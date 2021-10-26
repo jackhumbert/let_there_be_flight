@@ -1,0 +1,23 @@
+name: Build Workflow
+on: [ push, pull_request ]
+
+jobs:
+  build:
+    name: Build (${{ matrix.config }})
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        config: [ Debug, Release ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v1.0.2
+
+      - name: Build
+        run: MSBuild.exe RED4ext.Example.VisualStudio.sln -v:minimal -m -property:Configuration=${{ matrix.config }}
