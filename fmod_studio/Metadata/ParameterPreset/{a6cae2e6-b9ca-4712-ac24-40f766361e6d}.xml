@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.02.00">
+	<object class="ParameterPreset" id="{a6cae2e6-b9ca-4712-ac24-40f766361e6d}">
+		<property name="name">
+			<value>Surge</value>
+		</property>
+		<relationship name="folder">
+			<destination>{37bcb955-bb46-4db0-96d9-38f1f6d86753}</destination>
+		</relationship>
+		<relationship name="parameter">
+			<destination>{904b5fac-d401-49ff-95f6-5412fcfc5ada}</destination>
+		</relationship>
+	</object>
+	<object class="GameParameter" id="{904b5fac-d401-49ff-95f6-5412fcfc5ada}">
+		<property name="initialValue">
+			<value>0</value>
+		</property>
+	</object>
+</objects>
