@@ -23,11 +23,17 @@ public class VehicleStats {
   public let d_direction: Vector4;
   public let d_direction2D: Vector4;
 
+  private let reset: Bool;
+
   public static func Create(vehicle: ref<VehicleObject>) -> ref<VehicleStats> {
     let instance: ref<VehicleStats> = new VehicleStats();
     instance.vehicle = vehicle;
     instance.UpdateStatic();
     return instance;
+  }
+
+  public func Reset() -> Void {
+    this.reset = true;
   }
 
   public final func UpdateStatic() -> Void {
@@ -61,8 +67,7 @@ public class VehicleStats {
     this.s_forwardWeightTransferFactor = this.s_driveModelData.ForwardWeightTransferFactor();
   }
   
-  public final func UpdateDynamic() -> Void {
-    this.d_position = this.vehicle.GetWorldPosition() + this.s_centerOfMassOffset;
+  public final func UpdateDynamic(timeDelta: Float) -> Void {
     this.d_orientation = this.vehicle.GetWorldOrientation();
     this.d_forward = Quaternion.GetForward(this.d_orientation);
     this.d_right = Quaternion.GetRight(this.d_orientation);
@@ -74,5 +79,14 @@ public class VehicleStats {
     this.d_speed2D = Vector4.Length2D(this.d_velocity);
     this.d_direction = Vector4.Normalize(this.d_velocity);
     this.d_direction2D = Vector4.Normalize2D(this.d_velocity);
+
+    let position = this.vehicle.GetWorldPosition() + this.s_centerOfMassOffset;
+    // if !this.reset {
+      this.reset = false;
+      // try to smooth out the position some
+      // this.d_position = 0.95 * this.d_position + 0.05 * position;
+    // } else {
+      this.d_position = position;
+    // }
   }
 }

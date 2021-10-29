@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.02.00">
+	<object class="ParameterPreset" id="{7e7ec633-4bbb-4708-acf2-429f2874845c}">
+		<property name="name">
+			<value>Yaw</value>
+		</property>
+		<relationship name="folder">
+			<destination>{37bcb955-bb46-4db0-96d9-38f1f6d86753}</destination>
+		</relationship>
+		<relationship name="parameter">
+			<destination>{56c25c27-a165-4888-8239-9421b0a07e00}</destination>
+		</relationship>
+	</object>
+	<object class="GameParameter" id="{56c25c27-a165-4888-8239-9421b0a07e00}">
+		<property name="minimum">
+			<value>-1</value>
+		</property>
+		<property name="initialValue">
+			<value>-1</value>
+		</property>
+	</object>
+</objects>

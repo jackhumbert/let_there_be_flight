@@ -1,4 +1,4 @@
-// import BaseLib.*
+import BaseLib.UI.*
 
 enum FlightControlMode {
   Hover = 0,
@@ -28,6 +28,32 @@ enum FlightControlMode {
 
 // LogChannel(n"DEBUG", ToString(system.GetData()));
 
+// enum gamedataVehicleModel {
+//   Aerondight = 0,
+//   Alvarado = 1,
+//   Basilisk = 2,
+//   Bratsk = 3,
+//   Colby = 4,
+//   Columbus = 5,
+//   Cortes = 6,
+//   Emperor = 7,
+//   Galena = 8,
+//   GalenaNomad = 9,
+//   Kusanagi = 10,
+//   Mackinaw = 11,
+//   Maimai = 12,
+//   Octant = 13,
+//   Shion = 14,
+//   Supron = 15,
+//   Thrax = 16,
+//   Turbo = 17,
+//   Type66 = 18,
+//   Zeya = 19,
+//   Voight = 20,
+//   Count = 21,
+//   Invalid = 22,
+// }
+
 public class FlightControlAudioStats {
   public let volume: Float;
   public let playerPosition: Vector4;
@@ -43,12 +69,48 @@ public class FlightControlAudioStats {
   public let yaw: Float;
   public let pitchDiff: Float;
   public let brake: Float;
+  public static func Create() -> ref<FlightControlAudioStats> {
+    let instance = new FlightControlAudioStats();
+    instance.volume = 1.0;
+    instance.playerPosition = Vector4.EmptyVector();
+    instance.playerUp = new Vector4(0.0, 0.0, 1.0, 0.0);
+    instance.playerForward =new Vector4(0.0, 1.0, 0.0, 0.0);
+    instance.cameraPosition = Vector4.EmptyVector();
+    instance.cameraUp = new Vector4(0.0, 0.0, 1.0, 0.0);
+    instance.cameraForward = new Vector4(0.0, 1.0, 0.0, 0.0);
+    instance.speed = 0.0;
+    instance.surge = 0.0;
+    instance.yawDiff = 0.0;
+    instance.lift = 0.0;
+    instance.yaw = 0.0;
+    instance.pitchDiff = 0.0;
+    instance.brake = 0.0;
+    return instance;
+  }
 }
+
+// enum gamePSMVehicle {
+//   Default = 0,
+//   Driving = 1,
+//   Combat = 2,
+//   Passenger = 3,
+//   Transition = 4,
+//   Turret = 5,
+//   DriverCombat = 6,
+//   Scene = 7,
+//   Flying = 8
+// }
 
 // Singleton instance with player lifetime
 public class FlightControl {
   private let gameInstance: GameInstance;
+  // public let m_flightHUDGameController: ref<FlightHUDGameController>;
+  // public let m_flightHUDLogicController: ref<FlightHUDLogicController>;
   private let stats: ref<VehicleStats>;
+  private let ui: ref<FlightControlUI>;
+  public final func SetUI(ui: ref<FlightControlUI>) {
+    this.ui = ui;
+  }
   public let audioStats: ref<FlightControlAudioStats>;
   public final const func GetVehicle() -> ref<VehicleObject> {
     if !Equals(this.stats, null) {
@@ -149,26 +211,13 @@ public class FlightControl {
     this.rollWithYaw = 0.15;
     this.swayWithYaw = 0.5;
     this.surgeOffset = 0.5;
-    this.brakeOffset = 0.5;
+    // this.brakeOffset = 0.5;
+    this.brakeOffset = 0.0;
     this.velocityPointing = 0.5;
     this.hovering = true;
     this.referenceZ = 0.0;
 
-    this.audioStats = new FlightControlAudioStats();  
-    this.audioStats.volume = 1.0;
-    this.audioStats.playerPosition = Vector4.EmptyVector();
-    this.audioStats.playerUp = new Vector4(0.0, 0.0, 1.0, 0.0);
-    this.audioStats.playerForward =new Vector4(0.0, 1.0, 0.0, 0.0);
-    this.audioStats.cameraPosition = Vector4.EmptyVector();
-    this.audioStats.cameraUp = new Vector4(0.0, 0.0, 1.0, 0.0);
-    this.audioStats.cameraForward = new Vector4(0.0, 1.0, 0.0, 0.0);
-    this.audioStats.speed = 0.0;
-    this.audioStats.surge = 0.0;
-    this.audioStats.yawDiff = 0.0;
-    this.audioStats.lift = 0.0;
-    this.audioStats.yaw = 0.0;
-    this.audioStats.pitchDiff = 0.0;
-    this.audioStats.brake = 0.0;
+    this.audioStats = FlightControlAudioStats.Create();  
   }
   
   public static func CreateInstance(player: ref<PlayerPuppet>) {
@@ -178,7 +227,7 @@ public class FlightControl {
     // This strong reference will tie the lifetime of the singleton 
     // to the lifetime of the player entity
     player.FlightControlInstance = instance;
-    
+
     // This weak reference is used as a global variable 
     // to access the mod instance anywhere
     GetAllBlackboardDefs().FlightControlInstance = instance;
@@ -196,6 +245,7 @@ public class FlightControl {
     this.GetVehicle().TurnOn(true);
     this.GetVehicle().TurnEngineOn(true);
     this.SetupActions();
+    this.ui.Setup(this.stats);
 
     // very intrusive - need a prompt/confirmation that they want this popup, eg Detailed Info / About
     // let shardUIevent = new NotifyShardRead();
@@ -216,6 +266,7 @@ public class FlightControl {
     }
     this.enabled = false;
     this.SetupActions();   
+    this.stats = null;
 
     // if IsDefined(this.m_maxSpeedModifier) {
     //   scriptInterface.GetStatsSystem().RemoveModifier(Cast(scriptInterface.ownerEntityID), this.m_maxSpeedModifier);
@@ -243,14 +294,57 @@ public class FlightControl {
     this.pitchPID.Reset();
     this.rollPID.Reset();
     this.yawPID.Reset();
-    (this.GetVehicle().GetPS() as VehicleComponentPS).SetThrusterState(true);
+    (this.GetVehicle().GetPS() as VehicleComponentPS).SetThrusterState(false);
     this.GetVehicle().TurnEngineOn(false);
     this.GetVehicle().TurnOn(false);
-    this.stats.UpdateDynamic();
 
-    let transform: WorldTransform;
-    WorldTransform.SetPosition(transform, this.stats.d_position + new Vector4(0.0, 0.0, 2.0, 0.0));
-    let beam: ref<FxInstance> = GameInstance.GetFxSystem(this.gameInstance).SpawnEffect(this.GetVehicle().GetFxResourceByKey(n"pingNetworkLink"), transform, true);
+    this.stats.Reset();
+    if IsDefined(this.ui) {
+      let fadeInAnim = new inkAnimTransparency();
+      fadeInAnim.SetStartTransparency(0.0);
+      fadeInAnim.SetEndTransparency(1.0);
+      fadeInAnim.SetDuration(0.200);
+		  let activationAnim = new inkAnimDef();
+		  activationAnim.AddInterpolator(fadeInAnim);
+      this.ui.PlayAnimation(activationAnim);
+    }
+  
+      // stateContext.SetPermanentBoolParameter(n"ForceIdleVehicle", true, true);
+    // this.GetVehicle().GetBlackboard().SetVariant(GetAllBlackboardDefs().UI_ActiveVehicleData.VehPlayerStateData, ToVariant(3));
+
+    // let hudManager: ref<HUDManager>;
+    // let registration: ref<HUDManagerRegistrationRequest>;
+    // if this.GetVehicle().IsCrowdVehicle() && !this.GetVehicle().ShouldForceRegisterInHUDManager() {
+    //   return;
+    // };
+    // hudManager = GameInstance.GetScriptableSystemsContainer(this.GetVehicle().GetGame()).Get(n"HUDManager") as HUDManager;
+    // if IsDefined(hudManager) {
+    //   registration = new HUDManagerRegistrationRequest();
+    //   registration.SetProperties(this.GetVehicle(), shouldRegister);
+    //   hudManager.QueueRequest(registration);
+    // };    
+    
+    // GetPlayer(this.gameInstance).GetPlayerStateMachineBlackboard().SetInt(GetAllBlackboardDefs().PlayerStateMachine.Vehicle, EnumInt(gamePSMVehicle.Scene));
+
+    // let psm: ref<PSMStartStateMachine> = new PSMStartStateMachine();
+    // psm.stateMachineIdentifier.definitionName = n"Crosshair";
+    // this.GetVehicle().QueueEvent(psm);
+
+    // this.HUDGameController.ShowRequest();
+    
+    // let uiSystemBB = GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().UIGameData);
+    // let uiSystemBBDef = GetAllBlackboardDefs().UIGameData;
+    // uiSystemBB.SetBool(uiSystemBBDef.Popup_IsShown, true);
+    // uiSystemBB.SignalBool(uiSystemBBDef.Popup_IsShown);
+
+		// let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
+		// let showEvent: ref<ShowFlightHUDEvent> = ShowFlightHUDEvent.Create(this.HUDGameController);
+
+		// uiSystem.QueueEvent(showEvent);
+
+    // let transform: WorldTransform;
+    // WorldTransform.SetPosition(transform, this.stats.d_position + new Vector4(0.0, 0.0, 2.0, 0.0));
+    // let beam: ref<FxInstance> = GameInstance.GetFxSystem(this.gameInstance).SpawnEffect(this.GetVehicle().GetFxResourceByKey(n"pingNetworkLink"), transform, true);
 
     // StatusEffectHelper.ApplyStatusEffect(GetPlayer(this.gameInstance), t"GameplayRestriction.NoCameraControl");
     // gameSaveLockReason.PlayerState
@@ -284,6 +378,33 @@ public class FlightControl {
       this.ShowSimpleMessage("Flight Control Disengaged");
       GameInstance.GetAudioSystem(this.gameInstance).PlayFlightControlSound(n"ui_hacking_access_denied");
     }
+    if IsDefined(this.ui) {
+      let fadeOutAnim = new inkAnimTransparency();
+      fadeOutAnim.SetStartTransparency(1.0);
+      fadeOutAnim.SetEndTransparency(0.0);
+      fadeOutAnim.SetDuration(0.200);
+		  let deactivationAnim = new inkAnimDef();
+		  deactivationAnim.AddInterpolator(fadeOutAnim);
+      this.ui.PlayAnimation(deactivationAnim);
+    }
+
+    // GetPlayer(this.gameInstance).GetPlayerStateMachineBlackboard().SetInt(GetAllBlackboardDefs().PlayerStateMachine.Vehicle, EnumInt(gamePSMVehicle.Driving));
+
+    // let psm: ref<PSMStopStateMachine> = new PSMStopStateMachine();
+    // psm.stateMachineIdentifier.definitionName = n"Crosshair";
+    // this.GetVehicle().QueueEvent(psm);
+
+
+    // let uiSystemBB = GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().UIGameData);
+    // let uiSystemBBDef = GetAllBlackboardDefs().UIGameData;
+    // uiSystemBB.SetBool(uiSystemBBDef.Popup_IsShown, false);
+    // uiSystemBB.SignalBool(uiSystemBBDef.Popup_IsShown);
+
+		// let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
+		// let hideEvent: ref<HideFlightHUDEvent> = HideFlightHUDEvent.Create(this.HUDGameController);
+
+		// uiSystem.QueueEvent(hideEvent);
+
     // GameInstance.GetUISystem(this.gameInstance).PopGameContext(UIGameContext.VehicleRace);
     // let cameraContext: ref<PSMStopStateMachine> = new PSMStopStateMachine();
     // cameraContext.stateMachineIdentifier.definitionName = n"CameraContext";
@@ -457,7 +578,7 @@ public class FlightControl {
       return; 
     }
 
-    this.stats.UpdateDynamic();
+    this.stats.UpdateDynamic(timeDelta);
 
     let direction = this.stats.d_direction;
     if this.stats.d_speed < 1.0 {
@@ -594,6 +715,10 @@ public class FlightControl {
     this.audioStats.surge = surgeValue;
     this.audioStats.yaw = yawValue;
     this.audioStats.lift = liftValue;
+    this.audioStats.brake = brakeValue;
+    
+    this.ui.Update(timeDelta);
+    // worlduiWidgetComponent
 
     // always zero from what i can tell :/
     // LogChannel(n"DEBUG", ToString(vehicle.GetBlackboard().GetInt(GetAllBlackboardDefs().Vehicle.IsHandbraking)));
@@ -606,11 +731,8 @@ public class FlightControl {
     // accurate flying speed on the speedometer for development
     // if we go above 100 units here, it seems to brake us - not sure if the game is checking LV or the BB value
     // it's the linearvelocity level :/
-    // vehicle.GetBlackboard().SetFloat(GetAllBlackboardDefs().Vehicle.SpeedValue, Vector4.Length(vehicle.GetLinearVelocity()));
-    // vehicle.GetBlackboard().SignalFloat(GetAllBlackboardDefs().Vehicle.SpeedValue);
 
-    // TODO use vehicleRecord.Player_audio_resource() for engine noise?
-    // TODO speed-dependent wind noise would be nice too
+    // LogChannel(n"DEBUG", ToString(GameInstance.GetCameraSystem(this.gameInstance).ProjectPoint(FlightControl.GetInstance().stats.d_position)));
 
   }
 
@@ -655,34 +777,37 @@ public class FlightControl {
   // inkCompoundWidget is a base class for all widget types that can have children
   // Usually it's inkCanvas or inkFlex containers with absolute positioning
   // And inkHorizontalPanel or inkVerticalPanel containers for auto layouts
-  public static func HUDTextSetup(parent: wref<inkCompoundWidget>) -> ref<inkText> {
-    let flightControlText: ref<inkText> = new inkText();
-    flightControlText.SetName(n"flightControlText");
+  public static func HUDStatusSetup(parent: wref<inkCompoundWidget>) -> ref<inkText> {
+    let flightControlStatus: ref<inkText> = new inkText();
+    flightControlStatus.SetName(n"flightControlStatus");
     // Add widget instance to the parent
-    flightControlText.Reparent(parent);
+    flightControlStatus.Reparent(parent);
 
     // Set font
-    flightControlText.SetFontFamily("base\\gameplay\\gui\\fonts\\orbitron\\orbitron.inkfontfamily");
-    flightControlText.SetFontStyle(n"Medium");
-    flightControlText.SetFontSize(22);
-    flightControlText.SetLetterCase(textLetterCase.UpperCase);
+    flightControlStatus.SetFontFamily("base\\gameplay\\gui\\fonts\\orbitron\\orbitron.inkfontfamily");
+    flightControlStatus.SetFontStyle(n"Medium");
+    flightControlStatus.SetFontSize(24);
+    flightControlStatus.SetLetterCase(textLetterCase.UpperCase);
 
     // Set color
-    flightControlText.SetTintColor(new HDRColor(0.368627, 0.964706, 1.0, 1.0));
+    flightControlStatus.SetTintColor(new HDRColor(0.368627, 0.964706, 1.0, 1.0));
 
     // Set content
-    flightControlText.SetText("You shouldn't see this!");
+    flightControlStatus.SetText("You shouldn't see this!");
+    // flightControlStatus.SetHorizontalAlignment(textHorizontalAlignment.Center);
+    // flightControlStatus.SetAnchor(inkEAnchor.TopCenter);
 
 
     // Set widget position relative to parent
     // Altough the position is absolute for FHD resoltuion,
     // it will be adapted for the current resoltuion
-    flightControlText.SetMargin(130, 1822, 0, 0);
+    flightControlStatus.SetMargin(130, 1822, 0, 0);
 
     // Set widget size
-    flightControlText.SetSize(150.0, 50.0);
-    return flightControlText;
+    flightControlStatus.SetSize(220.0, 50.0);
+    return flightControlStatus;
   }
+
 }
 
 // boo
@@ -791,7 +916,7 @@ private final func Reset() -> Void {
 private let m_flightActiveBBConnectionId: ref<CallbackHandle>;
 
 @addField(hudCarController)
-private let m_flightControlText: wref<inkText>;
+private let m_flightControlStatus: wref<inkText>;
 
 @wrapMethod(hudCarController)
 private final func RegisterToVehicle(register: Bool) -> Void {
@@ -806,26 +931,25 @@ private final func RegisterToVehicle(register: Bool) -> Void {
     if register {
       // GetRootWidget() returns root widget of base type inkWidget
       // GetRootCompoundWidget() returns root widget casted to inkCompoundWidget
-    if !IsDefined(this.m_flightControlText) {
-      this.m_flightControlText = FlightControl.HUDTextSetup(this.GetRootCompoundWidget());
-    }
+      if !IsDefined(this.m_flightControlStatus) {
+        this.m_flightControlStatus = FlightControl.HUDStatusSetup(this.GetRootCompoundWidget());
+      }
       this.m_flightActiveBBConnectionId = vehicleBlackboard.RegisterListenerBool(GetAllBlackboardDefs().Vehicle.FlightActive, this, n"OnFlightActiveChanged");
     } else {
-      vehicleBlackboard.UnregisterListenerFloat(GetAllBlackboardDefs().Vehicle.RPMValue, this.m_flightActiveBBConnectionId);
+      vehicleBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().Vehicle.FlightActive, this.m_flightActiveBBConnectionId);
     };
   };
 }
 
 @addMethod(hudCarController)
 protected cb func OnFlightActiveChanged(active: Bool) -> Bool {
-  // let m_flightControlText: ref<inkText> = this.GetRootCompoundWidget().GetWidgetByPathName(n"flightControlText") as inkText;
-  if !IsDefined(this.m_flightControlText) {
-    this.m_flightControlText = FlightControl.HUDTextSetup(this.GetRootCompoundWidget());
+  if !IsDefined(this.m_flightControlStatus) {
+    this.m_flightControlStatus = FlightControl.HUDStatusSetup(this.GetRootCompoundWidget());
   }
   if active {
-    this.m_flightControlText.SetText("Flight Control Engaged");
+    this.m_flightControlStatus.SetText("Flight Control Engaged");
   } else {
-    this.m_flightControlText.SetText("Flight Control Available");
+    this.m_flightControlStatus.SetText("Flight Control Available");
   }
 }
 
@@ -861,6 +985,12 @@ protected cb func OnFlightActiveChanged(active: Bool) -> Bool {
 //   } else {
 //     GameObjectEffectHelper.BreakEffectLoopEvent(this.GetVehicle(), n"thrusters");
 //   };
+// }
+
+// trying to unstick cars on load
+// @wrapMethod(VehicleObject)
+// public final func IsOnPavement() -> Bool {
+//   return wrappedMethod() || true;
 // }
 
 @replaceMethod(VehicleComponent)

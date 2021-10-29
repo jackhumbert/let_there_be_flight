@@ -1,0 +1,85 @@
+Vehicle.vehicle_list.initially_unlocked_list,array:TweakDBID,[ "Vehicle.v_standard2_archer_hella_player" ]
+Vehicle.vehicle_list.list,array:TweakDBID,[ "Vehicle.v_sport1_herrera_outlaw_player" "Vehicle.v_sport1_quadra_turbo_player" "Vehicle.v_sport1_quadra_turbo_r_player" "Vehicle.v_sport1_rayfield_aerondight_player" "Vehicle.v_sport1_rayfield_caliburn_player" "Vehicle.v_sport2_mizutani_shion_player" "Vehicle.v_sport2_mizutani_shion_nomad_player" "Vehicle.v_sport2_porsche_911turbo_player" "Vehicle.v_sport2_quadra_type66_player" "Vehicle.v_sport2_quadra_type66_avenger_player" "Vehicle.v_sport2_quadra_type66_nomad_player" "Vehicle.v_sport2_villefort_alvarado_player" "Vehicle.v_standard25_mahir_supron_player" "Vehicle.v_standard25_thorton_colby_nomad_player" "Vehicle.v_standard25_villefort_columbus_player" "Vehicle.v_standard25_thorton_colby_pickup_player" "Vehicle.v_standard2_archer_hella_player" "Vehicle.v_standard2_archer_quartz_player" "Vehicle.v_standard2_chevalier_thrax_player" "Vehicle.v_standard2_makigai_maimai_player" "Vehicle.v_standard2_thorton_colby_player" "Vehicle.v_standard2_thorton_galena_player" "Vehicle.v_standard2_thorton_galena_nomad_player" "Vehicle.v_standard2_villefort_cortes_player" "Vehicle.v_standard2_villefort_cortes_delamain_player" "Vehicle.v_standard3_chevalier_emperor_player" "Vehicle.v_standard3_thorton_mackinaw_player" "Vehicle.v_sportbike1_yaiba_kusanagi_player" "Vehicle.v_sportbike2_arch_player" "Vehicle.v_sportbike3_brennan_apollo_player" "Vehicle.v_sportbike3_brennan_apollo_nomad_player" "Vehicle.v_sportbike2_arch_jackie_player" "Vehicle.v_sportbike2_arch_jackie_tuned_player" "Vehicle.v_sport2_villefort_alvarado_valentinos_player" "Vehicle.v_standard2_thorton_galena_bobas_player" "Vehicle.v_standard3_thorton_mackinaw_ncu_player" "Vehicle.v_sport2_quadra_type66_nomad_ncu_player" "Vehicle.v_sportbike1_yaiba_kusanagi_tyger_player" "Vehicle.v_sportbike2_arch_tyger_player" "Vehicle.v_sport2_mizutani_shion_nomad_02_player" "Vehicle.v_sport1_rayfield_caliburn_02_player" "Vehicle.v_standard25_thorton_colby_pickup_02_player" 00000028fa5dd86d ]
+Vehicle.vehicle_template.affiliation,TweakDBID,"Factions.Unaffiliated" 
+Vehicle.vehicle_template.appearanceName,CName,"None" 
+Vehicle.vehicle_template.archetypeName,CName,"vehicle" 
+Vehicle.vehicle_template.attachmentSlots,array:TweakDBID,[ "AttachmentSlots.Engine1" "AttachmentSlots.Engine2" "AttachmentSlots.Engine3" "AttachmentSlots.Engine4" ]
+Vehicle.vehicle_template.audioResourceName,CName,"None" 
+Vehicle.vehicle_template.brakelightColor,array:Int32,[ ]
+Vehicle.vehicle_template.cameraManagerParams,TweakDBID,"Camera.VehicleCameraManager_Default" 
+Vehicle.vehicle_template.crackLockDifficulty,String,"HARD" 
+Vehicle.vehicle_template.crowdMemberSettings,TweakDBID,"Crowds.DefaultCarPackage" 
+Vehicle.vehicle_template.curvesPath,raRef:CResource,14783903123043989255 
+Vehicle.vehicle_template.destroyedAppearance,CName,"None" 
+Vehicle.vehicle_template.destruction,TweakDBID,"Vehicle.VehicleDestructionParamsDefault_4w" 
+Vehicle.vehicle_template.displayName,gamedataLocKeyWrapper,0 
+Vehicle.vehicle_template.driving,TweakDBID,"Driving.Default_4w" 
+Vehicle.vehicle_template.effectors,array:TweakDBID,[ ]
+Vehicle.vehicle_template.enableDestruction,Bool,false 
+Vehicle.vehicle_template.entityTemplatePath,raRef:CResource,4187031448400952378 
+Vehicle.vehicle_template.fxCollision,TweakDBID,"Vehicle.FxCollision_Default" 
+Vehicle.vehicle_template.fxWheelsDecals,TweakDBID,"Vehicle.FxWheelsDecals_Default" 
+Vehicle.vehicle_template.fxWheelsParticles,TweakDBID,"Vehicle.FxWheelsParticles_Default" 
+Vehicle.vehicle_template.headlightColor,array:Int32,[ ]
+Vehicle.vehicle_template.hijackDifficulty,String,"HARD" 
+Vehicle.vehicle_template.icon,TweakDBID,"UIIcon.ItemIcon" 
+Vehicle.vehicle_template.interiorColor,array:Int32,[ ]
+Vehicle.vehicle_template.interiorDamageColor,array:Int32,[ ]
+Vehicle.vehicle_template.leftBackCamber,Float,0 
+Vehicle.vehicle_template.leftBackCamberOffset,Vector3,{ x:0 y:0 z:0 } 
+Vehicle.vehicle_template.leftBlinkerlightColor,array:Int32,[ ]
+Vehicle.vehicle_template.leftFrontCamber,Float,0 
+Vehicle.vehicle_template.leftFrontCamberOffset,Vector3,{ x:0 y:0 z:0 } 
+Vehicle.vehicle_template.manufacturer,TweakDBID,"" 
+Vehicle.vehicle_template.model,TweakDBID,"Vehicle.Turbo" 
+Vehicle.vehicle_template.multiplayerTemplatePaths,array:raRef:CResource,[ ]
+Vehicle.vehicle_template.objectActions,array:TweakDBID,[ "VehicleActions.VehicleHijackFrontLeft" "VehicleActions.VehicleHijackFrontRight" "VehicleActions.VehicleMountFrontLeft" "VehicleActions.VehicleMountFrontRight" "VehicleActions.VehicleMountBackLeft" "VehicleActions.VehicleMountBackRight" "VehicleActions.VehicleCrackLockFrontLeft" "VehicleActions.VehicleCrackLockFrontRight" ]
+Vehicle.vehicle_template.persistentName,CName,"None" 
+Vehicle.vehicle_template.player_audio_resource,String,"" 
+Vehicle.vehicle_template.priority,TweakDBID,"SpawnableObjectPriority.Regular" 
+Vehicle.vehicle_template.queryOnlyExceptions,array:CName,[ "trunk_a" "trunk_b" "hood_a" "door_fl_a" "door_fr_a" "door_bl_a" "door_br_a" "door_a_hidable" "door_b_hidable" "door_a" "door_b" "door_c" "door_front_right" "door_back_right" "door_front_left" "door_back_left" "av_zetatech_valgus__ext01_door_fl_01" "av_zetatech_valgus__ext01_door_fr_01" "av_militech_basilisk__ext01_turret_b" "body_transport" "av_militech_basilisk__ext01_canopy_a" "av_militech_basilisk__ext01_canopy_b" "av_militech_basilisk__ext01_turret_a" "av_militech_basilisk__ext01_body_kit_nomad" "wing_right_nomad" "wing_left_nomad" "wing_left_nomad" "seat_a_01" "seat_a_02" "seat_b_01" "seat_b_02" "seat_c_01" "seat_c_02" "seat_d_01" "seat_d_02" "seat_e_01" "seat_e_02" "seat_a_03" "seat_a_04" "seat_b_03" "seat_b_04" "seat_c_03" "seat_c_014" "seat_d_03" "seat_d_04" "seat_e_03" "seat_e_04" "av_zetatech_surveyor__int01_jumpseat_02" "av_zetatech_surveyor__int01_jumpseat_5657" "av_zetatech_surveyor__int01_jumpseat_5537" "av_zetatech_surveyor__int01_jumpseat_8866" "av_zetatech_surveyor__int01_jumpseat_01" "av_zetatech_surveyor__int01_jumpseat_5331" "av_zetatech_surveyor__int01_jumpseat_7123" "av_zetatech_surveyor__int01_jumpseat_1477" "deathrace_spoiler_01" "av_zetatech_valgus__ext01_landinggear_back_01" "av_zetatech_valgus__ext01_propeller_01" "av_zetatech_valgus__ext01_propeller_02" "v_common_suitcase_01" "jammer_antenna_01" "v_standard25_villefort_columbus__ext01_jammer_top_gear_01" "av_zetatech_surveyor__ext01_missilelauncher_l_01" "av_zetatech_surveyor__ext01_missilelauncher_r_01" ]
+Vehicle.vehicle_template.randomPassengers,array:TweakDBID,[ "Passengers.GenericDriverEntry" "Passengers.GenericPassengerEntry" ]
+Vehicle.vehicle_template.reverselightColor,array:Int32,[ ]
+Vehicle.vehicle_template.rightBLinkerlightColor,array:Int32,[ ]
+Vehicle.vehicle_template.rightBackCamber,Float,0 
+Vehicle.vehicle_template.rightBackCamberOffset,Vector3,{ x:0 y:0 z:0 } 
+Vehicle.vehicle_template.rightFrontCamber,Float,0 
+Vehicle.vehicle_template.rightFrontCamberOffset,Vector3,{ x:0 y:0 z:0 } 
+Vehicle.vehicle_template.savable,Bool,false 
+Vehicle.vehicle_template.statModifierGroups,array:TweakDBID,[ "VehicleStatPreset.BaseCar" ]
+Vehicle.vehicle_template.statModifiers,array:TweakDBID,[ ]
+Vehicle.vehicle_template.statPools,array:TweakDBID,[ "BaseStatPools.VehicleHealth" ]
+Vehicle.vehicle_template.tags,array:CName,[ "InteractiveTrunk" ]
+Vehicle.vehicle_template.tppCameraParams,TweakDBID,"Camera.VehicleTPP_DefaultParams" 
+Vehicle.vehicle_template.tppCameraPresets,array:TweakDBID,[ "Camera.VehicleTPP_4w_Preset_Low_Close" "Camera.VehicleTPP_4w_Preset_High_Close" "Camera.VehicleTPP_4w_Preset_Low_Far" "Camera.VehicleTPP_4w_Preset_High_Far" ]
+Vehicle.vehicle_template.traffic_audio_resource,String,"" 
+Vehicle.vehicle_template.type,TweakDBID,"Vehicle.Car" 
+Vehicle.vehicle_template.unmountOffsetPosition,Vector3,{ x:1.64999998 y:5 z:2.5 } 
+Vehicle.vehicle_template.vehAirControl,TweakDBID,"Vehicle.VehicleAirControlCar" 
+Vehicle.vehicle_template.vehAirControlAI,TweakDBID,"Vehicle.VehicleAirControlCarAI" 
+Vehicle.vehicle_template.vehBehaviorData,TweakDBID,"" 
+Vehicle.vehicle_template.vehDataPackage,TweakDBID,"Vehicle.VehicleDataPackageDefault" 
+Vehicle.vehicle_template.vehDefaultState,TweakDBID,"Vehicle.Veh4WDefaultState" 
+Vehicle.vehicle_template.vehDriveModelData,TweakDBID,"Vehicle.VehicleDriveModelDataDefault_4w" 
+Vehicle.vehicle_template.vehDriveModelDataAI,TweakDBID,"" 
+Vehicle.vehicle_template.vehDriverCombat_FPPCameraParams,TweakDBID,"Vehicle.VehicleDriverCombatFPPCameraParamsDefault" 
+Vehicle.vehicle_template.vehDriverCombat_ProceduralFPPCameraParams,TweakDBID,"Camera.VehicleProceduralFPPCamera_DefaultCombatParams" 
+Vehicle.vehicle_template.vehDriver_FPPCameraParams,TweakDBID,"Vehicle.VehicleDriverFPPCameraParamsDefault" 
+Vehicle.vehicle_template.vehDriver_ProceduralFPPCameraParams,TweakDBID,"Camera.VehicleProceduralFPPCamera_DefaultParams" 
+Vehicle.vehicle_template.vehEngineData,TweakDBID,"Vehicle.VehicleEngineData_4_Default" 
+Vehicle.vehicle_template.vehImpactTraffic,TweakDBID,"Driving.VehicleImpactTraffic_DefaultParams" 
+Vehicle.vehicle_template.vehPassCombatL_FPPCameraParams,TweakDBID,"Vehicle.VehiclePassengerLCombatFPPCameraParamsDefault" 
+Vehicle.vehicle_template.vehPassCombatL_ProceduralFPPCameraParams,TweakDBID,"Camera.VehicleProceduralFPPCamera_DefaultCombatParams" 
+Vehicle.vehicle_template.vehPassCombatR_FPPCameraParams,TweakDBID,"Vehicle.VehiclePassengerRCombatFPPCameraParamsDefault" 
+Vehicle.vehicle_template.vehPassCombatR_ProceduralFPPCameraParams,TweakDBID,"Camera.VehicleProceduralFPPCamera_DefaultCombatParams" 
+Vehicle.vehicle_template.vehPassL_FPPCameraParams,TweakDBID,"Vehicle.VehiclePassengerLFPPCameraParamsDefault" 
+Vehicle.vehicle_template.vehPassL_ProceduralFPPCameraParams,TweakDBID,"Camera.VehicleProceduralFPPCamera_DefaultParams" 
+Vehicle.vehicle_template.vehPassR_FPPCameraParams,TweakDBID,"Vehicle.VehiclePassengerRFPPCameraParamsDefault" 
+Vehicle.vehicle_template.vehPassR_ProceduralFPPCameraParams,TweakDBID,"Camera.VehicleProceduralFPPCamera_DefaultParams" 
+Vehicle.vehicle_template.vehWheelDimensionsSetup,TweakDBID,"Vehicle.VehicleWheelDimensionsSetup_Default" 
+Vehicle.vehicle_template.vehicleUIData,TweakDBID,"Vehicle.VehicleDefaultUIData" 
+Vehicle.vehicle_template.visualDestruction,TweakDBID,"Vehicle.VehicleVisualDestructionParamsDefault" 
+Vehicle.vehicle_template.visualTags,array:CName,[ ]
+Vehicle.vehicle_template.weakspots,array:TweakDBID,[ ]
+Vehicle.vehicle_template.weapons,array:TweakDBID,[ ]
+Vehicle.vehicle_template.widgetStyleSheetPath,raRef:CResource,0 

@@ -28,6 +28,14 @@ registerForEvent('onInit', function()
     TweakDB:SetFlat('Camera.VehicleTPP_DefaultParams.slopeCorrectionInAirRaiseCoef', 0.0)
     TweakDB:SetFlat('Camera.VehicleTPP_DefaultParams.slopeCorrectionInAirSpeedMax', 10)
     TweakDB:SetFlat('Camera.VehicleTPP_DefaultParams.slopeCorrectionInAirStrength', 4)
+    
+    TweakDB:SetFlat('Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirDampFactor', 0.1)
+    TweakDB:SetFlat('Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirFallCoef', 0)
+    TweakDB:SetFlat('Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirPitchMax', 30)
+    TweakDB:SetFlat('Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirPitchMin', -30)
+    TweakDB:SetFlat('Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirRaiseCoef', 0.0)
+    TweakDB:SetFlat('Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirSpeedMax', 10)
+    TweakDB:SetFlat('Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirStrength', 4)
 
     -- why not
     TweakDB:SetFlat('vehicles.common.temp_hack_ignore_trunk_max_height', 200)
@@ -40,6 +48,9 @@ registerForEvent('onInit', function()
 
     TweakDB:SetFlat('vehicles.showDebugUi', true)
 
+    TweakDB:SetFlat('Vehicle.Voight.enumComment', '')
+    TweakDB:SetFlat('Vehicle.Voight.enumName', 'Voight')
+
 	-- GameHUD.Initialize()
 
 	Observe('FlightControl', 'Activate', function(self)
@@ -48,7 +59,7 @@ registerForEvent('onInit', function()
 
 	Observe('FlightControl', 'OnUpdate', function(self)
         local as = Game.GetPlayer().FlightControlInstance.audioStats
-		Game.GetPlayer().FlightControlInstance:SetParams(as.volume * 3.0, as.playerPosition, as.playerUp, as.playerForward, as.cameraPosition, as.cameraUp, as.cameraForward, as.speed, as.surge, as.yawDiff)
+		Game.GetPlayer().FlightControlInstance:SetParams(as.volume, as.playerPosition, as.playerUp, as.playerForward, as.cameraPosition, as.cameraUp, as.cameraForward, as.speed, as.surge, as.yawDiff, as.lift, as.yaw, as.pitchDiff, as.brake)
 	end)
 
 	Observe('FlightControl', 'Deactivate', function(self)

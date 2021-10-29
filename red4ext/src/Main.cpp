@@ -63,12 +63,14 @@ void StartSnd(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void
 {
     spdlog::info("Starting sound");
     ERRCHECK(ltbfInstance->start());
+    ERRCHECK(fmod_system->update());
 }
 
 void StopSnd(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
 {
     spdlog::info("Stopping sound");
-    ERRCHECK(ltbfInstance->stop(FMOD_STUDIO_STOP_ALLOWFADEOUT));
+    ERRCHECK(ltbfInstance->stop(FMOD_STUDIO_STOP_IMMEDIATE));
+    ERRCHECK(fmod_system->update());
 }
 
 void SetParams(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
@@ -83,6 +85,10 @@ void SetParams(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, voi
     float speed;
     float surge;
     float yawDiff;
+    float lift;
+    float yaw;
+    float pitchDiff;
+    float brake;
 
     RED4ext::GetParameter(aFrame, &volume);
     RED4ext::GetParameter(aFrame, &playerPosition);
@@ -94,6 +100,10 @@ void SetParams(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, voi
     RED4ext::GetParameter(aFrame, &speed);
     RED4ext::GetParameter(aFrame, &surge);
     RED4ext::GetParameter(aFrame, &yawDiff);
+    RED4ext::GetParameter(aFrame, &lift);
+    RED4ext::GetParameter(aFrame, &yaw);
+    RED4ext::GetParameter(aFrame, &pitchDiff);
+    RED4ext::GetParameter(aFrame, &brake);
     aFrame->code++; // skip ParamEnd
 
     ERRCHECK(ltbfInstance->setVolume(volume));
@@ -125,6 +135,10 @@ void SetParams(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, voi
     ERRCHECK(ltbfInstance->setParameterByName("Speed", speed));
     ERRCHECK(ltbfInstance->setParameterByName("Surge", surge));
     ERRCHECK(ltbfInstance->setParameterByName("YawDiff", yawDiff));
+    ERRCHECK(ltbfInstance->setParameterByName("Lift", lift));
+    ERRCHECK(ltbfInstance->setParameterByName("Yaw", yaw));
+    ERRCHECK(ltbfInstance->setParameterByName("PitchDiff", pitchDiff));
+    ERRCHECK(ltbfInstance->setParameterByName("Brake", brake));
     ERRCHECK(fmod_system->update());
 }
 
@@ -174,6 +188,10 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Load(RED4ext::PluginHandle aHandle, const RED
         setParams->AddParam("Float", "speed");
         setParams->AddParam("Float", "surge");
         setParams->AddParam("Float", "yawDiff");
+        setParams->AddParam("Float", "lift");
+        setParams->AddParam("Float", "yaw");
+        setParams->AddParam("Float", "pitchDiff");
+        setParams->AddParam("Float", "brake");
 
         flightControlCls->RegisterFunction(startSound);
         flightControlCls->RegisterFunction(stopSound);
