@@ -3,6 +3,8 @@ import BaseLib.UI.*
 public class FlightControlUI extends inkCanvas {
   public let controller: ref<inkGameController>;
   public let stats: ref<VehicleStats>;
+  private let m_rootAnim: ref<inkAnimProxy>;
+  private let m_markerRadius: Float;
   public static func Create(controller: ref<inkGameController>, parent: ref<inkCompoundWidget>) -> ref<FlightControlUI> {
     let instance = new FlightControlUI();
     instance.controller = controller;
@@ -16,28 +18,122 @@ public class FlightControlUI extends inkCanvas {
     this.SetOpacity(0.0);
     this.RemoveAllChildren();
 		this.SetAnchor(inkEAnchor.Centered);
+    
+    // let buttonHints: ref<inkWidget> = this.controller.SpawnFromExternal(this, r"base\\gameplay\\gui\\widgets\\turret_hud\\turret_hud.inkwidget", n"Root");
+    // buttonHints.Reparent(this);
+    // return;
 
-    let arrow_left = new inkImage();
-		arrow_left.SetName(n"arrow_left");
-		arrow_left.Reparent(this);
-		arrow_left.SetAtlasResource(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas");
-		arrow_left.SetTexturePart(n"arrow_right");
-		arrow_left.SetSize(24.0, 24.0);
-    arrow_left.SetMargin(new inkMargin(0.0, 12.0, 24.0, 12.0));
-		arrow_left.SetOpacity(1.0);
-		arrow_left.SetTintColor(ThemeColors.ElectricBlue());
-    arrow_left.SetEffectEnabled(inkEffectType.Glitch, n"Glitch_0", true);
 
-    let arrow_right = new inkImage();
-		arrow_right.SetName(n"arrow_right");
-		arrow_right.Reparent(this);
-		arrow_right.SetAtlasResource(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas");
-		arrow_right.SetTexturePart(n"arrow_right");
-		arrow_right.SetSize(24.0, 24.0);
-    arrow_right.SetMargin(new inkMargin(0.0, 12.0, 24.0, 12.0));
-		arrow_right.SetOpacity(1.0);
-		arrow_right.SetTintColor(ThemeColors.ElectricBlue());
-    arrow_right.SetEffectEnabled(inkEffectType.Glitch, n"Glitch_0", true);
+    let arrow_left = inkWidgetBuilder.inkImage(n"arrow_left")
+		  .Reparent(this)
+		  .Atlas(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas")
+		  .Part(n"arrow_right")
+		  .Size(24.0, 24.0)
+      // .Margin(0.0, -12.0, -24.0, -12.0)
+      .Anchor(1.0, 0.5)
+		  .Opacity(1.0)
+		  .Tint(ThemeColors.ElectricBlue())
+      .BuildImage();
+      // .EffectEnabled(inkEffectType.Glitch, n"Glitch_0", true);
+
+    let arrow_right = inkWidgetBuilder.inkImage(n"arrow_right")
+		  .Reparent(this)
+		  .Atlas(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas")
+		  .Part(n"arrow_right")
+		  .Size(24.0, 24.0)
+      // .Margin(0.0, 12.0, 24.0, 12.0)
+      .Anchor(1.0, 0.5)
+		  .Opacity(1.0)
+		  .Tint(ThemeColors.ElectricBlue())
+      .BuildImage();
+      // .EffectEnabled(inkEffectType.Glitch, n"Glitch_0", true);
+
+    let rulers = inkWidgetBuilder.inkCanvas(n"rulers")
+      .Reparent(this)
+	    .Anchor(inkEAnchor.Centered)
+      .Margin(0.0, 0.0, 0.0, 0.0)
+      .BuildCanvas();
+  
+    let marks = [-25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25, 155, 160, 165, 170, 175, 180, 185, 190, 195, 200, 205];
+    this.m_markerRadius = 800.0;
+
+    for mark in marks {
+      let roll_marker = inkWidgetBuilder.inkRectangle(StringToName("roll_marker_" + mark))
+        .Tint(ThemeColors.ElectricBlue())
+        .Opacity(0.05)
+        .Size(3.0, 50.0)
+        .Anchor(0.5, 0.0)
+        .Translation(CosF(Deg2Rad(mark + 90.0)) * this.m_markerRadius, SinF(Deg2Rad(mark + 90.0)) * this.m_markerRadius)
+        .Rotation(mark)
+        .Reparent(rulers)
+        .BuildRectangle();
+    }
+
+    let roll_marker_left = inkWidgetBuilder.inkRectangle(n"roll_marker_left")
+      .Tint(ThemeColors.ElectricBlue())
+      .Opacity(0.5)
+      .Size(3.0, 80.0)
+      .Anchor(0.5, 0.0)
+      .Reparent(rulers)
+      .BuildRectangle();
+
+    let roll_marker_right = inkWidgetBuilder.inkRectangle(n"roll_marker_right")
+      .Tint(ThemeColors.ElectricBlue())
+      .Opacity(0.5)
+      .Size(3.0, 80.0)
+      .Anchor(0.5, 0.0)
+      .Reparent(rulers)
+      .BuildRectangle();
+
+    
+
+    // let ruler_right = inkWidgetBuilder.inkImage(n"ruler_right")
+    //   .Atlas(r"base\\gameplay\\gui\\widgets\\turret_hud\\turret_hud.inkatlas")
+    //   .Part(n"ruler")
+    //   .Tint(ThemeColors.ElectricBlue())
+    //   .Opacity(0.1)
+    //   // .Margin(-85.0, -193.5, 0.0, -193.5)
+		//   .Size(85.0, 387.0)
+    //   .Anchor(0.5, 0.5)
+    //   // .Scale(2.0, 2.0)
+    //   .Reparent(this)
+    //   .BuildImage();
+
+    // let ruler_left = inkWidgetBuilder.inkImage(n"ruler_left")
+    //   .Atlas(r"base\\gameplay\\gui\\widgets\\turret_hud\\turret_hud.inkatlas")
+    //   .Part(n"ruler")
+    //   .Tint(ThemeColors.ElectricBlue())
+    //   .Opacity(0.1)
+    //   // .Margin(-85.0, -193.5, 0.0, -193.5)
+		//   .Size(85.0, 387.0)
+    //   .Anchor(0.5, 0.5)
+    //   // .Scale(2.0, 2.0)
+    //   .Reparent(this)
+    //   .BuildImage();
+
+    let scaler_right = inkWidgetBuilder.inkImage(n"scaler_right")
+      .Atlas(r"base\\gameplay\\gui\\widgets\\turret_hud\\turret_hud.inkatlas")
+      .Part(n"scaler")
+      .Tint(ThemeColors.ElectricBlue())
+      .Opacity(0.1)
+      // .Margin(-109.0, -362.5, 0.0, -362.5)
+		  .Size(109.0, 725.0)
+      .Anchor(-5.85, 0.5)
+      .Reparent(this)
+      .BuildImage();
+
+    let scaler_left = inkWidgetBuilder.inkImage(n"scaler_left")
+      .Atlas(r"base\\gameplay\\gui\\widgets\\turret_hud\\turret_hud.inkatlas")
+      .Part(n"scaler")
+      .Tint(ThemeColors.ElectricBlue())
+      .Opacity(0.1)
+      // .Margin(109.0, -362.5, 0.0, -362.5)
+		  .Size(109.0, 725.0)
+      .Anchor(-5.85, 0.5)
+      .Reparent(this)
+      .BuildImage();
+
+
 
     // let fps = new inkText();
     // fps.SetName(n"fps");
@@ -51,12 +147,14 @@ public class FlightControlUI extends inkCanvas {
     // fps.SetMargin(new inkMargin(0.0, 0.0, 0.0, 0.0));
     // fps.SetSize(220.0, 24.0);
 
-    let info = new inkCanvas();
-		info.SetName(n"info");
-		info.SetSize(500.0, 200.0);
-    info.Reparent(this);
-		info.SetAnchor(inkEAnchor.CenterLeft);
-    info.SetMargin(new inkMargin(0.0, 0.0, 0.0, 0.0));
+    let info = inkWidgetBuilder.inkCanvas(n"info")
+      .Size(500.0, 200.0)
+      .Reparent(this)
+	    .Anchor(inkEAnchor.CenterLeft)
+      .Margin(0.0, 0.0, 0.0, 0.0)
+      .BuildCanvas();
+    info.SetEffectEnabled(inkEffectType.Glitch, n"Glitch_0", true);
+    info.SetEffectParamValue(inkEffectType.Glitch, n"Glitch_0", n"intensity", 1.0);
 		// altitude.SetAnchorPoint(new Vector2(0.5, 0.5));
 
     let top = new inkHorizontalPanel();
@@ -65,88 +163,126 @@ public class FlightControlUI extends inkCanvas {
     top.Reparent(info);
 		// top.SetHAlign(inkEHorizontalAlign.Left);
 		// top.SetVAlign(inkEVerticalAlign.Top);
-    top.SetMargin(new inkMargin(0.0, 0.0, 0.0, 0.0));
+    top.SetMargin(0.0, 0.0, 0.0, 0.0);
 
-    let vehicle_manufacturer = new inkImage();
-		vehicle_manufacturer.SetName(n"manufacturer");
-    vehicle_manufacturer.Reparent(top);
     let manufacturer = this.stats.vehicle.GetRecord().Manufacturer().EnumName();
     let iconRecord = TweakDBInterface.GetUIIconRecord(TDBID.Create("UIIcon." + manufacturer));
-    vehicle_manufacturer.SetTexturePart(iconRecord.AtlasPartName());
-    vehicle_manufacturer.SetAtlasResource(iconRecord.AtlasResourcePath());
-		vehicle_manufacturer.SetSize(174.0, 18.0);
-    vehicle_manufacturer.SetMargin(new inkMargin(0.0, 0.0, 0.0, 0.0));
-		vehicle_manufacturer.SetOpacity(1.0);
-		vehicle_manufacturer.SetTintColor(ThemeColors.ElectricBlue());
-		vehicle_manufacturer.SetAnchor(inkEAnchor.LeftFillVerticaly);
+    let vehicle_manufacturer = inkWidgetBuilder.inkImage(n"manufacturer")
+      .Reparent(top)
+      .Part(iconRecord.AtlasPartName())
+      .Atlas(iconRecord.AtlasResourcePath())
+		  .Size(174.0, 18.0)
+      .Margin(20.0, 0.0, 0.0, 0.0)
+		  .Opacity(1.0)
+		  .Tint(ThemeColors.Bittersweet())
+		  .Anchor(inkEAnchor.LeftFillVerticaly)
+      .BuildImage();
 
-    let fluff = new inkImage();
-		fluff.SetName(n"fluff");
-    fluff.Reparent(top);
-    fluff.SetAtlasResource(r"base\\gameplay\\gui\\fullscreen\\common\\general_fluff.inkatlas");
-    fluff.SetTexturePart(n"fluff_01");
-		fluff.SetSize(174.0, 18.0);
-    fluff.SetMargin(new inkMargin(10.0, 0.0, 0.0, 0.0));
-		fluff.SetOpacity(1.0);
-		fluff.SetTintColor(ThemeColors.ElectricBlue());
-		fluff.SetAnchor(inkEAnchor.LeftFillVerticaly);
+    let fluff = inkWidgetBuilder.inkImage(n"fluff")
+      .Atlas(r"base\\gameplay\\gui\\fullscreen\\common\\general_fluff.inkatlas")
+      .Part(n"fluff_01")
+      .Tint(ThemeColors.Bittersweet())
+      .Opacity(1.0)
+      .Margin(10.0, 0.0, 0.0, 0.0)
+		  .Size(174.0, 18.0)
+      .Anchor(inkEAnchor.LeftFillVerticaly)
+      .Reparent(top)
+      .BuildImage();
 
-    let panel = new inkFlex();
-		panel.SetName(n"panel");
-    panel.SetMargin(new inkMargin(0.0, 24.0, 0.0, 0.0));
-    panel.SetPadding(10.0, 10.0, 10.0, 10.0);
-		panel.SetFitToContent(true);
-    panel.Reparent(info);
-		panel.SetAnchor(inkEAnchor.Fill);
+    let fluff2 = inkWidgetBuilder.inkImage(n"fluff2")
+      .Atlas(r"base\\gameplay\\gui\\fullscreen\\common\\general_fluff.inkatlas")
+      .Part(n"p20_sq_element")
+      .Tint(ThemeColors.Bittersweet())
+      .Opacity(1.0)
+      .Margin(10.0, 0.0, 0.0, 0.0)
+		  .Size(18.0, 18.0)
+      .Anchor(inkEAnchor.LeftFillVerticaly)
+      .Reparent(top)
+      .BuildImage();
+
+    let panel = inkWidgetBuilder.inkFlex(n"panel")
+      .Margin(0.0, 24.0, 0.0, 0.0)
+      .Padding(10.0, 10.0, 10.0, 10.0)
+		  .FitToContent(true)
+      .Reparent(info)
+		  .Anchor(inkEAnchor.Fill)
+      .BuildFlex();
     
-    let altitude_background = new inkImage();
-		altitude_background.SetName(n"background");
-    altitude_background.Reparent(panel);
-		altitude_background.SetAnchor(inkEAnchor.Fill);
-    altitude_background.SetAtlasResource(r"base\\gameplay\\gui\\common\\shapes\\atlas_shapes_sync.inkatlas");
-		altitude_background.SetTexturePart(n"frame_top_bg");
-		altitude_background.SetNineSliceScale(true);
-    altitude_background.SetMargin(new inkMargin(0.0, 0.0, 0.0, 0.0));
-		altitude_background.SetTintColor(ThemeColors.ElectricBlue());
-		altitude_background.SetOpacity(0.1);
-    // altitude_background.BindProperty(n"tintColor", n"Briefings.BackgroundColour");
+    let altitude_background = inkWidgetBuilder.inkImage(n"background")
+      .Reparent(panel)
+      .Anchor(inkEAnchor.Fill)
+      .Atlas(r"base\\gameplay\\gui\\common\\shapes\\atlas_shapes_sync.inkatlas")
+      .Part(n"frame_top_bg")
+      .NineSliceScale(true)
+      .Margin(0.0, 0.0, 0.0, 0.0)
+      .Tint(ThemeColors.ElectricBlue())
+      .Opacity(0.005)
+      .BuildImage();
+    // .BindProperty(n"tintColor", n"Briefings.BackgroundColour");
 
-    let altitude_frame = new inkImage();
-		altitude_frame.SetName(n"frame");
-    altitude_frame.Reparent(panel);
-		altitude_frame.SetAnchor(inkEAnchor.Fill);
-    altitude_frame.SetAtlasResource(r"base\\gameplay\\gui\\common\\shapes\\atlas_shapes_sync.inkatlas");
-		altitude_frame.SetTexturePart(n"frame_top_fg");
-		altitude_frame.SetNineSliceScale(true);
-    altitude_frame.SetMargin(new inkMargin(0.0, 0.0, 0.0, 0.0));
-		altitude_frame.SetTintColor(ThemeColors.ElectricBlue());
-		altitude_frame.SetOpacity(1.0);
-    // altitude_frame.BindProperty(n"tintColor", n"Briefings.BackgroundColour");
-		// altitude_frame.SetOpacity(0.8);
-
-
-    // let altitude_lines = new inkImage();
-		// altitude_lines.SetName(n"lines");
-		// altitude_lines.Reparent(panel);
-		// altitude_lines.SetAtlasResource(r"base\\gameplay\\gui\\widgets\\crosshair\\smart_rifle\\arghtlas_smargun.inkatlas");
-		// altitude_lines.SetTexturePart(n"smartFluffVentHori");
-		// altitude_lines.SetSize(24.0, 18.0);
-    // altitude_lines.SetAnchor(inkEAnchor.TopLeft);
-    // // altitude_lines.SetMargin(new inkMargin(25.0, 18.0, 0.0, 0.0));
-		// altitude_lines.SetOpacity(1.0);
-		// altitude_lines.SetTintColor(ThemeColors.ElectricBlue());
+    let altitude_frame = inkWidgetBuilder.inkImage(n"frame")
+      .Reparent(panel)
+		  .Anchor(inkEAnchor.LeftFillVerticaly)
+      .Atlas(r"base\\gameplay\\gui\\widgets\\crosshair\\smart_rifle\\arghtlas_smargun.inkatlas")
+		  .Part(n"smartFrameTopLeft")
+		  .NineSliceScale(true)
+      .Margin(new inkMargin(0.0, 0.0, 0.0, 0.0))
+		  .Tint(ThemeColors.ElectricBlue())
+		  .Opacity(1.0)
+      .BuildImage();
+    //  .BindProperty(n"tintColor", n"Briefings.BackgroundColour");
     
-    let altitude_text = new inkText();
-    altitude_text.SetName(n"text");
-    altitude_text.Reparent(panel);
-    altitude_text.SetFontFamily("base\\gameplay\\gui\\fonts\\orbitron\\orbitron.inkfontfamily");
-    altitude_text.SetFontStyle(n"Medium");
-    altitude_text.SetFontSize(20);
-    altitude_text.SetLetterCase(textLetterCase.UpperCase);
-    altitude_text.SetTintColor(ThemeColors.ElectricBlue());
-    altitude_text.SetText("You shouldn't see this!");
-    altitude_text.SetMargin(new inkMargin(30.0, 0.0, 0.0, 0.0));
-    // altitude_text.SetSize(220.0, 24.0);
+    let altitude_text = inkWidgetBuilder.inkText(n"text")
+      .Reparent(panel)
+      .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
+      .FontSize(20)
+      .LetterCase(textLetterCase.UpperCase)
+      .Tint(ThemeColors.ElectricBlue())
+      .Text("You shouldn't see this!")
+      .Margin(20.0, 15.0, 0.0, 0.0)
+      // .Overflow(textOverflowPolicy.AdjustToSize)
+      .BuildText();
+  }
+
+  public func Show() -> Void {
+    FlightControl.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControl.ShouldShowUI, true, true);
+    FlightControl.GetInstance().GetBlackboard().SignalBool(GetAllBlackboardDefs().FlightControl.ShouldShowUI);
+    
+    let startValue = this.GetOpacity();
+    let duration = 1.0 - startValue;
+    if IsDefined(this.m_rootAnim) && this.m_rootAnim.IsPlaying() {
+      this.m_rootAnim.Stop();
+    };
+    this.m_rootAnim = this.PlayAnimation(InkAnimHelper.GetDef_Transparency(startValue, 1.0, duration * 2.0, 0.0, inkanimInterpolationType.Quadratic, inkanimInterpolationMode.EasyInOut));
+
+    let animSelect = new inkAnimDef();
+    let animEffectInterp = new inkAnimEffect();
+    animEffectInterp.SetStartDelay(0.00);
+    animEffectInterp.SetEffectType(inkEffectType.Glitch);
+    animEffectInterp.SetEffectName(n"Glitch_0");
+    animEffectInterp.SetParamName(n"intensity");
+    animEffectInterp.SetStartValue(1.0);
+    animEffectInterp.SetEndValue(0.0);
+    animEffectInterp.SetDuration(duration * 2.0);
+    animSelect.AddInterpolator(animEffectInterp);
+    (this.GetWidget(n"info") as inkCanvas).PlayAnimation(animSelect);
+  }
+
+  public func Hide() -> Void {    
+    let startValue = this.GetOpacity();
+    let duration = startValue;
+    if IsDefined(this.m_rootAnim) && this.m_rootAnim.IsPlaying() {
+      this.m_rootAnim.Stop();
+    };
+    this.m_rootAnim = this.PlayAnimation(InkAnimHelper.GetDef_Transparency(startValue, 0.0, duration * 0.5, 0.0, inkanimInterpolationType.Quadratic, inkanimInterpolationMode.EasyInOut));
+    this.m_rootAnim.RegisterToCallback(inkanimEventType.OnFinish, this, n"OnHideAnimationCompleted");
+  } 
+   
+  protected cb func OnHideAnimationCompleted(anim: ref<inkAnimProxy>) -> Bool {
+    if (!FlightControl.GetInstance().IsActive()) {
+      FlightControl.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControl.ShouldShowUI, false, true);
+      FlightControl.GetInstance().GetBlackboard().SignalBool(GetAllBlackboardDefs().FlightControl.ShouldShowUI);
+    }
   }
 
   public func Update(timeDelta: Float) -> Void {
@@ -154,18 +290,50 @@ public class FlightControlUI extends inkCanvas {
     let cameraSys: ref<CameraSystem> = GameInstance.GetCameraSystem(FlightControl.GetInstance().gameInstance);
     cameraSys.GetActiveCameraWorldTransform(cameraTransform);
     // (this.flightControlUI.GetWidget(n"fps") as inkText).SetText(FloatToStringPrec(1.0 / timeDelta));
-    (this.GetWidget(n"info/panel/text") as inkText).SetText("< " + FloatToStringPrec(this.stats.d_position.X, 1) + ", " + FloatToStringPrec(this.stats.d_position.Y, 1) + ", " + FloatToStringPrec(this.stats.d_position.Z, 1) + " >");
+    (this.GetWidget(n"info/panel/text") as inkText).SetText("Location: < " + FloatToStringPrec(this.stats.d_position.X, 1)
+      + ", " + FloatToStringPrec(this.stats.d_position.Y, 1) + ", " + FloatToStringPrec(this.stats.d_position.Z, 1) + " >");
+      // + "Velocity: <" + FloatToStringPrec(this.stats.d_velocity.X, 1)
+      // + ", " + FloatToStringPrec(this.stats.d_velocity.Y, 1) + ", " + FloatToStringPrec(this.stats.d_velocity.Z, 1) + " >");
     this.GetWidget(n"info").SetTranslation(this.ScreenXY(this.stats.d_position + Transform.GetRight(cameraTransform) * 2.5));
 
     this.GetWidget(n"arrow_left").SetTranslation(this.ScreenXY(this.stats.d_position - this.stats.d_right * 2));
     this.GetWidget(n"arrow_left").SetRotation(this.ScreenAngle(this.stats.d_position, this.stats.d_position - this.stats.d_right * 2));
     this.GetWidget(n"arrow_left").SetOpacity(this.OpacityForPosition(this.stats.d_position - this.stats.d_right * 2));
-    this.GetWidget(n"arrow_left").SetEffectParamValue(inkEffectType.Glitch, n"Glitch_0", n"intensity", 1.0 - this.OpacityForPosition(this.stats.d_position - this.stats.d_right * 2));
+    // this.GetWidget(n"arrow_left").SetEffectParamValue(inkEffectType.Glitch, n"Glitch_0", n"intensity", 1.0 - this.OpacityForPosition(this.stats.d_position - this.stats.d_right * 2));
 
     this.GetWidget(n"arrow_right").SetTranslation(this.ScreenXY(this.stats.d_position + this.stats.d_right * 2));
     this.GetWidget(n"arrow_right").SetRotation(this.ScreenAngle(this.stats.d_position, this.stats.d_position + this.stats.d_right * 2));
     this.GetWidget(n"arrow_right").SetOpacity(this.OpacityForPosition(this.stats.d_position + this.stats.d_right * 2));
-    this.GetWidget(n"arrow_right").SetEffectParamValue(inkEffectType.Glitch, n"Glitch_0", n"intensity", 1.0 - this.OpacityForPosition(this.stats.d_position + this.stats.d_right * 2));
+    // this.GetWidget(n"arrow_right").SetEffectParamValue(inkEffectType.Glitch, n"Glitch_0", n"intensity", 1.0 - this.OpacityForPosition(this.stats.d_position + this.stats.d_right * 2));
+ 
+ 
+    // this.GetWidget(n"ruler_left").SetTranslation(this.ScreenXY(this.stats.d_position - Transform.GetUp(cameraTransform) * 2.0));
+    // this.GetWidget(n"ruler_left").SetRotation(this.ScreenAngle(this.stats.d_position, this.stats.d_position - Transform.GetUp(cameraTransform) * 2.0));
+ 
+    // this.GetWidget(n"ruler_right").SetTranslation(this.ScreenXY(this.stats.d_position + Transform.GetUp(cameraTransform) * 2.0));
+    // this.GetWidget(n"ruler_right").SetRotation(this.ScreenAngle(this.stats.d_position, this.stats.d_position + Transform.GetUp(cameraTransform) * 2.0));
+
+
+    // let marker_vector = Vector4.RotateAxis(Transform.GetRight(cameraTransform), Transform.GetForward(cameraTransform), Deg2Rad(Vector4.GetAngleBetween(this.stats.d_right, new Vector4(0.0, 0.0, 1.0, 0.0))));
+    this.GetWidget(n"rulers").SetTranslation(this.ScreenXY(this.stats.d_position));
+
+    let mark = Vector4.GetAngleBetween(this.stats.d_right, new Vector4(0.0, 0.0, 1.0, 0.0)) + 90;
+
+    this.GetWidget(n"rulers/roll_marker_left").SetTranslation(CosF(Deg2Rad(mark - 90.0)) * this.m_markerRadius, SinF(Deg2Rad(mark - 90.0)) * this.m_markerRadius);
+    this.GetWidget(n"rulers/roll_marker_left").SetRotation(mark);
+
+    this.GetWidget(n"rulers/roll_marker_right").SetTranslation(CosF(Deg2Rad(mark + 90.0)) * this.m_markerRadius, SinF(Deg2Rad(mark + 90.0)) * this.m_markerRadius);
+    this.GetWidget(n"rulers/roll_marker_right").SetRotation(mark + 180.0);
+ 
+    // this.GetWidget(n"roll_marker_right").SetTranslation(this.ScreenXY(this.stats.d_position + marker_vector * 2.0));
+    // this.GetWidget(n"roll_marker_right").SetRotation(this.ScreenAngle(this.stats.d_position, this.stats.d_position + marker_vector));
+ 
+    // this.GetWidget(n"scaler_left").SetTranslation(this.ScreenXY(this.stats.d_position - Transform.GetRight(cameraTransform) * 4.0));
+    this.GetWidget(n"scaler_left").SetRotation(this.ScreenAngle(this.stats.d_position, this.stats.d_position - Transform.GetRight(cameraTransform)));
+ 
+    // this.GetWidget(n"scaler_right").SetTranslation(this.ScreenXY(this.stats.d_position + Transform.GetRight(cameraTransform) * 4.0));
+    this.GetWidget(n"scaler_right").SetRotation(this.ScreenAngle(this.stats.d_position, this.stats.d_position + Transform.GetRight(cameraTransform)));
+ 
   }
 
   public func OpacityForPosition(position: Vector4) -> Float {

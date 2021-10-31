@@ -120,9 +120,9 @@ protected cb func OnMountChanged(mounted: Bool) -> Bool {
     wrappedMethod(mounted);
     if IsDefined(this.m_Player) && this.m_Player.IsControlledByLocalPeer() {
         if mounted {
-            this.m_flightControlActiveCallbackId = GetMountedVehicle(this.m_Player).GetBlackboard().RegisterListenerBool(GetAllBlackboardDefs().Vehicle.FlightActive, this, n"OnFlightActiveChanged");
+            this.m_flightControlActiveCallbackId = FlightControl.GetInstance().GetBlackboard().RegisterListenerBool(GetAllBlackboardDefs().FlightControl.ShouldShowUI, this, n"OnFlightActiveChanged");
         } else {
-            GetMountedVehicle(this.m_Player).GetBlackboard().UnregisterListenerBool(GetAllBlackboardDefs().Vehicle.FlightActive, this.m_flightControlActiveCallbackId);
+            FlightControl.GetInstance().GetBlackboard().UnregisterListenerBool(GetAllBlackboardDefs().FlightControl.ShouldShowUI, this.m_flightControlActiveCallbackId);
         }
     }
 }

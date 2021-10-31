@@ -65,7 +65,7 @@ public class PID {
     // if error < 0.01 || error * this.lastErrorFloat < 0.0 {
     //   this.integralFloat = 0.0;
     // } else {
-    this.integralFloat = ClampF(error * timeDelta + this.integralFloat, -10.0, 10.0);
+    this.integralFloat = ClampF(error * timeDelta + this.integralFloat, -100.0, 100.0) * 0.95;
     // }
     this.lastErrorFloat = error;
     return this.P * error + this.I * this.integralFloat + this.D * derivative;

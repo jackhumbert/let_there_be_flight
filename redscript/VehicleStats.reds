@@ -1,10 +1,10 @@
 public class VehicleStats {
-  public let vehicle: ref<VehicleObject>;
-  public let s_record: ref<Vehicle_Record>;
+  public let vehicle: wref<VehicleObject>;
+  public let s_record: wref<Vehicle_Record>;
   public let s_driveModelData: wref<VehicleDriveModelData_Record>;
-  public let s_engineData: ref<VehicleEngineData_Record>;
-  public let s_wheelDimensions: ref<VehicleWheelDimensionsSetup_Record>;
-  public let s_wheelDriving: ref<VehicleWheelDrivingSetup_Record>;
+  public let s_engineData: wref<VehicleEngineData_Record>;
+  public let s_wheelDimensions: wref<VehicleWheelDimensionsSetup_Record>;
+  public let s_wheelDriving: wref<VehicleWheelDrivingSetup_Record>;
   public let s_mass: Float;
   public let s_centerOfMassOffset: Vector4;
   public let s_momentOfInertia: Vector4;
@@ -25,10 +25,13 @@ public class VehicleStats {
 
   private let reset: Bool;
 
-  public static func Create(vehicle: ref<VehicleObject>) -> ref<VehicleStats> {
+  public static func Create(vehicle: wref<VehicleObject>) -> ref<VehicleStats> {
     let instance: ref<VehicleStats> = new VehicleStats();
     instance.vehicle = vehicle;
+    instance.reset = false;
     instance.UpdateStatic();
+    instance.d_position = instance.vehicle.GetWorldPosition() + instance.s_centerOfMassOffset;
+    // instance.d_position = Vector4.EmptyVector();
     return instance;
   }
 
@@ -72,7 +75,11 @@ public class VehicleStats {
     this.d_forward = Quaternion.GetForward(this.d_orientation);
     this.d_right = Quaternion.GetRight(this.d_orientation);
     this.d_up = Quaternion.GetUp(this.d_orientation);
+    
+    
     this.d_velocity = this.vehicle.GetLinearVelocity();
+
+
     this.d_speed = Vector4.Length(this.d_velocity);
     this.d_speedRatio = this.d_speed / 100.0;
     this.d_speedRatioSquared = this.d_speedRatio * this.d_speedRatio;
@@ -81,12 +88,14 @@ public class VehicleStats {
     this.d_direction2D = Vector4.Normalize2D(this.d_velocity);
 
     let position = this.vehicle.GetWorldPosition() + this.s_centerOfMassOffset;
-    // if !this.reset {
-      this.reset = false;
-      // try to smooth out the position some
-      // this.d_position = 0.95 * this.d_position + 0.05 * position;
+    // if this.reset {
+    //   this.reset = false;
+    //   this.d_position = position;
     // } else {
-      this.d_position = position;
+      // try to smooth out the position some
+      // this.d_position = 0.99999 * this.d_position + 0.00001 * position;
+      this.d_position = Vector4.Interpolate(this.d_position, position, 0.5);
+      // this.d_position = this.d_position;
     // }
   }
 }

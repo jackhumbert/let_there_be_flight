@@ -48,9 +48,6 @@ registerForEvent('onInit', function()
 
     TweakDB:SetFlat('vehicles.showDebugUi', true)
 
-    TweakDB:SetFlat('Vehicle.Voight.enumComment', '')
-    TweakDB:SetFlat('Vehicle.Voight.enumName', 'Voight')
-
 	-- GameHUD.Initialize()
 
 	Observe('FlightControl', 'Activate', function(self)

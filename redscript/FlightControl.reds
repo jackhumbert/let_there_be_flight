@@ -28,32 +28,6 @@ enum FlightControlMode {
 
 // LogChannel(n"DEBUG", ToString(system.GetData()));
 
-// enum gamedataVehicleModel {
-//   Aerondight = 0,
-//   Alvarado = 1,
-//   Basilisk = 2,
-//   Bratsk = 3,
-//   Colby = 4,
-//   Columbus = 5,
-//   Cortes = 6,
-//   Emperor = 7,
-//   Galena = 8,
-//   GalenaNomad = 9,
-//   Kusanagi = 10,
-//   Mackinaw = 11,
-//   Maimai = 12,
-//   Octant = 13,
-//   Shion = 14,
-//   Supron = 15,
-//   Thrax = 16,
-//   Turbo = 17,
-//   Type66 = 18,
-//   Zeya = 19,
-//   Voight = 20,
-//   Count = 21,
-//   Invalid = 22,
-// }
-
 public class FlightControlAudioStats {
   public let volume: Float;
   public let playerPosition: Vector4;
@@ -102,17 +76,16 @@ public class FlightControlAudioStats {
 // }
 
 // Singleton instance with player lifetime
-public class FlightControl {
+public class FlightControl  {
   private let gameInstance: GameInstance;
-  // public let m_flightHUDGameController: ref<FlightHUDGameController>;
-  // public let m_flightHUDLogicController: ref<FlightHUDLogicController>;
+  private let m_blackboard: ref<IBlackboard>;
   private let stats: ref<VehicleStats>;
   private let ui: ref<FlightControlUI>;
   public final func SetUI(ui: ref<FlightControlUI>) {
     this.ui = ui;
   }
   public let audioStats: ref<FlightControlAudioStats>;
-  public final const func GetVehicle() -> ref<VehicleObject> {
+  public final const func GetVehicle() -> wref<VehicleObject> {
     if !Equals(this.stats, null) {
       return this.stats.vehicle;
     } else {
@@ -176,6 +149,7 @@ public class FlightControl {
 
   private func Initialize(player: ref<PlayerPuppet>) {
     this.gameInstance = player.GetGame();
+    // this.CreateBlackboard();
     this.enabled = false;
     this.active = false;
     this.showOptions = false;
@@ -219,6 +193,14 @@ public class FlightControl {
 
     this.audioStats = FlightControlAudioStats.Create();  
   }
+
+  public const func GetBlackboard() -> ref<IBlackboard> {
+    return GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().FlightControl);
+  }
+
+  // protected func CreateBlackboard() -> Void {
+  //   this.m_blackboard = IBlackboard.Create(GetAllBlackboardDefs().FlightControl);
+  // }
   
   public static func CreateInstance(player: ref<PlayerPuppet>) {
     let instance: ref<FlightControl> = new FlightControl();
@@ -231,6 +213,7 @@ public class FlightControl {
     // This weak reference is used as a global variable 
     // to access the mod instance anywhere
     GetAllBlackboardDefs().FlightControlInstance = instance;
+    // GetAllBlackboardDefs().FlightControl = instance.GetBlackboard() as FlightControlDef;
     LogChannel(n"DEBUG", "Flight Control Loaded");
   }
   
@@ -242,8 +225,8 @@ public class FlightControl {
     this.enabled = true;
     this.active = false;
     this.stats = VehicleStats.Create(vehicle);
-    this.GetVehicle().TurnOn(true);
-    this.GetVehicle().TurnEngineOn(true);
+    // this.GetVehicle().TurnOn(true);
+    // this.GetVehicle().TurnEngineOn(true);
     this.SetupActions();
     this.ui.Setup(this.stats);
 
@@ -282,8 +265,8 @@ public class FlightControl {
     } else {
       this.Activate();
     }
-    this.GetVehicle().GetBlackboard().SetBool(GetAllBlackboardDefs().Vehicle.FlightActive, this.active);
-    this.GetVehicle().GetBlackboard().SignalBool(GetAllBlackboardDefs().Vehicle.FlightActive);
+    this.GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControl.IsActive, this.active, true);
+    this.GetBlackboard().SignalBool(GetAllBlackboardDefs().FlightControl.IsActive);
     return this.active;
   }
   
@@ -294,20 +277,33 @@ public class FlightControl {
     this.pitchPID.Reset();
     this.rollPID.Reset();
     this.yawPID.Reset();
-    (this.GetVehicle().GetPS() as VehicleComponentPS).SetThrusterState(false);
+
+    this.pitch.Reset();
+    this.roll.Reset();
+    this.yaw.Reset();
+    this.surgePos.Reset();
+    this.surgeNeg.Reset();
+    this.lift.Reset();
+    this.brake.Reset();
+    // (this.GetVehicle().GetPS() as VehicleComponentPS).SetThrusterState(false);
+    // (this.GetVehicle().GetPS() as VehicleComponentPS).SetIsDestroyed(true);
+
+    // let interactionEvent: ref<InteractionSetEnableEvent> = new InteractionSetEnableEvent();
+    // interactionEvent.enable = false;
+    // interactionEvent.layer = n"";
+    // this.GetVehicle().QueueEvent(interactionEvent);
+
+    // these stop engine noises
     this.GetVehicle().TurnEngineOn(false);
     this.GetVehicle().TurnOn(false);
 
+    // this disables engines noises from starting
+    this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetState(vehicleEState.Disabled);
+
+    // this.GetVehicle().GetVehiclePS().SetIsPlayerVehicle(false);
+
     this.stats.Reset();
-    if IsDefined(this.ui) {
-      let fadeInAnim = new inkAnimTransparency();
-      fadeInAnim.SetStartTransparency(0.0);
-      fadeInAnim.SetEndTransparency(1.0);
-      fadeInAnim.SetDuration(0.200);
-		  let activationAnim = new inkAnimDef();
-		  activationAnim.AddInterpolator(fadeInAnim);
-      this.ui.PlayAnimation(activationAnim);
-    }
+    this.ui.Show();
   
       // stateContext.SetPermanentBoolParameter(n"ForceIdleVehicle", true, true);
     // this.GetVehicle().GetBlackboard().SetVariant(GetAllBlackboardDefs().UI_ActiveVehicleData.VehPlayerStateData, ToVariant(3));
@@ -370,23 +366,26 @@ public class FlightControl {
   private func Deactivate(silent: Bool) -> Void {
     this.active = false;
     this.SetupActions();
+
+    // (this.GetVehicle().GetPS() as VehicleComponentPS).SetIsDestroyed(false);
+    // let interactionEvent: ref<InteractionSetEnableEvent> = new InteractionSetEnableEvent();
+    // interactionEvent.enable = true;
+    // interactionEvent.layer = n"";
+    // this.GetVehicle().QueueEvent(interactionEvent);
     // (this.GetVehicle().GetPS() as VehicleComponentPS).SetThrusterState(false);
     this.GetVehicle().TurnOn(true);
     this.GetVehicle().TurnEngineOn(true);
+
+    this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetState(vehicleEState.On);
+
+    // this.GetVehicle().GetVehiclePS().SetIsPlayerVehicle(true);
+
     // StatusEffectHelper.RemoveStatusEffect(GetPlayer(this.gameInstance), t"GameplayRestriction.NoCameraControl");
     if !silent {
       this.ShowSimpleMessage("Flight Control Disengaged");
       GameInstance.GetAudioSystem(this.gameInstance).PlayFlightControlSound(n"ui_hacking_access_denied");
     }
-    if IsDefined(this.ui) {
-      let fadeOutAnim = new inkAnimTransparency();
-      fadeOutAnim.SetStartTransparency(1.0);
-      fadeOutAnim.SetEndTransparency(0.0);
-      fadeOutAnim.SetDuration(0.200);
-		  let deactivationAnim = new inkAnimDef();
-		  deactivationAnim.AddInterpolator(fadeOutAnim);
-      this.ui.PlayAnimation(deactivationAnim);
-    }
+    this.ui.Hide();
 
     // GetPlayer(this.gameInstance).GetPlayerStateMachineBlackboard().SetInt(GetAllBlackboardDefs().PlayerStateMachine.Vehicle, EnumInt(gamePSMVehicle.Driving));
 
@@ -902,8 +901,18 @@ public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, sc
   FlightControl.GetInstance().OnUpdate(timeDelta, stateContext, scriptInterface);
 }
 
-@addField(VehicleDef)
-public let FlightActive: BlackboardID_Bool;
+public class FlightControlDef extends BlackboardDefinition {
+
+  public let IsActive: BlackboardID_Bool;
+  public let ShouldShowUI: BlackboardID_Bool;
+
+  public final const func AutoCreateInSystem() -> Bool {
+    return true;
+  }
+}
+
+@addField(AllBlackboardDefinitions)
+public let FlightControl: ref<FlightControlDef>;
 
 // Hook into corresponding controller
 @wrapMethod(hudCarController)
@@ -921,22 +930,22 @@ private let m_flightControlStatus: wref<inkText>;
 @wrapMethod(hudCarController)
 private final func RegisterToVehicle(register: Bool) -> Void {
   wrappedMethod(register);
-  let vehicleBlackboard: wref<IBlackboard>;
+  let flightControlBlackboard: wref<IBlackboard>;
   let vehicle: ref<VehicleObject> = this.m_activeVehicle;
   if vehicle == null {
     return;
   };
-  vehicleBlackboard = vehicle.GetBlackboard();
-  if IsDefined(vehicleBlackboard) {
+  flightControlBlackboard = FlightControl.GetInstance().GetBlackboard();
+  if IsDefined(flightControlBlackboard) {
     if register {
       // GetRootWidget() returns root widget of base type inkWidget
       // GetRootCompoundWidget() returns root widget casted to inkCompoundWidget
       if !IsDefined(this.m_flightControlStatus) {
         this.m_flightControlStatus = FlightControl.HUDStatusSetup(this.GetRootCompoundWidget());
       }
-      this.m_flightActiveBBConnectionId = vehicleBlackboard.RegisterListenerBool(GetAllBlackboardDefs().Vehicle.FlightActive, this, n"OnFlightActiveChanged");
+      this.m_flightActiveBBConnectionId = flightControlBlackboard.RegisterListenerBool(GetAllBlackboardDefs().FlightControl.IsActive, this, n"OnFlightActiveChanged");
     } else {
-      vehicleBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().Vehicle.FlightActive, this.m_flightActiveBBConnectionId);
+      flightControlBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().FlightControl.IsActive, this.m_flightActiveBBConnectionId);
     };
   };
 }
