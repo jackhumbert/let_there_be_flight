@@ -5,6 +5,31 @@ enum FlightControlMode {
   Drone = 1
 } 
 
+// @addMethod(Vehicle_Record)
+// public final native func FlightControl() -> String;
+
+// @addMethod(TweakDBInterface)
+// public final static func GetFlightControlRecord(path: TweakDBID) -> ref<FlightControl_Record> {
+//   let record = new FlightControl_Record();
+//   let mass_path = path;
+//   TDBID.Prepend(mass_path, t"FlightControl.");
+//   TDBID.Append(mass_path, t".mass");
+//   record.mass = TweakDBInterface.GetFloat(mass_path, 0.0);
+//   let comOffset_position_path = path;
+//   TDBID.Prepend(comOffset_position_path, t"FlightControl.");
+//   TDBID.Append(comOffset_position_path, t".comOffset_position");
+//   record.comOffset_position = TweakDBInterface.GetVector3(comOffset_position_path, new Vector3(0.0, 0.0, 0.0));
+//   let comOffset_orientation_path = path;
+//   TDBID.Prepend(comOffset_orientation_path, t"FlightControl.");
+//   TDBID.Append(comOffset_orientation_path, t".comOffset_orientation");
+//   record.comOffset_orientation = TweakDBInterface.GetQuaternion(comOffset_orientation_path, new Quaternion(0.0, 0.0, 0.0, 0.0));
+//   let inertia_path = path;
+//   TDBID.Prepend(inertia_path, t"FlightControl.");
+//   TDBID.Append(inertia_path, t".inertia");
+//   record.inertia = TweakDBInterface.GetVector3(inertia_path, new Vector3(0.0, 0.0, 0.0));
+//   return record;
+// }
+
 // this might work better
 // module MyMod
 
@@ -110,11 +135,11 @@ public class FlightControl  {
   public let liftFactor: Float;
   public let surgePos: ref<PID>;
   public let surgeNeg: ref<PID>;
+  public let surgeFactor: Float;
   public let roll: ref<PID>;
   public let pitch: ref<PID>;
   public let yaw: ref<PID>;
   public let yawFactor: Float;
-  public let yawCorrectionFactor: Float;
   public let distance: Float;
   public let distanceEase: Float;
   public let normal: Vector4;
@@ -127,8 +152,11 @@ public class FlightControl  {
   public let hoverFactor: Float;
   public let hover: ref<PID>;
   public let pitchPID: ref<PID>;
+  public let pitchCorrectionFactor: Float;
   public let rollPID: ref<PID>;
+  public let rollCorrectionFactor: Float;
   public let yawPID: ref<PID>;
+  public let yawCorrectionFactor: Float;
   public let brakeFactor: Float;
   public let fwtfCorrection: Float;
   public let pitchWithLift: Float;
@@ -158,36 +186,42 @@ public class FlightControl  {
     this.liftFactor = 15.0;
     this.surgePos = PID.Create(0.04, 0.0, 0.0, 0.0);
     this.surgeNeg = PID.Create(0.04, 0.0, 0.0, 0.0);
+    this.surgeFactor = 0.4;
     this.roll = PID.Create(0.5, 0.0, 0.0, 0.0);
     this.pitch = PID.Create(0.5, 0.0, 0.0, 0.0);
     this.yaw = PID.Create(0.02, 0.0, 0.0, 0.0);
-    this.yawFactor = 8.0;
-    this.yawCorrectionFactor = 10.0;
+    this.yawFactor = 1.0;
     this.distance = 0.0;
     this.distanceEase = 0.5;
     this.normal = new Vector4(0.0, 0.0, 1.0, 0.0);
     this.normalEase = 0.01;
-    this.airResistance = 2.0;
+    this.airResistance = 0.005;
     this.hoverHeight = 3.50;
     this.maxHoverHeight = 7.0;
-    this.hoverFactor = 4.0;
+    this.hoverFactor = 0.5;
     this.hover = PID.Create(0.1, 0.01, 0.05);
     this.pitchPID = PID.Create(0.5, 0.05, 0.1);
+    this.pitchCorrectionFactor = 10.0;
     this.rollPID = PID.Create(0.5, 0.05, 0.1);
+    this.rollCorrectionFactor = 10.0;
     this.yawPID = PID.Create(0.5, 0.5, 0.5);
-    this.brakeFactor = 250.0;
+    this.yawCorrectionFactor = 2.0;
+    this.brakeFactor = 0.02;
     // this.lookAheadMax = 10.0;
-    this.lookAheadMax = 0.0;
-    this.lookAheadMin = 1.0;
+    this.lookAheadMax = 0.1;
+    this.lookAheadMin = 0.1;
     this.lookDown = new Vector4(0.0, 0.0, -this.maxHoverHeight - 10.0, 0.0);
     this.fwtfCorrection = 0.0;
-    this.pitchWithLift = -0.3;
+    // this.pitchWithLift = -0.3;
+    this.pitchWithLift = 0.0;
     this.rollWithYaw = 0.15;
     this.swayWithYaw = 0.5;
-    this.surgeOffset = 0.5;
+    // this.surgeOffset = 0.5;
+    this.surgeOffset = 0.0;
     // this.brakeOffset = 0.5;
     this.brakeOffset = 0.0;
-    this.velocityPointing = 0.5;
+    // this.velocityPointing = 0.5;
+    this.velocityPointing = 0.0;
     this.hovering = true;
     this.referenceZ = 0.0;
 
@@ -297,8 +331,11 @@ public class FlightControl  {
     this.GetVehicle().TurnEngineOn(false);
     this.GetVehicle().TurnOn(false);
 
-    // this disables engines noises from starting
+    // this disables engines noises from starting, but also prevents wheels from moving
+    // something that only stops engine noises would be preferred, or this could be toggled
+    // when close to the ground, to make transitions easier
     this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetState(vehicleEState.Disabled);
+    // LogChannel(n"DEBUG", ToString(TweakDBInterface.GetFlightControlRecord(this.GetVehicle().GetRecordID()).mass));
 
     // this.GetVehicle().GetVehiclePS().SetIsPlayerVehicle(false);
 
@@ -623,6 +660,11 @@ public class FlightControl  {
       // this finds vehicle too - need to figure out how to exclude it
       // QueryFilter.AddGroup(queryFilter, n"PlayerBlocker"); 
 
+      // let fl_position = (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_left_tire") as TargetingComponent).GetLocalToWorld().W;
+      // let fr_position = (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_right_tire") as TargetingComponent).GetLocalToWorld().W;
+      // let bl_position = (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_left_tire") as TargetingComponent).GetLocalToWorld().W;
+      // let br_position = (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_right_tire") as TargetingComponent).GetLocalToWorld().W;
+
       let findGround1: TraceResult = scriptInterface.RayCastWithCollisionFilter(this.stats.d_position + lookAheadPoint[0], this.stats.d_position + lookAheadPoint[0] + this.lookDown, queryFilter);
       let findGround2: TraceResult = scriptInterface.RayCastWithCollisionFilter(this.stats.d_position + lookAheadPoint[1], this.stats.d_position + lookAheadPoint[1] + this.lookDown, queryFilter);
       let findGround3: TraceResult = scriptInterface.RayCastWithCollisionFilter(this.stats.d_position + lookAheadPoint[2], this.stats.d_position + lookAheadPoint[2] + this.lookDown, queryFilter);
@@ -667,15 +709,15 @@ public class FlightControl  {
     }
 
     hoverCorrection = this.hover.GetCorrectionClamped(heightDifference, timeDelta, 1.0);
-    pitchCorrection = this.pitchPID.GetCorrectionClamped(Vector4.Dot(idealNormal, this.stats.d_forward) + liftValue * this.pitchWithLift, timeDelta, 1.0);
-    rollCorrection = this.rollPID.GetCorrectionClamped(Vector4.Dot(idealNormal, this.stats.d_right), timeDelta, 1.0) + yawValue * this.rollWithYaw;
+    pitchCorrection = this.pitchPID.GetCorrectionClamped(Vector4.Dot(idealNormal, this.stats.d_forward) + liftValue * this.pitchWithLift, timeDelta, 1.0) + pitchValue / 10.0;
+    rollCorrection = this.rollPID.GetCorrectionClamped(Vector4.Dot(idealNormal, this.stats.d_right), timeDelta, 1.0) + yawValue * this.rollWithYaw + rollValue / 10.0;
     let angle: Float = Vector4.GetAngleDegAroundAxis(Vector4.Interpolate(this.stats.d_forward, direction, this.stats.d_speedRatio * this.velocityPointing), this.stats.d_forward, new Vector4(0.0, 0.0, 1.0, 0.0));
 
     // decay the integral if we have yaw input - this helps get rid of the windup effect
     this.yawPID.integralFloat *= (1.0 - AbsF(yawValue));
-    yawCorrection = this.yawPID.GetCorrection(angle + yawValue * this.yawFactor * (1.0 + this.stats.d_speedRatio * 5.0), timeDelta) * this.yawCorrectionFactor;
+    yawCorrection = this.yawPID.GetCorrection(angle + yawValue * this.yawFactor * (1.0 + this.stats.d_speedRatio * 5.0), timeDelta);
 
-    let velocityDamp: Vector4 = MaxF(brakeValue * this.brakeFactor, this.airResistance) * this.stats.d_velocity;
+    let velocityDamp: Vector4 = MaxF(brakeValue * this.brakeFactor, this.airResistance) * this.stats.d_velocity * this.stats.s_mass;
     // so we don't get impulsed by the speed limit (100 m/s, i think)
     if this.stats.d_speed > 90.0 {
       velocityDamp *= (1 + PowF((this.stats.d_speed - 90.0) / 10.0, 2.0) * 1000.0);
@@ -683,15 +725,23 @@ public class FlightControl  {
 
     let yawDirectionality: Float = (this.stats.d_speedRatio + AbsF(yawValue) * this.swayWithYaw) * this.stats.s_mass;
     let liftForce: Float = hoverCorrection  * this.stats.s_mass * this.hoverFactor;
-    let surgeForce: Float = surgeValue * this.stats.s_mass;
+    let surgeForce: Float = surgeValue * this.stats.s_mass * this.surgeFactor;
 
     this.CreateImpulse(this.stats.d_position, new Vector4(0.00, 0.00, liftForce, 0.00) + Vector4.Normalize2D(this.stats.d_right) * Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right) * yawDirectionality);
     this.CreateImpulse(this.stats.d_position + this.stats.d_forward * this.surgeOffset, this.stats.d_forward * surgeForce);
-    this.CreateImpulse(this.stats.d_position - this.stats.d_forward * (pitchCorrection + pitchValue / 10.0) * this.stats.s_momentOfInertia.X - this.stats.d_right * (rollCorrection + rollValue / 10.0) * this.stats.s_momentOfInertia.Y, this.stats.d_up * 2000.0);
-    this.CreateImpulse(this.stats.d_position + this.stats.d_forward * (pitchCorrection + pitchValue / 10.0) * this.stats.s_momentOfInertia.X + this.stats.d_right * (rollCorrection + rollValue / 10.0) * this.stats.s_momentOfInertia.Y, this.stats.d_up * -2000.0);
-    this.CreateImpulse(this.stats.d_position + this.stats.d_forward, this.stats.d_right * this.stats.s_momentOfInertia.Z * (yawCorrection));
-    this.CreateImpulse(this.stats.d_position - this.stats.d_forward, this.stats.d_right * this.stats.s_momentOfInertia.Z * -(yawCorrection));
+    // pitch correction
+    this.CreateImpulse(this.stats.d_position - this.stats.d_up,       this.stats.d_forward *  this.stats.s_momentOfInertia.X * -pitchCorrection * this.pitchCorrectionFactor);
+    this.CreateImpulse(this.stats.d_position + this.stats.d_up,       this.stats.d_forward *  this.stats.s_momentOfInertia.X * pitchCorrection *  this.pitchCorrectionFactor);
+    // roll correction
+    this.CreateImpulse(this.stats.d_position - this.stats.d_right,    this.stats.d_up *       this.stats.s_momentOfInertia.Y * rollCorrection *   this.rollCorrectionFactor);
+    this.CreateImpulse(this.stats.d_position + this.stats.d_right,    this.stats.d_up *       this.stats.s_momentOfInertia.Y * -rollCorrection *  this.rollCorrectionFactor);
+    // yaw correction
+    this.CreateImpulse(this.stats.d_position + this.stats.d_forward,  this.stats.d_right *    this.stats.s_momentOfInertia.Z * yawCorrection *    this.yawCorrectionFactor);
+    this.CreateImpulse(this.stats.d_position - this.stats.d_forward,  this.stats.d_right *    this.stats.s_momentOfInertia.Z * -yawCorrection *   this.yawCorrectionFactor);
+    // brake
     this.CreateImpulse(this.stats.d_position + this.stats.d_forward * brakeValue * this.brakeOffset, -velocityDamp);
+
+
 
     // (this.GetVehicle().GetPS() as VehicleComponentPS).SetThrusterState(surgeValue > 0.99);
 
@@ -735,6 +785,7 @@ public class FlightControl  {
 
   }
 
+  // a generalized method for torque might be nice too
   public func CreateImpulse(position: Vector4, direction: Vector4) -> Void {
     let impulseEvent: ref<PhysicalImpulseEvent> = new PhysicalImpulseEvent();
     impulseEvent.radius = 0.5;

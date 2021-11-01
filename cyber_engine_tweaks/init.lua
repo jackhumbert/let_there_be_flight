@@ -38,7 +38,7 @@ registerForEvent('onInit', function()
     TweakDB:SetFlat('Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirStrength', 4)
 
     -- why not
-    TweakDB:SetFlat('vehicles.common.temp_hack_ignore_trunk_max_height', 200)
+    -- TweakDB:SetFlat('vehicles.common.temp_hack_ignore_trunk_max_height', 200)
 
     TweakDB:SetFlat('Vehicle.VehicleDriveModelData_Muscle.momentOfInertia', Vector3.new(4500, 1300, 4800))
     TweakDB:SetFlat('Vehicle.v_sport2_mizutani_shion_nomad_inline0.momentOfInertia', Vector3.new(3820, 800, 4080))
@@ -46,7 +46,12 @@ registerForEvent('onInit', function()
     TweakDB:SetFlat('Vehicle.v_standard25_thorton_colby_nomad_inline5.momentOfInertia', Vector3.new(3000, 700, 3790))
     TweakDB:SetFlat('Vehicle.v_standard2_thorton_galena_gt_camber_inline3.momentOfInertia', Vector3.new(1570, 460, 1780))
 
-    TweakDB:SetFlat('vehicles.showDebugUi', true)
+    -- print(TweakDB:SetFlat('FlightControl.Vehicle.v_sport2_quadra_type66_nomad_player.mass', 12284.779))
+    -- print(TweakDB:SetFlat('FlightControl.Vehicle.v_sport2_quadra_type66_nomad_player.comOffset_position', Vector3.new(-0.0029487698, -0.16552693, -0.10058464)))
+    -- print(TweakDB:SetFlat('FlightControl.Vehicle.v_sport2_quadra_type66_nomad_player.comOffset_orientation', Quaternion.new(-0.023060247, -0.001045868, 0.00025381809, 0.9997335)))
+    -- print(TweakDB:SetFlat('FlightControl.Vehicle.v_sport2_quadra_type66_nomad_player.inertia', Vector3.new(23577.398, 5773.1597, 27354.65)))
+
+    -- TweakDB:SetFlat('vehicles.showDebugUi', true)
 
 	-- GameHUD.Initialize()
 

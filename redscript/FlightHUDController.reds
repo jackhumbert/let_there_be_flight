@@ -129,7 +129,6 @@ protected cb func OnMountChanged(mounted: Bool) -> Bool {
 
 @replaceMethod(gameuiCrosshairContainerController)
 private final func UpdateRootVisibility() -> Void {
-    // LogChannel(n"DEBUG", "[gameuiCrosshairContainerController] Updating Root Visibility");
     this.GetRootWidget().SetVisible(!this.m_isUnarmed || !this.m_isMounted || this.m_isFlying);
 }
 

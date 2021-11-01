@@ -13,6 +13,10 @@ public abstract class TweakHash {
 		return TDBID.ToNumber(TDBID.Create(str));
 	}
 
+	public static func Compute(tdb: TweakDBID) -> Uint64 {
+		return TDBID.ToNumber(tdb);
+	}
+
 	public static func Compute(name: CName) -> Uint64 {
 		return TweakHash.Compute(NameToString(name));
 	}
