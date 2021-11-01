@@ -58,6 +58,7 @@ public class VehicleStats {
       // .Mass() -> Float;
     // this.s_mass = this.vehicle.GetTotalMass(); // might be dynamic?
     this.s_mass = this.s_fcRecord.mass;
+    // need to just dynamically calculate this instead of messing around with random values
     this.s_centerOfMassOffset = Cast(this.s_driveModelData.Center_of_mass_offset());
     this.s_centerOfMassOffset += this.s_fcRecord.comOffset_position;
     // this.s_momentOfInertia = Cast(this.s_driveModelData.MomentOfInertia());

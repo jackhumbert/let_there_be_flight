@@ -186,7 +186,7 @@ public class FlightControl  {
     this.liftFactor = 15.0;
     this.surgePos = PID.Create(0.04, 0.0, 0.0, 0.0);
     this.surgeNeg = PID.Create(0.04, 0.0, 0.0, 0.0);
-    this.surgeFactor = 0.4;
+    this.surgeFactor = 15.0;
     this.roll = PID.Create(0.5, 0.0, 0.0, 0.0);
     this.pitch = PID.Create(0.5, 0.0, 0.0, 0.0);
     this.yaw = PID.Create(0.02, 0.0, 0.0, 0.0);
@@ -198,14 +198,14 @@ public class FlightControl  {
     this.airResistance = 0.005;
     this.hoverHeight = 3.50;
     this.maxHoverHeight = 7.0;
-    this.hoverFactor = 0.5;
+    this.hoverFactor = 10.0;
     this.hover = PID.Create(0.1, 0.01, 0.05);
     this.pitchPID = PID.Create(0.5, 0.05, 0.1);
-    this.pitchCorrectionFactor = 10.0;
+    this.pitchCorrectionFactor = 1000.0;
     this.rollPID = PID.Create(0.5, 0.05, 0.1);
-    this.rollCorrectionFactor = 10.0;
+    this.rollCorrectionFactor = 1000.0;
     this.yawPID = PID.Create(0.5, 0.5, 0.5);
-    this.yawCorrectionFactor = 2.0;
+    this.yawCorrectionFactor = 100.0;
     this.brakeFactor = 0.02;
     // this.lookAheadMax = 10.0;
     this.lookAheadMax = 0.1;
@@ -724,20 +724,20 @@ public class FlightControl  {
     }
 
     let yawDirectionality: Float = (this.stats.d_speedRatio + AbsF(yawValue) * this.swayWithYaw) * this.stats.s_mass;
-    let liftForce: Float = hoverCorrection  * this.stats.s_mass * this.hoverFactor;
+    let liftForce: Float = hoverCorrection  * this.stats.s_mass * this.hoverFactor * timeDelta;
     let surgeForce: Float = surgeValue * this.stats.s_mass * this.surgeFactor;
 
-    this.CreateImpulse(this.stats.d_position, new Vector4(0.00, 0.00, liftForce, 0.00) + Vector4.Normalize2D(this.stats.d_right) * Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right) * yawDirectionality);
-    this.CreateImpulse(this.stats.d_position + this.stats.d_forward * this.surgeOffset, this.stats.d_forward * surgeForce);
+    this.CreateImpulse(this.stats.d_position, new Vector4(0.00, 0.00, liftForce, 0.00) + Vector4.Normalize2D(this.stats.d_right) * Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right) * yawDirectionality * timeDelta);
+    this.CreateImpulse(this.stats.d_position + this.stats.d_forward * this.surgeOffset, this.stats.d_forward * surgeForce * timeDelta);
     // pitch correction
-    this.CreateImpulse(this.stats.d_position - this.stats.d_up,       this.stats.d_forward *  this.stats.s_momentOfInertia.X * -pitchCorrection * this.pitchCorrectionFactor);
-    this.CreateImpulse(this.stats.d_position + this.stats.d_up,       this.stats.d_forward *  this.stats.s_momentOfInertia.X * pitchCorrection *  this.pitchCorrectionFactor);
+    this.CreateImpulse(this.stats.d_position - this.stats.d_up,       this.stats.d_forward *  this.stats.s_momentOfInertia.X * -pitchCorrection * this.pitchCorrectionFactor * timeDelta);
+    this.CreateImpulse(this.stats.d_position + this.stats.d_up,       this.stats.d_forward *  this.stats.s_momentOfInertia.X * pitchCorrection *  this.pitchCorrectionFactor * timeDelta);
     // roll correction
-    this.CreateImpulse(this.stats.d_position - this.stats.d_right,    this.stats.d_up *       this.stats.s_momentOfInertia.Y * rollCorrection *   this.rollCorrectionFactor);
-    this.CreateImpulse(this.stats.d_position + this.stats.d_right,    this.stats.d_up *       this.stats.s_momentOfInertia.Y * -rollCorrection *  this.rollCorrectionFactor);
+    this.CreateImpulse(this.stats.d_position - this.stats.d_right,    this.stats.d_up *       this.stats.s_momentOfInertia.Y * rollCorrection *   this.rollCorrectionFactor * timeDelta);
+    this.CreateImpulse(this.stats.d_position + this.stats.d_right,    this.stats.d_up *       this.stats.s_momentOfInertia.Y * -rollCorrection *  this.rollCorrectionFactor * timeDelta);
     // yaw correction
-    this.CreateImpulse(this.stats.d_position + this.stats.d_forward,  this.stats.d_right *    this.stats.s_momentOfInertia.Z * yawCorrection *    this.yawCorrectionFactor);
-    this.CreateImpulse(this.stats.d_position - this.stats.d_forward,  this.stats.d_right *    this.stats.s_momentOfInertia.Z * -yawCorrection *   this.yawCorrectionFactor);
+    this.CreateImpulse(this.stats.d_position + this.stats.d_forward,  this.stats.d_right *    this.stats.s_momentOfInertia.Z * yawCorrection *    this.yawCorrectionFactor * timeDelta);
+    this.CreateImpulse(this.stats.d_position - this.stats.d_forward,  this.stats.d_right *    this.stats.s_momentOfInertia.Z * -yawCorrection *   this.yawCorrectionFactor * timeDelta);
     // brake
     this.CreateImpulse(this.stats.d_position + this.stats.d_forward * brakeValue * this.brakeOffset, -velocityDamp);
 

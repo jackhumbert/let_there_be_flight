@@ -13,6 +13,13 @@ public class FlightControlUI extends inkCanvas {
     FlightControl.GetInstance().SetUI(instance);
     return instance;
   }
+  public final const func GetVehicle() -> wref<VehicleObject> {
+    if !Equals(this.stats, null) {
+      return this.stats.vehicle;
+    } else {
+      return null;
+    }
+  }
   public func Setup(stats: ref<VehicleStats>) -> Void {
     this.stats = stats;
     this.SetOpacity(0.0);
@@ -111,27 +118,27 @@ public class FlightControlUI extends inkCanvas {
     //   .Reparent(this)
     //   .BuildImage();
 
-    let scaler_right = inkWidgetBuilder.inkImage(n"scaler_right")
-      .Atlas(r"base\\gameplay\\gui\\widgets\\turret_hud\\turret_hud.inkatlas")
-      .Part(n"scaler")
-      .Tint(ThemeColors.ElectricBlue())
-      .Opacity(0.1)
-      // .Margin(-109.0, -362.5, 0.0, -362.5)
-		  .Size(109.0, 725.0)
-      .Anchor(-5.85, 0.5)
-      .Reparent(this)
-      .BuildImage();
+    // let scaler_right = inkWidgetBuilder.inkImage(n"scaler_right")
+    //   .Atlas(r"base\\gameplay\\gui\\widgets\\turret_hud\\turret_hud.inkatlas")
+    //   .Part(n"scaler")
+    //   .Tint(ThemeColors.ElectricBlue())
+    //   .Opacity(0.1)
+    //   // .Margin(-109.0, -362.5, 0.0, -362.5)
+		//   .Size(109.0, 725.0)
+    //   .Anchor(-5.85, 0.5)
+    //   .Reparent(this)
+    //   .BuildImage();
 
-    let scaler_left = inkWidgetBuilder.inkImage(n"scaler_left")
-      .Atlas(r"base\\gameplay\\gui\\widgets\\turret_hud\\turret_hud.inkatlas")
-      .Part(n"scaler")
-      .Tint(ThemeColors.ElectricBlue())
-      .Opacity(0.1)
-      // .Margin(109.0, -362.5, 0.0, -362.5)
-		  .Size(109.0, 725.0)
-      .Anchor(-5.85, 0.5)
-      .Reparent(this)
-      .BuildImage();
+    // let scaler_left = inkWidgetBuilder.inkImage(n"scaler_left")
+    //   .Atlas(r"base\\gameplay\\gui\\widgets\\turret_hud\\turret_hud.inkatlas")
+    //   .Part(n"scaler")
+    //   .Tint(ThemeColors.ElectricBlue())
+    //   .Opacity(0.1)
+    //   // .Margin(109.0, -362.5, 0.0, -362.5)
+		//   .Size(109.0, 725.0)
+    //   .Anchor(-5.85, 0.5)
+    //   .Reparent(this)
+    //   .BuildImage();
 
 
 
@@ -296,14 +303,20 @@ public class FlightControlUI extends inkCanvas {
       // + ", " + FloatToStringPrec(this.stats.d_velocity.Y, 1) + ", " + FloatToStringPrec(this.stats.d_velocity.Z, 1) + " >");
     this.GetWidget(n"info").SetTranslation(this.ScreenXY(this.stats.d_position + Transform.GetRight(cameraTransform) * 2.5));
 
-    this.GetWidget(n"arrow_left").SetTranslation(this.ScreenXY(this.stats.d_position - this.stats.d_right * 2));
-    this.GetWidget(n"arrow_left").SetRotation(this.ScreenAngle(this.stats.d_position, this.stats.d_position - this.stats.d_right * 2));
-    this.GetWidget(n"arrow_left").SetOpacity(this.OpacityForPosition(this.stats.d_position - this.stats.d_right * 2));
+    let fl_position = Matrix.GetTranslation((this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_left_tire") as TargetingComponent).GetLocalToWorld());
+    let fr_position = Matrix.GetTranslation((this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_right_tire") as TargetingComponent).GetLocalToWorld());
+    // let bl_position = (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_left_tire") as TargetingComponent).GetLocalToWorld().W;
+    // let br_position = (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_right_tire") as TargetingComponent).GetLocalToWorld().W;
+
+
+    this.GetWidget(n"arrow_left").SetTranslation(this.ScreenXY(fl_position - this.stats.d_right * 1.0));
+    this.GetWidget(n"arrow_left").SetRotation(this.ScreenAngle(fl_position, fl_position + this.stats.d_right * 1.0));
+    this.GetWidget(n"arrow_left").SetOpacity(this.OpacityForPosition(fl_position - this.stats.d_right * 1.0));
     // this.GetWidget(n"arrow_left").SetEffectParamValue(inkEffectType.Glitch, n"Glitch_0", n"intensity", 1.0 - this.OpacityForPosition(this.stats.d_position - this.stats.d_right * 2));
 
-    this.GetWidget(n"arrow_right").SetTranslation(this.ScreenXY(this.stats.d_position + this.stats.d_right * 2));
-    this.GetWidget(n"arrow_right").SetRotation(this.ScreenAngle(this.stats.d_position, this.stats.d_position + this.stats.d_right * 2));
-    this.GetWidget(n"arrow_right").SetOpacity(this.OpacityForPosition(this.stats.d_position + this.stats.d_right * 2));
+    this.GetWidget(n"arrow_right").SetTranslation(this.ScreenXY(fr_position + this.stats.d_right * 1.0));
+    this.GetWidget(n"arrow_right").SetRotation(this.ScreenAngle(fr_position, fr_position - this.stats.d_right * 1.0));
+    this.GetWidget(n"arrow_right").SetOpacity(this.OpacityForPosition(fr_position + this.stats.d_right * 1.0));
     // this.GetWidget(n"arrow_right").SetEffectParamValue(inkEffectType.Glitch, n"Glitch_0", n"intensity", 1.0 - this.OpacityForPosition(this.stats.d_position + this.stats.d_right * 2));
  
  
@@ -329,10 +342,10 @@ public class FlightControlUI extends inkCanvas {
     // this.GetWidget(n"roll_marker_right").SetRotation(this.ScreenAngle(this.stats.d_position, this.stats.d_position + marker_vector));
  
     // this.GetWidget(n"scaler_left").SetTranslation(this.ScreenXY(this.stats.d_position - Transform.GetRight(cameraTransform) * 4.0));
-    this.GetWidget(n"scaler_left").SetRotation(this.ScreenAngle(this.stats.d_position, this.stats.d_position - Transform.GetRight(cameraTransform)));
+    // this.GetWidget(n"scaler_left").SetRotation(this.ScreenAngle(this.stats.d_position, this.stats.d_position - Transform.GetRight(cameraTransform)));
  
     // this.GetWidget(n"scaler_right").SetTranslation(this.ScreenXY(this.stats.d_position + Transform.GetRight(cameraTransform) * 4.0));
-    this.GetWidget(n"scaler_right").SetRotation(this.ScreenAngle(this.stats.d_position, this.stats.d_position + Transform.GetRight(cameraTransform)));
+    // this.GetWidget(n"scaler_right").SetRotation(this.ScreenAngle(this.stats.d_position, this.stats.d_position + Transform.GetRight(cameraTransform)));
  
   }
 
