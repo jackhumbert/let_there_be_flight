@@ -1,4 +1,4 @@
-public class vehicleChassisComponent extends IPlacedComponent {
-    public let collisionResource: ref<physicsSystemResource>;
-    public let optionalPlayerOnlyCollisionResource: ref<physicsSystemResource>;
-}
+// public native class vehicleChassisComponent extends IPlacedComponent {
+    // public native let collisionResource: ResRef;
+    // public native let optionalPlayerOnlyCollisionResource: ResRef;
+// }

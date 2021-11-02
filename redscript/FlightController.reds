@@ -4,6 +4,9 @@ enum FlightMode {
   Undef = 0
 } 
 
+// public native class JackTestClass {
+// }
+
 // public class FlightSettingsListener extends ConfigVarListener {
 
 //   private let m_ctrl: wref<FlightController>;
@@ -67,7 +70,7 @@ enum FlightMode {
 
 // maybe this should extend ScriptableComponent or GameComponent?
 // Singleton instance with player lifetime
-public native class FlightController  {
+public class FlightController  {
   private let gameInstance: GameInstance;
   private let m_blackboard: ref<IBlackboard>;
   private let stats: ref<FlightStats>;
@@ -158,7 +161,7 @@ public native class FlightController  {
     this.showOptions = false;
     this.brake = PID.Create(0.05, 0.0, 0.0, 0.0);
     this.lift = PID.Create(0.05, 0.0, 0.0, 0.0);
-    this.liftFactor = 15.0;
+    this.liftFactor = 10.0;
     this.surge = PID.Create(0.04, 0.0, 0.0, 0.0);
     this.surgeFactor = 15.0;
     this.roll = PID.Create(0.5, 0.0, 0.0, 0.0);
@@ -181,7 +184,7 @@ public native class FlightController  {
     this.rollCorrectionFactor = 1000.0;
     this.yawPID = PID.Create(0.5, 0.5, 0.5);
     this.yawCorrectionFactor = 100.0;
-    this.brakeFactor = 0.5;
+    this.brakeFactor = 0.8;
     this.lookAheadMax = 10.0;
     // this.lookAheadMin = 1.0;
     this.lookDown = new Vector4(0.0, 0.0, -this.maxHoverHeight - 10.0, 0.0);
@@ -397,6 +400,7 @@ public native class FlightController  {
         if ListenerAction.IsButtonJustPressed(action) {
           LogChannel(n"DEBUG", "Options button pressed");
           this.showOptions = true;
+          this.ui.ShowInfo();
         }
         if ListenerAction.IsButtonJustReleased(action) {
           LogChannel(n"DEBUG", "Options button released");
@@ -547,7 +551,7 @@ public native class FlightController  {
     }
 
     this.stats.UpdateDynamic(timeDelta);
-    this.ui.ClearCircles();
+    this.ui.ClearMarks();
 
     let direction = this.stats.d_direction;
     if this.stats.d_speed < 1.0 {
@@ -563,7 +567,7 @@ public native class FlightController  {
 
     this.hoverHeight += this.lift.GetValue() * timeDelta * this.liftFactor * (1.0 + this.stats.d_speedRatio * 2.0);
     if this.hovering {
-      this.hoverHeight = MaxF(0.0, this.hoverHeight);
+      this.hoverHeight = MaxF(1.0, this.hoverHeight);
     }
 
     let foundGround = true;
@@ -592,22 +596,22 @@ public native class FlightController  {
       let findGround3: TraceResult = scriptInterface.RayCastWithCollisionFilter(bl_tire, bl_tire + this.lookDown, queryFilter);
       let findGround4: TraceResult = scriptInterface.RayCastWithCollisionFilter(br_tire, br_tire + this.lookDown, queryFilter);
       if TraceResult.IsValid(findGround1) && TraceResult.IsValid(findGround2) && TraceResult.IsValid(findGround3) && TraceResult.IsValid(findGround4) {
-        let distance = MaxF(
-          MaxF(Vector4.Distance(fl_tire, Cast(findGround1.position)),
+        let distance = MinF(
+          MinF(Vector4.Distance(fl_tire, Cast(findGround1.position)),
           Vector4.Distance(fr_tire, Cast(findGround2.position))),
-          MaxF(Vector4.Distance(bl_tire, Cast(findGround3.position)),
+          MinF(Vector4.Distance(bl_tire, Cast(findGround3.position)),
           Vector4.Distance(br_tire, Cast(findGround4.position))));
         this.distance = distance * (1.0 - this.distanceEase) + this.distance * (this.distanceEase);
 
-        this.ui.DrawCircle(Cast(findGround1.position));
-        this.ui.DrawCircle(Cast(findGround2.position));
-        this.ui.DrawCircle(Cast(findGround3.position));
-        this.ui.DrawCircle(Cast(findGround4.position));
+        this.ui.DrawMark(Cast(findGround1.position) - this.stats.d_velocity * timeDelta);
+        this.ui.DrawMark(Cast(findGround2.position) - this.stats.d_velocity * timeDelta);
+        this.ui.DrawMark(Cast(findGround3.position) - this.stats.d_velocity * timeDelta);
+        this.ui.DrawMark(Cast(findGround4.position) - this.stats.d_velocity * timeDelta);
 
-        this.ui.DrawText(Cast(findGround1.position), FloatToStringPrec(Vector4.Distance(fl_tire, Cast(findGround1.position)), 2));
-        this.ui.DrawText(Cast(findGround2.position), FloatToStringPrec(Vector4.Distance(fr_tire, Cast(findGround2.position)), 2));
-        this.ui.DrawText(Cast(findGround3.position), FloatToStringPrec(Vector4.Distance(bl_tire, Cast(findGround3.position)), 2));
-        this.ui.DrawText(Cast(findGround4.position), FloatToStringPrec(Vector4.Distance(br_tire, Cast(findGround4.position)), 2));
+        this.ui.DrawText(Cast(findGround1.position) - this.stats.d_velocity * timeDelta, FloatToStringPrec(Vector4.Distance(fl_tire, Cast(findGround1.position)), 2));
+        this.ui.DrawText(Cast(findGround2.position) - this.stats.d_velocity * timeDelta, FloatToStringPrec(Vector4.Distance(fr_tire, Cast(findGround2.position)), 2));
+        this.ui.DrawText(Cast(findGround3.position) - this.stats.d_velocity * timeDelta, FloatToStringPrec(Vector4.Distance(bl_tire, Cast(findGround3.position)), 2));
+        this.ui.DrawText(Cast(findGround4.position) - this.stats.d_velocity * timeDelta, FloatToStringPrec(Vector4.Distance(br_tire, Cast(findGround4.position)), 2));
 
         // FromVariant(scriptInterface.GetStateVectorParameter(physicsStateValue.Radius)) maybe?
         let normal = (Cast(findGround1.normal) + Cast(findGround2.normal) + Cast(findGround3.normal) + Cast(findGround4.normal)) / 4.0;
