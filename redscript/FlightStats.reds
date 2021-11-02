@@ -1,7 +1,7 @@
-public class VehicleStats {
+public class FlightStats {
   public let vehicle: wref<VehicleObject>;
   public let s_record: wref<Vehicle_Record>;
-  public let s_fcRecord: wref<VehicleStatsData_Record>;
+  public let s_fcRecord: wref<FlightStatsData_Record>;
   public let s_driveModelData: wref<VehicleDriveModelData_Record>;
   public let s_engineData: wref<VehicleEngineData_Record>;
   public let s_wheelDimensions: wref<VehicleWheelDimensionsSetup_Record>;
@@ -27,8 +27,8 @@ public class VehicleStats {
   private let reset: Bool;
   private let ipp: ref<IPositionProvider>;
 
-  public static func Create(vehicle: wref<VehicleObject>) -> ref<VehicleStats> {
-    let instance: ref<VehicleStats> = new VehicleStats();
+  public static func Create(vehicle: wref<VehicleObject>) -> ref<FlightStats> {
+    let instance: ref<FlightStats> = new FlightStats();
     instance.vehicle = vehicle;
     instance.reset = false;
     instance.UpdateStatic();
@@ -46,7 +46,7 @@ public class VehicleStats {
 
   public final func UpdateStatic() -> Void {
     this.s_record = this.vehicle.GetRecord();
-    this.s_fcRecord = VehicleStatsData.GetInstance(this.vehicle.GetGame()).Get(this.vehicle.GetRecordID());
+    this.s_fcRecord = FlightStatsData.GetInstance(this.vehicle.GetGame()).Get(this.vehicle.GetRecordID());
     this.s_driveModelData = this.s_record.VehDriveModelData();  
     // RollingResistanceFactor() -> Float;
     // HandbrakeBrakingTorque() -> Float;
@@ -70,7 +70,7 @@ public class VehicleStats {
     // this isn't defined for all vehicles, so throw some numbers in for now
     // would be nice to compute from meshes outside this and import those values in
     if Vector4.IsXYZFloatZero(this.s_momentOfInertia) {
-      LogChannel(n"DEBUG", "[VehicleStats] no MOI, setting to bad defaults");
+      LogChannel(n"DEBUG", "[FlightStats] no MOI, setting to bad defaults");
       this.s_momentOfInertia.X = this.s_mass * 1.75;
       this.s_momentOfInertia.Y = this.s_mass * 0.50;
       this.s_momentOfInertia.Z = this.s_mass * 2.00;

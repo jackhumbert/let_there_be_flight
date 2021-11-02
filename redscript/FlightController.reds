@@ -1,9 +1,21 @@
 import BaseLib.UI.*
 
 enum FlightMode {
-  Hover = 0,
-  Drone = 1
+  Undef = 0
 } 
+
+// public class FlightSettingsListener extends ConfigVarListener {
+
+//   private let m_ctrl: wref<FlightController>;
+
+//   public final func RegisterController(ctrl: ref<FlightController>) -> Void {
+//     this.m_ctrl = ctrl;
+//   }
+
+//   public func OnVarModified(groupPath: CName, varName: CName, varType: ConfigVarType, reason: ConfigChangeReason) -> Void {
+//     this.m_ctrl.OnVarModified(groupPath, varName, varType, reason);
+//   }
+// }
 
 // @addMethod(Vehicle_Record)
 // public final native func FlightControl() -> String;
@@ -12,7 +24,7 @@ enum FlightMode {
 // public final static func GetFlightControlRecord(path: TweakDBID) -> ref<FlightControl_Record> {
 //   let record = new FlightControl_Record();
 //   let mass_path = path;
-//   TDBID.Prepend(mass_path, t"FlighstControl.");
+//   TDBID.Prepend(mass_path, t"FlightControl.");
 //   TDBID.Append(mass_path, t".mass");
 //   record.mass = TweakDBInterface.GetFloat(mass_path, 0.0);
 //   let comOffset_position_path = path;
@@ -58,7 +70,7 @@ enum FlightMode {
 public class FlightController  {
   private let gameInstance: GameInstance;
   private let m_blackboard: ref<IBlackboard>;
-  private let stats: ref<VehicleStats>;
+  private let stats: ref<FlightStats>;
   private let ui: ref<FlightControllerUI>;
   public final func SetUI(ui: ref<FlightControllerUI>) {
     this.ui = ui;
@@ -91,8 +103,6 @@ public class FlightController  {
   public let lift: ref<PID>;
   public let liftFactor: Float;
   public let surge: ref<PID>;
-  // public let surgePos: ref<PID>;
-  // public let surgeNeg: ref<PID>;
   public let surgeFactor: Float;
   public let roll: ref<PID>;
   public let pitch: ref<PID>;
@@ -106,6 +116,7 @@ public class FlightController  {
   public let lookAheadMin: Float;
   public let lookDown: Vector4;
   public let airResistance: Float;
+  public let defaultHoverHeight: Float;
   public let hoverHeight: Float;
   public let hoverFactor: Float;
   public let hover: ref<PID>;
@@ -126,7 +137,14 @@ public class FlightController  {
   private let hovering: Bool;
   public let referenceZ: Float;
   public let maxHoverHeight: Float;
-  public let m_maxSpeedModifier: ref<gameStatModifierData>;
+
+  public let fl_tire: ref<IPlacedComponent>;
+  public let fr_tire: ref<IPlacedComponent>;
+  public let bl_tire: ref<IPlacedComponent>;
+  public let br_tire: ref<IPlacedComponent>;
+
+  // protected let m_settingsListener: ref<FlightSettingsListener>;
+  // protected let m_groupPath: CName;
 
   // these are defined in the RED4ext part
   // public native func StartSnd() -> Void
@@ -135,7 +153,6 @@ public class FlightController  {
 
   private func Initialize(player: ref<PlayerPuppet>) {
     this.gameInstance = player.GetGame();
-    // this.CreateBlackboard();
     this.enabled = false;
     this.active = false;
     this.showOptions = false;
@@ -143,19 +160,18 @@ public class FlightController  {
     this.lift = PID.Create(0.05, 0.0, 0.0, 0.0);
     this.liftFactor = 15.0;
     this.surge = PID.Create(0.04, 0.0, 0.0, 0.0);
-    // this.surgePos = PID.Create(0.04, 0.0, 0.0, 0.0);
-    // this.surgeNeg = PID.Create(0.04, 0.0, 0.0, 0.0);
     this.surgeFactor = 15.0;
     this.roll = PID.Create(0.5, 0.0, 0.0, 0.0);
     this.pitch = PID.Create(0.5, 0.0, 0.0, 0.0);
     this.yaw = PID.Create(0.02, 0.0, 0.0, 0.0);
     this.yawFactor = 1.0;
     this.distance = 0.0;
-    this.distanceEase = 0.5;
+    this.distanceEase = 0.1;
     this.normal = new Vector4(0.0, 0.0, 1.0, 0.0);
     this.normalEase = 0.01;
     this.airResistance = 0.01;
-    this.hoverHeight = 3.50;
+    this.defaultHoverHeight = 3.50;
+    this.hoverHeight = this.defaultHoverHeight;
     this.maxHoverHeight = 7.0;
     this.hoverFactor = 5.0;
     this.hover = PID.Create(0.1, 0.01, 0.05);
@@ -166,9 +182,8 @@ public class FlightController  {
     this.yawPID = PID.Create(0.5, 0.5, 0.5);
     this.yawCorrectionFactor = 100.0;
     this.brakeFactor = 0.5;
-    // this.lookAheadMax = 10.0;
-    this.lookAheadMax = 0.5;
-    this.lookAheadMin = 1.0;
+    this.lookAheadMax = 10.0;
+    // this.lookAheadMin = 1.0;
     this.lookDown = new Vector4(0.0, 0.0, -this.maxHoverHeight - 10.0, 0.0);
     this.fwtfCorrection = 0.0;
     // this.pitchWithLift = -0.3;
@@ -185,6 +200,11 @@ public class FlightController  {
     this.referenceZ = 0.0;
 
     this.audioStats = FlightAudioStats.Create();  
+
+    // this.m_groupPath = n"/controls/flight";
+    // this.m_settingsListener = new FlightSettingsListener();
+    // this.m_settingsListener.RegisterController(this);
+    // this.m_settingsListener.Register(this.m_groupPath);
   }
 
   public const func GetBlackboard() -> ref<IBlackboard> {
@@ -208,11 +228,21 @@ public class FlightController  {
   public static func GetInstance() -> wref<FlightController> {
     return GetAllBlackboardDefs().flightController;
   }
+
+  // public final func OnVarModified(groupPath: CName, varName: CName, varType: ConfigVarType, reason: ConfigChangeReason) -> Void {
+  //   switch varName {
+  //     case n"HoverHeight":
+  //       let configVar: ref<ConfigVarFloat> = GameInstance.GetSettingsSystem(this.gameInstance).GetVar(this.m_groupPath, n"HoverHeight") as ConfigVarFloat;
+  //       this.hoverHeight = configVar.GetValue();
+  //       break;
+  //     default:
+  //   };
+  // }
   
   public func Enable(vehicle: ref<VehicleObject>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
     this.enabled = true;
     this.active = false;
-    this.stats = VehicleStats.Create(vehicle);
+    this.stats = FlightStats.Create(vehicle);
     // this.GetVehicle().TurnOn(true);
     // this.GetVehicle().TurnEngineOn(true);
     this.SetupActions();
@@ -263,6 +293,9 @@ public class FlightController  {
     this.surge.Reset();
     this.lift.Reset();
     this.brake.Reset();
+
+    this.SetupTires();
+
     // (this.GetVehicle().GetPS() as VehicleComponentPS).SetThrusterState(false);
     // (this.GetVehicle().GetPS() as VehicleComponentPS).SetIsDestroyed(true);
 
@@ -300,18 +333,11 @@ public class FlightController  {
     this.active = false;
     this.SetupActions();
 
-    // (this.GetVehicle().GetPS() as VehicleComponentPS).SetIsDestroyed(false);
-    // let interactionEvent: ref<InteractionSetEnableEvent> = new InteractionSetEnableEvent();
-    // interactionEvent.enable = true;
-    // interactionEvent.layer = n"";
-    // this.GetVehicle().QueueEvent(interactionEvent);
     // (this.GetVehicle().GetPS() as VehicleComponentPS).SetThrusterState(false);
 
     this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetState(vehicleEState.On);
 
     // this.StopSnd();
-
-    // this.GetVehicle().GetVehiclePS().SetIsPlayerVehicle(true);
 
     // StatusEffectHelper.RemoveStatusEffect(GetPlayer(this.gameInstance), t"GameplayRestriction.NoCameraControl");
     if !silent {
@@ -322,33 +348,6 @@ public class FlightController  {
     }
     this.ui.Hide();
 
-    // GetPlayer(this.gameInstance).GetPlayerStateMachineBlackboard().SetInt(GetAllBlackboardDefs().PlayerStateMachine.Vehicle, EnumInt(gamePSMVehicle.Driving));
-
-    // let psm: ref<PSMStopStateMachine> = new PSMStopStateMachine();
-    // psm.stateMachineIdentifier.definitionName = n"Crosshair";
-    // this.GetVehicle().QueueEvent(psm);
-
-
-    // let uiSystemBB = GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().UIGameData);
-    // let uiSystemBBDef = GetAllBlackboardDefs().UIGameData;
-    // uiSystemBB.SetBool(uiSystemBBDef.Popup_IsShown, false);
-    // uiSystemBB.SignalBool(uiSystemBBDef.Popup_IsShown);
-
-		// let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
-		// let hideEvent: ref<HideFlightHUDEvent> = HideFlightHUDEvent.Create(this.HUDGameController);
-
-		// uiSystem.QueueEvent(hideEvent);
-
-    // GameInstance.GetUISystem(this.gameInstance).PopGameContext(UIGameContext.VehicleRace);
-    // let cameraContext: ref<PSMStopStateMachine> = new PSMStopStateMachine();
-    // cameraContext.stateMachineIdentifier.definitionName = n"CameraContext";
-    // GetPlayer(this.gameInstance).QueueEvent(cameraContext);
-
-    // this.driveEvents.SetVehicleCameraParameters(stateContext, scriptInterface);
-
-    // GameObject.PlaySound(GetPlayer(this.gameInstance), n"drone_disable");
-    // GameInstance.GetAudioSystem(this.gameInstance).PlayLootAllSound();
-    // GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"mus_cp_arcade_quadra_STOP");
     LogChannel(n"DEBUG", "Flight Control Deactivated");
   }
 
@@ -383,19 +382,6 @@ public class FlightController  {
       }
     }
   }
-
-  // eventually, something like this?
-  // protected func SetUIContext() -> Void {
-	// 	let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.GetGame());
-	// 	uiSystem.PushGameContext(UIGameContext.ModalPopup);
-	// 	uiSystem.RequestNewVisualState(n"inkModalPopupState");
-	// }
-
-	// protected func ResetUIContext() -> Void {
-	// 	let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.GetGame());
-	// 	uiSystem.PopGameContext(UIGameContext.ModalPopup);
-	// 	uiSystem.RestorePreviousVisualState(n"inkModalPopupState");
-	// }
 
   protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool {
     let actionType: gameinputActionType = ListenerAction.GetType(action);
@@ -479,8 +465,6 @@ public class FlightController  {
     this.lift.GetValue(timeDelta);
     this.brake.GetValue(timeDelta);
     this.surge.GetValue(timeDelta);
-    // this.surgePos.GetValue(timeDelta);
-    // this.surgeNeg.GetValue(timeDelta);
   }
 
   public func UpdateAudioParams() -> Void {
@@ -521,7 +505,14 @@ public class FlightController  {
     this.audioStats.lift = this.lift.GetValue();
     this.audioStats.brake = this.brake.GetValue();
 
-    // this.SetParams(this.audioStats.volume, this.audioStats.playerPosition, this.audioStats.playerUp, this.audioStats.playerForward, this.audioStats.cameraPosition, this.audioStats.cameraUp, this.audioStats.cameraForward, this.audioStats.speed, this.audioStats.surge, this.audioStats.yawDiff, this.audioStats.lift, this.audioStats.yaw, this.audioStats.pitchDiff, this.audioStats.brake);
+    // this.SetParams();
+  }
+
+  public func SetupTires() -> Void {
+    this.fl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_left_tire") as IPlacedComponent;
+    this.fr_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_right_tire") as IPlacedComponent;
+    this.bl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_left_tire") as IPlacedComponent;
+    this.br_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_right_tire") as IPlacedComponent;
   }
 
   public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
@@ -544,7 +535,7 @@ public class FlightController  {
     let player: ref<PlayerPuppet> = GetPlayer(this.gameInstance);
     if !IsDefined(this.GetVehicle()) { 
       if IsDefined(scriptInterface.owner as VehicleObject) {
-        this.stats = VehicleStats.Create(scriptInterface.owner as VehicleObject);
+        this.stats = FlightStats.Create(scriptInterface.owner as VehicleObject);
         LogChannel(n"DEBUG", "Vehicle undefined. Redefined to " + this.GetVehicle().GetDisplayName()); 
       } else {
         LogChannel(n"DEBUG", "Owner not defined"); 
@@ -585,24 +576,16 @@ public class FlightController  {
       // if we're under water, just go up
       hoverCorrection = 1.0;
     } else {
-      // we could also use these four points (or different ones) to just move each of the corners of the vehicle, instead of doing all this math
-      // let lookAheadPoint: array<Vector4>;
-      // lookAheadPoint[0] = (direction + Vector4.Cross(direction, player.GetWorldUp()) * 0.5) * (this.lookAheadMin + this.lookAheadMax * this.stats.d_speedRatio);
-      // lookAheadPoint[1] = (direction - Vector4.Cross(direction, player.GetWorldUp()) * 0.5) * (this.lookAheadMin + this.lookAheadMax * this.stats.d_speedRatio);
-      // lookAheadPoint[2] = (-direction + Vector4.Cross(direction, player.GetWorldUp()) * 0.5);
-      // lookAheadPoint[3] = (-direction - Vector4.Cross(direction, player.GetWorldUp()) * 0.5);
-
-
-
       QueryFilter.AddGroup(queryFilter, n"Static");
       QueryFilter.AddGroup(queryFilter, n"Terrain");
       // this finds vehicle too - need to figure out how to exclude it
       // QueryFilter.AddGroup(queryFilter, n"PlayerBlocker"); 
 
-      let fl_tire: Vector4 = Matrix.GetTranslation((this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_left_tire") as TargetingComponent).GetLocalToWorld());
-      let fr_tire: Vector4 = Matrix.GetTranslation((this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_right_tire") as TargetingComponent).GetLocalToWorld());
-      let bl_tire: Vector4 = Matrix.GetTranslation((this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_left_tire") as TargetingComponent).GetLocalToWorld());
-      let br_tire: Vector4 = Matrix.GetTranslation((this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_right_tire") as TargetingComponent).GetLocalToWorld());
+      // let lookAhead = this.stats.d_velocity * timeDelta * this.lookAheadMax;
+      let fl_tire: Vector4 = Matrix.GetTranslation(this.fl_tire.GetLocalToWorld());
+      let fr_tire: Vector4 = Matrix.GetTranslation(this.fr_tire.GetLocalToWorld());
+      let bl_tire: Vector4 = Matrix.GetTranslation(this.bl_tire.GetLocalToWorld());
+      let br_tire: Vector4 = Matrix.GetTranslation(this.br_tire.GetLocalToWorld());
 
       let findGround1: TraceResult = scriptInterface.RayCastWithCollisionFilter(fl_tire, fl_tire + this.lookDown, queryFilter);
       let findGround2: TraceResult = scriptInterface.RayCastWithCollisionFilter(fr_tire, fr_tire + this.lookDown, queryFilter);
@@ -614,7 +597,7 @@ public class FlightController  {
           Vector4.Distance(fr_tire, Cast(findGround2.position))),
           MaxF(Vector4.Distance(bl_tire, Cast(findGround3.position)),
           Vector4.Distance(br_tire, Cast(findGround4.position))));
-        this.distance = distance * this.distanceEase + this.distance * (1.0 - this.distanceEase);
+        this.distance = distance * (1.0 - this.distanceEase) + this.distance * (this.distanceEase);
 
         this.ui.DrawCircle(Cast(findGround1.position));
         this.ui.DrawCircle(Cast(findGround2.position));
@@ -673,7 +656,7 @@ public class FlightController  {
     // LogChannel(n"DEBUG", ToString(hoverCorrection * this.stats.s_mass * this.hoverFactor) + " vs " + this.GetVehicle().GetTotalMass());
     let surgeForce: Float = this.surge.GetValue() * this.stats.s_mass * this.surgeFactor;
 
-    // this.CreateImpulse(this.stats.d_position, new Vector4(0.00, 0.00, liftForce, 0.00) + Vector4.Normalize2D(this.stats.d_right) * Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right) * yawDirectionality * timeDelta);
+    this.CreateImpulse(this.stats.d_position, this.stats.d_right * Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right) * yawDirectionality * timeDelta);
     this.CreateImpulse(this.stats.d_position, new Vector4(0.00, 0.00, liftForce, 0.00));
     this.CreateImpulse(this.stats.d_position + this.stats.d_forward * this.surgeOffset, this.stats.d_forward * surgeForce * timeDelta);
     // pitch correction

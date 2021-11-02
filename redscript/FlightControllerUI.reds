@@ -2,7 +2,7 @@ import BaseLib.UI.*
 
 public class FlightControllerUI extends inkCanvas {
   public let controller: ref<inkGameController>;
-  public let stats: ref<VehicleStats>;
+  public let stats: ref<FlightStats>;
   private let m_rootAnim: ref<inkAnimProxy>;
   private let m_markerRadius: Float;
   public static func Create(controller: ref<inkGameController>, parent: ref<inkCompoundWidget>) -> ref<FlightControllerUI> {
@@ -20,7 +20,7 @@ public class FlightControllerUI extends inkCanvas {
       return null;
     }
   }
-  public func Setup(stats: ref<VehicleStats>) -> Void {
+  public func Setup(stats: ref<FlightStats>) -> Void {
     this.stats = stats;
     this.SetOpacity(0.0);
     this.RemoveAllChildren();
