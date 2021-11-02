@@ -604,6 +604,11 @@ public class FlightController  {
         this.ui.DrawCircle(Cast(findGround3.position));
         this.ui.DrawCircle(Cast(findGround4.position));
 
+        this.ui.DrawText(Cast(findGround1.position), FloatToStringPrec(Vector4.Distance(fl_tire, Cast(findGround1.position)), 2));
+        this.ui.DrawText(Cast(findGround2.position), FloatToStringPrec(Vector4.Distance(fr_tire, Cast(findGround2.position)), 2));
+        this.ui.DrawText(Cast(findGround3.position), FloatToStringPrec(Vector4.Distance(bl_tire, Cast(findGround3.position)), 2));
+        this.ui.DrawText(Cast(findGround4.position), FloatToStringPrec(Vector4.Distance(br_tire, Cast(findGround4.position)), 2));
+
         // FromVariant(scriptInterface.GetStateVectorParameter(physicsStateValue.Radius)) maybe?
         let normal = (Cast(findGround1.normal) + Cast(findGround2.normal) + Cast(findGround3.normal) + Cast(findGround4.normal)) / 4.0;
         this.normal = Vector4.Interpolate(this.normal, normal, this.normalEase);

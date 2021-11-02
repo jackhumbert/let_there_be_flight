@@ -256,6 +256,19 @@ public class FlightControllerUI extends inkCanvas {
       .BuildCircle();
   }
 
+  public func DrawText(position: Vector4, text: String) -> Void {
+    let circle = inkWidgetBuilder.inkText(StringToName("text_" + ToString(RandF())))
+      .Reparent((this.GetWidget(n"circles") as inkCanvas))
+      .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
+      .FontSize(20)
+      .Tint(ThemeColors.ElectricBlue())
+      .Opacity(0.5)
+      .Anchor(0.0, 0.0)
+      .Text(text)
+      .Translation(this.ScreenXY(position, 10.0, 0.0))
+      .BuildText();
+  }
+
   public func Show() -> Void {
     FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControllerBB.ShouldShowUI, true, true);
     FlightController.GetInstance().GetBlackboard().SignalBool(GetAllBlackboardDefs().FlightControllerBB.ShouldShowUI);
