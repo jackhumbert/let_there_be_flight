@@ -67,7 +67,7 @@ enum FlightMode {
 
 // maybe this should extend ScriptableComponent or GameComponent?
 // Singleton instance with player lifetime
-public class FlightController  {
+public native class FlightController  {
   private let gameInstance: GameInstance;
   private let m_blackboard: ref<IBlackboard>;
   private let stats: ref<FlightStats>;
