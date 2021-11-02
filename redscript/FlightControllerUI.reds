@@ -1,16 +1,16 @@
 import BaseLib.UI.*
 
-public class FlightControlUI extends inkCanvas {
+public class FlightControllerUI extends inkCanvas {
   public let controller: ref<inkGameController>;
   public let stats: ref<VehicleStats>;
   private let m_rootAnim: ref<inkAnimProxy>;
   private let m_markerRadius: Float;
-  public static func Create(controller: ref<inkGameController>, parent: ref<inkCompoundWidget>) -> ref<FlightControlUI> {
-    let instance = new FlightControlUI();
+  public static func Create(controller: ref<inkGameController>, parent: ref<inkCompoundWidget>) -> ref<FlightControllerUI> {
+    let instance = new FlightControllerUI();
     instance.controller = controller;
     instance.Reparent(parent);
-    instance.SetName(n"flightControlUI");
-    FlightControl.GetInstance().SetUI(instance);
+    instance.SetName(n"flightControllerUI");
+    FlightController.GetInstance().SetUI(instance);
     return instance;
   }
   public final const func GetVehicle() -> wref<VehicleObject> {
@@ -26,8 +26,8 @@ public class FlightControlUI extends inkCanvas {
     this.RemoveAllChildren();
 		this.SetAnchor(inkEAnchor.Centered);
     
-    // let buttonHints: ref<inkWidget> = this.controller.SpawnFromExternal(this, r"base\\gameplay\\gui\\widgets\\turret_hud\\turret_hud.inkwidget", n"Root");
-    // buttonHints.Reparent(this);
+    // let w: ref<inkWidget> = this.controller.SpawnFromExternal(this, r"base\\gameplay\\gui\\widgets\\turret_hud\\turret_hud.inkwidget", n"Root");
+    // w.Reparent(this);
     // return;
 
 
@@ -140,20 +140,6 @@ public class FlightControlUI extends inkCanvas {
     //   .Reparent(this)
     //   .BuildImage();
 
-
-
-    // let fps = new inkText();
-    // fps.SetName(n"fps");
-    // fps.Reparent(this);
-    // fps.SetFontFamily("base\\gameplay\\gui\\fonts\\orbitron\\orbitron.inkfontfamily");
-    // fps.SetFontStyle(n"Medium");
-    // fps.SetFontSize(24);
-    // fps.SetLetterCase(textLetterCase.UpperCase);
-    // fps.SetTintColor(ThemeColors.ElectricBlue());
-    // fps.SetText("You shouldn't see this!");
-    // fps.SetMargin(new inkMargin(0.0, 0.0, 0.0, 0.0));
-    // fps.SetSize(220.0, 24.0);
-
     let info = inkWidgetBuilder.inkCanvas(n"info")
       .Size(500.0, 200.0)
       .Reparent(this)
@@ -249,11 +235,30 @@ public class FlightControlUI extends inkCanvas {
       .Margin(20.0, 15.0, 0.0, 0.0)
       // .Overflow(textOverflowPolicy.AdjustToSize)
       .BuildText();
+
+      let circle_canvas = inkWidgetBuilder.inkCanvas(n"circles")
+        .Reparent(this)
+	      .Anchor(inkEAnchor.Centered)
+        .BuildCanvas();
+  }
+
+  public func ClearCircles() -> Void {
+    (this.GetWidget(n"circles") as inkCanvas).RemoveAllChildren();
+  }
+
+  public func DrawCircle(position: Vector4) -> Void {
+    let circle = inkWidgetBuilder.inkCircle(StringToName("circle_" + ToString(RandF())))
+      .Reparent((this.GetWidget(n"circles") as inkCanvas))
+      .Tint(ThemeColors.ElectricBlue())
+      .Opacity(0.5)
+      .Size(10.0, 10.0)
+      .Translation(this.ScreenXY(position))
+      .BuildCircle();
   }
 
   public func Show() -> Void {
-    FlightControl.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControl.ShouldShowUI, true, true);
-    FlightControl.GetInstance().GetBlackboard().SignalBool(GetAllBlackboardDefs().FlightControl.ShouldShowUI);
+    FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControllerBB.ShouldShowUI, true, true);
+    FlightController.GetInstance().GetBlackboard().SignalBool(GetAllBlackboardDefs().FlightControllerBB.ShouldShowUI);
     
     let startValue = this.GetOpacity();
     let duration = 1.0 - startValue;
@@ -286,17 +291,17 @@ public class FlightControlUI extends inkCanvas {
   } 
    
   protected cb func OnHideAnimationCompleted(anim: ref<inkAnimProxy>) -> Bool {
-    if (!FlightControl.GetInstance().IsActive()) {
-      FlightControl.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControl.ShouldShowUI, false, true);
-      FlightControl.GetInstance().GetBlackboard().SignalBool(GetAllBlackboardDefs().FlightControl.ShouldShowUI);
+    if (!FlightController.GetInstance().IsActive()) {
+      FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControllerBB.ShouldShowUI, false, true);
+      FlightController.GetInstance().GetBlackboard().SignalBool(GetAllBlackboardDefs().FlightControllerBB.ShouldShowUI);
     }
   }
 
   public func Update(timeDelta: Float) -> Void {
     let cameraTransform: Transform;
-    let cameraSys: ref<CameraSystem> = GameInstance.GetCameraSystem(FlightControl.GetInstance().gameInstance);
+    let cameraSys: ref<CameraSystem> = GameInstance.GetCameraSystem(FlightController.GetInstance().gameInstance);
     cameraSys.GetActiveCameraWorldTransform(cameraTransform);
-    // (this.flightControlUI.GetWidget(n"fps") as inkText).SetText(FloatToStringPrec(1.0 / timeDelta));
+    // (this.GetWidget(n"fps") as inkText).SetText(FloatToStringPrec(1.0 / timeDelta));
     (this.GetWidget(n"info/panel/text") as inkText).SetText("Location: < " + FloatToStringPrec(this.stats.d_position.X, 1)
       + ", " + FloatToStringPrec(this.stats.d_position.Y, 1) + ", " + FloatToStringPrec(this.stats.d_position.Z, 1) + " >");
       // + "Velocity: <" + FloatToStringPrec(this.stats.d_velocity.X, 1)
@@ -309,15 +314,15 @@ public class FlightControlUI extends inkCanvas {
     // let br_position = (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_right_tire") as TargetingComponent).GetLocalToWorld().W;
 
 
-    this.GetWidget(n"arrow_left").SetTranslation(this.ScreenXY(fl_position - this.stats.d_right * 1.0));
-    this.GetWidget(n"arrow_left").SetRotation(this.ScreenAngle(fl_position, fl_position + this.stats.d_right * 1.0));
-    this.GetWidget(n"arrow_left").SetOpacity(this.OpacityForPosition(fl_position - this.stats.d_right * 1.0));
-    // this.GetWidget(n"arrow_left").SetEffectParamValue(inkEffectType.Glitch, n"Glitch_0", n"intensity", 1.0 - this.OpacityForPosition(this.stats.d_position - this.stats.d_right * 2));
+    this.GetWidget(n"arrow_left").SetTranslation(this.ScreenXY(fl_position - this.stats.d_right * 0.5));
+    this.GetWidget(n"arrow_left").SetRotation(this.ScreenAngle(fl_position, fl_position + this.stats.d_right * 0.5));
+    this.GetWidget(n"arrow_left").SetOpacity(this.OpacityForPosition(fl_position - this.stats.d_right * 0.5));
+    // this.GetWidget(n"arrow_left").SetEffectParamValue(inkEffectType.Glitch, n"Glitch_0", n"intensity", 0.5 - this.OpacityForPosition(this.stats.d_position - this.stats.d_right * 2));
 
-    this.GetWidget(n"arrow_right").SetTranslation(this.ScreenXY(fr_position + this.stats.d_right * 1.0));
-    this.GetWidget(n"arrow_right").SetRotation(this.ScreenAngle(fr_position, fr_position - this.stats.d_right * 1.0));
-    this.GetWidget(n"arrow_right").SetOpacity(this.OpacityForPosition(fr_position + this.stats.d_right * 1.0));
-    // this.GetWidget(n"arrow_right").SetEffectParamValue(inkEffectType.Glitch, n"Glitch_0", n"intensity", 1.0 - this.OpacityForPosition(this.stats.d_position + this.stats.d_right * 2));
+    this.GetWidget(n"arrow_right").SetTranslation(this.ScreenXY(fr_position + this.stats.d_right * 0.5));
+    this.GetWidget(n"arrow_right").SetRotation(this.ScreenAngle(fr_position, fr_position - this.stats.d_right * 0.5));
+    this.GetWidget(n"arrow_right").SetOpacity(this.OpacityForPosition(fr_position + this.stats.d_right * 0.5));
+    // this.GetWidget(n"arrow_right").SetEffectParamValue(inkEffectType.Glitch, n"Glitch_0", n"intensity", 0.5 - this.OpacityForPosition(this.stats.d_position + this.stats.d_right * 2));
  
  
     // this.GetWidget(n"ruler_left").SetTranslation(this.ScreenXY(this.stats.d_position - Transform.GetUp(cameraTransform) * 2.0));
@@ -351,7 +356,7 @@ public class FlightControlUI extends inkCanvas {
 
   public func OpacityForPosition(position: Vector4) -> Float {
     let cameraTransform: Transform;
-    let cameraSys: ref<CameraSystem> = GameInstance.GetCameraSystem(FlightControl.GetInstance().gameInstance);
+    let cameraSys: ref<CameraSystem> = GameInstance.GetCameraSystem(FlightController.GetInstance().gameInstance);
     cameraSys.GetActiveCameraWorldTransform(cameraTransform);
     let cameraForward = Transform.GetForward(cameraTransform);
     return 0.1 + MaxF(0.0, MinF(0.9, (Vector4.Dot(cameraTransform.position - position, cameraForward) - Vector4.Dot(cameraTransform.position - this.stats.d_position, cameraForward)) / 2.0 * 0.9));

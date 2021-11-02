@@ -1,6 +1,6 @@
 import BaseLib.UI.*
 
-enum FlightControlMode {
+enum FlightMode {
   Hover = 0,
   Drone = 1
 } 
@@ -12,7 +12,7 @@ enum FlightControlMode {
 // public final static func GetFlightControlRecord(path: TweakDBID) -> ref<FlightControl_Record> {
 //   let record = new FlightControl_Record();
 //   let mass_path = path;
-//   TDBID.Prepend(mass_path, t"FlightControl.");
+//   TDBID.Prepend(mass_path, t"FlighstControl.");
 //   TDBID.Append(mass_path, t".mass");
 //   record.mass = TweakDBInterface.GetFloat(mass_path, 0.0);
 //   let comOffset_position_path = path;
@@ -53,63 +53,20 @@ enum FlightControlMode {
 
 // LogChannel(n"DEBUG", ToString(system.GetData()));
 
-public class FlightControlAudioStats {
-  public let volume: Float;
-  public let playerPosition: Vector4;
-  public let playerUp: Vector4;
-  public let playerForward: Vector4;
-  public let cameraPosition: Vector4;
-  public let cameraUp: Vector4;
-  public let cameraForward: Vector4;
-  public let speed: Float;
-  public let surge: Float;
-  public let yawDiff: Float;
-  public let lift: Float;
-  public let yaw: Float;
-  public let pitchDiff: Float;
-  public let brake: Float;
-  public static func Create() -> ref<FlightControlAudioStats> {
-    let instance = new FlightControlAudioStats();
-    instance.volume = 1.0;
-    instance.playerPosition = Vector4.EmptyVector();
-    instance.playerUp = new Vector4(0.0, 0.0, 1.0, 0.0);
-    instance.playerForward =new Vector4(0.0, 1.0, 0.0, 0.0);
-    instance.cameraPosition = Vector4.EmptyVector();
-    instance.cameraUp = new Vector4(0.0, 0.0, 1.0, 0.0);
-    instance.cameraForward = new Vector4(0.0, 1.0, 0.0, 0.0);
-    instance.speed = 0.0;
-    instance.surge = 0.0;
-    instance.yawDiff = 0.0;
-    instance.lift = 0.0;
-    instance.yaw = 0.0;
-    instance.pitchDiff = 0.0;
-    instance.brake = 0.0;
-    return instance;
-  }
-}
-
-// enum gamePSMVehicle {
-//   Default = 0,
-//   Driving = 1,
-//   Combat = 2,
-//   Passenger = 3,
-//   Transition = 4,
-//   Turret = 5,
-//   DriverCombat = 6,
-//   Scene = 7,
-//   Flying = 8
-// }
-
+// maybe this should extend ScriptableComponent or GameComponent?
 // Singleton instance with player lifetime
-public class FlightControl  {
+public class FlightController  {
   private let gameInstance: GameInstance;
   private let m_blackboard: ref<IBlackboard>;
   private let stats: ref<VehicleStats>;
-  private let ui: ref<FlightControlUI>;
-  public final func SetUI(ui: ref<FlightControlUI>) {
+  private let ui: ref<FlightControllerUI>;
+  public final func SetUI(ui: ref<FlightControllerUI>) {
     this.ui = ui;
   }
-  public let audioStats: ref<FlightControlAudioStats>;
+  public let audioStats: ref<FlightAudioStats>;
+  public const func GetAudioStats() -> ref<FlightAudioStats> {
+    return this.audioStats;
+  }
   public final const func GetVehicle() -> wref<VehicleObject> {
     if !Equals(this.stats, null) {
       return this.stats.vehicle;
@@ -125,16 +82,17 @@ public class FlightControl  {
   public final const func IsActive() -> Bool {
     return this.active;
   }
-  private let mode: FlightControlMode;
-  public final const func GetMode() -> FlightControlMode {
+  private let mode: FlightMode;
+  public final const func GetMode() -> FlightMode {
     return this.mode;
   }
   public let showOptions: Bool;
   public let brake: ref<PID>;
   public let lift: ref<PID>;
   public let liftFactor: Float;
-  public let surgePos: ref<PID>;
-  public let surgeNeg: ref<PID>;
+  public let surge: ref<PID>;
+  // public let surgePos: ref<PID>;
+  // public let surgeNeg: ref<PID>;
   public let surgeFactor: Float;
   public let roll: ref<PID>;
   public let pitch: ref<PID>;
@@ -170,10 +128,10 @@ public class FlightControl  {
   public let maxHoverHeight: Float;
   public let m_maxSpeedModifier: ref<gameStatModifierData>;
 
-  // defined in the RED4ext part
-  // public func StartSnd() -> Void
-  // public func StopSnd() -> Void
-  // public func SetParams(...) -> Void
+  // these are defined in the RED4ext part
+  // public native func StartSnd() -> Void
+  // public native func StopSnd() -> Void
+  // public native func SetParams() -> Void
 
   private func Initialize(player: ref<PlayerPuppet>) {
     this.gameInstance = player.GetGame();
@@ -184,8 +142,9 @@ public class FlightControl  {
     this.brake = PID.Create(0.05, 0.0, 0.0, 0.0);
     this.lift = PID.Create(0.05, 0.0, 0.0, 0.0);
     this.liftFactor = 15.0;
-    this.surgePos = PID.Create(0.04, 0.0, 0.0, 0.0);
-    this.surgeNeg = PID.Create(0.04, 0.0, 0.0, 0.0);
+    this.surge = PID.Create(0.04, 0.0, 0.0, 0.0);
+    // this.surgePos = PID.Create(0.04, 0.0, 0.0, 0.0);
+    // this.surgeNeg = PID.Create(0.04, 0.0, 0.0, 0.0);
     this.surgeFactor = 15.0;
     this.roll = PID.Create(0.5, 0.0, 0.0, 0.0);
     this.pitch = PID.Create(0.5, 0.0, 0.0, 0.0);
@@ -195,10 +154,10 @@ public class FlightControl  {
     this.distanceEase = 0.5;
     this.normal = new Vector4(0.0, 0.0, 1.0, 0.0);
     this.normalEase = 0.01;
-    this.airResistance = 0.005;
+    this.airResistance = 0.01;
     this.hoverHeight = 3.50;
     this.maxHoverHeight = 7.0;
-    this.hoverFactor = 10.0;
+    this.hoverFactor = 5.0;
     this.hover = PID.Create(0.1, 0.01, 0.05);
     this.pitchPID = PID.Create(0.5, 0.05, 0.1);
     this.pitchCorrectionFactor = 1000.0;
@@ -206,10 +165,10 @@ public class FlightControl  {
     this.rollCorrectionFactor = 1000.0;
     this.yawPID = PID.Create(0.5, 0.5, 0.5);
     this.yawCorrectionFactor = 100.0;
-    this.brakeFactor = 0.02;
+    this.brakeFactor = 0.5;
     // this.lookAheadMax = 10.0;
-    this.lookAheadMax = 0.1;
-    this.lookAheadMin = 0.1;
+    this.lookAheadMax = 0.5;
+    this.lookAheadMin = 1.0;
     this.lookDown = new Vector4(0.0, 0.0, -this.maxHoverHeight - 10.0, 0.0);
     this.fwtfCorrection = 0.0;
     // this.pitchWithLift = -0.3;
@@ -225,34 +184,29 @@ public class FlightControl  {
     this.hovering = true;
     this.referenceZ = 0.0;
 
-    this.audioStats = FlightControlAudioStats.Create();  
+    this.audioStats = FlightAudioStats.Create();  
   }
 
   public const func GetBlackboard() -> ref<IBlackboard> {
-    return GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().FlightControl);
+    return GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().FlightControllerBB);
   }
-
-  // protected func CreateBlackboard() -> Void {
-  //   this.m_blackboard = IBlackboard.Create(GetAllBlackboardDefs().FlightControl);
-  // }
   
   public static func CreateInstance(player: ref<PlayerPuppet>) {
-    let instance: ref<FlightControl> = new FlightControl();
+    let instance: ref<FlightController> = new FlightController();
     instance.Initialize(player);  
 
     // This strong reference will tie the lifetime of the singleton 
     // to the lifetime of the player entity
-    player.FlightControlInstance = instance;
+    player.flightController = instance;
 
     // This weak reference is used as a global variable 
     // to access the mod instance anywhere
-    GetAllBlackboardDefs().FlightControlInstance = instance;
-    // GetAllBlackboardDefs().FlightControl = instance.GetBlackboard() as FlightControlDef;
+    GetAllBlackboardDefs().flightController = instance;
     LogChannel(n"DEBUG", "Flight Control Loaded");
   }
   
-  public static func GetInstance() -> wref<FlightControl> {
-    return GetAllBlackboardDefs().FlightControlInstance;
+  public static func GetInstance() -> wref<FlightController> {
+    return GetAllBlackboardDefs().flightController;
   }
   
   public func Enable(vehicle: ref<VehicleObject>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
@@ -270,10 +224,6 @@ public class FlightControl  {
     // shardUIevent.text = "Your new car is equiped with the state-of-the-art Flight Control!";
     // GameInstance.GetUISystem(this.gameInstance).QueueEvent(shardUIevent);
 
-    // these don't appear to do anything here - maybe it's only locomotion
-    // this.m_maxSpeedModifier = RPGManager.CreateStatModifier(gamedataStatType.MaxSpeed, gameStatModifierType.Multiplier, 20.0);
-    // scriptInterface.GetStatsSystem().AddModifier(Cast(scriptInterface.ownerEntityID), this.m_maxSpeedModifier);
-
     LogChannel(n"DEBUG", "Flight Control Enabled for " + this.GetVehicle().GetDisplayName());
   }
 
@@ -285,11 +235,6 @@ public class FlightControl  {
     this.SetupActions();   
     this.stats = null;
 
-    // if IsDefined(this.m_maxSpeedModifier) {
-    //   scriptInterface.GetStatsSystem().RemoveModifier(Cast(scriptInterface.ownerEntityID), this.m_maxSpeedModifier);
-    //   this.m_maxSpeedModifier = null;
-    // }
-
     LogChannel(n"DEBUG", "Flight Control Disabled");
   }
 
@@ -299,8 +244,8 @@ public class FlightControl  {
     } else {
       this.Activate();
     }
-    this.GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControl.IsActive, this.active, true);
-    this.GetBlackboard().SignalBool(GetAllBlackboardDefs().FlightControl.IsActive);
+    this.GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControllerBB.IsActive, this.active, true);
+    this.GetBlackboard().SignalBool(GetAllBlackboardDefs().FlightControllerBB.IsActive);
     return this.active;
   }
   
@@ -315,21 +260,17 @@ public class FlightControl  {
     this.pitch.Reset();
     this.roll.Reset();
     this.yaw.Reset();
-    this.surgePos.Reset();
-    this.surgeNeg.Reset();
+    this.surge.Reset();
     this.lift.Reset();
     this.brake.Reset();
     // (this.GetVehicle().GetPS() as VehicleComponentPS).SetThrusterState(false);
     // (this.GetVehicle().GetPS() as VehicleComponentPS).SetIsDestroyed(true);
 
-    // let interactionEvent: ref<InteractionSetEnableEvent> = new InteractionSetEnableEvent();
-    // interactionEvent.enable = false;
-    // interactionEvent.layer = n"";
-    // this.GetVehicle().QueueEvent(interactionEvent);
-
-    // these stop engine noises
+    // these stop engine noises too?
     this.GetVehicle().TurnEngineOn(false);
-    this.GetVehicle().TurnOn(false);
+    // this.GetVehicle().TurnOn(true);
+
+    // this.StartSnd();
 
     // this disables engines noises from starting, but also prevents wheels from moving
     // something that only stops engine noises would be preferred, or this could be toggled
@@ -337,55 +278,10 @@ public class FlightControl  {
     this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetState(vehicleEState.Disabled);
     // LogChannel(n"DEBUG", ToString(TweakDBInterface.GetFlightControlRecord(this.GetVehicle().GetRecordID()).mass));
 
-    // this.GetVehicle().GetVehiclePS().SetIsPlayerVehicle(false);
-
     this.stats.Reset();
     this.ui.Show();
   
-      // stateContext.SetPermanentBoolParameter(n"ForceIdleVehicle", true, true);
-    // this.GetVehicle().GetBlackboard().SetVariant(GetAllBlackboardDefs().UI_ActiveVehicleData.VehPlayerStateData, ToVariant(3));
-
-    // let hudManager: ref<HUDManager>;
-    // let registration: ref<HUDManagerRegistrationRequest>;
-    // if this.GetVehicle().IsCrowdVehicle() && !this.GetVehicle().ShouldForceRegisterInHUDManager() {
-    //   return;
-    // };
-    // hudManager = GameInstance.GetScriptableSystemsContainer(this.GetVehicle().GetGame()).Get(n"HUDManager") as HUDManager;
-    // if IsDefined(hudManager) {
-    //   registration = new HUDManagerRegistrationRequest();
-    //   registration.SetProperties(this.GetVehicle(), shouldRegister);
-    //   hudManager.QueueRequest(registration);
-    // };    
-    
-    // GetPlayer(this.gameInstance).GetPlayerStateMachineBlackboard().SetInt(GetAllBlackboardDefs().PlayerStateMachine.Vehicle, EnumInt(gamePSMVehicle.Scene));
-
-    // let psm: ref<PSMStartStateMachine> = new PSMStartStateMachine();
-    // psm.stateMachineIdentifier.definitionName = n"Crosshair";
-    // this.GetVehicle().QueueEvent(psm);
-
-    // this.HUDGameController.ShowRequest();
-    
-    // let uiSystemBB = GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().UIGameData);
-    // let uiSystemBBDef = GetAllBlackboardDefs().UIGameData;
-    // uiSystemBB.SetBool(uiSystemBBDef.Popup_IsShown, true);
-    // uiSystemBB.SignalBool(uiSystemBBDef.Popup_IsShown);
-
-		// let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
-		// let showEvent: ref<ShowFlightHUDEvent> = ShowFlightHUDEvent.Create(this.HUDGameController);
-
-		// uiSystem.QueueEvent(showEvent);
-
-    // let transform: WorldTransform;
-    // WorldTransform.SetPosition(transform, this.stats.d_position + new Vector4(0.0, 0.0, 2.0, 0.0));
-    // let beam: ref<FxInstance> = GameInstance.GetFxSystem(this.gameInstance).SpawnEffect(this.GetVehicle().GetFxResourceByKey(n"pingNetworkLink"), transform, true);
-
-    // StatusEffectHelper.ApplyStatusEffect(GetPlayer(this.gameInstance), t"GameplayRestriction.NoCameraControl");
-    // gameSaveLockReason.PlayerState
-    //   private func IsSavingLocked() -> Bool {
-    
     this.ShowSimpleMessage("Flight Control Engaged");
-    // GameInstance.GetUISystem(this.gameInstance).PushGameContext(UIGameContext.VehicleRace); 
-
 
     // stateContext.SetPermanentCNameParameter(n"VehicleCameraParams", n"", true); 
     // this.driveEvents.UpdateCameraContext(stateContext, scriptInterface);
@@ -393,10 +289,10 @@ public class FlightControl  {
     // if param.valid {
     //     this.driveEvents.UpdateCameraParams(param.value, scriptInterface);
     // };
-    GameInstance.GetAudioSystem(this.gameInstance).PlayFlightControlSound(n"ui_hacking_access_granted");
+    GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_hacking_access_granted");
     // GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"ignition", true);
-    // GameInstance.GetAudioSystem(this.gameInstance).PlayFlightControlSound(StringToName(this.GetVehicle().GetRecord().Player_audio_resource()));
-    // GameInstance.GetAudioSystem(this.gameInstance).PlayFlightControlSound(n"mus_cp_arcade_quadra_START_menu");
+    // GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(StringToName(this.GetVehicle().GetRecord().Player_audio_resource()));
+    // GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"mus_cp_arcade_quadra_START_menu");
     LogChannel(n"DEBUG", "Flight Control Activated");
   }
 
@@ -410,17 +306,19 @@ public class FlightControl  {
     // interactionEvent.layer = n"";
     // this.GetVehicle().QueueEvent(interactionEvent);
     // (this.GetVehicle().GetPS() as VehicleComponentPS).SetThrusterState(false);
-    this.GetVehicle().TurnOn(true);
-    this.GetVehicle().TurnEngineOn(true);
 
     this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetState(vehicleEState.On);
+
+    // this.StopSnd();
 
     // this.GetVehicle().GetVehiclePS().SetIsPlayerVehicle(true);
 
     // StatusEffectHelper.RemoveStatusEffect(GetPlayer(this.gameInstance), t"GameplayRestriction.NoCameraControl");
     if !silent {
+      this.GetVehicle().TurnOn(true);
+      this.GetVehicle().TurnEngineOn(true);
       this.ShowSimpleMessage("Flight Control Disengaged");
-      GameInstance.GetAudioSystem(this.gameInstance).PlayFlightControlSound(n"ui_hacking_access_denied");
+      GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_hacking_access_denied");
     }
     this.ui.Hide();
 
@@ -450,7 +348,7 @@ public class FlightControl  {
 
     // GameObject.PlaySound(GetPlayer(this.gameInstance), n"drone_disable");
     // GameInstance.GetAudioSystem(this.gameInstance).PlayLootAllSound();
-    // GameInstance.GetAudioSystem(this.gameInstance).PlayFlightControlSound(n"mus_cp_arcade_quadra_STOP");
+    // GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"mus_cp_arcade_quadra_STOP");
     LogChannel(n"DEBUG", "Flight Control Deactivated");
   }
 
@@ -458,20 +356,20 @@ public class FlightControl  {
     let player: ref<PlayerPuppet> = GetPlayer(this.gameInstance);
     let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
     player.UnregisterInputListener(this);    
-    uiSystem.QueueEvent(FlightControl.HideHintFromSource(n"FlightControl"));
+    uiSystem.QueueEvent(FlightController.HideHintFromSource(n"FlightController"));
     if this.enabled {
       player.RegisterInputListener(this, n"Flight_Toggle");
       if this.active {
-        uiSystem.QueueEvent(FlightControl.ShowHintHelper("Disable Flight Control", n"Flight_Toggle", n"FlightControl"));
+        uiSystem.QueueEvent(FlightController.ShowHintHelper("Disable Flight Control", n"Flight_Toggle", n"FlightController"));
         // player.RegisterInputListener(this, n"Pitch");
-        // uiSystem.QueueEvent(FlightControl.ShowHintHelper("Pitch", n"Pitch", n"FlightControl"));
+        // uiSystem.QueueEvent(FlightController.ShowHintHelper("Pitch", n"Pitch", n"FlightController"));
         // player.RegisterInputListener(this, n"Roll");
-        // uiSystem.QueueEvent(FlightControl.ShowHintHelper("Roll", n"Roll", n"FlightControl"));
+        // uiSystem.QueueEvent(FlightController.ShowHintHelper("Roll", n"Roll", n"FlightController"));
         player.RegisterInputListener(this, n"Accelerate");
         player.RegisterInputListener(this, n"LeanFB");
-        uiSystem.QueueEvent(FlightControl.ShowHintHelper("Lift", n"LeanFB", n"FlightControl"));
+        uiSystem.QueueEvent(FlightController.ShowHintHelper("Lift", n"LeanFB", n"FlightController"));
         player.RegisterInputListener(this, n"TurnX");
-        uiSystem.QueueEvent(FlightControl.ShowHintHelper("Yaw", n"TurnX", n"FlightControl"));
+        uiSystem.QueueEvent(FlightController.ShowHintHelper("Yaw", n"TurnX", n"FlightController"));
         player.RegisterInputListener(this, n"Decelerate");
         // we may want to look at something else besides this input so ForceBrakesUntilStoppedOrFor will work (not entirely sure it doesn't now)
         // vehicle.GetBlackboard().GetInt(GetAllBlackboardDefs().Vehicle.IsHandbraking) is the value (why int? no enums for it seem to exist)
@@ -479,9 +377,9 @@ public class FlightControl  {
         player.RegisterInputListener(this, n"Choice1_DualState");
         player.RegisterInputListener(this, n"FlightOptions_Up");
         player.RegisterInputListener(this, n"FlightOptions_Down");
-        uiSystem.QueueEvent(FlightControl.ShowHintHelper("Flight Options", n"Choice1_DualState", n"FlightControl"));
+        uiSystem.QueueEvent(FlightController.ShowHintHelper("Flight Options", n"Choice1_DualState", n"FlightController"));
       } else {
-        uiSystem.QueueEvent(FlightControl.ShowHintHelper("Enable Flight Control", n"Flight_Toggle", n"FlightControl"));
+        uiSystem.QueueEvent(FlightController.ShowHintHelper("Enable Flight Control", n"Flight_Toggle", n"FlightController"));
       }
     }
   }
@@ -522,12 +420,12 @@ public class FlightControl  {
       if this.showOptions {
         if Equals(actionName, n"FlightOptions_Up") && ListenerAction.IsButtonJustPressed(action) {
             this.hoverHeight += 0.1;
-            GameInstance.GetAudioSystem(this.gameInstance).PlayFlightControlSound(n"ui_menu_onpress");
+            GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_menu_onpress");
             LogChannel(n"DEBUG", "hoverHeight = " + ToString(this.hoverHeight));
         }
         if Equals(actionName, n"FlightOptions_Down") && ListenerAction.IsButtonJustPressed(action) {
             this.hoverHeight -= 0.1;
-            GameInstance.GetAudioSystem(this.gameInstance).PlayFlightControlSound(n"ui_menu_onpress");
+            GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_menu_onpress");
             LogChannel(n"DEBUG", "hoverHeight = " + ToString(this.hoverHeight));
         }
       }
@@ -540,7 +438,7 @@ public class FlightControl  {
             this.pitch.SetInput(value);
             break;
           case n"Accelerate":
-            this.surgePos.SetInput(value);
+            this.surge.SetInput(value);
             break;
           case n"TurnX":
             this.yaw.SetInput(value);
@@ -549,7 +447,7 @@ public class FlightControl  {
             this.lift.SetInput(value);
             break;
           case n"Decelerate":
-            this.surgeNeg.SetInput(value);
+            this.surge.SetInput(-value);
             break;
           default:
             return false;
@@ -566,8 +464,7 @@ public class FlightControl  {
       }
     } else {
       this.lift.SetInput(0.0);
-      this.surgePos.SetInput(0.0);
-      this.surgeNeg.SetInput(0.0);
+      this.surge.SetInput(0.0);
       this.yaw.SetInput(0.0);
       this.pitch.SetInput(0.0);
       this.roll.SetInput(0.0);
@@ -575,10 +472,18 @@ public class FlightControl  {
     }
   }
 
-  public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-    if !this.active {
-      return;
-    }
+  public func UpdateInputs(timeDelta: Float) -> Void {
+    this.yaw.GetValue(timeDelta);
+    this.roll.GetValue(timeDelta);
+    this.pitch.GetValue(timeDelta);
+    this.lift.GetValue(timeDelta);
+    this.brake.GetValue(timeDelta);
+    this.surge.GetValue(timeDelta);
+    // this.surgePos.GetValue(timeDelta);
+    // this.surgeNeg.GetValue(timeDelta);
+  }
+
+  public func UpdateAudioParams() -> Void {
     this.audioStats.volume = 1.0;
     // this.audioStats.volume = (GameInstance.GetSettingsSystem(this.gameInstance).GetVar(n"/audio/volume", n"MasterVolume") as ConfigVarListInt).GetValue();
     // this.audioStats.volume *= (GameInstance.GetSettingsSystem(this.gameInstance).GetVar(n"/audio/volume", n"SfxVolume") as ConfigVarListInt).GetValue();
@@ -589,14 +494,50 @@ public class FlightControl  {
     }
     // might need to handle just the scanning system's dilation, and the pause menu
     if GameInstance.GetTimeSystem(this.gameInstance).IsTimeDilationActive(n"radial") {
+      this.audioStats.volume *= 0.1;
+    } else {
+      if GameInstance.GetTimeSystem(this.gameInstance).IsTimeDilationActive() {
+        this.audioStats.volume *= 0.1;
+      }
+    }
+    this.audioStats.playerPosition = this.stats.d_position;
+    this.audioStats.playerUp = this.stats.d_up;
+    this.audioStats.playerForward = this.stats.d_forward;
+
+    let cameraTransform: Transform;
+    let cameraSys: ref<CameraSystem> = GameInstance.GetCameraSystem(this.gameInstance);
+    cameraSys.GetActiveCameraWorldTransform(cameraTransform);
+
+    this.audioStats.cameraPosition = cameraTransform.position;
+    this.audioStats.cameraUp = Transform.GetUp(cameraTransform);
+    this.audioStats.cameraForward = Transform.GetForward(cameraTransform);
+
+    this.audioStats.speed = this.stats.d_speed;
+    this.audioStats.yawDiff = Vector4.GetAngleDegAroundAxis(this.stats.d_forward, this.stats.d_direction, this.stats.d_up);
+    this.audioStats.pitchDiff = Vector4.GetAngleDegAroundAxis(this.stats.d_forward, this.stats.d_direction, this.stats.d_right);
+    
+    this.audioStats.surge = this.surge.GetValue();
+    this.audioStats.yaw = this.yaw.GetValue();
+    this.audioStats.lift = this.lift.GetValue();
+    this.audioStats.brake = this.brake.GetValue();
+
+    // this.SetParams(this.audioStats.volume, this.audioStats.playerPosition, this.audioStats.playerUp, this.audioStats.playerForward, this.audioStats.cameraPosition, this.audioStats.cameraUp, this.audioStats.cameraForward, this.audioStats.speed, this.audioStats.surge, this.audioStats.yawDiff, this.audioStats.lift, this.audioStats.yaw, this.audioStats.pitchDiff, this.audioStats.brake);
+  }
+
+  public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
+    if !this.active {
+      return;
+    }
+    // might need to handle just the scanning system's dilation, and the pause menu
+    if GameInstance.GetTimeSystem(this.gameInstance).IsTimeDilationActive(n"radial") {
       // this might happpen?
       timeDelta *= TimeDilationHelper.GetFloatFromTimeSystemTweak("radialMenu", "timeDilation");
-      this.audioStats.volume *= 0.1;
+      LogChannel(n"DEBUG", "Radial menu dilation"); 
     } else {
       if GameInstance.GetTimeSystem(this.gameInstance).IsTimeDilationActive() {
         // i think this is what this is called
         timeDelta *= TimeDilationHelper.GetFloatFromTimeSystemTweak("focusModeTimeDilation", "timeDilation");
-        this.audioStats.volume *= 0.1;
+        LogChannel(n"DEBUG", "Other time dilation"); 
       }
     }
 
@@ -615,6 +556,7 @@ public class FlightControl  {
     }
 
     this.stats.UpdateDynamic(timeDelta);
+    this.ui.ClearCircles();
 
     let direction = this.stats.d_direction;
     if this.stats.d_speed < 1.0 {
@@ -626,14 +568,9 @@ public class FlightControl  {
     let rollCorrection: Float = 0.0;
     let yawCorrection: Float = 0.0;
 
-    let yawValue = this.yaw.GetValue(timeDelta);
-    let rollValue = this.roll.GetValue(timeDelta);
-    let pitchValue = this.pitch.GetValue(timeDelta);
-    let liftValue = this.lift.GetValue(timeDelta);
-    let brakeValue = this.brake.GetValue(timeDelta);
-    let surgeValue = this.surgePos.GetValue(timeDelta) - this.surgeNeg.GetValue(timeDelta);
+    this.UpdateInputs(timeDelta);
 
-    this.hoverHeight += liftValue * timeDelta * this.liftFactor * (1.0 + this.stats.d_speedRatio * 2.0);
+    this.hoverHeight += this.lift.GetValue() * timeDelta * this.liftFactor * (1.0 + this.stats.d_speedRatio * 2.0);
     if this.hovering {
       this.hoverHeight = MaxF(0.0, this.hoverHeight);
     }
@@ -649,33 +586,40 @@ public class FlightControl  {
       hoverCorrection = 1.0;
     } else {
       // we could also use these four points (or different ones) to just move each of the corners of the vehicle, instead of doing all this math
-      let lookAheadPoint: array<Vector4>;
-      lookAheadPoint[0] = (direction + Vector4.Cross(direction, player.GetWorldUp()) * 0.5) * (this.lookAheadMin + this.lookAheadMax * this.stats.d_speedRatio);
-      lookAheadPoint[1] = (direction - Vector4.Cross(direction, player.GetWorldUp()) * 0.5) * (this.lookAheadMin + this.lookAheadMax * this.stats.d_speedRatio);
-      lookAheadPoint[2] = (-direction + Vector4.Cross(direction, player.GetWorldUp()) * 0.5);
-      lookAheadPoint[3] = (-direction - Vector4.Cross(direction, player.GetWorldUp()) * 0.5);
+      // let lookAheadPoint: array<Vector4>;
+      // lookAheadPoint[0] = (direction + Vector4.Cross(direction, player.GetWorldUp()) * 0.5) * (this.lookAheadMin + this.lookAheadMax * this.stats.d_speedRatio);
+      // lookAheadPoint[1] = (direction - Vector4.Cross(direction, player.GetWorldUp()) * 0.5) * (this.lookAheadMin + this.lookAheadMax * this.stats.d_speedRatio);
+      // lookAheadPoint[2] = (-direction + Vector4.Cross(direction, player.GetWorldUp()) * 0.5);
+      // lookAheadPoint[3] = (-direction - Vector4.Cross(direction, player.GetWorldUp()) * 0.5);
+
+
 
       QueryFilter.AddGroup(queryFilter, n"Static");
       QueryFilter.AddGroup(queryFilter, n"Terrain");
       // this finds vehicle too - need to figure out how to exclude it
       // QueryFilter.AddGroup(queryFilter, n"PlayerBlocker"); 
 
-      // let fl_position = (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_left_tire") as TargetingComponent).GetLocalToWorld().W;
-      // let fr_position = (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_right_tire") as TargetingComponent).GetLocalToWorld().W;
-      // let bl_position = (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_left_tire") as TargetingComponent).GetLocalToWorld().W;
-      // let br_position = (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_right_tire") as TargetingComponent).GetLocalToWorld().W;
+      let fl_tire: Vector4 = Matrix.GetTranslation((this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_left_tire") as TargetingComponent).GetLocalToWorld());
+      let fr_tire: Vector4 = Matrix.GetTranslation((this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_right_tire") as TargetingComponent).GetLocalToWorld());
+      let bl_tire: Vector4 = Matrix.GetTranslation((this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_left_tire") as TargetingComponent).GetLocalToWorld());
+      let br_tire: Vector4 = Matrix.GetTranslation((this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_right_tire") as TargetingComponent).GetLocalToWorld());
 
-      let findGround1: TraceResult = scriptInterface.RayCastWithCollisionFilter(this.stats.d_position + lookAheadPoint[0], this.stats.d_position + lookAheadPoint[0] + this.lookDown, queryFilter);
-      let findGround2: TraceResult = scriptInterface.RayCastWithCollisionFilter(this.stats.d_position + lookAheadPoint[1], this.stats.d_position + lookAheadPoint[1] + this.lookDown, queryFilter);
-      let findGround3: TraceResult = scriptInterface.RayCastWithCollisionFilter(this.stats.d_position + lookAheadPoint[2], this.stats.d_position + lookAheadPoint[2] + this.lookDown, queryFilter);
-      let findGround4: TraceResult = scriptInterface.RayCastWithCollisionFilter(this.stats.d_position + lookAheadPoint[3], this.stats.d_position + lookAheadPoint[3] + this.lookDown, queryFilter);
+      let findGround1: TraceResult = scriptInterface.RayCastWithCollisionFilter(fl_tire, fl_tire + this.lookDown, queryFilter);
+      let findGround2: TraceResult = scriptInterface.RayCastWithCollisionFilter(fr_tire, fr_tire + this.lookDown, queryFilter);
+      let findGround3: TraceResult = scriptInterface.RayCastWithCollisionFilter(bl_tire, bl_tire + this.lookDown, queryFilter);
+      let findGround4: TraceResult = scriptInterface.RayCastWithCollisionFilter(br_tire, br_tire + this.lookDown, queryFilter);
       if TraceResult.IsValid(findGround1) && TraceResult.IsValid(findGround2) && TraceResult.IsValid(findGround3) && TraceResult.IsValid(findGround4) {
         let distance = MaxF(
-          MaxF(Vector4.Distance(this.stats.d_position + lookAheadPoint[0], Cast(findGround1.position)),
-          Vector4.Distance(this.stats.d_position + lookAheadPoint[1], Cast(findGround2.position))),
-          MaxF(Vector4.Distance(this.stats.d_position + lookAheadPoint[2], Cast(findGround3.position)),
-          Vector4.Distance(this.stats.d_position + lookAheadPoint[3], Cast(findGround4.position))));
+          MaxF(Vector4.Distance(fl_tire, Cast(findGround1.position)),
+          Vector4.Distance(fr_tire, Cast(findGround2.position))),
+          MaxF(Vector4.Distance(bl_tire, Cast(findGround3.position)),
+          Vector4.Distance(br_tire, Cast(findGround4.position))));
         this.distance = distance * this.distanceEase + this.distance * (1.0 - this.distanceEase);
+
+        this.ui.DrawCircle(Cast(findGround1.position));
+        this.ui.DrawCircle(Cast(findGround2.position));
+        this.ui.DrawCircle(Cast(findGround3.position));
+        this.ui.DrawCircle(Cast(findGround4.position));
 
         // FromVariant(scriptInterface.GetStateVectorParameter(physicsStateValue.Radius)) maybe?
         let normal = (Cast(findGround1.normal) + Cast(findGround2.normal) + Cast(findGround3.normal) + Cast(findGround4.normal)) / 4.0;
@@ -709,25 +653,28 @@ public class FlightControl  {
     }
 
     hoverCorrection = this.hover.GetCorrectionClamped(heightDifference, timeDelta, 1.0);
-    pitchCorrection = this.pitchPID.GetCorrectionClamped(Vector4.Dot(idealNormal, this.stats.d_forward) + liftValue * this.pitchWithLift, timeDelta, 1.0) + pitchValue / 10.0;
-    rollCorrection = this.rollPID.GetCorrectionClamped(Vector4.Dot(idealNormal, this.stats.d_right), timeDelta, 1.0) + yawValue * this.rollWithYaw + rollValue / 10.0;
+    pitchCorrection = this.pitchPID.GetCorrectionClamped(Vector4.Dot(idealNormal, this.stats.d_forward) + this.lift.GetValue() * this.pitchWithLift, timeDelta, 1.0) + this.pitch.GetValue() / 10.0;
+    rollCorrection = this.rollPID.GetCorrectionClamped(Vector4.Dot(idealNormal, this.stats.d_right), timeDelta, 1.0) + this.yaw.GetValue() * this.rollWithYaw + this.roll.GetValue() / 10.0;
     let angle: Float = Vector4.GetAngleDegAroundAxis(Vector4.Interpolate(this.stats.d_forward, direction, this.stats.d_speedRatio * this.velocityPointing), this.stats.d_forward, new Vector4(0.0, 0.0, 1.0, 0.0));
 
     // decay the integral if we have yaw input - this helps get rid of the windup effect
-    this.yawPID.integralFloat *= (1.0 - AbsF(yawValue));
-    yawCorrection = this.yawPID.GetCorrection(angle + yawValue * this.yawFactor * (1.0 + this.stats.d_speedRatio * 5.0), timeDelta);
+    this.yawPID.integralFloat *= (1.0 - AbsF(this.yaw.GetValue()));
+    yawCorrection = this.yawPID.GetCorrection(angle + this.yaw.GetValue() * this.yawFactor * (1.0 + this.stats.d_speedRatio * 5.0), timeDelta);
 
-    let velocityDamp: Vector4 = MaxF(brakeValue * this.brakeFactor, this.airResistance) * this.stats.d_velocity * this.stats.s_mass;
+    let velocityDamp: Vector4 = MaxF(this.brake.GetValue() * this.brakeFactor, this.airResistance) * this.stats.d_velocity * this.stats.s_mass;
     // so we don't get impulsed by the speed limit (100 m/s, i think)
     if this.stats.d_speed > 90.0 {
       velocityDamp *= (1 + PowF((this.stats.d_speed - 90.0) / 10.0, 2.0) * 1000.0);
     }
 
-    let yawDirectionality: Float = (this.stats.d_speedRatio + AbsF(yawValue) * this.swayWithYaw) * this.stats.s_mass;
-    let liftForce: Float = hoverCorrection  * this.stats.s_mass * this.hoverFactor * timeDelta;
-    let surgeForce: Float = surgeValue * this.stats.s_mass * this.surgeFactor;
+    let yawDirectionality: Float = (this.stats.d_speedRatio + AbsF(this.yaw.GetValue()) * this.swayWithYaw) * this.stats.s_mass;
+    let liftForce: Float = hoverCorrection * this.stats.s_mass * this.hoverFactor * timeDelta * 9.8;
+    // actual in-game mass (i think)
+    // LogChannel(n"DEBUG", ToString(hoverCorrection * this.stats.s_mass * this.hoverFactor) + " vs " + this.GetVehicle().GetTotalMass());
+    let surgeForce: Float = this.surge.GetValue() * this.stats.s_mass * this.surgeFactor;
 
-    this.CreateImpulse(this.stats.d_position, new Vector4(0.00, 0.00, liftForce, 0.00) + Vector4.Normalize2D(this.stats.d_right) * Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right) * yawDirectionality * timeDelta);
+    // this.CreateImpulse(this.stats.d_position, new Vector4(0.00, 0.00, liftForce, 0.00) + Vector4.Normalize2D(this.stats.d_right) * Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right) * yawDirectionality * timeDelta);
+    this.CreateImpulse(this.stats.d_position, new Vector4(0.00, 0.00, liftForce, 0.00));
     this.CreateImpulse(this.stats.d_position + this.stats.d_forward * this.surgeOffset, this.stats.d_forward * surgeForce * timeDelta);
     // pitch correction
     this.CreateImpulse(this.stats.d_position - this.stats.d_up,       this.stats.d_forward *  this.stats.s_momentOfInertia.X * -pitchCorrection * this.pitchCorrectionFactor * timeDelta);
@@ -739,49 +686,13 @@ public class FlightControl  {
     this.CreateImpulse(this.stats.d_position + this.stats.d_forward,  this.stats.d_right *    this.stats.s_momentOfInertia.Z * yawCorrection *    this.yawCorrectionFactor * timeDelta);
     this.CreateImpulse(this.stats.d_position - this.stats.d_forward,  this.stats.d_right *    this.stats.s_momentOfInertia.Z * -yawCorrection *   this.yawCorrectionFactor * timeDelta);
     // brake
-    this.CreateImpulse(this.stats.d_position + this.stats.d_forward * brakeValue * this.brakeOffset, -velocityDamp);
+    this.CreateImpulse(this.stats.d_position + this.stats.d_forward * this.brake.GetValue() * this.brakeOffset, -velocityDamp * timeDelta);
 
+    this.UpdateAudioParams();
 
-
-    // (this.GetVehicle().GetPS() as VehicleComponentPS).SetThrusterState(surgeValue > 0.99);
-
-    this.audioStats.playerPosition = this.stats.d_position;
-    this.audioStats.playerUp = this.stats.d_up;
-    this.audioStats.playerForward = this.stats.d_forward;
-
-    let cameraTransform: Transform;
-    let cameraSys: ref<CameraSystem> = GameInstance.GetCameraSystem(this.gameInstance);
-    cameraSys.GetActiveCameraWorldTransform(cameraTransform);
-
-    this.audioStats.cameraPosition = cameraTransform.position;
-    this.audioStats.cameraUp = Transform.GetUp(cameraTransform);
-    this.audioStats.cameraForward = Transform.GetForward(cameraTransform);
-
-    this.audioStats.speed = this.stats.d_speed;
-    this.audioStats.yawDiff = Vector4.GetAngleDegAroundAxis(this.stats.d_forward, this.stats.d_direction, this.stats.d_up);
-    this.audioStats.pitchDiff = Vector4.GetAngleDegAroundAxis(this.stats.d_forward, this.stats.d_direction, this.stats.d_right);
-    
-    this.audioStats.surge = surgeValue;
-    this.audioStats.yaw = yawValue;
-    this.audioStats.lift = liftValue;
-    this.audioStats.brake = brakeValue;
+    // (this.GetVehicle().GetPS() as VehicleComponentPS).SetThrusterState(this.surge.GetValue() > 0.99);
     
     this.ui.Update(timeDelta);
-    // worlduiWidgetComponent
-
-    // always zero from what i can tell :/
-    // LogChannel(n"DEBUG", ToString(vehicle.GetBlackboard().GetInt(GetAllBlackboardDefs().Vehicle.IsHandbraking)));
-
-    // i just wanna move the vehicle camera pls
-    // GameInstance.GetPlayerSystem(this.gameInstance).SetFreeCameraTransform(Transform.Create(vehicleCOM - this.GetVehicle().d_forward * 10 + this.GetVehicle().d_up * 5));
-
-    // LogChannel(n"DEBUG", "hover: " + ToString(hoverCorrection) + " pitch: " + ToString(pitchCorrection) + " roll: " + ToString(rollCorrection) + " yaw: " + ToString(yawCorrection));
-    
-    // accurate flying speed on the speedometer for development
-    // if we go above 100 units here, it seems to brake us - not sure if the game is checking LV or the BB value
-    // it's the linearvelocity level :/
-
-    // LogChannel(n"DEBUG", ToString(GameInstance.GetCameraSystem(this.gameInstance).ProjectPoint(FlightControl.GetInstance().stats.d_position)));
 
   }
 
@@ -860,42 +771,13 @@ public class FlightControl  {
 
 }
 
-// boo
-// @wrapMethod(VehicleObject)
-// public final native func GetLinearVelocity() -> Vector4 {
-//   return wrappedMethod() * 0.10;
-// }
-
-// try to reduce internal velocity to combat speed limits
-// no luck
-// @wrapMethod(DefaultTransition)
-// public final static func GetLinearVelocity(const scriptInterface: ref<StateGameScriptInterface>) -> Vector4 {
-//   // if FlightControl.GetInstance().IsActive() {
-//     return wrappedMethod(scriptInterface) * 0.1;
-//   // } else {
-//     // return wrappedMethod(scriptInterface);
-//   // }
-// }
-
-// probably not it
-// @wrapMethod(MeleeAttackGenericEvents)
-// protected final func ShouldBlockMovementImpulseUpdate(timeDelta: Float, attackData: ref<MeleeAttackData>, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-//   if !scriptInterface.IsOnGround() && (attackData.forwardImpulse < 0.00 || attackData.forwardImpulse > 0.00) {
-//     return true;
-//   };
-//   if scriptInterface.GetOwnerStateVectorParameterFloat(physicsStateValue.LinearSpeed) >= 10.00 {
-//     return true;
-//   };
-//   return false;
-// }
-
 @addMethod(AudioSystem)
-public final func PlayFlightControlSound(sound: CName) -> Void {
+public final func PlayFlightSound(sound: CName) -> Void {
   this.Play(sound);
 }
 
 @addMethod(AudioSystem)
-public final func PlayFlightControlSoundFrom(sound: CName, object: ref<GameObject>) -> Void {
+public final func PlayFlightSoundFrom(sound: CName, object: ref<GameObject>) -> Void {
   let objectID: EntityID = object.GetEntityID();
   if !EntityID.IsDefined(objectID) {
     this.Play(sound, objectID);
@@ -903,7 +785,7 @@ public final func PlayFlightControlSoundFrom(sound: CName, object: ref<GameObjec
 }
 
 @addMethod(AudioSystem)
-public final func StopFlightControlSoundFrom(sound: CName, object: ref<GameObject>) -> Void {
+public final func StopFlightSoundFrom(sound: CName, object: ref<GameObject>) -> Void {
   let objectID: EntityID = object.GetEntityID();
   if !EntityID.IsDefined(objectID) {
     this.Stop(sound, objectID);
@@ -911,17 +793,22 @@ public final func StopFlightControlSoundFrom(sound: CName, object: ref<GameObjec
 }
 
 @addField(PlayerPuppet)
-public let FlightControlInstance: ref<FlightControl>; // Must be strong reference
+public let flightController: ref<FlightController>; // Must be strong reference
+
+@addMethod(PlayerPuppet)
+public func GetFlightController() -> ref<FlightController> {
+  return this.flightController;
+}
 
 @addField(AllBlackboardDefinitions)
-public let FlightControlInstance: wref<FlightControl>; // Must be weak reference
+public let flightController: wref<FlightController>; // Must be weak reference
 
 // Option 2 -- Get the player instance as soon as it's ready
 @wrapMethod(PlayerPuppet)
 protected cb func OnGameAttached() -> Bool {
   wrappedMethod();
   if !this.IsReplacer() {
-    FlightControl.CreateInstance(this);
+    FlightController.CreateInstance(this);
   }
 }
 
@@ -930,40 +817,101 @@ protected func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<Sta
   wrappedMethod(stateContext, scriptInterface);
   let vehicle: ref<VehicleObject> = scriptInterface.owner as VehicleObject;  
   if vehicle.IsPlayerMounted() {
-    FlightControl.GetInstance().Enable(vehicle, scriptInterface);
+    FlightController.GetInstance().Enable(vehicle, scriptInterface);
   }
 }
 
 @wrapMethod(DriveEvents)
 public final func OnExit(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-  FlightControl.GetInstance().Disable(scriptInterface);
+  FlightController.GetInstance().Disable(scriptInterface);
   wrappedMethod(stateContext, scriptInterface);
 }
 
 @wrapMethod(DriveEvents)
 public final func OnForcedExit(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-  FlightControl.GetInstance().Disable(scriptInterface);
+  FlightController.GetInstance().Disable(scriptInterface);
   wrappedMethod(stateContext, scriptInterface);
 }
 
 @wrapMethod(DriveEvents)
 public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
   wrappedMethod(timeDelta, stateContext, scriptInterface);
-  FlightControl.GetInstance().OnUpdate(timeDelta, stateContext, scriptInterface);
+  FlightController.GetInstance().OnUpdate(timeDelta, stateContext, scriptInterface);
 }
 
-public class FlightControlDef extends BlackboardDefinition {
+// @replaceMethod(VehicleTransition)
+// protected final func PauseStateMachines(stateContext: ref<StateContext>, executionOwner: ref<GameObject>) -> Void {
+//     let upperBody: ref<PSMStopStateMachine> = new PSMStopStateMachine();
+//     let equipmentRightHand: ref<PSMStopStateMachine> = new PSMStopStateMachine();
+//     let equipmentLeftHand: ref<PSMStopStateMachine> = new PSMStopStateMachine();
+//     let coverAction: ref<PSMStopStateMachine> = new PSMStopStateMachine();
+//     let stamina: ref<PSMStopStateMachine> = new PSMStopStateMachine();
+//     let aimAssistContext: ref<PSMStopStateMachine> = new PSMStopStateMachine();
+//     let cameraContext: ref<PSMStopStateMachine> = new PSMStopStateMachine();
+//     if stateContext.IsStateActive(n"UpperBody", n"forceEmptyHands") {
+//         upperBody.stateMachineIdentifier.definitionName = n"UpperBody";
+//         executionOwner.QueueEvent(upperBody);
+//     };
+//     equipmentRightHand.stateMachineIdentifier.referenceName = n"RightHand";
+//     equipmentRightHand.stateMachineIdentifier.definitionName = n"Equipment";
+//     executionOwner.QueueEvent(equipmentRightHand);
+//     equipmentLeftHand.stateMachineIdentifier.referenceName = n"LeftHand";
+//     equipmentLeftHand.stateMachineIdentifier.definitionName = n"Equipment";
+//     executionOwner.QueueEvent(equipmentLeftHand);
+//     coverAction.stateMachineIdentifier.definitionName = n"CoverAction";
+//     executionOwner.QueueEvent(coverAction);
+//     if DefaultTransition.GetBlackboardIntVariable(executionOwner, GetAllBlackboardDefs().PlayerStateMachine.Stamina) == EnumInt(gamePSMStamina.Rested) {
+//         stamina.stateMachineIdentifier.definitionName = n"Stamina";
+//         executionOwner.QueueEvent(stamina);
+//     };
+//     aimAssistContext.stateMachineIdentifier.definitionName = n"AimAssistContext";
+//     executionOwner.QueueEvent(aimAssistContext);
+//     cameraContext.stateMachineIdentifier.definitionName = n"CameraContext";
+//     executionOwner.QueueEvent(cameraContext);
+// }
+
+// @replaceMethod(VehicleTransition)
+// protected final func ResumeStateMachines(executionOwner: ref<GameObject>) -> Void {
+//     let upperBody: ref<PSMStartStateMachine> = new PSMStartStateMachine();
+//     let equipmentRightHand: ref<PSMStartStateMachine> = new PSMStartStateMachine();
+//     let equipmentLeftHand: ref<PSMStartStateMachine> = new PSMStartStateMachine();
+//     let coverAction: ref<PSMStartStateMachine> = new PSMStartStateMachine();
+//     let stamina: ref<PSMStartStateMachine> = new PSMStartStateMachine();
+//     let aimAssistContext: ref<PSMStartStateMachine> = new PSMStartStateMachine();
+//     let locomotion: ref<PSMStartStateMachine> = new PSMStartStateMachine();
+//     let cameraContext: ref<PSMStartStateMachine> = new PSMStartStateMachine();
+//     upperBody.stateMachineIdentifier.definitionName = n"UpperBody";
+//     executionOwner.QueueEvent(upperBody);
+//     equipmentRightHand.stateMachineIdentifier.referenceName = n"RightHand";
+//     equipmentRightHand.stateMachineIdentifier.definitionName = n"Equipment";
+//     executionOwner.QueueEvent(equipmentRightHand);
+//     equipmentLeftHand.stateMachineIdentifier.referenceName = n"LeftHand";
+//     equipmentLeftHand.stateMachineIdentifier.definitionName = n"Equipment";
+//     executionOwner.QueueEvent(equipmentLeftHand);
+//     coverAction.stateMachineIdentifier.definitionName = n"CoverAction";
+//     executionOwner.QueueEvent(coverAction);
+//     stamina.stateMachineIdentifier.definitionName = n"Stamina";
+//     executionOwner.QueueEvent(stamina);
+//     aimAssistContext.stateMachineIdentifier.definitionName = n"AimAssistContext";
+//     executionOwner.QueueEvent(aimAssistContext);
+//     locomotion.stateMachineIdentifier.definitionName = n"Locomotion";
+//     executionOwner.QueueEvent(locomotion);
+//     cameraContext.stateMachineIdentifier.definitionName = n"CameraContext";
+//     executionOwner.QueueEvent(cameraContext);
+// }
+
+public class FlightControllerBBDef extends BlackboardDefinition {
 
   public let IsActive: BlackboardID_Bool;
   public let ShouldShowUI: BlackboardID_Bool;
 
-  public final const func AutoCreateInSystem() -> Bool {
+  public const func AutoCreateInSystem() -> Bool {
     return true;
   }
 }
 
 @addField(AllBlackboardDefinitions)
-public let FlightControl: ref<FlightControlDef>;
+public let FlightControllerBB: ref<FlightControllerBBDef>;
 
 // Hook into corresponding controller
 @wrapMethod(hudCarController)
@@ -976,40 +924,40 @@ private final func Reset() -> Void {
 private let m_flightActiveBBConnectionId: ref<CallbackHandle>;
 
 @addField(hudCarController)
-private let m_flightControlStatus: wref<inkText>;
+private let m_flightControllerStatus: wref<inkText>;
 
 @wrapMethod(hudCarController)
 private final func RegisterToVehicle(register: Bool) -> Void {
   wrappedMethod(register);
-  let flightControlBlackboard: wref<IBlackboard>;
+  let flightControllerBlackboard: wref<IBlackboard>;
   let vehicle: ref<VehicleObject> = this.m_activeVehicle;
   if vehicle == null {
     return;
   };
-  flightControlBlackboard = FlightControl.GetInstance().GetBlackboard();
-  if IsDefined(flightControlBlackboard) {
+  flightControllerBlackboard = FlightController.GetInstance().GetBlackboard();
+  if IsDefined(flightControllerBlackboard) {
     if register {
       // GetRootWidget() returns root widget of base type inkWidget
       // GetRootCompoundWidget() returns root widget casted to inkCompoundWidget
-      if !IsDefined(this.m_flightControlStatus) {
-        this.m_flightControlStatus = FlightControl.HUDStatusSetup(this.GetRootCompoundWidget());
+      if !IsDefined(this.m_flightControllerStatus) {
+        this.m_flightControllerStatus = FlightController.HUDStatusSetup(this.GetRootCompoundWidget());
       }
-      this.m_flightActiveBBConnectionId = flightControlBlackboard.RegisterListenerBool(GetAllBlackboardDefs().FlightControl.IsActive, this, n"OnFlightActiveChanged");
+      this.m_flightActiveBBConnectionId = flightControllerBlackboard.RegisterListenerBool(GetAllBlackboardDefs().FlightControllerBB.IsActive, this, n"OnFlightActiveChanged");
     } else {
-      flightControlBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().FlightControl.IsActive, this.m_flightActiveBBConnectionId);
+      flightControllerBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().FlightControllerBB.IsActive, this.m_flightActiveBBConnectionId);
     };
   };
 }
 
 @addMethod(hudCarController)
 protected cb func OnFlightActiveChanged(active: Bool) -> Bool {
-  if !IsDefined(this.m_flightControlStatus) {
-    this.m_flightControlStatus = FlightControl.HUDStatusSetup(this.GetRootCompoundWidget());
+  if !IsDefined(this.m_flightControllerStatus) {
+    this.m_flightControllerStatus = FlightController.HUDStatusSetup(this.GetRootCompoundWidget());
   }
   if active {
-    this.m_flightControlStatus.SetText("Flight Control Engaged");
+    this.m_flightControllerStatus.SetText("Flight Control Engaged");
   } else {
-    this.m_flightControlStatus.SetText("Flight Control Available");
+    this.m_flightControllerStatus.SetText("Flight Control Available");
   }
 }
 
@@ -1023,7 +971,7 @@ protected cb func OnFlightActiveChanged(active: Bool) -> Bool {
 
 // @wrapMethod(VehicleObject)
 // public const func IsVehicle() -> Bool {
-//   if FlightControl.GetInstance().IsActive() {
+//   if FlightController.GetInstance().IsActive() {
 //     return false;
 //   } else {
 //     return wrappedMethod();
@@ -1040,7 +988,7 @@ protected cb func OnFlightActiveChanged(active: Bool) -> Bool {
 // @replaceMethod(VehicleComponent)
 // private final func SetupThrusterFX() -> Void {
 //   let toggle: Bool = (this.GetPS() as VehicleComponentPS).GetThrusterState();
-//   if toggle || (Equals(FlightControl.GetInstance().GetVehicle(), this.GetVehicle()) && FlightControl.GetInstance().GetThrusterState()) {
+//   if toggle || (Equals(FlightController.GetInstance().GetVehicle(), this.GetVehicle()) && FlightController.GetInstance().GetThrusterState()) {
 //     GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"thrusters", true);
 //   } else {
 //     GameObjectEffectHelper.BreakEffectLoopEvent(this.GetVehicle(), n"thrusters");
@@ -1057,7 +1005,7 @@ protected cb func OnFlightActiveChanged(active: Bool) -> Bool {
 protected cb func OnVehicleWaterEvent(evt: ref<VehicleWaterEvent>) -> Bool {
   if evt.isInWater  {
     this.m_submerged = true;
-    if !Equals(FlightControl.GetInstance().GetVehicle(), this.GetVehicle()) && FlightControl.GetInstance().IsActive() {
+    if !Equals(FlightController.GetInstance().GetVehicle(), this.GetVehicle()) && FlightController.GetInstance().IsActive() {
       this.BreakAllDamageStageFX(true);
       this.DestroyVehicle();
       this.DestroyRandomWindow();
@@ -1078,10 +1026,10 @@ protected cb func OnVehicleWaterEvent(evt: ref<VehicleWaterEvent>) -> Bool {
 //     let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.GetGame());
 //     if evt.isLookedAt {
 //         player.RegisterInputListener(this.m_vehicleComponent, n"Choice1");
-//         uiSystem.QueueEvent(FlightControl.ShowHintHelper("Repair Vehicle", n"Choice1", n"RepairVehicle"));
+//         uiSystem.QueueEvent(FlightController.ShowHintHelper("Repair Vehicle", n"Choice1", n"RepairVehicle"));
 //     } else {
 //         player.UnregisterInputListener(this.m_vehicleComponent, n"Choice1");
-//         uiSystem.QueueEvent(FlightControl.HideHintFromSource(n"RepairVehicle"));
+//         uiSystem.QueueEvent(FlightController.HideHintFromSource(n"RepairVehicle"));
 //     }
 //   }
 // } 
@@ -1096,7 +1044,7 @@ protected cb func OnVehicleWaterEvent(evt: ref<VehicleWaterEvent>) -> Bool {
 //     let player: ref<PlayerPuppet> = GetPlayer(this.GetVehicle().GetGame());
 //     let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.GetVehicle().GetGame());
 //     player.UnregisterInputListener(this, n"Choice1");
-//     uiSystem.QueueEvent(FlightControl.HideHintFromSource(n"RepairVehicle"));
+//     uiSystem.QueueEvent(FlightController.HideHintFromSource(n"RepairVehicle"));
 //   }
 // }
 

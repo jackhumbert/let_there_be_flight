@@ -55,17 +55,18 @@ registerForEvent('onInit', function()
 
 	-- GameHUD.Initialize()
 
-	Observe('FlightControl', 'Activate', function(self)
-		Game.GetPlayer().FlightControlInstance:StartSnd()
+	Observe('FlightController', 'Activate', function(self)
+		Game.GetPlayer().flightController:StartSnd()
 	end)
 
-	Observe('FlightControl', 'OnUpdate', function(self)
-        local as = Game.GetPlayer().FlightControlInstance.audioStats
-		Game.GetPlayer().FlightControlInstance:SetParams(as.volume, as.playerPosition, as.playerUp, as.playerForward, as.cameraPosition, as.cameraUp, as.cameraForward, as.speed, as.surge, as.yawDiff, as.lift, as.yaw, as.pitchDiff, as.brake)
+	Observe('FlightController', 'OnUpdate', function(self)
+        -- local as = Game.GetPlayer().flightController.audioStats
+		-- Game.GetPlayer().flightController:SetParams(as.volume, as.playerPosition, as.playerUp, as.playerForward, as.cameraPosition, as.cameraUp, as.cameraForward, as.speed, as.surge, as.yawDiff, as.lift, as.yaw, as.pitchDiff, as.brake)
+		Game.GetPlayer().flightController:SetParams()
 	end)
 
-	Observe('FlightControl', 'Deactivate', function(self)
-		Game.GetPlayer().FlightControlInstance:StopSnd()
+	Observe('FlightController', 'Deactivate', function(self)
+		Game.GetPlayer().flightController:StopSnd()
 	end)
 
 end)

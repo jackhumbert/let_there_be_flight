@@ -2,6 +2,8 @@
 
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/Scripting/Natives/Generated/Vector4.hpp>
+#include <RED4ext/Scripting/Natives/ScriptGameInstance.hpp>
+#include <RED4ext/RTTITypes.hpp>
 
 #include <fmod_studio.hpp>
 #include <fmod.hpp>
@@ -18,13 +20,15 @@ FMOD::Studio::Bank* stringsBank = NULL;
 FMOD::Studio::EventDescription* ltbfDescription = NULL;
 FMOD::Studio::EventInstance* ltbfInstance = NULL;
 
-// RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes() {
+class FlightController
+{
+};
 
-// }
+RED4ext::CClass::Flags type_flags = {
+    .isNative = true
+};
 
-// RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
-    
-// }
+RED4ext::TTypedClass<FlightController> flightControllerClass("FlightController", type_flags);
 
 #define ERRCHECK(_result) ERRCHECK_fn(_result, __FILE__, __LINE__)
 void ERRCHECK_fn(FMOD_RESULT result, const char *file, int line)
@@ -33,30 +37,6 @@ void ERRCHECK_fn(FMOD_RESULT result, const char *file, int line)
     {
         spdlog::error("{0}({1}): FMOD error {2} - {3}", file, line, result, FMOD_ErrorString(result));
     }
-}
-
-BOOL APIENTRY DllMain(HMODULE aModule, DWORD aReason, LPVOID aReserved)
-{
-    switch (aReason)
-    {
-    case DLL_PROCESS_ATTACH:
-    {
-        DisableThreadLibraryCalls(aModule);
-        // RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
-
-        Utils::CreateLogger();
-
-        break;
-    }
-    case DLL_PROCESS_DETACH:
-    {
-        spdlog::shutdown();
-
-        break;
-    }
-    }
-
-    return TRUE;
 }
 
 void StartSnd(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
@@ -75,38 +55,21 @@ void StopSnd(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void*
 
 void SetParams(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
 {
-    float volume;
-    RED4ext::Vector4 playerPosition;
-    RED4ext::Vector4 playerUp;
-    RED4ext::Vector4 playerForward;
-    RED4ext::Vector4 cameraPosition;
-    RED4ext::Vector4 cameraUp;
-    RED4ext::Vector4 cameraForward;
-    float speed;
-    float surge;
-    float yawDiff;
-    float lift;
-    float yaw;
-    float pitchDiff;
-    float brake;
+    auto rtti = RED4ext::CRTTISystem::Get();
+    auto flightControlCls = rtti->GetClass("FlightController");
+    auto getAudioStatsFunc = flightControlCls->GetFunction("GetAudioStats");
 
-    RED4ext::GetParameter(aFrame, &volume);
-    RED4ext::GetParameter(aFrame, &playerPosition);
-    RED4ext::GetParameter(aFrame, &playerUp);
-    RED4ext::GetParameter(aFrame, &playerForward);
-    RED4ext::GetParameter(aFrame, &cameraPosition);
-    RED4ext::GetParameter(aFrame, &cameraUp);
-    RED4ext::GetParameter(aFrame, &cameraForward);
-    RED4ext::GetParameter(aFrame, &speed);
-    RED4ext::GetParameter(aFrame, &surge);
-    RED4ext::GetParameter(aFrame, &yawDiff);
-    RED4ext::GetParameter(aFrame, &lift);
-    RED4ext::GetParameter(aFrame, &yaw);
-    RED4ext::GetParameter(aFrame, &pitchDiff);
-    RED4ext::GetParameter(aFrame, &brake);
-    aFrame->code++; // skip ParamEnd
+    RED4ext::Handle<RED4ext::IScriptable> audioStats;
+    RED4ext::ExecuteFunction(aContext, getAudioStatsFunc, &audioStats, {});
 
-    ERRCHECK(ltbfInstance->setVolume(volume));
+    auto audioStatsCls = rtti->GetClass("FlightAudioStats");
+
+    RED4ext::Vector4 playerPosition = audioStatsCls->GetProperty("playerPosition")->GetValue<RED4ext::Vector4>(audioStats);
+    RED4ext::Vector4 playerUp = audioStatsCls->GetProperty("playerUp")->GetValue<RED4ext::Vector4>(audioStats);
+    RED4ext::Vector4 playerForward = audioStatsCls->GetProperty("playerForward")->GetValue<RED4ext::Vector4>(audioStats);
+    RED4ext::Vector4 cameraPosition = audioStatsCls->GetProperty("cameraPosition")->GetValue<RED4ext::Vector4>(audioStats);
+    RED4ext::Vector4 cameraUp = audioStatsCls->GetProperty("cameraUp")->GetValue<RED4ext::Vector4>(audioStats);
+    RED4ext::Vector4 cameraForward = audioStatsCls->GetProperty("cameraForward")->GetValue<RED4ext::Vector4>(audioStats);
 
     FMOD_3D_ATTRIBUTES attributes = { { 0 } };
     attributes.position.x = cameraPosition.X;
@@ -130,16 +93,57 @@ void SetParams(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, voi
     attributes.up.y = playerUp.Y;
     attributes.up.z = playerUp.Z;        
     ERRCHECK(ltbfInstance->set3DAttributes(&attributes));
+    
+    ERRCHECK(ltbfInstance->setVolume(audioStatsCls->GetProperty("volume")->GetValue<float>(audioStats)));
+    ERRCHECK(ltbfInstance->setParameterByName("Speed", audioStatsCls->GetProperty("speed")->GetValue<float>(audioStats)));
+    ERRCHECK(ltbfInstance->setParameterByName("Surge", audioStatsCls->GetProperty("surge")->GetValue<float>(audioStats)));
+    ERRCHECK(ltbfInstance->setParameterByName("YawDiff", audioStatsCls->GetProperty("yawDiff")->GetValue<float>(audioStats)));
+    ERRCHECK(ltbfInstance->setParameterByName("Lift", audioStatsCls->GetProperty("lift")->GetValue<float>(audioStats)));
+    ERRCHECK(ltbfInstance->setParameterByName("Yaw", audioStatsCls->GetProperty("yaw")->GetValue<float>(audioStats)));
+    ERRCHECK(ltbfInstance->setParameterByName("PitchDiff", audioStatsCls->GetProperty("pitchDiff")->GetValue<float>(audioStats)));
+    ERRCHECK(ltbfInstance->setParameterByName("Brake", audioStatsCls->GetProperty("brake")->GetValue<float>(audioStats)));
 
-    // spdlog::info("Updating Params: {0}, {1}, {2}", speed, surge, yawDiff);
-    ERRCHECK(ltbfInstance->setParameterByName("Speed", speed));
-    ERRCHECK(ltbfInstance->setParameterByName("Surge", surge));
-    ERRCHECK(ltbfInstance->setParameterByName("YawDiff", yawDiff));
-    ERRCHECK(ltbfInstance->setParameterByName("Lift", lift));
-    ERRCHECK(ltbfInstance->setParameterByName("Yaw", yaw));
-    ERRCHECK(ltbfInstance->setParameterByName("PitchDiff", pitchDiff));
-    ERRCHECK(ltbfInstance->setParameterByName("Brake", brake));
     ERRCHECK(fmod_system->update());
+
+}
+
+RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes()
+{
+    spdlog::info("RegisterTypes");
+    //RED4ext::CRTTISystem::Get()->CreateScriptedClass("FlightController", classFlags, nullptr);
+}
+
+RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
+{
+    //Sleep(10000);
+    //RED4ext::CRTTISystem::Get()->RegisterType(&flightControllerClass, 10000000);
+    spdlog::info("PostRegisterTypes");
+}
+
+BOOL APIENTRY DllMain(HMODULE aModule, DWORD aReason, LPVOID aReserved)
+{
+    switch (aReason)
+    {
+    case DLL_PROCESS_ATTACH:
+    {
+        DisableThreadLibraryCalls(aModule);
+        RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
+
+        Utils::CreateLogger();
+        spdlog::info("Flight Control starting");
+
+        break;
+    }
+    case DLL_PROCESS_DETACH:
+    {
+        spdlog::info("Flight Control Shutting down");
+        spdlog::shutdown();
+
+        break;
+    }
+    }
+
+    return TRUE;
 }
 
 RED4EXT_C_EXPORT bool RED4EXT_CALL Load(RED4ext::PluginHandle aHandle, const RED4ext::IRED4ext* aInterface)
@@ -173,29 +177,19 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Load(RED4ext::PluginHandle aHandle, const RED
     auto rtti = RED4ext::CRTTISystem::Get();
 
     {
-        auto flightControlCls = rtti->GetClass("FlightControl");
+        auto flightControllerClass = rtti->GetClass("FlightController");
 
-        auto startSound = RED4ext::CClassFunction::Create(flightControlCls, "StartSnd", "StartSnd", &StartSnd);
-        auto stopSound = RED4ext::CClassFunction::Create(flightControlCls, "StopSnd", "StopSnd", &StopSnd);
-        auto setParams = RED4ext::CClassFunction::Create(flightControlCls, "SetParams", "SetParams", &SetParams);
-        setParams->AddParam("Float", "volume");
-        setParams->AddParam("Vector4", "playerPositon");
-        setParams->AddParam("Vector4", "playerUp");
-        setParams->AddParam("Vector4", "playerForward");
-        setParams->AddParam("Vector4", "cameraPositon");
-        setParams->AddParam("Vector4", "cameraUp");
-        setParams->AddParam("Vector4", "cameraForward");
-        setParams->AddParam("Float", "speed");
-        setParams->AddParam("Float", "surge");
-        setParams->AddParam("Float", "yawDiff");
-        setParams->AddParam("Float", "lift");
-        setParams->AddParam("Float", "yaw");
-        setParams->AddParam("Float", "pitchDiff");
-        setParams->AddParam("Float", "brake");
+        //RED4ext::CBaseFunction::Flags flags = {.isNative = true};
+        RED4ext::CBaseFunction::Flags flags = {};
+        auto startSound =
+            RED4ext::CClassFunction::Create(flightControllerClass, "StartSnd", "StartSnd", &StartSnd, flags);
+        auto stopSound = RED4ext::CClassFunction::Create(flightControllerClass, "StopSnd", "StopSnd", &StopSnd, flags);
+        auto setParams =
+            RED4ext::CClassFunction::Create(flightControllerClass, "SetParams", "SetParams", &SetParams, flags);
 
-        flightControlCls->RegisterFunction(startSound);
-        flightControlCls->RegisterFunction(stopSound);
-        flightControlCls->RegisterFunction(setParams);
+        flightControllerClass->RegisterFunction(startSound);
+        flightControllerClass->RegisterFunction(stopSound);
+        flightControllerClass->RegisterFunction(setParams);
     }
 
     return true;
@@ -210,7 +204,7 @@ RED4EXT_C_EXPORT void RED4EXT_CALL Unload()
 
 RED4EXT_C_EXPORT void RED4EXT_CALL Query(RED4ext::PluginInfo* aInfo)
 {
-    aInfo->name = L"FlightControl";
+    aInfo->name = L"Flight Control";
     aInfo->author = L"Jack Humbert";
     aInfo->version = RED4EXT_SEMVER(1, 0, 0);
     aInfo->runtime = RED4EXT_RUNTIME_LATEST;

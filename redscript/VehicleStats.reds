@@ -25,13 +25,17 @@ public class VehicleStats {
   public let d_direction2D: Vector4;
 
   private let reset: Bool;
+  private let ipp: ref<IPositionProvider>;
 
   public static func Create(vehicle: wref<VehicleObject>) -> ref<VehicleStats> {
     let instance: ref<VehicleStats> = new VehicleStats();
     instance.vehicle = vehicle;
     instance.reset = false;
     instance.UpdateStatic();
-    instance.d_position = instance.vehicle.GetWorldPosition() + instance.s_centerOfMassOffset;
+    // instance.d_position = instance.vehicle.GetWorldPosition() + instance.s_centerOfMassOffset;
+    instance.ipp = IPositionProvider.CreateEntityPositionProvider(instance.vehicle);
+    instance.ipp.CalculatePosition(instance.d_position);
+    instance.d_position += instance.s_centerOfMassOffset;
     // instance.d_position = Vector4.EmptyVector();
     return instance;
   }
@@ -60,7 +64,7 @@ public class VehicleStats {
     this.s_mass = this.s_fcRecord.mass;
     // need to just dynamically calculate this instead of messing around with random values
     this.s_centerOfMassOffset = Cast(this.s_driveModelData.Center_of_mass_offset());
-    this.s_centerOfMassOffset += this.s_fcRecord.comOffset_position;
+    // this.s_centerOfMassOffset += this.s_fcRecord.comOffset_position;
     // this.s_momentOfInertia = Cast(this.s_driveModelData.MomentOfInertia());
     this.s_momentOfInertia = Cast(this.s_fcRecord.inertia);
     // this isn't defined for all vehicles, so throw some numbers in for now
@@ -89,6 +93,22 @@ public class VehicleStats {
     this.d_up = Quaternion.GetUp(this.d_orientation);
     
     
+    // GameInstance.GetSpatialQueriesSystem(FlightController.GetInstance().gameInstance).GetGeometryDescriptionSystem();
+    let position: Vector4; // = this.vehicle.GetWorldPosition() + this.s_centerOfMassOffset;
+    this.ipp.CalculatePosition(position);
+    position += this.s_centerOfMassOffset;
+
+    // if Vector4.Length(position - this.d_position) / timeDelta <= this.d_speed * 1.1 {
+    // if this.reset {
+    //   this.reset = false;
+    //   this.d_position = position;
+    // } else {
+      // try to smooth out the position some
+      // this.d_position = 0.99999 * this.d_position + 0.00001 * position;
+      // this.d_position = Vector4.Interpolate(this.d_position, position, 0.4);
+      // this.d_position = position;
+    // }
+
     this.d_velocity = this.vehicle.GetLinearVelocity();
 
 
@@ -99,15 +119,10 @@ public class VehicleStats {
     this.d_direction = Vector4.Normalize(this.d_velocity);
     this.d_direction2D = Vector4.Normalize2D(this.d_velocity);
 
-    let position = this.vehicle.GetWorldPosition() + this.s_centerOfMassOffset;
-    // if this.reset {
-    //   this.reset = false;
-    //   this.d_position = position;
-    // } else {
-      // try to smooth out the position some
-      // this.d_position = 0.99999 * this.d_position + 0.00001 * position;
-      // this.d_position = Vector4.Interpolate(this.d_position, position, 0.4);
-      this.d_position = position;
-    // }
+    // let minS = 0.3;
+    // let maxS = 0.7;
+    // let factor = Vector4.Distance(position, this.d_position) / timeDelta / this.d_speed;
+    // this.d_position = this.d_position * (minS + (maxS - minS) * factor) + position * (1.0 - minS - (maxS - minS) * factor);
+    this.d_position = position;
   }
 }
