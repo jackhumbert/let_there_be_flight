@@ -109,14 +109,12 @@ void SetParams(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, voi
 
 RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes()
 {
+    // RED4ext::CRTTISystem::Get()->RegisterType(&flightControllerClass, 10000000);
     spdlog::info("RegisterTypes");
-    //RED4ext::CRTTISystem::Get()->CreateScriptedClass("FlightController", classFlags, nullptr);
 }
 
 RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
 {
-    //Sleep(10000);
-    //RED4ext::CRTTISystem::Get()->RegisterType(&flightControllerClass, 10000000);
     spdlog::info("PostRegisterTypes");
 }
 
@@ -130,13 +128,13 @@ BOOL APIENTRY DllMain(HMODULE aModule, DWORD aReason, LPVOID aReserved)
         RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
 
         Utils::CreateLogger();
-        spdlog::info("Flight Control starting");
+        spdlog::info("Starting up");
 
         break;
     }
     case DLL_PROCESS_DETACH:
     {
-        spdlog::info("Flight Control Shutting down");
+        spdlog::info("Shutting down");
         spdlog::shutdown();
 
         break;
@@ -192,6 +190,8 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Load(RED4ext::PluginHandle aHandle, const RED
         flightControllerClass->RegisterFunction(setParams);
     }
 
+    spdlog::info("Functions registered");
+
     return true;
 }
 
@@ -206,7 +206,7 @@ RED4EXT_C_EXPORT void RED4EXT_CALL Query(RED4ext::PluginInfo* aInfo)
 {
     aInfo->name = L"Flight Control";
     aInfo->author = L"Jack Humbert";
-    aInfo->version = RED4EXT_SEMVER(1, 0, 0);
+    aInfo->version = RED4EXT_SEMVER(0, 0, 1);
     aInfo->runtime = RED4EXT_RUNTIME_LATEST;
     aInfo->sdk = RED4EXT_SDK_LATEST;
 }
