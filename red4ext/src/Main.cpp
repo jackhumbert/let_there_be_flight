@@ -29,7 +29,7 @@ RED4ext::CClass::Flags type_flags = {.isNative = true};
 
 class jackTestClass { };
 
-RED4ext::CClass::Flags jack_test_flags = {.isNative = true};
+RED4ext::CClass::Flags jack_test_flags = {.isImportOnly = true};
 
 //RED4ext::TTypedClass<FlightController> flightControllerClass("FlightController", type_flags);
 RED4ext::TTypedClass<jackTestClass> jackTestCls("JackTestClass", jack_test_flags);
@@ -43,28 +43,33 @@ void ERRCHECK_fn(FMOD_RESULT result, const char *file, int line)
     }
 }
 
-void StartSnd(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
+void StartFlightSound(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
 {
     spdlog::info("Starting sound");
     ERRCHECK(ltbfInstance->start());
     ERRCHECK(fmod_system->update());
 }
 
-void StopSnd(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
+void StopFlightSound(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
 {
     spdlog::info("Stopping sound");
     ERRCHECK(ltbfInstance->stop(FMOD_STUDIO_STOP_IMMEDIATE));
     ERRCHECK(fmod_system->update());
 }
 
-void SetParams(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
+void UpdateFlightSound(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
 {
     auto rtti = RED4ext::CRTTISystem::Get();
     auto flightControlCls = rtti->GetClass("FlightController");
+    auto getInstanceFunc = flightControlCls->GetFunction("GetInstance");
+
+    RED4ext::Handle<RED4ext::IScriptable> flightInst;
+    RED4ext::ExecuteFunction(aContext, getInstanceFunc, &flightInst, {});
+
     auto getAudioStatsFunc = flightControlCls->GetFunction("GetAudioStats");
 
     RED4ext::Handle<RED4ext::IScriptable> audioStats;
-    RED4ext::ExecuteFunction(aContext, getAudioStatsFunc, &audioStats, {});
+    RED4ext::ExecuteFunction(flightInst, getAudioStatsFunc, &audioStats, {});
 
     auto audioStatsCls = rtti->GetClass("FlightAudioStats");
 
@@ -115,7 +120,11 @@ RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes()
 {
     spdlog::info("RegisterTypes");
     //RED4ext::CRTTISystem::Get()->RegisterType(&flightControllerClass, 10000000);
-    RED4ext::CRTTISystem::Get()->RegisterType(&jackTestCls, 10005400);
+    //RED4ext::CRTTISystem::Get()->RegisterType(&jackTestCls, 10005400);
+
+    RED4ext::CClass::Flags jack_test_flags = {.isNative = true};
+    RED4ext::CRTTISystem::Get()->CreateScriptedClass("JackTestClass", jack_test_flags,
+                                                     RED4ext::CRTTISystem::Get()->GetClass("IScriptable"));
 }
 
 RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
@@ -176,22 +185,19 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Load(RED4ext::PluginHandle aHandle, const RED
     ERRCHECK(ltbfDescription->createInstance(&ltbfInstance));
 
     spdlog::info("FMOD loaded");
+
     auto rtti = RED4ext::CRTTISystem::Get();
 
     {
-        auto flightControllerClass = rtti->GetClass("FlightController");
+        RED4ext::CBaseFunction::Flags flags = {.isNative = true};
+        // RED4ext::CBaseFunction::Flags flags = {};
+        auto startSound = RED4ext::CGlobalFunction::Create("StartFlightSound", "StartFlightSound", &StartFlightSound);
+        auto stopSound = RED4ext::CGlobalFunction::Create("StopFlightSound", "StopFlightSound", &StopFlightSound);
+        auto setParams = RED4ext::CGlobalFunction::Create("UpdateFlightSound", "UpdateFlightSound", &UpdateFlightSound);
 
-        // RED4ext::CBaseFunction::Flags flags = {.isNative = true};
-        RED4ext::CBaseFunction::Flags flags = {};
-        auto startSound =
-            RED4ext::CClassFunction::Create(flightControllerClass, "StartSnd", "StartSnd", &StartSnd, flags);
-        auto stopSound = RED4ext::CClassFunction::Create(flightControllerClass, "StopSnd", "StopSnd", &StopSnd, flags);
-        auto setParams =
-            RED4ext::CClassFunction::Create(flightControllerClass, "SetParams", "SetParams", &SetParams, flags);
-
-        flightControllerClass->RegisterFunction(startSound);
-        flightControllerClass->RegisterFunction(stopSound);
-        flightControllerClass->RegisterFunction(setParams);
+        rtti->RegisterFunction(startSound);
+        rtti->RegisterFunction(stopSound);
+        rtti->RegisterFunction(setParams);
     }
 
     spdlog::info("Functions registered");

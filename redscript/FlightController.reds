@@ -4,8 +4,8 @@ enum FlightMode {
   Undef = 0
 } 
 
-// public native class JackTestClass {
-// }
+public native class JackTestClass {
+}
 
 // public class FlightSettingsListener extends ConfigVarListener {
 
