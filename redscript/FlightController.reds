@@ -1,5 +1,9 @@
 import BaseLib.UI.*
 
+public static native func FlightLogInfo(value: String) -> Void
+public static native func FlightLogWarn(value: String) -> Void
+public static native func FlightLogError(value: String) -> Void
+
 enum FlightMode {
   Undef = 0
 } 
@@ -50,11 +54,11 @@ enum FlightMode {
 
 // public class MySystem extends ScriptableSystem {
 //     private func OnAttach() -> Void {
-//         LogChannel(n"DEBUG", "MySystem::OnAttach");
+//         FlightLogInfo("MySystem::OnAttach");
 //     }
 
 //     private func OnDetach() -> Void {
-//         LogChannel(n"DEBUG", "MySystem::OnDetach");
+//         FlightLogInfo("MySystem::OnDetach");
 //     }
 
 //     public func GetData() -> Float {
@@ -66,7 +70,7 @@ enum FlightMode {
 // let container: ref<ScriptableSystemsContainer> = GameInstance.GetScriptableSystemsContainer(this.GetGame());
 // let system: ref<MySystem> = container.Get(n"MyMod.MySystem") as MySystem; // Don't forget the namespace if you're using modules
 
-// LogChannel(n"DEBUG", ToString(system.GetData()));
+// FlightLogInfo(ToString(system.GetData()));
 
 // maybe this should extend ScriptableComponent or GameComponent?
 // Singleton instance with player lifetime
@@ -225,7 +229,7 @@ public class FlightController  {
     // This weak reference is used as a global variable 
     // to access the mod instance anywhere
     GetAllBlackboardDefs().flightController = instance;
-    LogChannel(n"DEBUG", "Flight Control Loaded");
+    FlightLogInfo("Flight Control Loaded");
   }
   
   public static func GetInstance() -> wref<FlightController> {
@@ -257,7 +261,7 @@ public class FlightController  {
     // shardUIevent.text = "Your new car is equiped with the state-of-the-art Flight Control!";
     // GameInstance.GetUISystem(this.gameInstance).QueueEvent(shardUIevent);
 
-    LogChannel(n"DEBUG", "Flight Control Enabled for " + this.GetVehicle().GetDisplayName());
+    FlightLogInfo("Flight Control Enabled for " + this.GetVehicle().GetDisplayName());
   }
 
   public func Disable(scriptInterface: ref<StateGameScriptInterface>) -> Void {
@@ -268,7 +272,7 @@ public class FlightController  {
     this.SetupActions();   
     this.stats = null;
 
-    LogChannel(n"DEBUG", "Flight Control Disabled");
+    FlightLogInfo("Flight Control Disabled");
   }
 
   public func Toggle() -> Bool {
@@ -312,7 +316,7 @@ public class FlightController  {
     // something that only stops engine noises would be preferred, or this could be toggled
     // when close to the ground, to make transitions easier
     this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetState(vehicleEState.Disabled);
-    // LogChannel(n"DEBUG", ToString(TweakDBInterface.GetFlightControlRecord(this.GetVehicle().GetRecordID()).mass));
+    // FlightLogInfo(ToString(TweakDBInterface.GetFlightControlRecord(this.GetVehicle().GetRecordID()).mass));
 
     this.stats.Reset();
     this.ui.Show();
@@ -329,7 +333,7 @@ public class FlightController  {
     // GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"ignition", true);
     // GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(StringToName(this.GetVehicle().GetRecord().Player_audio_resource()));
     // GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"mus_cp_arcade_quadra_START_menu");
-    LogChannel(n"DEBUG", "Flight Control Activated");
+    FlightLogInfo("Flight Control Activated");
   }
 
   private func Deactivate(silent: Bool) -> Void {
@@ -351,7 +355,7 @@ public class FlightController  {
     }
     this.ui.Hide();
 
-    LogChannel(n"DEBUG", "Flight Control Deactivated");
+    FlightLogInfo("Flight Control Deactivated");
   }
 
   private func SetupActions() -> Bool {
@@ -390,7 +394,7 @@ public class FlightController  {
     let actionType: gameinputActionType = ListenerAction.GetType(action);
     let actionName: CName = ListenerAction.GetName(action);
     let value: Float = ListenerAction.GetValue(action);
-    // LogChannel(n"DEBUG", ToString(actionType) + ToString(actionName) + ToString(value));
+    // FlightLogInfo(ToString(actionType) + ToString(actionName) + ToString(value));
     if Equals(actionName, n"Flight_Toggle") && ListenerAction.IsButtonJustPressed(action) {
         this.Toggle();
         // ListenerActionConsumer.ConsumeSingleAction(consumer);
@@ -398,12 +402,12 @@ public class FlightController  {
     if this.active {
       if Equals(actionName, n"Choice1_DualState") {
         if ListenerAction.IsButtonJustPressed(action) {
-          LogChannel(n"DEBUG", "Options button pressed");
+          FlightLogInfo("Options button pressed");
           this.showOptions = true;
           this.ui.ShowInfo();
         }
         if ListenerAction.IsButtonJustReleased(action) {
-          LogChannel(n"DEBUG", "Options button released");
+          FlightLogInfo("Options button released");
           this.showOptions = false;
         }
       }
@@ -411,12 +415,12 @@ public class FlightController  {
         if Equals(actionName, n"FlightOptions_Up") && ListenerAction.IsButtonJustPressed(action) {
             this.hoverHeight += 0.1;
             GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_menu_onpress");
-            LogChannel(n"DEBUG", "hoverHeight = " + ToString(this.hoverHeight));
+            FlightLogInfo("hoverHeight = " + ToString(this.hoverHeight));
         }
         if Equals(actionName, n"FlightOptions_Down") && ListenerAction.IsButtonJustPressed(action) {
             this.hoverHeight -= 0.1;
             GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_menu_onpress");
-            LogChannel(n"DEBUG", "hoverHeight = " + ToString(this.hoverHeight));
+            FlightLogInfo("hoverHeight = " + ToString(this.hoverHeight));
         }
       }
       if Equals(actionType, gameinputActionType.AXIS_CHANGE) {
@@ -527,12 +531,12 @@ public class FlightController  {
     if GameInstance.GetTimeSystem(this.gameInstance).IsTimeDilationActive(n"radial") {
       // this might happpen?
       timeDelta *= TimeDilationHelper.GetFloatFromTimeSystemTweak("radialMenu", "timeDilation");
-      LogChannel(n"DEBUG", "Radial menu dilation"); 
+      FlightLogInfo("Radial menu dilation"); 
     } else {
       if GameInstance.GetTimeSystem(this.gameInstance).IsTimeDilationActive() {
         // i think this is what this is called
         timeDelta *= TimeDilationHelper.GetFloatFromTimeSystemTweak("focusModeTimeDilation", "timeDilation");
-        LogChannel(n"DEBUG", "Other time dilation"); 
+        FlightLogInfo("Other time dilation"); 
       }
     }
 
@@ -540,13 +544,14 @@ public class FlightController  {
     if !IsDefined(this.GetVehicle()) { 
       if IsDefined(scriptInterface.owner as VehicleObject) {
         this.stats = FlightStats.Create(scriptInterface.owner as VehicleObject);
-        LogChannel(n"DEBUG", "Vehicle undefined. Redefined to " + this.GetVehicle().GetDisplayName()); 
+        FlightLogWarn("Vehicle undefined. Redefined to " + this.GetVehicle().GetDisplayName()); 
       } else {
-        LogChannel(n"DEBUG", "Owner not defined"); 
+        FlightLogError("Owner not defined"); 
+        return;
       }
     }
     if !this.GetVehicle().IsPlayerMounted() { 
-      LogChannel(n"DEBUG", "Vehicle is not player mounted"); 
+      FlightLogError("Vehicle is not player mounted"); 
       return; 
     }
 
@@ -625,6 +630,7 @@ public class FlightController  {
           .Tint(ThemeColors.ElectricBlue())
           .BorderColor(ThemeColors.ElectricBlue())
           .BorderOpacity(0.5)
+          .Visible(true)
           .BuildShape();
 
         this.ui.DrawText(Cast(findGround1.position) - this.stats.d_velocity * timeDelta, FloatToStringPrec(Vector4.Distance(fl_tire, Cast(findGround1.position)), 2));
@@ -681,7 +687,7 @@ public class FlightController  {
     let yawDirectionality: Float = (this.stats.d_speedRatio + AbsF(this.yaw.GetValue()) * this.swayWithYaw) * this.stats.s_mass;
     let liftForce: Float = hoverCorrection * this.stats.s_mass * this.hoverFactor * timeDelta * 9.8;
     // actual in-game mass (i think)
-    // LogChannel(n"DEBUG", ToString(hoverCorrection * this.stats.s_mass * this.hoverFactor) + " vs " + this.GetVehicle().GetTotalMass());
+    // FlightLogInfo(ToString(hoverCorrection * this.stats.s_mass * this.hoverFactor) + " vs " + this.GetVehicle().GetTotalMass());
     let surgeForce: Float = this.surge.GetValue() * this.stats.s_mass * this.surgeFactor;
 
     this.CreateImpulse(this.stats.d_position, this.stats.d_right * Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right) * yawDirectionality * timeDelta);
@@ -1050,7 +1056,7 @@ protected cb func OnVehicleWaterEvent(evt: ref<VehicleWaterEvent>) -> Bool {
 //   let actionName: CName = ListenerAction.GetName(action);
 //   let value: Float = ListenerAction.GetValue(action);
 //   if Equals(actionName, n"Choice1") && ListenerAction.IsButtonJustReleased(action) {
-//     LogChannel(n"DEBUG", "Attempting to repair vehicle");
+//     FlightLogInfo("Attempting to repair vehicle");
 //     this.RepairVehicle();
 //     let player: ref<PlayerPuppet> = GetPlayer(this.GetVehicle().GetGame());
 //     let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.GetVehicle().GetGame());

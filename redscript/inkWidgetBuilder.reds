@@ -3,6 +3,11 @@ public class inkWidgetBuilder {
 
   // inkWidget generics
 
+  public func Visible(value: Bool) -> ref<inkWidgetBuilder> {
+    this.widget.SetVisible(value);
+    return this;
+  }
+
   public func Reparent(parent: ref<inkCompoundWidget>) -> ref<inkWidgetBuilder> {
     this.widget.Reparent(parent);
     return this;

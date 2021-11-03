@@ -1,0 +1,44 @@
+flats:
+  Camera.VehicleTPP_DefaultParams.slopeCorrectionInAirDampFactor:
+    type: Float
+    value: 1.0
+  Camera.VehicleTPP_DefaultParams.slopeCorrectionInAirFallCoef:
+    type: Float
+    value: 0
+  Camera.VehicleTPP_DefaultParams.slopeCorrectionInAirPitchMax:
+    type: Float
+    value: 30
+  Camera.VehicleTPP_DefaultParams.slopeCorrectionInAirPitchMin:
+    type: Float
+    value: -30
+  Camera.VehicleTPP_DefaultParams.slopeCorrectionInAirRaiseCoef:
+    type: Float
+    value: 0
+  Camera.VehicleTPP_DefaultParams.slopeCorrectionInAirSpeedMax:
+    type: Float
+    value: 10
+  Camera.VehicleTPP_DefaultParams.slopeCorrectionInAirStrength:
+    type: Float
+    value: 4
+  Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirDampFactor:
+    type: Float
+    value: 1.0
+  Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirFallCoef:
+    type: Float
+    value: 0
+  Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirPitchMax:
+    type: Float
+    value: 30
+  Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirPitchMin:
+    type: Float
+    value: -30
+  Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirRaiseCoef:
+    type: Float
+    value: 0
+  Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirSpeedMax:
+    type: Float
+    value: 10
+  Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirStrength:
+    type: Float
+    value: 4
+groups: {}

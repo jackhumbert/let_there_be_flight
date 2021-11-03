@@ -21,19 +21,6 @@ FMOD::Studio::Bank* stringsBank = NULL;
 FMOD::Studio::EventDescription* ltbfDescription = NULL;
 FMOD::Studio::EventInstance* ltbfInstance = NULL;
 
-//class FlightController
-//{
-//};
-
-//RED4ext::CClass::Flags type_flags = {.isNative = true};
-
-//class jackTestClass { };
-
-//RED4ext::CClass::Flags jack_test_flags = {.isImportOnly = true};
-
-//RED4ext::TTypedClass<FlightController> flightControllerClass("FlightController", type_flags);
-//RED4ext::TTypedClass<jackTestClass> jackTestCls("JackTestClass", jack_test_flags);
-
 #define ERRCHECK(_result) ERRCHECK_fn(_result, __FILE__, __LINE__)
 void ERRCHECK_fn(FMOD_RESULT result, const char *file, int line)
 {
@@ -41,6 +28,30 @@ void ERRCHECK_fn(FMOD_RESULT result, const char *file, int line)
     {
         spdlog::error("{0}({1}): FMOD error {2} - {3}", file, line, result, FMOD_ErrorString(result));
     }
+}
+
+void FlightLogInfo(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
+{
+    RED4ext::CString value;
+    RED4ext::GetParameter(aFrame, &value);
+    aFrame->code++; // skip ParamEnd
+    spdlog::info(value.c_str());
+}
+
+void FlightLogWarn(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
+{
+    RED4ext::CString value;
+    RED4ext::GetParameter(aFrame, &value);
+    aFrame->code++; // skip ParamEnd
+    spdlog::warn(value.c_str());
+}
+
+void FlightLogError(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
+{
+    RED4ext::CString value;
+    RED4ext::GetParameter(aFrame, &value);
+    aFrame->code++; // skip ParamEnd
+    spdlog::error(value.c_str());
 }
 
 void StartFlightAudio(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
@@ -134,18 +145,35 @@ void UpdateFlightAudio(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFr
 
 RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes()
 {
-    spdlog::info("RegisterTypes");
+    spdlog::info("Registering functions");
     //RED4ext::CRTTISystem::Get()->RegisterType(&jackTestCls, 10005400);
     auto rtti = RED4ext::CRTTISystem::Get();
 
     RED4ext::CBaseFunction::Flags flags = {.isNative = true, .isStatic = true};
+
+    auto flightLogInfo = RED4ext::CGlobalFunction::Create("FlightLogInfo", "FlightLogInfo", &FlightLogInfo);
+    auto flightLogWarn = RED4ext::CGlobalFunction::Create("FlightLogWarn", "FlightLogWarn", &FlightLogWarn);
+    auto flightLogError = RED4ext::CGlobalFunction::Create("FlightLogError", "FlightLogError", &FlightLogError);
+
     auto startSound = RED4ext::CGlobalFunction::Create("StartFlightAudio", "StartFlightAudio", &StartFlightAudio);
     auto stopSound = RED4ext::CGlobalFunction::Create("StopFlightAudio", "StopFlightAudio", &StopFlightAudio);
     auto setParams = RED4ext::CGlobalFunction::Create("UpdateFlightAudio", "UpdateFlightAudio", &UpdateFlightAudio);
 
+    flightLogInfo->AddParam("String", "value");
+    flightLogWarn->AddParam("String", "value");
+    flightLogError->AddParam("String", "value");
+
+    flightLogInfo->flags = flags;
+    flightLogWarn->flags = flags;
+    flightLogError->flags = flags;
+
     startSound->flags = flags;
     stopSound->flags = flags;
     setParams->flags = flags;
+
+    rtti->RegisterFunction(flightLogInfo);
+    rtti->RegisterFunction(flightLogWarn);
+    rtti->RegisterFunction(flightLogError);
 
     rtti->RegisterFunction(startSound);
     rtti->RegisterFunction(stopSound);
@@ -156,7 +184,7 @@ RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes()
 
 RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
 {
-    spdlog::info("PostRegisterTypes");
+    //spdlog::info("PostRegisterTypes");
     // RED4ext::CClass::Flags jack_test_flags = {.isNative = true};
     // RED4ext::CRTTISystem::Get()->CreateScriptedClass("JackTestClass", jack_test_flags,
     //                                                 RED4ext::CRTTISystem::Get()->GetClass("IScriptable"));

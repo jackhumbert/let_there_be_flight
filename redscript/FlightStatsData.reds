@@ -11,7 +11,7 @@ public class FlightStatsData extends ScriptableSystem {
     private let m_container: ref<inkHashMap>;
 
     public func OnAttach() -> Void {
-        LogChannel(n"DEBUG", "[FlightStatsData] attached");
+        FlightLogInfo("[FlightStatsData] attached");
 		this.m_container = new inkHashMap();
                 
         let record1 = new FlightStatsData_Record();
@@ -62,14 +62,14 @@ public class FlightStatsData extends ScriptableSystem {
 
 	public func Get(tdb: TweakDBID) -> wref<FlightStatsData_Record> {
 		let key: Uint64 = TweakHash.Compute(tdb);
-        LogChannel(n"DEBUG", "[FlightStatsData] getting " + ToString(key));
+        FlightLogInfo("[FlightStatsData] getting " + ToString(key));
 
 		return this.m_container.Get(key) as FlightStatsData_Record;
 	}
 
 	public func Put(tdb: TweakDBID, record: ref<FlightStatsData_Record>) -> Void {
 		let key: Uint64 = TweakHash.Compute(tdb);
-        LogChannel(n"DEBUG", "[FlightStatsData] putting " + ToString(key));
+        FlightLogInfo("[FlightStatsData] putting " + ToString(key));
 
 		if this.m_container.KeyExist(key) {
 			this.m_container.Set(key, record);
