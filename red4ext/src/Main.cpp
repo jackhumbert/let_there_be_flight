@@ -21,18 +21,18 @@ FMOD::Studio::Bank* stringsBank = NULL;
 FMOD::Studio::EventDescription* ltbfDescription = NULL;
 FMOD::Studio::EventInstance* ltbfInstance = NULL;
 
-class FlightController
-{
-};
+//class FlightController
+//{
+//};
 
-RED4ext::CClass::Flags type_flags = {.isNative = true};
+//RED4ext::CClass::Flags type_flags = {.isNative = true};
 
-class jackTestClass { };
+//class jackTestClass { };
 
-RED4ext::CClass::Flags jack_test_flags = {.isImportOnly = true};
+//RED4ext::CClass::Flags jack_test_flags = {.isImportOnly = true};
 
 //RED4ext::TTypedClass<FlightController> flightControllerClass("FlightController", type_flags);
-RED4ext::TTypedClass<jackTestClass> jackTestCls("JackTestClass", jack_test_flags);
+//RED4ext::TTypedClass<jackTestClass> jackTestCls("JackTestClass", jack_test_flags);
 
 #define ERRCHECK(_result) ERRCHECK_fn(_result, __FILE__, __LINE__)
 void ERRCHECK_fn(FMOD_RESULT result, const char *file, int line)
@@ -43,28 +43,28 @@ void ERRCHECK_fn(FMOD_RESULT result, const char *file, int line)
     }
 }
 
-void StartFlightSound(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
+void StartFlightAudio(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
 {
     spdlog::info("Starting sound");
     ERRCHECK(ltbfInstance->start());
     ERRCHECK(fmod_system->update());
+    spdlog::info("Started sound");
 }
 
-void StopFlightSound(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
+void StopFlightAudio(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
 {
     spdlog::info("Stopping sound");
     ERRCHECK(ltbfInstance->stop(FMOD_STUDIO_STOP_IMMEDIATE));
     ERRCHECK(fmod_system->update());
 }
 
-void UpdateFlightSound(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
+void UpdateFlightAudio(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
 {
     auto rtti = RED4ext::CRTTISystem::Get();
     auto flightControlCls = rtti->GetClass("FlightController");
-    auto getInstanceFunc = flightControlCls->GetFunction("GetInstance");
 
     RED4ext::Handle<RED4ext::IScriptable> flightInst;
-    RED4ext::ExecuteFunction(aContext, getInstanceFunc, &flightInst, {});
+    RED4ext::ExecuteFunction("FlightController", "GetInstance", &flightInst);
 
     auto getAudioStatsFunc = flightControlCls->GetFunction("GetAudioStats");
 
@@ -119,17 +119,32 @@ void UpdateFlightSound(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFr
 RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes()
 {
     spdlog::info("RegisterTypes");
-    //RED4ext::CRTTISystem::Get()->RegisterType(&flightControllerClass, 10000000);
     //RED4ext::CRTTISystem::Get()->RegisterType(&jackTestCls, 10005400);
+    auto rtti = RED4ext::CRTTISystem::Get();
 
-    RED4ext::CClass::Flags jack_test_flags = {.isNative = true};
-    RED4ext::CRTTISystem::Get()->CreateScriptedClass("JackTestClass", jack_test_flags,
-                                                     RED4ext::CRTTISystem::Get()->GetClass("IScriptable"));
+    RED4ext::CBaseFunction::Flags flags = {.isNative = true, .isStatic = true};
+    auto startSound = RED4ext::CGlobalFunction::Create("StartFlightAudio", "StartFlightAudio", &StartFlightAudio);
+    auto stopSound = RED4ext::CGlobalFunction::Create("StopFlightAudio", "StopFlightAudio", &StopFlightAudio);
+    auto setParams = RED4ext::CGlobalFunction::Create("UpdateFlightAudio", "UpdateFlightAudio", &UpdateFlightAudio);
+
+    startSound->flags = flags;
+    stopSound->flags = flags;
+    setParams->flags = flags;
+
+    rtti->RegisterFunction(startSound);
+    rtti->RegisterFunction(stopSound);
+    rtti->RegisterFunction(setParams);
+
+    spdlog::info("Functions registered");
 }
 
 RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
 {
     spdlog::info("PostRegisterTypes");
+    // RED4ext::CClass::Flags jack_test_flags = {.isNative = true};
+    // RED4ext::CRTTISystem::Get()->CreateScriptedClass("JackTestClass", jack_test_flags,
+    //                                                 RED4ext::CRTTISystem::Get()->GetClass("IScriptable"));
+
 }
 
 BOOL APIENTRY DllMain(HMODULE aModule, DWORD aReason, LPVOID aReserved)
@@ -185,22 +200,6 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Load(RED4ext::PluginHandle aHandle, const RED
     ERRCHECK(ltbfDescription->createInstance(&ltbfInstance));
 
     spdlog::info("FMOD loaded");
-
-    auto rtti = RED4ext::CRTTISystem::Get();
-
-    {
-        RED4ext::CBaseFunction::Flags flags = {.isNative = true};
-        // RED4ext::CBaseFunction::Flags flags = {};
-        auto startSound = RED4ext::CGlobalFunction::Create("StartFlightSound", "StartFlightSound", &StartFlightSound);
-        auto stopSound = RED4ext::CGlobalFunction::Create("StopFlightSound", "StopFlightSound", &StopFlightSound);
-        auto setParams = RED4ext::CGlobalFunction::Create("UpdateFlightSound", "UpdateFlightSound", &UpdateFlightSound);
-
-        rtti->RegisterFunction(startSound);
-        rtti->RegisterFunction(stopSound);
-        rtti->RegisterFunction(setParams);
-    }
-
-    spdlog::info("Functions registered");
 
     return true;
 }

@@ -1,6 +1,6 @@
-// public static native func StartFlightAudio() -> Void
-// public static native func StopFlightSudio() -> Void
-// public static native func UpdateFlightAudio() -> Void
+public static native func StartFlightAudio() -> Void
+public static native func StopFlightAudio() -> Void
+public static native func UpdateFlightAudio() -> Void
 
 public class FlightAudioStats {
   public let volume: Float;

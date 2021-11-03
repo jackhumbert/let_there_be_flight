@@ -4,8 +4,8 @@ enum FlightMode {
   Undef = 0
 } 
 
-public native class JackTestClass {
-}
+// public native class JackTestClass {
+// }
 
 // public class FlightSettingsListener extends ConfigVarListener {
 
@@ -306,7 +306,7 @@ public class FlightController  {
     this.GetVehicle().TurnEngineOn(false);
     // this.GetVehicle().TurnOn(true);
 
-    // this.StartSnd();
+    StartFlightAudio();
 
     // this disables engines noises from starting, but also prevents wheels from moving
     // something that only stops engine noises would be preferred, or this could be toggled
@@ -340,7 +340,7 @@ public class FlightController  {
 
     this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetState(vehicleEState.On);
 
-    // this.StopSnd();
+    StopFlightAudio();
 
     // StatusEffectHelper.RemoveStatusEffect(GetPlayer(this.gameInstance), t"GameplayRestriction.NoCameraControl");
     if !silent {
@@ -509,7 +509,7 @@ public class FlightController  {
     this.audioStats.lift = this.lift.GetValue();
     this.audioStats.brake = this.brake.GetValue();
 
-    // this.SetParams();
+    UpdateFlightAudio();
   }
 
   public func SetupTires() -> Void {
