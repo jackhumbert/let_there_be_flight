@@ -79,7 +79,7 @@ public class FlightController  {
     this.ui = ui;
   }
   public let audioStats: ref<FlightAudioStats>;
-  public const func GetAudioStats() -> ref<FlightAudioStats> {
+  public final func GetAudioStats() -> ref<FlightAudioStats> {
     return this.audioStats;
   }
   public final const func GetVehicle() -> wref<VehicleObject> {

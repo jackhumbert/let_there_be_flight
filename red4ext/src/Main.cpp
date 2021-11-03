@@ -45,6 +45,7 @@ void ERRCHECK_fn(FMOD_RESULT result, const char *file, int line)
 
 void StartFlightAudio(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
 {
+    aFrame->code++; // skip ParamEnd
     spdlog::info("Starting sound");
     ERRCHECK(ltbfInstance->start());
     ERRCHECK(fmod_system->update());
@@ -53,6 +54,7 @@ void StartFlightAudio(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFra
 
 void StopFlightAudio(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
 {
+    aFrame->code++; // skip ParamEnd
     spdlog::info("Stopping sound");
     ERRCHECK(ltbfInstance->stop(FMOD_STUDIO_STOP_IMMEDIATE));
     ERRCHECK(fmod_system->update());
@@ -60,59 +62,73 @@ void StopFlightAudio(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFram
 
 void UpdateFlightAudio(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
 {
-    auto rtti = RED4ext::CRTTISystem::Get();
-    auto flightControlCls = rtti->GetClass("FlightController");
+    aFrame->code++; // skip ParamEnd
 
-    RED4ext::Handle<RED4ext::IScriptable> flightInst;
-    RED4ext::ExecuteFunction("FlightController", "GetInstance", &flightInst);
+    RED4ext::ScriptGameInstance gameInstance;
+    RED4ext::Handle<RED4ext::IScriptable> handle;
+    RED4ext::ExecuteGlobalFunction("GetPlayer;GameInstance", &handle, gameInstance);
 
-    auto getAudioStatsFunc = flightControlCls->GetFunction("GetAudioStats");
+    if (handle)
+    {
+        auto rtti = RED4ext::CRTTISystem::Get();
+        auto playerPuppetCls = rtti->GetClass("PlayerPuppet");
+        auto getFlightControllerFunc = playerPuppetCls->GetFunction("GetFlightController");
 
-    RED4ext::Handle<RED4ext::IScriptable> audioStats;
-    RED4ext::ExecuteFunction(flightInst, getAudioStatsFunc, &audioStats, {});
+        RED4ext::Handle<RED4ext::IScriptable> flightController;
+        RED4ext::ExecuteFunction(handle, getFlightControllerFunc, &flightController, {});
 
-    auto audioStatsCls = rtti->GetClass("FlightAudioStats");
+        auto flightControlCls = rtti->GetClass("FlightController");
+        auto getAudioStatsFunc = flightControlCls->GetFunction("GetAudioStats");
 
-    RED4ext::Vector4 playerPosition = audioStatsCls->GetProperty("playerPosition")->GetValue<RED4ext::Vector4>(audioStats);
-    RED4ext::Vector4 playerUp = audioStatsCls->GetProperty("playerUp")->GetValue<RED4ext::Vector4>(audioStats);
-    RED4ext::Vector4 playerForward = audioStatsCls->GetProperty("playerForward")->GetValue<RED4ext::Vector4>(audioStats);
-    RED4ext::Vector4 cameraPosition = audioStatsCls->GetProperty("cameraPosition")->GetValue<RED4ext::Vector4>(audioStats);
-    RED4ext::Vector4 cameraUp = audioStatsCls->GetProperty("cameraUp")->GetValue<RED4ext::Vector4>(audioStats);
-    RED4ext::Vector4 cameraForward = audioStatsCls->GetProperty("cameraForward")->GetValue<RED4ext::Vector4>(audioStats);
+        RED4ext::Handle<RED4ext::IScriptable> audioStats;
+        RED4ext::ExecuteFunction(flightController, getAudioStatsFunc, &audioStats, {});
 
-    FMOD_3D_ATTRIBUTES attributes = { { 0 } };
-    attributes.position.x = cameraPosition.X;
-    attributes.position.y = cameraPosition.Y;
-    attributes.position.z = cameraPosition.Z;        
-    attributes.forward.x = cameraForward.X;
-    attributes.forward.y = cameraForward.Y;
-    attributes.forward.z = cameraForward.Z;        
-    attributes.up.x = cameraUp.X;
-    attributes.up.y = cameraUp.Y;
-    attributes.up.z = cameraUp.Z;        
-    ERRCHECK(fmod_system->setListenerAttributes(0, &attributes));
+        if (audioStats)
+        {
+            auto audioStatsCls = rtti->GetClass("FlightAudioStats");
 
-    attributes.position.x = playerPosition.X;
-    attributes.position.y = playerPosition.Y;
-    attributes.position.z = playerPosition.Z;        
-    attributes.forward.x = playerForward.X;
-    attributes.forward.y = playerForward.Y;
-    attributes.forward.z = playerForward.Z;        
-    attributes.up.x = playerUp.X;
-    attributes.up.y = playerUp.Y;
-    attributes.up.z = playerUp.Z;        
-    ERRCHECK(ltbfInstance->set3DAttributes(&attributes));
-    
-    ERRCHECK(ltbfInstance->setVolume(audioStatsCls->GetProperty("volume")->GetValue<float>(audioStats)));
-    ERRCHECK(ltbfInstance->setParameterByName("Speed", audioStatsCls->GetProperty("speed")->GetValue<float>(audioStats)));
-    ERRCHECK(ltbfInstance->setParameterByName("Surge", audioStatsCls->GetProperty("surge")->GetValue<float>(audioStats)));
-    ERRCHECK(ltbfInstance->setParameterByName("YawDiff", audioStatsCls->GetProperty("yawDiff")->GetValue<float>(audioStats)));
-    ERRCHECK(ltbfInstance->setParameterByName("Lift", audioStatsCls->GetProperty("lift")->GetValue<float>(audioStats)));
-    ERRCHECK(ltbfInstance->setParameterByName("Yaw", audioStatsCls->GetProperty("yaw")->GetValue<float>(audioStats)));
-    ERRCHECK(ltbfInstance->setParameterByName("PitchDiff", audioStatsCls->GetProperty("pitchDiff")->GetValue<float>(audioStats)));
-    ERRCHECK(ltbfInstance->setParameterByName("Brake", audioStatsCls->GetProperty("brake")->GetValue<float>(audioStats)));
+            RED4ext::Vector4 playerPosition = audioStatsCls->GetProperty("playerPosition")->GetValue<RED4ext::Vector4>(audioStats);
+            RED4ext::Vector4 playerUp = audioStatsCls->GetProperty("playerUp")->GetValue<RED4ext::Vector4>(audioStats);
+            RED4ext::Vector4 playerForward = audioStatsCls->GetProperty("playerForward")->GetValue<RED4ext::Vector4>(audioStats);
+            RED4ext::Vector4 cameraPosition = audioStatsCls->GetProperty("cameraPosition")->GetValue<RED4ext::Vector4>(audioStats);
+            RED4ext::Vector4 cameraUp = audioStatsCls->GetProperty("cameraUp")->GetValue<RED4ext::Vector4>(audioStats);
+            RED4ext::Vector4 cameraForward = audioStatsCls->GetProperty("cameraForward")->GetValue<RED4ext::Vector4>(audioStats);
 
-    ERRCHECK(fmod_system->update());
+            FMOD_3D_ATTRIBUTES attributes = { { 0 } };
+            attributes.position.x = cameraPosition.X;
+            attributes.position.y = cameraPosition.Y;
+            attributes.position.z = cameraPosition.Z;
+            attributes.forward.x = cameraForward.X;
+            attributes.forward.y = cameraForward.Y;
+            attributes.forward.z = cameraForward.Z;
+            attributes.up.x = cameraUp.X;
+            attributes.up.y = cameraUp.Y;
+            attributes.up.z = cameraUp.Z;
+            ERRCHECK(fmod_system->setListenerAttributes(0, &attributes));
+
+            attributes.position.x = playerPosition.X;
+            attributes.position.y = playerPosition.Y;
+            attributes.position.z = playerPosition.Z;
+            attributes.forward.x = playerForward.X;
+            attributes.forward.y = playerForward.Y;
+            attributes.forward.z = playerForward.Z;
+            attributes.up.x = playerUp.X;
+            attributes.up.y = playerUp.Y;
+            attributes.up.z = playerUp.Z;
+            ERRCHECK(ltbfInstance->set3DAttributes(&attributes));
+
+            ERRCHECK(ltbfInstance->setVolume(audioStatsCls->GetProperty("volume")->GetValue<float>(audioStats)));
+            ERRCHECK(ltbfInstance->setParameterByName("Speed", audioStatsCls->GetProperty("speed")->GetValue<float>(audioStats)));
+            ERRCHECK(ltbfInstance->setParameterByName("Surge", audioStatsCls->GetProperty("surge")->GetValue<float>(audioStats)));
+            ERRCHECK(ltbfInstance->setParameterByName("YawDiff", audioStatsCls->GetProperty("yawDiff")->GetValue<float>(audioStats)));
+            ERRCHECK(ltbfInstance->setParameterByName("Lift", audioStatsCls->GetProperty("lift")->GetValue<float>(audioStats)));
+            ERRCHECK(ltbfInstance->setParameterByName("Yaw", audioStatsCls->GetProperty("yaw")->GetValue<float>(audioStats)));
+            ERRCHECK(ltbfInstance->setParameterByName("PitchDiff", audioStatsCls->GetProperty("pitchDiff")->GetValue<float>(audioStats)));
+            ERRCHECK(ltbfInstance->setParameterByName("Brake", audioStatsCls->GetProperty("brake")->GetValue<float>(audioStats)));
+
+            ERRCHECK(fmod_system->update());
+        }
+    }
 
 }
 
