@@ -213,4 +213,62 @@ public class inkWidgetBuilder {
     return this.widget as inkCircle;
   }
 
+  // inkShape
+  
+  public static func inkShape(name: CName) -> ref<inkWidgetBuilder> {
+    let instance = new inkWidgetBuilder();
+    instance.widget = new inkShape() as inkWidget;
+    instance.widget.SetName(name);
+    return instance;
+  }
+
+  public func BuildShape() -> ref<inkShape> {
+    return this.widget as inkShape;
+  }
+  
+  public func ShapeVariant(shapeVariant: inkEShapeVariant) -> ref<inkWidgetBuilder> {
+    (this.widget as inkShape).SetShapeVariant(shapeVariant);
+    return this;
+  }
+
+  public func BorderOpacity(borderOpacity: Float) -> ref<inkWidgetBuilder>  {
+    (this.widget as inkShape).SetBorderOpacity(borderOpacity);
+    return this;
+  }
+
+  public func BorderColor(borderColor: HDRColor) -> ref<inkWidgetBuilder>  {
+    (this.widget as inkShape).SetBorderColor(borderColor);
+    return this;
+  }
+
+  public func FillOpacity(fillOpacity: Float) -> ref<inkWidgetBuilder>  {
+    (this.widget as inkShape).SetFillOpacity(fillOpacity);
+    return this;
+  }
+
+  public func VertexList(vertexList: array<Vector2>) -> ref<inkWidgetBuilder>  {
+    (this.widget as inkShape).SetVertexList(vertexList);
+    return this;
+  }
+
+  public func JointStyle(jointStyle: inkEJointStyle) -> ref<inkWidgetBuilder>  {
+    (this.widget as inkShape).SetJointStyle(jointStyle);
+    return this;
+  }
+
+  public func EndCapStyle(endCapStyle: inkEEndCapStyle) -> ref<inkWidgetBuilder>  {
+    (this.widget as inkShape).SetEndCapStyle(endCapStyle);
+    return this;
+  }
+
+  public func LineThickness(lineThickness: Float) -> ref<inkWidgetBuilder>  {
+    (this.widget as inkShape).SetLineThickness(lineThickness);
+    return this;
+  }
+  public func ShapeName(shapeName: CName) -> ref<inkWidgetBuilder>  {
+    (this.widget as inkShape).SetShapeName(shapeName);
+    return this;
+  }
+
+
 }

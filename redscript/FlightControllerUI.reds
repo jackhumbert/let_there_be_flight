@@ -224,6 +224,10 @@ public class FlightControllerUI extends inkCanvas {
     (this.GetWidget(n"marks") as inkCanvas).RemoveAllChildren();
   }
 
+  public func GetMarksWidget() -> ref<inkCanvas> {
+    return (this.GetWidget(n"marks") as inkCanvas);
+  }
+
   public func DrawMark(position: Vector4) -> Void {
     let circle = inkWidgetBuilder.inkImage(StringToName("marker_" + ToString(RandF())))
       .Reparent((this.GetWidget(n"marks") as inkCanvas))

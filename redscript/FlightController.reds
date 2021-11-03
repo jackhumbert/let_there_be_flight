@@ -608,6 +608,25 @@ public class FlightController  {
         this.ui.DrawMark(Cast(findGround3.position) - this.stats.d_velocity * timeDelta);
         this.ui.DrawMark(Cast(findGround4.position) - this.stats.d_velocity * timeDelta);
 
+        let points: array<Vector2>;
+        ArrayPush(points, this.ui.ScreenXY(Cast(findGround1.position) - this.stats.d_velocity * timeDelta));
+        ArrayPush(points, this.ui.ScreenXY(Cast(findGround2.position) - this.stats.d_velocity * timeDelta));
+        ArrayPush(points, this.ui.ScreenXY(Cast(findGround4.position) - this.stats.d_velocity * timeDelta));
+        ArrayPush(points, this.ui.ScreenXY(Cast(findGround3.position) - this.stats.d_velocity * timeDelta));
+
+        let quad = inkWidgetBuilder.inkShape(n"quad")
+          .Reparent(this.ui.GetMarksWidget())
+          .ShapeName(n"hair_thin")
+          .Size(100.0, 100.0)
+          .ShapeVariant(inkEShapeVariant.FillAndBorder)
+          .LineThickness(5.0)
+          .VertexList(points)
+          .FillOpacity(0.1)
+          .Tint(ThemeColors.ElectricBlue())
+          .BorderColor(ThemeColors.ElectricBlue())
+          .BorderOpacity(0.5)
+          .BuildShape();
+
         this.ui.DrawText(Cast(findGround1.position) - this.stats.d_velocity * timeDelta, FloatToStringPrec(Vector4.Distance(fl_tire, Cast(findGround1.position)), 2));
         this.ui.DrawText(Cast(findGround2.position) - this.stats.d_velocity * timeDelta, FloatToStringPrec(Vector4.Distance(fr_tire, Cast(findGround2.position)), 2));
         this.ui.DrawText(Cast(findGround3.position) - this.stats.d_velocity * timeDelta, FloatToStringPrec(Vector4.Distance(bl_tire, Cast(findGround3.position)), 2));
