@@ -2,7 +2,7 @@ public static native func StartFlightAudio() -> Void
 public static native func StopFlightAudio() -> Void
 public static native func UpdateFlightAudio() -> Void
 
-public class FlightAudioStats {
+public native class FlightAudio {
   public let volume: Float;
   public let playerPosition: Vector4;
   public let playerUp: Vector4;

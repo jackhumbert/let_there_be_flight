@@ -21,6 +21,19 @@ FMOD::Studio::Bank* stringsBank = NULL;
 FMOD::Studio::EventDescription* ltbfDescription = NULL;
 FMOD::Studio::EventInstance* ltbfInstance = NULL;
 
+
+//struct MyCustomClass : RED4ext::IScriptable
+//{
+//    RED4ext::CClass* GetNativeType();
+//};
+//
+//RED4ext::TTypedClass<MyCustomClass> cls("MyCustomClass");
+//
+//RED4ext::CClass* MyCustomClass::GetNativeType()
+//{
+//    return &cls;
+//}
+
 #define ERRCHECK(_result) ERRCHECK_fn(_result, __FILE__, __LINE__)
 void ERRCHECK_fn(FMOD_RESULT result, const char *file, int line)
 {
@@ -179,6 +192,9 @@ RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes()
     rtti->RegisterFunction(stopSound);
     rtti->RegisterFunction(setParams);
 
+    //cls.flags = {.isNative = true};
+    //RED4ext::CRTTISystem::Get()->RegisterType(&cls, 100000);
+
     spdlog::info("Functions registered");
 }
 
@@ -188,7 +204,9 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
     // RED4ext::CClass::Flags jack_test_flags = {.isNative = true};
     // RED4ext::CRTTISystem::Get()->CreateScriptedClass("JackTestClass", jack_test_flags,
     //                                                 RED4ext::CRTTISystem::Get()->GetClass("IScriptable"));
-
+   // auto rtti = RED4ext::CRTTISystem::Get();
+    //auto scriptable = rtti->GetClass("IScriptable");
+    //cls.parent = scriptable;
 }
 
 BOOL APIENTRY DllMain(HMODULE aModule, DWORD aReason, LPVOID aReserved)

@@ -1,0 +1,9 @@
+flats:
+  Flight.Vehicle.v_standard2_makigai_maimai_player:
+    type: Float
+    value: 1431.0
+records:
+  Flight:
+    type: Flight
+    members:
+      - Flight.Vehicle.v_standard2_makigai_maimai_player

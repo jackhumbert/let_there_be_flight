@@ -621,8 +621,8 @@ public class FlightController  {
 
         let quad = inkWidgetBuilder.inkShape(n"quad")
           .Reparent(this.ui.GetMarksWidget())
-          .ShapeName(n"hair_thin")
-          .Size(100.0, 100.0)
+          //.ShapeName(n"hair_thin")
+          .Size(800.0, 800.0)
           .ShapeVariant(inkEShapeVariant.FillAndBorder)
           .LineThickness(5.0)
           .VertexList(points)

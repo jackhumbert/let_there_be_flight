@@ -1,6 +1,6 @@
-[submodule "red4ext/deps/red4ext.sdk"]
+[submodule "red4ext.sdk"]
 	path = red4ext/deps/red4ext.sdk
-	url = https://github.com/WopsS/RED4ext.SDK.git
+	url = git@github.com:jackhumbert/RED4ext.SDK.git
 [submodule "red4ext/deps/spdlog"]
 	path = red4ext/deps/spdlog
 	url = https://github.com/gabime/spdlog.git
