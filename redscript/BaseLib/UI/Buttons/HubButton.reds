@@ -245,7 +245,9 @@ public class HubButton extends CustomButton {
 		this.m_hoverFillAnimProxy = this.m_hover.PlayAnimationWithOptions(this.m_hoverFillAnimDef, reverseAnimOpts);
 	}
 
-	protected func ApplyPressedState() -> Void
+	protected func ApplyPressedState() -> Void {
+		
+	}
 
 	public func SetIcon(icon: CName) -> Void {
 		this.m_icon.SetTexturePart(icon);

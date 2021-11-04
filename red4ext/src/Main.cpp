@@ -10,6 +10,7 @@
 #include "stdafx.hpp"
 #include "FlightAudio.hpp"
 #include "FlightLog.hpp"
+#include "FlightStats_Record.hpp"
 #include "FmodHelper.hpp"
 
 RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes()
@@ -17,6 +18,7 @@ RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes()
     spdlog::info("Registering classes & types");
     FlightAudio::RegisterTypes();
     FlightLog::RegisterTypes();
+    //FlightStats_Record::RegisterTypes();
 }
 
 RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
@@ -24,6 +26,7 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
     spdlog::info("Registering functions");
     FlightAudio::RegisterFunctions();
     FlightLog::RegisterFunctions();
+    //FlightStats_Record::RegisterFunctions();
 
 }
 

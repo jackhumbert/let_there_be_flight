@@ -1,8 +1,8 @@
 public native class FlightAudio {
   // defined in red4ext part
-  public native func Start() -> Void
-  public native func Stop() -> Void
-  public native func Update() -> Void
+  public native func Start() -> Void;
+  public native func Stop() -> Void;
+  public native func Update() -> Void;
 
   public let volume: Float;
   public let playerPosition: Vector4;
