@@ -1,0 +1,9 @@
+flats: {}
+groups:
+  v_sport2_quadra_type66:
+    inherits: Vehicle_4w_Default
+    type: Vehicle
+    members:
+      enableDestruction:
+        type: Bool
+        value: true
