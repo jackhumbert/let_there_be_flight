@@ -127,11 +127,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="FlightLog.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="FlightAudio.cpp" />
+    <ClCompile Include="FmodHelper.hpp" />
+    <ClCompile Include="FmodHelper.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="FlightAudio.hpp" />
+    <ClInclude Include="FlightLog.hpp" />
     <ClInclude Include="stdafx.hpp" />
     <ClInclude Include="Utils.hpp" />
   </ItemGroup>

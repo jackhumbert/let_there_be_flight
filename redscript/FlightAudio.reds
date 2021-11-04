@@ -1,8 +1,9 @@
-public static native func StartFlightAudio() -> Void
-public static native func StopFlightAudio() -> Void
-public static native func UpdateFlightAudio() -> Void
-
 public native class FlightAudio {
+  // defined in red4ext part
+  public native func Start() -> Void
+  public native func Stop() -> Void
+  public native func Update() -> Void
+
   public let volume: Float;
   public let playerPosition: Vector4;
   public let playerUp: Vector4;
@@ -17,8 +18,8 @@ public native class FlightAudio {
   public let yaw: Float;
   public let pitchDiff: Float;
   public let brake: Float;
-  public static func Create() -> ref<FlightAudioStats> {
-    let instance = new FlightAudioStats();
+  public static func Create() -> ref<FlightAudio> {
+    let instance = new FlightAudio();
     instance.volume = 1.0;
     instance.playerPosition = Vector4.EmptyVector();
     instance.playerUp = new Vector4(0.0, 0.0, 1.0, 0.0);

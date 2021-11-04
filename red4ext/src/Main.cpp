@@ -6,207 +6,25 @@
 #include <RED4ext/Scripting/IScriptable.hpp>
 #include <RED4ext/RTTITypes.hpp>
 
-#include <fmod_studio.hpp>
-#include <fmod.hpp>
-#include <fmod_errors.h>
 #include "Utils.hpp"
 #include "stdafx.hpp"
-
-static std::vector<char*> gPathList;
-void* extraDriverData = NULL;
-FMOD::Studio::System* fmod_system = NULL;
-FMOD::System* coreSystem = NULL;
-FMOD::Studio::Bank* masterBank = NULL;
-FMOD::Studio::Bank* stringsBank = NULL;
-FMOD::Studio::EventDescription* ltbfDescription = NULL;
-FMOD::Studio::EventInstance* ltbfInstance = NULL;
-
-
-//struct MyCustomClass : RED4ext::IScriptable
-//{
-//    RED4ext::CClass* GetNativeType();
-//};
-//
-//RED4ext::TTypedClass<MyCustomClass> cls("MyCustomClass");
-//
-//RED4ext::CClass* MyCustomClass::GetNativeType()
-//{
-//    return &cls;
-//}
-
-#define ERRCHECK(_result) ERRCHECK_fn(_result, __FILE__, __LINE__)
-void ERRCHECK_fn(FMOD_RESULT result, const char *file, int line)
-{
-    if (result != FMOD_OK)
-    {
-        spdlog::error("{0}({1}): FMOD error {2} - {3}", file, line, result, FMOD_ErrorString(result));
-    }
-}
-
-void FlightLogInfo(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
-{
-    RED4ext::CString value;
-    RED4ext::GetParameter(aFrame, &value);
-    aFrame->code++; // skip ParamEnd
-    spdlog::info(value.c_str());
-}
-
-void FlightLogWarn(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
-{
-    RED4ext::CString value;
-    RED4ext::GetParameter(aFrame, &value);
-    aFrame->code++; // skip ParamEnd
-    spdlog::warn(value.c_str());
-}
-
-void FlightLogError(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
-{
-    RED4ext::CString value;
-    RED4ext::GetParameter(aFrame, &value);
-    aFrame->code++; // skip ParamEnd
-    spdlog::error(value.c_str());
-}
-
-void StartFlightAudio(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
-{
-    aFrame->code++; // skip ParamEnd
-    spdlog::info("Starting sound");
-    ERRCHECK(ltbfInstance->start());
-    ERRCHECK(fmod_system->update());
-    spdlog::info("Started sound");
-}
-
-void StopFlightAudio(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
-{
-    aFrame->code++; // skip ParamEnd
-    spdlog::info("Stopping sound");
-    ERRCHECK(ltbfInstance->stop(FMOD_STUDIO_STOP_IMMEDIATE));
-    ERRCHECK(fmod_system->update());
-}
-
-void UpdateFlightAudio(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
-{
-    aFrame->code++; // skip ParamEnd
-
-    RED4ext::ScriptGameInstance gameInstance;
-    RED4ext::Handle<RED4ext::IScriptable> handle;
-    RED4ext::ExecuteGlobalFunction("GetPlayer;GameInstance", &handle, gameInstance);
-
-    if (handle)
-    {
-        auto rtti = RED4ext::CRTTISystem::Get();
-        auto playerPuppetCls = rtti->GetClass("PlayerPuppet");
-        auto getFlightControllerFunc = playerPuppetCls->GetFunction("GetFlightController");
-
-        RED4ext::Handle<RED4ext::IScriptable> flightController;
-        RED4ext::ExecuteFunction(handle, getFlightControllerFunc, &flightController, {});
-
-        auto flightControlCls = rtti->GetClass("FlightController");
-        auto getAudioStatsFunc = flightControlCls->GetFunction("GetAudioStats");
-
-        RED4ext::Handle<RED4ext::IScriptable> audioStats;
-        RED4ext::ExecuteFunction(flightController, getAudioStatsFunc, &audioStats, {});
-
-        if (audioStats)
-        {
-            auto audioStatsCls = rtti->GetClass("FlightAudioStats");
-
-            RED4ext::Vector4 playerPosition = audioStatsCls->GetProperty("playerPosition")->GetValue<RED4ext::Vector4>(audioStats);
-            RED4ext::Vector4 playerUp = audioStatsCls->GetProperty("playerUp")->GetValue<RED4ext::Vector4>(audioStats);
-            RED4ext::Vector4 playerForward = audioStatsCls->GetProperty("playerForward")->GetValue<RED4ext::Vector4>(audioStats);
-            RED4ext::Vector4 cameraPosition = audioStatsCls->GetProperty("cameraPosition")->GetValue<RED4ext::Vector4>(audioStats);
-            RED4ext::Vector4 cameraUp = audioStatsCls->GetProperty("cameraUp")->GetValue<RED4ext::Vector4>(audioStats);
-            RED4ext::Vector4 cameraForward = audioStatsCls->GetProperty("cameraForward")->GetValue<RED4ext::Vector4>(audioStats);
-
-            FMOD_3D_ATTRIBUTES attributes = { { 0 } };
-            attributes.position.x = cameraPosition.X;
-            attributes.position.y = cameraPosition.Y;
-            attributes.position.z = cameraPosition.Z;
-            attributes.forward.x = cameraForward.X;
-            attributes.forward.y = cameraForward.Y;
-            attributes.forward.z = cameraForward.Z;
-            attributes.up.x = cameraUp.X;
-            attributes.up.y = cameraUp.Y;
-            attributes.up.z = cameraUp.Z;
-            ERRCHECK(fmod_system->setListenerAttributes(0, &attributes));
-
-            attributes.position.x = playerPosition.X;
-            attributes.position.y = playerPosition.Y;
-            attributes.position.z = playerPosition.Z;
-            attributes.forward.x = playerForward.X;
-            attributes.forward.y = playerForward.Y;
-            attributes.forward.z = playerForward.Z;
-            attributes.up.x = playerUp.X;
-            attributes.up.y = playerUp.Y;
-            attributes.up.z = playerUp.Z;
-            ERRCHECK(ltbfInstance->set3DAttributes(&attributes));
-
-            ERRCHECK(ltbfInstance->setVolume(audioStatsCls->GetProperty("volume")->GetValue<float>(audioStats)));
-            ERRCHECK(ltbfInstance->setParameterByName("Speed", audioStatsCls->GetProperty("speed")->GetValue<float>(audioStats)));
-            ERRCHECK(ltbfInstance->setParameterByName("Surge", audioStatsCls->GetProperty("surge")->GetValue<float>(audioStats)));
-            ERRCHECK(ltbfInstance->setParameterByName("YawDiff", audioStatsCls->GetProperty("yawDiff")->GetValue<float>(audioStats)));
-            ERRCHECK(ltbfInstance->setParameterByName("Lift", audioStatsCls->GetProperty("lift")->GetValue<float>(audioStats)));
-            ERRCHECK(ltbfInstance->setParameterByName("Yaw", audioStatsCls->GetProperty("yaw")->GetValue<float>(audioStats)));
-            ERRCHECK(ltbfInstance->setParameterByName("PitchDiff", audioStatsCls->GetProperty("pitchDiff")->GetValue<float>(audioStats)));
-            ERRCHECK(ltbfInstance->setParameterByName("Brake", audioStatsCls->GetProperty("brake")->GetValue<float>(audioStats)));
-
-            ERRCHECK(fmod_system->update());
-        }
-    }
-
-}
+#include "FlightAudio.hpp"
+#include "FlightLog.hpp"
+#include "FmodHelper.hpp"
 
 RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes()
 {
-    spdlog::info("Registering functions");
-    //RED4ext::CRTTISystem::Get()->RegisterType(&jackTestCls, 10005400);
-    auto rtti = RED4ext::CRTTISystem::Get();
-
-    RED4ext::CBaseFunction::Flags flags = {.isNative = true, .isStatic = true};
-
-    auto flightLogInfo = RED4ext::CGlobalFunction::Create("FlightLogInfo", "FlightLogInfo", &FlightLogInfo);
-    auto flightLogWarn = RED4ext::CGlobalFunction::Create("FlightLogWarn", "FlightLogWarn", &FlightLogWarn);
-    auto flightLogError = RED4ext::CGlobalFunction::Create("FlightLogError", "FlightLogError", &FlightLogError);
-
-    auto startSound = RED4ext::CGlobalFunction::Create("StartFlightAudio", "StartFlightAudio", &StartFlightAudio);
-    auto stopSound = RED4ext::CGlobalFunction::Create("StopFlightAudio", "StopFlightAudio", &StopFlightAudio);
-    auto setParams = RED4ext::CGlobalFunction::Create("UpdateFlightAudio", "UpdateFlightAudio", &UpdateFlightAudio);
-
-    flightLogInfo->AddParam("String", "value");
-    flightLogWarn->AddParam("String", "value");
-    flightLogError->AddParam("String", "value");
-
-    flightLogInfo->flags = flags;
-    flightLogWarn->flags = flags;
-    flightLogError->flags = flags;
-
-    startSound->flags = flags;
-    stopSound->flags = flags;
-    setParams->flags = flags;
-
-    rtti->RegisterFunction(flightLogInfo);
-    rtti->RegisterFunction(flightLogWarn);
-    rtti->RegisterFunction(flightLogError);
-
-    rtti->RegisterFunction(startSound);
-    rtti->RegisterFunction(stopSound);
-    rtti->RegisterFunction(setParams);
-
-    //cls.flags = {.isNative = true};
-    //RED4ext::CRTTISystem::Get()->RegisterType(&cls, 100000);
-
-    spdlog::info("Functions registered");
+    spdlog::info("Registering classes & types");
+    FlightAudio::RegisterTypes();
+    FlightLog::RegisterTypes();
 }
 
 RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
 {
-    //spdlog::info("PostRegisterTypes");
-    // RED4ext::CClass::Flags jack_test_flags = {.isNative = true};
-    // RED4ext::CRTTISystem::Get()->CreateScriptedClass("JackTestClass", jack_test_flags,
-    //                                                 RED4ext::CRTTISystem::Get()->GetClass("IScriptable"));
-   // auto rtti = RED4ext::CRTTISystem::Get();
-    //auto scriptable = rtti->GetClass("IScriptable");
-    //cls.parent = scriptable;
+    spdlog::info("Registering functions");
+    FlightAudio::RegisterFunctions();
+    FlightLog::RegisterFunctions();
+
 }
 
 BOOL APIENTRY DllMain(HMODULE aModule, DWORD aReason, LPVOID aReserved)
@@ -237,40 +55,13 @@ BOOL APIENTRY DllMain(HMODULE aModule, DWORD aReason, LPVOID aReserved)
 
 RED4EXT_C_EXPORT bool RED4EXT_CALL Load(RED4ext::PluginHandle aHandle, const RED4ext::IRED4ext* aInterface)
 {
-    ERRCHECK(FMOD::Studio::System::create(&fmod_system));
-
-    // The example Studio project is authored for 5.1 sound, so set up the system output mode to match
-    ERRCHECK(fmod_system->getCoreSystem(&coreSystem));
-    ERRCHECK(coreSystem->setSoftwareFormat(0, FMOD_SPEAKERMODE_5POINT1, 0));
-    
-    // Due to a bug in WinSonic on Windows, FMOD initialization may fail on some machines.
-    // If you get the error "FMOD error 51 - Error initializing output device", try using
-    // a different output type such as FMOD_OUTPUTTYPE_AUTODETECT
-    ERRCHECK(coreSystem->setOutput(FMOD_OUTPUTTYPE_AUTODETECT));
-
-    std::string bank_path = (Utils::GetRootDir() / "bin" / "x64" / "plugins" / "flight_control" / "vehicle1.bank").string();
-    std::string strings_path = (Utils::GetRootDir() / "bin" / "x64" / "plugins" / "flight_control" / "vehicle1.strings.bank").string();
-    const char* bank = bank_path.c_str();
-    const char* strings = strings_path.c_str();
-    ERRCHECK(fmod_system->initialize(1024, FMOD_STUDIO_INIT_LIVEUPDATE, FMOD_INIT_NORMAL, extraDriverData));
-    ERRCHECK(fmod_system->loadBankFile(bank, FMOD_STUDIO_LOAD_BANK_NORMAL, &masterBank));
-    ERRCHECK(fmod_system->loadBankFile(strings, FMOD_STUDIO_LOAD_BANK_NORMAL, &stringsBank));
-
-    // Get the Looping Engine Noise
-    ERRCHECK(fmod_system->getEvent("event:/vehicle1", &ltbfDescription));
-
-    ERRCHECK(ltbfDescription->createInstance(&ltbfInstance));
-
-    spdlog::info("FMOD loaded");
-
+    FlightAudio::Load();
     return true;
 }
 
 RED4EXT_C_EXPORT void RED4EXT_CALL Unload()
 {
-    stringsBank->unload();
-    masterBank->unload();
-    fmod_system->release();
+    FlightAudio::Unload();
 }
 
 RED4EXT_C_EXPORT void RED4EXT_CALL Query(RED4ext::PluginInfo* aInfo)
