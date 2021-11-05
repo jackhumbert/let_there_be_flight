@@ -1,9 +1,348 @@
-flats: {}
-groups:
-  v_sport2_quadra_type66:
-    inherits: Vehicle_4w_Default
+flats:
+  Vehicle.vehicle_list.list:
+    type: array:TweakDBID
+    value:
+      - Vehicle.v_sport1_herrera_outlaw_player
+      - Vehicle.v_sport1_quadra_turbo_player
+      - Vehicle.v_sport1_quadra_turbo_r_player
+      - Vehicle.v_sport1_rayfield_aerondight_player
+      - Vehicle.v_sport1_rayfield_caliburn_player
+      - Vehicle.v_sport2_mizutani_shion_player
+      - Vehicle.v_sport2_mizutani_shion_nomad_player
+      - Vehicle.v_sport2_porsche_911turbo_player
+      - Vehicle.v_sport2_quadra_type66_player
+      - Vehicle.v_sport2_quadra_type66_avenger_player
+      - Vehicle.v_sport2_quadra_type66_nomad_player
+      - Vehicle.v_sport2_villefort_alvarado_player
+      - Vehicle.v_standard25_mahir_supron_player
+      - Vehicle.v_standard25_thorton_colby_nomad_player
+      - Vehicle.v_standard25_villefort_columbus_player
+      - Vehicle.v_standard25_thorton_colby_pickup_player
+      - Vehicle.v_standard2_archer_hella_player
+      - Vehicle.v_standard2_archer_quartz_player
+      - Vehicle.v_standard2_chevalier_thrax_player
+      - Vehicle.v_standard2_makigai_maimai_player
+      - Vehicle.v_standard2_thorton_colby_player
+      - Vehicle.v_standard2_thorton_galena_player
+      - Vehicle.v_standard2_thorton_galena_nomad_player
+      - Vehicle.v_standard2_villefort_cortes_player
+      - Vehicle.v_standard2_villefort_cortes_delamain_player
+      - Vehicle.v_standard3_chevalier_emperor_player
+      - Vehicle.v_standard3_thorton_mackinaw_player
+      - Vehicle.v_sportbike1_yaiba_kusanagi_player
+      - Vehicle.v_sportbike2_arch_player
+      - Vehicle.v_sportbike3_brennan_apollo_player
+      - Vehicle.v_sportbike3_brennan_apollo_nomad_player
+      - Vehicle.v_sportbike2_arch_jackie_player
+      - Vehicle.v_sportbike2_arch_jackie_tuned_player
+      - Vehicle.v_sport2_villefort_alvarado_valentinos_player
+      - Vehicle.v_standard2_thorton_galena_bobas_player
+      - Vehicle.v_standard3_thorton_mackinaw_ncu_player
+      - Vehicle.v_sport2_quadra_type66_nomad_ncu_player
+      - Vehicle.v_sportbike1_yaiba_kusanagi_tyger_player
+      - Vehicle.v_sportbike2_arch_tyger_player
+      - Vehicle.v_sport2_mizutani_shion_nomad_02_player
+      - Vehicle.v_sport1_rayfield_caliburn_02_player
+      - Vehicle.v_standard25_thorton_colby_pickup_02_player
+      - Vehicle.v_standard2_archer_bandit_player
+      - Vehicle.v_sport2_quadra_type66_jack
+groups: 
+  Vehicle.v_sport2_quadra_type66_jack: 
     type: Vehicle
-    members:
-      enableDestruction:
+    inherits: Vehicle.v_sport2_quadra_type66
+    members: 
+      affiliation: 
+        type: TweakDBID
+        value: Factions.Unaffiliated
+      appearanceName: 
+        type: CName
+        value: None
+      archetypeName: 
+        type: CName
+        value: vehicle
+      attachmentSlots: 
+        type: array:TweakDBID
+        value: 
+          - AttachmentSlots.Engine1
+          - AttachmentSlots.Engine2
+          - AttachmentSlots.Engine3
+          - AttachmentSlots.Engine4
+      audioResourceName: 
+        type: CName
+        value: None
+      brakelightColor: 
+        type: array:Int32
+        value: []
+      cameraManagerParams: 
+        type: TweakDBID
+        value: Camera.VehicleCameraManager_Default
+      crackLockDifficulty: 
+        type: String
+        value: HARD
+      crowdMemberSettings: 
+        type: TweakDBID
+        value: Crowds.Sport_DrivingPackage
+      curvesPath: 
+        type: raRef:CResource
+        value: base\gameplay\vehicles\curves\muscle_car.vehcurveset
+      destroyedAppearance: 
+        type: CName
+        value: quadra_type66__basic_burnt_01
+      destruction: 
+        type: TweakDBID
+        value: Vehicle.VehicleDestructionParamsQuadraType66
+      displayName: 
+        type: LocKey
+        value: 36326
+      driving: 
+        type: TweakDBID
+        value: Driving.Default_4w
+      effectors: 
+        type: array:TweakDBID
+        value: []
+      enableDestruction: 
         type: Bool
         value: true
+      entityTemplatePath: 
+        type: "raRef:CResource"
+        value: base\vehicles\sport\v_sport2_quadra_type66__basic_01.ent
+      fxCollision: 
+        type: TweakDBID
+        value: Vehicle.FxCollision_Default
+      fxWheelsDecals: 
+        type: TweakDBID
+        value: Vehicle.FxWheels_Sport_XL
+      fxWheelsParticles: 
+        type: TweakDBID
+        value: Vehicle.FxWheelsParticles_Default
+      headlightColor: 
+        type: array:Int32
+        value: 
+          - 255
+          - 0 
+          - 0
+          - 255
+      hijackDifficulty: 
+        type: String
+        value: HARD
+      icon: 
+        type: TweakDBID
+        value: UIIcon.quadra_type66__basic_jen_rowley
+      interiorColor: 
+        type: array:Int32
+        value: []
+      interiorDamageColor: 
+        type: array:Int32
+        value: []
+      leftBackCamber: 
+        type: Float
+        value: 3
+      leftBackCamberOffset: 
+        type: Vector3
+        value: 
+          "X": 0.0199999996
+          "Y": 0.0
+          "Z": 0.0
+      leftBlinkerlightColor: 
+        type: array:Int32
+        value: []
+      leftFrontCamber: 
+        type: Float
+        value: 3
+      leftFrontCamberOffset: 
+        type: Vector3
+        value: 
+          "X": 0.0199999996
+          "Y": 0.0
+          "Z": 0.0
+      manufacturer: 
+        type: TweakDBID
+        value: Vehicle.Quadra
+      model: 
+        type: TweakDBID
+        value: Vehicle.Type66
+      multiplayerTemplatePaths: 
+        type: array:raRef:CResource
+        value: []
+      objectActions: 
+        type: array:TweakDBID
+        value: 
+          - VehicleActions.VehicleHijackFrontLeft
+          - VehicleActions.VehicleHijackFrontRight
+          - VehicleActions.VehicleMountFrontLeft
+          - VehicleActions.VehicleMountFrontRight
+          - VehicleActions.VehicleMountBackLeft
+          - VehicleActions.VehicleMountBackRight
+          - VehicleActions.VehicleCrackLockFrontLeft
+          - VehicleActions.VehicleCrackLockFrontRight
+      persistentName: 
+        type: CName
+        value: None
+      player_audio_resource: 
+        type: String
+        value: v_car_quadra_type_66
+      priority: 
+        type: TweakDBID
+        value: SpawnableObjectPriority.Regular
+      queryOnlyExceptions: 
+        type: array:CName
+        value: 
+          - trunk_a
+          - trunk_b
+          - hood_a
+      randomPassengers: 
+        type: array:TweakDBID
+        value: 
+          - Passengers.NightLifeDriverEntry
+          - Passengers.NightLifePassengerFrontEntry
+      reverselightColor: 
+        type: array:Int32
+        value: []
+      rightBLinkerlightColor: 
+        type: array:Int32
+        value: []
+      rightBackCamber: 
+        type: Float
+        value: -3
+      rightBackCamberOffset: 
+        type: Vector3
+        value: 
+          "X": -0.0199999996
+          "Y": 0
+          "Z": 0
+      rightFrontCamber: 
+        type: Float
+        value: -3
+      rightFrontCamberOffset: 
+        type: Vector3
+        value: 
+          "X": -0.0199999996
+          "Y": 0
+          "Z": 0
+      savable: 
+        type: Bool
+        value: true
+      statModifierGroups: 
+        type: array:TweakDBID
+        value: 
+          - VehicleStatPreset.BaseCar
+      statModifiers: 
+        type: array:TweakDBID
+        value: 
+          - Vehicle.v_sport2_quadra_type66_inline1
+      statPools: 
+        type: array:TweakDBID
+        value: 
+          - BaseStatPools.VehicleHealth
+      tags: 
+        type: array:CName
+        value: 
+          - InteractiveTrunk
+          - Sport
+      tppCameraParams: 
+        type: TweakDBID
+        value: Camera.VehicleTPP_DefaultParams
+      tppCameraPresets: 
+        type: array:TweakDBID
+        value: 
+          - Camera.VehicleTPP_4w_Quadra66_Low_Close
+          - Camera.VehicleTPP_4w_Quadra66_High_Close
+          - Camera.VehicleTPP_4w_Quadra66_Low_Far
+          - Camera.VehicleTPP_4w_Quadra66_High_Far
+      traffic_audio_resource: 
+        type: String
+        value: v_car_quadra_type_66_traffic
+      type: 
+        type: TweakDBID
+        value: Vehicle.Car
+      unmountOffsetPosition: 
+        type: Vector3
+        value: 
+          "X": 1.64999998
+          "Y": 5
+          "Z": 2.5
+      vehAirControl: 
+        type: TweakDBID
+        value: Vehicle.VehicleAirControlCar
+      vehAirControlAI: 
+        type: TweakDBID
+        value: Vehicle.VehicleAirControlCarAI
+      vehBehaviorData: 
+        type: TweakDBID
+        value: ""
+      vehDataPackage: 
+        type: TweakDBID
+        value: Vehicle.v_sport2_quadra_type66_inline0
+      vehDefaultState: 
+        type: TweakDBID
+        value: Vehicle.Veh4WDefaultState
+      vehDriveModelData: 
+        type: TweakDBID
+        value: Vehicle.VehicleDriveModelData_Type66
+      vehDriveModelDataAI: 
+        type: TweakDBID
+        value: ""
+      vehDriverCombat_FPPCameraParams: 
+        type: TweakDBID
+        value: Vehicle.VehicleDriverCombatFPPCameraParamsDefault
+      vehDriverCombat_ProceduralFPPCameraParams: 
+        type: TweakDBID
+        value: Camera.VehicleProceduralFPPCamera_DefaultCombatParams
+      vehDriver_FPPCameraParams: 
+        type: TweakDBID
+        value: Vehicle.v_sport2_quadra_type66_inline5
+      vehDriver_ProceduralFPPCameraParams: 
+        type: TweakDBID
+        value: Camera.VehicleProceduralFPPCamera_DefaultParams
+      vehEngineData: 
+        type: TweakDBID
+        value: Vehicle.VehicleEngineData_4_Sport
+      vehImpactTraffic: 
+        type: TweakDBID
+        value: Driving.VehicleImpactTraffic_DefaultParams
+      vehPassCombatL_FPPCameraParams: 
+        type: TweakDBID
+        value: Vehicle.VehiclePassengerLCombatFPPCameraParamsDefault
+      vehPassCombatL_ProceduralFPPCameraParams: 
+        type: TweakDBID
+        value: Camera.VehicleProceduralFPPCamera_DefaultCombatParams
+      vehPassCombatR_FPPCameraParams: 
+        type: TweakDBID
+        value: Vehicle.VehiclePassengerRCombatFPPCameraParamsDefault
+      vehPassCombatR_ProceduralFPPCameraParams: 
+        type: TweakDBID
+        value: Camera.VehicleProceduralFPPCamera_DefaultCombatParams
+      vehPassL_FPPCameraParams: 
+        type: TweakDBID
+        value: Vehicle.VehiclePassengerLFPPCameraParamsDefault
+      vehPassL_ProceduralFPPCameraParams: 
+        type: TweakDBID
+        value: Camera.VehicleProceduralFPPCamera_DefaultParams
+      vehPassR_FPPCameraParams: 
+        type: TweakDBID
+        value: Vehicle.VehiclePassengerRFPPCameraParamsDefault
+      vehPassR_ProceduralFPPCameraParams: 
+        type: TweakDBID
+        value: Camera.VehicleProceduralFPPCamera_DefaultParams
+      vehWheelDimensionsSetup: 
+        type: TweakDBID
+        value: Vehicle.v_sport2_quadra_type66_inline2
+      vehicleUIData: 
+        type: TweakDBID
+        value: Vehicle.VehicleQuadraType66UIData
+      visualDestruction: 
+        type: TweakDBID
+        value: Vehicle.VehicleVisualDestructionParamsDefault
+      visualTags: 
+        type: array:CName
+        value: 
+          - Standard
+      weakspots: 
+        type: array:TweakDBID
+        value: []
+      weapons: 
+        type: array:TweakDBID
+        value: []
+      widgetStyleSheetPath: 
+        type: "raRef:CResource"
+        value:

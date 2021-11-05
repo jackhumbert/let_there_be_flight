@@ -83,3 +83,6 @@ Vehicle.vehicle_template.visualTags,array:CName,[ ]
 Vehicle.vehicle_template.weakspots,array:TweakDBID,[ ]
 Vehicle.vehicle_template.weapons,array:TweakDBID,[ ]
 Vehicle.vehicle_template.widgetStyleSheetPath,raRef:CResource,0 
+
+
+
