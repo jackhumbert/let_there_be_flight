@@ -1,13 +1,13 @@
 flats:
   Camera.VehicleTPP_DefaultParams.slopeCorrectionInAirDampFactor:
     type: Float
-    value: 0.0001
+    value: 0.1
   Camera.VehicleTPP_DefaultParams.slopeCorrectionInAirFallCoef:
     type: Float
-    value: 0.0001
+    value: 0
   Camera.VehicleTPP_DefaultParams.slopeCorrectionInAirRaiseCoef:
     type: Float
-    value: 0.0001
+    value: 0
   Camera.VehicleTPP_DefaultParams.slopeCorrectionInAirSpeedMax:
     type: Float
     value: 10.0
@@ -16,13 +16,13 @@ flats:
     value: 4.0
   Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirDampFactor:
     type: Float
-    value: 0.0001
+    value: 0.1
   Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirFallCoef:
     type: Float
-    value: 0.0001
+    value: 0
   Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirRaiseCoef:
     type: Float
-    value: 0.0001
+    value: 0
   Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirSpeedMax:
     type: Float
     value: 10.0
@@ -31,13 +31,13 @@ flats:
     value: 4.0
   Camera.VehicleTPPCameraParams.slopeCorrectionInAirDampFactor:
     type: Float
-    value: 0.0001
+    value: 0.1
   Camera.VehicleTPPCameraParams.slopeCorrectionInAirFallCoef:
     type: Float
-    value: 0.0001
+    value: 0
   Camera.VehicleTPPCameraParams.slopeCorrectionInAirRaiseCoef:
     type: Float
-    value: 0.0001
+    value: 0
   Camera.VehicleTPPCameraParams.slopeCorrectionInAirSpeedMax:
     type: Float
     value: 10.0

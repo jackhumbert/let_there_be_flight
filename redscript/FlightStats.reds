@@ -16,6 +16,7 @@ public class FlightStats {
   public let d_forward: Vector4;
   public let d_right: Vector4;
   public let d_up: Vector4;
+  public let d_angularVelocity: Quaternion;
   public let d_velocity: Vector4;
   public let d_speed: Float;
   public let d_speedRatio: Float;
@@ -60,26 +61,28 @@ public class FlightStats {
     // .FrontPreset() & .BackPreset();
       // .MaxBrakingTorque() -> Float;
       // .Mass() -> Float;
-    // this.s_mass = this.vehicle.GetTotalMass(); // might be dynamic?
     this.s_mass = this.s_fcRecord.mass;
+    if this.s_mass == 0.0 {
+      this.s_mass = this.vehicle.GetTotalMass(); // might be dynamic?
+    }
     // need to just dynamically calculate this instead of messing around with random values
     this.s_centerOfMassOffset = Cast(this.s_driveModelData.Center_of_mass_offset());
     // this.s_centerOfMassOffset += this.s_fcRecord.comOffset_position;
     // this.s_momentOfInertia = Cast(this.s_driveModelData.MomentOfInertia());
-    this.s_momentOfInertia = Cast(this.s_fcRecord.inertia);
+    // this.s_momentOfInertia = Cast(this.s_fcRecord.inertia);
     // this isn't defined for all vehicles, so throw some numbers in for now
     // would be nice to compute from meshes outside this and import those values in
-    if Vector4.IsXYZFloatZero(this.s_momentOfInertia) {
-      LogChannel(n"DEBUG", "[FlightStats] no MOI, setting to bad defaults");
-      this.s_momentOfInertia.X = this.s_mass * 1.75;
-      this.s_momentOfInertia.Y = this.s_mass * 0.50;
-      this.s_momentOfInertia.Z = this.s_mass * 2.00;
-    }
+    // if Vector4.IsXYZFloatZero(this.s_momentOfInertia) {
+      // LogChannel(n"DEBUG", "[FlightStats] no MOI, setting to bad defaults");
+      this.s_momentOfInertia.X = this.s_mass;
+      this.s_momentOfInertia.Y = this.s_mass;
+      this.s_momentOfInertia.Z = this.s_mass;
+    // 
     // this is to try to make smaller vehicles more responsive than larger ones
     // maybe the same could be done for mass?
-    this.s_momentOfInertia.X = SqrtF(this.s_momentOfInertia.X);
-    this.s_momentOfInertia.Y = SqrtF(this.s_momentOfInertia.Y);
-    this.s_momentOfInertia.Z = SqrtF(this.s_momentOfInertia.Z);
+    // this.s_momentOfInertia.X = SqrtF(this.s_momentOfInertia.X);
+    // this.s_momentOfInertia.Y = SqrtF(this.s_momentOfInertia.Y);
+    // this.s_momentOfInertia.Z = SqrtF(this.s_momentOfInertia.Z);
     // this.s_momentOfInertia /= 2000.0; // get to a workable range    
     // this torques the vehicile in some way upon acceleration - the details aren't currently known
     // it could also be tied to Vehicle.RPMValue - we could use vehicle.GetBlackboard().GetFloat(GetAllBlackboardDefs().Vehicle.RPMValue)
@@ -87,7 +90,9 @@ public class FlightStats {
   }
   
   public final func UpdateDynamic(timeDelta: Float) -> Void {
-    this.d_orientation = this.vehicle.GetWorldOrientation();
+    let orientation = this.vehicle.GetWorldOrientation();
+    this.d_angularVelocity = (orientation - this.d_orientation) / timeDelta;
+    this.d_orientation = orientation;
     this.d_forward = Quaternion.GetForward(this.d_orientation);
     this.d_right = Quaternion.GetRight(this.d_orientation);
     this.d_up = Quaternion.GetUp(this.d_orientation);

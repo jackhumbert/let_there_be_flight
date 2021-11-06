@@ -7,3 +7,6 @@
 [submodule "red4ext/deps/detours"]
 	path = red4ext/deps/detours
 	url = https://github.com/microsoft/Detours.git
+[submodule "redscript/codeware"]
+	path = redscript/codeware
+	url = git@github.com:jackhumbert/cp2077-codeware.git

@@ -1,5 +1,18 @@
+enum inkWidgetBuilderType {
+  inkCanvas = 0,
+  inkFlex = 1,
+  inkImage = 2,
+  inkText = 3,
+  inkRectangle = 4,
+  inkCircle = 5,
+  inkShape = 6,
+  inkScrollArea = 7,
+  inkMask = 8
+}
+
 public class inkWidgetBuilder {
   private let widget: ref<inkWidget>;
+  private let type: inkWidgetBuilderType;
 
   // inkWidget generics
 
@@ -96,10 +109,11 @@ public class inkWidgetBuilder {
   // inkCanvas methods
 
   public static func inkCanvas(name: CName) -> ref<inkWidgetBuilder> {
-    let instance = new inkWidgetBuilder();
-    instance.widget = new inkCanvas() as inkWidget;
-    instance.widget.SetName(name);
-    return instance;
+    let self = new inkWidgetBuilder();
+    self.widget = new inkCanvas() as inkWidget;
+    self.type = inkWidgetBuilderType.inkCanvas;
+    self.widget.SetName(name);
+    return self;
   }
 
   public func BuildCanvas() -> ref<inkCanvas> {
@@ -109,10 +123,11 @@ public class inkWidgetBuilder {
   // inkFlex methods
 
   public static func inkFlex(name: CName) -> ref<inkWidgetBuilder> {
-    let instance = new inkWidgetBuilder();
-    instance.widget = new inkFlex() as inkWidget;
-    instance.widget.SetName(name);
-    return instance;
+    let self = new inkWidgetBuilder();
+    self.widget = new inkFlex() as inkWidget;
+    self.type = inkWidgetBuilderType.inkFlex;
+    self.widget.SetName(name);
+    return self;
   }
 
   public func BuildFlex() -> ref<inkFlex> {
@@ -122,10 +137,11 @@ public class inkWidgetBuilder {
   // inkImage methods
 
   public static func inkImage(name: CName) -> ref<inkWidgetBuilder> {
-    let instance = new inkWidgetBuilder();
-    instance.widget = new inkImage() as inkWidget;
-    instance.widget.SetName(name);
-    return instance;
+    let self = new inkWidgetBuilder();
+    self.widget = new inkImage() as inkWidget;
+    self.type = inkWidgetBuilderType.inkImage;
+    self.widget.SetName(name);
+    return self;
   }
 
   public func BuildImage() -> ref<inkImage> {
@@ -133,27 +149,43 @@ public class inkWidgetBuilder {
   }
 
   public func Atlas(atlas: ResRef) -> ref<inkWidgetBuilder> {
-    (this.widget as inkImage).SetAtlasResource(atlas);
+    if Equals(this.widget, this.widget as inkImage) {
+      (this.widget as inkImage).SetAtlasResource(atlas);
+    }
+    if Equals(this.widget, this.widget as inkMask) {
+      (this.widget as inkMask).SetAtlasResource(atlas);
+    }
     return this;
   }
 
   public func Part(texture: CName) -> ref<inkWidgetBuilder> {
-    (this.widget as inkImage).SetTexturePart(texture);
+    if Equals(this.widget, this.widget as inkImage) {
+      (this.widget as inkImage).SetTexturePart(texture);
+    }
+    if Equals(this.widget, this.widget as inkMask) {
+      (this.widget as inkMask).SetTexturePart(texture);
+    }
     return this;
   }
 
   public func NineSliceScale(value: Bool) -> ref<inkWidgetBuilder> {
+    if Equals(this.widget, this.widget as inkImage) {
     (this.widget as inkImage).SetNineSliceScale(value);
+      }
+    if Equals(this.widget, this.widget as inkMask) {
+      (this.widget as inkMask).SetNineSliceScale(value);
+    }
     return this;
   }
 
   // inkText methods
 
   public static func inkText(name: CName) -> ref<inkWidgetBuilder> {
-    let instance = new inkWidgetBuilder();
-    instance.widget = new inkText() as inkWidget;
-    instance.widget.SetName(name);
-    return instance;
+    let self = new inkWidgetBuilder();
+    self.widget = new inkText() as inkWidget;
+    self.type = inkWidgetBuilderType.inkText;
+    self.widget.SetName(name);
+    return self;
   }
 
   public func BuildText() -> ref<inkText> {
@@ -190,15 +222,19 @@ public class inkWidgetBuilder {
     return this;
   }
 
-
+  public func HAlign(contentHAlign: inkEHorizontalAlign) -> ref<inkWidgetBuilder> {
+    (this.widget as inkText).SetContentHAlign(contentHAlign);
+    return this;
+}
 
   // inkRectangle
   
   public static func inkRectangle(name: CName) -> ref<inkWidgetBuilder> {
-    let instance = new inkWidgetBuilder();
-    instance.widget = new inkRectangle() as inkWidget;
-    instance.widget.SetName(name);
-    return instance;
+    let self = new inkWidgetBuilder();
+    self.widget = new inkRectangle() as inkWidget;
+    self.type = inkWidgetBuilderType.inkRectangle;
+    self.widget.SetName(name);
+    return self;
   }
 
   public func BuildRectangle() -> ref<inkRectangle> {
@@ -208,10 +244,11 @@ public class inkWidgetBuilder {
   // inkCircle
   
   public static func inkCircle(name: CName) -> ref<inkWidgetBuilder> {
-    let instance = new inkWidgetBuilder();
-    instance.widget = new inkCircle() as inkWidget;
-    instance.widget.SetName(name);
-    return instance;
+    let self = new inkWidgetBuilder();
+    self.widget = new inkCircle() as inkWidget;
+    self.type = inkWidgetBuilderType.inkCircle;
+    self.widget.SetName(name);
+    return self;
   }
 
   public func BuildCircle() -> ref<inkCircle> {
@@ -221,10 +258,11 @@ public class inkWidgetBuilder {
   // inkShape
   
   public static func inkShape(name: CName) -> ref<inkWidgetBuilder> {
-    let instance = new inkWidgetBuilder();
-    instance.widget = new inkShape() as inkWidget;
-    instance.widget.SetName(name);
-    return instance;
+    let self = new inkWidgetBuilder();
+    self.widget = new inkShape() as inkWidget;
+    self.type = inkWidgetBuilderType.inkShape;
+    self.widget.SetName(name);
+    return self;
   }
 
   public func BuildShape() -> ref<inkShape> {
@@ -274,6 +312,56 @@ public class inkWidgetBuilder {
     (this.widget as inkShape).SetShapeName(shapeName);
     return this;
   }
+
+  // inkScrollArea
+
+  public static func inkScrollArea(name: CName) -> ref<inkWidgetBuilder> {
+    let self = new inkWidgetBuilder();
+    self.widget = new inkScrollArea() as inkWidget;
+    self.type = inkWidgetBuilderType.inkScrollArea;
+    self.widget.SetName(name);
+    return self;
+  }
+
+  public func BuildScrollArea() -> ref<inkScrollArea> {
+    return this.widget as inkScrollArea;
+  }
+
+  public func Mask(value: Bool) -> ref<inkWidgetBuilder> {
+    (this.widget as inkScrollArea).SetUseInternalMask(value);
+    return this;
+  }
+
+  // inkMask
+
+  public static func inkMask(name: CName) -> ref<inkWidgetBuilder> {
+    let self = new inkWidgetBuilder();
+    self.widget = new inkMask() as inkWidget;
+    self.type = inkWidgetBuilderType.inkMask;
+    self.widget.SetName(name);
+    return self;
+  }
+
+  public func BuildMask() -> ref<inkMask> {
+    return this.widget as inkMask;
+  }
+
+  public func MaskSource(value: inkMaskDataSource) -> ref<inkWidgetBuilder> {
+    (this.widget as inkMask).SetDataSource(value); 
+    return this;
+  }
+
+  public func MaskTransparency(value: Float) -> ref<inkWidgetBuilder> {
+    (this.widget as inkMask).SetMaskTransparency(value); 
+    return this;
+  }
+
+  public func InvertMask(value: Bool) -> ref<inkWidgetBuilder> {
+    (this.widget as inkMask).SetInvertMask(value); 
+    return this;
+  }
+
+
 
 
 }

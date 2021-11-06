@@ -47,6 +47,24 @@ flats:
       - Vehicle.v_standard2_archer_bandit_player
       - Vehicle.v_sport2_quadra_type66_jack
 groups: 
+  Vehicle.VehicleQuadraType66JackUIData:
+    type: VehicleUIData
+    members:
+      driveLayout:
+        type: LocKey
+        value: 53856 
+      horsepower:
+        type: Float
+        value: 100 
+      info:
+        type: LocKey
+        value: 72039 
+      mass:
+        type: Float
+        value: 1720 
+      productionYear:
+        type: String
+        value: Jack's Custom Type66 
   Vehicle.v_sport2_quadra_type66_jack: 
     type: Vehicle
     inherits: Vehicle.v_sport2_quadra_type66
@@ -56,7 +74,7 @@ groups:
         value: Factions.Unaffiliated
       appearanceName: 
         type: CName
-        value: None
+        value: jack
       archetypeName: 
         type: CName
         value: vehicle
@@ -93,7 +111,7 @@ groups:
         value: Vehicle.VehicleDestructionParamsQuadraType66
       displayName: 
         type: LocKey
-        value: 36326
+        value: 51641
       driving: 
         type: TweakDBID
         value: Driving.Default_4w
@@ -105,7 +123,7 @@ groups:
         value: true
       entityTemplatePath: 
         type: "raRef:CResource"
-        value: base\vehicles\sport\v_sport2_quadra_type66__basic_01.ent
+        value:  
       fxCollision: 
         type: TweakDBID
         value: Vehicle.FxCollision_Default
@@ -329,7 +347,7 @@ groups:
         value: Vehicle.v_sport2_quadra_type66_inline2
       vehicleUIData: 
         type: TweakDBID
-        value: Vehicle.VehicleQuadraType66UIData
+        value: Vehicle.VehicleQuadraType66JackUIData
       visualDestruction: 
         type: TweakDBID
         value: Vehicle.VehicleVisualDestructionParamsDefault

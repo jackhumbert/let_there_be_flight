@@ -1,5 +1,3 @@
-import BaseLib.Hashing.TweakHash
-
 public class FlightStatsData_Record extends IScriptable {
   public let mass: Float;
   public let comOffset_position: Vector4;
@@ -61,14 +59,14 @@ public class FlightStatsData extends ScriptableSystem {
     }
 
 	public func Get(tdb: TweakDBID) -> wref<FlightStatsData_Record> {
-		let key: Uint64 = TweakHash.Compute(tdb);
+		let key: Uint64 = TDBID.ToNumber(tdb);
         FlightLog.Info("[FlightStatsData] getting " + ToString(key));
 
 		return this.m_container.Get(key) as FlightStatsData_Record;
 	}
 
 	public func Put(tdb: TweakDBID, record: ref<FlightStatsData_Record>) -> Void {
-		let key: Uint64 = TweakHash.Compute(tdb);
+		let key: Uint64 = TDBID.ToNumber(tdb);
         FlightLog.Info("[FlightStatsData] putting " + ToString(key));
 
 		if this.m_container.KeyExist(key) {

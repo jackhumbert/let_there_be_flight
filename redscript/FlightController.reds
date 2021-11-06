@@ -1,4 +1,4 @@
-import BaseLib.UI.*
+import Codeware.UI.*
 
 enum FlightMode {
   Undef = 0
@@ -47,8 +47,8 @@ enum FlightMode {
 // maybe this should extend ScriptableComponent or GameComponent?
 // Singleton instance with player lifetime
 public class FlightController  {
+  //public let camera: ref<vehicleTPPCameraComponent>;
   private let gameInstance: GameInstance;
-  private let m_blackboard: ref<IBlackboard>;
   private let stats: ref<FlightStats>;
   private let ui: ref<FlightControllerUI>;
   public final func SetUI(ui: ref<FlightControllerUI>) {
@@ -144,7 +144,7 @@ public class FlightController  {
     this.distance = 0.0;
     this.distanceEase = 0.1;
     this.normal = new Vector4(0.0, 0.0, 1.0, 0.0);
-    this.normalEase = 0.1;
+    this.normalEase = 0.3;
     this.airResistance = 0.01;
     this.defaultHoverHeight = 3.50;
     this.hoverHeight = this.defaultHoverHeight;
@@ -152,11 +152,11 @@ public class FlightController  {
     this.hoverFactor = 5.0;
     this.hover = PID.Create(0.1, 0.01, 0.05);
     this.pitchPID = PID.Create(0.5, 0.05, 0.1);
-    this.pitchCorrectionFactor = 1000.0;
+    this.pitchCorrectionFactor = 10.0;
     this.rollPID = PID.Create(0.5, 0.05, 0.1);
-    this.rollCorrectionFactor = 1000.0;
-    this.yawPID = PID.Create(0.5, 0.5, 0.5);
-    this.yawCorrectionFactor = 8.0;
+    this.rollCorrectionFactor = 10.0;
+    this.yawPID = PID.Create(0.5, 0.2, 2.0);
+    this.yawCorrectionFactor = 0.1;
     this.brakeFactor = 1.2;
     this.lookAheadMax = 10.0;
     // this.lookAheadMin = 1.0;
@@ -188,16 +188,16 @@ public class FlightController  {
   }
   
   public static func CreateInstance(player: ref<PlayerPuppet>) {
-    let instance: ref<FlightController> = new FlightController();
-    instance.Initialize(player);  
+    let self: ref<FlightController> = new FlightController();
+    self.Initialize(player);  
 
     // This strong reference will tie the lifetime of the singleton 
     // to the lifetime of the player entity
-    player.flightController = instance;
+    player.flightController = self;
 
     // This weak reference is used as a global variable 
     // to access the mod instance anywhere
-    GetAllBlackboardDefs().flightController = instance;
+    GetAllBlackboardDefs().flightController = self;
     FlightLog.Info("Flight Control Loaded");
   }
   
@@ -272,6 +272,8 @@ public class FlightController  {
 
     this.SetupTires();
 
+    //this.camera = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"Collider") as vehicleTPPCameraComponent;
+
     // (this.GetVehicle().GetPS() as VehicleComponentPS).SetThrusterState(false);
     // (this.GetVehicle().GetPS() as VehicleComponentPS).SetIsDestroyed(true);
 
@@ -298,7 +300,7 @@ public class FlightController  {
     // if param.valid {
     //     this.driveEvents.UpdateCameraParams(param.value, scriptInterface);
     // };
-    GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_hacking_access_granted");
+   // GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_hacking_access_granted");
     // GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"ignition", true);
     // GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(StringToName(this.GetVehicle().GetRecord().Player_audio_resource()));
     // GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"mus_cp_arcade_quadra_START_menu");
@@ -320,7 +322,7 @@ public class FlightController  {
       this.GetVehicle().TurnOn(true);
       this.GetVehicle().TurnEngineOn(true);
       this.ShowSimpleMessage("Flight Control Disengaged");
-      GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_hacking_access_denied");
+      //GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_hacking_access_denied");
     }
     this.ui.Hide();
 
@@ -524,6 +526,7 @@ public class FlightController  {
       return; 
     }
 
+
     this.stats.UpdateDynamic(timeDelta);
     this.ui.ClearMarks();
 
@@ -560,10 +563,14 @@ public class FlightController  {
       // QueryFilter.AddGroup(queryFilter, n"PlayerBlocker"); 
 
       // let lookAhead = this.stats.d_velocity * timeDelta * this.lookAheadMax;
-      let fl_tire: Vector4 = Matrix.GetTranslation(this.fl_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
-      let fr_tire: Vector4 = Matrix.GetTranslation(this.fr_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
-      let bl_tire: Vector4 = Matrix.GetTranslation(this.bl_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
-      let br_tire: Vector4 = Matrix.GetTranslation(this.br_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
+      // let fl_tire: Vector4 = Matrix.GetTranslation(this.fl_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
+      // let fr_tire: Vector4 = Matrix.GetTranslation(this.fr_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
+      // let bl_tire: Vector4 = Matrix.GetTranslation(this.bl_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
+      // let br_tire: Vector4 = Matrix.GetTranslation(this.br_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
+      let fl_tire: Vector4 = Matrix.GetTranslation(this.fl_tire.GetLocalToWorld());
+      let fr_tire: Vector4 = Matrix.GetTranslation(this.fr_tire.GetLocalToWorld());
+      let bl_tire: Vector4 = Matrix.GetTranslation(this.bl_tire.GetLocalToWorld());
+      let br_tire: Vector4 = Matrix.GetTranslation(this.br_tire.GetLocalToWorld());
 
       let findGround1: TraceResult = scriptInterface.RayCastWithCollisionFilter(fl_tire, fl_tire + this.lookDown, queryFilter);
       let findGround2: TraceResult = scriptInterface.RayCastWithCollisionFilter(fr_tire, fr_tire + this.lookDown, queryFilter);
@@ -575,23 +582,26 @@ public class FlightController  {
           Vector4.Distance(fr_tire, Cast(findGround2.position))),
           MinF(Vector4.Distance(bl_tire, Cast(findGround3.position)),
           Vector4.Distance(br_tire, Cast(findGround4.position))));
-        this.distance = distance * (1.0 - this.distanceEase) + this.distance * (this.distanceEase);
+        // this.distance = distance * (1.0 - this.distanceEase) + this.distance * (this.distanceEase);
+        this.distance = distance;
 
-        this.ui.DrawMark(Cast(findGround1.position));
-        this.ui.DrawMark(Cast(findGround2.position));
-        this.ui.DrawMark(Cast(findGround3.position));
-        this.ui.DrawMark(Cast(findGround4.position));
+        this.ui.DrawMark(Cast(findGround1.position) - this.stats.d_velocity * timeDelta);
+        this.ui.DrawMark(Cast(findGround2.position) - this.stats.d_velocity * timeDelta);
+        this.ui.DrawMark(Cast(findGround3.position) - this.stats.d_velocity * timeDelta);
+        this.ui.DrawMark(Cast(findGround4.position) - this.stats.d_velocity * timeDelta);
 
-        let points: array<Vector2>;
-        ArrayPush(points, this.ui.ScreenXY(Cast(findGround1.position)));
-        ArrayPush(points, this.ui.ScreenXY(Cast(findGround2.position)));
-        ArrayPush(points, this.ui.ScreenXY(Cast(findGround4.position)));
-        ArrayPush(points, this.ui.ScreenXY(Cast(findGround3.position)));
+        // let points: array<Vector2>;
+        // ArrayPush(points, this.ui.ScreenXY(Cast(findGround1.position), 1920.0, 1080.0));
+        // ArrayPush(points, this.ui.ScreenXY(Cast(findGround2.position), 1920.0, 1080.0));
+        // ArrayPush(points, this.ui.ScreenXY(Cast(findGround4.position), 1920.0, 1080.0));
+        // ArrayPush(points, this.ui.ScreenXY(Cast(findGround3.position), 1920.0, 1080.0));
 
         // let quad = inkWidgetBuilder.inkShape(n"quad")
         //   .Reparent(this.ui.GetMarksWidget())
         //   //.ShapeName(n"hair_thin")
-        //   .Size(800.0, 800.0)
+        //   .Size(1920.0 * 2.0, 1080.0 * 2.0)
+        //   .Atlas(r"base\\gameplay\\gui\\widgets\\crosshair\\master_crosshair.inkatlas")
+        //   .Part(n"headshot")
         //   .ShapeVariant(inkEShapeVariant.FillAndBorder)
         //   .LineThickness(5.0)
         //   .VertexList(points)
@@ -608,8 +618,9 @@ public class FlightController  {
         this.ui.DrawText(Cast(findGround4.position) - this.stats.d_velocity * timeDelta, FloatToStringPrec(Vector4.Distance(br_tire, Cast(findGround4.position)), 2));
 
         // FromVariant(scriptInterface.GetStateVectorParameter(physicsStateValue.Radius)) maybe?
-        let normal = (Cast(findGround1.normal) + Cast(findGround2.normal) + Cast(findGround3.normal) + Cast(findGround4.normal)) / 4.0;
-        this.normal = Vector4.Interpolate(this.normal, normal, this.normalEase);
+        let normal = (Vector4.Normalize(Cast(findGround1.normal)) + Vector4.Normalize(Cast(findGround2.normal)) + Vector4.Normalize(Cast(findGround3.normal)) + Vector4.Normalize(Cast(findGround4.normal))) / 4.0;
+        // this.normal = Vector4.Interpolate(this.normal, normal, this.normalEase);
+        this.normal = normal;
 
       } else {
         foundGround = false;
@@ -646,6 +657,7 @@ public class FlightController  {
 
     // decay the integral if we have yaw input - this helps get rid of the windup effect
     this.yawPID.integralFloat *= (1.0 - AbsF(this.yaw.GetValue()));
+    this.yawPID.integralFloat *= MinF(1.0, this.stats.d_speedRatio * 4.0);
     let angleTooHigh = MinF(1.0, 8.0 - AbsF(angle) / 180.0 * 8.0);
     yawCorrection = this.yawPID.GetCorrection(angle * angleTooHigh * this.stats.d_speedRatio + this.yaw.GetValue() * this.yawFactor * (1.0 + this.stats.d_speedRatio * 3.0), timeDelta);
 
@@ -830,6 +842,16 @@ public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, sc
   wrappedMethod(timeDelta, stateContext, scriptInterface);
   FlightController.GetInstance().OnUpdate(timeDelta, stateContext, scriptInterface);
 }
+
+// @wrapMethod(Ground)
+// protected const func EnterCondition(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
+//   return wrappedMethod(stateContext, scriptInterface) || FlightController.GetInstance().IsActive();
+// }
+
+// @wrapMethod(Air)
+// protected const func EnterCondition(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
+//   return wrappedMethod(stateContext, scriptInterface) && !FlightController.GetInstance().IsActive();
+// }
 
 // @replaceMethod(VehicleTransition)
 // protected final func PauseStateMachines(stateContext: ref<StateContext>, executionOwner: ref<GameObject>) -> Void {
@@ -1072,3 +1094,23 @@ protected cb func OnVehicleWaterEvent(evt: ref<VehicleWaterEvent>) -> Bool {
   //       initData.occupiedByNeutral = mountingEvent.request.mountData.mountEventOptions.occupiedByNeutral;
   //       instanceData.initData = initData;
   //       this.AddStateMachine(n"Vehicle", instanceData, otherObject);
+
+// @addField(VehicleObject)
+// public let m_colliderComponent: ref<ColliderComponent>;
+
+// @wrapMethod(VehicleObject)
+// protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> Bool {
+//   wrappedMethod(ri);
+//   EntityRequestComponentsInterface.RequestComponent(ri, n"Collider", n"entColliderComponent", false);
+// }
+
+// @wrapMethod(VehicleObject)
+// protected cb func OnTakeControl(ri: EntityResolveComponentsInterface) -> Bool {
+//   wrappedMethod(ri);
+//   this.m_colliderComponent = EntityResolveComponentsInterface.GetComponent(ri, n"Collider") as ColliderComponent;
+// }
+
+// @addMethod(VehicleObject)
+// public final const func GetColliderComponent() -> ref<ColliderComponent> {
+//   return this.m_colliderComponent;
+// }

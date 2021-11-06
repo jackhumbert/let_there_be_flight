@@ -5,6 +5,10 @@
 #include <RED4ext/Scripting/Natives/ScriptGameInstance.hpp>
 #include <RED4ext/Scripting/IScriptable.hpp>
 #include <RED4ext/RTTITypes.hpp>
+#include <RED4ext/Scripting/Natives/Generated/red/ResourceReferenceScriptToken.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ink/ImageWidget.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ink/TextureAtlas.hpp>
+#include <RED4ext/InstanceType.hpp>
 
 #include "Utils.hpp"
 #include "stdafx.hpp"
@@ -21,12 +25,38 @@ RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes()
     //FlightStats_Record::RegisterTypes();
 }
 
+void SetAtlasResource(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
+{
+    RED4ext::red::ResourceReferenceScriptToken value;
+    RED4ext::GetParameter(aFrame, &value);
+    aFrame->code++; // skip ParamEnd
+    auto rtti = RED4ext::CRTTISystem::Get();
+
+    //auto inkImageWidget = rtti->GetClass("inkImageWidget");
+    //auto setAtlasResource = inkImageWidget->GetFunction("SetAtlasResource");
+    //RED4ext::StackArgs_t args;
+    //args.emplace_back(nullptr, &value); // or value, I don't remember how it should be passed.
+    //RED4ext::ExecuteFunction(aContext, setAtlasResource, aOut, args);
+
+    auto inkMaskWidget = rtti->GetClass("inkMaskWidget");
+    //uint64_t resource = RED4ext::FNV1a64("base\\gameplay\\gui\\common\\shapes\\atlas_shapes_sync.inkatlas");
+    inkMaskWidget->GetProperty("textureAtlas")->SetValue(aContext, value.resource);
+}
+
 RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
 {
     spdlog::info("Registering functions");
     FlightAudio::RegisterFunctions();
     FlightLog::RegisterFunctions();
+    RED4ext::CRTTISystem::Get()->RegisterScriptName("entBaseCameraComponent", "BaseCameraComponent");
+    //RED4ext::CRTTISystem::Get()->RegisterScriptName("entColliderComponent", "ColliderComponent");
     //FlightStats_Record::RegisterFunctions();
+
+    auto rtti = RED4ext::CRTTISystem::Get();
+    auto inkMaskWidget = rtti->GetClass("inkMaskWidget");
+    auto setAtlasTextureFunc = RED4ext::CClassFunction::Create(inkMaskWidget, "SetAtlasResource", "SetAtlasResource", &SetAtlasResource, { .isNative = true });
+    setAtlasTextureFunc->AddParam("redResourceReferenceScriptToken", "atlasResourcePath");
+    inkMaskWidget->RegisterFunction(setAtlasTextureFunc);
 
 }
 
