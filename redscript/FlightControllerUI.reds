@@ -263,18 +263,17 @@ public class FlightControllerUI extends inkCanvas {
         .Margin(0.0, 0.0, 0.0, 0.0)
         .BuildCanvas();
 
-
-      // let fill = inkWidgetBuilder.inkImage(n"fill")
-      //   .Reparent(pitch)
-      //   .Atlas(r"base\\gameplay\\gui\\common\\shapes\\atlas_shapes_sync.inkatlas")
-      //   .Part(n"arrow_cell_bg")
-      //   .Size(59.0, height)
-      //   .NineSliceScale(true)
-      //   .Anchor(0.5, 0.5)
-      //   .Anchor(inkEAnchor.Centered)
-      //   .Opacity(0.05)
-      //   .Tint(ThemeColors.ElectricBlue())
-      //   .BuildImage();
+      let fill = inkWidgetBuilder.inkImage(n"fill")
+        .Reparent(pitch)
+        .Atlas(r"base\\gameplay\\gui\\common\\shapes\\atlas_shapes_sync.inkatlas")
+        .Part(n"arrow_cell_bg")
+        .Size(59.0, height)
+        .NineSliceScale(true)
+        .Anchor(0.5, 0.5)
+        .Anchor(inkEAnchor.Centered)
+        .Opacity(0.05)
+        .Tint(ThemeColors.ElectricBlue())
+        .BuildImage();
 
       let mask = inkWidgetBuilder.inkMask(n"mask")
         .Reparent(pitch)
@@ -283,13 +282,13 @@ public class FlightControllerUI extends inkCanvas {
         .Size(59.0, height)
         .Opacity(1.0)
         .MaskTransparency(1.0)
-        // .NineSliceScale(true)
+        .NineSliceScale(true)
         .Anchor(0.5, 0.5)
         // .InvertMask(true)
         .Anchor(inkEAnchor.Centered)
-        // .MaskSource(inkMaskDataSource.DynamicTexture)
+        .MaskSource(inkMaskDataSource.DynamicTexture)
         .BuildMask();
-      // mask.SetDynamicTextureMask(n"fill");
+      mask.SetDynamicTextureMask(n"fill");
 
       let border = inkWidgetBuilder.inkImage(n"border")
         .Reparent(pitch)
@@ -327,8 +326,8 @@ public class FlightControllerUI extends inkCanvas {
 		  // markers.SetRenderTransformPivot(new Vector2(0.0, 0.0));
 
 
-      let marks: array<Float> = [-90.0, -80.0, -70.0, -60.0, -50.0, -40.0, -30.0, -20.0, -10.0, 0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0];
-      let marks_inc: array<Float> = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
+      let marks: array<Float> = [-100.0, -90.0, -80.0, -70.0, -60.0, -50.0, -40.0, -30.0, -20.0, -10.0, 0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0];
+      let marks_inc: array<Float> = [-4.0, -3.0, -2.0, -1.0, 1.0, 2.0, 3.0, 4.0, 5.0];
 
       for mark in marks {
 
@@ -489,7 +488,7 @@ public class FlightControllerUI extends inkCanvas {
     // let br_position = (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_right_tire") as TargetingComponent).GetLocalToWorld().W;
 
     let screen_position: Vector4 = this.stats.d_position - this.stats.d_velocity * timeDelta;
-    this.GetWidget(n"arrow_forward").SetTranslation(this.ScreenXY(screen_position + this.stats.d_forward * 2.0));
+    this.GetWidget(n"arrow_forward").SetTranslation(this.ScreenXY(screen_position + this.stats.d_forward * 3.0));
     this.GetWidget(n"arrow_forward").SetRotation(this.ScreenAngle(screen_position, screen_position + this.stats.d_forward));
     // this.GetWidget(n"arrow_forward").SetOpacity(this.OpacityForPosition(screen_position - this.stats.d_forward * 2.0));
 
@@ -556,7 +555,11 @@ public class FlightControllerUI extends inkCanvas {
     return 0.1 + MaxF(0.0, MinF(0.9, (Vector4.Dot(cameraTransform.position - position, cameraForward) - Vector4.Dot(cameraTransform.position - this.stats.d_position, cameraForward)) / 4.0 * 0.9));
   }
 
-  public func ScreenXY(position: Vector4, opt offsetX: Float, opt offsetY: Float) -> Vector2 {
+  public func ScreenXY(position: Vector4) -> Vector2 {
+    return this.ScreenXY(position, 0.0, 0.0);
+  }
+
+  public func ScreenXY(position: Vector4, offsetX: Float, offsetY: Float) -> Vector2 {
     if IsDefined(this.controller) {
       let translation = this.controller.ProjectWorldToScreen(position);
       translation.X = translation.X * 1920.0 + offsetX;

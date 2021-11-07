@@ -215,7 +215,7 @@ public class FlightController  {
   //   };
   // }
   
-  public func Enable(vehicle: ref<VehicleObject>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
+  public func Enable(vehicle: ref<VehicleObject>) -> Void {
     this.enabled = true;
     this.active = false;
     this.stats = FlightStats.Create(vehicle);
@@ -233,7 +233,7 @@ public class FlightController  {
     FlightLog.Info("Flight Control Enabled for " + this.GetVehicle().GetDisplayName());
   }
 
-  public func Disable(scriptInterface: ref<StateGameScriptInterface>) -> Void {
+  public func Disable() -> Void {
     if this.active {
       this.Deactivate(true);
     }
@@ -248,6 +248,9 @@ public class FlightController  {
     if this.active {
       this.Deactivate(false);
     } else {
+      if (!this.enabled) {
+        this.Enable(GetMountedVehicle(this.gameInstance));
+      }
       this.Activate();
     }
     this.GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControllerBB.IsActive, this.active, true);
@@ -590,27 +593,27 @@ public class FlightController  {
         this.ui.DrawMark(Cast(findGround3.position) - this.stats.d_velocity * timeDelta);
         this.ui.DrawMark(Cast(findGround4.position) - this.stats.d_velocity * timeDelta);
 
-        // let points: array<Vector2>;
-        // ArrayPush(points, this.ui.ScreenXY(Cast(findGround1.position), 1920.0, 1080.0));
-        // ArrayPush(points, this.ui.ScreenXY(Cast(findGround2.position), 1920.0, 1080.0));
-        // ArrayPush(points, this.ui.ScreenXY(Cast(findGround4.position), 1920.0, 1080.0));
-        // ArrayPush(points, this.ui.ScreenXY(Cast(findGround3.position), 1920.0, 1080.0));
+        let points: array<Vector2>;
+        ArrayPush(points, this.ui.ScreenXY(Cast(findGround1.position), 150.0, 150.0));
+        ArrayPush(points, this.ui.ScreenXY(Cast(findGround2.position), 150.0, 150.0));
+        ArrayPush(points, this.ui.ScreenXY(Cast(findGround4.position), 150.0, 150.0));
+        ArrayPush(points, this.ui.ScreenXY(Cast(findGround3.position), 150.0, 150.0));
 
-        // let quad = inkWidgetBuilder.inkShape(n"quad")
-        //   .Reparent(this.ui.GetMarksWidget())
-        //   //.ShapeName(n"hair_thin")
-        //   .Size(1920.0 * 2.0, 1080.0 * 2.0)
-        //   .Atlas(r"base\\gameplay\\gui\\widgets\\crosshair\\master_crosshair.inkatlas")
-        //   .Part(n"headshot")
-        //   .ShapeVariant(inkEShapeVariant.FillAndBorder)
-        //   .LineThickness(5.0)
-        //   .VertexList(points)
-        //   .FillOpacity(0.1)
-        //   .Tint(ThemeColors.ElectricBlue())
-        //   .BorderColor(ThemeColors.ElectricBlue())
-        //   .BorderOpacity(0.5)
-        //   .Visible(true)
-        //   .BuildShape();
+        let quad = inkWidgetBuilder.inkShape(n"shape")
+          .Reparent(this.ui.GetMarksWidget())
+          // .ShapeResource(r"base\\gameplay\\gui\\common\\main_shapes.inkshapecollection")
+          .ChangeShape(n"Rectangle")
+          .Size(300.0, 300.0)
+          .UseNineSlice(true)
+          .ShapeVariant(inkEShapeVariant.FillAndBorder)
+          .LineThickness(5.0)
+          .VertexList(points)
+          .FillOpacity(0.1)
+          .Tint(ThemeColors.ElectricBlue())
+          .BorderColor(ThemeColors.ElectricBlue())
+          .BorderOpacity(0.5)
+          .Visible(true)
+          .BuildShape();
 
         this.ui.DrawText(Cast(findGround1.position) - this.stats.d_velocity * timeDelta, FloatToStringPrec(Vector4.Distance(fl_tire, Cast(findGround1.position)), 2));
         this.ui.DrawText(Cast(findGround2.position) - this.stats.d_velocity * timeDelta, FloatToStringPrec(Vector4.Distance(fr_tire, Cast(findGround2.position)), 2));
@@ -679,7 +682,7 @@ public class FlightController  {
     // lift
     this.CreateImpulse(this.stats.d_position, new Vector4(0.00, 0.00, liftForce, 0.00) * timeDelta);
     // surge
-    this.CreateImpulse(this.stats.d_position + this.stats.d_forward * this.surgeOffset, this.stats.d_forward * surgeForce * timeDelta);
+    this.CreateImpulse(this.stats.d_position, this.stats.d_forward * surgeForce * timeDelta);
     // pitch correction
     this.CreateImpulse(this.stats.d_position - this.stats.d_up,       this.stats.d_forward *  this.stats.s_momentOfInertia.X * -pitchCorrection * this.pitchCorrectionFactor * timeDelta);
     this.CreateImpulse(this.stats.d_position + this.stats.d_up,       this.stats.d_forward *  this.stats.s_momentOfInertia.X * pitchCorrection *  this.pitchCorrectionFactor * timeDelta);
@@ -690,9 +693,11 @@ public class FlightController  {
     this.CreateImpulse(this.stats.d_position + this.stats.d_forward,  this.stats.d_right *    this.stats.s_momentOfInertia.Z * yawCorrection *    this.yawCorrectionFactor * timeDelta);
     this.CreateImpulse(this.stats.d_position - this.stats.d_forward,  this.stats.d_right *    this.stats.s_momentOfInertia.Z * -yawCorrection *   this.yawCorrectionFactor * timeDelta);
     // brake
-    this.CreateImpulse(this.stats.d_position + this.stats.d_forward * this.brake.GetValue() * this.brakeOffset, -velocityDamp * timeDelta);
+    this.CreateImpulse(this.stats.d_position, -velocityDamp * timeDelta);
 
     this.UpdateAudioParams();
+
+
 
     // (this.GetVehicle().GetPS() as VehicleComponentPS).SetThrusterState(this.surge.GetValue() > 0.99);
     
@@ -821,19 +826,19 @@ protected func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<Sta
   wrappedMethod(stateContext, scriptInterface);
   let vehicle: ref<VehicleObject> = scriptInterface.owner as VehicleObject;  
   if vehicle.IsPlayerMounted() {
-    FlightController.GetInstance().Enable(vehicle, scriptInterface);
+    FlightController.GetInstance().Enable(vehicle);
   }
 }
 
 @wrapMethod(DriveEvents)
 public final func OnExit(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-  FlightController.GetInstance().Disable(scriptInterface);
+  FlightController.GetInstance().Disable();
   wrappedMethod(stateContext, scriptInterface);
 }
 
 @wrapMethod(DriveEvents)
 public final func OnForcedExit(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-  FlightController.GetInstance().Disable(scriptInterface);
+  FlightController.GetInstance().Disable();
   wrappedMethod(stateContext, scriptInterface);
 }
 

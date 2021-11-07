@@ -147,6 +147,9 @@ public func GetVertexList() -> array<Vector2> {
 // }
 
 @addMethod(inkShape)
+public native func SetShapeResource(shapeResource: ResRef);
+
+@addMethod(inkShape)
 public func SetShapeName(shapeName: CName) {
     this.shapeName = shapeName;
 }
