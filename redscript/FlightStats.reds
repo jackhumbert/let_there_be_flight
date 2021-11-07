@@ -12,6 +12,7 @@ public class FlightStats {
   public let s_forwardWeightTransferFactor: Float;
 
   public let d_position: Vector4;
+  public let d_visualPosition: Vector4;
   public let d_orientation: Quaternion;
   public let d_forward: Vector4;
   public let d_right: Vector4;
@@ -93,9 +94,9 @@ public class FlightStats {
     let orientation = this.vehicle.GetWorldOrientation();
     this.d_angularVelocity = (orientation - this.d_orientation) / timeDelta;
     this.d_orientation = orientation;
-    this.d_forward = Quaternion.GetForward(this.d_orientation);
-    this.d_right = Quaternion.GetRight(this.d_orientation);
-    this.d_up = Quaternion.GetUp(this.d_orientation);
+    this.d_forward = Vector4.Normalize(Quaternion.GetForward(this.d_orientation));
+    this.d_right = Vector4.Normalize(Quaternion.GetRight(this.d_orientation));
+    this.d_up = Vector4.Normalize(Quaternion.GetUp(this.d_orientation));
     
     
     // GameInstance.GetSpatialQueriesSystem(FlightController.GetInstance().gameInstance).GetGeometryDescriptionSystem();
@@ -129,5 +130,6 @@ public class FlightStats {
     // let factor = Vector4.Distance(position, this.d_position) / timeDelta / this.d_speed;
     // this.d_position = this.d_position * (minS + (maxS - minS) * factor) + position * (1.0 - minS - (maxS - minS) * factor);
     this.d_position = position;
+    this.d_visualPosition = position - this.d_velocity * timeDelta;
   }
 }

@@ -1,7 +1,9 @@
 import Codeware.UI.*
 
 enum FlightMode {
-  Undef = 0
+  HoverFly = 0,
+  Hover = 1,
+  Count = 2
 } 
 
 // public native class FlightStats_Record extends TweakDBRecord {
@@ -128,6 +130,7 @@ public class FlightController  {
 
   private func Initialize(player: ref<PlayerPuppet>) {
     this.gameInstance = player.GetGame();
+    this.mode = FlightMode.HoverFly;
     this.enabled = false;
     this.active = false;
     this.showOptions = false;
@@ -152,9 +155,9 @@ public class FlightController  {
     this.hoverFactor = 5.0;
     this.hover = PID.Create(0.1, 0.01, 0.05);
     this.pitchPID = PID.Create(0.5, 0.05, 0.1);
-    this.pitchCorrectionFactor = 10.0;
+    this.pitchCorrectionFactor = 20.0;
     this.rollPID = PID.Create(0.5, 0.05, 0.1);
-    this.rollCorrectionFactor = 10.0;
+    this.rollCorrectionFactor = 20.0;
     this.yawPID = PID.Create(0.5, 0.2, 2.0);
     this.yawCorrectionFactor = 0.1;
     this.brakeFactor = 1.2;
@@ -357,6 +360,8 @@ public class FlightController  {
         player.RegisterInputListener(this, n"Choice1_DualState");
         player.RegisterInputListener(this, n"FlightOptions_Up");
         player.RegisterInputListener(this, n"FlightOptions_Down");
+        player.RegisterInputListener(this, n"FlightOptions_Left");
+        player.RegisterInputListener(this, n"FlightOptions_Right");
         uiSystem.QueueEvent(FlightController.ShowHintHelper("Flight Options", n"Choice1_DualState", n"FlightController"));
       } else {
         uiSystem.QueueEvent(FlightController.ShowHintHelper("Enable Flight Control", n"Flight_Toggle", n"FlightController"));
@@ -395,6 +400,10 @@ public class FlightController  {
             this.hoverHeight -= 0.1;
             GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_menu_onpress");
             FlightLog.Info("hoverHeight = " + ToString(this.hoverHeight));
+        }
+        if Equals(actionName, n"FlightOptions_Right") && ListenerAction.IsButtonJustPressed(action) {
+            this.mode = IntEnum((EnumInt(this.mode) + 1) % EnumInt(FlightMode.Count));
+            GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_menu_onpress");
         }
       }
       if Equals(actionType, gameinputActionType.AXIS_CHANGE) {
@@ -491,10 +500,17 @@ public class FlightController  {
   }
 
   public func SetupTires() -> Void {
-    this.fl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_left_tire") as IPlacedComponent;
-    this.fr_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_right_tire") as IPlacedComponent;
-    this.bl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_left_tire") as IPlacedComponent;
-    this.br_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_right_tire") as IPlacedComponent;
+    if this.GetVehicle() == (this.GetVehicle() as CarObject) {
+      this.fl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_left_tire") as IPlacedComponent;
+      this.fr_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_right_tire") as IPlacedComponent;
+      this.bl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_left_tire") as IPlacedComponent;
+      this.br_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_right_tire") as IPlacedComponent;
+    } else {
+      this.fl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_tire") as IPlacedComponent;
+      this.fr_tire = this.fl_tire;
+      this.bl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_tire") as IPlacedComponent;
+      this.br_tire = this.bl_tire;
+    }
   }
 
   public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
@@ -545,7 +561,10 @@ public class FlightController  {
 
     this.UpdateInputs(timeDelta);
 
-    this.hoverHeight += this.lift.GetValue() * timeDelta * this.liftFactor * (1.0 + this.stats.d_speedRatio * 2.0);
+
+    if Equals(this.mode, FlightMode.HoverFly) {
+      this.hoverHeight += this.lift.GetValue() * timeDelta * this.liftFactor * (1.0 + this.stats.d_speedRatio * 2.0);
+    }
     if this.hovering {
       this.hoverHeight = MaxF(1.0, this.hoverHeight);
     }
@@ -587,29 +606,34 @@ public class FlightController  {
           Vector4.Distance(br_tire, Cast(findGround4.position))));
         // this.distance = distance * (1.0 - this.distanceEase) + this.distance * (this.distanceEase);
         this.distance = distance;
+        
+        let groundPoints: array<Vector4> = [
+          Vector4.Vector3To4(findGround1.position) - this.stats.d_velocity * timeDelta, 
+          Vector4.Vector3To4(findGround2.position) - this.stats.d_velocity * timeDelta,
+          Vector4.Vector3To4(findGround4.position) - this.stats.d_velocity * timeDelta,
+          Vector4.Vector3To4(findGround3.position) - this.stats.d_velocity * timeDelta
+        ]; 
 
-        this.ui.DrawMark(Cast(findGround1.position) - this.stats.d_velocity * timeDelta);
-        this.ui.DrawMark(Cast(findGround2.position) - this.stats.d_velocity * timeDelta);
-        this.ui.DrawMark(Cast(findGround3.position) - this.stats.d_velocity * timeDelta);
-        this.ui.DrawMark(Cast(findGround4.position) - this.stats.d_velocity * timeDelta);
+        this.ui.DrawMark(groundPoints[0]);
+        this.ui.DrawMark(groundPoints[1]);
+        this.ui.DrawMark(groundPoints[2]);
+        this.ui.DrawMark(groundPoints[3]);
 
         let points: array<Vector2> = [
-          this.ui.ScreenXY(Vector4.Vector3To4(findGround1.position) - this.stats.d_velocity * timeDelta), 
-          this.ui.ScreenXY(Vector4.Vector3To4(findGround2.position) - this.stats.d_velocity * timeDelta),
-          this.ui.ScreenXY(Vector4.Vector3To4(findGround4.position) - this.stats.d_velocity * timeDelta),
-          this.ui.ScreenXY(Vector4.Vector3To4(findGround3.position) - this.stats.d_velocity * timeDelta),
-          this.ui.ScreenXY(Vector4.Vector3To4(findGround1.position) - this.stats.d_velocity * timeDelta)
+          this.ui.ScreenXY(groundPoints[0]), 
+          this.ui.ScreenXY(groundPoints[1]),
+          this.ui.ScreenXY(groundPoints[2]),
+          this.ui.ScreenXY(groundPoints[3]),
+          this.ui.ScreenXY(groundPoints[0])
         ]; 
 
         let quad = inkWidgetBuilder.inkShape(n"shape")
           .Reparent(this.ui.GetMarksWidget())
-          // .ShapeResource(r"base\\gameplay\\gui\\common\\main_shapes.inkshapecollection")
-          .ChangeShape(n"Rectangle")
+          // .ChangeShape(n"Rectangle")
           .Size(1920.0 * 2.0, 1080.0 * 2.0)
           .UseNineSlice(true)
           .ShapeVariant(inkEShapeVariant.FillAndBorder)
           .LineThickness(3.0)
-          // .VertexList(points)
           .FillOpacity(0.0)
           .Tint(ThemeColors.ElectricBlue())
           .BorderColor(ThemeColors.ElectricBlue())
@@ -618,46 +642,116 @@ public class FlightController  {
           .BuildShape();
         quad.SetVertexList(points);
 
-        this.ui.DrawText(Cast(findGround1.position) - this.stats.d_velocity * timeDelta, FloatToStringPrec(Vector4.Distance(fl_tire, Cast(findGround1.position)), 2));
-        this.ui.DrawText(Cast(findGround2.position) - this.stats.d_velocity * timeDelta, FloatToStringPrec(Vector4.Distance(fr_tire, Cast(findGround2.position)), 2));
-        this.ui.DrawText(Cast(findGround3.position) - this.stats.d_velocity * timeDelta, FloatToStringPrec(Vector4.Distance(bl_tire, Cast(findGround3.position)), 2));
-        this.ui.DrawText(Cast(findGround4.position) - this.stats.d_velocity * timeDelta, FloatToStringPrec(Vector4.Distance(br_tire, Cast(findGround4.position)), 2));
+        // level plane - not that useful right now
+        // let higherGroundPoints = groundPoints;
+        // let maxZ = MaxF(MaxF(groundPoints[0], groundPoints[1]), MaxF(groundPoints[2], groundPoints[3]));
+        // groundPoints[0].Z = maxZ;
+        // groundPoints[1].Z = maxZ;
+        // groundPoints[2].Z = maxZ;
+        // groundPoints[3].Z = maxZ;
+
+        // let points2: array<Vector2> = [
+        //   this.ui.ScreenXY(higherGroundPoints[0]), 
+        //   this.ui.ScreenXY(higherGroundPoints[1]),
+        //   this.ui.ScreenXY(higherGroundPoints[2]),
+        //   this.ui.ScreenXY(higherGroundPoints[3]),
+        //   this.ui.ScreenXY(higherGroundPoints[0])
+        // ]; 
+        
+        // let quad = inkWidgetBuilder.inkShape(n"shape2")
+        //   .Reparent(this.ui.GetMarksWidget())
+        //   // .ChangeShape(n"Rectangle")
+        //   .Size(1920.0 * 2.0, 1080.0 * 2.0)
+        //   .UseNineSlice(true)
+        //   .ShapeVariant(inkEShapeVariant.FillAndBorder)
+        //   .LineThickness(3.0)
+        //   .FillOpacity(0.0)
+        //   .Tint(ThemeColors.ElectricBlue())
+        //   .BorderColor(ThemeColors.ElectricBlue())
+        //   .BorderOpacity(0.01)
+        //   .Visible(true)
+        //   .BuildShape();
+        // quad.SetVertexList(points2);
+
+        this.ui.DrawText(groundPoints[0], FloatToStringPrec(Vector4.Distance(fl_tire, Cast(findGround1.position)), 2));
+        this.ui.DrawText(groundPoints[1], FloatToStringPrec(Vector4.Distance(fr_tire, Cast(findGround2.position)), 2));
+        this.ui.DrawText(groundPoints[2], FloatToStringPrec(Vector4.Distance(bl_tire, Cast(findGround3.position)), 2));
+        this.ui.DrawText(groundPoints[3], FloatToStringPrec(Vector4.Distance(br_tire, Cast(findGround4.position)), 2));
 
         // FromVariant(scriptInterface.GetStateVectorParameter(physicsStateValue.Radius)) maybe?
         let normal = (Vector4.Normalize(Cast(findGround1.normal)) + Vector4.Normalize(Cast(findGround2.normal)) + Vector4.Normalize(Cast(findGround3.normal)) + Vector4.Normalize(Cast(findGround4.normal))) / 4.0;
         // this.normal = Vector4.Interpolate(this.normal, normal, this.normalEase);
         this.normal = normal;
 
+        
+
       } else {
         foundGround = false;
       }   
     }
 
-    if ((this.distance > this.maxHoverHeight && this.hovering) || (this.hovering && !foundGround)) {
-      this.hovering = false;
-      this.referenceZ = this.stats.d_position.Z;
-      this.hoverHeight = 0.0;
-    }
-    if (this.distance <= this.maxHoverHeight && !this.hovering && foundGround) {
-      this.hovering = true;
-      this.hoverHeight = this.distance;
-    }
-
     let heightDifference = 0.0;
     let idealNormal = new Vector4(0.0, 0.0, 1.0, 0.0);
+    if Equals(this.mode, FlightMode.HoverFly) {
+      if ((this.distance > this.maxHoverHeight && this.hovering) || (this.hovering && !foundGround)) {
+        this.hovering = false;
+        this.referenceZ = this.stats.d_position.Z;
+        this.hoverHeight = 0.0;
+      }
+      if (this.distance <= this.maxHoverHeight && !this.hovering && foundGround) {
+        this.hovering = true;
+        this.hoverHeight = this.distance;
+      }
     // would be cool to fade between these instead of using a boolean
-    if this.hovering {
-      // close to ground, use as reference
-      heightDifference = this.hoverHeight - this.distance;
-      idealNormal = this.normal;
-    } else {
-      // use absolute Z if too high
-      heightDifference = this.referenceZ + this.hoverHeight - this.stats.d_position.Z;
+      if this.hovering {
+        // close to ground, use as reference
+        heightDifference = this.hoverHeight - this.distance;
+        idealNormal = this.normal;
+      } else {
+        // use absolute Z if too high
+        heightDifference = this.referenceZ + this.hoverHeight - this.stats.d_position.Z;
+      }
+    }
+    if Equals(this.mode, FlightMode.Hover) {
+      if (foundGround) {
+        heightDifference = this.hoverHeight - this.distance;
+        idealNormal = this.normal;
+      }
     }
 
+    let normalLine = inkWidgetBuilder.inkShape(n"normalLine")
+      .Reparent(this.ui.GetMarksWidget())
+      .Size(1920.0 * 2.0, 1080.0 * 2.0)
+      .UseNineSlice(true)
+      .ShapeVariant(inkEShapeVariant.FillAndBorder)
+      .LineThickness(3.0)
+      .FillOpacity(0.0)
+      .Tint(ThemeColors.ElectricBlue())
+      .BorderColor(ThemeColors.ElectricBlue())
+      .BorderOpacity(0.1)
+      .Visible(true)
+      .BuildShape();
+    normalLine.SetVertexList([this.ui.ScreenXY(this.stats.d_visualPosition), this.ui.ScreenXY(this.stats.d_visualPosition + idealNormal)]);
+    this.ui.DrawMark(this.stats.d_visualPosition + idealNormal);
+
+    let normalLine = inkWidgetBuilder.inkShape(n"normalLine")
+      .Reparent(this.ui.GetMarksWidget())
+      .Size(1920.0 * 2.0, 1080.0 * 2.0)
+      .UseNineSlice(true)
+      .ShapeVariant(inkEShapeVariant.FillAndBorder)
+      .LineThickness(3.0)
+      .FillOpacity(0.0)
+      .Tint(ThemeColors.ElectricBlue())
+      .BorderColor(ThemeColors.ElectricBlue())
+      .BorderOpacity(0.1)
+      .Visible(true)
+      .BuildShape();
+    normalLine.SetVertexList([this.ui.ScreenXY(this.stats.d_visualPosition), this.ui.ScreenXY(this.stats.d_visualPosition + this.stats.d_up)]);
+    this.ui.DrawMark(this.stats.d_visualPosition + this.stats.d_up);
+
     hoverCorrection = this.hover.GetCorrectionClamped(heightDifference, timeDelta, 1.0);
-    pitchCorrection = this.pitchPID.GetCorrectionClamped(Vector4.Dot(idealNormal, this.stats.d_forward) + this.lift.GetValue() * this.pitchWithLift, timeDelta, 1.0) + this.pitch.GetValue() / 10.0;
-    rollCorrection = this.rollPID.GetCorrectionClamped(Vector4.Dot(idealNormal, this.stats.d_right), timeDelta, 1.0) + this.yaw.GetValue() * this.rollWithYaw + this.roll.GetValue() / 10.0;
+    pitchCorrection = this.pitchPID.GetCorrectionClamped(Vector4.Dot(idealNormal, this.stats.d_forward) + this.lift.GetValue() * this.pitchWithLift, timeDelta, 10.0) + this.pitch.GetValue() / 10.0;
+    rollCorrection = this.rollPID.GetCorrectionClamped(Vector4.Dot(idealNormal, this.stats.d_right), timeDelta, 10.0) + this.yaw.GetValue() * this.rollWithYaw + this.roll.GetValue() / 10.0;
     // let angle: Float = Vector4.GetAngleDegAroundAxis(Vector4.Interpolate(this.stats.d_forward, direction, this.stats.d_speedRatio * this.velocityPointing), this.stats.d_forward, new Vector4(0.0, 0.0, 1.0, 0.0));
     let angle: Float = Vector4.GetAngleDegAroundAxis(direction, this.stats.d_forward, new Vector4(0.0, 0.0, 1.0, 0.0));
 
