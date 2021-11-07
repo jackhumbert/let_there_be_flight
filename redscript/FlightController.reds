@@ -607,7 +607,7 @@ public class FlightController  {
           .UseNineSlice(true)
           .ShapeVariant(inkEShapeVariant.FillAndBorder)
           .LineThickness(5.0)
-          .VertexList(points)
+          // .VertexList(points)
           .FillOpacity(0.1)
           .Tint(ThemeColors.ElectricBlue())
           .BorderColor(ThemeColors.ElectricBlue())
