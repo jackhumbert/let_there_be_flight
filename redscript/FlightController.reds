@@ -143,7 +143,7 @@ public class FlightController  {
     this.pitchCorrectionFactor = 20.0;
     this.rollCorrectionFactor = 20.0;
     this.yawCorrectionFactor = 0.1;
-    this.yawDirectionalityFactor = 20.0;
+    this.yawDirectionalityFactor = 50.0;
     this.brake = PID.Create(0.05, 0.0, 0.0, 0.0);
     this.lift = PID.Create(0.05, 0.0, 0.0, 0.0);
     this.surge = PID.Create(0.04, 0.0, 0.0, 0.0);
@@ -812,8 +812,9 @@ public class FlightController  {
     let surgeForce: Float = this.surge.GetValue() * this.stats.s_mass * this.surgeFactor;
 
     // yawDirectionality
-    this.CreateImpulse(this.stats.d_position, this.stats.d_right * Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right) * yawDirectionality * timeDelta);
+    //this.CreateImpulse(this.stats.d_position, this.stats.d_right * Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right) * yawDirectionality / 2.0 * timeDelta);
     this.CreateImpulse(this.stats.d_position, this.stats.d_forward * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta);
+    this.CreateImpulse(this.stats.d_position, -this.stats.d_direction * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta);
     // lift
     this.CreateImpulse(this.stats.d_position, new Vector4(0.00, 0.00, liftForce, 0.00) * timeDelta);
     // surge

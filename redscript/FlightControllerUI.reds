@@ -5,6 +5,7 @@ public class FlightControllerUI extends inkCanvas {
   public let stats: ref<FlightStats>;
   private let m_rootAnim: ref<inkAnimProxy>;
   private let m_markerRadius: Float;
+  private let m_lastPitchValue: Float;
   public static func Create(controller: ref<inkGameController>, parent: ref<inkCompoundWidget>) -> ref<FlightControllerUI> {
     let instance = new FlightControllerUI();
     instance.controller = controller;
@@ -276,8 +277,7 @@ public class FlightControllerUI extends inkCanvas {
         .Translation(-920.0, 230.0)
         .Opacity(0.5)
         .BuildCanvas();
-
-
+      // pitch.SetChildOrder(inkEChildOrder.Backward);
 
       let arrow = inkWidgetBuilder.inkImage(n"arrow")
         .Reparent(pitch)
@@ -304,22 +304,6 @@ public class FlightControllerUI extends inkCanvas {
         // .Overflow(textOverflowPolicy.AdjustToSize) pArrayType was nullptr.
         .BuildText();
 
-      let fill = inkWidgetBuilder.inkImage(n"fill")
-        .Reparent(pitch)
-        .Atlas(r"base\\gameplay\\gui\\common\\shapes\\atlas_shapes_sync.inkatlas")
-        .Part(n"arrow_cell_bg")
-        .Size(width, height)
-        .NineSliceScale(true)
-        .Anchor(0.5, 0.5)
-        .Anchor(inkEAnchor.Centered)
-        .Opacity(0.2)
-        .Tint(ThemeColors.PureBlack())
-        .BuildImage();
-      //fill.SetChildOrder(inkEChildOrder.Backward);
-      fill.CreateEffect("inkMaskEffect", n"Mask_0");
-      fill.SetEffectEnabled(inkEffectType.Mask, n"Mask_0", true);
-      //FlightLog.Probe(fill, r"base\\gameplay\\gui\\common\\shapes\\atlas_shapes_sync.inkatlas");
-
       let border = inkWidgetBuilder.inkImage(n"border")
         .Reparent(pitch)
         .Atlas(r"base\\gameplay\\gui\\common\\shapes\\atlas_shapes_sync.inkatlas")
@@ -332,7 +316,41 @@ public class FlightControllerUI extends inkCanvas {
         .Tint(ThemeColors.ElectricBlue())
         .BuildImage();
 
-      FlightLog.Info("Does arrow_cell_bg exist on the fill atlas? " + ToString(border.IsTexturePartExist(n"arrow_cell_bg")));
+      let fill = inkWidgetBuilder.inkImage(n"fill")
+        .Reparent(pitch)
+        .Atlas(r"base\\gameplay\\gui\\common\\shapes\\atlas_shapes_sync.inkatlas")
+        .Part(n"arrow_cell_bg")
+        .Size(width, height)
+        .NineSliceScale(true)
+        .Anchor(0.5, 0.5)
+        .Anchor(inkEAnchor.Centered)
+        .Opacity(0.1)
+        .Tint(ThemeColors.PureBlack())
+        .BuildImage();
+      //fill.SetChildOrder(inkEChildOrder.Backward);
+      // fill.CreateEffect(n"inkMaskEffect", n"Mask_0");
+      // fill.SetEffectEnabled(inkEffectType.Mask, n"Mask_0", true);
+      //FlightLog.Probe(fill, r"base\\gameplay\\gui\\common\\shapes\\atlas_shapes_sync.inkatlas");
+
+      // let mask = inkWidgetBuilder.inkShape(n"mask")
+      //   .Reparent(pitch)
+      //   .Size(width, height)
+      //   .Anchor(0.5, 0.5)
+      //   .Anchor(inkEAnchor.Centered)
+      //   .UseNineSlice(true)
+      //   .ShapeVariant(inkEShapeVariant.FillAndBorder)
+      //   .LineThickness(3.0)
+      //   .FillOpacity(1.0)
+      //   .Tint(ThemeColors.ElectricBlue())
+      //   .BorderColor(ThemeColors.ElectricBlue())
+      //   .BorderOpacity(0.0)
+      //   .EndCapStyle(inkEEndCapStyle.SQUARE)
+      //   .Visible(true)
+      //   .BuildShape();
+      // mask.SetVertexList([new Vector2(0.0, 0.0), new Vector2(0.0, 100.0), new Vector2(100.0, 100.0), new Vector2(100.0, 0.0)]);
+      // mask.CreateEffect(n"inkMaskEffect", n"Mask_0");
+      // mask.SetEffectEnabled(inkEffectType.Mask, n"Mask_0", true);
+
 
       // let mask = inkWidgetBuilder.inkCanvas(n"mask")
       //   .Size(width, height)
@@ -341,9 +359,11 @@ public class FlightControllerUI extends inkCanvas {
       //   .Anchor(inkEAnchor.Centered)
       //   .Margin(0.0, 0.0, 0.0, 0.0)
       //   .BuildCanvas();
-      // mask.SetChildOrder(inkEChildOrder.Backward);
-      // mask.CreateEffect("inkMaskEffect", n"Mask_0");
+      // // mask.SetChildOrder(inkEChildOrder.Backward);
+      // mask.CreateEffect(n"inkMaskEffect", n"Mask_0");
       // mask.SetEffectEnabled(inkEffectType.Mask, n"Mask_0", true);
+      // mask.SetEffectParamValue(inkEffectType.Mask, n"Mask_0", n"opacity", 1.0);
+      // mask.SetEffectParamValue(inkEffectType.Mask, n"Mask_0", n"angle", 1.0);
 
       // let image = inkWidgetBuilder.inkImage(n"image")
       //   .Reparent(mask)
@@ -353,8 +373,7 @@ public class FlightControllerUI extends inkCanvas {
       //   .NineSliceScale(true)
       //   .Anchor(0.5, 0.5)
       //   .Anchor(inkEAnchor.Centered)
-      //   .Opacity(0.2)
-      //   .Tint(ThemeColors.PureBlack())
+      //   .Opacity(1.0)
       //   .BuildImage();
 
       let mask = inkWidgetBuilder.inkMask(n"mask")
@@ -398,6 +417,10 @@ public class FlightControllerUI extends inkCanvas {
         .Anchor(inkEAnchor.Centered)
         .Margin(0.0, 0.0, 0.0, 0.0)
         .BuildCanvas();
+      markers.CreateEffect(n"inkBoxBlurEffect", n"BoxBlur_0");
+      markers.SetEffectEnabled(inkEffectType.BoxBlur, n"BoxBlur_0", true);
+      markers.SetEffectParamValue(inkEffectType.BoxBlur, n"BoxBlur_0", n"intensity", 0.0);
+      markers.SetBlurDimension(n"BoxBlur_0", inkEBlurDimension.Vertical);
       // markers.SetEffectEnabled(inkEffectType.Mask, n"Mask_0", true);
 		  // markers.SetRenderTransformPivot(new Vector2(0.0, 0.0));
 
@@ -410,7 +433,7 @@ public class FlightControllerUI extends inkCanvas {
         // .Opacity(mark == 0.0 ? 1.0 : 0.5)
         .Size(width, 40.0)
         .Anchor(0.0, 0.5)
-        .Translation(0.0, 0.0)
+        .Translation(0.0, 90.0)
         .Reparent(markers)
         .BuildRectangle();
 
@@ -420,6 +443,7 @@ public class FlightControllerUI extends inkCanvas {
         .FontStyle(n"Bold")
         .FontSize(25)
         .Anchor(0.5, 0.5)
+        .Translation(0.0, 90.0)
         .Tint(ThemeColors.PureBlack())
         .Text("0")
         .HAlign(inkEHorizontalAlign.Center)
@@ -440,7 +464,7 @@ public class FlightControllerUI extends inkCanvas {
             .Text(FloatToStringPrec(AbsF(mark), 0))
             .HAlign(inkEHorizontalAlign.Center)
             .Margin(0.0, 0.0, 0.0, 0.0)
-            .Translation(width / 2.0, mark * mark_scale)
+            .Translation(width / 2.0, (mark + 90.0) * mark_scale)
             // .Overflow(textOverflowPolicy.AdjustToSize)
             .BuildText();
 
@@ -449,7 +473,7 @@ public class FlightControllerUI extends inkCanvas {
             // .Opacity(mark == 0.0 ? 1.0 : 0.5)
             .Size(20.0, 2.0)
             .Anchor(0.0, 0.5)
-            .Translation(width - 20.0, mark * mark_scale)
+            .Translation(width - 20.0, (mark + 90.0) * mark_scale)
             .Reparent(markers)
             .BuildRectangle();
 
@@ -458,7 +482,7 @@ public class FlightControllerUI extends inkCanvas {
             // .Opacity(mark == 0.0 ? 1.0 : 0.5)
             .Size(20.0, 2.0)
             .Anchor(0.0, 0.5)
-            .Translation(0.0, mark * mark_scale)
+            .Translation(0.0, (mark + 90.0) * mark_scale)
             .Reparent(markers)
             .BuildRectangle();
         }
@@ -468,7 +492,7 @@ public class FlightControllerUI extends inkCanvas {
             .Opacity(0.1)
             .Size(width, 2.0)
             .Anchor(0.0, 0.5)
-            .Translation(0.0, (mark + mark_inc) * mark_scale)
+            .Translation(0.0, ((mark + 90.0) + mark_inc) * mark_scale)
             .Reparent(markers)
             .BuildRectangle();
         }
@@ -615,7 +639,9 @@ public class FlightControllerUI extends inkCanvas {
     // this.GetWidget(n"ruler_right").SetRotation(this.ScreenAngle(this.stats.d_position, this.stats.d_position + Transform.GetUp(cameraTransform) * 2.0));
 
     let pitch_mark = Vector4.GetAngleBetween(this.stats.d_forward, new Vector4(0.0, 0.0, 1.0, 0.0));
-    this.GetWidget(n"pitch/markers").SetTranslation(0.0, pitch_mark * 20.0);
+    this.GetWidget(n"pitch/markers").SetTranslation(0.0, (pitch_mark - 90.0) * 20.0);
+    this.GetWidget(n"pitch/markers").SetEffectParamValue(inkEffectType.BoxBlur, n"BoxBlur_0", n"intensity", AbsF(pitch_mark - this.m_lastPitchValue) / timeDelta * 0.0001);
+    this.m_lastPitchValue = pitch_mark;
 
     // let marker_vector = Vector4.RotateAxis(Transform.GetRight(cameraTransform), Transform.GetForward(cameraTransform), Deg2Rad(Vector4.GetAngleBetween(this.stats.d_right, new Vector4(0.0, 0.0, 1.0, 0.0))));
     // this.GetWidget(n"rulers").SetTranslation(this.ScreenXY(this.stats.d_position - this.stats.d_velocity * timeDelta));

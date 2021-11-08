@@ -8,6 +8,8 @@
 #include <RED4ext/Scripting/Natives/Generated/red/ResourceReferenceScriptToken.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/ImageWidget.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/TextureAtlas.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ink/EBlurDimension.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ink/BoxBlurEffect.hpp>
 #include <RED4ext/InstanceType.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/IEffect.hpp>
 
@@ -59,46 +61,72 @@ void SetAtlasResource(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFra
     
 }
 
-void CreateEffect(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
+void CreateEffect(RED4ext::IScriptable* apContext, RED4ext::CStackFrame* apFrame, void* apOut, int64_t a4)
 {
-    auto rtti = RED4ext::CRTTISystem::Get();
-    RED4ext::CString type;
-    RED4ext::CName name;
-    RED4ext::GetParameter(aFrame, &type);
-    RED4ext::GetParameter(aFrame, &name);
+    RED4ext::CName typeName;
+    RED4ext::CName effectName;
 
-    aFrame->code++; // skip ParamEnd
+    RED4ext::GetParameter(apFrame, &typeName);
+    RED4ext::GetParameter(apFrame, &effectName);
+    apFrame->code++; // skip ParamEnd
 
-    auto typeClass = rtti->GetClass(type.c_str());
-    auto inkWidgetClass = rtti->GetClass("inkWidget");
-    //auto hinkIEffect = rtti->GetClass("handle:inkIEffect");
+    auto pRtti = RED4ext::CRTTISystem::Get();
 
-    //auto* typeClassType = rtti->GetType(RED4ext::CName("handle:") + RED4ext::CName(type.c_str()));
-    auto* apRttiType = rtti->GetType("array:handle:inkIEffect");
-    auto* pArrayType = reinterpret_cast<RED4ext::CRTTIArrayType*>(apRttiType);
-    auto* pArrayInnerType = pArrayType->GetInnerType();
-    auto effects = inkWidgetClass->GetProperty("effects")->GetValue<RED4ext::CRTTIArrayType*>(aContext);
+    auto pEffectClass = pRtti->GetClass(typeName);
+    auto pEffectInstance = reinterpret_cast<RED4ext::ISerializable*>(pEffectClass->AllocInstance());
+    auto pEffectHandle = RED4ext::Handle<RED4ext::ISerializable>(pEffectInstance);
 
-    uint32_t arraySize = pArrayType->GetLength(effects);
+    pEffectClass->GetProperty("effectName")->SetValue(pEffectInstance, effectName);
 
-    auto apAllocator = apRttiType->GetAllocator();
-    auto pMemory = apAllocator->AllocAligned(apRttiType->GetSize(), apRttiType->GetAlignment());
-    apRttiType->Construct(pMemory.memory);
-    //pArrayType->Assign(effects, pMemory.memory);
+    auto pWidgetClass = pRtti->GetClass("inkWidget");
+    auto pEffectsProp = pWidgetClass->GetProperty("effects");
+    auto pEffectsType = reinterpret_cast<RED4ext::CRTTIArrayType*>(pEffectsProp->type);
+    auto pEffectsArray = pEffectsProp->GetValue<RED4ext::DynArray<void*>*>(apContext);
 
-    auto allocator = typeClass->GetAllocator();
-    auto allocResult = allocator->AllocAligned(typeClass->GetSize(), typeClass->GetAlignment());
-    typeClass->Construct(allocResult.memory);
-    typeClass->GetProperty("effectName")->SetValue(allocResult.memory, name);
-    //pArrayType->InsertAt(effects, arraySize);
-    pArrayType->Resize(pMemory.memory, 1);
-    const auto pElement = pArrayType->GetElement(pMemory.memory, arraySize);
-    typeClass->Assign(pElement, allocResult.memory);
+    auto lastIndex = pEffectsType->GetLength(pEffectsArray);
 
-    //Exception thrown at 0x00007FF78EB02B17 in Cyberpunk2077.exe: 0xC0000005: Access violation writing location 0x0000000000001116.
-    inkWidgetClass->GetProperty("effects")->SetValue(aContext, pMemory.memory);
+    pEffectsType->InsertAt(pEffectsArray, lastIndex);
 
-    
+    auto pLastElement = pEffectsType->GetElement(pEffectsArray, lastIndex);
+
+    pEffectsType->GetInnerType()->Assign(pLastElement, &pEffectHandle);
+}
+
+void SetBlurDimension(RED4ext::IScriptable* apContext, RED4ext::CStackFrame* apFrame, bool* apOut, int64_t a4) {
+
+    RED4ext::CName effectName;
+    RED4ext::ink::EBlurDimension blurDimension;
+    RED4ext::GetParameter(apFrame, &effectName);
+    RED4ext::GetParameter(apFrame, &blurDimension);
+    apFrame->code++; // skip ParamEnd
+
+    auto pRtti = RED4ext::CRTTISystem::Get();
+
+    auto pEffectClass = pRtti->GetClass("inkBoxBlurEffect");
+    auto pGenericEffectClass = pRtti->GetClass("inkIEffect");
+
+    auto pWidgetClass = pRtti->GetClass("inkWidget");
+    auto pEffectsProp = pWidgetClass->GetProperty("effects");
+    auto pEffectsType = reinterpret_cast<RED4ext::CRTTIArrayType*>(pEffectsProp->type);
+    auto pEffectsArray = pEffectsProp->GetValue<RED4ext::DynArray<void*>*>(apContext);
+
+    auto pEffectsArraySize = pEffectsType->GetLength(pEffectsArray);
+
+    bool found = false;
+
+    for (int i = 0; i < pEffectsArraySize; i++) {
+        auto pEffect = (RED4ext::Handle<RED4ext::ISerializable>*)pEffectsType->GetElement(pEffectsArray, i);
+        RED4ext::CName pEffectName = pGenericEffectClass->GetProperty("effectName")->GetValue<RED4ext::CName>(pEffect->instance);
+        if (pEffectName == effectName) {
+            pEffectClass->GetProperty("blurDimension")->SetValue(pEffect->instance, blurDimension);
+            found = true;
+            break;
+        }
+    }
+
+    if (apOut) {
+        *apOut = found;
+    }
 }
 
 void SetShapeResource(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
@@ -143,10 +171,22 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
 
 
     auto inkWidget = rtti->GetClass("inkWidget");
+
     auto createEffectFunc = RED4ext::CClassFunction::Create(inkWidget, "CreateEffect", "CreateEffect", &CreateEffect, { .isNative = true });
-    createEffectFunc->AddParam("String", "effectType");
+    createEffectFunc->AddParam("CName", "typeName");
     createEffectFunc->AddParam("CName", "effectName");
     inkWidget->RegisterFunction(createEffectFunc);
+
+    auto setBlurDimensionFunc = RED4ext::CClassFunction::Create(inkWidget, "SetBlurDimension", "SetBlurDimension", &SetBlurDimension, { .isNative = true });
+    setBlurDimensionFunc->AddParam("CName", "effectName");
+    setBlurDimensionFunc->AddParam("inkEBlurDimension", "blurDimension");
+    setBlurDimensionFunc->SetReturnType("Bool");
+    inkWidget->RegisterFunction(setBlurDimensionFunc);
+
+    //auto getEffectFunc = RED4ext::CClassFunction::Create(inkWidget, "GetEffect", "GetEffect", &GetEffect, { .isNative = true });
+    //getEffectFunc->AddParam("CName", "effectName");
+    //getEffectFunc->SetReturnType("inkIEffect");
+    //inkWidget->RegisterFunction(getEffectFunc);
 
 
 }
