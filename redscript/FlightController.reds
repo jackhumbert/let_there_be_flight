@@ -119,6 +119,7 @@ public class FlightController  {
   private let hovering: Bool;
   public let referenceZ: Float;
   public let maxHoverHeight: Float;
+  private let secondCounter: Float;
 
   public let fl_tire: ref<IPlacedComponent>;
   public let fr_tire: ref<IPlacedComponent>;
@@ -134,16 +135,25 @@ public class FlightController  {
     this.enabled = false;
     this.active = false;
     this.showOptions = false;
+    this.brakeFactor = 1.2;
+    this.liftFactor = 10.0;
+    this.surgeFactor = 15.0;
+    this.hoverFactor = 5.0;
+    this.yawFactor = 40.0;
+    this.pitchCorrectionFactor = 20.0;
+    this.rollCorrectionFactor = 20.0;
+    this.yawCorrectionFactor = 0.1;
+    this.yawDirectionalityFactor = 20.0;
     this.brake = PID.Create(0.05, 0.0, 0.0, 0.0);
     this.lift = PID.Create(0.05, 0.0, 0.0, 0.0);
-    this.liftFactor = 10.0;
     this.surge = PID.Create(0.04, 0.0, 0.0, 0.0);
-    this.surgeFactor = 15.0;
     this.roll = PID.Create(0.5, 0.0, 0.0, 0.0);
     this.pitch = PID.Create(0.5, 0.0, 0.0, 0.0);
     this.yaw = PID.Create(0.01, 0.0, 0.0, 0.0);
-    this.yawFactor = 40.0;
-    this.yawDirectionalityFactor = 20.0;
+    this.hover = PID.Create(0.1, 0.01, 0.05);
+    this.pitchPID = PID.Create(0.5, 0.2, 0.05);
+    this.rollPID = PID.Create(0.5, 0.2, 0.05);
+    this.yawPID = PID.Create(0.5, 0.2, 2.0);
     this.distance = 0.0;
     this.distanceEase = 0.1;
     this.normal = new Vector4(0.0, 0.0, 1.0, 0.0);
@@ -152,15 +162,6 @@ public class FlightController  {
     this.defaultHoverHeight = 3.50;
     this.hoverHeight = this.defaultHoverHeight;
     this.maxHoverHeight = 7.0;
-    this.hoverFactor = 5.0;
-    this.hover = PID.Create(0.1, 0.01, 0.05);
-    this.pitchPID = PID.Create(0.5, 0.05, 0.1);
-    this.pitchCorrectionFactor = 20.0;
-    this.rollPID = PID.Create(0.5, 0.05, 0.1);
-    this.rollCorrectionFactor = 20.0;
-    this.yawPID = PID.Create(0.5, 0.2, 2.0);
-    this.yawCorrectionFactor = 0.1;
-    this.brakeFactor = 1.2;
     this.lookAheadMax = 10.0;
     // this.lookAheadMin = 1.0;
     this.lookDown = new Vector4(0.0, 0.0, -this.maxHoverHeight - 10.0, 0.0);
@@ -177,6 +178,7 @@ public class FlightController  {
     this.velocityPointing = 0.0;
     this.hovering = true;
     this.referenceZ = 0.0;
+    this.secondCounter = 0.0;
 
     this.audio = FlightAudio.Create();  
 
@@ -566,7 +568,7 @@ public class FlightController  {
       this.hoverHeight += this.lift.GetValue() * timeDelta * this.liftFactor * (1.0 + this.stats.d_speedRatio * 2.0);
     }
     if this.hovering {
-      this.hoverHeight = MaxF(1.0, this.hoverHeight);
+      this.hoverHeight = MaxF(2.0, this.hoverHeight);
     }
 
     let foundGround = true;
@@ -642,13 +644,47 @@ public class FlightController  {
           .BuildShape();
         quad.SetVertexList(points);
 
+        this.secondCounter += timeDelta;
+        if this.secondCounter > 1.0 {
+          this.secondCounter -= 1.0;
+        }
+
+        let higherGroundPoints = groundPoints;
+        higherGroundPoints[0].Z = higherGroundPoints[0].Z * (this.secondCounter) + fl_tire.Z * (1.0 - this.secondCounter);
+        higherGroundPoints[1].Z = higherGroundPoints[1].Z * (this.secondCounter) + fr_tire.Z * (1.0 - this.secondCounter);
+        higherGroundPoints[2].Z = higherGroundPoints[2].Z * (this.secondCounter) + bl_tire.Z * (1.0 - this.secondCounter);
+        higherGroundPoints[3].Z = higherGroundPoints[3].Z * (this.secondCounter) + br_tire.Z * (1.0 - this.secondCounter);
+
+        let points2: array<Vector2> = [
+          this.ui.ScreenXY(higherGroundPoints[0]), 
+          this.ui.ScreenXY(higherGroundPoints[1]),
+          this.ui.ScreenXY(higherGroundPoints[2]),
+          this.ui.ScreenXY(higherGroundPoints[3]),
+          this.ui.ScreenXY(higherGroundPoints[0])
+        ]; 
+        
+        let quad2 = inkWidgetBuilder.inkShape(n"shape2")
+          .Reparent(this.ui.GetMarksWidget())
+          // .ChangeShape(n"Rectangle")
+          .Size(1920.0 * 2.0, 1080.0 * 2.0)
+          .UseNineSlice(true)
+          .ShapeVariant(inkEShapeVariant.FillAndBorder)
+          .LineThickness(3.0)
+          .FillOpacity(0.0)
+          .Tint(ThemeColors.ElectricBlue())
+          .BorderColor(ThemeColors.ElectricBlue())
+          .BorderOpacity(0.1 * this.secondCounter)
+          .Visible(true)
+          .BuildShape();
+        quad2.SetVertexList(points2);
+
         // level plane - not that useful right now
         // let higherGroundPoints = groundPoints;
         // let maxZ = MaxF(MaxF(groundPoints[0], groundPoints[1]), MaxF(groundPoints[2], groundPoints[3]));
-        // groundPoints[0].Z = maxZ;
-        // groundPoints[1].Z = maxZ;
-        // groundPoints[2].Z = maxZ;
-        // groundPoints[3].Z = maxZ;
+        // higherGroundPoints[0].Z = maxZ;
+        // higherGroundPoints[1].Z = maxZ;
+        // higherGroundPoints[2].Z = maxZ;
+        // higherGroundPoints[3].Z = maxZ;
 
         // let points2: array<Vector2> = [
         //   this.ui.ScreenXY(higherGroundPoints[0]), 
@@ -658,7 +694,7 @@ public class FlightController  {
         //   this.ui.ScreenXY(higherGroundPoints[0])
         // ]; 
         
-        // let quad = inkWidgetBuilder.inkShape(n"shape2")
+        // let quad2 = inkWidgetBuilder.inkShape(n"shape2")
         //   .Reparent(this.ui.GetMarksWidget())
         //   // .ChangeShape(n"Rectangle")
         //   .Size(1920.0 * 2.0, 1080.0 * 2.0)
@@ -681,7 +717,7 @@ public class FlightController  {
         // FromVariant(scriptInterface.GetStateVectorParameter(physicsStateValue.Radius)) maybe?
         let normal = (Vector4.Normalize(Cast(findGround1.normal)) + Vector4.Normalize(Cast(findGround2.normal)) + Vector4.Normalize(Cast(findGround3.normal)) + Vector4.Normalize(Cast(findGround4.normal))) / 4.0;
         // this.normal = Vector4.Interpolate(this.normal, normal, this.normalEase);
-        this.normal = normal;
+        this.normal = Vector4.Normalize(normal);
 
         
 
@@ -719,6 +755,8 @@ public class FlightController  {
       }
     }
 
+    // idealNormal = Vector4.Normalize(idealNormal - (this.stats.d_velocity / 100.0));
+
     let normalLine = inkWidgetBuilder.inkShape(n"normalLine")
       .Reparent(this.ui.GetMarksWidget())
       .Size(1920.0 * 2.0, 1080.0 * 2.0)
@@ -750,8 +788,8 @@ public class FlightController  {
     this.ui.DrawMark(this.stats.d_visualPosition + this.stats.d_up);
 
     hoverCorrection = this.hover.GetCorrectionClamped(heightDifference, timeDelta, 1.0);
-    pitchCorrection = this.pitchPID.GetCorrectionClamped(Vector4.Dot(idealNormal, this.stats.d_forward) + this.lift.GetValue() * this.pitchWithLift, timeDelta, 10.0) + this.pitch.GetValue() / 10.0;
-    rollCorrection = this.rollPID.GetCorrectionClamped(Vector4.Dot(idealNormal, this.stats.d_right), timeDelta, 10.0) + this.yaw.GetValue() * this.rollWithYaw + this.roll.GetValue() / 10.0;
+    pitchCorrection = this.pitchPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(idealNormal, this.stats.d_forward)) + this.lift.GetValue() * this.pitchWithLift, timeDelta, 10.0) + this.pitch.GetValue() / 10.0;
+    rollCorrection = this.rollPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(idealNormal, this.stats.d_right)), timeDelta, 10.0) + this.yaw.GetValue() * this.rollWithYaw + this.roll.GetValue() / 10.0;
     // let angle: Float = Vector4.GetAngleDegAroundAxis(Vector4.Interpolate(this.stats.d_forward, direction, this.stats.d_speedRatio * this.velocityPointing), this.stats.d_forward, new Vector4(0.0, 0.0, 1.0, 0.0));
     let angle: Float = Vector4.GetAngleDegAroundAxis(direction, this.stats.d_forward, new Vector4(0.0, 0.0, 1.0, 0.0));
 

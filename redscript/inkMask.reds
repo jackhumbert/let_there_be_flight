@@ -75,4 +75,4 @@ func SetMaskTransparency(value: Float) {
 //     this.textureAtlas = textureAtlas;
 // }
 @addMethod(inkMask)
-public native func SetAtlasResource(atlasResourcePath: ResRef);
+public native func SetAtlasResource(atlasResourcePath: ResRef) -> Bool;

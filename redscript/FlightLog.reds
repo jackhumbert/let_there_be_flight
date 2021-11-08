@@ -3,4 +3,5 @@ public native class FlightLog {
   public static native func Info(value: String) -> Void;
   public static native func Warn(value: String) -> Void;
   public static native func Error(value: String) -> Void;
+  public static native func Probe(image: ref<inkImage>, atlasResourcePath: ResRef) -> Void;
 }

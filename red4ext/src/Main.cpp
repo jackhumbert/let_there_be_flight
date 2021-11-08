@@ -9,6 +9,7 @@
 #include <RED4ext/Scripting/Natives/Generated/ink/ImageWidget.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/TextureAtlas.hpp>
 #include <RED4ext/InstanceType.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ink/IEffect.hpp>
 
 #include "Utils.hpp"
 #include "stdafx.hpp"
@@ -25,7 +26,7 @@ RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes()
     //FlightStats_Record::RegisterTypes();
 }
 
-void SetAtlasResource(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
+void SetAtlasResource(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, bool* aOut, int64_t a4)
 {
     RED4ext::red::ResourceReferenceScriptToken value;
     RED4ext::GetParameter(aFrame, &value);
@@ -38,9 +39,66 @@ void SetAtlasResource(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFra
     //args.emplace_back(nullptr, &value); // or value, I don't remember how it should be passed.
     //RED4ext::ExecuteFunction(aContext, setAtlasResource, aOut, args);
 
-    auto inkMaskWidget = rtti->GetClass("inkMaskWidget");
-    //uint64_t resource = RED4ext::FNV1a64("base\\gameplay\\gui\\common\\shapes\\atlas_shapes_sync.inkatlas");
-    inkMaskWidget->GetProperty("textureAtlas")->SetValue(aContext, value.resource);
+    auto redResourceReferenceScriptToken = rtti->GetClass("redResourceReferenceScriptToken");
+    auto IsValid = redResourceReferenceScriptToken->GetFunction("IsValid");
+    bool valid;
+    RED4ext::ExecuteFunction(redResourceReferenceScriptToken, IsValid, &valid, &value);
+    if (valid) {
+        auto inkMaskWidget = rtti->GetClass("inkMaskWidget");
+        //uint64_t resource = RED4ext::FNV1a64("base\\gameplay\\gui\\common\\shapes\\atlas_shapes_sync.inkatlas");
+        inkMaskWidget->GetProperty("textureAtlas")->SetValue(aContext, value.resource);
+        if (aOut != nullptr) {
+        *aOut = true;
+        }
+    }
+    else {
+        if (aOut != nullptr) {
+            *aOut = false;
+        }
+    }
+    
+}
+
+void CreateEffect(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
+{
+    auto rtti = RED4ext::CRTTISystem::Get();
+    RED4ext::CString type;
+    RED4ext::CName name;
+    RED4ext::GetParameter(aFrame, &type);
+    RED4ext::GetParameter(aFrame, &name);
+
+    aFrame->code++; // skip ParamEnd
+
+    auto typeClass = rtti->GetClass(type.c_str());
+    auto inkWidgetClass = rtti->GetClass("inkWidget");
+    //auto hinkIEffect = rtti->GetClass("handle:inkIEffect");
+
+    //auto* typeClassType = rtti->GetType(RED4ext::CName("handle:") + RED4ext::CName(type.c_str()));
+    auto* apRttiType = rtti->GetType("array:handle:inkIEffect");
+    auto* pArrayType = reinterpret_cast<RED4ext::CRTTIArrayType*>(apRttiType);
+    auto* pArrayInnerType = pArrayType->GetInnerType();
+    auto effects = inkWidgetClass->GetProperty("effects")->GetValue<RED4ext::CRTTIArrayType*>(aContext);
+
+    uint32_t arraySize = pArrayType->GetLength(effects);
+
+    auto apAllocator = apRttiType->GetAllocator();
+    auto pMemory = apAllocator->AllocAligned(apRttiType->GetSize(), apRttiType->GetAlignment());
+    apRttiType->Construct(pMemory.memory);
+    //pArrayType->Assign(effects, pMemory.memory);
+
+    auto allocator = typeClass->GetAllocator();
+    auto allocResult = allocator->AllocAligned(typeClass->GetSize(), typeClass->GetAlignment());
+    typeClass->Construct(allocResult.memory);
+    typeClass->GetProperty("effectName")->SetValue(allocResult.memory, name);
+    //pArrayType->InsertAt(effects, arraySize);
+    pArrayType->Resize(pMemory.memory, 1);
+    const auto pElement = pArrayType->GetElement(pMemory.memory, arraySize);
+    typeClass->Assign(pElement, allocResult.memory);
+
+    //Exception thrown at 0x00007FF78EB02B17 in Cyberpunk2077.exe: 0xC0000005: Access violation writing location 0x0000000000001116.
+    inkWidgetClass->GetProperty("effects")->SetValue(aContext, pMemory.memory);
+
+    
 }
 
 void SetShapeResource(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
@@ -75,12 +133,21 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
     auto inkMaskWidget = rtti->GetClass("inkMaskWidget");
     auto setAtlasTextureFunc = RED4ext::CClassFunction::Create(inkMaskWidget, "SetAtlasResource", "SetAtlasResource", &SetAtlasResource, { .isNative = true });
     setAtlasTextureFunc->AddParam("redResourceReferenceScriptToken", "atlasResourcePath");
+    setAtlasTextureFunc->SetReturnType("Bool");
     inkMaskWidget->RegisterFunction(setAtlasTextureFunc);
 
     auto inkShapeWidget = rtti->GetClass("inkShapeWidget");
     auto setShapeResourceFunc = RED4ext::CClassFunction::Create(inkShapeWidget, "SetShapeResource", "SetShapeResource", &SetShapeResource, { .isNative = true });
     setShapeResourceFunc->AddParam("redResourceReferenceScriptToken", "shapeResourcePath");
     inkShapeWidget->RegisterFunction(setShapeResourceFunc);
+
+
+    auto inkWidget = rtti->GetClass("inkWidget");
+    auto createEffectFunc = RED4ext::CClassFunction::Create(inkWidget, "CreateEffect", "CreateEffect", &CreateEffect, { .isNative = true });
+    createEffectFunc->AddParam("String", "effectType");
+    createEffectFunc->AddParam("CName", "effectName");
+    inkWidget->RegisterFunction(createEffectFunc);
+
 
 }
 

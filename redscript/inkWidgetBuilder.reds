@@ -225,7 +225,12 @@ public class inkWidgetBuilder {
   public func HAlign(contentHAlign: inkEHorizontalAlign) -> ref<inkWidgetBuilder> {
     (this.widget as inkText).SetContentHAlign(contentHAlign);
     return this;
-}
+  }
+
+  public func VAlign(contentVAlign: inkEVerticalAlign) -> ref<inkWidgetBuilder> {
+    (this.widget as inkText).SetContentVAlign(contentVAlign);
+    return this;
+  }
 
   // inkRectangle
   

@@ -102,7 +102,7 @@ public class FlightStats {
     // GameInstance.GetSpatialQueriesSystem(FlightController.GetInstance().gameInstance).GetGeometryDescriptionSystem();
     let position: Vector4; // = this.vehicle.GetWorldPosition() + this.s_centerOfMassOffset;
     this.ipp.CalculatePosition(position);
-    position += this.s_centerOfMassOffset;
+    // position += this.s_centerOfMassOffset;
 
     // if Vector4.Length(position - this.d_position) / timeDelta <= this.d_speed * 1.1 {
     // if this.reset {
