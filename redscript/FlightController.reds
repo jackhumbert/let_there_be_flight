@@ -49,7 +49,7 @@ enum FlightMode {
 // maybe this should extend ScriptableComponent or GameComponent?
 // Singleton instance with player lifetime
 public class FlightController  {
-  //public let camera: ref<vehicleTPPCameraComponent>;
+  public let camera: ref<vehicleTPPCameraComponent>;
   private let gameInstance: GameInstance;
   private let stats: ref<FlightStats>;
   private let ui: ref<FlightControllerUI>;
@@ -100,6 +100,8 @@ public class FlightController  {
   public let airResistance: Float;
   public let defaultHoverHeight: Float;
   public let hoverHeight: Float;
+  public let minHoverHeight: Float;
+  public let maxHoverHeight: Float;
   public let hoverFactor: Float;
   public let hover: ref<PID>;
   public let pitchPID: ref<PID>;
@@ -118,7 +120,6 @@ public class FlightController  {
   public let velocityPointing: Float;
   private let hovering: Bool;
   public let referenceZ: Float;
-  public let maxHoverHeight: Float;
   private let secondCounter: Float;
 
   public let fl_tire: ref<IPlacedComponent>;
@@ -161,6 +162,7 @@ public class FlightController  {
     this.airResistance = 0.01;
     this.defaultHoverHeight = 3.50;
     this.hoverHeight = this.defaultHoverHeight;
+    this.minHoverHeight = 3.0;
     this.maxHoverHeight = 7.0;
     this.lookAheadMax = 10.0;
     // this.lookAheadMin = 1.0;
@@ -279,6 +281,9 @@ public class FlightController  {
     this.brake.Reset();
 
     this.SetupTires();
+
+    this.camera = GetPlayer(this.gameInstance).FindComponentByName(n"vehicleTPPCamera") as vehicleTPPCameraComponent;
+    FlightLog.Info("TPP camera! " + ToString(this.camera.fov));
 
     //this.camera = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"Collider") as vehicleTPPCameraComponent;
 
@@ -477,7 +482,7 @@ public class FlightController  {
         this.audio.volume *= 0.1;
       }
     }
-    this.audio.playerPosition = this.stats.d_position;
+    this.audio.playerPosition = this.stats.d_visualPosition;
     this.audio.playerUp = this.stats.d_up;
     this.audio.playerForward = this.stats.d_forward;
 
@@ -568,7 +573,7 @@ public class FlightController  {
       this.hoverHeight += this.lift.GetValue() * timeDelta * this.liftFactor * (1.0 + this.stats.d_speedRatio * 2.0);
     }
     if this.hovering {
-      this.hoverHeight = MaxF(2.0, this.hoverHeight);
+      this.hoverHeight = MaxF(this.minHoverHeight, this.hoverHeight);
     }
 
     let foundGround = true;
@@ -736,7 +741,7 @@ public class FlightController  {
       }
       if (this.distance <= this.maxHoverHeight && !this.hovering && foundGround) {
         this.hovering = true;
-        this.hoverHeight = this.distance;
+        this.hoverHeight = MaxF(this.distance, this.minHoverHeight);
       }
     // would be cool to fade between these instead of using a boolean
       if this.hovering {
@@ -754,38 +759,51 @@ public class FlightController  {
         idealNormal = this.normal;
       }
     }
+    
+    let text = inkWidgetBuilder.inkText(n"text")
+      .Reparent(this.ui.GetMarksWidget())
+      .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
+      .FontSize(20)
+      .Anchor(0.5, 0.5)
+      .Tint(ThemeColors.ElectricBlue())
+      .Text(this.hovering ? "Hovering" : "Flying")
+      .HAlign(inkEHorizontalAlign.Center)
+      .Margin(0.0, 0.0, 0.0, 0.0)
+      .Translation(800, 320)
+      // .Overflow(textOverflowPolicy.AdjustToSize)
+      .BuildText();
 
     // idealNormal = Vector4.Normalize(idealNormal - (this.stats.d_velocity / 100.0));
 
-    let normalLine = inkWidgetBuilder.inkShape(n"normalLine")
-      .Reparent(this.ui.GetMarksWidget())
-      .Size(1920.0 * 2.0, 1080.0 * 2.0)
-      .UseNineSlice(true)
-      .ShapeVariant(inkEShapeVariant.FillAndBorder)
-      .LineThickness(3.0)
-      .FillOpacity(0.0)
-      .Tint(ThemeColors.ElectricBlue())
-      .BorderColor(ThemeColors.ElectricBlue())
-      .BorderOpacity(0.1)
-      .Visible(true)
-      .BuildShape();
-    normalLine.SetVertexList([this.ui.ScreenXY(this.stats.d_visualPosition), this.ui.ScreenXY(this.stats.d_visualPosition + idealNormal)]);
-    this.ui.DrawMark(this.stats.d_visualPosition + idealNormal);
+    // let normalLine = inkWidgetBuilder.inkShape(n"normalLine")
+    //   .Reparent(this.ui.GetMarksWidget())
+    //   .Size(1920.0 * 2.0, 1080.0 * 2.0)
+    //   .UseNineSlice(true)
+    //   .ShapeVariant(inkEShapeVariant.FillAndBorder)
+    //   .LineThickness(3.0)
+    //   .FillOpacity(0.0)
+    //   .Tint(ThemeColors.ElectricBlue())
+    //   .BorderColor(ThemeColors.ElectricBlue())
+    //   .BorderOpacity(0.1)
+    //   .Visible(true)
+    //   .BuildShape();
+    // normalLine.SetVertexList([this.ui.ScreenXY(this.stats.d_visualPosition), this.ui.ScreenXY(this.stats.d_visualPosition + idealNormal)]);
+    // this.ui.DrawMark(this.stats.d_visualPosition + idealNormal);
 
-    let normalLine = inkWidgetBuilder.inkShape(n"normalLine")
-      .Reparent(this.ui.GetMarksWidget())
-      .Size(1920.0 * 2.0, 1080.0 * 2.0)
-      .UseNineSlice(true)
-      .ShapeVariant(inkEShapeVariant.FillAndBorder)
-      .LineThickness(3.0)
-      .FillOpacity(0.0)
-      .Tint(ThemeColors.ElectricBlue())
-      .BorderColor(ThemeColors.ElectricBlue())
-      .BorderOpacity(0.1)
-      .Visible(true)
-      .BuildShape();
-    normalLine.SetVertexList([this.ui.ScreenXY(this.stats.d_visualPosition), this.ui.ScreenXY(this.stats.d_visualPosition + this.stats.d_up)]);
-    this.ui.DrawMark(this.stats.d_visualPosition + this.stats.d_up);
+    // let normalLine = inkWidgetBuilder.inkShape(n"normalLine")
+    //   .Reparent(this.ui.GetMarksWidget())
+    //   .Size(1920.0 * 2.0, 1080.0 * 2.0)
+    //   .UseNineSlice(true)
+    //   .ShapeVariant(inkEShapeVariant.FillAndBorder)
+    //   .LineThickness(3.0)
+    //   .FillOpacity(0.0)
+    //   .Tint(ThemeColors.ElectricBlue())
+    //   .BorderColor(ThemeColors.ElectricBlue())
+    //   .BorderOpacity(0.1)
+    //   .Visible(true)
+    //   .BuildShape();
+    // normalLine.SetVertexList([this.ui.ScreenXY(this.stats.d_visualPosition), this.ui.ScreenXY(this.stats.d_visualPosition + this.stats.d_up)]);
+    // this.ui.DrawMark(this.stats.d_visualPosition + this.stats.d_up);
 
     hoverCorrection = this.hover.GetCorrectionClamped(heightDifference, timeDelta, 1.0);
     pitchCorrection = this.pitchPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(idealNormal, this.stats.d_forward)) + this.lift.GetValue() * this.pitchWithLift, timeDelta, 10.0) + this.pitch.GetValue() / 10.0;
@@ -844,7 +862,9 @@ public class FlightController  {
   // a generalized method for torque might be nice too
   public func CreateImpulse(position: Vector4, direction: Vector4) -> Void {
     let impulseEvent: ref<PhysicalImpulseEvent> = new PhysicalImpulseEvent();
-    impulseEvent.radius = 0.5;
+    impulseEvent.radius = 1.0;
+    // impulseEvent.bodyIndex = 15u;
+    // impulseEvent.shapeIndex = 2u;
     impulseEvent.worldPosition = Vector4.Vector4To3(position);
     impulseEvent.worldImpulse = Vector4.Vector4To3(direction);
     this.GetVehicle().QueueEvent(impulseEvent);
@@ -890,7 +910,7 @@ public class FlightController  {
     flightControlStatus.Reparent(parent);
 
     // Set font
-    flightControlStatus.SetFontFamily("base\\gameplay\\gui\\fonts\\orbitron\\orbitron.inkfontfamily");
+    flightControlStatus.SetFontFamily("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily");
     flightControlStatus.SetFontStyle(n"Medium");
     flightControlStatus.SetFontSize(24);
     flightControlStatus.SetLetterCase(textLetterCase.UpperCase);
