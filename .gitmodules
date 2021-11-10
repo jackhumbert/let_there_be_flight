@@ -1,12 +1,12 @@
-[submodule "red4ext.sdk"]
-	path = red4ext/deps/red4ext.sdk
-	url = git@github.com:jackhumbert/RED4ext.SDK.git
-[submodule "red4ext/deps/spdlog"]
-	path = red4ext/deps/spdlog
+[submodule "deps/spdlog"]
+	path = deps/spdlog
 	url = https://github.com/gabime/spdlog.git
-[submodule "red4ext/deps/detours"]
-	path = red4ext/deps/detours
+[submodule "deps/detours"]
+	path = deps/detours
 	url = https://github.com/microsoft/Detours.git
-[submodule "redscript/codeware"]
-	path = redscript/codeware
+[submodule "src/redscript/codeware"]
+	path = src/redscript/codeware
 	url = git@github.com:jackhumbert/cp2077-codeware.git
+[submodule "deps/red4ext.sdk"]
+	path = deps/red4ext.sdk
+	url = git@github.com:jackhumbert/RED4ext.SDK.git

@@ -4,7 +4,7 @@
     "version": "2.0.0",
     "tasks": [
       {
-        "label": "Lint Redscript",
+        "label": "Lint Installed Redscript",
         "type": "shell",
         "command": "cargo run --bin redscript-cli --release -- lint -s \"c:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\r6\\scripts\" -b \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\r6\\cache\\final.redscripts.bk\"",
         "options": {
@@ -22,7 +22,31 @@
           "focus": false,
           "panel": "shared",
           "showReuseMessage": false,
-          "clear": true
+          "clear": false
+        },
+        "group": "build",
+        "problemMatcher": []
+      },
+      {
+        "label": "Lint Local Redscript",
+        "type": "shell",
+        "command": "cargo run --bin redscript-cli --release -- lint -s \"C:\\Users\\Jack\\Documents\\cyberpunk\\flight_control\\src\\redscript\" -b \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\r6\\cache\\final.redscripts.bk\"",
+        "options": {
+          "cwd": "C:\\Users\\Jack\\Documents\\cyberpunk\\redscript",
+          "shell": {
+            "executable": "cmd.exe",
+            "args": [
+              "/d", "/c"
+            ]
+          }
+        },
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared",
+          "showReuseMessage": false,
+          "clear": false
         },
         "group": "build",
         "problemMatcher": []
@@ -30,7 +54,7 @@
       {
         "label": "Build Mod",
         "type": "shell",
-        "command": "build.bat",
+        "command": "tools\\build.bat",
         "options": {
           "shell": {
             "executable": "cmd.exe",
@@ -45,7 +69,30 @@
           "focus": false,
           "panel": "shared",
           "showReuseMessage": false,
-          "clear": true
+          "clear": false
+        },
+        "group": "build",
+        "problemMatcher": []
+      },
+      {
+        "label": "Build Tweaks",
+        "type": "shell",
+        "command": "tools\\build_tweaks.bat",
+        "options": {
+          "shell": {
+            "executable": "cmd.exe",
+            "args": [
+              "/d", "/c"
+            ]
+          }
+        },
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared",
+          "showReuseMessage": false,
+          "clear": false
         },
         "group": "build",
         "problemMatcher": []
@@ -53,7 +100,7 @@
       {
         "label": "Build & Install Mod",
         "type": "shell",
-        "command": "build_install_no_confirm.bat",
+        "command": "tools\\build_install_no_confirm.bat",
         "options": {
           "shell": {
             "executable": "cmd.exe",
@@ -68,7 +115,7 @@
           "focus": false,
           "panel": "shared",
           "showReuseMessage": false,
-          "clear": true
+          "clear": false
         },
         "group": {
           "kind": "build",
