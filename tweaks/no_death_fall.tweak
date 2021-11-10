@@ -1,0 +1,49 @@
+flats:
+  playerStateMachineBaseLocomotion.locomotionAir.deathLanding:
+    type: Float
+    value: 100
+  playerStateMachineBaseLocomotionTakedown.grappleAir.deathLanding:
+    type: Float
+    value: 100 
+  playerStateMachineBaseLocomotionTier3.locomotionAirTier3.deathLanding:
+    type: Float
+    value: 100 
+  playerStateMachineBaseLocomotionTier4.locomotionAirTier4.deathLanding:
+    type: Float
+    value: 100 
+  playerStateMachineBaseLocomotionTier5.locomotionAirTier5.deathLanding:
+    type: Float
+    value: 100 
+  playerStateMachineLocomotion.airHover.deathLanding:
+    type: Float
+    value: 100
+  playerStateMachineLocomotion.airThrusters.deathLanding:
+    type: Float
+    value: 100
+  playerStateMachineLocomotion.chargeJump.deathLanding:
+    type: Float
+    value: 100
+  playerStateMachineLocomotion.dodgeAir.deathLanding:
+    type: Float
+    value: 100 
+  playerStateMachineLocomotion.doubleJump.deathLanding:
+    type: Float
+    value: 100
+  playerStateMachineLocomotion.fall.deathLanding:
+    type: Float
+    value: 100
+  playerStateMachineLocomotion.hoverJump.deathLanding:
+    type: Float
+    value: 100
+  playerStateMachineLocomotion.jump.deathLanding:
+    type: Float
+    value: 100 
+  playerStateMachineLocomotion.ladderCrouch.deathLanding:
+    type: Float
+    value: 100
+  playerStateMachineLocomotion.ladderJump.deathLanding:
+    type: Float
+    value: 100
+  playerStateMachineLocomotion.slideFall.deathLanding:
+    type: Float
+    value: 20 

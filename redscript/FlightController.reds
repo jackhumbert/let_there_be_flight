@@ -104,9 +104,9 @@ public class FlightController  {
   public let maxHoverHeight: Float;
   public let hoverFactor: Float;
   public let hover: ref<PID>;
-  public let pitchPID: ref<PID>;
+  public let pitchPID: ref<DualPID>;
   public let pitchCorrectionFactor: Float;
-  public let rollPID: ref<PID>;
+  public let rollPID: ref<DualPID>;
   public let rollCorrectionFactor: Float;
   public let yawPID: ref<PID>;
   public let yawCorrectionFactor: Float;
@@ -152,8 +152,8 @@ public class FlightController  {
     this.pitch = PID.Create(0.5, 0.0, 0.0, 0.0);
     this.yaw = PID.Create(0.01, 0.0, 0.0, 0.0);
     this.hover = PID.Create(0.1, 0.01, 0.05);
-    this.pitchPID = PID.Create(0.5, 0.2, 0.05);
-    this.rollPID = PID.Create(0.5, 0.2, 0.05);
+    this.pitchPID = DualPID.Create(0.5, 0.2, 0.05,  5.0, 1.0, 0.5);
+    this.rollPID =  DualPID.Create(0.5, 0.2, 0.05,  5.0, 1.0, 0.5);
     this.yawPID = PID.Create(0.5, 0.2, 2.0);
     this.distance = 0.0;
     this.distanceEase = 0.1;
@@ -230,6 +230,7 @@ public class FlightController  {
     // this.GetVehicle().TurnEngineOn(true);
     this.SetupActions();
     this.ui.Setup(this.stats);
+    this.audio.Init("vehicle2_TPP");
 
     // very intrusive - need a prompt/confirmation that they want this popup, eg Detailed Info / About
     // let shardUIevent = new NotifyShardRead();
@@ -247,6 +248,7 @@ public class FlightController  {
     this.enabled = false;
     this.SetupActions();   
     this.stats = null;
+    this.audio.Deinit();
 
     FlightLog.Info("Flight Control Disabled");
   }
@@ -472,6 +474,7 @@ public class FlightController  {
 
     if GameInstance.GetTimeSystem(this.gameInstance).IsPausedState() {
       this.audio.volume = 0.0;
+      this.audio.Update();
       return;
     }
     // might need to handle just the scanning system's dilation, and the pause menu
@@ -482,17 +485,17 @@ public class FlightController  {
         this.audio.volume *= 0.1;
       }
     }
-    this.audio.playerPosition = this.stats.d_visualPosition;
-    this.audio.playerUp = this.stats.d_up;
-    this.audio.playerForward = this.stats.d_forward;
+    this.audio.playerPosition = Vector4.Vector4To3(this.stats.d_visualPosition);
+    this.audio.playerUp = Vector4.Vector4To3(this.stats.d_up);
+    this.audio.playerForward = Vector4.Vector4To3(this.stats.d_forward);
 
     let cameraTransform: Transform;
     let cameraSys: ref<CameraSystem> = GameInstance.GetCameraSystem(this.gameInstance);
     cameraSys.GetActiveCameraWorldTransform(cameraTransform);
 
-    this.audio.cameraPosition = cameraTransform.position;
-    this.audio.cameraUp = Transform.GetUp(cameraTransform);
-    this.audio.cameraForward = Transform.GetForward(cameraTransform);
+    this.audio.cameraPosition = Vector4.Vector4To3(cameraTransform.position);
+    this.audio.cameraUp = Vector4.Vector4To3(Transform.GetUp(cameraTransform));
+    this.audio.cameraForward = Vector4.Vector4To3(Transform.GetForward(cameraTransform));
 
     this.audio.speed = this.stats.d_speed;
     this.audio.yawDiff = Vector4.GetAngleDegAroundAxis(this.stats.d_forward, this.stats.d_direction, this.stats.d_up);
@@ -522,6 +525,9 @@ public class FlightController  {
 
   public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
     if !this.active {
+      this.stats.UpdateDynamic(timeDelta);
+      this.UpdateAudioParams();
+      this.ui.ClearMarks();
       return;
     }
     // might need to handle just the scanning system's dilation, and the pause menu
@@ -805,6 +811,9 @@ public class FlightController  {
     // normalLine.SetVertexList([this.ui.ScreenXY(this.stats.d_visualPosition), this.ui.ScreenXY(this.stats.d_visualPosition + this.stats.d_up)]);
     // this.ui.DrawMark(this.stats.d_visualPosition + this.stats.d_up);
 
+    this.pitchPID.SetRatio(this.stats.d_speedRatio);
+    this.rollPID.SetRatio(this.stats.d_speedRatio);
+
     hoverCorrection = this.hover.GetCorrectionClamped(heightDifference, timeDelta, 1.0);
     pitchCorrection = this.pitchPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(idealNormal, this.stats.d_forward)) + this.lift.GetValue() * this.pitchWithLift, timeDelta, 10.0) + this.pitch.GetValue() / 10.0;
     rollCorrection = this.rollPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(idealNormal, this.stats.d_right)), timeDelta, 10.0) + this.yaw.GetValue() * this.rollWithYaw + this.roll.GetValue() / 10.0;
@@ -838,11 +847,13 @@ public class FlightController  {
     // surge
     this.CreateImpulse(this.stats.d_position, this.stats.d_forward * surgeForce * timeDelta);
     // pitch correction
-    this.CreateImpulse(this.stats.d_position - this.stats.d_up,       this.stats.d_forward *  this.stats.s_momentOfInertia.X * -pitchCorrection * this.pitchCorrectionFactor * timeDelta);
-    this.CreateImpulse(this.stats.d_position + this.stats.d_up,       this.stats.d_forward *  this.stats.s_momentOfInertia.X * pitchCorrection *  this.pitchCorrectionFactor * timeDelta);
+    let totalPitchCorrection = this.stats.s_momentOfInertia.X * pitchCorrection * (this.pitchCorrectionFactor + 1.0 * this.pitchCorrectionFactor * this.stats.d_speedRatio) * timeDelta;
+    this.CreateImpulse(this.stats.d_position - this.stats.d_up,       this.stats.d_forward * -totalPitchCorrection);
+    this.CreateImpulse(this.stats.d_position + this.stats.d_up,       this.stats.d_forward *  totalPitchCorrection);
     // roll correction
-    this.CreateImpulse(this.stats.d_position - this.stats.d_right,    this.stats.d_up *       this.stats.s_momentOfInertia.Y * rollCorrection *   this.rollCorrectionFactor * timeDelta);
-    this.CreateImpulse(this.stats.d_position + this.stats.d_right,    this.stats.d_up *       this.stats.s_momentOfInertia.Y * -rollCorrection *  this.rollCorrectionFactor * timeDelta);
+    let totalRollCorrection = this.stats.s_momentOfInertia.Y * rollCorrection * (this.rollCorrectionFactor + 1.0 * this.rollCorrectionFactor * this.stats.d_speedRatio) * timeDelta;
+    this.CreateImpulse(this.stats.d_position - this.stats.d_right,    this.stats.d_up *       totalRollCorrection);
+    this.CreateImpulse(this.stats.d_position + this.stats.d_right,    this.stats.d_up *      -totalRollCorrection);
     // yaw correction
     this.CreateImpulse(this.stats.d_position + this.stats.d_forward,  this.stats.d_right *    this.stats.s_momentOfInertia.Z * yawCorrection *    this.yawCorrectionFactor * timeDelta);
     this.CreateImpulse(this.stats.d_position - this.stats.d_forward,  this.stats.d_right *    this.stats.s_momentOfInertia.Z * -yawCorrection *   this.yawCorrectionFactor * timeDelta);

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.02.00">
+	<object class="AudioFile" id="{61d246d6-a504-4720-8077-11a2d815aa0c}">
+		<property name="assetPath">
+			<value>2077-soft-4.wav</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>44.0999985</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>8</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{0d578fee-7aad-4a8f-9570-e624d548a13b}</destination>
+		</relationship>
+	</object>
+</objects>

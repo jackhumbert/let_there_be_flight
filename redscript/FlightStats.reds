@@ -1,7 +1,8 @@
 public class FlightStats {
   public let vehicle: wref<VehicleObject>;
   public let s_record: wref<Vehicle_Record>;
-  public let s_fcRecord: wref<FlightStatsData_Record>;
+  // public let s_fcRecord: wref<FlightStatsData_Record>;
+  public let s_fc_record: wref<FlightControl_Record>;
   public let s_driveModelData: wref<VehicleDriveModelData_Record>;
   public let s_engineData: wref<VehicleEngineData_Record>;
   public let s_wheelDimensions: wref<VehicleWheelDimensionsSetup_Record>;
@@ -48,7 +49,8 @@ public class FlightStats {
 
   public final func UpdateStatic() -> Void {
     this.s_record = this.vehicle.GetRecord();
-    this.s_fcRecord = FlightStatsData.GetInstance(this.vehicle.GetGame()).Get(this.vehicle.GetRecordID());
+    // this.s_fcRecord = FlightStatsData.GetInstance(this.vehicle.GetGame()).Get(this.vehicle.GetRecordID());
+    this.s_fc_record = TweakDBInterface.GetFlightRecord(this.vehicle.GetRecordID());
     this.s_driveModelData = this.s_record.VehDriveModelData();  
     // RollingResistanceFactor() -> Float;
     // HandbrakeBrakingTorque() -> Float;
@@ -62,7 +64,8 @@ public class FlightStats {
     // .FrontPreset() & .BackPreset();
       // .MaxBrakingTorque() -> Float;
       // .Mass() -> Float;
-    this.s_mass = this.s_fcRecord.mass;
+    // this.s_mass = this.s_fcRecord.mass;
+    this.s_mass = this.s_fc_record.mass;
     if this.s_mass == 0.0 {
       this.s_mass = this.vehicle.GetTotalMass(); // might be dynamic?
     }

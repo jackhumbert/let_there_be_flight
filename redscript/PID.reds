@@ -85,3 +85,46 @@ public class PID {
     this.lastErrorFloat = 0.0;
   }
 }
+
+public class DualPID extends PID {
+  private let P_aux: Float;
+  private let I_aux: Float;
+  private let D_aux: Float;
+  private let ratio: Float;
+  public static func Create(P: Float, I: Float, D: Float, P_aux: Float, I_aux: Float, D_aux: Float) -> ref<DualPID> {
+    let instance: ref<DualPID> = new DualPID();
+    instance.P = P;
+    instance.I = I;
+    instance.D = D;
+    instance.P_aux = P_aux;
+    instance.I_aux = I_aux;
+    instance.D_aux = D_aux;
+    instance.Reset();
+    return instance;
+  }
+  public static func Create(P: Float, I: Float, D: Float, P_aux: Float, I_aux: Float, D_aux: Float, initialValue: Float) -> ref<DualPID> {
+    let instance: ref<DualPID> = DualPID.Create(P, I, D, P_aux, I_aux, D_aux);
+    instance.valueFloat = initialValue;
+    return instance;
+  }
+  public func SetRatio(ratio: Float) {
+    this.ratio = ratio;
+  }
+  public func GetCorrection(error: Float, timeDelta: Float) -> Float { 
+    let derivative: Float = (error - this.lastErrorFloat) / timeDelta;
+    // if error < 0.01 || error * this.lastErrorFloat < 0.0 {
+    //   this.integralFloat = 0.0;
+    // } else {
+    this.integralFloat = ClampF(error * timeDelta + this.integralFloat, -100.0, 100.0) * 0.95;
+    // }
+    this.lastErrorFloat = error;
+    let pri = this.P * error + this.I * this.integralFloat + this.D * derivative;
+    let aux = this.P_aux * error + this.I_aux * this.integralFloat + this.D_aux * derivative;
+    return pri * (1.0 - this.ratio) + aux * (this.ratio);
+  }
+  public func UpdateAux(P_aux: Float, I_aux: Float, D_aux: Float) -> Void {
+    this.P_aux = P_aux;
+    this.I_aux = I_aux;
+    this.D_aux = D_aux;
+  }
+}

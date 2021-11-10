@@ -1,5 +1,8 @@
 import Codeware.UI.*
 
+// handle this somewhere
+// this.m_tppBBConnectionId = this.m_activeVehicleUIBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this, n"OnCameraModeChanged");
+
 public class FlightControllerUI extends inkCanvas {
   public let controller: ref<inkGameController>;
   public let stats: ref<FlightStats>;
