@@ -819,6 +819,7 @@ public class FlightController  {
     rollCorrection = this.rollPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(idealNormal, this.stats.d_right)), timeDelta, 10.0) + this.yaw.GetValue() * this.rollWithYaw + this.roll.GetValue() / 10.0;
     // let angle: Float = Vector4.GetAngleDegAroundAxis(Vector4.Interpolate(this.stats.d_forward, direction, this.stats.d_speedRatio * this.velocityPointing), this.stats.d_forward, new Vector4(0.0, 0.0, 1.0, 0.0));
     let angle: Float = Vector4.GetAngleDegAroundAxis(direction, this.stats.d_forward, new Vector4(0.0, 0.0, 1.0, 0.0));
+    // let angle: Float = Vector4.Dot2D(direction, this.stats.d_forward);
 
     // decay the integral if we have yaw input - this helps get rid of the windup effect
     this.yawPID.integralFloat *= (1.0 - AbsF(this.yaw.GetValue()));
@@ -843,7 +844,7 @@ public class FlightController  {
     this.CreateImpulse(this.stats.d_position, this.stats.d_forward * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta);
     this.CreateImpulse(this.stats.d_position, -this.stats.d_direction * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta);
     // lift
-    this.CreateImpulse(this.stats.d_position, new Vector4(0.00, 0.00, liftForce, 0.00) * timeDelta);
+    this.CreateImpulse(this.stats.d_position, new Vector4(0.00, 0.00, liftForce + this.stats.d_speedRatio * liftForce, 0.00) * timeDelta);
     // surge
     this.CreateImpulse(this.stats.d_position, this.stats.d_forward * surgeForce * timeDelta);
     // pitch correction

@@ -49,6 +49,7 @@ namespace FlightAudio {
     }
 
     void Load() {
+
         ERRCHECK(FMOD::Studio::System::create(&fmod_system));
 
         // The example Studio project is authored for 5.1 sound, so set up the system output mode to match
@@ -60,8 +61,8 @@ namespace FlightAudio {
         // a different output type such as FMOD_OUTPUTTYPE_AUTODETECT
         ERRCHECK(coreSystem->setOutput(FMOD_OUTPUTTYPE_AUTODETECT));
 
-        std::string bank_path = (Utils::GetRootDir() / "bin" / "x64" / "plugins" / "flight_control" / "base_sounds.bank").string();
-        std::string strings_path = (Utils::GetRootDir() / "bin" / "x64" / "plugins" / "flight_control" / "base_sounds.strings.bank").string();
+        std::string bank_path = (Utils::GetRootDir() / "red4ext" / "plugins" / "flight_control" / "base_sounds.bank").string();
+        std::string strings_path = (Utils::GetRootDir() / "red4ext" / "plugins" / "flight_control" / "base_sounds.strings.bank").string();
         const char* bank = bank_path.c_str();
         const char* strings = strings_path.c_str();
         ERRCHECK(fmod_system->initialize(1024, FMOD_STUDIO_INIT_LIVEUPDATE, FMOD_INIT_NORMAL, extraDriverData));

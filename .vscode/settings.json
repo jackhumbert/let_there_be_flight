@@ -1,0 +1,5 @@
+{
+    "redscript.buildPath": "build",
+    "redscript.sourcePath": "src/redscript",
+    "redscript.modFolderName": "flight_control"
+}
