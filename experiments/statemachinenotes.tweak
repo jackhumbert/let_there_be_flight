@@ -1,0 +1,62 @@
+
+# playerStateMachineVehicle.drive.affinity,CName,"None" 
+
+      # affinity:
+      #   type: CName
+      #   value: "None" 
+      # alias:
+      #   type: array:CName
+      #   value: [ "allSlotStates" ]
+      # forceInputContext:
+      #   type: CName
+      #   value: "None" 
+      # hasEnterCondition:
+      #   type: Bool
+      #   value: true 
+      # hasExitCondition:
+      #   type: Boole
+      #   value: false 
+      # hasOnEnter:
+      #   type: Bool
+      #   value: true 
+      # hasOnExit:
+      #   type: Bool
+      #   value: true 
+      # hasOnUpdate:
+      #   type: Bool
+      #   value: true 
+      # onEnterCameraParamsName:
+      #   type: CName
+      #   value: "Vehicle" 
+      # onEnterCameraParamsNameSecondary:
+      #   type: CName
+      #   value: "Bike" 
+      # stateBodyClassName:
+      #   type: String
+      #   value: "VehicleDrive" 
+      # transitionCondition:
+      #   type: array:String
+      #   value: [ "" "=" "=" "" "" "" ]
+      # transitionConditionOverridesEnterCondition:
+      #   type: array:Bool
+      #   value: [ ]
+      # transitionSkipInternalCondition:
+      #   type: array:Bool
+      #   value: [ ]
+      # transitionTo:
+      #   type: array:String
+      #   value: [ "scene" "switchSeats" "driverCombat" "deathExiting" "collisionExiting" "exiting" ]
+
+# playerStateMachineInputContext.vehicleDriverContext.affinity,CName,"None" 
+# playerStateMachineInputContext.vehicleDriverContext.alias,array:CName,[ "allVehicleContexts" ]
+# playerStateMachineInputContext.vehicleDriverContext.forceInputContext,CName,"VehicleDrive" 
+# playerStateMachineInputContext.vehicleDriverContext.hasEnterCondition,Bool,true 
+# playerStateMachineInputContext.vehicleDriverContext.hasExitCondition,Bool,false 
+# playerStateMachineInputContext.vehicleDriverContext.hasOnEnter,Bool,true 
+# playerStateMachineInputContext.vehicleDriverContext.hasOnExit,Bool,true 
+# playerStateMachineInputContext.vehicleDriverContext.hasOnUpdate,Bool,true 
+# playerStateMachineInputContext.vehicleDriverContext.stateBodyClassName,String,"" 
+# playerStateMachineInputContext.vehicleDriverContext.transitionCondition,array:String,[ "" "" "ExitCondition" ]
+# playerStateMachineInputContext.vehicleDriverContext.transitionConditionOverridesEnterCondition,array:Bool,[ ]
+# playerStateMachineInputContext.vehicleDriverContext.transitionSkipInternalCondition,array:Bool,[ ]
+# playerStateMachineInputContext.vehicleDriverContext.transitionTo,array:String,[ "allForcedContexts" "allUIContexts" "gameplayContext" ]

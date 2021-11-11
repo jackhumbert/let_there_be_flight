@@ -98,6 +98,29 @@
         "problemMatcher": []
       },
       {
+        "label": "Launch Game",
+        "type": "shell",
+        "command": "\"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\bin\\x64\\Cyberpunk2077.exe\"",
+        "options": {
+          "shell": {
+            "executable": "cmd.exe",
+            "args": [
+              "/d", "/c"
+            ]
+          }
+        },
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared",
+          "showReuseMessage": false,
+          "clear": false
+        },
+        "group": "build",
+        "problemMatcher": []
+      },
+      {
         "label": "Build & Install Mod",
         "type": "shell",
         "command": "tools\\build_install_no_confirm.bat",

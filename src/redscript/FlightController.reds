@@ -285,7 +285,7 @@ public class FlightController  {
     this.SetupTires();
 
     this.camera = GetPlayer(this.gameInstance).FindComponentByName(n"vehicleTPPCamera") as vehicleTPPCameraComponent;
-    FlightLog.Info("TPP camera! " + ToString(this.camera.fov));
+    //FlightLog.Info("TPP camera! " + ToString(this.camera.fov));
 
     //this.camera = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"Collider") as vehicleTPPCameraComponent;
 
@@ -298,11 +298,24 @@ public class FlightController  {
 
     this.audio.Start();
 
+    // let flightDevice = new FlightDevice();
+
+    // let originalevent = new ToggleTakeOverControl();
+    // originalevent.actionName = n"ToggleTakeOverControl";
+    // originalevent.prop = DeviceActionPropertyFunctions.SetUpProperty_Bool(originalevent.actionName, true, n"LocKey#359", n"LocKey#17810");
+    // // originalevent.m_isQuickHack = false;
+
+    // let takeOverRequest = new RequestTakeControl();
+    // let takeOverControlSystem: ref<TakeOverControlSystem> = GameInstance.GetScriptableSystemsContainer(this.gameInstance).Get(n"TakeOverControlSystem") as TakeOverControlSystem;
+    // takeOverRequest.requestSource = flightDevice.GetEntityID();
+    // takeOverRequest.originalEvent = originalevent;
+    // takeOverControlSystem.QueueRequest(takeOverRequest);
+
+
     // this disables engines noises from starting, but also prevents wheels from moving
     // something that only stops engine noises would be preferred, or this could be toggled
     // when close to the ground, to make transitions easier
-    this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetState(vehicleEState.Disabled);
-    FlightLog.Info(ToString(TweakDBInterface.GetFlightRecord(this.GetVehicle().GetRecordID()).mass));
+    // this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetState(vehicleEState.Disabled);
 
     this.stats.Reset();
     this.ui.Show();
@@ -328,13 +341,13 @@ public class FlightController  {
 
     // (this.GetVehicle().GetPS() as VehicleComponentPS).SetThrusterState(false);
 
-    this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetState(vehicleEState.On);
+    // this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetState(vehicleEState.On);
 
     this.audio.Stop();
 
     // StatusEffectHelper.RemoveStatusEffect(GetPlayer(this.gameInstance), t"GameplayRestriction.NoCameraControl");
     if !silent {
-      this.GetVehicle().TurnOn(true);
+      //this.GetVehicle().TurnOn(true);
       this.GetVehicle().TurnEngineOn(true);
       this.ShowSimpleMessage("Flight Control Disengaged");
       //GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_hacking_access_denied");
@@ -770,12 +783,38 @@ public class FlightController  {
       .Reparent(this.ui.GetMarksWidget())
       .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
       .FontSize(20)
-      .Anchor(0.5, 0.5)
+      .Anchor(0.0, 0.5)
       .Tint(ThemeColors.ElectricBlue())
       .Text(this.hovering ? "Hovering" : "Flying")
-      .HAlign(inkEHorizontalAlign.Center)
+      .HAlign(inkEHorizontalAlign.Left)
       .Margin(0.0, 0.0, 0.0, 0.0)
-      .Translation(800, 320)
+      .Translation(1100, 320)
+      // .Overflow(textOverflowPolicy.AdjustToSize)
+      .BuildText();
+
+    let text2 = inkWidgetBuilder.inkText(n"text2")
+      .Reparent(this.ui.GetMarksWidget())
+      .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
+      .FontSize(20)
+      .Anchor(0.0, 0.5)
+      .Tint(ThemeColors.ElectricBlue())
+      .Text("Current Input Context: " + ToString(stateContext.GetStateMachineCurrentState(n"InputContext")))
+      .HAlign(inkEHorizontalAlign.Left)
+      .Margin(0.0, 0.0, 0.0, 0.0)
+      .Translation(1100, 350)
+      // .Overflow(textOverflowPolicy.AdjustToSize)
+      .BuildText();
+
+      let text3 = inkWidgetBuilder.inkText(n"text3")
+      .Reparent(this.ui.GetMarksWidget())
+      .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
+      .FontSize(20)
+      .Anchor(0.0, 0.5)
+      .Tint(ThemeColors.ElectricBlue())
+      .Text("Current Vehicle State: " + ToString(stateContext.GetStateMachineCurrentState(n"Vehicle")))
+      .HAlign(inkEHorizontalAlign.Left)
+      .Margin(0.0, 0.0, 0.0, 0.0)
+      .Translation(1100, 380)
       // .Overflow(textOverflowPolicy.AdjustToSize)
       .BuildText();
 
@@ -825,7 +864,8 @@ public class FlightController  {
     this.yawPID.integralFloat *= (1.0 - AbsF(this.yaw.GetValue()));
     this.yawPID.integralFloat *= MinF(1.0, this.stats.d_speedRatio * 4.0);
     let angleTooHigh = MinF(1.0, 8.0 - AbsF(angle) / 180.0 * 8.0);
-    yawCorrection = this.yawPID.GetCorrection(angle * angleTooHigh * this.stats.d_speedRatio + this.yaw.GetValue() * this.yawFactor * (1.0 + this.stats.d_speedRatio * 3.0), timeDelta);
+    // yawCorrection = this.yawPID.GetCorrection(angle * angleTooHigh * this.stats.d_speedRatio + this.yaw.GetValue() * this.yawFactor * (1.0 + this.stats.d_speedRatio * 3.0), timeDelta);
+    yawCorrection = this.yawPID.GetCorrection(angle * angleTooHigh, timeDelta);
 
     let velocityDamp: Vector4 = MaxF(this.brake.GetValue() * this.brakeFactor, this.airResistance) * this.stats.d_velocity * this.stats.s_mass;
     // so we don't get impulsed by the speed limit (100 m/s, i think)
@@ -856,8 +896,9 @@ public class FlightController  {
     this.CreateImpulse(this.stats.d_position - this.stats.d_right,    this.stats.d_up *       totalRollCorrection);
     this.CreateImpulse(this.stats.d_position + this.stats.d_right,    this.stats.d_up *      -totalRollCorrection);
     // yaw correction
-    this.CreateImpulse(this.stats.d_position + this.stats.d_forward,  this.stats.d_right *    this.stats.s_momentOfInertia.Z * yawCorrection *    this.yawCorrectionFactor * timeDelta);
-    this.CreateImpulse(this.stats.d_position - this.stats.d_forward,  this.stats.d_right *    this.stats.s_momentOfInertia.Z * -yawCorrection *   this.yawCorrectionFactor * timeDelta);
+    let totalYawCorrecion = this.stats.s_momentOfInertia.Z * (yawCorrection * this.yawCorrectionFactor + this.yaw.GetValue() * this.yawFactor) * timeDelta;
+    this.CreateImpulse(this.stats.d_position + this.stats.d_forward,  this.stats.d_right *    totalYawCorrecion);
+    this.CreateImpulse(this.stats.d_position - this.stats.d_forward,  this.stats.d_right *   -totalYawCorrecion);
     // brake
     this.CreateImpulse(this.stats.d_position, -velocityDamp * timeDelta);
 
@@ -987,33 +1028,6 @@ protected cb func OnGameAttached() -> Bool {
   if !this.IsReplacer() {
     FlightController.CreateInstance(this);
   }
-}
-
-@wrapMethod(DriveEvents)
-protected func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-  wrappedMethod(stateContext, scriptInterface);
-  let vehicle: ref<VehicleObject> = scriptInterface.owner as VehicleObject;  
-  if vehicle.IsPlayerMounted() {
-    FlightController.GetInstance().Enable(vehicle);
-  }
-}
-
-@wrapMethod(DriveEvents)
-public final func OnExit(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-  FlightController.GetInstance().Disable();
-  wrappedMethod(stateContext, scriptInterface);
-}
-
-@wrapMethod(DriveEvents)
-public final func OnForcedExit(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-  FlightController.GetInstance().Disable();
-  wrappedMethod(stateContext, scriptInterface);
-}
-
-@wrapMethod(DriveEvents)
-public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-  wrappedMethod(timeDelta, stateContext, scriptInterface);
-  FlightController.GetInstance().OnUpdate(timeDelta, stateContext, scriptInterface);
 }
 
 // @wrapMethod(Ground)

@@ -67,7 +67,6 @@ groups:
         value: Jack's Custom Type66 
   Vehicle.v_sport2_quadra_type66_jack: 
     type: Vehicle
-    inherits: Vehicle.v_sport2_quadra_type66
     members: 
       affiliation: 
         type: TweakDBID
