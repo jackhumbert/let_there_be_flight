@@ -205,7 +205,7 @@ public class FlightController  {
     // This weak reference is used as a global variable 
     // to access the mod instance anywhere
     GetAllBlackboardDefs().flightController = self;
-    FlightLog.Info("Flight Control Loaded");
+    FlightLog.Info("[FlightController] CreateInstance");
   }
   
   public static func GetInstance() -> wref<FlightController> {
@@ -230,7 +230,7 @@ public class FlightController  {
     // this.GetVehicle().TurnEngineOn(true);
     this.SetupActions();
     this.ui.Setup(this.stats);
-    this.audio.Init("vehicle2_TPP");
+    this.audio.Start("wind_TPP");
 
     // very intrusive - need a prompt/confirmation that they want this popup, eg Detailed Info / About
     // let shardUIevent = new NotifyShardRead();
@@ -238,7 +238,7 @@ public class FlightController  {
     // shardUIevent.text = "Your new car is equiped with the state-of-the-art Flight Control!";
     // GameInstance.GetUISystem(this.gameInstance).QueueEvent(shardUIevent);
 
-    FlightLog.Info("Flight Control Enabled for " + this.GetVehicle().GetDisplayName());
+    FlightLog.Info("[FlightController] Enable - " + this.GetVehicle().GetDisplayName());
   }
 
   public func Disable() -> Void {
@@ -248,9 +248,9 @@ public class FlightController  {
     this.enabled = false;
     this.SetupActions();   
     this.stats = null;
-    this.audio.Deinit();
+    this.audio.Stop("wind_TPP");
 
-    FlightLog.Info("Flight Control Disabled");
+    FlightLog.Info("[FlightController] Disable");
   }
 
   public func Toggle() -> Bool {
@@ -296,7 +296,7 @@ public class FlightController  {
     this.GetVehicle().TurnEngineOn(false);
     // this.GetVehicle().TurnOn(true);
 
-    this.audio.Start();
+    this.audio.Start("vehicle2_TPP");
 
     // let flightDevice = new FlightDevice();
 
@@ -315,7 +315,7 @@ public class FlightController  {
     // this disables engines noises from starting, but also prevents wheels from moving
     // something that only stops engine noises would be preferred, or this could be toggled
     // when close to the ground, to make transitions easier
-    // this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetState(vehicleEState.Disabled);
+    this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetState(vehicleEState.Disabled);
 
     this.stats.Reset();
     this.ui.Show();
@@ -332,7 +332,7 @@ public class FlightController  {
     // GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"ignition", true);
     // GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(StringToName(this.GetVehicle().GetRecord().Player_audio_resource()));
     // GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"mus_cp_arcade_quadra_START_menu");
-    FlightLog.Info("Flight Control Activated");
+    FlightLog.Info("[FlightController] Activate");
   }
 
   private func Deactivate(silent: Bool) -> Void {
@@ -343,7 +343,7 @@ public class FlightController  {
 
     // this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetState(vehicleEState.On);
 
-    this.audio.Stop();
+    this.audio.Stop("vehicle2_TPP");
 
     // StatusEffectHelper.RemoveStatusEffect(GetPlayer(this.gameInstance), t"GameplayRestriction.NoCameraControl");
     if !silent {
@@ -354,7 +354,7 @@ public class FlightController  {
     }
     this.ui.Hide();
 
-    FlightLog.Info("Flight Control Deactivated");
+    FlightLog.Info("[FlightController] Deactivate");
   }
 
   private func SetupActions() -> Bool {
@@ -980,7 +980,7 @@ public class FlightController  {
     // Set widget position relative to parent
     // Altough the position is absolute for FHD resoltuion,
     // it will be adapted for the current resoltuion
-    flightControlStatus.SetMargin(130, 1822, 0, 0);
+    flightControlStatus.SetMargin(110, 1722, 0, 0);
 
     // Set widget size
     flightControlStatus.SetSize(220.0, 50.0);

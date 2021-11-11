@@ -31,10 +31,9 @@ namespace FlightAudio {
     void* extraDriverData;
     FMOD::Studio::System* fmod_system;
     FMOD::System* coreSystem;
-    FMOD::Studio::Bank* masterBank;
+    FMOD::Studio::Bank* soundBank;
     FMOD::Studio::Bank* stringsBank;
-    FMOD::Studio::EventInstance* vehicleInstance;
-    FMOD::Studio::EventInstance* windInstance;
+    std::unordered_map<std::string, FMOD::Studio::EventInstance*> eventMap;
 
     struct FlightAudio : RED4ext::IScriptable
     {
@@ -66,60 +65,50 @@ namespace FlightAudio {
         const char* bank = bank_path.c_str();
         const char* strings = strings_path.c_str();
         ERRCHECK(fmod_system->initialize(1024, FMOD_STUDIO_INIT_LIVEUPDATE, FMOD_INIT_NORMAL, extraDriverData));
-        ERRCHECK(fmod_system->loadBankFile(bank, FMOD_STUDIO_LOAD_BANK_NORMAL, &masterBank));
+        ERRCHECK(fmod_system->loadBankFile(bank, FMOD_STUDIO_LOAD_BANK_NORMAL, &soundBank));
         ERRCHECK(fmod_system->loadBankFile(strings, FMOD_STUDIO_LOAD_BANK_NORMAL, &stringsBank));
-
-        FMOD::Studio::EventDescription* windDescription;
-        // Get the Looping Engine Noise
-        ERRCHECK(fmod_system->getEvent("event:/wind_TPP", &windDescription));
-
-        ERRCHECK(windDescription->createInstance(&windInstance));
 
         spdlog::info("FMOD loaded");
     }
 
     void Unload() {
         stringsBank->unload();
-        masterBank->unload();
+        soundBank->unload();
         fmod_system->release();
     }
 
-    void Init(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
-    {
-        RED4ext::CString eventName;
-        RED4ext::GetParameter(aFrame, &eventName);
-        FMOD::Studio::EventDescription* vehicleDescription;
-        std::string path = "event:/";
-        ERRCHECK(fmod_system->getEvent(path.append(eventName.c_str()).c_str(), &vehicleDescription));
-        ERRCHECK(vehicleDescription->createInstance(&vehicleInstance));
-        aFrame->code++; // skip ParamEnd
-        spdlog::info("Starting wind sound");
-        ERRCHECK(windInstance->start());
-        ERRCHECK(fmod_system->update());
-    }
-
-    void Deinit(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
-    {
-        aFrame->code++; // skip ParamEnd
-        spdlog::info("Stopping wind sound");
-        ERRCHECK(windInstance->stop(FMOD_STUDIO_STOP_IMMEDIATE));
-        ERRCHECK(fmod_system->update());
-    }
 
     void Start(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
     {
+        RED4ext::CString eventName;
+        RED4ext::GetParameter(aFrame, &eventName);
         aFrame->code++; // skip ParamEnd
-        spdlog::info("Starting vehicle sound");
-        ERRCHECK(vehicleInstance->start());
+        spdlog::info(fmt::format("Starting sound: {}", eventName.c_str()));
+        FMOD::Studio::EventDescription* eventDescription;
+        //std::string path = "event:/";
+        //ERRCHECK(fmod_system->getEvent(path.append(eventName.c_str()).c_str(), &eventDescription));
+        ERRCHECK(fmod_system->getEvent(fmt::format("event:/{}", eventName.c_str()).c_str(), &eventDescription));
+        FMOD::Studio::EventInstance* eventInstance;
+        ERRCHECK(eventDescription->createInstance(&eventInstance));
+        ERRCHECK(eventInstance->start());
+        eventMap[eventName.c_str()] = eventInstance;
         ERRCHECK(fmod_system->update());
     }
 
     void Stop(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
     {
+        RED4ext::CString eventName;
+        RED4ext::GetParameter(aFrame, &eventName);
         aFrame->code++; // skip ParamEnd
-        spdlog::info("Stopping vehicle sound");
-        ERRCHECK(vehicleInstance->stop(FMOD_STUDIO_STOP_IMMEDIATE));
-        ERRCHECK(fmod_system->update());
+        if (eventMap.find(eventName.c_str()) != eventMap.end()) {
+            spdlog::info(fmt::format("Stopping sound: {}", eventName.c_str()));
+            ERRCHECK(eventMap[eventName.c_str()]->stop(FMOD_STUDIO_STOP_IMMEDIATE));
+            ERRCHECK(fmod_system->update());
+            eventMap[eventName.c_str()]->release();
+            eventMap.erase(eventName.c_str());
+        } else {
+            spdlog::warn(fmt::format("Sound is not playing: {}", eventName.c_str()));
+        }
     }
 
     void Update(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
@@ -157,21 +146,18 @@ namespace FlightAudio {
         attributes.up.x = playerUp.X;
         attributes.up.y = playerUp.Y;
         attributes.up.z = playerUp.Z;
-        ERRCHECK(windInstance->set3DAttributes(&attributes));
-        ERRCHECK(vehicleInstance->set3DAttributes(&attributes));
 
-        ERRCHECK(windInstance->setVolume(flightAudioCls->GetProperty("volume")->GetValue<float>(aContext)));
-        ERRCHECK(windInstance->setParameterByName("Speed", flightAudioCls->GetProperty("speed")->GetValue<float>(aContext)));
-        ERRCHECK(windInstance->setParameterByName("YawDiff", flightAudioCls->GetProperty("yawDiff")->GetValue<float>(aContext)));
-        ERRCHECK(windInstance->setParameterByName("PitchDiff", flightAudioCls->GetProperty("pitchDiff")->GetValue<float>(aContext)));
-
-        ERRCHECK(vehicleInstance->setVolume(flightAudioCls->GetProperty("volume")->GetValue<float>(aContext)));
-        ERRCHECK(vehicleInstance->setParameterByName("Speed", flightAudioCls->GetProperty("speed")->GetValue<float>(aContext)));
-        ERRCHECK(vehicleInstance->setParameterByName("Surge", flightAudioCls->GetProperty("surge")->GetValue<float>(aContext)));
-        ERRCHECK(vehicleInstance->setParameterByName("Lift", flightAudioCls->GetProperty("lift")->GetValue<float>(aContext)));
-        ERRCHECK(vehicleInstance->setParameterByName("Yaw", flightAudioCls->GetProperty("yaw")->GetValue<float>(aContext)));
-        ERRCHECK(vehicleInstance->setParameterByName("Brake", flightAudioCls->GetProperty("brake")->GetValue<float>(aContext)));
-
+        for (const std::pair<std::string, FMOD::Studio::EventInstance*>& eventInstance : eventMap) {
+            ERRCHECK(eventInstance.second->set3DAttributes(&attributes));
+            ERRCHECK(eventInstance.second->setVolume(flightAudioCls->GetProperty("volume")->GetValue<float>(aContext)));
+            eventInstance.second->setParameterByName("YawDiff", flightAudioCls->GetProperty("yawDiff")->GetValue<float>(aContext));
+            eventInstance.second->setParameterByName("PitchDiff", flightAudioCls->GetProperty("pitchDiff")->GetValue<float>(aContext));
+            eventInstance.second->setParameterByName("Speed", flightAudioCls->GetProperty("speed")->GetValue<float>(aContext));
+            eventInstance.second->setParameterByName("Surge", flightAudioCls->GetProperty("surge")->GetValue<float>(aContext));
+            eventInstance.second->setParameterByName("Lift", flightAudioCls->GetProperty("lift")->GetValue<float>(aContext));
+            eventInstance.second->setParameterByName("Yaw", flightAudioCls->GetProperty("yaw")->GetValue<float>(aContext));
+            eventInstance.second->setParameterByName("Brake", flightAudioCls->GetProperty("brake")->GetValue<float>(aContext));
+        }
         ERRCHECK(fmod_system->update());
     }
 
@@ -186,22 +172,17 @@ namespace FlightAudio {
         flightAudioCls.parent = scriptable;
 
         RED4ext::CBaseFunction::Flags n_flags = { .isNative = true };
-
-        auto initFunc = RED4ext::CClassFunction::Create(&flightAudioCls, "Init", "Init", &Init);
-        initFunc->AddParam("String", "eventName");
-        auto deinit = RED4ext::CClassFunction::Create(&flightAudioCls, "Deinit", "Deinit", &Deinit);
+;
         auto startSound = RED4ext::CClassFunction::Create(&flightAudioCls, "Start", "Start", &Start);
+        startSound->AddParam("String", "eventName");
         auto stopSound = RED4ext::CClassFunction::Create(&flightAudioCls, "Stop", "Stop", &Stop);
+        stopSound->AddParam("String", "eventName");
         auto setParams = RED4ext::CClassFunction::Create(&flightAudioCls, "Update", "Update", &Update);
 
-        initFunc->flags = n_flags;
-        deinit->flags = n_flags;
         startSound->flags = n_flags;
         stopSound->flags = n_flags;
         setParams->flags = n_flags;
 
-        flightAudioCls.RegisterFunction(initFunc);
-        flightAudioCls.RegisterFunction(deinit);
         flightAudioCls.RegisterFunction(startSound);
         flightAudioCls.RegisterFunction(stopSound);
         flightAudioCls.RegisterFunction(setParams);

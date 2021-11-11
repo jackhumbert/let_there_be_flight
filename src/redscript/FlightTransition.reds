@@ -105,11 +105,11 @@ protected func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<Sta
 //   wrappedMethod(stateContext, scriptInterface);
 // }
 
-// @wrapMethod(DriveEvents)
-// public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-//   wrappedMethod(timeDelta, stateContext, scriptInterface);
-//   FlightController.GetInstance().OnUpdate(timeDelta, stateContext, scriptInterface);
-// }
+@wrapMethod(DriveEvents)
+public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
+  wrappedMethod(timeDelta, stateContext, scriptInterface);
+  FlightController.GetInstance().OnUpdate(timeDelta, stateContext, scriptInterface);
+}
 
 // Custom classes
 

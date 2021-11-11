@@ -12,14 +12,13 @@ protected final const func RemoveVehicleFlightInputHints(stateContext: ref<State
 public class VehicleFlightContextEvents extends InputContextTransitionEvents {
 
   protected func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-    this.ShowVehicleFlightInputHints(stateContext, scriptInterface);    
     FlightLog.Info("[VehicleFlightContextEvents] OnEnter");
-
+    this.ShowVehicleFlightInputHints(stateContext, scriptInterface);
   }
 
   protected func OnExit(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-    this.RemoveVehicleFlightInputHints(stateContext, scriptInterface);
     FlightLog.Info("[VehicleFlightContextEvents] OnExit");
+    this.RemoveVehicleFlightInputHints(stateContext, scriptInterface);
   }
 }
 
@@ -35,6 +34,7 @@ public class VehicleFlightContextDecisions extends InputContextTransitionDecisio
       this.m_callbackID = scriptInterface.localBlackboard.RegisterListenerInt(allBlackboardDef.PlayerStateMachine.Vehicle, this, n"OnVehicleStateChanged");
       this.OnVehicleStateChanged(scriptInterface.localBlackboard.GetInt(allBlackboardDef.PlayerStateMachine.Vehicle));
     };
+    this.EnableOnEnterCondition(true);
   }
 
   protected final func OnDetach(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Void {
@@ -44,7 +44,7 @@ public class VehicleFlightContextDecisions extends InputContextTransitionDecisio
 
   protected cb func OnVehicleStateChanged(value: Int32) -> Bool {
     FlightLog.Info("[VehicleFlightContextDecisions] OnVehicleStateChanged");
-    this.EnableOnEnterCondition(FlightController.GetInstance().IsActive());
+    // this.EnableOnEnterCondition(FlightController.GetInstance().IsActive());
   }
 
   protected const func EnterCondition(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {

@@ -1,4 +1,72 @@
 flats:
+  playerStateMachineInputContext.vehicleFlightContext.affinity:
+    type: CName
+    value: "None" 
+  playerStateMachineInputContext.vehicleFlightContext.alias:
+    type: array:CName
+    value: [ "allVehicleContexts" ]
+  playerStateMachineInputContext.vehicleFlightContext.forceInputContext:
+    type: CName
+    value: "VehicleFlight"
+  playerStateMachineInputContext.vehicleFlightContext.hasEnterCondition:
+    type: Bool
+    value: true 
+  playerStateMachineInputContext.vehicleFlightContext.hasExitCondition:
+    type: Bool
+    value: false 
+  playerStateMachineInputContext.vehicleFlightContext.hasOnEnter:
+    type: Bool
+    value: true 
+  playerStateMachineInputContext.vehicleFlightContext.hasOnExit:
+    type: Bool
+    value: true 
+  playerStateMachineInputContext.vehicleFlightContext.hasOnUpdate:
+    type: Bool
+    value: false 
+  playerStateMachineInputContext.vehicleFlightContext.stateBodyClassName:
+    type: String
+    value: "" 
+  playerStateMachineInputContext.vehicleFlightContext.transitionCondition:
+    type: array:String
+    value: [ "", "", "ExitCondition" ]
+  playerStateMachineInputContext.vehicleFlightContext.transitionConditionOverridesEnterCondition:
+    type: array:Bool
+    value: [ ]
+  playerStateMachineInputContext.vehicleFlightContext.transitionSkipInternalCondition:
+    type: array:Bool
+    value: [ ]
+  playerStateMachineInputContext.vehicleFlightContext.transitionTo:
+    type: array:String
+    value: [ "allForcedContexts", "allUIContexts", "gameplayContext" ]
+  playerStateMachineDefinitions.InputContext.states:
+    type: array:String
+    value:
+      - initialState
+      - deadContext
+      - braindanceContext
+      - gameplayContext
+      - vehicleGameplayContext
+      - aimingContext
+      - ladderEnterContext
+      - visionContext
+      - deviceControlContext
+      - uiContext
+      - uiQuickHackPanelContext
+      - uiRadialContext
+      - uiVendorContext
+      - uiPhoneContext
+      - interactionContext
+      - vehicleQuestRestrictedContext
+      - vehicleBlockInputContext
+      - vehicleNoDriveCombatContext
+      - vehicleNoDriveContext
+      - vehicleTankDriverContext
+      - vehicleDriverContext
+      - vehicleDriverCombatContext
+      - vehicleCombatContext
+      - vehiclePassengerContext
+      - baseContext
+      - vehicleFlightContext
   player.vehicle.canEnterVehicleFlight:
     type: Bool
     value: true
@@ -14,28 +82,6 @@ flats:
   playerStateMachineVehicle.scene.transitionCondition:
     type: array:String
     value: [ "", "=", "=", "", "=" ]
-  playerStateMachineDefinitions.Vehicle.states:
-    type: array:String
-    value:
-      - idle
-      - entering
-      - drive
-      - gunner
-      - passenger
-      - switchSeats
-      - driverCombat
-      - enteringCombat
-      - exitingCombat
-      - combat
-      - collisionExiting
-      - deathExiting
-      - exiting
-      - exit
-      - scene
-      - sceneExiting
-      - sceneExitingCombat
-      - waitingForScene
-      - flight
   photo_mode.general.onlyFPPPhotoModeInPlayerStates:
     type: array:String
     value: 
@@ -90,7 +136,7 @@ flats:
     value: [ "allSlotStates" ]
   playerStateMachineVehicle.flight.forceInputContext:
     type: CName
-    value: "" 
+    value: "None" 
   playerStateMachineVehicle.flight.hasEnterCondition:
     type: Bool
     value: true
@@ -127,71 +173,47 @@ flats:
   playerStateMachineVehicle.flight.transitionTo:
     type: array:String
     value: [ "drive", "deathExiting", "collisionExiting", "exiting" ]
-  playerStateMachineInputContext.vehicleFlightContext.affinity:
-    type: CName
-    value: "None" 
-  playerStateMachineInputContext.vehicleFlightContext.alias:
-    type: array:CName
-    value: [ "allVehicleContexts" ]
-  playerStateMachineInputContext.vehicleFlightContext.forceInputContext:
-    type: CName
-    value: "VehicleFlight" 
-  playerStateMachineInputContext.vehicleFlightContext.hasEnterCondition:
-    type: Bool
-    value: true 
-  playerStateMachineInputContext.vehicleFlightContext.hasExitCondition:
-    type: Bool
-    value: false 
-  playerStateMachineInputContext.vehicleFlightContext.hasOnEnter:
-    type: Bool
-    value: true 
-  playerStateMachineInputContext.vehicleFlightContext.hasOnExit:
-    type: Bool
-    value: true 
-  playerStateMachineInputContext.vehicleFlightContext.hasOnUpdate:
-    type: Bool
-    value: false 
-  playerStateMachineInputContext.vehicleFlightContext.stateBodyClassName:
-    type: String
-    value: "" 
-  playerStateMachineInputContext.vehicleFlightContext.transitionCondition:
-    type: array:String
-    value: [ "", "", "ExitCondition" ]
-  playerStateMachineInputContext.vehicleFlightContext.transitionConditionOverridesEnterCondition:
-    type: array:Bool
-    value: [ ]
-  playerStateMachineInputContext.vehicleFlightContext.transitionSkipInternalCondition:
-    type: array:Bool
-    value: [ ]
-  playerStateMachineInputContext.vehicleFlightContext.transitionTo:
-    type: array:String
-    value: [ "allForcedContexts", "allUIContexts", "gameplayContext" ]
-  playerStateMachineDefinitions.InputContext.states:
+  playerStateMachineDefinitions.Vehicle.states:
     type: array:String
     value:
-     - initialState
-     - deadContext
-     - braindanceContext
-     - gameplayContext
-     - vehicleGameplayContext
-     - aimingContext
-     - ladderEnterContext
-     - visionContext
-     - deviceControlContext
-     - uiContext
-     - uiQuickHackPanelContext
-     - uiRadialContext
-     - uiVendorContext
-     - uiPhoneContext
-     - interactionContext
-     - vehicleQuestRestrictedContext
-     - vehicleBlockInputContext
-     - vehicleNoDriveCombatContext
-     - vehicleNoDriveContext
-     - vehicleTankDriverContext
-     - vehicleDriverContext
-     - vehicleDriverCombatContext
-     - vehicleCombatContext
-     - vehiclePassengerContext
-     - baseContext
-     - vehicleFlightContext
+      - idle
+      - entering
+      - drive
+      - gunner
+      - passenger
+      - switchSeats
+      - driverCombat
+      - enteringCombat
+      - exitingCombat
+      - combat
+      - collisionExiting
+      - deathExiting
+      - exiting
+      - exit
+      - scene
+      - sceneExiting
+      - sceneExitingCombat
+      - waitingForScene
+      - flight
+# GameplayRestriction.VehicleCombat.AIData,TweakDBID,"" 
+# GameplayRestriction.VehicleCombat.SFX,array:TweakDBID,[ ]
+# GameplayRestriction.VehicleCombat.VFX,array:TweakDBID,[ ]
+# GameplayRestriction.VehicleCombat.actionRestriction,TweakDBID,"" 
+# GameplayRestriction.VehicleCombat.additionalParam,CName,"None" 
+# GameplayRestriction.VehicleCombat.debugTags,array:CName,[ ]
+# GameplayRestriction.VehicleCombat.duration,TweakDBID,"BaseStats.InfiniteDuration" 
+# GameplayRestriction.VehicleCombat.gameplayTags,array:CName,[ "GameplayRestriction" "VehicleCombat" "InfiniteAmmo" "Firearms" ]
+# GameplayRestriction.VehicleCombat.immunityStats,array:TweakDBID,[ ]
+# GameplayRestriction.VehicleCombat.isAffectedByTimeDilationNPC,Bool,true 
+# GameplayRestriction.VehicleCombat.isAffectedByTimeDilationPlayer,Bool,true 
+# GameplayRestriction.VehicleCombat.maxStacks,TweakDBID,"BaseStats.InfiniteStacks" 
+# GameplayRestriction.VehicleCombat.packages,array:TweakDBID,[ ]
+# GameplayRestriction.VehicleCombat.playerData,TweakDBID,"" 
+# GameplayRestriction.VehicleCombat.removeAllStacksWhenDurationEnds,Bool,false 
+# GameplayRestriction.VehicleCombat.removeAllStacksWhenDurationEndsStatModifiers,TweakDBID,"" 
+# GameplayRestriction.VehicleCombat.removeOnStoryTier,Bool,false 
+# GameplayRestriction.VehicleCombat.replicated,Bool,false 
+# GameplayRestriction.VehicleCombat.savable,Bool,true 
+# GameplayRestriction.VehicleCombat.statusEffectType,TweakDBID,"BaseStatusEffectTypes.Misc" 
+# GameplayRestriction.VehicleCombat.stopActiveSfxOnDeactivate,Bool,true 
+# GameplayRestriction.VehicleCombat.uiData,TweakDBID,"" 
