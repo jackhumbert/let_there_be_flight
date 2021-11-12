@@ -35,6 +35,7 @@ protected final func SetIsInFlight(stateContext: ref<StateContext>, value: Bool)
   stateContext.SetPermanentBoolParameter(n"isInFlight", value, true);
 }
 
+// need to implement some things in order to use this
 @addMethod(VehicleTransition)
 protected final const func IsPlayerAllowedToEnterVehicleFlight(const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
   if this.IsNoCombatActionsForced(scriptInterface) {
@@ -60,7 +61,7 @@ protected final const func IsPlayerAllowedToExitFlight(const scriptInterface: re
 public final const func ToFlight(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
   // if this.IsPlayerAllowedToEnterVehicleFlight(scriptInterface) && VehicleTransition.CanEnterVehicleFlight() {
   // if VehicleTransitiorn.CanEnterVehicleFlight() {
-    if FlightController.GetInstance().IsActive() {
+    if scriptInterface.IsActionJustPressed(n"Flight_Toggle") {
       FlightLog.Info("[DriveDecisions] ToFlight");
       return true;
     };
@@ -84,14 +85,14 @@ public final const func ToFlight(const stateContext: ref<StateContext>, const sc
 
 // DriveEvents
 
-@wrapMethod(DriveEvents)
-protected func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-  wrappedMethod(stateContext, scriptInterface);
-  let vehicle: ref<VehicleObject> = scriptInterface.owner as VehicleObject;  
-  if vehicle.IsPlayerMounted() {
-    FlightController.GetInstance().Enable(vehicle);
-  }
-}
+// @wrapMethod(DriveEvents)
+// protected func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
+//   wrappedMethod(stateContext, scriptInterface);
+//   let vehicle: ref<VehicleObject> = scriptInterface.owner as VehicleObject;  
+//   if vehicle.IsPlayerMounted() {
+//     FlightController.GetInstance().Enable(vehicle);
+//   }
+// }
 
 // @wrapMethod(DriveEvents)
 // public final func OnExit(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
@@ -105,11 +106,40 @@ protected func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<Sta
 //   wrappedMethod(stateContext, scriptInterface);
 // }
 
-@wrapMethod(DriveEvents)
-public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-  wrappedMethod(timeDelta, stateContext, scriptInterface);
-  FlightController.GetInstance().OnUpdate(timeDelta, stateContext, scriptInterface);
-}
+// public final func OnExit(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
+//   let transition: PuppetVehicleState = this.GetPuppetVehicleSceneTransition(stateContext);
+//   if Equals(transition, PuppetVehicleState.CombatSeated) || Equals(transition, PuppetVehicleState.CombatWindowed) {
+//     this.SendEquipmentSystemWeaponManipulationRequest(scriptInterface, EquipmentManipulationAction.RequestLastUsedOrFirstAvailableWeapon);
+//   };
+//   this.SetIsVehicleDriver(stateContext, false);
+//   this.SendAnimFeature(stateContext, scriptInterface);
+//   this.ResetVehFppCameraParams(stateContext, scriptInterface);
+//   this.isCameraTogglePressed = false;
+//   stateContext.SetPermanentBoolParameter(n"ForceEmptyHands", false, true);
+//   this.ResumeStateMachines(scriptInterface.executionOwner);
+// }
+
+// @wrapMethod(DriveEvents)
+// public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
+//   wrappedMethod(timeDelta, stateContext, scriptInterface);
+//   FlightController.GetInstance().OnUpdate(timeDelta, stateContext, scriptInterface);
+// }
+
+// PublicSafeDecisions
+
+// @replaceMethod(PublicSafeDecisions)
+// protected cb func OnVehicleChanged(value: Int32) -> Bool {
+//   this.m_isInVehicleCombat = value == EnumInt(gamePSMVehicle.Combat) || value == 8;
+//   this.m_isInVehTurret = value == EnumInt(gamePSMVehicle.Turret);
+//   this.UpdateShouldOnEnterBeEnabled();
+// }
+
+// AimingStateDecisions
+
+// @wrapMethod(AimingStateDecisions)
+// private final func GetShouldAimValue() -> Bool {
+//   return wrappedMethod() || this.m_vehicleState == 8;
+// }
 
 // Custom classes
 
@@ -123,7 +153,7 @@ public class FlightDecisions extends VehicleTransition {
 
   public final const func ToDrive(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
     // FlightLog.Info("[FlightDecisions] ToDrive");
-    return !FlightController.GetInstance().IsActive();
+    return scriptInterface.IsActionJustPressed(n"Flight_Toggle");
   }
 }
 
@@ -131,20 +161,42 @@ public class FlightEvents extends VehicleEventsTransition {
   protected func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
     FlightLog.Info("[FlightEvents] OnEnter");
     super.OnEnter(stateContext, scriptInterface);
-    let audioEvt = new VehicleAudioEvent();
-    audioEvt.action = vehicleAudioEventAction.OnPlayerExitVehicle;
-    scriptInterface.owner.QueueEvent(audioEvt);
     this.SetIsInFlight(stateContext, true);
-    //this.SetBlackboardIntVariable(scriptInterface, GetAllBlackboardDefs().PlayerStateMachine.Vehicle, 8); // doesn't exist
+    this.SetIsVehicleDriver(stateContext, true);
+    this.SendAnimFeature(stateContext, scriptInterface);
+    this.PauseStateMachines(stateContext, scriptInterface.executionOwner);
+    
+    this.PlayerStateChange(scriptInterface, 1);
+    this.SetBlackboardIntVariable(scriptInterface, GetAllBlackboardDefs().PlayerStateMachine.Vehicle, 8);
+    if !VehicleTransition.CanEnterDriverCombat() {
+      stateContext.SetPermanentBoolParameter(n"ForceEmptyHands", true, true);
+    };    
+    (scriptInterface.executionOwner as VehicleObject).ToggleFlightComponent(true);
+    FlightController.GetInstance().Activate();
   }
 
   public final func OnExit(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
     FlightLog.Info("[FlightEvents] OnExit");
     this.SetIsInFlight(stateContext, false);
+    (scriptInterface.executionOwner as VehicleObject).ToggleFlightComponent(false);
+    FlightController.GetInstance().Deactivate(false);
+  }
+
+  public func OnForcedExit(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
+    FlightLog.Info("[FlightEvents] OnForcedExit");
+    this.SetIsInFlight(stateContext, false);
+    (scriptInterface.executionOwner as VehicleObject).ToggleFlightComponent(false);
+    FlightController.GetInstance().Deactivate(true);
+    this.OnForcedExit(stateContext, scriptInterface);
+    this.ResumeStateMachines(scriptInterface.executionOwner);
   }
 
   public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-    //FlightLog.Info("[FlightEvents] OnUpdate");
     FlightController.GetInstance().OnUpdate(timeDelta, stateContext, scriptInterface);
+    this.SetIsInVehicle(stateContext, true);
+    this.SetSide(stateContext, scriptInterface);
+    this.SendAnimFeature(stateContext, scriptInterface);
+    this.HandleCameraInput(scriptInterface);
+    this.HandleExitRequest(stateContext, scriptInterface);
   }
 }

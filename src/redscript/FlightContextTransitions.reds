@@ -9,6 +9,20 @@ protected final const func RemoveVehicleFlightInputHints(stateContext: ref<State
   // this.RemoveInputHintsBySource(scriptInterface, n"VehicleFlight");
 }
 
+@wrapMethod(VehicleDriverContextDecisions)
+protected const func EnterCondition(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
+  // FlightLog.Info("[VehicleDriverContextDecisions] EnterCondition");
+  let old = wrappedMethod(stateContext, scriptInterface);
+  let currentState: Int32 = scriptInterface.localBlackboard.GetInt(GetAllBlackboardDefs().PlayerStateMachine.Vehicle);
+  return old && currentState != 8;
+}
+
+@wrapMethod(VehiclePassengerContextDecisions)
+protected const func EnterCondition(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
+  let currentState: Int32 = scriptInterface.localBlackboard.GetInt(GetAllBlackboardDefs().PlayerStateMachine.Vehicle);
+  return currentState != 8;
+}
+
 public class VehicleFlightContextEvents extends InputContextTransitionEvents {
 
   protected func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
@@ -33,28 +47,30 @@ public class VehicleFlightContextDecisions extends InputContextTransitionDecisio
       allBlackboardDef = GetAllBlackboardDefs();
       this.m_callbackID = scriptInterface.localBlackboard.RegisterListenerInt(allBlackboardDef.PlayerStateMachine.Vehicle, this, n"OnVehicleStateChanged");
       this.OnVehicleStateChanged(scriptInterface.localBlackboard.GetInt(allBlackboardDef.PlayerStateMachine.Vehicle));
+      FlightController.GetInstance().SetupMountedToCallback(scriptInterface.localBlackboard);
     };
-    this.EnableOnEnterCondition(true);
+    //this.EnableOnEnterCondition(true);
   }
 
   protected final func OnDetach(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Void {
     FlightLog.Info("[VehicleFlightContextDecisions] OnDetach");
     this.m_callbackID = null;
+    // FlightController.GetInstance().Disable();
   }
 
   protected cb func OnVehicleStateChanged(value: Int32) -> Bool {
     FlightLog.Info("[VehicleFlightContextDecisions] OnVehicleStateChanged");
-    // this.EnableOnEnterCondition(FlightController.GetInstance().IsActive());
+    this.EnableOnEnterCondition(value == 8);
   }
 
   protected const func EnterCondition(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-    FlightLog.Info("[VehicleFlightContextDecisions] EnterCondition");
+    // FlightLog.Info("[VehicleFlightContextDecisions] EnterCondition");
     // if StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"VehicleOnlyForward") {
     //   return false;
     // };
     // if StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"NoDriving") {
     //   return false;
     // };
-    return FlightController.GetInstance().IsActive();
+    return true;
   }
 }

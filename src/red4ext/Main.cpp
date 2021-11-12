@@ -147,6 +147,10 @@ void SetShapeResource(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFra
     inkShapeWidget->GetProperty("shapeResource")->SetValue(aContext, value.resource);
 }
 
+//struct gamePSMVehicle : RED4ext::CBaseRTTIType {
+//};
+
+
 RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
 {
     spdlog::info("Registering functions");
@@ -188,7 +192,16 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
     //getEffectFunc->SetReturnType("inkIEffect");
     //inkWidget->RegisterFunction(getEffectFunc);
 
+    auto gamePSMVehicleEnum = rtti->GetEnum("gamePSMVehicle");
+    gamePSMVehicleEnum->hashList.PushBack("Flight");
+    gamePSMVehicleEnum->valueList.PushBack(8);
+    gamePSMVehicleEnum->aliasList.PushBack("Flight");
+    gamePSMVehicleEnum->aliasValueList.PushBack(8);
 
+    //RED4ext::CEnum::Flags flags = {};
+    //RED4ext::CEnum gamePSMVehicleEnum = RED4ext::CEnum::CEnum("gamePSMVehicle", 10, flags);
+
+    //rtti->CreateScriptedEnum("gamePSMVehicle", 10, &gamePSMVehicleEnum);
 }
 
 BOOL APIENTRY DllMain(HMODULE aModule, DWORD aReason, LPVOID aReserved)

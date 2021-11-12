@@ -136,7 +136,7 @@ flats:
     value: [ "allSlotStates" ]
   playerStateMachineVehicle.flight.forceInputContext:
     type: CName
-    value: "None" 
+    value: "VehicleFlight" 
   playerStateMachineVehicle.flight.hasEnterCondition:
     type: Bool
     value: true
@@ -195,6 +195,13 @@ flats:
       - sceneExitingCombat
       - waitingForScene
       - flight
+# groups:
+#   HUDPreset.flight:
+#     type: HUD_Preset_Entry
+#     members:
+#       hudEntries:
+#         type: array:CName
+#         value: [ "flight" ]
 # GameplayRestriction.VehicleCombat.AIData,TweakDBID,"" 
 # GameplayRestriction.VehicleCombat.SFX,array:TweakDBID,[ ]
 # GameplayRestriction.VehicleCombat.VFX,array:TweakDBID,[ ]

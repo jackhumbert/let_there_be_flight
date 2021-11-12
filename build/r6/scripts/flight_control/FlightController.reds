@@ -6,10 +6,6 @@ enum FlightMode {
   Count = 2
 } 
 
-// public native class FlightStats_Record extends TweakDBRecord {
-//   public native let mass: Float;
-// }
-
 // public class FlightSettingsListener extends ConfigVarListener {
 
 //   private let m_ctrl: wref<FlightController>;
@@ -46,11 +42,16 @@ enum FlightMode {
 
 // FlightLog.Info(ToString(system.GetData()));
 
+// could watch this
+// this.m_callbackID = scriptInterface.localBlackboard.RegisterListenerInt(allBlackboardDef.PlayerStateMachine.Vehicle, this, n"OnVehicleStateChanged");
+
 // maybe this should extend ScriptableComponent or GameComponent?
 // Singleton instance with player lifetime
-public class FlightController  {
+public class FlightController extends IScriptable {
   public let camera: ref<vehicleTPPCameraComponent>;
   private let gameInstance: GameInstance;
+  private let player: ref<PlayerPuppet>;
+  private let m_callbackID: ref<CallbackHandle>;
   private let stats: ref<FlightStats>;
   private let ui: ref<FlightControllerUI>;
   public final func SetUI(ui: ref<FlightControllerUI>) {
@@ -132,6 +133,7 @@ public class FlightController  {
 
   private func Initialize(player: ref<PlayerPuppet>) {
     this.gameInstance = player.GetGame();
+    this.player = player;
     this.mode = FlightMode.HoverFly;
     this.enabled = false;
     this.active = false;
@@ -221,22 +223,27 @@ public class FlightController  {
   //     default:
   //   };
   // }
+
+  public func SetupMountedToCallback(psmBB: ref<IBlackboard>) -> Void {
+    this.m_callbackID = psmBB.RegisterListenerBool(GetAllBlackboardDefs().PlayerStateMachine.MountedToVehicle, this, n"OnMountedToVehicleChange");
+  }
   
-  public func Enable(vehicle: ref<VehicleObject>) -> Void {
+  public cb func OnMountedToVehicleChange(mounted: Bool) -> Bool {
+    FlightLog.Info("[FlightController] OnMountedToVehicleChange");
+    if (mounted) {
+      this.Enable();
+    } else {
+      this.Disable();
+    }
+  }
+  
+  public func Enable() -> Void {
     this.enabled = true;
     this.active = false;
-    this.stats = FlightStats.Create(vehicle);
-    // this.GetVehicle().TurnOn(true);
-    // this.GetVehicle().TurnEngineOn(true);
     this.SetupActions();
-    this.ui.Setup(this.stats);
     this.audio.Start("wind_TPP");
-
-    // very intrusive - need a prompt/confirmation that they want this popup, eg Detailed Info / About
-    // let shardUIevent = new NotifyShardRead();
-    // shardUIevent.title = "Flight Control: Now Available";
-    // shardUIevent.text = "Your new car is equiped with the state-of-the-art Flight Control!";
-    // GameInstance.GetUISystem(this.gameInstance).QueueEvent(shardUIevent);
+    this.stats = FlightStats.Create(GetMountedVehicle(this.player));
+    this.ui.Setup(this.stats);
 
     FlightLog.Info("[FlightController] Enable - " + this.GetVehicle().GetDisplayName());
   }
@@ -254,16 +261,16 @@ public class FlightController  {
   }
 
   public func Toggle() -> Bool {
-    if this.active {
-      this.Deactivate(false);
-    } else {
-      if (!this.enabled) {
-        this.Enable(GetMountedVehicle(this.gameInstance));
-      }
-      this.Activate();
-    }
-    this.GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControllerBB.IsActive, this.active, true);
-    this.GetBlackboard().SignalBool(GetAllBlackboardDefs().FlightControllerBB.IsActive);
+    // if this.active {
+    //   this.Deactivate(false);
+    // } else {
+    //   if (!this.enabled) {
+    //     this.Enable();
+    //   }
+    //   this.Activate();
+    // // }
+    // this.GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControllerBB.IsActive, this.active, true);
+    // this.GetBlackboard().SignalBool(GetAllBlackboardDefs().FlightControllerBB.IsActive);
     return this.active;
   }
   
@@ -285,14 +292,8 @@ public class FlightController  {
     this.SetupTires();
 
     this.camera = GetPlayer(this.gameInstance).FindComponentByName(n"vehicleTPPCamera") as vehicleTPPCameraComponent;
-    //FlightLog.Info("TPP camera! " + ToString(this.camera.fov));
 
-    //this.camera = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"Collider") as vehicleTPPCameraComponent;
-
-    // (this.GetVehicle().GetPS() as VehicleComponentPS).SetThrusterState(false);
-    // (this.GetVehicle().GetPS() as VehicleComponentPS).SetIsDestroyed(true);
-
-    // these stop engine noises too?
+    // these stop engine noises if they were already playing?
     this.GetVehicle().TurnEngineOn(false);
     // this.GetVehicle().TurnOn(true);
 
@@ -311,11 +312,13 @@ public class FlightController  {
     // takeOverRequest.originalEvent = originalevent;
     // takeOverControlSystem.QueueRequest(takeOverRequest);
 
-
     // this disables engines noises from starting, but also prevents wheels from moving
     // something that only stops engine noises would be preferred, or this could be toggled
     // when close to the ground, to make transitions easier
-    this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetState(vehicleEState.Disabled);
+    // this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetState(vehicleEState.Default);
+
+    this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetLightMode(vehicleELightMode.HighBeams);
+    this.GetVehicle().GetVehicleComponent().GetVehicleController().ToggleLights(true);
 
     this.stats.Reset();
     this.ui.Show();
@@ -333,6 +336,8 @@ public class FlightController  {
     // GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(StringToName(this.GetVehicle().GetRecord().Player_audio_resource()));
     // GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"mus_cp_arcade_quadra_START_menu");
     FlightLog.Info("[FlightController] Activate");
+    this.GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControllerBB.IsActive, true, true);
+    this.GetBlackboard().SignalBool(GetAllBlackboardDefs().FlightControllerBB.IsActive);
   }
 
   private func Deactivate(silent: Bool) -> Void {
@@ -355,6 +360,16 @@ public class FlightController  {
     this.ui.Hide();
 
     FlightLog.Info("[FlightController] Deactivate");
+    this.GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControllerBB.IsActive, false, true);
+    this.GetBlackboard().SignalBool(GetAllBlackboardDefs().FlightControllerBB.IsActive);
+  }
+
+  private func ShowMoreInfo() -> Void {
+    // very intrusive - need a prompt/confirmation that they want this popup, eg Detailed Info / About
+    let shardUIevent = new NotifyShardRead();
+    shardUIevent.title = "Flight Control: Now Available";
+    shardUIevent.text = "Your new car is equiped with the state-of-the-art Flight Control!";
+    GameInstance.GetUISystem(this.gameInstance).QueueEvent(shardUIevent);
   }
 
   private func SetupActions() -> Bool {
@@ -363,19 +378,19 @@ public class FlightController  {
     player.UnregisterInputListener(this);    
     uiSystem.QueueEvent(FlightController.HideHintFromSource(n"FlightController"));
     if this.enabled {
-      player.RegisterInputListener(this, n"Flight_Toggle");
+      // player.RegisterInputListener(this, n"Flight_Toggle");
       if this.active {
         uiSystem.QueueEvent(FlightController.ShowHintHelper("Disable Flight Control", n"Flight_Toggle", n"FlightController"));
         // player.RegisterInputListener(this, n"Pitch");
         // uiSystem.QueueEvent(FlightController.ShowHintHelper("Pitch", n"Pitch", n"FlightController"));
         // player.RegisterInputListener(this, n"Roll");
         // uiSystem.QueueEvent(FlightController.ShowHintHelper("Roll", n"Roll", n"FlightController"));
-        player.RegisterInputListener(this, n"Accelerate");
+        player.RegisterInputListener(this, n"SurgePos");
         player.RegisterInputListener(this, n"LeanFB");
         uiSystem.QueueEvent(FlightController.ShowHintHelper("Lift", n"LeanFB", n"FlightController"));
         player.RegisterInputListener(this, n"TurnX");
         uiSystem.QueueEvent(FlightController.ShowHintHelper("Yaw", n"TurnX", n"FlightController"));
-        player.RegisterInputListener(this, n"Decelerate");
+        player.RegisterInputListener(this, n"SurgeNeg");
         // we may want to look at something else besides this input so ForceBrakesUntilStoppedOrFor will work (not entirely sure it doesn't now)
         // vehicle.GetBlackboard().GetInt(GetAllBlackboardDefs().Vehicle.IsHandbraking) is the value (why int? no enums for it seem to exist)
         player.RegisterInputListener(this, n"Handbrake");
@@ -436,7 +451,7 @@ public class FlightController  {
           case n"Pitch":
             this.pitch.SetInput(value);
             break;
-          case n"Accelerate":
+          case n"SurgePos":
             this.surge.SetInput(value);
             break;
           case n"TurnX":
@@ -445,7 +460,7 @@ public class FlightController  {
           case n"LeanFB":
             this.lift.SetInput(value);
             break;
-          case n"Decelerate":
+          case n"SurgeNeg":
             this.surge.SetInput(-value);
             break;
           default:
@@ -506,7 +521,7 @@ public class FlightController  {
     let cameraSys: ref<CameraSystem> = GameInstance.GetCameraSystem(this.gameInstance);
     cameraSys.GetActiveCameraWorldTransform(cameraTransform);
 
-    this.audio.cameraPosition = Vector4.Vector4To3(cameraTransform.position);
+    this.audio.cameraPosition = Vector4.Vector4To3(cameraTransform.position + this.stats.d_forward * 0.5);
     this.audio.cameraUp = Vector4.Vector4To3(Transform.GetUp(cameraTransform));
     this.audio.cameraForward = Vector4.Vector4To3(Transform.GetForward(cameraTransform));
 
@@ -547,12 +562,12 @@ public class FlightController  {
     if GameInstance.GetTimeSystem(this.gameInstance).IsTimeDilationActive(n"radial") {
       // this might happpen?
       timeDelta *= TimeDilationHelper.GetFloatFromTimeSystemTweak("radialMenu", "timeDilation");
-      FlightLog.Info("Radial menu dilation"); 
+      //FlightLog.Info("Radial menu dilation"); 
     } else {
       if GameInstance.GetTimeSystem(this.gameInstance).IsTimeDilationActive() {
         // i think this is what this is called
         timeDelta *= TimeDilationHelper.GetFloatFromTimeSystemTweak("focusModeTimeDilation", "timeDilation");
-        FlightLog.Info("Other time dilation"); 
+        //FlightLog.Info("Other time dilation"); 
       }
     }
 
@@ -850,8 +865,8 @@ public class FlightController  {
     // normalLine.SetVertexList([this.ui.ScreenXY(this.stats.d_visualPosition), this.ui.ScreenXY(this.stats.d_visualPosition + this.stats.d_up)]);
     // this.ui.DrawMark(this.stats.d_visualPosition + this.stats.d_up);
 
-    this.pitchPID.SetRatio(this.stats.d_speedRatio);
-    this.rollPID.SetRatio(this.stats.d_speedRatio);
+    this.pitchPID.SetRatio(this.stats.d_speedRatio * AbsF(Vector4.Dot(this.stats.d_direction, this.stats.d_forward)));
+    this.rollPID.SetRatio(this.stats.d_speedRatio * AbsF(Vector4.Dot(this.stats.d_direction, this.stats.d_right)));
 
     hoverCorrection = this.hover.GetCorrectionClamped(heightDifference, timeDelta, 1.0);
     pitchCorrection = this.pitchPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(idealNormal, this.stats.d_forward)) + this.lift.GetValue() * this.pitchWithLift, timeDelta, 10.0) + this.pitch.GetValue() / 10.0;
@@ -980,7 +995,7 @@ public class FlightController  {
     // Set widget position relative to parent
     // Altough the position is absolute for FHD resoltuion,
     // it will be adapted for the current resoltuion
-    flightControlStatus.SetMargin(110, 1722, 0, 0);
+    flightControlStatus.SetMargin(100, 1802, 0, 0);
 
     // Set widget size
     flightControlStatus.SetSize(220.0, 50.0);
@@ -1038,67 +1053,6 @@ protected cb func OnGameAttached() -> Bool {
 // @wrapMethod(Air)
 // protected const func EnterCondition(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
 //   return wrappedMethod(stateContext, scriptInterface) && !FlightController.GetInstance().IsActive();
-// }
-
-// @replaceMethod(VehicleTransition)
-// protected final func PauseStateMachines(stateContext: ref<StateContext>, executionOwner: ref<GameObject>) -> Void {
-//     let upperBody: ref<PSMStopStateMachine> = new PSMStopStateMachine();
-//     let equipmentRightHand: ref<PSMStopStateMachine> = new PSMStopStateMachine();
-//     let equipmentLeftHand: ref<PSMStopStateMachine> = new PSMStopStateMachine();
-//     let coverAction: ref<PSMStopStateMachine> = new PSMStopStateMachine();
-//     let stamina: ref<PSMStopStateMachine> = new PSMStopStateMachine();
-//     let aimAssistContext: ref<PSMStopStateMachine> = new PSMStopStateMachine();
-//     let cameraContext: ref<PSMStopStateMachine> = new PSMStopStateMachine();
-//     if stateContext.IsStateActive(n"UpperBody", n"forceEmptyHands") {
-//         upperBody.stateMachineIdentifier.definitionName = n"UpperBody";
-//         executionOwner.QueueEvent(upperBody);
-//     };
-//     equipmentRightHand.stateMachineIdentifier.referenceName = n"RightHand";
-//     equipmentRightHand.stateMachineIdentifier.definitionName = n"Equipment";
-//     executionOwner.QueueEvent(equipmentRightHand);
-//     equipmentLeftHand.stateMachineIdentifier.referenceName = n"LeftHand";
-//     equipmentLeftHand.stateMachineIdentifier.definitionName = n"Equipment";
-//     executionOwner.QueueEvent(equipmentLeftHand);
-//     coverAction.stateMachineIdentifier.definitionName = n"CoverAction";
-//     executionOwner.QueueEvent(coverAction);
-//     if DefaultTransition.GetBlackboardIntVariable(executionOwner, GetAllBlackboardDefs().PlayerStateMachine.Stamina) == EnumInt(gamePSMStamina.Rested) {
-//         stamina.stateMachineIdentifier.definitionName = n"Stamina";
-//         executionOwner.QueueEvent(stamina);
-//     };
-//     aimAssistContext.stateMachineIdentifier.definitionName = n"AimAssistContext";
-//     executionOwner.QueueEvent(aimAssistContext);
-//     cameraContext.stateMachineIdentifier.definitionName = n"CameraContext";
-//     executionOwner.QueueEvent(cameraContext);
-// }
-
-// @replaceMethod(VehicleTransition)
-// protected final func ResumeStateMachines(executionOwner: ref<GameObject>) -> Void {
-//     let upperBody: ref<PSMStartStateMachine> = new PSMStartStateMachine();
-//     let equipmentRightHand: ref<PSMStartStateMachine> = new PSMStartStateMachine();
-//     let equipmentLeftHand: ref<PSMStartStateMachine> = new PSMStartStateMachine();
-//     let coverAction: ref<PSMStartStateMachine> = new PSMStartStateMachine();
-//     let stamina: ref<PSMStartStateMachine> = new PSMStartStateMachine();
-//     let aimAssistContext: ref<PSMStartStateMachine> = new PSMStartStateMachine();
-//     let locomotion: ref<PSMStartStateMachine> = new PSMStartStateMachine();
-//     let cameraContext: ref<PSMStartStateMachine> = new PSMStartStateMachine();
-//     upperBody.stateMachineIdentifier.definitionName = n"UpperBody";
-//     executionOwner.QueueEvent(upperBody);
-//     equipmentRightHand.stateMachineIdentifier.referenceName = n"RightHand";
-//     equipmentRightHand.stateMachineIdentifier.definitionName = n"Equipment";
-//     executionOwner.QueueEvent(equipmentRightHand);
-//     equipmentLeftHand.stateMachineIdentifier.referenceName = n"LeftHand";
-//     equipmentLeftHand.stateMachineIdentifier.definitionName = n"Equipment";
-//     executionOwner.QueueEvent(equipmentLeftHand);
-//     coverAction.stateMachineIdentifier.definitionName = n"CoverAction";
-//     executionOwner.QueueEvent(coverAction);
-//     stamina.stateMachineIdentifier.definitionName = n"Stamina";
-//     executionOwner.QueueEvent(stamina);
-//     aimAssistContext.stateMachineIdentifier.definitionName = n"AimAssistContext";
-//     executionOwner.QueueEvent(aimAssistContext);
-//     locomotion.stateMachineIdentifier.definitionName = n"Locomotion";
-//     executionOwner.QueueEvent(locomotion);
-//     cameraContext.stateMachineIdentifier.definitionName = n"CameraContext";
-//     executionOwner.QueueEvent(cameraContext);
 // }
 
 public class FlightControllerBBDef extends BlackboardDefinition {
