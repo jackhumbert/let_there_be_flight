@@ -1,3 +1,34 @@
+// Hooks
+
+@addField(VehicleObject)
+private let m_flightComponent: wref<FlightComponent>;
+
+@wrapMethod(VehicleObject)
+protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> Bool {
+  EntityRequestComponentsInterface.RequestComponent(ri, n"flightComponent", n"FlightComponent", true);
+  wrappedMethod(ri);
+}
+
+@wrapMethod(VehicleObject)
+protected cb func OnTakeControl(ri: EntityResolveComponentsInterface) -> Bool {
+  //FlightLog.Info("[VehicleObject] OnTakeControl: " + this.GetDisplayName());
+  this.m_flightComponent = EntityResolveComponentsInterface.GetComponent(ri, n"flightComponent") as FlightComponent;
+  this.m_flightComponent.Toggle(false);
+  wrappedMethod(ri);
+}
+
+@addMethod(VehicleObject)
+public const func GetFlightComponent() -> ref<FlightComponent> {
+  return this.m_flightComponent;
+}
+
+@addMethod(VehicleObject)
+public func ToggleFlightComponent(state: Bool) -> Void {
+  this.m_flightComponent.Toggle(state);
+}
+
+// Custom Classes
+
 public class FlightComponent extends ScriptableDC {
 
   public let m_interaction: ref<InteractionComponent>;
@@ -11,7 +42,7 @@ public class FlightComponent extends ScriptableDC {
   }
 
   private final func OnGameAttach() -> Void {
-    // FlightLog.Info("[FlightComponent] OnGameAttach: " + this.GetVehicle().GetDisplayName());
+    //FlightLog.Info("[FlightComponent] OnGameAttach: " + this.GetVehicle().GetDisplayName());
     this.m_interaction = this.FindComponentByName(n"interaction") as InteractionComponent;
     this.m_healthStatPoolListener = new VehicleHealthStatPoolListener();
     this.m_healthStatPoolListener.m_owner = this.GetVehicle();
@@ -20,7 +51,7 @@ public class FlightComponent extends ScriptableDC {
   }
 
   private final func OnGameDetach() -> Void {
-    // FlightLog.Info("[FlightComponent] OnGameDetach: " + this.GetVehicle().GetDisplayName());
+    //FlightLog.Info("[FlightComponent] OnGameDetach: " + this.GetVehicle().GetDisplayName());
     GameInstance.GetStatPoolsSystem(this.GetVehicle().GetGame()).RequestUnregisteringListener(Cast(this.GetVehicle().GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
   }
   
@@ -38,32 +69,41 @@ public class FlightComponent extends ScriptableDC {
   }
 
   protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool {
+    FlightLog.Info("[FlightComponent] OnAction: " + this.GetVehicle().GetDisplayName());
+  }
+
+  protected cb func OnVehicleFlightActivationEvent(evt: ref<VehicleFlightActivationEvent>) -> Bool {
+    FlightLog.Info("[FlightComponent] OnVehicleFlightActivationEvent: " + evt.vehicle.GetDisplayName());
 
   }
-}
 
-@addField(VehicleObject)
-private let m_flightComponent: wref<FlightComponent>;
+  protected cb func OnGridDestruction(evt: ref<VehicleGridDestructionEvent>) -> Bool {
+    let biggestImpact: Float;
+    let desiredChange: Float;
+    let i: Int32 = 0;
+    while i < 16 {
+      desiredChange = evt.desiredChange[i];
+      if desiredChange > biggestImpact {
+        biggestImpact = desiredChange;
+      };
+      i += 1;
+    };
+    FlightLog.Info("[FlightComponent] OnGridDestruction: " + FloatToStringPrec(biggestImpact, 2));
+    FlightController.GetInstance().collisionTimer = FlightController.GetInstance().collisionRecoveryDelay - biggestImpact;
+  }
 
-@wrapMethod(VehicleObject)
-protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> Bool {
-  EntityRequestComponentsInterface.RequestComponent(ri, n"flightComponent", n"FlightComponent", true);
-  wrappedMethod(ri);
-}
-
-@wrapMethod(VehicleObject)
-protected cb func OnTakeControl(ri: EntityResolveComponentsInterface) -> Bool {
-  this.m_flightComponent = EntityResolveComponentsInterface.GetComponent(ri, n"flightComponent") as FlightComponent;
-  this.m_flightComponent.Toggle(false);
-  wrappedMethod(ri);
-}
-
-@addMethod(VehicleObject)
-public const func GetFlightComponent() -> ref<FlightComponent> {
-  return this.m_flightComponent;
-}
-
-@addMethod(VehicleObject)
-public func ToggleFlightComponent(state: Bool) -> Void {
-  this.m_flightComponent.Toggle(state);
+/*  private final func RegisterToHUDManager(shouldRegister: Bool) -> Void {
+    let hudManager: ref<HUDManager>;
+    let registration: ref<HUDManagerRegistrationRequest>;
+    if this.GetVehicle().IsCrowdVehicle() && !this.GetVehicle().ShouldForceRegisterInHUDManager() {
+      return;
+    };
+    hudManager = GameInstance.GetScriptableSystemsContainer(this.GetVehicle().GetGame()).Get(n"HUDManager") as HUDManager;
+    if IsDefined(hudManager) {
+      registration = new HUDManagerRegistrationRequest();
+      registration.SetProperties(this.GetVehicle(), shouldRegister);
+      hudManager.QueueRequest(registration);
+    };
+  }
+*/
 }

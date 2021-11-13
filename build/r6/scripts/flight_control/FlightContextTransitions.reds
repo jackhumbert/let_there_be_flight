@@ -48,12 +48,14 @@ public class VehicleFlightContextDecisions extends InputContextTransitionDecisio
       this.m_callbackID = scriptInterface.localBlackboard.RegisterListenerInt(allBlackboardDef.PlayerStateMachine.Vehicle, this, n"OnVehicleStateChanged");
       this.OnVehicleStateChanged(scriptInterface.localBlackboard.GetInt(allBlackboardDef.PlayerStateMachine.Vehicle));
       FlightController.GetInstance().SetupMountedToCallback(scriptInterface.localBlackboard);
+      (scriptInterface.owner as VehicleObject).ToggleFlightComponent(true);
     };
     //this.EnableOnEnterCondition(true);
   }
 
   protected final func OnDetach(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Void {
     FlightLog.Info("[VehicleFlightContextDecisions] OnDetach");
+    (scriptInterface.owner as VehicleObject).ToggleFlightComponent(false);
     this.m_callbackID = null;
     // FlightController.GetInstance().Disable();
   }

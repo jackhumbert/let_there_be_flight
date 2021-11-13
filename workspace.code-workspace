@@ -9,9 +9,9 @@
 	],
 	"settings": {
 		"files.associations": {
-			"*.reds": "swift",
-			"*.ws": "swift",
-			"*.script": "swift",
+			"*.reds": "redscript",
+			"*.ws": "redscript",
+			"*.script": "redscript",
 			"algorithm": "cpp",
 			"array": "cpp",
 			"atomic": "cpp",

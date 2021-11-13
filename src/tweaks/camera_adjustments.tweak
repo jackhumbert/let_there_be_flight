@@ -16,7 +16,7 @@ flats:
     value: 10.0
   Camera.VehicleTPP_DefaultParams.slopeCorrectionInAirStrength:
     type: Float
-    value: 4.0
+    value: 0.00001
   Camera.VehicleTPP_2w_DefaultParams.autoCenterMaxSpeedThreshold:
     type: Float
     value: 100
@@ -37,7 +37,7 @@ flats:
     value: 100
   RTDB.VehicleTPPCameraParams.slopeCorrectionInAirStrength:
     type: Float
-    value: 4.0
+    value: 0.00001
   RTDB.VehicleTPPCameraParams.slopeCorrectionInAirDampFactor:
     type: Float
     value: 10.0
@@ -52,5 +52,5 @@ flats:
     value: 10.0
   RTDB.VehicleTPPCameraParams.slopeCorrectionInAirStrength:
     type: Float
-    value: 4.0
+    value: 0.00001
 groups: {}

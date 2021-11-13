@@ -195,8 +195,14 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
     auto gamePSMVehicleEnum = rtti->GetEnum("gamePSMVehicle");
     gamePSMVehicleEnum->hashList.PushBack("Flight");
     gamePSMVehicleEnum->valueList.PushBack(8);
-    gamePSMVehicleEnum->aliasList.PushBack("Flight");
-    gamePSMVehicleEnum->aliasValueList.PushBack(8);
+
+    auto UIGameContextEnum = rtti->GetEnum("UIGameContext");
+    UIGameContextEnum->hashList.PushBack("VehicleFlight");
+    UIGameContextEnum->valueList.PushBack(10);
+
+    auto UIGameContextEnum = rtti->GetEnum("HUDActorType");
+    UIGameContextEnum->hashList.PushBack("FLIGHT");
+    UIGameContextEnum->valueList.PushBack(7);
 
     //RED4ext::CEnum::Flags flags = {};
     //RED4ext::CEnum gamePSMVehicleEnum = RED4ext::CEnum::CEnum("gamePSMVehicle", 10, flags);

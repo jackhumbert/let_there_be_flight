@@ -33,6 +33,19 @@ public class PID {
     this.I = I;
     this.D = D;
   }
+  
+  public func UpdateP(P: Float) -> Void {
+    this.P = P;
+  }
+  
+  public func UpdateI(I: Float) -> Void {
+    this.I = I;
+  }
+
+  public func UpdateD(D: Float) -> Void {
+    this.D = D;
+  }
+
   public func SetInput(input: Float) {
     this.inputFloat = input;
   }
@@ -41,7 +54,7 @@ public class PID {
   // }
   public func GetValue(timeDelta: Float) -> Float {
     let error: Float = this.inputFloat - this.valueFloat;
-    this.valueFloat += this.GetCorrection(error);
+    this.valueFloat += this.GetCorrection(error, timeDelta);
     return this.valueFloat;
   } 
   public func GetValue() -> Float {
@@ -65,7 +78,7 @@ public class PID {
     // if error < 0.01 || error * this.lastErrorFloat < 0.0 {
     //   this.integralFloat = 0.0;
     // } else {
-    this.integralFloat = ClampF(error * timeDelta + this.integralFloat, -100.0, 100.0) * 0.95;
+    this.integralFloat = ClampF(error * timeDelta + this.integralFloat, -100.0, 100.0);
     // }
     this.lastErrorFloat = error;
     return this.P * error + this.I * this.integralFloat + this.D * derivative;
@@ -83,6 +96,24 @@ public class PID {
     this.inputFloat = 0.0;
     this.integralFloat = 0.0;
     this.lastErrorFloat = 0.0;
+  }
+}
+
+public class InputPID extends PID {
+  private let P_dec: Float;
+  public static func Create(P: Float, P_dec: Float) -> ref<InputPID> {
+    let instance: ref<InputPID> = new InputPID();
+    instance.P = P;
+    instance.P_dec = P_dec;
+    instance.Reset();
+    return instance;
+  }
+  public func GetCorrection(error: Float, timeDelta: Float) -> Float { 
+    if AbsF(this.inputFloat) > AbsF(this.valueFloat) || this.inputFloat * this.valueFloat < 0.0 {
+      return this.P * error;
+    } else {
+      return this.P_dec * error;
+    }
   }
 }
 

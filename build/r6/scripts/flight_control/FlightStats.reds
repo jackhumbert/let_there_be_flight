@@ -15,6 +15,7 @@ public class FlightStats {
   public let d_position: Vector4;
   public let d_visualPosition: Vector4;
   public let d_orientation: Quaternion;
+  public let d_lastOrientation: Quaternion;
   public let d_forward: Vector4;
   public let d_right: Vector4;
   public let d_up: Vector4;
@@ -31,16 +32,17 @@ public class FlightStats {
   private let ipp: ref<IPositionProvider>;
 
   public static func Create(vehicle: wref<VehicleObject>) -> ref<FlightStats> {
-    let instance: ref<FlightStats> = new FlightStats();
-    instance.vehicle = vehicle;
-    instance.reset = false;
-    instance.UpdateStatic();
-    // instance.d_position = instance.vehicle.GetWorldPosition() + instance.s_centerOfMassOffset;
-    instance.ipp = IPositionProvider.CreateEntityPositionProvider(instance.vehicle);
-    instance.ipp.CalculatePosition(instance.d_position);
-    instance.d_position += instance.s_centerOfMassOffset;
-    // instance.d_position = Vector4.EmptyVector();
-    return instance;
+    let self: ref<FlightStats> = new FlightStats();
+    self.vehicle = vehicle;
+    self.reset = false;
+    self.UpdateStatic();
+    // self.d_position = self.vehicle.GetWorldPosition() + self.s_centerOfMassOffset;
+    self.ipp = IPositionProvider.CreateEntityPositionProvider(self.vehicle);
+    self.ipp.CalculatePosition(self.d_position);
+    self.d_position += self.s_centerOfMassOffset;
+    self.d_orientation = self.vehicle.GetWorldOrientation();
+    // self.d_position = Vector4.EmptyVector();
+    return self;
   }
 
   public func Reset() -> Void {
@@ -96,6 +98,7 @@ public class FlightStats {
   public final func UpdateDynamic(timeDelta: Float) -> Void {
     let orientation = this.vehicle.GetWorldOrientation();
     this.d_angularVelocity = (orientation - this.d_orientation) / timeDelta;
+    this.d_lastOrientation = this.d_orientation;
     this.d_orientation = orientation;
     this.d_forward = Vector4.Normalize(Quaternion.GetForward(this.d_orientation));
     this.d_right = Vector4.Normalize(Quaternion.GetRight(this.d_orientation));

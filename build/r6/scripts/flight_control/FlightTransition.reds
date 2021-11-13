@@ -171,23 +171,25 @@ public class FlightEvents extends VehicleEventsTransition {
     if !VehicleTransition.CanEnterDriverCombat() {
       stateContext.SetPermanentBoolParameter(n"ForceEmptyHands", true, true);
     };    
-    (scriptInterface.executionOwner as VehicleObject).ToggleFlightComponent(true);
     FlightController.GetInstance().Activate();
+    let evt = new VehicleFlightActivationEvent();
+    evt.vehicle = scriptInterface.owner as VehicleObject;
+    (scriptInterface.owner as VehicleObject).QueueEvent(evt);
   }
 
   public final func OnExit(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
     FlightLog.Info("[FlightEvents] OnExit");
     this.SetIsInFlight(stateContext, false);
-    (scriptInterface.executionOwner as VehicleObject).ToggleFlightComponent(false);
+    // (scriptInterface.owner as VehicleObject).ToggleFlightComponent(false);
     FlightController.GetInstance().Deactivate(false);
   }
 
   public func OnForcedExit(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
     FlightLog.Info("[FlightEvents] OnForcedExit");
     this.SetIsInFlight(stateContext, false);
-    (scriptInterface.executionOwner as VehicleObject).ToggleFlightComponent(false);
+    // (scriptInterface.owner as VehicleObject).ToggleFlightComponent(false);
     FlightController.GetInstance().Deactivate(true);
-    this.OnForcedExit(stateContext, scriptInterface);
+    super.OnForcedExit(stateContext, scriptInterface);
     this.ResumeStateMachines(scriptInterface.executionOwner);
   }
 
@@ -197,6 +199,28 @@ public class FlightEvents extends VehicleEventsTransition {
     this.SetSide(stateContext, scriptInterface);
     this.SendAnimFeature(stateContext, scriptInterface);
     this.HandleCameraInput(scriptInterface);
-    this.HandleExitRequest(stateContext, scriptInterface);
+    this.HandleFlightExitRequest(stateContext, scriptInterface);
+  }
+
+  public final func HandleFlightExitRequest(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
+    let isTeleportExiting: StateResultBool = stateContext.GetPermanentBoolParameter(n"teleportExitActive");
+    let isScheduledExit: StateResultBool = stateContext.GetPermanentBoolParameter(n"validExitAfterSwitchRequest");
+    let isSwitchingSeats: StateResultBool = stateContext.GetPermanentBoolParameter(n"validSwitchSeatExitRequest");
+    if isTeleportExiting.value || isScheduledExit.value || isSwitchingSeats.value {
+      return;
+    };
+    if this.IsPlayerAllowedToExitVehicle(scriptInterface) {
+      let stateTime = this.GetInStateTime();      
+      let exitActionPressCount = scriptInterface.GetActionPressCount(n"Exit");
+      let exitPressCountResult = stateContext.GetPermanentIntParameter(n"exitPressCountOnEnter");
+      let onDifferentExitPress = !exitPressCountResult.valid || exitPressCountResult.value != Cast(exitActionPressCount);
+      if onDifferentExitPress && stateTime >= 0.30 && scriptInterface.GetActionValue(n"Exit") > 0.00 {
+        let vehicle = scriptInterface.owner as VehicleObject;
+        let inputStateTime = scriptInterface.GetActionStateTime(n"Exit");
+        let validUnmount = vehicle.CanUnmount(true, scriptInterface.executionOwner);
+        stateContext.SetPermanentIntParameter(n"vehUnmountDir", EnumInt(validUnmount.direction), true);
+        this.ExitWithTeleport(stateContext, scriptInterface, validUnmount, false, true);
+      }
+    }
   }
 }

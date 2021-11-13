@@ -52,6 +52,7 @@ public class FlightController extends IScriptable {
   private let gameInstance: GameInstance;
   private let player: ref<PlayerPuppet>;
   private let m_callbackID: ref<CallbackHandle>;
+  private let m_vehicleCollisionBBStateID: ref<CallbackHandle>;
   private let stats: ref<FlightStats>;
   private let ui: ref<FlightControllerUI>;
   public final func SetUI(ui: ref<FlightControllerUI>) {
@@ -81,14 +82,14 @@ public class FlightController extends IScriptable {
     return this.mode;
   }
   public let showOptions: Bool;
-  public let brake: ref<PID>;
-  public let lift: ref<PID>;
+  public let brake: ref<InputPID>;
+  public let lift: ref<InputPID>;
   public let liftFactor: Float;
-  public let surge: ref<PID>;
+  public let surge: ref<InputPID>;
   public let surgeFactor: Float;
-  public let roll: ref<PID>;
-  public let pitch: ref<PID>;
-  public let yaw: ref<PID>;
+  public let roll: ref<InputPID>;
+  public let pitch: ref<InputPID>;
+  public let yaw: ref<InputPID>;
   public let yawFactor: Float;
   public let yawDirectionalityFactor: Float;
   public let distance: Float;
@@ -110,6 +111,7 @@ public class FlightController extends IScriptable {
   public let rollPID: ref<DualPID>;
   public let rollCorrectionFactor: Float;
   public let yawPID: ref<PID>;
+  public let yawD: Float;
   public let yawCorrectionFactor: Float;
   public let brakeFactor: Float;
   public let fwtfCorrection: Float;
@@ -122,6 +124,9 @@ public class FlightController extends IScriptable {
   private let hovering: Bool;
   public let referenceZ: Float;
   private let secondCounter: Float;
+  public let collisionTimer: Float;
+  public let collisionRecoveryDelay: Float;
+  public let collisionRecoveryDuration: Float;
 
   public let fl_tire: ref<IPlacedComponent>;
   public let fr_tire: ref<IPlacedComponent>;
@@ -147,16 +152,17 @@ public class FlightController extends IScriptable {
     this.rollCorrectionFactor = 20.0;
     this.yawCorrectionFactor = 0.1;
     this.yawDirectionalityFactor = 50.0;
-    this.brake = PID.Create(0.05, 0.0, 0.0, 0.0);
-    this.lift = PID.Create(0.05, 0.0, 0.0, 0.0);
-    this.surge = PID.Create(0.04, 0.0, 0.0, 0.0);
-    this.roll = PID.Create(0.5, 0.0, 0.0, 0.0);
-    this.pitch = PID.Create(0.5, 0.0, 0.0, 0.0);
-    this.yaw = PID.Create(0.01, 0.0, 0.0, 0.0);
+    this.brake = InputPID.Create(0.05, 0.5);
+    this.lift = InputPID.Create(0.05, 0.2);
+    this.surge = InputPID.Create(0.04, 0.2);
+    this.roll = InputPID.Create(0.5, 0.5);
+    this.pitch = InputPID.Create(0.5, 0.5);
+    this.yaw = InputPID.Create(0.02, 0.2);
     this.hover = PID.Create(0.1, 0.01, 0.05);
-    this.pitchPID = DualPID.Create(0.5, 0.2, 0.05,  5.0, 1.0, 0.5);
-    this.rollPID =  DualPID.Create(0.5, 0.2, 0.05,  5.0, 1.0, 0.5);
-    this.yawPID = PID.Create(0.5, 0.2, 2.0);
+    this.pitchPID = DualPID.Create(0.5, 0.2, 0.05,  1.0, 0.25, 0.1);
+    this.rollPID =  DualPID.Create(0.5, 0.2, 0.05,  1.0, 0.25, 0.1);
+    this.yawPID = PID.Create(0.5, 0.2, 0.0);
+    this.yawD = 3.0;
     this.distance = 0.0;
     this.distanceEase = 0.1;
     this.normal = new Vector4(0.0, 0.0, 1.0, 0.0);
@@ -164,7 +170,7 @@ public class FlightController extends IScriptable {
     this.airResistance = 0.01;
     this.defaultHoverHeight = 3.50;
     this.hoverHeight = this.defaultHoverHeight;
-    this.minHoverHeight = 3.0;
+    this.minHoverHeight = 1.0;
     this.maxHoverHeight = 7.0;
     this.lookAheadMax = 10.0;
     // this.lookAheadMin = 1.0;
@@ -183,6 +189,9 @@ public class FlightController extends IScriptable {
     this.hovering = true;
     this.referenceZ = 0.0;
     this.secondCounter = 0.0;
+    this.collisionRecoveryDelay = 0.8;
+    this.collisionRecoveryDuration = 0.8;
+    this.collisionTimer = this.collisionRecoveryDelay;
 
     this.audio = FlightAudio.Create();  
 
@@ -226,6 +235,9 @@ public class FlightController extends IScriptable {
 
   public func SetupMountedToCallback(psmBB: ref<IBlackboard>) -> Void {
     this.m_callbackID = psmBB.RegisterListenerBool(GetAllBlackboardDefs().PlayerStateMachine.MountedToVehicle, this, n"OnMountedToVehicleChange");
+    if psmBB.GetBool(GetAllBlackboardDefs().PlayerStateMachine.MountedToVehicle) {
+      this.Enable();
+    } 
   }
   
   public cb func OnMountedToVehicleChange(mounted: Bool) -> Bool {
@@ -290,6 +302,9 @@ public class FlightController extends IScriptable {
     this.brake.Reset();
 
     this.SetupTires();
+    
+    this.collisionTimer = this.collisionRecoveryDelay;
+    this.hoverHeight = this.defaultHoverHeight;
 
     this.camera = GetPlayer(this.gameInstance).FindComponentByName(n"vehicleTPPCamera") as vehicleTPPCameraComponent;
 
@@ -299,23 +314,9 @@ public class FlightController extends IScriptable {
 
     this.audio.Start("vehicle2_TPP");
 
-    // let flightDevice = new FlightDevice();
-
-    // let originalevent = new ToggleTakeOverControl();
-    // originalevent.actionName = n"ToggleTakeOverControl";
-    // originalevent.prop = DeviceActionPropertyFunctions.SetUpProperty_Bool(originalevent.actionName, true, n"LocKey#359", n"LocKey#17810");
-    // // originalevent.m_isQuickHack = false;
-
-    // let takeOverRequest = new RequestTakeControl();
-    // let takeOverControlSystem: ref<TakeOverControlSystem> = GameInstance.GetScriptableSystemsContainer(this.gameInstance).Get(n"TakeOverControlSystem") as TakeOverControlSystem;
-    // takeOverRequest.requestSource = flightDevice.GetEntityID();
-    // takeOverRequest.originalEvent = originalevent;
-    // takeOverControlSystem.QueueRequest(takeOverRequest);
-
-    // this disables engines noises from starting, but also prevents wheels from moving
-    // something that only stops engine noises would be preferred, or this could be toggled
-    // when close to the ground, to make transitions easier
-    // this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetState(vehicleEState.Default);
+    // idk what to do with this
+    // let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
+    // uiSystem.PushGameContext(IntEnum(10));
 
     this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetLightMode(vehicleELightMode.HighBeams);
     this.GetVehicle().GetVehicleComponent().GetVehicleController().ToggleLights(true);
@@ -325,16 +326,14 @@ public class FlightController extends IScriptable {
   
     this.ShowSimpleMessage("Flight Control Engaged");
 
+    // have access to this now, but it's FPP only
     // stateContext.SetPermanentCNameParameter(n"VehicleCameraParams", n"", true); 
     // this.driveEvents.UpdateCameraContext(stateContext, scriptInterface);
     // let param: StateResultCName = stateContext.GetPermanentCNameParameter(n"LocomotionCameraParams");
     // if param.valid {
     //     this.driveEvents.UpdateCameraParams(param.value, scriptInterface);
     // };
-   // GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_hacking_access_granted");
-    // GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"ignition", true);
-    // GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(StringToName(this.GetVehicle().GetRecord().Player_audio_resource()));
-    // GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"mus_cp_arcade_quadra_START_menu");
+    
     FlightLog.Info("[FlightController] Activate");
     this.GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControllerBB.IsActive, true, true);
     this.GetBlackboard().SignalBool(GetAllBlackboardDefs().FlightControllerBB.IsActive);
@@ -346,9 +345,10 @@ public class FlightController extends IScriptable {
 
     // (this.GetVehicle().GetPS() as VehicleComponentPS).SetThrusterState(false);
 
-    // this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetState(vehicleEState.On);
-
     this.audio.Stop("vehicle2_TPP");
+
+    //let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
+    //uiSystem.PopGameContext(IntEnum(10));
 
     // StatusEffectHelper.RemoveStatusEffect(GetPlayer(this.gameInstance), t"GameplayRestriction.NoCameraControl");
     if !silent {
@@ -362,7 +362,7 @@ public class FlightController extends IScriptable {
     FlightLog.Info("[FlightController] Deactivate");
     this.GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControllerBB.IsActive, false, true);
     this.GetBlackboard().SignalBool(GetAllBlackboardDefs().FlightControllerBB.IsActive);
-  }
+  }  
 
   private func ShowMoreInfo() -> Void {
     // very intrusive - need a prompt/confirmation that they want this popup, eg Detailed Info / About
@@ -392,7 +392,7 @@ public class FlightController extends IScriptable {
         uiSystem.QueueEvent(FlightController.ShowHintHelper("Yaw", n"TurnX", n"FlightController"));
         player.RegisterInputListener(this, n"SurgeNeg");
         // we may want to look at something else besides this input so ForceBrakesUntilStoppedOrFor will work (not entirely sure it doesn't now)
-        // vehicle.GetBlackboard().GetInt(GetAllBlackboardDefs().Vehicle.IsHandbraking) is the value (why int? no enums for it seem to exist)
+        // vehicle.GetBlackboard().GetInt(GetAllBlackboardDefs().Vehicle.IsHandbraking)
         player.RegisterInputListener(this, n"Handbrake");
         player.RegisterInputListener(this, n"Choice1_DualState");
         player.RegisterInputListener(this, n"FlightOptions_Up");
@@ -529,9 +529,14 @@ public class FlightController extends IScriptable {
     this.audio.yawDiff = Vector4.GetAngleDegAroundAxis(this.stats.d_forward, this.stats.d_direction, this.stats.d_up);
     this.audio.pitchDiff = Vector4.GetAngleDegAroundAxis(this.stats.d_forward, this.stats.d_direction, this.stats.d_right);
     
-    this.audio.surge = this.surge.GetValue();
-    this.audio.yaw = this.yaw.GetValue();
-    this.audio.lift = this.lift.GetValue();
+    let ratio = 1.0;
+    if this.collisionTimer < this.collisionRecoveryDelay + this.collisionRecoveryDuration {
+      ratio = MaxF(0.0, (this.collisionTimer - this.collisionRecoveryDelay) / this.collisionRecoveryDuration);
+    }
+
+    this.audio.surge = this.surge.GetValue() * ratio;
+    this.audio.yaw = this.yaw.GetValue() * ratio;
+    this.audio.lift = this.lift.GetValue() * ratio;
     this.audio.brake = this.brake.GetValue();
 
     this.audio.Update();
@@ -591,9 +596,9 @@ public class FlightController extends IScriptable {
     this.ui.ClearMarks();
 
     let direction = this.stats.d_direction;
-    if this.stats.d_speed < 1.0 {
-      direction = this.stats.d_forward;
-    }
+    // if this.stats.d_speed < 1.0 {
+    //   direction = Vector4.Normalize(Quaternion.GetForward(this.stats.d_lastOrientation));
+    // }
 
     let hoverCorrection: Float = 0.0;
     let pitchCorrection: Float = 0.0;
@@ -640,11 +645,15 @@ public class FlightController extends IScriptable {
       let findGround3: TraceResult = scriptInterface.RayCastWithCollisionFilter(bl_tire, bl_tire + this.lookDown, queryFilter);
       let findGround4: TraceResult = scriptInterface.RayCastWithCollisionFilter(br_tire, br_tire + this.lookDown, queryFilter);
       if TraceResult.IsValid(findGround1) && TraceResult.IsValid(findGround2) && TraceResult.IsValid(findGround3) && TraceResult.IsValid(findGround4) {
-        let distance = MinF(
-          MinF(Vector4.Distance(fl_tire, Cast(findGround1.position)),
-          Vector4.Distance(fr_tire, Cast(findGround2.position))),
-          MinF(Vector4.Distance(bl_tire, Cast(findGround3.position)),
-          Vector4.Distance(br_tire, Cast(findGround4.position))));
+        // let distance = MinF(
+        //   MinF(Vector4.Distance(fl_tire, Cast(findGround1.position)),
+        //   Vector4.Distance(fr_tire, Cast(findGround2.position))),
+        //   MinF(Vector4.Distance(bl_tire, Cast(findGround3.position)),
+        //   Vector4.Distance(br_tire, Cast(findGround4.position))));        
+        let distance = (Vector4.Distance(fl_tire, Cast(findGround1.position)) +
+          Vector4.Distance(fr_tire, Cast(findGround2.position)) +
+          Vector4.Distance(bl_tire, Cast(findGround3.position)) +
+          Vector4.Distance(br_tire, Cast(findGround4.position))) / 4;
         // this.distance = distance * (1.0 - this.distanceEase) + this.distance * (this.distanceEase);
         this.distance = distance;
         
@@ -781,7 +790,8 @@ public class FlightController extends IScriptable {
       if this.hovering {
         // close to ground, use as reference
         heightDifference = this.hoverHeight - this.distance;
-        idealNormal = this.normal;
+        // idealNormal = this.normal;
+        idealNormal = Vector4.Interpolate(this.normal, idealNormal, (this.distance - this.minHoverHeight) / (this.maxHoverHeight - this.minHoverHeight));
       } else {
         // use absolute Z if too high
         heightDifference = this.referenceZ + this.hoverHeight - this.stats.d_position.Z;
@@ -800,7 +810,7 @@ public class FlightController extends IScriptable {
       .FontSize(20)
       .Anchor(0.0, 0.5)
       .Tint(ThemeColors.ElectricBlue())
-      .Text(this.hovering ? "Hovering" : "Flying")
+      .Text(this.hovering ? "Hovering from " + FloatToStringPrec(this.distance, 2) + " to " + FloatToStringPrec(this.hoverHeight, 2): "Flying at " + FloatToStringPrec(this.distance, 2))
       .HAlign(inkEHorizontalAlign.Left)
       .Margin(0.0, 0.0, 0.0, 0.0)
       .Translation(1100, 320)
@@ -872,15 +882,22 @@ public class FlightController extends IScriptable {
     pitchCorrection = this.pitchPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(idealNormal, this.stats.d_forward)) + this.lift.GetValue() * this.pitchWithLift, timeDelta, 10.0) + this.pitch.GetValue() / 10.0;
     rollCorrection = this.rollPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(idealNormal, this.stats.d_right)), timeDelta, 10.0) + this.yaw.GetValue() * this.rollWithYaw + this.roll.GetValue() / 10.0;
     // let angle: Float = Vector4.GetAngleDegAroundAxis(Vector4.Interpolate(this.stats.d_forward, direction, this.stats.d_speedRatio * this.velocityPointing), this.stats.d_forward, new Vector4(0.0, 0.0, 1.0, 0.0));
-    let angle: Float = Vector4.GetAngleDegAroundAxis(direction, this.stats.d_forward, new Vector4(0.0, 0.0, 1.0, 0.0));
-    // let angle: Float = Vector4.Dot2D(direction, this.stats.d_forward);
+//    let angle: Float = Vector4.GetAngleDegAroundAxis(direction, this.stats.d_forward, new Vector4(0.0, 0.0, 1.0, 0.0));
+
+    let changeAngle: Float = Vector4.GetAngleDegAroundAxis(Quaternion.GetForward(this.stats.d_lastOrientation), this.stats.d_forward, this.stats.d_up);
+    let directionAngle: Float = Vector4.GetAngleDegAroundAxis(this.stats.d_direction, this.stats.d_forward, this.stats.d_up);
+
+    let angle: Float = directionAngle;
 
     // decay the integral if we have yaw input - this helps get rid of the windup effect
     this.yawPID.integralFloat *= (1.0 - AbsF(this.yaw.GetValue()));
-    this.yawPID.integralFloat *= MinF(1.0, this.stats.d_speedRatio * 4.0);
-    let angleTooHigh = MinF(1.0, 8.0 - AbsF(angle) / 180.0 * 8.0);
+    // this.yawPID.integralFloat *= MinF(1.0, this.stats.d_speedRatio * 4.0);
+    // let angleTooHigh = MinF(1.0, 8.0 - AbsF(angle) / 180.0 * 8.0);
     // yawCorrection = this.yawPID.GetCorrection(angle * angleTooHigh * this.stats.d_speedRatio + this.yaw.GetValue() * this.yawFactor * (1.0 + this.stats.d_speedRatio * 3.0), timeDelta);
-    yawCorrection = this.yawPID.GetCorrection(angle * angleTooHigh, timeDelta);
+    // this.yawPID.UpdateP(0.5 * MaxF(0.0, this.stats.d_speedRatioSquared * 1.1 - 0.1));
+    // this.yawPID.UpdateP(5.0 * this.stats.d_speedRatioSquared);
+    // this.yawPID.UpdateI(2.0 * this.stats.d_speedRatioSquared);
+    yawCorrection = this.yawPID.GetCorrection(angle, timeDelta) + this.yawD * changeAngle / timeDelta;
 
     let velocityDamp: Vector4 = MaxF(this.brake.GetValue() * this.brakeFactor, this.airResistance) * this.stats.d_velocity * this.stats.s_mass;
     // so we don't get impulsed by the speed limit (100 m/s, i think)
@@ -888,7 +905,8 @@ public class FlightController extends IScriptable {
       velocityDamp *= (1 + PowF((this.stats.d_speed - 90.0) / 10.0, 2.0) * 1000.0);
     }
 
-    let yawDirectionality: Float = (this.stats.d_speedRatio + AbsF(this.yaw.GetValue()) * this.swayWithYaw) * this.stats.s_mass * this.yawDirectionalityFactor;
+    // let yawDirectionality: Float = (this.stats.d_speedRatio + AbsF(this.yaw.GetValue()) * this.swayWithYaw) * this.stats.s_mass * this.yawDirectionalityFactor;
+    let yawDirectionality: Float = this.stats.d_speedRatio * this.stats.s_mass * this.yawDirectionalityFactor;
     let liftForce: Float = hoverCorrection * this.stats.s_mass * this.hoverFactor * 9.8;
     // actual in-game mass (i think)
     // FlightLog.Info(ToString(hoverCorrection * this.stats.s_mass * this.hoverFactor) + " vs " + this.GetVehicle().GetTotalMass());
@@ -919,7 +937,9 @@ public class FlightController extends IScriptable {
 
     this.UpdateAudioParams();
 
-
+    if this.collisionTimer < this.collisionRecoveryDelay + this.collisionRecoveryDuration {
+      this.collisionTimer += timeDelta;
+    }
 
     // (this.GetVehicle().GetPS() as VehicleComponentPS).SetThrusterState(this.surge.GetValue() > 0.99);
     
@@ -934,6 +954,9 @@ public class FlightController extends IScriptable {
     // impulseEvent.bodyIndex = 15u;
     // impulseEvent.shapeIndex = 2u;
     impulseEvent.worldPosition = Vector4.Vector4To3(position);
+    if this.collisionTimer < this.collisionRecoveryDelay + this.collisionRecoveryDuration {
+      direction *= MaxF(0.0, (this.collisionTimer - this.collisionRecoveryDelay) / this.collisionRecoveryDuration);
+    }
     impulseEvent.worldImpulse = Vector4.Vector4To3(direction);
     this.GetVehicle().QueueEvent(impulseEvent);
   }
@@ -1171,6 +1194,11 @@ protected cb func OnVehicleWaterEvent(evt: ref<VehicleWaterEvent>) -> Bool {
     this.m_submerged = false;
   }
   ScriptedPuppet.ReevaluateOxygenConsumption(this.m_mountedPlayer);
+  if FlightController.GetInstance().IsActive() {
+    let playerPuppet = GameInstance.GetPlayerSystem(this.GetVehicle().GetGame()).GetLocalPlayerMainGameObject() as PlayerPuppet;
+    let playerStateMachineBlackboard = GameInstance.GetBlackboardSystem(this.GetVehicle().GetGame()).GetLocalInstanced(playerPuppet.GetEntityID(), GetAllBlackboardDefs().PlayerStateMachine);
+    playerStateMachineBlackboard.SetInt(GetAllBlackboardDefs().PlayerStateMachine.Swimming, EnumInt(gamePSMSwimming.Surface), true);
+  }
 }
 
 // @wrapMethod(VehicleObject)
