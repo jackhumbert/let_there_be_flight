@@ -147,7 +147,7 @@ public class FlightController extends IScriptable {
     this.liftFactor = 10.0;
     this.surgeFactor = 15.0;
     this.hoverFactor = 5.0;
-    this.yawFactor = 40.0;
+    this.yawFactor = 80.0;
     this.pitchCorrectionFactor = 20.0;
     this.rollCorrectionFactor = 20.0;
     this.yawCorrectionFactor = 0.1;
@@ -159,8 +159,8 @@ public class FlightController extends IScriptable {
     this.pitch = InputPID.Create(0.5, 0.5);
     this.yaw = InputPID.Create(0.02, 0.2);
     this.hover = PID.Create(0.1, 0.01, 0.05);
-    this.pitchPID = DualPID.Create(0.5, 0.2, 0.05,  1.0, 0.25, 0.1);
-    this.rollPID =  DualPID.Create(0.5, 0.2, 0.05,  1.0, 0.25, 0.1);
+    this.pitchPID = DualPID.Create(0.5, 0.2, 0.05,  2.5, 1.5, 0.5);
+    this.rollPID =  DualPID.Create(0.5, 0.2, 0.05,  2.5, 1.5, 0.5);
     this.yawPID = PID.Create(0.5, 0.2, 0.0);
     this.yawD = 3.0;
     this.distance = 0.0;
@@ -304,6 +304,7 @@ public class FlightController extends IScriptable {
     this.SetupTires();
     
     this.collisionTimer = this.collisionRecoveryDelay;
+    this.hoverHeight = this.defaultHoverHeight;
 
     this.camera = GetPlayer(this.gameInstance).FindComponentByName(n"vehicleTPPCamera") as vehicleTPPCameraComponent;
 
@@ -316,19 +317,6 @@ public class FlightController extends IScriptable {
     // idk what to do with this
     // let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
     // uiSystem.PushGameContext(IntEnum(10));
-
-    // let flightDevice = new FlightDevice();
-
-    // let originalevent = new ToggleTakeOverControl();
-    // originalevent.actionName = n"ToggleTakeOverControl";
-    // originalevent.prop = DeviceActionPropertyFunctions.SetUpProperty_Bool(originalevent.actionName, true, n"LocKey#359", n"LocKey#17810");
-    // // originalevent.m_isQuickHack = false;
-
-    // let takeOverRequest = new RequestTakeControl();
-    // let takeOverControlSystem: ref<TakeOverControlSystem> = GameInstance.GetScriptableSystemsContainer(this.gameInstance).Get(n"TakeOverControlSystem") as TakeOverControlSystem;
-    // takeOverRequest.requestSource = flightDevice.GetEntityID();
-    // takeOverRequest.originalEvent = originalevent;
-    // takeOverControlSystem.QueueRequest(takeOverRequest);
 
     this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetLightMode(vehicleELightMode.HighBeams);
     this.GetVehicle().GetVehicleComponent().GetVehicleController().ToggleLights(true);

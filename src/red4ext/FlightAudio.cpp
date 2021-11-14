@@ -97,6 +97,7 @@ namespace FlightAudio {
 
     void Stop(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
     {
+        int32_t count;
         RED4ext::CString eventName;
         RED4ext::GetParameter(aFrame, &eventName);
         aFrame->code++; // skip ParamEnd
@@ -174,9 +175,7 @@ namespace FlightAudio {
         RED4ext::CBaseFunction::Flags n_flags = { .isNative = true };
 ;
         auto startSound = RED4ext::CClassFunction::Create(&flightAudioCls, "Start", "Start", &Start);
-        startSound->AddParam("String", "eventName");
         auto stopSound = RED4ext::CClassFunction::Create(&flightAudioCls, "Stop", "Stop", &Stop);
-        stopSound->AddParam("String", "eventName");
         auto setParams = RED4ext::CClassFunction::Create(&flightAudioCls, "Update", "Update", &Update);
 
         startSound->flags = n_flags;

@@ -86,12 +86,6 @@ namespace FlightLog {
         auto flightLogError = RED4ext::CClassStaticFunction::Create(&flightLogCls, "Error", "Error", &Error);
         auto flightLogProbe = RED4ext::CClassStaticFunction::Create(&flightLogCls, "Probe", "Probe", &Probe);
 
-        flightLogInfo->AddParam("String", "value");
-        flightLogWarn->AddParam("String", "value");
-        flightLogError->AddParam("String", "value");
-        flightLogProbe->AddParam("handle:inkImageWidget", "image");
-        flightLogProbe->AddParam("redResourceReferenceScriptToken", "atlasResourcePath");
-
         flightLogInfo->flags = flags;
         flightLogWarn->flags = flags;
         flightLogError->flags = flags;

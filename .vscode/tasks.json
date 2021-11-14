@@ -28,11 +28,10 @@
         "problemMatcher": []
       },
       {
-        "label": "Lint Local Redscript",
+        "label": "Lint",
         "type": "shell",
-        "command": "cargo run --bin redscript-cli --release -- lint -s \"C:\\Users\\Jack\\Documents\\cyberpunk\\flight_control\\src\\redscript\" -b \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\r6\\cache\\final.redscripts.bk\"",
+        "command": "tools\\lint.bat",
         "options": {
-          "cwd": "C:\\Users\\Jack\\Documents\\cyberpunk\\redscript",
           "shell": {
             "executable": "cmd.exe",
             "args": [
@@ -52,7 +51,7 @@
         "problemMatcher": []
       },
       {
-        "label": "Build Mod",
+        "label": "Build",
         "type": "shell",
         "command": "tools\\build.bat",
         "options": {
@@ -98,7 +97,79 @@
         "problemMatcher": []
       },
       {
-        "label": "Launch Game",
+        "label": "Lint/Build",
+        "type": "shell",
+        "command": "tools\\build.bat",
+        "options": {
+          "shell": {
+            "executable": "cmd.exe",
+            "args": [
+              "/d", "/c"
+            ]
+          }
+        },
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared",
+          "showReuseMessage": false,
+          "clear": false
+        },
+        "group": "build",
+        "problemMatcher": [],
+        "dependsOn": ["Lint"]
+      },
+      {
+        "label": "Install",
+        "type": "shell",
+        "command": "tools\\install.bat",
+        "options": {
+          "shell": {
+            "executable": "cmd.exe",
+            "args": [
+              "/d", "/c"
+            ]
+          }
+        },
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared",
+          "showReuseMessage": false,
+          "clear": false
+        },
+        "group": "build",
+        "problemMatcher": []
+      },
+      {
+        "label": "Lint/Build/Install",
+        "type": "shell",
+        "command": "tools\\install.bat",
+        "options": {
+          "shell": {
+            "executable": "cmd.exe",
+            "args": [
+              "/d", "/c"
+            ]
+          }
+        },
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared",
+          "showReuseMessage": false,
+          "clear": false
+        },
+        "group": "build",
+        "problemMatcher": [],
+        "dependsOrder": "sequence",
+        "dependsOn": ["Lint/Build", "Build Tweaks"]
+      },
+      {
+        "label": "Run",
         "type": "shell",
         "command": "\"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\bin\\x64\\Cyberpunk2077.exe\"",
         "options": {
@@ -121,9 +192,9 @@
         "problemMatcher": []
       },
       {
-        "label": "Build & Install Mod",
+        "label": "Lint/Build/Install/Run",
         "type": "shell",
-        "command": "tools\\build_install_no_confirm.bat",
+        "command": "\"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\bin\\x64\\Cyberpunk2077.exe\"",
         "options": {
           "shell": {
             "executable": "cmd.exe",
@@ -140,11 +211,33 @@
           "showReuseMessage": false,
           "clear": false
         },
-        "group": {
-          "kind": "build",
-          "isDefault": true
+        "group": "build",
+        "problemMatcher": [],
+        "dependsOn": ["Lint/Build/Install"]
+      },
+      {
+        "label": "Install/Run",
+        "type": "shell",
+        "command": "\"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\bin\\x64\\Cyberpunk2077.exe\"",
+        "options": {
+          "shell": {
+            "executable": "cmd.exe",
+            "args": [
+              "/d", "/c"
+            ]
+          }
         },
-        "problemMatcher": []
-      }
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared",
+          "showReuseMessage": false,
+          "clear": false
+        },
+        "group": "build",
+        "problemMatcher": [],
+        "dependsOn": ["Install"]
+      },
     ]
   }

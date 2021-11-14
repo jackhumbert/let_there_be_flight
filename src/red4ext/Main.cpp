@@ -6,6 +6,7 @@
 #include <RED4ext/Scripting/IScriptable.hpp>
 #include <RED4ext/RTTITypes.hpp>
 #include <RED4ext/Scripting/Natives/Generated/red/ResourceReferenceScriptToken.hpp>
+#include <RED4ext/Scripting/Natives/Generated/game/data/VehicleTPPCameraParams_Record.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/ImageWidget.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/TextureAtlas.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/EBlurDimension.hpp>
@@ -150,6 +151,25 @@ void SetShapeResource(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFra
 //struct gamePSMVehicle : RED4ext::CBaseRTTIType {
 //};
 
+void TppCameraParams(RED4ext::IScriptable* apContext, RED4ext::CStackFrame* apFrame, RED4ext::VehicleTPPCameraParams_Record* apOut, int64_t a4) {
+    auto rtti = RED4ext::CRTTISystem::Get();
+    auto TweakDBInterface = rtti->GetClass("TweakDBInterface");
+    auto GetVehicleTPPCameraParamsRecord = TweakDBInterface->GetFunction("GetVehicleTPPCameraParamsRecord");
+    auto value = RED4ext::TweakDBID::TweakDBID("Camera.VehicleTPP_FlightParams");
+    RED4ext::StackArgs_t args;
+    args.emplace_back(nullptr, &value);
+    RED4ext::ExecuteFunction(TweakDBInterface, GetVehicleTPPCameraParamsRecord, apOut, args);
+}
+
+void TppCameraParamsHandle(RED4ext::IScriptable* apContext, RED4ext::CStackFrame* apFrame, RED4ext::Handle<RED4ext::VehicleTPPCameraParams_Record*>* apOut, int64_t a4) {
+    auto rtti = RED4ext::CRTTISystem::Get();
+    auto TweakDBInterface = rtti->GetClass("TweakDBInterface");
+    auto GetVehicleTPPCameraParamsRecord = TweakDBInterface->GetFunction("GetVehicleTPPCameraParamsRecord");
+    auto value = RED4ext::TweakDBID::TweakDBID("Camera.VehicleTPP_FlightParams");
+    RED4ext::StackArgs_t args;
+    args.emplace_back(nullptr, &value);
+    RED4ext::ExecuteFunction(TweakDBInterface, GetVehicleTPPCameraParamsRecord, apOut, args);
+}
 
 RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
 {
@@ -164,27 +184,19 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
 
     auto inkMaskWidget = rtti->GetClass("inkMaskWidget");
     auto setAtlasTextureFunc = RED4ext::CClassFunction::Create(inkMaskWidget, "SetAtlasResource", "SetAtlasResource", &SetAtlasResource, { .isNative = true });
-    setAtlasTextureFunc->AddParam("redResourceReferenceScriptToken", "atlasResourcePath");
-    setAtlasTextureFunc->SetReturnType("Bool");
     inkMaskWidget->RegisterFunction(setAtlasTextureFunc);
 
     auto inkShapeWidget = rtti->GetClass("inkShapeWidget");
     auto setShapeResourceFunc = RED4ext::CClassFunction::Create(inkShapeWidget, "SetShapeResource", "SetShapeResource", &SetShapeResource, { .isNative = true });
-    setShapeResourceFunc->AddParam("redResourceReferenceScriptToken", "shapeResourcePath");
     inkShapeWidget->RegisterFunction(setShapeResourceFunc);
 
 
     auto inkWidget = rtti->GetClass("inkWidget");
 
     auto createEffectFunc = RED4ext::CClassFunction::Create(inkWidget, "CreateEffect", "CreateEffect", &CreateEffect, { .isNative = true });
-    createEffectFunc->AddParam("CName", "typeName");
-    createEffectFunc->AddParam("CName", "effectName");
     inkWidget->RegisterFunction(createEffectFunc);
 
     auto setBlurDimensionFunc = RED4ext::CClassFunction::Create(inkWidget, "SetBlurDimension", "SetBlurDimension", &SetBlurDimension, { .isNative = true });
-    setBlurDimensionFunc->AddParam("CName", "effectName");
-    setBlurDimensionFunc->AddParam("inkEBlurDimension", "blurDimension");
-    setBlurDimensionFunc->SetReturnType("Bool");
     inkWidget->RegisterFunction(setBlurDimensionFunc);
 
     //auto getEffectFunc = RED4ext::CClassFunction::Create(inkWidget, "GetEffect", "GetEffect", &GetEffect, { .isNative = true });
@@ -200,9 +212,49 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
     UIGameContextEnum->hashList.PushBack("VehicleFlight");
     UIGameContextEnum->valueList.PushBack(10);
 
-    auto UIGameContextEnum = rtti->GetEnum("HUDActorType");
-    UIGameContextEnum->hashList.PushBack("FLIGHT");
-    UIGameContextEnum->valueList.PushBack(7);
+    auto gamedataVehicle_Record = rtti->GetClass("gamedataVehicle_Record");
+    auto TppCameraParamsOld = gamedataVehicle_Record->GetFunction("TppCameraParams");
+
+    auto TppCameraParamsNew = RED4ext::CClassFunction::Create(gamedataVehicle_Record, "TppCameraParams", "TppCameraParams", &TppCameraParams, { .isNative = true });
+    
+    TppCameraParamsNew->fullName = TppCameraParamsOld->fullName;
+    TppCameraParamsNew->shortName = TppCameraParamsOld->shortName;
+
+    TppCameraParamsNew->returnType = TppCameraParamsOld->returnType;
+    for (auto* p : TppCameraParamsOld->params)
+    {
+        TppCameraParamsNew->params.PushBack(p);
+    }
+
+    for (auto* p : TppCameraParamsOld->localVars)
+    {
+        TppCameraParamsNew->localVars.PushBack(p);
+    }
+
+    TppCameraParamsNew->unk20 = TppCameraParamsOld->unk20;
+    //std::copy_n(TppCameraParamsOld->unk78, std::size(TppCameraParamsOld->unk78), TppCameraParamsNew->unk78);
+    TppCameraParamsNew->unk48 = TppCameraParamsOld->unk48;
+    TppCameraParamsNew->unkAC = TppCameraParamsOld->unkAC;
+    TppCameraParamsNew->flags = TppCameraParamsOld->flags;
+    TppCameraParamsNew->parent = TppCameraParamsOld->parent;
+    TppCameraParamsNew->flags.isNative = true;
+
+    // Swap the content of the real function with the one we just created
+    std::array<char, sizeof(RED4ext::CClassFunction)> tmpBuffer;
+
+    std::memcpy(&tmpBuffer, TppCameraParamsOld, sizeof(RED4ext::CClassFunction));
+    std::memcpy(TppCameraParamsOld, TppCameraParamsNew, sizeof(RED4ext::CClassFunction));
+    std::memcpy(TppCameraParamsNew, &tmpBuffer, sizeof(RED4ext::CClassFunction));
+
+    //gamedataVehicle_Record->RegisterFunction(TppCameraParamsFunc);
+    //auto TppCameraParamsHandleFunc = RED4ext::CClassFunction::Create(gamedataVehicle_Record, "TppCameraParamsHandle", "TppCameraParamsHandle", &TppCameraParamsHandle, { .isNative = true });
+    //gamedataVehicle_Record->RegisterFunction(TppCameraParamsHandleFunc);
+    
+
+
+    //auto UIGameContextEnum = rtti->GetEnum("HUDActorType");
+    //UIGameContextEnum->hashList.PushBack("FLIGHT");
+    //UIGameContextEnum->valueList.PushBack(7);
 
     //RED4ext::CEnum::Flags flags = {};
     //RED4ext::CEnum gamePSMVehicleEnum = RED4ext::CEnum::CEnum("gamePSMVehicle", 10, flags);

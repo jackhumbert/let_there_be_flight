@@ -214,7 +214,7 @@ public class FlightEvents extends VehicleEventsTransition {
       let exitActionPressCount = scriptInterface.GetActionPressCount(n"Exit");
       let exitPressCountResult = stateContext.GetPermanentIntParameter(n"exitPressCountOnEnter");
       let onDifferentExitPress = !exitPressCountResult.valid || exitPressCountResult.value != Cast(exitActionPressCount);
-      if onDifferentExitPress && stateTime >= 0.30 && scriptInterface.GetActionValue(n"Exit") > 0.00 {
+      if onDifferentExitPress && stateTime >= 0.30 && scriptInterface.GetActionValue(n"Exit") > 0.00 && scriptInterface.GetActionStateTime(n"Exit") > 0.30{
         let vehicle = scriptInterface.owner as VehicleObject;
         let inputStateTime = scriptInterface.GetActionStateTime(n"Exit");
         let validUnmount = vehicle.CanUnmount(true, scriptInterface.executionOwner);
