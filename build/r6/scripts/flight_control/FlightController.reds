@@ -190,7 +190,7 @@ public class FlightController extends IScriptable {
     this.referenceZ = 0.0;
     this.secondCounter = 0.0;
     this.collisionRecoveryDelay = 0.8;
-    this.collisionRecoveryDuration = 0.8;
+    this.collisionRecoveryDuration = 0.4;
     this.collisionTimer = this.collisionRecoveryDelay;
 
     this.audio = FlightAudio.Create();  

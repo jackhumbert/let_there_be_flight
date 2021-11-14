@@ -151,7 +151,7 @@ void SetShapeResource(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFra
 //struct gamePSMVehicle : RED4ext::CBaseRTTIType {
 //};
 
-void TppCameraParams(RED4ext::IScriptable* apContext, RED4ext::CStackFrame* apFrame, RED4ext::VehicleTPPCameraParams_Record* apOut, int64_t a4) {
+void TppFlightCameraParams(RED4ext::IScriptable* apContext, RED4ext::CStackFrame* apFrame, RED4ext::VehicleTPPCameraParams_Record* apOut, int64_t a4) {
     auto rtti = RED4ext::CRTTISystem::Get();
     auto TweakDBInterface = rtti->GetClass("TweakDBInterface");
     auto GetVehicleTPPCameraParamsRecord = TweakDBInterface->GetFunction("GetVehicleTPPCameraParamsRecord");
@@ -213,40 +213,40 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
     UIGameContextEnum->valueList.PushBack(10);
 
     auto gamedataVehicle_Record = rtti->GetClass("gamedataVehicle_Record");
-    auto TppCameraParamsOld = gamedataVehicle_Record->GetFunction("TppCameraParams");
+    //auto TppCameraParamsOld = gamedataVehicle_Record->GetFunction("TppCameraParams");
 
-    auto TppCameraParamsNew = RED4ext::CClassFunction::Create(gamedataVehicle_Record, "TppCameraParams", "TppCameraParams", &TppCameraParams, { .isNative = true });
-    
-    TppCameraParamsNew->fullName = TppCameraParamsOld->fullName;
-    TppCameraParamsNew->shortName = TppCameraParamsOld->shortName;
+    auto TppCameraParamsNew = RED4ext::CClassFunction::Create(gamedataVehicle_Record, "TppFlightCameraParams", "TppFlightCameraParams", &TppFlightCameraParams, { .isNative = true });
+    //
+    //TppCameraParamsNew->fullName = TppCameraParamsOld->fullName;
+    //TppCameraParamsNew->shortName = TppCameraParamsOld->shortName;
 
-    TppCameraParamsNew->returnType = TppCameraParamsOld->returnType;
-    for (auto* p : TppCameraParamsOld->params)
-    {
-        TppCameraParamsNew->params.PushBack(p);
-    }
+    //TppCameraParamsNew->returnType = TppCameraParamsOld->returnType;
+    //for (auto* p : TppCameraParamsOld->params)
+    //{
+    //    TppCameraParamsNew->params.PushBack(p);
+    //}
 
-    for (auto* p : TppCameraParamsOld->localVars)
-    {
-        TppCameraParamsNew->localVars.PushBack(p);
-    }
+    //for (auto* p : TppCameraParamsOld->localVars)
+    //{
+    //    TppCameraParamsNew->localVars.PushBack(p);
+    //}
 
-    TppCameraParamsNew->unk20 = TppCameraParamsOld->unk20;
-    //std::copy_n(TppCameraParamsOld->unk78, std::size(TppCameraParamsOld->unk78), TppCameraParamsNew->unk78);
-    TppCameraParamsNew->unk48 = TppCameraParamsOld->unk48;
-    TppCameraParamsNew->unkAC = TppCameraParamsOld->unkAC;
-    TppCameraParamsNew->flags = TppCameraParamsOld->flags;
-    TppCameraParamsNew->parent = TppCameraParamsOld->parent;
-    TppCameraParamsNew->flags.isNative = true;
+    //TppCameraParamsNew->unk20 = TppCameraParamsOld->unk20;
+    ////std::copy_n(TppCameraParamsOld->unk78, std::size(TppCameraParamsOld->unk78), TppCameraParamsNew->unk78);
+    //TppCameraParamsNew->unk48 = TppCameraParamsOld->unk48;
+    //TppCameraParamsNew->unkAC = TppCameraParamsOld->unkAC;
+    //TppCameraParamsNew->flags = TppCameraParamsOld->flags;
+    //TppCameraParamsNew->parent = TppCameraParamsOld->parent;
+    //TppCameraParamsNew->flags.isNative = true;
 
-    // Swap the content of the real function with the one we just created
-    std::array<char, sizeof(RED4ext::CClassFunction)> tmpBuffer;
+    //// Swap the content of the real function with the one we just created
+    //std::array<char, sizeof(RED4ext::CClassFunction)> tmpBuffer;
 
-    std::memcpy(&tmpBuffer, TppCameraParamsOld, sizeof(RED4ext::CClassFunction));
-    std::memcpy(TppCameraParamsOld, TppCameraParamsNew, sizeof(RED4ext::CClassFunction));
-    std::memcpy(TppCameraParamsNew, &tmpBuffer, sizeof(RED4ext::CClassFunction));
+    //std::memcpy(&tmpBuffer, TppCameraParamsOld, sizeof(RED4ext::CClassFunction));
+    //std::memcpy(TppCameraParamsOld, TppCameraParamsNew, sizeof(RED4ext::CClassFunction));
+    //std::memcpy(TppCameraParamsNew, &tmpBuffer, sizeof(RED4ext::CClassFunction));
 
-    //gamedataVehicle_Record->RegisterFunction(TppCameraParamsFunc);
+    gamedataVehicle_Record->RegisterFunction(TppCameraParamsNew);
     //auto TppCameraParamsHandleFunc = RED4ext::CClassFunction::Create(gamedataVehicle_Record, "TppCameraParamsHandle", "TppCameraParamsHandle", &TppCameraParamsHandle, { .isNative = true });
     //gamedataVehicle_Record->RegisterFunction(TppCameraParamsHandleFunc);
     
