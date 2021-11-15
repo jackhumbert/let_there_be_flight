@@ -1,5 +1,5 @@
 groups:
-  Vehicle.v_custom_quadra_arcadia_mk4:
+  Vehicle.v_sport1_docworks_arcadia:
     type: Vehicle
     members:
       affiliation:
@@ -8,6 +8,7 @@ groups:
       appearanceName:
           type: CName
           value: docworks_turbor_arcadia_mkiii_naomie 
+          # value: None
       archetypeName:
           type: CName
           value: vehicle 
@@ -34,7 +35,8 @@ groups:
           value: base\gameplay\vehicles\curves\muscle_car.vehcurveset
       destroyedAppearance:
           type: CName
-          value: quadra_turbo_basic_burnt_player_01 
+          value: docworks_turbor_arcadia_mkiii_burnt_01 
+          # value: mizutani_shion_nomad_burnt_01
       destruction:
           type: TweakDBID
           value: Vehicle.VehicleDestructionParamsShionNomad
@@ -52,7 +54,8 @@ groups:
           value: false 
       entityTemplatePath:
           type: raRef:CResource
-          value: base\amm_vehicles\docworks_arcadia\doc_arcadia.ent
+          value: base\vehicles\sport\v_sport1_docworks_arcadia__basic_01.ent
+          # value: 10240601289904711319
       fxCollision:
           type: TweakDBID
           value: Vehicle.FxCollision_Default 
@@ -199,7 +202,7 @@ groups:
           value: Vehicle.Veh4WDefaultState 
       vehDriveModelData:
           type: TweakDBID
-          value: Vehicle.v_custom_quadra_arcadia_mk4_inline0
+          value: Vehicle.v_sport1_docworks_arcadia_inline0
       vehDriveModelDataAI:
           type: TweakDBID
           value:  
@@ -217,7 +220,7 @@ groups:
           value: Camera.VehicleProceduralFPPCamera_DefaultParams 
       vehEngineData:
           type: TweakDBID
-          value: Vehicle.v_custom_quadra_arcadia_mk4_inline9
+          value: Vehicle.v_sport1_docworks_arcadia_inline9
       vehImpactTraffic:
           type: TweakDBID
           value: Driving.VehicleImpactTraffic_DefaultParams 
@@ -267,7 +270,7 @@ groups:
           type: raRef:CResource
           value: 11594906919832128403
     
-  Vehicle.v_custom_quadra_arcadia_mk4_inline0:
+  Vehicle.v_sport1_docworks_arcadia_inline0:
     type: VehicleDriveModelData
     members:
       airResistanceFactor:
@@ -284,7 +287,7 @@ groups:
         value: 0.119999997 
       bikeCurvesPath:
         type: raRef:CResource
-        value: 0 
+        value:
       bikeMaxTilt:
         type: Float
         value: 0 
@@ -476,7 +479,7 @@ groups:
         value: Vehicle.VehicleWaterDefault 
       wheelSetup:
         type: TweakDBID
-        value: Vehicle.v_custom_quadra_arcadia_mk4_inline1 
+        value: Vehicle.v_sport1_docworks_arcadia_inline1 
       wheelTurnMaxAddPerSecond:
         type: Float
         value: 90 
@@ -488,7 +491,7 @@ groups:
         value: CarDrivingFrictionMap.Nomad_Sport_Friction_Map 
 
 
-  Vehicle.v_custom_quadra_arcadia_mk4_inline1:
+  Vehicle.v_sport1_docworks_arcadia_inline1:
     type: VehicleWheelDrivingSetup_4
     members:
       LB:
@@ -505,13 +508,13 @@ groups:
         value: Vehicle.VehicleWheelDrivingSetup_4_Default_inline0
       backPreset:
         type: TweakDBID
-        value: Vehicle.v_custom_quadra_arcadia_mk4_inline3
+        value: Vehicle.v_sport1_docworks_arcadia_inline3
       frontPreset:
         type: TweakDBID
-        value: Vehicle.v_custom_quadra_arcadia_mk4_inline2
+        value: Vehicle.v_sport1_docworks_arcadia_inline2
 
-  Vehicle.v_custom_quadra_arcadia_mk4_inline2:
-    type: VehicleWheelRole
+  Vehicle.v_sport1_docworks_arcadia_inline2:
+    type: VehicleWheelDrivingPreset
     members:
       extremeCompressionEventScalor:
         type: Float
@@ -530,7 +533,7 @@ groups:
         value: 40 
       maxBrakingTorque:
         type: Float
-        value: 4000 
+        value: 6000 
       springBoundDampingLowRate:
         type: Float
         value: 0 
@@ -583,8 +586,8 @@ groups:
         type: Float
         value: 0.16
 
-  Vehicle.v_custom_quadra_arcadia_mk4_inline3:
-    type: VehicleWheelRole
+  Vehicle.v_sport1_docworks_arcadia_inline3:
+    type: VehicleWheelDrivingPreset
     members:
       extremeCompressionEventScalor:
         type: Float
@@ -603,7 +606,7 @@ groups:
         value: 60 
       maxBrakingTorque:
         type: Float
-        value: 3000 
+        value: 5000 
       springBoundDampingLowRate:
         type: Float
         value: 0 
@@ -656,7 +659,7 @@ groups:
         type: Float
         value: 0.18
 
-  Vehicle.v_custom_quadra_arcadia_mk4_inline9:
+  Vehicle.v_sport1_docworks_arcadia_inline9:
     type: VehicleEngineData
     members:
       clutchSyncTorqueMul:
@@ -685,7 +688,7 @@ groups:
         value: 14046115977652497572 
       gears:
         type: array:TweakDBID
-        value: [ Vehicle.v_custom_quadra_arcadia_mk4_inline10, Vehicle.v_custom_quadra_arcadia_mk4_inline11, Vehicle.v_custom_quadra_arcadia_mk4_inline12, Vehicle.v_custom_quadra_arcadia_mk4_inline13, Vehicle.v_custom_quadra_arcadia_mk4_inline14, Vehicle.v_custom_quadra_arcadia_mk4_inline15, Vehicle.v_custom_quadra_arcadia_mk4_inline16 ]
+        value: [ Vehicle.v_sport1_docworks_arcadia_inline10, Vehicle.v_sport1_docworks_arcadia_inline11, Vehicle.v_sport1_docworks_arcadia_inline12, Vehicle.v_sport1_docworks_arcadia_inline13, Vehicle.v_sport1_docworks_arcadia_inline14, Vehicle.v_sport1_docworks_arcadia_inline15, Vehicle.v_sport1_docworks_arcadia_inline16, Vehicle.v_sport1_docworks_arcadia_inline17 ]
       instantR1GearChange:
         type: Bool
         value: false 
@@ -702,7 +705,26 @@ groups:
         type: Float
         value: 15 
 
-  Vehicle.v_custom_quadra_arcadia_mk4_inline10:    
+  Vehicle.v_sport1_docworks_arcadia_inline10:    
+    type: VehicleGear
+    members:
+      maxEngineRPM:
+        type: Float
+        value: 5800 
+      maxSpeed:
+        type: Float
+        value: 10 
+      minEngineRPM:
+        type: Float
+        value: 800 
+      minSpeed:
+        type: Float
+        value: 0 
+      torqueMultiplier:
+        type: Float
+        value: 1 
+
+  Vehicle.v_sport1_docworks_arcadia_inline11:    
     type: VehicleGear
     members:
       maxEngineRPM:
@@ -721,10 +743,10 @@ groups:
         type: Float
         value: 1 
 
-  Vehicle.v_custom_quadra_arcadia_mk4_inline11: 
+  Vehicle.v_sport1_docworks_arcadia_inline12: 
     type: VehicleGear
     members:
-      maxEnineRPM:
+      maxEngineRPM:
         type: Float
         value: 8600 
       maxSpeed:
@@ -740,7 +762,7 @@ groups:
         type: Float
         value: 0.8 
 
-  Vehicle.v_custom_quadra_arcadia_mk4_inline12: 
+  Vehicle.v_sport1_docworks_arcadia_inline13: 
     type: VehicleGear
     members:
       maxEngineRPM:
@@ -759,7 +781,7 @@ groups:
         type: Float
         value: 0.62
 
-  Vehicle.v_custom_quadra_arcadia_mk4_inline13: 
+  Vehicle.v_sport1_docworks_arcadia_inline14: 
     type: VehicleGear
     members:
       maxEngineRPM:
@@ -778,7 +800,7 @@ groups:
         type: Float
         value: 0.48 
 
-  Vehicle.v_custom_quadra_arcadia_mk4_inline14: 
+  Vehicle.v_sport1_docworks_arcadia_inline15: 
     type: VehicleGear
     members:
       maxEngineRPM:
@@ -797,7 +819,7 @@ groups:
         type: Float
         value: 0.40 
 
-  Vehicle.v_custom_quadra_arcadia_mk4_inline15: 
+  Vehicle.v_sport1_docworks_arcadia_inline16: 
     type: VehicleGear
     members:
       maxEngineRPM:
@@ -816,7 +838,7 @@ groups:
         type: Float
         value: 0.35 
 
-  Vehicle.v_custom_quadra_arcadia_mk4_inline16: 
+  Vehicle.v_sport1_docworks_arcadia_inline17: 
     type: VehicleGear
     members:
       maxEngineRPM:
