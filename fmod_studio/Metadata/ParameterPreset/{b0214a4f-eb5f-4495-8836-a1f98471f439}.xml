@@ -2,7 +2,7 @@
 <objects serializationModel="Studio.02.02.00">
 	<object class="ParameterPreset" id="{b0214a4f-eb5f-4495-8836-a1f98471f439}">
 		<property name="name">
-			<value>YawDiff</value>
+			<value>yawDiff</value>
 		</property>
 		<relationship name="folder">
 			<destination>{37bcb955-bb46-4db0-96d9-38f1f6d86753}</destination>

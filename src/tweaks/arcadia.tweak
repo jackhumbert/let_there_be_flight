@@ -856,3 +856,7 @@ groups:
       torqueMultiplier:
         type: Float
         value: 0.30
+flats:
+  Vehicle.v_sport1_docworks_arcadia.test:
+    type: Float
+    value: 0.5

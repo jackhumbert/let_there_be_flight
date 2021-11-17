@@ -71,7 +71,7 @@ namespace FlightLog {
 
     void RegisterTypes() {
         flightLogCls.flags = { .isNative = true };
-        RED4ext::CRTTISystem::Get()->RegisterType(&flightLogCls, 456816);
+        RED4ext::CRTTISystem::Get()->RegisterType(&flightLogCls);
     }
 
     void RegisterFunctions() {

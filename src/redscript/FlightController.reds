@@ -133,6 +133,8 @@ public class FlightController extends IScriptable {
   public let bl_tire: ref<IPlacedComponent>;
   public let br_tire: ref<IPlacedComponent>;
 
+  public let isTPP: Bool;
+
   // protected let m_settingsListener: ref<FlightSettingsListener>;
   // protected let m_groupPath: CName;
 
@@ -253,7 +255,8 @@ public class FlightController extends IScriptable {
     this.enabled = true;
     this.active = false;
     this.SetupActions();
-    this.audio.Start("wind_TPP");
+    this.audio.Start("windLeft", "wind_TPP");
+    this.audio.Start("windRight", "wind_TPP");
     this.stats = FlightStats.Create(GetMountedVehicle(this.player));
     this.ui.Setup(this.stats);
 
@@ -267,7 +270,8 @@ public class FlightController extends IScriptable {
     this.enabled = false;
     this.SetupActions();   
     this.stats = null;
-    this.audio.Stop("wind_TPP");
+    this.audio.Stop("windLeft");
+    this.audio.Stop("windRight");
 
     FlightLog.Info("[FlightController] Disable");
   }
@@ -302,6 +306,7 @@ public class FlightController extends IScriptable {
     this.brake.Reset();
 
     this.SetupTires();
+    this.SetupPositionProviders();
     
     this.collisionTimer = this.collisionRecoveryDelay;
     this.hoverHeight = this.defaultHoverHeight;
@@ -312,7 +317,10 @@ public class FlightController extends IScriptable {
     this.GetVehicle().TurnEngineOn(false);
     // this.GetVehicle().TurnOn(true);
 
-    this.audio.Start("vehicle2_TPP");
+    this.audio.Start("leftFront", "vehicle2_TPP");
+    this.audio.Start("rightFront", "vehicle2_TPP");
+    this.audio.Start("leftRear", "vehicle2_TPP");
+    this.audio.Start("rightRear", "vehicle2_TPP");
 
     // idk what to do with this
     // let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
@@ -345,7 +353,10 @@ public class FlightController extends IScriptable {
 
     // (this.GetVehicle().GetPS() as VehicleComponentPS).SetThrusterState(false);
 
-    this.audio.Stop("vehicle2_TPP");
+    this.audio.Stop("leftFront");
+    this.audio.Stop("rightFront");
+    this.audio.Stop("leftRear");
+    this.audio.Stop("rightRear");
 
     //let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
     //uiSystem.PopGameContext(IntEnum(10));
@@ -495,35 +506,48 @@ public class FlightController extends IScriptable {
     this.surge.GetValue(timeDelta);
   }
 
-  public func UpdateAudioParams() -> Void {
-    this.audio.volume = 1.0;
-    // this.audio.volume = (GameInstance.GetSettingsSystem(this.gameInstance).GetVar(n"/audio/volume", n"MasterVolume") as ConfigVarListInt).GetValue();
-    // this.audio.volume *= (GameInstance.GetSettingsSystem(this.gameInstance).GetVar(n"/audio/volume", n"SfxVolume") as ConfigVarListInt).GetValue();
+  public func UpdateAudioParams(timeDelta: Float) -> Void {
+    let engineVolume = 1.0;
+    let windVolume = 1.0;
+    // let engineVolume = (GameInstance.GetSettingsSystem(this.gameInstance).GetVar(n"/audio/volume", n"MasterVolume") as ConfigVarListInt).GetValue();
+    // let engineVolume *= (GameInstance.GetSettingsSystem(this.gameInstance).GetVar(n"/audio/volume", n"SfxVolume") as ConfigVarListInt).GetValue();
 
     if GameInstance.GetTimeSystem(this.gameInstance).IsPausedState() {
-      this.audio.volume = 0.0;
-      this.audio.Update();
+      engineVolume = 0.0;
+      windVolume = 0.0;
+      this.audio.Update("leftFront", Vector4.EmptyVector(), engineVolume);
+      this.audio.Update("rightFront", Vector4.EmptyVector(), engineVolume);
+      this.audio.Update("leftRear", Vector4.EmptyVector(), engineVolume);
+      this.audio.Update("rightRear", Vector4.EmptyVector(), engineVolume);
+      this.audio.Update("windLeft", Vector4.EmptyVector(), windVolume);
+      this.audio.Update("windRight", Vector4.EmptyVector(), windVolume);
       return;
     }
     // might need to handle just the scanning system's dilation, and the pause menu
     if GameInstance.GetTimeSystem(this.gameInstance).IsTimeDilationActive(n"radial") {
-      this.audio.volume *= 0.1;
+      engineVolume *= 0.1;
+      windVolume *= 0.1;
     } else {
       if GameInstance.GetTimeSystem(this.gameInstance).IsTimeDilationActive() {
-        this.audio.volume *= 0.1;
+        engineVolume *= 0.1;
+        windVolume *= 0.1;
       }
     }
-    this.audio.playerPosition = Vector4.Vector4To3(this.stats.d_visualPosition);
-    this.audio.playerUp = Vector4.Vector4To3(this.stats.d_up);
-    this.audio.playerForward = Vector4.Vector4To3(this.stats.d_forward);
 
-    let cameraTransform: Transform;
-    let cameraSys: ref<CameraSystem> = GameInstance.GetCameraSystem(this.gameInstance);
-    cameraSys.GetActiveCameraWorldTransform(cameraTransform);
+    this.audio.UpdateSlotProviders();
 
-    this.audio.cameraPosition = Vector4.Vector4To3(cameraTransform.position + this.stats.d_forward * 0.5);
-    this.audio.cameraUp = Vector4.Vector4To3(Transform.GetUp(cameraTransform));
-    this.audio.cameraForward = Vector4.Vector4To3(Transform.GetForward(cameraTransform));
+    let leftFrontPosition = this.audio.GetPosition(n"wheel_front_left") - (this.stats.d_velocity * timeDelta);
+    let rightFrontPosition = this.audio.GetPosition(n"wheel_front_right") - (this.stats.d_velocity * timeDelta);
+    let leftRearPosition = this.audio.GetPosition(n"wheel_back_left") - (this.stats.d_velocity * timeDelta);
+    let rightRearPosition = this.audio.GetPosition(n"wheel_back_right") - (this.stats.d_velocity * timeDelta);
+
+    let windLeftPosition = this.audio.GetPosition(n"window_front_left_a") - (this.stats.d_velocity * timeDelta);
+    let windRightPosition = this.audio.GetPosition(n"window_front_right_a") - (this.stats.d_velocity * timeDelta);
+
+    let listener = this.player.FindComponentByName(n"soundListener") as IPlacedComponent;
+    this.audio.listenerPosition = Matrix.GetTranslation(listener.GetLocalToWorld());
+    this.audio.listenerForward = Matrix.GetDirectionVector(listener.GetLocalToWorld());
+    this.audio.listenerUp = Matrix.GetAxisZ(listener.GetLocalToWorld());
 
     this.audio.speed = this.stats.d_speed;
     this.audio.yawDiff = Vector4.GetAngleDegAroundAxis(this.stats.d_forward, this.stats.d_direction, this.stats.d_up);
@@ -538,28 +562,43 @@ public class FlightController extends IScriptable {
     this.audio.yaw = this.yaw.GetValue() * ratio;
     this.audio.lift = this.lift.GetValue() * ratio;
     this.audio.brake = this.brake.GetValue();
+    this.audio.inside = this.isTPP ? MaxF(0.0, this.audio.inside - timeDelta * 4.0) : MinF(1.0, this.audio.inside + timeDelta * 4.0);
+    engineVolume *= (ratio * 0.5 + 0.5);
 
-    this.audio.Update();
+    this.audio.Update("leftFront", leftFrontPosition, engineVolume);
+    this.audio.Update("rightFront", rightFrontPosition, engineVolume);
+    this.audio.Update("leftRear", leftRearPosition, engineVolume);
+    this.audio.Update("rightRear", rightRearPosition, engineVolume);
+    this.audio.Update("windLeft", windLeftPosition, windVolume);
+    this.audio.Update("windRight", windRightPosition, windVolume);
   }
 
   public func SetupTires() -> Void {
     if this.GetVehicle() == (this.GetVehicle() as CarObject) {
-      this.fl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_left_tire") as IPlacedComponent;
-      this.fr_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_right_tire") as IPlacedComponent;
-      this.bl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_left_tire") as IPlacedComponent;
-      this.br_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_right_tire") as IPlacedComponent;
+      // this.fl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_left_tire") as IPlacedComponent;
+      // this.fr_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_right_tire") as IPlacedComponent;
+      // this.bl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_left_tire") as IPlacedComponent;
+      // this.br_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_right_tire") as IPlacedComponent;
+      this.fl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterFL") as IPlacedComponent;
+      this.fr_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterFR") as IPlacedComponent;
+      this.bl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterBL") as IPlacedComponent;
+      this.br_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterBR") as IPlacedComponent;
     } else {
-      this.fl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_tire") as IPlacedComponent;
+      this.fl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterFront") as IPlacedComponent;
       this.fr_tire = this.fl_tire;
-      this.bl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_tire") as IPlacedComponent;
+      this.bl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterBack") as IPlacedComponent;
       this.br_tire = this.bl_tire;
     }
+  }
+
+  public func SetupPositionProviders() -> Void {
+    this.audio.AddSlotProviders(this.GetVehicle());
   }
 
   public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
     if !this.active {
       this.stats.UpdateDynamic(timeDelta);
-      this.UpdateAudioParams();
+      this.UpdateAudioParams(timeDelta);
       this.ui.ClearMarks();
       return;
     }
@@ -935,7 +974,33 @@ public class FlightController extends IScriptable {
     // brake
     this.CreateImpulse(this.stats.d_position, -velocityDamp * timeDelta);
 
-    this.UpdateAudioParams();
+    this.audio.DrawSlotPositions(this.ui);
+
+    this.UpdateAudioParams(timeDelta);
+    
+
+    let listener = this.player.FindComponentByName(n"soundListener") as IPlacedComponent;
+    let listenerPosition = Matrix.GetTranslation(listener.GetLocalToWorld());
+    let listenerForward = Matrix.GetAxisY(listener.GetLocalToWorld());
+
+    this.ui.DrawMark(listenerPosition);
+    this.ui.DrawText(listenerPosition, "Listener");
+
+    let normalLine = inkWidgetBuilder.inkShape(n"normalLine")
+      .Reparent(this.ui.GetMarksWidget())
+      .Size(1920.0 * 2.0, 1080.0 * 2.0)
+      .UseNineSlice(true)
+      .ShapeVariant(inkEShapeVariant.FillAndBorder)
+      .LineThickness(3.0)
+      .FillOpacity(0.0)
+      .Tint(ThemeColors.ElectricBlue())
+      .BorderColor(ThemeColors.ElectricBlue())
+      .BorderOpacity(0.1)
+      .Visible(true)
+      .BuildShape();
+    normalLine.SetVertexList([this.ui.ScreenXY(listenerPosition), this.ui.ScreenXY(listenerPosition + listenerForward)]);
+    this.ui.DrawMark(listenerPosition + listenerForward);
+
 
     if this.collisionTimer < this.collisionRecoveryDelay + this.collisionRecoveryDuration {
       this.collisionTimer += timeDelta;

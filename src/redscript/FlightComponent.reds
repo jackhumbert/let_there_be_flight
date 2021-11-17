@@ -32,10 +32,9 @@ public func ToggleFlightComponent(state: Bool) -> Void {
 public class FlightComponent extends ScriptableDC {
 
   public let m_interaction: ref<InteractionComponent>;
-
   public let m_healthStatPoolListener: ref<VehicleHealthStatPoolListener>;
-
   public let m_vehicleBlackboard: wref<IBlackboard>;
+  public let m_vehicleTPPCallbackID: ref<CallbackHandle>;
 
   protected final const func GetVehicle() -> wref<VehicleObject> {
     return this.GetEntity() as VehicleObject;
@@ -48,12 +47,14 @@ public class FlightComponent extends ScriptableDC {
     this.m_healthStatPoolListener.m_owner = this.GetVehicle();
     GameInstance.GetStatPoolsSystem(this.GetVehicle().GetGame()).RequestRegisteringListener(Cast(this.GetVehicle().GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     this.m_vehicleBlackboard = this.GetVehicle().GetBlackboard();
+    this.SetupVehicleTPPBBListener();
   }
 
   private final func OnGameDetach() -> Void {
     //FlightLog.Info("[FlightComponent] OnGameDetach: " + this.GetVehicle().GetDisplayName());
     GameInstance.GetStatPoolsSystem(this.GetVehicle().GetGame()).RequestUnregisteringListener(Cast(this.GetVehicle().GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
-  }
+    this.UnregisterVehicleTPPBBListener();
+    }
   
   private final func RegisterInputListener() -> Void {
     let playerPuppet: ref<PlayerPuppet> = GameInstance.GetPlayerSystem(this.GetVehicle().GetGame()).GetLocalPlayerMainGameObject() as PlayerPuppet;
@@ -66,6 +67,30 @@ public class FlightComponent extends ScriptableDC {
     if IsDefined(playerPuppet) {
       playerPuppet.UnregisterInputListener(this);
     };
+  }
+
+  protected final func SetupVehicleTPPBBListener() -> Void {
+    let activeVehicleUIBlackboard: wref<IBlackboard>;
+    let bbSys: ref<BlackboardSystem>;
+    if !IsDefined(this.m_vehicleTPPCallbackID) {
+      bbSys = GameInstance.GetBlackboardSystem(this.GetVehicle().GetGame());
+      activeVehicleUIBlackboard = bbSys.Get(GetAllBlackboardDefs().UI_ActiveVehicleData);
+      this.m_vehicleTPPCallbackID = activeVehicleUIBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this, n"OnVehicleCameraChange");
+    };
+  }
+  
+  protected final func UnregisterVehicleTPPBBListener() -> Void {
+    let activeVehicleUIBlackboard: wref<IBlackboard>;
+    let bbSys: ref<BlackboardSystem>;
+    if IsDefined(this.m_vehicleTPPCallbackID) {
+      bbSys = GameInstance.GetBlackboardSystem(this.GetVehicle().GetGame());
+      activeVehicleUIBlackboard = bbSys.Get(GetAllBlackboardDefs().UI_ActiveVehicleData);
+      activeVehicleUIBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this.m_vehicleTPPCallbackID);
+    };
+  }
+
+  protected cb func OnDeath(evt: ref<gameDeathEvent>) -> Bool {
+    FlightController.GetInstance().Disable();
   }
 
   protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool {
@@ -89,8 +114,44 @@ public class FlightComponent extends ScriptableDC {
       i += 1;
     };
     FlightLog.Info("[FlightComponent] OnGridDestruction: " + FloatToStringPrec(biggestImpact, 2));
-    FlightController.GetInstance().collisionTimer = FlightController.GetInstance().collisionRecoveryDelay - biggestImpact;
+    if biggestImpact > 0.03 {
+      FlightController.GetInstance().collisionTimer = FlightController.GetInstance().collisionRecoveryDelay - biggestImpact;
+    }
   }
+
+
+  // hook into sound somehow
+  // protected cb func OnVehicleOnPartDetached(evt: ref<VehicleOnPartDetachedEvent>) -> Bool {
+  //   let partName: CName = evt.partName;
+  //   if Equals(partName, n"Trunk") {
+  //     (this.GetPS() as VehicleComponentPS).SetDoorState(EVehicleDoor.trunk, VehicleDoorState.Detached);
+  //   } else {
+  //     if Equals(partName, n"Hood") {
+  //       (this.GetPS() as VehicleComponentPS).SetDoorState(EVehicleDoor.hood, VehicleDoorState.Detached);
+  //     } else {
+  //       if Equals(partName, n"DoorFrontLeft") || Equals(partName, n"DoorFrontLeft_A") || Equals(partName, n"DoorFrontLeft_B") || Equals(partName, n"DoorFrontLeft_C") {
+  //         (this.GetPS() as VehicleComponentPS).SetDoorState(EVehicleDoor.seat_front_left, VehicleDoorState.Detached);
+  //       } else {
+  //         if Equals(partName, n"DoorFrontRight") || Equals(partName, n"DoorFrontRight_A") || Equals(partName, n"DoorFrontRight_B") || Equals(partName, n"DoorFrontRight_C") {
+  //           (this.GetPS() as VehicleComponentPS).SetDoorState(EVehicleDoor.seat_front_right, VehicleDoorState.Detached);
+  //         } else {
+  //           if Equals(partName, n"DoorBackLeft") {
+  //             (this.GetPS() as VehicleComponentPS).SetDoorState(EVehicleDoor.seat_back_left, VehicleDoorState.Detached);
+  //           } else {
+  //             if Equals(partName, n"DoorBackRight") {
+  //               (this.GetPS() as VehicleComponentPS).SetDoorState(EVehicleDoor.seat_back_right, VehicleDoorState.Detached);
+  //             };
+  //           };
+  //         };
+  //       };
+  //     };
+  //   };
+  // }
+  
+  protected final func OnVehicleCameraChange(state: Bool) -> Void {
+    FlightController.GetInstance().isTPP = state;
+  }
+
 
 /*  private final func RegisterToHUDManager(shouldRegister: Bool) -> Void {
     let hudManager: ref<HUDManager>;

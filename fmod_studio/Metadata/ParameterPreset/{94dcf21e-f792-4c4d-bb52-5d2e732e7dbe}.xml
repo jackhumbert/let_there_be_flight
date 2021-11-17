@@ -2,7 +2,7 @@
 <objects serializationModel="Studio.02.02.00">
 	<object class="ParameterPreset" id="{94dcf21e-f792-4c4d-bb52-5d2e732e7dbe}">
 		<property name="name">
-			<value>SurgeAcc</value>
+			<value>surgeAcc</value>
 		</property>
 		<relationship name="folder">
 			<destination>{37bcb955-bb46-4db0-96d9-38f1f6d86753}</destination>

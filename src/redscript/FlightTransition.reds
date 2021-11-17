@@ -188,7 +188,7 @@ public class FlightEvents extends VehicleEventsTransition {
     FlightLog.Info("[FlightEvents] OnForcedExit");
     this.SetIsInFlight(stateContext, false);
     // (scriptInterface.owner as VehicleObject).ToggleFlightComponent(false);
-    FlightController.GetInstance().Deactivate(true);
+    //FlightController.GetInstance().Deactivate(true);
     super.OnForcedExit(stateContext, scriptInterface);
     this.ResumeStateMachines(scriptInterface.executionOwner);
   }
