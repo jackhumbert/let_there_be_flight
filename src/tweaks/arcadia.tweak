@@ -54,7 +54,7 @@ groups:
           value: false 
       entityTemplatePath:
           type: raRef:CResource
-          value: base\vehicles\sport\v_sport1_docworks_arcadia__basic_01.ent
+          value: base\amm_vehicles\docworks_arcadia\doc_arcadia.ent
           # value: 10240601289904711319
       fxCollision:
           type: TweakDBID
@@ -73,7 +73,7 @@ groups:
           value: HARD 
       icon:
           type: TweakDBID
-          value: UIIcon.mizutani_shion_nomad_player_01
+          value: UIIcon.v_sport1_docworks_arcadia
       interiorColor:
           type: array:Int32
           value: [ ]
@@ -118,7 +118,7 @@ groups:
           value: None 
       player_audio_resource:
           type: String
-          value: v_car_archer_quartz_nomad
+          value: v_car_quadra_turbo_r_vtek
       priority:
           type: TweakDBID
           value: SpawnableObjectPriority.Regular 
@@ -253,7 +253,7 @@ groups:
           value: Vehicle.v_sport2_mizutani_shion_nomad_inline5
       vehicleUIData:
           type: TweakDBID
-          value: Vehicle.VehicleMizutaniShionNomadUIData
+          value: Vehicle.VehicleDocworksArcadiaUIData
       visualDestruction:
           type: TweakDBID
           value: Vehicle.VehicleVisualDestructionParamsDefault 
@@ -268,7 +268,8 @@ groups:
           value: [ ]
       widgetStyleSheetPath:
           type: raRef:CResource
-          value: 11594906919832128403
+          value: base\gameplay\gui\widgets\vehicle\mizutani\mizutani_nomad.inkstyle
+          # value: base\amm_vehicles\docworks_arcadia\widgets\doc_arcadia_doc.inkstyle
     
   Vehicle.v_sport1_docworks_arcadia_inline0:
     type: VehicleDriveModelData
@@ -704,7 +705,7 @@ groups:
       wheelsResistanceRatio:
         type: Float
         value: 15 
-
+# reverse
   Vehicle.v_sport1_docworks_arcadia_inline10:    
     type: VehicleGear
     members:
@@ -723,7 +724,7 @@ groups:
       torqueMultiplier:
         type: Float
         value: 1 
-
+# first gear
   Vehicle.v_sport1_docworks_arcadia_inline11:    
     type: VehicleGear
     members:
@@ -742,7 +743,7 @@ groups:
       torqueMultiplier:
         type: Float
         value: 1 
-
+# second gear
   Vehicle.v_sport1_docworks_arcadia_inline12: 
     type: VehicleGear
     members:
@@ -761,7 +762,7 @@ groups:
       torqueMultiplier:
         type: Float
         value: 0.8 
-
+# third gear
   Vehicle.v_sport1_docworks_arcadia_inline13: 
     type: VehicleGear
     members:
@@ -780,7 +781,7 @@ groups:
       torqueMultiplier:
         type: Float
         value: 0.62
-
+# fourth gear
   Vehicle.v_sport1_docworks_arcadia_inline14: 
     type: VehicleGear
     members:
@@ -799,7 +800,7 @@ groups:
       torqueMultiplier:
         type: Float
         value: 0.48 
-
+# fifth gear
   Vehicle.v_sport1_docworks_arcadia_inline15: 
     type: VehicleGear
     members:
@@ -818,7 +819,7 @@ groups:
       torqueMultiplier:
         type: Float
         value: 0.40 
-
+# sixth gear
   Vehicle.v_sport1_docworks_arcadia_inline16: 
     type: VehicleGear
     members:
@@ -837,7 +838,7 @@ groups:
       torqueMultiplier:
         type: Float
         value: 0.35 
-
+# seventh gear
   Vehicle.v_sport1_docworks_arcadia_inline17: 
     type: VehicleGear
     members:
@@ -856,7 +857,32 @@ groups:
       torqueMultiplier:
         type: Float
         value: 0.30
-flats:
-  Vehicle.v_sport1_docworks_arcadia.test:
-    type: Float
-    value: 0.5
+
+  UIIcon.v_sport1_docworks_arcadia:
+    type: UIIcon
+    members:
+      atlasPartName:
+        type: CName
+        value: docworks_arcadia
+      atlasResourcePath:
+        type: raRef:CResource
+        value: base\gameplay\gui\common\icons\vehicles_icon_arcadia.inkatlas 
+
+  Vehicle.VehicleDocworksArcadiaUIData:
+    type: VehicleUIData
+    members:
+      driveLayout:
+        type: LocKey
+        value: 45371 
+      horsepower:
+        type: Float
+        value: 880 
+      info:
+        type: LocKey
+        value: 53528 
+      mass:
+        type: Float
+        value: 1720 
+      productionYear:
+        type: String
+        value: 2067

@@ -1,3 +1,17 @@
+// -----------------------------------------------------------------------------
+// inkShape
+// -----------------------------------------------------------------------------
+//
+// - Constrain content position
+// - Content fitting direction
+//
+// -----------------------------------------------------------------------------
+//
+// class inkShape extends inkBaseShapeWidget {
+//   public final native func ChangeShape(shapeName: CName) -> Void;
+// }
+//
+
 enum inkEShapeVariant {
     Fill = 0,
     Border = 1,
@@ -63,11 +77,6 @@ native let jointStyle: inkEJointStyle;
 native let vertexList: array<Vector2>;
 
 // Gets
-
-// @addMethod(inkShape)
-// public func GetShapeResource() -> ResRef {
-//     return this.shapeResource;
-// }
 
 @addMethod(inkShape)
 public func GetShapeName() -> CName {
@@ -141,13 +150,9 @@ public func GetVertexList() -> array<Vector2> {
 
 // Sets
 
+// could be implemented natively
 // @addMethod(inkShape)
-// public func SetShapeResource(shapeResource: ResRef) {
-//     this.shapeResource = shapeResource;
-// }
-
-@addMethod(inkShape)
-public native func SetShapeResource(shapeResource: ResRef);
+// public native func SetShapeResource(shapeResource: ResRef);
 
 @addMethod(inkShape)
 public func SetShapeName(shapeName: CName) {

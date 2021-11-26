@@ -86,7 +86,7 @@ namespace FlightAudio {
         RED4ext::GetParameter(aFrame, &emitterName);
         RED4ext::GetParameter(aFrame, &eventName);
         aFrame->code++; // skip ParamEnd
-        spdlog::info(fmt::format("Starting sound: {}", emitterName.c_str()));
+        spdlog::info(fmt::format("[FlightAudio] Starting sound: {}", emitterName.c_str()));
         FMOD::Studio::EventDescription* eventDescription;
         //std::string path = "event:/";
         //ERRCHECK(fmod_system->getEvent(path.append(eventName.c_str()).c_str(), &eventDescription));
@@ -94,6 +94,9 @@ namespace FlightAudio {
         FMOD::Studio::EventInstance* eventInstance;
         ERRCHECK(eventDescription->createInstance(&eventInstance));
         ERRCHECK(eventInstance->start());
+        ERRCHECK(eventInstance->setTimelinePosition(rand()));
+        float pitch = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+        ERRCHECK(eventInstance->setPitch(1.0 + pitch * 0.01));
         eventMap[emitterName.c_str()] = eventInstance;
         ERRCHECK(fmod_system->update());
     }
@@ -105,13 +108,13 @@ namespace FlightAudio {
         RED4ext::GetParameter(aFrame, &emitterName);
         aFrame->code++; // skip ParamEnd
         if (eventMap.find(emitterName.c_str()) != eventMap.end()) {
-            spdlog::info(fmt::format("Stopping sound: {}", emitterName.c_str()));
+            spdlog::info(fmt::format("[FlightAudio] Stopping sound: {}", emitterName.c_str()));
             ERRCHECK(eventMap[emitterName.c_str()]->stop(FMOD_STUDIO_STOP_IMMEDIATE));
             ERRCHECK(fmod_system->update());
             eventMap[emitterName.c_str()]->release();
             eventMap.erase(emitterName.c_str());
         } else {
-            spdlog::warn(fmt::format("Sound is not playing: {}", emitterName.c_str()));
+            spdlog::warn(fmt::format("[FlightAudio] Sound is not playing: {}", emitterName.c_str()));
         }
     }
 

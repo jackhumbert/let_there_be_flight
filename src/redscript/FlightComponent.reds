@@ -13,7 +13,7 @@ protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> B
 protected cb func OnTakeControl(ri: EntityResolveComponentsInterface) -> Bool {
   //FlightLog.Info("[VehicleObject] OnTakeControl: " + this.GetDisplayName());
   this.m_flightComponent = EntityResolveComponentsInterface.GetComponent(ri, n"flightComponent") as FlightComponent;
-  this.m_flightComponent.Toggle(false);
+  // this.m_flightComponent.Toggle(false);
   wrappedMethod(ri);
 }
 
@@ -47,7 +47,7 @@ public class FlightComponent extends ScriptableDC {
     this.m_healthStatPoolListener.m_owner = this.GetVehicle();
     GameInstance.GetStatPoolsSystem(this.GetVehicle().GetGame()).RequestRegisteringListener(Cast(this.GetVehicle().GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     this.m_vehicleBlackboard = this.GetVehicle().GetBlackboard();
-    this.SetupVehicleTPPBBListener();
+    // QuickhackModule.RequestRefreshQuickhackMenu(this.GetVehicle().GetGame(), this.GetVehicle().GetEntityID());
   }
 
   private final func OnGameDetach() -> Void {
@@ -89,8 +89,31 @@ public class FlightComponent extends ScriptableDC {
     };
   }
 
+  // callbacks
+  
+  protected cb func OnMountingEvent(evt: ref<MountingEvent>) -> Bool {
+    let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
+    if mountChild.IsPlayer() {
+      this.SetupVehicleTPPBBListener();
+      FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName());
+    }
+  }
+
+  protected cb func OnUnmountingEvent(evt: ref<UnmountingEvent>) -> Bool {
+    let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
+    if IsDefined(mountChild) && mountChild.IsPlayer() {
+      this.UnregisterVehicleTPPBBListener();
+    }
+  }
+
   protected cb func OnDeath(evt: ref<gameDeathEvent>) -> Bool {
-    FlightController.GetInstance().Disable();
+    let vehicle: ref<VehicleObject> = this.GetVehicle();
+    let gameInstance: GameInstance = vehicle.GetGame();
+    let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
+    if VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), vehicle) {
+      FlightLog.Info("[FlightComponent] OnDeath: " + this.GetVehicle().GetDisplayName());
+      FlightController.GetInstance().Disable();
+    }
   }
 
   protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool {
@@ -103,22 +126,68 @@ public class FlightComponent extends ScriptableDC {
   }
 
   protected cb func OnGridDestruction(evt: ref<VehicleGridDestructionEvent>) -> Bool {
-    let biggestImpact: Float;
-    let desiredChange: Float;
-    let i: Int32 = 0;
-    while i < 16 {
-      desiredChange = evt.desiredChange[i];
-      if desiredChange > biggestImpact {
-        biggestImpact = desiredChange;
+    let vehicle: ref<VehicleObject> = this.GetVehicle();
+    let gameInstance: GameInstance = vehicle.GetGame();
+    let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
+    if VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), vehicle) {
+      let biggestImpact: Float;
+      let desiredChange: Float;
+      let i: Int32 = 0;
+      while i < 16 {
+        desiredChange = evt.desiredChange[i];
+        if desiredChange > biggestImpact {
+          biggestImpact = desiredChange;
+        };
+        i += 1;
       };
-      i += 1;
-    };
-    FlightLog.Info("[FlightComponent] OnGridDestruction: " + FloatToStringPrec(biggestImpact, 2));
-    if biggestImpact > 0.03 {
-      FlightController.GetInstance().collisionTimer = FlightController.GetInstance().collisionRecoveryDelay - biggestImpact;
+      FlightLog.Info("[FlightComponent] OnGridDestruction: " + FloatToStringPrec(biggestImpact, 2));
+      if biggestImpact > 0.03 {
+        FlightController.GetInstance().ProcessImpact(biggestImpact);
+      }
+    } else {
+      this.FireVerticalImpulse();
     }
   }
+  
+  protected cb func OnInteractionActivated(evt: ref<InteractionActivationEvent>) -> Bool {
+    let radialRequest: ref<ResolveQuickHackRadialRequest>;
+    if !IsDefined(evt.activator as PlayerPuppet) && !IsDefined(evt.activator as Muppet) {
+      return false;
+    };
+    radialRequest = new ResolveQuickHackRadialRequest();
+    this.GetVehicle().GetHudManager().QueueRequest(radialRequest);
+  }
 
+  protected cb func OnSetExposeQuickHacks(evt: ref<SetExposeQuickHacks>) -> Bool {
+    let request: ref<RefreshActorRequest> = new RefreshActorRequest();
+    request.ownerID = this.GetVehicle().GetEntityID();
+    this.GetVehicle().GetHudManager().QueueRequest(request);
+  }
+  
+  protected cb func OnActionEngineering(evt: ref<ActionEngineering>) -> Bool {
+    this.FireVerticalImpulse();
+  }
+
+  public func OnQuickHackFlightMalfunction(evt: ref<QuickHackFlightMalfunction>) -> EntityNotificationType {
+    FlightLog.Info("[FlightComponent] OnQuickHackFlightMalfunction");
+    let type: EntityNotificationType = this.OnQuickHackFlightMalfunction(evt);
+    // if Equals(type, EntityNotificationType.DoNotNotifyEntity) {
+    //   return type;
+    // };
+    if evt.IsStarted() {
+      // this.ExecutePSAction(this.FireVerticalImpulse());
+      this.FireVerticalImpulse();
+    };
+    return EntityNotificationType.SendThisEventToEntity;
+  }
+
+  public func FireVerticalImpulse() {
+    let impulseEvent: ref<PhysicalImpulseEvent> = new PhysicalImpulseEvent();
+    impulseEvent.radius = 1.0;
+    impulseEvent.worldPosition = Vector4.Vector4To3(this.GetVehicle().GetWorldPosition());
+    impulseEvent.worldImpulse = new Vector3(0.0, 0.0, 10000.0);
+    this.GetVehicle().QueueEvent(impulseEvent);
+  }
 
   // hook into sound somehow
   // protected cb func OnVehicleOnPartDetached(evt: ref<VehicleOnPartDetachedEvent>) -> Bool {
@@ -167,4 +236,8 @@ public class FlightComponent extends ScriptableDC {
     };
   }
 */
+}
+
+public static func OperatorAdd(a: Vector4, b: Vector3) -> Vector4 {
+  return a + Vector4.Vector3To4(b);
 }

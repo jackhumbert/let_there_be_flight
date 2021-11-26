@@ -19,31 +19,9 @@ enum FlightMode {
 //   }
 // }
 
-// this might work better
-// module MyMod
-
-// public class MySystem extends ScriptableSystem {
-//     private func OnAttach() -> Void {
-//         FlightLog.Info("MySystem::OnAttach");
-//     }
-
-//     private func OnDetach() -> Void {
-//         FlightLog.Info("MySystem::OnDetach");
-//     }
-
-//     public func GetData() -> Float {
-//         return GetPlayer(this.GetGameInstance()).GetGunshotRange();
-//     }
-// }
-
-// access
-// let container: ref<ScriptableSystemsContainer> = GameInstance.GetScriptableSystemsContainer(this.GetGame());
-// let system: ref<MySystem> = container.Get(n"MyMod.MySystem") as MySystem; // Don't forget the namespace if you're using modules
-
-// FlightLog.Info(ToString(system.GetData()));
-
 // could watch this
 // this.m_callbackID = scriptInterface.localBlackboard.RegisterListenerInt(allBlackboardDef.PlayerStateMachine.Vehicle, this, n"OnVehicleStateChanged");
+
 
 // maybe this should extend ScriptableComponent or GameComponent?
 // Singleton instance with player lifetime
@@ -243,7 +221,7 @@ public class FlightController extends IScriptable {
   }
   
   public cb func OnMountedToVehicleChange(mounted: Bool) -> Bool {
-    FlightLog.Info("[FlightController] OnMountedToVehicleChange");
+    // FlightLog.Info("[FlightController] OnMountedToVehicleChange");
     if (mounted) {
       this.Enable();
     } else {
@@ -507,8 +485,8 @@ public class FlightController extends IScriptable {
   }
 
   public func UpdateAudioParams(timeDelta: Float) -> Void {
-    let engineVolume = 1.0;
-    let windVolume = 1.0;
+    let engineVolume = 0.5;
+    let windVolume = 0.5;
     // let engineVolume = (GameInstance.GetSettingsSystem(this.gameInstance).GetVar(n"/audio/volume", n"MasterVolume") as ConfigVarListInt).GetValue();
     // let engineVolume *= (GameInstance.GetSettingsSystem(this.gameInstance).GetVar(n"/audio/volume", n"SfxVolume") as ConfigVarListInt).GetValue();
 
@@ -563,7 +541,7 @@ public class FlightController extends IScriptable {
     this.audio.lift = this.lift.GetValue() * ratio;
     this.audio.brake = this.brake.GetValue();
     this.audio.inside = this.isTPP ? MaxF(0.0, this.audio.inside - timeDelta * 4.0) : MinF(1.0, this.audio.inside + timeDelta * 4.0);
-    engineVolume *= (ratio * 0.5 + 0.5);
+    // engineVolume *= (ratio * 0.5 + 0.5);
 
     this.audio.Update("leftFront", leftFrontPosition, engineVolume);
     this.audio.Update("rightFront", rightFrontPosition, engineVolume);
@@ -723,11 +701,10 @@ public class FlightController extends IScriptable {
           .UseNineSlice(true)
           .ShapeVariant(inkEShapeVariant.FillAndBorder)
           .LineThickness(3.0)
-          .FillOpacity(0.0)
+          .FillOpacity(0.01)
           .Tint(ThemeColors.ElectricBlue())
           .BorderColor(ThemeColors.ElectricBlue())
-          .BorderOpacity(0.01)
-          .Visible(true)
+          .BorderOpacity(0.05)
           .BuildShape();
         quad.SetVertexList(points);
 
@@ -882,61 +859,27 @@ public class FlightController extends IScriptable {
       // .Overflow(textOverflowPolicy.AdjustToSize)
       .BuildText();
 
-    // idealNormal = Vector4.Normalize(idealNormal - (this.stats.d_velocity / 100.0));
-
-    // let normalLine = inkWidgetBuilder.inkShape(n"normalLine")
-    //   .Reparent(this.ui.GetMarksWidget())
-    //   .Size(1920.0 * 2.0, 1080.0 * 2.0)
-    //   .UseNineSlice(true)
-    //   .ShapeVariant(inkEShapeVariant.FillAndBorder)
-    //   .LineThickness(3.0)
-    //   .FillOpacity(0.0)
-    //   .Tint(ThemeColors.ElectricBlue())
-    //   .BorderColor(ThemeColors.ElectricBlue())
-    //   .BorderOpacity(0.1)
-    //   .Visible(true)
-    //   .BuildShape();
-    // normalLine.SetVertexList([this.ui.ScreenXY(this.stats.d_visualPosition), this.ui.ScreenXY(this.stats.d_visualPosition + idealNormal)]);
-    // this.ui.DrawMark(this.stats.d_visualPosition + idealNormal);
-
-    // let normalLine = inkWidgetBuilder.inkShape(n"normalLine")
-    //   .Reparent(this.ui.GetMarksWidget())
-    //   .Size(1920.0 * 2.0, 1080.0 * 2.0)
-    //   .UseNineSlice(true)
-    //   .ShapeVariant(inkEShapeVariant.FillAndBorder)
-    //   .LineThickness(3.0)
-    //   .FillOpacity(0.0)
-    //   .Tint(ThemeColors.ElectricBlue())
-    //   .BorderColor(ThemeColors.ElectricBlue())
-    //   .BorderOpacity(0.1)
-    //   .Visible(true)
-    //   .BuildShape();
-    // normalLine.SetVertexList([this.ui.ScreenXY(this.stats.d_visualPosition), this.ui.ScreenXY(this.stats.d_visualPosition + this.stats.d_up)]);
-    // this.ui.DrawMark(this.stats.d_visualPosition + this.stats.d_up);
-
     this.pitchPID.SetRatio(this.stats.d_speedRatio * AbsF(Vector4.Dot(this.stats.d_direction, this.stats.d_forward)));
     this.rollPID.SetRatio(this.stats.d_speedRatio * AbsF(Vector4.Dot(this.stats.d_direction, this.stats.d_right)));
 
     hoverCorrection = this.hover.GetCorrectionClamped(heightDifference, timeDelta, 1.0);
-    pitchCorrection = this.pitchPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(idealNormal, this.stats.d_forward)) + this.lift.GetValue() * this.pitchWithLift, timeDelta, 10.0) + this.pitch.GetValue() / 10.0;
-    rollCorrection = this.rollPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(idealNormal, this.stats.d_right)), timeDelta, 10.0) + this.yaw.GetValue() * this.rollWithYaw + this.roll.GetValue() / 10.0;
+    // pitchCorrection = this.pitchPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(idealNormal, this.stats.d_forward)) + this.lift.GetValue() * this.pitchWithLift, timeDelta, 10.0) + this.pitch.GetValue() / 10.0;
+    // rollCorrection = this.rollPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(idealNormal, this.stats.d_right)), timeDelta, 10.0) + this.yaw.GetValue() * this.rollWithYaw + this.roll.GetValue() / 10.0;
+    let pitchDegOff = 90.0 - AbsF(Vector4.GetAngleDegAroundAxis(idealNormal, this.stats.d_forward, this.stats.d_right));
+    let rollDegOff = 90.0 - AbsF(Vector4.GetAngleDegAroundAxis(idealNormal, this.stats.d_right, this.stats.d_forward));
+    if AbsF(pitchDegOff) < 80.0 && AbsF(rollDegOff) < 80.0 {
+      pitchCorrection = this.pitchPID.GetCorrectionClamped(pitchDegOff / 90.0 + this.lift.GetValue() * this.pitchWithLift, timeDelta, 10.0) + this.pitch.GetValue() / 10.0;
+      rollCorrection = this.rollPID.GetCorrectionClamped(rollDegOff / 90.0 + this.yaw.GetValue() * this.rollWithYaw, timeDelta, 10.0) + this.roll.GetValue() / 10.0;
     // let angle: Float = Vector4.GetAngleDegAroundAxis(Vector4.Interpolate(this.stats.d_forward, direction, this.stats.d_speedRatio * this.velocityPointing), this.stats.d_forward, new Vector4(0.0, 0.0, 1.0, 0.0));
 //    let angle: Float = Vector4.GetAngleDegAroundAxis(direction, this.stats.d_forward, new Vector4(0.0, 0.0, 1.0, 0.0));
-
+    }
     let changeAngle: Float = Vector4.GetAngleDegAroundAxis(Quaternion.GetForward(this.stats.d_lastOrientation), this.stats.d_forward, this.stats.d_up);
-    let directionAngle: Float = Vector4.GetAngleDegAroundAxis(this.stats.d_direction, this.stats.d_forward, this.stats.d_up);
-
-    let angle: Float = directionAngle;
-
-    // decay the integral if we have yaw input - this helps get rid of the windup effect
-    this.yawPID.integralFloat *= (1.0 - AbsF(this.yaw.GetValue()));
-    // this.yawPID.integralFloat *= MinF(1.0, this.stats.d_speedRatio * 4.0);
-    // let angleTooHigh = MinF(1.0, 8.0 - AbsF(angle) / 180.0 * 8.0);
-    // yawCorrection = this.yawPID.GetCorrection(angle * angleTooHigh * this.stats.d_speedRatio + this.yaw.GetValue() * this.yawFactor * (1.0 + this.stats.d_speedRatio * 3.0), timeDelta);
-    // this.yawPID.UpdateP(0.5 * MaxF(0.0, this.stats.d_speedRatioSquared * 1.1 - 0.1));
-    // this.yawPID.UpdateP(5.0 * this.stats.d_speedRatioSquared);
-    // this.yawPID.UpdateI(2.0 * this.stats.d_speedRatioSquared);
-    yawCorrection = this.yawPID.GetCorrection(angle, timeDelta) + this.yawD * changeAngle / timeDelta;
+    if AbsF(pitchDegOff) < 30.0 && AbsF(rollDegOff) < 30.0 {
+      let directionAngle: Float = Vector4.GetAngleDegAroundAxis(this.stats.d_direction, this.stats.d_forward, this.stats.d_up);
+      this.yawPID.integralFloat *= (1.0 - AbsF(this.yaw.GetValue()));
+      yawCorrection = this.yawPID.GetCorrection(directionAngle, timeDelta);
+    }
+    yawCorrection += this.yawD * changeAngle / timeDelta;
 
     let velocityDamp: Vector4 = MaxF(this.brake.GetValue() * this.brakeFactor, this.airResistance) * this.stats.d_velocity * this.stats.s_mass;
     // so we don't get impulsed by the speed limit (100 m/s, i think)
@@ -1024,6 +967,11 @@ public class FlightController extends IScriptable {
     }
     impulseEvent.worldImpulse = Vector4.Vector4To3(direction);
     this.GetVehicle().QueueEvent(impulseEvent);
+  }
+
+  public func ProcessImpact(impact: Float) {
+    this.collisionTimer = this.collisionRecoveryDelay - impact;
+    this.surge.Reset(this.surge.GetValue() * MaxF(0.0, 1.0 - impact * 5.0));
   }
 
   public func ShowSimpleMessage(message: String) -> Void {

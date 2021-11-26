@@ -321,10 +321,10 @@ public class inkWidgetBuilder {
     (this.widget as inkShape).SetUseNineSlice(value);
     return this;
   }
-  public func ShapeResource(shapeResource: ResRef) -> ref<inkWidgetBuilder>  {
-    (this.widget as inkShape).SetShapeResource(shapeResource);
-    return this;
-  }
+  // public func ShapeResource(shapeResource: ResRef) -> ref<inkWidgetBuilder>  {
+  //   (this.widget as inkShape).SetShapeResource(shapeResource);
+  //   return this;
+  // }
   public func ChangeShape(shapeName: CName) -> ref<inkWidgetBuilder>  {
     (this.widget as inkShape).ChangeShape(shapeName);
     return this;

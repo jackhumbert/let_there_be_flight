@@ -1,0 +1,79 @@
+
+  # QuickHack.VehicleFlightMalfunction:
+  #   type: ObjectAction
+  #   members:
+  #     actionName:
+  #       type: CName
+  #       value: None 
+  #     activationTime:
+  #       type: array:TweakDBID
+  #       value: [ QuickHack.QuickHack_inline0, QuickHack.QuickHack_inline1, QuickHack.QuickHack_inline2, QuickHack.VehicleFlightMalfunction_inline0 ]
+  #     completionEffects:
+  #       type: array:TweakDBID
+  #       value: [ QuickHack.QuickHack_inline4, QuickHack.QuickHack_inline8, QuickHack.QuickHack_inline10, QuickHack.QuickHack_inline11, QuickHack.VehicleFlightMalfunction_inline3 ]
+  #     cooldown:
+  #       type: TweakDBID
+  #       value:  
+  #     costs:
+  #       type: array:TweakDBID
+  #       value: [ QuickHack.VehicleFlightMalfunction_inline1 ]
+  #     gameplayCategory:
+  #       type: TweakDBID
+  #       value:  
+  #     hackCategory:
+  #       type: TweakDBID
+  #       value: HackCategories.ControlHack 
+  #     instigatorActivePrereqs:
+  #       type: array:TweakDBID
+  #       value: [ ]
+  #     instigatorPrereqs:
+  #       type: array:TweakDBID
+  #       value: [ ]
+  #     interactionLayer:
+  #       type: CName
+  #       value: remote 
+  #     isQuickHack:
+  #       type: Bool
+  #       value: true 
+  #     objectActionType:
+  #       type: TweakDBID
+  #       value: ObjectActionType.DeviceQuickHack 
+  #     objectActionUI:
+  #       type: TweakDBID
+  #       value: Interactions.AndroidTurnOff 
+  #     priority:
+  #       type: Float
+  #       value: 0 
+  #     rewards:
+  #       type: array:TweakDBID
+  #       value: [ RPGActionRewards.CombatHacking ]
+  #     startEffects:
+  #       type: array:TweakDBID
+  #       value: [ QuickHack.QuickHack_inline12, QuickHack.QuickHack_inline13, QuickHack.ControlHack_inline0 ]
+  #     targetActivePrereqs:
+  #       type: array:TweakDBID
+  #       value: [ Prereqs.QuickHackUploadingPrereq, Prereqs.QuickHackTargetMortalPrereq ]
+  #     targetPrereqs:
+  #       type: array:TweakDBID
+  #       value: [ ]
+  # QuickHack.VehicleFlightMalfunction_inline0:
+  #   type: ConstantStatModifier
+  #   members:
+  #     0.modifierType:
+  #       type: CName
+  #       value: Additive 
+  #     0.statType:
+  #       type: TweakDBID
+  #       value: BaseStats.QuickHackUpload 
+  #     0.value:
+  #       type: Float
+  #       value: 3 
+  # QuickHack.VehicleFlightMalfunction_inline1:
+  #   type: StatPoolCost
+  #   members:
+  #     1.costMods:
+  #       type: array:TweakDBID
+  #       value: [ QuickHack.MemoryCostReductionMod, QuickHack.TargetResistance, QuickHack.ConsumableCostReduction, QuickHack.DeviceMemoryCostReductionMod ]
+  #     1.statPool:
+  #       type: TweakDBID
+  #       value: BaseStatPools.Memory 

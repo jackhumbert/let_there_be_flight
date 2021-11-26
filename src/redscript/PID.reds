@@ -92,8 +92,8 @@ public class PID {
   public func GetCorrectionClamped(error: Float, timeDelta: Float, clamp: Float) -> Float {
     return ClampF(this.GetCorrection(error, timeDelta), -clamp, clamp);
   }
-  public func Reset() -> Void {
-    this.inputFloat = 0.0;
+  public func Reset(opt input: Float) -> Void {
+    this.inputFloat = input;
     this.integralFloat = 0.0;
     this.lastErrorFloat = 0.0;
   }
