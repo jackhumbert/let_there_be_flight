@@ -1,0 +1,89 @@
+<?xml version="1.0"?>
+<bindings>
+	<!-- VEHICLE DRIVE - used when player is mounted as driver and can control vehicle -->
+	
+	<context name="VehicleDrive" append="true">
+		<include name="VehicleFlightToggle" />
+	</context>
+	
+	<!-- VEHICLE DRIVER COMBAT - used when player is mounted as driver and has weapon equipped -->
+	
+	<context name="VehicleDriverCombat" append="true">
+		<include name="VehicleFlightToggle" />
+	</context>
+
+	<!-- VEHICLE COMBAT - used when player is mounted as passenger and has weapon equipped -->
+	
+	<context name="VehicleCombat" append="true">
+		<include name="VehicleFlightToggle" />
+	</context>
+
+	<context name="VehicleFlight" >
+		<include name="CameraMovement" />
+		<include name="VisionActions" />
+		<include name="UIExploration" />
+		<include name="PhotoMode" />
+		<include name="QuickLoadAndSave" />
+		<include name="Items" />
+		<include name="VehicleFlightToggle" />
+		<include name="Combat" />
+
+		<action name="FlightOptions_Up"		map="UI_DPadUp"/>
+		<action name="FlightOptions_Right"	map="UI_DPadRight"/>
+		<action name="FlightOptions_Down"	map="UI_DPadDown"/>
+		<action name="FlightOptions_Left"	map="UI_DPadLeft"/>
+		<action name="Roll"					map="RightX_Axis"/>
+		<action name="Pitch"				map="RightY_Axis"/>
+		<!-- <action name="FlightCombat_Toggle"  map="FlightCombat_Toggle" /> -->
+		<action name="UseConsumable"		map="UseConsumable_Button" />
+		<action name="SurgePos"					map="Acceleration_Axis" />
+		<action name="SurgeNeg"					map="Deceleration_Axis" />
+		<action name="TurnX"						map="LeftX_Axis_Vehicle" />
+		<action name="LeanFB"						map="LeftY_Axis_Vehicle" />
+		<action name="RockFB"						map="LeftY_Axis_Vehicle_RockFB" />
+		<action name="ToggleVehCamera"	map="VehicleCameraToggle" />
+		<action name="VehicleCameraInverse"	map="VehicleCameraInverse_Button"/>
+		<action name="Exit"							map="ExitVehicle_Button" />
+		<!-- <action name="CycleLights"			map="Vehicle_CycleLights" /> -->
+		<action name="Handbrake"				map="Vehicle_Handbrake" />
+		<action name="ZoomIn"						map="ZoomIn_Button"/>
+		<action name="ZoomOut"					map="ZoomOut_Button"/>
+	</context>
+
+	<context name="VehicleFlightToggle" >
+		<action name="Flight_Toggle" 		map="Flight_Toggle" />
+	</context>
+
+	<!-- INTERACTIONS -->
+	<context name="InteractionActions" append="true">
+		<action name="Choice1_DualState"	map="Choice1" priority="-1" />
+		<action name="Choice2_DualState"	map="Choice1" priority="-1" />
+		<action name="Choice3_DualState"	map="Choice1" priority="-1" />
+		<action name="Choice4_DualState"	map="Choice1" priority="-1" />
+	</context>
+
+	<!-- EVENTS -->
+	 <acceptedEvents action="Choice1_DualState" >
+		<event name="BUTTON_PRESSED" />
+		<event name="BUTTON_RELEASED" />
+	</acceptedEvents>
+	 <acceptedEvents action="Choice2_DualState" >
+		<event name="BUTTON_PRESSED" />
+		<event name="BUTTON_RELEASED" />
+	</acceptedEvents>
+	 <acceptedEvents action="Choice3_DualState" >
+		<event name="BUTTON_PRESSED" />
+		<event name="BUTTON_RELEASED" />
+	</acceptedEvents>
+	 <acceptedEvents action="Choice4_DualState" >
+		<event name="BUTTON_PRESSED" />
+		<event name="BUTTON_RELEASED" />
+	</acceptedEvents>
+
+	<!-- MAPPINGS -->
+	<mapping name="Flight_Toggle" type="Button" >
+		<button id="IK_Pad_LeftThumb" />
+		<button id="IK_E" overridableUI="vehicleFlight"/>
+    </mapping>
+
+</bindings>

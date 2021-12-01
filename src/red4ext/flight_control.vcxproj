@@ -100,6 +100,7 @@
   <ItemGroup>
     <ClCompile Include="FlightLog.cpp" />
     <ClCompile Include="FlightStats_Record.cpp" />
+    <ClCompile Include="Input.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="FlightAudio.cpp" />
     <ClCompile Include="FmodHelper.hpp" />
