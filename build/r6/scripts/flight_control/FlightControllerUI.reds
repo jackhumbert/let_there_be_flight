@@ -123,15 +123,15 @@ public class FlightControllerUI extends inkCanvas {
         .Opacity(1.0)
         .Size(3.0, (mark == 0) ? 50.0 : 30.0)
         .Anchor(0.5, 0.0)
-        .Translation(CosF(Deg2Rad(mark - 90.0)) * this.m_markerRadius, SinF(Deg2Rad(mark - 90.0)) * this.m_markerRadius)
-        .Rotation(mark + 180.0)
+        .Translation(CosF(Deg2Rad(Cast<Float>(mark) - 90.0)) * this.m_markerRadius, SinF(Deg2Rad(Cast<Float>(mark) - 90.0)) * this.m_markerRadius)
+        .Rotation(Cast<Float>(mark) + 180.0)
         .Reparent(rulers)
         .BuildRectangle();
     }
     let offset = 20.0;
     let i = -40;
     while i <= 40 {
-      ArrayPush(points, new Vector2(CosF(Deg2Rad(i - 90.0)) * (this.m_markerRadius + offset), SinF(Deg2Rad(i - 90.0)) * (this.m_markerRadius + offset)));
+      ArrayPush(points, new Vector2(CosF(Deg2Rad(Cast<Float>(i)  - 90.0)) * (this.m_markerRadius + offset), SinF(Deg2Rad(Cast<Float>(i) - 90.0)) * (this.m_markerRadius + offset)));
       i += 1;
     }
 
@@ -293,7 +293,7 @@ public class FlightControllerUI extends inkCanvas {
     let marks = [-30, -25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 25, 30];
     // let points: array<Vector2>;
     for mark in marks {
-      let mark_scale = factor * mark;
+      let mark_scale = factor * Cast<Float>(mark);
       this.GetWidget(StringToName("rulers/roll_marker_" + mark)).SetTranslation(CosF(Deg2Rad(mark_scale - 90.0)) * this.m_markerRadius, SinF(Deg2Rad(mark_scale - 90.0)) * this.m_markerRadius);
       this.GetWidget(StringToName("rulers/roll_marker_" + mark)).SetRotation(mark_scale + 180.0);
       // ArrayPush(points, new Vector2(CosF(Deg2Rad(mark_scale - 90.0)) * this.m_markerRadius, SinF(Deg2Rad(mark_scale - 90.0)) * this.m_markerRadius));
@@ -644,7 +644,7 @@ public class FlightControllerUI extends inkCanvas {
     // this.GetWidget(n"rulers").SetTranslation(this.ScreenXY(this.stats.d_position - this.stats.d_velocity * timeDelta));
 
     let splay = 1.0 + 0.2 * MaxF(0.0, FlightController.GetInstance().surge.GetValue()) - 0.2 * FlightController.GetInstance().brake.GetValue() + ((RandF() * 0.02 - 0.01) * this.stats.d_speedRatio);
-    let mark = Vector4.GetAngleBetween(this.stats.d_right, new Vector4(0.0, 0.0, 1.0, 0.0)) + 90;
+    let mark = Vector4.GetAngleBetween(this.stats.d_right, new Vector4(0.0, 0.0, 1.0, 0.0)) + 90.0;
     let mark_effected = mark * splay;
     this.UpdateRollSplay(splay);
     this.UpdatePitchDisplayHeight(splay);

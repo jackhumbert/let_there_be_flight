@@ -43,7 +43,7 @@ public class HubTextInput extends TextInput {
 
 		let fontSize: Int32 = 36;
 		let inputHeight: Float = 74.0;
-		let textPadding: Vector2 = new Vector2(18.0, (inputHeight - Cast(fontSize)) / 2.0 - 1.0);
+		let textPadding: Vector2 = new Vector2(18.0, (inputHeight - Cast<Float>(fontSize)) / 2.0 - 1.0);
 
 		this.m_text.SetFontSize(fontSize);
 		this.m_root.SetHeight(inputHeight);

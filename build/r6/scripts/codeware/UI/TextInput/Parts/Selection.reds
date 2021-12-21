@@ -48,7 +48,7 @@ public class Selection extends inkCustomController {
 	}
 
 	protected func InitializeLayout() -> Void {
-		this.m_selection.SetHeight(this.m_fontSize + this.m_padSize * 2);
+		this.m_selection.SetHeight(this.m_fontSize + this.m_padSize * 2.0);
 	}
 
 	public func GetFontSize() -> Int32 {

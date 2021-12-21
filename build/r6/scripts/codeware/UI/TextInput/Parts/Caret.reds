@@ -68,7 +68,7 @@ public class Caret extends inkCustomController {
 	}
 
 	protected func InitializeLayout() -> Void {
-		this.m_caret.SetSize(new Vector2(4.0, this.m_fontSize + this.m_padSize * 2));
+		this.m_caret.SetSize(new Vector2(4.0, this.m_fontSize + this.m_padSize * 2.0));
 	}
 
 	public func GetFontSize() -> Int32 {

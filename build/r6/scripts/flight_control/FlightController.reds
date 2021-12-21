@@ -388,6 +388,16 @@ public class FlightController extends IScriptable {
         player.RegisterInputListener(this, n"FlightOptions_Down");
         player.RegisterInputListener(this, n"FlightOptions_Left");
         player.RegisterInputListener(this, n"FlightOptions_Right");
+        if this.showOptions {
+          if EnumInt(this.mode) == EnumInt(FlightMode.Hover) {
+            uiSystem.QueueEvent(FlightController.ShowHintHelper("Hover & Fly", n"FlightOptions_Right", n"FlightController"));
+          } else {
+            uiSystem.QueueEvent(FlightController.ShowHintHelper("Hover Only", n"FlightOptions_Right", n"FlightController"));
+          }
+          uiSystem.QueueEvent(FlightController.ShowHintHelper("Raise Hover Height", n"FlightOptions_Up", n"FlightController"));
+          uiSystem.QueueEvent(FlightController.ShowHintHelper("Lower Hover Height", n"FlightOptions_Down", n"FlightController"));
+
+        }
         uiSystem.QueueEvent(FlightController.ShowHintHelper("Flight Options", n"Choice1_DualState", n"FlightController"));
       } else {
         uiSystem.QueueEvent(FlightController.ShowHintHelper("Enable Flight Control", n"Flight_Toggle", n"FlightController"));
@@ -410,10 +420,12 @@ public class FlightController extends IScriptable {
           FlightLog.Info("Options button pressed");
           this.showOptions = true;
           this.ui.ShowInfo();
+          this.SetupActions();
         }
         if ListenerAction.IsButtonJustReleased(action) {
           FlightLog.Info("Options button released");
           this.showOptions = false;
+          this.SetupActions();
         }
       }
       if this.showOptions {
@@ -667,10 +679,10 @@ public class FlightController extends IScriptable {
         //   Vector4.Distance(fr_tire, Cast(findGround2.position))),
         //   MinF(Vector4.Distance(bl_tire, Cast(findGround3.position)),
         //   Vector4.Distance(br_tire, Cast(findGround4.position))));        
-        let distance = (Vector4.Distance(fl_tire, Cast(findGround1.position)) +
-          Vector4.Distance(fr_tire, Cast(findGround2.position)) +
-          Vector4.Distance(bl_tire, Cast(findGround3.position)) +
-          Vector4.Distance(br_tire, Cast(findGround4.position))) / 4;
+        let distance = (Vector4.Distance(fl_tire, Vector4.Vector3To4(findGround1.position)) +
+          Vector4.Distance(fr_tire, Vector4.Vector3To4(findGround2.position)) +
+          Vector4.Distance(bl_tire, Vector4.Vector3To4(findGround3.position)) +
+          Vector4.Distance(br_tire, Vector4.Vector3To4(findGround4.position))) / 4.0;
         // this.distance = distance * (1.0 - this.distanceEase) + this.distance * (this.distanceEase);
         this.distance = distance;
         
@@ -884,7 +896,7 @@ public class FlightController extends IScriptable {
     let velocityDamp: Vector4 = MaxF(this.brake.GetValue() * this.brakeFactor, this.airResistance) * this.stats.d_velocity * this.stats.s_mass;
     // so we don't get impulsed by the speed limit (100 m/s, i think)
     if this.stats.d_speed > 90.0 {
-      velocityDamp *= (1 + PowF((this.stats.d_speed - 90.0) / 10.0, 2.0) * 1000.0);
+      velocityDamp *= (1.0 + PowF((this.stats.d_speed - 90.0) / 10.0, 2.0) * 1000.0);
     }
 
     // let yawDirectionality: Float = (this.stats.d_speedRatio + AbsF(this.yaw.GetValue()) * this.swayWithYaw) * this.stats.s_mass * this.yawDirectionalityFactor;

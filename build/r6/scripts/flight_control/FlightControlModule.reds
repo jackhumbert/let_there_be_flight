@@ -65,7 +65,7 @@ public abstract class BaseModule {
 }
 
 public class RollInputModule extends BaseModule {
-  public static func Create(controller: FlightController) -> ref<RollInputModule> {
+  public static func Create(controller: ref<FlightController>) -> ref<RollInputModule> {
     let instance = new RollInputModule();
     instance.SetController(controller);
     return instance;
@@ -82,7 +82,7 @@ public class RollInputModule extends BaseModule {
 }
 
 public class RollCorrectionModule extends BaseModule {
-  public static func Create(controller: FlightController) -> ref<RollCorrectionModule> {
+  public static func Create(controller: ref<FlightController>) -> ref<RollCorrectionModule> {
     let instance = new RollCorrectionModule();
     instance.SetController(controller);
     return instance;
@@ -99,7 +99,7 @@ public class RollCorrectionModule extends BaseModule {
 }
 
 public class LiftInputModule extends BaseModule {
-  public static func Create(controller: FlightController) -> ref<LiftInputModule> {
+  public static func Create(controller: ref<FlightController>) -> ref<LiftInputModule> {
     let instance = new LiftInputModule();
     instance.SetController(controller);
     return instance;
@@ -115,7 +115,7 @@ public class LiftInputModule extends BaseModule {
 }
 
 public class HoverModule extends BaseModule {
-  public static func Create(controller: FlightController) -> ref<HoverModule> {
+  public static func Create(controller: ref<FlightController>) -> ref<HoverModule> {
     let instance = new HoverModule();
     instance.SetController(controller);
     return instance;

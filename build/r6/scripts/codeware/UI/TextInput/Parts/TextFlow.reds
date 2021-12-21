@@ -57,7 +57,7 @@ public class TextFlow extends inkCustomController {
 			let position: Int32 = 1;
 
 			while position <= this.m_length {
-				this.m_charOffsets[position] = -1;
+				this.m_charOffsets[position] = -1.0;
 
 				position += 1;
 			}
@@ -99,7 +99,7 @@ public class TextFlow extends inkCustomController {
 			position += 1;
 
 			while position <= this.m_length {
-				if this.m_charOffsets[position] > 0 {
+				if this.m_charOffsets[position] > 0.0 {
 					this.m_charOffsets[position] += diff;
 				}
 
@@ -193,7 +193,7 @@ public class TextFlow extends inkCustomController {
 		let position: Int32 = 0;
 
 		while position < this.m_length {
-			if this.m_charOffsets[position] < 0 {
+			if this.m_charOffsets[position] < 0.0 {
 				return 0; // break?
 			}
 
