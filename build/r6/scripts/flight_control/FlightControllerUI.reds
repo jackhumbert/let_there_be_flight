@@ -1,7 +1,15 @@
 import Codeware.UI.*
+// import Flexy.UI.*
 
 // handle this somewhere
 // this.m_tppBBConnectionId = this.m_activeVehicleUIBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this, n"OnCameraModeChanged");
+
+// public static func OperatorAssignAdd(out a: array<ref<Elem>>, b: ref<Text>) -> array<ref<Elem>> {
+//   ArrayPush(a, b as Elem);
+//   return a;
+// }
+
+
 
 public class FlightControllerUI extends inkCanvas {
   public let controller: ref<inkGameController>;
@@ -25,6 +33,16 @@ public class FlightControllerUI extends inkCanvas {
     }
   }
   public func Setup(stats: ref<FlightStats>) -> Void {
+
+    // let box_bg_image = Image.New(r"base\\gameplay\\gui\\common\\shapes\\atlas_shapes_sync.inkatlas", n"frame_top_bg");
+    // let box_text = Text.New("Howdy");    
+    // // let box_text2 = Text.New("Hi there");
+
+    // let box = Box.New([box_text as Elem]);
+    // // // box.children += box_text2;
+    // box.BackgroundImage(box_bg_image);
+    // // RenderElem(box, new Vector2(500.0, 500.0)).Reparent(this);
+
     this.stats = stats;
     this.SetOpacity(0.0);
     this.RemoveAllChildren();

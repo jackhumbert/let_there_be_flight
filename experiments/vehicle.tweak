@@ -46,6 +46,11 @@ flats:
       - Vehicle.v_standard25_thorton_colby_pickup_02_player
       - Vehicle.v_standard2_archer_bandit_player
       - Vehicle.v_sport2_quadra_type66_jack
+
+# type: ContentAssignment 
+# EconomicAssignment.v_sport2_quadra_type66_nomad_player.overrideValue,Int32,73000 
+# EconomicAssignment.v_sport2_quadra_type66_nomad_player.powerLevelMod,TweakDBID,"" 
+# EconomicAssignment.v_sport2_quadra_type66_nomad_player.questType,TweakDBID,"" 
 groups: 
   Vehicle.VehicleQuadraType66JackUIData:
     type: VehicleUIData

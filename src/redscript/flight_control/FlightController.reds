@@ -820,44 +820,44 @@ public class FlightController extends IScriptable {
       }
     }
     
-    let text = inkWidgetBuilder.inkText(n"text")
-      .Reparent(this.ui.GetMarksWidget())
-      .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
-      .FontSize(20)
-      .Anchor(0.0, 0.5)
-      .Tint(ThemeColors.ElectricBlue())
-      .Text(this.hovering ? "Hovering from " + FloatToStringPrec(this.distance, 2) + " to " + FloatToStringPrec(this.hoverHeight, 2): "Flying at " + FloatToStringPrec(this.distance, 2))
-      .HAlign(inkEHorizontalAlign.Left)
-      .Margin(0.0, 0.0, 0.0, 0.0)
-      .Translation(1100, 320)
-      // .Overflow(textOverflowPolicy.AdjustToSize)
-      .BuildText();
+    // let text = inkWidgetBuilder.inkText(n"text")
+    //   .Reparent(this.ui.GetMarksWidget())
+    //   .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
+    //   .FontSize(20)
+    //   .Anchor(0.0, 0.5)
+    //   .Tint(ThemeColors.ElectricBlue())
+    //   .Text(this.hovering ? "Hovering from " + FloatToStringPrec(this.distance, 2) + " to " + FloatToStringPrec(this.hoverHeight, 2): "Flying at " + FloatToStringPrec(this.distance, 2))
+    //   .HAlign(inkEHorizontalAlign.Left)
+    //   .Margin(0.0, 0.0, 0.0, 0.0)
+    //   .Translation(1100, 320)
+    //   // .Overflow(textOverflowPolicy.AdjustToSize)
+    //   .BuildText();
 
-    let text2 = inkWidgetBuilder.inkText(n"text2")
-      .Reparent(this.ui.GetMarksWidget())
-      .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
-      .FontSize(20)
-      .Anchor(0.0, 0.5)
-      .Tint(ThemeColors.ElectricBlue())
-      .Text("Current Input Context: " + ToString(stateContext.GetStateMachineCurrentState(n"InputContext")))
-      .HAlign(inkEHorizontalAlign.Left)
-      .Margin(0.0, 0.0, 0.0, 0.0)
-      .Translation(1100, 350)
-      // .Overflow(textOverflowPolicy.AdjustToSize)
-      .BuildText();
+    // let text2 = inkWidgetBuilder.inkText(n"text2")
+    //   .Reparent(this.ui.GetMarksWidget())
+    //   .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
+    //   .FontSize(20)
+    //   .Anchor(0.0, 0.5)
+    //   .Tint(ThemeColors.ElectricBlue())
+    //   .Text("Current Input Context: " + ToString(stateContext.GetStateMachineCurrentState(n"InputContext")))
+    //   .HAlign(inkEHorizontalAlign.Left)
+    //   .Margin(0.0, 0.0, 0.0, 0.0)
+    //   .Translation(1100, 350)
+    //   // .Overflow(textOverflowPolicy.AdjustToSize)
+    //   .BuildText();
 
-      let text3 = inkWidgetBuilder.inkText(n"text3")
-      .Reparent(this.ui.GetMarksWidget())
-      .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
-      .FontSize(20)
-      .Anchor(0.0, 0.5)
-      .Tint(ThemeColors.ElectricBlue())
-      .Text("Current Vehicle State: " + ToString(stateContext.GetStateMachineCurrentState(n"Vehicle")))
-      .HAlign(inkEHorizontalAlign.Left)
-      .Margin(0.0, 0.0, 0.0, 0.0)
-      .Translation(1100, 380)
-      // .Overflow(textOverflowPolicy.AdjustToSize)
-      .BuildText();
+    //   let text3 = inkWidgetBuilder.inkText(n"text3")
+    //   .Reparent(this.ui.GetMarksWidget())
+    //   .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
+    //   .FontSize(20)
+    //   .Anchor(0.0, 0.5)
+    //   .Tint(ThemeColors.ElectricBlue())
+    //   .Text("Current Vehicle State: " + ToString(stateContext.GetStateMachineCurrentState(n"Vehicle")))
+    //   .HAlign(inkEHorizontalAlign.Left)
+    //   .Margin(0.0, 0.0, 0.0, 0.0)
+    //   .Translation(1100, 380)
+    //   // .Overflow(textOverflowPolicy.AdjustToSize)
+    //   .BuildText();
 
     this.pitchPID.SetRatio(this.stats.d_speedRatio * AbsF(Vector4.Dot(this.stats.d_direction, this.stats.d_forward)));
     this.rollPID.SetRatio(this.stats.d_speedRatio * AbsF(Vector4.Dot(this.stats.d_direction, this.stats.d_right)));
@@ -917,32 +917,32 @@ public class FlightController extends IScriptable {
     // brake
     this.CreateImpulse(this.stats.d_position, -velocityDamp * timeDelta);
 
-    this.audio.DrawSlotPositions(this.ui);
+    // this.audio.DrawSlotPositions(this.ui);
 
     this.UpdateAudioParams(timeDelta);
     
 
-    let listener = this.player.FindComponentByName(n"soundListener") as IPlacedComponent;
-    let listenerPosition = Matrix.GetTranslation(listener.GetLocalToWorld());
-    let listenerForward = Matrix.GetAxisY(listener.GetLocalToWorld());
+    // let listener = this.player.FindComponentByName(n"soundListener") as IPlacedComponent;
+    // let listenerPosition = Matrix.GetTranslation(listener.GetLocalToWorld());
+    // let listenerForward = Matrix.GetAxisY(listener.GetLocalToWorld());
 
-    this.ui.DrawMark(listenerPosition);
-    this.ui.DrawText(listenerPosition, "Listener");
+    // this.ui.DrawMark(listenerPosition);
+    // this.ui.DrawText(listenerPosition, "Listener");
 
-    let normalLine = inkWidgetBuilder.inkShape(n"normalLine")
-      .Reparent(this.ui.GetMarksWidget())
-      .Size(1920.0 * 2.0, 1080.0 * 2.0)
-      .UseNineSlice(true)
-      .ShapeVariant(inkEShapeVariant.FillAndBorder)
-      .LineThickness(3.0)
-      .FillOpacity(0.0)
-      .Tint(ThemeColors.ElectricBlue())
-      .BorderColor(ThemeColors.ElectricBlue())
-      .BorderOpacity(0.1)
-      .Visible(true)
-      .BuildShape();
-    normalLine.SetVertexList([this.ui.ScreenXY(listenerPosition), this.ui.ScreenXY(listenerPosition + listenerForward)]);
-    this.ui.DrawMark(listenerPosition + listenerForward);
+    // let normalLine = inkWidgetBuilder.inkShape(n"normalLine")
+    //   .Reparent(this.ui.GetMarksWidget())
+    //   .Size(1920.0 * 2.0, 1080.0 * 2.0)
+    //   .UseNineSlice(true)
+    //   .ShapeVariant(inkEShapeVariant.FillAndBorder)
+    //   .LineThickness(3.0)
+    //   .FillOpacity(0.0)
+    //   .Tint(ThemeColors.ElectricBlue())
+    //   .BorderColor(ThemeColors.ElectricBlue())
+    //   .BorderOpacity(0.1)
+    //   .Visible(true)
+    //   .BuildShape();
+    // normalLine.SetVertexList([this.ui.ScreenXY(listenerPosition), this.ui.ScreenXY(listenerPosition + listenerForward)]);
+    // this.ui.DrawMark(listenerPosition + listenerForward);
 
 
     if this.collisionTimer < this.collisionRecoveryDelay + this.collisionRecoveryDuration {
