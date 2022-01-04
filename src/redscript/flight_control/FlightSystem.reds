@@ -1,4 +1,3 @@
-
 public class FlightSystem extends ScriptableSystem {
   
   public static func Get(gameInstance: GameInstance) -> ref<FlightSystem> {
