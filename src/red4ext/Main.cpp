@@ -17,6 +17,7 @@
 #include "Utils.hpp"
 #include "stdafx.hpp"
 #include "FlightAudio.hpp"
+#include "FlightHUDGameController.hpp"
 #include "FlightLog.hpp"
 #include "FlightStats_Record.hpp"
 #include "FmodHelper.hpp"
@@ -26,6 +27,7 @@ RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes()
     spdlog::info("Registering classes & types");
     FlightAudio::RegisterTypes();
     FlightLog::RegisterTypes();
+    FlightHUDGameController::RegisterTypes();
     //FlightStats_Record::RegisterTypes();
 }
 
@@ -176,6 +178,7 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
     spdlog::info("Registering functions");
     FlightAudio::RegisterFunctions();
     FlightLog::RegisterFunctions();
+    FlightHUDGameController::RegisterFunctions();
     RED4ext::CRTTISystem::Get()->RegisterScriptName("entBaseCameraComponent", "BaseCameraComponent");
     //RED4ext::CRTTISystem::Get()->RegisterScriptName("entColliderComponent", "ColliderComponent");
     //FlightStats_Record::RegisterFunctions();
@@ -262,48 +265,54 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
     //rtti->CreateScriptedEnum("gamePSMVehicle", 10, &gamePSMVehicleEnum);
 }
 
-BOOL APIENTRY DllMain(HMODULE aModule, DWORD aReason, LPVOID aReserved)
+RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::EMainReason aReason, const RED4ext::Sdk* aSdk)
 {
-    switch (aReason)
-    {
-    case DLL_PROCESS_ATTACH:
-    {
-        DisableThreadLibraryCalls(aModule);
-        RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
+    switch (aReason) {
+        case RED4ext::EMainReason::Load: {
+            // Attach hooks, register RTTI types, add custom states or initalize your
+            // application. DO NOT try to access the game's memory at this point, it
+            // is not initalized yet.
 
-        Utils::CreateLogger();
-        spdlog::info("Starting up");
+            Utils::CreateLogger();
+            spdlog::info("Starting up");
 
-        break;
+            RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
+
+            RED4ext::GameState initState;
+            initState.OnEnter = nullptr;
+            initState.OnUpdate = nullptr;
+            initState.OnExit = &FlightAudio::Load;
+
+            aSdk->gameStates->Add(aHandle, RED4ext::EGameStateType::Initialization, &initState);
+    
+            RED4ext::GameState shutdownState;
+            shutdownState.OnEnter = nullptr;
+            shutdownState.OnUpdate = &FlightAudio::Unload;
+            shutdownState.OnExit = nullptr;
+
+            aSdk->gameStates->Add(aHandle, RED4ext::EGameStateType::Shutdown, &shutdownState);
+
+            break;
+        }
+        case RED4ext::EMainReason::Unload: {
+            // Free memory, detach hooks.
+            // The game's memory is already freed, to not try to do anything with it.
+
+            spdlog::info("Shutting down");
+            spdlog::shutdown();
+            break;
+        }
     }
-    case DLL_PROCESS_DETACH:
-    {
-        spdlog::info("Shutting down");
-        spdlog::shutdown();
 
-        break;
-    }
-    }
-
-    return TRUE;
-}
-
-RED4EXT_C_EXPORT bool RED4EXT_CALL Load(RED4ext::PluginHandle aHandle, const RED4ext::IRED4ext* aInterface)
-{
-    FlightAudio::Load();
     return true;
 }
 
-RED4EXT_C_EXPORT void RED4EXT_CALL Unload()
-{
-    FlightAudio::Unload();
-}
 
 RED4EXT_C_EXPORT void RED4EXT_CALL Query(RED4ext::PluginInfo* aInfo)
 {
     aInfo->name = L"Flight Control";
     aInfo->author = L"Jack Humbert";
-    aInfo->version = RED4EXT_SEMVER(0, 0, 1);
+    aInfo->version = RED4EXT_SEMVER(0, 0, 2);
     aInfo->runtime = RED4EXT_RUNTIME_LATEST;
     aInfo->sdk = RED4EXT_SDK_LATEST;
 }

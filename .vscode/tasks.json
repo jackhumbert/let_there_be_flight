@@ -6,7 +6,7 @@
       {
         "label": "Lint Installed Redscript",
         "type": "shell",
-        "command": "cargo run --bin redscript-cli --release -- lint -s \"c:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\r6\\scripts\" -b \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\r6\\cache\\final.redscripts.bk\"",
+        "command": "\"C:\\Users\\Jack\\Downloads\\redscript-cli (1).exe\" lint -s \"c:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\r6\\scripts\" -b \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\r6\\cache\\final.redscripts.bk\"",
         "options": {
           "cwd": "C:\\Users\\Jack\\Documents\\cyberpunk\\redscript",
           "shell": {

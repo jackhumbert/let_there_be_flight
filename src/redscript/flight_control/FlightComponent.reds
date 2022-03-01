@@ -29,7 +29,7 @@ public func ToggleFlightComponent(state: Bool) -> Void {
 
 // Custom Classes
 
-public class FlightComponent extends ScriptableDC {
+public class FlightComponent extends ScriptableDeviceComponent {
 
   public let m_interaction: ref<InteractionComponent>;
   public let m_healthStatPoolListener: ref<VehicleHealthStatPoolListener>;

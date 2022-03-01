@@ -295,6 +295,12 @@ public class FlightController extends IScriptable {
     this.GetVehicle().TurnEngineOn(false);
     // this.GetVehicle().TurnOn(true);
 
+    AnimationControllerComponent.PushEvent(this.GetVehicle(), n"VehicleNPCDeathData");
+
+    let evt = new AIEvent();
+    evt.name = n"DriverDead";
+    this.GetVehicle().QueueEvent(evt);
+
     this.audio.Start("leftFront", "vehicle2_TPP");
     this.audio.Start("rightFront", "vehicle2_TPP");
     this.audio.Start("leftRear", "vehicle2_TPP");
@@ -646,18 +652,12 @@ public class FlightController extends IScriptable {
 
     let foundGround = true;
 
-    let queryFilter: QueryFilter;
-    QueryFilter.AddGroup(queryFilter, n"Water");
-
-    let findWater: TraceResult = scriptInterface.RayCastWithCollisionFilter(this.stats.d_position, this.stats.d_position - this.lookDown, queryFilter);
+    let findWater: TraceResult;
+    GameInstance.GetSpatialQueriesSystem(this.gameInstance).SyncRaycastByCollisionGroup(this.stats.d_position, this.stats.d_position - this.lookDown, n"Water", findWater, true, false);
     if TraceResult.IsValid(findWater) {
       // if we're under water, just go up
       hoverCorrection = 1.0;
     } else {
-      QueryFilter.AddGroup(queryFilter, n"Static");
-      QueryFilter.AddGroup(queryFilter, n"Terrain");
-      // this finds vehicle too - need to figure out how to exclude it
-      // QueryFilter.AddGroup(queryFilter, n"PlayerBlocker"); 
 
       // let lookAhead = this.stats.d_velocity * timeDelta * this.lookAheadMax;
       // let fl_tire: Vector4 = Matrix.GetTranslation(this.fl_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
@@ -669,10 +669,17 @@ public class FlightController extends IScriptable {
       let bl_tire: Vector4 = Matrix.GetTranslation(this.bl_tire.GetLocalToWorld());
       let br_tire: Vector4 = Matrix.GetTranslation(this.br_tire.GetLocalToWorld());
 
-      let findGround1: TraceResult = scriptInterface.RayCastWithCollisionFilter(fl_tire, fl_tire + this.lookDown, queryFilter);
-      let findGround2: TraceResult = scriptInterface.RayCastWithCollisionFilter(fr_tire, fr_tire + this.lookDown, queryFilter);
-      let findGround3: TraceResult = scriptInterface.RayCastWithCollisionFilter(bl_tire, bl_tire + this.lookDown, queryFilter);
-      let findGround4: TraceResult = scriptInterface.RayCastWithCollisionFilter(br_tire, br_tire + this.lookDown, queryFilter);
+
+      let findGround1: TraceResult; 
+      let findGround2: TraceResult; 
+      let findGround3: TraceResult; 
+      let findGround4: TraceResult;
+      
+      GameInstance.GetSpatialQueriesSystem(this.gameInstance).SyncRaycastByCollisionGroup(fl_tire, fl_tire + this.lookDown, n"Terrain", findGround1, true, false);
+      GameInstance.GetSpatialQueriesSystem(this.gameInstance).SyncRaycastByCollisionGroup(fr_tire, fr_tire + this.lookDown, n"Terrain", findGround2, true, false);
+      GameInstance.GetSpatialQueriesSystem(this.gameInstance).SyncRaycastByCollisionGroup(bl_tire, bl_tire + this.lookDown, n"Terrain", findGround3, true, false);
+      GameInstance.GetSpatialQueriesSystem(this.gameInstance).SyncRaycastByCollisionGroup(br_tire, br_tire + this.lookDown, n"Terrain", findGround4, true, false);
+
       if TraceResult.IsValid(findGround1) && TraceResult.IsValid(findGround2) && TraceResult.IsValid(findGround3) && TraceResult.IsValid(findGround4) {
         // let distance = MinF(
         //   MinF(Vector4.Distance(fl_tire, Cast(findGround1.position)),
@@ -1206,8 +1213,7 @@ protected cb func OnFlightActiveChanged(active: Bool) -> Bool {
 
 @replaceMethod(VehicleComponent)
 protected cb func OnVehicleWaterEvent(evt: ref<VehicleWaterEvent>) -> Bool {
-  if evt.isInWater  {
-    this.m_submerged = true;
+  if evt.isInWater  && !this.GetPS().GetIsSubmerged() {
     if !Equals(FlightController.GetInstance().GetVehicle(), this.GetVehicle()) && FlightController.GetInstance().IsActive() {
       this.BreakAllDamageStageFX(true);
       this.DestroyVehicle();
@@ -1215,8 +1221,6 @@ protected cb func OnVehicleWaterEvent(evt: ref<VehicleWaterEvent>) -> Bool {
       this.ApplyVehicleDOT(n"high");
     }
     GameObjectEffectHelper.BreakEffectLoopEvent(this.GetVehicle(), n"fire");
-  } else {
-    this.m_submerged = false;
   }
   ScriptedPuppet.ReevaluateOxygenConsumption(this.m_mountedPlayer);
   if FlightController.GetInstance().IsActive() {

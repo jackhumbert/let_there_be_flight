@@ -49,7 +49,8 @@ namespace FlightAudio {
         return &flightAudioCls;
     }
 
-    void Load() {
+    bool Load(RED4ext::CGameApplication *aApp)
+    {
 
         ERRCHECK(FMOD::Studio::System::create(&fmod_system));
 
@@ -71,12 +72,17 @@ namespace FlightAudio {
         ERRCHECK(fmod_system->loadBankFile(strings, FMOD_STUDIO_LOAD_BANK_NORMAL, &stringsBank));
 
         spdlog::info("FMOD loaded");
+
+        return true;
     }
 
-    void Unload() {
+    bool Unload(RED4ext::CGameApplication* aApp)
+    {
         stringsBank->unload();
         soundBank->unload();
         fmod_system->release();
+        
+        return true;
     }
 
     void Start(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)

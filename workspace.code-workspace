@@ -1,17 +1,18 @@
 {
 	"folders": [
 		{
+			"name": "src",
+			"path": "src"
+		},
+		{
 			"path": "."
 		},
 		{
-			"path": "..\\master"
+			"path": "..\\cyberpunk-master (1)"
 		}
 	],
 	"settings": {
 		"files.associations": {
-			"*.reds": "redscript",
-			"*.ws": "redscript",
-			"*.script": "redscript",
 			"algorithm": "cpp",
 			"array": "cpp",
 			"atomic": "cpp",

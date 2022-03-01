@@ -13,7 +13,7 @@ public class FlightSystem extends ScriptableSystem {
     FlightLog.Info("[FlightSystem] OnDetach");
   }
 
-  private func IsSavingLocked() -> Bool {
-    return FlightController.GetInstance().IsActive();
-  }
+  // private func IsSavingLocked() -> Bool {
+  //   return FlightController.GetInstance().IsActive();
+  // }
 }
