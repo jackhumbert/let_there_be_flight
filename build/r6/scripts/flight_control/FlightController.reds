@@ -295,16 +295,16 @@ public class FlightController extends IScriptable {
     this.GetVehicle().TurnEngineOn(false);
     // this.GetVehicle().TurnOn(true);
 
-    AnimationControllerComponent.PushEvent(this.GetVehicle(), n"VehicleNPCDeathData");
+    // AnimationControllerComponent.PushEvent(this.GetVehicle(), n"VehicleNPCDeathData");
 
-    let evt = new AIEvent();
-    evt.name = n"DriverDead";
-    this.GetVehicle().QueueEvent(evt);
+    // let evt = new AIEvent();
+    // evt.name = n"DriverDead";
+    // this.GetVehicle().QueueEvent(evt);
 
-    this.audio.Start("leftFront", "vehicle2_TPP");
-    this.audio.Start("rightFront", "vehicle2_TPP");
-    this.audio.Start("leftRear", "vehicle2_TPP");
-    this.audio.Start("rightRear", "vehicle2_TPP");
+    this.audio.Start("leftFront", "vehicle3_TPP");
+    this.audio.Start("rightFront", "vehicle3_TPP");
+    this.audio.Start("leftRear", "vehicle3_TPP");
+    this.audio.Start("rightRear", "vehicle3_TPP");
 
     // idk what to do with this
     // let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
