@@ -1,4 +1,3 @@
-
 public class FlightSystem extends ScriptableSystem {
   
   public static func Get(gameInstance: GameInstance) -> ref<FlightSystem> {
@@ -17,3 +16,4 @@ public class FlightSystem extends ScriptableSystem {
   //   return FlightController.GetInstance().IsActive();
   // }
 }
+

@@ -675,10 +675,10 @@ public class FlightController extends IScriptable {
       let findGround3: TraceResult; 
       let findGround4: TraceResult;
       
-      GameInstance.GetSpatialQueriesSystem(this.gameInstance).SyncRaycastByCollisionGroup(fl_tire, fl_tire + this.lookDown, n"Terrain", findGround1, true, false);
-      GameInstance.GetSpatialQueriesSystem(this.gameInstance).SyncRaycastByCollisionGroup(fr_tire, fr_tire + this.lookDown, n"Terrain", findGround2, true, false);
-      GameInstance.GetSpatialQueriesSystem(this.gameInstance).SyncRaycastByCollisionGroup(bl_tire, bl_tire + this.lookDown, n"Terrain", findGround3, true, false);
-      GameInstance.GetSpatialQueriesSystem(this.gameInstance).SyncRaycastByCollisionGroup(br_tire, br_tire + this.lookDown, n"Terrain", findGround4, true, false);
+      GameInstance.GetSpatialQueriesSystem(this.gameInstance).SyncRaycastByCollisionPreset(fl_tire, fl_tire + this.lookDown, n"World Static", findGround1, false, false);
+      GameInstance.GetSpatialQueriesSystem(this.gameInstance).SyncRaycastByCollisionPreset(fr_tire, fr_tire + this.lookDown, n"World Static", findGround2, false, false);
+      GameInstance.GetSpatialQueriesSystem(this.gameInstance).SyncRaycastByCollisionPreset(bl_tire, bl_tire + this.lookDown, n"World Static", findGround3, false, false);
+      GameInstance.GetSpatialQueriesSystem(this.gameInstance).SyncRaycastByCollisionPreset(br_tire, br_tire + this.lookDown, n"World Static", findGround4, false, false);
 
       if TraceResult.IsValid(findGround1) && TraceResult.IsValid(findGround2) && TraceResult.IsValid(findGround3) && TraceResult.IsValid(findGround4) {
         // let distance = MinF(

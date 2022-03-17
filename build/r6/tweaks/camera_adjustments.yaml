@@ -1,0 +1,68 @@
+Camera.VehicleTPP_DefaultParams.autoCenterMaxSpeedThreshold: 100
+Camera.VehicleTPP_DefaultParams.slopeCorrectionInAirPitchMin: 0.0
+Camera.VehicleTPP_DefaultParams.slopeCorrectionInAirPitchMax: 0.0
+Camera.VehicleTPP_DefaultParams.slopeCorrectionInAirDampFactor: 10.0
+Camera.VehicleTPP_DefaultParams.slopeCorrectionInAirFallCoef: 1.0
+Camera.VehicleTPP_DefaultParams.slopeCorrectionInAirRaiseCoef: 1.0
+Camera.VehicleTPP_DefaultParams.slopeCorrectionInAirSpeedMax: 10.0
+Camera.VehicleTPP_DefaultParams.slopeCorrectionInAirStrength: 4.0
+Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirPitchMin: 0.0
+Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirPitchMax: 0.0
+Camera.VehicleTPP_2w_DefaultParams.autoCenterMaxSpeedThreshold: 100
+Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirDampFactor: 10.0
+Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirFallCoef: 1.0
+Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirRaiseCoef: 1.0
+Camera.VehicleTPP_2w_DefaultParams.slopeCorrectionInAirSpeedMax: 10.0
+RTDB.VehicleTPPCameraParams.slopeCorrectionInAirPitchMin: 0.0
+RTDB.VehicleTPPCameraParams.slopeCorrectionInAirPitchMax: 0.0
+RTDB.VehicleTPPCameraParams.autoCenterMaxSpeedThreshold: 100
+RTDB.VehicleTPPCameraParams.slopeCorrectionInAirStrength: 4.0
+RTDB.VehicleTPPCameraParams.slopeCorrectionInAirDampFactor: 10.0
+RTDB.VehicleTPPCameraParams.slopeCorrectionInAirFallCoef: 1.0
+RTDB.VehicleTPPCameraParams.slopeCorrectionInAirRaiseCoef: 1.0
+RTDB.VehicleTPPCameraParams.slopeCorrectionInAirSpeedMax: 10.0
+RTDB.VehicleTPPCameraParams.slopeCorrectionInAirStrength: 4.0
+Camera.VehicleTPP_FlightParams:
+  $base: Camera.VehicleTPP_DefaultParams
+  airFlowDistortion: true
+  autoCenterMaxSpeedThreshold: 20.0
+  autoCenterSpeed: 5.0
+  autoCenterStartTimeGamepad: 0.5
+  autoCenterStartTimeMouse: 2.0
+  cameraBoomExtensionSpeed: 3.0
+  cameraMaxPitch: 80.0
+  cameraMinPitch: -35.0
+  cameraSphereRadius: 1.0
+  collisionDetection: true
+  drivingDirectionCompensation: true
+  drivingDirectionCompensationAngle: 100.0
+  drivingDirectionCompensationAngleSmooth: 70.0
+  drivingDirectionCompensationAngularVelocityMin: 150.0
+  drivingDirectionCompensationSpeedCoef: 1.0
+  drivingDirectionCompensationSpeedMax: 120.0
+  drivingDirectionCompensationSpeedMin: 4.0
+  elasticBoomAcceleration: true
+  elasticBoomAccelerationExpansionLength: 0.5
+  elasticBoomForwardAccelerationCoef: 10.0
+  elasticBoomSpeedExpansionLength: 0.5
+  elasticBoomSpeedExpansionSpeedMax: 20.0
+  elasticBoomSpeedExpansionSpeedMin: 10.0
+  elasticBoomVelocity: true
+  fov: 49.0
+  headLookAtCenterYawThreshold: 100.0
+  headLookAtMaxPitchDown: 40.0
+  headLookAtMaxPitchUp: 0.0
+  headLookAtMaxYaw: 70.0
+  headLookAtRotationSpeed: 0.800000012
+  lockedCamera: false
+  slopeAdjustement: true
+  slopeCorrectionInAirDampFactor: 0.100000001
+  slopeCorrectionInAirFallCoef: 2.0
+  slopeCorrectionInAirPitchMax: 30.0
+  slopeCorrectionInAirPitchMin: -30.0
+  slopeCorrectionInAirRaiseCoef: 0.5
+  slopeCorrectionInAirSpeedMax: 10.0
+  slopeCorrectionInAirStrength: 20.0
+  slopeCorrectionOnGroundPitchMax: 30.0
+  slopeCorrectionOnGroundPitchMin: -30.0
+  slopeCorrectionOnGroundStrength: 4.0
