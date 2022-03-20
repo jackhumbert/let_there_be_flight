@@ -110,6 +110,22 @@ namespace FlightAudio {
         eventMap[emitterName.c_str()] = eventInstance;
         ERRCHECK(fmod_system->update());
     }
+    
+
+    void Play(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
+    {
+        RED4ext::CString eventName;
+        RED4ext::GetParameter(aFrame, &eventName);
+        aFrame->code++; // skip ParamEnd
+        spdlog::info(fmt::format("[FlightAudio] Playing event: {}", eventName.c_str()));
+        FMOD::Studio::EventDescription* eventDescription;
+        ERRCHECK(fmod_system->getEvent(fmt::format("event:/{}", eventName.c_str()).c_str(), &eventDescription));
+        FMOD::Studio::EventInstance* eventInstance;
+        ERRCHECK(eventDescription->createInstance(&eventInstance));
+        ERRCHECK(eventInstance->start());
+        ERRCHECK(eventInstance->release());
+        ERRCHECK(fmod_system->update());
+    }
 
     void Stop(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
     {
@@ -179,14 +195,17 @@ namespace FlightAudio {
         RED4ext::CBaseFunction::Flags n_flags = { .isNative = true };
 ;
         auto startSound = RED4ext::CClassFunction::Create(&flightAudioCls, "Start", "Start", &Start);
+        auto playSound = RED4ext::CClassFunction::Create(&flightAudioCls, "Play", "Play", &Play);
         auto stopSound = RED4ext::CClassFunction::Create(&flightAudioCls, "Stop", "Stop", &Stop);
         auto setParams = RED4ext::CClassFunction::Create(&flightAudioCls, "Update", "Update", &Update);
 
         startSound->flags = n_flags;
+        playSound->flags = n_flags;
         stopSound->flags = n_flags;
         setParams->flags = n_flags;
 
         flightAudioCls.RegisterFunction(startSound);
+        flightAudioCls.RegisterFunction(playSound);
         flightAudioCls.RegisterFunction(stopSound);
         flightAudioCls.RegisterFunction(setParams);
     }
