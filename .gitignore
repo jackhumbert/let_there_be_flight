@@ -38,6 +38,10 @@ src/red4ext/x64/
 src/red4ext/build/
 packed/
 packed.zip
+build.zip
+
+Cyberpunk2077.exe*
+REDEngineErrorReporter.exe*
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/

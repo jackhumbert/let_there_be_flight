@@ -3,7 +3,6 @@
     "redscript.sourcePath": "src/redscript",
     "redscript.modFolderName": "flight_control",
     "files.exclude": {
-        "build": true,
         "packed": true,
         "**/.git": true,
         "**/.svn": true,

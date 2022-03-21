@@ -105,6 +105,8 @@ public class FlightController extends IScriptable {
   public let collisionTimer: Float;
   public let collisionRecoveryDelay: Float;
   public let collisionRecoveryDuration: Float;
+  public let isInAnyMenu: Bool;
+  public let audioEnabled: Bool;
 
   public let fl_tire: ref<IPlacedComponent>;
   public let fr_tire: ref<IPlacedComponent>;
@@ -174,6 +176,7 @@ public class FlightController extends IScriptable {
     this.collisionTimer = this.collisionRecoveryDelay;
 
     this.audio = FlightAudio.Create();  
+    this.audioEnabled = true;
 
     // this.m_groupPath = n"/controls/flight";
     // this.m_settingsListener = new FlightSettingsListener();
@@ -367,10 +370,11 @@ public class FlightController extends IScriptable {
     GameInstance.GetUISystem(this.gameInstance).QueueEvent(shardUIevent);
   }
 
-  private func SetupActions() -> Bool {
+  private func SetupActions() -> Void {
     let player: ref<PlayerPuppet> = GetPlayer(this.gameInstance);
     let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
     player.UnregisterInputListener(this);    
+    // player.RegisterInputListener(this, n"OpenPauseMenu");
     uiSystem.QueueEvent(FlightController.HideHintFromSource(n"FlightController"));
     if this.enabled {
       // player.RegisterInputListener(this, n"Flight_Toggle");
@@ -415,6 +419,17 @@ public class FlightController extends IScriptable {
     let actionType: gameinputActionType = ListenerAction.GetType(action);
     let actionName: CName = ListenerAction.GetName(action);
     let value: Float = ListenerAction.GetValue(action);
+    if Equals(actionName, n"OpenPauseMenu") && ListenerAction.IsButtonJustPressed(action) {
+      this.audioEnabled = false;
+      let engineVolume = 0.0;
+      let windVolume = 0.0;
+      this.audio.Update("leftFront", Vector4.EmptyVector(), engineVolume);
+      this.audio.Update("rightFront", Vector4.EmptyVector(), engineVolume);
+      this.audio.Update("leftRear", Vector4.EmptyVector(), engineVolume);
+      this.audio.Update("rightRear", Vector4.EmptyVector(), engineVolume);
+      this.audio.Update("windLeft", Vector4.EmptyVector(), windVolume);
+      this.audio.Update("windRight", Vector4.EmptyVector(), windVolume);
+    }
     // FlightLog.Info(ToString(actionType) + ToString(actionName) + ToString(value));
     if Equals(actionName, n"Flight_Toggle") && ListenerAction.IsButtonJustPressed(action) {
         this.Toggle();
@@ -507,8 +522,11 @@ public class FlightController extends IScriptable {
     let windVolume = 0.5;
     // let engineVolume = (GameInstance.GetSettingsSystem(this.gameInstance).GetVar(n"/audio/volume", n"MasterVolume") as ConfigVarListInt).GetValue();
     // let engineVolume *= (GameInstance.GetSettingsSystem(this.gameInstance).GetVar(n"/audio/volume", n"SfxVolume") as ConfigVarListInt).GetValue();
-
-    if GameInstance.GetTimeSystem(this.gameInstance).IsPausedState() {
+    if GameInstance.GetTimeSystem(this.gameInstance).IsPausedState() ||
+      GameInstance.GetTimeSystem(this.gameInstance).IsTimeDilationActive(n"HubMenu") || 
+      GameInstance.GetTimeSystem(this.gameInstance).IsTimeDilationActive(n"WorldMap") ||
+      this.isInAnyMenu ||
+      !this.audioEnabled {
       engineVolume = 0.0;
       windVolume = 0.0;
       this.audio.Update("leftFront", Vector4.EmptyVector(), engineVolume);
@@ -519,15 +537,11 @@ public class FlightController extends IScriptable {
       this.audio.Update("windRight", Vector4.EmptyVector(), windVolume);
       return;
     }
+
     // might need to handle just the scanning system's dilation, and the pause menu
-    if GameInstance.GetTimeSystem(this.gameInstance).IsTimeDilationActive(n"radial") {
+    if GameInstance.GetTimeSystem(this.gameInstance).IsTimeDilationActive(n"radialMenu") {
       engineVolume *= 0.1;
       windVolume *= 0.1;
-    } else {
-      if GameInstance.GetTimeSystem(this.gameInstance).IsTimeDilationActive() {
-        engineVolume *= 0.1;
-        windVolume *= 0.1;
-      }
     }
 
     this.audio.UpdateSlotProviders();
@@ -592,6 +606,11 @@ public class FlightController extends IScriptable {
   }
 
   public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
+    
+    let blackboard: ref<IBlackboard> = scriptInterface.GetBlackboardSystem().Get(GetAllBlackboardDefs().UI_System);
+    let uiSystemBB: ref<UI_SystemDef> = GetAllBlackboardDefs().UI_System;
+    this.isInAnyMenu = blackboard.GetBool(uiSystemBB.IsInMenu);
+    
     if !this.active {
       this.stats.UpdateDynamic(timeDelta);
       this.UpdateAudioParams(timeDelta);
@@ -611,7 +630,7 @@ public class FlightController extends IScriptable {
       }
     }
 
-    let player: ref<PlayerPuppet> = GetPlayer(this.gameInstance);
+    // let player: ref<PlayerPuppet> = GetPlayer(this.gameInstance);
     if !IsDefined(this.GetVehicle()) { 
       if IsDefined(scriptInterface.owner as VehicleObject) {
         this.stats = FlightStats.Create(scriptInterface.owner as VehicleObject);
@@ -705,61 +724,61 @@ public class FlightController extends IScriptable {
         this.ui.DrawMark(groundPoints[2]);
         this.ui.DrawMark(groundPoints[3]);
 
-        let points: array<Vector2> = [
-          this.ui.ScreenXY(groundPoints[0]), 
-          this.ui.ScreenXY(groundPoints[1]),
-          this.ui.ScreenXY(groundPoints[2]),
-          this.ui.ScreenXY(groundPoints[3]),
-          this.ui.ScreenXY(groundPoints[0])
-        ]; 
+        // let points: array<Vector2> = [
+        //   this.ui.ScreenXY(groundPoints[0]), 
+        //   this.ui.ScreenXY(groundPoints[1]),
+        //   this.ui.ScreenXY(groundPoints[2]),
+        //   this.ui.ScreenXY(groundPoints[3]),
+        //   this.ui.ScreenXY(groundPoints[0])
+        // ]; 
 
-        let quad = inkWidgetBuilder.inkShape(n"shape")
-          .Reparent(this.ui.GetMarksWidget())
-          // .ChangeShape(n"Rectangle")
-          .Size(1920.0 * 2.0, 1080.0 * 2.0)
-          .UseNineSlice(true)
-          .ShapeVariant(inkEShapeVariant.FillAndBorder)
-          .LineThickness(3.0)
-          .FillOpacity(0.01)
-          .Tint(ThemeColors.ElectricBlue())
-          .BorderColor(ThemeColors.ElectricBlue())
-          .BorderOpacity(0.05)
-          .BuildShape();
-        quad.SetVertexList(points);
+        // let quad = inkWidgetBuilder.inkShape(n"shape")
+        //   .Reparent(this.ui.GetMarksWidget())
+        //   // .ChangeShape(n"Rectangle")
+        //   .Size(1920.0 * 2.0, 1080.0 * 2.0)
+        //   .UseNineSlice(true)
+        //   .ShapeVariant(inkEShapeVariant.FillAndBorder)
+        //   .LineThickness(3.0)
+        //   .FillOpacity(0.01)
+        //   .Tint(ThemeColors.ElectricBlue())
+        //   .BorderColor(ThemeColors.ElectricBlue())
+        //   .BorderOpacity(0.05)
+        //   .BuildShape();
+        // quad.SetVertexList(points);
 
-        this.secondCounter += timeDelta;
-        if this.secondCounter > 1.0 {
-          this.secondCounter -= 1.0;
-        }
+        // this.secondCounter += timeDelta;
+        // if this.secondCounter > 1.0 {
+        //   this.secondCounter -= 1.0;
+        // }
 
-        let higherGroundPoints = groundPoints;
-        higherGroundPoints[0].Z = higherGroundPoints[0].Z * (this.secondCounter) + fl_tire.Z * (1.0 - this.secondCounter);
-        higherGroundPoints[1].Z = higherGroundPoints[1].Z * (this.secondCounter) + fr_tire.Z * (1.0 - this.secondCounter);
-        higherGroundPoints[2].Z = higherGroundPoints[2].Z * (this.secondCounter) + bl_tire.Z * (1.0 - this.secondCounter);
-        higherGroundPoints[3].Z = higherGroundPoints[3].Z * (this.secondCounter) + br_tire.Z * (1.0 - this.secondCounter);
+        // let higherGroundPoints = groundPoints;
+        // higherGroundPoints[0].Z = higherGroundPoints[0].Z * (this.secondCounter) + fl_tire.Z * (1.0 - this.secondCounter);
+        // higherGroundPoints[1].Z = higherGroundPoints[1].Z * (this.secondCounter) + fr_tire.Z * (1.0 - this.secondCounter);
+        // higherGroundPoints[2].Z = higherGroundPoints[2].Z * (this.secondCounter) + bl_tire.Z * (1.0 - this.secondCounter);
+        // higherGroundPoints[3].Z = higherGroundPoints[3].Z * (this.secondCounter) + br_tire.Z * (1.0 - this.secondCounter);
 
-        let points2: array<Vector2> = [
-          this.ui.ScreenXY(higherGroundPoints[0]), 
-          this.ui.ScreenXY(higherGroundPoints[1]),
-          this.ui.ScreenXY(higherGroundPoints[2]),
-          this.ui.ScreenXY(higherGroundPoints[3]),
-          this.ui.ScreenXY(higherGroundPoints[0])
-        ]; 
+        // let points2: array<Vector2> = [
+        //   this.ui.ScreenXY(higherGroundPoints[0]), 
+        //   this.ui.ScreenXY(higherGroundPoints[1]),
+        //   this.ui.ScreenXY(higherGroundPoints[2]),
+        //   this.ui.ScreenXY(higherGroundPoints[3]),
+        //   this.ui.ScreenXY(higherGroundPoints[0])
+        // ]; 
         
-        let quad2 = inkWidgetBuilder.inkShape(n"shape2")
-          .Reparent(this.ui.GetMarksWidget())
-          // .ChangeShape(n"Rectangle")
-          .Size(1920.0 * 2.0, 1080.0 * 2.0)
-          .UseNineSlice(true)
-          .ShapeVariant(inkEShapeVariant.FillAndBorder)
-          .LineThickness(3.0)
-          .FillOpacity(0.0)
-          .Tint(ThemeColors.ElectricBlue())
-          .BorderColor(ThemeColors.ElectricBlue())
-          .BorderOpacity(0.1 * this.secondCounter)
-          .Visible(true)
-          .BuildShape();
-        quad2.SetVertexList(points2);
+        // let quad2 = inkWidgetBuilder.inkShape(n"shape2")
+        //   .Reparent(this.ui.GetMarksWidget())
+        //   // .ChangeShape(n"Rectangle")
+        //   .Size(1920.0 * 2.0, 1080.0 * 2.0)
+        //   .UseNineSlice(true)
+        //   .ShapeVariant(inkEShapeVariant.FillAndBorder)
+        //   .LineThickness(3.0)
+        //   .FillOpacity(0.0)
+        //   .Tint(ThemeColors.ElectricBlue())
+        //   .BorderColor(ThemeColors.ElectricBlue())
+        //   .BorderOpacity(0.1 * this.secondCounter)
+        //   .Visible(true)
+        //   .BuildShape();
+        // quad2.SetVertexList(points2);
 
         // level plane - not that useful right now
         // let higherGroundPoints = groundPoints;

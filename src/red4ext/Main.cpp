@@ -215,10 +215,10 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
     UIGameContextEnum->hashList.PushBack("VehicleFlight");
     UIGameContextEnum->valueList.PushBack(10);
 
-    auto gamedataVehicle_Record = rtti->GetClass("gamedataVehicle_Record");
+    //auto gamedataVehicle_Record = rtti->GetClass("gamedataVehicle_Record");
     //auto TppCameraParamsOld = gamedataVehicle_Record->GetFunction("TppCameraParams");
 
-    auto TppCameraParamsNew = RED4ext::CClassFunction::Create(gamedataVehicle_Record, "TppFlightCameraParams", "TppFlightCameraParams", &TppFlightCameraParams, { .isNative = true });
+    //auto TppCameraParamsNew = RED4ext::CClassFunction::Create(gamedataVehicle_Record, "TppFlightCameraParams", "TppFlightCameraParams", &TppFlightCameraParams, { .isNative = true });
     //
     //TppCameraParamsNew->fullName = TppCameraParamsOld->fullName;
     //TppCameraParamsNew->shortName = TppCameraParamsOld->shortName;
@@ -249,7 +249,7 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
     //std::memcpy(TppCameraParamsOld, TppCameraParamsNew, sizeof(RED4ext::CClassFunction));
     //std::memcpy(TppCameraParamsNew, &tmpBuffer, sizeof(RED4ext::CClassFunction));
 
-    gamedataVehicle_Record->RegisterFunction(TppCameraParamsNew);
+    //gamedataVehicle_Record->RegisterFunction(TppCameraParamsNew);
     //auto TppCameraParamsHandleFunc = RED4ext::CClassFunction::Create(gamedataVehicle_Record, "TppCameraParamsHandle", "TppCameraParamsHandle", &TppCameraParamsHandle, { .isNative = true });
     //gamedataVehicle_Record->RegisterFunction(TppCameraParamsHandleFunc);
     
