@@ -37,8 +37,8 @@ mono_crash.*
 src/red4ext/x64/
 src/red4ext/build/
 packed/
-packed.zip
-build.zip
+packed*.zip
+build*.zip
 
 Cyberpunk2077.exe*
 REDEngineErrorReporter.exe*
