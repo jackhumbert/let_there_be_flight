@@ -1,6 +1,7 @@
 public native class FlightAudio {
   // defined in red4ext part
   public native func Start(emitterName: String, eventName: String) -> Void;
+  public native func Play(eventName: String) -> Void;
   public native func Stop(emitterName: String) -> Void;
   // public native func Update(emitterName: String, eventLocation: Vector3, eventForward: Vector3, eventUp: Vector3, volume: Float) -> Void;
   public native func Update(emitterName: String, eventLocation: Vector4, volume: Float) -> Void;
@@ -58,23 +59,23 @@ public native class FlightAudio {
     self.m_orientationProviders = new inkHashMap();
     self.m_orientations = new inkHashMap();
     self.slots = [
-      n"steering_wheel",
-      n"roofhatch",
-      n"glove_box",
-      n"Base",
-      n"dseat_a",
-      n"dseat_b",
-      n"bumper_front_a",
-      n"bumper_front_b",
-      n"mirror_front_left",
-      n"mirror_front_right",
+      // n"steering_wheel",
+      // n"roofhatch",
+      // n"glove_box",
+      // n"Base",
+      // n"dseat_a",
+      // n"dseat_b",
+      // n"bumper_front_a",
+      // n"bumper_front_b",
+      // n"mirror_front_left",
+      // n"mirror_front_right",
       n"wheel_front",
       n"wheel_back",
       n"wheel_front_left",
       n"wheel_front_right",
       n"wheel_back_left",
       n"wheel_back_right",
-      n"bumper_back",
+      // n"bumper_back",
       n"window_front_left_a",
       n"window_front_right_a"
     ];

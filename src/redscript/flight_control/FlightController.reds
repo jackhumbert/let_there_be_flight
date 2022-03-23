@@ -286,6 +286,9 @@ public class FlightController extends IScriptable {
     this.lift.Reset();
     this.brake.Reset();
 
+
+    this.audio.Play("vehicle3_startup");
+
     this.SetupTires();
     this.SetupPositionProviders();
     

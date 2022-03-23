@@ -28,10 +28,10 @@
 		<include name="VehicleFlightToggle" />
 		<include name="Combat" />
 
-		<action name="FlightOptions_Up"		map="UI_DPadUp"/>
-		<action name="FlightOptions_Right"	map="UI_DPadRight"/>
-		<action name="FlightOptions_Down"	map="UI_DPadDown"/>
-		<action name="FlightOptions_Left"	map="UI_DPadLeft"/>
+		<action name="FlightOptions_Up"		map="UI_MoveUp"/>
+		<action name="FlightOptions_Right"	map="UI_MoveRight"/>
+		<action name="FlightOptions_Down"	map="UI_MoveDown"/>
+		<action name="FlightOptions_Left"	map="UI_MoveLeft"/>
 		<action name="Roll"					map="RightX_Axis"/>
 		<action name="Pitch"				map="RightY_Axis"/>
 		<!-- <action name="FlightCombat_Toggle"  map="FlightCombat_Toggle" /> -->
@@ -57,9 +57,9 @@
 	<!-- INTERACTIONS -->
 	<context name="InteractionActions" append="true">
 		<action name="Choice1_DualState"	map="Choice1" priority="-1" />
-		<action name="Choice2_DualState"	map="Choice1" priority="-1" />
-		<action name="Choice3_DualState"	map="Choice1" priority="-1" />
-		<action name="Choice4_DualState"	map="Choice1" priority="-1" />
+		<action name="Choice2_DualState"	map="Choice2" priority="-1" />
+		<action name="Choice3_DualState"	map="Choice3" priority="-1" />
+		<action name="Choice4_DualState"	map="Choice4" priority="-1" />
 	</context>
 
 	<!-- EVENTS -->

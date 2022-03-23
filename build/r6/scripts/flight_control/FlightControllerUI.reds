@@ -63,57 +63,57 @@ public class FlightControllerUI extends inkCanvas {
     // w.Reparent(this);
     // return;
 
-    this.m_arrow_forward = inkWidgetBuilder.inkImage(n"arrow_forward")
-		  .Reparent(this)
-		  .Atlas(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas")
-		  .Part(n"arrow_right")
-		  .Size(24.0, 24.0)
-      .Anchor(1.0, 0.5)
-		  .Opacity(1.0)
-		  .Tint(ThemeColors.ElectricBlue())
-      .BuildImage();
+    // this.m_arrow_forward = inkWidgetBuilder.inkImage(n"arrow_forward")
+		//   .Reparent(this)
+		//   .Atlas(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas")
+		//   .Part(n"arrow_right")
+		//   .Size(24.0, 24.0)
+    //   .Anchor(1.0, 0.5)
+		//   .Opacity(1.0)
+		//   .Tint(ThemeColors.ElectricBlue())
+    //   .BuildImage();
 
-    // wheel markers
+    // // wheel markers
 
-    this.m_arrow_left = inkWidgetBuilder.inkImage(n"arrow_left")
-		  .Reparent(this)
-		  .Atlas(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas")
-		  .Part(n"arrow_right")
-		  .Size(24.0, 24.0)
-      .Anchor(1.0, 0.5)
-		  .Opacity(1.0)
-		  .Tint(ThemeColors.ElectricBlue())
-      .BuildImage();
+    // this.m_arrow_left = inkWidgetBuilder.inkImage(n"arrow_left")
+		//   .Reparent(this)
+		//   .Atlas(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas")
+		//   .Part(n"arrow_right")
+		//   .Size(24.0, 24.0)
+    //   .Anchor(1.0, 0.5)
+		//   .Opacity(1.0)
+		//   .Tint(ThemeColors.ElectricBlue())
+    //   .BuildImage();
 
-    this.m_arrow_right = inkWidgetBuilder.inkImage(n"arrow_right")
-		  .Reparent(this)
-		  .Atlas(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas")
-		  .Part(n"arrow_right")
-		  .Size(24.0, 24.0)
-      .Anchor(1.0, 0.5)
-		  .Opacity(1.0)
-		  .Tint(ThemeColors.ElectricBlue())
-      .BuildImage();
+    // this.m_arrow_right = inkWidgetBuilder.inkImage(n"arrow_right")
+		//   .Reparent(this)
+		//   .Atlas(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas")
+		//   .Part(n"arrow_right")
+		//   .Size(24.0, 24.0)
+    //   .Anchor(1.0, 0.5)
+		//   .Opacity(1.0)
+		//   .Tint(ThemeColors.ElectricBlue())
+    //   .BuildImage();
 
-    this.m_arrow_left_rear = inkWidgetBuilder.inkImage(n"arrow_left_rear")
-		  .Reparent(this)
-		  .Atlas(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas")
-		  .Part(n"arrow_right")
-		  .Size(24.0, 24.0)
-      .Anchor(1.0, 0.5)
-		  .Opacity(1.0)
-		  .Tint(ThemeColors.ElectricBlue())
-      .BuildImage();
+    // this.m_arrow_left_rear = inkWidgetBuilder.inkImage(n"arrow_left_rear")
+		//   .Reparent(this)
+		//   .Atlas(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas")
+		//   .Part(n"arrow_right")
+		//   .Size(24.0, 24.0)
+    //   .Anchor(1.0, 0.5)
+		//   .Opacity(1.0)
+		//   .Tint(ThemeColors.ElectricBlue())
+    //   .BuildImage();
 
-    this.m_arrow_right_rear = inkWidgetBuilder.inkImage(n"arrow_right_rear")
-		  .Reparent(this)
-		  .Atlas(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas")
-		  .Part(n"arrow_right")
-		  .Size(24.0, 24.0)
-      .Anchor(1.0, 0.5)
-		  .Opacity(1.0)
-		  .Tint(ThemeColors.ElectricBlue())
-      .BuildImage();
+    // this.m_arrow_right_rear = inkWidgetBuilder.inkImage(n"arrow_right_rear")
+		//   .Reparent(this)
+		//   .Atlas(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas")
+		//   .Part(n"arrow_right")
+		//   .Size(24.0, 24.0)
+    //   .Anchor(1.0, 0.5)
+		//   .Opacity(1.0)
+		//   .Tint(ThemeColors.ElectricBlue())
+    //   .BuildImage();
 
     // roll markers
 
@@ -612,33 +612,32 @@ public class FlightControllerUI extends inkCanvas {
       // + ", " + FloatToStringPrec(this.stats.d_velocity.Y, 1) + ", " + FloatToStringPrec(this.stats.d_velocity.Z, 1) + " >");
     this.m_info.SetTranslation(this.ScreenXY(this.stats.d_position - this.stats.d_velocity * timeDelta + Transform.GetRight(cameraTransform) * 2.5));
 
-    let fl_position = Matrix.GetTranslation((this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_left_tire") as TargetingComponent).GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
-    let fr_position = Matrix.GetTranslation((this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_right_tire") as TargetingComponent).GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
+    // let fl_position = Matrix.GetTranslation((this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_left_tire") as TargetingComponent).GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
+    // let fr_position = Matrix.GetTranslation((this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_right_tire") as TargetingComponent).GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
    
-    let bl_position = Matrix.GetTranslation((this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_left_tire") as TargetingComponent).GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
-    let br_position = Matrix.GetTranslation((this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_right_tire") as TargetingComponent).GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
-    // let br_position = (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_right_tire") as TargetingComponent).GetLocalToWorld().W;
+    // let bl_position = Matrix.GetTranslation((this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_left_tire") as TargetingComponent).GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
+    // let br_position = Matrix.GetTranslation((this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_right_tire") as TargetingComponent).GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
 
-    let screen_position: Vector4 = this.stats.d_position - this.stats.d_velocity * timeDelta;
-    this.m_arrow_forward.SetTranslation(this.ScreenXY(screen_position + this.stats.d_forward * 3.0));
-    this.m_arrow_forward.SetRotation(this.ScreenAngle(screen_position, screen_position + this.stats.d_forward));
-    this.m_arrow_forward.SetOpacity(this.OpacityForPosition(screen_position + this.stats.d_forward * 3.0));
+    // let screen_position: Vector4 = this.stats.d_position - this.stats.d_velocity * timeDelta;
+    // this.m_arrow_forward.SetTranslation(this.ScreenXY(screen_position + this.stats.d_forward * 3.0));
+    // this.m_arrow_forward.SetRotation(this.ScreenAngle(screen_position, screen_position + this.stats.d_forward));
+    // this.m_arrow_forward.SetOpacity(this.OpacityForPosition(screen_position + this.stats.d_forward * 3.0));
 
-    this.m_arrow_left.SetTranslation(this.ScreenXY(fl_position - this.stats.d_right * 0.5));
-    this.m_arrow_left.SetRotation(this.ScreenAngle(fl_position, fl_position + this.stats.d_right * 0.5));
-    this.m_arrow_left.SetOpacity(this.OpacityForPosition(fl_position - this.stats.d_right * 0.5));
+    // this.m_arrow_left.SetTranslation(this.ScreenXY(fl_position - this.stats.d_right * 0.5));
+    // this.m_arrow_left.SetRotation(this.ScreenAngle(fl_position, fl_position + this.stats.d_right * 0.5));
+    // this.m_arrow_left.SetOpacity(this.OpacityForPosition(fl_position - this.stats.d_right * 0.5));
 
-    this.m_arrow_right.SetTranslation(this.ScreenXY(fr_position + this.stats.d_right * 0.5));
-    this.m_arrow_right.SetRotation(this.ScreenAngle(fr_position, fr_position - this.stats.d_right * 0.5));
-    this.m_arrow_right.SetOpacity(this.OpacityForPosition(fr_position + this.stats.d_right * 0.5));
+    // this.m_arrow_right.SetTranslation(this.ScreenXY(fr_position + this.stats.d_right * 0.5));
+    // this.m_arrow_right.SetRotation(this.ScreenAngle(fr_position, fr_position - this.stats.d_right * 0.5));
+    // this.m_arrow_right.SetOpacity(this.OpacityForPosition(fr_position + this.stats.d_right * 0.5));
 
-    this.m_arrow_left_rear.SetTranslation(this.ScreenXY(bl_position - this.stats.d_right * 0.5));
-    this.m_arrow_left_rear.SetRotation(this.ScreenAngle(bl_position, bl_position + this.stats.d_right * 0.5));
-    this.m_arrow_left_rear.SetOpacity(this.OpacityForPosition(bl_position - this.stats.d_right * 0.5));
+    // this.m_arrow_left_rear.SetTranslation(this.ScreenXY(bl_position - this.stats.d_right * 0.5));
+    // this.m_arrow_left_rear.SetRotation(this.ScreenAngle(bl_position, bl_position + this.stats.d_right * 0.5));
+    // this.m_arrow_left_rear.SetOpacity(this.OpacityForPosition(bl_position - this.stats.d_right * 0.5));
 
-    this.m_arrow_right_rear.SetTranslation(this.ScreenXY(br_position + this.stats.d_right * 0.5));
-    this.m_arrow_right_rear.SetRotation(this.ScreenAngle(br_position, br_position - this.stats.d_right * 0.5));
-    this.m_arrow_right_rear.SetOpacity(this.OpacityForPosition(br_position + this.stats.d_right * 0.5));
+    // this.m_arrow_right_rear.SetTranslation(this.ScreenXY(br_position + this.stats.d_right * 0.5));
+    // this.m_arrow_right_rear.SetRotation(this.ScreenAngle(br_position, br_position - this.stats.d_right * 0.5));
+    // this.m_arrow_right_rear.SetOpacity(this.OpacityForPosition(br_position + this.stats.d_right * 0.5));
  
  
     // this.GetWidget(n"ruler_left").SetTranslation(this.ScreenXY(this.stats.d_position - Transform.GetUp(cameraTransform) * 2.0));
