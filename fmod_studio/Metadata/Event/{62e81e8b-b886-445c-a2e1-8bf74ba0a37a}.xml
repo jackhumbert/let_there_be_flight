@@ -2,7 +2,7 @@
 <objects serializationModel="Studio.02.02.00">
 	<object class="Event" id="{62e81e8b-b886-445c-a2e1-8bf74ba0a37a}">
 		<property name="name">
-			<value>vehicle3_startup</value>
+			<value>vehicle3_on</value>
 		</property>
 		<property name="outputFormat">
 			<value>1</value>
@@ -137,6 +137,9 @@
 	<object class="SFXReverbEffect" id="{284ddbd1-b738-4eb8-a5d6-9b3b2442c3ff}">
 		<property name="decayTime">
 			<value>260</value>
+		</property>
+		<property name="wetLevel">
+			<value>-10.5</value>
 		</property>
 	</object>
 	<object class="MixerBusFader" id="{c4736f1f-75bb-4971-8b9b-4da72803d39d}" />

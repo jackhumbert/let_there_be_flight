@@ -17,7 +17,7 @@
 #include "Utils.hpp"
 #include "stdafx.hpp"
 #include "FlightAudio.hpp"
-#include "FlightHUDGameController.hpp"
+//#include "FlightHUDGameController.hpp"
 #include "FlightLog.hpp"
 #include "FlightStats_Record.hpp"
 #include "FmodHelper.hpp"
@@ -27,7 +27,7 @@ RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes()
     spdlog::info("Registering classes & types");
     FlightAudio::RegisterTypes();
     FlightLog::RegisterTypes();
-    FlightHUDGameController::RegisterTypes();
+    //FlightHUDGameController::RegisterTypes();
     //FlightStats_Record::RegisterTypes();
 }
 
@@ -178,7 +178,7 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
     spdlog::info("Registering functions");
     FlightAudio::RegisterFunctions();
     FlightLog::RegisterFunctions();
-    FlightHUDGameController::RegisterFunctions();
+    //FlightHUDGameController::RegisterFunctions();
     RED4ext::CRTTISystem::Get()->RegisterScriptName("entBaseCameraComponent", "BaseCameraComponent");
     //RED4ext::CRTTISystem::Get()->RegisterScriptName("entColliderComponent", "ColliderComponent");
     //FlightStats_Record::RegisterFunctions();
@@ -214,6 +214,10 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
     auto UIGameContextEnum = rtti->GetEnum("UIGameContext");
     UIGameContextEnum->hashList.PushBack("VehicleFlight");
     UIGameContextEnum->valueList.PushBack(10);
+
+    //auto NavGenAgentSizeEnum = rtti->GetEnum("NavGenAgentSize");
+    //NavGenAgentSizeEnum->hashList.PushBack("Vehicle");
+    //NavGenAgentSizeEnum->valueList.PushBack(1);
 
     //auto gamedataVehicle_Record = rtti->GetClass("gamedataVehicle_Record");
     //auto TppCameraParamsOld = gamedataVehicle_Record->GetFunction("TppCameraParams");
@@ -263,6 +267,16 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
     //RED4ext::CEnum gamePSMVehicleEnum = RED4ext::CEnum::CEnum("gamePSMVehicle", 10, flags);
 
     //rtti->CreateScriptedEnum("gamePSMVehicle", 10, &gamePSMVehicleEnum);
+
+    
+    //auto cc = rtti->GetClass("vehicle::TPPCameraComponent");
+    auto cc = rtti->GetClass("vehicleTPPCameraComponent");
+    cc->props.PushBack(RED4ext::CProperty::Create(
+      rtti->GetType("Bool"), "isInAir", nullptr, 0x2E0));
+    
+    using func_t = bool (*)(RED4ext::CBaseRTTIType*, int64_t, RED4ext::ScriptInstance);
+    RED4ext::RelocFunc<func_t> func(0x1400000);
+
 }
 
 RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::EMainReason aReason, const RED4ext::Sdk* aSdk)

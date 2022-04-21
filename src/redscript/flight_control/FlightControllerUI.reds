@@ -63,57 +63,57 @@ public class FlightControllerUI extends inkCanvas {
     // w.Reparent(this);
     // return;
 
-    this.m_arrow_forward = inkWidgetBuilder.inkImage(n"arrow_forward")
-		  .Reparent(this)
-		  .Atlas(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas")
-		  .Part(n"arrow_right")
-		  .Size(24.0, 24.0)
-      .Anchor(1.0, 0.5)
-		  .Opacity(1.0)
-		  .Tint(ThemeColors.ElectricBlue())
-      .BuildImage();
+    // this.m_arrow_forward = inkWidgetBuilder.inkImage(n"arrow_forward")
+		//   .Reparent(this)
+		//   .Atlas(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas")
+		//   .Part(n"arrow_right")
+		//   .Size(24.0, 24.0)
+    //   .Anchor(1.0, 0.5)
+		//   .Opacity(1.0)
+		//   .Tint(ThemeColors.ElectricBlue())
+    //   .BuildImage();
 
-    // wheel markers
+    // // wheel markers
 
-    this.m_arrow_left = inkWidgetBuilder.inkImage(n"arrow_left")
-		  .Reparent(this)
-		  .Atlas(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas")
-		  .Part(n"arrow_right")
-		  .Size(24.0, 24.0)
-      .Anchor(1.0, 0.5)
-		  .Opacity(1.0)
-		  .Tint(ThemeColors.ElectricBlue())
-      .BuildImage();
+    // this.m_arrow_left = inkWidgetBuilder.inkImage(n"arrow_left")
+		//   .Reparent(this)
+		//   .Atlas(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas")
+		//   .Part(n"arrow_right")
+		//   .Size(24.0, 24.0)
+    //   .Anchor(1.0, 0.5)
+		//   .Opacity(1.0)
+		//   .Tint(ThemeColors.ElectricBlue())
+    //   .BuildImage();
 
-    this.m_arrow_right = inkWidgetBuilder.inkImage(n"arrow_right")
-		  .Reparent(this)
-		  .Atlas(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas")
-		  .Part(n"arrow_right")
-		  .Size(24.0, 24.0)
-      .Anchor(1.0, 0.5)
-		  .Opacity(1.0)
-		  .Tint(ThemeColors.ElectricBlue())
-      .BuildImage();
+    // this.m_arrow_right = inkWidgetBuilder.inkImage(n"arrow_right")
+		//   .Reparent(this)
+		//   .Atlas(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas")
+		//   .Part(n"arrow_right")
+		//   .Size(24.0, 24.0)
+    //   .Anchor(1.0, 0.5)
+		//   .Opacity(1.0)
+		//   .Tint(ThemeColors.ElectricBlue())
+    //   .BuildImage();
 
-    this.m_arrow_left_rear = inkWidgetBuilder.inkImage(n"arrow_left_rear")
-		  .Reparent(this)
-		  .Atlas(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas")
-		  .Part(n"arrow_right")
-		  .Size(24.0, 24.0)
-      .Anchor(1.0, 0.5)
-		  .Opacity(1.0)
-		  .Tint(ThemeColors.ElectricBlue())
-      .BuildImage();
+    // this.m_arrow_left_rear = inkWidgetBuilder.inkImage(n"arrow_left_rear")
+		//   .Reparent(this)
+		//   .Atlas(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas")
+		//   .Part(n"arrow_right")
+		//   .Size(24.0, 24.0)
+    //   .Anchor(1.0, 0.5)
+		//   .Opacity(1.0)
+		//   .Tint(ThemeColors.ElectricBlue())
+    //   .BuildImage();
 
-    this.m_arrow_right_rear = inkWidgetBuilder.inkImage(n"arrow_right_rear")
-		  .Reparent(this)
-		  .Atlas(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas")
-		  .Part(n"arrow_right")
-		  .Size(24.0, 24.0)
-      .Anchor(1.0, 0.5)
-		  .Opacity(1.0)
-		  .Tint(ThemeColors.ElectricBlue())
-      .BuildImage();
+    // this.m_arrow_right_rear = inkWidgetBuilder.inkImage(n"arrow_right_rear")
+		//   .Reparent(this)
+		//   .Atlas(r"base\\gameplay\\gui\\common\\icons\\atlas_common.inkatlas")
+		//   .Part(n"arrow_right")
+		//   .Size(24.0, 24.0)
+    //   .Anchor(1.0, 0.5)
+		//   .Opacity(1.0)
+		//   .Tint(ThemeColors.ElectricBlue())
+    //   .BuildImage();
 
     // roll markers
 

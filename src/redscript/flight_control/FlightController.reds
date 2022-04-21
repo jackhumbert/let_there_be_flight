@@ -113,7 +113,13 @@ public class FlightController extends IScriptable {
   public let bl_tire: ref<IPlacedComponent>;
   public let br_tire: ref<IPlacedComponent>;
 
-  public let isTPP: Bool;
+  public let isTPP: Bool;  
+
+  private let uiBlackboard: ref<IBlackboard>;
+  private let uiSystemBB: ref<UI_SystemDef>;
+  private let trackedMappinId: ref<CallbackHandle>;
+  private let m_currentMappin: wref<IMappin>;
+  private let waypoint: Vector4;
 
   // protected let m_settingsListener: ref<FlightSettingsListener>;
   // protected let m_groupPath: CName;
@@ -177,6 +183,13 @@ public class FlightController extends IScriptable {
 
     this.audio = FlightAudio.Create();  
     this.audioEnabled = true;
+
+    this.uiBlackboard = GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().UI_System);
+    this.uiSystemBB = GetAllBlackboardDefs().UI_System;
+    this.trackedMappinId = this.uiBlackboard.RegisterListenerVariant(this.uiSystemBB.TrackedMappin, this, n"OnTrackedMappinUpdated");
+    this.uiBlackboard.SignalVariant(this.uiSystemBB.TrackedMappin);
+
+    this.waypoint = new Vector4(313.6, 208.2, 62.3, 0.0);
 
     // this.m_groupPath = n"/controls/flight";
     // this.m_settingsListener = new FlightSettingsListener();
@@ -286,8 +299,7 @@ public class FlightController extends IScriptable {
     this.lift.Reset();
     this.brake.Reset();
 
-
-    this.audio.Play("vehicle3_startup");
+    this.audio.Play("vehicle3_on");
 
     this.SetupTires();
     this.SetupPositionProviders();
@@ -296,6 +308,7 @@ public class FlightController extends IScriptable {
     this.hoverHeight = this.defaultHoverHeight;
 
     this.camera = GetPlayer(this.gameInstance).FindComponentByName(n"vehicleTPPCamera") as vehicleTPPCameraComponent;
+    this.camera.isInAir = false;
 
     // these stop engine noises if they were already playing?
     this.GetVehicle().TurnEngineOn(false);
@@ -341,12 +354,14 @@ public class FlightController extends IScriptable {
     this.active = false;
     this.SetupActions();
 
+    this.audio.Play("vehicle3_off");
     // (this.GetVehicle().GetPS() as VehicleComponentPS).SetThrusterState(false);
 
     this.audio.Stop("leftFront");
     this.audio.Stop("rightFront");
     this.audio.Stop("leftRear");
     this.audio.Stop("rightRear");
+
 
     //let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
     //uiSystem.PopGameContext(IntEnum(10));
@@ -416,6 +431,21 @@ public class FlightController extends IScriptable {
         uiSystem.QueueEvent(FlightController.ShowHintHelper("Enable Flight Control", n"Flight_Toggle", n"FlightController"));
       }
     }
+  }
+
+  protected cb func OnTrackedMappinUpdated(value: Variant) -> Bool {
+    this.m_currentMappin = FromVariant<ref<IScriptable>>(value) as IMappin;
+    if IsDefined(this.m_currentMappin) {
+      this.waypoint = this.m_currentMappin.GetWorldPosition();
+    }
+    // inkCompoundRef.RemoveAllChildren(this.m_TrackedMappinObjectiveContainer);
+    // inkWidgetRef.SetVisible(this.m_TrackedMappinContainer, IsDefined(this.m_currentMappin));
+    // if IsDefined(this.m_trackedMappinSpawnRequest) {
+    //   this.m_trackedMappinSpawnRequest.Cancel();
+    // };
+    // if IsDefined(this.m_currentMappin) {
+    //   this.m_trackedMappinSpawnRequest = this.AsyncSpawnFromLocal(inkWidgetRef.Get(this.m_TrackedMappinObjectiveContainer), n"Objective", this, n"OnTrackedMappinSpawned");
+    // };
   }
 
   protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool {
@@ -565,11 +595,14 @@ public class FlightController extends IScriptable {
     this.audio.speed = this.stats.d_speed;
     this.audio.yawDiff = Vector4.GetAngleDegAroundAxis(this.stats.d_forward, this.stats.d_direction, this.stats.d_up);
     this.audio.pitchDiff = Vector4.GetAngleDegAroundAxis(this.stats.d_forward, this.stats.d_direction, this.stats.d_right);
-    
+
+
     let ratio = 1.0;
     if this.collisionTimer < this.collisionRecoveryDelay + this.collisionRecoveryDuration {
       ratio = MaxF(0.0, (this.collisionTimer - this.collisionRecoveryDelay) / this.collisionRecoveryDuration);
     }
+    
+    this.audio.damage = 1.0 - MaxF(GameInstance.GetStatPoolsSystem(this.gameInstance).GetStatPoolValue(Cast<StatsObjectID>(this.GetVehicle().GetEntityID()), gamedataStatPoolType.Health, false) + ratio, 1.0);
 
     this.audio.surge = this.surge.GetValue() * ratio;
     this.audio.yaw = this.yaw.GetValue() * ratio;
@@ -609,10 +642,15 @@ public class FlightController extends IScriptable {
   }
 
   public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-    
-    let blackboard: ref<IBlackboard> = scriptInterface.GetBlackboardSystem().Get(GetAllBlackboardDefs().UI_System);
-    let uiSystemBB: ref<UI_SystemDef> = GetAllBlackboardDefs().UI_System;
-    this.isInAnyMenu = blackboard.GetBool(uiSystemBB.IsInMenu);
+    this.camera.isInAir = false;
+    // if !IsDefined(this.uiBlackboard) {
+    //   this.uiBlackboard = GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().UI_System);
+    //   this.uiSystemBB = GetAllBlackboardDefs().UI_System;
+    //   this.trackedMappinId = this.uiBlackboard.RegisterListenerVariant(this.uiSystemBB.TrackedMappin, this, n"OnTrackedMappinUpdated");
+    //   this.uiBlackboard.SignalVariant(this.uiSystemBB.TrackedMappin);
+    // }
+
+    this.isInAnyMenu = this.uiBlackboard.GetBool(this.uiSystemBB.IsInMenu);
     
     if !this.active {
       this.stats.UpdateDynamic(timeDelta);
@@ -665,6 +703,138 @@ public class FlightController extends IScriptable {
     this.UpdateInputs(timeDelta);
 
 
+    // IN WORLD NAV?
+
+    // let value = blackboard.GetVariant(uiSystemBB.TrackedMappin);
+    // let mappin: wref<IMappin> = FromVariant<ref<IScriptable>>(value) as IMappin;
+    
+    // JournalManager.GetTrackedEntry();
+    // GetPlaystyleMappinSlotWorldPos();
+
+    let mappins: array<MappinEntry>;
+    let ms = GameInstance.GetMappinSystem(this.gameInstance);
+    ms.GetMappins(gamemappinsMappinTargetType.World, mappins);
+
+    let jm = GameInstance.GetJournalManager(this.gameInstance);
+    let objective = jm.GetTrackedEntry();
+    if IsDefined(objective) {
+      let phase = jm.GetParentEntry(objective);
+      let mappin = ms.GetMappinFromObjective(phase, objective);
+    // }
+
+    // for mappin in mappins {
+      // mappin.id.value;
+      // GameInstance.FindEntityByID(gameInstance,
+
+
+      let ogStartPoint = this.stats.d_position;
+      let ogEndPoint = mappin.GetWorldPosition();
+      // if IsDefined(this.m_currentMappin) {
+      //   ogEndPoint = this.m_currentMappin.GetWorldPosition();
+      // }
+
+
+      let navSystem = GameInstance.GetNavigationSystem(this.gameInstance);
+      let aiNavSystem = GameInstance.GetAINavigationSystem(this.gameInstance);
+
+      // let startPoint = aiNavSystem.GetNearestNavmeshPointBelow(this.player, ogStartPoint, 1000.0, 1);
+      let startResult = aiNavSystem.FindPointInSphereForCharacter(ogStartPoint, 1000.0, this.player);
+      let startPoint = ogStartPoint;
+      if Equals(startResult.status, worldNavigationRequestStatus.OK) {
+        startPoint = startResult.point;
+      }
+
+      // let endPoint = aiNavSystem.GetNearestNavmeshPointBelow(this.player, ogEndPoint, 1000.0, 1);
+      let endResult = aiNavSystem.FindPointInSphereForCharacter(ogEndPoint, 10.0, GameInstance.FindEntityByID(this.gameInstance, mappin.GetEntityID()));
+      let endPoint = ogEndPoint;
+      if Equals(endResult.status, worldNavigationRequestStatus.OK) {
+        endPoint = endResult.point;
+      }
+
+      let navPath: ref<NavigationPath> = navSystem.CalculatePathOnlyHumanNavmesh(startPoint, endPoint, IntEnum(0), 0.5);
+      let totalDistance = Vector4.Distance(startPoint, endPoint);
+
+      if IsDefined(navPath) {
+        let screenPoints: array<Vector2>;
+        for point in navPath.path {
+          let pointDistance = Vector4.Distance(point, endPoint);
+          let newZ = (ogStartPoint.Z * pointDistance / totalDistance) + (ogEndPoint.Z * (1.0 - pointDistance / totalDistance));
+          let floatingPoint = point + new Vector4(0.0, 0.0, MaxF(newZ - point.Z, 0), 0.0);
+          let correctedPoint = floatingPoint - this.stats.d_velocity * timeDelta;
+          let screenPoint = this.ui.ScreenXY(correctedPoint);
+          ArrayPush(screenPoints, screenPoint);
+
+          inkWidgetBuilder.inkImage(StringToName("marker_" + ToString(RandF())))
+            .Reparent(this.ui.GetMarksWidget())
+            .Atlas(r"base\\gameplay\\gui\\widgets\\crosshair\\master_crosshair.inkatlas")
+            .Part(n"lockon-b")
+            .Tint(ThemeColors.ElectricBlue())
+            .Opacity(0.5 * pointDistance / totalDistance)
+            .Size(10.0, 10.0)
+            .Anchor(0.5, 0.5)
+            .Translation(screenPoint)
+            .BuildImage();
+        }
+
+        let navLine = inkWidgetBuilder.inkShape(n"navLine")
+          .Reparent(this.ui.GetMarksWidget())
+          // .ChangeShape(n"Rectangle")
+          .Size(1920.0 * 2.0, 1080.0 * 2.0)
+          .UseNineSlice(true)
+          .ShapeVariant(inkEShapeVariant.FillAndBorder)
+          .LineThickness(3.0)
+          .FillOpacity(0.0)
+          .Tint(ThemeColors.ElectricBlue())
+          .BorderColor(ThemeColors.ElectricBlue())
+          .BorderOpacity(0.1)
+          .Visible(true)
+          .BuildShape();
+        navLine.SetVertexList(screenPoints);
+          
+      }
+
+    }
+
+    // regular nav - human only?
+
+    // let navSystem = GameInstance.GetNavigationSystem(this.gameInstance);
+    // let startPoint = navSystem.GetNearestNavmeshPointBelowOnlyHumanNavmesh(startPoint, 100.0, 10);
+    // let endPoint = navSystem.GetNearestNavmeshPointBelowOnlyHumanNavmesh(endPoint, 100.0, 10);
+    // let navPath: ref<NavigationPath> = navSystem.CalculatePathOnlyHumanNavmesh(startPoint, endPoint, NavGenAgentSize.Human, 1.00);
+
+    // if IsDefined(navPath) {
+    //   for point in navPath.path {
+    //     this.ui.DrawMark(point);
+    //   }
+    // }
+
+    // let points: array<Vector4>;
+    // let fallbackPoints: array<Vector4>;
+    // navSystem.FindPursuitPointsRange(endPoint, startPoint, this.stats.d_forward, 1.0, 10.0, 100, false, NavGenAgentSize.Human, points, fallbackPoints);
+
+    // let pursuitPoint: Vector4;
+    // let fallback: Bool;
+    // navSystem.FindPursuitPoint(endPoint, startPoint, this.stats.d_forward, 5.0, false, NavGenAgentSize.Human, pursuitPoint, fallback);
+    // let overflow = 0;
+    // while (Vector4.Distance(endPoint, pursuitPoint) > 5.0 && overflow < 100)
+    // {
+    //   overflow += 1;
+    //   this.ui.DrawMark(pursuitPoint);
+    //   let newStart = pursuitPoint;
+    //   navSystem.FindPursuitPoint(endPoint, newStart, endPoint - newStart, 5.0, false, NavGenAgentSize.Human, pursuitPoint, fallback);
+    // }
+    // navSystem.FindPursuitPoint(endPoint, startPoint)
+    // for point in points {
+    //   this.ui.DrawMark(point);
+    // }
+
+    // for point in fallbackPoints {
+    //   this.ui.DrawMark(point);
+    // }
+
+
+
+
     if Equals(this.mode, FlightMode.HoverFly) {
       this.hoverHeight += this.lift.GetValue() * timeDelta * this.liftFactor * (1.0 + this.stats.d_speedRatio * 2.0);
     }
@@ -702,6 +872,32 @@ public class FlightController extends IScriptable {
       GameInstance.GetSpatialQueriesSystem(this.gameInstance).SyncRaycastByCollisionPreset(bl_tire, bl_tire + this.lookDown, n"World Static", findGround3, false, false);
       GameInstance.GetSpatialQueriesSystem(this.gameInstance).SyncRaycastByCollisionPreset(br_tire, br_tire + this.lookDown, n"World Static", findGround4, false, false);
 
+      let groundPoint1: Vector4;
+      let groundPoint2: Vector4;
+      let groundPoint3: Vector4;
+      let groundPoint4: Vector4;
+
+      if TraceResult.IsValid(findGround1) {
+        groundPoint1 = Vector4.Vector3To4(findGround1.position) - this.stats.d_velocity * timeDelta;
+        this.ui.DrawMark(groundPoint1);
+        this.ui.DrawText(groundPoint1, FloatToStringPrec(Vector4.Distance(fl_tire, Cast(findGround1.position)), 2));
+      }
+      if TraceResult.IsValid(findGround2) {
+        groundPoint2 = Vector4.Vector3To4(findGround2.position) - this.stats.d_velocity * timeDelta;
+        this.ui.DrawMark(groundPoint2);
+        this.ui.DrawText(groundPoint2, FloatToStringPrec(Vector4.Distance(fr_tire, Cast(findGround2.position)), 2));
+      }
+      if TraceResult.IsValid(findGround3) {
+        groundPoint3 = Vector4.Vector3To4(findGround3.position) - this.stats.d_velocity * timeDelta;
+        this.ui.DrawMark(groundPoint3);
+        this.ui.DrawText(groundPoint3, FloatToStringPrec(Vector4.Distance(bl_tire, Cast(findGround3.position)), 2));
+      }
+      if TraceResult.IsValid(findGround4) {
+        groundPoint4 = Vector4.Vector3To4(findGround4.position) - this.stats.d_velocity * timeDelta;
+        this.ui.DrawMark(groundPoint4);
+        this.ui.DrawText(groundPoint4, FloatToStringPrec(Vector4.Distance(br_tire, Cast(findGround4.position)), 2));
+      }
+
       if TraceResult.IsValid(findGround1) && TraceResult.IsValid(findGround2) && TraceResult.IsValid(findGround3) && TraceResult.IsValid(findGround4) {
         // let distance = MinF(
         //   MinF(Vector4.Distance(fl_tire, Cast(findGround1.position)),
@@ -715,18 +911,6 @@ public class FlightController extends IScriptable {
         // this.distance = distance * (1.0 - this.distanceEase) + this.distance * (this.distanceEase);
         this.distance = distance;
         
-        let groundPoints: array<Vector4> = [
-          Vector4.Vector3To4(findGround1.position) - this.stats.d_velocity * timeDelta, 
-          Vector4.Vector3To4(findGround2.position) - this.stats.d_velocity * timeDelta,
-          Vector4.Vector3To4(findGround4.position) - this.stats.d_velocity * timeDelta,
-          Vector4.Vector3To4(findGround3.position) - this.stats.d_velocity * timeDelta
-        ]; 
-
-        this.ui.DrawMark(groundPoints[0]);
-        this.ui.DrawMark(groundPoints[1]);
-        this.ui.DrawMark(groundPoints[2]);
-        this.ui.DrawMark(groundPoints[3]);
-
         // let points: array<Vector2> = [
         //   this.ui.ScreenXY(groundPoints[0]), 
         //   this.ui.ScreenXY(groundPoints[1]),
@@ -814,10 +998,6 @@ public class FlightController extends IScriptable {
         //   .BuildShape();
         // quad.SetVertexList(points2);
 
-        this.ui.DrawText(groundPoints[0], FloatToStringPrec(Vector4.Distance(fl_tire, Cast(findGround1.position)), 2));
-        this.ui.DrawText(groundPoints[1], FloatToStringPrec(Vector4.Distance(fr_tire, Cast(findGround2.position)), 2));
-        this.ui.DrawText(groundPoints[2], FloatToStringPrec(Vector4.Distance(bl_tire, Cast(findGround3.position)), 2));
-        this.ui.DrawText(groundPoints[3], FloatToStringPrec(Vector4.Distance(br_tire, Cast(findGround4.position)), 2));
 
         // FromVariant(scriptInterface.GetStateVectorParameter(physicsStateValue.Radius)) maybe?
         let normal = (Vector4.Normalize(Cast(findGround1.normal)) + Vector4.Normalize(Cast(findGround2.normal)) + Vector4.Normalize(Cast(findGround3.normal)) + Vector4.Normalize(Cast(findGround4.normal))) / 4.0;

@@ -16,6 +16,7 @@ public native class FlightAudio {
   public let pitchDiff: Float;
   public let brake: Float;
   public let inside: Float;
+  public let damage: Float;
 
   public let listenerPosition: Vector4;
   public let listenerUp: Vector4;
@@ -38,6 +39,7 @@ public native class FlightAudio {
     self.pitchDiff = 0.0;
     self.brake = 0.0;
     self.inside = 0.0;
+    self.damage = 0.0;
 
     self.parameters = [
       "speed",
@@ -47,7 +49,8 @@ public native class FlightAudio {
       "yaw",
       "pitchDiff",
       "brake",
-      "inside"
+      "inside",
+      "damage"
     ];
 
     self.listenerPosition = new Vector4(0.0, 0.0, 0.0, 0.0);
