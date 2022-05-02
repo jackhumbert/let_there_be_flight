@@ -11,6 +11,10 @@
 #include <RED4ext/Scripting/Natives/Generated/ink/TextureAtlas.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/EBlurDimension.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/BoxBlurEffect.hpp>
+#include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
+#include <RED4ext/Scripting/Natives/Generated/vehicle/ChassisComponent.hpp>
+#include <RED4ext/Scripting/Natives/Generated/physics/SystemResource.hpp>
+#include <RED4ext/Scripting/Natives/Generated/physics/SystemBody.hpp>
 #include <RED4ext/InstanceType.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/IEffect.hpp>
 
@@ -150,28 +154,58 @@ void SetShapeResource(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFra
     inkShapeWidget->GetProperty("shapeResource")->SetValue(aContext, value.resource);
 }
 
+void ChassisGetComOffset(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, RED4ext::Vector4* aOut, int64_t a4)
+{
+  aFrame->code++; // skip ParamEnd
+
+  auto rtti = RED4ext::CRTTISystem::Get();
+  auto vccClass = rtti->GetClass("vehicleChassisComponent");
+  auto crProp = vccClass->GetProperty("collisionResource");
+  auto cr = crProp->GetValue<RED4ext::Ref<RED4ext::physics::SystemResource>>(aContext);
+  auto hpsr = (RED4ext::Handle<RED4ext::physics::SystemResource>*)(cr.unk08 + 0x28);
+  auto psr = hpsr->GetPtr();
+  RED4ext::Handle<RED4ext::physics::SystemBody> hpsb = psr->bodies[0];
+  auto params = hpsb->params;
+
+  if (aOut) {
+    *aOut = params.comOffset.position;
+  }
+}
+
+void VehicleGetInteriaTensor(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, RED4ext::Matrix* aOut, int64_t a4)
+{
+  aFrame->code++; // skip ParamEnd
+
+  auto v = reinterpret_cast<RED4ext::vehicle::BaseObject*>(aContext);
+  auto ps = v->physicsStruct;
+
+  if (aOut) {
+    *aOut = ps->interiaTensor;
+  }
+}
+
 //struct gamePSMVehicle : RED4ext::CBaseRTTIType {
 //};
 
-void TppFlightCameraParams(RED4ext::IScriptable* apContext, RED4ext::CStackFrame* apFrame, RED4ext::VehicleTPPCameraParams_Record* apOut, int64_t a4) {
-    auto rtti = RED4ext::CRTTISystem::Get();
-    auto TweakDBInterface = rtti->GetClass("TweakDBInterface");
-    auto GetVehicleTPPCameraParamsRecord = TweakDBInterface->GetFunction("GetVehicleTPPCameraParamsRecord");
-    auto value = RED4ext::TweakDBID::TweakDBID("Camera.VehicleTPP_FlightParams");
-    RED4ext::StackArgs_t args;
-    args.emplace_back(nullptr, &value);
-    RED4ext::ExecuteFunction(TweakDBInterface, GetVehicleTPPCameraParamsRecord, apOut, args);
-}
-
-void TppCameraParamsHandle(RED4ext::IScriptable* apContext, RED4ext::CStackFrame* apFrame, RED4ext::Handle<RED4ext::VehicleTPPCameraParams_Record*>* apOut, int64_t a4) {
-    auto rtti = RED4ext::CRTTISystem::Get();
-    auto TweakDBInterface = rtti->GetClass("TweakDBInterface");
-    auto GetVehicleTPPCameraParamsRecord = TweakDBInterface->GetFunction("GetVehicleTPPCameraParamsRecord");
-    auto value = RED4ext::TweakDBID::TweakDBID("Camera.VehicleTPP_FlightParams");
-    RED4ext::StackArgs_t args;
-    args.emplace_back(nullptr, &value);
-    RED4ext::ExecuteFunction(TweakDBInterface, GetVehicleTPPCameraParamsRecord, apOut, args);
-}
+//void TppFlightCameraParams(RED4ext::IScriptable* apContext, RED4ext::CStackFrame* apFrame, RED4ext::VehicleTPPCameraParams_Record* apOut, int64_t a4) {
+//    auto rtti = RED4ext::CRTTISystem::Get();
+//    auto TweakDBInterface = rtti->GetClass("TweakDBInterface");
+//    auto GetVehicleTPPCameraParamsRecord = TweakDBInterface->GetFunction("GetVehicleTPPCameraParamsRecord");
+//    auto value = RED4ext::TweakDBID::TweakDBID("Camera.VehicleTPP_FlightParams");
+//    RED4ext::StackArgs_t args;
+//    args.emplace_back(nullptr, &value);
+//    RED4ext::ExecuteFunction(TweakDBInterface, GetVehicleTPPCameraParamsRecord, apOut, args);
+//}
+//
+//void TppCameraParamsHandle(RED4ext::IScriptable* apContext, RED4ext::CStackFrame* apFrame, RED4ext::Handle<RED4ext::VehicleTPPCameraParams_Record*>* apOut, int64_t a4) {
+//    auto rtti = RED4ext::CRTTISystem::Get();
+//    auto TweakDBInterface = rtti->GetClass("TweakDBInterface");
+//    auto GetVehicleTPPCameraParamsRecord = TweakDBInterface->GetFunction("GetVehicleTPPCameraParamsRecord");
+//    auto value = RED4ext::TweakDBID::TweakDBID("Camera.VehicleTPP_FlightParams");
+//    RED4ext::StackArgs_t args;
+//    args.emplace_back(nullptr, &value);
+//    RED4ext::ExecuteFunction(TweakDBInterface, GetVehicleTPPCameraParamsRecord, apOut, args);
+//}
 
 RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
 {
@@ -215,9 +249,9 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
     UIGameContextEnum->hashList.PushBack("VehicleFlight");
     UIGameContextEnum->valueList.PushBack(10);
 
-    //auto NavGenAgentSizeEnum = rtti->GetEnum("NavGenAgentSize");
-    //NavGenAgentSizeEnum->hashList.PushBack("Vehicle");
-    //NavGenAgentSizeEnum->valueList.PushBack(1);
+    auto NavGenAgentSizeEnum = rtti->GetEnum("NavGenAgentSize");
+    NavGenAgentSizeEnum->hashList.PushBack("Vehicle");
+    NavGenAgentSizeEnum->valueList.PushBack(1);
 
     //auto gamedataVehicle_Record = rtti->GetClass("gamedataVehicle_Record");
     //auto TppCameraParamsOld = gamedataVehicle_Record->GetFunction("TppCameraParams");
@@ -269,13 +303,44 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes()
     //rtti->CreateScriptedEnum("gamePSMVehicle", 10, &gamePSMVehicleEnum);
 
     
-    //auto cc = rtti->GetClass("vehicle::TPPCameraComponent");
+ /*   auto cc = rtti->GetClass("vehicleTPPCameraComponent");
+    cc->props.PushBack(RED4ext::CProperty::Create(
+         rtti->GetType("Bool"), "isInAir", nullptr, 0x2E0));*/
     auto cc = rtti->GetClass("vehicleTPPCameraComponent");
     cc->props.PushBack(RED4ext::CProperty::Create(
-      rtti->GetType("Bool"), "isInAir", nullptr, 0x2E0));
+      rtti->GetType("Float"), "drivingDirectionCompensationSpeedCoef", nullptr, 0x4E0));
+    cc->props.PushBack(RED4ext::CProperty::Create(
+      rtti->GetType("Float"), "drivingDirectionCompensationAngleSmooth", nullptr, 0x4E8));
+    cc->props.PushBack(RED4ext::CProperty::Create(
+      rtti->GetType("WorldPosition"), "worldPosition", nullptr, 0x320));
+
+    auto vbc = rtti->GetClass("vehicleBaseObject");
+    vbc->props.PushBack(RED4ext::CProperty::Create(
+      rtti->GetType("Bool"), "isOnGround", nullptr, 0x24C));
+    //vbc->props.PushBack(RED4ext::CProperty::Create(
+    //  rtti->GetType("WorldTransform"), "unkWorldTransform", nullptr, 0x330));
+    //vbc->props.PushBack(RED4ext::CProperty::Create(
+    //  rtti->GetType("handle:entIPlacedComponent"), "chassis", nullptr, 0x2D0));
+    auto getInteriaTensor = RED4ext::CClassFunction::Create(
+        vbc, "GetInteriaTensor", "GetInteriaTensor", &VehicleGetInteriaTensor, { .isNative = true });
+    vbc->RegisterFunction(getInteriaTensor);
+
+    auto ms = rtti->GetClass("gameuiMinimapContainerController");
+    ms->props.PushBack(RED4ext::CProperty::Create(
+      rtti->GetType("array:Vector4"), "questPoints", nullptr, 0x1E0));
+    ms->props.PushBack(RED4ext::CProperty::Create(
+      rtti->GetType("array:Vector4"), "playerPoints", nullptr, 0x208));
     
-    using func_t = bool (*)(RED4ext::CBaseRTTIType*, int64_t, RED4ext::ScriptInstance);
-    RED4ext::RelocFunc<func_t> func(0x1400000);
+    auto vcc = rtti->GetClass("vehicleChassisComponent");
+    auto getComOffsetFunc = RED4ext::CClassFunction::Create(
+        vcc, "GetComOffset", "GetComOffset", &ChassisGetComOffset, { .isNative = true });
+    vcc->RegisterFunction(getComOffsetFunc);
+    
+    //using func_t = bool (*)(RED4ext::CBaseRTTIType*, int64_t, RED4ext::ScriptInstance);
+    //RED4ext::RelocFunc<func_t> func(0x1400000);
+
+    // 0x120 + 0x40 (ptr120, float*);
+    // 0x14342E6C0
 
 }
 

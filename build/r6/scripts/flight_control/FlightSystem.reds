@@ -8,8 +8,16 @@ public class FlightSystem extends ScriptableSystem {
     FlightLog.Info("[FlightSystem] OnAttach");
   }
 
+  private final func OnPlayerAttach(request: ref<PlayerAttachRequest>) -> Void {
+    FlightLog.Info("[FlightSystem] OnPlayerAttach");
+  }
+
   private func OnDetach() -> Void {
     FlightLog.Info("[FlightSystem] OnDetach");
+  }
+
+  private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void {
+    FlightLog.Info("[FlightSystem] OnRestored");
   }
 
   // private func IsSavingLocked() -> Bool {

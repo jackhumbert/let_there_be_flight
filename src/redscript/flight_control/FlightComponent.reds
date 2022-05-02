@@ -140,7 +140,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
         };
         i += 1;
       };
-      FlightLog.Info("[FlightComponent] OnGridDestruction: " + FloatToStringPrec(biggestImpact, 2));
+      // FlightLog.Info("[FlightComponent] OnGridDestruction: " + FloatToStringPrec(biggestImpact, 2));
       if biggestImpact > 0.03 {
         FlightController.GetInstance().ProcessImpact(biggestImpact);
       }

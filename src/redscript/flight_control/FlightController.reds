@@ -27,6 +27,8 @@ enum FlightMode {
 // Singleton instance with player lifetime
 public class FlightController extends IScriptable {
   public let camera: ref<vehicleTPPCameraComponent>;
+  public let chassis: ref<vehicleChassisComponent>;
+  public let mmcc: ref<MinimapContainerController>;
   private let gameInstance: GameInstance;
   private let player: ref<PlayerPuppet>;
   private let m_callbackID: ref<CallbackHandle>;
@@ -60,6 +62,7 @@ public class FlightController extends IScriptable {
     return this.mode;
   }
   public let showOptions: Bool;
+  public let showUI: Bool;
   public let brake: ref<InputPID>;
   public let lift: ref<InputPID>;
   public let liftFactor: Float;
@@ -83,7 +86,9 @@ public class FlightController extends IScriptable {
   public let minHoverHeight: Float;
   public let maxHoverHeight: Float;
   public let hoverFactor: Float;
-  public let hover: ref<PID>;
+  public let hoverEnv: ref<PID>;
+  public let hoverUser: ref<PID>;
+  public let hoverClamp: Float;
   public let pitchPID: ref<DualPID>;
   public let pitchCorrectionFactor: Float;
   public let rollPID: ref<DualPID>;
@@ -121,6 +126,9 @@ public class FlightController extends IScriptable {
   private let m_currentMappin: wref<IMappin>;
   private let waypoint: Vector4;
 
+  public let timeDelta: Float;
+  public let averageMass: Float;
+
   // protected let m_settingsListener: ref<FlightSettingsListener>;
   // protected let m_groupPath: CName;
 
@@ -131,10 +139,12 @@ public class FlightController extends IScriptable {
     this.enabled = false;
     this.active = false;
     this.showOptions = false;
+    this.showUI = true;
     this.brakeFactor = 1.2;
     this.liftFactor = 10.0;
     this.surgeFactor = 15.0;
     this.hoverFactor = 5.0;
+    this.hoverClamp = 1.0;
     this.yawFactor = 80.0;
     this.pitchCorrectionFactor = 20.0;
     this.rollCorrectionFactor = 20.0;
@@ -146,11 +156,12 @@ public class FlightController extends IScriptable {
     this.roll = InputPID.Create(0.5, 0.5);
     this.pitch = InputPID.Create(0.5, 0.5);
     this.yaw = InputPID.Create(0.02, 0.2);
-    this.hover = PID.Create(0.1, 0.01, 0.05);
-    this.pitchPID = DualPID.Create(0.5, 0.2, 0.05,  2.5, 1.5, 0.5);
+    this.hoverEnv = PID.Create(1.0, 0.01, 0.1);
+    this.hoverUser = PID.Create(1.0, 0.01, 0.1);
+    this.pitchPID = DualPID.Create(0.8, 0.05, 0.2,  0.8, 0.05, 0.2);
     this.rollPID =  DualPID.Create(0.5, 0.2, 0.05,  2.5, 1.5, 0.5);
-    this.yawPID = PID.Create(0.5, 0.2, 0.0);
-    this.yawD = 3.0;
+    this.yawPID = PID.Create(0.5, 0.1, 0.0);
+    this.yawD = 1.0;
     this.distance = 0.0;
     this.distanceEase = 0.1;
     this.normal = new Vector4(0.0, 0.0, 1.0, 0.0);
@@ -252,6 +263,7 @@ public class FlightController extends IScriptable {
     this.audio.Start("windLeft", "wind_TPP");
     this.audio.Start("windRight", "wind_TPP");
     this.stats = FlightStats.Create(GetMountedVehicle(this.player));
+    this.GetVehicle().chassis = this.GetVehicle().FindComponentByName(n"Chassis") as vehicleChassisComponent;
     this.ui.Setup(this.stats);
 
     FlightLog.Info("[FlightController] Enable - " + this.GetVehicle().GetDisplayName());
@@ -287,7 +299,8 @@ public class FlightController extends IScriptable {
   private func Activate() -> Void {
     this.active = true;
     this.SetupActions();
-    this.hover.Reset();
+    this.hoverEnv.Reset();
+    this.hoverUser.Reset();
     this.pitchPID.Reset();
     this.rollPID.Reset();
     this.yawPID.Reset();
@@ -308,7 +321,9 @@ public class FlightController extends IScriptable {
     this.hoverHeight = this.defaultHoverHeight;
 
     this.camera = GetPlayer(this.gameInstance).FindComponentByName(n"vehicleTPPCamera") as vehicleTPPCameraComponent;
-    this.camera.isInAir = false;
+    // this.camera.isInAir = false;
+    this.camera.drivingDirectionCompensationAngleSmooth = 120.0;
+    this.camera.drivingDirectionCompensationSpeedCoef = 0.1;
 
     // these stop engine noises if they were already playing?
     this.GetVehicle().TurnEngineOn(false);
@@ -333,7 +348,9 @@ public class FlightController extends IScriptable {
     this.GetVehicle().GetVehicleComponent().GetVehicleController().ToggleLights(true);
 
     this.stats.Reset();
-    this.ui.Show();
+    if (this.showUI) {
+      this.ui.Show();
+    }
   
     this.ShowSimpleMessage("Flight Control Engaged");
 
@@ -373,7 +390,9 @@ public class FlightController extends IScriptable {
       this.ShowSimpleMessage("Flight Control Disengaged");
       //GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_hacking_access_denied");
     }
-    this.ui.Hide();
+    if (this.showUI) {
+      this.ui.Hide();
+    }
 
     FlightLog.Info("[FlightController] Deactivate");
     this.GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControllerBB.IsActive, false, true);
@@ -424,6 +443,7 @@ public class FlightController extends IScriptable {
           }
           uiSystem.QueueEvent(FlightController.ShowHintHelper("Raise Hover Height", n"FlightOptions_Up", n"FlightController"));
           uiSystem.QueueEvent(FlightController.ShowHintHelper("Lower Hover Height", n"FlightOptions_Down", n"FlightController"));
+          uiSystem.QueueEvent(FlightController.ShowHintHelper("Toggle UI", n"FlightOptions_Left", n"FlightController"));
 
         }
         uiSystem.QueueEvent(FlightController.ShowHintHelper("Flight Options", n"Choice1_DualState", n"FlightController"));
@@ -473,7 +493,9 @@ public class FlightController extends IScriptable {
         if ListenerAction.IsButtonJustPressed(action) {
           FlightLog.Info("Options button pressed");
           this.showOptions = true;
-          this.ui.ShowInfo();
+          if (this.showUI) {
+            this.ui.ShowInfo();
+          }
           this.SetupActions();
         }
         if ListenerAction.IsButtonJustReleased(action) {
@@ -496,6 +518,14 @@ public class FlightController extends IScriptable {
         if Equals(actionName, n"FlightOptions_Right") && ListenerAction.IsButtonJustPressed(action) {
             this.mode = IntEnum((EnumInt(this.mode) + 1) % EnumInt(FlightMode.Count));
             GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_menu_onpress");
+        }
+        if Equals(actionName, n"FlightOptions_Left") && ListenerAction.IsButtonJustPressed(action) {
+            this.showUI = !this.showUI;
+            if (this.showUI) {
+              this.ui.Show();
+            } else {
+              this.ui.Hide();
+            }
         }
       }
       if Equals(actionType, gameinputActionType.AXIS_CHANGE) {
@@ -641,8 +671,129 @@ public class FlightController extends IScriptable {
     this.audio.AddSlotProviders(this.GetVehicle());
   }
 
+  public func DrawMappinPath(points: array<Vector4>, color: HDRColor, timeDelta: Float) -> Void {
+    let spacing = 3.0; // meters
+    let fadePointsDistance = 500.0; // meters
+    let fadePointsClose = 10.0; // meters
+    // let fadePointsNumber = 100.0; // number of points
+    let lineThickness = 3.0; // pixels
+    let largestPoint = 20.0; // pixels
+    let distanceToPath = 50.0; // meters
+    let closestPoint = 2.0; // meters
+    let lineOpacity = 0.1;
+    let pointOpacity = 1.0;
+
+    let cameraPosition = WorldPosition.ToVector4(this.camera.worldPosition);
+    // let linePoints: array<Vector2>;
+    let lastPoint: Vector4 = new Vector4(0.0, 0.0, 0.0, 0.0);
+
+    for point in points {
+      let tweenPointDistance = Vector4.Distance(point, lastPoint);
+
+      // let newZ = (ogStartPoint.Z * pointDistance / totalDistance) + (ogEndPoint.Z * (1.0 - pointDistance / totalDistance));
+      // let floatingPoint = point + new Vector4(0.0, 0.0, MaxF(newZ - point.Z, 0), 0.0);
+      let adjustedPoint = point;   
+      adjustedPoint = this.AdjustPointToDirection(adjustedPoint, distanceToPath);
+
+      let pointDistance = Vector4.Distance(point, this.stats.d_position);
+      let cameraDistance = Vector4.Distance(adjustedPoint, cameraPosition);
+      let correctedPoint = adjustedPoint - this.stats.d_velocity * timeDelta;
+      let screenPoint = this.ui.ScreenXY(correctedPoint);
+      // if (cameraDistance >= fadePointsDistance && AbsF(screenPoint.X) > 0.01 && AbsF(screenPoint.Y) > 0.01) {
+      //   ArrayPush(linePoints, screenPoint);
+      // }
+      // if (cameraDistance < fadePointsDistance && tweenPointDistance > spacing) {
+      if (tweenPointDistance > spacing) {
+        let distanceFade = PowF(1.0 - MinF(cameraDistance, fadePointsDistance) / fadePointsDistance, 2);
+        let fade = MinF(MaxF(pointDistance, closestPoint) - closestPoint, fadePointsClose) / (fadePointsClose - closestPoint);
+        // let fade = 1.0 - MinF(Cast<Float>(drawnPoints), fadePointsNumber) / fadePointsNumber;
+        let size = lineThickness + (largestPoint - lineThickness) * distanceFade;
+        let opacity = (lineOpacity + (pointOpacity - lineOpacity) * distanceFade) * fade;
+        this.DrawMappinPathPoint(screenPoint, opacity, size, color);
+        if (lastPoint.X != 0.0 && lastPoint.Y != 0.0) {
+          let rounded = Cast<Float>(RoundF(tweenPointDistance / spacing));
+          let tweenPointSpacing = spacing + (tweenPointDistance - rounded * spacing) / rounded;
+          let x = tweenPointSpacing;
+          while (x < tweenPointDistance) {
+            let midPoint = point / tweenPointDistance * x + lastPoint / tweenPointDistance * (tweenPointDistance - x);      
+            midPoint = this.AdjustPointToDirection(midPoint, distanceToPath);
+            pointDistance = Vector4.Distance(midPoint, this.stats.d_position);
+            cameraDistance = Vector4.Distance(midPoint, this.stats.d_position);
+            distanceFade = PowF(1.0 - MinF(cameraDistance, fadePointsDistance) / fadePointsDistance, 2);
+            fade = MinF(MaxF(pointDistance, closestPoint) - closestPoint, fadePointsClose) / (fadePointsClose - closestPoint);
+            let correctedMidPoint = midPoint - this.stats.d_velocity * timeDelta;
+            let midScreenPoint = this.ui.ScreenXY(correctedMidPoint);
+            size = lineThickness + (largestPoint - lineThickness) * distanceFade;
+            opacity = (lineOpacity + (pointOpacity - lineOpacity) * distanceFade) * fade;
+            this.DrawMappinPathPoint(midScreenPoint, opacity, size, color);
+            x += tweenPointSpacing;
+          }
+        }
+        lastPoint = point;
+      }
+    }
+    // let p = 0;
+    // let maxPoints = 5;
+    // while (p < ArraySize(linePoints)) {
+    //   let subLinePoints: array<Vector2>;
+    //   let x = p;
+    //   while (x <= (p + maxPoints) && x < ArraySize(linePoints)) {
+    //     ArrayPush(subLinePoints, linePoints[x]);
+    //     x += 1;
+    //   }
+    //   let navLine = inkWidgetBuilder.inkShape(StringToName("navLine_" + ToString(RandF())))
+    //     .Reparent(this.ui.GetMarksWidget())
+    //     // .ChangeShape(n"Rectangle")
+    //     .Size(1920.0 * 2.0, 1080.0 * 2.0)
+    //     .UseNineSlice(true)
+    //     .ShapeVariant(inkEShapeVariant.Border)
+    //     .LineThickness(lineThickness)
+    //     .FillOpacity(0.0)
+    //     .Tint(color)
+    //     .BorderColor(color)
+    //     .BorderOpacity(lineOpacity)
+    //     .Visible(true)
+    //     .BuildShape();
+    //   navLine.SetVertexList(subLinePoints);
+    //   p += maxPoints;
+    // }
+  }
+
+  private func AdjustPointToDirection(point: Vector4, threshold: Float) -> Vector4 {
+    let distance2D = Vector4.Distance2D(point, this.stats.d_position);
+    if (distance2D < threshold) {
+      let factor = PowF(1.0 - distance2D / threshold, 2.0);
+      // point.Z = point.Z * (1.0 - factor) + this.stats.d_position.Z * factor;
+      // let pointAlongDirection = Vector4.NearestPointOnEdge(point, this.stats.d_position + (this.stats.d_forward * -threshold) + this.stats.d_velocity, this.stats.d_position + (this.stats.d_forward * threshold) + this.stats.d_velocity);
+      let pointAlongDirection = Vector4.NearestPointOnEdge(point, this.stats.d_position + (this.stats.d_forward * -threshold), this.stats.d_position + (this.stats.d_forward * threshold) + this.stats.d_velocity);
+      point.X = point.X * (1.0 - factor) + pointAlongDirection.X * factor;
+      point.Y = point.Y * (1.0 - factor) + pointAlongDirection.Y * factor;
+      point.Z = point.Z * (1.0 - factor) + pointAlongDirection.Z * factor;
+    }
+    return point;
+  }
+
+  private func DrawMappinPathPoint(point: Vector2, opacity: Float, size: Float, color: HDRColor) {
+    if (AbsF(point.X) > 1920.0 || AbsF(point.Y) > 1080.0) {
+      return;
+    }
+    inkWidgetBuilder.inkImage(StringToName("marker_" + ToString(RandF())))
+      .Reparent(this.ui.GetMarksWidget())
+      .Atlas(r"base\\gameplay\\gui\\widgets\\crosshair\\master_crosshair.inkatlas")
+      .Part(n"lockon-b")
+      .Tint(color)
+      .Opacity(opacity)
+      .Size(size, size)
+      .Anchor(0.5, 0.5)
+      .Translation(point)
+      .BuildImage();
+  }
+
   public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-    this.camera.isInAir = false;
+    // this.camera.isInAir = false;
+    this.GetVehicle().isOnGround = true;
+    this.camera.drivingDirectionCompensationAngleSmooth = 120.0;
+    this.camera.drivingDirectionCompensationSpeedCoef = 0.1;
     // if !IsDefined(this.uiBlackboard) {
     //   this.uiBlackboard = GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().UI_System);
     //   this.uiSystemBB = GetAllBlackboardDefs().UI_System;
@@ -655,7 +806,9 @@ public class FlightController extends IScriptable {
     if !this.active {
       this.stats.UpdateDynamic(timeDelta);
       this.UpdateAudioParams(timeDelta);
-      this.ui.ClearMarks();
+      if (this.showUI) { 
+        this.ui.ClearMarks();
+      }
       return;
     }
     // might need to handle just the scanning system's dilation, and the pause menu
@@ -688,7 +841,9 @@ public class FlightController extends IScriptable {
 
 
     this.stats.UpdateDynamic(timeDelta);
-    this.ui.ClearMarks();
+    if (this.showUI) { 
+      this.ui.ClearMarks();
+    }
 
     let direction = this.stats.d_direction;
     // if this.stats.d_speed < 1.0 {
@@ -711,89 +866,56 @@ public class FlightController extends IScriptable {
     // JournalManager.GetTrackedEntry();
     // GetPlaystyleMappinSlotWorldPos();
 
-    let mappins: array<MappinEntry>;
-    let ms = GameInstance.GetMappinSystem(this.gameInstance);
-    ms.GetMappins(gamemappinsMappinTargetType.World, mappins);
+    // let mappins: array<MappinEntry>;
+    // let ms = GameInstance.GetMappinSystem(this.gameInstance);
+    // ms.GetMappins(gamemappinsMappinTargetType.World, mappins);
 
-    let jm = GameInstance.GetJournalManager(this.gameInstance);
-    let objective = jm.GetTrackedEntry();
-    if IsDefined(objective) {
-      let phase = jm.GetParentEntry(objective);
-      let mappin = ms.GetMappinFromObjective(phase, objective);
+    // let jm = GameInstance.GetJournalManager(this.gameInstance);
+    // let objective = jm.GetTrackedEntry();
+    // if IsDefined(objective) {
+    //   let phase = jm.GetParentEntry(objective);
+    //   let mappin = ms.GetMappinFromObjective(phase, objective);
+    // // }
+
+    // // for mappin in mappins {
+    //   // mappin.id.value;
+    //   // GameInstance.FindEntityByID(gameInstance,
+
+
+    //   let ogStartPoint = this.stats.d_position;
+    //   let ogEndPoint = mappin.GetWorldPosition();
+    //   // if IsDefined(this.m_currentMappin) {
+    //   //   ogEndPoint = this.m_currentMappin.GetWorldPosition();
+    //   // }
+
+
+    //   let navSystem = GameInstance.GetNavigationSystem(this.gameInstance);
+    //   let aiNavSystem = GameInstance.GetAINavigationSystem(this.gameInstance);
+
+    //   // let startPoint = aiNavSystem.GetNearestNavmeshPointBelow(this.player, ogStartPoint, 1000.0, 1);
+    //   let startResult = aiNavSystem.FindPointInSphereForCharacter(ogStartPoint, 1000.0, this.player);
+    //   let startPoint = ogStartPoint;
+    //   if Equals(startResult.status, worldNavigationRequestStatus.OK) {
+    //     startPoint = startResult.point;
+    //   }
+
+    //   // let endPoint = aiNavSystem.GetNearestNavmeshPointBelow(this.player, ogEndPoint, 1000.0, 1);
+    //   let endResult = aiNavSystem.FindPointInSphereForCharacter(ogEndPoint, 10.0, GameInstance.FindEntityByID(this.gameInstance, mappin.GetEntityID()));
+    //   let endPoint = ogEndPoint;
+    //   if Equals(endResult.status, worldNavigationRequestStatus.OK) {
+    //     endPoint = endResult.point;
+    //   }
+
+    //   let navPath: ref<NavigationPath> = navSystem.CalculatePathOnlyHumanNavmesh(startPoint, endPoint, IntEnum(0), 0.5);
+      // let totalDistance = Vector4.Distance(startPoint, endPoint);
+
+      if IsDefined(this.mmcc) && this.showUI {
+        let fastTravelBlue = new HDRColor(0.34901960784, 0.682352941176, 1.0, 1.0);
+        this.DrawMappinPath(this.mmcc.questPoints, ThemeColors.Dandelion(), timeDelta);
+        this.DrawMappinPath(this.mmcc.playerPoints, fastTravelBlue, timeDelta);
+      }
+
     // }
-
-    // for mappin in mappins {
-      // mappin.id.value;
-      // GameInstance.FindEntityByID(gameInstance,
-
-
-      let ogStartPoint = this.stats.d_position;
-      let ogEndPoint = mappin.GetWorldPosition();
-      // if IsDefined(this.m_currentMappin) {
-      //   ogEndPoint = this.m_currentMappin.GetWorldPosition();
-      // }
-
-
-      let navSystem = GameInstance.GetNavigationSystem(this.gameInstance);
-      let aiNavSystem = GameInstance.GetAINavigationSystem(this.gameInstance);
-
-      // let startPoint = aiNavSystem.GetNearestNavmeshPointBelow(this.player, ogStartPoint, 1000.0, 1);
-      let startResult = aiNavSystem.FindPointInSphereForCharacter(ogStartPoint, 1000.0, this.player);
-      let startPoint = ogStartPoint;
-      if Equals(startResult.status, worldNavigationRequestStatus.OK) {
-        startPoint = startResult.point;
-      }
-
-      // let endPoint = aiNavSystem.GetNearestNavmeshPointBelow(this.player, ogEndPoint, 1000.0, 1);
-      let endResult = aiNavSystem.FindPointInSphereForCharacter(ogEndPoint, 10.0, GameInstance.FindEntityByID(this.gameInstance, mappin.GetEntityID()));
-      let endPoint = ogEndPoint;
-      if Equals(endResult.status, worldNavigationRequestStatus.OK) {
-        endPoint = endResult.point;
-      }
-
-      let navPath: ref<NavigationPath> = navSystem.CalculatePathOnlyHumanNavmesh(startPoint, endPoint, IntEnum(0), 0.5);
-      let totalDistance = Vector4.Distance(startPoint, endPoint);
-
-      if IsDefined(navPath) {
-        let screenPoints: array<Vector2>;
-        for point in navPath.path {
-          let pointDistance = Vector4.Distance(point, endPoint);
-          let newZ = (ogStartPoint.Z * pointDistance / totalDistance) + (ogEndPoint.Z * (1.0 - pointDistance / totalDistance));
-          let floatingPoint = point + new Vector4(0.0, 0.0, MaxF(newZ - point.Z, 0), 0.0);
-          let correctedPoint = floatingPoint - this.stats.d_velocity * timeDelta;
-          let screenPoint = this.ui.ScreenXY(correctedPoint);
-          ArrayPush(screenPoints, screenPoint);
-
-          inkWidgetBuilder.inkImage(StringToName("marker_" + ToString(RandF())))
-            .Reparent(this.ui.GetMarksWidget())
-            .Atlas(r"base\\gameplay\\gui\\widgets\\crosshair\\master_crosshair.inkatlas")
-            .Part(n"lockon-b")
-            .Tint(ThemeColors.ElectricBlue())
-            .Opacity(0.5 * pointDistance / totalDistance)
-            .Size(10.0, 10.0)
-            .Anchor(0.5, 0.5)
-            .Translation(screenPoint)
-            .BuildImage();
-        }
-
-        let navLine = inkWidgetBuilder.inkShape(n"navLine")
-          .Reparent(this.ui.GetMarksWidget())
-          // .ChangeShape(n"Rectangle")
-          .Size(1920.0 * 2.0, 1080.0 * 2.0)
-          .UseNineSlice(true)
-          .ShapeVariant(inkEShapeVariant.FillAndBorder)
-          .LineThickness(3.0)
-          .FillOpacity(0.0)
-          .Tint(ThemeColors.ElectricBlue())
-          .BorderColor(ThemeColors.ElectricBlue())
-          .BorderOpacity(0.1)
-          .Visible(true)
-          .BuildShape();
-        navLine.SetVertexList(screenPoints);
-          
-      }
-
-    }
 
     // regular nav - human only?
 
@@ -1083,7 +1205,7 @@ public class FlightController extends IScriptable {
     this.pitchPID.SetRatio(this.stats.d_speedRatio * AbsF(Vector4.Dot(this.stats.d_direction, this.stats.d_forward)));
     this.rollPID.SetRatio(this.stats.d_speedRatio * AbsF(Vector4.Dot(this.stats.d_direction, this.stats.d_right)));
 
-    hoverCorrection = this.hover.GetCorrectionClamped(heightDifference, timeDelta, 1.0);
+    hoverCorrection = this.hoverEnv.GetCorrectionClamped(heightDifference, timeDelta, this.hoverClamp);
     // pitchCorrection = this.pitchPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(idealNormal, this.stats.d_forward)) + this.lift.GetValue() * this.pitchWithLift, timeDelta, 10.0) + this.pitch.GetValue() / 10.0;
     // rollCorrection = this.rollPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(idealNormal, this.stats.d_right)), timeDelta, 10.0) + this.yaw.GetValue() * this.rollWithYaw + this.roll.GetValue() / 10.0;
     let pitchDegOff = 90.0 - AbsF(Vector4.GetAngleDegAroundAxis(idealNormal, this.stats.d_forward, this.stats.d_right));
@@ -1112,17 +1234,25 @@ public class FlightController extends IScriptable {
     let yawDirectionality: Float = this.stats.d_speedRatio * this.stats.s_mass * this.yawDirectionalityFactor;
     let liftForce: Float = hoverCorrection * this.stats.s_mass * this.hoverFactor * 9.8;
     // actual in-game mass (i think)
-    // FlightLog.Info(ToString(hoverCorrection * this.stats.s_mass * this.hoverFactor) + " vs " + this.GetVehicle().GetTotalMass());
+    this.averageMass = this.averageMass * 0.99 + (liftForce / 9.8) * 0.01;
+    // FlightLog.Info(ToString(this.averageMass) + " vs " + ToString(this.stats.s_mass));
     let surgeForce: Float = this.surge.GetValue() * this.stats.s_mass * this.surgeFactor;
 
-    // yawDirectionality
     //this.CreateImpulse(this.stats.d_position, this.stats.d_right * Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right) * yawDirectionality / 2.0 * timeDelta);
-    this.CreateImpulse(this.stats.d_position, this.stats.d_forward * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta);
-    this.CreateImpulse(this.stats.d_position, -this.stats.d_direction * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta);
+
+    let combinedVector: Vector4 = new Vector4(0.0, 0.0, 0.0, 0.0);
+
+    // yawDirectionality
+    // this.CreateImpulse(this.stats.d_position, this.stats.d_forward * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta);
+    combinedVector += this.stats.d_forward * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta;
+    // this.CreateImpulse(this.stats.d_position, -this.stats.d_direction * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta);
+    combinedVector += -this.stats.d_direction * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta;
     // lift
-    this.CreateImpulse(this.stats.d_position, new Vector4(0.00, 0.00, liftForce + this.stats.d_speedRatio * liftForce, 0.00) * timeDelta);
+    // this.CreateImpulse(this.stats.d_position, new Vector4(0.00, 0.00, liftForce + this.stats.d_speedRatio * liftForce, 0.00) * timeDelta);
+    combinedVector += new Vector4(0.00, 0.00, liftForce + this.stats.d_speedRatio * liftForce, 0.00) * timeDelta;
     // surge
-    this.CreateImpulse(this.stats.d_position, this.stats.d_forward * surgeForce * timeDelta);
+    // this.CreateImpulse(this.stats.d_position, this.stats.d_forward * surgeForce * timeDelta);
+    combinedVector += this.stats.d_forward * surgeForce * timeDelta;
     // pitch correction
     let totalPitchCorrection = this.stats.s_momentOfInertia.X * pitchCorrection * (this.pitchCorrectionFactor + 1.0 * this.pitchCorrectionFactor * this.stats.d_speedRatio) * timeDelta;
     this.CreateImpulse(this.stats.d_position - this.stats.d_up,       this.stats.d_forward * -totalPitchCorrection);
@@ -1136,7 +1266,10 @@ public class FlightController extends IScriptable {
     this.CreateImpulse(this.stats.d_position + this.stats.d_forward,  this.stats.d_right *    totalYawCorrecion);
     this.CreateImpulse(this.stats.d_position - this.stats.d_forward,  this.stats.d_right *   -totalYawCorrecion);
     // brake
-    this.CreateImpulse(this.stats.d_position, -velocityDamp * timeDelta);
+    // this.CreateImpulse(this.stats.d_position, -velocityDamp * timeDelta);
+    combinedVector += -velocityDamp * timeDelta;
+
+    this.CreateImpulse(this.stats.d_position, combinedVector);
 
     // this.audio.DrawSlotPositions(this.ui);
 
@@ -1171,9 +1304,11 @@ public class FlightController extends IScriptable {
     }
 
     // (this.GetVehicle().GetPS() as VehicleComponentPS).SetThrusterState(this.surge.GetValue() > 0.99);
-    
-    this.ui.Update(timeDelta);
-
+    if (this.showUI) {
+      this.ui.Update(timeDelta);
+      this.ui.DrawText(this.stats.d_visualPosition, FloatToStringPrec(1.0 / this.timeDelta, 4));
+    }
+    this.timeDelta = timeDelta * 0.01 + this.timeDelta * 0.99;
   }
 
   // a generalized method for torque might be nice too

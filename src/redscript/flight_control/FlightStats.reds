@@ -67,10 +67,12 @@ public class FlightStats {
       // .MaxBrakingTorque() -> Float;
       // .Mass() -> Float;
     // this.s_mass = this.s_fcRecord.mass;
-    this.s_mass = this.s_fc_record.mass;
-    if this.s_mass == 0.0 {
-      this.s_mass = this.vehicle.GetTotalMass(); // might be dynamic?
-    }
+    // this.s_mass = this.s_fc_record.mass;
+    // if this.s_mass == 0.0 {
+      this.s_mass = this.vehicle.GetTotalMass(); // might be dynamic? pulled from otherPhysicsData->totalMass
+    // }
+    // small sample size (2) for this value under limited circumstances
+    this.s_mass *= 1.396;
     // need to just dynamically calculate this instead of messing around with random values
     this.s_centerOfMassOffset = Cast(this.s_driveModelData.Center_of_mass_offset());
     // this.s_centerOfMassOffset += this.s_fcRecord.comOffset_position;
@@ -80,9 +82,10 @@ public class FlightStats {
     // would be nice to compute from meshes outside this and import those values in
     // if Vector4.IsXYZFloatZero(this.s_momentOfInertia) {
       // LogChannel(n"DEBUG", "[FlightStats] no MOI, setting to bad defaults");
-      this.s_momentOfInertia.X = this.s_mass;
-      this.s_momentOfInertia.Y = this.s_mass;
-      this.s_momentOfInertia.Z = this.s_mass;
+    let it = this.vehicle.GetInteriaTensor();
+    this.s_momentOfInertia.X = it.X.X;
+    this.s_momentOfInertia.Y = it.Y.Y;
+    this.s_momentOfInertia.Z = it.Z.Z;
     // 
     // this is to try to make smaller vehicles more responsive than larger ones
     // maybe the same could be done for mass?
@@ -106,9 +109,14 @@ public class FlightStats {
     
     
     // GameInstance.GetSpatialQueriesSystem(FlightController.GetInstance().gameInstance).GetGeometryDescriptionSystem();
-    let position: Vector4; // = this.vehicle.GetWorldPosition() + this.s_centerOfMassOffset;
-    this.ipp.CalculatePosition(position);
-    position += this.s_centerOfMassOffset;
+    let position: Vector4;
+    if IsDefined(this.vehicle.chassis) {
+      position = this.vehicle.GetWorldPosition() + this.vehicle.chassis.GetLocalPosition();// + this.vehicle.chassis.GetComOffset();
+    } else {
+      position = this.vehicle.GetWorldPosition() + this.s_centerOfMassOffset;
+    }
+    // this.ipp.CalculatePosition(position);
+    // position += this.s_centerOfMassOffset;
 
     // if Vector4.Length(position - this.d_position) / timeDelta <= this.d_speed * 1.1 {
     // if this.reset {
@@ -135,7 +143,7 @@ public class FlightStats {
     // let maxS = 0.7;
     // let factor = Vector4.Distance(position, this.d_position) / timeDelta / this.d_speed;
     // this.d_position = this.d_position * (minS + (maxS - minS) * factor) + position * (1.0 - minS - (maxS - minS) * factor);
-    this.d_position = position;
-    this.d_visualPosition = position - this.d_velocity * timeDelta;
+    this.d_position =  position;
+    this.d_visualPosition = this.d_position - this.d_velocity * timeDelta;
   }
 }

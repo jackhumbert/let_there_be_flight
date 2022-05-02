@@ -1,9 +1,51 @@
-native class vehicleTPPCameraComponent extends CameraComponent {
-    public native let isInAir: Bool;
-//     // public func Peak() -> Void {   
-//         // FlightLog.Info("TPP Camera! " + ToString(this));
-//     // }
+public native class vehicleChassisComponent extends IPlacedComponent {
+    public native func GetComOffset() -> Vector4;
 }
+
+native class vehicleTPPCameraComponent extends CameraComponent {
+    // public native let isInAir: Bool;
+    public native let drivingDirectionCompensationAngleSmooth: Float;
+    public native let drivingDirectionCompensationSpeedCoef: Float;
+    public native let worldPosition: WorldPosition;
+    // public native let chassis: ref<vehicleChassisComponent>;
+}
+
+@addField(VehicleObject)
+public native let isOnGround: Bool;
+
+@addField(VehicleObject)
+public let chassis: ref<vehicleChassisComponent>;
+
+@addMethod(VehicleObject)
+public native func GetInteriaTensor() -> Matrix;
+
+// @addMethod(vehicleChassisComponent)
+// protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> Bool {
+//     super.OnRequestComponents(ri);
+//     EntityRequestComponentsInterface.RequestComponent(ri, n"Chassis", n"vehicleChassisComponent", false);
+// }
+
+@wrapMethod(MinimapContainerController)
+protected final func InitializePlayer(playerPuppet: ref<GameObject>) -> Void {
+  wrappedMethod(playerPuppet);
+  FlightController.GetInstance().mmcc = this;
+}
+
+@addField(MinimapContainerController)
+public native let questPoints: array<Vector4>;
+
+@addField(MinimapContainerController)
+public native let playerPoints: array<Vector4>;
+
+
+// public native class exEntitySpawner {
+//     public native static func Spawn(entityPath: ResRef, worldTransform: WorldTransform, opt appearance: CName, opt recordID: TweakDBID) -> EntityID;
+//     public native static func SpawnRecord(recordID: TweakDBID, worldTransform: WorldTransform, opt appearance: CName) -> EntityID;
+//     public native static func Despawn(entity: ref<Entity>) -> Void;
+// }
+
+// @addField(MappinSystem)
+// public native let worldMappins: Array<Ptr<>>;
 
 // @addField(entCameraComponent)
 // native let fov: Float;
