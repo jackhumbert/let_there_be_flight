@@ -1,4 +1,4 @@
-public class FlightSystem extends ScriptableSystem {
+public native class FlightSystem extends IGameSystem {
   
   public static func Get(gameInstance: GameInstance) -> ref<FlightSystem> {
     return GameInstance.GetScriptableSystemsContainer(gameInstance).Get(n"FlightSystem") as FlightSystem;

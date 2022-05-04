@@ -19,7 +19,8 @@ public class FlightStats {
   public let d_forward: Vector4;
   public let d_right: Vector4;
   public let d_up: Vector4;
-  public let d_angularVelocity: Quaternion;
+  public let d_orientationChange: Quaternion;
+  public let d_angularVelocity: EulerAngles;
   public let d_velocity: Vector4;
   public let d_speed: Float;
   public let d_speedRatio: Float;
@@ -85,14 +86,7 @@ public class FlightStats {
     let it = this.vehicle.GetInteriaTensor();
     this.s_momentOfInertia.X = it.X.X;
     this.s_momentOfInertia.Y = it.Y.Y;
-    this.s_momentOfInertia.Z = it.Z.Z;
-    // 
-    // this is to try to make smaller vehicles more responsive than larger ones
-    // maybe the same could be done for mass?
-    // this.s_momentOfInertia.X = SqrtF(this.s_momentOfInertia.X);
-    // this.s_momentOfInertia.Y = SqrtF(this.s_momentOfInertia.Y);
-    // this.s_momentOfInertia.Z = SqrtF(this.s_momentOfInertia.Z);
-    // this.s_momentOfInertia /= 2000.0; // get to a workable range    
+    this.s_momentOfInertia.Z = it.Z.Z; 
     // this torques the vehicile in some way upon acceleration - the details aren't currently known
     // it could also be tied to Vehicle.RPMValue - we could use vehicle.GetBlackboard().GetFloat(GetAllBlackboardDefs().Vehicle.RPMValue)
     this.s_forwardWeightTransferFactor = this.s_driveModelData.ForwardWeightTransferFactor();
@@ -100,21 +94,23 @@ public class FlightStats {
   
   public final func UpdateDynamic(timeDelta: Float) -> Void {
     let orientation = this.vehicle.GetWorldOrientation();
-    this.d_angularVelocity = (orientation - this.d_orientation) / timeDelta;
+    this.d_orientationChange = Quaternion.MulInverse(orientation, this.d_orientation);
+    this.d_angularVelocity = Quaternion.ToEulerAngles(this.d_orientationChange) / timeDelta;
     this.d_lastOrientation = this.d_orientation;
     this.d_orientation = orientation;
-    this.d_forward = Vector4.Normalize(Quaternion.GetForward(this.d_orientation));
-    this.d_right = Vector4.Normalize(Quaternion.GetRight(this.d_orientation));
-    this.d_up = Vector4.Normalize(Quaternion.GetUp(this.d_orientation));
+    Quaternion.GetAxes(this.d_orientation, this.d_forward, this.d_right, this.d_up);
+    // this.d_forward = Vector4.Normalize(Quaternion.GetForward(this.d_orientation));
+    // this.d_right = Vector4.Normalize(Quaternion.GetRight(this.d_orientation));
+    // this.d_up = Vector4.Normalize(Quaternion.GetUp(this.d_orientation));
     
     
     // GameInstance.GetSpatialQueriesSystem(FlightController.GetInstance().gameInstance).GetGeometryDescriptionSystem();
     let position: Vector4;
-    if IsDefined(this.vehicle.chassis) {
-      position = this.vehicle.GetWorldPosition() + this.vehicle.chassis.GetLocalPosition();// + this.vehicle.chassis.GetComOffset();
-    } else {
-      position = this.vehicle.GetWorldPosition() + this.s_centerOfMassOffset;
-    }
+    // if IsDefined(this.vehicle.chassis) {
+      position = this.vehicle.chassis.GetLocalToWorld() * this.vehicle.chassis.GetComOffset();
+    // } else {
+      // position = this.vehicle.GetWorldPosition() + this.s_centerOfMassOffset;
+    // }
     // this.ipp.CalculatePosition(position);
     // position += this.s_centerOfMassOffset;
 
@@ -146,4 +142,57 @@ public class FlightStats {
     this.d_position =  position;
     this.d_visualPosition = this.d_position - this.d_velocity * timeDelta;
   }
+}
+
+
+public static func OperatorMultiply(m: Matrix, v: Vector4) -> Vector4 {
+  return Vector4.Transform(m, v);
+}
+// public static func OperatorMultiply(vector: Vector4, matrix: Matrix) -> Vector4 {
+//   return Vector4.Transform(matrix, vector);
+// }
+
+public static func OperatorAssignMultiply(out v: Vector4, m: Matrix) -> Vector4 {
+  return m * v;
+}
+
+public static func OperatorXor(q: Quaternion, n: Int32) -> Quaternion {
+  let out = q;
+  while (n > 0) {
+    Quaternion.SetInverse(out);
+    n -= 1;
+  }
+  return out;
+}
+
+public static func OperatorMultiply(e: EulerAngles, f: Float) -> EulerAngles {
+  let out = e;
+  e.Roll *= f;
+  e.Yaw *= f;
+  e.Pitch += f;
+  return out;
+}
+
+public static func OperatorDivide(e: EulerAngles, f: Float) -> EulerAngles {
+  let out = e;
+  e.Roll /= f;
+  e.Yaw /= f;
+  e.Pitch /= f;
+  return out;
+}
+
+public static func OperatorAdd(e: EulerAngles, v: Vector4) -> Vector4 {
+  let out = v;
+  v.X += e.Pitch;
+  v.Y += e.Roll;
+  v.Z += e.Yaw;
+  return out;
+}
+
+public static func OperatorAdd(v: Vector4, e: EulerAngles) -> Vector4 {
+  return e + v;
+}
+
+public static func OperatorAssignAdd(out v: Vector4, e: EulerAngles) -> Vector4 {
+  return e + v;
 }

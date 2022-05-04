@@ -19,6 +19,9 @@ public let chassis: ref<vehicleChassisComponent>;
 @addMethod(VehicleObject)
 public native func GetInteriaTensor() -> Matrix;
 
+@addMethod(VehicleObject)
+public native func GetUnk90() -> Matrix;
+
 // @addMethod(vehicleChassisComponent)
 // protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> Bool {
 //     super.OnRequestComponents(ri);
@@ -37,6 +40,15 @@ public native let questPoints: array<Vector4>;
 @addField(MinimapContainerController)
 public native let playerPoints: array<Vector4>;
 
+public native class vehicleDriveToPointEvent extends Event {
+    public native let targetPos: Vector3;
+    public native let useTraffic: Bool;
+    public native let speedInTraffic: Float;
+}
+
+public importonly class EffectSpawnerComponent extends IVisualComponent {
+    public native func AddEffect() -> Void;
+}
 
 // public native class exEntitySpawner {
 //     public native static func Spawn(entityPath: ResRef, worldTransform: WorldTransform, opt appearance: CName, opt recordID: TweakDBID) -> EntityID;

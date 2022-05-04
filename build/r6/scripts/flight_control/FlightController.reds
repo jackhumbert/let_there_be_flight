@@ -86,11 +86,13 @@ public class FlightController extends IScriptable {
   public let minHoverHeight: Float;
   public let maxHoverHeight: Float;
   public let hoverFactor: Float;
-  public let hoverEnv: ref<PID>;
-  public let hoverUser: ref<PID>;
+  public let hoverGroundPID: ref<PID>;
+  public let hoverPID: ref<PID>;
   public let hoverClamp: Float;
+  public let pitchGroundPID: ref<DualPID>;
   public let pitchPID: ref<DualPID>;
   public let pitchCorrectionFactor: Float;
+  public let rollGroundPID: ref<DualPID>;
   public let rollPID: ref<DualPID>;
   public let rollCorrectionFactor: Float;
   public let yawPID: ref<PID>;
@@ -103,7 +105,6 @@ public class FlightController extends IScriptable {
   public let swayWithYaw: Float;
   public let surgeOffset: Float;
   public let brakeOffset: Float;
-  public let velocityPointing: Float;
   private let hovering: Bool;
   public let referenceZ: Float;
   private let secondCounter: Float;
@@ -145,7 +146,7 @@ public class FlightController extends IScriptable {
     this.surgeFactor = 15.0;
     this.hoverFactor = 5.0;
     this.hoverClamp = 1.0;
-    this.yawFactor = 80.0;
+    this.yawFactor = 60.0;
     this.pitchCorrectionFactor = 20.0;
     this.rollCorrectionFactor = 20.0;
     this.yawCorrectionFactor = 0.1;
@@ -156,9 +157,11 @@ public class FlightController extends IScriptable {
     this.roll = InputPID.Create(0.5, 0.5);
     this.pitch = InputPID.Create(0.5, 0.5);
     this.yaw = InputPID.Create(0.02, 0.2);
-    this.hoverEnv = PID.Create(1.0, 0.01, 0.1);
-    this.hoverUser = PID.Create(1.0, 0.01, 0.1);
-    this.pitchPID = DualPID.Create(0.8, 0.05, 0.2,  0.8, 0.05, 0.2);
+    this.hoverGroundPID = PID.Create(1.0, 0.01, 0.1);
+    this.hoverPID = PID.Create(1.0, 0.01, 0.1);
+    this.pitchGroundPID = DualPID.Create(0.8, 0.2, 0.05,  0.8, 0.2, 0.05);
+    this.pitchPID = DualPID.Create(0.8, 0.2, 0.05,  0.7, 0.4, 0.2);
+    this.rollGroundPID =  DualPID.Create(0.5, 0.2, 0.05,  2.5, 1.5, 0.5);
     this.rollPID =  DualPID.Create(0.5, 0.2, 0.05,  2.5, 1.5, 0.5);
     this.yawPID = PID.Create(0.5, 0.1, 0.0);
     this.yawD = 1.0;
@@ -175,21 +178,19 @@ public class FlightController extends IScriptable {
     // this.lookAheadMin = 1.0;
     this.lookDown = new Vector4(0.0, 0.0, -this.maxHoverHeight - 10.0, 0.0);
     this.fwtfCorrection = 0.0;
-    this.pitchWithLift = -0.3;
+    // this.pitchWithLift = 0.3;
     // this.pitchWithLift = 0.0;
-    this.rollWithYaw = 0.15;
-    this.swayWithYaw =   0.5;
+    // this.rollWithYaw = 0.15;
+    // this.swayWithYaw =   0.5;
     // this.surgeOffset = 0.5;
     this.surgeOffset = 0.0;
     // this.brakeOffset = 0.5;
     this.brakeOffset = 0.0;
-    // this.velocityPointing = 0.5;
-    this.velocityPointing = 0.0;
     this.hovering = true;
     this.referenceZ = 0.0;
     this.secondCounter = 0.0;
     this.collisionRecoveryDelay = 0.8;
-    this.collisionRecoveryDuration = 0.4;
+    this.collisionRecoveryDuration = 0.8;
     this.collisionTimer = this.collisionRecoveryDelay;
 
     this.audio = FlightAudio.Create();  
@@ -267,6 +268,9 @@ public class FlightController extends IScriptable {
     this.ui.Setup(this.stats);
 
     FlightLog.Info("[FlightController] Enable - " + this.GetVehicle().GetDisplayName());
+
+    (this.GetVehicle().FindComponentByName(n"cars_sport_fx") as EffectSpawnerComponent).AddEffect();
+
   }
 
   public func Disable() -> Void {
@@ -299,9 +303,11 @@ public class FlightController extends IScriptable {
   private func Activate() -> Void {
     this.active = true;
     this.SetupActions();
-    this.hoverEnv.Reset();
-    this.hoverUser.Reset();
+    this.hoverGroundPID.Reset();
+    this.hoverPID.Reset();
+    this.pitchGroundPID.Reset();
     this.pitchPID.Reset();
+    this.rollGroundPID.Reset();
     this.rollPID.Reset();
     this.yawPID.Reset();
 
@@ -316,6 +322,26 @@ public class FlightController extends IScriptable {
 
     this.SetupTires();
     this.SetupPositionProviders();
+
+    // GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"summon_hologram", true);
+    GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"test_effect", true);
+
+    // (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"tire_01_fl_a") as IComponent).Toggle(false);
+    // (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"tire_01_fl_a_shadow") as IComponent).Toggle(false);
+    // (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"wheel_01_fl_a") as IComponent).Toggle(false);
+
+    // (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"tire_01_fr_a") as IComponent).Toggle(false);
+    // (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"tire_01_fr_a_shadow") as IComponent).Toggle(false);
+    // (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"wheel_01_fr_a") as IComponent).Toggle(false);
+
+    // (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"tire_01_bl_a") as IComponent).Toggle(false);
+    // (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"tire_01_bl_a_shadow") as IComponent).Toggle(false);
+    // (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"wheel_01_bl_a") as IComponent).Toggle(false);
+
+    // (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"tire_01_br_a") as IComponent).Toggle(false);
+    // (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"tire_01_br_a_shadow") as IComponent).Toggle(false);
+    // (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"wheel_01_br_a") as IComponent).Toggle(false);
+
     
     this.collisionTimer = this.collisionRecoveryDelay;
     this.hoverHeight = this.defaultHoverHeight;
@@ -379,6 +405,8 @@ public class FlightController extends IScriptable {
     this.audio.Stop("leftRear");
     this.audio.Stop("rightRear");
 
+    // GameObjectEffectHelper.BreakEffectLoopEvent(this.GetVehicle(), n"summon_hologram");
+    GameObjectEffectHelper.BreakEffectLoopEvent(this.GetVehicle(), n"test_effect");
 
     //let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
     //uiSystem.PopGameContext(IntEnum(10));
@@ -857,105 +885,13 @@ public class FlightController extends IScriptable {
 
     this.UpdateInputs(timeDelta);
 
+    // IN WORLD NAV
 
-    // IN WORLD NAV?
-
-    // let value = blackboard.GetVariant(uiSystemBB.TrackedMappin);
-    // let mappin: wref<IMappin> = FromVariant<ref<IScriptable>>(value) as IMappin;
-    
-    // JournalManager.GetTrackedEntry();
-    // GetPlaystyleMappinSlotWorldPos();
-
-    // let mappins: array<MappinEntry>;
-    // let ms = GameInstance.GetMappinSystem(this.gameInstance);
-    // ms.GetMappins(gamemappinsMappinTargetType.World, mappins);
-
-    // let jm = GameInstance.GetJournalManager(this.gameInstance);
-    // let objective = jm.GetTrackedEntry();
-    // if IsDefined(objective) {
-    //   let phase = jm.GetParentEntry(objective);
-    //   let mappin = ms.GetMappinFromObjective(phase, objective);
-    // // }
-
-    // // for mappin in mappins {
-    //   // mappin.id.value;
-    //   // GameInstance.FindEntityByID(gameInstance,
-
-
-    //   let ogStartPoint = this.stats.d_position;
-    //   let ogEndPoint = mappin.GetWorldPosition();
-    //   // if IsDefined(this.m_currentMappin) {
-    //   //   ogEndPoint = this.m_currentMappin.GetWorldPosition();
-    //   // }
-
-
-    //   let navSystem = GameInstance.GetNavigationSystem(this.gameInstance);
-    //   let aiNavSystem = GameInstance.GetAINavigationSystem(this.gameInstance);
-
-    //   // let startPoint = aiNavSystem.GetNearestNavmeshPointBelow(this.player, ogStartPoint, 1000.0, 1);
-    //   let startResult = aiNavSystem.FindPointInSphereForCharacter(ogStartPoint, 1000.0, this.player);
-    //   let startPoint = ogStartPoint;
-    //   if Equals(startResult.status, worldNavigationRequestStatus.OK) {
-    //     startPoint = startResult.point;
-    //   }
-
-    //   // let endPoint = aiNavSystem.GetNearestNavmeshPointBelow(this.player, ogEndPoint, 1000.0, 1);
-    //   let endResult = aiNavSystem.FindPointInSphereForCharacter(ogEndPoint, 10.0, GameInstance.FindEntityByID(this.gameInstance, mappin.GetEntityID()));
-    //   let endPoint = ogEndPoint;
-    //   if Equals(endResult.status, worldNavigationRequestStatus.OK) {
-    //     endPoint = endResult.point;
-    //   }
-
-    //   let navPath: ref<NavigationPath> = navSystem.CalculatePathOnlyHumanNavmesh(startPoint, endPoint, IntEnum(0), 0.5);
-      // let totalDistance = Vector4.Distance(startPoint, endPoint);
-
-      if IsDefined(this.mmcc) && this.showUI {
-        let fastTravelBlue = new HDRColor(0.34901960784, 0.682352941176, 1.0, 1.0);
-        this.DrawMappinPath(this.mmcc.questPoints, ThemeColors.Dandelion(), timeDelta);
-        this.DrawMappinPath(this.mmcc.playerPoints, fastTravelBlue, timeDelta);
-      }
-
-    // }
-
-    // regular nav - human only?
-
-    // let navSystem = GameInstance.GetNavigationSystem(this.gameInstance);
-    // let startPoint = navSystem.GetNearestNavmeshPointBelowOnlyHumanNavmesh(startPoint, 100.0, 10);
-    // let endPoint = navSystem.GetNearestNavmeshPointBelowOnlyHumanNavmesh(endPoint, 100.0, 10);
-    // let navPath: ref<NavigationPath> = navSystem.CalculatePathOnlyHumanNavmesh(startPoint, endPoint, NavGenAgentSize.Human, 1.00);
-
-    // if IsDefined(navPath) {
-    //   for point in navPath.path {
-    //     this.ui.DrawMark(point);
-    //   }
-    // }
-
-    // let points: array<Vector4>;
-    // let fallbackPoints: array<Vector4>;
-    // navSystem.FindPursuitPointsRange(endPoint, startPoint, this.stats.d_forward, 1.0, 10.0, 100, false, NavGenAgentSize.Human, points, fallbackPoints);
-
-    // let pursuitPoint: Vector4;
-    // let fallback: Bool;
-    // navSystem.FindPursuitPoint(endPoint, startPoint, this.stats.d_forward, 5.0, false, NavGenAgentSize.Human, pursuitPoint, fallback);
-    // let overflow = 0;
-    // while (Vector4.Distance(endPoint, pursuitPoint) > 5.0 && overflow < 100)
-    // {
-    //   overflow += 1;
-    //   this.ui.DrawMark(pursuitPoint);
-    //   let newStart = pursuitPoint;
-    //   navSystem.FindPursuitPoint(endPoint, newStart, endPoint - newStart, 5.0, false, NavGenAgentSize.Human, pursuitPoint, fallback);
-    // }
-    // navSystem.FindPursuitPoint(endPoint, startPoint)
-    // for point in points {
-    //   this.ui.DrawMark(point);
-    // }
-
-    // for point in fallbackPoints {
-    //   this.ui.DrawMark(point);
-    // }
-
-
-
+    if IsDefined(this.mmcc) && this.showUI && false {
+      let fastTravelBlue = new HDRColor(0.34901960784, 0.682352941176, 1.0, 1.0);
+      this.DrawMappinPath(this.mmcc.questPoints, ThemeColors.Dandelion(), timeDelta);
+      this.DrawMappinPath(this.mmcc.playerPoints, fastTravelBlue, timeDelta);
+    }
 
     if Equals(this.mode, FlightMode.HoverFly) {
       this.hoverHeight += this.lift.GetValue() * timeDelta * this.liftFactor * (1.0 + this.stats.d_speedRatio * 2.0);
@@ -1001,23 +937,31 @@ public class FlightController extends IScriptable {
 
       if TraceResult.IsValid(findGround1) {
         groundPoint1 = Vector4.Vector3To4(findGround1.position) - this.stats.d_velocity * timeDelta;
-        this.ui.DrawMark(groundPoint1);
-        this.ui.DrawText(groundPoint1, FloatToStringPrec(Vector4.Distance(fl_tire, Cast(findGround1.position)), 2));
+        if this.showUI {
+          this.ui.DrawMark(groundPoint1);
+          this.ui.DrawText(groundPoint1, FloatToStringPrec(Vector4.Distance(fl_tire, Cast(findGround1.position)), 2));
+        }
       }
       if TraceResult.IsValid(findGround2) {
         groundPoint2 = Vector4.Vector3To4(findGround2.position) - this.stats.d_velocity * timeDelta;
-        this.ui.DrawMark(groundPoint2);
-        this.ui.DrawText(groundPoint2, FloatToStringPrec(Vector4.Distance(fr_tire, Cast(findGround2.position)), 2));
+        if this.showUI {
+          this.ui.DrawMark(groundPoint2);
+          this.ui.DrawText(groundPoint2, FloatToStringPrec(Vector4.Distance(fr_tire, Cast(findGround2.position)), 2));
+        }
       }
       if TraceResult.IsValid(findGround3) {
         groundPoint3 = Vector4.Vector3To4(findGround3.position) - this.stats.d_velocity * timeDelta;
-        this.ui.DrawMark(groundPoint3);
-        this.ui.DrawText(groundPoint3, FloatToStringPrec(Vector4.Distance(bl_tire, Cast(findGround3.position)), 2));
+        if this.showUI {
+          this.ui.DrawMark(groundPoint3);
+          this.ui.DrawText(groundPoint3, FloatToStringPrec(Vector4.Distance(bl_tire, Cast(findGround3.position)), 2));
+        }
       }
       if TraceResult.IsValid(findGround4) {
         groundPoint4 = Vector4.Vector3To4(findGround4.position) - this.stats.d_velocity * timeDelta;
-        this.ui.DrawMark(groundPoint4);
-        this.ui.DrawText(groundPoint4, FloatToStringPrec(Vector4.Distance(br_tire, Cast(findGround4.position)), 2));
+        if this.showUI {
+          this.ui.DrawMark(groundPoint4);
+          this.ui.DrawText(groundPoint4, FloatToStringPrec(Vector4.Distance(br_tire, Cast(findGround4.position)), 2));
+        }
       }
 
       if TraceResult.IsValid(findGround1) && TraceResult.IsValid(findGround2) && TraceResult.IsValid(findGround3) && TraceResult.IsValid(findGround4) {
@@ -1033,94 +977,6 @@ public class FlightController extends IScriptable {
         // this.distance = distance * (1.0 - this.distanceEase) + this.distance * (this.distanceEase);
         this.distance = distance;
         
-        // let points: array<Vector2> = [
-        //   this.ui.ScreenXY(groundPoints[0]), 
-        //   this.ui.ScreenXY(groundPoints[1]),
-        //   this.ui.ScreenXY(groundPoints[2]),
-        //   this.ui.ScreenXY(groundPoints[3]),
-        //   this.ui.ScreenXY(groundPoints[0])
-        // ]; 
-
-        // let quad = inkWidgetBuilder.inkShape(n"shape")
-        //   .Reparent(this.ui.GetMarksWidget())
-        //   // .ChangeShape(n"Rectangle")
-        //   .Size(1920.0 * 2.0, 1080.0 * 2.0)
-        //   .UseNineSlice(true)
-        //   .ShapeVariant(inkEShapeVariant.FillAndBorder)
-        //   .LineThickness(3.0)
-        //   .FillOpacity(0.01)
-        //   .Tint(ThemeColors.ElectricBlue())
-        //   .BorderColor(ThemeColors.ElectricBlue())
-        //   .BorderOpacity(0.05)
-        //   .BuildShape();
-        // quad.SetVertexList(points);
-
-        // this.secondCounter += timeDelta;
-        // if this.secondCounter > 1.0 {
-        //   this.secondCounter -= 1.0;
-        // }
-
-        // let higherGroundPoints = groundPoints;
-        // higherGroundPoints[0].Z = higherGroundPoints[0].Z * (this.secondCounter) + fl_tire.Z * (1.0 - this.secondCounter);
-        // higherGroundPoints[1].Z = higherGroundPoints[1].Z * (this.secondCounter) + fr_tire.Z * (1.0 - this.secondCounter);
-        // higherGroundPoints[2].Z = higherGroundPoints[2].Z * (this.secondCounter) + bl_tire.Z * (1.0 - this.secondCounter);
-        // higherGroundPoints[3].Z = higherGroundPoints[3].Z * (this.secondCounter) + br_tire.Z * (1.0 - this.secondCounter);
-
-        // let points2: array<Vector2> = [
-        //   this.ui.ScreenXY(higherGroundPoints[0]), 
-        //   this.ui.ScreenXY(higherGroundPoints[1]),
-        //   this.ui.ScreenXY(higherGroundPoints[2]),
-        //   this.ui.ScreenXY(higherGroundPoints[3]),
-        //   this.ui.ScreenXY(higherGroundPoints[0])
-        // ]; 
-        
-        // let quad2 = inkWidgetBuilder.inkShape(n"shape2")
-        //   .Reparent(this.ui.GetMarksWidget())
-        //   // .ChangeShape(n"Rectangle")
-        //   .Size(1920.0 * 2.0, 1080.0 * 2.0)
-        //   .UseNineSlice(true)
-        //   .ShapeVariant(inkEShapeVariant.FillAndBorder)
-        //   .LineThickness(3.0)
-        //   .FillOpacity(0.0)
-        //   .Tint(ThemeColors.ElectricBlue())
-        //   .BorderColor(ThemeColors.ElectricBlue())
-        //   .BorderOpacity(0.1 * this.secondCounter)
-        //   .Visible(true)
-        //   .BuildShape();
-        // quad2.SetVertexList(points2);
-
-        // level plane - not that useful right now
-        // let higherGroundPoints = groundPoints;
-        // let maxZ = MaxF(MaxF(groundPoints[0], groundPoints[1]), MaxF(groundPoints[2], groundPoints[3]));
-        // higherGroundPoints[0].Z = maxZ;
-        // higherGroundPoints[1].Z = maxZ;
-        // higherGroundPoints[2].Z = maxZ;
-        // higherGroundPoints[3].Z = maxZ;
-
-        // let points2: array<Vector2> = [
-        //   this.ui.ScreenXY(higherGroundPoints[0]), 
-        //   this.ui.ScreenXY(higherGroundPoints[1]),
-        //   this.ui.ScreenXY(higherGroundPoints[2]),
-        //   this.ui.ScreenXY(higherGroundPoints[3]),
-        //   this.ui.ScreenXY(higherGroundPoints[0])
-        // ]; 
-        
-        // let quad2 = inkWidgetBuilder.inkShape(n"shape2")
-        //   .Reparent(this.ui.GetMarksWidget())
-        //   // .ChangeShape(n"Rectangle")
-        //   .Size(1920.0 * 2.0, 1080.0 * 2.0)
-        //   .UseNineSlice(true)
-        //   .ShapeVariant(inkEShapeVariant.FillAndBorder)
-        //   .LineThickness(3.0)
-        //   .FillOpacity(0.0)
-        //   .Tint(ThemeColors.ElectricBlue())
-        //   .BorderColor(ThemeColors.ElectricBlue())
-        //   .BorderOpacity(0.01)
-        //   .Visible(true)
-        //   .BuildShape();
-        // quad.SetVertexList(points2);
-
-
         // FromVariant(scriptInterface.GetStateVectorParameter(physicsStateValue.Radius)) maybe?
         let normal = (Vector4.Normalize(Cast(findGround1.normal)) + Vector4.Normalize(Cast(findGround2.normal)) + Vector4.Normalize(Cast(findGround3.normal)) + Vector4.Normalize(Cast(findGround4.normal))) / 4.0;
         // this.normal = Vector4.Interpolate(this.normal, normal, this.normalEase);
@@ -1162,148 +1018,87 @@ public class FlightController extends IScriptable {
         idealNormal = this.normal;
       }
     }
-    
-    // let text = inkWidgetBuilder.inkText(n"text")
-    //   .Reparent(this.ui.GetMarksWidget())
-    //   .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
-    //   .FontSize(20)
-    //   .Anchor(0.0, 0.5)
-    //   .Tint(ThemeColors.ElectricBlue())
-    //   .Text(this.hovering ? "Hovering from " + FloatToStringPrec(this.distance, 2) + " to " + FloatToStringPrec(this.hoverHeight, 2): "Flying at " + FloatToStringPrec(this.distance, 2))
-    //   .HAlign(inkEHorizontalAlign.Left)
-    //   .Margin(0.0, 0.0, 0.0, 0.0)
-    //   .Translation(1100, 320)
-    //   // .Overflow(textOverflowPolicy.AdjustToSize)
-    //   .BuildText();
 
-    // let text2 = inkWidgetBuilder.inkText(n"text2")
-    //   .Reparent(this.ui.GetMarksWidget())
-    //   .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
-    //   .FontSize(20)
-    //   .Anchor(0.0, 0.5)
-    //   .Tint(ThemeColors.ElectricBlue())
-    //   .Text("Current Input Context: " + ToString(stateContext.GetStateMachineCurrentState(n"InputContext")))
-    //   .HAlign(inkEHorizontalAlign.Left)
-    //   .Margin(0.0, 0.0, 0.0, 0.0)
-    //   .Translation(1100, 350)
-    //   // .Overflow(textOverflowPolicy.AdjustToSize)
-    //   .BuildText();
+    // idealNormal += this.stats.d_right * this.yaw.GetValue() * this.rollWithYaw;
 
-    //   let text3 = inkWidgetBuilder.inkText(n"text3")
-    //   .Reparent(this.ui.GetMarksWidget())
-    //   .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
-    //   .FontSize(20)
-    //   .Anchor(0.0, 0.5)
-    //   .Tint(ThemeColors.ElectricBlue())
-    //   .Text("Current Vehicle State: " + ToString(stateContext.GetStateMachineCurrentState(n"Vehicle")))
-    //   .HAlign(inkEHorizontalAlign.Left)
-    //   .Margin(0.0, 0.0, 0.0, 0.0)
-    //   .Translation(1100, 380)
-    //   // .Overflow(textOverflowPolicy.AdjustToSize)
-    //   .BuildText();
+    idealNormal = Vector4.RotateAxis(idealNormal, this.stats.d_forward, this.yaw.GetValue() * this.rollWithYaw);
+    idealNormal = Vector4.RotateAxis(idealNormal, this.stats.d_right, this.lift.GetValue() * this.pitchWithLift);
 
     this.pitchPID.SetRatio(this.stats.d_speedRatio * AbsF(Vector4.Dot(this.stats.d_direction, this.stats.d_forward)));
     this.rollPID.SetRatio(this.stats.d_speedRatio * AbsF(Vector4.Dot(this.stats.d_direction, this.stats.d_right)));
 
-    hoverCorrection = this.hoverEnv.GetCorrectionClamped(heightDifference, timeDelta, this.hoverClamp);
+    hoverCorrection = this.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, this.hoverClamp) / this.hoverClamp;
     // pitchCorrection = this.pitchPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(idealNormal, this.stats.d_forward)) + this.lift.GetValue() * this.pitchWithLift, timeDelta, 10.0) + this.pitch.GetValue() / 10.0;
     // rollCorrection = this.rollPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(idealNormal, this.stats.d_right)), timeDelta, 10.0) + this.yaw.GetValue() * this.rollWithYaw + this.roll.GetValue() / 10.0;
     let pitchDegOff = 90.0 - AbsF(Vector4.GetAngleDegAroundAxis(idealNormal, this.stats.d_forward, this.stats.d_right));
     let rollDegOff = 90.0 - AbsF(Vector4.GetAngleDegAroundAxis(idealNormal, this.stats.d_right, this.stats.d_forward));
-    if AbsF(pitchDegOff) < 80.0 && AbsF(rollDegOff) < 80.0 {
-      pitchCorrection = this.pitchPID.GetCorrectionClamped(pitchDegOff / 90.0 + this.lift.GetValue() * this.pitchWithLift, timeDelta, 10.0) + this.pitch.GetValue() / 10.0;
-      rollCorrection = this.rollPID.GetCorrectionClamped(rollDegOff / 90.0 + this.yaw.GetValue() * this.rollWithYaw, timeDelta, 10.0) + this.roll.GetValue() / 10.0;
-    // let angle: Float = Vector4.GetAngleDegAroundAxis(Vector4.Interpolate(this.stats.d_forward, direction, this.stats.d_speedRatio * this.velocityPointing), this.stats.d_forward, new Vector4(0.0, 0.0, 1.0, 0.0));
-//    let angle: Float = Vector4.GetAngleDegAroundAxis(direction, this.stats.d_forward, new Vector4(0.0, 0.0, 1.0, 0.0));
+    if AbsF(pitchDegOff) < 80.0  {
+      // pitchCorrection = this.pitchPID.GetCorrectionClamped(pitchDegOff / 90.0 + this.lift.GetValue() * this.pitchWithLift, timeDelta, 10.0) + this.pitch.GetValue() / 10.0;
+      pitchCorrection = this.pitchPID.GetCorrectionClamped(pitchDegOff / 90.0, timeDelta, 10.0) + this.pitch.GetValue() / 10.0;
     }
+    if AbsF(rollDegOff) < 80.0 {
+      // rollCorrection = this.rollPID.GetCorrectionClamped(rollDegOff / 90.0 + this.yaw.GetValue() * this.rollWithYaw, timeDelta, 10.0) + this.roll.GetValue() / 10.0;
+      rollCorrection = this.rollPID.GetCorrectionClamped(rollDegOff / 90.0, timeDelta, 10.0) + this.roll.GetValue() / 10.0;
+    }
+    // adjust with speed ratio 
+    pitchCorrection = pitchCorrection * (this.pitchCorrectionFactor + 1.0 * this.pitchCorrectionFactor * this.stats.d_speedRatio);
+    rollCorrection = rollCorrection * (this.rollCorrectionFactor + 1.0 * this.rollCorrectionFactor * this.stats.d_speedRatio);
     let changeAngle: Float = Vector4.GetAngleDegAroundAxis(Quaternion.GetForward(this.stats.d_lastOrientation), this.stats.d_forward, this.stats.d_up);
     if AbsF(pitchDegOff) < 30.0 && AbsF(rollDegOff) < 30.0 {
       let directionAngle: Float = Vector4.GetAngleDegAroundAxis(this.stats.d_direction, this.stats.d_forward, this.stats.d_up);
       this.yawPID.integralFloat *= (1.0 - AbsF(this.yaw.GetValue()));
-      yawCorrection = this.yawPID.GetCorrection(directionAngle, timeDelta);
+      yawCorrection = this.yawPID.GetCorrectionClamped(directionAngle, timeDelta, 10.0) / 10.0;
     }
     yawCorrection += this.yawD * changeAngle / timeDelta;
 
-    let velocityDamp: Vector4 = MaxF(this.brake.GetValue() * this.brakeFactor, this.airResistance) * this.stats.d_velocity * this.stats.s_mass;
+    let dampFactor = -MaxF(this.brake.GetValue() * this.brakeFactor, this.airResistance);
+    let velocityDamp: Vector4 = this.stats.d_velocity * dampFactor;
+    let angularDamp: EulerAngles = this.stats.d_angularVelocity * dampFactor;
     // so we don't get impulsed by the speed limit (100 m/s, i think)
     if this.stats.d_speed > 90.0 {
       velocityDamp *= (1.0 + PowF((this.stats.d_speed - 90.0) / 10.0, 2.0) * 1000.0);
     }
 
-    // let yawDirectionality: Float = (this.stats.d_speedRatio + AbsF(this.yaw.GetValue()) * this.swayWithYaw) * this.stats.s_mass * this.yawDirectionalityFactor;
-    let yawDirectionality: Float = this.stats.d_speedRatio * this.stats.s_mass * this.yawDirectionalityFactor;
-    let liftForce: Float = hoverCorrection * this.stats.s_mass * this.hoverFactor * 9.8;
+    // let yawDirectionality: Float = (this.stats.d_speedRatio + AbsF(this.yaw.GetValue()) * this.swayWithYaw) * this.yawDirectionalityFactor;
+    let yawDirectionality: Float = this.stats.d_speedRatio * this.yawDirectionalityFactor;
+    let liftForce: Float = hoverCorrection * this.hoverFactor * 9.8;
     // actual in-game mass (i think)
-    this.averageMass = this.averageMass * 0.99 + (liftForce / 9.8) * 0.01;
+    // this.averageMass = this.averageMass * 0.99 + (liftForce / 9.8) * 0.01;
     // FlightLog.Info(ToString(this.averageMass) + " vs " + ToString(this.stats.s_mass));
-    let surgeForce: Float = this.surge.GetValue() * this.stats.s_mass * this.surgeFactor;
+    let surgeForce: Float = this.surge.GetValue() * this.surgeFactor;
 
     //this.CreateImpulse(this.stats.d_position, this.stats.d_right * Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right) * yawDirectionality / 2.0 * timeDelta);
 
-    let combinedVector: Vector4 = new Vector4(0.0, 0.0, 0.0, 0.0);
+    let combinedForce: Vector4 = new Vector4(0.0, 0.0, 0.0, 0.0);
+    let combinedTorque: Vector4 = new Vector4(0.0, 0.0, 0.0, 0.0);
 
-    // yawDirectionality
-    // this.CreateImpulse(this.stats.d_position, this.stats.d_forward * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta);
-    combinedVector += this.stats.d_forward * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta;
-    // this.CreateImpulse(this.stats.d_position, -this.stats.d_direction * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta);
-    combinedVector += -this.stats.d_direction * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta;
+    // yawDirectionality - redirect non-directional velocity to vehicle forward
+    combinedForce += this.stats.d_forward * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta;
+    combinedForce += -this.stats.d_direction * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta;
     // lift
-    // this.CreateImpulse(this.stats.d_position, new Vector4(0.00, 0.00, liftForce + this.stats.d_speedRatio * liftForce, 0.00) * timeDelta);
-    combinedVector += new Vector4(0.00, 0.00, liftForce + this.stats.d_speedRatio * liftForce, 0.00) * timeDelta;
+    combinedForce += new Vector4(0.00, 0.00, liftForce + this.stats.d_speedRatio * liftForce, 0.00) * timeDelta;
     // surge
-    // this.CreateImpulse(this.stats.d_position, this.stats.d_forward * surgeForce * timeDelta);
-    combinedVector += this.stats.d_forward * surgeForce * timeDelta;
+    combinedForce += this.stats.d_forward * surgeForce * timeDelta;
+    // directional brake
+    combinedForce += velocityDamp * timeDelta;
     // pitch correction
-    let totalPitchCorrection = this.stats.s_momentOfInertia.X * pitchCorrection * (this.pitchCorrectionFactor + 1.0 * this.pitchCorrectionFactor * this.stats.d_speedRatio) * timeDelta;
-    this.CreateImpulse(this.stats.d_position - this.stats.d_up,       this.stats.d_forward * -totalPitchCorrection);
-    this.CreateImpulse(this.stats.d_position + this.stats.d_up,       this.stats.d_forward *  totalPitchCorrection);
+    combinedTorque.X = pitchCorrection * timeDelta;
     // roll correction
-    let totalRollCorrection = this.stats.s_momentOfInertia.Y * rollCorrection * (this.rollCorrectionFactor + 1.0 * this.rollCorrectionFactor * this.stats.d_speedRatio) * timeDelta;
-    this.CreateImpulse(this.stats.d_position - this.stats.d_right,    this.stats.d_up *       totalRollCorrection);
-    this.CreateImpulse(this.stats.d_position + this.stats.d_right,    this.stats.d_up *      -totalRollCorrection);
+    combinedTorque.Y = rollCorrection * timeDelta;
     // yaw correction
-    let totalYawCorrecion = this.stats.s_momentOfInertia.Z * (yawCorrection * this.yawCorrectionFactor + this.yaw.GetValue() * this.yawFactor) * timeDelta;
-    this.CreateImpulse(this.stats.d_position + this.stats.d_forward,  this.stats.d_right *    totalYawCorrecion);
-    this.CreateImpulse(this.stats.d_position - this.stats.d_forward,  this.stats.d_right *   -totalYawCorrecion);
-    // brake
-    // this.CreateImpulse(this.stats.d_position, -velocityDamp * timeDelta);
-    combinedVector += -velocityDamp * timeDelta;
+    combinedTorque.Z = (yawCorrection * this.yawCorrectionFactor + this.yaw.GetValue() * this.yawFactor) * timeDelta;
+    // rotational brake
+    // combinedTorque += (angularDamp * timeDelta) * 0.01;
 
-    this.CreateImpulse(this.stats.d_position, combinedVector);
-
-    // this.audio.DrawSlotPositions(this.ui);
+    this.CreateImpulse(combinedForce);
+    this.CreateMoment(combinedTorque);
 
     this.UpdateAudioParams(timeDelta);
     
-
-    // let listener = this.player.FindComponentByName(n"soundListener") as IPlacedComponent;
-    // let listenerPosition = Matrix.GetTranslation(listener.GetLocalToWorld());
-    // let listenerForward = Matrix.GetAxisY(listener.GetLocalToWorld());
-
-    // this.ui.DrawMark(listenerPosition);
-    // this.ui.DrawText(listenerPosition, "Listener");
-
-    // let normalLine = inkWidgetBuilder.inkShape(n"normalLine")
-    //   .Reparent(this.ui.GetMarksWidget())
-    //   .Size(1920.0 * 2.0, 1080.0 * 2.0)
-    //   .UseNineSlice(true)
-    //   .ShapeVariant(inkEShapeVariant.FillAndBorder)
-    //   .LineThickness(3.0)
-    //   .FillOpacity(0.0)
-    //   .Tint(ThemeColors.ElectricBlue())
-    //   .BorderColor(ThemeColors.ElectricBlue())
-    //   .BorderOpacity(0.1)
-    //   .Visible(true)
-    //   .BuildShape();
-    // normalLine.SetVertexList([this.ui.ScreenXY(listenerPosition), this.ui.ScreenXY(listenerPosition + listenerForward)]);
-    // this.ui.DrawMark(listenerPosition + listenerForward);
-
-
     if this.collisionTimer < this.collisionRecoveryDelay + this.collisionRecoveryDuration {
       this.collisionTimer += timeDelta;
     }
 
-    // (this.GetVehicle().GetPS() as VehicleComponentPS).SetThrusterState(this.surge.GetValue() > 0.99);
     if (this.showUI) {
       this.ui.Update(timeDelta);
       this.ui.DrawText(this.stats.d_visualPosition, FloatToStringPrec(1.0 / this.timeDelta, 4));
@@ -1311,18 +1106,25 @@ public class FlightController extends IScriptable {
     this.timeDelta = timeDelta * 0.01 + this.timeDelta * 0.99;
   }
 
-  // a generalized method for torque might be nice too
-  public func CreateImpulse(position: Vector4, direction: Vector4) -> Void {
+  public func CreateImpulse(direction: Vector4, opt offset: Vector4) -> Void {
     let impulseEvent: ref<PhysicalImpulseEvent> = new PhysicalImpulseEvent();
     impulseEvent.radius = 1.0;
-    // impulseEvent.bodyIndex = 15u;
-    // impulseEvent.shapeIndex = 2u;
-    impulseEvent.worldPosition = Vector4.Vector4To3(position);
+    impulseEvent.worldPosition = Vector4.Vector4To3(this.stats.d_position + offset);
     if this.collisionTimer < this.collisionRecoveryDelay + this.collisionRecoveryDuration {
       direction *= MaxF(0.0, (this.collisionTimer - this.collisionRecoveryDelay) / this.collisionRecoveryDuration);
     }
-    impulseEvent.worldImpulse = Vector4.Vector4To3(direction);
+    impulseEvent.worldImpulse = Vector4.Vector4To3(direction * this.stats.s_mass);
     this.GetVehicle().QueueEvent(impulseEvent);
+  }
+
+  public func CreateMoment(moment: Vector4) ->  Void {
+    moment = this.GetVehicle().GetInteriaTensor() * moment;
+    this.CreateImpulse(this.stats.d_forward * moment.X, this.stats.d_up);
+    this.CreateImpulse(this.stats.d_forward * -moment.X, -this.stats.d_up);
+    this.CreateImpulse(this.stats.d_up * moment.Y, -this.stats.d_right);
+    this.CreateImpulse(this.stats.d_up * -moment.Y, this.stats.d_right);
+    this.CreateImpulse(this.stats.d_right * moment.Z, this.stats.d_forward);
+    this.CreateImpulse(this.stats.d_right * -moment.Z, -this.stats.d_forward);
   }
 
   public func ProcessImpact(impact: Float) {

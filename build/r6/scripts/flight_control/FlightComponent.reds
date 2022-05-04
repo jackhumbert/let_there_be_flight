@@ -54,7 +54,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     //FlightLog.Info("[FlightComponent] OnGameDetach: " + this.GetVehicle().GetDisplayName());
     GameInstance.GetStatPoolsSystem(this.GetVehicle().GetGame()).RequestUnregisteringListener(Cast(this.GetVehicle().GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     this.UnregisterVehicleTPPBBListener();
-    }
+  }
   
   private final func RegisterInputListener() -> Void {
     let playerPuppet: ref<PlayerPuppet> = GameInstance.GetPlayerSystem(this.GetVehicle().GetGame()).GetLocalPlayerMainGameObject() as PlayerPuppet;
@@ -129,23 +129,29 @@ public class FlightComponent extends ScriptableDeviceComponent {
     let vehicle: ref<VehicleObject> = this.GetVehicle();
     let gameInstance: GameInstance = vehicle.GetGame();
     let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
-    if VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), vehicle) {
-      let biggestImpact: Float;
-      let desiredChange: Float;
-      let i: Int32 = 0;
-      while i < 16 {
-        desiredChange = evt.desiredChange[i];
-        if desiredChange > biggestImpact {
-          biggestImpact = desiredChange;
-        };
-        i += 1;
+    let biggestImpact: Float;
+    let desiredChange: Float;
+    let i: Int32 = 0;
+    while i < 16 {
+      desiredChange = evt.desiredChange[i];
+      if desiredChange > biggestImpact {
+        biggestImpact = desiredChange;
       };
+      i += 1;
+    };
       // FlightLog.Info("[FlightComponent] OnGridDestruction: " + FloatToStringPrec(biggestImpact, 2));
+    if VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), vehicle) {
       if biggestImpact > 0.03 {
         FlightController.GetInstance().ProcessImpact(biggestImpact);
       }
     } else {
+      if biggestImpact > 0.50 {
+        GameObjectEffectHelper.StartEffectEvent(vehicle, n"explosion");
+      }
       this.FireVerticalImpulse();
+      // let event = new vehicleDriveToPointEvent();
+      // event.targetPos = new Vector3(0.0, 0.0, 0.0);
+      // vehicle.QueueEvent(event);
     }
   }
   
