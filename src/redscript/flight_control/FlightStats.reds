@@ -1,5 +1,6 @@
 public class FlightStats {
   public let vehicle: wref<VehicleObject>;
+  public let player: wref<PlayerPuppet>;
   public let s_record: wref<Vehicle_Record>;
   // public let s_fcRecord: wref<FlightStatsData_Record>;
   public let s_fc_record: wref<FlightControl_Record>;
@@ -8,7 +9,8 @@ public class FlightStats {
   public let s_wheelDimensions: wref<VehicleWheelDimensionsSetup_Record>;
   public let s_wheelDriving: wref<VehicleWheelDrivingSetup_Record>;
   public let s_mass: Float;
-  public let s_centerOfMassOffset: Vector4;
+  public let s_playerMass: Float;
+  public let s_centerOfMass: Transform;
   public let s_momentOfInertia: Vector4;
   public let s_forwardWeightTransferFactor: Float;
 
@@ -22,6 +24,7 @@ public class FlightStats {
   public let d_orientationChange: Quaternion;
   public let d_angularVelocity: EulerAngles;
   public let d_velocity: Vector4;
+  public let d_velocity2D: Vector4;
   public let d_speed: Float;
   public let d_speedRatio: Float;
   public let d_speedRatioSquared: Float;
@@ -31,17 +34,25 @@ public class FlightStats {
 
   private let reset: Bool;
   private let ipp: ref<IPositionProvider>;
+  private let iop: ref<IOrientationProvider>;
 
-  public static func Create(vehicle: wref<VehicleObject>) -> ref<FlightStats> {
+  public static func Create(player: wref<PlayerPuppet>) -> ref<FlightStats> {
     let self: ref<FlightStats> = new FlightStats();
-    self.vehicle = vehicle;
+    self.player = player;
+    self.vehicle = GetMountedVehicle(player);
+    self.vehicle.chassis = self.vehicle.FindComponentByName(n"Chassis") as vehicleChassisComponent;
     self.reset = false;
     self.UpdateStatic();
-    // self.d_position = self.vehicle.GetWorldPosition() + self.s_centerOfMassOffset;
-    self.ipp = IPositionProvider.CreateEntityPositionProvider(self.vehicle);
+    // self.d_position = self.vehicle.GetWorldPosition() + self.s_centerOfMass;
+    // self.ipp = IPositionProvider.CreateEntityPositionProvider(self.vehicle);
+    self.ipp = IPositionProvider.CreatePlacedComponentPositionProvider(self.vehicle.chassis); //, Vector4.Vector4To3(self.vehicle.chassis.GetInitialPosition()));
     self.ipp.CalculatePosition(self.d_position);
-    self.d_position += self.s_centerOfMassOffset;
-    self.d_orientation = self.vehicle.GetWorldOrientation();
+    // CreateMoveComponentVelocityProvider(this.player);
+    // self.d_position = self.vehicle.chassis.GetLocalToWorld(); * self.s_centerOfMass;
+    // self.d_position = self.vehicle.chassis.GetLocalToWorld() * new Vector4(0.0, 0.0, 0.0, 0.0);
+    // self.d_position += self.s_centerOfMass;
+    self.d_orientation = Matrix.ToQuat(self.vehicle.chassis.GetLocalToWorld());
+    // self.d_orientation = self.vehicle.chassis.GetWorldOrientation();
     // self.d_position = Vector4.EmptyVector();
     return self;
   }
@@ -71,12 +82,16 @@ public class FlightStats {
     // this.s_mass = this.s_fc_record.mass;
     // if this.s_mass == 0.0 {
       this.s_mass = this.vehicle.GetTotalMass(); // might be dynamic? pulled from otherPhysicsData->totalMass
+      this.s_playerMass = 60.0;
     // }
     // small sample size (2) for this value under limited circumstances
     this.s_mass *= 1.396;
     // need to just dynamically calculate this instead of messing around with random values
-    this.s_centerOfMassOffset = Cast(this.s_driveModelData.Center_of_mass_offset());
-    // this.s_centerOfMassOffset += this.s_fcRecord.comOffset_position;
+    // this.s_centerOfMass = Cast(this.s_driveModelData.Center_of_mass_offset());
+    this.s_centerOfMass = this.vehicle.chassis.GetComOffset();
+    // let playerMass = 80.0;
+    // this.s_centerOfMass = playerMass * (Matrix.GetInverted(this.vehicle.chassis.GetLocalToWorld()) * this.player.GetWorldPosition()) / (playerMass + this.s_mass);
+    // this.s_centerOfMass += this.s_fcRecord.comOffset_position;
     // this.s_momentOfInertia = Cast(this.s_driveModelData.MomentOfInertia());
     // this.s_momentOfInertia = Cast(this.s_fcRecord.inertia);
     // this isn't defined for all vehicles, so throw some numbers in for now
@@ -93,26 +108,41 @@ public class FlightStats {
   }
   
   public final func UpdateDynamic(timeDelta: Float) -> Void {
-    let orientation = this.vehicle.GetWorldOrientation();
-    this.d_orientationChange = Quaternion.MulInverse(orientation, this.d_orientation);
-    this.d_angularVelocity = Quaternion.ToEulerAngles(this.d_orientationChange) / timeDelta;
     this.d_lastOrientation = this.d_orientation;
+    // let orientation = this.vehicle.GetWorldOrientation();
+    let orientation = Matrix.ToQuat(this.vehicle.chassis.GetLocalToWorld());
     this.d_orientation = orientation;
+    this.d_orientationChange = Quaternion.MulInverse(this.d_orientation, this.d_lastOrientation);
+    this.d_angularVelocity = Quaternion.ToEulerAngles(this.d_orientationChange) / timeDelta;
     Quaternion.GetAxes(this.d_orientation, this.d_forward, this.d_right, this.d_up);
     // this.d_forward = Vector4.Normalize(Quaternion.GetForward(this.d_orientation));
     // this.d_right = Vector4.Normalize(Quaternion.GetRight(this.d_orientation));
     // this.d_up = Vector4.Normalize(Quaternion.GetUp(this.d_orientation));
+    // this.d_forward = Quaternion.Transform(this.s_centerOfMass.orientation, this.d_forward);
+    // this.d_right = Quaternion.Transform(this.s_centerOfMass.orientation, this.d_right);
+    // this.d_up = Quaternion.Transform(this.s_centerOfMass.orientation, this.d_up);
     
+    // let playerMass = 80.0;
+
+    // this.s_centerOfMass.position = this.s_playerMass * (Matrix.GetInverted(this.vehicle.GetLocalToWorld()) * this.player.GetWorldPosition()) / (this.s_playerMass + this.s_mass);
+    this.s_centerOfMass.position = this.s_playerMass * (Matrix.GetInverted(this.vehicle.chassis.GetLocalToWorld()) * this.player.GetWorldPosition()) / (this.s_playerMass + this.s_mass);
+    // this.s_centerOfMass /= this.s_centerOfMass.W;
     
     // GameInstance.GetSpatialQueriesSystem(FlightController.GetInstance().gameInstance).GetGeometryDescriptionSystem();
     let position: Vector4;
     // if IsDefined(this.vehicle.chassis) {
-      position = this.vehicle.chassis.GetLocalToWorld() * this.vehicle.chassis.GetComOffset();
+      // position = this.vehicle.GetWorldPosition() * this.s_mass;
+      // position += this.player.GetWorldPosition() * this.s_playerMass;
+      // position /= (this.s_mass + this.s_playerMass);
+      // position /= position.W;
+      // position = this.vehicle.chassis.GetLocalToWorld() * -this.vehicle.chassis.GetComOffset();
+      // position = this.vehicle.chassis.GetLocalToWorld() * this.s_centerOfMass;
+      // position = this.vehicle.GetLocalToWorld() * this.s_centerOfMass;
     // } else {
-      // position = this.vehicle.GetWorldPosition() + this.s_centerOfMassOffset;
+      // position = this.vehicle.GetWorldPosition() + this.s_centerOfMass;
     // }
-    // this.ipp.CalculatePosition(position);
-    // position += this.s_centerOfMassOffset;
+    this.ipp.CalculatePosition(position);
+    position += Quaternion.Transform(this.d_orientation, this.s_centerOfMass.position);
 
     // if Vector4.Length(position - this.d_position) / timeDelta <= this.d_speed * 1.1 {
     // if this.reset {
@@ -134,65 +164,14 @@ public class FlightStats {
     this.d_speed2D = Vector4.Length2D(this.d_velocity);
     this.d_direction = Vector4.Normalize(this.d_velocity);
     this.d_direction2D = Vector4.Normalize2D(this.d_velocity);
+    this.d_velocity2D = this.d_direction2D * this.d_speed2D;
 
     // let minS = 0.3;
     // let maxS = 0.7;
     // let factor = Vector4.Distance(position, this.d_position) / timeDelta / this.d_speed;
     // this.d_position = this.d_position * (minS + (maxS - minS) * factor) + position * (1.0 - minS - (maxS - minS) * factor);
+    this.d_visualPosition = this.d_position;
     this.d_position =  position;
-    this.d_visualPosition = this.d_position - this.d_velocity * timeDelta;
+    // this.d_visualPosition = this.d_position - this.d_velocity * timeDelta;
   }
-}
-
-
-public static func OperatorMultiply(m: Matrix, v: Vector4) -> Vector4 {
-  return Vector4.Transform(m, v);
-}
-// public static func OperatorMultiply(vector: Vector4, matrix: Matrix) -> Vector4 {
-//   return Vector4.Transform(matrix, vector);
-// }
-
-public static func OperatorAssignMultiply(out v: Vector4, m: Matrix) -> Vector4 {
-  return m * v;
-}
-
-public static func OperatorXor(q: Quaternion, n: Int32) -> Quaternion {
-  let out = q;
-  while (n > 0) {
-    Quaternion.SetInverse(out);
-    n -= 1;
-  }
-  return out;
-}
-
-public static func OperatorMultiply(e: EulerAngles, f: Float) -> EulerAngles {
-  let out = e;
-  e.Roll *= f;
-  e.Yaw *= f;
-  e.Pitch += f;
-  return out;
-}
-
-public static func OperatorDivide(e: EulerAngles, f: Float) -> EulerAngles {
-  let out = e;
-  e.Roll /= f;
-  e.Yaw /= f;
-  e.Pitch /= f;
-  return out;
-}
-
-public static func OperatorAdd(e: EulerAngles, v: Vector4) -> Vector4 {
-  let out = v;
-  v.X += e.Pitch;
-  v.Y += e.Roll;
-  v.Z += e.Yaw;
-  return out;
-}
-
-public static func OperatorAdd(v: Vector4, e: EulerAngles) -> Vector4 {
-  return e + v;
-}
-
-public static func OperatorAssignAdd(out v: Vector4, e: EulerAngles) -> Vector4 {
-  return e + v;
 }

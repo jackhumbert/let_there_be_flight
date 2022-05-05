@@ -174,7 +174,7 @@ void SetShapeResource(RED4ext::IScriptable *aContext,
 }
 
 void ChassisGetComOffset(RED4ext::IScriptable *aContext,
-                         RED4ext::CStackFrame *aFrame, RED4ext::Vector4 *aOut,
+                         RED4ext::CStackFrame *aFrame, RED4ext::Transform *aOut,
                          int64_t a4) {
   aFrame->code++; // skip ParamEnd
 
@@ -190,7 +190,7 @@ void ChassisGetComOffset(RED4ext::IScriptable *aContext,
   auto params = hpsb->params;
 
   if (aOut) {
-    *aOut = params.comOffset.position;
+    *aOut = params.comOffset;
   }
 }
 

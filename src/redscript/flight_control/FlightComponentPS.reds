@@ -51,9 +51,9 @@ public final const func IsPotentiallyQuickHackable() -> Bool {
 @replaceMethod(VehicleComponentPS)
 protected func GetQuickHackActions(out actions: array<ref<DeviceAction>>, context: GetActionsContext) -> Void {
   FlightLog.Info("[VehicleComponentPS] GetQuickHackActions");
-  let currentAction: ref<ScriptableDeviceAction>;
+  // let currentAction: ref<ScriptableDeviceAction>;
   let controllerPS: ref<vehicleControllerPS> = this.GetVehicleControllerPS();
-  let vehicleState: vehicleEState = controllerPS.GetState();
+  // let vehicleState: vehicleEState = controllerPS.GetState();
   // if Equals(vehicleState, vehicleEState.Default) {
     // if !controllerPS.IsAlarmOn() {
       // currentAction = this.ActionForceCarAlarm();
@@ -84,7 +84,7 @@ protected func Initialize() -> Void {
 
 @addMethod(VehicleComponentPS)
 public func OnQuickHackFlightMalfunction(evt: ref<QuickHackFlightMalfunction>) -> EntityNotificationType {
-  let type: EntityNotificationType = this.OnQuickHackFlightMalfunction(evt);
+  // let type: EntityNotificationType = this.OnQuickHackFlightMalfunction(evt);
   // if Equals(type, EntityNotificationType.DoNotNotifyEntity) {
   //   return type;
   // };

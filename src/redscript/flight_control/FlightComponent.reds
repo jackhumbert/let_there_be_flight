@@ -27,6 +27,31 @@ public func ToggleFlightComponent(state: Bool) -> Void {
   this.m_flightComponent.Toggle(state);
 }
 
+@addMethod(VehicleObject)
+public func GetLocalToWorld() -> Matrix {
+  return WorldTransform.ToMatrix(this.GetWorldTransform());
+}
+
+@addMethod(VehicleObject)
+protected cb func OnPhysicalCollision(evt: ref<PhysicalCollisionEvent>) -> Bool {
+  FlightLog.Info("[VehicleObject] OnPhysicalCollision");
+  let vehicle = evt.otherEntity as VehicleObject;
+  if IsDefined(vehicle) {
+    let gameInstance: GameInstance = this.GetGame();
+    let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
+    let isPlayerMounted = VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), vehicle);
+    if isPlayerMounted {
+      // FlightController.GetInstance().ProcessImpact(evt.attackData.vehicleImpactForce);
+    } else {
+      let impulseEvent: ref<PhysicalImpulseEvent> = new PhysicalImpulseEvent();
+      impulseEvent.radius = 1.0;
+      impulseEvent.worldPosition = Vector4.Vector4To3(evt.worldPosition);
+      impulseEvent.worldImpulse = new Vector3(0.0, 0.0, 10000.0);
+      vehicle.QueueEvent(impulseEvent);
+    }
+  }
+}
+
 // Custom Classes
 
 public class FlightComponent extends ScriptableDeviceComponent {
@@ -129,31 +154,54 @@ public class FlightComponent extends ScriptableDeviceComponent {
     let vehicle: ref<VehicleObject> = this.GetVehicle();
     let gameInstance: GameInstance = vehicle.GetGame();
     let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
+    let isPlayerMounted = VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), vehicle);
     let biggestImpact: Float;
     let desiredChange: Float;
+    let gridState: Float;
     let i: Int32 = 0;
+    let gridID = 0;
     while i < 16 {
+      gridState = evt.state[i];
       desiredChange = evt.desiredChange[i];
       if desiredChange > biggestImpact {
         biggestImpact = desiredChange;
+        gridID = i;
       };
       i += 1;
     };
       // FlightLog.Info("[FlightComponent] OnGridDestruction: " + FloatToStringPrec(biggestImpact, 2));
-    if VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), vehicle) {
+    if isPlayerMounted {
       if biggestImpact > 0.03 {
         FlightController.GetInstance().ProcessImpact(biggestImpact);
       }
     } else {
-      if biggestImpact > 0.50 {
+      this.FireVerticalImpulse(gridID);
+      if biggestImpact > 0.30 {
         GameObjectEffectHelper.StartEffectEvent(vehicle, n"explosion");
       }
-      this.FireVerticalImpulse();
       // let event = new vehicleDriveToPointEvent();
       // event.targetPos = new Vector3(0.0, 0.0, 0.0);
       // vehicle.QueueEvent(event);
     }
   }
+
+  // protected cb func OnHit(evt: ref<gameHitEvent>) -> Bool {
+  //   let vehicle: ref<VehicleObject> = this.GetVehicle();
+  //   let gameInstance: GameInstance = vehicle.GetGame();
+  //   let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
+  //   let isPlayerMounted = VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), vehicle);
+  //   FlightLog.Info("[FlightComponent] OnPhysicalCollision: " + FloatToStringPrec(evt.attackData.vehicleImpactForce, 2));
+  //   if isPlayerMounted {
+  //       FlightController.GetInstance().ProcessImpact(evt.attackData.vehicleImpactForce);
+  //   } else {
+  //     let impulseEvent: ref<PhysicalImpulseEvent> = new PhysicalImpulseEvent();
+  //     impulseEvent.radius = 1.0;
+  //     impulseEvent.worldPosition = Vector4.Vector4To3(evt.hitPosition);
+  //     impulseEvent.worldImpulse = new Vector3(0.0, 0.0, evt.attackData.vehicleImpactForce);
+  //     this.GetVehicle().QueueEvent(impulseEvent);
+  //   }
+  // }
+
   
   protected cb func OnInteractionActivated(evt: ref<InteractionActivationEvent>) -> Bool {
     let radialRequest: ref<ResolveQuickHackRadialRequest>;
@@ -171,29 +219,100 @@ public class FlightComponent extends ScriptableDeviceComponent {
   }
   
   protected cb func OnActionEngineering(evt: ref<ActionEngineering>) -> Bool {
-    this.FireVerticalImpulse();
+    // this.FireVerticalImpulse();
   }
 
   public func OnQuickHackFlightMalfunction(evt: ref<QuickHackFlightMalfunction>) -> EntityNotificationType {
     FlightLog.Info("[FlightComponent] OnQuickHackFlightMalfunction");
-    let type: EntityNotificationType = this.OnQuickHackFlightMalfunction(evt);
+    // let type: EntityNotificationType = this.OnQuickHackFlightMalfunction(evt);
     // if Equals(type, EntityNotificationType.DoNotNotifyEntity) {
     //   return type;
     // };
     if evt.IsStarted() {
       // this.ExecutePSAction(this.FireVerticalImpulse());
-      this.FireVerticalImpulse();
+      // this.FireVerticalImpulse();
     };
     return EntityNotificationType.SendThisEventToEntity;
   }
 
-  public func FireVerticalImpulse() {
+  // gridID
+  // 0 rear left
+  // 1 rear right
+  // 2 -
+  // 3 -
+  // 4 door left
+  // 5 door right
+  // 6 front left
+  // 7 front right
+
+  public func FireVerticalImpulse(gridID: Int32, opt impulse: Float) {
     let impulseEvent: ref<PhysicalImpulseEvent> = new PhysicalImpulseEvent();
     impulseEvent.radius = 1.0;
-    impulseEvent.worldPosition = Vector4.Vector4To3(this.GetVehicle().GetWorldPosition());
-    impulseEvent.worldImpulse = new Vector3(0.0, 0.0, 10000.0);
+    let offset = new Vector4(0.0, 0.0, 0.0, 0.0);
+    if gridID == 0 {
+      offset = new Vector4(-0.5, -0.5, 0.0, 0.0);
+    }
+    if gridID == 1 {
+      offset = new Vector4(0.5, -0.5, 0.0, 0.0);
+    }
+    if gridID == 4 {
+      offset = new Vector4(-0.5, 0.0, 0.0, 0.0);
+    }
+    if gridID == 5 {
+      offset = new Vector4(0.5, 0.0, 0.0, 0.0);
+    }
+    if gridID == 6 {
+      offset = new Vector4(-0.5, 0.5, 0.0, 0.0);
+    }
+    if gridID == 7 {
+      offset = new Vector4(0.5, 0.5, 0.0, 0.0);
+    }
+    if impulse == 0.0 {
+      impulse = 1.0;
+    }
+    // FlightLog.Info("[FlightComponent] FireVerticalImpulse: " + gridID);
+    impulseEvent.worldPosition = Vector4.Vector4To3(this.GetVehicle().GetLocalToWorld() * offset);
+    impulseEvent.worldImpulse = new Vector3(0.0, 0.0, 10.0 * impulse * this.GetVehicle().GetTotalMass());
     this.GetVehicle().QueueEvent(impulseEvent);
   }
+
+  // protected cb func OnPhysicalCollision(evt: ref<PhysicalCollisionEvent>) -> Bool {
+  //   FlightLog.Info("[FlightComponent] OnPhysicalCollision");
+  //   let vehicle = this.GetVehicle();
+  //   let gameInstance: GameInstance = vehicle.GetGame();
+  //   let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
+  //   let isPlayerMounted = VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), this);
+  //   if isPlayerMounted {
+  //     // FlightController.GetInstance().ProcessImpact(evt.attackData.vehicleImpactForce);
+  //   } else {
+  //     let impulseEvent: ref<PhysicalImpulseEvent> = new PhysicalImpulseEvent();
+  //     impulseEvent.radius = 1.0;
+  //     impulseEvent.worldPosition = Vector4.Vector4To3(evt.worldPosition);
+  //     impulseEvent.worldImpulse = new Vector3(0.0, 0.0, 10000.0);
+  //     vehicle.QueueEvent(impulseEvent);
+  //   }
+  // }
+
+  // protected cb func OnHit(evt: ref<gameHitEvent>) -> Bool {
+  //   FlightLog.Info("[FlightComponent] OnHit: " + FloatToStringPrec(evt.attackData.vehicleImpactForce, 2));
+  //   let vehicle = this.GetVehicle();
+  //   let gameInstance: GameInstance = vehicle.GetGame();
+  //   let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
+  //   let isPlayerMounted = VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), this);
+  //   if isPlayerMounted {
+  //     FlightController.GetInstance().ProcessImpact(evt.attackData.vehicleImpactForce);
+  //   } else {
+  //     let impulseEvent: ref<PhysicalImpulseEvent> = new PhysicalImpulseEvent();
+  //     impulseEvent.radius = 1.0;
+  //     impulseEvent.worldPosition = Vector4.Vector4To3(evt.hitPosition);
+  //     impulseEvent.worldImpulse = new Vector3(0.0, 0.0, evt.attackData.vehicleImpactForce);
+  //     vehicle.QueueEvent(impulseEvent);
+  //   }
+  // }
+
+  // public cb func OnAnyEvent(evt: ref<Event>) {
+  //   FlightLog.Info("[FlightComponent] OnAnyEvent: " + ToString(evt.GetClassName()));
+  // }
 
   // hook into sound somehow
   // protected cb func OnVehicleOnPartDetached(evt: ref<VehicleOnPartDetachedEvent>) -> Bool {

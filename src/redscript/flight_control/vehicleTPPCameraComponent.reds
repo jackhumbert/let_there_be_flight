@@ -1,5 +1,5 @@
 public native class vehicleChassisComponent extends IPlacedComponent {
-    public native func GetComOffset() -> Vector4;
+    public native func GetComOffset() -> Transform;
 }
 
 native class vehicleTPPCameraComponent extends CameraComponent {
@@ -31,7 +31,7 @@ public native func GetUnk90() -> Matrix;
 @wrapMethod(MinimapContainerController)
 protected final func InitializePlayer(playerPuppet: ref<GameObject>) -> Void {
   wrappedMethod(playerPuppet);
-  FlightController.GetInstance().mmcc = this;
+  FlightController.GetInstance().ui.mmcc = this;
 }
 
 @addField(MinimapContainerController)
