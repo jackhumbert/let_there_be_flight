@@ -207,6 +207,19 @@ void VehicleGetInteriaTensor(RED4ext::IScriptable *aContext,
   }
 }
 
+void VehicleGetCenterOfMass(RED4ext::IScriptable *aContext,
+                             RED4ext::CStackFrame *aFrame,
+                             RED4ext::Vector3 *aOut, int64_t a4) {
+  aFrame->code++; // skip ParamEnd
+
+  auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
+  auto ps = v->physicsStruct;
+
+  if (aOut) {
+    *aOut = ps->centerOfMass;
+  }
+}
+
 void VehicleGetUnk90(RED4ext::IScriptable *aContext,
                      RED4ext::CStackFrame *aFrame, RED4ext::Matrix *aOut,
                      int64_t a4) {
@@ -449,7 +462,19 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
       rtti->GetType("Float"), "drivingDirectionCompensationAngleSmooth",
       nullptr, 0x4E8));
   cc->props.PushBack(RED4ext::CProperty::Create(
+      rtti->GetType("Bool"), "lockedCamera", nullptr, 0x48A));
+  cc->props.PushBack(RED4ext::CProperty::Create(
       rtti->GetType("WorldPosition"), "worldPosition", nullptr, 0x320));
+  cc->props.PushBack(RED4ext::CProperty::Create(
+      rtti->GetType("WorldTransform"), "worldTransform2", nullptr, 0x2B0));
+  cc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"),
+                                                "pitch", nullptr, 0x380));
+  cc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"),
+                                                "yaw", nullptr, 0x384));
+  cc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"),
+                                                "yawDelta", nullptr, 0x2D0));
+  cc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"),
+                                                "pitchDelta", nullptr, 0x2D4));
 
   auto vbc = rtti->GetClass("vehicleBaseObject");
   vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Bool"),
@@ -462,6 +487,10 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
       vbc, "GetInteriaTensor", "GetInteriaTensor", &VehicleGetInteriaTensor,
       {.isNative = true});
   vbc->RegisterFunction(getInteriaTensor);
+  auto getCenterOfMass = RED4ext::CClassFunction::Create(
+      vbc, "GetCenterOfMass", "GetCenterOfMass", &VehicleGetCenterOfMass,
+      {.isNative = true});
+  vbc->RegisterFunction(getCenterOfMass);
   auto getUnk90 = RED4ext::CClassFunction::Create(
       vbc, "GetUnk90", "GetUnk90", &VehicleGetUnk90, {.isNative = true});
   vbc->RegisterFunction(getUnk90);
@@ -493,6 +522,17 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
       eesc, "AddEffect", "AddEffect", &EffectSpawnerAddEffect,
       {.isNative = true});
   eesc->RegisterFunction(eescAddEffect);
+
+  
+  auto ecc = rtti->GetClass("entColliderComponent");
+  ecc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "mass",
+                                                 nullptr, 0x150));
+  ecc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "massOverride",
+                                                 nullptr, 0x14C));
+  ecc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Vector3"),
+                                                 "inertia", nullptr, 0x158));
+  ecc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Transform"),
+                                                 "comOffset", nullptr, 0x170));
 
   // using func_t = bool (*)(RED4ext::CBaseRTTIType*, int64_t,
   // RED4ext::ScriptInstance); RED4ext::RelocFunc<func_t> func(0x1400000);

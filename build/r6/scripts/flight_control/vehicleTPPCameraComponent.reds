@@ -6,7 +6,13 @@ native class vehicleTPPCameraComponent extends CameraComponent {
     // public native let isInAir: Bool;
     public native let drivingDirectionCompensationAngleSmooth: Float;
     public native let drivingDirectionCompensationSpeedCoef: Float;
+    public native let lockedCamera: Bool;
     public native let worldPosition: WorldPosition;
+    public native let worldTransform2: WorldTransform;
+    public native let pitch: Float;
+    public native let yaw: Float;
+    public native let pitchDelta: Float; // positive moves camera down
+    public native let yawDelta: Float; // positive moves camera right
     // public native let chassis: ref<vehicleChassisComponent>;
 }
 
@@ -18,6 +24,9 @@ public let chassis: ref<vehicleChassisComponent>;
 
 @addMethod(VehicleObject)
 public native func GetInteriaTensor() -> Matrix;
+
+@addMethod(VehicleObject)
+public native func GetCenterOfMass() -> Vector3;
 
 @addMethod(VehicleObject)
 public native func GetUnk90() -> Matrix;
@@ -49,6 +58,19 @@ public native class vehicleDriveToPointEvent extends Event {
 public importonly class EffectSpawnerComponent extends IVisualComponent {
     public native func AddEffect() -> Void;
 }
+
+
+@addField(ColliderComponent)
+public native let mass: Float;
+
+@addField(ColliderComponent)
+public native let massOverride: Float;
+
+@addField(ColliderComponent)
+public native let inertia: Vector3;
+
+@addField(ColliderComponent)
+public native let comOffset: Transform;
 
 // public native class exEntitySpawner {
 //     public native static func Spawn(entityPath: ResRef, worldTransform: WorldTransform, opt appearance: CName, opt recordID: TweakDBID) -> EntityID;
