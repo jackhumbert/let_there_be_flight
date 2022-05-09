@@ -25,6 +25,14 @@ public static func OperatorXor(q: Quaternion, n: Int32) -> Quaternion {
 
 // EulerAngles
 
+public static  func Cast(a: EulerAngles) -> Vector4 {
+  let v = Vector4.EmptyVector();
+  v.X = a.Pitch;
+  v.Y = a.Roll;
+  v.Z = a.Yaw;
+  return v;
+}
+
 public static func OperatorMultiply(e: EulerAngles, f: Float) -> EulerAngles {
   let out = e;
   e.Roll *= f;

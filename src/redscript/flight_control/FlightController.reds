@@ -110,6 +110,7 @@ public class FlightController extends IScriptable {
   public let yawCorrectionFactor: Float;
   public let brakeFactor: Float;
   public let angularDampFactor: Float;
+  public let angularBrakeFactor: Float;
   public let fwtfCorrection: Float;
   public let pitchWithLift: Float;
   public let rollWithYaw: Float;
@@ -134,12 +135,14 @@ public class FlightController extends IScriptable {
 
   private let uiBlackboard: ref<IBlackboard>;
   private let uiSystemBB: ref<UI_SystemDef>;
-  private let trackedMappinId: ref<CallbackHandle>;
-  private let m_currentMappin: wref<IMappin>;
-  private let waypoint: Vector4;
+  // private let trackedMappinId: ref<CallbackHandle>;
+  // private let m_currentMappin: wref<IMappin>;
+  // private let waypoint: Vector4;
 
   public let timeDelta: Float;
   public let averageMass: Float;
+  
+  private let sqs: ref<SpatialQueriesSystem>;
 
   // protected let m_settingsListener: ref<FlightSettingsListener>;
   // protected let m_groupPath: CName;
@@ -153,19 +156,22 @@ public class FlightController extends IScriptable {
     this.showOptions = false;
     this.showUI = true;
     this.brakeFactor = 1.2;
-    this.angularDampFactor = -10.0;
+    this.angularDampFactor = -100.0;
+    this.angularBrakeFactor = -300.0;
     this.liftFactor = 10.0;
-    this.liftFactorDrone = 20.0;
+    this.liftFactorDrone = 30.0;
     this.surgeFactor = 15.0;
+    // this.surgeFactor = 50.0;
     this.hoverFactor = 5.0;
     this.hoverClamp = 1.0;
+
     this.yawFactor = 50.0;
-    this.pitchFactorDrone = 3.0;
+    this.pitchFactorDrone = 0.5;
     this.pitchCorrectionFactor = 3.0;
-    this.rollFactorDrone = 15.0;
+    this.rollFactorDrone = 5.0;
     this.rollCorrectionFactor = 15.0;
     this.yawCorrectionFactor = 0.05;
-    this.yawFactorDrone = 10.0;
+    this.yawFactorDrone = 3.0;
     this.yawDirectionalityFactor = 50.0;
     this.brake = InputPID.Create(0.05, 0.5);
     this.lift = InputPID.Create(0.05, 0.2);
@@ -185,7 +191,7 @@ public class FlightController extends IScriptable {
     this.distanceEase = 0.1;
     this.normal = new Vector4(0.0, 0.0, 1.0, 0.0);
     this.normalEase = 0.3;
-    this.airResistance = 0.01;
+    this.airResistance = 0.005;
     this.defaultHoverHeight = 3.50;
     this.hoverHeight = this.defaultHoverHeight;
     this.minHoverHeight = 1.0;
@@ -213,10 +219,12 @@ public class FlightController extends IScriptable {
 
     this.uiBlackboard = GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().UI_System);
     this.uiSystemBB = GetAllBlackboardDefs().UI_System;
-    this.trackedMappinId = this.uiBlackboard.RegisterListenerVariant(this.uiSystemBB.TrackedMappin, this, n"OnTrackedMappinUpdated");
-    this.uiBlackboard.SignalVariant(this.uiSystemBB.TrackedMappin);
+    // this.trackedMappinId = this.uiBlackboard.RegisterListenerVariant(this.uiSystemBB.TrackedMappin, this, n"OnTrackedMappinUpdated");
+    // this.uiBlackboard.SignalVariant(this.uiSystemBB.TrackedMappin);
 
-    this.waypoint = new Vector4(313.6, 208.2, 62.3, 0.0);
+    // this.waypoint = new Vector4(313.6, 208.2, 62.3, 0.0);
+
+    this.sqs = GameInstance.GetSpatialQueriesSystem(this.gameInstance);
 
     // this.m_groupPath = n"/controls/flight";
     // this.m_settingsListener = new FlightSettingsListener();
@@ -393,14 +401,6 @@ public class FlightController extends IScriptable {
     }
   
     this.ShowSimpleMessage("Flight Control Engaged");
-
-    // have access to this now, but it's FPP only
-    // stateContext.SetPermanentCNameParameter(n"VehicleCameraParams", n"", true); 
-    // this.driveEvents.UpdateCameraContext(stateContext, scriptInterface);
-    // let param: StateResultCName = stateContext.GetPermanentCNameParameter(n"LocomotionCameraParams");
-    // if param.valid {
-    //     this.driveEvents.UpdateCameraParams(param.value, scriptInterface);
-    // };
     
     FlightLog.Info("[FlightController] Activate");
     this.GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControllerBB.IsActive, true, true);
@@ -499,20 +499,20 @@ public class FlightController extends IScriptable {
     }
   }
 
-  protected cb func OnTrackedMappinUpdated(value: Variant) -> Bool {
-    this.m_currentMappin = FromVariant<ref<IScriptable>>(value) as IMappin;
-    if IsDefined(this.m_currentMappin) {
-      this.waypoint = this.m_currentMappin.GetWorldPosition();
-    }
-    // inkCompoundRef.RemoveAllChildren(this.m_TrackedMappinObjectiveContainer);
-    // inkWidgetRef.SetVisible(this.m_TrackedMappinContainer, IsDefined(this.m_currentMappin));
-    // if IsDefined(this.m_trackedMappinSpawnRequest) {
-    //   this.m_trackedMappinSpawnRequest.Cancel();
-    // };
-    // if IsDefined(this.m_currentMappin) {
-    //   this.m_trackedMappinSpawnRequest = this.AsyncSpawnFromLocal(inkWidgetRef.Get(this.m_TrackedMappinObjectiveContainer), n"Objective", this, n"OnTrackedMappinSpawned");
-    // };
-  }
+  // protected cb func OnTrackedMappinUpdated(value: Variant) -> Bool {
+  //   this.m_currentMappin = FromVariant<ref<IScriptable>>(value) as IMappin;
+  //   if IsDefined(this.m_currentMappin) {
+  //     this.waypoint = this.m_currentMappin.GetWorldPosition();
+  //   }
+  //   // inkCompoundRef.RemoveAllChildren(this.m_TrackedMappinObjectiveContainer);
+  //   // inkWidgetRef.SetVisible(this.m_TrackedMappinContainer, IsDefined(this.m_currentMappin));
+  //   // if IsDefined(this.m_trackedMappinSpawnRequest) {
+  //   //   this.m_trackedMappinSpawnRequest.Cancel();
+  //   // };
+  //   // if IsDefined(this.m_currentMappin) {
+  //   //   this.m_trackedMappinSpawnRequest = this.AsyncSpawnFromLocal(inkWidgetRef.Get(this.m_TrackedMappinObjectiveContainer), n"Objective", this, n"OnTrackedMappinSpawned");
+  //   // };
+  // }
 
   protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool {
     let actionType: gameinputActionType = ListenerAction.GetType(action);
@@ -563,15 +563,27 @@ public class FlightController extends IScriptable {
         // }
         if Equals(actionName, n"FlightOptions_Up") && ListenerAction.IsButtonJustPressed(action) {
             this.mode = IntEnum((EnumInt(this.mode) + 1) % EnumInt(FlightMode.Count));
+            if Equals(this.mode, FlightMode.HoverFly) {
+              this.ShowSimpleMessage("Flight & Hover Enabled");
+            }
+            if Equals(this.mode, FlightMode.Hover) {
+              this.ShowSimpleMessage("Hover Enabled");
+            }
+            if Equals(this.mode, FlightMode.Drone) {
+              this.ShowSimpleMessage("Drone Enabled");
+            }
             GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_menu_onpress");
         }
         if Equals(actionName, n"FlightOptions_Left") && ListenerAction.IsButtonJustPressed(action) {
             this.showUI = !this.showUI;
             if (this.showUI) {
               this.ui.Show();
+              this.ShowSimpleMessage("Flight UI Shown");
             } else {
               this.ui.Hide();
+              this.ShowSimpleMessage("Flight UI Hidden");
             }
+            GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_menu_onpress");
         }
       }
       if Equals(actionType, gameinputActionType.AXIS_CHANGE) {
@@ -717,11 +729,99 @@ public class FlightController extends IScriptable {
     this.audio.AddSlotProviders(this.GetVehicle());
   }
 
+  public func FindGround(timeDelta: Float) -> Bool {
+    let foundGround = true;
+
+
+      // let lookAhead = this.stats.d_velocity * timeDelta * this.lookAheadMax;
+      // let fl_tire: Vector4 = Matrix.GetTranslation(this.fl_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
+      // let fr_tire: Vector4 = Matrix.GetTranslation(this.fr_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
+      // let bl_tire: Vector4 = Matrix.GetTranslation(this.bl_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
+      // let br_tire: Vector4 = Matrix.GetTranslation(this.br_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
+      let fl_tire: Vector4 = Matrix.GetTranslation(this.fl_tire.GetLocalToWorld());
+      let fr_tire: Vector4 = Matrix.GetTranslation(this.fr_tire.GetLocalToWorld());
+      let bl_tire: Vector4 = Matrix.GetTranslation(this.bl_tire.GetLocalToWorld());
+      let br_tire: Vector4 = Matrix.GetTranslation(this.br_tire.GetLocalToWorld());
+
+
+      let findGround1: TraceResult; 
+      let findGround2: TraceResult; 
+      let findGround3: TraceResult; 
+      let findGround4: TraceResult;
+
+      // all in engine\physics\collision_presets.json
+      // VehicleBlocker? RagdollVehicle?
+      this.sqs.SyncRaycastByCollisionGroup(fl_tire, fl_tire + this.lookDown, n"VehicleBlocker", findGround1, false, false);
+      this.sqs.SyncRaycastByCollisionGroup(fr_tire, fr_tire + this.lookDown, n"VehicleBlocker", findGround2, false, false);
+      this.sqs.SyncRaycastByCollisionGroup(bl_tire, bl_tire + this.lookDown, n"VehicleBlocker", findGround3, false, false);
+      this.sqs.SyncRaycastByCollisionGroup(br_tire, br_tire + this.lookDown, n"VehicleBlocker", findGround4, false, false);
+      
+      let groundPoint1: Vector4;
+      let groundPoint2: Vector4;
+      let groundPoint3: Vector4;
+      let groundPoint4: Vector4;
+
+      if TraceResult.IsValid(findGround1) {
+        groundPoint1 = Vector4.Vector3To4(findGround1.position) - this.stats.d_velocity * timeDelta;
+        if this.showUI {
+          this.ui.DrawMark(groundPoint1);
+          this.ui.DrawText(groundPoint1, FloatToStringPrec(Vector4.Distance(fl_tire, Cast(findGround1.position)), 2));
+        }
+      }
+      if TraceResult.IsValid(findGround2) {
+        groundPoint2 = Vector4.Vector3To4(findGround2.position) - this.stats.d_velocity * timeDelta;
+        if this.showUI {
+          this.ui.DrawMark(groundPoint2);
+          this.ui.DrawText(groundPoint2, FloatToStringPrec(Vector4.Distance(fr_tire, Cast(findGround2.position)), 2));
+        }
+      }
+      if TraceResult.IsValid(findGround3) {
+        groundPoint3 = Vector4.Vector3To4(findGround3.position) - this.stats.d_velocity * timeDelta;
+        if this.showUI {
+          this.ui.DrawMark(groundPoint3);
+          this.ui.DrawText(groundPoint3, FloatToStringPrec(Vector4.Distance(bl_tire, Cast(findGround3.position)), 2));
+        }
+      }
+      if TraceResult.IsValid(findGround4) {
+        groundPoint4 = Vector4.Vector3To4(findGround4.position) - this.stats.d_velocity * timeDelta;
+        if this.showUI {
+          this.ui.DrawMark(groundPoint4);
+          this.ui.DrawText(groundPoint4, FloatToStringPrec(Vector4.Distance(br_tire, Cast(findGround4.position)), 2));
+        }
+      }
+
+      if TraceResult.IsValid(findGround1) && TraceResult.IsValid(findGround2) && TraceResult.IsValid(findGround3) && TraceResult.IsValid(findGround4) {
+        // let distance = MinF(
+        //   MinF(Vector4.Distance(fl_tire, Cast(findGround1.position)),
+        //   Vector4.Distance(fr_tire, Cast(findGround2.position))),
+        //   MinF(Vector4.Distance(bl_tire, Cast(findGround3.position)),
+        //   Vector4.Distance(br_tire, Cast(findGround4.position))));        
+        let distance = (Vector4.Distance(fl_tire, Vector4.Vector3To4(findGround1.position)) +
+          Vector4.Distance(fr_tire, Vector4.Vector3To4(findGround2.position)) +
+          Vector4.Distance(bl_tire, Vector4.Vector3To4(findGround3.position)) +
+          Vector4.Distance(br_tire, Vector4.Vector3To4(findGround4.position))) / 4.0;
+        // this.distance = distance * (1.0 - this.distanceEase) + this.distance * (this.distanceEase);
+        this.distance = distance;
+        
+        // FromVariant(scriptInterface.GetStateVectorParameter(physicsStateValue.Radius)) maybe?
+        let normal = (Vector4.Normalize(Cast(findGround1.normal)) + Vector4.Normalize(Cast(findGround2.normal)) + Vector4.Normalize(Cast(findGround3.normal)) + Vector4.Normalize(Cast(findGround4.normal))) / 4.0;
+        // this.normal = Vector4.Interpolate(this.normal, normal, this.normalEase);
+        this.normal = Vector4.Normalize(normal);
+
+      } else {
+        foundGround = false;
+      }   
+    return foundGround;
+  } 
+
   public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
     // this.camera.isInAir = false;
     this.GetVehicle().isOnGround = true;
     this.ui.camera.drivingDirectionCompensationAngleSmooth = 120.0;
     this.ui.camera.drivingDirectionCompensationSpeedCoef = 0.1;
+
+    this.GetVehicle().TurnOffAirControl();
+
     // let cameraPos = this.ui.camera.GetLocalToWorld() * Vector4.EmptyVector();
     // let localCameraPos = Matrix.GetInverted(this.GetVehicle().chassis.GetLocalToWorld()) * cameraPos;
     // let idealCameraPos = new Vector4(0.0, -6.0, 1.2, 0.0);
@@ -786,7 +886,7 @@ public class FlightController extends IScriptable {
       this.ui.camera.yawDelta = 0.0;
       this.ui.camera.pitchDelta = 0.0;
 
-      let dampFactor = -MaxF(this.brake.GetValue() * this.brakeFactor, this.airResistance);
+      let dampFactor = -MaxF(this.brake.GetValue() * this.brakeFactor * this.stats.s_brakingFrictionFactor, this.airResistance * this.stats.s_airResistanceFactor);
       let velocityDamp: Vector4 = this.stats.d_velocity * dampFactor;
 
       let combinedForce: Vector4 = new Vector4(0.0, 0.0, 0.0, 0.0);
@@ -810,7 +910,7 @@ public class FlightController extends IScriptable {
       // rotational brake
       // combinedTorque = combinedTorque + (angularDamp * timeDelta);
       // factor in interia tensor
-      combinedTorque *= this.GetVehicle().GetInteriaTensor();
+      combinedTorque *= this.GetVehicle().GetInertiaTensor();
 
       this.CreateImpulse(combinedForce);
       this.CreateMoment(combinedTorque);
@@ -835,93 +935,13 @@ public class FlightController extends IScriptable {
       }
 
       let foundGround = true;
-
-      let sqs: ref<SpatialQueriesSystem> = GameInstance.GetSpatialQueriesSystem(this.gameInstance);
       let findWater: TraceResult;
-      sqs.SyncRaycastByCollisionGroup(this.stats.d_position, this.stats.d_position - this.lookDown, n"Water", findWater, true, false);
+      this.sqs.SyncRaycastByCollisionGroup(this.stats.d_position, this.stats.d_position - this.lookDown, n"Water", findWater, true, false);
       if TraceResult.IsValid(findWater) {
         // if we're under water, just go up
         hoverCorrection = 1.0;
       } else {
-
-        // let lookAhead = this.stats.d_velocity * timeDelta * this.lookAheadMax;
-        // let fl_tire: Vector4 = Matrix.GetTranslation(this.fl_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
-        // let fr_tire: Vector4 = Matrix.GetTranslation(this.fr_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
-        // let bl_tire: Vector4 = Matrix.GetTranslation(this.bl_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
-        // let br_tire: Vector4 = Matrix.GetTranslation(this.br_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
-        let fl_tire: Vector4 = Matrix.GetTranslation(this.fl_tire.GetLocalToWorld());
-        let fr_tire: Vector4 = Matrix.GetTranslation(this.fr_tire.GetLocalToWorld());
-        let bl_tire: Vector4 = Matrix.GetTranslation(this.bl_tire.GetLocalToWorld());
-        let br_tire: Vector4 = Matrix.GetTranslation(this.br_tire.GetLocalToWorld());
-
-
-        let findGround1: TraceResult; 
-        let findGround2: TraceResult; 
-        let findGround3: TraceResult; 
-        let findGround4: TraceResult;
-
-        // all in engine\physics\collision_presets.json
-        // VehicleBlocker? RagdollVehicle?
-        sqs.SyncRaycastByCollisionGroup(fl_tire, fl_tire + this.lookDown, n"VehicleBlocker", findGround1, false, false);
-        sqs.SyncRaycastByCollisionGroup(fr_tire, fr_tire + this.lookDown, n"VehicleBlocker", findGround2, false, false);
-        sqs.SyncRaycastByCollisionGroup(bl_tire, bl_tire + this.lookDown, n"VehicleBlocker", findGround3, false, false);
-        sqs.SyncRaycastByCollisionGroup(br_tire, br_tire + this.lookDown, n"VehicleBlocker", findGround4, false, false);
-        
-        let groundPoint1: Vector4;
-        let groundPoint2: Vector4;
-        let groundPoint3: Vector4;
-        let groundPoint4: Vector4;
-
-        if TraceResult.IsValid(findGround1) {
-          groundPoint1 = Vector4.Vector3To4(findGround1.position) - this.stats.d_velocity * timeDelta;
-          if this.showUI {
-            this.ui.DrawMark(groundPoint1);
-            this.ui.DrawText(groundPoint1, FloatToStringPrec(Vector4.Distance(fl_tire, Cast(findGround1.position)), 2));
-          }
-        }
-        if TraceResult.IsValid(findGround2) {
-          groundPoint2 = Vector4.Vector3To4(findGround2.position) - this.stats.d_velocity * timeDelta;
-          if this.showUI {
-            this.ui.DrawMark(groundPoint2);
-            this.ui.DrawText(groundPoint2, FloatToStringPrec(Vector4.Distance(fr_tire, Cast(findGround2.position)), 2));
-          }
-        }
-        if TraceResult.IsValid(findGround3) {
-          groundPoint3 = Vector4.Vector3To4(findGround3.position) - this.stats.d_velocity * timeDelta;
-          if this.showUI {
-            this.ui.DrawMark(groundPoint3);
-            this.ui.DrawText(groundPoint3, FloatToStringPrec(Vector4.Distance(bl_tire, Cast(findGround3.position)), 2));
-          }
-        }
-        if TraceResult.IsValid(findGround4) {
-          groundPoint4 = Vector4.Vector3To4(findGround4.position) - this.stats.d_velocity * timeDelta;
-          if this.showUI {
-            this.ui.DrawMark(groundPoint4);
-            this.ui.DrawText(groundPoint4, FloatToStringPrec(Vector4.Distance(br_tire, Cast(findGround4.position)), 2));
-          }
-        }
-
-        if TraceResult.IsValid(findGround1) && TraceResult.IsValid(findGround2) && TraceResult.IsValid(findGround3) && TraceResult.IsValid(findGround4) {
-          // let distance = MinF(
-          //   MinF(Vector4.Distance(fl_tire, Cast(findGround1.position)),
-          //   Vector4.Distance(fr_tire, Cast(findGround2.position))),
-          //   MinF(Vector4.Distance(bl_tire, Cast(findGround3.position)),
-          //   Vector4.Distance(br_tire, Cast(findGround4.position))));        
-          let distance = (Vector4.Distance(fl_tire, Vector4.Vector3To4(findGround1.position)) +
-            Vector4.Distance(fr_tire, Vector4.Vector3To4(findGround2.position)) +
-            Vector4.Distance(bl_tire, Vector4.Vector3To4(findGround3.position)) +
-            Vector4.Distance(br_tire, Vector4.Vector3To4(findGround4.position))) / 4.0;
-          // this.distance = distance * (1.0 - this.distanceEase) + this.distance * (this.distanceEase);
-          this.distance = distance;
-          
-          // FromVariant(scriptInterface.GetStateVectorParameter(physicsStateValue.Radius)) maybe?
-          let normal = (Vector4.Normalize(Cast(findGround1.normal)) + Vector4.Normalize(Cast(findGround2.normal)) + Vector4.Normalize(Cast(findGround3.normal)) + Vector4.Normalize(Cast(findGround4.normal))) / 4.0;
-          // this.normal = Vector4.Interpolate(this.normal, normal, this.normalEase);
-          this.normal = Vector4.Normalize(normal);
-
-        } else {
-          foundGround = false;
-        }   
+        foundGround = this.FindGround(timeDelta);
       }
 
       let heightDifference = 0.0;
@@ -989,17 +1009,16 @@ public class FlightController extends IScriptable {
       }
       yawCorrection += this.yawD * changeAngle / timeDelta;
 
-      let dampFactor = -MaxF(this.brake.GetValue() * this.brakeFactor, this.airResistance);
-      let velocityDamp: Vector4 = this.stats.d_velocity * dampFactor;
-      // let angularDamp: EulerAngles = this.stats.d_angularVelocity * dampFactor * this.angularDampFactor;
+      let velocityDamp: Vector4 = this.stats.d_velocity * -MaxF(this.brake.GetValue() * this.brakeFactor * this.stats.s_brakingFrictionFactor, this.airResistance * this.stats.s_airResistanceFactor);
+      let angularDamp: Vector4 = this.stats.d_angularVelocity * -MaxF(this.brake.GetValue() * this.angularBrakeFactor * this.stats.s_brakingFrictionFactor, this.angularDampFactor);
       // so we don't get impulsed by the speed limit (100 m/s, i think)
-      if this.stats.d_speed > 90.0 {
-        velocityDamp *= (1.0 + PowF((this.stats.d_speed - 90.0) / 10.0, 2.0) * 1000.0);
-      }
+      // if this.stats.d_speed > 90.0 {
+      //   velocityDamp *= (1.0 + PowF((this.stats.d_speed - 90.0) / 10.0, 2.0) * 1000.0);
+      // }
 
       // let yawDirectionality: Float = (this.stats.d_speedRatio + AbsF(this.yaw.GetValue()) * this.swayWithYaw) * this.yawDirectionalityFactor;
       let yawDirectionality: Float = this.stats.d_speedRatio * this.yawDirectionalityFactor;
-      let liftForce: Float = hoverCorrection * this.hoverFactor * 9.8;
+      let liftForce: Float = hoverCorrection * this.hoverFactor * (9.81000042 * 1.4);
       // actual in-game mass (i think)
       // this.averageMass = this.averageMass * 0.99 + (liftForce / 9.8) * 0.01;
       // FlightLog.Info(ToString(this.averageMass) + " vs " + ToString(this.stats.s_mass));
@@ -1011,24 +1030,24 @@ public class FlightController extends IScriptable {
       let combinedTorque: Vector4 = new Vector4(0.0, 0.0, 0.0, 0.0);
 
       // yawDirectionality - redirect non-directional velocity to vehicle forward
-      combinedForce += this.stats.d_forward * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta;
-      combinedForce += -this.stats.d_direction * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta;
+      // combinedForce += this.stats.d_forward * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta;
+      // combinedForce += -this.stats.d_direction * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta;
       // lift
       // combinedForce += new Vector4(0.00, 0.00, liftForce + this.stats.d_speedRatio * liftForce, 0.00) * timeDelta;
       combinedForce += new Vector4(0.00, 0.00, liftForce, 0.00) * timeDelta;
       // surge
-      combinedForce += this.stats.d_forward * surgeForce * timeDelta;
+      combinedForce += this.stats.d_forward2D * surgeForce * timeDelta;
       // directional brake
       combinedForce += velocityDamp * timeDelta;
       // factor in mass
       combinedForce *= this.stats.s_mass;
 
       // pitch correction
-      combinedTorque.X =  (pitchCorrection) * timeDelta;
+      combinedTorque.X = (pitchCorrection + angularDamp.X) * timeDelta;
       // roll correction
-      combinedTorque.Y = (rollCorrection) * timeDelta;
+      combinedTorque.Y = (rollCorrection + angularDamp.Y) * timeDelta;
       // yaw correction
-      combinedTorque.Z = ((yawCorrection * this.yawCorrectionFactor + this.yaw.GetValue() * this.yawFactor)) * timeDelta;
+      combinedTorque.Z = ((yawCorrection * this.yawCorrectionFactor + this.yaw.GetValue() * this.yawFactor) + angularDamp.Z) * timeDelta;
       // rotational brake
       // combinedTorque = combinedTorque + (angularDamp * timeDelta);
 
@@ -1038,7 +1057,7 @@ public class FlightController extends IScriptable {
       // }
 
       // factor in interia tensor
-      combinedTorque *= this.GetVehicle().GetInteriaTensor();
+      combinedTorque *= this.GetVehicle().GetInertiaTensor();
 
       this.CreateImpulse(combinedForce);
       this.CreateMoment(combinedTorque);

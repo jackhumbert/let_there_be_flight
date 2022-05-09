@@ -13,6 +13,8 @@ public class FlightStats {
   public let s_centerOfMass: Vector3;
   public let s_momentOfInertia: Vector4;
   public let s_forwardWeightTransferFactor: Float;
+  public let s_brakingFrictionFactor: Float;
+  public let s_airResistanceFactor: Float;
 
   public let d_position: Vector4;
   public let d_visualPosition: Vector4;
@@ -21,8 +23,9 @@ public class FlightStats {
   public let d_forward: Vector4;
   public let d_right: Vector4;
   public let d_up: Vector4;
+  public let d_forward2D: Vector4;
   public let d_orientationChange: Quaternion;
-  public let d_angularVelocity: EulerAngles;
+  public let d_angularVelocity: Vector4;
   public let d_velocity: Vector4;
   public let d_velocity2D: Vector4;
   public let d_speed: Float;
@@ -67,6 +70,8 @@ public class FlightStats {
     // this.s_fcRecord = FlightStatsData.GetInstance(this.vehicle.GetGame()).Get(this.vehicle.GetRecordID());
     this.s_fc_record = TweakDBInterface.GetFlightRecord(this.vehicle.GetRecordID());
     this.s_driveModelData = this.s_record.VehDriveModelData();  
+    this.s_brakingFrictionFactor = this.s_driveModelData.BrakingFrictionFactor();
+    this.s_airResistanceFactor = this.s_driveModelData.AirResistanceFactor();
     // RollingResistanceFactor() -> Float;
     // HandbrakeBrakingTorque() -> Float;
     this.s_wheelDimensions = this.s_record.VehWheelDimensionsSetup();
@@ -132,7 +137,7 @@ public class FlightStats {
     // would be nice to compute from meshes outside this and import those values in
     // if Vector4.IsXYZFloatZero(this.s_momentOfInertia) {
       // LogChannel(n"DEBUG", "[FlightStats] no MOI, setting to bad defaults");
-    let it = this.vehicle.GetInteriaTensor();
+    let it = this.vehicle.GetInertiaTensor();
     this.s_momentOfInertia.X = it.X.X;
     this.s_momentOfInertia.Y = it.Y.Y;
     this.s_momentOfInertia.Z = it.Z.Z; 
@@ -147,8 +152,9 @@ public class FlightStats {
     // let orientation = Matrix.ToQuat(this.vehicle.chassis.GetLocalToWorld());
     this.d_orientation = orientation;
     this.d_orientationChange = Quaternion.MulInverse(this.d_orientation, this.d_lastOrientation);
-    this.d_angularVelocity = Quaternion.ToEulerAngles(this.d_orientationChange) / timeDelta;
+    this.d_angularVelocity = Quaternion.Conjugate(this.d_orientation) * Vector4.Vector3To4(this.vehicle.GetAngularVelocity());
     Quaternion.GetAxes(this.d_orientation, this.d_forward, this.d_right, this.d_up);
+    this.d_forward2D = Vector4.Normalize2D(this.d_forward);
     // this.d_forward = Vector4.Normalize(Quaternion.GetForward(this.d_orientation));
     // this.d_right = Vector4.Normalize(Quaternion.GetRight(this.d_orientation));
     // this.d_up = Vector4.Normalize(Quaternion.GetUp(this.d_orientation));

@@ -23,13 +23,22 @@ public native let isOnGround: Bool;
 public let chassis: ref<vehicleChassisComponent>;
 
 @addMethod(VehicleObject)
-public native func GetInteriaTensor() -> Matrix;
+public native func UsesInertiaTensor() -> Bool;
+
+@addMethod(VehicleObject)
+public native func GetInertiaTensor() -> Matrix;
+
+@addMethod(VehicleObject)
+public native func GetMomentOfInertiaScale() -> Vector3;
 
 @addMethod(VehicleObject)
 public native func GetCenterOfMass() -> Vector3;
 
 @addMethod(VehicleObject)
-public native func GetUnk90() -> Matrix;
+public native func GetAngularVelocity() -> Vector3;
+
+@addMethod(VehicleObject)
+public native func TurnOffAirControl() -> Bool;
 
 // @addMethod(vehicleChassisComponent)
 // protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> Bool {
