@@ -13,9 +13,9 @@ RED4EXT_INLINE RED4ext::CClass * RED4ext::vehicle::DriveHelper::GetNativeType() 
   return func();
 }
 
-RED4EXT_INLINE uintptr_t RED4ext::vehicle::DriveHelper::dtor(uintptr_t a1, char a2) {
-  RED4ext::RelocFunc<uintptr_t (*)(uintptr_t a1, char a2)> func(RED4ext::vehicle::DriveHelper_dtor);
-  return func(a1, a2);
+RED4EXT_INLINE uintptr_t RED4ext::vehicle::DriveHelper::dtor(char a2) {
+  RED4ext::RelocFunc<uintptr_t (*)(DriveHelper*, char)> func(RED4ext::vehicle::DriveHelper_dtor);
+  return func(this, a2);
 }
 
-RED4EXT_INLINE void RED4ext::vehicle::DriveHelper::sub_18(uintptr_t a1) {}
+RED4EXT_INLINE void RED4ext::vehicle::DriveHelper::sub_18() {}

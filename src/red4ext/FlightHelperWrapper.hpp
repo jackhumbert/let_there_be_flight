@@ -26,6 +26,8 @@ struct HelperWrapper : RED4ext::IScriptable {
   RED4ext::Vector4 torque;
 };
 RED4EXT_ASSERT_SIZE(HelperWrapper, 0x68);
+RED4EXT_ASSERT_OFFSET(HelperWrapper, force, 0x48);
+RED4EXT_ASSERT_OFFSET(HelperWrapper, torque, 0x58);
 //char (*__kaboom)[sizeof(HelperWrapper)] = 1;
 
 } // namespace flight

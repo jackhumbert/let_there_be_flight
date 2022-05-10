@@ -78,37 +78,38 @@ RED4ext::Handle<HelperWrapper> Helper::AddToDriverHelpers(RED4ext::DynArray<uint
   h->wrapper->torque.Y = 0.0;
   h->wrapper->torque.Z = 0.0;
 
+  auto hwh = RED4ext::Handle<HelperWrapper>(h->wrapper);
+
   RED4ext::RelocFunc<void *(*)(RED4ext::DynArray<uintptr_t> *, void *)> addToDriveHelper(AddDriveHelperToArray);
   addToDriveHelper(ra, &h);
   spdlog::info("[flightHelper] Added to driveHelpers");
 
-  auto hwh = RED4ext::Handle<HelperWrapper>(h->wrapper);
   return hwh;
 }
 
-void Helper::PhysicsUpdate(RED4ext::vehicle::DriveHelper *helper, RED4ext::vehicle::BaseObject *vehicle, float timeDelta) {
+void Helper::PhysicsUpdate(RED4ext::vehicle::BaseObject *vehicle, float timeDelta) {
   // if (vehicle->isOnGround) {
   //}
   // if (timeDelta > 0.0) {
   // spdlog::info("in the physics update! dT: {:01.6f}", deltaTime); // -4 sometimes
 
-  auto fh = reinterpret_cast<Helper *>(helper);
+  //auto fh = reinterpret_cast<Helper *>(helper);
 
-  vehicle->physicsStruct->force.X += fh->wrapper->force.X;
-  vehicle->physicsStruct->force.Y += fh->wrapper->force.Y;
-  vehicle->physicsStruct->force.Z += fh->wrapper->force.Z;
+  vehicle->physicsStruct->force.X += this->wrapper->force.X;
+  vehicle->physicsStruct->force.Y += this->wrapper->force.Y;
+  vehicle->physicsStruct->force.Z += this->wrapper->force.Z;
 
-  vehicle->physicsStruct->torque.X += fh->wrapper->torque.X;
-  vehicle->physicsStruct->torque.Y += fh->wrapper->torque.Y;
-  vehicle->physicsStruct->torque.Z += fh->wrapper->torque.Z;
+  vehicle->physicsStruct->torque.X += this->wrapper->torque.X;
+  vehicle->physicsStruct->torque.Y += this->wrapper->torque.Y;
+  vehicle->physicsStruct->torque.Z += this->wrapper->torque.Z;
 
-  fh->wrapper->force.X = 0.0;
-  fh->wrapper->force.Y = 0.0;
-  fh->wrapper->force.Z = 0.0;
+  this->wrapper->force.X = 0.0;
+  this->wrapper->force.Y = 0.0;
+  this->wrapper->force.Z = 0.0;
 
-  fh->wrapper->torque.X = 0.0;
-  fh->wrapper->torque.Y = 0.0;
-  fh->wrapper->torque.Z = 0.0;
+  this->wrapper->torque.X = 0.0;
+  this->wrapper->torque.Y = 0.0;
+  this->wrapper->torque.Z = 0.0;
 
   //auto rtti = RED4ext::CRTTISystem::Get();
   //auto FlightController = rtti->GetClass("FlightController");

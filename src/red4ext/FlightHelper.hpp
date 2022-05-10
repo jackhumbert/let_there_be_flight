@@ -18,7 +18,7 @@ struct HelperWrapper;
 
 struct Helper : RED4ext::vehicle::DriveHelper {
   virtual RED4ext::CClass *GetNativeType();
-  virtual void PhysicsUpdate(RED4ext::vehicle::DriveHelper *, RED4ext::vehicle::BaseObject *, float);
+  virtual void PhysicsUpdate(RED4ext::vehicle::BaseObject *, float);
 
   static void RegisterTypes();
   static void RegisterFunctions();

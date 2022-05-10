@@ -14,9 +14,9 @@ constexpr uintptr_t DriveHelper_dtor = 0x141D30500 - RED4ext::Addresses::ImageBa
 
 struct DriveHelper {
   virtual RED4ext::CClass *GetNativeType();
-  virtual uintptr_t dtor(uintptr_t a1, char a2);
-  virtual void PhysicsUpdate(DriveHelper *, RED4ext::vehicle::BaseObject *, float) = 0;
-  virtual void sub_18(uintptr_t a1);
+  virtual uintptr_t dtor(char a2);
+  virtual void PhysicsUpdate(RED4ext::vehicle::BaseObject *, float) = 0;
+  virtual void sub_18();
 };
 RED4EXT_ASSERT_SIZE(DriveHelper, 0x8);
 // char (*__kaboom)[sizeof(Helper)] = 1;

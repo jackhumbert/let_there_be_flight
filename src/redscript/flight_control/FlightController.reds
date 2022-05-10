@@ -932,8 +932,8 @@ public native class FlightController extends IScriptable {
       // this.CreateImpulse(combinedForce);
       // this.CreateMoment(combinedTorque);
 
-      this.helper.force = combinedForce;
-      this.helper.torque = combinedTorque;
+      this.helper.force += combinedForce;
+      this.helper.torque += combinedTorque;
 
     } else {
 
@@ -1065,7 +1065,7 @@ public native class FlightController extends IScriptable {
       // pitch correction
       combinedTorque.X = (pitchCorrection + angularDamp.X) * timeDelta;
       // roll correction
-      combinedTorque.Y = (rollCorrection + angularDamp.Y) * timeDelta;
+      combinedTorque.Y = -(rollCorrection + angularDamp.Y) * timeDelta;
       // yaw correction
       combinedTorque.Z = ((yawCorrection * this.yawCorrectionFactor + this.yaw.GetValue() * this.yawFactor) + angularDamp.Z) * timeDelta;
       // rotational brake
@@ -1079,8 +1079,8 @@ public native class FlightController extends IScriptable {
       // factor in interia tensor
       combinedTorque *= this.GetVehicle().GetInertiaTensor();
 
-      this.helper.force = combinedForce;
-      this.helper.torque = combinedTorque;
+      this.helper.force += combinedForce;
+      this.helper.torque += combinedTorque;
 
       // this.CreateImpulse(combinedForce);
       // this.CreateMoment(combinedTorque);
