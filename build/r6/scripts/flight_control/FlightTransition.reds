@@ -173,7 +173,7 @@ public class FlightEvents extends VehicleEventsTransition {
     };    
     FlightController.GetInstance().Activate();
     let evt = new VehicleFlightActivationEvent();
-    evt.vehicle = scriptInterface.owner as VehicleObject;
+    // evt.vehicle = scriptInterface.owner as VehicleObject;
     (scriptInterface.owner as VehicleObject).QueueEvent(evt);
   }
 

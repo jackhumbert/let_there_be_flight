@@ -47,9 +47,7 @@ TTypedClass<FlightSystem> flightSystemCls("FlightSystem");
 
 CClass* FlightSystem::GetNativeType() { return &flightSystemCls; }
 
-void* FlightSystemUpdate(void *, float) {
-
-}
+void* FlightSystemUpdate(void *, float) { return NULL; }
 
 void* FlightSystem::RegisterUpdate(uintptr_t lookup) {
 	//RED4ext::CClass *cls;

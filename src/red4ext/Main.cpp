@@ -27,12 +27,19 @@
 #include "FlightStats_Record.hpp"
 #include "FlightSystem.hpp"
 #include "FmodHelper.hpp"
+#include "VehicleSpeedUnlimiter.hpp"
+#include "FlightHelper.hpp"
+#include "FlightController.hpp"
+#include "FlightEvents.hpp"
 
 RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes() {
   spdlog::info("Registering classes & types");
   FlightAudio::RegisterTypes();
   FlightLog::RegisterTypes();
   FlightSystem::RegisterTypes();
+  FlightController::RegisterTypes();
+  vehicle::flight::RegisterTypes();
+  vehicle::flight::HelperWrapper::RegisterTypes();
   // FlightHUDGameController::RegisterTypes();
   // FlightStats_Record::RegisterTypes();
 }
@@ -43,21 +50,12 @@ void SetAtlasResource(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFra
   aFrame->code++; // skip ParamEnd
   auto rtti = RED4ext::CRTTISystem::Get();
 
-  // auto inkImageWidget = rtti->GetClass("inkImageWidget");
-  // auto setAtlasResource = inkImageWidget->GetFunction("SetAtlasResource");
-  // RED4ext::StackArgs_t args;
-  // args.emplace_back(nullptr, &value); // or value, I don't remember how it
-  // should be passed. RED4ext::ExecuteFunction(aContext, setAtlasResource,
-  // aOut, args);
-
   auto redResourceReferenceScriptToken = rtti->GetClass("redResourceReferenceScriptToken");
   auto IsValid = redResourceReferenceScriptToken->GetFunction("IsValid");
   bool valid;
   RED4ext::ExecuteFunction(redResourceReferenceScriptToken, IsValid, &valid, &value);
   if (valid) {
     auto inkMaskWidget = rtti->GetClass("inkMaskWidget");
-    // uint64_t resource =
-    // RED4ext::FNV1a64("base\\gameplay\\gui\\common\\shapes\\atlas_shapes_sync.inkatlas");
     inkMaskWidget->GetProperty("textureAtlas")->SetValue(aContext, value.resource);
     if (aOut != nullptr) {
       *aOut = true;
@@ -184,88 +182,6 @@ void VehicleUsesInertiaTensor(RED4ext::IScriptable *aContext, RED4ext::CStackFra
   }
 }
 
-short PhysicsStructUpdate(RED4ext::physics::VehiclePhysicsStruct *ps);
-decltype(&PhysicsStructUpdate) PhysicsStructUpdate_Original;
-
-short PhysicsStructUpdate(RED4ext::physics::VehiclePhysicsStruct* ps) { 
-
-  // apply force to linear velocity
-  RED4ext::Vector3 unlimitedVelocity;
-  unlimitedVelocity.X = ps->velocity.X + ps->force.X * ps->inverseMass;
-  unlimitedVelocity.Y = ps->velocity.Y + ps->force.Y * ps->inverseMass;
-  unlimitedVelocity.Z = ps->velocity.Z + ps->force.Z * ps->inverseMass;
-
-  auto result = PhysicsStructUpdate_Original(ps);
-
-  if (result != 1) {
-    ps->velocity = unlimitedVelocity;
-  }
-
-  return result;
-
-  //ps->force.X = 0.0;
-  //ps->force.Y = 0.0;
-  //ps->force.Z = 0.0;
-
-  //auto speedSquared = pow(ps->velocity.X, 2) + pow(ps->velocity.Y, 2) + pow(ps->velocity.Z, 2);
-  //auto result = _fdclass(speedSquared);
-
-  //// knock-down velocity if too fast
-  //if (result == 1 || speedSquared > 10000.0) {
-  //  ps->velocity.X = 0.0;
-  //  ps->velocity.Y = 0.0;
-  //  ps->velocity.Z = 0.0;
-  //}
-
-  // apply torque to angular velocity
-  //auto deltaAV = _mm_add_ps(_mm_add_ps(
-  //  _mm_mul_ps(_mm_set1_ps(ps->torque.Y), _mm_load_ps((float*)&ps->invertedWorldInertiaTensor.Y)),
-  //  _mm_mul_ps(_mm_set1_ps(ps->torque.X), _mm_load_ps((float*)&ps->invertedWorldInertiaTensor.X))),
-  //  _mm_mul_ps(_mm_set1_ps(ps->torque.Z), _mm_load_ps((float*)&ps->invertedWorldInertiaTensor.Z)));
-
-  //ps->angularVelocity.X = deltaAV.m128_f32[0] + ps->angularVelocity.X;
-  //ps->angularVelocity.Y = deltaAV.m128_f32[1] + ps->angularVelocity.Y;
-  //ps->angularVelocity.Z = deltaAV.m128_f32[2] + ps->angularVelocity.Z;
-
-  // auto deltaAV = _mm_add_ps(_mm_add_ps(
-  //  _mm_mul_ps(_mm_shuffle_ps(_mm_set_ss(ps->torque.Y), _mm_set_ss(ps->torque.Y), 0), ps->invertedWorldInertiaTensor.Y.raw),
-  //  _mm_mul_ps(_mm_shuffle_ps(_mm_set_ss(ps->torque.X), _mm_set_ss(ps->torque.X), 0), ps->invertedWorldInertiaTensor.X.raw)),
-  //  _mm_mul_ps(_mm_shuffle_ps(_mm_set_ss(ps->torque.Z), _mm_set_ss(ps->torque.Z), 0), ps->invertedWorldInertiaTensor.Z.raw));
-  //
-  // ps->angularVelocity.X = deltaAV.m128_f32[0] + ps->angularVelocity.X;
-  // ps->angularVelocity.Y = deltaAV.m128_f32[1] + ps->angularVelocity.Y;
-  // ps->angularVelocity.Z = deltaAV.m128_f32[2] + ps->angularVelocity.Z;
-
-  //ps->torque.X = 0.0;
-  //ps->torque.Y = 0.0;
-  //ps->torque.Z = 0.0;
-
-  // apply angular velocity to quaternion
-  // https://www.ashwinnarayan.com/post/how-to-integrate-quaternions/
-  //auto w = ps->currentTransform.Orientation.k;
-  //auto x = ps->currentTransform.Orientation.r;
-  //auto y = ps->currentTransform.Orientation.i;
-  //auto z = ps->currentTransform.Orientation.j;
-  //auto aV = ps->angularVelocity;
-
-  //auto wp = 0.5 * (x * -aV.X + y * -aV.Y + z * -aV.Z);
-  //auto xp = 0.5 * (w * aV.X + y * aV.Z + z * -aV.Y);
-  //auto yp = 0.5 * (w * aV.Y + x * -aV.Z + z * aV.X);
-  //auto zp = 0.5 * (w * aV.Z + x * aV.Y + y * -aV.X);
-
-  //ps->orientation.i = y;
-  //ps->orientation.j = z;
-  //ps->orientation.k = w;
-  //ps->orientation.r = x;
-
-  //auto o = ps->currentTransform.Orientation;
-  //ps->orientation.i = (o.k * ps->angularVelocity.Y + o.r * ps->angularVelocity.X - o.j * ps->angularVelocity.Z) * 0.5;
-  //ps->orientation.j = (o.i * ps->angularVelocity.Z + o.r * ps->angularVelocity.Y - o.k * ps->angularVelocity.X) * 0.5;
-  //ps->orientation.k = (-o.i * ps->angularVelocity.X - o.j * ps->angularVelocity.Y - o.k * ps->angularVelocity.Z) * 0.5;
-  //ps->orientation.r = (o.r * ps->angularVelocity.Z + o.j * ps->angularVelocity.X - o.i * ps->angularVelocity.Y) * 0.5;
-
-  return result;
-}
 
 void VehicleTurnOffAirControl(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, bool *aOut, int64_t a4) {
   aFrame->code++; // skip ParamEnd
@@ -330,6 +246,20 @@ void VehicleGetAngularVelocity(RED4ext::IScriptable *aContext, RED4ext::CStackFr
 
   if (aOut) {
     *aOut = ps->angularVelocity;
+  }
+}
+
+void VehicleAddFlightHelper(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Handle<vehicle::flight::HelperWrapper> *aOut, int64_t a4) {
+  //RED4ext::ScriptInstance fc;
+  //RED4ext::GetParameter(aFrame, &fc);
+  aFrame->code++; // skip ParamEnd
+
+  auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
+  auto p = v->physics;
+  auto helper = vehicle::flight::Helper::AddToDriverHelpers(&p->driveHelpers);
+
+  if (aOut) {
+    *aOut = helper;
   }
 }
 
@@ -399,43 +329,14 @@ void EffectSpawnerAddEffect(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   //}
 }
 
-// struct gamePSMVehicle : RED4ext::CBaseRTTIType {
-//};
-
-// void TppFlightCameraParams(RED4ext::IScriptable* apContext,
-// RED4ext::CStackFrame* apFrame, RED4ext::VehicleTPPCameraParams_Record* apOut,
-// int64_t a4) {
-//    auto rtti = RED4ext::CRTTISystem::Get();
-//    auto TweakDBInterface = rtti->GetClass("TweakDBInterface");
-//    auto GetVehicleTPPCameraParamsRecord =
-//    TweakDBInterface->GetFunction("GetVehicleTPPCameraParamsRecord"); auto
-//    value = RED4ext::TweakDBID::TweakDBID("Camera.VehicleTPP_FlightParams");
-//    RED4ext::StackArgs_t args;
-//    args.emplace_back(nullptr, &value);
-//    RED4ext::ExecuteFunction(TweakDBInterface,
-//    GetVehicleTPPCameraParamsRecord, apOut, args);
-//}
-//
-// void TppCameraParamsHandle(RED4ext::IScriptable* apContext,
-// RED4ext::CStackFrame* apFrame,
-// RED4ext::Handle<RED4ext::VehicleTPPCameraParams_Record*>* apOut, int64_t a4)
-// {
-//    auto rtti = RED4ext::CRTTISystem::Get();
-//    auto TweakDBInterface = rtti->GetClass("TweakDBInterface");
-//    auto GetVehicleTPPCameraParamsRecord =
-//    TweakDBInterface->GetFunction("GetVehicleTPPCameraParamsRecord"); auto
-//    value = RED4ext::TweakDBID::TweakDBID("Camera.VehicleTPP_FlightParams");
-//    RED4ext::StackArgs_t args;
-//    args.emplace_back(nullptr, &value);
-//    RED4ext::ExecuteFunction(TweakDBInterface,
-//    GetVehicleTPPCameraParamsRecord, apOut, args);
-//}
-
 RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
   spdlog::info("Registering functions");
   FlightAudio::RegisterFunctions();
   FlightLog::RegisterFunctions();
   FlightSystem::RegisterFunctions();
+  FlightController::RegisterFunctions();
+  vehicle::flight::RegisterFunctions();
+  vehicle::flight::HelperWrapper::RegisterFunctions();
   // FlightHUDGameController::RegisterFunctions();
   RED4ext::CRTTISystem::Get()->RegisterScriptName("entBaseCameraComponent", "BaseCameraComponent");
   // RED4ext::CRTTISystem::Get()->RegisterScriptName("entColliderComponent",
@@ -480,54 +381,6 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
   auto NavGenAgentSizeEnum = rtti->GetEnum("NavGenAgentSize");
   NavGenAgentSizeEnum->hashList.PushBack("Vehicle");
   NavGenAgentSizeEnum->valueList.PushBack(1);
-
-  // auto gamedataVehicle_Record = rtti->GetClass("gamedataVehicle_Record");
-  // auto TppCameraParamsOld =
-  // gamedataVehicle_Record->GetFunction("TppCameraParams");
-
-  // auto TppCameraParamsNew =
-  // RED4ext::CClassFunction::Create(gamedataVehicle_Record,
-  // "TppFlightCameraParams", "TppFlightCameraParams", &TppFlightCameraParams, {
-  // .isNative = true });
-  //
-  // TppCameraParamsNew->fullName = TppCameraParamsOld->fullName;
-  // TppCameraParamsNew->shortName = TppCameraParamsOld->shortName;
-
-  // TppCameraParamsNew->returnType = TppCameraParamsOld->returnType;
-  // for (auto* p : TppCameraParamsOld->params)
-  //{
-  //    TppCameraParamsNew->params.PushBack(p);
-  //}
-
-  // for (auto* p : TppCameraParamsOld->localVars)
-  //{
-  //    TppCameraParamsNew->localVars.PushBack(p);
-  //}
-
-  // TppCameraParamsNew->unk20 = TppCameraParamsOld->unk20;
-  ////std::copy_n(TppCameraParamsOld->unk78,
-  /// std::size(TppCameraParamsOld->unk78), TppCameraParamsNew->unk78);
-  // TppCameraParamsNew->unk48 = TppCameraParamsOld->unk48;
-  // TppCameraParamsNew->unkAC = TppCameraParamsOld->unkAC;
-  // TppCameraParamsNew->flags = TppCameraParamsOld->flags;
-  // TppCameraParamsNew->parent = TppCameraParamsOld->parent;
-  // TppCameraParamsNew->flags.isNative = true;
-
-  //// Swap the content of the real function with the one we just created
-  // std::array<char, sizeof(RED4ext::CClassFunction)> tmpBuffer;
-
-  // std::memcpy(&tmpBuffer, TppCameraParamsOld,
-  // sizeof(RED4ext::CClassFunction)); std::memcpy(TppCameraParamsOld,
-  // TppCameraParamsNew, sizeof(RED4ext::CClassFunction));
-  // std::memcpy(TppCameraParamsNew, &tmpBuffer,
-  // sizeof(RED4ext::CClassFunction));
-
-  // gamedataVehicle_Record->RegisterFunction(TppCameraParamsNew);
-  // auto TppCameraParamsHandleFunc =
-  // RED4ext::CClassFunction::Create(gamedataVehicle_Record,
-  // "TppCameraParamsHandle", "TppCameraParamsHandle", &TppCameraParamsHandle, {
-  // .isNative = true });
-  // gamedataVehicle_Record->RegisterFunction(TppCameraParamsHandleFunc);
 
   // auto UIGameContextEnum = rtti->GetEnum("HUDActorType");
   // UIGameContextEnum->hashList.PushBack("FLIGHT");
@@ -584,6 +437,9 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
   auto turnOffAirControl = RED4ext::CClassFunction::Create(vbc, "TurnOffAirControl", "TurnOffAirControl", &VehicleTurnOffAirControl, {.isNative = true});
   vbc->RegisterFunction(turnOffAirControl);
 
+  auto addFlightHelper = RED4ext::CClassFunction::Create(vbc, "AddFlightHelper", "AddFlightHelper", &VehicleAddFlightHelper, {.isNative = true});
+  vbc->RegisterFunction(addFlightHelper);
+  
 
   auto ms = rtti->GetClass("gameuiMinimapContainerController");
   ms->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("array:Vector4"), "questPoints", nullptr, 0x1E0));
@@ -618,6 +474,30 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
   // 0x14342E6C0
 }
 
+short PhysicsStructUpdate(RED4ext::physics::VehiclePhysicsStruct *ps);
+
+// 40 53 48 81 EC 80 00 00  00 F3 0F 10 41 40 48 8B D9 F3 0F 10 51 08 0F 28 C8 F3 0F 59 09 0F 29 74
+constexpr uintptr_t VehiclePhysicsApplyForceTorque = 0x141CE1960 - RED4ext::Addresses::ImageBase; 
+decltype(&PhysicsStructUpdate) PhysicsStructUpdate_Original;
+
+short PhysicsStructUpdate(RED4ext::physics::VehiclePhysicsStruct *ps) {
+
+  // apply force to linear velocity
+  RED4ext::Vector3 unlimitedVelocity;
+  unlimitedVelocity.X = ps->velocity.X + ps->force.X * ps->inverseMass;
+  unlimitedVelocity.Y = ps->velocity.Y + ps->force.Y * ps->inverseMass;
+  unlimitedVelocity.Z = ps->velocity.Z + ps->force.Z * ps->inverseMass;
+
+  auto result = PhysicsStructUpdate_Original(ps);
+
+  // ignore speed limit in og function
+  if (result != 1) {
+    ps->velocity = unlimitedVelocity;
+  }
+
+  return result;
+}
+
 RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::EMainReason aReason,
                                         const RED4ext::Sdk *aSdk) {
   switch (aReason) {
@@ -645,9 +525,8 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 
     aSdk->gameStates->Add(aHandle, RED4ext::EGameStateType::Shutdown, &shutdownState);
 
-    aSdk->hooking->Attach(aHandle,
-                          RED4EXT_OFFSET_TO_ADDR(RED4ext::Addresses::VehiclePhysicsApplyForceTorque),
-                          &PhysicsStructUpdate, reinterpret_cast<void **>(&PhysicsStructUpdate_Original));
+    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehiclePhysicsApplyForceTorque), 
+      &PhysicsStructUpdate, reinterpret_cast<void **>(&PhysicsStructUpdate_Original));
     break;
   }
   case RED4ext::EMainReason::Unload: {
@@ -655,8 +534,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // The game's memory is already freed, to not try to do anything with it.
 
     spdlog::info("Shutting down");
-    aSdk->hooking->Detach(aHandle,
-                          RED4EXT_OFFSET_TO_ADDR(RED4ext::Addresses::VehiclePhysicsApplyForceTorque));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehiclePhysicsApplyForceTorque));
     spdlog::shutdown();
     break;
   }

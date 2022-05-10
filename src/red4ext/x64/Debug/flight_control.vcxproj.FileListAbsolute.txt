@@ -1,0 +1,3 @@
+C:\Users\Jack\Documents\cyberpunk\flight_control\src\red4ext\x64\Debug\flight_control.vcxproj.MdMergeInputs.cache
+C:\Users\Jack\Documents\cyberpunk\flight_control\src\red4ext\x64\Debug\flight_control.vcxproj.cppwinrt_plat.cache
+C:\Users\Jack\Documents\cyberpunk\flight_control\src\red4ext\x64\Debug\flight_control.vcxproj.cppwinrt_comp.cache

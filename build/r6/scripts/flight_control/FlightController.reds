@@ -33,7 +33,7 @@ public static func fcv() -> wref<VehicleObject> {
 
 // maybe this should extend ScriptableComponent or GameComponent?
 // Singleton instance with player lifetime
-public class FlightController extends IScriptable {
+public native class FlightController extends IScriptable {
   public let chassis: ref<vehicleChassisComponent>;
   private let gameInstance: GameInstance;
   private let player: ref<PlayerPuppet>;
@@ -143,6 +143,7 @@ public class FlightController extends IScriptable {
   public let averageMass: Float;
   
   private let sqs: ref<SpatialQueriesSystem>;
+  public let helper: ref<vehicleFlightHelper>;
 
   // protected let m_settingsListener: ref<FlightSettingsListener>;
   // protected let m_groupPath: CName;
@@ -160,8 +161,8 @@ public class FlightController extends IScriptable {
     this.angularBrakeFactor = -300.0;
     this.liftFactor = 10.0;
     this.liftFactorDrone = 30.0;
-    // this.surgeFactor = 15.0;
-    this.surgeFactor = 50.0;
+    this.surgeFactor = 15.0;
+    // this.surgeFactor = 50.0;
     this.hoverFactor = 5.0;
     this.hoverClamp = 1.0;
 
@@ -293,6 +294,7 @@ public class FlightController extends IScriptable {
 
     (this.GetVehicle().FindComponentByName(n"cars_sport_fx") as EffectSpawnerComponent).AddEffect();
 
+    this.helper = this.GetVehicle().AddFlightHelper();
   }
 
   public func Disable() -> Void {
@@ -344,6 +346,7 @@ public class FlightController extends IScriptable {
 
     this.SetupTires();
     this.SetupPositionProviders();
+    this.GetVehicle().TurnOffAirControl();
 
     // GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"summon_hologram", true);
     GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"test_effect", true);
@@ -814,13 +817,27 @@ public class FlightController extends IScriptable {
     return foundGround;
   } 
 
+
+  public static cb func PhysicsUpdate() {
+    let fc = FlightController.GetInstance();
+    if (fc.IsActive()) { 
+      // fc.OnPhysicsUpdate(1.0/60.0);
+          FlightLog.Info("in the physics update!");
+    }
+  }
+
+  // protected cb func PhysicsUpdate(evt: ref<vehicleFlightPhysicsUpdateEvent>) -> Bool {
+    // FlightLog.Info("in the physics update!");
+  // }
+
   public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
+    // let timeDelta = evt.timeDelta;
+
     // this.camera.isInAir = false;
     this.GetVehicle().isOnGround = true;
     this.ui.camera.drivingDirectionCompensationAngleSmooth = 120.0;
     this.ui.camera.drivingDirectionCompensationSpeedCoef = 0.1;
 
-    this.GetVehicle().TurnOffAirControl();
 
     // let cameraPos = this.ui.camera.GetLocalToWorld() * Vector4.EmptyVector();
     // let localCameraPos = Matrix.GetInverted(this.GetVehicle().chassis.GetLocalToWorld()) * cameraPos;
@@ -912,8 +929,11 @@ public class FlightController extends IScriptable {
       // factor in interia tensor
       combinedTorque *= this.GetVehicle().GetInertiaTensor();
 
-      this.CreateImpulse(combinedForce);
-      this.CreateMoment(combinedTorque);
+      // this.CreateImpulse(combinedForce);
+      // this.CreateMoment(combinedTorque);
+
+      this.helper.force = combinedForce;
+      this.helper.torque = combinedTorque;
 
     } else {
 
@@ -1030,8 +1050,8 @@ public class FlightController extends IScriptable {
       let combinedTorque: Vector4 = new Vector4(0.0, 0.0, 0.0, 0.0);
 
       // yawDirectionality - redirect non-directional velocity to vehicle forward
-      // combinedForce += this.stats.d_forward * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta;
-      // combinedForce += -this.stats.d_direction * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta;
+      combinedForce += this.stats.d_forward * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta;
+      combinedForce += -this.stats.d_direction * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta;
       // lift
       // combinedForce += new Vector4(0.00, 0.00, liftForce + this.stats.d_speedRatio * liftForce, 0.00) * timeDelta;
       combinedForce += new Vector4(0.00, 0.00, liftForce, 0.00) * timeDelta;
@@ -1059,8 +1079,11 @@ public class FlightController extends IScriptable {
       // factor in interia tensor
       combinedTorque *= this.GetVehicle().GetInertiaTensor();
 
-      this.CreateImpulse(combinedForce);
-      this.CreateMoment(combinedTorque);
+      this.helper.force = combinedForce;
+      this.helper.torque = combinedTorque;
+
+      // this.CreateImpulse(combinedForce);
+      // this.CreateMoment(combinedTorque);
 
     }
 

@@ -99,6 +99,10 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="FlightController.cpp" />
+    <ClCompile Include="FlightEvents.cpp" />
+    <ClCompile Include="FlightHelper.cpp" />
+    <ClCompile Include="FlightHelperWrapper.cpp" />
     <ClCompile Include="FlightHUDGameController.cpp" />
     <ClCompile Include="FlightLog.cpp" />
     <ClCompile Include="FlightStats_Record.cpp" />
@@ -110,14 +114,22 @@
     <ClCompile Include="FlightHUDGameController.hpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Utils.cpp" />
+    <ClCompile Include="VehicleSpeedUnlimiter.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DriveHelper-inl.hpp" />
+    <ClInclude Include="DriveHelper.hpp" />
     <ClInclude Include="FlightAudio.hpp" />
+    <ClInclude Include="FlightController.hpp" />
+    <ClInclude Include="FlightEvents.hpp" />
+    <ClInclude Include="FlightHelper.hpp" />
+    <ClInclude Include="FlightHelperWrapper.hpp" />
     <ClInclude Include="FlightLog.hpp" />
     <ClInclude Include="FlightStats_Record.hpp" />
     <ClInclude Include="FlightSystem.hpp" />
     <ClInclude Include="stdafx.hpp" />
     <ClInclude Include="Utils.hpp" />
+    <ClInclude Include="VehicleSpeedUnlimiter.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

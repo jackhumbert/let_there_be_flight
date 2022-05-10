@@ -146,7 +146,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   }
 
   protected cb func OnVehicleFlightActivationEvent(evt: ref<VehicleFlightActivationEvent>) -> Bool {
-    FlightLog.Info("[FlightComponent] OnVehicleFlightActivationEvent: " + evt.vehicle.GetDisplayName());
+    FlightLog.Info("[FlightComponent] OnVehicleFlightActivationEvent: " + this.GetVehicle().GetDisplayName());
 
   }
 
