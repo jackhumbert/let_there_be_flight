@@ -1,18 +1,36 @@
 #include "FlightModule.hpp"
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/HudWidgetSpawnEntry.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ink/WidgetLibraryResource.hpp>
 
 namespace vehicle {
 namespace flight {
 
-void CopyHUDWidgetSpawnEntries(uintptr_t a1, RED4ext::DynArray<RED4ext::ink::HudWidgetSpawnEntry> *a2);
+struct HUDLayerUnknown {
+  uint64_t unk[11];
+  RED4ext::DynArray<RED4ext::ink::HudWidgetSpawnEntry> spawnEntries;
+};
+
+void CopyHUDWidgetSpawnEntries(HUDLayerUnknown *a1, RED4ext::DynArray<RED4ext::ink::HudWidgetSpawnEntry> *a2);
 
 // 40 53 56 41 56 48 83 EC  30 48 8B F2 4C 89 7C 24 60 8B 52 0C 4C 8B F1 48 8B 0E E8 01 03 00 00 33
 constexpr uintptr_t CopyHUDWidgetSpawnEntriesAddr = 0x140820EA0 - RED4ext::Addresses::ImageBase;
 decltype(&CopyHUDWidgetSpawnEntries) CopyHUDWidgetSpawnEntries_Original;
 
-void CopyHUDWidgetSpawnEntries(uintptr_t a1, RED4ext::DynArray<RED4ext::ink::HudWidgetSpawnEntry> *a2) {
-  CopyHUDWidgetSpawnEntries_Original(a1, a2);
+//// 40 53 48 83 EC 60 33 C0  48 8B DA 48 89 44 24 20 89 44 24 28 88 44 24 2C 48 39 01 74 2D 48 8B 11
+//constexpr uintptr_t CreateResRef08Addr = 0x140200110 - RED4ext::Addresses::ImageBase;
+//using CreateResRef08Sig = RED4ext::ResourceWrapper<RED4ext::ink::WidgetLibraryResource>* (*) (uint64_t *, RED4ext::ResourceWrapper<RED4ext::ink::WidgetLibraryResource> *a2);
+//
+//// 40 53 48 83 EC 40 8B 41  58 48 8B D9 0F 29 74 24 30 0F 29 7C 24 20 85 C0 74 0A 80 79 5C 00 0F 84
+//constexpr uintptr_t WaitUntilLoadedAddr = 0x1402476B0 - RED4ext::Addresses::ImageBase;
+//using WaitUntilLoadedSig = void * (*) (RED4ext::ResourceWrapper<RED4ext::ink::WidgetLibraryResource> *a2);
+
+// 48 89 5C 24 08 48 89 74  24 10 57 48 83 EC 60 41 0F B6 D8 48 8B FA 48 8B F1 48 C7 44 24 20 00 00
+constexpr uintptr_t LoadResRefAddr = 0x140200060 - RED4ext::Addresses::ImageBase;
+using LoadResRefSig = RED4ext::ResourceWrapper<RED4ext::ink::WidgetLibraryResource>* (*) (uint64_t *,
+RED4ext::ResourceWrapper<RED4ext::ink::WidgetLibraryResource> *a2, int8_t);
+
+void CopyHUDWidgetSpawnEntries(HUDLayerUnknown *a1, RED4ext::DynArray<RED4ext::ink::HudWidgetSpawnEntry> *a2) {
 
   auto instance = new RED4ext::ink::HudWidgetSpawnEntry();
   instance->hudEntryName = "flight_hud";
@@ -32,8 +50,30 @@ void CopyHUDWidgetSpawnEntries(uintptr_t a1, RED4ext::DynArray<RED4ext::ink::Hud
   instance->slotParams.useSlotLayout = true;
   instance->slotParams.layoutOverride.sizeCoefficient = 1.0;
 
+  RED4ext::RelocFunc<LoadResRefSig> LoadResRef(LoadResRefAddr);
+  //RED4ext::RelocFunc<WaitUntilLoadedSig> WaitUntilLoaded(WaitUntilLoadedAddr);
+
+  auto wrapper = new RED4ext::ResourceWrapper<RED4ext::ink::WidgetLibraryResource>();
+  uint64_t hash = 2783178642409560840;
+  LoadResRef(&hash, wrapper, false);
+  //WaitUntilLoaded(wrapper->self);
+
+  instance->widgetResource.hash = hash;
+  instance->widgetResource.wrapper = wrapper->self;
+  instance->widgetResource.refCount = wrapper->refCount;
+  instance->widgetResource.refCount->IncRef();
+
+  //for (const auto &entry : a1->spawnEntries) {
+  //  if (entry.hudEntryName == "car hud") {
+  //    instance->widgetResource.hash = entry.widgetResource.hash;
+  //    instance->widgetResource.wrapper= entry.widgetResource.wrapper;
+  //    instance->widgetResource.refCount = entry.widgetResource.refCount;
+  //    instance->widgetResource.refCount->IncRef();
+  //  }
+  //}
+
   //instance->widgetResource.ref = (RED4ext::ink::WidgetLibraryResource *)11046326377887898612; // base\gameplay\gui\widgets\vehicle\huds\hud_car_default.inkwidget
-  instance->widgetResource.ref = (RED4ext::ink::WidgetLibraryResource *)2783178642409560840; // base\gameplay\gui\widgets\vehicle\huds\hud_flight_default.inkwidget
+  //instance->widgetResource.ref = (RED4ext::ink::WidgetLibraryResource *)2783178642409560840; // base\gameplay\gui\widgets\vehicle\huds\hud_flight_default.inkwidget
   
 
   //auto rtti = RED4ext::CRTTISystem::Get();
@@ -41,7 +81,8 @@ void CopyHUDWidgetSpawnEntries(uintptr_t a1, RED4ext::DynArray<RED4ext::ink::Hud
   //auto instance = reinterpret_cast<RED4ext::ink::HudWidgetSpawnEntry *>(cls->AllocInstance());
   //auto pEffectHandle = RED4ext::Handle<RED4ext::ISerializable>(pEffectInstance);
 
-  a2->EmplaceBack(nullptr, instance);
+  a1->spawnEntries.EmplaceBack(nullptr, instance);
+  CopyHUDWidgetSpawnEntries_Original(a1, a2);
 }
 
 struct CustomHUDLayer : FlightModule {

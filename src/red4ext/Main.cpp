@@ -162,9 +162,7 @@ void ChassisGetComOffset(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *a
   auto vccClass = rtti->GetClass("vehicleChassisComponent");
   auto crProp = vccClass->GetProperty("collisionResource");
   auto cr = crProp->GetValue<RED4ext::Ref<RED4ext::physics::SystemResource>>(aContext);
-  auto hpsr = (RED4ext::Handle<RED4ext::physics::SystemResource> *)(cr.unk08 + 0x28);
-  auto psr = hpsr->GetPtr();
-  RED4ext::Handle<RED4ext::physics::SystemBody> hpsb = psr->bodies[0];
+  RED4ext::Handle<RED4ext::physics::SystemBody> hpsb = cr.wrapper->resource->bodies[0];
   auto params = hpsb->params;
 
   if (aOut) {
@@ -523,7 +521,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 RED4EXT_C_EXPORT void RED4EXT_CALL Query(RED4ext::PluginInfo *aInfo) {
   aInfo->name = L"Flight Control";
   aInfo->author = L"Jack Humbert";
-  aInfo->version = RED4EXT_SEMVER(0, 0, 2);
+  aInfo->version = RED4EXT_SEMVER(0, 0, 8);
   aInfo->runtime = RED4EXT_RUNTIME_LATEST;
   aInfo->sdk = RED4EXT_SDK_LATEST;
 }
