@@ -7,16 +7,18 @@
 namespace vehicle {
 namespace flight {
 
+REGISTER_FLIGHT_MODULE(HelperWrapperModule);
+
 RED4ext::TTypedClass<HelperWrapper> helperCls("vehicleFlightHelper");
 
 RED4ext::CClass *HelperWrapper::GetNativeType() { return &helperCls; }
 
-void HelperWrapper::RegisterTypes() {
+void HelperWrapperModule::RegisterTypes() {
   helperCls.flags = {.isNative = true};
   RED4ext::CRTTISystem::Get()->RegisterType(&helperCls);
 }
 
-void HelperWrapper::RegisterFunctions() {
+void HelperWrapperModule::PostRegisterTypes() {
   auto rtti = RED4ext::CRTTISystem::Get();
   auto is = rtti->GetClass("IScriptable");
   helperCls.parent = is;

@@ -158,8 +158,8 @@ public native class FlightController extends IScriptable {
     this.showUI = true;
     this.brakeFactor = 1.2;
     this.angularDampFactor = -100.0;
-    this.angularBrakeFactor = -300.0;
-    this.liftFactor = 10.0;
+    this.angularBrakeFactor = -10.0;
+    this.liftFactor = 8.0;
     this.liftFactorDrone = 30.0;
     this.surgeFactor = 15.0;
     // this.surgeFactor = 50.0;
@@ -173,7 +173,7 @@ public native class FlightController extends IScriptable {
     this.rollCorrectionFactor = 15.0;
     this.yawCorrectionFactor = 0.05;
     this.yawFactorDrone = 3.0;
-    this.yawDirectionalityFactor = 50.0;
+    this.yawDirectionalityFactor = 30.0;
     this.brake = InputPID.Create(0.05, 0.5);
     this.lift = InputPID.Create(0.05, 0.2);
     this.surge = InputPID.Create(0.04, 0.2);
@@ -187,7 +187,7 @@ public native class FlightController extends IScriptable {
     this.rollGroundPID =  DualPID.Create(0.5, 0.2, 0.05,  2.5, 1.5, 0.5);
     this.rollPID =  DualPID.Create(1.0, 0.5, 0.5,  1.0, 0.5, 0.5);
     this.yawPID = PID.Create(1.0, 0.1, 0.0);
-    this.yawD = 2.0;
+    this.yawD = 3.0;
     this.distance = 0.0;
     this.distanceEase = 0.1;
     this.normal = new Vector4(0.0, 0.0, 1.0, 0.0);
@@ -201,7 +201,7 @@ public native class FlightController extends IScriptable {
     // this.lookAheadMin = 1.0;
     this.lookDown = new Vector4(0.0, 0.0, -this.maxHoverHeight - 10.0, 0.0);
     this.fwtfCorrection = 0.0;
-    this.pitchWithLift = 0.5;
+    this.pitchWithLift = 0.8;
     // this.rollWithYaw = 0.15;
     // this.swayWithYaw =   0.5;
     // this.surgeOffset = 0.5;
@@ -346,7 +346,7 @@ public native class FlightController extends IScriptable {
 
     this.SetupTires();
     this.SetupPositionProviders();
-    this.GetVehicle().TurnOffAirControl();
+    // this.GetVehicle().TurnOffAirControl();
 
     // GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"summon_hologram", true);
     GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"test_effect", true);
@@ -696,6 +696,10 @@ public native class FlightController extends IScriptable {
     this.audio.damage = 1.0 - MaxF(GameInstance.GetStatPoolsSystem(this.gameInstance).GetStatPoolValue(Cast<StatsObjectID>(this.GetVehicle().GetEntityID()), gamedataStatPoolType.Health, false) + ratio, 1.0);
 
     this.audio.surge = this.surge.GetValue() * ratio;
+    if Equals(this.mode, FlightMode.Drone) {
+      this.audio.surge *= 0.5;
+      this.audio.surge += this.lift.GetValue() * ratio * 0.5;
+    }
     this.audio.yaw = this.yaw.GetValue() * ratio;
     this.audio.lift = this.lift.GetValue() * ratio;
     this.audio.brake = this.brake.GetValue();
@@ -834,7 +838,7 @@ public native class FlightController extends IScriptable {
     // let timeDelta = evt.timeDelta;
 
     // this.camera.isInAir = false;
-    this.GetVehicle().isOnGround = true;
+    // this.GetVehicle().isOnGround = true;
     this.ui.camera.drivingDirectionCompensationAngleSmooth = 120.0;
     this.ui.camera.drivingDirectionCompensationSpeedCoef = 0.1;
 
@@ -919,21 +923,28 @@ public native class FlightController extends IScriptable {
       combinedForce *= this.stats.s_mass;
 
       // pitch correction
-      combinedTorque.X =  (this.pitch.GetValue() * this.pitchFactorDrone) * timeDelta;
+      combinedTorque.X =  -(this.pitch.GetValue() * this.pitchFactorDrone) * timeDelta;
       // roll correction
       combinedTorque.Y = (this.roll.GetValue() * this.rollFactorDrone) * timeDelta;
       // yaw correction
-      combinedTorque.Z = (this.yaw.GetValue() * this.yawFactorDrone) * timeDelta;
+      combinedTorque.Z = -(this.yaw.GetValue() * this.yawFactorDrone) * timeDelta;
       // rotational brake
       // combinedTorque = combinedTorque + (angularDamp * timeDelta);
       // factor in interia tensor
       combinedTorque *= this.GetVehicle().GetInertiaTensor();
 
+      combinedTorque = this.stats.d_orientation * combinedTorque;
       // this.CreateImpulse(combinedForce);
       // this.CreateMoment(combinedTorque);
 
-      this.helper.force += combinedForce;
-      this.helper.torque += combinedTorque;
+      if this.collisionTimer < this.collisionRecoveryDelay + this.collisionRecoveryDuration {
+        let collisionDampener = MinF(MaxF(0.0, (this.collisionTimer - this.collisionRecoveryDelay) / this.collisionRecoveryDuration), 1.0);
+        combinedTorque *= collisionDampener;
+        combinedForce *= collisionDampener;
+      }
+
+      this.helper.force = this.helper.force + combinedForce;
+      this.helper.torque = this.helper.torque + combinedTorque;
 
     } else {
 
@@ -1047,11 +1058,13 @@ public native class FlightController extends IScriptable {
       //this.CreateImpulse(this.stats.d_position, this.stats.d_right * Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right) * yawDirectionality / 2.0 * timeDelta);
 
       let combinedForce: Vector4 = new Vector4(0.0, 0.0, 0.0, 0.0);
-      let combinedTorque: Vector4 = new Vector4(0.0, 0.0, 0.0, 0.0);
+      let combinedTorque: Vector4 = new Vector4(0.0, 0.0, 0.0, 0.0); 
+
+      let aeroFactor = Vector4.Dot(this.stats.d_forward, this.stats.d_direction);
 
       // yawDirectionality - redirect non-directional velocity to vehicle forward
-      combinedForce += this.stats.d_forward * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta;
-      combinedForce += -this.stats.d_direction * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta;
+      combinedForce += this.stats.d_forward * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta * aeroFactor;
+      combinedForce += -this.stats.d_direction * AbsF(Vector4.Dot(this.stats.d_forward - direction, this.stats.d_right)) * yawDirectionality * timeDelta * AbsF(aeroFactor);
       // lift
       // combinedForce += new Vector4(0.00, 0.00, liftForce + this.stats.d_speedRatio * liftForce, 0.00) * timeDelta;
       combinedForce += new Vector4(0.00, 0.00, liftForce, 0.00) * timeDelta;
@@ -1063,11 +1076,11 @@ public native class FlightController extends IScriptable {
       combinedForce *= this.stats.s_mass;
 
       // pitch correction
-      combinedTorque.X = (pitchCorrection + angularDamp.X) * timeDelta;
+      combinedTorque.X = -(pitchCorrection + angularDamp.X) * timeDelta;
       // roll correction
-      combinedTorque.Y = -(rollCorrection + angularDamp.Y) * timeDelta;
+      combinedTorque.Y = (rollCorrection - angularDamp.Y) * timeDelta;
       // yaw correction
-      combinedTorque.Z = ((yawCorrection * this.yawCorrectionFactor + this.yaw.GetValue() * this.yawFactor) + angularDamp.Z) * timeDelta;
+      combinedTorque.Z = -((yawCorrection * this.yawCorrectionFactor + this.yaw.GetValue() * this.yawFactor) + angularDamp.Z) * timeDelta;
       // rotational brake
       // combinedTorque = combinedTorque + (angularDamp * timeDelta);
 
@@ -1079,8 +1092,16 @@ public native class FlightController extends IScriptable {
       // factor in interia tensor
       combinedTorque *= this.GetVehicle().GetInertiaTensor();
 
-      this.helper.force += combinedForce;
-      this.helper.torque += combinedTorque;
+      combinedTorque = this.stats.d_orientation * combinedTorque;
+
+      if this.collisionTimer < this.collisionRecoveryDelay + this.collisionRecoveryDuration {
+        let collisionDampener = MinF(MaxF(0.0, (this.collisionTimer - this.collisionRecoveryDelay) / this.collisionRecoveryDuration), 1.0);
+        combinedTorque *= collisionDampener;
+        combinedForce *= collisionDampener;
+      }
+
+      this.helper.force = this.helper.force + combinedForce;
+      this.helper.torque = this.helper.torque + combinedTorque;
 
       // this.CreateImpulse(combinedForce);
       // this.CreateMoment(combinedTorque);

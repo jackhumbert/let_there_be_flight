@@ -16,6 +16,7 @@
 #include <RED4ext/Scripting/Natives/Generated/red/ResourceReferenceScriptToken.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/ChassisComponent.hpp>
+#include <RED4ext/Scripting/Natives/Generated/vehicle/TPPCameraComponent.hpp>
 #include <RED4ext/Scripting/Natives/ScriptGameInstance.hpp>
 #include <iostream>
 
@@ -31,15 +32,15 @@
 #include "FlightHelper.hpp"
 #include "FlightController.hpp"
 #include "FlightEvents.hpp"
+#include "FlightCamera.hpp"
 
 RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes() {
   spdlog::info("Registering classes & types");
   FlightAudio::RegisterTypes();
-  FlightLog::RegisterTypes();
   FlightSystem::RegisterTypes();
   FlightController::RegisterTypes();
-  vehicle::flight::RegisterTypes();
-  vehicle::flight::HelperWrapper::RegisterTypes();
+  FlightModuleFactory::getInstance().RegisterTypes();
+
   // FlightHUDGameController::RegisterTypes();
   // FlightStats_Record::RegisterTypes();
 }
@@ -332,11 +333,11 @@ void EffectSpawnerAddEffect(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
 RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
   spdlog::info("Registering functions");
   FlightAudio::RegisterFunctions();
-  FlightLog::RegisterFunctions();
   FlightSystem::RegisterFunctions();
   FlightController::RegisterFunctions();
-  vehicle::flight::RegisterFunctions();
-  vehicle::flight::HelperWrapper::RegisterFunctions();
+
+  FlightModuleFactory::getInstance().PostRegisterTypes();
+
   // FlightHUDGameController::RegisterFunctions();
   RED4ext::CRTTISystem::Get()->RegisterScriptName("entBaseCameraComponent", "BaseCameraComponent");
   // RED4ext::CRTTISystem::Get()->RegisterScriptName("entColliderComponent",
@@ -474,30 +475,6 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
   // 0x14342E6C0
 }
 
-short PhysicsStructUpdate(RED4ext::physics::VehiclePhysicsStruct *ps);
-
-// 40 53 48 81 EC 80 00 00  00 F3 0F 10 41 40 48 8B D9 F3 0F 10 51 08 0F 28 C8 F3 0F 59 09 0F 29 74
-constexpr uintptr_t VehiclePhysicsApplyForceTorque = 0x141CE1960 - RED4ext::Addresses::ImageBase; 
-decltype(&PhysicsStructUpdate) PhysicsStructUpdate_Original;
-
-short PhysicsStructUpdate(RED4ext::physics::VehiclePhysicsStruct *ps) {
-
-  // apply force to linear velocity
-  RED4ext::Vector3 unlimitedVelocity;
-  unlimitedVelocity.X = ps->velocity.X + ps->force.X * ps->inverseMass;
-  unlimitedVelocity.Y = ps->velocity.Y + ps->force.Y * ps->inverseMass;
-  unlimitedVelocity.Z = ps->velocity.Z + ps->force.Z * ps->inverseMass;
-
-  auto result = PhysicsStructUpdate_Original(ps);
-
-  // ignore speed limit in og function
-  if (result != 1) {
-    ps->velocity = unlimitedVelocity;
-  }
-
-  return result;
-}
-
 RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::EMainReason aReason,
                                         const RED4ext::Sdk *aSdk) {
   switch (aReason) {
@@ -507,7 +484,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // is not initalized yet.
 
     Utils::CreateLogger();
-    spdlog::info("Starting up");
+    spdlog::info("[RED4ext] Starting up");
 
     RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
 
@@ -525,16 +502,16 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 
     aSdk->gameStates->Add(aHandle, RED4ext::EGameStateType::Shutdown, &shutdownState);
 
-    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehiclePhysicsApplyForceTorque), 
-      &PhysicsStructUpdate, reinterpret_cast<void **>(&PhysicsStructUpdate_Original));
+    FlightModuleFactory::getInstance().Load(aSdk, aHandle);
+
     break;
   }
   case RED4ext::EMainReason::Unload: {
     // Free memory, detach hooks.
     // The game's memory is already freed, to not try to do anything with it.
 
-    spdlog::info("Shutting down");
-    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehiclePhysicsApplyForceTorque));
+    spdlog::info("[RED4ext] Shutting down");
+    FlightModuleFactory::getInstance().Unload(aSdk, aHandle);
     spdlog::shutdown();
     break;
   }

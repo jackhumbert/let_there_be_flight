@@ -55,17 +55,7 @@ void Helper::RegisterFunctions() {
   //vdtpe->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Vector4"), "torque", nullptr, 0x18));
 }
 
-RED4ext::Handle<HelperWrapper> Helper::AddToDriverHelpers(RED4ext::DynArray<uintptr_t> *ra) { //, RED4ext::ScriptInstance fc) {
-  // FlightHelperCreationStruct cs;
-  // FlightHelperCreationStruct * csp;
-
-  // RED4ext::RelocFunc<FlightHelperCreationStruct *(*)(FlightHelperCreationStruct*, unsigned __int64 a2)> poolThing(
-  //    VehiclePhysicsPoolThing);
-  // csp = poolThing(&cs, 0x8);
-  // memset(csp->pointer, 0, csp->size);
-
-  // RED4ext::RelocFunc<FlightHelper (*)(FlightHelper * a1)> initDriveHelper(InitializeDriveHelper);
-  // initDriveHelper(csp->pointer);
+RED4ext::Handle<HelperWrapper> Helper::AddToDriverHelpers(RED4ext::DynArray<uintptr_t> *ra) {
 
   Helper *h = new Helper();
   h->wrapper = new HelperWrapper();
@@ -78,6 +68,7 @@ RED4ext::Handle<HelperWrapper> Helper::AddToDriverHelpers(RED4ext::DynArray<uint
   h->wrapper->torque.Y = 0.0;
   h->wrapper->torque.Z = 0.0;
 
+  // need to create the handle before adding to driveHelpers
   auto hwh = RED4ext::Handle<HelperWrapper>(h->wrapper);
 
   RED4ext::RelocFunc<void *(*)(RED4ext::DynArray<uintptr_t> *, void *)> addToDriveHelper(AddDriveHelperToArray);
@@ -88,12 +79,8 @@ RED4ext::Handle<HelperWrapper> Helper::AddToDriverHelpers(RED4ext::DynArray<uint
 }
 
 void Helper::PhysicsUpdate(RED4ext::vehicle::BaseObject *vehicle, float timeDelta) {
-  // if (vehicle->isOnGround) {
-  //}
-  // if (timeDelta > 0.0) {
-  // spdlog::info("in the physics update! dT: {:01.6f}", deltaTime); // -4 sometimes
 
-  //auto fh = reinterpret_cast<Helper *>(helper);
+  //vehicle->isOnGround = true;
 
   vehicle->physicsStruct->force.X += this->wrapper->force.X;
   vehicle->physicsStruct->force.Y += this->wrapper->force.Y;
@@ -110,32 +97,6 @@ void Helper::PhysicsUpdate(RED4ext::vehicle::BaseObject *vehicle, float timeDelt
   this->wrapper->torque.X = 0.0;
   this->wrapper->torque.Y = 0.0;
   this->wrapper->torque.Z = 0.0;
-
-  //auto rtti = RED4ext::CRTTISystem::Get();
-  //auto FlightController = rtti->GetClass("FlightController");
-  //auto PhysicsUpdate = FlightController->GetFunction("PhysicsUpdate");
-  //// bool valid;
-  //RED4ext::ExecuteFunction(FlightController, PhysicsUpdate, nullptr, nullptr);
-
-  // RED4ext::StackArgs_t args;
-  // args.emplace_back(nullptr, &timeDelta);
-  // void *out;
-  // RED4ext::ExecuteFunction(FlightController, PhysicsUpdate, &out, args);
-
-  // auto e = new vehicle::flight::PhysicsUpdateEvent();
-  ////e->vehicle = vehicle;
-  // e->timeDelta = timeDelta;
-
-  // RED4ext::RelocFunc<void (*)(RED4ext::ent::Entity *, RED4ext::red::Event *)> QueueEvent(EntityQueueEvent);
-  // QueueEvent(vehicle, e);
-
-  //}
-
-  // auto stack = new RED4ext::CStack(a1->flightController, &deltaTime, 1, nullptr, 0i64);
-
-  // PhysicsUpdate->Execute(stack);
-  // bool valid;
-  // RED4ext::ExecuteFunction(a1->flightController, PhysicsUpdate, &valid, &deltaTime);
 }
 
 } // namespace flight

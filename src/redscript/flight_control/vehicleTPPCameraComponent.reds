@@ -37,8 +37,8 @@ public native func GetCenterOfMass() -> Vector3;
 @addMethod(VehicleObject)
 public native func GetAngularVelocity() -> Vector3;
 
-@addMethod(VehicleObject)
-public native func TurnOffAirControl() -> Bool;
+// @addMethod(VehicleObject)
+// public native func TurnOffAirControl() -> Bool;
 
 public native class vehicleFlightHelper extends IScriptable {
     public native let force: Vector4;

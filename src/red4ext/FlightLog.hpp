@@ -1,6 +1,8 @@
 #pragma once
+#include "FlightModule.hpp"
 
 namespace FlightLog {
-    void RegisterTypes();
-    void RegisterFunctions();
+struct FlightLog : RED4ext::IScriptable {
+  RED4ext::CClass *GetNativeType();
+};
 }

@@ -4,6 +4,8 @@ namespace vehicle {
 
 namespace flight {
 
+REGISTER_FLIGHT_MODULE(FlightEventsModule);
+
 RED4ext::TTypedClass<Event> eventCls("vehicleFlightEvent");
 
 RED4ext::CClass *Event::GetNativeType() { return &eventCls; }
@@ -12,7 +14,7 @@ RED4ext::TTypedClass<PhysicsUpdateEvent> physicsUpdateEventCls("vehicleFlightPhy
 
 RED4ext::CClass *PhysicsUpdateEvent::GetNativeType() { return &physicsUpdateEventCls; }
 
-void RegisterTypes() {
+void FlightEventsModule::RegisterTypes() {
   eventCls.flags = {.isNative = true};
   RED4ext::CRTTISystem::Get()->RegisterType(&eventCls);
 
@@ -20,7 +22,7 @@ void RegisterTypes() {
   RED4ext::CRTTISystem::Get()->RegisterType(&physicsUpdateEventCls);
 }
 
-void RegisterFunctions() {
+void FlightEventsModule::PostRegisterTypes() {
   auto rtti = RED4ext::CRTTISystem::Get();
   auto redEvent = rtti->GetClass("redEvent");
   eventCls.parent = redEvent;
