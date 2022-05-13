@@ -162,7 +162,7 @@ void ChassisGetComOffset(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *a
   auto vccClass = rtti->GetClass("vehicleChassisComponent");
   auto crProp = vccClass->GetProperty("collisionResource");
   auto cr = crProp->GetValue<RED4ext::Ref<RED4ext::physics::SystemResource>>(aContext);
-  RED4ext::Handle<RED4ext::physics::SystemBody> hpsb = cr.wrapper->resource->bodies[0];
+  RED4ext::Handle<RED4ext::physics::SystemBody> hpsb = cr.handle.wrapper->resource->bodies[0];
   auto params = hpsb->params;
 
   if (aOut) {
@@ -262,6 +262,9 @@ void VehicleAddFlightHelper(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   }
 }
 
+#include "LoadResRef.hpp"
+#include <RED4ext/Scripting/Natives/Generated/world/Effect.hpp>
+
 void EffectSpawnerAddEffect(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, void *aOut, int64_t a4) {
   // RED4ext::red::ResourceReferenceScriptToken value;
   // RED4ext::CName name;
@@ -289,24 +292,105 @@ void EffectSpawnerAddEffect(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   auto ed = reinterpret_cast<RED4ext::ent::EffectDesc *>(effectDescCls->AllocInstance());
 
   ed->effectName = "test_effect";
-  ed->id.unk00 = 2738936757675335681; // 2738936757675335680 + 1
-  auto existingEffect = (RED4ext::ent::EffectDesc *)esc->effectDescs[0].instance;
-  ed->effect.ref = existingEffect->effect.ref;
-  // ed->effect.ref = 3990659875028156682;
+  ed->id.unk00 = 2738936757675336192; // 2738936757675335680 changed a bit
+  //auto existingEffect = (RED4ext::ent::EffectDesc *)esc->effectDescs[0].instance;
+  //ed->effect.ref = existingEffect->effect.ref;
 
-  auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->AllocInstance());
-  eventInfo->eventRUID.unk00 = 2740474573584572416;
-  eventInfo->placementIndexMask = 1;
-  eventInfo->flags = 1;
-  ed->compiledEffectInfo.eventsSortedByRUID.EmplaceBack(*eventInfo);
+  //auto wrapper = new RED4ext::ResourceWrapper<RED4ext::world::Effect>();
+  //uint64_t hash = 2413621465439885870;
+  //LoadResRef<RED4ext::world::Effect>(&hash, wrapper, true);
+  //ed->effect.ref = wrapper->self->resource;
 
-  auto placementInfo = reinterpret_cast<RED4ext::world::CompiledEffectPlacementInfo *>(cepi->AllocInstance());
-  placementInfo->flags = 5;
-  placementInfo->placementTagIndex = 0;
-  placementInfo->relativePositionIndex = 0;
-  placementInfo->relativeRotationIndex = 0;
-  ed->compiledEffectInfo.placementInfos.EmplaceBack(*placementInfo);
+  //ed->effect.ref = 3990659875028156682;
+  ed->effect.ref = 2413621465439885870; // base\fx\vehicles\flight.effect
 
+  {
+    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->AllocInstance());
+    eventInfo->eventRUID.unk00 = 2738876334750015488;
+    eventInfo->placementIndexMask = 15;
+    eventInfo->flags = 1;
+    ed->compiledEffectInfo.eventsSortedByRUID.EmplaceBack(*eventInfo);
+  }
+
+  {
+    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->AllocInstance());
+    eventInfo->eventRUID.unk00 = 2738876938696237056;
+    eventInfo->placementIndexMask = 15;
+    eventInfo->flags = 1;
+    ed->compiledEffectInfo.eventsSortedByRUID.EmplaceBack(*eventInfo);
+  }
+
+  {
+    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->AllocInstance());
+    eventInfo->eventRUID.unk00 = 2738888051890561024;
+    eventInfo->placementIndexMask = 15;
+    eventInfo->flags = 1;
+    ed->compiledEffectInfo.eventsSortedByRUID.EmplaceBack(*eventInfo);
+  }
+
+  {
+    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->AllocInstance());
+    eventInfo->eventRUID.unk00 = 2738893332334747648;
+    eventInfo->placementIndexMask = 15;
+    eventInfo->flags = 1;
+    ed->compiledEffectInfo.eventsSortedByRUID.EmplaceBack(*eventInfo);
+  }
+
+  {
+    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->AllocInstance());
+    eventInfo->eventRUID.unk00 = 2738893580167782400;
+    eventInfo->placementIndexMask = 15;
+    eventInfo->flags = 1;
+    ed->compiledEffectInfo.eventsSortedByRUID.EmplaceBack(*eventInfo);
+  }
+
+  {
+    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->AllocInstance());
+    eventInfo->eventRUID.unk00 = 2738893796308656128;
+    eventInfo->placementIndexMask = 15;
+    eventInfo->flags = 1;
+    ed->compiledEffectInfo.eventsSortedByRUID.EmplaceBack(*eventInfo);
+  }
+
+  {
+    auto placementInfo = reinterpret_cast<RED4ext::world::CompiledEffectPlacementInfo *>(cepi->AllocInstance());
+    placementInfo->flags = 5;
+    placementInfo->placementTagIndex = 0;
+    placementInfo->relativePositionIndex = 0;
+    placementInfo->relativeRotationIndex = 0;
+    ed->compiledEffectInfo.placementInfos.EmplaceBack(*placementInfo);
+  }
+
+  {
+    auto placementInfo = reinterpret_cast<RED4ext::world::CompiledEffectPlacementInfo *>(cepi->AllocInstance());
+    placementInfo->flags = 5;
+    placementInfo->placementTagIndex = 1;
+    placementInfo->relativePositionIndex = 0;
+    placementInfo->relativeRotationIndex = 0;
+    ed->compiledEffectInfo.placementInfos.EmplaceBack(*placementInfo);
+  }
+
+  {
+    auto placementInfo = reinterpret_cast<RED4ext::world::CompiledEffectPlacementInfo *>(cepi->AllocInstance());
+    placementInfo->flags = 5;
+    placementInfo->placementTagIndex = 2;
+    placementInfo->relativePositionIndex = 0;
+    placementInfo->relativeRotationIndex = 0;
+    ed->compiledEffectInfo.placementInfos.EmplaceBack(*placementInfo);
+  }
+
+  {
+    auto placementInfo = reinterpret_cast<RED4ext::world::CompiledEffectPlacementInfo *>(cepi->AllocInstance());
+    placementInfo->flags = 5;
+    placementInfo->placementTagIndex = 3;
+    placementInfo->relativePositionIndex = 0;
+    placementInfo->relativeRotationIndex = 0;
+    ed->compiledEffectInfo.placementInfos.EmplaceBack(*placementInfo);
+  }
+
+  ed->compiledEffectInfo.placementTags.EmplaceBack("fx_holo_corner_fl");
+  ed->compiledEffectInfo.placementTags.EmplaceBack("fx_holo_corner_fr");
+  ed->compiledEffectInfo.placementTags.EmplaceBack("fx_holo_corner_bl");
   ed->compiledEffectInfo.placementTags.EmplaceBack("fx_holo_corner_br");
 
   auto vector = reinterpret_cast<RED4ext::Vector3 *>(v3->AllocInstance());

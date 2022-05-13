@@ -2,6 +2,7 @@
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/HudWidgetSpawnEntry.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/WidgetLibraryResource.hpp>
+#include "LoadResRef.hpp"
 
 namespace vehicle {
 namespace flight {
@@ -25,10 +26,6 @@ decltype(&CopyHUDWidgetSpawnEntries) CopyHUDWidgetSpawnEntries_Original;
 //constexpr uintptr_t WaitUntilLoadedAddr = 0x1402476B0 - RED4ext::Addresses::ImageBase;
 //using WaitUntilLoadedSig = void * (*) (RED4ext::ResourceWrapper<RED4ext::ink::WidgetLibraryResource> *a2);
 
-// 48 89 5C 24 08 48 89 74  24 10 57 48 83 EC 60 41 0F B6 D8 48 8B FA 48 8B F1 48 C7 44 24 20 00 00
-constexpr uintptr_t LoadResRefAddr = 0x140200060 - RED4ext::Addresses::ImageBase;
-using LoadResRefSig = RED4ext::ResourceWrapper<RED4ext::ink::WidgetLibraryResource>* (*) (uint64_t *,
-RED4ext::ResourceWrapper<RED4ext::ink::WidgetLibraryResource> *a2, int8_t);
 
 void CopyHUDWidgetSpawnEntries(HUDLayerUnknown *a1, RED4ext::DynArray<RED4ext::ink::HudWidgetSpawnEntry> *a2) {
 
@@ -50,18 +47,17 @@ void CopyHUDWidgetSpawnEntries(HUDLayerUnknown *a1, RED4ext::DynArray<RED4ext::i
   instance->slotParams.useSlotLayout = true;
   instance->slotParams.layoutOverride.sizeCoefficient = 1.0;
 
-  RED4ext::RelocFunc<LoadResRefSig> LoadResRef(LoadResRefAddr);
   //RED4ext::RelocFunc<WaitUntilLoadedSig> WaitUntilLoaded(WaitUntilLoadedAddr);
 
-  auto wrapper = new RED4ext::ResourceWrapper<RED4ext::ink::WidgetLibraryResource>();
-  uint64_t hash = 2783178642409560840;
-  LoadResRef(&hash, wrapper, false);
-  //WaitUntilLoaded(wrapper->self);
+  auto handle = new RED4ext::ResourceHandle<RED4ext::ink::WidgetLibraryResource>();
+  uint64_t hash = 2783178642409560840; // flight
+  //uint64_t hash = 11046326377887898612; // car
+  LoadResRef<RED4ext::ink::WidgetLibraryResource>(&hash, handle, true);
+  //WaitUntilLoaded(handle->self);
 
   instance->widgetResource.hash = hash;
-  instance->widgetResource.wrapper = wrapper->self;
-  instance->widgetResource.refCount = wrapper->refCount;
-  instance->widgetResource.refCount->IncRef();
+  instance->widgetResource.handle = *handle;
+  instance->widgetResource.handle.refCount->IncRef();
 
   //for (const auto &entry : a1->spawnEntries) {
   //  if (entry.hudEntryName == "car hud") {
@@ -81,8 +77,8 @@ void CopyHUDWidgetSpawnEntries(HUDLayerUnknown *a1, RED4ext::DynArray<RED4ext::i
   //auto instance = reinterpret_cast<RED4ext::ink::HudWidgetSpawnEntry *>(cls->AllocInstance());
   //auto pEffectHandle = RED4ext::Handle<RED4ext::ISerializable>(pEffectInstance);
 
-  a1->spawnEntries.EmplaceBack(nullptr, instance);
   CopyHUDWidgetSpawnEntries_Original(a1, a2);
+  a2->EmplaceBack(nullptr, instance);
 }
 
 struct CustomHUDLayer : FlightModule {

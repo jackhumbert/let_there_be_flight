@@ -145,6 +145,8 @@ public native class FlightController extends IScriptable {
   private let sqs: ref<SpatialQueriesSystem>;
   public let helper: ref<vehicleFlightHelper>;
 
+  public let effectInstance: ref<EffectInstance>;
+
   // protected let m_settingsListener: ref<FlightSettingsListener>;
   // protected let m_groupPath: CName;
 
@@ -295,6 +297,12 @@ public native class FlightController extends IScriptable {
     (this.GetVehicle().FindComponentByName(n"cars_sport_fx") as EffectSpawnerComponent).AddEffect();
 
     this.helper = this.GetVehicle().AddFlightHelper();
+
+    // this.effectInstance = GameInstance.GetGameEffectSystem(this.gameInstance).CreateEffectStatic(n"loot_highlight", n"item_highlight", this.GetVehicle());
+    // EffectData.SetEntity(this.effectInstance.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.entity, this.GetVehicle());
+    // EffectData.SetBool(this.effectInstance.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.renderMaterialOverride, false);
+    // this.effectInstance.Run();
+
   }
 
   public func Disable() -> Void {
@@ -350,6 +358,13 @@ public native class FlightController extends IScriptable {
 
     // GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"summon_hologram", true);
     GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"test_effect", true);
+    // EffectData.SetBool(this.effectInstance.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.enable, true);
+    
+    let empEffect: ref<EffectInstance> = GameInstance.GetGameEffectSystem(this.gameInstance).CreateEffectStatic(n"base\\gameplay\\game_effects\\emp.es", n"emp", this.GetVehicle());
+    // let empEffect: ref<EffectInstance> = GameInstance.GetGameEffectSystem(this.gameInstance).CreateEffectStatic(n"emp", n"emp", this.GetVehicle());
+    EffectData.SetVector(empEffect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.position, this.stats.d_position);
+    EffectData.SetFloat(empEffect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.radius, 50.0);
+    empEffect.Run();
 
     // (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"tire_01_fl_a") as IComponent).Toggle(false);
     // (this.GetVehicle().GetVehicleComponent().FindComponentByName(n"tire_01_fl_a_shadow") as IComponent).Toggle(false);
@@ -424,6 +439,7 @@ public native class FlightController extends IScriptable {
 
     // GameObjectEffectHelper.BreakEffectLoopEvent(this.GetVehicle(), n"summon_hologram");
     GameObjectEffectHelper.BreakEffectLoopEvent(this.GetVehicle(), n"test_effect");
+    // EffectData.SetBool(this.effectInstance.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.enable, false);
 
     //let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
     //uiSystem.PopGameContext(IntEnum(10));
@@ -542,6 +558,7 @@ public native class FlightController extends IScriptable {
         if ListenerAction.IsButtonJustPressed(action) {
           FlightLog.Info("Options button pressed");
           this.showOptions = true;
+          // GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"summon_hologram", true);
           if (this.showUI) {
             this.ui.ShowInfo();
           }
@@ -549,7 +566,8 @@ public native class FlightController extends IScriptable {
         }
         if ListenerAction.IsButtonJustReleased(action) {
           FlightLog.Info("Options button released");
-          this.showOptions = false;
+          this.showOptions = false; 
+          // GameObjectEffectHelper.BreakEffectLoopEvent(this.GetVehicle(), n"summon_hologram");
           this.SetupActions();
         }
       }

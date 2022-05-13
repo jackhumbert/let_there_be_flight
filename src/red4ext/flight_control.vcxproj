@@ -111,6 +111,7 @@
     <ClCompile Include="FlightModule.hpp" />
     <ClCompile Include="FlightStats_Record.cpp" />
     <ClCompile Include="FlightSystem.cpp" />
+    <ClCompile Include="CreateStaticEffect.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="FlightAudio.cpp" />
     <ClCompile Include="FmodHelper.hpp" />
@@ -132,6 +133,7 @@
     <ClInclude Include="FlightLog.hpp" />
     <ClInclude Include="FlightStats_Record.hpp" />
     <ClInclude Include="FlightSystem.hpp" />
+    <ClInclude Include="LoadResRef.hpp" />
     <ClInclude Include="stdafx.hpp" />
     <ClInclude Include="Utils.hpp" />
     <ClInclude Include="VehicleSpeedUnlimiter.hpp" />
