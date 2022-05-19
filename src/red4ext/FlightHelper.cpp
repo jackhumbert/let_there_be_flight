@@ -40,21 +40,6 @@ RED4ext::TTypedClass<Helper> helperCls("vehicleFlightHelperRuntime");
 
 RED4ext::CClass *Helper::GetNativeType() { return &helperCls; }
 
-void Helper::RegisterTypes() {
-  //helperCls.flags = {.isNative = true};
-  //RED4ext::CRTTISystem::Get()->RegisterType(&helperCls);
-}
-
-void Helper::RegisterFunctions() {
-  //auto rtti = RED4ext::CRTTISystem::Get();
-  //auto redEvent = rtti->GetClass("vehicleDriveHelper");
-  //helperCls.parent = redEvent;
-
-  //auto vdtpe = rtti->GetClass("vehicleFlightHelper");
-  //vdtpe->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Vector4"), "force", nullptr, 0x08));
-  //vdtpe->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Vector4"), "torque", nullptr, 0x18));
-}
-
 RED4ext::Handle<HelperWrapper> Helper::AddToDriverHelpers(RED4ext::DynArray<uintptr_t> *ra) {
 
   Helper *h = new Helper();

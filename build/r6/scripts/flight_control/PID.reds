@@ -108,6 +108,11 @@ public class InputPID extends PID {
     instance.Reset();
     return instance;
   }
+
+  public func UpdatePd(Pd: Float) -> Void {
+    this.P_dec = Pd;
+  }
+
   public func GetCorrection(error: Float, timeDelta: Float) -> Float { 
     if AbsF(this.inputFloat) > AbsF(this.valueFloat) || this.inputFloat * this.valueFloat < 0.0 {
       return this.P * error;

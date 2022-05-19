@@ -18,7 +18,7 @@
 		<include name="VehicleFlightToggle" />
 	</context>
 
-	<context name="VehicleFlight" >
+	<context name="VehicleFlight">
 		<include name="CameraMovement" />
 		<include name="VisionActions" />
 		<include name="UIExploration" />
@@ -28,6 +28,7 @@
 		<include name="VehicleFlightToggle" />
 		<include name="Combat" />
 
+		<action name="Flight_Trick" 		map="Flight_Trick" />
 		<action name="FlightOptions_Up"		map="UI_MoveUp"/>
 		<action name="FlightOptions_Right"	map="UI_MoveRight"/>
 		<action name="FlightOptions_Down"	map="UI_MoveDown"/>
@@ -50,7 +51,7 @@
 		<action name="ZoomOut"					map="ZoomOut_Button"/>
 	</context>
 
-	<context name="VehicleFlightToggle" >
+	<context name="VehicleFlightToggle">
 		<action name="Flight_Toggle" 		map="Flight_Toggle" />
 	</context>
 
@@ -63,27 +64,35 @@
 	</context>
 
 	<!-- EVENTS -->
-	 <acceptedEvents action="Choice1_DualState" >
+	<acceptedEvents action="Choice1_DualState">
 		<event name="BUTTON_PRESSED" />
 		<event name="BUTTON_RELEASED" />
 	</acceptedEvents>
-	 <acceptedEvents action="Choice2_DualState" >
+	 <acceptedEvents action="Choice2_DualState">
 		<event name="BUTTON_PRESSED" />
 		<event name="BUTTON_RELEASED" />
 	</acceptedEvents>
-	 <acceptedEvents action="Choice3_DualState" >
+	 <acceptedEvents action="Choice3_DualState">
 		<event name="BUTTON_PRESSED" />
 		<event name="BUTTON_RELEASED" />
 	</acceptedEvents>
-	 <acceptedEvents action="Choice4_DualState" >
+	 <acceptedEvents action="Choice4_DualState">
 		<event name="BUTTON_PRESSED" />
 		<event name="BUTTON_RELEASED" />
 	</acceptedEvents>
+	<acceptedEvents action="Flight_Trick">
+	 <event name="BUTTON_PRESSED" />
+	 <event name="BUTTON_RELEASED" />
+ 	</acceptedEvents>
 
 	<!-- MAPPINGS -->
-	<mapping name="Flight_Toggle" type="Button" >
+	<mapping name="Flight_Toggle" type="Button">
 		<button id="IK_Pad_LeftThumb" />
 		<button id="IK_E" overridableUI="vehicleFlight"/>
-    </mapping>
+  </mapping>
+
+	<mapping name="Flight_Trick" type="Button">
+		<button id="IK_Pad_RightShoulder" />
+	</mapping>
 
 </bindings>

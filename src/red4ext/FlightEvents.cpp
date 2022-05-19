@@ -4,7 +4,7 @@ namespace vehicle {
 
 namespace flight {
 
-REGISTER_FLIGHT_MODULE(FlightEventsModule);
+//REGISTER_FLIGHT_MODULE(FlightEventsModule);
 
 RED4ext::TTypedClass<Event> eventCls("vehicleFlightEvent");
 

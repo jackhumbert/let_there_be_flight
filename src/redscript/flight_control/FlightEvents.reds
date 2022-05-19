@@ -7,5 +7,8 @@ public abstract class vehicleFlightEvent extends Event {
 // }
 
 public class VehicleFlightActivationEvent extends vehicleFlightEvent {
-  public let activated: Bool;
+}
+
+public class VehicleFlightDeactivationEvent extends vehicleFlightEvent {
+  let silent: Bool;
 }

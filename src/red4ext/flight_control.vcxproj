@@ -100,6 +100,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CustomHUDLayer.cpp" />
+    <ClCompile Include="DebugPrinter.cpp" />
+    <ClCompile Include="EntityAddComponent.cpp" />
     <ClCompile Include="FlightCamera.cpp" />
     <ClCompile Include="FlightController.cpp" />
     <ClCompile Include="FlightEvents.cpp" />
@@ -112,6 +114,7 @@
     <ClCompile Include="FlightStats_Record.cpp" />
     <ClCompile Include="FlightSystem.cpp" />
     <ClCompile Include="CreateStaticEffect.cpp" />
+    <ClCompile Include="FxResource.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="FlightAudio.cpp" />
     <ClCompile Include="FmodHelper.hpp" />
@@ -119,6 +122,7 @@
     <ClCompile Include="FlightHUDGameController.hpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Utils.cpp" />
+    <ClCompile Include="VehicleObject.cpp" />
     <ClCompile Include="VehicleSpeedUnlimiter.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -1,15 +1,12 @@
 public class FlightStats {
   public let vehicle: wref<VehicleObject>;
-  public let player: wref<PlayerPuppet>;
   public let s_record: wref<Vehicle_Record>;
-  // public let s_fcRecord: wref<FlightStatsData_Record>;
-  public let s_fc_record: wref<FlightControl_Record>;
+  // public let s_fc_record: wref<FlightControl_Record>;
   public let s_driveModelData: wref<VehicleDriveModelData_Record>;
   public let s_engineData: wref<VehicleEngineData_Record>;
   public let s_wheelDimensions: wref<VehicleWheelDimensionsSetup_Record>;
   public let s_wheelDriving: wref<VehicleWheelDrivingSetup_Record>;
   public let s_mass: Float;
-  public let s_playerMass: Float;
   public let s_centerOfMass: Vector3;
   public let s_momentOfInertia: Vector4;
   public let s_forwardWeightTransferFactor: Float;
@@ -27,22 +24,23 @@ public class FlightStats {
   public let d_orientationChange: Quaternion;
   public let d_angularVelocity: Vector4;
   public let d_velocity: Vector4;
+  public let d_localVelocity: Vector4;
   public let d_velocity2D: Vector4;
   public let d_speed: Float;
   public let d_speedRatio: Float;
   public let d_speedRatioSquared: Float;
   public let d_speed2D: Float;
   public let d_direction: Vector4;
+  public let d_localDirection: Vector4;
   public let d_direction2D: Vector4;
 
   private let reset: Bool;
   private let ipp: ref<IPositionProvider>;
   private let iop: ref<IOrientationProvider>;
 
-  public static func Create(player: wref<PlayerPuppet>) -> ref<FlightStats> {
+  public static func Create(vehicle: wref<VehicleObject>) -> ref<FlightStats> {
     let self: ref<FlightStats> = new FlightStats();
-    self.player = player;
-    self.vehicle = GetMountedVehicle(player);
+    self.vehicle = vehicle;
     self.vehicle.chassis = self.vehicle.FindComponentByName(n"Chassis") as vehicleChassisComponent;
     self.reset = false;
     self.UpdateStatic();
@@ -68,7 +66,7 @@ public class FlightStats {
   public final func UpdateStatic() -> Void {
     this.s_record = this.vehicle.GetRecord();
     // this.s_fcRecord = FlightStatsData.GetInstance(this.vehicle.GetGame()).Get(this.vehicle.GetRecordID());
-    this.s_fc_record = TweakDBInterface.GetFlightRecord(this.vehicle.GetRecordID());
+    // this.s_fc_record = TweakDBInterface.GetFlightRecord(this.vehicle.GetRecordID());
     this.s_driveModelData = this.s_record.VehDriveModelData();  
     this.s_brakingFrictionFactor = this.s_driveModelData.BrakingFrictionFactor();
     this.s_airResistanceFactor = this.s_driveModelData.AirResistanceFactor();
@@ -196,13 +194,14 @@ public class FlightStats {
     // }
 
     this.d_velocity = this.vehicle.GetLinearVelocity();
-
+    this.d_localVelocity = Quaternion.Conjugate(this.d_orientation) * this.d_velocity;
 
     this.d_speed = Vector4.Length(this.d_velocity);
     this.d_speedRatio = this.d_speed / 100.0;
     this.d_speedRatioSquared = this.d_speedRatio * this.d_speedRatio;
     this.d_speed2D = Vector4.Length2D(this.d_velocity);
     this.d_direction = Vector4.Normalize(this.d_velocity);
+    this.d_localDirection = Vector4.Normalize(this.d_localVelocity);
     this.d_direction2D = Vector4.Normalize2D(this.d_velocity);
     this.d_velocity2D = this.d_direction2D * this.d_speed2D;
 

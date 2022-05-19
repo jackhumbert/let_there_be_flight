@@ -18,70 +18,7 @@
 // @addField(AnimFeature_VehicleData)
 // public let isInFlight: Bool;
 
-// VehicleTransition
 
-@addMethod(VehicleTransition)
-public final static func CanEnterVehicleFlight() -> Bool {
-  return TweakDBInterface.GetBool(t"player.vehicle.canEnterVehicleFlight", false);
-}
-
-// @addMethod(VehicleTransition)
-// protected final const func IsVehicleFlying(const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-//   return scriptInterface.IsVehicleFlying();
-// }
-
-@addMethod(VehicleTransition)
-protected final func SetIsInFlight(stateContext: ref<StateContext>, value: Bool) -> Void {
-  stateContext.SetPermanentBoolParameter(n"isInFlight", value, true);
-}
-
-// need to implement some things in order to use this
-@addMethod(VehicleTransition)
-protected final const func IsPlayerAllowedToEnterVehicleFlight(const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-  if this.IsNoCombatActionsForced(scriptInterface) {
-    return false;
-  };
-  if StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"VehicleFlight") {
-    return true;
-  };
-  return true;
-}
-
-@addMethod(VehicleTransition)
-protected final const func IsPlayerAllowedToExitFlight(const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-  if StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"VehicleFlightBlockExit") {
-    return false;
-  };
-  return true;
-}
-
-// DriveDecisions
-
-@addMethod(DriveDecisions)
-public final const func ToFlight(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-  // if this.IsPlayerAllowedToEnterVehicleFlight(scriptInterface) && VehicleTransition.CanEnterVehicleFlight() {
-  // if VehicleTransitiorn.CanEnterVehicleFlight() {
-    if scriptInterface.IsActionJustPressed(n"Flight_Toggle") {
-      FlightLog.Info("[DriveDecisions] ToFlight");
-      return true;
-    };
-  // };
-  return false;
-}
-
-// SceneDecisions
-
-@addMethod(SceneDecisions)
-public final const func ToFlight(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-  // if this.IsPlayerAllowedToEnterVehicleFlight(scriptInterface) && VehicleTransition.CanEnterVehicleFlight() {
-  if VehicleTransition.CanEnterVehicleFlight() {
-    // if FlightController.GetInstance().IsActive() {
-      FlightLog.Info("[SceneDecisions] ToFlight");
-      return false;
-    // };
-  };
-  return false;
-}
 
 // DriveEvents
 
@@ -182,6 +119,10 @@ public class FlightEvents extends VehicleEventsTransition {
     this.SetIsInFlight(stateContext, false);
     // (scriptInterface.owner as VehicleObject).ToggleFlightComponent(false);
     FlightController.GetInstance().Deactivate(false);
+    let evt = new VehicleFlightDeactivationEvent();
+    evt.silent = false;
+    // evt.vehicle = scriptInterface.owner as VehicleObject;
+    (scriptInterface.owner as VehicleObject).QueueEvent(evt);
   }
 
   public func OnForcedExit(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
@@ -195,6 +136,7 @@ public class FlightEvents extends VehicleEventsTransition {
 
   public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
     FlightController.GetInstance().OnUpdate(timeDelta, stateContext, scriptInterface);
+    FlightSystem.GetInstance().OnUpdate(timeDelta);
     this.SetIsInVehicle(stateContext, true);
     this.SetSide(stateContext, scriptInterface);
     this.SendAnimFeature(stateContext, scriptInterface);

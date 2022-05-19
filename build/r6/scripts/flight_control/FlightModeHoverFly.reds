@@ -1,0 +1,40 @@
+public class FlightModeHoverFly extends FlightModeStandard {
+  protected let hovering: Bool;
+  protected let referenceZ: Float;
+
+  public func Update(timeDelta: Float, out force: Vector4, out torque: Vector4) -> Void {
+    this.component.hoverHeight += this.component.lift * timeDelta * this.sys.settings.liftFactor() * (1.0 + this.component.stats.d_speedRatio * 2.0);
+
+    let foundGround = true;
+    let findWater: TraceResult;
+    let heightDifference = 1.0;
+    let idealNormal = FlightUtils.Up();
+
+    this.component.sqs.SyncRaycastByCollisionGroup(this.component.stats.d_position, this.component.stats.d_position - this.sys.settings.lookDown(), n"Water", findWater, true, false);
+    if !TraceResult.IsValid(findWater) {
+      let normal: Vector4;
+      foundGround = this.component.FindGround(timeDelta, normal);
+      if ((this.component.distance > this.sys.settings.maxHoverHeight() && this.hovering) || (this.hovering && !foundGround)) {
+        this.hovering = false;
+        this.referenceZ = this.component.stats.d_position.Z;
+        this.component.hoverHeight = 0.0;
+      }
+      if (this.component.distance <= this.sys.settings.maxHoverHeight() && !this.hovering && foundGround) {
+        this.hovering = true;
+        this.component.hoverHeight = MaxF(this.component.distance, this.sys.settings.minHoverHeight());
+      }
+    // would be cool to fade between these instead of using a boolean
+      if this.hovering {
+        // close to ground, use as reference
+        heightDifference = this.component.hoverHeight - this.component.distance;
+        // idealNormal = this.normal;
+        idealNormal = Vector4.Interpolate(normal, idealNormal, (this.component.distance - this.sys.settings.minHoverHeight()) / (this.sys.settings.maxHoverHeight() - this.sys.settings.minHoverHeight()));
+      } else {
+        // use absolute Z if too high
+        heightDifference = this.referenceZ + this.component.hoverHeight - this.component.stats.d_position.Z;
+      }
+    }
+
+    this.UpdateWithNormalDistance(timeDelta, force, torque, idealNormal, heightDifference);
+  }
+}

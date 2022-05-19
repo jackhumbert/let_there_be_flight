@@ -1,65 +1,44 @@
-// Hooks
-
-@addField(VehicleObject)
-private let m_flightComponent: wref<FlightComponent>;
-
-@wrapMethod(VehicleObject)
-protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> Bool {
-  EntityRequestComponentsInterface.RequestComponent(ri, n"flightComponent", n"FlightComponent", true);
-  wrappedMethod(ri);
-}
-
-@wrapMethod(VehicleObject)
-protected cb func OnTakeControl(ri: EntityResolveComponentsInterface) -> Bool {
-  //FlightLog.Info("[VehicleObject] OnTakeControl: " + this.GetDisplayName());
-  this.m_flightComponent = EntityResolveComponentsInterface.GetComponent(ri, n"flightComponent") as FlightComponent;
-  // this.m_flightComponent.Toggle(false);
-  wrappedMethod(ri);
-}
-
-@addMethod(VehicleObject)
-public const func GetFlightComponent() -> ref<FlightComponent> {
-  return this.m_flightComponent;
-}
-
-@addMethod(VehicleObject)
-public func ToggleFlightComponent(state: Bool) -> Void {
-  this.m_flightComponent.Toggle(state);
-}
-
-@addMethod(VehicleObject)
-public func GetLocalToWorld() -> Matrix {
-  return WorldTransform.ToMatrix(this.GetWorldTransform());
-}
-
-@addMethod(VehicleObject)
-protected cb func OnPhysicalCollision(evt: ref<PhysicalCollisionEvent>) -> Bool {
-  FlightLog.Info("[VehicleObject] OnPhysicalCollision");
-  let vehicle = evt.otherEntity as VehicleObject;
-  if IsDefined(vehicle) {
-    let gameInstance: GameInstance = this.GetGame();
-    let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
-    let isPlayerMounted = VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), vehicle);
-    if isPlayerMounted {
-      // FlightController.GetInstance().ProcessImpact(evt.attackData.vehicleImpactForce);
-    } else {
-      let impulseEvent: ref<PhysicalImpulseEvent> = new PhysicalImpulseEvent();
-      impulseEvent.radius = 1.0;
-      impulseEvent.worldPosition = Vector4.Vector4To3(evt.worldPosition);
-      impulseEvent.worldImpulse = new Vector3(0.0, 0.0, 10000.0);
-      vehicle.QueueEvent(impulseEvent);
-    }
-  }
-}
-
-// Custom Classes
-
 public class FlightComponent extends ScriptableDeviceComponent {
+  private let sys: ref<FlightSystem>;
+  public let fx: ref<FlightFx>;
+  private let helper: ref<vehicleFlightHelper>;
+  private let stats: ref<FlightStats>;
 
   public let m_interaction: ref<InteractionComponent>;
   public let m_healthStatPoolListener: ref<VehicleHealthStatPoolListener>;
   public let m_vehicleBlackboard: wref<IBlackboard>;
   public let m_vehicleTPPCallbackID: ref<CallbackHandle>;
+
+  let hoverGroundPID: ref<PID>;
+  let hoverPID: ref<PID>;
+  let pitchGroundPID: ref<DualPID>;
+  let pitchPID: ref<DualPID>;
+  let rollGroundPID: ref<DualPID>;
+  let rollPID: ref<DualPID>;
+  let yawPID: ref<PID>;
+
+  private let sqs: ref<SpatialQueriesSystem>;
+
+  public let fl_tire: ref<IPlacedComponent>;
+  public let fr_tire: ref<IPlacedComponent>;
+  public let bl_tire: ref<IPlacedComponent>;
+  public let br_tire: ref<IPlacedComponent>;
+  
+  public let collisionTimer: Float;
+  
+  public let distance: Float;
+  public let hoverHeight: Float;
+
+  private let modes: array<ref<FlightMode>>;
+  public let mode: Int32;
+
+  private let surge: Float;
+  private let lift: Float;
+  private let roll: Float;
+  private let pitch: Float;
+  private let yaw: Float;
+  private let sway: Float;
+  private let brake: Float;
 
   protected final const func GetVehicle() -> wref<VehicleObject> {
     return this.GetEntity() as VehicleObject;
@@ -73,6 +52,30 @@ public class FlightComponent extends ScriptableDeviceComponent {
     GameInstance.GetStatPoolsSystem(this.GetVehicle().GetGame()).RequestRegisteringListener(Cast(this.GetVehicle().GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     this.m_vehicleBlackboard = this.GetVehicle().GetBlackboard();
     // QuickhackModule.RequestRefreshQuickhackMenu(this.GetVehicle().GetGame(), this.GetVehicle().GetEntityID());
+    
+    this.hoverGroundPID = PID.Create(1.0, 0.01, 0.1);
+    this.hoverPID = PID.Create(1.0, 0.01, 0.1);
+    this.pitchGroundPID = DualPID.Create(0.8, 0.2, 0.05,  0.8, 0.2, 0.05);
+    this.pitchPID = DualPID.Create(1.0, 0.5, 0.5,  1.0, 0.5, 0.5);
+    this.rollGroundPID =  DualPID.Create(0.5, 0.2, 0.05,  2.5, 1.5, 0.5);
+    this.rollPID =  DualPID.Create(1.0, 0.5, 0.5,  1.0, 0.5, 0.5);
+    this.yawPID = PID.Create(1.0, 0.1, 0.0);
+
+    this.sys = FlightSystem.GetInstance();
+    this.sqs = GameInstance.GetSpatialQueriesSystem(this.GetVehicle().GetGame());
+    this.fx = FlightFx.Create(this);
+    
+    this.helper = this.GetVehicle().AddFlightHelper();
+    this.stats = FlightStats.Create(this.GetVehicle());
+
+    this.collisionTimer = this.sys.settings.collisionRecoveryDelay();
+    this.distance = 0.0;
+    this.hoverHeight = this.sys.settings.defaultHoverHeight();
+    
+    ArrayPush(this.modes, new FlightModeHoverFly());
+    ArrayPush(this.modes, new FlightModeHover());
+    ArrayPush(this.modes, new FlightModeFly());
+    ArrayPush(this.modes, new FlightModeDrone());
   }
 
   private final func OnGameDetach() -> Void {
@@ -81,18 +84,18 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.UnregisterVehicleTPPBBListener();
   }
   
-  private final func RegisterInputListener() -> Void {
-    let playerPuppet: ref<PlayerPuppet> = GameInstance.GetPlayerSystem(this.GetVehicle().GetGame()).GetLocalPlayerMainGameObject() as PlayerPuppet;
-    playerPuppet.RegisterInputListener(this, n"VehicleInsideWheel");
-    playerPuppet.RegisterInputListener(this, n"VehicleHorn");
-  }
+  // private final func RegisterInputListener() -> Void {
+  //   let playerPuppet: ref<PlayerPuppet> = GameInstance.GetPlayerSystem(this.GetVehicle().GetGame()).GetLocalPlayerMainGameObject() as PlayerPuppet;
+  //   playerPuppet.RegisterInputListener(this, n"VehicleInsideWheel");
+  //   playerPuppet.RegisterInputListener(this, n"VehicleHorn");
+  // }
 
-  private final func UnregisterInputListener() -> Void {
-    let playerPuppet: ref<PlayerPuppet> = GameInstance.GetPlayerSystem(this.GetVehicle().GetGame()).GetLocalPlayerMainGameObject() as PlayerPuppet;
-    if IsDefined(playerPuppet) {
-      playerPuppet.UnregisterInputListener(this);
-    };
-  }
+  // private final func UnregisterInputListener() -> Void {
+  //   let playerPuppet: ref<PlayerPuppet> = GameInstance.GetPlayerSystem(this.GetVehicle().GetGame()).GetLocalPlayerMainGameObject() as PlayerPuppet;
+  //   if IsDefined(playerPuppet) {
+  //     playerPuppet.UnregisterInputListener(this);
+  //   };
+  // }
 
   protected final func SetupVehicleTPPBBListener() -> Void {
     let activeVehicleUIBlackboard: wref<IBlackboard>;
@@ -119,8 +122,13 @@ public class FlightComponent extends ScriptableDeviceComponent {
   protected cb func OnMountingEvent(evt: ref<MountingEvent>) -> Bool {
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if mountChild.IsPlayer() {
+      this.GetVehicle().TurnOffAirControl();
       this.SetupVehicleTPPBBListener();
       FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName());
+      this.sys.audio.Start("windLeft", "wind_TPP");
+      this.sys.audio.Start("windRight", "wind_TPP");
+      (this.GetVehicle().FindComponentByName(n"cars_sport_fx") as EffectSpawnerComponent).AddEffect();
+      FlightController.GetInstance().ui.Setup(this.stats);
     }
   }
 
@@ -128,6 +136,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if IsDefined(mountChild) && mountChild.IsPlayer() {
       this.UnregisterVehicleTPPBBListener();
+      this.sys.audio.Stop("windLeft");
+      this.sys.audio.Stop("windRight");
     }
   }
 
@@ -147,7 +157,118 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
   protected cb func OnVehicleFlightActivationEvent(evt: ref<VehicleFlightActivationEvent>) -> Bool {
     FlightLog.Info("[FlightComponent] OnVehicleFlightActivationEvent: " + this.GetVehicle().GetDisplayName());
+    this.fx.Start();
+    this.SetupTires();
+    // these stop engine noises if they were already playing?
+    this.GetVehicle().TurnEngineOn(false);
+    // this.GetVehicle().TurnOn(true);
+    this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetLightMode(vehicleELightMode.HighBeams);
+    this.GetVehicle().GetVehicleComponent().GetVehicleController().ToggleLights(true);
 
+    this.hoverGroundPID.Reset();
+    this.hoverPID.Reset();
+    this.pitchGroundPID.Reset();
+    this.pitchPID.Reset();
+    this.rollGroundPID.Reset();
+    this.rollPID.Reset();
+    this.yawPID.Reset();
+
+    this.stats.Reset();
+
+    let vehicle: ref<VehicleObject> = this.GetVehicle();
+    let gameInstance: GameInstance = vehicle.GetGame();
+    let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
+    let isPlayerMounted = VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), vehicle);
+    if isPlayerMounted {
+      this.sys.audio.Play("vehicle3_on");
+      this.sys.audio.Start("playerVehicle", "vehicle3_TPP");
+      // this.sys.audio.Start("leftFront", "vehicle3_TPP");
+      // this.sys.audio.Start("rightFront", "vehicle3_TPP");
+      // this.sys.audio.Start("leftRear", "vehicle3_TPP");
+      // this.sys.audio.Start("rightRear", "vehicle3_TPP");
+    } else {
+      this.sys.audio.Start("otherVehicle" + ToString(EntityID.GetHash(this.GetVehicle().GetEntityID())), "vehicle3_TPP");
+    }
+  }
+
+  protected func OnUpdate(timeDelta: Float) -> Void {
+    let vehicle: ref<VehicleObject> = this.GetVehicle();
+    let gameInstance: GameInstance = vehicle.GetGame();
+    let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
+    let isPlayerMounted = VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), vehicle);
+    if isPlayerMounted {
+      let fc = FlightController.GetInstance();
+      this.yaw = fc.yaw.GetValue();
+      this.roll = fc.roll.GetValue();
+      this.pitch = fc.pitch.GetValue();
+      this.lift = fc.lift.GetValue();
+      this.brake = fc.brake.GetValue();
+      this.surge = fc.surge.GetValue();
+      this.mode = fc.mode;
+    }
+
+    this.stats.UpdateDynamic(timeDelta);
+    this.UpdateAudioParams(timeDelta);
+
+    let force: Vector4;
+    let torque: Vector4;
+
+    if this.mode < ArraySize(this.modes) {
+      this.modes[this.mode].Update(timeDelta, force, torque);
+    }
+
+    this.fx.Update(force, torque);
+
+    force *= timeDelta;
+    // factor in mass
+    force *= this.stats.s_mass;
+    // convet to global
+    force = this.stats.d_orientation * force;
+
+    torque += timeDelta;
+    // factor in interia tensor
+    torque *= this.GetVehicle().GetInertiaTensor();
+    // convert to global
+    torque = this.stats.d_orientation * torque;
+    
+    if this.collisionTimer < this.sys.settings.collisionRecoveryDelay() + this.sys.settings.collisionRecoveryDuration() {
+      let collisionDampener = MinF(MaxF(0.0, (this.collisionTimer - this.sys.settings.collisionRecoveryDelay()) / this.sys.settings.collisionRecoveryDuration()), 1.0);
+      torque *= collisionDampener;
+      force *= collisionDampener;
+    }
+
+    if this.collisionTimer < this.sys.settings.collisionRecoveryDelay() + this.sys.settings.collisionRecoveryDuration() {
+      this.collisionTimer += timeDelta;
+    }
+
+    this.helper.force = this.helper.force + force;
+    this.helper.torque = this.helper.torque + torque;
+  }
+
+  protected cb func OnVehicleFlightDeactivationEvent(evt: ref<VehicleFlightDeactivationEvent>) -> Bool {
+    FlightLog.Info("[FlightComponent] OnVehicleFlightDeactivationEvent: " + this.GetVehicle().GetDisplayName());
+    this.fx.Stop();
+
+    if !evt.silent {
+      this.GetVehicle().TurnEngineOn(true);
+    }
+
+    let vehicle: ref<VehicleObject> = this.GetVehicle();
+    let gameInstance: GameInstance = vehicle.GetGame();
+    let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
+    let isPlayerMounted = VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), vehicle);
+    if isPlayerMounted {
+      if !evt.silent {
+        this.sys.audio.Play("vehicle3_off");
+      }
+      this.sys.audio.Stop("playerVehicle");
+      // this.sys.audio.Stop("leftFront");
+      // this.sys.audio.Stop("rightFront");
+      // this.sys.audio.Stop("leftRear");
+      // this.sys.audio.Stop("rightRear");
+    } else {
+      this.sys.audio.Stop("otherVehicle" + ToString(EntityID.GetHash(this.GetVehicle().GetEntityID())));
+    }
   }
 
   protected cb func OnGridDestruction(evt: ref<VehicleGridDestructionEvent>) -> Bool {
@@ -171,12 +292,13 @@ public class FlightComponent extends ScriptableDeviceComponent {
     };
       // FlightLog.Info("[FlightComponent] OnGridDestruction: " + FloatToStringPrec(biggestImpact, 2));
     if isPlayerMounted {
-      if biggestImpact > 0.03 {
+      if biggestImpact > 0.00 {
+        this.ProcessImpact(biggestImpact);
         FlightController.GetInstance().ProcessImpact(biggestImpact);
       }
     } else {
       this.FireVerticalImpulse(gridID);
-      if biggestImpact > 0.30 {
+      if biggestImpact > 0.20 {
         GameObjectEffectHelper.StartEffectEvent(vehicle, n"explosion");
       }
       // let event = new vehicleDriveToPointEvent();
@@ -346,6 +468,184 @@ public class FlightComponent extends ScriptableDeviceComponent {
     FlightController.GetInstance().isTPP = state;
   }
 
+  public func ProcessImpact(impact: Float) {
+    this.collisionTimer = this.sys.settings.collisionRecoveryDelay() - impact;
+  }
+
+  public func UpdateAudioParams(timeDelta: Float) -> Void {
+    let engineVolume = 0.5;
+    let windVolume = 0.5;
+    // let engineVolume = (GameInstance.GetSettingsSystem(this.GetVehicle().GetGame()).GetVar(n"/audio/volume", n"MasterVolume") as ConfigVarListInt).GetValue();
+    // let engineVolume *= (GameInstance.GetSettingsSystem(this.GetVehicle().GetGame()).GetVar(n"/audio/volume", n"SfxVolume") as ConfigVarListInt).GetValue();
+    if GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsPausedState() ||
+      GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsTimeDilationActive(n"HubMenu") || 
+      GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsTimeDilationActive(n"WorldMap")
+      {
+      engineVolume = 0.0;
+      windVolume = 0.0;
+      this.sys.audio.Update("leftFront", Vector4.EmptyVector(), engineVolume);
+      this.sys.audio.Update("rightFront", Vector4.EmptyVector(), engineVolume);
+      this.sys.audio.Update("leftRear", Vector4.EmptyVector(), engineVolume);
+      this.sys.audio.Update("rightRear", Vector4.EmptyVector(), engineVolume);
+      this.sys.audio.Update("windLeft", Vector4.EmptyVector(), windVolume);
+      this.sys.audio.Update("windRight", Vector4.EmptyVector(), windVolume);
+      return;
+    }
+
+    // might need to handle just the scanning system's dilation, and the pause menu
+    if GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsTimeDilationActive(n"radialMenu") {
+      engineVolume *= 0.1;
+      windVolume *= 0.1;
+    }
+
+    this.sys.audio.UpdateSlotProviders();
+
+    let leftFrontPosition = this.sys.audio.GetPosition(n"wheel_front_left") - (this.stats.d_velocity * timeDelta);
+    let rightFrontPosition = this.sys.audio.GetPosition(n"wheel_front_right") - (this.stats.d_velocity * timeDelta);
+    let leftRearPosition = this.sys.audio.GetPosition(n"wheel_back_left") - (this.stats.d_velocity * timeDelta);
+    let rightRearPosition = this.sys.audio.GetPosition(n"wheel_back_right") - (this.stats.d_velocity * timeDelta);
+
+    let windLeftPosition = this.sys.audio.GetPosition(n"window_front_left_a") - (this.stats.d_velocity * timeDelta);
+    let windRightPosition = this.sys.audio.GetPosition(n"window_front_right_a") - (this.stats.d_velocity * timeDelta);
+
+    let listenerMatrix = (this.sys.player.FindComponentByName(n"soundListener") as IPlacedComponent).GetLocalToWorld();
+    this.sys.audio.listenerPosition = Matrix.GetTranslation(listenerMatrix);
+    this.sys.audio.listenerForward = Matrix.GetAxisY(listenerMatrix);
+    this.sys.audio.listenerUp = Matrix.GetAxisZ(listenerMatrix);
+
+    this.sys.audio.speed = this.stats.d_speed;
+    this.sys.audio.yawDiff = Vector4.GetAngleDegAroundAxis(this.stats.d_forward, this.stats.d_direction, this.stats.d_up);
+    this.sys.audio.pitchDiff = Vector4.GetAngleDegAroundAxis(this.stats.d_forward, this.stats.d_direction, this.stats.d_right);
+
+
+    let ratio = 1.0;
+    if this.collisionTimer < this.sys.settings.collisionRecoveryDelay() + this.sys.settings.collisionRecoveryDuration() {
+      ratio = MaxF(0.0, (this.collisionTimer - this.sys.settings.collisionRecoveryDelay()) / this.sys.settings.collisionRecoveryDuration());
+    }
+    
+    this.sys.audio.damage = 1.0 - MaxF(GameInstance.GetStatPoolsSystem(this.GetVehicle().GetGame()).GetStatPoolValue(Cast<StatsObjectID>(this.GetVehicle().GetEntityID()), gamedataStatPoolType.Health, false) + ratio, 1.0);
+
+    this.sys.audio.surge = this.surge * ratio;
+    if this.mode == 3 {
+      this.sys.audio.surge *= 0.5;
+      this.sys.audio.surge += this.lift * ratio * 0.5;
+    }
+    this.sys.audio.yaw = this.yaw * ratio;
+    this.sys.audio.lift = this.lift * ratio;
+    this.sys.audio.brake = this.brake;
+    this.sys.audio.inside = FlightController.GetInstance().isTPP ? MaxF(0.0, this.sys.audio.inside - timeDelta * 4.0) : MinF(1.0, this.sys.audio.inside + timeDelta * 4.0);
+    // engineVolume *= (ratio * 0.5 + 0.5);
+
+    this.sys.audio.Update("leftFront", leftFrontPosition, engineVolume);
+    this.sys.audio.Update("rightFront", rightFrontPosition, engineVolume);
+    this.sys.audio.Update("leftRear", leftRearPosition, engineVolume);
+    this.sys.audio.Update("rightRear", rightRearPosition, engineVolume);
+    this.sys.audio.Update("windLeft", windLeftPosition, windVolume);
+    this.sys.audio.Update("windRight", windRightPosition, windVolume);
+  }
+
+  
+  public func SetupTires() -> Void {
+    if this.GetVehicle() == (this.GetVehicle() as CarObject) {
+      // this.fl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_left_tire") as IPlacedComponent;
+      // this.fr_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_right_tire") as IPlacedComponent;
+      // this.bl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_left_tire") as IPlacedComponent;
+      // this.br_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_right_tire") as IPlacedComponent;
+      this.fl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterFL") as IPlacedComponent;
+      this.fr_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterFR") as IPlacedComponent;
+      this.bl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterBL") as IPlacedComponent;
+      this.br_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterBR") as IPlacedComponent;
+    } else {
+      this.fl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterFront") as IPlacedComponent;
+      this.fr_tire = this.fl_tire;
+      this.bl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterBack") as IPlacedComponent;
+      this.br_tire = this.bl_tire;
+    }
+  }
+
+  public func FindGround(timeDelta: Float, out normal: Vector4) -> Bool {
+    // let lookAhead = this.stats.d_velocity * timeDelta * this.lookAheadMax;
+    // let fl_tire: Vector4 = Matrix.GetTranslation(this.fl_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
+    // let fr_tire: Vector4 = Matrix.GetTranslation(this.fr_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
+    // let bl_tire: Vector4 = Matrix.GetTranslation(this.bl_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
+    // let br_tire: Vector4 = Matrix.GetTranslation(this.br_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
+    let fl_tire: Vector4 = Matrix.GetTranslation(this.fl_tire.GetLocalToWorld());
+    let fr_tire: Vector4 = Matrix.GetTranslation(this.fr_tire.GetLocalToWorld());
+    let bl_tire: Vector4 = Matrix.GetTranslation(this.bl_tire.GetLocalToWorld());
+    let br_tire: Vector4 = Matrix.GetTranslation(this.br_tire.GetLocalToWorld());
+
+
+    let findGround1: TraceResult; 
+    let findGround2: TraceResult; 
+    let findGround3: TraceResult; 
+    let findGround4: TraceResult;
+
+    // all in engine\physics\collision_presets.json
+    // VehicleBlocker? RagdollVehicle?
+    this.sqs.SyncRaycastByCollisionGroup(fl_tire, fl_tire + this.sys.settings.lookDown(), n"VehicleBlocker", findGround1, false, false);
+    this.sqs.SyncRaycastByCollisionGroup(fr_tire, fr_tire + this.sys.settings.lookDown(), n"VehicleBlocker", findGround2, false, false);
+    this.sqs.SyncRaycastByCollisionGroup(bl_tire, bl_tire + this.sys.settings.lookDown(), n"VehicleBlocker", findGround3, false, false);
+    this.sqs.SyncRaycastByCollisionGroup(br_tire, br_tire + this.sys.settings.lookDown(), n"VehicleBlocker", findGround4, false, false);
+    
+    let groundPoint1: Vector4;
+    let groundPoint2: Vector4;
+    let groundPoint3: Vector4;
+    let groundPoint4: Vector4;
+
+    if TraceResult.IsValid(findGround1) {
+      groundPoint1 = Vector4.Vector3To4(findGround1.position) - this.stats.d_velocity * timeDelta;
+      // if this.showUI {
+      //   this.ui.DrawMark(groundPoint1);
+      //   this.ui.DrawText(groundPoint1, FloatToStringPrec(Vector4.Distance(fl_tire, Cast(findGround1.position)), 2));
+      // }
+    }
+    if TraceResult.IsValid(findGround2) {
+      groundPoint2 = Vector4.Vector3To4(findGround2.position) - this.stats.d_velocity * timeDelta;
+      // if this.showUI {
+      //   this.ui.DrawMark(groundPoint2);
+      //   this.ui.DrawText(groundPoint2, FloatToStringPrec(Vector4.Distance(fr_tire, Cast(findGround2.position)), 2));
+      // }
+    }
+    if TraceResult.IsValid(findGround3) {
+      groundPoint3 = Vector4.Vector3To4(findGround3.position) - this.stats.d_velocity * timeDelta;
+      // if this.showUI {
+      //   this.ui.DrawMark(groundPoint3);
+      //   this.ui.DrawText(groundPoint3, FloatToStringPrec(Vector4.Distance(bl_tire, Cast(findGround3.position)), 2));
+      // }
+    }
+    if TraceResult.IsValid(findGround4) {
+      groundPoint4 = Vector4.Vector3To4(findGround4.position) - this.stats.d_velocity * timeDelta;
+      // if this.showUI {
+      //   this.ui.DrawMark(groundPoint4);
+      //   this.ui.DrawText(groundPoint4, FloatToStringPrec(Vector4.Distance(br_tire, Cast(findGround4.position)), 2));
+      // }
+    }
+
+    if TraceResult.IsValid(findGround1) && TraceResult.IsValid(findGround2) && TraceResult.IsValid(findGround3) && TraceResult.IsValid(findGround4) {
+      // let distance = MinF(
+      //   MinF(Vector4.Distance(fl_tire, Cast(findGround1.position)),
+      //   Vector4.Distance(fr_tire, Cast(findGround2.position))),
+      //   MinF(Vector4.Distance(bl_tire, Cast(findGround3.position)),
+      //   Vector4.Distance(br_tire, Cast(findGround4.position))));        
+      let distance = (Vector4.Distance(fl_tire, Vector4.Vector3To4(findGround1.position)) +
+        Vector4.Distance(fr_tire, Vector4.Vector3To4(findGround2.position)) +
+        Vector4.Distance(bl_tire, Vector4.Vector3To4(findGround3.position)) +
+        Vector4.Distance(br_tire, Vector4.Vector3To4(findGround4.position))) / 4.0;
+      // this.distance = distance * (1.0 - this.distanceEase) + this.distance * (this.distanceEase);
+      this.distance = distance;
+      
+      // FromVariant(scriptInterface.GetStateVectorParameter(physicsStateValue.Radius)) maybe?
+      let n = (Vector4.Normalize(Cast(findGround1.normal)) + Vector4.Normalize(Cast(findGround2.normal)) + Vector4.Normalize(Cast(findGround3.normal)) + Vector4.Normalize(Cast(findGround4.normal))) / 4.0;
+      // this.normal = Vector4.Interpolate(this.normal, normal, this.normalEase);
+      normal = Vector4.Normalize(n);
+
+      return true;
+    } else {
+      return false;
+    }   
+  } 
+
+
 
 /*  private final func RegisterToHUDManager(shouldRegister: Bool) -> Void {
     let hudManager: ref<HUDManager>;
@@ -361,8 +661,4 @@ public class FlightComponent extends ScriptableDeviceComponent {
     };
   }
 */
-}
-
-public static func OperatorAdd(a: Vector4, b: Vector3) -> Vector4 {
-  return a + Vector4.Vector3To4(b);
 }

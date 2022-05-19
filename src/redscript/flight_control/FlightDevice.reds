@@ -22,8 +22,3 @@ public class FlightDevice extends GameObject {
     FlightLog.Info("[FlightDevice] OnDetach");
   }
 }
-
-@wrapMethod(VehicleObject)
-public final func IsOnPavement() -> Bool {
-  return wrappedMethod() || FlightController.GetInstance().IsActive();
-}

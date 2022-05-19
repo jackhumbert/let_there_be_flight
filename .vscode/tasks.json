@@ -4,11 +4,10 @@
     "version": "2.0.0",
     "tasks": [
       {
-        "label": "Lint Installed Redscript",
+        "label": "Lint Installed",
         "type": "shell",
-        "command": "\"C:\\Users\\Jack\\Downloads\\redscript-cli (1).exe\" lint -s \"c:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\r6\\scripts\" -b \"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\r6\\cache\\final.redscripts.bk\"",
+        "command": "tools\\lint_installed.bat",
         "options": {
-          "cwd": "C:\\Users\\Jack\\Documents\\cyberpunk\\redscript",
           "shell": {
             "executable": "cmd.exe",
             "args": [

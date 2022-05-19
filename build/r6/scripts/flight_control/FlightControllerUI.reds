@@ -27,6 +27,7 @@ public class FlightControllerUI extends inkCanvas {
   private let m_roll_markers: array<ref<inkRectangle>>;
   private let m_pitch: ref<inkCanvas>;
   private let m_marks: ref<inkCanvas>;
+  let updateFrequency: Float;
 
   public static func Create(controller: ref<inkGameController>, parent: ref<inkCompoundWidget>) -> ref<FlightControllerUI> {
     let instance = new FlightControllerUI();
@@ -34,6 +35,7 @@ public class FlightControllerUI extends inkCanvas {
     instance.Reparent(parent);
     instance.SetName(n"flightControllerUI");
     FlightController.GetInstance().SetUI(instance);
+    instance.updateFrequency = 0.01;
     return instance;
   }
   public final const func GetVehicle() -> wref<VehicleObject> {
@@ -298,220 +300,7 @@ public class FlightControllerUI extends inkCanvas {
       .Reparent(this)
       .Anchor(inkEAnchor.Centered)
       .BuildCanvas();
-
-    this.SetupNavPath();
   }
-
-  // Navigation Path
-
-  public let mmcc: ref<MinimapContainerController>;
-  public let camera: ref<vehicleTPPCameraComponent>;
-  let spacing: Float;
-  let fadePointsDistance: Float;
-  let fadePointsClose: Float;
-  // let fadePointsNumber: Float;
-  let lineThickness: Float;
-  let largestPoint: Float;
-  let distanceToPath: Float;
-  let closestPoint: Float;
-  let lineOpacity: Float;
-  let pointOpacity: Float;
-
-  let m_navPath: ref<inkCanvas>;
-  let m_navPathQuest: ref<inkCanvas>;
-  let m_navPathUser: ref<inkCanvas>;
-  let navPathQuestPoints: array<ref<inkImage>>;
-  let navPathUserPoints: array<ref<inkImage>>;
-
-  private func SetupNavPath() {
-    this.m_navPath = inkWidgetBuilder.inkCanvas(n"navPath")
-      .Reparent(this)
-      .Anchor(inkEAnchor.Centered)
-      .BuildCanvas();
-
-    this.spacing = 3.0; // meters
-    this.fadePointsDistance = 500.0; // meters
-    this.fadePointsClose = 10.0; // meters
-    // this.fadePointsNumber = 100.0; // number of points
-    this.lineThickness = 3.0; // pixels
-    this.largestPoint = 20.0; // pixels
-    this.distanceToPath = 50.0; // meters
-    this.closestPoint = 2.0; // meters
-    this.lineOpacity = 0.1;
-    this.pointOpacity = 1.0;
-
-    // if IsDefined(this.mmcc) && this.showUI && false {
-    //   let fastTravelBlue = new HDRColor(0.34901960784, 0.682352941176, 1.0, 1.0);
-    //   this.DrawMappinPath(this.mmcc.questPoints, ThemeColors.Dandelion(), timeDelta);
-    //   this.DrawMappinPath(this.mmcc.playerPoints, fastTravelBlue, timeDelta);
-    // }
-
-  // private func DrawMappinPathPoint(point: Vector2, opacity: Float, size: Float, color: HDRColor) {
-    // if (AbsF(point.X) > 1920.0 || AbsF(point.Y) > 1080.0) {
-    //   return;
-    // }
-    
-    this.m_navPathQuest = inkWidgetBuilder.inkCanvas(n"questPath")
-      .Reparent(this.m_navPath)
-      .Anchor(inkEAnchor.Centered)
-      .BuildCanvas();
-    let i = 0;
-    while (i < 100) {
-      ArrayPush(this.navPathQuestPoints, inkWidgetBuilder.inkImage(StringToName("marker_" + ToString(RandF())))
-        .Reparent(this.m_navPathQuest)
-        .Atlas(r"base\\gameplay\\gui\\widgets\\crosshair\\master_crosshair.inkatlas")
-        .Part(n"lockon-b")
-        .Tint(ThemeColors.Dandelion())
-        .Opacity(0.0)
-        .Size(this.largestPoint, this.largestPoint)
-        .Anchor(0.5, 0.5)
-        .BuildImage());
-        i += 1;
-    }
-
-    this.m_navPathUser = inkWidgetBuilder.inkCanvas(n"userPath")
-      .Reparent(this.m_navPath)
-      .Anchor(inkEAnchor.Centered)
-      .BuildCanvas();
-    i = 0;
-    let fastTravelBlue = new HDRColor(0.34901960784, 0.682352941176, 1.0, 1.0);
-    while (i < 100) {
-      ArrayPush(this.navPathUserPoints, inkWidgetBuilder.inkImage(StringToName("marker_" + ToString(RandF())))
-        .Reparent(this.m_navPathUser)
-        .Atlas(r"base\\gameplay\\gui\\widgets\\crosshair\\master_crosshair.inkatlas")
-        .Part(n"lockon-b")
-        .Tint(fastTravelBlue)
-        .Opacity(0.0)
-        .Size(this.largestPoint, this.largestPoint)
-        .Anchor(0.5, 0.5)
-        .BuildImage());
-        i += 1;
-    }
-  }
-
-  private func UpdateNavPathPoints(widgets:array<ref<inkImage>>, points: array<Vector4>, timeDelta: Float) -> Void {
-    let cameraPosition = WorldPosition.ToVector4(this.camera.worldPosition);
-    // let linePoints: array<Vector2>;
-    let lastPoint: Vector4 = new Vector4(0.0, 0.0, 0.0, 0.0);
-    let pointsDrawn = 0;
-
-    for point in points {
-      let tweenPointDistance = Vector4.Distance(point, lastPoint);
-
-      // let newZ = (ogStartPoint.Z * pointDistance / totalDistance) + (ogEndPoint.Z * (1.0 - pointDistance / totalDistance));
-      // let floatingPoint = point + new Vector4(0.0, 0.0, MaxF(newZ - point.Z, 0), 0.0);
-      let adjustedPoint = point;   
-      adjustedPoint = this.AdjustPointToDirection(adjustedPoint, this.distanceToPath);
-
-      let pointDistance = Vector4.Distance(point, this.stats.d_visualPosition);
-      let cameraDistance = Vector4.Distance(adjustedPoint, cameraPosition);
-      let correctedPoint = adjustedPoint;// - this.stats.d_velocity * timeDelta;
-      let screenPoint = this.ScreenXY(correctedPoint);
-      // if (cameraDistance >= fadePointsDistance && AbsF(screenPoint.X) > 0.01 && AbsF(screenPoint.Y) > 0.01) {
-      //   ArrayPush(linePoints, screenPoint);
-      // }
-      // if (cameraDistance < fadePointsDistance && tweenPointDistance > spacing) {
-      if (tweenPointDistance > this.spacing) {
-        let distanceFade = PowF(1.0 - MinF(cameraDistance, this.fadePointsDistance) / this.fadePointsDistance, 2);
-        let fade = MinF(MaxF(pointDistance, this.closestPoint) - this.closestPoint, this.fadePointsClose) / (this.fadePointsClose - this.closestPoint);
-        // let fade = 1.0 - MinF(Cast<Float>(drawnPoints), fadePointsNumber) / fadePointsNumber;
-        let size = this.lineThickness + (this.largestPoint - this.lineThickness) * distanceFade;
-        let opacity = (this.lineOpacity + (this.pointOpacity - this.lineOpacity) * distanceFade) * fade;
-        this.UpdateNavPathPoint(widgets[pointsDrawn], screenPoint, opacity, size);
-        pointsDrawn += 1;
-        if (pointsDrawn >= 100)
-        {
-          break;
-        }
-        if (lastPoint.X != 0.0 && lastPoint.Y != 0.0) {
-          let rounded = Cast<Float>(RoundF(tweenPointDistance / this.spacing));
-          let tweenPointSpacing = this.spacing + (tweenPointDistance - rounded * this.spacing) / rounded;
-          let x = tweenPointSpacing;
-          while (x < tweenPointDistance) {
-            let midPoint = point / tweenPointDistance * x + lastPoint / tweenPointDistance * (tweenPointDistance - x);      
-            midPoint = this.AdjustPointToDirection(midPoint, this.distanceToPath);
-            pointDistance = Vector4.Distance(midPoint, this.stats.d_visualPosition);
-            cameraDistance = Vector4.Distance(midPoint, this.stats.d_visualPosition);
-            distanceFade = PowF(1.0 - MinF(cameraDistance, this.fadePointsDistance) / this.fadePointsDistance, 2);
-            fade = MinF(MaxF(pointDistance, this.closestPoint) - this.closestPoint, this.fadePointsClose) / (this.fadePointsClose - this.closestPoint);
-            let correctedMidPoint = midPoint;// - this.stats.d_velocity * timeDelta;
-            let midScreenPoint = this.ScreenXY(correctedMidPoint);
-            size = this.lineThickness + (this.largestPoint - this.lineThickness) * distanceFade;
-            opacity = (this.lineOpacity + (this.pointOpacity - this.lineOpacity) * distanceFade) * fade;
-            this.UpdateNavPathPoint(widgets[pointsDrawn], midScreenPoint, opacity, size);
-            pointsDrawn += 1;
-            if (pointsDrawn >= 100)
-            {
-              break;
-            }
-            x += tweenPointSpacing;
-          }
-          if (pointsDrawn >= 100)
-          {
-            break;
-          }
-        }
-        lastPoint = point;
-      }
-    }
-    if pointsDrawn < 100 {
-      while pointsDrawn < 100 {
-        widgets[pointsDrawn].SetVisible(false);
-        pointsDrawn += 1;
-      }
-    }
-  }
-
-  private func UpdateNavPathPoint(ii: ref<inkImage>, point: Vector2, opacity: Float, size: Float) {
-    if (AbsF(point.X) > 1920.0 || AbsF(point.Y) > 1080.0) {
-      ii.SetVisible(false);
-      return;
-    }
-    ii.SetVisible(true);
-    ii.SetTranslation(point);
-    ii.SetOpacity(opacity);
-    ii.SetSize(new Vector2(size, size));
-  }
-
-  private func AdjustPointToDirection(point: Vector4, threshold: Float) -> Vector4 {
-    let distance2D = Vector4.Distance2D(point, this.stats.d_visualPosition);
-    if (distance2D < threshold) {
-      let factor = PowF(1.0 - distance2D / threshold, 2.0);
-      // point.Z = point.Z * (1.0 - factor) + this.stats.d_visualPosition.Z * factor;
-      // let pointAlongDirection = Vector4.NearestPointOnEdge(point, this.stats.d_visualPosition + (this.stats.d_forward * -threshold) + this.stats.d_velocity, this.stats.d_visualPosition + (this.stats.d_forward * threshold) + this.stats.d_velocity);
-      let pointAlongDirection = Vector4.NearestPointOnEdge(point, this.stats.d_visualPosition + (this.stats.d_forward * -threshold), this.stats.d_visualPosition + (this.stats.d_forward * threshold));
-      point.X = point.X * (1.0 - factor) + pointAlongDirection.X * factor;
-      point.Y = point.Y * (1.0 - factor) + pointAlongDirection.Y * factor;
-      point.Z = point.Z * (1.0 - factor) + pointAlongDirection.Z * factor;
-    }
-    return point;
-  }
-  
-  // let p = 0;
-  // let maxPoints = 5;
-  // while (p < ArraySize(linePoints)) {
-  //   let subLinePoints: array<Vector2>;
-  //   let x = p;
-  //   while (x <= (p + maxPoints) && x < ArraySize(linePoints)) {
-  //     ArrayPush(subLinePoints, linePoints[x]);
-  //     x += 1;
-  //   }
-  //   let navLine = inkWidgetBuilder.inkShape(StringToName("navLine_" + ToString(RandF())))
-  //     .Reparent(this.ui.GetMarksWidget())
-  //     // .ChangeShape(n"Rectangle")
-  //     .Size(1920.0 * 2.0, 1080.0 * 2.0)
-  //     .UseNineSlice(true)
-  //     .ShapeVariant(inkEShapeVariant.Border)
-  //     .LineThickness(lineThickness)
-  //     .FillOpacity(0.0)
-  //     .Tint(color)
-  //     .BorderColor(color)
-  //     .BorderOpacity(lineOpacity)
-  //     .Visible(true)
-  //     .BuildShape();
-  //   navLine.SetVertexList(subLinePoints);
-  //   p += maxPoints;
-  // }
 
   private func UpdateRollSplay(factor: Float) -> Void {
     let indexes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
@@ -872,20 +661,6 @@ public class FlightControllerUI extends inkCanvas {
     let mark_effected = mark * splay;
     this.UpdateRollSplay(splay);
     this.UpdatePitchDisplayHeight(splay);
-    if IsDefined(this.mmcc) {
-      if ArraySize(this.mmcc.questPoints) > 0 {
-        this.m_navPathQuest.SetVisible(true);
-        this.UpdateNavPathPoints(this.navPathQuestPoints, this.mmcc.questPoints, timeDelta);
-      } else {
-        this.m_navPathQuest.SetVisible(false);
-      }
-      if ArraySize(this.mmcc.playerPoints) > 0 {
-        this.m_navPathUser.SetVisible(true);
-        this.UpdateNavPathPoints(this.navPathUserPoints, this.mmcc.playerPoints, timeDelta);
-      } else {
-        this.m_navPathUser.SetVisible(false);
-      }
-    }
 
     this.GetWidget(n"rulers/roll_marker_top").SetTranslation(CosF(Deg2Rad(mark_effected + 90.0)) * this.m_markerRadius, SinF(Deg2Rad(mark_effected + 90.0)) * this.m_markerRadius);
     this.GetWidget(n"rulers/roll_marker_top").SetRotation(mark_effected);

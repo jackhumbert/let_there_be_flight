@@ -52,7 +52,7 @@ public final const func IsPotentiallyQuickHackable() -> Bool {
 protected func GetQuickHackActions(out actions: array<ref<DeviceAction>>, context: GetActionsContext) -> Void {
   FlightLog.Info("[VehicleComponentPS] GetQuickHackActions");
   // let currentAction: ref<ScriptableDeviceAction>;
-  let controllerPS: ref<vehicleControllerPS> = this.GetVehicleControllerPS();
+  // let controllerPS: ref<vehicleControllerPS> = this.GetVehicleControllerPS();
   // let vehicleState: vehicleEState = controllerPS.GetState();
   // if Equals(vehicleState, vehicleEState.Default) {
     // if !controllerPS.IsAlarmOn() {

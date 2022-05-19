@@ -21,7 +21,7 @@ class FlightModuleFactory {
   std::vector<std::function<void()>> s_postRegisters;
 
 public:
-  static FlightModuleFactory &getInstance() {
+  static FlightModuleFactory &GetInstance() {
     static FlightModuleFactory s_instance;
     return s_instance;
   }
@@ -72,11 +72,11 @@ public:
   }
 };
 
-// FlightModuleFactory::getInstance()
+// FlightModuleFactory::GetInstance()
 
 template <class T> class FlightModuleRegister {
 public:
-  explicit FlightModuleRegister(const std::string &name) { FlightModuleFactory::getInstance().registerClass<T>(name); }
+  explicit FlightModuleRegister(const std::string &name) { FlightModuleFactory::GetInstance().registerClass<T>(name); }
 };
 
 #define REGISTER_FLIGHT_MODULE(derived_class)                                                                            \
