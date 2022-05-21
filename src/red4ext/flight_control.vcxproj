@@ -123,6 +123,7 @@
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Utils.cpp" />
     <ClCompile Include="VehicleObject.cpp" />
+    <ClCompile Include="VehiclePhysicsUpdate.cpp" />
     <ClCompile Include="VehicleSpeedUnlimiter.cpp" />
   </ItemGroup>
   <ItemGroup>

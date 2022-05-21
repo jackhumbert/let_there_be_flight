@@ -49,7 +49,8 @@ RED4ext::Handle<FlightSystem> fsHandle;
 FlightSystem *FlightSystem::GetInstance() {
   if (!fsHandle.instance) {
     spdlog::info("[RED4ext] New FlightSystem Instance");
-    fsHandle = RED4ext::Handle<FlightSystem>((FlightSystem *)cls.AllocInstance());
+    auto instance = reinterpret_cast<FlightSystem *>(cls.AllocInstance());
+    fsHandle = RED4ext::Handle<FlightSystem>(instance);
   }
 
   return (FlightSystem *)fsHandle.instance;
@@ -61,10 +62,12 @@ void GetInstanceScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aF
 
   if (!fsHandle.instance) {
     spdlog::info("[RED4ext] New FlightSystem Instance");
-    fsHandle = RED4ext::Handle<FlightSystem>((FlightSystem *)cls.AllocInstance());
+    auto instance = reinterpret_cast<FlightSystem *>(cls.AllocInstance());
+    fsHandle = RED4ext::Handle<FlightSystem>(instance);
   }
 
   if (aOut) {
+    fsHandle.refCount->IncRef();
     *aOut = RED4ext::Handle<FlightSystem>(fsHandle);
   }
 }
@@ -120,26 +123,28 @@ void* FlightSystem::RegisterUpdate(uintptr_t lookup) {
 	return 0;
 }
 
-//bool OnUpdate(RED4ext::CGameApplication* aApp) {
-//  //auto fs = FlightSystem::GetInstance();
-//  //auto rtti = RED4ext::CRTTISystem::Get();
-//  //auto fc = rtti->GetClass("FlightComponent");
-//  //auto onUpdate = fc->GetFunction("OnUpdate");
-//  //for (const auto component : fs->components) {
-//  //  auto stack = RED4ext::CStack(component, nullptr, 0, nullptr, 0);
-//  //  onUpdate->Execute(&stack);
-//  //}
-//  spdlog::info("[FlightSystem] OnUpdate");
-//  return true;
-//}
+bool OnUpdate(RED4ext::CGameApplication* aApp) {
+  //auto fs = FlightSystem::GetInstance();
+  //auto rtti = RED4ext::CRTTISystem::Get();
+  //auto fc = rtti->GetClass("FlightComponent");
+  //auto onUpdate = fc->GetFunction("OnUpdate");
+  //for (const auto component : fs->components) {
+  //  auto stack = RED4ext::CStack(component, nullptr, 0, nullptr, 0);
+  //  onUpdate->Execute(&stack);
+  //}
+  spdlog::info("[FlightSystem] OnUpdate");
+  return true;
+}
 
 struct FlightSystemModule : FlightModule {
-  //void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-  //  RED4ext::GameState runningState;
-  //  runningState.OnUpdate = &OnUpdate;
+  void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
+    RED4ext::GameState runningState;
+    runningState.OnEnter = nullptr;
+    runningState.OnUpdate = &OnUpdate;
+    runningState.OnExit = nullptr;
 
-  //  aSdk->gameStates->Add(aHandle, RED4ext::EGameStateType::Running, &runningState);
-  //}
+    aSdk->gameStates->Add(aHandle, RED4ext::EGameStateType::Running, &runningState);
+  }
 
   void RegisterTypes() {
     auto rtti = RED4ext::CRTTISystem::Get();
@@ -154,11 +159,12 @@ struct FlightSystemModule : FlightModule {
   }
 
   void PostRegisterTypes() {
+    auto rtti = RED4ext::CRTTISystem::Get();
     auto getInstance = RED4ext::CClassStaticFunction::Create(&cls, "GetInstance", "GetInstance", &GetInstanceScripts,
                                                              {.isNative = true, .isStatic = true});
     cls.RegisterFunction(getInstance);
 
-    FlightSystem::GetInstance();
+    //FlightSystem::GetInstance();
   }
 };
 

@@ -16,7 +16,7 @@ public class FlightFx {
   }
 
   public func Initialize(component: ref<FlightComponent>) -> ref<FlightFx> {
-    this.sys = FlightSystem.GetInstance();
+    this.sys = component.sys;
     this.component = component;
     return this;
   }
@@ -50,8 +50,52 @@ public class FlightFx {
     (vehicleComponent.FindComponentByName(n"wheel_01_br_a") as IComponent).Toggle(false);
     (vehicleComponent.FindComponentByName(n"wheel_01_br_b") as IComponent).Toggle(false);
 
+    (vehicleComponent.FindComponentByName(n"tire_02_fl_a") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"tire_02_fl_b") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"tire_02_fl_a_shadow") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"wheel_02_fl_a") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"wheel_02_fl_b") as IComponent).Toggle(false);
+
+    (vehicleComponent.FindComponentByName(n"tire_02_fr_a") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"tire_02_fr_b") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"tire_02_fr_a_shadow") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"wheel_02_fr_a") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"wheel_02_fr_b") as IComponent).Toggle(false);
+
+    (vehicleComponent.FindComponentByName(n"tire_02_bl_a") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"tire_02_bl_b") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"tire_02_bl_a_shadow") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"wheel_02_bl_a") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"wheel_02_bl_b") as IComponent).Toggle(false);
+
+    (vehicleComponent.FindComponentByName(n"tire_02_br_a") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"tire_02_br_b") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"tire_02_br_a_shadow") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"wheel_02_br_a") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"wheel_02_br_b") as IComponent).Toggle(false);
+
+    (vehicleComponent.FindComponentByName(n"wheel_bl_a_01") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"wheel_br_a_01") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"wheel_fl_a_01") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"wheel_fr_a_01") as IComponent).Toggle(false);
+
+    (vehicleComponent.FindComponentByName(n"wheel_bl_b_01") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"wheel_br_b_01") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"wheel_fl_b_01") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"wheel_fr_b_01") as IComponent).Toggle(false);
+
+    (vehicleComponent.FindComponentByName(n"wheel_bl_a_02") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"wheel_br_a_02") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"wheel_fl_a_02") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"wheel_fr_a_02") as IComponent).Toggle(false);
+
+    (vehicleComponent.FindComponentByName(n"wheel_bl_b_02") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"wheel_br_b_02") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"wheel_fl_b_02") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"wheel_fr_b_02") as IComponent).Toggle(false);
+
     let effectTransform: WorldTransform;
-    WorldTransform.SetPosition(effectTransform, this.component.stats.d_visualPosition);
+    WorldTransform.SetPosition(effectTransform, this.component.stats.d_position);
     // let resource: FxResource = Cast<FxResource>(r"base\\fx\\vehicles\\av\\av_panzer\\av_panzer_thruster_quest.effect");
     // let resource: FxResource = Cast<FxResource>(r"base\\fx\\vehicles\\av_ion_thruster.effect");
     this.resource = Cast<FxResource>(r"base\\fx\\vehicles\\v_av_manticore_thrusters_idle_land.effect");
@@ -135,6 +179,50 @@ public class FlightFx {
     (vehicleComponent.FindComponentByName(n"wheel_01_br_a") as IComponent).Toggle(true);
     (vehicleComponent.FindComponentByName(n"wheel_01_br_b") as IComponent).Toggle(true);
 
+    (vehicleComponent.FindComponentByName(n"tire_02_fl_a") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"tire_02_fl_b") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"tire_02_fl_a_shadow") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"wheel_02_fl_a") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"wheel_02_fl_b") as IComponent).Toggle(true);
+
+    (vehicleComponent.FindComponentByName(n"tire_02_fr_a") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"tire_02_fr_b") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"tire_02_fr_a_shadow") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"wheel_02_fr_a") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"wheel_02_fr_b") as IComponent).Toggle(true);
+
+    (vehicleComponent.FindComponentByName(n"tire_02_bl_a") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"tire_02_bl_b") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"tire_02_bl_a_shadow") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"wheel_02_bl_a") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"wheel_02_bl_b") as IComponent).Toggle(true);
+
+    (vehicleComponent.FindComponentByName(n"tire_02_br_a") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"tire_02_br_b") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"tire_02_br_a_shadow") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"wheel_02_br_a") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"wheel_02_br_b") as IComponent).Toggle(true);
+
+    (vehicleComponent.FindComponentByName(n"wheel_bl_a_01") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"wheel_br_a_01") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"wheel_fl_a_01") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"wheel_fr_a_01") as IComponent).Toggle(true);
+
+    (vehicleComponent.FindComponentByName(n"wheel_bl_b_01") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"wheel_br_b_01") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"wheel_fl_b_01") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"wheel_fr_b_01") as IComponent).Toggle(true);
+
+    (vehicleComponent.FindComponentByName(n"wheel_bl_a_02") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"wheel_br_a_02") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"wheel_fl_a_02") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"wheel_fr_a_02") as IComponent).Toggle(true);
+
+    (vehicleComponent.FindComponentByName(n"wheel_bl_b_02") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"wheel_br_b_02") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"wheel_fl_b_02") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"wheel_fr_b_02") as IComponent).Toggle(true);
+
   }
 
   public func Update(visualForce: Vector4, visualTorque: Vector4) {
@@ -150,26 +238,52 @@ public class FlightFx {
     // +x = torwards front
     // +y = rotate left z
     // +z = towards right 
-    this.component.bl_tire.SetLocalOrientation(EulerAngles.ToQuat(new EulerAngles(
-      -visualForce.Y,
-      0.0, 
-      visualTorque.Z - visualForce.X
-    )));
-    this.component.br_tire.SetLocalOrientation(EulerAngles.ToQuat(new EulerAngles(
-      -visualForce.Y, 
-      0.0, 
-      visualTorque.Z - visualForce.X
-    )));
-    this.component.fl_tire.SetLocalOrientation(EulerAngles.ToQuat(new EulerAngles(
-      -visualForce.Y, 
-      0.0, 
-      -visualTorque.Z - visualForce.X
-    )));
-    this.component.fr_tire.SetLocalOrientation(EulerAngles.ToQuat(new EulerAngles(
-      -visualForce.Y, 
-      0.0, 
-      -visualTorque.Z - visualForce.X
-    )));
+    // let forceQuat = Quaternion.BuildFromDirectionVector(-visualForce, this.component.stats.d_localUp);
+    // let quat = EulerAngles.ToQuat(new EulerAngles(
+    //   Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Right()),
+    //   Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Forward()),
+    //   0
+    // ));
+    this.component.bl_tire.SetLocalOrientation(Quaternion.Slerp(this.component.bl_tire.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
+      ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Right()), -45.0, 45.0),
+      0.0,
+      visualTorque.Z * 0.5 + ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Forward()), -45.0, 45.0)
+    )), 0.1));
+    this.component.br_tire.SetLocalOrientation(Quaternion.Slerp(this.component.br_tire.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
+      ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Right()), -45.0, 45.0), 
+      0.0,
+      visualTorque.Z * 0.5 + ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Forward()), -45.0, 45.0)
+    )), 0.1));
+    this.component.fl_tire.SetLocalOrientation(Quaternion.Slerp(this.component.fl_tire.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
+      ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Right()), -45.0, 45.0), 
+      0.0,
+      -visualTorque.Z * 0.5 + ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Forward()), -45.0, 45.0)
+    )), 0.1));
+    this.component.fr_tire.SetLocalOrientation(Quaternion.Slerp(this.component.fr_tire.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
+      ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Right()), -45.0, 45.0), 
+      0.0,
+      -visualTorque.Z * 0.5 + ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Forward()), -45.0, 45.0)
+    )), 0.1));
+    // this.component.bl_tire.SetLocalOrientation(EulerAngles.ToQuat(new EulerAngles(
+    //   -visualForce.Y,
+    //   0.0, 
+    //   visualTorque.Z - visualForce.X
+    // )));
+    // this.component.br_tire.SetLocalOrientation(EulerAngles.ToQuat(new EulerAngles(
+    //   -visualForce.Y, 
+    //   0.0, 
+    //   visualTorque.Z - visualForce.X
+    // )));
+    // this.component.fl_tire.SetLocalOrientation(EulerAngles.ToQuat(new EulerAngles(
+    //   -visualForce.Y, 
+    //   0.0, 
+    //   -visualTorque.Z - visualForce.X
+    // )));
+    // this.component.fr_tire.SetLocalOrientation(EulerAngles.ToQuat(new EulerAngles(
+    //   -visualForce.Y, 
+    //   0.0, 
+    //   -visualTorque.Z - visualForce.X
+    // )));
     // +x = torwards front
     // +y = rotate left z
     // +z = towards right 

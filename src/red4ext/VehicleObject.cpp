@@ -104,11 +104,17 @@ void VehicleAddFlightHelper(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
 
   auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
   auto p = v->physics;
-  auto helper = vehicle::flight::Helper::AddToDriverHelpers(&p->driveHelpers);
-
-  if (aOut) {
-    *aOut = helper;
+  if (p) {
+    auto helper = vehicle::flight::Helper::AddToDriverHelpers(&p->driveHelpers);
+    if (aOut) {
+      *aOut = helper;
+    }
+  } else {
+    if (aOut) {
+      *aOut = nullptr;
+    }
   }
+
 }
 
 struct VehicleObjectModule : FlightModule {

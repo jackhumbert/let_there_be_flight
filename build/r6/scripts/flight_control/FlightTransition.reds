@@ -108,7 +108,7 @@ public class FlightEvents extends VehicleEventsTransition {
     if !VehicleTransition.CanEnterDriverCombat() {
       stateContext.SetPermanentBoolParameter(n"ForceEmptyHands", true, true);
     };    
-    FlightController.GetInstance().Activate();
+    // FlightController.GetInstance().Activate();
     let evt = new VehicleFlightActivationEvent();
     // evt.vehicle = scriptInterface.owner as VehicleObject;
     (scriptInterface.owner as VehicleObject).QueueEvent(evt);
@@ -118,7 +118,8 @@ public class FlightEvents extends VehicleEventsTransition {
     FlightLog.Info("[FlightEvents] OnExit");
     this.SetIsInFlight(stateContext, false);
     // (scriptInterface.owner as VehicleObject).ToggleFlightComponent(false);
-    FlightController.GetInstance().Deactivate(false);
+    // FlightController.GetInstance().Deactivate(false);
+    stateContext.SetPermanentBoolParameter(n"ForceEmptyHands", false, true);
     let evt = new VehicleFlightDeactivationEvent();
     evt.silent = false;
     // evt.vehicle = scriptInterface.owner as VehicleObject;
@@ -130,13 +131,15 @@ public class FlightEvents extends VehicleEventsTransition {
     this.SetIsInFlight(stateContext, false);
     // (scriptInterface.owner as VehicleObject).ToggleFlightComponent(false);
     //FlightController.GetInstance().Deactivate(true);
+    stateContext.SetPermanentBoolParameter(n"ForceEmptyHands", false, true);
     super.OnForcedExit(stateContext, scriptInterface);
     this.ResumeStateMachines(scriptInterface.executionOwner);
   }
 
   public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-    FlightController.GetInstance().OnUpdate(timeDelta, stateContext, scriptInterface);
-    FlightSystem.GetInstance().OnUpdate(timeDelta);
+    // let fc = FlightController.GetInstance();
+    // fc.OnUpdate(timeDelta, stateContext, scriptInterface);
+    // fc.sys.OnUpdate(timeDelta);
     this.SetIsInVehicle(stateContext, true);
     this.SetSide(stateContext, scriptInterface);
     this.SendAnimFeature(stateContext, scriptInterface);

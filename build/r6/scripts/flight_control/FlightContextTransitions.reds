@@ -61,7 +61,7 @@ public class VehicleFlightContextDecisions extends InputContextTransitionDecisio
   }
 
   protected cb func OnVehicleStateChanged(value: Int32) -> Bool {
-    FlightLog.Info("[VehicleFlightContextDecisions] OnVehicleStateChanged");
+    FlightLog.Info("[VehicleFlightContextDecisions] OnVehicleStateChanged: " + ToString(IntEnum<gamePSMVehicle>(value)));
     this.EnableOnEnterCondition(value == 8);
   }
 

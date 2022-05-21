@@ -20,6 +20,7 @@ public class FlightStats {
   public let d_forward: Vector4;
   public let d_right: Vector4;
   public let d_up: Vector4;
+  public let d_localUp: Vector4;
   public let d_forward2D: Vector4;
   public let d_orientationChange: Quaternion;
   public let d_angularVelocity: Vector4;
@@ -144,7 +145,7 @@ public class FlightStats {
     this.s_forwardWeightTransferFactor = this.s_driveModelData.ForwardWeightTransferFactor();
   }
   
-  public final func UpdateDynamic(timeDelta: Float) -> Void {
+  public final func UpdateDynamic() -> Void {
     this.d_lastOrientation = this.d_orientation;
     let orientation = this.vehicle.GetWorldOrientation();
     // let orientation = Matrix.ToQuat(this.vehicle.chassis.GetLocalToWorld());
@@ -195,6 +196,8 @@ public class FlightStats {
 
     this.d_velocity = this.vehicle.GetLinearVelocity();
     this.d_localVelocity = Quaternion.Conjugate(this.d_orientation) * this.d_velocity;
+    this.d_localUp = Quaternion.Conjugate(this.d_orientation) * FlightUtils.Up();
+    // this.d_localUp = this.d_orientation * this.d_up;
 
     this.d_speed = Vector4.Length(this.d_velocity);
     this.d_speedRatio = this.d_speed / 100.0;

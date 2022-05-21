@@ -60,6 +60,9 @@ public class PID {
   public func GetValue() -> Float {
     return this.valueFloat;
   } 
+  public func GetInput() -> Float {
+    return this.inputFloat;
+  }
   // public func GetValue(timeDelta: Float) -> Vector4 {
   //   let error: Vector4 = this.inputVector - this.valueVector;
   //   this.valueVector += this.GetCorrection(error)

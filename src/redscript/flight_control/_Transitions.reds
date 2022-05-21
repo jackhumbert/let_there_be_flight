@@ -41,7 +41,7 @@ protected final const func IsPlayerAllowedToExitFlight(const scriptInterface: re
 public final const func ToFlight(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
   // if this.IsPlayerAllowedToEnterVehicleFlight(scriptInterface) && VehicleTransition.CanEnterVehicleFlight() {
   // if VehicleTransitiorn.CanEnterVehicleFlight() {
-    if scriptInterface.IsActionJustPressed(n"Flight_Toggle") {
+    if scriptInterface.IsActionJustPressed(n"Flight_Toggle") || (IsDefined(fs().playerComponent) && fs().playerComponent.active) {
       FlightLog.Info("[DriveDecisions] ToFlight");
       return true;
     };

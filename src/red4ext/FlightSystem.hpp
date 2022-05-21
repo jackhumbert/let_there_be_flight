@@ -15,7 +15,8 @@ struct FlightSystem : IFlightSystem {
   void *RegisterUpdate(uintptr_t lookup); // 110
 
   static FlightSystem *GetInstance();
-  //RED4ext::DynArray<RED4ext::ScriptInstance> components;
+  RED4ext::DynArray<RED4ext::WeakHandle<RED4ext::IScriptable>> components;
 };
+//RED4EXT_ASSERT_OFFSET(FlightSystem, components, 0x48);
 
 }  // namespace FlightSystem

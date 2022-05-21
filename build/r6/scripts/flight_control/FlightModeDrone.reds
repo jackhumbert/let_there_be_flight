@@ -1,23 +1,32 @@
 public class FlightModeDrone extends FlightMode {
-  public func Update(timeDelta: Float, out force: Vector4, out torque: Vector4) -> Void {
+  public static func Create(component: ref<FlightComponent>) -> ref<FlightModeDrone> {
+    let self = new FlightModeDrone();
+    self.component = component;
+    self.sys = component.sys;
+    return self;
+  }
+
+  public func Update(timeDelta: Float) -> Void {
       this.sys.tppCamera.yawDelta = 0.0;
       this.sys.tppCamera.pitchDelta = 0.0;
 
-      let dampFactor = -MaxF(this.sys.ctlr.brake.GetValue() * this.sys.settings.brakeFactor() * this.component.stats.s_brakingFrictionFactor, this.sys.settings.airResistance() * this.component.stats.s_airResistanceFactor);
+      let dampFactor = -MaxF(this.component.brake * this.sys.settings.brakeFactor() * this.component.stats.s_brakingFrictionFactor, this.sys.settings.airResistance() * this.component.stats.s_airResistanceFactor);
       let velocityDamp: Vector4 = this.component.stats.d_localVelocity * dampFactor;
 
+      this.force = new Vector4(0.0, 0.0, 0.0, 0.0);
       // lift
-      force += FlightUtils.Up() * this.sys.ctlr.lift.GetValue() * this.sys.settings.liftFactorDrone();
+      this.force += FlightUtils.Up() * this.component.lift * this.sys.settings.liftFactorDrone();
       // surge
-      force += FlightUtils.Forward() * this.sys.ctlr.surge.GetValue() * this.sys.settings.surgeFactor();
+      this.force += FlightUtils.Forward() * this.component.surge * this.sys.settings.surgeFactor();
       // directional brake
-      force += velocityDamp;
+      this.force += velocityDamp;
 
+      this.torque = new Vector4(0.0, 0.0, 0.0, 0.0);
       // pitch correction
-      torque.X = -(this.sys.ctlr.pitch.GetValue() * this.sys.settings.pitchFactorDrone());
+      this.torque.X = -(this.component.pitch * this.sys.settings.pitchFactorDrone());
       // roll correction
-      torque.Y = (this.sys.ctlr.roll.GetValue() * this.sys.settings.rollFactorDrone());
+      this.torque.Y = (this.component.roll * this.sys.settings.rollFactorDrone());
       // yaw correction
-      torque.Z = -(this.sys.ctlr.yaw.GetValue() * this.sys.settings.yawFactorDrone());
+      this.torque.Z = -(this.component.yaw * this.sys.settings.yawFactorDrone());
   }
 }

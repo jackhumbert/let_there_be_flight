@@ -89,26 +89,47 @@ namespace FlightAudio {
         return true;
     }
 
-    void Start(RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame, void* aOut, int64_t a4)
-    {
-        RED4ext::CString emitterName;
-        RED4ext::CString eventName;
-        RED4ext::GetParameter(aFrame, &emitterName);
-        RED4ext::GetParameter(aFrame, &eventName);
-        aFrame->code++; // skip ParamEnd
-        spdlog::info(fmt::format("[FlightAudio] Starting sound: {}", emitterName.c_str()));
-        FMOD::Studio::EventDescription* eventDescription;
-        //std::string path = "event:/";
-        //ERRCHECK(fmod_system->getEvent(path.append(eventName.c_str()).c_str(), &eventDescription));
-        ERRCHECK(fmod_system->getEvent(fmt::format("event:/{}", eventName.c_str()).c_str(), &eventDescription));
-        FMOD::Studio::EventInstance* eventInstance;
-        ERRCHECK(eventDescription->createInstance(&eventInstance));
-        ERRCHECK(eventInstance->start());
-        ERRCHECK(eventInstance->setTimelinePosition(rand()));
-        float pitch = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-        ERRCHECK(eventInstance->setPitch(1.0 + pitch * 0.01));
-        eventMap[emitterName.c_str()] = eventInstance;
-        ERRCHECK(fmod_system->update());
+    void Start(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, void *aOut, int64_t a4) {
+      RED4ext::CString emitterName;
+      RED4ext::CString eventName;
+      RED4ext::GetParameter(aFrame, &emitterName);
+      RED4ext::GetParameter(aFrame, &eventName);
+      aFrame->code++; // skip ParamEnd
+      spdlog::info(fmt::format("[FlightAudio] Starting sound: {}", emitterName.c_str()));
+      FMOD::Studio::EventDescription *eventDescription;
+      // std::string path = "event:/";
+      // ERRCHECK(fmod_system->getEvent(path.append(eventName.c_str()).c_str(), &eventDescription));
+      ERRCHECK(fmod_system->getEvent(fmt::format("event:/{}", eventName.c_str()).c_str(), &eventDescription));
+      FMOD::Studio::EventInstance *eventInstance;
+      ERRCHECK(eventDescription->createInstance(&eventInstance));
+      ERRCHECK(eventInstance->start());
+      ERRCHECK(eventInstance->setTimelinePosition(rand()));
+      float pitch = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+      ERRCHECK(eventInstance->setPitch(1.0 + pitch * 0.01));
+      eventMap[emitterName.c_str()] = eventInstance;
+      ERRCHECK(fmod_system->update());
+    }
+
+    void StartWithPitch(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, void *aOut, int64_t a4) {
+      RED4ext::CString emitterName;
+      RED4ext::CString eventName;
+      float pitch;
+      RED4ext::GetParameter(aFrame, &emitterName);
+      RED4ext::GetParameter(aFrame, &eventName);
+      RED4ext::GetParameter(aFrame, &pitch);
+      aFrame->code++; // skip ParamEnd
+      spdlog::info(fmt::format("[FlightAudio] Starting sound: {} with pitch: {}", emitterName.c_str(), pitch));
+      FMOD::Studio::EventDescription *eventDescription;
+      // std::string path = "event:/";
+      // ERRCHECK(fmod_system->getEvent(path.append(eventName.c_str()).c_str(), &eventDescription));
+      ERRCHECK(fmod_system->getEvent(fmt::format("event:/{}", eventName.c_str()).c_str(), &eventDescription));
+      FMOD::Studio::EventInstance *eventInstance;
+      ERRCHECK(eventDescription->createInstance(&eventInstance));
+      ERRCHECK(eventInstance->start());
+      ERRCHECK(eventInstance->setTimelinePosition(rand()));
+      ERRCHECK(eventInstance->setPitch(pitch));
+      eventMap[emitterName.c_str()] = eventInstance;
+      ERRCHECK(fmod_system->update());
     }
     
 
@@ -192,19 +213,17 @@ namespace FlightAudio {
         auto scriptable = rtti->GetClass("IScriptable");
         flightAudioCls.parent = scriptable;
 
-        RED4ext::CBaseFunction::Flags n_flags = { .isNative = true };
-;
-        auto startSound = RED4ext::CClassFunction::Create(&flightAudioCls, "Start", "Start", &Start);
-        auto playSound = RED4ext::CClassFunction::Create(&flightAudioCls, "Play", "Play", &Play);
-        auto stopSound = RED4ext::CClassFunction::Create(&flightAudioCls, "Stop", "Stop", &Stop);
-        auto setParams = RED4ext::CClassFunction::Create(&flightAudioCls, "Update", "Update", &Update);
-
-        startSound->flags = n_flags;
-        playSound->flags = n_flags;
-        stopSound->flags = n_flags;
-        setParams->flags = n_flags;
+        auto startSound =
+            RED4ext::CClassFunction::Create(&flightAudioCls, "Start", "Start", &Start, {.isNative = true});
+        auto startSoundWithPitch = RED4ext::CClassFunction::Create(&flightAudioCls, "StartWithPitch", "StartWithPitch",
+                                                                   &StartWithPitch, {.isNative = true});
+        auto playSound = RED4ext::CClassFunction::Create(&flightAudioCls, "Play", "Play", &Play, {.isNative = true});
+        auto stopSound = RED4ext::CClassFunction::Create(&flightAudioCls, "Stop", "Stop", &Stop, {.isNative = true});
+        auto setParams =
+            RED4ext::CClassFunction::Create(&flightAudioCls, "Update", "Update", &Update, {.isNative = true});
 
         flightAudioCls.RegisterFunction(startSound);
+        flightAudioCls.RegisterFunction(startSoundWithPitch);
         flightAudioCls.RegisterFunction(playSound);
         flightAudioCls.RegisterFunction(stopSound);
         flightAudioCls.RegisterFunction(setParams);

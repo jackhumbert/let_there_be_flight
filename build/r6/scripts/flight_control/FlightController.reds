@@ -74,7 +74,9 @@ public native class FlightController extends IScriptable {
   // protected let m_groupPath: CName;
 
   private func Initialize(player: ref<PlayerPuppet>) {
+    FlightLog.Info("[FlightController] Initialize");
     this.sys = FlightSystem.GetInstance();
+    // this.sys = GameInstance.GetScriptableSystemsContainer(player.GetGame()).Get(n"FlightSystem") as FlightSystem;
     this.sys.Setup(player);
     this.gameInstance = player.GetGame();
     this.player = player;
@@ -113,6 +115,7 @@ public native class FlightController extends IScriptable {
   }
   
   public static func CreateInstance(player: ref<PlayerPuppet>) {
+    FlightLog.Info("[FlightController] CreateInstance Started");
     // let self: ref<FlightController> = new FlightController();
     let self = FlightController.GetInstance();
     self.Initialize(player);  
@@ -124,7 +127,7 @@ public native class FlightController extends IScriptable {
     // This weak reference is used as a global variable 
     // to access the mod instance anywhere
     GetAllBlackboardDefs().flightController = self;
-    FlightLog.Info("[FlightController] CreateInstance");
+    FlightLog.Info("[FlightController] CreateInstance Finished");
   }
   
   // public static func GetInstance() -> wref<FlightController> {
@@ -150,11 +153,11 @@ public native class FlightController extends IScriptable {
   
   public cb func OnMountedToVehicleChange(mounted: Bool) -> Bool {
     // FlightLog.Info("[FlightController] OnMountedToVehicleChange");
-    if (mounted) {
-      this.Enable();
-    } else {
-      this.Disable();
-    }
+    // if (mounted) {
+    //   this.Enable();
+    // } else {
+    //   this.Disable();
+    // }
   }
   
   public func Enable() -> Void {
@@ -205,6 +208,7 @@ public native class FlightController extends IScriptable {
 
   
   private func Activate() -> Void {
+    this.enabled = true;
     this.active = true;
     this.SetupActions();
 
@@ -364,10 +368,10 @@ public native class FlightController extends IScriptable {
     //   this.audio.Update("windRight", Vector4.EmptyVector(), windVolume);
     // }
     // FlightLog.Info(ToString(actionType) + ToString(actionName) + ToString(value));
-    if Equals(actionName, n"Flight_Toggle") && ListenerAction.IsButtonJustPressed(action) {
-        this.Toggle();
+    // if Equals(actionName, n"Flight_Toggle") && ListenerAction.IsButtonJustPressed(action) {
+        // this.Toggle();
         // ListenerActionConsumer.ConsumeSingleAction(consumer);
-    }
+    // }
     if this.active {
       if Equals(actionName, n"Choice1_DualState") {
         if ListenerAction.IsButtonJustPressed(action) {
@@ -503,7 +507,8 @@ public native class FlightController extends IScriptable {
     // FlightLog.Info("in the physics update!");
   // }
 
-  public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
+  // public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
+  public final func OnUpdate(timeDelta: Float) -> Void {
     this.navPath.Update();
 
     // let cameraPos = this.ui.camera.GetLocalToWorld() * Vector4.EmptyVector();
@@ -519,26 +524,26 @@ public native class FlightController extends IScriptable {
     //   this.uiBlackboard.SignalVariant(this.uiSystemBB.TrackedMappin);
     // }
 
-    this.isInAnyMenu = this.uiBlackboard.GetBool(this.uiSystemBB.IsInMenu);
+    // this.isInAnyMenu = this.uiBlackboard.GetBool(this.uiSystemBB.IsInMenu);
     
-    if !this.active {
-      if (this.showUI) { 
-        this.ui.ClearMarks();
-      }
-      return;
-    }
+    // if !this.active {
+    //   if (this.showUI) { 
+    //     this.ui.ClearMarks();
+    //   }
+    //   return;
+    // }
     // might need to handle just the scanning system's dilation, and the pause menu
-    if GameInstance.GetTimeSystem(this.gameInstance).IsTimeDilationActive(n"radial") {
-      // this might happpen?
-      timeDelta *= TimeDilationHelper.GetFloatFromTimeSystemTweak("radialMenu", "timeDilation");
-      //FlightLog.Info("Radial menu dilation"); 
-    } else {
-      if GameInstance.GetTimeSystem(this.gameInstance).IsTimeDilationActive() {
-        // i think this is what this is called
-        timeDelta *= TimeDilationHelper.GetFloatFromTimeSystemTweak("focusModeTimeDilation", "timeDilation");
-        //FlightLog.Info("Other time dilation"); 
-      }
-    }
+    // if GameInstance.GetTimeSystem(this.gameInstance).IsTimeDilationActive(n"radial") {
+    //   // this might happpen?
+    //   timeDelta *= TimeDilationHelper.GetFloatFromTimeSystemTweak("radialMenu", "timeDilation");
+    //   //FlightLog.Info("Radial menu dilation"); 
+    // } else {
+    //   if GameInstance.GetTimeSystem(this.gameInstance).IsTimeDilationActive() {
+    //     // i think this is what this is called
+    //     timeDelta *= TimeDilationHelper.GetFloatFromTimeSystemTweak("focusModeTimeDilation", "timeDilation");
+    //     //FlightLog.Info("Other time dilation"); 
+    //   }
+    // }
 
     // let player: ref<PlayerPuppet> = GetPlayer(this.gameInstance);
     // if !IsDefined(this.GetVehicle()) { 

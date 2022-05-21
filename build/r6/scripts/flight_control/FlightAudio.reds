@@ -1,6 +1,7 @@
 public native class FlightAudio {
   // defined in red4ext part
   public native func Start(emitterName: String, eventName: String) -> Void;
+  public native func StartWithPitch(emitterName: String, eventName: String, pitch: Float) -> Void;
   public native func Play(eventName: String) -> Void;
   public native func Stop(emitterName: String) -> Void;
   // public native func Update(emitterName: String, eventLocation: Vector3, eventForward: Vector3, eventUp: Vector3, volume: Float) -> Void;

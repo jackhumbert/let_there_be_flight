@@ -1,5 +1,12 @@
 public class FlightModeHover extends FlightModeStandard {
-  public func Update(timeDelta: Float, out force: Vector4, out torque: Vector4) -> Void {
+  public static func Create(component: ref<FlightComponent>) -> ref<FlightModeHover> {
+    let self = new FlightModeHover();
+    self.component = component;
+    self.sys = component.sys;
+    return self;
+  }
+  
+  public func Update(timeDelta: Float) -> Void {
     this.component.hoverHeight = MaxF(this.sys.settings.minHoverHeight(), this.component.hoverHeight);
 
     let findWater: TraceResult;
@@ -15,6 +22,6 @@ public class FlightModeHover extends FlightModeStandard {
       }
     }
 
-    this.UpdateWithNormalDistance(timeDelta, force, torque, idealNormal, heightDifference);
+    this.UpdateWithNormalDistance(timeDelta, idealNormal, heightDifference);
   }
 }

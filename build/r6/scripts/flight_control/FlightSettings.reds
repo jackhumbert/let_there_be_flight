@@ -1,4 +1,5 @@
 public class FlightSettings {
+  public let idk: Float;
   public func airResistance() -> Float = 0.005
   public func angularBrakeFactor() -> Float = -10.0
   public func angularDampFactor() -> Float = -100.0
