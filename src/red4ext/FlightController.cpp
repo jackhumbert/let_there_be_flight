@@ -64,6 +64,7 @@ struct Module : FlightModule {
 
     cls.props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Bool"), "enabled", nullptr, 0x40));
     cls.props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Bool"), "active", nullptr, 0x41));
+    cls.props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Int32"), "mode", nullptr, 0x44));
 
 
     // auto physicsUpdate =

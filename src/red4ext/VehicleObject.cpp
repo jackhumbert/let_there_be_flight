@@ -4,6 +4,7 @@
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/Entity.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ent/HardTransformBinding.hpp>
 
 
 
@@ -114,7 +115,45 @@ void VehicleAddFlightHelper(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
       *aOut = nullptr;
     }
   }
+}
 
+void VehicleGetComponentsUsingSlot(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,
+                            RED4ext::DynArray<RED4ext::WeakHandle<RED4ext::ent::IComponent>> *aOut, int64_t a4) {
+  // RED4ext::ScriptInstance fc;
+  // RED4ext::GetParameter(aFrame, &fc);
+  RED4ext::CName slotName;
+   RED4ext::GetParameter(aFrame, &slotName);
+  aFrame->code++; // skip ParamEnd
+
+  if (aOut) {
+    auto rtti = RED4ext::CRTTISystem::Get();
+    auto ipct = rtti->GetType("entIPlacedComponent");
+    auto htb = rtti->GetType("endHardTransformBinding");
+    *aOut = RED4ext::DynArray<RED4ext::WeakHandle<RED4ext::ent::IComponent>>();
+
+    auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
+    for (const auto &h : v->components) {
+      auto c = h.GetPtr();
+      bool isIPC = false;
+      auto ct = c->GetType();
+      while (ct->parent) {
+        if (ct == ipct) {
+          isIPC = true;
+        }
+        ct = ct->parent;
+      }
+      if (isIPC) {  
+        auto ipc = reinterpret_cast<RED4ext::ent::IPlacedComponent*>(c);
+        if (ipc->parentTransform) {
+          auto htb = reinterpret_cast<RED4ext::ent::HardTransformBinding *>(ipc->parentTransform.instance);
+          if (htb->slotName == slotName) {
+            auto wh = RED4ext::WeakHandle<RED4ext::ent::IComponent>(h);
+            aOut->EmplaceBack(wh);
+          }
+        }
+      }
+    }
+  }
 }
 
 struct VehicleObjectModule : FlightModule {
@@ -149,6 +188,9 @@ struct VehicleObjectModule : FlightModule {
 
     auto addFlightHelper = RED4ext::CClassFunction::Create(vbc, "AddFlightHelper", "AddFlightHelper", &VehicleAddFlightHelper, {.isNative = true});
     vbc->RegisterFunction(addFlightHelper);
+
+    auto getComponentsUsingSlot = RED4ext::CClassFunction::Create(vbc, "GetComponentsUsingSlot", "GetComponentsUsingSlot", &VehicleGetComponentsUsingSlot, {.isNative = true});
+    vbc->RegisterFunction(getComponentsUsingSlot);
   }
 };
 

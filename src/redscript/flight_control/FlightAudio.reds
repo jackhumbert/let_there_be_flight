@@ -1,14 +1,4 @@
-public native class FlightAudio {
-  // defined in red4ext part
-  public native func Start(emitterName: String, eventName: String) -> Void;
-  public native func StartWithPitch(emitterName: String, eventName: String, pitch: Float) -> Void;
-  public native func Play(eventName: String) -> Void;
-  public native func Stop(emitterName: String) -> Void;
-  // public native func Update(emitterName: String, eventLocation: Vector3, eventForward: Vector3, eventUp: Vector3, volume: Float) -> Void;
-  public native func Update(emitterName: String, eventLocation: Vector4, volume: Float) -> Void;
-
-  public let parameters: array<String>;
-
+public class FlightAudioUpdate {
   public let speed: Float;
   public let surge: Float;
   public let yawDiff: Float;
@@ -19,6 +9,18 @@ public native class FlightAudio {
   public let inside: Float;
   public let damage: Float;
   public let water: Float;
+}
+
+public native class FlightAudio {
+  // defined in red4ext part
+  public native func Start(emitterName: String, eventName: String) -> Void;
+  public native func StartWithPitch(emitterName: String, eventName: String, pitch: Float) -> Void;
+  public native func Play(eventName: String) -> Void;
+  public native func Stop(emitterName: String) -> Void;
+  // public native func Update(emitterName: String, eventLocation: Vector3, eventForward: Vector3, eventUp: Vector3, volume: Float) -> Void;
+  public native func Update(emitterName: String, eventLocation: Vector4, volume: Float, update: ref<FlightAudioUpdate>) -> Void;
+
+  public let parameters: array<String>;
 
   public let listenerPosition: Vector4;
   public let listenerUp: Vector4;
@@ -32,17 +34,6 @@ public native class FlightAudio {
 
   public static func Create() -> ref<FlightAudio> {
     let self = new FlightAudio();
-
-    self.speed = 0.0;
-    self.surge = 0.0;
-    self.yawDiff = 0.0;
-    self.lift = 0.0;
-    self.yaw = 0.0;
-    self.pitchDiff = 0.0;
-    self.brake = 0.0;
-    self.inside = 0.0;
-    self.damage = 0.0;
-    self.water = 0.0;
 
     self.parameters = [
       "speed",

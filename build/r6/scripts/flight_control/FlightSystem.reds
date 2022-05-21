@@ -24,6 +24,7 @@ public native class FlightSystem extends IFlightSystem {
     this.audio = FlightAudio.Create();
     FlightLog.Info("[FlightSystem] FlightAudio Created");
     this.ctlr = FlightController.GetInstance();
+    this.tppCamera = player.FindComponentByName(n"vehicleTPPCamera") as vehicleTPPCameraComponent;
   }
 
   // public func OnUpdate(timeDelta: Float) -> Void {

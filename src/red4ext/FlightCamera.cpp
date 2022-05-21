@@ -15,10 +15,15 @@ decltype(&Camera::TPPCameraStatsUpdate) TPPCameraStatsUpdate_Original;
 uintptr_t Camera::TPPCameraStatsUpdate(RED4ext::vehicle::TPPCameraComponent *camera, uintptr_t data) {
   uintptr_t result = TPPCameraStatsUpdate_Original(camera, data);
   
-  if (FlightController::FlightController::GetInstance()->active) {
+  auto fc = FlightController::FlightController::GetInstance();
+  if (fc->active) {
     camera->isInAir = false;
     camera->drivingDirectionCompensationAngleSmooth = 120.0;
     camera->drivingDirectionCompensationSpeedCoef = 0.1;
+    if (fc->mode == 3) {
+      camera->pitchDelta = 0.0;
+      camera->yawDelta = 0.0;
+    }
   }
 
   return result;

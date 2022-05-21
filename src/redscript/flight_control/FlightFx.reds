@@ -11,6 +11,11 @@ public class FlightFx {
   // let fl_fx_wt: WorldTransform;
   // let fr_fx_wt: WorldTransform;
 
+  public let blc: array<ref<IComponent>>;
+  public let brc: array<ref<IComponent>>;
+  public let flc: array<ref<IComponent>>;
+  public let frc: array<ref<IComponent>>;
+
   public static func Create(component: ref<FlightComponent>) -> ref<FlightFx> {
     return new FlightFx().Initialize(component);
   }
@@ -25,74 +30,37 @@ public class FlightFx {
     // hide wheels, tires & brakes (chassis)
     let vehicleComponent = this.component.GetVehicle().GetVehicleComponent();
     (vehicleComponent.FindComponentByName(n"chassis") as IComponent).Toggle(false);
+    (vehicleComponent.FindComponentByName(n"chasis") as IComponent).Toggle(false);
 
-    (vehicleComponent.FindComponentByName(n"tire_01_fl_a") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"tire_01_fl_b") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"tire_01_fl_a_shadow") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_01_fl_a") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_01_fl_b") as IComponent).Toggle(false);
+    this.blc = this.component.GetVehicle().GetComponentsUsingSlot(n"wheel_back_left");
+    this.brc = this.component.GetVehicle().GetComponentsUsingSlot(n"wheel_back_right");
+    this.flc = this.component.GetVehicle().GetComponentsUsingSlot(n"wheel_front_left");
+    this.frc = this.component.GetVehicle().GetComponentsUsingSlot(n"wheel_front_right");
 
-    (vehicleComponent.FindComponentByName(n"tire_01_fr_a") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"tire_01_fr_b") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"tire_01_fr_a_shadow") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_01_fr_a") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_01_fr_b") as IComponent).Toggle(false);
-
-    (vehicleComponent.FindComponentByName(n"tire_01_bl_a") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"tire_01_bl_b") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"tire_01_bl_a_shadow") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_01_bl_a") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_01_bl_b") as IComponent).Toggle(false);
-
-    (vehicleComponent.FindComponentByName(n"tire_01_br_a") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"tire_01_br_b") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"tire_01_br_a_shadow") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_01_br_a") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_01_br_b") as IComponent).Toggle(false);
-
-    (vehicleComponent.FindComponentByName(n"tire_02_fl_a") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"tire_02_fl_b") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"tire_02_fl_a_shadow") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_02_fl_a") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_02_fl_b") as IComponent).Toggle(false);
-
-    (vehicleComponent.FindComponentByName(n"tire_02_fr_a") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"tire_02_fr_b") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"tire_02_fr_a_shadow") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_02_fr_a") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_02_fr_b") as IComponent).Toggle(false);
-
-    (vehicleComponent.FindComponentByName(n"tire_02_bl_a") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"tire_02_bl_b") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"tire_02_bl_a_shadow") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_02_bl_a") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_02_bl_b") as IComponent).Toggle(false);
-
-    (vehicleComponent.FindComponentByName(n"tire_02_br_a") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"tire_02_br_b") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"tire_02_br_a_shadow") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_02_br_a") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_02_br_b") as IComponent).Toggle(false);
-
-    (vehicleComponent.FindComponentByName(n"wheel_bl_a_01") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_br_a_01") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_fl_a_01") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_fr_a_01") as IComponent).Toggle(false);
-
-    (vehicleComponent.FindComponentByName(n"wheel_bl_b_01") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_br_b_01") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_fl_b_01") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_fr_b_01") as IComponent).Toggle(false);
-
-    (vehicleComponent.FindComponentByName(n"wheel_bl_a_02") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_br_a_02") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_fl_a_02") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_fr_a_02") as IComponent).Toggle(false);
-
-    (vehicleComponent.FindComponentByName(n"wheel_bl_b_02") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_br_b_02") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_fl_b_02") as IComponent).Toggle(false);
-    (vehicleComponent.FindComponentByName(n"wheel_fr_b_02") as IComponent).Toggle(false);
+    for c in this.blc {
+      if c.IsEnabled() {
+        c.Toggle(false);
+      }
+      // ArrayRemove(this.blc, c);
+    }
+    for c in this.brc {
+      if c.IsEnabled() {
+        c.Toggle(false);
+      }
+      // ArrayRemove(this.brc, c);
+    }
+    for c in this.flc {
+      if c.IsEnabled() {
+        c.Toggle(false);
+      }
+      // ArrayRemove(this.flc, c);
+    }
+    for c in this.frc {
+      if c.IsEnabled() {
+        c.Toggle(false);
+      }
+      // ArrayRemove(this.frc, c);
+    }
 
     let effectTransform: WorldTransform;
     WorldTransform.SetPosition(effectTransform, this.component.stats.d_position);
@@ -154,75 +122,20 @@ public class FlightFx {
 
     let vehicleComponent = this.component.GetVehicle().GetVehicleComponent();
     (vehicleComponent.FindComponentByName(n"chassis") as IComponent).Toggle(true);
+    (vehicleComponent.FindComponentByName(n"chasis") as IComponent).Toggle(true);
 
-    (vehicleComponent.FindComponentByName(n"tire_01_fl_a") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"tire_01_fl_b") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"tire_01_fl_a_shadow") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_01_fl_a") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_01_fl_b") as IComponent).Toggle(true);
-
-    (vehicleComponent.FindComponentByName(n"tire_01_fr_a") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"tire_01_fr_b") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"tire_01_fr_a_shadow") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_01_fr_a") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_01_fr_b") as IComponent).Toggle(true);
-
-    (vehicleComponent.FindComponentByName(n"tire_01_bl_a") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"tire_01_bl_b") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"tire_01_bl_a_shadow") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_01_bl_a") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_01_bl_b") as IComponent).Toggle(true);
-
-    (vehicleComponent.FindComponentByName(n"tire_01_br_a") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"tire_01_br_b") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"tire_01_br_a_shadow") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_01_br_a") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_01_br_b") as IComponent).Toggle(true);
-
-    (vehicleComponent.FindComponentByName(n"tire_02_fl_a") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"tire_02_fl_b") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"tire_02_fl_a_shadow") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_02_fl_a") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_02_fl_b") as IComponent).Toggle(true);
-
-    (vehicleComponent.FindComponentByName(n"tire_02_fr_a") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"tire_02_fr_b") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"tire_02_fr_a_shadow") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_02_fr_a") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_02_fr_b") as IComponent).Toggle(true);
-
-    (vehicleComponent.FindComponentByName(n"tire_02_bl_a") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"tire_02_bl_b") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"tire_02_bl_a_shadow") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_02_bl_a") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_02_bl_b") as IComponent).Toggle(true);
-
-    (vehicleComponent.FindComponentByName(n"tire_02_br_a") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"tire_02_br_b") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"tire_02_br_a_shadow") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_02_br_a") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_02_br_b") as IComponent).Toggle(true);
-
-    (vehicleComponent.FindComponentByName(n"wheel_bl_a_01") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_br_a_01") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_fl_a_01") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_fr_a_01") as IComponent).Toggle(true);
-
-    (vehicleComponent.FindComponentByName(n"wheel_bl_b_01") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_br_b_01") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_fl_b_01") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_fr_b_01") as IComponent).Toggle(true);
-
-    (vehicleComponent.FindComponentByName(n"wheel_bl_a_02") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_br_a_02") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_fl_a_02") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_fr_a_02") as IComponent).Toggle(true);
-
-    (vehicleComponent.FindComponentByName(n"wheel_bl_b_02") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_br_b_02") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_fl_b_02") as IComponent).Toggle(true);
-    (vehicleComponent.FindComponentByName(n"wheel_fr_b_02") as IComponent).Toggle(true);
-
+    for c in this.blc {
+        c.Toggle(true);
+    }
+    for c in this.brc {
+        c.Toggle(true);
+    }
+    for c in this.flc {
+        c.Toggle(true);
+    }
+    for c in this.frc {
+        c.Toggle(true);
+    }
   }
 
   public func Update(visualForce: Vector4, visualTorque: Vector4) {
@@ -244,6 +157,7 @@ public class FlightFx {
     //   Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Forward()),
     //   0
     // ));
+    if thrusterAmount > 0.0 {
     this.component.bl_tire.SetLocalOrientation(Quaternion.Slerp(this.component.bl_tire.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
       ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Right()), -45.0, 45.0),
       0.0,
@@ -264,6 +178,7 @@ public class FlightFx {
       0.0,
       -visualTorque.Z * 0.5 + ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Forward()), -45.0, 45.0)
     )), 0.1));
+    }
     // this.component.bl_tire.SetLocalOrientation(EulerAngles.ToQuat(new EulerAngles(
     //   -visualForce.Y,
     //   0.0, 

@@ -170,13 +170,16 @@ namespace FlightAudio {
         RED4ext::CString emitterName;
         RED4ext::Vector4 eventLocation;
         float eventVolume;
+        RED4ext::Handle<RED4ext::IScriptable> update;
         RED4ext::GetParameter(aFrame, &emitterName);
         RED4ext::GetParameter(aFrame, &eventLocation);
         RED4ext::GetParameter(aFrame, &eventVolume);
+        RED4ext::GetParameter(aFrame, &update);
         aFrame->code++; // skip ParamEnd
 
         auto rtti = RED4ext::CRTTISystem::Get();
         auto flightAudioCls = rtti->GetClass("FlightAudio");
+        auto flightAudioUpdateCls = rtti->GetClass("FlightAudioUpdate");
 
         RED4ext::Vector4 listenerPosition = flightAudioCls->GetProperty("listenerPosition")->GetValue<RED4ext::Vector4>(aContext);
         RED4ext::Vector4 listenerForward = flightAudioCls->GetProperty("listenerForward")->GetValue<RED4ext::Vector4>(aContext);
@@ -197,8 +200,10 @@ namespace FlightAudio {
         auto pParametersType = reinterpret_cast<RED4ext::CRTTIArrayType*>(pParametersProp->type);
         auto pParametersArraySize = pParametersType->GetLength(pParametersArray);
         for (int i = 0; i < pParametersArraySize; i++) {
-            auto pParameterName = (RED4ext::CString*)pParametersType->GetElement(pParametersArray, i);
-            eventMap[emitterName.c_str()]->setParameterByName(pParameterName->c_str(), flightAudioCls->GetProperty(pParameterName->c_str())->GetValue<float>(aContext));
+          auto pParameterName = (RED4ext::CString*)pParametersType->GetElement(pParametersArray, i);
+          eventMap[emitterName.c_str()]->setParameterByName(
+              pParameterName->c_str(),
+              flightAudioUpdateCls->GetProperty(pParameterName->c_str())->GetValue<float>(update));
         }
         ERRCHECK(fmod_system->update());
     }

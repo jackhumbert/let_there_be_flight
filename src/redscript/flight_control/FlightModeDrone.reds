@@ -1,15 +1,11 @@
 public class FlightModeDrone extends FlightMode {
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeDrone> {
     let self = new FlightModeDrone();
-    self.component = component;
-    self.sys = component.sys;
+    self.Initialize(component);
     return self;
   }
 
   public func Update(timeDelta: Float) -> Void {
-      this.sys.tppCamera.yawDelta = 0.0;
-      this.sys.tppCamera.pitchDelta = 0.0;
-
       let dampFactor = -MaxF(this.component.brake * this.sys.settings.brakeFactor() * this.component.stats.s_brakingFrictionFactor, this.sys.settings.airResistance() * this.component.stats.s_airResistanceFactor);
       let velocityDamp: Vector4 = this.component.stats.d_localVelocity * dampFactor;
 

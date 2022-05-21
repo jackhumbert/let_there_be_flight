@@ -66,6 +66,11 @@ public native class vehicleFlightHelper extends IScriptable {
 public native func AddFlightHelper() -> ref<vehicleFlightHelper>;
 
 @addMethod(VehicleObject)
+public native func GetComponentsUsingSlot(slotName: CName) -> array<ref<IComponent>>;
+
+
+
+@addMethod(VehicleObject)
 protected cb func OnPhysicalCollision(evt: ref<PhysicalCollisionEvent>) -> Bool {
   FlightLog.Info("[VehicleObject] OnPhysicalCollision");
   let vehicle = evt.otherEntity as VehicleObject;

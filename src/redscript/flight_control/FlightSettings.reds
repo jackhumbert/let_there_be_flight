@@ -24,7 +24,7 @@ public class FlightSettings {
   public func normalEase() -> Float = 0.3
   public func pitchCorrectionFactor() -> Float = 3.0
   public func pitchFactorDrone() -> Float = 0.5
-  public func pitchWithLift() -> Float = 0.8
+  public func pitchWithLift() -> Float = 0.5
   public func pitchWithSurge() -> Float = 0.0
   public func referenceZ() -> Float = 0.0
   public func rollCorrectionFactor() -> Float = 15.0

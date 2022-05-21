@@ -28,6 +28,7 @@ public native class FlightController extends IScriptable {
   // defined on the RED4ext side
   private native let enabled: Bool;
   private native let active: Bool;
+  public native let mode: Int32;
   public static native func GetInstance() -> ref<FlightController>;
   
   // redscript-only
@@ -47,7 +48,6 @@ public native class FlightController extends IScriptable {
   public final const func IsActive() -> Bool {
     return this.active;
   }
-  public let mode: Int32;
 
   public let showOptions: Bool;
   public let showUI: Bool;
@@ -98,6 +98,8 @@ public native class FlightController extends IScriptable {
 
     this.uiBlackboard = GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().UI_System);
     this.uiSystemBB = GetAllBlackboardDefs().UI_System;
+
+    this.navPath = FlightNavPath.Create(this);
     // this.trackedMappinId = this.uiBlackboard.RegisterListenerVariant(this.uiSystemBB.TrackedMappin, this, n"OnTrackedMappinUpdated");
     // this.uiBlackboard.SignalVariant(this.uiSystemBB.TrackedMappin);
 
@@ -162,52 +164,17 @@ public native class FlightController extends IScriptable {
   
   public func Enable() -> Void {
     this.enabled = true;
-    this.active = false;
     this.SetupActions();
-
-    this.navPath = FlightNavPath.Create(this);
-    // this.ui.Setup(this.stats);
-
-    // FlightLog.Info("[FlightController] Enable - " + this.GetVehicle().GetDisplayName());
-
-
-    // let epsc = new EffectPreloadScriptContext();
-    // EffectPreloadScriptContext.PreloadFxResource(epsc, Cast<FxResource>(r"base\\fx\\vehicles\\av_ion_thruster.effect"));
-
-    // this.effectInstance = GameInstance.GetGameEffectSystem(this.gameInstance).CreateEffectStatic(n"loot_highlight", n"item_highlight", this.GetVehicle());
-    // EffectData.SetEntity(this.effectInstance.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.entity, this.GetVehicle());
-    // EffectData.SetBool(this.effectInstance.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.renderMaterialOverride, false);
-    // this.effectInstance.Run();
-
+    FlightLog.Info("[FlightController] Enable");
   }
 
   public func Disable() -> Void {
-    if this.active {
-      this.Deactivate(true);
-    }
     this.enabled = false;
     this.SetupActions();   
-    // this.stats = null;
-
     FlightLog.Info("[FlightController] Disable");
   }
-
-  public func Toggle() -> Bool {
-    // if this.active {
-    //   this.Deactivate(false);
-    // } else {
-    //   if (!this.enabled) {
-    //     this.Enable();
-    //   }
-    //   this.Activate();
-    // // }
-    // this.GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControllerBB.IsActive, this.active, true);
-    // this.GetBlackboard().SignalBool(GetAllBlackboardDefs().FlightControllerBB.IsActive);
-    return this.active;
-  }
-
   
-  private func Activate() -> Void {
+  private func Activate(silent: Bool) -> Void {
     this.enabled = true;
     this.active = true;
     this.SetupActions();
@@ -227,31 +194,19 @@ public native class FlightController extends IScriptable {
     
     this.SetupPositionProviders();
 
-    // GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"summon_hologram", true);
-    // GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"test_effect", true);
-    // // EffectData.SetBool(this.effectInstance.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.enable, true);
-    
-    // let staticResource = n"base\\gameplay\\game_effects\\in_world_nav.es";
-    // let effect = GameInstance.GetGameEffectSystem(this.gameInstance).CreateEffectStatic(staticResource, n"in_world_nav", this.GetVehicle());
-    // // let effect: ref<EffectInstance> = GameInstance.GetGameEffectSystem(this.gameInstance).CreateEffectStatic(n"emp", n"emp", this.GetVehicle());
-    // EffectData.SetFloat(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.duration, 5.0);
-    // EffectData.SetFloat(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.radius, 50.0);
-    // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.position, this.stats.d_position);
-    // // EffectData.SetFloat(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.duration, 50.0);
-    // effect.Run();
-
-    this.sys.tppCamera = GetPlayer(this.gameInstance).FindComponentByName(n"vehicleTPPCamera") as vehicleTPPCameraComponent;
+    // this.sys.tppCamera = GetPlayer(this.gameInstance).FindComponentByName(n"vehicleTPPCamera") as vehicleTPPCameraComponent;
 
     // idk what to do with this
     // let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
     // uiSystem.PushGameContext(IntEnum(10));
 
-
     if (this.showUI) {
       this.ui.Show();
     }
   
-    this.ShowSimpleMessage("Flight Control Engaged");
+    if !silent {
+      this.ShowSimpleMessage("Flight Control Engaged");
+    }
     
     FlightLog.Info("[FlightController] Activate");
     this.GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControllerBB.IsActive, true, true);
@@ -262,17 +217,11 @@ public native class FlightController extends IScriptable {
     this.active = false;
     this.SetupActions();
 
-    // GameObjectEffectHelper.BreakEffectLoopEvent(this.GetVehicle(), n"summon_hologram");
-    // GameObjectEffectHelper.BreakEffectLoopEvent(this.GetVehicle(), n"test_effect");
-    // EffectData.SetBool(this.effectInstance.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.enable, false);
-
     //let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
     //uiSystem.PopGameContext(IntEnum(10));
 
-    // StatusEffectHelper.RemoveStatusEffect(GetPlayer(this.gameInstance), t"GameplayRestriction.NoCameraControl");
     if !silent {
       this.ShowSimpleMessage("Flight Control Disengaged");
-      //GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_hacking_access_denied");
     }
     if (this.showUI) {
       this.ui.Hide();
@@ -415,6 +364,9 @@ public native class FlightController extends IScriptable {
         // }
         if Equals(actionName, n"FlightOptions_Up") && ListenerAction.IsButtonJustPressed(action) {
             this.mode = (this.mode + 1) % 4;
+            let evt = new VehicleFlightModeChangeEvent();
+            evt.mode = this.mode;
+            GetMountedVehicle(this.player).QueueEvent(evt);
             if this.mode == 0 {
               this.ShowSimpleMessage("Flight & Hover Enabled");
             }
@@ -644,22 +596,6 @@ public native class FlightController extends IScriptable {
 @addMethod(AudioSystem)
 public final func PlayFlightSound(sound: CName) -> Void {
   this.Play(sound);
-}
-
-@addMethod(AudioSystem)
-public final func PlayFlightSoundFrom(sound: CName, object: ref<GameObject>) -> Void {
-  let objectID: EntityID = object.GetEntityID();
-  if !EntityID.IsDefined(objectID) {
-    this.Play(sound, objectID);
-  }
-}
-
-@addMethod(AudioSystem)
-public final func StopFlightSoundFrom(sound: CName, object: ref<GameObject>) -> Void {
-  let objectID: EntityID = object.GetEntityID();
-  if !EntityID.IsDefined(objectID) {
-    this.Stop(sound, objectID);
-  }
 }
 
 @addField(PlayerPuppet)

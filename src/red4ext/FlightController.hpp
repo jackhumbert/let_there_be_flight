@@ -13,10 +13,12 @@ struct FlightController : RED4ext::IScriptable {
 
   bool enabled;
   bool active;
+  int32_t mode;
 };
 
 RED4EXT_ASSERT_SIZE(FlightController, 0x48);
 RED4EXT_ASSERT_OFFSET(FlightController, enabled, 0x40);
 RED4EXT_ASSERT_OFFSET(FlightController, active, 0x41);
+RED4EXT_ASSERT_OFFSET(FlightController, mode, 0x44);
 
 } // namespace FlightController
