@@ -11,8 +11,8 @@ public class FlightSettings {
   public func distance() -> Float = 0.0
   public func distanceEase() -> Float = 0.1
   public func fwtfCorrection() -> Float = 0.0
-  public func hoverClamp() -> Float = 1.0
-  public func hoverFactor() -> Float = 5.0
+  public func hoverClamp() -> Float = 10.0
+  public func hoverFactor() -> Float = 8.0
   public func liftFactor() -> Float = 8.0
   public func liftFactorDrone() -> Float = 30.0
   public func lookAheadMax() -> Float = 10.0

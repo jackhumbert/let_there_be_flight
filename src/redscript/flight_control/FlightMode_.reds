@@ -10,7 +10,8 @@ public abstract class FlightMode {
   public func Initialize(component: ref<FlightComponent>) -> Void {
     this.component = component;
     this.sys = component.sys;
-    this.gravityFactor = 2.885;
+    // this.gravityFactor = 2.885;
+    this.gravityFactor = 1.0;
   }
 
   public func Activate() -> Void;

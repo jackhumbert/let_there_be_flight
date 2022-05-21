@@ -45,10 +45,18 @@ protected cb func OnFlightActiveChanged(active: Bool) -> Bool {
   }
 }
 
-// show the real km/s for dev
-// @replaceMethod(hudCarController)
-// protected cb func OnSpeedValueChanged(speedValue: Float) -> Bool {
-//   speedValue = AbsF(speedValue);
-//   // let multiplier: Float = GameInstance.GetStatsDataSystem(this.m_activeVehicle.GetGame()).GetValueFromCurve(n"vehicle_ui", speedValue, n"speed_to_multiplier");
-//   inkTextRef.SetText(this.m_SpeedValue, IntToString(RoundMath(speedValue)));
-// }
+@wrapMethod(hudCarController)
+protected cb func OnSpeedValueChanged(speedValue: Float) -> Bool {
+  // speedValue = AbsF(speedValue);
+  // let multiplier: Float = GameInstance.GetStatsDataSystem(this.m_activeVehicle.GetGame()).GetValueFromCurve(n"vehicle_ui", speedValue, n"speed_to_multiplier");
+  // inkTextRef.SetText(this.m_SpeedValue, IntToString(RoundMath(speedValue)));
+
+  let fc = fs().playerComponent;
+  if fc.active {
+    let speed = AbsF(fc.stats.d_speed);
+    let multiplier: Float = GameInstance.GetStatsDataSystem(this.m_activeVehicle.GetGame()).GetValueFromCurve(n"vehicle_ui", speed, n"speed_to_multiplier");
+    inkTextRef.SetText(this.m_SpeedValue, IntToString(RoundMath(speed * multiplier)));
+  } else {
+    wrappedMethod(speedValue);
+  }
+}

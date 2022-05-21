@@ -1,7 +1,7 @@
 public abstract class FlightModeStandard extends FlightMode {
   protected func UpdateWithNormalDistance(timeDelta: Float, normal: Vector4, heightDifference: Float) -> Void {
-    let hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, this.sys.settings.hoverClamp()) / this.sys.settings.hoverClamp();
-    let liftForce: Float = hoverCorrection * this.sys.settings.hoverFactor() * (9.81000042) * this.gravityFactor;
+    let hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, this.sys.settings.hoverClamp());// / this.sys.settings.hoverClamp();
+    let liftForce: Float = hoverCorrection * this.sys.settings.hoverFactor() + (9.81000042) * this.gravityFactor;
     this.UpdateWithNormalLift(timeDelta, normal, liftForce);
   }
 
@@ -38,7 +38,7 @@ public abstract class FlightModeStandard extends FlightMode {
     if AbsF(pitchDegOff) < 30.0 && AbsF(rollDegOff) < 30.0 {
       let directionAngle: Float = Vector4.GetAngleDegAroundAxis(this.component.stats.d_direction, this.component.stats.d_forward, this.component.stats.d_up);
       this.component.yawPID.integralFloat *= (1.0 - AbsF(this.component.yaw));
-      yawCorrection = this.component.yawPID.GetCorrectionClamped(directionAngle, timeDelta, 10.0) / 10.0;
+      yawCorrection = this.component.yawPID.GetCorrectionClamped(directionAngle, timeDelta, 10.0);// / 10.0;
     }
     yawCorrection += this.sys.settings.yawD() * changeAngle / timeDelta;
 

@@ -126,7 +126,7 @@ namespace FlightAudio {
       FMOD::Studio::EventInstance *eventInstance;
       ERRCHECK(eventDescription->createInstance(&eventInstance));
       ERRCHECK(eventInstance->start());
-      ERRCHECK(eventInstance->setTimelinePosition(rand()));
+      //ERRCHECK(eventInstance->setTimelinePosition(rand()));
       ERRCHECK(eventInstance->setPitch(pitch));
       eventMap[emitterName.c_str()] = eventInstance;
       ERRCHECK(fmod_system->update());

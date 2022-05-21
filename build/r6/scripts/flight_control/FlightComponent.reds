@@ -59,7 +59,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.m_vehicleBlackboard = this.GetVehicle().GetBlackboard();
     // QuickhackModule.RequestRefreshQuickhackMenu(this.GetVehicle().GetGame(), this.GetVehicle().GetEntityID());
     
-    this.hoverGroundPID = PID.Create(1.0, 0.01, 0.1);
+    // this.hoverGroundPID = PID.Create(1.0, 0.01, 0.1);
+    this.hoverGroundPID = PID.Create(1.0, 0.005, 0.5);
     this.hoverPID = PID.Create(1.0, 0.01, 0.1);
     this.pitchGroundPID = DualPID.Create(0.8, 0.2, 0.05,  0.8, 0.2, 0.05);
     this.pitchPID = DualPID.Create(1.0, 0.5, 0.5,  1.0, 0.5, 0.5);
@@ -157,7 +158,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
       if this.active {
         this.sys.ctlr.Activate(true);
         // this.sys.audio.Stop("otherVehicle" + ToString(EntityID.GetHash(this.GetVehicle().GetEntityID())));
-        this.sys.audio.Play("vehicle3_on");
+        //this.sys.audio.Play("vehicle3_on");
         // this.sys.audio.StartWithPitch("playerVehicle", "vehicle3_TPP", this.GetPitch());
       }
     }
@@ -273,7 +274,6 @@ public class FlightComponent extends ScriptableDeviceComponent {
       }
 
       this.stats.UpdateDynamic();
-      this.UpdateAudioParams(timeDelta);
 
       let force = new Vector4(0.0, 0.0, 0.0, 0.0);
       let torque = new Vector4(0.0, 0.0, 0.0, 0.0);
@@ -288,6 +288,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
       this.smoothTorque = Vector4.Interpolate(this.smoothTorque, torque, 0.99);
 
       this.fx.Update(force, torque);
+      this.UpdateAudioParams(timeDelta, force, torque);
 
       force *= timeDelta;
       // factor in mass
@@ -560,6 +561,36 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
   public let audioUpdate: ref<FlightAudioUpdate>;
 
+  public func UpdateAudioParams(timeDelta: Float, force: Vector4, torque: Vector4) -> Void {
+    let ratio = 1.0;
+    if this.collisionTimer < this.sys.settings.collisionRecoveryDelay() + this.sys.settings.collisionRecoveryDuration() {
+      ratio = MaxF(0.0, (this.collisionTimer - this.sys.settings.collisionRecoveryDelay()) / this.sys.settings.collisionRecoveryDuration());
+    }
+    
+    // this.audioUpdate.damage = 1.0 - MaxF(GameInstance.GetStatPoolsSystem(this.GetVehicle().GetGame()).GetStatPoolValue(Cast<StatsObjectID>(this.GetVehicle().GetEntityID()), gamedataStatPoolType.Health, false) + ratio, 1.0);
+    if this.isDestroyed {
+      this.audioUpdate.damage = 0.5;
+    }
+    if this.isPlayerMounted {
+      // more responsive-sounding
+      this.audioUpdate.surge = this.sys.ctlr.surge.GetInput() * ratio;
+    } else {
+      this.audioUpdate.surge = this.surge * ratio;
+    }
+    // if this.mode == 3 {
+    //   this.audioUpdate.surge *= 0.5;
+    //   this.audioUpdate.surge += this.lift * ratio * 0.5;
+    // }
+    this.audioUpdate.yaw = this.yaw * ratio;
+    // this.audioUpdate.lift = this.lift * ratio;
+    this.audioUpdate.lift = Vector4.Dot(force, FlightUtils.Up());
+    // this.audioUpdate.brake = this.brake;
+    this.audioUpdate.brake = this.sys.ctlr.brake.GetInput();
+    // this.audioUpdate.brake = Vector4.Dot(-force, this.stats.d_direction);
+
+    this.UpdateAudioParams(timeDelta);
+  }
+
   public func UpdateAudioParams(timeDelta: Float) -> Void {
     let engineVolume = 0.85;
     let windVolume = 0.5;
@@ -613,29 +644,6 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.audioUpdate.yawDiff = Vector4.GetAngleDegAroundAxis(this.stats.d_forward, this.stats.d_direction, this.stats.d_up);
     this.audioUpdate.pitchDiff = Vector4.GetAngleDegAroundAxis(this.stats.d_forward, this.stats.d_direction, this.stats.d_right);
 
-
-    let ratio = 1.0;
-    if this.collisionTimer < this.sys.settings.collisionRecoveryDelay() + this.sys.settings.collisionRecoveryDuration() {
-      ratio = MaxF(0.0, (this.collisionTimer - this.sys.settings.collisionRecoveryDelay()) / this.sys.settings.collisionRecoveryDuration());
-    }
-    
-    this.audioUpdate.damage = 1.0 - MaxF(GameInstance.GetStatPoolsSystem(this.GetVehicle().GetGame()).GetStatPoolValue(Cast<StatsObjectID>(this.GetVehicle().GetEntityID()), gamedataStatPoolType.Health, false) + ratio, 1.0);
-    if this.isDestroyed {
-      this.audioUpdate.damage = 1.0;
-    }
-    if this.isPlayerMounted {
-      // more responsive-sounding
-      this.audioUpdate.surge = this.sys.ctlr.surge.GetInput() * ratio;
-    } else {
-      this.audioUpdate.surge = this.surge * ratio;
-    }
-    if this.mode == 3 {
-      this.audioUpdate.surge *= 0.5;
-      this.audioUpdate.surge += this.lift * ratio * 0.5;
-    }
-    this.audioUpdate.yaw = this.yaw * ratio;
-    this.audioUpdate.lift = this.lift * ratio;
-    this.audioUpdate.brake = this.brake;
     // engineVolume *= (ratio * 0.5 + 0.5);
 
     // this.sys.audio.Update("leftFront", leftFrontPosition, engineVolume);

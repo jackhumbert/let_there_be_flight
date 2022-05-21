@@ -298,7 +298,7 @@ public native class FlightController extends IScriptable {
   private let trick: Bool;
 
   public func ProcessImpact(impact: Float) {
-    this.surge.Reset(this.surge.GetValue() * MaxF(0.0, 1.0 - impact * 5.0));
+    // this.surge.Reset(this.surge.GetValue() * MaxF(0.0, 1.0 - impact * 5.0));
   }
 
   protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool {

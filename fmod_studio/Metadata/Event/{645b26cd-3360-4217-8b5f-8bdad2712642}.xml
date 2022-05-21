@@ -108,7 +108,7 @@
 	</object>
 	<object class="SingleSound" id="{59c8182e-a843-4a49-86df-6230510b9c8d}">
 		<property name="length">
-			<value>30</value>
+			<value>60</value>
 		</property>
 		<property name="pitch">
 			<value>-5</value>
