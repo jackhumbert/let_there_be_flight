@@ -4,6 +4,8 @@ public class FlightModeHover extends FlightModeStandard {
     self.Initialize(component);
     return self;
   }
+
+  public func GetDescription() -> String = "Hover";
   
   public func Update(timeDelta: Float) -> Void {
     this.component.hoverHeight = MaxF(this.sys.settings.minHoverHeight(), this.component.hoverHeight);

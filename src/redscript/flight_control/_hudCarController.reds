@@ -8,6 +8,9 @@ private final func Reset() -> Void {
 private let m_flightActiveBBConnectionId: ref<CallbackHandle>;
 
 @addField(hudCarController)
+private let m_flightModeBBConnectionId: ref<CallbackHandle>;
+
+@addField(hudCarController)
 private let m_flightControllerStatus: wref<inkText>;
 
 @wrapMethod(hudCarController)
@@ -27,8 +30,10 @@ private final func RegisterToVehicle(register: Bool) -> Void {
         this.m_flightControllerStatus = FlightController.HUDStatusSetup(this.GetRootCompoundWidget());
       }
       this.m_flightActiveBBConnectionId = flightControllerBlackboard.RegisterListenerBool(GetAllBlackboardDefs().FlightControllerBB.IsActive, this, n"OnFlightActiveChanged");
+      this.m_flightModeBBConnectionId = flightControllerBlackboard.RegisterListenerInt(GetAllBlackboardDefs().FlightControllerBB.Mode, this, n"OnFlightModeChanged");
     } else {
       flightControllerBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().FlightControllerBB.IsActive, this.m_flightActiveBBConnectionId);
+      flightControllerBlackboard.UnregisterListenerInt(GetAllBlackboardDefs().FlightControllerBB.Mode, this.m_flightModeBBConnectionId);
     };
   };
 }
@@ -39,10 +44,15 @@ protected cb func OnFlightActiveChanged(active: Bool) -> Bool {
     this.m_flightControllerStatus = FlightController.HUDStatusSetup(this.GetRootCompoundWidget());
   }
   if active {
-    this.m_flightControllerStatus.SetText("Flight Control Engaged");
+    this.m_flightControllerStatus.SetText("Flight Active: " + fs().playerComponent.GetFlightMode().GetDescription());
   } else {
-    this.m_flightControllerStatus.SetText("Flight Control Available");
+    this.m_flightControllerStatus.SetText("Flight Available");
   }
+}
+
+@addMethod(hudCarController)
+protected cb func OnFlightModeChanged(mode: Int32) -> Bool {
+  this.m_flightControllerStatus.SetText("Flight Active: " + fs().playerComponent.GetFlightMode().GetDescription());
 }
 
 @wrapMethod(hudCarController)

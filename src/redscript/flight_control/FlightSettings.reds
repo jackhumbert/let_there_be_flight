@@ -1,43 +1,135 @@
 public class FlightSettings {
   public let idk: Float;
-  public func airResistance() -> Float = 0.005
-  public func angularBrakeFactor() -> Float = -10.0
-  public func angularDampFactor() -> Float = -100.0
-  public func brakeFactor() -> Float = 1.2
-  public func brakeOffset() -> Float = 0.0
-  public func collisionRecoveryDelay() -> Float = 0.8
-  public func collisionRecoveryDuration() -> Float = 0.8
-  public func defaultHoverHeight() -> Float = 3.50
-  public func distance() -> Float = 0.0
-  public func distanceEase() -> Float = 0.1
-  public func fwtfCorrection() -> Float = 0.0
-  public func hoverClamp() -> Float = 10.0
-  public func hoverFactor() -> Float = 8.0
-  public func liftFactor() -> Float = 8.0
-  public func liftFactorDrone() -> Float = 30.0
-  public func lookAheadMax() -> Float = 10.0
-  public func lookAheadMin() -> Float = 1.0
-  public func lookDown() -> Vector4 = new Vector4(0.0, 0.0, -this.maxHoverHeight() - 10.0, 0.0);
-  public func maxHoverHeight() -> Float = 7.0
-  public func minHoverHeight() -> Float = 1.0
-  public func normal() -> Vector4 = new Vector4(0.0, 0.0, 1.0, 0.0);
-  public func normalEase() -> Float = 0.3
-  public func pitchCorrectionFactor() -> Float = 3.0
-  public func pitchFactorDrone() -> Float = 0.5
-  public func pitchWithLift() -> Float = 0.5
-  public func pitchWithSurge() -> Float = 0.0
-  public func referenceZ() -> Float = 0.0
-  public func rollCorrectionFactor() -> Float = 15.0
-  public func rollFactorDrone() -> Float = 5.0
-  public func rollWithYaw() -> Float = 0.15
-  public func secondCounter() -> Float = 0.0
-  public func surgeFactor() -> Float = 15.0
-  public func surgeOffset() -> Float = 0.5
-  public func swayWithYaw() -> Float =   0.5
-  public func thrusterFactor() -> Float = 0.05;
-  public func yawCorrectionFactor() -> Float = 0.05
-  public func yawD() -> Float = 3.0
-  public func yawDirectionalityFactor() -> Float = 30.0
-  public func yawFactor() -> Float = 20.0
-  public func yawFactorDrone() -> Float = 3.0
+  public func airResistance() -> Float = this._airResistance;
+  public let _airResistance: Float;
+  public func angularBrakeFactor() -> Float = this._angularBrakeFactor;
+  public let _angularBrakeFactor: Float;
+  public func angularDampFactor() -> Float = this._angularDampFactor;
+  public let _angularDampFactor: Float;
+  public func brakeFactor() -> Float = this._brakeFactor;
+  public let _brakeFactor: Float;
+  public func brakeOffset() -> Float = this._brakeOffset;
+  public let _brakeOffset: Float;
+  public func collisionRecoveryDelay() -> Float = this._collisionRecoveryDelay;
+  public let _collisionRecoveryDelay: Float;
+  public func collisionRecoveryDuration() -> Float = this._collisionRecoveryDuration;
+  public let _collisionRecoveryDuration: Float;
+  public func defaultHoverHeight() -> Float = this._defaultHoverHeight;
+  public let _defaultHoverHeight: Float;
+  public func distance() -> Float = this._distance;
+  public let _distance: Float;
+  public func distanceEase() -> Float = this._distanceEase;
+  public let _distanceEase: Float;
+  public func fwtfCorrection() -> Float = this._fwtfCorrection;
+  public let _fwtfCorrection: Float;
+  public func hoverClamp() -> Float = this._hoverClamp;
+  public let _hoverClamp: Float;
+  public func hoverFactor() -> Float = this._hoverFactor;
+  public let _hoverFactor: Float;
+  public func liftFactor() -> Float = this._liftFactor;
+  public let _liftFactor: Float;
+  public func liftFactorDrone() -> Float = this._liftFactorDrone;
+  public let _liftFactorDrone: Float;
+  public func lookAheadMax() -> Float = this._lookAheadMax;
+  public let _lookAheadMax: Float;
+  public func lookAheadMin() -> Float = this._lookAheadMin;
+  public let _lookAheadMin: Float;
+  public func lookDown() -> Vector4 = this._lookDown;
+  public let _lookDown: Vector4;
+  public func maxHoverHeight() -> Float = this._maxHoverHeight;
+  public let _maxHoverHeight: Float;
+  public func minHoverHeight() -> Float = this._minHoverHeight;
+  public let _minHoverHeight: Float;
+  public func normal() -> Vector4 = this._normal;
+  public let _normal: Vector4;
+  public func normalEase() -> Float = this._normalEase;
+  public let _normalEase: Float;
+  public func pitchCorrectionFactor() -> Float = this._pitchCorrectionFactor;
+  public let _pitchCorrectionFactor: Float;
+  public func pitchFactorDrone() -> Float = this._pitchFactorDrone;
+  public let _pitchFactorDrone: Float;
+  public func pitchWithLift() -> Float = this._pitchWithLift;
+  public let _pitchWithLift: Float;
+  public func pitchWithSurge() -> Float = this._pitchWithSurge;
+  public let _pitchWithSurge: Float;
+  public func referenceZ() -> Float = this._referenceZ;
+  public let _referenceZ: Float;
+  public func rollCorrectionFactor() -> Float = this._rollCorrectionFactor;
+  public let _rollCorrectionFactor: Float;
+  public func rollFactorDrone() -> Float = this._rollFactorDrone;
+  public let _rollFactorDrone: Float;
+  public func rollWithYaw() -> Float = this._rollWithYaw;
+  public let _rollWithYaw: Float;
+  public func secondCounter() -> Float = this._secondCounter;
+  public let _secondCounter: Float;
+  public func surgeFactor() -> Float = this._surgeFactor;
+  public let _surgeFactor: Float;
+  public func surgeOffset() -> Float = this._surgeOffset;
+  public let _surgeOffset: Float;
+  public func swayFactor() -> Float = this._swayFactor;
+  public let _swayFactor: Float;
+  public func swayWithYaw() -> Float = this._swayWithYaw;
+  public let _swayWithYaw: Float;
+  public func thrusterFactor() -> Float = this._thrusterFactor;
+  public let _thrusterFactor: Float;
+  public func yawCorrectionFactor() -> Float = this._yawCorrectionFactor;
+  public let _yawCorrectionFactor: Float;
+  public func yawD() -> Float = this._yawD;
+  public let _yawD: Float;
+  public func yawDirectionalityFactor() -> Float = this._yawDirectionalityFactor;
+  public let _yawDirectionalityFactor: Float;
+  public func yawFactor() -> Float = this._yawFactor;
+  public let _yawFactor: Float;
+  public func yawFactorDrone() -> Float = this._yawFactorDrone;
+  public let _yawFactorDrone: Float;
+
+  public static func Create() -> ref<FlightSettings> {
+    let self = new FlightSettings();
+    self.Initialize();
+    return self;
+  }
+
+  public func Initialize() -> Void {
+    this._airResistance = 0.005;
+    this._angularBrakeFactor = 10.0;
+    this._angularDampFactor = 3.0;
+    this._brakeFactor = 1.2;
+    this._brakeOffset = 0.0;
+    this._collisionRecoveryDelay = 0.8;
+    this._collisionRecoveryDuration = 0.8;
+    this._defaultHoverHeight = 3.50;
+    this._distance = 0.0;
+    this._distanceEase = 0.1;
+    this._fwtfCorrection = 0.0;
+    this._hoverClamp = 10.0;
+    this._hoverFactor = 20.0;
+    this._liftFactor = 8.0;
+    this._liftFactorDrone = 40.0;
+    this._lookAheadMax = 10.0;
+    this._lookAheadMin = 1.0;
+    this._lookDown = new Vector4(0.0, 0.0, -this.maxHoverHeight() - 10.0, 0.0);
+    this._maxHoverHeight = 7.0;
+    this._minHoverHeight = 1.0;
+    this._normal = new Vector4(0.0, 0.0, 1.0, 0.0);
+    this._normalEase = 0.3;
+    this._pitchCorrectionFactor = 3.0;
+    this._pitchFactorDrone = 7.0;
+    this._pitchWithLift = 0.5;
+    this._pitchWithSurge = 0.0;
+    this._referenceZ = 0.0;
+    this._rollCorrectionFactor = 15.0;
+    this._rollFactorDrone = 18.0;
+    this._rollWithYaw = 0.15;
+    this._secondCounter = 0.0;
+    this._surgeFactor = 15.0;
+    this._surgeOffset = 0.5;
+    this._swayFactor =   5.0;
+    this._swayWithYaw =   0.5;
+    this._thrusterFactor = 0.05;
+    this._yawCorrectionFactor = 0.25;
+    this._yawD = 3.0;
+    this._yawDirectionalityFactor = 50.0;
+    this._yawFactor = 5.0;
+    this._yawFactorDrone = 5.0;
+  }
 }

@@ -39,6 +39,9 @@ src/red4ext/build/
 packed/
 packed*.zip
 build*.zip
+flight_effects/flight_effects.zip
+flight_effects/install_log.xml
+
 
 Cyberpunk2077.exe*
 REDEngineErrorReporter.exe*

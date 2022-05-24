@@ -17,7 +17,7 @@ public native class FlightSystem extends IFlightSystem {
   public let playerComponent: wref<FlightComponent>;
 
   public func Setup(player: ref<PlayerPuppet>) -> Void {
-    this.settings = new FlightSettings();
+    this.settings = FlightSettings.Create();
     FlightLog.Info("[FlightSystem] FlightSettings Created");
     this.player = player;
     this.gameInstance = player.GetGame();
@@ -26,17 +26,6 @@ public native class FlightSystem extends IFlightSystem {
     this.ctlr = FlightController.GetInstance();
     this.tppCamera = player.FindComponentByName(n"vehicleTPPCamera") as vehicleTPPCameraComponent;
   }
-
-  // public func OnUpdate(timeDelta: Float) -> Void {
-  //   let i = 0;
-  //   while (i < ArraySize(this.components)) {
-  //     let fc = this.components[i] as FlightComponent;
-  //     if IsDefined(fc) && fc.active {
-  //       fc.OnUpdate(timeDelta);
-  //     }
-  //     i += 1;
-  //   }
-  // }
 
 //   public static func Get(gameInstance: GameInstance) -> ref<FlightSystem> {
 //     return GameInstance.GetScriptableSystemsContainer(gameInstance).Get(n"FlightSystem") as FlightSystem;

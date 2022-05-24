@@ -118,11 +118,11 @@ void VehicleAddFlightHelper(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
 }
 
 void VehicleGetComponentsUsingSlot(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,
-                            RED4ext::DynArray<RED4ext::WeakHandle<RED4ext::ent::IComponent>> *aOut, int64_t a4) {
+                                   RED4ext::DynArray<RED4ext::WeakHandle<RED4ext::ent::IComponent>> *aOut, int64_t a4) {
   // RED4ext::ScriptInstance fc;
   // RED4ext::GetParameter(aFrame, &fc);
   RED4ext::CName slotName;
-   RED4ext::GetParameter(aFrame, &slotName);
+  RED4ext::GetParameter(aFrame, &slotName);
   aFrame->code++; // skip ParamEnd
 
   if (aOut) {
@@ -130,6 +130,7 @@ void VehicleGetComponentsUsingSlot(RED4ext::IScriptable *aContext, RED4ext::CSta
     auto ipct = rtti->GetType("entIPlacedComponent");
     auto htb = rtti->GetType("endHardTransformBinding");
     *aOut = RED4ext::DynArray<RED4ext::WeakHandle<RED4ext::ent::IComponent>>();
+    auto doubleCheck = RED4ext::DynArray<RED4ext::Handle<RED4ext::ent::IComponent>>();
 
     auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
     for (const auto &h : v->components) {
@@ -142,14 +143,30 @@ void VehicleGetComponentsUsingSlot(RED4ext::IScriptable *aContext, RED4ext::CSta
         }
         ct = ct->parent;
       }
-      if (isIPC) {  
-        auto ipc = reinterpret_cast<RED4ext::ent::IPlacedComponent*>(c);
+      if (isIPC) {
+        auto ipc = reinterpret_cast<RED4ext::ent::IPlacedComponent *>(c);
         if (ipc->parentTransform) {
           auto htb = reinterpret_cast<RED4ext::ent::HardTransformBinding *>(ipc->parentTransform.instance);
           if (htb->slotName == slotName) {
             auto wh = RED4ext::WeakHandle<RED4ext::ent::IComponent>(h);
             aOut->EmplaceBack(wh);
+          } else if (htb->slotName.hash == 0) {
+            doubleCheck.EmplaceBack(h);
           }
+        }
+      }
+    }
+    // probably only need to go one deep
+    for (const auto &h : doubleCheck) {
+      auto c = h.GetPtr();
+      auto ipc = reinterpret_cast<RED4ext::ent::IPlacedComponent *>(c);
+      auto htb = reinterpret_cast<RED4ext::ent::HardTransformBinding *>(ipc->parentTransform.instance);
+      for (const auto &eh : *aOut) {
+        auto ec = reinterpret_cast<RED4ext::ent::IComponent *>(eh.instance);
+        if (htb->bindName == ec->name) {
+          auto wh = RED4ext::WeakHandle<RED4ext::ent::IComponent>(h);
+          aOut->EmplaceBack(wh);
+          break;
         }
       }
     }

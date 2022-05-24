@@ -5,9 +5,11 @@ public class FlightModeDrone extends FlightMode {
     return self;
   }
 
+  public func GetDescription() -> String = "Drone";
+
   public func Update(timeDelta: Float) -> Void {
-      let dampFactor = -MaxF(this.component.brake * this.sys.settings.brakeFactor() * this.component.stats.s_brakingFrictionFactor, this.sys.settings.airResistance() * this.component.stats.s_airResistanceFactor);
-      let velocityDamp: Vector4 = this.component.stats.d_localVelocity * dampFactor;
+      let velocityDamp: Vector4 = this.component.stats.d_localVelocity * -MaxF(this.component.brake * this.sys.settings.brakeFactor() * this.component.stats.s_brakingFrictionFactor, this.sys.settings.airResistance() * this.component.stats.s_airResistanceFactor);   
+      let angularDamp: Vector4 = this.component.stats.d_angularVelocity * MaxF(this.component.brake * this.sys.settings.angularBrakeFactor() * this.component.stats.s_brakingFrictionFactor, this.sys.settings.angularDampFactor());
 
       this.force = new Vector4(0.0, 0.0, 0.0, 0.0);
       // lift
@@ -19,10 +21,10 @@ public class FlightModeDrone extends FlightMode {
 
       this.torque = new Vector4(0.0, 0.0, 0.0, 0.0);
       // pitch correction
-      this.torque.X = -(this.component.pitch * this.sys.settings.pitchFactorDrone());
+      this.torque.X = -(this.component.pitch * this.sys.settings.pitchFactorDrone() + angularDamp.X);
       // roll correction
-      this.torque.Y = (this.component.roll * this.sys.settings.rollFactorDrone());
+      this.torque.Y = (this.component.roll * this.sys.settings.rollFactorDrone() - angularDamp.Y);
       // yaw correction
-      this.torque.Z = -(this.component.yaw * this.sys.settings.yawFactorDrone());
+      this.torque.Z = -(this.component.yaw * this.sys.settings.yawFactorDrone() + angularDamp.Z);
   }
 }

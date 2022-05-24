@@ -25,6 +25,16 @@ void __fastcall AirControlProcess(RED4ext::physics::VehicleBaseObjectAirControl 
 constexpr uintptr_t AirControlProcessAddr = 0x141CE4080 - RED4ext::Addresses::ImageBase;
 decltype(&AirControlProcess) AirControlProcess_Original;
 
+// add vector to torque
+void __fastcall TorqueUpdate(RED4ext::physics::VehiclePhysicsStruct *a1, uintptr_t);
+//void __fastcall TorqueUpdate(RED4ext::physics::VehicleBaseObjectAirControl *ac, float deltaTime);
+
+// F3 0F 10 41 0C F3 0F 58  02 F3 0F 11 41 0C F3 0F 10 4A 04 F3 0F 58 49 10 F3 0F 11 49 10 F3 0F 10
+constexpr uintptr_t TorqueUpdateAddr = 0x141CE0D10 - RED4ext::Addresses::ImageBase;
+decltype(&TorqueUpdate) TorqueUpdate_Original;
+
+
+
 RED4ext::ent::IComponent *GetFlightComponent(RED4ext::physics::VehiclePhysics *p) {
   auto rtti = RED4ext::CRTTISystem::Get();
   auto fcc = rtti->GetClass("FlightComponent");
@@ -107,16 +117,33 @@ uintptr_t __fastcall VehicleHelperUpdate(RED4ext::physics::VehiclePhysics *p, fl
   return result;
 }
 
+
+void __fastcall TorqueUpdate(RED4ext::physics::VehiclePhysicsStruct* a1, uintptr_t a2) {
+  auto rtti = RED4ext::CRTTISystem::Get();
+  auto fcc = rtti->GetClass("FlightComponent");
+  auto fc = GetFlightComponent(a1->vehicle);
+  auto activeProp = fcc->GetProperty("active");
+  if (!activeProp->GetValue<bool>(fc)) {
+    TorqueUpdate_Original(a1, a2);
+  }
+}
+
 struct VehiclePhysicsUpdateModule : FlightModule {
   void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
     aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehiclePhysicsUpdateAddr), &VehiclePhysicsUpdate,
                           reinterpret_cast<void **>(&VehiclePhysicsUpdate_Original));
     aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleHelperUpdateAddr), &VehicleHelperUpdate,
                           reinterpret_cast<void **>(&VehicleHelperUpdate_Original));
+    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(AirControlProcessAddr), &AirControlProcess,
+                          reinterpret_cast<void **>(&AirControlProcess_Original));
+    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(TorqueUpdateAddr), &TorqueUpdate,
+                          reinterpret_cast<void **>(&TorqueUpdate_Original));
   }
   void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehiclePhysicsUpdateAddr));
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleHelperUpdateAddr));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(AirControlProcessAddr));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(TorqueUpdateAddr));
   }
 };
 

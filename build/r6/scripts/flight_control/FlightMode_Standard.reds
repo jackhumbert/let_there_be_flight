@@ -13,6 +13,8 @@ public abstract class FlightModeStandard extends FlightMode {
     normal = Vector4.RotateAxis(normal, this.component.stats.d_forward, this.component.yaw * this.sys.settings.rollWithYaw());
     normal = Vector4.RotateAxis(normal, this.component.stats.d_right, this.component.lift * this.sys.settings.pitchWithLift() * Vector4.Dot(this.component.stats.d_forward, this.component.stats.d_direction));
     normal = Vector4.RotateAxis(normal, this.component.stats.d_right, this.component.surge * this.sys.settings.pitchWithSurge());
+    // normal = Vector4.RotateAxis(normal, this.component.stats.d_right, this.component.surge * this.component.stats.s_forwardWeightTransferFactor);
+    
 
     this.component.pitchPID.SetRatio(this.component.stats.d_speedRatio * AbsF(Vector4.Dot(this.component.stats.d_direction, this.component.stats.d_forward)));
     this.component.rollPID.SetRatio(this.component.stats.d_speedRatio * AbsF(Vector4.Dot(this.component.stats.d_direction, this.component.stats.d_right)));
@@ -34,16 +36,20 @@ public abstract class FlightModeStandard extends FlightMode {
     // rollCorrection = rollCorrection * (this.rollCorrectionFactor + 1.0 * this.rollCorrectionFactor * this.component.stats.d_speedRatio);
     pitchCorrection *= this.sys.settings.pitchCorrectionFactor();
     rollCorrection *= this.sys.settings.rollCorrectionFactor();
-    let changeAngle: Float = Vector4.GetAngleDegAroundAxis(Quaternion.GetForward(this.component.stats.d_lastOrientation), this.component.stats.d_forward, this.component.stats.d_up);
-    if AbsF(pitchDegOff) < 30.0 && AbsF(rollDegOff) < 30.0 {
-      let directionAngle: Float = Vector4.GetAngleDegAroundAxis(this.component.stats.d_direction, this.component.stats.d_forward, this.component.stats.d_up);
-      this.component.yawPID.integralFloat *= (1.0 - AbsF(this.component.yaw));
-      yawCorrection = this.component.yawPID.GetCorrectionClamped(directionAngle, timeDelta, 10.0);// / 10.0;
-    }
-    yawCorrection += this.sys.settings.yawD() * changeAngle / timeDelta;
+    // let changeAngle: Float = Vector4.GetAngleDegAroundAxis(Quaternion.GetForward(this.component.stats.d_lastOrientation), this.component.stats.d_forward, this.component.stats.d_up);
+    // if AbsF(pitchDegOff) < 30.0 && AbsF(rollDegOff) < 30.0 {
+      let direction = this.component.stats.d_direction;
+      if Vector4.Dot(this.component.stats.d_direction, this.component.stats.d_forward) < 0.0 {
+        direction = -this.component.stats.d_direction;
+      }
+      let directionAngle: Float = Vector4.GetAngleDegAroundAxis(direction, this.component.stats.d_forward, this.component.stats.d_up);
+      // this.component.yawPID.integralFloat *= (1.0 - AbsF(this.component.yaw));
+      yawCorrection = this.component.yawPID.GetCorrectionClamped(directionAngle, timeDelta, 10.0) * this.component.stats.d_speedRatio;// / 10.0;
+    // }
+    // yawCorrection += this.sys.settings.yawD() * changeAngle / timeDelta;
 
     let velocityDamp: Vector4 = this.component.stats.d_localVelocity * -MaxF(this.component.brake * this.sys.settings.brakeFactor() * this.component.stats.s_brakingFrictionFactor, this.sys.settings.airResistance() * this.component.stats.s_airResistanceFactor);
-    let angularDamp: Vector4 = this.component.stats.d_angularVelocity * -MaxF(this.component.brake * this.sys.settings.angularBrakeFactor() * this.component.stats.s_brakingFrictionFactor, this.sys.settings.angularDampFactor());
+    let angularDamp: Vector4 = this.component.stats.d_angularVelocity * MaxF(this.component.brake * this.sys.settings.angularBrakeFactor() * this.component.stats.s_brakingFrictionFactor, this.sys.settings.angularDampFactor());
 
     // let yawDirectionality: Float = (this.component.stats.d_speedRatio + AbsF(this.yaw.GetValue()) * this.swayWithYaw) * this.yawDirectionalityFactor;
     let yawDirectionality: Float = this.component.stats.d_speedRatio * this.sys.settings.yawDirectionalityFactor();
@@ -67,6 +73,8 @@ public abstract class FlightModeStandard extends FlightMode {
     this.force += liftForce * this.component.stats.d_localUp;
     // surge
     this.force += FlightUtils.Forward() * surgeForce;
+    // sway
+    this.force += FlightUtils.Right() * this.component.sway * this.sys.settings.swayFactor();
     // directional brake
     this.force += velocityDamp;
 

@@ -22,10 +22,12 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
   private let sqs: ref<SpatialQueriesSystem>;
 
-  public let fl_tire: ref<IPlacedComponent>;
-  public let fr_tire: ref<IPlacedComponent>;
   public let bl_tire: ref<IPlacedComponent>;
   public let br_tire: ref<IPlacedComponent>;
+  public let fl_tire: ref<IPlacedComponent>;
+  public let fr_tire: ref<IPlacedComponent>;
+  public let hood: ref<IPlacedComponent>;
+  public let trunk: ref<IPlacedComponent>;
   
   public let collisionTimer: Float;
   
@@ -66,7 +68,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.pitchPID = DualPID.Create(1.0, 0.5, 0.5,  1.0, 0.5, 0.5);
     this.rollGroundPID =  DualPID.Create(0.5, 0.2, 0.05,  2.5, 1.5, 0.5);
     this.rollPID =  DualPID.Create(1.0, 0.5, 0.5,  1.0, 0.5, 0.5);
-    this.yawPID = PID.Create(1.0, 0.1, 0.0);
+    this.yawPID = PID.Create(1.0, 0.01, 2.0);
 
     this.sys = FlightSystem.GetInstance();
     this.sqs = GameInstance.GetSpatialQueriesSystem(this.GetVehicle().GetGame());
@@ -85,15 +87,17 @@ public class FlightComponent extends ScriptableDeviceComponent {
     ArrayPush(this.modes, FlightModeDrone.Create(this));
 
     this.audioUpdate = new FlightAudioUpdate();
-
-    // ArrayPush(this.sys.components, this);
   }
 
   private final func OnGameDetach() -> Void {
     //FlightLog.Info("[FlightComponent] OnGameDetach: " + this.GetVehicle().GetDisplayName());
     GameInstance.GetStatPoolsSystem(this.GetVehicle().GetGame()).RequestUnregisteringListener(Cast(this.GetVehicle().GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     this.UnregisterVehicleTPPBBListener();
-    // ArrayRemove(this.sys.components, this);
+    this.isDestroyed = true;
+    this.hasExploded = true;
+    if this.active {
+      this.Deactivate(true);
+    }
   }
   
   // private final func RegisterInputListener() -> Void {
@@ -133,6 +137,18 @@ public class FlightComponent extends ScriptableDeviceComponent {
     return 700.0 / this.stats.s_mass + 0.5;
   }
 
+  public func GetFlightModeIndex() -> Int32 {
+    return this.mode;
+  }
+
+  public func GetFlightMode() -> ref<FlightMode> {
+    return this.modes[this.mode];
+  }
+
+  public func GetNextFlightMode() -> ref<FlightMode> {
+    return this.modes[(this.mode + 1) % ArraySize(this.modes)];
+  }
+
   // callbacks
   
   protected cb func OnMountingEvent(evt: ref<MountingEvent>) -> Bool {
@@ -153,6 +169,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   }
   
   protected cb func OnVehicleFinishedMountingEvent(evt: ref<VehicleFinishedMountingEvent>) -> Bool {
+    FlightLog.Info("[FlightComponent] OnVehicleFinishedMountingEvent: " + this.GetVehicle().GetDisplayName());
     if this.isPlayerMounted {
       this.sys.ctlr.Enable();
       if this.active {
@@ -181,6 +198,11 @@ public class FlightComponent extends ScriptableDeviceComponent {
     }
   }
 
+  // protected cb func OnVehicleHasExplodedEvent(evt: ref<VehicleHasExplodedEvent>) -> Bool {
+  //   this.sys.audio.Stop("vehicleDestroyed" + this.GetUniqueID());
+  //   this.Deactivate(true);
+  // }
+
   protected cb func OnVehicleFlightModeChangeEvent(evt: ref<VehicleFlightModeChangeEvent>) -> Bool {
     this.modes[this.mode].Deactivate();
     this.mode = evt.mode;
@@ -194,6 +216,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
     if VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), vehicle) {
       FlightLog.Info("[FlightComponent] OnDeath: " + this.GetVehicle().GetDisplayName());
       if this.active {
+        this.isDestroyed = true;
+        this.hasExploded = true;
         this.Deactivate(true);
       }
     }
@@ -230,6 +254,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
       this.rollPID.Reset();
       this.yawPID.Reset();
 
+      this.modes[this.mode].Activate();
+
       if this.isPlayerMounted {
         this.sys.ctlr.Activate(false);
         this.sys.audio.Play("vehicle3_on");
@@ -244,9 +270,12 @@ public class FlightComponent extends ScriptableDeviceComponent {
     }
   }
 
+  public let trick: ref<FlightTrick>;
+
   let smoothForce: Vector4;
   let smoothTorque: Vector4;
   let isDestroyed: Bool;
+  let hasExploded: Bool;
 
   protected func OnUpdate(timeDelta: Float) -> Void {
     if this.GetVehicle().IsDestroyed() {
@@ -255,7 +284,9 @@ public class FlightComponent extends ScriptableDeviceComponent {
         this.isDestroyed = true;
       }
       if this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() {
-        this.sys.audio.Stop("vehicleDestroyed" + this.GetUniqueID());
+        this.hasExploded = true;
+      }
+      if this.hasExploded {
         this.Deactivate(true);
         return;
       } 
@@ -271,6 +302,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
         this.lift = fc.lift.GetValue();
         this.brake = fc.brake.GetValue();
         this.surge = fc.surge.GetValue();
+        this.sway = fc.sway.GetValue();
       }
 
       this.stats.UpdateDynamic();
@@ -278,10 +310,21 @@ public class FlightComponent extends ScriptableDeviceComponent {
       let force = new Vector4(0.0, 0.0, 0.0, 0.0);
       let torque = new Vector4(0.0, 0.0, 0.0, 0.0);
 
-      if this.mode < ArraySize(this.modes) {
+      let shouldModeUpdate = this.mode < ArraySize(this.modes);
+      if IsDefined(this.trick) {
+        if this.trick.Update(timeDelta) {
+          this.trick = null;
+        } else {
+          force += this.trick.force;
+          torque += this.trick.torque;
+          shouldModeUpdate = shouldModeUpdate && !this.trick.suspendMode;
+        }
+      }
+
+      if shouldModeUpdate {
         this.modes[this.mode].Update(timeDelta);
-        force = this.modes[this.mode].force;
-        torque = this.modes[this.mode].torque;
+        force += this.modes[this.mode].force;
+        torque += this.modes[this.mode].torque;
       }
 
       this.smoothForce = Vector4.Interpolate(this.smoothForce, force, 0.99);
@@ -327,19 +370,24 @@ public class FlightComponent extends ScriptableDeviceComponent {
   }
 
   protected cb func OnVehicleFlightDeactivationEvent(evt: ref<VehicleFlightDeactivationEvent>) -> Bool {
+    FlightLog.Info("[FlightComponent] OnVehicleFlightDeactivationEvent: " + this.GetVehicle().GetDisplayName());
     this.Deactivate(evt.silent);
   }
 
   public func Deactivate(silent: Bool) -> Void{
     this.active = false;
-    FlightLog.Info("[FlightComponent] OnVehicleFlightDeactivationEvent: " + this.GetVehicle().GetDisplayName());
     this.fx.Stop();
+
+    if this.isDestroyed && this.hasExploded {
+        this.sys.audio.Stop("vehicleDestroyed" + this.GetUniqueID());
+    }
 
     if !silent {
       this.GetVehicle().TurnEngineOn(true);
     }
 
     if this.isPlayerMounted {
+      this.sys.ctlr.Deactivate(silent);
       if !silent {
         this.sys.audio.Play("vehicle3_off");
       }
@@ -567,9 +615,13 @@ public class FlightComponent extends ScriptableDeviceComponent {
       ratio = MaxF(0.0, (this.collisionTimer - this.sys.settings.collisionRecoveryDelay()) / this.sys.settings.collisionRecoveryDuration());
     }
     
+    let vehicleID = Cast<StatsObjectID>(this.GetVehicle().GetEntityID());
+    let vehHealthPercent = GameInstance.GetStatPoolsSystem(this.GetVehicle().GetGame()).GetStatPoolValue(vehicleID, gamedataStatPoolType.Health);
     // this.audioUpdate.damage = 1.0 - MaxF(GameInstance.GetStatPoolsSystem(this.GetVehicle().GetGame()).GetStatPoolValue(Cast<StatsObjectID>(this.GetVehicle().GetEntityID()), gamedataStatPoolType.Health, false) + ratio, 1.0);
     if this.isDestroyed {
-      this.audioUpdate.damage = 0.5;
+      this.audioUpdate.damage = 0.25;
+    } else {
+      this.audioUpdate.damage = (1.0 - (vehHealthPercent / 100.0)) * 0.2;
     }
     if this.isPlayerMounted {
       // more responsive-sounding
@@ -677,6 +729,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
       this.fr_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterFR") as IPlacedComponent;
       this.bl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterBL") as IPlacedComponent;
       this.br_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterBR") as IPlacedComponent;
+      this.hood = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"VehicleHoodEmitter") as IPlacedComponent;
+      this.trunk = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"VehicleTrunkEmitter") as IPlacedComponent;
     } else {
       this.fl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterFront") as IPlacedComponent;
       this.fr_tire = this.fl_tire;

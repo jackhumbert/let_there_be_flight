@@ -16,6 +16,7 @@ public abstract class FlightMode {
 
   public func Activate() -> Void;
   public func Deactivate() -> Void;
+  public func GetDescription() -> String;
 
   public func Update(timeDelta: Float) -> Void;
 }
