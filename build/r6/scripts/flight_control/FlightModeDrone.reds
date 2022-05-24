@@ -8,8 +8,8 @@ public class FlightModeDrone extends FlightMode {
   public func GetDescription() -> String = "Drone";
 
   public func Update(timeDelta: Float) -> Void {
-      let velocityDamp: Vector4 = this.component.stats.d_localVelocity * -MaxF(this.component.brake * this.sys.settings.brakeFactor() * this.component.stats.s_brakingFrictionFactor, this.sys.settings.airResistance() * this.component.stats.s_airResistanceFactor);   
-      let angularDamp: Vector4 = this.component.stats.d_angularVelocity * MaxF(this.component.brake * this.sys.settings.angularBrakeFactor() * this.component.stats.s_brakingFrictionFactor, this.sys.settings.angularDampFactor());
+      let velocityDamp: Vector4 = this.component.stats.d_localVelocity * this.component.brake * this.sys.settings.brakeFactor() * this.component.stats.s_brakingFrictionFactor;   
+      let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.brake * this.sys.settings.angularBrakeFactor() * this.component.stats.s_brakingFrictionFactor;
 
       this.force = new Vector4(0.0, 0.0, 0.0, 0.0);
       // lift
@@ -17,7 +17,7 @@ public class FlightModeDrone extends FlightMode {
       // surge
       this.force += FlightUtils.Forward() * this.component.surge * this.sys.settings.surgeFactor();
       // directional brake
-      this.force += velocityDamp;
+      this.force -= velocityDamp;
 
       this.torque = new Vector4(0.0, 0.0, 0.0, 0.0);
       // pitch correction

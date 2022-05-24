@@ -415,6 +415,8 @@ public native class FlightController extends IScriptable {
               if this.sys.playerComponent.trick == null  && AbsF(value) > 0.9 {
                 this.sys.playerComponent.trick = FlightTrickAileronRoll.Create(this.sys.playerComponent, Cast<Float>(RoundF(value)));
               }
+              this.yaw.SetInput(0.0);
+              this.sway.SetInput(0.0);
             } else {
               if this.showOptions {
                 this.sway.SetInput(value);

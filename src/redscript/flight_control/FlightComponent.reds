@@ -310,28 +310,38 @@ public class FlightComponent extends ScriptableDeviceComponent {
       let force = new Vector4(0.0, 0.0, 0.0, 0.0);
       let torque = new Vector4(0.0, 0.0, 0.0, 0.0);
 
-      let shouldModeUpdate = this.mode < ArraySize(this.modes);
+      let shouldModeUpdate = true;
       if IsDefined(this.trick) {
         if this.trick.Update(timeDelta) {
           this.trick = null;
         } else {
           force += this.trick.force;
           torque += this.trick.torque;
-          shouldModeUpdate = shouldModeUpdate && !this.trick.suspendMode;
+          shouldModeUpdate = !this.trick.suspendMode;
         }
       }
 
-      if shouldModeUpdate {
-        this.modes[this.mode].Update(timeDelta);
-        force += this.modes[this.mode].force;
-        torque += this.modes[this.mode].torque;
+      if this.mode < ArraySize(this.modes) {
+        if shouldModeUpdate {
+          this.modes[this.mode].Update(timeDelta);
+          force += this.modes[this.mode].force;
+          torque += this.modes[this.mode].torque;
+        }
       }
 
       this.smoothForce = Vector4.Interpolate(this.smoothForce, force, 0.99);
       this.smoothTorque = Vector4.Interpolate(this.smoothTorque, torque, 0.99);
 
+      // process user-inputted force/torque in visuals/audio
       this.fx.Update(force, torque);
       this.UpdateAudioParams(timeDelta, force, torque);
+      
+      // apply physics helpers
+      if this.mode < ArraySize(this.modes) {
+        this.modes[this.mode].ApplyPhysics(timeDelta);
+        force += this.modes[this.mode].force;
+        torque += this.modes[this.mode].torque;
+      }
 
       force *= timeDelta;
       // factor in mass
@@ -635,7 +645,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     // }
     this.audioUpdate.yaw = this.yaw * ratio;
     // this.audioUpdate.lift = this.lift * ratio;
-    this.audioUpdate.lift = Vector4.Dot(force, FlightUtils.Up());
+    this.audioUpdate.lift = (Vector4.Dot(force, FlightUtils.Up()) + this.sys.ctlr.lift.GetInput()) * ratio;
     // this.audioUpdate.brake = this.brake;
     this.audioUpdate.brake = this.sys.ctlr.brake.GetInput();
     // this.audioUpdate.brake = Vector4.Dot(-force, this.stats.d_direction);

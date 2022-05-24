@@ -90,7 +90,7 @@ public class FlightSettings {
   }
 
   public func Initialize() -> Void {
-    this._airResistance = 0.005;
+    this._airResistance = 0.001;
     this._angularBrakeFactor = 10.0;
     this._angularDampFactor = 3.0;
     this._brakeFactor = 1.2;
