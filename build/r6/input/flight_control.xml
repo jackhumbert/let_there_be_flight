@@ -99,14 +99,14 @@
 
 	<mapping name="FlightLeftX" type="Axis" >
 		<button id="IK_Pad_LeftAxisX" />
-		<!-- <button id="IK_D" val="1.0" overridableUI="vehicleFlightLeftXRight"/>
-		<button id="IK_A" val="-1.0" overridableUI="vehicleFlightLeftXLeft"/> -->
+		<button id="IK_D" val="1.0" overridableUI="vehicleFlightYawRight"/>
+		<button id="IK_A" val="-1.0" overridableUI="vehicleFlightYawLeft"/>
 	</mapping>
 	
 	<mapping name="FlightLeftY" type="Axis" >
 		<button id="IK_Pad_LeftAxisY" />
-		<!-- <button id="IK_R" val="1.0" />
-		<button id="IK_V" val="-1.0" /> -->
+		<button id="IK_R" val="1.0" overridableUI="vehicleFlightLiftUp" />
+		<button id="IK_V" val="-1.0" overridableUI="vehicleFlightLiftDown" />
 	</mapping>
 
 	<!-- <mapping name="Sway" type="Axis" >

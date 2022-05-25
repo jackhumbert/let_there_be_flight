@@ -9,7 +9,7 @@ public class FlightModeFly extends FlightModeStandard {
 
   public func Update(timeDelta: Float) -> Void {
     let idealNormal = FlightUtils.Up();  
-    let liftForce: Float = this.sys.settings.hoverFactor() * this.component.lift + (9.81000042) * this.gravityFactor;
+    let liftForce: Float = FlightSettings.GetFloat(n"hoverFactor") * this.component.lift + (9.81000042) * this.gravityFactor;
     this.UpdateWithNormalLift(timeDelta, idealNormal, liftForce);
   }
 }

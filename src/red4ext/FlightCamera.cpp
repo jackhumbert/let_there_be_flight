@@ -1,5 +1,6 @@
 #include "FlightCamera.hpp"
 #include "FlightController.hpp"
+#include "FlightSystem.hpp"
 
 // Treat flying vehicles as being on the ground (for TPP camera)
 
@@ -20,9 +21,22 @@ uintptr_t Camera::TPPCameraStatsUpdate(RED4ext::vehicle::TPPCameraComponent *cam
     camera->isInAir = false;
     camera->drivingDirectionCompensationAngleSmooth = 120.0;
     camera->drivingDirectionCompensationSpeedCoef = 0.1;
-    if (fc->mode == 3) {
+
+    auto rtti = RED4ext::CRTTISystem::Get();
+    auto fcc = rtti->GetClass("FlightSystem");
+    auto fs = FlightSystem::FlightSystem::GetInstance();
+    auto pcp = fcc->GetProperty("playerComponent");
+    auto fcomp = pcp->GetValue<RED4ext::Handle<RED4ext::IScriptable>>(fs);
+    auto fcompc = rtti->GetClass("FlightComponent");
+    RED4ext::Handle<RED4ext::IScriptable> mode;
+    auto result = RED4ext::CStackType(rtti->GetClass("FlightMode"), &mode);
+    auto stack = RED4ext::CStack(fcomp, nullptr, 0, &result, 0);
+    fcompc->GetFunction("GetFlightMode")->Execute(&stack);
+
+    if (mode->GetType() == rtti->GetClass("FlightModeDrone")) {
       camera->pitchDelta = 0.0;
       camera->yawDelta = 0.0;
+      camera->slopeCorrectionOnGroundStrength = 0.0;
     }
   }
 

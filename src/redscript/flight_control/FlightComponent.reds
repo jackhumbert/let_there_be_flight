@@ -77,13 +77,13 @@ public class FlightComponent extends ScriptableDeviceComponent {
     // this.helper = this.GetVehicle().AddFlightHelper();
     // this.stats = FlightStats.Create(this.GetVehicle());
 
-    this.collisionTimer = this.sys.settings.collisionRecoveryDelay();
+    this.collisionTimer = FlightSettings.GetFloat(n"collisionRecoveryDelay");
     this.distance = 0.0;
-    this.hoverHeight = this.sys.settings.defaultHoverHeight();
+    this.hoverHeight = FlightSettings.GetFloat(n"defaultHoverHeight");
     
     ArrayPush(this.modes, FlightModeHoverFly.Create(this));
-    ArrayPush(this.modes, FlightModeHover.Create(this));
-    ArrayPush(this.modes, FlightModeFly.Create(this));
+    // ArrayPush(this.modes, FlightModeHover.Create(this));
+    // ArrayPush(this.modes, FlightModeFly.Create(this));
     ArrayPush(this.modes, FlightModeDrone.Create(this));
 
     this.audioUpdate = new FlightAudioUpdate();
@@ -257,6 +257,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
       this.modes[this.mode].Activate();
 
       if this.isPlayerMounted {
+        this.mode = this.sys.ctlr.mode;
         this.sys.ctlr.Activate(false);
         this.sys.audio.Play("vehicle3_on");
         // this.sys.audio.StartWithPitch("playerVehicle", "vehicle3_TPP", this.GetPitch());
@@ -361,8 +362,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
       // convert to global
       torque = this.stats.d_orientation * torque;
       
-      if this.collisionTimer < this.sys.settings.collisionRecoveryDelay() + this.sys.settings.collisionRecoveryDuration() {
-        let collisionDampener = MinF(MaxF(0.0, (this.collisionTimer - this.sys.settings.collisionRecoveryDelay()) / this.sys.settings.collisionRecoveryDuration()), 1.0);
+      if this.collisionTimer < FlightSettings.GetFloat(n"collisionRecoveryDelay") + FlightSettings.GetFloat(n"collisionRecoveryDuration") {
+        let collisionDampener = MinF(MaxF(0.0, (this.collisionTimer - FlightSettings.GetFloat(n"collisionRecoveryDelay")) / FlightSettings.GetFloat(n"collisionRecoveryDuration")), 1.0);
         torque *= collisionDampener;
         force *= collisionDampener;
         this.collisionTimer += timeDelta;
@@ -614,15 +615,15 @@ public class FlightComponent extends ScriptableDeviceComponent {
   }
 
   public func ProcessImpact(impact: Float) {
-    this.collisionTimer = this.sys.settings.collisionRecoveryDelay() - impact;
+    this.collisionTimer = FlightSettings.GetFloat(n"collisionRecoveryDelay") - impact;
   }
 
   public let audioUpdate: ref<FlightAudioUpdate>;
 
   public func UpdateAudioParams(timeDelta: Float, force: Vector4, torque: Vector4) -> Void {
     let ratio = 1.0;
-    if this.collisionTimer < this.sys.settings.collisionRecoveryDelay() + this.sys.settings.collisionRecoveryDuration() {
-      ratio = MaxF(0.0, (this.collisionTimer - this.sys.settings.collisionRecoveryDelay()) / this.sys.settings.collisionRecoveryDuration());
+    if this.collisionTimer < FlightSettings.GetFloat(n"collisionRecoveryDelay") + FlightSettings.GetFloat(n"collisionRecoveryDuration") {
+      ratio = MaxF(0.0, (this.collisionTimer - FlightSettings.GetFloat(n"collisionRecoveryDelay")) / FlightSettings.GetFloat(n"collisionRecoveryDuration"));
     }
     
     let vehicleID = Cast<StatsObjectID>(this.GetVehicle().GetEntityID());
@@ -768,10 +769,11 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
     // all in engine\physics\collision_presets.json
     // VehicleBlocker? RagdollVehicle?
-    this.sqs.SyncRaycastByCollisionGroup(fl_tire, fl_tire + this.sys.settings.lookDown(), n"VehicleBlocker", findGround1, false, false);
-    this.sqs.SyncRaycastByCollisionGroup(fr_tire, fr_tire + this.sys.settings.lookDown(), n"VehicleBlocker", findGround2, false, false);
-    this.sqs.SyncRaycastByCollisionGroup(bl_tire, bl_tire + this.sys.settings.lookDown(), n"VehicleBlocker", findGround3, false, false);
-    this.sqs.SyncRaycastByCollisionGroup(br_tire, br_tire + this.sys.settings.lookDown(), n"VehicleBlocker", findGround4, false, false);
+    let lookDown = new Vector4(0.0, 0.0, -FlightSettings.GetFloat(n"maxHoverHeight") - 10.0, 0.0);
+    this.sqs.SyncRaycastByCollisionGroup(fl_tire, fl_tire + lookDown, n"VehicleBlocker", findGround1, false, false);
+    this.sqs.SyncRaycastByCollisionGroup(fr_tire, fr_tire + lookDown, n"VehicleBlocker", findGround2, false, false);
+    this.sqs.SyncRaycastByCollisionGroup(bl_tire, bl_tire + lookDown, n"VehicleBlocker", findGround3, false, false);
+    this.sqs.SyncRaycastByCollisionGroup(br_tire, br_tire + lookDown, n"VehicleBlocker", findGround4, false, false);
     
     let groundPoint1: Vector4;
     let groundPoint2: Vector4;
