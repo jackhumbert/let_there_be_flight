@@ -13,10 +13,13 @@ REGISTER_FLIGHT_MODULE(Camera);
 constexpr uintptr_t TPPCameraStatsUpdateAddr = 0x141CC7560 - RED4ext::Addresses::ImageBase;
 decltype(&Camera::TPPCameraStatsUpdate) TPPCameraStatsUpdate_Original;
 
+float defaultSlopeCorrectionOnGroundStrength = 0.0;
+
 uintptr_t Camera::TPPCameraStatsUpdate(RED4ext::vehicle::TPPCameraComponent *camera, uintptr_t data) {
   uintptr_t result = TPPCameraStatsUpdate_Original(camera, data);
   
   auto fc = FlightController::FlightController::GetInstance();
+  bool resetSlope = false;
   if (fc->active) {
     camera->isInAir = false;
     camera->drivingDirectionCompensationAngleSmooth = 120.0;
@@ -36,8 +39,20 @@ uintptr_t Camera::TPPCameraStatsUpdate(RED4ext::vehicle::TPPCameraComponent *cam
     if (mode->GetType() == rtti->GetClass("FlightModeDrone")) {
       camera->pitchDelta = 0.0;
       camera->yawDelta = 0.0;
+      if (camera->slopeCorrectionOnGroundStrength != 0.0) {
+        defaultSlopeCorrectionOnGroundStrength = camera->slopeCorrectionOnGroundStrength;
+      }
       camera->slopeCorrectionOnGroundStrength = 0.0;
+    } else {
+      resetSlope = true;
     }
+  } else {
+    resetSlope = true;
+  }
+
+  if (resetSlope && camera->slopeCorrectionOnGroundStrength == 0.0 && defaultSlopeCorrectionOnGroundStrength != 0.0) {
+    camera->slopeCorrectionOnGroundStrength = defaultSlopeCorrectionOnGroundStrength;
+    defaultSlopeCorrectionOnGroundStrength = 0.0;
   }
 
   return result;

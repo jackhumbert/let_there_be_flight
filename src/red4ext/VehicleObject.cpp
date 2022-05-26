@@ -178,6 +178,13 @@ struct VehicleObjectModule : FlightModule {
     auto rtti = RED4ext::CRTTISystem::Get();
     auto vbc = rtti->GetClass("vehicleBaseObject");
     vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Bool"), "isOnGround", nullptr, 0x24C));
+    vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "acceleration", nullptr, 0x254));
+    vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "deceleration", nullptr, 0x258));
+    vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "handbrake", nullptr, 0x25C));
+    vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnX", nullptr, 0x5B0));
+    vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnX2", nullptr, 0x5B4));
+    vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnX3", nullptr, 0x5B8));
+    vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnX4", nullptr, 0x268));
     // vbc->props.PushBack(RED4ext::CProperty::Create(
     //  rtti->GetType("WorldTransform"), "unkWorldTransform", nullptr, 0x330));
     // vbc->props.PushBack(RED4ext::CProperty::Create(

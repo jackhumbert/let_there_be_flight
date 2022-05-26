@@ -36,6 +36,27 @@ public let chassis: ref<vehicleChassisComponent>;
 @addField(VehicleObject)
 public native let isOnGround: Bool;
 
+@addField(VehicleObject)
+public native let acceleration: Float;
+
+@addField(VehicleObject)
+public native let deceleration: Float;
+
+@addField(VehicleObject)
+public native let handbrake: Float;
+
+@addField(VehicleObject)
+public native let turnX: Float;
+
+@addField(VehicleObject)
+public native let turnX2: Float;
+
+@addField(VehicleObject)
+public native let turnX3: Float;
+
+@addField(VehicleObject)
+public native let turnX4: Float;
+
 @addMethod(VehicleObject)
 public native func UsesInertiaTensor() -> Bool;
 

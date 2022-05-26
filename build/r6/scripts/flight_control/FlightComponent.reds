@@ -304,6 +304,11 @@ public class FlightComponent extends ScriptableDeviceComponent {
         this.brake = fc.brake.GetValue();
         this.surge = fc.surge.GetValue();
         this.sway = fc.sway.GetValue();
+      } else {
+        let v = this.GetVehicle();
+        this.surge = v.acceleration * 0.5 - v.deceleration * 0.1;
+        this.yaw = v.turnX4 * 2.0;
+        this.brake = v.handbrake * 0.5;
       }
 
       this.stats.UpdateDynamic();
@@ -433,11 +438,11 @@ public class FlightComponent extends ScriptableDeviceComponent {
         this.sys.ctlr.ProcessImpact(biggestImpact);
       }
     } else {
-      if biggestImpact > 0.10 {
+      if biggestImpact > 0.00 {
         if !this.active {
           this.Activate();
         } else {
-          this.Deactivate(true);
+          // this.Deactivate(true);
         }
       }
       // if !this.active {
@@ -698,7 +703,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
     let windLeftPosition = this.sys.audio.GetPosition(n"window_front_left_a"); // - (this.stats.d_velocity * timeDelta);
     let windRightPosition = this.sys.audio.GetPosition(n"window_front_right_a"); //- (this.stats.d_velocity * timeDelta);
 
-    let listenerMatrix = (this.sys.ctlr.player.FindComponentByName(n"soundListener") as IPlacedComponent).GetLocalToWorld();
+    // let listenerMatrix = (this.sys.ctlr.player.FindComponentByName(n"soundListener") as IPlacedComponent).GetLocalToWorld();
+    let listenerMatrix = this.sys.tppCamera.GetLocalToWorld();
     this.sys.audio.listenerPosition = Matrix.GetTranslation(listenerMatrix);
     this.sys.audio.listenerForward = Matrix.GetAxisY(listenerMatrix);
     this.sys.audio.listenerUp = Matrix.GetAxisZ(listenerMatrix);
