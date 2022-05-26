@@ -89,8 +89,6 @@ public native func AddFlightHelper() -> ref<vehicleFlightHelper>;
 @addMethod(VehicleObject)
 public native func GetComponentsUsingSlot(slotName: CName) -> array<ref<IComponent>>;
 
-
-
 @addMethod(VehicleObject)
 protected cb func OnPhysicalCollision(evt: ref<PhysicalCollisionEvent>) -> Bool {
   FlightLog.Info("[VehicleObject] OnPhysicalCollision");
@@ -117,16 +115,6 @@ public final func IsOnPavement() -> Bool {
 }
 
 // @wrapMethod(VehicleObject)
-// public const func IsVehicle() -> Bool {
-//   if FlightController.GetInstance().IsActive() {
-//     return false;
-//   } else {
-//     return wrappedMethod();
-//   }
-// }
-
-
-// @wrapMethod(VehicleObject)
 // protected cb func OnLookedAtEvent(evt: ref<LookedAtEvent>) -> Bool {
 //   wrappedMethod(evt);
 //   if this.IsDestroyed() && this.IsCurrentlyScanned() {
@@ -142,14 +130,6 @@ public final func IsOnPavement() -> Bool {
 //   }
 // } 
 
-
-// trying to unstick cars on load
-// @wrapMethod(VehicleObject)
-// public final func IsOnPavement() -> Bool {
-//   return wrappedMethod() || true;
-// }
-
-
 // @addMethod(VehicleObject)
 // public const func IsQuickHackAble() -> Bool {
 //   return true;
@@ -158,24 +138,4 @@ public final func IsOnPavement() -> Bool {
 // @addMethod(VehicleObject)
 // public const func IsQuickHacksExposed() -> Bool {
 //   return true;
-// }
-
-// @addField(VehicleObject)
-// public let m_colliderComponent: ref<ColliderComponent>;
-
-// @wrapMethod(VehicleObject)
-// protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> Bool {
-//   wrappedMethod(ri);
-//   EntityRequestComponentsInterface.RequestComponent(ri, n"Collider", n"entColliderComponent", false);
-// }
-
-// @wrapMethod(VehicleObject)
-// protected cb func OnTakeControl(ri: EntityResolveComponentsInterface) -> Bool {
-//   wrappedMethod(ri);
-//   this.m_colliderComponent = EntityResolveComponentsInterface.GetComponent(ri, n"Collider") as ColliderComponent;
-// }
-
-// @addMethod(VehicleObject)
-// public final const func GetColliderComponent() -> ref<ColliderComponent> {
-//   return this.m_colliderComponent;
 // }

@@ -157,19 +157,19 @@ public class FlightComponent extends ScriptableDeviceComponent {
     if mountChild.IsPlayer() {
       // this.GetVehicle().TurnOffAirControl();
       this.SetupVehicleTPPBBListener();
-      FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName());
+      // FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName());
       this.sys.audio.Start("windLeft", "wind_TPP");
       this.sys.audio.Start("windRight", "wind_TPP");
       // (this.GetVehicle().FindComponentByName(n"cars_sport_fx") as EffectSpawnerComponent).AddEffect();
       this.sys.playerComponent = this;
       this.isPlayerMounted = true;
     } else {
-      FlightLog.Info("[FlightComponent] OnMountingEvent for other vehicle: " + this.GetVehicle().GetDisplayName());
+      // FlightLog.Info("[FlightComponent] OnMountingEvent for other vehicle: " + this.GetVehicle().GetDisplayName());
     }
   }
   
   protected cb func OnVehicleFinishedMountingEvent(evt: ref<VehicleFinishedMountingEvent>) -> Bool {
-    FlightLog.Info("[FlightComponent] OnVehicleFinishedMountingEvent: " + this.GetVehicle().GetDisplayName());
+    // FlightLog.Info("[FlightComponent] OnVehicleFinishedMountingEvent: " + this.GetVehicle().GetDisplayName());
     if this.isPlayerMounted {
       this.sys.ctlr.Enable();
       if this.active {

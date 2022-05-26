@@ -17,6 +17,14 @@ protected cb func OnVehicleWaterEvent(evt: ref<VehicleWaterEvent>) -> Bool {
   }
 }
 
+@wrapMethod(VehicleComponent)
+private final func ExplodeVehicle(instigator: wref<GameObject>) -> Void {
+  wrappedMethod(instigator);
+  this.GetVehicle().GetFlightComponent().isDestroyed = true;
+  this.GetVehicle().GetFlightComponent().hasExploded = true;
+  this.GetVehicle().GetFlightComponent().Deactivate(true);
+}
+
 // @wrapMethod(VehicleComponent) 
 // protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool {
 //   wrappedMethod(action, consumer);

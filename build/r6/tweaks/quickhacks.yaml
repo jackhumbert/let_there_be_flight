@@ -1,0 +1,45 @@
+Interactions.QuickHackFlightMalfunction:
+  $base: Interactions.QuickHackDistraction
+  action: Choice1 
+  caption: LocKey#375 
+  captionIcon: t"ChoiceCaptionParts.MalfunctionIcon"
+  description: LocKey#6958 
+  name: "QuickHackFlightMalfunction"
+  prereqID: ""  
+device_gameplay_roles.ControlVehicleFlight:
+  $base: device_gameplay_roles.ControlOtherDevice
+  friendlyName: "QuickHackFlightMalfunction"
+  iconName: n"distract_enemy3"
+  # iconRecord: t""
+  localizedDescription: LocKey#2028 
+  localizedName: LocKey#1411 
+  # revealOrder: 1 
+DeviceAction.QuickHackFlightMalfunction:
+  $base: DeviceAction.QuickHackDistractExplosive
+  actionName: n"QuickHackFlightMalfunction"
+  activationTime: [ t"QuickHack.QuickHack_inline0", t"QuickHack.QuickHack_inline1", t"QuickHack.QuickHack_inline2", t"DeviceAction.DeviceQuickHack_inline0" ]
+  completionEffects: [ t"QuickHack.QuickHack_inline4", t"QuickHack.QuickHack_inline8", t"QuickHack.QuickHack_inline10", t"QuickHack.QuickHack_inline11" ]
+  # cooldown: t"" 
+  costs: [ t"DeviceAction.DeviceQuickHack_inline1" ]
+  gameplayCategory: t"ActionCategories.Malfunction"
+  hackCategory: t"HackCategories.DeviceHack"
+  instigatorActivePrereqs: [ ]
+  instigatorPrereqs: [ t"QuickHack.QuickHack_inline3" ]
+  interactionLayer: n"any"
+  # isQuickHack: true 
+  objectActionType: t"ObjectActionType.DeviceQuickHack"
+  objectActionUI: t"Interactions.QuickHackFlightMalfunction"
+  priority: 0.0 
+  rewards: [ t"RPGActionRewards.CombatHacking" ]
+  startEffects: [ t"QuickHack.QuickHack_inline12", t"QuickHack.QuickHack_inline13" ]
+  targetActivePrereqs: [ ]
+  targetPrereqs: [ ]
+device_role_actions.quick_hack_flight_control:
+  $base: device_role_actions.quick_hack_distraction_crane
+  friendlyName: "ActionQuickHackFlightMalfunction"
+  iconName: n"hack1" 
+  # iconRecord: t""
+  # isQuickHack: true 
+  localizedDescription: LocKey#1480 
+  localizedName: LocKey#1495 
+  # revealOrder: 1 
