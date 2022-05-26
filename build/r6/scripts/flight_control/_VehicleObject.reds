@@ -89,25 +89,26 @@ public native func AddFlightHelper() -> ref<vehicleFlightHelper>;
 @addMethod(VehicleObject)
 public native func GetComponentsUsingSlot(slotName: CName) -> array<ref<IComponent>>;
 
-@addMethod(VehicleObject)
-protected cb func OnPhysicalCollision(evt: ref<PhysicalCollisionEvent>) -> Bool {
-  FlightLog.Info("[VehicleObject] OnPhysicalCollision");
-  let vehicle = evt.otherEntity as VehicleObject;
-  if IsDefined(vehicle) {
-    let gameInstance: GameInstance = this.GetGame();
-    let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
-    let isPlayerMounted = VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), vehicle);
-    if isPlayerMounted {
-      // FlightController.GetInstance().ProcessImpact(evt.attackData.vehicleImpactForce);
-    } else {
-      let impulseEvent: ref<PhysicalImpulseEvent> = new PhysicalImpulseEvent();
-      impulseEvent.radius = 1.0;
-      impulseEvent.worldPosition = Vector4.Vector4To3(evt.worldPosition);
-      impulseEvent.worldImpulse = new Vector3(0.0, 0.0, 10000.0);
-      vehicle.QueueEvent(impulseEvent);
-    }
-  }
-}
+// working
+// @addMethod(VehicleObject)
+// protected cb func OnPhysicalCollision(evt: ref<PhysicalCollisionEvent>) -> Bool {
+//   FlightLog.Info("[VehicleObject] OnPhysicalCollision");
+//   let vehicle = evt.otherEntity as VehicleObject;
+//   if IsDefined(vehicle) {
+//     let gameInstance: GameInstance = this.GetGame();
+//     let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
+//     let isPlayerMounted = VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), vehicle);
+//     if isPlayerMounted {
+//       // FlightController.GetInstance().ProcessImpact(evt.attackData.vehicleImpactForce);
+//     } else {
+//       let impulseEvent: ref<PhysicalImpulseEvent> = new PhysicalImpulseEvent();
+//       impulseEvent.radius = 1.0;
+//       impulseEvent.worldPosition = Vector4.Vector4To3(evt.worldPosition);
+//       impulseEvent.worldImpulse = new Vector3(0.0, 0.0, 10000.0);
+//       vehicle.QueueEvent(impulseEvent);
+//     }
+//   }
+// }
 
 @wrapMethod(VehicleObject)
 public final func IsOnPavement() -> Bool {

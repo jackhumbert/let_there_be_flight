@@ -482,7 +482,6 @@ public native class FlightController extends IScriptable {
 
   // public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
   public final func OnUpdate(timeDelta: Float) -> Void {
-    this.navPath.Update();
 
     // let cameraPos = this.ui.camera.GetLocalToWorld() * Vector4.EmptyVector();
     // let localCameraPos = Matrix.GetInverted(this.GetVehicle().chassis.GetLocalToWorld()) * cameraPos;
@@ -534,6 +533,7 @@ public native class FlightController extends IScriptable {
     // }
 
     if (this.showUI) { 
+      this.navPath.Update();
       this.ui.ClearMarks();
     }
 

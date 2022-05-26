@@ -122,15 +122,41 @@ public func GetActions(out outActions: array<ref<DeviceAction>>, context: GetAct
 }
 
 @wrapMethod(VehicleComponentPS)
+public final func GetValidChoices(objectActionRecords: array<wref<ObjectAction_Record>>, context: GetActionsContext, objectActionsCallbackController: wref<gameObjectActionsCallbackController>, out choices: array<InteractionChoice>, isAutoRefresh: Bool) -> Void {
+  ArrayPush(objectActionRecords, TweakDBInterface.GetObjectActionRecord(t"DeviceAction.QuickHackFlightMalfunction"));
+  ArrayPush(objectActionRecords, TweakDBInterface.GetObjectActionRecord(t"DeviceAction.MalfunctionClassHack"));
+  wrappedMethod(objectActionRecords, context, objectActionsCallbackController, choices, isAutoRefresh);
+}
+
+@wrapMethod(VehicleComponentPS)
 protected func Initialize() -> Void {
   wrappedMethod();
   this.m_disableQuickHacks = false;
+  this.m_isLockedViaSequencer = false;
   // this.m_debugExposeQuickHacks = true;
   this.UpdateQuickHackableState(true);
   this.EnableDevice();
   this.InitializeQuickHackVulnerabilities();
   this.AddQuickHackVulnerability(t"DeviceAction.QuickHackFlightMalfunction");
 }
+
+@wrapMethod(VehicleComponentPS)
+public final func DetermineActionsToPush(interaction: ref<InteractionComponent>, context: VehicleActionsContext, objectActionsCallbackController: wref<gameObjectActionsCallbackController>, isAutoRefresh: Bool) -> Void {
+  FlightLog.Info("[VehicleComponentPS] DetermineActionsToPush");
+  wrappedMethod(interaction, context, objectActionsCallbackController, isAutoRefresh);
+  
+  // let choices: array<InteractionChoice>;
+  // let caption: InteractionChoiceCaption;
+  // InteractionChoiceCaption.AddTextPart(caption, "Fly yo!");
+  // let data: array<Variant>;
+  // let metadata: InteractionChoiceMetaData;
+  // metadata.tweakDBID = t"DeviceAction.MalfunctionClassHack";
+  // let choice = new InteractionChoice("Fly", caption, data, metadata);
+  // choice.caption = "Fly";
+  // ArrayPush(choices, choice);
+  // this.PushActionsToInteractionComponent(interaction, choices, context);
+}
+
 
 @addMethod(VehicleComponentPS)
 public func OnQuickHackFlightMalfunction(evt: ref<QuickHackFlightMalfunction>) -> EntityNotificationType {
@@ -153,75 +179,75 @@ public func OnQuickHackFlightMalfunction(evt: ref<QuickHackFlightMalfunction>) -
 
 // custom class
 
-public class FlightComponentPS extends ScriptableDeviceComponentPS {
-  protected func Initialize() -> Void {
-    super.Initialize();
-    this.m_disableQuickHacks = false;
-    this.m_debugExposeQuickHacks = true;
-    this.UpdateQuickHackableState(true);
-  }
+// public class FlightComponentPS extends ScriptableDeviceComponentPS {
+//   protected func Initialize() -> Void {
+//     super.Initialize();
+//     this.m_disableQuickHacks = false;
+//     this.m_debugExposeQuickHacks = true;
+//     this.UpdateQuickHackableState(true);
+//   }
 
-  public const func IsQuickHackAble() -> Bool {
-    FlightLog.Info("[FlightComponentPS] IsQuickHackAble");
-    return true;
-  }
+//   public const func IsQuickHackAble() -> Bool {
+//     FlightLog.Info("[FlightComponentPS] IsQuickHackAble");
+//     return true;
+//   }
 
-  public func IsQuickHacksExposed() -> Bool {
-    FlightLog.Info("[FlightComponentPS] IsQuickHacksExposed");
-    return true;
-  }
+//   public func IsQuickHacksExposed() -> Bool {
+//     FlightLog.Info("[FlightComponentPS] IsQuickHacksExposed");
+//     return true;
+//   }
 
-  public func OnSetExposeQuickHacks(evt: ref<SetExposeQuickHacks>) -> EntityNotificationType {
-    super.OnSetExposeQuickHacks(evt);
-    return EntityNotificationType.SendThisEventToEntity;
-  }
+//   public func OnSetExposeQuickHacks(evt: ref<SetExposeQuickHacks>) -> EntityNotificationType {
+//     super.OnSetExposeQuickHacks(evt);
+//     return EntityNotificationType.SendThisEventToEntity;
+//   }
 
-  protected const func CanCreateAnyQuickHackActions() -> Bool {
-    return true;
-  }
+//   protected const func CanCreateAnyQuickHackActions() -> Bool {
+//     return true;
+//   }
 
-  protected func GetQuickHackActions(out actions: array<ref<DeviceAction>>, context: GetActionsContext) -> Void {
-    FlightLog.Info("[FlightComponentPS] GetQuickHackActions");
-    let action: ref<ScriptableDeviceAction> = this.ActionQuickHackFlightMalfunction();
-    action.SetObjectActionID(t"DeviceAction.MalfunctionClassHack");
-    action.SetDurationValue(0.1);
-    // action.SetInactiveWithReason(!this.IsDistracting(), "LocKey#7004");
-    ArrayPush(actions, action);
-    this.FinalizeGetQuickHackActions(actions, context);
-  }
+//   protected func GetQuickHackActions(out actions: array<ref<DeviceAction>>, context: GetActionsContext) -> Void {
+//     FlightLog.Info("[FlightComponentPS] GetQuickHackActions");
+//     let action: ref<ScriptableDeviceAction> = this.ActionQuickHackFlightMalfunction();
+//     action.SetObjectActionID(t"DeviceAction.MalfunctionClassHack");
+//     action.SetDurationValue(0.1);
+//     // action.SetInactiveWithReason(!this.IsDistracting(), "LocKey#7004");
+//     ArrayPush(actions, action);
+//     this.FinalizeGetQuickHackActions(actions, context);
+//   }
 
-  protected func ActionQuickHackFlightMalfunction() -> ref<QuickHackFlightMalfunction> {
-    let action: ref<QuickHackFlightMalfunction> = new QuickHackFlightMalfunction();
-    action.SetUp(this);
-    action.SetProperties();
-    action.AddDeviceName(this.GetDeviceName());
-    action.CreateInteraction();
-    action.SetDurationValue(0.1);
-    return action;
-  }
+//   protected func ActionQuickHackFlightMalfunction() -> ref<QuickHackFlightMalfunction> {
+//     let action: ref<QuickHackFlightMalfunction> = new QuickHackFlightMalfunction();
+//     action.SetUp(this);
+//     action.SetProperties();
+//     action.AddDeviceName(this.GetDeviceName());
+//     action.CreateInteraction();
+//     action.SetDurationValue(0.1);
+//     return action;
+//   }
 
-  public func OnQuickHackFlightMalfunction(evt: ref<QuickHackFlightMalfunction>) -> EntityNotificationType {
-    FlightLog.Info("[FlightComponentPS] OnQuickHackFlightMalfunction");
-    // let type: EntityNotificationType = this.OnQuickHackFlightMalfunction(evt);
-    // if Equals(type, EntityNotificationType.DoNotNotifyEntity) {
-    //   return type;
-    // };
-    if evt.IsStarted() {
-      // this.ExecutePSAction(this.FireVerticalImpulse());
-      this.FireVerticalImpulse();
-    };
-    return EntityNotificationType.SendThisEventToEntity;
-  }
+//   public func OnQuickHackFlightMalfunction(evt: ref<QuickHackFlightMalfunction>) -> EntityNotificationType {
+//     FlightLog.Info("[FlightComponentPS] OnQuickHackFlightMalfunction");
+//     // let type: EntityNotificationType = this.OnQuickHackFlightMalfunction(evt);
+//     // if Equals(type, EntityNotificationType.DoNotNotifyEntity) {
+//     //   return type;
+//     // };
+//     if evt.IsStarted() {
+//       // this.ExecutePSAction(this.FireVerticalImpulse());
+//       this.FireVerticalImpulse();
+//     };
+//     return EntityNotificationType.SendThisEventToEntity;
+//   }
 
-  public func GetVehicle() -> wref<VehicleObject> {
-    return GameInstance.FindEntityByID(this.GetGameInstance(), PersistentID.ExtractEntityID(this.GetID())) as VehicleObject;
-  }
+//   public func GetVehicle() -> wref<VehicleObject> {
+//     return GameInstance.FindEntityByID(this.GetGameInstance(), PersistentID.ExtractEntityID(this.GetID())) as VehicleObject;
+//   }
 
-  public func FireVerticalImpulse() {
-    let impulseEvent: ref<PhysicalImpulseEvent> = new PhysicalImpulseEvent();
-    impulseEvent.radius = 1.0;
-    impulseEvent.worldPosition = Vector4.Vector4To3(this.GetVehicle().GetWorldPosition());
-    impulseEvent.worldImpulse = new Vector3(0.0, 0.0, 10000.0);
-    this.GetVehicle().QueueEvent(impulseEvent);
-  }
-}
+//   public func FireVerticalImpulse() {
+//     let impulseEvent: ref<PhysicalImpulseEvent> = new PhysicalImpulseEvent();
+//     impulseEvent.radius = 1.0;
+//     impulseEvent.worldPosition = Vector4.Vector4To3(this.GetVehicle().GetWorldPosition());
+//     impulseEvent.worldImpulse = new Vector3(0.0, 0.0, 10000.0);
+//     this.GetVehicle().QueueEvent(impulseEvent);
+//   }
+// }

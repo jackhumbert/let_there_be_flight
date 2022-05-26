@@ -184,7 +184,7 @@ public class FlightNavPath {
       let findGround: TraceResult;
       GameInstance.GetSpatialQueriesSystem(this.controller.player.GetGame()).SyncRaycastByCollisionGroup(point, point + new Vector4(0.0, 0.0, 1.0, 0.0), n"VehicleBlocker", findGround, false, false);
       if !TraceResult.IsValid(findGround) { 
-        GameInstance.GetSpatialQueriesSystem(this.controller.player.GetGame()).SyncRaycastByCollisionGroup(point, point + new Vector4(0.0, 0.0, 20.0, 0.0), n"VehicleBlocker", findGround, false, false);
+        GameInstance.GetSpatialQueriesSystem(this.controller.player.GetGame()).SyncRaycastByCollisionGroup(point, point + new Vector4(0.0, 0.0, -20.0, 0.0), n"VehicleBlocker", findGround, false, false);
         if TraceResult.IsValid(findGround) {
           point.Z = MaxF(findGround.position.Z + 0.01, point.Z);
         }

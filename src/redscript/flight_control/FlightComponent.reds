@@ -223,6 +223,14 @@ public class FlightComponent extends ScriptableDeviceComponent {
     }
   }
 
+  protected cb func OnVehicleWaterEvent(evt: ref<VehicleWaterEvent>) -> Bool {
+    if evt.isInWater  {
+      this.audioUpdate.water = 1.0;
+    } else {
+      this.audioUpdate.water = 0.0;
+    }
+  }
+
   protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool {
     FlightLog.Info("[FlightComponent] OnAction: " + this.GetVehicle().GetDisplayName());
   }
@@ -271,6 +279,10 @@ public class FlightComponent extends ScriptableDeviceComponent {
     }
   }
 
+  protected cb func OnInteractionUsed(evt: ref<InteractionChoiceEvent>) -> Bool {
+    FlightLog.Info("[FlightComponent] OnInteractionUsed: " + ToString(evt.actionType));
+  }
+
   public let trick: ref<FlightTrick>;
 
   let smoothForce: Vector4;
@@ -307,7 +319,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
       } else {
         let v = this.GetVehicle();
         this.surge = v.acceleration * 0.5 - v.deceleration * 0.1;
-        this.yaw = v.turnX4;
+        this.yaw = -v.turnX4;
         this.brake = v.handbrake * 0.5;
       }
 
@@ -651,7 +663,11 @@ public class FlightComponent extends ScriptableDeviceComponent {
     // }
     this.audioUpdate.yaw = this.yaw * ratio;
     // this.audioUpdate.lift = this.lift * ratio;
-    this.audioUpdate.lift = (Vector4.Dot(force, FlightUtils.Up()) + this.sys.ctlr.lift.GetInput()) * ratio;
+    if IsDefined(this.GetFlightMode() as FlightModeDrone) {
+      this.audioUpdate.lift = this.sys.ctlr.lift.GetInput() * ratio;
+    } else {
+      this.audioUpdate.lift = (Vector4.Dot(Vector4.Normalize(force), this.stats.d_localUp) * 0.1 + this.sys.ctlr.lift.GetInput()) * ratio;
+    }
     // this.audioUpdate.brake = this.brake;
     this.audioUpdate.brake = this.sys.ctlr.brake.GetInput();
     // this.audioUpdate.brake = Vector4.Dot(-force, this.stats.d_direction);
@@ -660,8 +676,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
   }
 
   public func UpdateAudioParams(timeDelta: Float) -> Void {
-    let engineVolume = 0.85;
-    let windVolume = 0.5;
+    let engineVolume = 1.0;
+    let windVolume = 0.6;
     // let engineVolume = (GameInstance.GetSettingsSystem(this.GetVehicle().GetGame()).GetVar(n"/audio/volume", n"MasterVolume") as ConfigVarListInt).GetValue();
     // let engineVolume *= (GameInstance.GetSettingsSystem(this.GetVehicle().GetGame()).GetVar(n"/audio/volume", n"SfxVolume") as ConfigVarListInt).GetValue();
     if GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsPausedState() ||
