@@ -19,6 +19,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   let rollGroundPID: ref<DualPID>;
   let rollPID: ref<DualPID>;
   let yawPID: ref<PID>;
+  let pitchAeroPID: ref<PID>;
 
   private let sqs: ref<SpatialQueriesSystem>;
 
@@ -69,6 +70,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.rollGroundPID =  DualPID.Create(0.5, 0.2, 0.05,  2.5, 1.5, 0.5);
     this.rollPID =  DualPID.Create(1.0, 0.5, 0.5,  1.0, 0.5, 0.5);
     this.yawPID = PID.Create(1.0, 0.01, 2.0);
+    this.pitchAeroPID = PID.Create(1.0, 0.01, 2.0);
 
     this.sys = FlightSystem.GetInstance();
     this.sqs = GameInstance.GetSpatialQueriesSystem(this.GetVehicle().GetGame());
@@ -261,6 +263,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
       this.rollGroundPID.Reset();
       this.rollPID.Reset();
       this.yawPID.Reset();
+      this.pitchAeroPID.Reset();
 
       this.modes[this.mode].Activate();
 
@@ -855,6 +858,12 @@ public class FlightComponent extends ScriptableDeviceComponent {
     }   
   } 
 
+  protected cb func OnHUDInstruction(evt: ref<HUDInstruction>) -> Bool {
+    if evt.quickhackInstruction.ShouldProcess() {
+      FlightLog.Info("[FlightComponent] OnHUDInstruction");
+      this.GetVehicle().TryOpenQuickhackMenu(evt.quickhackInstruction.ShouldOpen());
+    };
+  }
 
 
 /*  private final func RegisterToHUDManager(shouldRegister: Bool) -> Void {

@@ -14,3 +14,10 @@ public class QuickHackFlightMalfunction extends ActionBool {
     return TweakDBInterface.GetChoiceCaptionIconPartRecord(t"ChoiceCaptionParts.DistractIcon");
   }
 }
+
+public class VehicleFlightMalfunction extends ActionBool {
+  public final func SetProperties() -> Void {
+    this.actionName = n"FlightMalfunction";
+    this.prop = DeviceActionPropertyFunctions.SetUpProperty_Bool(this.actionName, true, n"UI-Settings-Group-Flight", n"UI-Settings-Group-Flight");
+  }
+}

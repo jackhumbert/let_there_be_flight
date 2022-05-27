@@ -58,7 +58,9 @@ bool Setup(RED4ext::CGameApplication *aApp) {
   floats.Insert("maxHoverHeight", 7.0);
   floats.Insert("minHoverHeight", 1.0);
   floats.Insert("normalEase", 0.3);
+  floats.Insert("pitchAeroCorrectionFactor", 0.25);
   floats.Insert("pitchCorrectionFactor", 3.0);
+  floats.Insert("pitchDirectionalityFactor", 50.0);
   floats.Insert("pitchFactorDrone", 15.0);
   floats.Insert("pitchWithLift", 0.5);
   floats.Insert("pitchWithSurge", 0.0);

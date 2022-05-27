@@ -29,10 +29,14 @@ public abstract class FlightMode {
     if Vector4.Dot(this.component.stats.d_direction, this.component.stats.d_forward) < 0.0 {
       direction = -this.component.stats.d_direction;
     }
-    let directionAngle: Float = Vector4.GetAngleDegAroundAxis(direction, this.component.stats.d_forward, this.component.stats.d_up);
-    let aeroDynamicYaw = this.component.yawPID.GetCorrectionClamped(directionAngle, timeDelta, 10.0) * this.component.stats.d_speedRatio;// / 10.0;
+    let yawDirectionAngle: Float = Vector4.GetAngleDegAroundAxis(direction, this.component.stats.d_forward, this.component.stats.d_up);
+    let pitchDirectionAngle: Float = Vector4.GetAngleDegAroundAxis(direction, this.component.stats.d_forward, this.component.stats.d_right);
+
+    let aeroDynamicYaw = this.component.yawPID.GetCorrectionClamped(yawDirectionAngle, timeDelta, 10.0) * this.component.stats.d_speedRatio;// / 10.0;
+    let aeroDynamicPitch = this.component.pitchAeroPID.GetCorrectionClamped(pitchDirectionAngle, timeDelta, 10.0) * this.component.stats.d_speedRatio;// / 10.0;
 
     let yawDirectionality: Float = this.component.stats.d_speedRatio * FlightSettings.GetFloat(n"yawDirectionalityFactor");
+    let pitchDirectionality: Float = this.component.stats.d_speedRatio * FlightSettings.GetFloat(n"pitchDirectionalityFactor");
     let aeroFactor = Vector4.Dot(this.component.stats.d_forward, this.component.stats.d_direction);
     // yawDirectionality - redirect non-directional velocity to vehicle forward
 
@@ -41,7 +45,11 @@ public abstract class FlightMode {
     this.force += FlightUtils.Forward() * AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_right)) * yawDirectionality * aeroFactor;
     this.force += -this.component.stats.d_localDirection * AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_right)) * yawDirectionality * AbsF(aeroFactor);
 
+    this.force += FlightUtils.Forward() * AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_up)) * pitchDirectionality * aeroFactor;
+    this.force += -this.component.stats.d_localDirection * AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_up)) * pitchDirectionality * AbsF(aeroFactor);
+
     this.torque = -angularDamp;
     this.torque.Z -= aeroDynamicYaw * FlightSettings.GetFloat(n"yawCorrectionFactor");
+    this.torque.X -= aeroDynamicPitch * FlightSettings.GetFloat(n"pitchAeroCorrectionFactor");
   }
 }
