@@ -137,6 +137,9 @@
 		<relationship name="automators">
 			<destination>{c4f6a404-2bd8-4c9c-a192-796dd14a1b29}</destination>
 		</relationship>
+		<relationship name="modulators">
+			<destination>{2739846e-7629-427b-9629-d175ff503bf0}</destination>
+		</relationship>
 		<relationship name="audioFile">
 			<destination>{bb91d7b4-fa71-44bc-88bb-9d01bd01f15c}</destination>
 		</relationship>
@@ -165,6 +168,17 @@
 			<destination>{e3dd2dad-9f6f-4091-b25f-7fe39294b845}</destination>
 		</relationship>
 	</object>
+	<object class="LFOModulator" id="{2739846e-7629-427b-9629-d175ff503bf0}">
+		<property name="nameOfPropertyBeingModulated">
+			<value>pitch</value>
+		</property>
+		<property name="rate">
+			<value>0.0549999997</value>
+		</property>
+		<property name="depth">
+			<value>1.5</value>
+		</property>
+	</object>
 	<object class="MixerBusFader" id="{d7dd204b-8620-4036-84e1-8d3996721c88}" />
 	<object class="AutomationCurve" id="{e3dd2dad-9f6f-4091-b25f-7fe39294b845}">
 		<relationship name="parameter">
@@ -180,7 +194,7 @@
 			<value>0</value>
 		</property>
 		<property name="value">
-			<value>-2.5</value>
+			<value>-4.5</value>
 		</property>
 		<property name="curveShape">
 			<value>-1</value>
@@ -191,7 +205,7 @@
 			<value>0.10000000000000001</value>
 		</property>
 		<property name="value">
-			<value>2</value>
+			<value>0</value>
 		</property>
 	</object>
 </objects>

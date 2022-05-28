@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.02.00">
+	<object class="ParameterPreset" id="{f3d2881b-7e3a-4eed-a540-7992d7a466eb}">
+		<property name="name">
+			<value>roll</value>
+		</property>
+		<relationship name="folder">
+			<destination>{37bcb955-bb46-4db0-96d9-38f1f6d86753}</destination>
+		</relationship>
+		<relationship name="parameter">
+			<destination>{e145a22a-0731-460a-ac97-33e31347e883}</destination>
+		</relationship>
+	</object>
+	<object class="GameParameter" id="{e145a22a-0731-460a-ac97-33e31347e883}">
+		<property name="minimum">
+			<value>-1</value>
+		</property>
+		<property name="initialValue">
+			<value>0</value>
+		</property>
+		<property name="seekSpeed">
+			<value>3.2000000476837158</value>
+		</property>
+	</object>
+</objects>

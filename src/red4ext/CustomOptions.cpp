@@ -3,6 +3,8 @@
 #include <spdlog/spdlog.h>
 #include "Utils.hpp"
 
+// this is working, but there are some other parts that aren't, so it's disabled
+
 struct OptionStructUnk18 {
   void *unk00;
   uint64_t unk08;
@@ -150,4 +152,4 @@ struct CustomOptionsModule : FlightModule {
   }
 };
 
-REGISTER_FLIGHT_MODULE(CustomOptionsModule);
+//REGISTER_FLIGHT_MODULE(/*CustomOptionsModule*/);

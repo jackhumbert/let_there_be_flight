@@ -11,7 +11,13 @@ public class FlightFx {
   public let bl_fx: ref<FxInstance>;
   public let br_fx: ref<FxInstance>;
 
+  public let bl_retroFx: ref<FxInstance>;
+  public let br_retroFx: ref<FxInstance>;
+  public let fl_retroFx: ref<FxInstance>;
+  public let fr_retroFx: ref<FxInstance>;
+
   public let resource: FxResource;
+  public let retroResource: FxResource;
 
   let f_fx_wt: WorldTransform;
   let b_fx_wt: WorldTransform;
@@ -41,6 +47,7 @@ public class FlightFx {
     this.sys = component.sys;
     this.component = component;
     this.resource = Cast<FxResource>(r"user\\jackhumbert\\effects\\ion_thruster_with_engine.effect");
+    this.retroResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\retro_thruster.effect");
     return this;
   }
 
@@ -91,7 +98,7 @@ public class FlightFx {
     this.flbc = this.component.GetVehicle().GetComponentsUsingSlot(n"wheel_front_left_b");
     this.frc = this.component.GetVehicle().GetComponentsUsingSlot(n"wheel_front_right");
     this.frbc = this.component.GetVehicle().GetComponentsUsingSlot(n"wheel_front_right_b");
-
+    
     let vehicleComponent = this.component.GetVehicle().GetVehicleComponent();
     this.chassis = vehicleComponent.FindComponentByName(n"chassis") as IComponent;
     if !IsDefined(this.chassis) {
@@ -127,6 +134,14 @@ public class FlightFx {
       vehicleSlots.GetSlotTransform(n"wheel_back_left", this.bl_fx_wt);
       this.component.bl_tire.SetLocalPosition(-chassisOffset + WorldPosition.ToVector4(WorldTransform.GetWorldPosition(this.bl_fx_wt)) * vwt);
       this.bl_fx.AttachToComponent(this.component.GetVehicle(), entAttachmentTarget.Transform, n"WheelAudioEmitterBL", wt);
+
+      let wt_retro: WorldTransform;
+      let p = this.component.bl_tire.GetLocalPosition();
+      p.Z = 0.0;
+      WorldTransform.SetPosition(wt_retro, p);
+      WorldTransform.SetOrientation(wt_retro, EulerAngles.ToQuat(new EulerAngles(0.0, 0.0, 90.0)));
+      this.bl_retroFx =  GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(this.retroResource, effectTransform);
+      this.bl_retroFx.AttachToSlot(this.component.GetVehicle(), entAttachmentTarget.Transform, n"Base", wt_retro);
     }
     if this.HasBRWheel() {
       this.br_fx = GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(this.resource, effectTransform);
@@ -134,6 +149,14 @@ public class FlightFx {
       vehicleSlots.GetSlotTransform(n"wheel_back_right", this.br_fx_wt);
       this.component.br_tire.SetLocalPosition(-chassisOffset + WorldPosition.ToVector4(WorldTransform.GetWorldPosition(this.br_fx_wt)) * vwt);
       this.br_fx.AttachToComponent(this.component.GetVehicle(), entAttachmentTarget.Transform, n"WheelAudioEmitterBR", wt);
+
+      let wt_retro: WorldTransform;
+      let p = this.component.br_tire.GetLocalPosition();
+      p.Z = 0.0;
+      WorldTransform.SetPosition(wt_retro, p);
+      WorldTransform.SetOrientation(wt_retro, EulerAngles.ToQuat(new EulerAngles(0.0, 0.0, -90.0)));
+      this.br_retroFx =  GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(this.retroResource, effectTransform);
+      this.br_retroFx.AttachToSlot(this.component.GetVehicle(), entAttachmentTarget.Transform, n"Base", wt_retro);
     }
     if this.HasFLWheel() {
       this.fl_fx = GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(this.resource, effectTransform);
@@ -141,6 +164,14 @@ public class FlightFx {
       vehicleSlots.GetSlotTransform(n"wheel_front_left", this.fl_fx_wt);
       this.component.fl_tire.SetLocalPosition(-chassisOffset + WorldPosition.ToVector4(WorldTransform.GetWorldPosition(this.fl_fx_wt)) * vwt);
       this.fl_fx.AttachToComponent(this.component.GetVehicle(), entAttachmentTarget.Transform, n"WheelAudioEmitterFL", wt);
+
+      let wt_retro: WorldTransform;
+      let p = this.component.fl_tire.GetLocalPosition();
+      p.Z = 0.0;
+      WorldTransform.SetPosition(wt_retro, p);
+      WorldTransform.SetOrientation(wt_retro, EulerAngles.ToQuat(new EulerAngles(0.0, 0.0, 90.0)));
+      this.fl_retroFx =  GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(this.retroResource, effectTransform);
+      this.fl_retroFx.AttachToSlot(this.component.GetVehicle(), entAttachmentTarget.Transform, n"Base", wt_retro);
     }
     if this.HasFRWheel() {
       this.fr_fx = GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(this.resource, effectTransform);
@@ -148,6 +179,14 @@ public class FlightFx {
       vehicleSlots.GetSlotTransform(n"wheel_front_right", this.fr_fx_wt);
       this.component.fr_tire.SetLocalPosition(-chassisOffset + WorldPosition.ToVector4(WorldTransform.GetWorldPosition(this.fr_fx_wt)) * vwt);
       this.fr_fx.AttachToComponent(this.component.GetVehicle(), entAttachmentTarget.Transform, n"WheelAudioEmitterFR", wt);
+
+      let wt_retro: WorldTransform;
+      let p = this.component.fr_tire.GetLocalPosition();
+      p.Z = 0.0;
+      WorldTransform.SetPosition(wt_retro, p);
+      WorldTransform.SetOrientation(wt_retro, EulerAngles.ToQuat(new EulerAngles(0.0, 0.0, -90.0)));
+      this.fr_retroFx =  GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(this.retroResource, effectTransform);
+      this.fr_retroFx.AttachToSlot(this.component.GetVehicle(), entAttachmentTarget.Transform, n"Base", wt_retro);
     }
     if this.HasFLBWheel() {
       this.flb_fx = GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(this.resource, effectTransform);
@@ -191,93 +230,109 @@ public class FlightFx {
       this.frb_fx.BreakLoop();
     }
 
+    if IsDefined(this.bl_retroFx) {
+      this.bl_retroFx.BreakLoop();
+    }
+    if IsDefined(this.br_retroFx) {
+      this.br_retroFx.BreakLoop();
+    }
+    if IsDefined(this.fl_retroFx) {
+      this.fl_retroFx.BreakLoop();
+    }
+    if IsDefined(this.fr_retroFx) {
+      this.fr_retroFx.BreakLoop();
+    }
 
     this.ShowWheelComponents();
   }
 
-  public func Update(visualForce: Vector4, visualTorque: Vector4) {
+  public func Update(force: Vector4, torque: Vector4) {
     // would be nice to do this periodically, or when the vehicle comes back into the frustum
     this.HideWheelComponents();
 
-    let thrusterAmount = Vector4.Dot(new Vector4(0.0, 0.0, 1.0, 0.0), visualForce);
+    let thrusterAmount = Vector4.Dot(new Vector4(0.0, 0.0, 1.0, 0.0), force);
     // let thrusterAmount = ClampF(this.surge.GetValue(), 0.0, 1.0) * 1.0;
     if this.HasFWheel() {
-      this.f_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount + visualTorque.X + visualTorque.Y) * FlightSettings.GetFloat(n"thrusterFactor"));
+      this.f_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount + torque.X + torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat(n"thrusterFactor"));
       if thrusterAmount > 0.0 {
         this.component.fl_tire.SetLocalOrientation(Quaternion.Slerp(this.component.fl_tire.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
-          ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Right()), -45.0, 45.0),
+          ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0),
           0.0,
-          visualTorque.Z * 0.5 + ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Forward()), -45.0, 45.0)
+          torque.Z * 0.5 + ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Forward()), -45.0, 45.0)
         )), 0.1));
       }
     }
     if this.HasBWheel() {
-      this.b_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount + visualTorque.X - visualTorque.Y) * FlightSettings.GetFloat(n"thrusterFactor"));
+      this.b_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount + torque.X - torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat(n"thrusterFactor"));
       if thrusterAmount > 0.0 {
         this.component.bl_tire.SetLocalOrientation(Quaternion.Slerp(this.component.bl_tire.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
-          ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Right()), -45.0, 45.0), 
+          ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0), 
           0.0,
-          visualTorque.Z * 0.5 + ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Forward()), -45.0, 45.0)
+          torque.Z * 0.5 + ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Forward()), -45.0, 45.0)
         )), 0.1));
       }
     }
     if this.HasBLWheel() {
-      this.bl_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount + visualTorque.X + visualTorque.Y) * FlightSettings.GetFloat(n"thrusterFactor"));
+      this.bl_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount + torque.X + torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat(n"thrusterFactor"));
       if thrusterAmount > 0.0 {
         this.component.bl_tire.SetLocalOrientation(Quaternion.Slerp(this.component.bl_tire.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
-          ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Right()), -45.0, 45.0),
+          ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0),
           0.0,
-          visualTorque.Z * 0.5 + ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Forward()), -45.0, 45.0)
+          torque.Z * 0.5 + ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Forward()), -45.0, 45.0)
         )), 0.1));
       }
+      this.bl_retroFx.SetBlackboardValue(n"thruster_amount", (Vector4.Dot(new Vector4(1.0, 0.0, 0.0, 0.0), force) + torque.Z) * 0.1);
     }
     if this.HasBRWheel() {
-      this.br_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount + visualTorque.X - visualTorque.Y) * FlightSettings.GetFloat(n"thrusterFactor"));
+      this.br_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount + torque.X - torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat(n"thrusterFactor"));
       if thrusterAmount > 0.0 {
         this.component.br_tire.SetLocalOrientation(Quaternion.Slerp(this.component.br_tire.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
-          ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Right()), -45.0, 45.0), 
+          ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0), 
           0.0,
-          visualTorque.Z * 0.5 + ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Forward()), -45.0, 45.0)
+          torque.Z * 0.5 + ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Forward()), -45.0, 45.0)
         )), 0.1));
       }
+      this.br_retroFx.SetBlackboardValue(n"thruster_amount", (Vector4.Dot(new Vector4(-1.0, 0.0, 0.0, 0.0), force) - torque.Z) * 0.1);
     }
     if this.HasFLWheel() {
-      this.fl_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount - visualTorque.X + visualTorque.Y) * FlightSettings.GetFloat(n"thrusterFactor"));
+      this.fl_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount - torque.X + torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat(n"thrusterFactor"));
       if thrusterAmount > 0.0 {
         this.component.fl_tire.SetLocalOrientation(Quaternion.Slerp(this.component.fl_tire.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
-          ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Right()), -45.0, 45.0), 
+          ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0), 
           0.0,
-          -visualTorque.Z * 0.5 + ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Forward()), -45.0, 45.0)
+          -torque.Z * 0.5 + ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Forward()), -45.0, 45.0)
         )), 0.1));
       }
+      this.fl_retroFx.SetBlackboardValue(n"thruster_amount", (Vector4.Dot(new Vector4(1.0, 0.0, 0.0, 0.0), force) - torque.Z) * 0.1);
     }
     if this.HasFRWheel() {
-      this.fr_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount - visualTorque.X - visualTorque.Y) * FlightSettings.GetFloat(n"thrusterFactor"));
+      this.fr_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount - torque.X - torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat(n"thrusterFactor"));
       if thrusterAmount > 0.0 {
         this.component.fr_tire.SetLocalOrientation(Quaternion.Slerp(this.component.fr_tire.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
-          ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Right()), -45.0, 45.0), 
+          ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0), 
           0.0,
-          -visualTorque.Z * 0.5 + ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Forward()), -45.0, 45.0)
+          -torque.Z * 0.5 + ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Forward()), -45.0, 45.0)
         )), 0.1));
       }
+      this.fr_retroFx.SetBlackboardValue(n"thruster_amount", (Vector4.Dot(new Vector4(-1.0, 0.0, 0.0, 0.0), force) + torque.Z) * 0.1);
     }
     if this.HasFLBWheel() {
-      this.flb_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount - visualTorque.X + visualTorque.Y) * FlightSettings.GetFloat(n"thrusterFactor"));
+      this.flb_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount - torque.X + torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat(n"thrusterFactor"));
       if thrusterAmount > 0.0 {
         this.component.hood.SetLocalOrientation(Quaternion.Slerp(this.component.hood.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
-          ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Right()), -45.0, 45.0), 
+          ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0), 
           0.0,
-          -visualTorque.Z * 0.5 + ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Forward()), -45.0, 45.0)
+          -torque.Z * 0.5 + ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Forward()), -45.0, 45.0)
         )), 0.1));
       }
     }
     if this.HasFRBWheel() {
-      this.frb_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount - visualTorque.X - visualTorque.Y) * FlightSettings.GetFloat(n"thrusterFactor"));
+      this.frb_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount - torque.X - torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat(n"thrusterFactor"));
       if thrusterAmount > 0.0 {
         this.component.trunk.SetLocalOrientation(Quaternion.Slerp(this.component.trunk.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
-          ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Right()), -45.0, 45.0), 
+          ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0), 
           0.0,
-          -visualTorque.Z * 0.5 + ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Forward()), -45.0, 45.0)
+          -torque.Z * 0.5 + ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Forward()), -45.0, 45.0)
         )), 0.1));
       }
     }
@@ -285,31 +340,31 @@ public class FlightFx {
     // +x = torwards front
     // +y = rotate left z
     // +z = towards right 
-    // let forceQuat = Quaternion.BuildFromDirectionVector(-visualForce, this.component.stats.d_localUp);
+    // let forceQuat = Quaternion.BuildFromDirectionVector(-force, this.component.stats.d_localUp);
     // let quat = EulerAngles.ToQuat(new EulerAngles(
-    //   Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Right()),
-    //   Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), visualForce, FlightUtils.Forward()),
+    //   Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()),
+    //   Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Forward()),
     //   0
     // ));
     // this.component.bl_tire.SetLocalOrientation(EulerAngles.ToQuat(new EulerAngles(
-    //   -visualForce.Y,
+    //   -force.Y,
     //   0.0, 
-    //   visualTorque.Z - visualForce.X
+    //   torque.Z - force.X
     // )));
     // this.component.br_tire.SetLocalOrientation(EulerAngles.ToQuat(new EulerAngles(
-    //   -visualForce.Y, 
+    //   -force.Y, 
     //   0.0, 
-    //   visualTorque.Z - visualForce.X
+    //   torque.Z - force.X
     // )));
     // this.component.fl_tire.SetLocalOrientation(EulerAngles.ToQuat(new EulerAngles(
-    //   -visualForce.Y, 
+    //   -force.Y, 
     //   0.0, 
-    //   -visualTorque.Z - visualForce.X
+    //   -torque.Z - force.X
     // )));
     // this.component.fr_tire.SetLocalOrientation(EulerAngles.ToQuat(new EulerAngles(
-    //   -visualForce.Y, 
+    //   -force.Y, 
     //   0.0, 
-    //   -visualTorque.Z - visualForce.X
+    //   -torque.Z - force.X
     // )));
     // +x = torwards front
     // +y = rotate left z
@@ -320,24 +375,24 @@ public class FlightFx {
     // WorldTransform.SetPosition(this.fr_fx_wt, this.audio.GetPosition(n"wheel_front_right"));
 
     // WorldTransform.SetOrientationEuler(this.bl_fx_wt, new EulerAngles(
-    //   Vector4.Dot(visualForce, -this.stats.d_forward), 
+    //   Vector4.Dot(force, -this.stats.d_forward), 
     //   0.0, 
-    //   visualTorque.Z + Vector4.Dot(visualForce, -this.stats.d_right)
+    //   torque.Z + Vector4.Dot(force, -this.stats.d_right)
     // ));
     // WorldTransform.SetOrientationEuler(this.br_fx_wt, new EulerAngles(
-    //   Vector4.Dot(visualForce, -this.stats.d_forward), 
+    //   Vector4.Dot(force, -this.stats.d_forward), 
     //   0.0, 
-    //   visualTorque.Z + Vector4.Dot(visualForce, -this.stats.d_right)
+    //   torque.Z + Vector4.Dot(force, -this.stats.d_right)
     // ));
     // WorldTransform.SetOrientationEuler(this.fl_fx_wt, new EulerAngles(
-    //   Vector4.Dot(visualForce, -this.stats.d_forward), 
+    //   Vector4.Dot(force, -this.stats.d_forward), 
     //   0.0, 
-    //   -visualTorque.Z + Vector4.Dot(visualForce, -this.stats.d_right)
+    //   -torque.Z + Vector4.Dot(force, -this.stats.d_right)
     // ));
     // WorldTransform.SetOrientationEuler(this.fr_fx_wt, new EulerAngles(
-    //   Vector4.Dot(visualForce, -this.stats.d_forward), 
+    //   Vector4.Dot(force, -this.stats.d_forward), 
     //   0.0, 
-    //   -visualTorque.Z + Vector4.Dot(visualForce, -this.stats.d_right)
+    //   -torque.Z + Vector4.Dot(force, -this.stats.d_right)
     // ));
     
     // this.bl_fx.UpdateTransform(this.bl_fx_wt);
@@ -349,9 +404,9 @@ public class FlightFx {
   public func HideWheelComponents() {
     // hide wheels, tires & brakes (chassis)
 
-    if this.chassis.IsEnabled() {
-      this.chassis.Toggle(false);
-    }
+    // if this.chassis.IsEnabled() {
+    //   this.chassis.Toggle(false);
+    // }
 
     for c in this.fc {
       if c.IsEnabled() {
@@ -404,7 +459,7 @@ public class FlightFx {
   }
 
   public func ShowWheelComponents() {
-    this.chassis.Toggle(true);
+    // this.chassis.Toggle(true);
 
     for c in this.fc {
         c.Toggle(true);

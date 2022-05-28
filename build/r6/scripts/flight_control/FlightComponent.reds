@@ -657,20 +657,28 @@ public class FlightComponent extends ScriptableDeviceComponent {
     if this.isPlayerMounted {
       // more responsive-sounding
       this.audioUpdate.surge = this.sys.ctlr.surge.GetInput() * ratio;
+      this.audioUpdate.yaw = this.sys.ctlr.yaw.GetInput() * ratio;
+      if IsDefined(this.GetFlightMode() as FlightModeDrone) {
+        this.audioUpdate.lift = this.sys.ctlr.lift.GetInput() * ratio;
+        this.audioUpdate.roll = this.sys.ctlr.roll.GetInput() * ratio;
+        this.audioUpdate.pitch = this.sys.ctlr.pitch.GetInput() * ratio;
+      } else {
+        this.audioUpdate.lift = (Vector4.Dot(Vector4.Normalize(force), this.stats.d_localUp) * 0.1 + this.sys.ctlr.lift.GetInput()) * ratio;
+        this.audioUpdate.roll = this.roll * ratio;
+        this.audioUpdate.pitch = this.pitch * ratio;
+      }
     } else {
       this.audioUpdate.surge = this.surge * ratio;
+      this.audioUpdate.lift = (Vector4.Dot(Vector4.Normalize(force), this.stats.d_localUp) * 0.1 + this.lift) * ratio;
+      this.audioUpdate.roll = this.roll * ratio;
+      this.audioUpdate.pitch = this.pitch * ratio;
+      this.audioUpdate.yaw = this.yaw * ratio;
     }
     // if this.mode == 3 {
     //   this.audioUpdate.surge *= 0.5;
     //   this.audioUpdate.surge += this.lift * ratio * 0.5;
     // }
-    this.audioUpdate.yaw = this.yaw * ratio;
     // this.audioUpdate.lift = this.lift * ratio;
-    if IsDefined(this.GetFlightMode() as FlightModeDrone) {
-      this.audioUpdate.lift = this.sys.ctlr.lift.GetInput() * ratio;
-    } else {
-      this.audioUpdate.lift = (Vector4.Dot(Vector4.Normalize(force), this.stats.d_localUp) * 0.1 + this.sys.ctlr.lift.GetInput()) * ratio;
-    }
     // this.audioUpdate.brake = this.brake;
     this.audioUpdate.brake = this.sys.ctlr.brake.GetInput();
     // this.audioUpdate.brake = Vector4.Dot(-force, this.stats.d_direction);
@@ -724,9 +732,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
     // let listenerMatrix = (this.sys.ctlr.player.FindComponentByName(n"soundListener") as IPlacedComponent).GetLocalToWorld();
     let listenerMatrix = this.sys.tppCamera.GetLocalToWorld();
-    this.sys.audio.listenerPosition = Matrix.GetTranslation(listenerMatrix);
-    this.sys.audio.listenerForward = Matrix.GetAxisY(listenerMatrix);
-    this.sys.audio.listenerUp = Matrix.GetAxisZ(listenerMatrix);
+    FlightAudio.UpdateListener(Matrix.GetTranslation(listenerMatrix), Matrix.GetAxisY(listenerMatrix), Matrix.GetAxisZ(listenerMatrix));
 
     this.audioUpdate.speed = this.stats.d_speed;
     this.audioUpdate.yawDiff = Vector4.GetAngleDegAroundAxis(this.stats.d_forward, this.stats.d_direction, this.stats.d_up);

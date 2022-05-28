@@ -391,10 +391,6 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
   cc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "yawDelta", nullptr, 0x2D0));
   cc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "pitchDelta", nullptr, 0x2D4));
 
-  auto ms = rtti->GetClass("gameuiMinimapContainerController");
-  ms->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("array:Vector4"), "questPoints", nullptr, 0x1E0));
-  ms->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("array:Vector4"), "playerPoints", nullptr, 0x208));
-
   auto vcc = rtti->GetClass("vehicleChassisComponent");
   auto getComOffsetFunc =
       RED4ext::CClassFunction::Create(vcc, "GetComOffset", "GetComOffset", &ChassisGetComOffset, {.isNative = true});

@@ -2,7 +2,7 @@
 <objects serializationModel="Studio.02.02.00">
 	<object class="ParameterPreset" id="{b94b843a-5720-4f33-87c9-1453583572ae}">
 		<property name="name">
-			<value>underWater</value>
+			<value>water</value>
 		</property>
 		<relationship name="folder">
 			<destination>{37bcb955-bb46-4db0-96d9-38f1f6d86753}</destination>
@@ -14,6 +14,9 @@
 	<object class="GameParameter" id="{aacc860e-2131-46c5-8d98-b3cc33497bd3}">
 		<property name="initialValue">
 			<value>0</value>
+		</property>
+		<property name="seekSpeed">
+			<value>3.4000000953674316</value>
 		</property>
 	</object>
 </objects>
