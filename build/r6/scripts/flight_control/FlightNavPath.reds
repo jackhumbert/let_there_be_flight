@@ -23,6 +23,9 @@ public class FlightNavPath {
   let questVariant: gamedataMappinVariant;
   let poiVariant: gamedataMappinVariant;
 
+  let navPathQuestFXTransforms: array<WorldTransform>;
+  let navPathPOIFXTransforms: array<WorldTransform>;
+
   private let m_journalManager: wref<JournalManager>;
 
   public static func Create(controller: ref<FlightController>) -> ref<FlightNavPath> {
