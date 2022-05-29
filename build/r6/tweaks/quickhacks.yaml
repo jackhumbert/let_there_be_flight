@@ -45,17 +45,17 @@ device_role_actions.quick_hack_flight_control:
   # revealOrder: 1 
 
 Vehicle.q000_nomad_v_sport2_porsche_911turbo_quest.objectActions:
-  - !append: DeviceAction.QuickHackFlightMalfunction
-  - !append: DeviceAction.MalfunctionClassHack
+  - !append DeviceAction.QuickHackFlightMalfunction
+  - !append DeviceAction.MalfunctionClassHack
 
 Vehicle.v_sport2_porsche_911turbo.objectActions:
-  - !append: DeviceAction.QuickHackFlightMalfunction
-  - !append: DeviceAction.MalfunctionClassHack
+  - !append DeviceAction.QuickHackFlightMalfunction
+  - !append DeviceAction.MalfunctionClassHack
 
 Vehicle.v_sport2_porsche_911turbo_player.objectActions:
-  - !append: DeviceAction.QuickHackFlightMalfunction
-  - !append: DeviceAction.MalfunctionClassHack
+  - !append DeviceAction.QuickHackFlightMalfunction
+  - !append DeviceAction.MalfunctionClassHack
 
 Vehicle.v_sport2_porsche_911turbo_quest.objectActions:
-  - !append: DeviceAction.QuickHackFlightMalfunction
-  - !append: DeviceAction.MalfunctionClassHack
+  - !append DeviceAction.QuickHackFlightMalfunction
+  - !append DeviceAction.MalfunctionClassHack

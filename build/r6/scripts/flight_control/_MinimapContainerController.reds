@@ -11,7 +11,7 @@ public native func GetQuestMappin() -> ref<QuestMappin>;
 public native let questPoints: array<Vector4>;
 
 @addMethod(MinimapContainerController)
-public native func GetPOIMappin() -> ref<PointOfInterestMappin>;
+public native func GetPOIMappin() -> ref<IMappin>;
 
 @addField(MinimapContainerController)
 public native let poiPoints: array<Vector4>;

@@ -17,7 +17,7 @@ void GetQuestMappin(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame
 }
 
 void GetPOIMappin(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,
-                    RED4ext::Handle<RED4ext::game::mappins::PointOfInterestMappin> *aOut, int64_t a4) {
+                    RED4ext::Handle<RED4ext::game::mappins::IMappin> *aOut, int64_t a4) {
   aFrame->code++; // skip ParamEnd
 
   if (aOut) {
