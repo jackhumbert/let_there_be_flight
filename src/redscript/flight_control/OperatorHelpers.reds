@@ -86,3 +86,20 @@ public static func OperatorAdd(a: Vector4, b: Vector3) -> Vector4 {
 // FxResource
 
 public static native func Cast(a: ResRef) -> FxResource;
+
+
+public static func OperatorEqual(a: Vector3, b: Vector3) -> Bool {
+  return a.X == b.X && a.Y == b.Y && a.Z == b.Z;
+}
+
+public static func OperatorEqual(a: Vector4, b: Vector4) -> Bool {
+  return a.X == b.X && a.Y == b.Y && a.Z == b.Z && a.W == b.W;
+}
+
+public static func OperatorNotEqual(a: Vector3, b: Vector3) -> Bool {
+  return !OperatorEqual(a, b);
+}
+
+public static func OperatorNotEqual(a: Vector4, b: Vector4) -> Bool {
+  return !OperatorEqual(a, b);
+}

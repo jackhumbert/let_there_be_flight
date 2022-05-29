@@ -23,6 +23,9 @@ public class FlightNavPath {
   let questVariant: gamedataMappinVariant;
   let poiVariant: gamedataMappinVariant;
 
+  let navPathQuestFXTransforms: array<WorldTransform>;
+  let navPathPOIFXTransforms: array<WorldTransform>;
+
   private let m_journalManager: wref<JournalManager>;
 
   public static func Create(controller: ref<FlightController>) -> ref<FlightNavPath> {
@@ -105,8 +108,7 @@ public class FlightNavPath {
     let lastPoint: Vector4 = points[0];
     let lastFxPoint: Vector4 = points[0];
     let pointsDrawn = 0;
-
-    ArrayRemove(points, points[0]);
+    let skipFirst = false;
 
     for point in points {
       let tweenPointDistance = Vector4.Distance(point, lastPoint);
@@ -118,13 +120,15 @@ public class FlightNavPath {
         while (x < tweenPointDistance) {
           let midPoint = point / tweenPointDistance * x + lastPoint / tweenPointDistance * (tweenPointDistance - x);      
           // let correctedMidPoint = this.AdjustPointToDirection(midPoint, this.distanceToPath);
-          if Vector4.Distance(midPoint, this.controller.player.GetWorldPosition()) > this.closestPoint {
+          if skipFirst {
             this.UpdateNavPath(fxs, pointsDrawn, midPoint, Quaternion.BuildFromDirectionVector(midPoint - lastFxPoint), resource, force);
             pointsDrawn += 1;
             if (pointsDrawn >= this.FXPoints)
             {
               break;
             }
+          } else {
+            skipFirst = true;
           }
           lastFxPoint = midPoint;
           x += tweenPointSpacing;
