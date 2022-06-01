@@ -1,10 +1,10 @@
 #include "FlightModule.hpp"
 #include <RED4ext/RED4ext.hpp>
 #include <spdlog/spdlog.h>
-
-void __fastcall DebugPrint(uintptr_t, RED4ext::CString*);
+#include <RED4ext/Relocation.hpp>
 
 // 40 55 48 83 EC 40 80 39  00 48 8B EA 0F 84 C5 00 00 00 48 89 7C 24 60 48 8B 79 18 44 8B 47 0C 44
+void __fastcall DebugPrint(uintptr_t, RED4ext::CString *);
 constexpr uintptr_t DebugPrintAddr = 0x140A7E8E0 - RED4ext::Addresses::ImageBase;
 decltype(&DebugPrint) DebugPrint_Original;
 

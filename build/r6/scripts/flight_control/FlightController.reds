@@ -533,7 +533,7 @@ public native class FlightController extends IScriptable {
     // }
 
     if (this.showUI) { 
-      this.navPath.Update();
+      // this.navPath.Update();
       this.ui.ClearMarks();
     }
 

@@ -137,14 +137,14 @@ bool OnUpdate(RED4ext::CGameApplication* aApp) {
 }
 
 struct FlightSystemModule : FlightModule {
-  void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-    RED4ext::GameState runningState;
-    runningState.OnEnter = nullptr;
-    runningState.OnUpdate = &OnUpdate;
-    runningState.OnExit = nullptr;
+  //void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
+  //  RED4ext::GameState runningState;
+  //  runningState.OnEnter = nullptr;
+  //  runningState.OnUpdate = &OnUpdate;
+  //  runningState.OnExit = nullptr;
 
-    aSdk->gameStates->Add(aHandle, RED4ext::EGameStateType::Running, &runningState);
-  }
+  //  aSdk->gameStates->Add(aHandle, RED4ext::EGameStateType::Running, &runningState);
+  //}
 
   void RegisterTypes() {
     auto rtti = RED4ext::CRTTISystem::Get();

@@ -1,4 +1,6 @@
-public class FlightNavPath {
+public native class FlightNavPath extends IScriptable {
+  public static native func GetInstance() -> ref<FlightNavPath>;
+
   let controller: ref<FlightController>;
 
   public let mmcc: ref<MinimapContainerController>;
@@ -29,7 +31,7 @@ public class FlightNavPath {
   private let m_journalManager: wref<JournalManager>;
 
   public static func Create(controller: ref<FlightController>) -> ref<FlightNavPath> {
-    let self = new FlightNavPath();
+    let self = FlightNavPath.GetInstance();
     self.controller = controller;
     self.spacing = 2.5; // meters
     self.distanceToPath = 50.0; // meters
@@ -70,26 +72,29 @@ public class FlightNavPath {
       return this.navPathWhiteResource;
   }
 
-  public func Update() {
+  public func Update(questOrPOI: Int32) {
     if IsDefined(this.mmcc) {
-      let questMappin = this.mmcc.GetQuestMappin();
-      if IsDefined(questMappin) {
-        let questVariant = questMappin.GetVariant();
-        if !Equals(questVariant, this.questVariant) {
-          this.questVariant = questVariant;
-          this.UpdateNavPath(this.navPathQuestFX, this.mmcc.questPoints, this.GetResourceForVariant(this.questVariant), true);
-        } else {
-          this.UpdateNavPath(this.navPathQuestFX, this.mmcc.questPoints, this.GetResourceForVariant(this.questVariant), false);
+      if questOrPOI == 0 {
+        let questMappin = this.mmcc.GetQuestMappin();
+        if IsDefined(questMappin) {
+          let questVariant = questMappin.GetVariant();
+          if !Equals(questVariant, this.questVariant) {
+            this.questVariant = questVariant;
+            this.UpdateNavPath(this.navPathQuestFX, this.mmcc.questPoints, this.GetResourceForVariant(this.questVariant), true);
+          } else {
+            this.UpdateNavPath(this.navPathQuestFX, this.mmcc.questPoints, this.GetResourceForVariant(this.questVariant), false);
+          }
         }
-      }
-      let poiMappin = this.mmcc.GetPOIMappin();
-      if IsDefined(poiMappin) {
-        let poiVariant = poiMappin.GetVariant();
-        if !Equals(poiVariant, this.poiVariant) {
-          this.poiVariant = poiVariant;
-          this.UpdateNavPath(this.navPathPOIFX, this.mmcc.poiPoints, this.GetResourceForVariant(this.poiVariant), true);
-        } else {
-          this.UpdateNavPath(this.navPathPOIFX, this.mmcc.poiPoints, this.GetResourceForVariant(this.poiVariant), false);
+      } else {
+        let poiMappin = this.mmcc.GetPOIMappin();
+        if IsDefined(poiMappin) {
+          let poiVariant = poiMappin.GetVariant();
+          if !Equals(poiVariant, this.poiVariant) {
+            this.poiVariant = poiVariant;
+            this.UpdateNavPath(this.navPathPOIFX, this.mmcc.poiPoints, this.GetResourceForVariant(this.poiVariant), true);
+          } else {
+            this.UpdateNavPath(this.navPathPOIFX, this.mmcc.poiPoints, this.GetResourceForVariant(this.poiVariant), false);
+          }
         }
       }
     }
