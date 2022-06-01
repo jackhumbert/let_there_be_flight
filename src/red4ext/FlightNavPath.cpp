@@ -121,4 +121,4 @@ struct FlightNavPathModule : FlightModule {
   }
 };
 
- REGISTER_FLIGHT_MODULE(FlightNavPathModule);
+ //REGISTER_FLIGHT_MODULE(FlightNavPathModule);

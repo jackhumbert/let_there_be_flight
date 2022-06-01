@@ -37,7 +37,6 @@ public native class FlightController extends IScriptable {
   private let player: ref<PlayerPuppet>;
   private let m_callbackID: ref<CallbackHandle>;
   private let m_vehicleCollisionBBStateID: ref<CallbackHandle>;
-  private let navPath: ref<FlightNavPath>;
   private let ui: ref<FlightControllerUI>;
   public final func SetUI(ui: ref<FlightControllerUI>) {
     this.ui = ui;
@@ -101,7 +100,6 @@ public native class FlightController extends IScriptable {
     this.uiBlackboard = GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().UI_System);
     this.uiSystemBB = GetAllBlackboardDefs().UI_System;
 
-    this.navPath = FlightNavPath.Create(this);
     // this.trackedMappinId = this.uiBlackboard.RegisterListenerVariant(this.uiSystemBB.TrackedMappin, this, n"OnTrackedMappinUpdated");
     // this.uiBlackboard.SignalVariant(this.uiSystemBB.TrackedMappin);
 
@@ -219,8 +217,6 @@ public native class FlightController extends IScriptable {
   private func Deactivate(silent: Bool) -> Void {
     this.active = false;
     this.SetupActions();
-
-    this.navPath.Stop();
 
     //let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
     //uiSystem.PopGameContext(IntEnum(10));
