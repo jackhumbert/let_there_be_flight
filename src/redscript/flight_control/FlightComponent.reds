@@ -49,6 +49,9 @@ public class FlightComponent extends ScriptableDeviceComponent {
   public let force: Vector4;
   public let torque: Vector4;
 
+  public let ui: wref<worlduiWidgetComponent>;
+  public let ui_info: wref<worlduiWidgetComponent>;
+
   protected final const func GetVehicle() -> wref<VehicleObject> {
     return this.GetEntity() as VehicleObject;
   }
@@ -152,6 +155,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
   }
 
   // callbacks
+
+  public let uiControl: ref<FlightControllerUI>;
   
   protected cb func OnMountingEvent(evt: ref<MountingEvent>) -> Bool {
     // this.helper = this.GetVehicle().AddFlightHelper();
@@ -165,6 +170,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
       // (this.GetVehicle().FindComponentByName(n"cars_sport_fx") as EffectSpawnerComponent).AddEffect();
       this.sys.playerComponent = this;
       this.isPlayerMounted = true;
+      this.uiControl = FlightControllerUI.Create(this.ui_info.GetGameController(), this.ui_info.GetGameController().GetRootCompoundWidget());
+      this.uiControl.Setup(this.stats);
     } else {
       // FlightLog.Info("[FlightComponent] OnMountingEvent for other vehicle: " + this.GetVehicle().GetDisplayName());
     }
@@ -447,28 +454,28 @@ public class FlightComponent extends ScriptableDeviceComponent {
       i += 1;
     };
       // FlightLog.Info("[FlightComponent] OnGridDestruction: " + FloatToStringPrec(biggestImpact, 2));
-    if this.isPlayerMounted {
-      if biggestImpact > 0.00 {
-        this.ProcessImpact(biggestImpact);
+    if biggestImpact > 0.00 {
+      this.ProcessImpact(biggestImpact);
+      if this.isPlayerMounted {
         this.sys.ctlr.ProcessImpact(biggestImpact);
-      }
-    } else {
-      if biggestImpact > 0.00 {
-        if !this.active {
-          this.Activate();
-        } else {
-          // this.Deactivate(true);
+      } else {
+        // if biggestImpact > 0.00 {
+        //   if !this.active {
+        //     this.Activate();
+        //   } else {
+        //     // this.Deactivate(true);
+        //   }
+        // }
+        // if !this.active {
+        //   this.FireVerticalImpulse(gridID);
+        // }
+        if biggestImpact > 0.20 {
+          GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"explosion");
         }
+        // let event = new vehicleDriveToPointEvent();
+        // event.targetPos = new Vector3(0.0, 0.0, 0.0);
+        // vehicle.QueueEvent(event);
       }
-      // if !this.active {
-      //   this.FireVerticalImpulse(gridID);
-      // }
-      if biggestImpact > 0.20 {
-        GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"explosion");
-      }
-      // let event = new vehicleDriveToPointEvent();
-      // event.targetPos = new Vector3(0.0, 0.0, 0.0);
-      // vehicle.QueueEvent(event);
     }
   }
 
@@ -636,6 +643,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
   public func ProcessImpact(impact: Float) {
     this.collisionTimer = FlightSettings.GetFloat(n"collisionRecoveryDelay") - impact;
+    this.ui.StartGlitching(impact, FlightSettings.GetFloat(n"collisionRecoveryDuration") + impact);
   }
 
   public let audioUpdate: ref<FlightAudioUpdate>;

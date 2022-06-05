@@ -256,7 +256,7 @@ public native class FlightController extends IScriptable {
         player.RegisterInputListener(this, n"Lift");
         player.RegisterInputListener(this, n"Yaw");
         player.RegisterInputListener(this, n"SurgeNeg");
-        player.RegisterInputListener(this, n"Handbrake");
+        player.RegisterInputListener(this, n"Flight_LinearBrake");
         player.RegisterInputListener(this, n"Flight_Trick");
         player.RegisterInputListener(this, n"Choice1_DualState");
         player.RegisterInputListener(this, n"FlightOptions_Up");
@@ -439,7 +439,7 @@ public native class FlightController extends IScriptable {
         }
       }
         // ListenerActionConsumer.ConsumeSingleAction(consumer);
-      if Equals(actionName, n"Handbrake") {
+      if Equals(actionName, n"Flight_LinearBrake") {
         if Equals(actionType, gameinputActionType.BUTTON_PRESSED) {
           this.brake.SetInput(1.0);
         } else {

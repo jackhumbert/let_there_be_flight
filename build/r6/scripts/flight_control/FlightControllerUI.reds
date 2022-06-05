@@ -9,8 +9,6 @@ import Codeware.UI.*
 //   return a;
 // }
 
-
-
 public class FlightControllerUI extends inkCanvas {
   public let controller: ref<inkGameController>;
   public let stats: ref<FlightStats>;
@@ -59,7 +57,7 @@ public class FlightControllerUI extends inkCanvas {
     this.stats = stats;
     this.SetOpacity(0.0);
     this.RemoveAllChildren();
-		this.SetAnchor(inkEAnchor.Centered);
+		this.SetAnchor(inkEAnchor.TopLeft);
     
     // let w: ref<inkWidget> = this.controller.SpawnFromExternal(this, r"base\\gameplay\\gui\\widgets\\turret_hud\\turret_hud.inkwidget", n"Root");
     // w.Reparent(this);
@@ -150,7 +148,7 @@ public class FlightControllerUI extends inkCanvas {
 
     let arc = inkWidgetBuilder.inkShape(n"arc")
       .Reparent(rulers)
-      .Size(1920.0 * 2.0, 1080.0 * 2.0)
+      .Size(1024.0, 1024.0)
       .UseNineSlice(true)
       .ShapeVariant(inkEShapeVariant.FillAndBorder)
       .LineThickness(3.0)
@@ -612,7 +610,7 @@ public class FlightControllerUI extends inkCanvas {
       + ", " + FloatToStringPrec(this.stats.d_velocity.Y, 1) + ", " + FloatToStringPrec(this.stats.d_velocity.Z, 1) + " >");
       // + "Velocity: <" + FloatToStringPrec(this.stats.d_velocity.X, 1)
       // + ", " + FloatToStringPrec(this.stats.d_velocity.Y, 1) + ", " + FloatToStringPrec(this.stats.d_velocity.Z, 1) + " >");
-    this.m_info.SetTranslation(this.ScreenXY(this.stats.d_visualPosition + Transform.GetRight(cameraTransform) * 2.5));
+    // this.m_info.SetTranslation(this.ScreenXY(this.stats.d_visualPosition + Transform.GetRight(cameraTransform) * 2.5));
 
     // let fl_position = Matrix.GetTranslation((this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_left_tire") as TargetingComponent).GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
     // let fr_position = Matrix.GetTranslation((this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_right_tire") as TargetingComponent).GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
@@ -689,7 +687,7 @@ public class FlightControllerUI extends inkCanvas {
   //   }
   //   let normalLine = inkWidgetBuilder.inkShape(n"normalLine")
   //     .Reparent(this.ui.GetMarksWidget())
-  //     .Size(1920.0 * 2.0, 1080.0 * 2.0)
+  //     .Size(1024.0, 1024.0)
   //     .UseNineSlice(true)
   //     .ShapeVariant(inkEShapeVariant.FillAndBorder)
   //     .LineThickness(3.0)
