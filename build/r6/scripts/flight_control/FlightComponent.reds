@@ -510,18 +510,18 @@ public class FlightComponent extends ScriptableDeviceComponent {
     // this.FireVerticalImpulse();
   }
 
-  public func OnQuickHackFlightMalfunction(evt: ref<QuickHackFlightMalfunction>) -> EntityNotificationType {
-    FlightLog.Info("[FlightComponent] OnQuickHackFlightMalfunction");
-    // let type: EntityNotificationType = this.OnQuickHackFlightMalfunction(evt);
-    // if Equals(type, EntityNotificationType.DoNotNotifyEntity) {
-    //   return type;
-    // };
-    if evt.IsStarted() {
-      // this.ExecutePSAction(this.FireVerticalImpulse());
-      // this.FireVerticalImpulse();
-    };
-    return EntityNotificationType.SendThisEventToEntity;
-  }
+  // public func OnQuickHackFlightMalfunction(evt: ref<QuickHackFlightMalfunction>) -> EntityNotificationType {
+  //   FlightLog.Info("[FlightComponent] OnQuickHackFlightMalfunction");
+  //   // let type: EntityNotificationType = this.OnQuickHackFlightMalfunction(evt);
+  //   // if Equals(type, EntityNotificationType.DoNotNotifyEntity) {
+  //   //   return type;
+  //   // };
+  //   if evt.IsStarted() {
+  //     // this.ExecutePSAction(this.FireVerticalImpulse());
+  //     // this.FireVerticalImpulse();
+  //   };
+  //   return EntityNotificationType.SendThisEventToEntity;
+  // }
 
   // gridID
   // 0 rear left
