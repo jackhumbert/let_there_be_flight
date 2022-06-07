@@ -22,6 +22,7 @@ private final func ExplodeVehicle(instigator: wref<GameObject>) -> Void {
   wrappedMethod(instigator);
   this.GetVehicle().GetFlightComponent().isDestroyed = true;
   this.GetVehicle().GetFlightComponent().hasExploded = true;
+  this.GetVehicle().GetFlightComponent().hasUpdate = false;
   this.GetVehicle().GetFlightComponent().Deactivate(true);
 }
 

@@ -85,10 +85,10 @@ public class vflightUIGameController extends inkHUDGameController {
     };
 
     this.m_info = inkWidgetBuilder.inkCanvas(n"info")
-      .Size(600.0, 200.0)
+      .Size(624.0, 200.0)
       .Reparent(this.GetRootCompoundWidget())
-		  .Anchor(inkEAnchor.CenterLeft)
-      .Margin(400.0, 0.0, 0.0, 0.0)
+		  .Anchor(inkEAnchor.TopLeft)
+      .Margin(380.0, 20.0, 0.0, 0.0)
       .BuildCanvas();
 
     let top = new inkHorizontalPanel();
@@ -220,7 +220,199 @@ public class vflightUIGameController extends inkHUDGameController {
       .BuildText();
 
 
+    this.SetupPitchDisplay();
   }
+
+
+  public let m_pitch: ref<inkCanvas>;
+  
+  private func SetupPitchDisplay() -> Void {
+
+      let mark_scale = 20.0;
+      let height = 520.0;
+      let width = 60.0;
+
+      this.m_pitch = inkWidgetBuilder.inkCanvas(n"m_pitch")
+        .Size(width, height)
+        .Reparent(this.GetRootCompoundWidget())
+        .Anchor(inkEAnchor.TopLeft)
+        .Anchor(0.5, 0.5)
+        .Margin(0.0, 0.0, 0.0, 0.0)
+        .Translation(314.0, 320.0)
+        .Opacity(0.5)
+        .BuildCanvas();
+      // this.m_pitch.SetChildOrder(inkEChildOrder.Backward);
+
+      inkWidgetBuilder.inkImage(n"arrow")
+        .Reparent(this.m_pitch)
+        .Atlas(r"base\\gameplay\\gui\\common\\shapes\\atlas_shapes_sync.inkatlas")
+        .Part(n"arrow_right_bg")
+        .Size(20.0, 20.0)
+        .Anchor(1.0, 0.5)
+        .Anchor(inkEAnchor.CenterLeft)
+        .Margin(-15.0, 0.0, 0.0, 0.0)
+        .Opacity(1.0)
+        .Tint(FlightUtils.ElectricBlue())
+        .BuildImage();
+        
+      inkWidgetBuilder.inkText(n"fluff_text")
+        .Reparent(this.m_pitch)
+        .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
+        .FontSize(12)
+        .Anchor(0.0, 1.0)
+        .Anchor(inkEAnchor.TopLeft)
+        .Tint(FlightUtils.Bittersweet())
+        .Text("89V_PITCH")
+        .HAlign(inkEHorizontalAlign.Left)
+        .Margin(-14.0, -10.0, 0.0, 0.0)
+        // .Overflow(textOverflowPolicy.AdjustToSize) pArrayType was nullptr.
+        .BuildText();
+
+      inkWidgetBuilder.inkImage(n"border")
+        .Reparent(this.m_pitch)
+        .Atlas(r"base\\gameplay\\gui\\common\\shapes\\atlas_shapes_sync.inkatlas")
+        .Part(n"arrow_cell_fg")
+        .Size(width + 24.0, height)
+        .NineSliceScale(true)
+        .Anchor(0.5, 0.5)
+        .Anchor(inkEAnchor.CenterFillVerticaly)
+        .Translation(-2.5, 0.0)
+        .Opacity(1.0)
+        .Tint(FlightUtils.ElectricBlue())
+        .BuildImage();
+
+      inkWidgetBuilder.inkImage(n"fill")
+        .Reparent(this.m_pitch)
+        .Atlas(r"base\\gameplay\\gui\\common\\shapes\\atlas_shapes_sync.inkatlas")
+        .Part(n"arrow_cell_bg")
+        .Size(width + 24.0, height)
+        .NineSliceScale(true)
+        .Anchor(0.5, 0.5)
+        .Anchor(inkEAnchor.CenterFillVerticaly)
+        .Translation(-2.5, 0.0)
+        .Opacity(0.1)
+        .Tint(FlightUtils.PureBlack())
+        .BuildImage();
+
+      inkWidgetBuilder.inkMask(n"mask")
+        .Reparent(this.m_pitch)
+        .Atlas(r"base\\gameplay\\gui\\quests\\q000\\aerondight_rayfield\\assets\\logo_and_mask.inkatlas")
+        .Part(n"Maska_textura")
+        // .Size(width, height)
+        // .Opacity(1.0)     
+        .FitToContent(true)
+        // .MaskTransparency(1.0)
+        // .NineSliceScale(true)
+        .Anchor(0.5, 0.5)
+        // .InvertMask(true)
+        .Anchor(inkEAnchor.Centered)
+        // .MaskSource(inkMaskDataSource.TextureAtlas)
+        .BuildMask();
+      // mask.SetDynamicTextureMask(n"fill");
+      // mask.SetEffectEnabled(inkEffectType.Mask, n"Mask_0", true);
+      // mask.SetEffectParamValue(inkEffectType.Mask, n"Mask_0", n"opacity", 1.0);
+
+      // FlightLog.Info("Does arrow_cell_bg exist on the mask atlas? " + ToString(mask.IsTexturePartExist(n"arrow_cell_bg")));
+
+      let markers = inkWidgetBuilder.inkCanvas(n"markers")
+        .Size(width, 180.0 * mark_scale)
+        .Reparent(this.m_pitch)
+        .Anchor(0.5, 0.5)
+        .Anchor(inkEAnchor.Centered)
+        .Margin(0.0, 0.0, 0.0, 0.0)
+        .BuildCanvas();
+      markers.CreateEffect(n"inkBoxBlurEffect", n"BoxBlur_0");
+      markers.SetEffectEnabled(inkEffectType.BoxBlur, n"BoxBlur_0", true);
+      markers.SetEffectParamValue(inkEffectType.BoxBlur, n"BoxBlur_0", n"intensity", 0.0);
+      markers.SetBlurDimension(n"BoxBlur_0", inkEBlurDimension.Vertical);
+      // markers.SetEffectEnabled(inkEffectType.Mask, n"Mask_0", true);
+		  // markers.SetRenderTransformPivot(new Vector2(0.0, 0.0));
+
+      let midbar_size = 16.0;
+      let marks: array<Float> = [-100.0, -90.0, -80.0, -70.0, -60.0, -50.0, -40.0, -30.0, -20.0, -10.0, 0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0];
+      let marks_inc: array<Float> = [-4.0, -3.0, -2.0, -1.0, 1.0, 2.0, 3.0, 4.0, 5.0];
+
+      inkWidgetBuilder.inkRectangle(n"m1_00000")
+        .Tint(FlightUtils.ElectricBlue())
+        // .Opacity(mark == 0.0 ? 1.0 : 0.5)
+        .Opacity(1.0)
+        .Reparent(markers)
+        .Size(width, 19.0)
+        .Anchor(0.0, 0.0)
+        .Translation(0.0, 90.0 * mark_scale - 20.0)
+        .BuildRectangle();
+
+      inkWidgetBuilder.inkRectangle(n"m1_00001")
+        .Tint(FlightUtils.ElectricBlue())
+        // .Opacity(mark == 0.0 ? 1.0 : 0.5)
+        .Opacity(1.0)
+        .Reparent(markers)
+        .Size(width, 19.0)
+        .Anchor(0.0, 1.0)
+        .Translation(0.0, 90.0 * mark_scale + 20.0)
+        .BuildRectangle();
+
+      // let text = inkWidgetBuilder.inkText(n"text")
+      //   .Reparent(markers)
+      //   .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily", n"Heavy")
+      //   .FontSize(16)
+      //   .Anchor(0.5, 0.5)
+      //   .Tint(FlightUtils.PureBlack())
+      //   .Text("LEVEL")
+      //   .Opacity(1.0)
+      //   .HAlign(inkEHorizontalAlign.Center)
+      //   .VAlign(inkEVerticalAlign.Center)
+      //   .Margin(0.0, 0.0, 0.0, 0.0)
+      //   .Translation(width / 2.0, 90.0 * mark_scale)
+      //   // .Overflow(textOverflowPolicy.AdjustToSize)
+      //   .BuildText();
+
+      for mark in marks {
+        if mark != 0.0 {
+          inkWidgetBuilder.inkText(n"text")
+            .Reparent(markers)
+            .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
+            .FontSize(20)
+            .Anchor(0.5, 0.5)
+            .Tint(FlightUtils.ElectricBlue())
+            .Text(FloatToStringPrec(AbsF(mark), 0))
+            .HAlign(inkEHorizontalAlign.Center)
+            .Margin(0.0, 0.0, 0.0, 0.0)
+            .Translation(width / 2.0, (mark + 90.0) * mark_scale)
+            // .Overflow(textOverflowPolicy.AdjustToSize)
+            .BuildText();
+
+          inkWidgetBuilder.inkRectangle(StringToName("m1_" + FloatToString(mark)))
+            .Tint(FlightUtils.ElectricBlue())
+            // .Opacity(mark == 0.0 ? 1.0 : 0.5)
+            .Size(midbar_size, 2.0)
+            .Anchor(0.0, 0.5)
+            .Translation(width - midbar_size, (mark + 90.0) * mark_scale)
+            .Reparent(markers)
+            .BuildRectangle();
+
+          inkWidgetBuilder.inkRectangle(StringToName("m2_" + FloatToString(mark)))
+            .Tint(FlightUtils.ElectricBlue())
+            // .Opacity(mark == 0.0 ? 1.0 : 0.5)
+            .Size(midbar_size, 2.0)
+            .Anchor(0.0, 0.5)
+            .Translation(0.0, (mark + 90.0) * mark_scale)
+            .Reparent(markers)
+            .BuildRectangle();
+        }
+        for mark_inc in marks_inc {
+          inkWidgetBuilder.inkRectangle(StringToName("m_" + FloatToString(mark + mark_inc)))
+            .Tint(FlightUtils.ElectricBlue())
+            .Opacity(mark_inc == 5.0 ? 0.25 : 0.05)
+            .Size(width, 2.0)
+            .Anchor(0.0, 0.5)
+            .Translation(0.0, ((mark + 90.0) + mark_inc) * mark_scale)
+            .Reparent(markers)
+            .BuildRectangle();
+        }
+      } 
+  }
+
 
   protected cb func OnUninitialize() -> Bool {
     if IsDefined(this.m_vehicleBBUIActivId) {

@@ -50,7 +50,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   public let force: Vector4;
   public let torque: Vector4;
 
-  public let ui: wref<worlduiWidgetComponent>;
+  // public let ui: wref<worlduiWidgetComponent>;
   public let ui_info: wref<worlduiWidgetComponent>;
 
   protected final const func GetVehicle() -> wref<VehicleObject> {
@@ -104,6 +104,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     if this.active {
       this.Deactivate(true);
     }
+    this.hasUpdate = false;
   }
   
   // private final func RegisterInputListener() -> Void {
@@ -230,6 +231,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
         this.hasExploded = true;
         this.Deactivate(true);
       }
+      this.hasUpdate = false;
     }
   }
 
@@ -313,27 +315,36 @@ public class FlightComponent extends ScriptableDeviceComponent {
       }
       if this.hasExploded {
         this.Deactivate(true);
-        this.hasUpdate = false;
         return;
       } 
     }
     if timeDelta > 0.0 {
     // if IsDefined(this.helper) {
-      if this.isPlayerMounted {
-        this.sys.ctlr.OnUpdate(timeDelta);
-        let fc = this.sys.ctlr;
-        this.yaw = fc.yaw.GetValue();
-        this.roll = fc.roll.GetValue();
-        this.pitch = fc.pitch.GetValue();
-        this.lift = fc.lift.GetValue();
-        this.brake = fc.brake.GetValue();
-        this.surge = fc.surge.GetValue();
-        this.sway = fc.sway.GetValue();
+      if this.active {
+        if this.isPlayerMounted {
+          this.sys.ctlr.OnUpdate(timeDelta);
+          let fc = this.sys.ctlr;
+          this.yaw = fc.yaw.GetValue();
+          this.roll = fc.roll.GetValue();
+          this.pitch = fc.pitch.GetValue();
+          this.lift = fc.lift.GetValue();
+          this.brake = fc.brake.GetValue();
+          this.surge = fc.surge.GetValue();
+          this.sway = fc.sway.GetValue();
+        } else {
+          let v = this.GetVehicle();
+          this.surge = v.acceleration * 0.5 - v.deceleration * 0.1;
+          this.yaw = -v.turnX4;
+          this.brake = v.handbrake * 0.5;
+        }
       } else {
-        let v = this.GetVehicle();
-        this.surge = v.acceleration * 0.5 - v.deceleration * 0.1;
-        this.yaw = -v.turnX4;
-        this.brake = v.handbrake * 0.5;
+        this.yaw = 0.0;
+        this.roll = 0.0;
+        this.pitch = 0.0;
+        this.lift = 0.0;
+        this.brake = 0.0;
+        this.surge = 0.0;
+        this.sway = 0.0;
       }
 
       this.stats.UpdateDynamic();
@@ -646,7 +657,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
   public func ProcessImpact(impact: Float) {
     this.collisionTimer = FlightSettings.GetFloat(n"collisionRecoveryDelay") - impact;
-    this.ui.StartGlitching(impact, FlightSettings.GetFloat(n"collisionRecoveryDuration") + impact);
+    this.ui_info.StartGlitching(impact, FlightSettings.GetFloat(n"collisionRecoveryDuration") + impact);
   }
 
   public let audioUpdate: ref<FlightAudioUpdate>;

@@ -113,8 +113,7 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
           sc->slotIndexLookup.Emplace(slot->slotName, 3);
         }
 
-        auto scHandle = RED4ext::Handle<RED4ext::ent::SlotComponent>(sc);
-        entity->components.EmplaceBack(scHandle);
+        entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::SlotComponent>(sc));
       }
 
       {
@@ -136,18 +135,18 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
       }
 
       // UI
-      {
-        // MeshComponent
-        auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
+      //{
+      //  // MeshComponent
+      //  auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
 
-        RED4ext::CName mesh = "user\\jackhumbert\\meshes\\flight_ui.mesh";
-        mc->mesh.ref = mesh;
-        mc->name = "flight_screen";
-        mc->meshAppearance = "screen_ui";
+      //  RED4ext::CName mesh = "user\\jackhumbert\\meshes\\flight_ui.mesh";
+      //  mc->mesh.ref = mesh;
+      //  mc->name = "flight_screen";
+      //  mc->meshAppearance = "default";
 
-        auto mcHandle = RED4ext::Handle<RED4ext::ent::MeshComponent>(mc);
-        entity->components.EmplaceBack(mcHandle);
-      }
+      //  auto mcHandle = RED4ext::Handle<RED4ext::ent::MeshComponent>(mc);
+      //  entity->components.EmplaceBack(mcHandle);
+      //}
       //{
       //  // WorldWidgetComponent
       //  auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->AllocInstance();
@@ -174,10 +173,9 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
         mc->mesh.ref = mesh;
         mc->name = "flight_screen_info";
         mc->meshAppearance = "screen_ui";
-        mc->forcedLodDistance = RED4ext::ent::ForcedLodDistance::Vehicle;
+        mc->forcedLodDistance = RED4ext::ent::ForcedLodDistance::VehicleInterior;
 
-        auto mcHandle = RED4ext::Handle<RED4ext::ent::MeshComponent>(mc);
-        entity->components.EmplaceBack(mcHandle);
+        entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::MeshComponent>(mc));
       }
       {
         // WorldWidgetComponent
@@ -192,8 +190,7 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
         mtb->bindName = "flight_screen_info";
         wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
 
-        auto wwcHandle = RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc);
-        entity->components.EmplaceBack(wwcHandle);
+        entity->components.EmplaceBack(RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc));
       }
     }
 

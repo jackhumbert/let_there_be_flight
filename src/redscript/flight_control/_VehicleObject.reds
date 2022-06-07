@@ -13,7 +13,7 @@ protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> B
 protected cb func OnTakeControl(ri: EntityResolveComponentsInterface) -> Bool {
   //FlightLog.Info("[VehicleObject] OnTakeControl: " + this.GetDisplayName());
   this.m_flightComponent = EntityResolveComponentsInterface.GetComponent(ri, n"flightComponent") as FlightComponent;
-  this.m_flightComponent.ui = EntityResolveComponentsInterface.GetComponent(ri, n"flight_ui") as worlduiWidgetComponent;
+  // this.m_flightComponent.ui = EntityResolveComponentsInterface.GetComponent(ri, n"flight_ui") as worlduiWidgetComponent;
   this.m_flightComponent.ui_info = EntityResolveComponentsInterface.GetComponent(ri, n"flight_ui_info") as worlduiWidgetComponent;
   // this.m_flightComponent.Toggle(false);
   wrappedMethod(ri);
