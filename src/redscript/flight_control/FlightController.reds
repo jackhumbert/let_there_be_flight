@@ -1,5 +1,3 @@
-import Codeware.UI.*
-
 // public class FlightSettingsListener extends ConfigVarListener {
 
 //   private let m_ctrl: wref<FlightController>;

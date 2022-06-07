@@ -1,5 +1,3 @@
-import Codeware.UI.*
-
 public class vflightUIGameController extends inkHUDGameController {
 
   private let m_vehicleBlackboard: wref<IBlackboard>;
@@ -110,14 +108,14 @@ public class vflightUIGameController extends inkHUDGameController {
 		  .Size(174.0, 18.0)
       .Margin(20.0, 0.0, 0.0, 0.0)
 		  .Opacity(1.0)
-		  .Tint(ThemeColors.Bittersweet())
+		  .Tint(FlightUtils.Bittersweet())
 		  .Anchor(inkEAnchor.LeftFillVerticaly)
       .BuildImage();
 
     inkWidgetBuilder.inkImage(n"fluff")
       .Atlas(r"base\\gameplay\\gui\\fullscreen\\common\\general_fluff.inkatlas")
       .Part(n"fluff_01")
-      .Tint(ThemeColors.Bittersweet())
+      .Tint(FlightUtils.Bittersweet())
       .Opacity(1.0)
       .Margin(10.0, 0.0, 0.0, 0.0)
 		  .Size(174.0, 18.0)
@@ -128,7 +126,7 @@ public class vflightUIGameController extends inkHUDGameController {
     inkWidgetBuilder.inkImage(n"fluff2")
       .Atlas(r"base\\gameplay\\gui\\fullscreen\\common\\general_fluff.inkatlas")
       .Part(n"p20_sq_element")
-      .Tint(ThemeColors.Bittersweet())
+      .Tint(FlightUtils.Bittersweet())
       .Opacity(1.0)
       .Margin(10.0, 0.0, 0.0, 0.0)
 		  .Size(18.0, 18.0)
@@ -151,7 +149,7 @@ public class vflightUIGameController extends inkHUDGameController {
 		  .Part(n"tooltip_side_gap_flip")
 		  .NineSliceScale(true)
       .Margin(0.0, 0.0, 0.0, 20.0)
-		  .Tint(ThemeColors.ElectricBlue())
+		  .Tint(FlightUtils.ElectricBlue())
 		  .Opacity(1.0)
       .BuildImage();
     //  .BindProperty(n"tintColor", n"Briefings.BackgroundColour");
@@ -163,7 +161,7 @@ public class vflightUIGameController extends inkHUDGameController {
       .Part(n"frame_small_bg")
       .NineSliceScale(true)
       .Margin(20.0, 5.0, 10.0, 30.0)
-      .Tint(ThemeColors.PureBlack())
+      .Tint(FlightUtils.PureBlack())
       .Opacity(1.0)
       .BuildImage();
     
@@ -172,7 +170,7 @@ public class vflightUIGameController extends inkHUDGameController {
       .Font("base\\gameplay\\gui\\fonts\\arame\\arame.inkfontfamily")
       .FontSize(14)
       .LetterCase(textLetterCase.UpperCase)
-      .Tint(ThemeColors.ElectricBlue())
+      .Tint(FlightUtils.ElectricBlue())
       .Text("[  0.0000@0]  VDECO(LOW)   :0x09A00000 - 0x19A00000 (256MiB)")
       .Margin(30.0, 15.0, 0.0, 0.0)
       // .Overflow(textOverflowPolicy.AdjustToSize)
@@ -183,7 +181,7 @@ public class vflightUIGameController extends inkHUDGameController {
       .Font("base\\gameplay\\gui\\fonts\\arame\\arame.inkfontfamily")
       .FontSize(14)
       .LetterCase(textLetterCase.UpperCase)
-      .Tint(ThemeColors.ElectricBlue())
+      .Tint(FlightUtils.ElectricBlue())
       .Text("[  0.0000@0]  PPMGRO(HIGH) :0x07A00000 - 0x07000000 (46MiB)")
       .Margin(30.0, 35.0, 0.0, 0.0)
       // .Overflow(textOverflowPolicy.AdjustToSize)
@@ -194,7 +192,7 @@ public class vflightUIGameController extends inkHUDGameController {
       .Font("base\\gameplay\\gui\\fonts\\arame\\arame.inkfontfamily")
       .FontSize(14)
       .LetterCase(textLetterCase.UpperCase)
-      .Tint(ThemeColors.ElectricBlue())
+      .Tint(FlightUtils.ElectricBlue())
       .Text("[  0.0000@0]  VDIN10(LOW)  :0x19A00000 - 0x1AA00000 (16MiB)")
       .Margin(30.0, 55.0, 0.0, 0.0)
       // .Overflow(textOverflowPolicy.AdjustToSize)
@@ -204,7 +202,7 @@ public class vflightUIGameController extends inkHUDGameController {
       .Reparent(this.m_info)
       .Atlas(r"base\\gameplay\\gui\\fullscreen\\common\\general_fluff.inkatlas")
       .Part(n"fluff_06_L")
-      .Tint(ThemeColors.ElectricBlue())
+      .Tint(FlightUtils.ElectricBlue())
       .Opacity(1.0)
       .Margin(30.0, 100.0, 0.0, 0.0)
 		  .Size(23.0, 24.0)
@@ -215,7 +213,7 @@ public class vflightUIGameController extends inkHUDGameController {
       .Font("base\\gameplay\\gui\\fonts\\arame\\arame.inkfontfamily")
       .FontSize(18)
       .LetterCase(textLetterCase.UpperCase)
-      .Tint(ThemeColors.ElectricBlue())
+      .Tint(FlightUtils.ElectricBlue())
       .Text(" 1550.52,   850.68,    87.34")
       .Margin(60.0, 104.0, 0.0, 0.0)
       // .Overflow(textOverflowPolicy.AdjustToSize)

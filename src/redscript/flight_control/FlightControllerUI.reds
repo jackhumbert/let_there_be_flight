@@ -1,6 +1,3 @@
-import Codeware.UI.*
-// import Flexy.UI.*
-
 // handle this somewhere
 // this.m_tppBBConnectionId = this.m_activeVehicleUIBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this, n"OnCameraModeChanged");
 
@@ -70,7 +67,7 @@ public class FlightControllerUI extends inkCanvas {
 		//   .Size(24.0, 24.0)
     //   .Anchor(1.0, 0.5)
 		//   .Opacity(1.0)
-		//   .Tint(ThemeColors.ElectricBlue())
+		//   .Tint(FlightUtils.ElectricBlue())
     //   .BuildImage();
 
     // // wheel markers
@@ -82,7 +79,7 @@ public class FlightControllerUI extends inkCanvas {
 		//   .Size(24.0, 24.0)
     //   .Anchor(1.0, 0.5)
 		//   .Opacity(1.0)
-		//   .Tint(ThemeColors.ElectricBlue())
+		//   .Tint(FlightUtils.ElectricBlue())
     //   .BuildImage();
 
     // this.m_arrow_right = inkWidgetBuilder.inkImage(n"arrow_right")
@@ -92,7 +89,7 @@ public class FlightControllerUI extends inkCanvas {
 		//   .Size(24.0, 24.0)
     //   .Anchor(1.0, 0.5)
 		//   .Opacity(1.0)
-		//   .Tint(ThemeColors.ElectricBlue())
+		//   .Tint(FlightUtils.ElectricBlue())
     //   .BuildImage();
 
     // this.m_arrow_left_rear = inkWidgetBuilder.inkImage(n"arrow_left_rear")
@@ -102,7 +99,7 @@ public class FlightControllerUI extends inkCanvas {
 		//   .Size(24.0, 24.0)
     //   .Anchor(1.0, 0.5)
 		//   .Opacity(1.0)
-		//   .Tint(ThemeColors.ElectricBlue())
+		//   .Tint(FlightUtils.ElectricBlue())
     //   .BuildImage();
 
     // this.m_arrow_right_rear = inkWidgetBuilder.inkImage(n"arrow_right_rear")
@@ -112,7 +109,7 @@ public class FlightControllerUI extends inkCanvas {
 		//   .Size(24.0, 24.0)
     //   .Anchor(1.0, 0.5)
 		//   .Opacity(1.0)
-		//   .Tint(ThemeColors.ElectricBlue())
+		//   .Tint(FlightUtils.ElectricBlue())
     //   .BuildImage();
 
     // roll markers
@@ -130,7 +127,7 @@ public class FlightControllerUI extends inkCanvas {
     let points: array<Vector2>;
     for mark in marks {
       ArrayPush(this.m_roll_markers, inkWidgetBuilder.inkRectangle(StringToName("roll_marker_" + mark))
-        .Tint(ThemeColors.ElectricBlue())
+        .Tint(FlightUtils.ElectricBlue())
         .Opacity(1.0)
         .Size(3.0, (mark == 0) ? 50.0 : 30.0)
         .Anchor(0.5, 0.0)
@@ -153,8 +150,8 @@ public class FlightControllerUI extends inkCanvas {
       .ShapeVariant(inkEShapeVariant.FillAndBorder)
       .LineThickness(3.0)
       .FillOpacity(0.0)
-      .Tint(ThemeColors.ElectricBlue())
-      .BorderColor(ThemeColors.ElectricBlue())
+      .Tint(FlightUtils.ElectricBlue())
+      .BorderColor(FlightUtils.ElectricBlue())
       .BorderOpacity(1.0)
       .EndCapStyle(inkEEndCapStyle.SQUARE)
       .Visible(true)
@@ -167,14 +164,14 @@ public class FlightControllerUI extends inkCanvas {
       .Reparent(rulers)
       .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
       .FontSize(20)
-      .Tint(ThemeColors.ElectricBlue())
+      .Tint(FlightUtils.ElectricBlue())
       .Text("0.00")
 		  .Opacity(1.0)
       .Anchor(0.5, 0.0)
       .BuildText();
 
     inkWidgetBuilder.inkRectangle(n"roll_marker_top")
-      .Tint(ThemeColors.ElectricBlue())
+      .Tint(FlightUtils.ElectricBlue())
       .Opacity(1.0)
       .Size(3.0, 70.0)
       .Anchor(0.5, 0.0)
@@ -212,14 +209,14 @@ public class FlightControllerUI extends inkCanvas {
 		  .Size(174.0, 18.0)
       .Margin(20.0, 0.0, 0.0, 0.0)
 		  .Opacity(1.0)
-		  .Tint(ThemeColors.Bittersweet())
+		  .Tint(FlightUtils.Bittersweet())
 		  .Anchor(inkEAnchor.LeftFillVerticaly)
       .BuildImage();
 
     inkWidgetBuilder.inkImage(n"fluff")
       .Atlas(r"base\\gameplay\\gui\\fullscreen\\common\\general_fluff.inkatlas")
       .Part(n"fluff_01")
-      .Tint(ThemeColors.Bittersweet())
+      .Tint(FlightUtils.Bittersweet())
       .Opacity(1.0)
       .Margin(10.0, 0.0, 0.0, 0.0)
 		  .Size(174.0, 18.0)
@@ -230,7 +227,7 @@ public class FlightControllerUI extends inkCanvas {
     inkWidgetBuilder.inkImage(n"fluff2")
       .Atlas(r"base\\gameplay\\gui\\fullscreen\\common\\general_fluff.inkatlas")
       .Part(n"p20_sq_element")
-      .Tint(ThemeColors.Bittersweet())
+      .Tint(FlightUtils.Bittersweet())
       .Opacity(1.0)
       .Margin(10.0, 0.0, 0.0, 0.0)
 		  .Size(18.0, 18.0)
@@ -253,7 +250,7 @@ public class FlightControllerUI extends inkCanvas {
       .Part(n"frame_top_bg")
       .NineSliceScale(true)
       .Margin(0.0, 0.0, 0.0, 0.0)
-      .Tint(ThemeColors.PureBlack())
+      .Tint(FlightUtils.PureBlack())
       .Opacity(0.1)
       .BuildImage();
     // .BindProperty(n"tintColor", n"Briefings.BackgroundColour");
@@ -265,7 +262,7 @@ public class FlightControllerUI extends inkCanvas {
 		  .Part(n"smartFrameTopLeft")
 		  .NineSliceScale(true)
       .Margin(new inkMargin(0.0, 0.0, 0.0, 0.0))
-		  .Tint(ThemeColors.ElectricBlue())
+		  .Tint(FlightUtils.ElectricBlue())
 		  .Opacity(1.0)
       .BuildImage();
     //  .BindProperty(n"tintColor", n"Briefings.BackgroundColour");
@@ -275,7 +272,7 @@ public class FlightControllerUI extends inkCanvas {
       .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
       .FontSize(20)
       .LetterCase(textLetterCase.UpperCase)
-      .Tint(ThemeColors.ElectricBlue())
+      .Tint(FlightUtils.ElectricBlue())
       .Text("You shouldn't see this!")
       .Margin(20.0, 15.0, 0.0, 0.0)
       // .Overflow(textOverflowPolicy.AdjustToSize)
@@ -286,7 +283,7 @@ public class FlightControllerUI extends inkCanvas {
       .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
       .FontSize(20)
       .LetterCase(textLetterCase.UpperCase)
-      .Tint(ThemeColors.ElectricBlue())
+      .Tint(FlightUtils.ElectricBlue())
       .Text("You shouldn't see this!")
       .Margin(20.0, 40.0, 0.0, 0.0)
       // .Overflow(textOverflowPolicy.AdjustToSize)
@@ -347,7 +344,7 @@ public class FlightControllerUI extends inkCanvas {
         .Anchor(inkEAnchor.CenterLeft)
         .Margin(-15.0, 0.0, 0.0, 0.0)
         .Opacity(1.0)
-        .Tint(ThemeColors.ElectricBlue())
+        .Tint(FlightUtils.ElectricBlue())
         .BuildImage();
         
       inkWidgetBuilder.inkText(n"fluff_text")
@@ -356,7 +353,7 @@ public class FlightControllerUI extends inkCanvas {
         .FontSize(12)
         .Anchor(0.0, 1.0)
         .Anchor(inkEAnchor.TopLeft)
-        .Tint(ThemeColors.Bittersweet())
+        .Tint(FlightUtils.Bittersweet())
         .Text("89V_PITCH")
         .HAlign(inkEHorizontalAlign.Left)
         .Margin(-14.0, -10.0, 0.0, 0.0)
@@ -373,7 +370,7 @@ public class FlightControllerUI extends inkCanvas {
         .Anchor(inkEAnchor.CenterFillVerticaly)
         .Translation(-2.5, 0.0)
         .Opacity(1.0)
-        .Tint(ThemeColors.ElectricBlue())
+        .Tint(FlightUtils.ElectricBlue())
         .BuildImage();
 
       inkWidgetBuilder.inkImage(n"fill")
@@ -386,7 +383,7 @@ public class FlightControllerUI extends inkCanvas {
         .Anchor(inkEAnchor.CenterFillVerticaly)
         .Translation(-2.5, 0.0)
         .Opacity(0.1)
-        .Tint(ThemeColors.PureBlack())
+        .Tint(FlightUtils.PureBlack())
         .BuildImage();
 
       inkWidgetBuilder.inkMask(n"mask")
@@ -428,7 +425,7 @@ public class FlightControllerUI extends inkCanvas {
       let marks_inc: array<Float> = [-4.0, -3.0, -2.0, -1.0, 1.0, 2.0, 3.0, 4.0, 5.0];
 
       inkWidgetBuilder.inkRectangle(n"m1_00000")
-        .Tint(ThemeColors.ElectricBlue())
+        .Tint(FlightUtils.ElectricBlue())
         // .Opacity(mark == 0.0 ? 1.0 : 0.5)
         .Opacity(1.0)
         .Reparent(markers)
@@ -438,7 +435,7 @@ public class FlightControllerUI extends inkCanvas {
         .BuildRectangle();
 
       inkWidgetBuilder.inkRectangle(n"m1_00001")
-        .Tint(ThemeColors.ElectricBlue())
+        .Tint(FlightUtils.ElectricBlue())
         // .Opacity(mark == 0.0 ? 1.0 : 0.5)
         .Opacity(1.0)
         .Reparent(markers)
@@ -452,7 +449,7 @@ public class FlightControllerUI extends inkCanvas {
       //   .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily", n"Heavy")
       //   .FontSize(16)
       //   .Anchor(0.5, 0.5)
-      //   .Tint(ThemeColors.PureBlack())
+      //   .Tint(FlightUtils.PureBlack())
       //   .Text("LEVEL")
       //   .Opacity(1.0)
       //   .HAlign(inkEHorizontalAlign.Center)
@@ -469,7 +466,7 @@ public class FlightControllerUI extends inkCanvas {
             .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
             .FontSize(20)
             .Anchor(0.5, 0.5)
-            .Tint(ThemeColors.ElectricBlue())
+            .Tint(FlightUtils.ElectricBlue())
             .Text(FloatToStringPrec(AbsF(mark), 0))
             .HAlign(inkEHorizontalAlign.Center)
             .Margin(0.0, 0.0, 0.0, 0.0)
@@ -478,7 +475,7 @@ public class FlightControllerUI extends inkCanvas {
             .BuildText();
 
           inkWidgetBuilder.inkRectangle(StringToName("m1_" + FloatToString(mark)))
-            .Tint(ThemeColors.ElectricBlue())
+            .Tint(FlightUtils.ElectricBlue())
             // .Opacity(mark == 0.0 ? 1.0 : 0.5)
             .Size(midbar_size, 2.0)
             .Anchor(0.0, 0.5)
@@ -487,7 +484,7 @@ public class FlightControllerUI extends inkCanvas {
             .BuildRectangle();
 
           inkWidgetBuilder.inkRectangle(StringToName("m2_" + FloatToString(mark)))
-            .Tint(ThemeColors.ElectricBlue())
+            .Tint(FlightUtils.ElectricBlue())
             // .Opacity(mark == 0.0 ? 1.0 : 0.5)
             .Size(midbar_size, 2.0)
             .Anchor(0.0, 0.5)
@@ -497,7 +494,7 @@ public class FlightControllerUI extends inkCanvas {
         }
         for mark_inc in marks_inc {
           inkWidgetBuilder.inkRectangle(StringToName("m_" + FloatToString(mark + mark_inc)))
-            .Tint(ThemeColors.ElectricBlue())
+            .Tint(FlightUtils.ElectricBlue())
             .Opacity(mark_inc == 5.0 ? 0.25 : 0.05)
             .Size(width, 2.0)
             .Anchor(0.0, 0.5)
@@ -521,7 +518,7 @@ public class FlightControllerUI extends inkCanvas {
       .Reparent(this.m_marks)
       .Atlas(r"base\\gameplay\\gui\\widgets\\crosshair\\master_crosshair.inkatlas")
       .Part(n"lockon-b")
-      .Tint(ThemeColors.ElectricBlue())
+      .Tint(FlightUtils.ElectricBlue())
       .Opacity(0.5)
       .Size(10.0, 10.0)
       .Anchor(0.5, 0.5)
@@ -534,7 +531,7 @@ public class FlightControllerUI extends inkCanvas {
       .Reparent(this.m_marks)
       .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
       .FontSize(20)
-      .Tint(ThemeColors.ElectricBlue())
+      .Tint(FlightUtils.ElectricBlue())
       .Opacity(0.2)
       .Anchor(0.0, 0.5)
       .Text(text)
@@ -692,8 +689,8 @@ public class FlightControllerUI extends inkCanvas {
   //     .ShapeVariant(inkEShapeVariant.FillAndBorder)
   //     .LineThickness(3.0)
   //     .FillOpacity(0.0)
-  //     .Tint(ThemeColors.ElectricBlue())
-  //     .BorderColor(ThemeColors.ElectricBlue())
+  //     .Tint(FlightUtils.ElectricBlue())
+  //     .BorderColor(FlightUtils.ElectricBlue())
   //     .BorderOpacity(0.1)
   //     .Visible(true)
   //     .BuildShape();

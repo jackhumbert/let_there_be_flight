@@ -60,7 +60,7 @@ uintptr_t __fastcall VehiclePhysicsUpdate(RED4ext::physics::VehiclePhysics *p, f
   auto rtti = RED4ext::CRTTISystem::Get();
   auto fcc = rtti->GetClass("FlightComponent");
   auto fc = GetFlightComponent(p);
-  auto activeProp = fcc->GetProperty("active");
+  auto activeProp = fcc->GetProperty("hasUpdate");
   if (activeProp->GetValue<bool>(fc) && p->parent->physicsStruct) {
     auto onUpdate = fcc->GetFunction("OnUpdate");
     auto args = RED4ext::CStackType(rtti->GetType("Float"), &deltaTime);

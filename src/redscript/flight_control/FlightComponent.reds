@@ -10,6 +10,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   public let m_vehicleTPPCallbackID: ref<CallbackHandle>;
 
   public let active: Bool;
+  public let hasUpdate: Bool;
   public let isPlayerMounted: Bool;
 
   let hoverGroundPID: ref<PID>;
@@ -286,6 +287,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
       }
       this.sys.audio.StartWithPitch("vehicle" + this.GetUniqueID(), "vehicle3_TPP", this.GetPitch());
       this.active = true;
+      this.hasUpdate = true;
     }
   }
 
@@ -311,6 +313,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
       }
       if this.hasExploded {
         this.Deactivate(true);
+        this.hasUpdate = false;
         return;
       } 
     }

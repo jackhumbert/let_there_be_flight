@@ -15,11 +15,11 @@
 #include <RED4ext/Scripting/Natives/Generated/physics/FilterData.hpp>
 #include "LoadResRef.hpp"
 
-RED4ext::ent::PhysicalMeshComponent *CreateThrusterEngine(RED4ext::CRTTISystem *rtti,
+RED4ext::ent::PhysicalMeshComponent *CreateThrusterEngine(RED4ext::CRTTISystem *rtti, RED4ext::CName mesh,
                                                           RED4ext::CName name, RED4ext::CName slot) {
-  RED4ext::CName mesh = "user\\jackhumbert\\meshes\\engine_corpo.mesh";
   auto mc = (RED4ext::ent::PhysicalMeshComponent *)rtti->GetClass("entPhysicalMeshComponent")->AllocInstance();
   mc->mesh.ref = mesh;
+  // not sure why this doesn't carry through
   //mc->isEnabled = false;
   mc->visualScale.X = 0.0;
   mc->visualScale.Y = 0.0;
@@ -118,19 +118,19 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
       }
 
       {
-        auto fl = CreateThrusterEngine(rtti, "ThrusterFL", "thruster_front_left");
+        auto fl = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterFL", "thruster_front_left");
         entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(fl));
         AddToController(rtti, vcc, fl);
 
-        auto fr = CreateThrusterEngine(rtti, "ThrusterFR", "thruster_front_right");
+        auto fr = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterFR", "thruster_front_right");
         entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(fr));
         AddToController(rtti, vcc, fr);
 
-        auto bl = CreateThrusterEngine(rtti, "ThrusterBL", "thruster_back_left");
+        auto bl = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterBL", "thruster_back_left");
         entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(bl));
         AddToController(rtti, vcc, bl);
 
-        auto br = CreateThrusterEngine(rtti, "ThrusterBR", "thruster_back_right");
+        auto br = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterBR", "thruster_back_right");
         entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(br));
         AddToController(rtti, vcc, br);
       }
