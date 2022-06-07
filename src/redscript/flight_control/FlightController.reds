@@ -379,7 +379,7 @@ public native class FlightController extends IScriptable {
           evt.mode = this.mode;
           GetMountedVehicle(this.player).QueueEvent(evt);
           this.ShowSimpleMessage(newMode.GetDescription() + " Enabled");
-          GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_menu_onpress");
+          GameInstance.GetAudioSystem(this.gameInstance).Play(n"ui_menu_onpress");
           this.SetupActions();
         }
         if Equals(actionName, n"FlightOptions_Left") && ListenerAction.IsButtonJustPressed(action) {
@@ -391,7 +391,7 @@ public native class FlightController extends IScriptable {
               this.ui.Hide();
               this.ShowSimpleMessage("Flight UI Hidden");
             }
-            GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_menu_onpress");
+            GameInstance.GetAudioSystem(this.gameInstance).Play(n"ui_menu_onpress");
         }
       }
       
@@ -610,10 +610,10 @@ public native class FlightController extends IScriptable {
 
 }
 
-@addMethod(AudioSystem)
-public final func PlayFlightSound(sound: CName) -> Void {
-  this.Play(sound);
-}
+// @addMethod(AudioSystem)
+// public final func PlayFlightSound(sound: CName) -> Void {
+//   this.Play(sound);
+// }
 
 @addField(PlayerPuppet)
 public let flightController: ref<FlightController>; // Must be strong reference

@@ -1,0 +1,10 @@
+Vehicle.VehicleDestructionParamsThrusterFL:
+  $base: Vehicle.VehicleDestructionParamsCaliburn_inline1 
+  components: [ n"ThrusterFL" ]
+  gridCells: [ 6, 7 ]
+  name: n"ThrusterFL" 
+  spawnsExplosionEffect: true 
+  threshold:  0.7 
+
+Vehicle.VehicleDestructionParamsCaliburn.detachableParts:
+  - !append Vehicle.VehicleDestructionParamsThrusterFL

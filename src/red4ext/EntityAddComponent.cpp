@@ -12,14 +12,21 @@
 #include <RED4ext/Scripting/Natives/Generated/WorldWidgetComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/HardTransformBinding.hpp>
 #include <RED4ext/Scripting/Natives/Generated/world/ui/MeshTargetBinding.hpp>
+#include <RED4ext/Scripting/Natives/Generated/physics/FilterData.hpp>
 #include "LoadResRef.hpp"
 
-RED4ext::ent::MeshComponent *CreateThrusterEngine(RED4ext::CRTTISystem *rtti,
+RED4ext::ent::PhysicalMeshComponent *CreateThrusterEngine(RED4ext::CRTTISystem *rtti,
                                                           RED4ext::CName name, RED4ext::CName slot) {
-  RED4ext::CName mesh = "user\\jackhumbert\\meshes\\engine.mesh";
-  auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
+  RED4ext::CName mesh = "user\\jackhumbert\\meshes\\engine_corpo.mesh";
+  auto mc = (RED4ext::ent::PhysicalMeshComponent *)rtti->GetClass("entPhysicalMeshComponent")->AllocInstance();
   mc->mesh.ref = mesh;
-  mc->isEnabled = false;
+  //mc->isEnabled = false;
+  mc->visualScale.X = 0.0;
+  mc->visualScale.Y = 0.0;
+  mc->visualScale.Z = 0.0;
+  mc->filterDataSource = RED4ext::physics::FilterDataSource::Collider;
+  auto filterData = (RED4ext::physics::FilterData *)rtti->GetClass("physicsFilterData")->AllocInstance();
+  mc->filterData = RED4ext::Handle<RED4ext::physics::FilterData>(filterData);
   mc->name = name;
   mc->motionBlurScale = 0.1;
   mc->meshAppearance = "default";
@@ -30,6 +37,16 @@ RED4ext::ent::MeshComponent *CreateThrusterEngine(RED4ext::CRTTISystem *rtti,
   htb->slotName = slot;
   mc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
   return mc;
+}
+
+void AddToController(RED4ext::CRTTISystem *rtti, RED4ext::ent::VisualControllerComponent *vcc,
+                     RED4ext::ent::MeshComponent *mc) {
+  auto vcd = reinterpret_cast<RED4ext::ent::VisualControllerDependency *>(
+      rtti->GetClass("entVisualControllerDependency")->AllocInstance());
+  vcd->appearanceName = mc->meshAppearance;
+  vcd->componentName = mc->name;
+  vcd->mesh.ref = mc->mesh.ref;
+  vcc->appearanceDependency.EmplaceBack(*vcd);
 }
 
 // 48 89 54 24 10 55 53 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 B8 FB FF FF 48 81 EC 48 05 00 00
@@ -48,133 +65,136 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
   } while (type = type->parent);
 
   if (isVehicle) {
-    {
-      // SlotComponent
-      auto sc = (RED4ext::ent::SlotComponent *)rtti->GetClass("entSlotComponent")->AllocInstance();
-      sc->name = "thruster_slots";
-      auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->AllocInstance();
-      htb->bindName = "deformation_rig";
-      sc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
-
-      {
-        auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
-        slot->boneName = "swingarm_front_left";
-        slot->slotName = "thruster_front_left";
-        sc->slots.EmplaceBack(*slot);
-        sc->slotIndexLookup.Emplace(slot->slotName, 0);
+    // entVisualControllerComponent
+    RED4ext::ent::VisualControllerComponent *vcc = NULL;
+    for (auto const &handle : entity->components) {
+      auto component = handle.GetPtr();
+      if (component->GetNativeType() == rtti->GetClass("entVisualControllerComponent")) {
+        vcc = reinterpret_cast<RED4ext::ent::VisualControllerComponent *>(component);
+        break;
       }
-      {
-        auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
-        slot->boneName = "swingarm_front_right";
-        slot->slotName = "thruster_front_right";
-        sc->slots.EmplaceBack(*slot);
-        sc->slotIndexLookup.Emplace(slot->slotName, 1);
-      }
-      {
-        auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
-        slot->boneName = "swingarm_back_left";
-        slot->slotName = "thruster_back_left";
-        sc->slots.EmplaceBack(*slot);
-        sc->slotIndexLookup.Emplace(slot->slotName, 2);
-      }
-      {
-        auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
-        slot->boneName = "swingarm_back_right";
-        slot->slotName = "thruster_back_right";
-        sc->slots.EmplaceBack(*slot);
-        sc->slotIndexLookup.Emplace(slot->slotName, 3);
-      }
-
-      auto scHandle = RED4ext::Handle<RED4ext::ent::SlotComponent>(sc);
-      entity->components.EmplaceBack(scHandle);
     }
-    {
-      for (auto const& handle : entity->components) {
-        auto component = handle.GetPtr();
-        if (component->GetNativeType() == rtti->GetClass("entVisualControllerComponent")) {
-          auto vcc = reinterpret_cast<RED4ext::ent::VisualControllerComponent *>(component);
-          auto vcd = reinterpret_cast<RED4ext::ent::VisualControllerDependency *>(rtti->GetClass("entVisualControllerDependency")->AllocInstance());
-          vcd->appearanceName = "default";
-          vcd->componentName = "ThrusterFL";
-          RED4ext::CName mesh =  "user\\jackhumbert\\meshes\\engine.mesh";
-          vcd->mesh.ref = mesh;
-          vcc->appearanceDependency.EmplaceBack(*vcd);
+
+    if (vcc != NULL) {
+      {
+        // SlotComponent
+        auto sc = (RED4ext::ent::SlotComponent *)rtti->GetClass("entSlotComponent")->AllocInstance();
+        sc->name = "thruster_slots";
+        auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->AllocInstance();
+        htb->bindName = "deformation_rig";
+        sc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
+
+        {
+          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+          slot->boneName = "swingarm_front_left";
+          slot->slotName = "thruster_front_left";
+          sc->slots.EmplaceBack(*slot);
+          sc->slotIndexLookup.Emplace(slot->slotName, 0);
         }
+        {
+          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+          slot->boneName = "swingarm_front_right";
+          slot->slotName = "thruster_front_right";
+          sc->slots.EmplaceBack(*slot);
+          sc->slotIndexLookup.Emplace(slot->slotName, 1);
+        }
+        {
+          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+          slot->boneName = "swingarm_back_left";
+          slot->slotName = "thruster_back_left";
+          sc->slots.EmplaceBack(*slot);
+          sc->slotIndexLookup.Emplace(slot->slotName, 2);
+        }
+        {
+          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+          slot->boneName = "swingarm_back_right";
+          slot->slotName = "thruster_back_right";
+          sc->slots.EmplaceBack(*slot);
+          sc->slotIndexLookup.Emplace(slot->slotName, 3);
+        }
+
+        auto scHandle = RED4ext::Handle<RED4ext::ent::SlotComponent>(sc);
+        entity->components.EmplaceBack(scHandle);
       }
-    }
-    {
-      auto fl = RED4ext::Handle<RED4ext::ent::MeshComponent>(
-          CreateThrusterEngine(rtti, "ThrusterFL", "thruster_front_left"));
-      entity->components.EmplaceBack(fl);
-      auto fr = RED4ext::Handle<RED4ext::ent::MeshComponent>(
-          CreateThrusterEngine(rtti, "ThrusterFR", "thruster_front_right"));
-      entity->components.EmplaceBack(fr);
-      auto bl = RED4ext::Handle<RED4ext::ent::MeshComponent>(
-          CreateThrusterEngine(rtti, "ThrusterBL", "thruster_back_left"));
-      entity->components.EmplaceBack(bl);
-      auto br = RED4ext::Handle<RED4ext::ent::MeshComponent>(
-          CreateThrusterEngine(rtti, "ThrusterBR", "thruster_back_right"));
-      entity->components.EmplaceBack(br);
-    }
 
-    // UI
-    {
-      // MeshComponent
-      auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
+      {
+        auto fl = CreateThrusterEngine(rtti, "ThrusterFL", "thruster_front_left");
+        entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(fl));
+        AddToController(rtti, vcc, fl);
 
-      RED4ext::CName mesh = "user\\jackhumbert\\meshes\\flight_ui.mesh";
-      mc->mesh.ref = mesh;
-      mc->name = "flight_screen";
-      mc->meshAppearance = "screen_ui";
+        auto fr = CreateThrusterEngine(rtti, "ThrusterFR", "thruster_front_right");
+        entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(fr));
+        AddToController(rtti, vcc, fr);
 
-      auto mcHandle = RED4ext::Handle<RED4ext::ent::MeshComponent>(mc);
-      entity->components.EmplaceBack(mcHandle);
-    }
-    //{
-    //  // WorldWidgetComponent
-    //  auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->AllocInstance();
+        auto bl = CreateThrusterEngine(rtti, "ThrusterBL", "thruster_back_left");
+        entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(bl));
+        AddToController(rtti, vcc, bl);
 
-    //  wwc->name = "flight_ui";
+        auto br = CreateThrusterEngine(rtti, "ThrusterBR", "thruster_back_right");
+        entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(br));
+        AddToController(rtti, vcc, br);
+      }
 
-    //  RED4ext::CName fc = "user\\jackhumbert\\widgets\\flight_ui.inkwidget";
-    //  wwc->widgetResource.ref = fc;
+      // UI
+      {
+        // MeshComponent
+        auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
 
-    //  auto mtb = (RED4ext::world::ui::MeshTargetBinding *)rtti->GetClass("worlduiMeshTargetBinding")->AllocInstance();
-    //  mtb->bindName = "flight_screen";
-    //  wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
+        RED4ext::CName mesh = "user\\jackhumbert\\meshes\\flight_ui.mesh";
+        mc->mesh.ref = mesh;
+        mc->name = "flight_screen";
+        mc->meshAppearance = "screen_ui";
 
-    //  auto wwcHandle = RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc);
-    //  entity->components.EmplaceBack(wwcHandle);
-    //}
+        auto mcHandle = RED4ext::Handle<RED4ext::ent::MeshComponent>(mc);
+        entity->components.EmplaceBack(mcHandle);
+      }
+      //{
+      //  // WorldWidgetComponent
+      //  auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->AllocInstance();
 
-    // UI Info Panel
-    {
-      // MeshComponent
-      auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
+      //  wwc->name = "flight_ui";
 
-      RED4ext::CName mesh = "user\\jackhumbert\\meshes\\flight_ui_info.mesh";
-      mc->mesh.ref = mesh;
-      mc->name = "flight_screen_info";
-      mc->meshAppearance = "screen_ui";
+      //  RED4ext::CName fc = "user\\jackhumbert\\widgets\\flight_ui.inkwidget";
+      //  wwc->widgetResource.ref = fc;
 
-      auto mcHandle = RED4ext::Handle<RED4ext::ent::MeshComponent>(mc);
-      entity->components.EmplaceBack(mcHandle);
-    }
-    {
-      // WorldWidgetComponent
-      auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->AllocInstance();
+      //  auto mtb = (RED4ext::world::ui::MeshTargetBinding
+      //  *)rtti->GetClass("worlduiMeshTargetBinding")->AllocInstance(); mtb->bindName = "flight_screen";
+      //  wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
 
-      wwc->name = "flight_ui_info";
+      //  auto wwcHandle = RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc);
+      //  entity->components.EmplaceBack(wwcHandle);
+      //}
 
-      RED4ext::CName fc = "user\\jackhumbert\\widgets\\flight_ui.inkwidget";
-      wwc->widgetResource.ref = fc;
-      wwc->spawnDistanceOverride = 20.0;
-      auto mtb = (RED4ext::world::ui::MeshTargetBinding *)rtti->GetClass("worlduiMeshTargetBinding")->AllocInstance();
-      mtb->bindName = "flight_screen_info";
-      wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
+      // UI Info Panel
+      {
+        // MeshComponent
+        auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
 
-      auto wwcHandle = RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc);
-      entity->components.EmplaceBack(wwcHandle);
+        RED4ext::CName mesh = "user\\jackhumbert\\meshes\\flight_ui_info.mesh";
+        mc->mesh.ref = mesh;
+        mc->name = "flight_screen_info";
+        mc->meshAppearance = "screen_ui";
+        mc->forcedLodDistance = RED4ext::ent::ForcedLodDistance::Vehicle;
+
+        auto mcHandle = RED4ext::Handle<RED4ext::ent::MeshComponent>(mc);
+        entity->components.EmplaceBack(mcHandle);
+      }
+      {
+        // WorldWidgetComponent
+        auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->AllocInstance();
+
+        wwc->name = "flight_ui_info";
+
+        RED4ext::CName fc = "user\\jackhumbert\\widgets\\flight_ui.inkwidget";
+        wwc->widgetResource.ref = fc;
+        wwc->spawnDistanceOverride = 20.0;
+        auto mtb = (RED4ext::world::ui::MeshTargetBinding *)rtti->GetClass("worlduiMeshTargetBinding")->AllocInstance();
+        mtb->bindName = "flight_screen_info";
+        wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
+
+        auto wwcHandle = RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc);
+        entity->components.EmplaceBack(wwcHandle);
+      }
     }
 
   }
@@ -315,6 +335,11 @@ struct EntityAddComponentModule : FlightModule {
     auto ipc = rtti->GetClass("entIPlacedComponent");
     ipc->RegisterFunction(RED4ext::CClassFunction::Create(ipc, "UpdateHardTransformBinding", "UpdateHardTransformBinding",
                                                           &IPlacedComponentUpdateHardTransformBinding, {.isNative = true}));
+
+    
+    auto mc = rtti->GetClass("entMeshComponent");
+    mc->props.EmplaceBack(RED4ext::CProperty::Create(rtti->GetType("Vector3"), "visualScale", nullptr, 0x178));
+
   }
 };
 
