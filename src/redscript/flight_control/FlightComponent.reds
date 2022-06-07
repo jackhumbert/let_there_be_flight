@@ -352,7 +352,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
       let force = new Vector4(0.0, 0.0, 0.0, 0.0);
       let torque = new Vector4(0.0, 0.0, 0.0, 0.0);
 
-      let shouldModeUpdate = true;
+      let shouldModeUpdate = this.active;
       if IsDefined(this.trick) {
         if this.trick.Update(timeDelta) {
           this.trick = null;

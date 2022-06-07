@@ -173,6 +173,7 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
         mc->mesh.ref = mesh;
         mc->name = "flight_screen_info";
         mc->meshAppearance = "screen_ui";
+        mc->renderingPlane = RED4ext::ERenderingPlane::RPl_Weapon;
         mc->forcedLodDistance = RED4ext::ent::ForcedLodDistance::VehicleInterior;
 
         entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::MeshComponent>(mc));
@@ -186,6 +187,7 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
         RED4ext::CName fc = "user\\jackhumbert\\widgets\\flight_ui.inkwidget";
         wwc->widgetResource.ref = fc;
         wwc->spawnDistanceOverride = 20.0;
+        wwc->sceneWidgetProperties.renderingPlane = RED4ext::ERenderingPlane::RPl_Weapon;
         auto mtb = (RED4ext::world::ui::MeshTargetBinding *)rtti->GetClass("worlduiMeshTargetBinding")->AllocInstance();
         mtb->bindName = "flight_screen_info";
         wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
