@@ -1,73 +1,28 @@
 public class vflightUIGameController extends inkHUDGameController {
-
   private let m_vehicleBlackboard: wref<IBlackboard>;
-
+  private let m_vehicleFlightBlackboard: wref<IBlackboard>;
   private let m_vehicle: wref<VehicleObject>;
-
   private let m_vehiclePS: ref<VehicleComponentPS>;
-
   private let m_vehicleBBStateConectionId: ref<CallbackHandle>;
-
   private let m_vehicleCollisionBBStateID: ref<CallbackHandle>;
-
+  private let m_vehiclePitchID: ref<CallbackHandle>;
+  private let m_vehiclePositionID: ref<CallbackHandle>;
   private let m_vehicleBBUIActivId: ref<CallbackHandle>;
-
   private let m_rootWidget: wref<inkWidget>;
-
   private let m_UIEnabled: Bool;
-
   private let m_startAnimProxy: ref<inkAnimProxy>;
-
   private let m_loopAnimProxy: ref<inkAnimProxy>;
-
   private let m_endAnimProxy: ref<inkAnimProxy>;
-
   private let m_loopingBootProxy: ref<inkAnimProxy>;
-
   private let m_speedometerWidget: inkWidgetRef;
-
   private let m_tachometerWidget: inkWidgetRef;
-
   private let m_timeWidget: inkWidgetRef;
-
   private let m_instruments: inkWidgetRef;
-
   private let m_gearBox: inkWidgetRef;
-
   private let m_radio: inkWidgetRef;
-
   private let m_analogTachWidget: inkWidgetRef;
-
   private let m_analogSpeedWidget: inkWidgetRef;
-
   private let m_isVehicleReady: Bool;
-
-  private final func SetupModule(widget: inkWidgetRef, vehicle: wref<VehicleObject>, vehBB: wref<IBlackboard>) -> Void {
-    FlightLog.Info("[vflightUIGameController] SetupModule");
-    let moduleController: wref<IVehicleModuleController>;
-    if !inkWidgetRef.IsValid(widget) {
-      return;
-    };
-    moduleController = inkWidgetRef.GetController(widget) as IVehicleModuleController;
-    if moduleController == null {
-      return;
-    };
-    // moduleController.RegisterCallbacks(vehicle, vehBB, this);
-  }
-
-  private final func UnregisterModule(widget: inkWidgetRef) -> Void {
-    let moduleController: wref<IVehicleModuleController>;
-    if !inkWidgetRef.IsValid(widget) {
-      return;
-    };
-    moduleController = inkWidgetRef.GetController(widget) as IVehicleModuleController;
-    if moduleController == null {
-      return;
-    };
-    moduleController.UnregisterCallbacks();
-  }
-
-  let m_info: ref<inkCanvas>;
 
   protected cb func OnInitialize() -> Bool {
     FlightLog.Info("[vflightUIGameController] OnInitialize");
@@ -75,6 +30,7 @@ public class vflightUIGameController extends inkHUDGameController {
     this.m_vehiclePS = this.m_vehicle.GetVehiclePS();
     this.m_rootWidget = this.GetRootWidget();
     this.m_vehicleBlackboard = this.m_vehicle.GetBlackboard();
+    this.m_vehicleFlightBlackboard = FlightController.GetInstance().GetBlackboard();
     if this.IsUIactive() {
       this.ActivateUI();
     };
@@ -83,7 +39,19 @@ public class vflightUIGameController extends inkHUDGameController {
         this.m_vehicleBBUIActivId = this.m_vehicleBlackboard.RegisterListenerBool(GetAllBlackboardDefs().Vehicle.IsUIActive, this, n"OnActivateUI");
       };
     };
+    
+    this.SetupInfoPanel();
+    this.SetupPitchDisplay();
+  }
 
+  private let m_info: ref<inkCanvas>;
+  private let m_position: ref<inkText>;
+
+  protected cb func OnVehiclePositionChanged(position: Vector4) -> Bool {
+    this.m_position.SetText(Vector4.ToStringPrec(position, 2));
+  }
+
+  private func SetupInfoPanel() {
     this.m_info = inkWidgetBuilder.inkCanvas(n"info")
       .Size(624.0, 200.0)
       .Reparent(this.GetRootCompoundWidget())
@@ -208,7 +176,7 @@ public class vflightUIGameController extends inkHUDGameController {
 		  .Size(23.0, 24.0)
       .BuildImage();
 
-    inkWidgetBuilder.inkText(n"position")
+    this.m_position = inkWidgetBuilder.inkText(n"position")
       .Reparent(this.m_info)
       .Font("base\\gameplay\\gui\\fonts\\arame\\arame.inkfontfamily")
       .FontSize(18)
@@ -219,13 +187,18 @@ public class vflightUIGameController extends inkHUDGameController {
       // .Overflow(textOverflowPolicy.AdjustToSize)
       .BuildText();
 
-
-    this.SetupPitchDisplay();
   }
 
-
-  public let m_pitch: ref<inkCanvas>;
+  private let m_pitch: ref<inkCanvas>;
+  private let m_pitchMarkers: ref<inkCanvas>;
+  private let m_lastPitchValue: Float;
   
+  protected cb func OnVehiclePitchChanged(pitch: Float) -> Bool {
+    this.m_pitchMarkers.SetTranslation(0.0, (pitch - 90.0) * 20.0);
+    this.m_pitchMarkers.SetEffectParamValue(inkEffectType.BoxBlur, n"BoxBlur_0", n"intensity", AbsF(pitch - this.m_lastPitchValue) * 0.001);
+    this.m_lastPitchValue = pitch;
+  }
+
   private func SetupPitchDisplay() -> Void {
 
       let mark_scale = 20.0;
@@ -239,7 +212,7 @@ public class vflightUIGameController extends inkHUDGameController {
         .Anchor(0.5, 0.5)
         .Margin(0.0, 0.0, 0.0, 0.0)
         .Translation(314.0, 320.0)
-        .Opacity(0.5)
+        // .Opacity(0.5)
         .BuildCanvas();
       // this.m_pitch.SetChildOrder(inkEChildOrder.Backward);
 
@@ -314,18 +287,19 @@ public class vflightUIGameController extends inkHUDGameController {
 
       // FlightLog.Info("Does arrow_cell_bg exist on the mask atlas? " + ToString(mask.IsTexturePartExist(n"arrow_cell_bg")));
 
-      let markers = inkWidgetBuilder.inkCanvas(n"markers")
+     this.m_pitchMarkers = inkWidgetBuilder.inkCanvas(n"markers")
         .Size(width, 180.0 * mark_scale)
         .Reparent(this.m_pitch)
         .Anchor(0.5, 0.5)
         .Anchor(inkEAnchor.Centered)
         .Margin(0.0, 0.0, 0.0, 0.0)
         .BuildCanvas();
-      markers.CreateEffect(n"inkBoxBlurEffect", n"BoxBlur_0");
-      markers.SetEffectEnabled(inkEffectType.BoxBlur, n"BoxBlur_0", true);
-      markers.SetEffectParamValue(inkEffectType.BoxBlur, n"BoxBlur_0", n"intensity", 0.0);
-      markers.SetBlurDimension(n"BoxBlur_0", inkEBlurDimension.Vertical);
-      // markers.SetEffectEnabled(inkEffectType.Mask, n"Mask_0", true);
+      this.m_pitchMarkers.CreateEffect(n"inkBoxBlurEffect", n"BoxBlur_0");
+      this.m_pitchMarkers.SetEffectEnabled(inkEffectType.BoxBlur, n"BoxBlur_0", true);
+      this.m_pitchMarkers.SetEffectParamValue(inkEffectType.BoxBlur, n"BoxBlur_0", n"intensity", 0.0);
+      this.m_pitchMarkers.SetBlurDimension(n"BoxBlur_0", inkEBlurDimension.Vertical);
+      // this.m_pitchMarkers.CreateEffect(n"inkMaskEffect", n"Mask_0");
+      // this.m_pitchMarkers.SetEffectEnabled(inkEffectType.Mask, n"Mask_0", true);
 		  // markers.SetRenderTransformPivot(new Vector2(0.0, 0.0));
 
       let midbar_size = 16.0;
@@ -336,7 +310,7 @@ public class vflightUIGameController extends inkHUDGameController {
         .Tint(FlightUtils.ElectricBlue())
         // .Opacity(mark == 0.0 ? 1.0 : 0.5)
         .Opacity(1.0)
-        .Reparent(markers)
+        .Reparent(this.m_pitchMarkers)
         .Size(width, 19.0)
         .Anchor(0.0, 0.0)
         .Translation(0.0, 90.0 * mark_scale - 20.0)
@@ -346,14 +320,14 @@ public class vflightUIGameController extends inkHUDGameController {
         .Tint(FlightUtils.ElectricBlue())
         // .Opacity(mark == 0.0 ? 1.0 : 0.5)
         .Opacity(1.0)
-        .Reparent(markers)
+        .Reparent(this.m_pitchMarkers)
         .Size(width, 19.0)
         .Anchor(0.0, 1.0)
         .Translation(0.0, 90.0 * mark_scale + 20.0)
         .BuildRectangle();
 
       // let text = inkWidgetBuilder.inkText(n"text")
-      //   .Reparent(markers)
+      //   .Reparent(this.m_pitchMarkers)
       //   .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily", n"Heavy")
       //   .FontSize(16)
       //   .Anchor(0.5, 0.5)
@@ -370,7 +344,7 @@ public class vflightUIGameController extends inkHUDGameController {
       for mark in marks {
         if mark != 0.0 {
           inkWidgetBuilder.inkText(n"text")
-            .Reparent(markers)
+            .Reparent(this.m_pitchMarkers)
             .Font("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily")
             .FontSize(20)
             .Anchor(0.5, 0.5)
@@ -388,7 +362,7 @@ public class vflightUIGameController extends inkHUDGameController {
             .Size(midbar_size, 2.0)
             .Anchor(0.0, 0.5)
             .Translation(width - midbar_size, (mark + 90.0) * mark_scale)
-            .Reparent(markers)
+            .Reparent(this.m_pitchMarkers)
             .BuildRectangle();
 
           inkWidgetBuilder.inkRectangle(StringToName("m2_" + FloatToString(mark)))
@@ -397,7 +371,7 @@ public class vflightUIGameController extends inkHUDGameController {
             .Size(midbar_size, 2.0)
             .Anchor(0.0, 0.5)
             .Translation(0.0, (mark + 90.0) * mark_scale)
-            .Reparent(markers)
+            .Reparent(this.m_pitchMarkers)
             .BuildRectangle();
         }
         for mark_inc in marks_inc {
@@ -407,12 +381,11 @@ public class vflightUIGameController extends inkHUDGameController {
             .Size(width, 2.0)
             .Anchor(0.0, 0.5)
             .Translation(0.0, ((mark + 90.0) + mark_inc) * mark_scale)
-            .Reparent(markers)
+            .Reparent(this.m_pitchMarkers)
             .BuildRectangle();
         }
       } 
   }
-
 
   protected cb func OnUninitialize() -> Bool {
     if IsDefined(this.m_vehicleBBUIActivId) {
@@ -433,7 +406,7 @@ public class vflightUIGameController extends inkHUDGameController {
   }
 
   protected cb func OnActivateUI(activate: Bool) -> Bool {
-    let evt: ref<VehicleUIactivateEvent> = new VehicleUIactivateEvent();
+    let evt: ref<VehicleFlightUIActivationEvent> = new VehicleFlightUIActivationEvent();
     if activate {
       evt.m_activate = true;
     } else {
@@ -442,7 +415,7 @@ public class vflightUIGameController extends inkHUDGameController {
     this.QueueEvent(evt);
   }
 
-  protected cb func OnActivateUIEvent(evt: ref<VehicleUIactivateEvent>) -> Bool {
+  protected cb func OnActivateUIEvent(evt: ref<VehicleFlightUIActivationEvent>) -> Bool {
     if evt.m_activate {
       this.ActivateUI();
     } else {
@@ -463,19 +436,19 @@ public class vflightUIGameController extends inkHUDGameController {
 
   private final func RegisterBlackBoardCallbacks() -> Void {
     if IsDefined(this.m_vehicleBlackboard) {
-      // this.SetupModule(this.m_speedometerWidget, this.m_vehicle, this.m_vehicleBlackboard);
-      // this.SetupModule(this.m_tachometerWidget, this.m_vehicle, this.m_vehicleBlackboard);
-      // this.SetupModule(this.m_timeWidget, this.m_vehicle, this.m_vehicleBlackboard);
-      // this.SetupModule(this.m_instruments, this.m_vehicle, this.m_vehicleBlackboard);
-      // this.SetupModule(this.m_gearBox, this.m_vehicle, this.m_vehicleBlackboard);
-      // this.SetupModule(this.m_radio, this.m_vehicle, this.m_vehicleBlackboard);
-      // this.SetupModule(this.m_analogTachWidget, this.m_vehicle, this.m_vehicleBlackboard);
-      // this.SetupModule(this.m_analogSpeedWidget, this.m_vehicle, this.m_vehicleBlackboard);
       if !IsDefined(this.m_vehicleBBStateConectionId) {
         this.m_vehicleBBStateConectionId = this.m_vehicleBlackboard.RegisterListenerInt(GetAllBlackboardDefs().Vehicle.VehicleState, this, n"OnVehicleStateChanged");
       };
       if !IsDefined(this.m_vehicleCollisionBBStateID) {
         this.m_vehicleCollisionBBStateID = this.m_vehicleBlackboard.RegisterListenerBool(GetAllBlackboardDefs().Vehicle.Collision, this, n"OnVehicleCollision");
+      };
+    }
+    if IsDefined(this.m_vehicleFlightBlackboard) {
+      if !IsDefined(this.m_vehiclePitchID) {
+        this.m_vehiclePitchID = this.m_vehicleFlightBlackboard.RegisterListenerFloat(GetAllBlackboardDefs().VehicleFlight.Pitch, this, n"OnVehiclePitchChanged");
+      };
+      if !IsDefined(this.m_vehiclePositionID) {
+        this.m_vehiclePositionID = this.m_vehicleFlightBlackboard.RegisterListenerVector4(GetAllBlackboardDefs().VehicleFlight.Position, this, n"OnVehiclePositionChanged");
       };
       this.InitializeWidgetStyleSheet(this.m_vehicle);
     };
@@ -483,19 +456,19 @@ public class vflightUIGameController extends inkHUDGameController {
 
   private final func UnregisterBlackBoardCallbacks() -> Void {
     if IsDefined(this.m_vehicleBlackboard) {
-      // this.UnregisterModule(this.m_speedometerWidget);
-      // this.UnregisterModule(this.m_tachometerWidget);
-      // this.UnregisterModule(this.m_timeWidget);
-      // this.UnregisterModule(this.m_instruments);
-      // this.UnregisterModule(this.m_gearBox);
-      // this.UnregisterModule(this.m_radio);
-      // this.UnregisterModule(this.m_analogTachWidget);
-      // this.UnregisterModule(this.m_analogSpeedWidget);
       if IsDefined(this.m_vehicleBBStateConectionId) {
         this.m_vehicleBlackboard.UnregisterListenerInt(GetAllBlackboardDefs().Vehicle.VehicleState, this.m_vehicleBBStateConectionId);
       };
       if IsDefined(this.m_vehicleCollisionBBStateID) {
         this.m_vehicleBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().Vehicle.Collision, this.m_vehicleCollisionBBStateID);
+      };
+    }
+    if IsDefined(this.m_vehicleFlightBlackboard) {
+      if IsDefined(this.m_vehiclePitchID) {
+        this.m_vehicleFlightBlackboard.UnregisterListenerFloat(GetAllBlackboardDefs().VehicleFlight.Pitch, this.m_vehiclePitchID);
+      };
+      if IsDefined(this.m_vehiclePositionID) {
+        this.m_vehicleFlightBlackboard.UnregisterListenerVector4(GetAllBlackboardDefs().VehicleFlight.Position, this.m_vehiclePositionID);
       };
     };
   }

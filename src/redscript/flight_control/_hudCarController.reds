@@ -29,11 +29,11 @@ private final func RegisterToVehicle(register: Bool) -> Void {
       if !IsDefined(this.m_flightControllerStatus) {
         this.m_flightControllerStatus = FlightController.HUDStatusSetup(this.GetRootCompoundWidget());
       }
-      this.m_flightActiveBBConnectionId = flightControllerBlackboard.RegisterListenerBool(GetAllBlackboardDefs().FlightControllerBB.IsActive, this, n"OnFlightActiveChanged");
-      this.m_flightModeBBConnectionId = flightControllerBlackboard.RegisterListenerInt(GetAllBlackboardDefs().FlightControllerBB.Mode, this, n"OnFlightModeChanged");
+      this.m_flightActiveBBConnectionId = flightControllerBlackboard.RegisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this, n"OnFlightActiveChanged");
+      this.m_flightModeBBConnectionId = flightControllerBlackboard.RegisterListenerInt(GetAllBlackboardDefs().VehicleFlight.Mode, this, n"OnFlightModeChanged");
     } else {
-      flightControllerBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().FlightControllerBB.IsActive, this.m_flightActiveBBConnectionId);
-      flightControllerBlackboard.UnregisterListenerInt(GetAllBlackboardDefs().FlightControllerBB.Mode, this.m_flightModeBBConnectionId);
+      flightControllerBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this.m_flightActiveBBConnectionId);
+      flightControllerBlackboard.UnregisterListenerInt(GetAllBlackboardDefs().VehicleFlight.Mode, this.m_flightModeBBConnectionId);
     };
   };
 }

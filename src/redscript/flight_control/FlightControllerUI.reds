@@ -540,8 +540,8 @@ public class FlightControllerUI extends inkCanvas {
   }
 
   public func Show() -> Void {
-    FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControllerBB.ShouldShowUI, true, true);
-    FlightController.GetInstance().GetBlackboard().SignalBool(GetAllBlackboardDefs().FlightControllerBB.ShouldShowUI);
+    FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, true, true);
+    FlightController.GetInstance().GetBlackboard().SignalBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive);
     
     let startValue = this.GetOpacity();
     let duration = 1.0 - startValue;
@@ -578,8 +578,8 @@ public class FlightControllerUI extends inkCanvas {
     if (FlightController.GetInstance().IsActive()) {
       this.HideInfo();
     } else {
-      FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControllerBB.ShouldShowUI, false, true);
-      FlightController.GetInstance().GetBlackboard().SignalBool(GetAllBlackboardDefs().FlightControllerBB.ShouldShowUI);
+      FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, false, true);
+      FlightController.GetInstance().GetBlackboard().SignalBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive);
     }
   }
 

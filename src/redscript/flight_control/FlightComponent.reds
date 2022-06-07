@@ -318,107 +318,113 @@ public class FlightComponent extends ScriptableDeviceComponent {
         return;
       } 
     }
-    if timeDelta > 0.0 {
-    // if IsDefined(this.helper) {
-      if this.active {
-        if this.isPlayerMounted {
-          this.sys.ctlr.OnUpdate(timeDelta);
-          let fc = this.sys.ctlr;
-          this.yaw = fc.yaw.GetValue();
-          this.roll = fc.roll.GetValue();
-          this.pitch = fc.pitch.GetValue();
-          this.lift = fc.lift.GetValue();
-          this.brake = fc.brake.GetValue();
-          this.surge = fc.surge.GetValue();
-          this.sway = fc.sway.GetValue();
-        } else {
-          let v = this.GetVehicle();
-          this.surge = v.acceleration * 0.5 - v.deceleration * 0.1;
-          this.yaw = -v.turnX4;
-          this.brake = v.handbrake * 0.5;
-        }
-      } else {
-        this.yaw = 0.0;
-        this.roll = 0.0;
-        this.pitch = 0.0;
-        this.lift = 0.0;
-        this.brake = 0.0;
-        this.surge = 0.0;
-        this.sway = 0.0;
-      }
-
+    if timeDelta <= 0.0 {
       this.stats.UpdateDynamic();
-
-      let force = new Vector4(0.0, 0.0, 0.0, 0.0);
-      let torque = new Vector4(0.0, 0.0, 0.0, 0.0);
-
-      let shouldModeUpdate = this.active;
-      if IsDefined(this.trick) {
-        if this.trick.Update(timeDelta) {
-          this.trick = null;
-        } else {
-          force += this.trick.force;
-          torque += this.trick.torque;
-          shouldModeUpdate = !this.trick.suspendMode;
-        }
+      this.UpdateAudioParams(1.0/60.0);
+      return;
+    }
+    if this.active {
+      if this.isPlayerMounted {
+        this.sys.ctlr.OnUpdate(timeDelta);
+        let fc = this.sys.ctlr;
+        this.yaw = fc.yaw.GetValue();
+        this.roll = fc.roll.GetValue();
+        this.pitch = fc.pitch.GetValue();
+        this.lift = fc.lift.GetValue();
+        this.brake = fc.brake.GetValue();
+        this.surge = fc.surge.GetValue();
+        this.sway = fc.sway.GetValue();
+      } else {
+        let v = this.GetVehicle();
+        this.surge = v.acceleration * 0.5 - v.deceleration * 0.1;
+        this.yaw = -v.turnX4;
+        this.brake = v.handbrake * 0.5;
       }
+    } else {
+      this.yaw = 0.0;
+      this.roll = 0.0;
+      this.pitch = 0.0;
+      this.lift = 0.0;
+      this.brake = 0.0;
+      this.surge = 0.0;
+      this.sway = 0.0;
+    }
 
-      if this.mode < ArraySize(this.modes) {
-        if shouldModeUpdate {
-          this.modes[this.mode].Update(timeDelta);
-          force += this.modes[this.mode].force;
-          torque += this.modes[this.mode].torque;
-        }
+    this.stats.UpdateDynamic();
+
+    let force = new Vector4(0.0, 0.0, 0.0, 0.0);
+    let torque = new Vector4(0.0, 0.0, 0.0, 0.0);
+
+    let shouldModeUpdate = this.active;
+    if IsDefined(this.trick) {
+      if this.trick.Update(timeDelta) {
+        this.trick = null;
+      } else {
+        force += this.trick.force;
+        torque += this.trick.torque;
+        shouldModeUpdate = !this.trick.suspendMode;
       }
+    }
 
-      this.smoothForce = Vector4.Interpolate(this.smoothForce, force, 0.99);
-      this.smoothTorque = Vector4.Interpolate(this.smoothTorque, torque, 0.99);
-
-      // process user-inputted force/torque in visuals/audio
-      this.fx.Update(force, torque);
-      this.UpdateAudioParams(timeDelta, force, torque);
-      
-      // apply physics helpers
-      if this.mode < ArraySize(this.modes) {
-        this.modes[this.mode].ApplyPhysics(timeDelta);
+    if this.mode < ArraySize(this.modes) {
+      if shouldModeUpdate {
+        this.modes[this.mode].Update(timeDelta);
         force += this.modes[this.mode].force;
         torque += this.modes[this.mode].torque;
       }
-
-      force *= timeDelta;
-      // factor in mass
-      force *= this.stats.s_mass;
-      // convet to global
-      force = this.stats.d_orientation * force;
-
-      torque *= timeDelta;
-      // factor in interia tensor - maybe half?
-      let it = this.GetVehicle().GetInertiaTensor();
-      torque.X *= it.X.X;
-      // torque.X *= SqrtF(it.X.X) * 20.0;
-      torque.Y *= it.Y.Y;
-      // torque.Y *= SqrtF(it.Y.Y) * 20.0;
-      torque.Z *= it.Z.Z;
-      // torque.Z *= SqrtF(it.Z.Z) * 20.0;
-      // convert to global
-      torque = this.stats.d_orientation * torque;
-      
-      if this.collisionTimer < FlightSettings.GetFloat(n"collisionRecoveryDelay") + FlightSettings.GetFloat(n"collisionRecoveryDuration") {
-        let collisionDampener = MinF(MaxF(0.0, (this.collisionTimer - FlightSettings.GetFloat(n"collisionRecoveryDelay")) / FlightSettings.GetFloat(n"collisionRecoveryDuration")), 1.0);
-        torque *= collisionDampener;
-        force *= collisionDampener;
-        this.collisionTimer += timeDelta;
-      }
-
-      // this.helper.force = this.helper.force + force;
-      // this.helper.torque = this.helper.torque + torque;
-      this.force += force;
-      this.torque += torque;
-    // }
-    } else {
-      this.stats.UpdateDynamic();
-      this.UpdateAudioParams(1.0/60.0);
     }
+
+    // this.smoothForce = Vector4.Interpolate(this.smoothForce, force, 0.99);
+    // this.smoothTorque = Vector4.Interpolate(this.smoothTorque, torque, 0.99);
+
+
+    // process user-inputted force/torque in visuals/audio
+    this.fx.Update(force, torque);
+    this.UpdateAudioParams(timeDelta, force, torque);
+    
+    if this.isPlayerMounted {
+      this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Force, force);
+      this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Torque, torque);
+      this.sys.ctlr.GetBlackboard().SetFloat(GetAllBlackboardDefs().VehicleFlight.Pitch, Vector4.GetAngleBetween(this.stats.d_forward, FlightUtils.Up()));
+      // this.sys.ctlr.GetBlackboard().SignalFloat(GetAllBlackboardDefs().VehicleFlight.Pitch);
+      this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Position, this.stats.d_position);
+      // this.sys.ctlr.GetBlackboard().SignalVector4(GetAllBlackboardDefs().VehicleFlight.Position);
+    }
+    
+    // apply physics helpers
+    if this.mode < ArraySize(this.modes) {
+      this.modes[this.mode].ApplyPhysics(timeDelta);
+      force += this.modes[this.mode].force;
+      torque += this.modes[this.mode].torque;
+    }
+
+    force *= timeDelta;
+    // factor in mass
+    force *= this.stats.s_mass;
+    // convet to global
+    force = this.stats.d_orientation * force;
+
+    torque *= timeDelta;
+    // factor in interia tensor - maybe half?
+    let it = this.GetVehicle().GetInertiaTensor();
+    torque.X *= it.X.X;
+    // torque.X *= SqrtF(it.X.X) * 20.0;
+    torque.Y *= it.Y.Y;
+    // torque.Y *= SqrtF(it.Y.Y) * 20.0;
+    torque.Z *= it.Z.Z;
+    // torque.Z *= SqrtF(it.Z.Z) * 20.0;
+    // convert to global
+    torque = this.stats.d_orientation * torque;
+    
+    if this.collisionTimer < FlightSettings.GetFloat(n"collisionRecoveryDelay") + FlightSettings.GetFloat(n"collisionRecoveryDuration") {
+      let collisionDampener = MinF(MaxF(0.0, (this.collisionTimer - FlightSettings.GetFloat(n"collisionRecoveryDelay")) / FlightSettings.GetFloat(n"collisionRecoveryDuration")), 1.0);
+      torque *= collisionDampener;
+      force *= collisionDampener;
+      this.collisionTimer += timeDelta;
+    }
+
+    this.force += force;
+    this.torque += torque;
   }
 
   protected cb func OnVehicleFlightDeactivationEvent(evt: ref<VehicleFlightDeactivationEvent>) -> Bool {

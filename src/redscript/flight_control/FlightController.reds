@@ -111,7 +111,7 @@ public native class FlightController extends IScriptable {
   }
 
   public const func GetBlackboard() -> ref<IBlackboard> {
-    return GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().FlightControllerBB);
+    return GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().VehicleFlight);
   }
   
   public static func CreateInstance(player: ref<PlayerPuppet>) {
@@ -122,11 +122,11 @@ public native class FlightController extends IScriptable {
 
     // This strong reference will tie the lifetime of the singleton 
     // to the lifetime of the player entity
-    player.flightController = self;
+    // player.flightController = self;
 
     // This weak reference is used as a global variable 
     // to access the mod instance anywhere
-    GetAllBlackboardDefs().flightController = self;
+    // GetAllBlackboardDefs().flightController = self;
     FlightLog.Info("[FlightController] CreateInstance Finished");
   }
   
@@ -208,8 +208,8 @@ public native class FlightController extends IScriptable {
     }
     
     FlightLog.Info("[FlightController] Activate");
-    this.GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControllerBB.IsActive, true, true);
-    this.GetBlackboard().SignalBool(GetAllBlackboardDefs().FlightControllerBB.IsActive);
+    this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsActive, true, true);
+    this.GetBlackboard().SignalBool(GetAllBlackboardDefs().VehicleFlight.IsActive);
   }
 
   private func Deactivate(silent: Bool) -> Void {
@@ -227,8 +227,8 @@ public native class FlightController extends IScriptable {
     }
 
     FlightLog.Info("[FlightController] Deactivate");
-    this.GetBlackboard().SetBool(GetAllBlackboardDefs().FlightControllerBB.IsActive, false, true);
-    this.GetBlackboard().SignalBool(GetAllBlackboardDefs().FlightControllerBB.IsActive);
+    this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsActive, false, true);
+    this.GetBlackboard().SignalBool(GetAllBlackboardDefs().VehicleFlight.IsActive);
   }  
 
   private func ShowMoreInfo() -> Void {
@@ -279,7 +279,7 @@ public native class FlightController extends IScriptable {
             uiSystem.QueueEvent(FlightController.ShowHintHelper("Tricks", n"Flight_Trick", n"FlightController"));
           }
           // we may want to look at something else besides this input so ForceBrakesUntilStoppedOrFor will work (not entirely sure it doesn't now)
-          // vehicle.GetBlackboard().GetInt(GetAllBlackboardDefs().Vehicle.IsHandbraking)
+          // vehicle.GetBlackboard().GetInt(GetAllBlackboardDefs().VehicleFlight.IsHandbraking)
           uiSystem.QueueEvent(FlightController.ShowHintHelper("Flight Options", n"Choice1_DualState", n"FlightController"));
         }
       } else {
@@ -371,8 +371,8 @@ public native class FlightController extends IScriptable {
         if Equals(actionName, n"FlightOptions_Up") && ListenerAction.IsButtonJustPressed(action) {
           let newMode = this.sys.playerComponent.GetNextFlightMode();
           this.mode = (this.mode + 1) % ArraySize(this.sys.playerComponent.modes);
-          this.GetBlackboard().SetInt(GetAllBlackboardDefs().FlightControllerBB.Mode, this.mode, true);
-          this.GetBlackboard().SignalInt(GetAllBlackboardDefs().FlightControllerBB.Mode);
+          this.GetBlackboard().SetInt(GetAllBlackboardDefs().VehicleFlight.Mode, this.mode, true);
+          this.GetBlackboard().SignalInt(GetAllBlackboardDefs().VehicleFlight.Mode);
           let evt = new VehicleFlightModeChangeEvent();
           evt.mode = this.mode;
           GetMountedVehicle(this.player).QueueEvent(evt);
@@ -383,10 +383,10 @@ public native class FlightController extends IScriptable {
         if Equals(actionName, n"FlightOptions_Left") && ListenerAction.IsButtonJustPressed(action) {
             this.showUI = !this.showUI;
             if (this.showUI) {
-              this.ui.Show();
+              this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, true, true);
               this.ShowSimpleMessage("Flight UI Shown");
             } else {
-              this.ui.Hide();
+              this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, false, true);
               this.ShowSimpleMessage("Flight UI Hidden");
             }
             GameInstance.GetAudioSystem(this.gameInstance).Play(n"ui_menu_onpress");
@@ -526,18 +526,18 @@ public native class FlightController extends IScriptable {
     //   return; 
     // }
 
-    if (this.showUI) { 
-      // this.navPath.Update();
-      this.ui.ClearMarks();
-    }
+    // if (this.showUI) { 
+    //   // this.navPath.Update();
+    //   this.ui.ClearMarks();
+    // }
 
     this.UpdateInputs(timeDelta);
 
-    if (this.showUI) {
-      this.ui.Update(timeDelta);
+    // if (this.showUI) {
+      // this.ui.Update(timeDelta);
       // this.ui.DrawMark(this.stats.d_visualPosition);
       // this.ui.DrawText(this.stats.d_visualPosition, FloatToStringPrec(1.0 / this.timeDelta, 4));
-    }
+    // }
 
     // this.timeDelta = timeDelta * 0.001 + this.timeDelta * 0.999;
   }
@@ -613,16 +613,16 @@ public native class FlightController extends IScriptable {
 //   this.Play(sound);
 // }
 
-@addField(PlayerPuppet)
-public let flightController: ref<FlightController>; // Must be strong reference
+// @addField(PlayerPuppet)
+// public let flightController: ref<FlightController>; // Must be strong reference
 
-@addMethod(PlayerPuppet)
-public func GetFlightController() -> ref<FlightController> {
-  return this.flightController;
-}
+// @addMethod(PlayerPuppet)
+// public func GetFlightController() -> ref<FlightController> {
+//   return this.flightController;
+// }
 
-@addField(AllBlackboardDefinitions)
-public let flightController: wref<FlightController>; // Must be weak reference
+// @addField(AllBlackboardDefinitions)
+// public let flightController: wref<FlightController>; // Must be weak reference
 
 // Option 2 -- Get the player instance as soon as it's ready
 @wrapMethod(PlayerPuppet)
@@ -642,21 +642,6 @@ protected cb func OnGameAttached() -> Bool {
 // protected const func EnterCondition(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
 //   return wrappedMethod(stateContext, scriptInterface) && !FlightController.GetInstance().IsActive();
 // }
-
-public class FlightControllerBBDef extends BlackboardDefinition {
-
-  public let IsActive: BlackboardID_Bool;
-  public let Mode: BlackboardID_Int;
-  public let ShouldShowUI: BlackboardID_Bool;
-
-  public const func AutoCreateInSystem() -> Bool {
-    return true;
-  }
-}
-
-@addField(AllBlackboardDefinitions)
-public let FlightControllerBB: ref<FlightControllerBBDef>;
-
 
 // might be good to replace this
 // @wrapMethod(ReactionManagerComponent)

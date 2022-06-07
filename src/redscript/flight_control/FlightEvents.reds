@@ -13,6 +13,11 @@ public class VehicleFlightDeactivationEvent extends vehicleFlightEvent {
   let silent: Bool;
 }
 
+public class VehicleFlightUIActivationEvent extends vehicleFlightEvent {
+  public let m_activate: Bool;
+}
+
+
 public class VehicleFlightModeChangeEvent extends vehicleFlightEvent {
   let mode: Int32;
 }
