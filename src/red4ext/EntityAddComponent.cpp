@@ -13,6 +13,7 @@
 #include <RED4ext/Scripting/Natives/Generated/ent/HardTransformBinding.hpp>
 #include <RED4ext/Scripting/Natives/Generated/world/ui/MeshTargetBinding.hpp>
 #include <RED4ext/Scripting/Natives/Generated/physics/FilterData.hpp>
+#include <RED4ext/Scripting/Natives/Generated/game/projectile/SpawnComponent.hpp>
 #include "LoadResRef.hpp"
 
 RED4ext::ent::PhysicalMeshComponent *CreateThrusterEngine(RED4ext::CRTTISystem *rtti, RED4ext::CName mesh,
@@ -194,6 +195,12 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
 
         entity->components.EmplaceBack(RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc));
       }
+      //{ 
+      //  auto gpsp = (RED4ext::game::projectile::SpawnComponent *)rtti->GetClass("gameprojectileSpawnComponent")->AllocInstance();
+      //  gpsp->name = "projectileSpawn8722";
+      //  gpsp->projectileTemplates.EmplaceBack("exploding_bullet");
+      //  entity->components.EmplaceBack(RED4ext::Handle<RED4ext::game::projectile::SpawnComponent>(gpsp));
+      //}
     }
 
   }
