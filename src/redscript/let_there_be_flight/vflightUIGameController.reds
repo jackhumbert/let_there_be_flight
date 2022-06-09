@@ -34,9 +34,9 @@ public class vflightUIGameController extends inkHUDGameController {
     if this.IsUIactive() {
       this.ActivateUI();
     };
-    if IsDefined(this.m_vehicleBlackboard) {
+    if IsDefined(this.m_vehicleFlightBlackboard) {
       if !IsDefined(this.m_vehicleBBUIActivId) {
-        this.m_vehicleBBUIActivId = this.m_vehicleBlackboard.RegisterListenerBool(GetAllBlackboardDefs().Vehicle.IsUIActive, this, n"OnActivateUI");
+        this.m_vehicleBBUIActivId = this.m_vehicleFlightBlackboard.RegisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, this, n"OnActivateUI");
       };
     };
     
@@ -77,30 +77,33 @@ public class vflightUIGameController extends inkHUDGameController {
       .Margin(20.0, 0.0, 0.0, 0.0)
 		  .Opacity(1.0)
 		  .Tint(FlightUtils.Bittersweet())
+      .Tint(n"Default.accent_color1")
 		  .Anchor(inkEAnchor.LeftFillVerticaly)
-      .BuildImage().BindProperty(n"tintColor", n"Default.accent_color1");
+      .BuildImage();
 
     inkWidgetBuilder.inkImage(n"fluff")
       .Atlas(r"base\\gameplay\\gui\\fullscreen\\common\\general_fluff.inkatlas")
       .Part(n"fluff_01")
       .Tint(FlightUtils.Bittersweet())
+      .Tint(n"Default.accent_color1")
       .Opacity(1.0)
       .Margin(10.0, 0.0, 0.0, 0.0)
 		  .Size(174.0, 18.0)
       .Anchor(inkEAnchor.LeftFillVerticaly)
       .Reparent(top)
-      .BuildImage().BindProperty(n"tintColor", n"Default.accent_color1");
+      .BuildImage();
 
     inkWidgetBuilder.inkImage(n"fluff2")
       .Atlas(r"base\\gameplay\\gui\\fullscreen\\common\\general_fluff.inkatlas")
       .Part(n"p20_sq_element")
       .Tint(FlightUtils.Bittersweet())
+      .Tint(n"Default.accent_color1")
       .Opacity(1.0)
       .Margin(10.0, 0.0, 0.0, 0.0)
 		  .Size(18.0, 18.0)
       .Anchor(inkEAnchor.LeftFillVerticaly)
       .Reparent(top)
-      .BuildImage().BindProperty(n"tintColor", n"Default.accent_color1");
+      .BuildImage();
 
     let panel = inkWidgetBuilder.inkFlex(n"panel")
       .Margin(0.0, 24.0, 0.0, 0.0)
@@ -118,8 +121,9 @@ public class vflightUIGameController extends inkHUDGameController {
 		  .NineSliceScale(true)
       .Margin(0.0, 0.0, 0.0, 20.0)
 		  .Tint(FlightUtils.ElectricBlue())
+      .Tint(n"Default.main")
 		  .Opacity(1.0)
-      .BuildImage().BindProperty(n"tintColor", n"Default.main");
+      .BuildImage();
     //  .BindProperty(n"tintColor", n"Briefings.BackgroundColour");
       
    inkWidgetBuilder.inkImage(n"background")
@@ -138,22 +142,24 @@ public class vflightUIGameController extends inkHUDGameController {
       .Font("base\\gameplay\\gui\\fonts\\arame\\arame.inkfontfamily")
       .FontSize(14)
       .LetterCase(textLetterCase.UpperCase)
-      // .Tint(FlightUtils.ElectricBlue())
+      .Tint(FlightUtils.ElectricBlue())
+        .Tint(n"Default.main")
       .Text("[  0.0000@0]  VDECO(LOW)   :0x09A00000 - 0x19A00000 (256MiB)")
       .Margin(30.0, 15.0, 0.0, 0.0)
       // .Overflow(textOverflowPolicy.AdjustToSize)
-      .BuildText().BindProperty(n"tintColor", n"Default.main");
+      .BuildText();
 
     inkWidgetBuilder.inkText(n"fluff_text2")
       .Reparent(panel)
       .Font("base\\gameplay\\gui\\fonts\\arame\\arame.inkfontfamily")
       .FontSize(14)
       .LetterCase(textLetterCase.UpperCase)
-      // .Tint(FlightUtils.ElectricBlue())
+      .Tint(FlightUtils.ElectricBlue())
+        .Tint(n"Default.main")
       .Text("[  0.0000@0]  PPMGRO(HIGH) :0x07A00000 - 0x07000000 (46MiB)")
       .Margin(30.0, 35.0, 0.0, 0.0)
       // .Overflow(textOverflowPolicy.AdjustToSize)
-      .BuildText().BindProperty(n"tintColor", n"Default.main");
+      .BuildText();
 
     inkWidgetBuilder.inkText(n"fluff_text3")
       .Reparent(panel)
@@ -161,20 +167,22 @@ public class vflightUIGameController extends inkHUDGameController {
       .FontSize(14)
       .LetterCase(textLetterCase.UpperCase)
       .Tint(FlightUtils.ElectricBlue())
+        .Tint(n"Default.main")
       .Text("[  0.0000@0]  VDIN10(LOW)  :0x19A00000 - 0x1AA00000 (16MiB)")
       .Margin(30.0, 55.0, 0.0, 0.0)
       // .Overflow(textOverflowPolicy.AdjustToSize)
-      .BuildText().BindProperty(n"tintColor", n"Default.main");
+      .BuildText();
 
     inkWidgetBuilder.inkImage(n"position_fluff")
       .Reparent(this.m_info)
       .Atlas(r"base\\gameplay\\gui\\fullscreen\\common\\general_fluff.inkatlas")
       .Part(n"fluff_06_L")
       .Tint(FlightUtils.ElectricBlue())
+        .Tint(n"Default.main")
       .Opacity(1.0)
       .Margin(30.0, 100.0, 0.0, 0.0)
 		  .Size(23.0, 24.0)
-      .BuildImage().BindProperty(n"tintColor", n"Default.main");
+      .BuildImage();
 
     this.m_position = inkWidgetBuilder.inkText(n"position")
       .Reparent(this.m_info)
@@ -182,11 +190,12 @@ public class vflightUIGameController extends inkHUDGameController {
       .FontSize(18)
       .LetterCase(textLetterCase.UpperCase)
       .Tint(FlightUtils.ElectricBlue())
+        .Tint(n"Default.main")
       .Text(" 1550.52,   850.68,    87.34")
       .Margin(60.0, 104.0, 0.0, 0.0)
       // .Overflow(textOverflowPolicy.AdjustToSize)
       .BuildText();
-    this.m_position.BindProperty(n"tintColor", n"Default.main");
+    this.m_position;
 
   }
 
@@ -227,7 +236,8 @@ public class vflightUIGameController extends inkHUDGameController {
         .Margin(-15.0, 0.0, 0.0, 0.0)
         .Opacity(1.0)
         .Tint(FlightUtils.ElectricBlue())
-        .BuildImage().BindProperty(n"tintColor", n"Default.main");
+        .Tint(n"Default.main")
+        .BuildImage();
         
       inkWidgetBuilder.inkText(n"fluff_text")
         .Reparent(this.m_pitch)
@@ -236,11 +246,12 @@ public class vflightUIGameController extends inkHUDGameController {
         .Anchor(0.0, 1.0)
         .Anchor(inkEAnchor.TopLeft)
         .Tint(FlightUtils.Bittersweet())
+        .Tint(n"Default.accent_color1")
         .Text("89V_PITCH")
         .HAlign(inkEHorizontalAlign.Left)
         .Margin(-14.0, -10.0, 0.0, 0.0)
         // .Overflow(textOverflowPolicy.AdjustToSize) pArrayType was nullptr.
-        .BuildText().BindProperty(n"tintColor", n"Default.accent_color1");
+        .BuildText();
 
       inkWidgetBuilder.inkImage(n"border")
         .Reparent(this.m_pitch)
@@ -253,7 +264,8 @@ public class vflightUIGameController extends inkHUDGameController {
         .Translation(-2.5, 0.0)
         .Opacity(1.0)
         .Tint(FlightUtils.ElectricBlue())
-        .BuildImage().BindProperty(n"tintColor", n"Default.main");
+        .Tint(n"Default.main")
+        .BuildImage();
 
       inkWidgetBuilder.inkImage(n"fill")
         .Reparent(this.m_pitch)
@@ -309,23 +321,25 @@ public class vflightUIGameController extends inkHUDGameController {
 
       inkWidgetBuilder.inkRectangle(n"m1_00000")
         .Tint(FlightUtils.Bittersweet())
+        .Tint(n"Default.accent_color1")
         // .Opacity(mark == 0.0 ? 1.0 : 0.5)
         .Opacity(1.0)
         .Reparent(this.m_pitchMarkers)
         .Size(width, 19.0)
         .Anchor(0.0, 0.0)
         .Translation(0.0, 90.0 * mark_scale - 20.0)
-        .BuildRectangle().BindProperty(n"tintColor", n"Default.accent_color1");
+        .BuildRectangle();
 
       inkWidgetBuilder.inkRectangle(n"m1_00001")
         .Tint(FlightUtils.Bittersweet())
+        .Tint(n"Default.accent_color1")
         // .Opacity(mark == 0.0 ? 1.0 : 0.5)
         .Opacity(1.0)
         .Reparent(this.m_pitchMarkers)
         .Size(width, 19.0)
         .Anchor(0.0, 1.0)
         .Translation(0.0, 90.0 * mark_scale + 20.0)
-        .BuildRectangle().BindProperty(n"tintColor", n"Default.accent_color1");
+        .BuildRectangle();
 
       // let text = inkWidgetBuilder.inkText(n"text")
       //   .Reparent(this.m_pitchMarkers)
@@ -350,47 +364,51 @@ public class vflightUIGameController extends inkHUDGameController {
             .FontSize(20)
             .Anchor(0.5, 0.5)
             .Tint(FlightUtils.ElectricBlue())
+            .Tint(n"Default.main")
             .Text(FloatToStringPrec(AbsF(mark), 0))
             .HAlign(inkEHorizontalAlign.Center)
             .Margin(0.0, 0.0, 0.0, 0.0)
             .Translation(width / 2.0, (mark + 90.0) * mark_scale)
             // .Overflow(textOverflowPolicy.AdjustToSize)
-            .BuildText().BindProperty(n"tintColor", n"Default.main");
+            .BuildText();
 
           inkWidgetBuilder.inkRectangle(StringToName("m1_" + FloatToString(mark)))
             .Tint(FlightUtils.ElectricBlue())
+            .Tint(n"Default.main")
             // .Opacity(mark == 0.0 ? 1.0 : 0.5)
             .Size(midbar_size, 2.0)
             .Anchor(0.0, 0.5)
             .Translation(width - midbar_size, (mark + 90.0) * mark_scale)
             .Reparent(this.m_pitchMarkers)
-            .BuildRectangle().BindProperty(n"tintColor", n"Default.main");
+            .BuildRectangle();
 
           inkWidgetBuilder.inkRectangle(StringToName("m2_" + FloatToString(mark)))
             .Tint(FlightUtils.ElectricBlue())
+            .Tint(n"Default.main")
             // .Opacity(mark == 0.0 ? 1.0 : 0.5)
             .Size(midbar_size, 2.0)
             .Anchor(0.0, 0.5)
             .Translation(0.0, (mark + 90.0) * mark_scale)
             .Reparent(this.m_pitchMarkers)
-            .BuildRectangle().BindProperty(n"tintColor", n"Default.main");
+            .BuildRectangle();
         }
         for mark_inc in marks_inc {
           inkWidgetBuilder.inkRectangle(StringToName("m_" + FloatToString(mark + mark_inc)))
             .Tint(FlightUtils.ElectricBlue())
-            .Opacity(mark_inc == 5.0 ? 0.25 : 0.05)
+            .Tint(n"Default.main")
+            .Opacity(mark_inc == 5.0 ? 0.5 : 0.1)
             .Size(width, 2.0)
             .Anchor(0.0, 0.5)
             .Translation(0.0, ((mark + 90.0) + mark_inc) * mark_scale)
             .Reparent(this.m_pitchMarkers)
-            .BuildRectangle().BindProperty(n"tintColor", n"Default.main");
+            .BuildRectangle();
         }
       } 
   }
 
   protected cb func OnUninitialize() -> Bool {
     if IsDefined(this.m_vehicleBBUIActivId) {
-      this.m_vehicleBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().Vehicle.IsUIActive, this.m_vehicleBBUIActivId);
+      this.m_vehicleFlightBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, this.m_vehicleBBUIActivId);
     };
     this.UnregisterBlackBoardCallbacks();
   }
@@ -475,7 +493,7 @@ public class vflightUIGameController extends inkHUDGameController {
   }
 
   private final func IsUIactive() -> Bool {
-    if IsDefined(this.m_vehicleBlackboard) && this.m_vehicleBlackboard.GetBool(GetAllBlackboardDefs().Vehicle.IsUIActive) {
+    if IsDefined(this.m_vehicleFlightBlackboard) && this.m_vehicleFlightBlackboard.GetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive) {
       return true;
     };
     return false;

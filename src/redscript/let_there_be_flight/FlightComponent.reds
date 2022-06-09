@@ -53,6 +53,14 @@ public class FlightComponent extends ScriptableDeviceComponent {
   // public let ui: wref<worlduiWidgetComponent>;
   public let ui_info: wref<worlduiWidgetComponent>;
 
+  private let uiBlackboard: wref<IBlackboard>;
+  private let menuCallback: ref<CallbackHandle>;
+  public let isInMenu: Bool;
+
+  private let uiGameDataBlackboard: wref<IBlackboard>;
+  private let popupCallback: ref<CallbackHandle>;
+  public let isPopupShown: Bool;
+
   protected final const func GetVehicle() -> wref<VehicleObject> {
     return this.GetEntity() as VehicleObject;
   }
@@ -65,7 +73,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     GameInstance.GetStatPoolsSystem(this.GetVehicle().GetGame()).RequestRegisteringListener(Cast(this.GetVehicle().GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     this.m_vehicleBlackboard = this.GetVehicle().GetBlackboard();
     // QuickhackModule.RequestRefreshQuickhackMenu(this.GetVehicle().GetGame(), this.GetVehicle().GetEntityID());
-    
+
     // this.hoverGroundPID = PID.Create(1.0, 0.01, 0.1);
     this.hoverGroundPID = PID.Create(1.0, 0.005, 0.5);
     this.hoverPID = PID.Create(1.0, 0.01, 0.1);
@@ -105,6 +113,21 @@ public class FlightComponent extends ScriptableDeviceComponent {
       this.Deactivate(true);
     }
     this.hasUpdate = false;
+    if IsDefined(this.uiBlackboard) && IsDefined(this.menuCallback) {
+      this.uiBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UI_System.IsInMenu, this.menuCallback);
+    }
+    if IsDefined(this.uiGameDataBlackboard) && IsDefined(this.popupCallback) {
+      this.uiGameDataBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown, this.popupCallback);
+    }
+  }
+
+  protected cb func OnIsInMenu(inMenu: Bool) -> Bool {
+    this.isInMenu = inMenu;
+    this.UpdateAudioParams(1.0/60.0);
+  }
+  protected cb func OnPopupIsShown(isShown: Bool) -> Bool {
+    this.isPopupShown = isShown;
+    this.UpdateAudioParams(1.0/60.0);
   }
   
   // private final func RegisterInputListener() -> Void {
@@ -255,6 +278,23 @@ public class FlightComponent extends ScriptableDeviceComponent {
     // this.helper = this.GetVehicle().AddFlightHelper();
     FlightLog.Info("[FlightComponent] OnVehicleFlightActivationEvent: " + this.GetVehicle().GetDisplayName());
     if !this.active {
+
+      this.uiBlackboard = GameInstance.GetBlackboardSystem(this.sys.ctlr.gameInstance).Get(GetAllBlackboardDefs().UI_System);
+      if IsDefined(this.uiBlackboard) {
+        if !IsDefined(this.menuCallback) {
+          this.menuCallback = this.uiBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UI_System.IsInMenu, this, n"OnIsInMenu");
+          this.isInMenu = this.uiBlackboard.GetBool(GetAllBlackboardDefs().UI_System.IsInMenu);
+        }
+      }
+
+      this.uiGameDataBlackboard = GameInstance.GetBlackboardSystem(this.sys.ctlr.gameInstance).Get(GetAllBlackboardDefs().UIGameData);
+      if IsDefined(this.uiGameDataBlackboard) {
+        if !IsDefined(this.popupCallback) {
+          this.popupCallback = this.uiGameDataBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown, this, n"OnPopupIsShown");
+          this.isPopupShown = this.uiGameDataBlackboard.GetBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown);
+        }
+      }
+
       this.stats = FlightStats.Create(this.GetVehicle());
       this.sys.ctlr.ui.Setup(this.stats);
 
@@ -719,7 +759,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     let windVolume = 0.6;
     // let engineVolume = (GameInstance.GetSettingsSystem(this.GetVehicle().GetGame()).GetVar(n"/audio/volume", n"MasterVolume") as ConfigVarListInt).GetValue();
     // let engineVolume *= (GameInstance.GetSettingsSystem(this.GetVehicle().GetGame()).GetVar(n"/audio/volume", n"SfxVolume") as ConfigVarListInt).GetValue();
-    if GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsPausedState() ||
+    if this.isPopupShown || this.isInMenu || GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsPausedState() ||
       GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsTimeDilationActive(n"HubMenu") || 
       GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsTimeDilationActive(n"WorldMap")
       {
@@ -729,9 +769,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
         // this.sys.audio.Update("playerVehicle", Vector4.EmptyVector(), engineVolume);
         this.sys.audio.Update("windLeft", Vector4.EmptyVector(), windVolume, this.audioUpdate);
         this.sys.audio.Update("windRight", Vector4.EmptyVector(), windVolume, this.audioUpdate);
-      } else {
-        this.sys.audio.Update("vehicle" + this.GetUniqueID(), Vector4.EmptyVector(), engineVolume, this.audioUpdate);
       }
+      this.sys.audio.Update("vehicle" + this.GetUniqueID(), Vector4.EmptyVector(), engineVolume, this.audioUpdate);
       if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() {
         this.sys.audio.Update("vehicleDestroyed" + this.GetUniqueID(), Vector4.EmptyVector(), engineVolume, this.audioUpdate);
       }

@@ -31,6 +31,11 @@ public class inkWidgetBuilder {
     return this;
   }
 
+  public func Tint(binding: CName) -> ref<inkWidgetBuilder> {
+    this.widget.BindProperty(n"tintColor", binding);
+    return this;
+  }
+
   public func Opacity(opacity: Float) -> ref<inkWidgetBuilder> {
     this.widget.SetOpacity(opacity);
     return this;

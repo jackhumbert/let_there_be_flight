@@ -256,7 +256,7 @@ public native class FlightController extends IScriptable {
         player.RegisterInputListener(this, n"SurgeNeg");
         player.RegisterInputListener(this, n"Flight_LinearBrake");
         player.RegisterInputListener(this, n"Flight_Trick");
-        player.RegisterInputListener(this, n"Choice1_DualState");
+        player.RegisterInputListener(this, n"Flight_Options");
         player.RegisterInputListener(this, n"FlightOptions_Up");
         player.RegisterInputListener(this, n"FlightOptions_Down");
         player.RegisterInputListener(this, n"FlightOptions_Left");
@@ -272,15 +272,15 @@ public native class FlightController extends IScriptable {
           uiSystem.QueueEvent(FlightController.ShowHintHelper("Pitch", n"Pitch", n"FlightController"));
           uiSystem.QueueEvent(FlightController.ShowHintHelper("Roll", n"Roll", n"FlightController"));
           uiSystem.QueueEvent(FlightController.ShowHintHelper("Lift", n"Lift", n"FlightController"));
-          if this.trick {
-            uiSystem.QueueEvent(FlightController.ShowHintHelper("Aileron Roll", n"Yaw", n"FlightController"));
-          } else {
+          // if this.trick {
+          //   uiSystem.QueueEvent(FlightController.ShowHintHelper("Aileron Roll", n"Yaw", n"FlightController"));
+          // } else {
             uiSystem.QueueEvent(FlightController.ShowHintHelper("Yaw", n"Yaw", n"FlightController"));
-            uiSystem.QueueEvent(FlightController.ShowHintHelper("Tricks", n"Flight_Trick", n"FlightController"));
-          }
+            // uiSystem.QueueEvent(FlightController.ShowHintHelper("Tricks", n"Flight_Trick", n"FlightController"));
+          // }
           // we may want to look at something else besides this input so ForceBrakesUntilStoppedOrFor will work (not entirely sure it doesn't now)
           // vehicle.GetBlackboard().GetInt(GetAllBlackboardDefs().VehicleFlight.IsHandbraking)
-          uiSystem.QueueEvent(FlightController.ShowHintHelper("Flight Options", n"Choice1_DualState", n"FlightController"));
+          uiSystem.QueueEvent(FlightController.ShowHintHelper("Flight Options", n"Flight_Options", n"FlightController"));
         }
       } else {
         uiSystem.QueueEvent(FlightController.ShowHintHelper("Enable Flight", n"Flight_Toggle", n"FlightController"));
@@ -318,7 +318,7 @@ public native class FlightController extends IScriptable {
         // ListenerActionConsumer.ConsumeSingleAction(consumer);
     // }
     if this.active {
-      if Equals(actionName, n"Choice1_DualState") {
+      if Equals(actionName, n"Flight_Options") {
         if ListenerAction.IsButtonJustPressed(action) {
           // FlightLog.Info("Options button pressed");
           this.showOptions = true;
@@ -335,8 +335,8 @@ public native class FlightController extends IScriptable {
           this.SetupActions();
         }
       }
-      if Equals(actionName, n"Flight_Trick") {
-        if ListenerAction.IsButtonJustPressed(action) {
+      // if Equals(actionName, n"Flight_Trick") {
+      //   if ListenerAction.IsButtonJustPressed(action) {
 
           // let attack: ref<Attack_GameEffect>;
           // let attackContext: AttackInitContext;
@@ -372,13 +372,13 @@ public native class FlightController extends IScriptable {
           //   this.sys.playerComponent.trick = FlightTrickAileronRoll.Create(this.sys.playerComponent, Cast<Float>(RoundF(direction)));
           // }
           // this.SetupActions();
-        }
-        if ListenerAction.IsButtonJustReleased(action) {
+        // }
+        // if ListenerAction.IsButtonJustReleased(action) {
           // FlightLog.Info("Options button released");
           // this.trick = false; 
           // this.SetupActions();
-        }
-      }
+        // }
+      // }
       if this.showOptions {
         // if Equals(actionName, n"FlightOptions_Up") && ListenerAction.IsButtonJustPressed(action) {
         //     this.hoverHeight += 0.1;
@@ -427,13 +427,13 @@ public native class FlightController extends IScriptable {
             this.surge.SetInput(value);
             break;
           case n"Yaw":
-            if this.trick {
-              if this.sys.playerComponent.trick == null  && AbsF(value) > 0.9 {
-                this.sys.playerComponent.trick = FlightTrickAileronRoll.Create(this.sys.playerComponent, Cast<Float>(RoundF(value)));
-              }
-              this.yaw.SetInput(0.0);
-              this.sway.SetInput(0.0);
-            } else {
+            // if this.trick {
+            //   if this.sys.playerComponent.trick == null  && AbsF(value) > 0.9 {
+            //     this.sys.playerComponent.trick = FlightTrickAileronRoll.Create(this.sys.playerComponent, Cast<Float>(RoundF(value)));
+            //   }
+            //   this.yaw.SetInput(0.0);
+            //   this.sway.SetInput(0.0);
+            // } else {
               if this.showOptions {
                 this.sway.SetInput(value);
                 this.yaw.SetInput(0.0);
@@ -441,7 +441,7 @@ public native class FlightController extends IScriptable {
                 this.sway.SetInput(0.0);
                 this.yaw.SetInput(value);
               }
-            }
+            // }
             break;
           case n"Lift":
             if this.trick {

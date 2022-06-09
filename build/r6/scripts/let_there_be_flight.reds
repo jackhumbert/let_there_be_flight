@@ -234,6 +234,14 @@ public class FlightComponent extends ScriptableDeviceComponent {
   // public let ui: wref<worlduiWidgetComponent>;
   public let ui_info: wref<worlduiWidgetComponent>;
 
+  private let uiBlackboard: wref<IBlackboard>;
+  private let menuCallback: ref<CallbackHandle>;
+  public let isInMenu: Bool;
+
+  private let uiGameDataBlackboard: wref<IBlackboard>;
+  private let popupCallback: ref<CallbackHandle>;
+  public let isPopupShown: Bool;
+
   protected final const func GetVehicle() -> wref<VehicleObject> {
     return this.GetEntity() as VehicleObject;
   }
@@ -246,7 +254,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     GameInstance.GetStatPoolsSystem(this.GetVehicle().GetGame()).RequestRegisteringListener(Cast(this.GetVehicle().GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     this.m_vehicleBlackboard = this.GetVehicle().GetBlackboard();
     // QuickhackModule.RequestRefreshQuickhackMenu(this.GetVehicle().GetGame(), this.GetVehicle().GetEntityID());
-    
+
     // this.hoverGroundPID = PID.Create(1.0, 0.01, 0.1);
     this.hoverGroundPID = PID.Create(1.0, 0.005, 0.5);
     this.hoverPID = PID.Create(1.0, 0.01, 0.1);
@@ -286,6 +294,21 @@ public class FlightComponent extends ScriptableDeviceComponent {
       this.Deactivate(true);
     }
     this.hasUpdate = false;
+    if IsDefined(this.uiBlackboard) && IsDefined(this.menuCallback) {
+      this.uiBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UI_System.IsInMenu, this.menuCallback);
+    }
+    if IsDefined(this.uiGameDataBlackboard) && IsDefined(this.popupCallback) {
+      this.uiGameDataBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown, this.popupCallback);
+    }
+  }
+
+  protected cb func OnIsInMenu(inMenu: Bool) -> Bool {
+    this.isInMenu = inMenu;
+    this.UpdateAudioParams(1.0/60.0);
+  }
+  protected cb func OnPopupIsShown(isShown: Bool) -> Bool {
+    this.isPopupShown = isShown;
+    this.UpdateAudioParams(1.0/60.0);
   }
   
   // private final func RegisterInputListener() -> Void {
@@ -436,6 +459,23 @@ public class FlightComponent extends ScriptableDeviceComponent {
     // this.helper = this.GetVehicle().AddFlightHelper();
     FlightLog.Info("[FlightComponent] OnVehicleFlightActivationEvent: " + this.GetVehicle().GetDisplayName());
     if !this.active {
+
+      this.uiBlackboard = GameInstance.GetBlackboardSystem(this.sys.ctlr.gameInstance).Get(GetAllBlackboardDefs().UI_System);
+      if IsDefined(this.uiBlackboard) {
+        if !IsDefined(this.menuCallback) {
+          this.menuCallback = this.uiBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UI_System.IsInMenu, this, n"OnIsInMenu");
+          this.isInMenu = this.uiBlackboard.GetBool(GetAllBlackboardDefs().UI_System.IsInMenu);
+        }
+      }
+
+      this.uiGameDataBlackboard = GameInstance.GetBlackboardSystem(this.sys.ctlr.gameInstance).Get(GetAllBlackboardDefs().UIGameData);
+      if IsDefined(this.uiGameDataBlackboard) {
+        if !IsDefined(this.popupCallback) {
+          this.popupCallback = this.uiGameDataBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown, this, n"OnPopupIsShown");
+          this.isPopupShown = this.uiGameDataBlackboard.GetBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown);
+        }
+      }
+
       this.stats = FlightStats.Create(this.GetVehicle());
       this.sys.ctlr.ui.Setup(this.stats);
 
@@ -900,7 +940,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     let windVolume = 0.6;
     // let engineVolume = (GameInstance.GetSettingsSystem(this.GetVehicle().GetGame()).GetVar(n"/audio/volume", n"MasterVolume") as ConfigVarListInt).GetValue();
     // let engineVolume *= (GameInstance.GetSettingsSystem(this.GetVehicle().GetGame()).GetVar(n"/audio/volume", n"SfxVolume") as ConfigVarListInt).GetValue();
-    if GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsPausedState() ||
+    if this.isPopupShown || this.isInMenu || GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsPausedState() ||
       GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsTimeDilationActive(n"HubMenu") || 
       GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsTimeDilationActive(n"WorldMap")
       {
@@ -910,9 +950,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
         // this.sys.audio.Update("playerVehicle", Vector4.EmptyVector(), engineVolume);
         this.sys.audio.Update("windLeft", Vector4.EmptyVector(), windVolume, this.audioUpdate);
         this.sys.audio.Update("windRight", Vector4.EmptyVector(), windVolume, this.audioUpdate);
-      } else {
-        this.sys.audio.Update("vehicle" + this.GetUniqueID(), Vector4.EmptyVector(), engineVolume, this.audioUpdate);
       }
+      this.sys.audio.Update("vehicle" + this.GetUniqueID(), Vector4.EmptyVector(), engineVolume, this.audioUpdate);
       if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() {
         this.sys.audio.Update("vehicleDestroyed" + this.GetUniqueID(), Vector4.EmptyVector(), engineVolume, this.audioUpdate);
       }
@@ -1436,7 +1475,7 @@ public native class FlightController extends IScriptable {
         player.RegisterInputListener(this, n"SurgeNeg");
         player.RegisterInputListener(this, n"Flight_LinearBrake");
         player.RegisterInputListener(this, n"Flight_Trick");
-        player.RegisterInputListener(this, n"Choice1_DualState");
+        player.RegisterInputListener(this, n"Flight_Options");
         player.RegisterInputListener(this, n"FlightOptions_Up");
         player.RegisterInputListener(this, n"FlightOptions_Down");
         player.RegisterInputListener(this, n"FlightOptions_Left");
@@ -1452,15 +1491,15 @@ public native class FlightController extends IScriptable {
           uiSystem.QueueEvent(FlightController.ShowHintHelper("Pitch", n"Pitch", n"FlightController"));
           uiSystem.QueueEvent(FlightController.ShowHintHelper("Roll", n"Roll", n"FlightController"));
           uiSystem.QueueEvent(FlightController.ShowHintHelper("Lift", n"Lift", n"FlightController"));
-          if this.trick {
-            uiSystem.QueueEvent(FlightController.ShowHintHelper("Aileron Roll", n"Yaw", n"FlightController"));
-          } else {
+          // if this.trick {
+          //   uiSystem.QueueEvent(FlightController.ShowHintHelper("Aileron Roll", n"Yaw", n"FlightController"));
+          // } else {
             uiSystem.QueueEvent(FlightController.ShowHintHelper("Yaw", n"Yaw", n"FlightController"));
-            uiSystem.QueueEvent(FlightController.ShowHintHelper("Tricks", n"Flight_Trick", n"FlightController"));
-          }
+            // uiSystem.QueueEvent(FlightController.ShowHintHelper("Tricks", n"Flight_Trick", n"FlightController"));
+          // }
           // we may want to look at something else besides this input so ForceBrakesUntilStoppedOrFor will work (not entirely sure it doesn't now)
           // vehicle.GetBlackboard().GetInt(GetAllBlackboardDefs().VehicleFlight.IsHandbraking)
-          uiSystem.QueueEvent(FlightController.ShowHintHelper("Flight Options", n"Choice1_DualState", n"FlightController"));
+          uiSystem.QueueEvent(FlightController.ShowHintHelper("Flight Options", n"Flight_Options", n"FlightController"));
         }
       } else {
         uiSystem.QueueEvent(FlightController.ShowHintHelper("Enable Flight", n"Flight_Toggle", n"FlightController"));
@@ -1498,7 +1537,7 @@ public native class FlightController extends IScriptable {
         // ListenerActionConsumer.ConsumeSingleAction(consumer);
     // }
     if this.active {
-      if Equals(actionName, n"Choice1_DualState") {
+      if Equals(actionName, n"Flight_Options") {
         if ListenerAction.IsButtonJustPressed(action) {
           // FlightLog.Info("Options button pressed");
           this.showOptions = true;
@@ -1515,8 +1554,8 @@ public native class FlightController extends IScriptable {
           this.SetupActions();
         }
       }
-      if Equals(actionName, n"Flight_Trick") {
-        if ListenerAction.IsButtonJustPressed(action) {
+      // if Equals(actionName, n"Flight_Trick") {
+      //   if ListenerAction.IsButtonJustPressed(action) {
 
           // let attack: ref<Attack_GameEffect>;
           // let attackContext: AttackInitContext;
@@ -1552,13 +1591,13 @@ public native class FlightController extends IScriptable {
           //   this.sys.playerComponent.trick = FlightTrickAileronRoll.Create(this.sys.playerComponent, Cast<Float>(RoundF(direction)));
           // }
           // this.SetupActions();
-        }
-        if ListenerAction.IsButtonJustReleased(action) {
+        // }
+        // if ListenerAction.IsButtonJustReleased(action) {
           // FlightLog.Info("Options button released");
           // this.trick = false; 
           // this.SetupActions();
-        }
-      }
+        // }
+      // }
       if this.showOptions {
         // if Equals(actionName, n"FlightOptions_Up") && ListenerAction.IsButtonJustPressed(action) {
         //     this.hoverHeight += 0.1;
@@ -1607,13 +1646,13 @@ public native class FlightController extends IScriptable {
             this.surge.SetInput(value);
             break;
           case n"Yaw":
-            if this.trick {
-              if this.sys.playerComponent.trick == null  && AbsF(value) > 0.9 {
-                this.sys.playerComponent.trick = FlightTrickAileronRoll.Create(this.sys.playerComponent, Cast<Float>(RoundF(value)));
-              }
-              this.yaw.SetInput(0.0);
-              this.sway.SetInput(0.0);
-            } else {
+            // if this.trick {
+            //   if this.sys.playerComponent.trick == null  && AbsF(value) > 0.9 {
+            //     this.sys.playerComponent.trick = FlightTrickAileronRoll.Create(this.sys.playerComponent, Cast<Float>(RoundF(value)));
+            //   }
+            //   this.yaw.SetInput(0.0);
+            //   this.sway.SetInput(0.0);
+            // } else {
               if this.showOptions {
                 this.sway.SetInput(value);
                 this.yaw.SetInput(0.0);
@@ -1621,7 +1660,7 @@ public native class FlightController extends IScriptable {
                 this.sway.SetInput(0.0);
                 this.yaw.SetInput(value);
               }
-            }
+            // }
             break;
           case n"Lift":
             if this.trick {
@@ -4013,6 +4052,11 @@ public class inkWidgetBuilder {
     return this;
   }
 
+  public func Tint(binding: CName) -> ref<inkWidgetBuilder> {
+    this.widget.BindProperty(n"tintColor", binding);
+    return this;
+  }
+
   public func Opacity(opacity: Float) -> ref<inkWidgetBuilder> {
     this.widget.SetOpacity(opacity);
     return this;
@@ -4771,9 +4815,9 @@ public class vflightUIGameController extends inkHUDGameController {
     if this.IsUIactive() {
       this.ActivateUI();
     };
-    if IsDefined(this.m_vehicleBlackboard) {
+    if IsDefined(this.m_vehicleFlightBlackboard) {
       if !IsDefined(this.m_vehicleBBUIActivId) {
-        this.m_vehicleBBUIActivId = this.m_vehicleBlackboard.RegisterListenerBool(GetAllBlackboardDefs().Vehicle.IsUIActive, this, n"OnActivateUI");
+        this.m_vehicleBBUIActivId = this.m_vehicleFlightBlackboard.RegisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, this, n"OnActivateUI");
       };
     };
     
@@ -4814,30 +4858,33 @@ public class vflightUIGameController extends inkHUDGameController {
       .Margin(20.0, 0.0, 0.0, 0.0)
 		  .Opacity(1.0)
 		  .Tint(FlightUtils.Bittersweet())
+      .Tint(n"Default.accent_color1")
 		  .Anchor(inkEAnchor.LeftFillVerticaly)
-      .BuildImage().BindProperty(n"tintColor", n"Default.accent_color1");
+      .BuildImage();
 
     inkWidgetBuilder.inkImage(n"fluff")
       .Atlas(r"base\\gameplay\\gui\\fullscreen\\common\\general_fluff.inkatlas")
       .Part(n"fluff_01")
       .Tint(FlightUtils.Bittersweet())
+      .Tint(n"Default.accent_color1")
       .Opacity(1.0)
       .Margin(10.0, 0.0, 0.0, 0.0)
 		  .Size(174.0, 18.0)
       .Anchor(inkEAnchor.LeftFillVerticaly)
       .Reparent(top)
-      .BuildImage().BindProperty(n"tintColor", n"Default.accent_color1");
+      .BuildImage();
 
     inkWidgetBuilder.inkImage(n"fluff2")
       .Atlas(r"base\\gameplay\\gui\\fullscreen\\common\\general_fluff.inkatlas")
       .Part(n"p20_sq_element")
       .Tint(FlightUtils.Bittersweet())
+      .Tint(n"Default.accent_color1")
       .Opacity(1.0)
       .Margin(10.0, 0.0, 0.0, 0.0)
 		  .Size(18.0, 18.0)
       .Anchor(inkEAnchor.LeftFillVerticaly)
       .Reparent(top)
-      .BuildImage().BindProperty(n"tintColor", n"Default.accent_color1");
+      .BuildImage();
 
     let panel = inkWidgetBuilder.inkFlex(n"panel")
       .Margin(0.0, 24.0, 0.0, 0.0)
@@ -4855,8 +4902,9 @@ public class vflightUIGameController extends inkHUDGameController {
 		  .NineSliceScale(true)
       .Margin(0.0, 0.0, 0.0, 20.0)
 		  .Tint(FlightUtils.ElectricBlue())
+      .Tint(n"Default.main")
 		  .Opacity(1.0)
-      .BuildImage().BindProperty(n"tintColor", n"Default.main");
+      .BuildImage();
     //  .BindProperty(n"tintColor", n"Briefings.BackgroundColour");
       
    inkWidgetBuilder.inkImage(n"background")
@@ -4875,22 +4923,24 @@ public class vflightUIGameController extends inkHUDGameController {
       .Font("base\\gameplay\\gui\\fonts\\arame\\arame.inkfontfamily")
       .FontSize(14)
       .LetterCase(textLetterCase.UpperCase)
-      // .Tint(FlightUtils.ElectricBlue())
+      .Tint(FlightUtils.ElectricBlue())
+        .Tint(n"Default.main")
       .Text("[  0.0000@0]  VDECO(LOW)   :0x09A00000 - 0x19A00000 (256MiB)")
       .Margin(30.0, 15.0, 0.0, 0.0)
       // .Overflow(textOverflowPolicy.AdjustToSize)
-      .BuildText().BindProperty(n"tintColor", n"Default.main");
+      .BuildText();
 
     inkWidgetBuilder.inkText(n"fluff_text2")
       .Reparent(panel)
       .Font("base\\gameplay\\gui\\fonts\\arame\\arame.inkfontfamily")
       .FontSize(14)
       .LetterCase(textLetterCase.UpperCase)
-      // .Tint(FlightUtils.ElectricBlue())
+      .Tint(FlightUtils.ElectricBlue())
+        .Tint(n"Default.main")
       .Text("[  0.0000@0]  PPMGRO(HIGH) :0x07A00000 - 0x07000000 (46MiB)")
       .Margin(30.0, 35.0, 0.0, 0.0)
       // .Overflow(textOverflowPolicy.AdjustToSize)
-      .BuildText().BindProperty(n"tintColor", n"Default.main");
+      .BuildText();
 
     inkWidgetBuilder.inkText(n"fluff_text3")
       .Reparent(panel)
@@ -4898,20 +4948,22 @@ public class vflightUIGameController extends inkHUDGameController {
       .FontSize(14)
       .LetterCase(textLetterCase.UpperCase)
       .Tint(FlightUtils.ElectricBlue())
+        .Tint(n"Default.main")
       .Text("[  0.0000@0]  VDIN10(LOW)  :0x19A00000 - 0x1AA00000 (16MiB)")
       .Margin(30.0, 55.0, 0.0, 0.0)
       // .Overflow(textOverflowPolicy.AdjustToSize)
-      .BuildText().BindProperty(n"tintColor", n"Default.main");
+      .BuildText();
 
     inkWidgetBuilder.inkImage(n"position_fluff")
       .Reparent(this.m_info)
       .Atlas(r"base\\gameplay\\gui\\fullscreen\\common\\general_fluff.inkatlas")
       .Part(n"fluff_06_L")
       .Tint(FlightUtils.ElectricBlue())
+        .Tint(n"Default.main")
       .Opacity(1.0)
       .Margin(30.0, 100.0, 0.0, 0.0)
 		  .Size(23.0, 24.0)
-      .BuildImage().BindProperty(n"tintColor", n"Default.main");
+      .BuildImage();
 
     this.m_position = inkWidgetBuilder.inkText(n"position")
       .Reparent(this.m_info)
@@ -4919,11 +4971,12 @@ public class vflightUIGameController extends inkHUDGameController {
       .FontSize(18)
       .LetterCase(textLetterCase.UpperCase)
       .Tint(FlightUtils.ElectricBlue())
+        .Tint(n"Default.main")
       .Text(" 1550.52,   850.68,    87.34")
       .Margin(60.0, 104.0, 0.0, 0.0)
       // .Overflow(textOverflowPolicy.AdjustToSize)
       .BuildText();
-    this.m_position.BindProperty(n"tintColor", n"Default.main");
+    this.m_position;
 
   }
 
@@ -4964,7 +5017,8 @@ public class vflightUIGameController extends inkHUDGameController {
         .Margin(-15.0, 0.0, 0.0, 0.0)
         .Opacity(1.0)
         .Tint(FlightUtils.ElectricBlue())
-        .BuildImage().BindProperty(n"tintColor", n"Default.main");
+        .Tint(n"Default.main")
+        .BuildImage();
         
       inkWidgetBuilder.inkText(n"fluff_text")
         .Reparent(this.m_pitch)
@@ -4973,11 +5027,12 @@ public class vflightUIGameController extends inkHUDGameController {
         .Anchor(0.0, 1.0)
         .Anchor(inkEAnchor.TopLeft)
         .Tint(FlightUtils.Bittersweet())
+        .Tint(n"Default.accent_color1")
         .Text("89V_PITCH")
         .HAlign(inkEHorizontalAlign.Left)
         .Margin(-14.0, -10.0, 0.0, 0.0)
         // .Overflow(textOverflowPolicy.AdjustToSize) pArrayType was nullptr.
-        .BuildText().BindProperty(n"tintColor", n"Default.accent_color1");
+        .BuildText();
 
       inkWidgetBuilder.inkImage(n"border")
         .Reparent(this.m_pitch)
@@ -4990,7 +5045,8 @@ public class vflightUIGameController extends inkHUDGameController {
         .Translation(-2.5, 0.0)
         .Opacity(1.0)
         .Tint(FlightUtils.ElectricBlue())
-        .BuildImage().BindProperty(n"tintColor", n"Default.main");
+        .Tint(n"Default.main")
+        .BuildImage();
 
       inkWidgetBuilder.inkImage(n"fill")
         .Reparent(this.m_pitch)
@@ -5046,23 +5102,25 @@ public class vflightUIGameController extends inkHUDGameController {
 
       inkWidgetBuilder.inkRectangle(n"m1_00000")
         .Tint(FlightUtils.Bittersweet())
+        .Tint(n"Default.accent_color1")
         // .Opacity(mark == 0.0 ? 1.0 : 0.5)
         .Opacity(1.0)
         .Reparent(this.m_pitchMarkers)
         .Size(width, 19.0)
         .Anchor(0.0, 0.0)
         .Translation(0.0, 90.0 * mark_scale - 20.0)
-        .BuildRectangle().BindProperty(n"tintColor", n"Default.accent_color1");
+        .BuildRectangle();
 
       inkWidgetBuilder.inkRectangle(n"m1_00001")
         .Tint(FlightUtils.Bittersweet())
+        .Tint(n"Default.accent_color1")
         // .Opacity(mark == 0.0 ? 1.0 : 0.5)
         .Opacity(1.0)
         .Reparent(this.m_pitchMarkers)
         .Size(width, 19.0)
         .Anchor(0.0, 1.0)
         .Translation(0.0, 90.0 * mark_scale + 20.0)
-        .BuildRectangle().BindProperty(n"tintColor", n"Default.accent_color1");
+        .BuildRectangle();
 
       // let text = inkWidgetBuilder.inkText(n"text")
       //   .Reparent(this.m_pitchMarkers)
@@ -5087,47 +5145,51 @@ public class vflightUIGameController extends inkHUDGameController {
             .FontSize(20)
             .Anchor(0.5, 0.5)
             .Tint(FlightUtils.ElectricBlue())
+            .Tint(n"Default.main")
             .Text(FloatToStringPrec(AbsF(mark), 0))
             .HAlign(inkEHorizontalAlign.Center)
             .Margin(0.0, 0.0, 0.0, 0.0)
             .Translation(width / 2.0, (mark + 90.0) * mark_scale)
             // .Overflow(textOverflowPolicy.AdjustToSize)
-            .BuildText().BindProperty(n"tintColor", n"Default.main");
+            .BuildText();
 
           inkWidgetBuilder.inkRectangle(StringToName("m1_" + FloatToString(mark)))
             .Tint(FlightUtils.ElectricBlue())
+            .Tint(n"Default.main")
             // .Opacity(mark == 0.0 ? 1.0 : 0.5)
             .Size(midbar_size, 2.0)
             .Anchor(0.0, 0.5)
             .Translation(width - midbar_size, (mark + 90.0) * mark_scale)
             .Reparent(this.m_pitchMarkers)
-            .BuildRectangle().BindProperty(n"tintColor", n"Default.main");
+            .BuildRectangle();
 
           inkWidgetBuilder.inkRectangle(StringToName("m2_" + FloatToString(mark)))
             .Tint(FlightUtils.ElectricBlue())
+            .Tint(n"Default.main")
             // .Opacity(mark == 0.0 ? 1.0 : 0.5)
             .Size(midbar_size, 2.0)
             .Anchor(0.0, 0.5)
             .Translation(0.0, (mark + 90.0) * mark_scale)
             .Reparent(this.m_pitchMarkers)
-            .BuildRectangle().BindProperty(n"tintColor", n"Default.main");
+            .BuildRectangle();
         }
         for mark_inc in marks_inc {
           inkWidgetBuilder.inkRectangle(StringToName("m_" + FloatToString(mark + mark_inc)))
             .Tint(FlightUtils.ElectricBlue())
+            .Tint(n"Default.main")
             .Opacity(mark_inc == 5.0 ? 0.25 : 0.05)
             .Size(width, 2.0)
             .Anchor(0.0, 0.5)
             .Translation(0.0, ((mark + 90.0) + mark_inc) * mark_scale)
             .Reparent(this.m_pitchMarkers)
-            .BuildRectangle().BindProperty(n"tintColor", n"Default.main");
+            .BuildRectangle();
         }
       } 
   }
 
   protected cb func OnUninitialize() -> Bool {
     if IsDefined(this.m_vehicleBBUIActivId) {
-      this.m_vehicleBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().Vehicle.IsUIActive, this.m_vehicleBBUIActivId);
+      this.m_vehicleFlightBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, this.m_vehicleBBUIActivId);
     };
     this.UnregisterBlackBoardCallbacks();
   }
@@ -5212,7 +5274,7 @@ public class vflightUIGameController extends inkHUDGameController {
   }
 
   private final func IsUIactive() -> Bool {
-    if IsDefined(this.m_vehicleBlackboard) && this.m_vehicleBlackboard.GetBool(GetAllBlackboardDefs().Vehicle.IsUIActive) {
+    if IsDefined(this.m_vehicleFlightBlackboard) && this.m_vehicleFlightBlackboard.GetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive) {
       return true;
     };
     return false;
