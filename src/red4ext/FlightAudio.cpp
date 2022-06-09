@@ -56,9 +56,9 @@ bool Load(RED4ext::CGameApplication *aApp) {
   ERRCHECK(coreSystem->setOutput(FMOD_OUTPUTTYPE_AUTODETECT));
 
   std::string bank_path =
-      (Utils::GetRootDir() / "red4ext" / "plugins" / "flight_control" / "base_sounds.bank").string();
+      (Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "base_sounds.bank").string();
   std::string strings_path =
-      (Utils::GetRootDir() / "red4ext" / "plugins" / "flight_control" / "base_sounds.strings.bank").string();
+      (Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "base_sounds.strings.bank").string();
   const char *bank = bank_path.c_str();
   const char *strings = strings_path.c_str();
   ERRCHECK(fmod_system->initialize(1024, FMOD_STUDIO_INIT_LIVEUPDATE,
