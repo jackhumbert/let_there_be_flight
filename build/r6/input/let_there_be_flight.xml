@@ -30,10 +30,8 @@
 
 		<action name="Flight_Trick" 		map="Flight_Trick" />
 		<action name="Flight_Options"		map="Flight_Options"/>
-		<action name="FlightOptions_Up"		map="UI_MoveUp"/>
-		<action name="FlightOptions_Right"	map="UI_MoveRight"/>
-		<action name="FlightOptions_Down"	map="UI_MoveDown"/>
-		<action name="FlightOptions_Left"	map="UI_MoveLeft"/>
+		<action name="Flight_UIToggle"	map="Flight_UIToggle"/>
+		<action name="Flight_ModeSwitch" map="Flight_ModeSwitch"/>
 		<action name="Roll"							map="Flight_Roll"/>
 		<action name="Pitch"						map="Flight_Pitch"/>
 		<!-- <action name="FlightCombat_Toggle"  map="FlightCombat_Toggle" /> -->
@@ -53,7 +51,6 @@
 		<action name="Flight_AngularBrake" map="Flight_AngularBrake" />
 		<action name="ZoomIn"						map="ZoomIn_Button"/>
 		<action name="ZoomOut"					map="ZoomOut_Button"/>
-		<action name="Flight_ModeSwitch" map="Flight_ModeSwitch"/>
 	</context>
 
 	<context name="VehicleFlightToggle">
@@ -87,7 +84,13 @@
 	</mapping>
 
 	<mapping name="Flight_ModeSwitch" type="Button">
+		<button id="IK_Pad_DigitLeft" />
 		<button id="IK_G" />
+	</mapping>
+
+	<mapping name="Flight_UIToggle" type="Button">
+		<button id="IK_Pad_DigitUp" />
+		<button id="IK_Y" />
 	</mapping>
 
 	<mapping name="Flight_LinearBrake" type="Button">
@@ -108,14 +111,14 @@
 
 	<mapping name="Flight_Pitch" type="Axis" >
 		<button id="IK_Pad_RightAxisY" />
-		<button id="IK_MouseWheelUp" val="1.0" overridableUI="vehicleFlightPitchForward" />
-		<button id="IK_MouseWheelDown" val="-1.0" overridableUI="vehicleFlightPitchBackward" />
+		<button id="IK_L" val="1.0" overridableUI="vehicleFlightPitchForward" />
+		<button id="IK_Period" val="-1.0" overridableUI="vehicleFlightPitchBackward" />
 	</mapping>
 
 	<mapping name="Flight_Roll" type="Axis" >
 		<button id="IK_Pad_RightAxisX" />
-		<button id="IK_E" val="1.0" overridableUI="vehicleFlightRollRight"/>
-		<button id="IK_Q" val="-1.0" overridableUI="vehicleFlightRollLeft"/>
+		<button id="IK_Comma" val="1.0" overridableUI="vehicleFlightRollRight"/>
+		<button id="IK_Slash" val="-1.0" overridableUI="vehicleFlightRollLeft"/>
 	</mapping>
 	
 	<mapping name="Flight_Lift" type="Axis" >

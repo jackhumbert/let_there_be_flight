@@ -1476,16 +1476,14 @@ public native class FlightController extends IScriptable {
         player.RegisterInputListener(this, n"Flight_LinearBrake");
         player.RegisterInputListener(this, n"Flight_Trick");
         player.RegisterInputListener(this, n"Flight_Options");
-        player.RegisterInputListener(this, n"FlightOptions_Up");
-        player.RegisterInputListener(this, n"FlightOptions_Down");
-        player.RegisterInputListener(this, n"FlightOptions_Left");
-        player.RegisterInputListener(this, n"FlightOptions_Right");
+        player.RegisterInputListener(this, n"Flight_UIToggle");
+        player.RegisterInputListener(this, n"Flight_ModeSwitch");
         if this.showOptions {
           uiSystem.QueueEvent(FlightController.ShowHintHelper("Sway", n"Yaw", n"FlightController"));
-          uiSystem.QueueEvent(FlightController.ShowHintHelper(this.sys.playerComponent.GetNextFlightMode().GetDescription(), n"FlightOptions_Up", n"FlightController"));
+          uiSystem.QueueEvent(FlightController.ShowHintHelper(this.sys.playerComponent.GetNextFlightMode().GetDescription(), n"Flight_ModeSwitch", n"FlightController"));
           // uiSystem.QueueEvent(FlightController.ShowHintHelper("Raise Hover Height", n"FlightOptions_Up", n"FlightController"));
           // uiSystem.QueueEvent(FlightController.ShowHintHelper("Lower Hover Height", n"FlightOptions_Down", n"FlightController"));
-          uiSystem.QueueEvent(FlightController.ShowHintHelper("Toggle UI", n"FlightOptions_Left", n"FlightController"));
+          uiSystem.QueueEvent(FlightController.ShowHintHelper("Toggle UI", n"Flight_UIToggle", n"FlightController"));
         } else {
           uiSystem.QueueEvent(FlightController.ShowHintHelper("Disable Flight", n"Flight_Toggle", n"FlightController"));
           uiSystem.QueueEvent(FlightController.ShowHintHelper("Pitch", n"Pitch", n"FlightController"));
@@ -1513,6 +1511,18 @@ public native class FlightController extends IScriptable {
     // this.surge.Reset(this.surge.GetValue() * MaxF(0.0, 1.0 - impact * 5.0));
   }
 
+  private func CycleMode(direction: Int32) -> Void {
+    let newMode = this.sys.playerComponent.GetNextFlightMode();
+    this.mode = (this.mode + 1) % ArraySize(this.sys.playerComponent.modes);
+    this.GetBlackboard().SetInt(GetAllBlackboardDefs().VehicleFlight.Mode, this.mode);
+    let evt = new VehicleFlightModeChangeEvent();
+    evt.mode = this.mode;
+    GetMountedVehicle(this.player).QueueEvent(evt);
+    this.ShowSimpleMessage(newMode.GetDescription() + " Enabled");
+    GameInstance.GetAudioSystem(this.gameInstance).Play(n"ui_menu_onpress");
+    this.SetupActions();
+  }
+
   let tempYaw: Float;
   let tempSway: Float;
 
@@ -1520,23 +1530,15 @@ public native class FlightController extends IScriptable {
     let actionType: gameinputActionType = ListenerAction.GetType(action);
     let actionName: CName = ListenerAction.GetName(action);
     let value: Float = ListenerAction.GetValue(action);
-    // if Equals(actionName, n"OpenPauseMenu") && ListenerAction.IsButtonJustPressed(action) {
-    //   this.audioEnabled = false;
-    //   let engineVolume = 0.0;
-    //   let windVolume = 0.0;
-    //   this.audio.Update("leftFront", Vector4.EmptyVector(), engineVolume);
-    //   this.audio.Update("rightFront", Vector4.EmptyVector(), engineVolume);
-    //   this.audio.Update("leftRear", Vector4.EmptyVector(), engineVolume);
-    //   this.audio.Update("rightRear", Vector4.EmptyVector(), engineVolume);
-    //   this.audio.Update("windLeft", Vector4.EmptyVector(), windVolume);
-    //   this.audio.Update("windRight", Vector4.EmptyVector(), windVolume);
-    // }
     // FlightLog.Info(ToString(actionType) + ToString(actionName) + ToString(value));
     // if Equals(actionName, n"Flight_Toggle") && ListenerAction.IsButtonJustPressed(action) {
         // this.Toggle();
         // ListenerActionConsumer.ConsumeSingleAction(consumer);
     // }
     if this.active {
+      // if Equals(actionName, n"Flight_ModeSwitch") && ListenerAction.IsButtonJustPressed(action) {
+      //   this.CycleMode(1);
+      // }
       if Equals(actionName, n"Flight_Options") {
         if ListenerAction.IsButtonJustPressed(action) {
           // FlightLog.Info("Options button pressed");
@@ -1609,19 +1611,10 @@ public native class FlightController extends IScriptable {
         //     GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_menu_onpress");
         //     FlightLog.Info("hoverHeight = " + ToString(this.hoverHeight));
         // }
-        if Equals(actionName, n"FlightOptions_Up") && ListenerAction.IsButtonJustPressed(action) {
-          let newMode = this.sys.playerComponent.GetNextFlightMode();
-          this.mode = (this.mode + 1) % ArraySize(this.sys.playerComponent.modes);
-          this.GetBlackboard().SetInt(GetAllBlackboardDefs().VehicleFlight.Mode, this.mode, true);
-          this.GetBlackboard().SignalInt(GetAllBlackboardDefs().VehicleFlight.Mode);
-          let evt = new VehicleFlightModeChangeEvent();
-          evt.mode = this.mode;
-          GetMountedVehicle(this.player).QueueEvent(evt);
-          this.ShowSimpleMessage(newMode.GetDescription() + " Enabled");
-          GameInstance.GetAudioSystem(this.gameInstance).Play(n"ui_menu_onpress");
-          this.SetupActions();
+        if Equals(actionName, n"Flight_ModeSwitch") && ListenerAction.IsButtonJustPressed(action) {
+          this.CycleMode(1);
         }
-        if Equals(actionName, n"FlightOptions_Left") && ListenerAction.IsButtonJustPressed(action) {
+        if Equals(actionName, n"Flight_UIToggle") && ListenerAction.IsButtonJustPressed(action) {
             this.showUI = !this.showUI;
             if (this.showUI) {
               this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, true, true);
@@ -5177,7 +5170,7 @@ public class vflightUIGameController extends inkHUDGameController {
           inkWidgetBuilder.inkRectangle(StringToName("m_" + FloatToString(mark + mark_inc)))
             .Tint(FlightUtils.ElectricBlue())
             .Tint(n"Default.main")
-            .Opacity(mark_inc == 5.0 ? 0.25 : 0.05)
+            .Opacity(mark_inc == 5.0 ? 0.5 : 0.1)
             .Size(width, 2.0)
             .Anchor(0.0, 0.5)
             .Translation(0.0, ((mark + 90.0) + mark_inc) * mark_scale)
