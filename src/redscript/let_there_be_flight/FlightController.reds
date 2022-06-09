@@ -270,6 +270,7 @@ public native class FlightController extends IScriptable {
           uiSystem.QueueEvent(FlightController.ShowHintHelper("Pitch", n"Pitch", n"FlightController"));
           uiSystem.QueueEvent(FlightController.ShowHintHelper("Roll", n"Roll", n"FlightController"));
           uiSystem.QueueEvent(FlightController.ShowHintHelper("Lift", n"Lift", n"FlightController"));
+          uiSystem.QueueEvent(FlightController.ShowHintHelper("Brake", n"Flight_LinearBrake", n"FlightController"));
           // if this.trick {
           //   uiSystem.QueueEvent(FlightController.ShowHintHelper("Aileron Roll", n"Yaw", n"FlightController"));
           // } else {

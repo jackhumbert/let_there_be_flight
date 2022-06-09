@@ -95,7 +95,7 @@
       <AdditionalDependencies>..\..\deps\fmod\lib\x64\fmodstudio_vc.lib;..\..\deps\fmod\lib\x64\fmod_vc.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y /d "$(SolutionDir)build\release\bin\*.dll" "$(SolutionDir)..\..\build\red4ext\plugins\flight_control\"</Command>
+      <Command>copy "$(SolutionDir)build\release\bin\flight_control.dll" "$(SolutionDir)..\..\build\red4ext\plugins\let_there_be_flight\let_there_be_flight.dll"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

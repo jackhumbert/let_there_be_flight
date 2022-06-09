@@ -37,10 +37,10 @@ mono_crash.*
 src/red4ext/x64/
 src/red4ext/build/
 packed/
-packed*.zip
-build*.zip
-flight_effects/flight_effects.zip
-flight_effects/install_log.xml
+*packed*.zip
+*build*.zip
+let_there_be_flight/let_there_be_flight.zip
+let_there_be_flight/install_log.xml
 
 
 Cyberpunk2077.exe*

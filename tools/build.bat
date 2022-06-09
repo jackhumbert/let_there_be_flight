@@ -1,5 +1,5 @@
 if not exist "build" mkdir build
-xcopy /y /d /s flight_effects\packed\* build\
+xcopy /y /d /s wolvenkit\packed\* build\
 if not exist "build\bin" mkdir build\bin
 if not exist "build\bin\x64" mkdir build\bin\x64
 xcopy /y /d fmod_studio\API\* build\bin\x64\
@@ -31,5 +31,5 @@ echo. >> build\r6\tweaks\let_there_be_flight.yaml
 )
 if not exist "build\red4ext" mkdir build\red4ext
 if not exist "build\red4ext\plugins" mkdir build\red4ext\plugins
-if not exist "build\red4ext\plugins\flight_control" mkdir build\red4ext\plugins\flight_control
-xcopy /y /d fmod_studio\Build\Desktop\* build\red4ext\plugins\flight_control\
+if not exist "build\red4ext\plugins\let_there_be_flight" mkdir build\red4ext\plugins\let_there_be_flight
+xcopy /y /d fmod_studio\Build\Desktop\* build\red4ext\plugins\let_there_be_flight\
