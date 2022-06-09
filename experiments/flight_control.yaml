@@ -1,0 +1,27 @@
+# FlightControl.Vehicle.v_standard2_makigai_maimai_player.mass: 1431.0
+# FlightControl.Vehicle.v_sport2_quadra_type66_nomad_player.mass: 2515.2
+# FlightControl.Vehicle.v_sport2_quadra_type66_nomad_ncu_player.mass: 2515.2
+# FlightControl.Vehicle.v_sport2_quadra_type66_player.mass: 2374.4
+# FlightControl.Vehicle.v_sport2_quadra_type66_rogue.mass: 2374.4
+# FlightControl.Vehicle.v_sport2_quadra_type66_rowley.mass: 2374.4
+# FlightControl.Vehicle.v_sport2_quadra_type66_sampson.mass: 2374.4
+# FlightControl.Vehicle.v_sport2_quadra_type66_sport.mass: 2374.4
+# FlightControl.Vehicle.v_sport2_quadra_type66_quest.mass: 2374.4
+# FlightControl.Vehicle.v_sport2_quadra_type66_poor.mass: 2374.4
+# FlightControl.Vehicle.v_sport2_quadra_type66_avenger_player.mass: 2374.4
+# FlightControl.Vehicle.v_sportbike2_arch_jackie_player.mass: 379.8
+# FlightControl.Vehicle.v_sportbike2_arch_jackie_tuned.mass: 379.8
+# FlightControl.Vehicle.v_sportbike2_arch.mass: 379.8
+# FlightControl.Vehicle.v_sportbike2_arch_jackie.mass: 379.8
+
+# HUDPreset.Blackscreen.hudEntries:
+#   - !append n"flight_hud"
+# HUDPreset.T3.hudEntries:
+#   - !append n"flight_hud"
+# HUDPreset.T4.hudEntries:
+#   - !append n"flight_hud"
+# HUDPreset.T5.hudEntries:
+#   - !append n"flight_hud"
+# HUDPreset.crosshairs.hudEntries:
+#   - !append n"car hud"
+#   - !append n"flight_hud"

@@ -1,0 +1,15 @@
+# Vehicle.VehicleDestructionParamsThrusterFL:
+#   $base: Vehicle.VehicleDestructionParamsCaliburn_inline1 
+#   components: [ n"ThrusterFL" ]
+#   gridCells: [ 6, 7 ]
+#   name: n"ThrusterFL" 
+#   spawnsExplosionEffect: true 
+#   threshold:  0.7 
+
+# Vehicle.VehicleDestructionParamsCaliburn.detachableParts:
+#   - !append Vehicle.VehicleDestructionParamsThrusterFL
+
+# Vehicle.v_sport1_rayfield_caliburn.weapons: [ t"Vehicle.PanzerCannon", t"Vehicle.PanzerHomingMissileLauncher", t"Vehicle.PanzerCounterMeasuresLauncherLeft", t"Vehicle.PanzerCounterMeasuresLauncherRight" ]
+# Vehicle.v_sport1_rayfield_caliburn_02_player.weapons: [ t"Vehicle.PanzerCannon", t"Vehicle.PanzerHomingMissileLauncher", t"Vehicle.PanzerCounterMeasuresLauncherLeft", t"Vehicle.PanzerCounterMeasuresLauncherRight" ]
+# Vehicle.v_sport1_rayfield_caliburn_murdered.weapons: [ t"Vehicle.PanzerCannon", t"Vehicle.PanzerHomingMissileLauncher", t"Vehicle.PanzerCounterMeasuresLauncherLeft", t"Vehicle.PanzerCounterMeasuresLauncherRight" ]
+# Vehicle.v_sport1_rayfield_caliburn_player.weapons: [ t"Vehicle.PanzerCannon", t"Vehicle.PanzerHomingMissileLauncher", t"Vehicle.PanzerCounterMeasuresLauncherLeft", t"Vehicle.PanzerCounterMeasuresLauncherRight" ]
