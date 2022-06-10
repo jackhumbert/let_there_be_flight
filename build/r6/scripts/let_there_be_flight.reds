@@ -938,8 +938,10 @@ public class FlightComponent extends ScriptableDeviceComponent {
   public func UpdateAudioParams(timeDelta: Float) -> Void {
     let engineVolume = 1.0;
     let windVolume = 0.6;
-    // let engineVolume = (GameInstance.GetSettingsSystem(this.GetVehicle().GetGame()).GetVar(n"/audio/volume", n"MasterVolume") as ConfigVarListInt).GetValue();
-    // let engineVolume *= (GameInstance.GetSettingsSystem(this.GetVehicle().GetGame()).GetVar(n"/audio/volume", n"SfxVolume") as ConfigVarListInt).GetValue();
+    let master = Cast<Float>((GameInstance.GetSettingsSystem(this.GetVehicle().GetGame()).GetVar(n"/audio/volume", n"MasterVolume") as ConfigVarInt).GetValue()) / 100.0;
+    let sfx = Cast<Float>((GameInstance.GetSettingsSystem(this.GetVehicle().GetGame()).GetVar(n"/audio/volume", n"SfxVolume") as ConfigVarInt).GetValue()) / 100.0;
+    engineVolume *= (master * sfx);
+    windVolume *= (master * sfx);
     if this.isPopupShown || this.isInMenu || GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsPausedState() ||
       GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsTimeDilationActive(n"HubMenu") || 
       GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsTimeDilationActive(n"WorldMap")
