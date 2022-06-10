@@ -703,7 +703,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
   public func ProcessImpact(impact: Float) {
     this.collisionTimer = FlightSettings.GetFloat(n"collisionRecoveryDelay") - impact;
-    this.ui_info.StartGlitching(impact, FlightSettings.GetFloat(n"collisionRecoveryDuration") + impact);
+    // this.ui_info.StartGlitching(impact, FlightSettings.GetFloat(n"collisionRecoveryDuration") + impact);
   }
 
   public let audioUpdate: ref<FlightAudioUpdate>;
