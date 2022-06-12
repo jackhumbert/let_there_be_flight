@@ -338,29 +338,32 @@ public native class FlightController extends IScriptable {
           this.SetupActions();
         }
       }
+
       // if Equals(actionName, n"Flight_Trick") {
       //   if ListenerAction.IsButtonJustPressed(action) {
 
-          // let attack: ref<Attack_GameEffect>;
-          // let attackContext: AttackInitContext;
-          // let effect: ref<EffectInstance>;
-          // let statMods: array<ref<gameStatModifierData>>;    
-          // let position: Vector4;
-          // let forward: Vector4;
-          // attackContext.source = this.sys.playerComponent.GetVehicle();
-          // attackContext.record = TweakDBInterface.GetAttackRecord(t"Attacks.Bullet_GameEffect");
-          // attackContext.instigator = attackContext.source;
-          // attack = IAttack.Create(attackContext) as Attack_GameEffect;
-          // attack.GetStatModList(statMods);
-          // effect = attack.PrepareAttack(this.sys.playerComponent.GetVehicle());
-          // GameInstance.GetTargetingSystem(this.gameInstance).GetDefaultCrosshairData(this.sys.player, position, forward);
-          // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.position, position);
-          // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.muzzlePosition, position);
-          // // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.forward, this.sys.playerComponent.stats.d_forward);
-          // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.forward, forward);
-          // EffectData.SetVariant(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.attack, ToVariant(attack));
-          // EffectData.SetVariant(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.attackStatModList, ToVariant(statMods));
-          // attack.StartAttack();
+      //     let attack: ref<Attack_GameEffect>;
+      //     let attackContext: AttackInitContext;
+      //     let effect: ref<EffectInstance>;
+      //     let statMods: array<ref<gameStatModifierData>>;    
+      //     let position: Vector4;
+      //     let forward: Vector4;
+      //     attackContext.source = this.sys.playerComponent.GetVehicle();
+      //     attackContext.record = TweakDBInterface.GetAttackRecord(t"Attacks.Bullet_GameEffect");
+      //     attackContext.instigator = attackContext.source;
+      //     attack = IAttack.Create(attackContext) as Attack_GameEffect;
+      //     attack.GetStatModList(statMods);
+      //     effect = attack.PrepareAttack(this.sys.playerComponent.GetVehicle());
+      //     GameInstance.GetTargetingSystem(this.gameInstance).GetDefaultCrosshairData(this.sys.player, position, forward);
+      //     EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.position, position);
+      //     EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.muzzlePosition, position);
+      //     // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.forward, this.sys.playerComponent.stats.d_forward);
+      //     EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.forward, forward);
+      //     EffectData.SetVariant(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.attack, ToVariant(attack));
+      //     EffectData.SetVariant(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.attackStatModList, ToVariant(statMods));
+      //     attack.StartAttack();
+      //   }
+      // }
 
           // // FlightLog.Info("Options button pressed");
           // this.trick = true;
@@ -377,9 +380,9 @@ public native class FlightController extends IScriptable {
           // this.SetupActions();
         // }
         // if ListenerAction.IsButtonJustReleased(action) {
-          // FlightLog.Info("Options button released");
-          // this.trick = false; 
-          // this.SetupActions();
+        //   FlightLog.Info("Options button released");
+        //   this.trick = false; 
+        //   this.SetupActions();
         // }
       // }
       if this.showOptions {
