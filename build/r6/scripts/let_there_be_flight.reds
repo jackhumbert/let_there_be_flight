@@ -3879,11 +3879,13 @@ public class FlightEvents extends VehicleEventsTransition {
     super.OnEnter(stateContext, scriptInterface);
     this.SetIsInFlight(stateContext, true);
     this.SetIsVehicleDriver(stateContext, true);
-    this.SendAnimFeature(stateContext, scriptInterface);
-    this.PauseStateMachines(stateContext, scriptInterface.executionOwner);
-    
     this.PlayerStateChange(scriptInterface, 1);
     this.SetBlackboardIntVariable(scriptInterface, GetAllBlackboardDefs().PlayerStateMachine.Vehicle, 8);
+    this.SendAnimFeature(stateContext, scriptInterface);
+    this.SetVehFppCameraParams(stateContext, scriptInterface, false);
+
+    this.PauseStateMachines(stateContext, scriptInterface.executionOwner);
+    
     if !VehicleTransition.CanEnterDriverCombat() {
       stateContext.SetPermanentBoolParameter(n"ForceEmptyHands", true, true);
     };    

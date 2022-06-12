@@ -37,7 +37,7 @@ uintptr_t Camera::TPPCameraStatsUpdate(RED4ext::vehicle::TPPCameraComponent *cam
     auto stack = RED4ext::CStack(fcomp, nullptr, 0, &result, 0);
     fcompc->GetFunction("GetFlightMode")->Execute(&stack);
 
-    if (mode->GetType() == rtti->GetClass("FlightModeDrone")) {
+    if (mode->GetType() == rtti->GetClass("FlightModeDrone") && !camera->isUsingMouse) {
       camera->pitchDelta = 0.0;
       camera->yawDelta = 0.0;
       if (camera->slopeCorrectionOnGroundStrength != 0.0) {
