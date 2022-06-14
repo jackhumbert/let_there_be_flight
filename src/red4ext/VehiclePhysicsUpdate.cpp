@@ -3,6 +3,7 @@
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 #include <RED4ext/RED4ext.hpp>
 #include <spdlog/spdlog.h>
+#include "VehiclePhysicsUpdate.hpp"
 
 // main vehicle physics update
 uintptr_t __fastcall VehiclePhysicsUpdate(RED4ext::physics::VehiclePhysics *, float);

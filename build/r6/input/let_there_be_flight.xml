@@ -27,8 +27,12 @@
 		<include name="Items" />
 		<include name="VehicleFlightToggle" />
 		<include name="Combat" />
+		
+		<action name="ShootPrimary"			map="Flight_Trick" />
+		<action name="ShootSecondary"		map="Flight_Trick" />
+		<action name="ShootTertiary"		map="Flight_Trick" />
 
-		<action name="Flight_Trick" 		map="Flight_Trick" />
+		<!-- <action name="Flight_Trick" 		map="Flight_Trick" /> -->
 		<action name="Flight_Options"		map="Flight_Options"/>
 		<action name="Flight_UIToggle"	map="Flight_UIToggle"/>
 		<action name="Flight_ModeSwitch" map="Flight_ModeSwitch"/>

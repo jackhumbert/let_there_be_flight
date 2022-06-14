@@ -14,10 +14,18 @@
 #include <RED4ext/Scripting/Natives/Generated/world/ui/MeshTargetBinding.hpp>
 #include <RED4ext/Scripting/Natives/Generated/physics/FilterData.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/projectile/SpawnComponent.hpp>
+#include <RED4ext/Scripting/Natives/Generated/game/AttachmentSlots.hpp>
+#include <RED4ext/Scripting/Natives/Generated/game/AnimParamSlotsOption.hpp>
+#include <RED4ext/Scripting/Natives/Generated/WidgetHudComponent.hpp>
+#include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
+#include <RED4ext/Scripting/Natives/Generated/vehicle/Weapon.hpp>
 #include "LoadResRef.hpp"
+#include <spdlog/spdlog.h>
+#include "VehiclePhysicsUpdate.hpp"
 
 RED4ext::ent::PhysicalMeshComponent *CreateThrusterEngine(RED4ext::CRTTISystem *rtti, RED4ext::CName mesh,
-                                                          RED4ext::CName name, RED4ext::CName slot) {
+                                                          RED4ext::CName name, RED4ext::CName slot,
+                                                          RED4ext::CName bindName = "thruster_slots") {
   auto mc = (RED4ext::ent::PhysicalMeshComponent *)rtti->GetClass("entPhysicalMeshComponent")->AllocInstance();
   mc->mesh.ref = mesh;
   // not sure why this doesn't carry through
@@ -34,7 +42,7 @@ RED4ext::ent::PhysicalMeshComponent *CreateThrusterEngine(RED4ext::CRTTISystem *
   mc->objectTypeID = RED4ext::ERenderObjectType::ROT_Vehicle;
   mc->LODMode = RED4ext::ent::MeshComponentLODMode::Appearance;
   auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->AllocInstance();
-   htb->bindName = "thruster_slots";
+  htb->bindName = bindName;
   htb->slotName = slot;
   mc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
   return mc;
@@ -50,10 +58,30 @@ void AddToController(RED4ext::CRTTISystem *rtti, RED4ext::ent::VisualControllerC
   vcc->appearanceDependency.EmplaceBack(*vcd);
 }
 
+// 48 8B C4 55 56 41 54 41 55 41 56 41 57 48 8D A8 28 FE FF FF 48 81 EC A8 02 00 00 44 0F 29 A8 48
+void __fastcall VehicleProcessWeapons(RED4ext::vehicle::BaseObject *vehicle, float timeDelta, unsigned int shootIndex);
+constexpr uintptr_t VehicleProcessWeaponsAddr = 0x140000C00 + 0x1C5F1D0 - RED4ext::Addresses::ImageBase;
+decltype(&VehicleProcessWeapons) VehicleProcessWeapons_Original;
+
+
+void __fastcall VehicleProcessWeapons(RED4ext::vehicle::BaseObject *vehicle, float timeDelta, unsigned int shootIndex) {
+  VehicleProcessWeapons_Original(vehicle, timeDelta, shootIndex);
+  if (vehicle->weapons[shootIndex].cycleTimer == 0.0) {
+    auto rtti = RED4ext::CRTTISystem::Get();
+    auto fcc = rtti->GetClass("FlightComponent");
+    auto fc = GetFlightComponent(vehicle);
+    auto onFireWeapon = fcc->GetFunction("OnFireWeapon");
+    auto args = RED4ext::CStackType(rtti->GetType("Vector3"), &vehicle->tracePosition);
+    auto stack = RED4ext::CStack(fc, &args, 1, nullptr, 0);
+    onFireWeapon->Execute(&stack);
+  }
+}
+
 // 48 89 54 24 10 55 53 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 B8 FB FF FF 48 81 EC 48 05 00 00
 void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity *entity, uintptr_t, uintptr_t);
 constexpr uintptr_t Entity_InitializeComponentsAddr = 0x140000C00 + 0x1035B00 - RED4ext::Addresses::ImageBase;
 decltype(&Entity_InitializeComponents) Entity_InitializeComponents_Original;
+
 
 void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintptr_t a2, uintptr_t a3) {
 
@@ -66,12 +94,66 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
   } while (type = type->parent);
 
   if (isVehicle) {
+    auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(entity);
+
+    {
+      auto weapon = new RED4ext::vehicle::Weapon();
+      weapon->attackRange = 100.0;
+      weapon->canFriendlyFire = false;
+      weapon->cycleTime = 0.5;
+      weapon->genericShoot = true;
+      weapon->genericTick = true;
+      weapon->item = RED4ext::TweakDBID("Items.Panzer_Cannon");
+      weapon->maxPitch = 0.0;
+      weapon->maxYaw = 0.0;
+      weapon->minPitch = 0.0;
+      weapon->minYaw = 0.0;
+      weapon->singleProjectileCycleTime = 1.0;
+      weapon->singleShotProjectiles = 1;
+      weapon->slot = RED4ext::TweakDBID("AttachmentSlots.PanzerCannon");
+      weapon->weaponShootAnimEvent = "shoot_rocket";
+      weapon->wholeBurstProjectiles = 1;
+      vehicle->weapons.EmplaceBack(*weapon);
+    }
+
     // entVisualControllerComponent
     RED4ext::ent::VisualControllerComponent *vcc = NULL;
     for (auto const &handle : entity->components) {
       auto component = handle.GetPtr();
       if (component->GetNativeType() == rtti->GetClass("entVisualControllerComponent")) {
         vcc = reinterpret_cast<RED4ext::ent::VisualControllerComponent *>(component);
+        break;
+      }
+    }
+
+    for (auto const &handle : entity->components) {
+      auto component = handle.GetPtr();
+      if (component->GetNativeType() == rtti->GetClass("entSlotComponent")) {
+        auto sc = reinterpret_cast<RED4ext::ent::SlotComponent *>(component);
+
+        if (sc->name == "vehicle_slots") {
+          {
+            auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+            slot->boneName = "swingarm_front_left";
+            slot->relativePosition.X -= 0.25;
+            slot->relativePosition.Y += 0.75;
+            slot->slotName = "PanzerCannon";
+            sc->slots.EmplaceBack(*slot);
+            sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
+          }
+          {
+            auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+            slot->boneName = "swingarm_front_left";
+            slot->relativePosition.X = -0.25;
+            slot->relativePosition.Z = -0.6;
+            slot->relativeRotation.k = 1.0;
+            slot->relativeRotation.r = 0.0;
+            slot->slotName = "gun_front_left";
+            sc->slots.EmplaceBack(*slot);
+            sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
+          }
+        }
+
         break;
       }
     }
@@ -118,90 +200,135 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
       }
 
       {
-        auto fl = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterFL", "thruster_front_left");
+        auto fl = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterFL",
+                                       "thruster_front_left");
         entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(fl));
         AddToController(rtti, vcc, fl);
 
-        auto fr = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterFR", "thruster_front_right");
+
+        auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
+        mc->mesh.ref =
+            (RED4ext::CName)"base\\weapons\\turrets\\maxtac_turret\\entities\\meshes\\w_turret__maxtac_turret__base1_guns.mesh";
+        mc->visualScale.X = 1.0;
+        mc->visualScale.Y = 1.0;
+        mc->visualScale.Z = 1.0;
+        mc->name = "FunGun";
+        mc->motionBlurScale = 0.1;
+        mc->meshAppearance = "default";
+        mc->objectTypeID = RED4ext::ERenderObjectType::ROT_Vehicle;
+        mc->LODMode = RED4ext::ent::MeshComponentLODMode::Appearance;
+        auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->AllocInstance();
+        htb->bindName = "vehicle_slots";
+        htb->slotName = "gun_front_left";
+        mc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
+        entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::MeshComponent>(mc));
+        AddToController(rtti, vcc, mc);
+
+        auto fr = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterFR",
+                                       "thruster_front_right");
         entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(fr));
         AddToController(rtti, vcc, fr);
 
-        auto bl = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterBL", "thruster_back_left");
+        auto bl = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterBL",
+                                       "thruster_back_left");
         entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(bl));
         AddToController(rtti, vcc, bl);
 
-        auto br = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterBR", "thruster_back_right");
+        auto br = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterBR",
+                                       "thruster_back_right");
         entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(br));
         AddToController(rtti, vcc, br);
       }
-
-      // UI
-      //{
-      //  // MeshComponent
-      //  auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
-
-      //  RED4ext::CName mesh = "user\\jackhumbert\\meshes\\flight_ui.mesh";
-      //  mc->mesh.ref = mesh;
-      //  mc->name = "flight_screen";
-      //  mc->meshAppearance = "default";
-
-      //  auto mcHandle = RED4ext::Handle<RED4ext::ent::MeshComponent>(mc);
-      //  entity->components.EmplaceBack(mcHandle);
-      //}
-      //{
-      //  // WorldWidgetComponent
-      //  auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->AllocInstance();
-
-      //  wwc->name = "flight_ui";
-
-      //  RED4ext::CName fc = "user\\jackhumbert\\widgets\\flight_ui.inkwidget";
-      //  wwc->widgetResource.ref = fc;
-
-      //  auto mtb = (RED4ext::world::ui::MeshTargetBinding
-      //  *)rtti->GetClass("worlduiMeshTargetBinding")->AllocInstance(); mtb->bindName = "flight_screen";
-      //  wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
-
-      //  auto wwcHandle = RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc);
-      //  entity->components.EmplaceBack(wwcHandle);
-      //}
-
-      // UI Info Panel
-      {
-        // MeshComponent
-        auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
-
-        RED4ext::CName mesh = "user\\jackhumbert\\meshes\\flight_ui_info.mesh";
-        mc->mesh.ref = mesh;
-        mc->name = "flight_screen_info";
-        mc->meshAppearance = "screen_ui";
-        mc->renderingPlane = RED4ext::ERenderingPlane::RPl_Weapon;
-        mc->forcedLodDistance = RED4ext::ent::ForcedLodDistance::VehicleInterior;
-
-        entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::MeshComponent>(mc));
-      }
-      {
-        // WorldWidgetComponent
-        auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->AllocInstance();
-
-        wwc->name = "flight_ui_info";
-
-        RED4ext::CName fc = "user\\jackhumbert\\widgets\\flight_ui.inkwidget";
-        wwc->widgetResource.ref = fc;
-        wwc->spawnDistanceOverride = 20.0;
-        wwc->sceneWidgetProperties.renderingPlane = RED4ext::ERenderingPlane::RPl_Weapon;
-        auto mtb = (RED4ext::world::ui::MeshTargetBinding *)rtti->GetClass("worlduiMeshTargetBinding")->AllocInstance();
-        mtb->bindName = "flight_screen_info";
-        wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
-
-        entity->components.EmplaceBack(RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc));
-      }
-      //{ 
-      //  auto gpsp = (RED4ext::game::projectile::SpawnComponent *)rtti->GetClass("gameprojectileSpawnComponent")->AllocInstance();
-      //  gpsp->name = "projectileSpawn8722";
-      //  gpsp->projectileTemplates.EmplaceBack("exploding_bullet");
-      //  entity->components.EmplaceBack(RED4ext::Handle<RED4ext::game::projectile::SpawnComponent>(gpsp));
-      //}
     }
+
+    // UI
+    //{
+    //  // MeshComponent
+    //  auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
+
+    //  RED4ext::CName mesh = "user\\jackhumbert\\meshes\\flight_ui.mesh";
+    //  mc->mesh.ref = mesh;
+    //  mc->name = "flight_screen";
+    //  mc->meshAppearance = "default";
+
+    //  auto mcHandle = RED4ext::Handle<RED4ext::ent::MeshComponent>(mc);
+    //  entity->components.EmplaceBack(mcHandle);
+    //}
+    //{
+    //  // WorldWidgetComponent
+    //  auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->AllocInstance();
+
+    //  wwc->name = "flight_ui";
+
+    //  RED4ext::CName fc = "user\\jackhumbert\\widgets\\flight_ui.inkwidget";
+    //  wwc->widgetResource.ref = fc;
+
+    //  auto mtb = (RED4ext::world::ui::MeshTargetBinding
+    //  *)rtti->GetClass("worlduiMeshTargetBinding")->AllocInstance(); mtb->bindName = "flight_screen";
+    //  wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
+
+    //  auto wwcHandle = RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc);
+    //  entity->components.EmplaceBack(wwcHandle);
+    //}
+
+    // UI Info Panel
+    {
+      // MeshComponent
+      auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
+
+      RED4ext::CName mesh = "user\\jackhumbert\\meshes\\flight_ui_info.mesh";
+      mc->mesh.ref = mesh;
+      mc->name = "flight_screen_info";
+      mc->meshAppearance = "screen_ui";
+      mc->renderingPlane = RED4ext::ERenderingPlane::RPl_Weapon;
+      mc->forcedLodDistance = RED4ext::ent::ForcedLodDistance::VehicleInterior;
+
+      entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::MeshComponent>(mc));
+    }
+    {
+      // WorldWidgetComponent
+      auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->AllocInstance();
+
+      wwc->name = "flight_ui_info";
+
+      RED4ext::CName fc = "user\\jackhumbert\\widgets\\flight_ui.inkwidget";
+      wwc->widgetResource.ref = fc;
+      wwc->spawnDistanceOverride = 20.0;
+      wwc->sceneWidgetProperties.renderingPlane = RED4ext::ERenderingPlane::RPl_Weapon;
+      auto mtb = (RED4ext::world::ui::MeshTargetBinding *)rtti->GetClass("worlduiMeshTargetBinding")->AllocInstance();
+      mtb->bindName = "flight_screen_info";
+      wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
+
+      entity->components.EmplaceBack(RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc));
+    }
+    { 
+      auto gpsp = (RED4ext::game::projectile::SpawnComponent *)rtti->GetClass("gameprojectileSpawnComponent")->AllocInstance();
+      gpsp->name = "projectileSpawn8722";
+      gpsp->projectileTemplates.EmplaceBack("exploding_bullet");
+      auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->AllocInstance();
+      htb->bindName = "thruster_slots";
+      htb->slotName = "ThrusterFL";
+      gpsp->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
+      entity->components.EmplaceBack(RED4ext::Handle<RED4ext::game::projectile::SpawnComponent>(gpsp));
+    }
+    {
+      auto gas = (RED4ext::game::AttachmentSlots *)rtti->GetClass("gameAttachmentSlots")->AllocInstance();
+      gas->name = "AttachmentSlots";
+      {
+        auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->AllocInstance();
+        gapso->slotID = "AttachmentSlots.PanzerCannon";
+        gapso->paramName = "renderPlane";
+        gas->animParams.EmplaceBack(*gapso);
+      }
+      entity->components.EmplaceBack(RED4ext::Handle<RED4ext::game::AttachmentSlots>(gas));
+    }
+
+    //{
+    //  auto whc = (RED4ext::WidgetHudComponent *)rtti->GetClass("WidgetHudComponent")->AllocInstance();
+    //  whc->name = "WidgetHud1367";
+    //  whc->hudEntriesResource.hash = (RED4ext::CName)"base\\gameplay\\gui\\hud_tank.inkhud";
+    //  entity->components.EmplaceBack(RED4ext::Handle<RED4ext::WidgetHudComponent>(whc));
+    //}
 
   }
 
@@ -324,11 +451,15 @@ void IPlacedComponentUpdateHardTransformBinding(RED4ext::IScriptable *aContext, 
 
 struct EntityAddComponentModule : FlightModule {
   void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(Entity_InitializeComponentsAddr), &Entity_InitializeComponents,
+    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(Entity_InitializeComponentsAddr),
+                          &Entity_InitializeComponents,
                           reinterpret_cast<void **>(&Entity_InitializeComponents_Original));
+    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleProcessWeaponsAddr), &VehicleProcessWeapons,
+                          reinterpret_cast<void **>(&VehicleProcessWeapons_Original));
   }
   void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(Entity_InitializeComponentsAddr));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleProcessWeaponsAddr));
   }
   void PostRegisterTypes() {
     auto rtti = RED4ext::CRTTISystem::Get();

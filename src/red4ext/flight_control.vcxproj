@@ -145,6 +145,7 @@
     <ClInclude Include="LoadResRef.hpp" />
     <ClInclude Include="stdafx.hpp" />
     <ClInclude Include="Utils.hpp" />
+    <ClInclude Include="VehiclePhysicsUpdate.hpp" />
     <ClInclude Include="VehicleSpeedUnlimiter.hpp" />
   </ItemGroup>
   <ItemGroup>

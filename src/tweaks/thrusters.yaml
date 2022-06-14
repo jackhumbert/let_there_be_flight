@@ -9,7 +9,138 @@
 # Vehicle.VehicleDestructionParamsCaliburn.detachableParts:
 #   - !append Vehicle.VehicleDestructionParamsThrusterFL
 
-# Vehicle.v_sport1_rayfield_caliburn.weapons: [ t"Vehicle.PanzerCannon", t"Vehicle.PanzerHomingMissileLauncher", t"Vehicle.PanzerCounterMeasuresLauncherLeft", t"Vehicle.PanzerCounterMeasuresLauncherRight" ]
-# Vehicle.v_sport1_rayfield_caliburn_02_player.weapons: [ t"Vehicle.PanzerCannon", t"Vehicle.PanzerHomingMissileLauncher", t"Vehicle.PanzerCounterMeasuresLauncherLeft", t"Vehicle.PanzerCounterMeasuresLauncherRight" ]
-# Vehicle.v_sport1_rayfield_caliburn_murdered.weapons: [ t"Vehicle.PanzerCannon", t"Vehicle.PanzerHomingMissileLauncher", t"Vehicle.PanzerCounterMeasuresLauncherLeft", t"Vehicle.PanzerCounterMeasuresLauncherRight" ]
-# Vehicle.v_sport1_rayfield_caliburn_player.weapons: [ t"Vehicle.PanzerCannon", t"Vehicle.PanzerHomingMissileLauncher", t"Vehicle.PanzerCounterMeasuresLauncherLeft", t"Vehicle.PanzerCounterMeasuresLauncherRight" ]
+# Items.FlyingWeapon:
+#   $base: Items.Panzer_Cannon
+#   CraftingData: "" 
+#   IsIKEnabled: true 
+#   NPCAnimWrapperWeightOverride: "None" 
+#   OnAttach: TweakDBID,[ ]
+#   OnEquip: TweakDBID,[ ]
+#   OnLooted: TweakDBID,[ ]
+#   ammo: "Ammo.Standard" 
+#   animFeatureName: "WeaponData" 
+#   animName: "ui_garment_pose" 
+#   animSetResource: CResource,0 
+#   animationParameters: CName,[ ]
+#   appearanceName: "None" 
+#   appearanceResourceName: "None" 
+#   appearanceSuffixes: TweakDBID,[ ]
+#   appearanceSuffixesOwnerOverride: Bool,[ ]
+#   attachmentSlots: TweakDBID,[ ]
+#   attacks: TweakDBID,[ "Attacks.ExplodingPanzerBulletProjectile" ]
+#   audioName: "v_av_panzer_wea_set_cannon" 
+#   audioSwitchName: "None" 
+#   audioSwitchValue: "None" 
+#   audioWeaponConfiguration: "None" 
+#   blueprint: "" 
+#   buyPrice: TweakDBID,[ "Price.BasePrice" "Price.BuyMultiplier" "Price.ItemQualityMultiplier" "Price.WeightMultiplier" "Price.RangedWeapon" 00000026d74227f7 ]
+#   cameraForward: { x:0 y:0 z:0 } 
+#   cameraUp: { x:0 y:0 z:0 } 
+#   connections: TweakDBID,[ ]
+#   cpoItemCategory: "" 
+#   crosshair: "Crosshairs.Custom_HMG" 
+#   damageType: "DamageTypes.Physical" 
+#   displayName: 50343 
+#   dropObject: "defaultItemDrop" 
+#   dropSettings: "" 
+#   effectiveRangeCurve: "None" 
+#   effectiveRangeFalloffCurve: "StandardFalloff" 
+#   effectors: TweakDBID,[ ]
+#   enableNpcRPGData: false 
+#   entityName: "blank_weapon" 
+#   equipArea: "EquipmentArea.Weapon" 
+#   equipAreas: TweakDBID,[ ]
+#   equipPrereqs: TweakDBID,[ ]
+#   equipSoundMetadata: "None" 
+#   equivalent: "" 
+#   evolution: "WeaponEvolution.Power" 
+#   forcedMinHitReaction: -1 
+#   friendlyName: "w_panzer_cannon" 
+#   fxPackage: "WeaponFxPackage.PowerLargeCaliber" 
+#   fxPackageQuickMelee: "WeaponFxPackage.QuickMeleeFxPackage" 
+#   gameplayRestrictions: TweakDBID,[ "GameplayRestriction.VehicleCombatNoInterruptions" ]
+#   garmentOffset: 0 
+#   hairSkinnedMeshComponents: CName,[ ]
+#   hide_nametag: true 
+#   holsteredItem: "" 
+#   hudIcon: "HUDWeaponIcons.Default" 
+#   icon: "UIIcon.ItemIcon" 
+#   iconPath: "" 
+#   isCustomizable: false 
+#   isGarment: false 
+#   isPart: false 
+#   isSingleInstance: false 
+#   itemCategory: "ItemCategory.Weapon" 
+#   itemSecondaryAction: "ItemAction.Equip" 
+#   itemStructure: "" 
+#   itemType: "ItemType.Wea_HeavyMachineGun" 
+#   localizedDescription: 50343 
+#   localizedName: "" 
+#   manufacturer: "WeaponManufacturer.Street" 
+#   mass: 20 
+#   minigameInstance: "minigame_v2.DefaultItemMinigame" 
+#   movementPattern: "None" 
+#   movementSound: "" 
+#   npcRPGData: "" 
+#   objectActions: TweakDBID,[ "ItemAction.Drop" "ItemAction.Disassemble" "ItemAction.WeaponDisassemble" ]
+#   onEquipStats: "" 
+#   parentAttachmentType: "ParentAttachmentType.Slot" 
+#   parts: TweakDBID,[ ]
+#   placementSlots: TweakDBID,[ "AttachmentSlots.PanzerCannon" ]
+#   previewEffectName: "None" 
+#   previewEffectTag: "None" 
+#   primaryTriggerMode: "" 
+#   projectileEaseOutCurveName: "ProjectileEaseOut" 
+#   quality: "Quality.Random" 
+#   rangedAttacks: "Attacks.PhysicalBulletPackage" 
+#   replicateWhenNotActive: false 
+#   requiredSlots: TweakDBID,[ ]
+#   safeActionDuration: 2 
+#   savable: false 
+#   secondaryTriggerMode: "" 
+#   sellPrice: TweakDBID,[ "Price.BasePrice" "Price.SellMultiplier" "Price.ItemQualitySellMultiplier" "Price.WeightMultiplier" "Price.CraftingTraitMultiplier" "Price.WeaponSellMultiplier" "Price.RangedWeapon" 00000026d74227f7 ]
+#   shootingPatternPackages: TweakDBID,[ ]
+#   slotPartList: TweakDBID,[ ]
+#   slotPartListPreset: TweakDBID,[ ]
+#   statModifierGroups: TweakDBID,[ "Items.Base_Weapon_Status_Effect_Application_Stats" "Items.Base_Weapon_Damage_Type_Min_Max" "Items.Base_Weapon_Damage_Type_Randomization" "Items.QualityRandomization" "Items.Base_Panzer_Weapon_Stats" ]
+#   statModifiers: TweakDBID,[ "Items.FlyingWeapon_inline0" "Items.FlyingWeapon_inline1" "Items.FlyingWeapon_inline2" ]
+#   statPools: TweakDBID,[ ]
+#   stateMachineName: "Weapon" 
+#   tags: CName,[ "Weapon" "RangedWeapon" "Preload" "Weapon" "Unique" "HeavyWeapon" ]
+#   triggerModes: TweakDBID,[ "TriggerMode.FullAuto" ]
+#   useForcedTBHZOffset: false 
+#   useNewSpawnMethod: false 
+#   visualTags: CName,[ "Default" "Neon" "Military" "Pimp" ]
+#   weakspots: TweakDBID,[ ]
+#   weaponBlurIntensity: 1 
+#   weaponBlurIntensity_aim: 1 
+#   weaponEdgesSharpness: 0 
+#   weaponEdgesSharpness_aim: 0 
+#   weaponFarPlane: 50 
+#   weaponFarPlane_aim: 50 
+#   weaponNearPlane: 5 
+#   weaponNearPlane_aim: 15 
+#   weaponVignetteCircular: 0 
+#   weaponVignetteCircular_aim: 1 
+#   weaponVignetteIntensity: 0 
+#   weaponVignetteIntensity_aim: 0.5 
+#   weaponVignetteRadius: 0 
+#   weaponVignetteRadius_aim: 0.600000024 
+
+# Items.FlyingWeapon_inline0:
+#   $base: Items.Panzer_Cannon_inline0
+#   modifierType: n"Multiplier" 
+#   statType: BaseStats.HitReactionFactor
+#   value: 3 
+  
+# Items.FlyingWeapon_inline1:
+#   $base: Items.Panzer_Cannon_inline1
+#   modifierType: n"Multiplier" 
+#   statType: BaseStats.HitWoundsFactor 
+#   value: 3 
+
+# Items.FlyingWeapon_inline2:
+#   $base: Items.Panzer_Cannon_inline2
+#   modifierType: n"Multiplier" 
+#   statType: BaseStats.HitDismembermentFactor
+#   value: 3 

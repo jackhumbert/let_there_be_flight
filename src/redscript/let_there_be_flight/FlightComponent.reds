@@ -203,7 +203,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     let normal: Vector4;
     this.SetupTires();
     if !this.FindGround(normal) || this.distance > 1.0 {
-      this.Activate();
+      this.Activate(true);
     }
   }
   
@@ -279,7 +279,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.Activate();
   }
 
-  public func Activate() -> Void {
+  public func Activate(opt silent: Bool) -> Void {
     // this.helper = this.GetVehicle().AddFlightHelper();
     FlightLog.Info("[FlightComponent] OnVehicleFlightActivationEvent: " + this.GetVehicle().GetDisplayName());
     if !this.active {
@@ -324,7 +324,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
       if this.isPlayerMounted {
         this.mode = this.sys.ctlr.mode;
-        this.sys.ctlr.Activate(false);
+        this.sys.ctlr.Activate(silent);
         this.sys.audio.Play("vehicle3_on");
         // this.sys.audio.StartWithPitch("playerVehicle", "vehicle3_TPP", this.GetPitch());
         // this.sys.audio.Start("leftFront", "vehicle3_TPP");
@@ -945,6 +945,22 @@ public class FlightComponent extends ScriptableDeviceComponent {
     };
   }
 
+  public func OnFireWeapon(tracePosition: Vector3) -> Void {    
+    let wt: WorldTransform;
+    let vehicleSlots = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"vehicle_slots") as SlotComponent;
+    vehicleSlots.GetSlotTransform(n"PanzerCannon", wt);
+    // let start = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(wt));
+    // let end = Vector4.Vector3To4(tracePosition);
+    // WorldTransform.SetPosition(wt, start);
+    // WorldTransform.SetOrientation(wt, Quaternion.BuildFromDirectionVector(end - start, FlightUtils.Up()));
+
+    let effect = Cast<FxResource>(r"base\\fx\\vehicles\\av\\av_panzer\\weapons\\v_panzer_muzzle_flash.effect");
+    GameInstance.GetFxSystem(this.GetVehicle().GetGame()).SpawnEffect(effect, wt);
+    
+    // let tp: WorldPosition;
+    // WorldPosition.SetVector4(tp, Vector4.Vector3To4(tracePosition));
+    // fxi.UpdateTargetPosition(tp);
+  }
 
 /*  private final func RegisterToHUDManager(shouldRegister: Bool) -> Void {
     let hudManager: ref<HUDManager>;

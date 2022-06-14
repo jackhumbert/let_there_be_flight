@@ -141,9 +141,13 @@ public class FlightFx {
 
     this.HideWheelComponents();
 
+    let wt = new WorldTransform();
+
+    let laser = GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(Cast<FxResource>(r"user\\jackhumbert\\effects\\aim.effect"), wt);
+    laser.AttachToComponent(this.component.GetVehicle(), entAttachmentTarget.Transform, n"FunGun", wt);
+
     let effectTransform: WorldTransform;
     WorldTransform.SetPosition(effectTransform, this.component.stats.d_position);
-    let wt = new WorldTransform();
     WorldTransform.SetPosition(wt, new Vector4(0.0, 0.0, -0.25, 0.0));
     let chassisOffset = (vehicleComponent.FindComponentByName(n"Chassis") as vehicleChassisComponent).GetLocalPosition();
     let vehicleSlots = this.component.GetVehicle().GetVehicleComponent().FindComponentByName(n"vehicle_slots") as SlotComponent;

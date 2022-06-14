@@ -384,7 +384,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     let normal: Vector4;
     this.SetupTires();
     if !this.FindGround(normal) || this.distance > 1.0 {
-      this.Activate();
+      this.Activate(true);
     }
   }
   
@@ -460,7 +460,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.Activate();
   }
 
-  public func Activate() -> Void {
+  public func Activate(opt silent: Bool) -> Void {
     // this.helper = this.GetVehicle().AddFlightHelper();
     FlightLog.Info("[FlightComponent] OnVehicleFlightActivationEvent: " + this.GetVehicle().GetDisplayName());
     if !this.active {
@@ -505,7 +505,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
       if this.isPlayerMounted {
         this.mode = this.sys.ctlr.mode;
-        this.sys.ctlr.Activate(false);
+        this.sys.ctlr.Activate(silent);
         this.sys.audio.Play("vehicle3_on");
         // this.sys.audio.StartWithPitch("playerVehicle", "vehicle3_TPP", this.GetPitch());
         // this.sys.audio.Start("leftFront", "vehicle3_TPP");
@@ -1126,6 +1126,22 @@ public class FlightComponent extends ScriptableDeviceComponent {
     };
   }
 
+  public func OnFireWeapon(tracePosition: Vector3) -> Void {    
+    let wt: WorldTransform;
+    let vehicleSlots = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"vehicle_slots") as SlotComponent;
+    vehicleSlots.GetSlotTransform(n"PanzerCannon", wt);
+    // let start = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(wt));
+    // let end = Vector4.Vector3To4(tracePosition);
+    // WorldTransform.SetPosition(wt, start);
+    // WorldTransform.SetOrientation(wt, Quaternion.BuildFromDirectionVector(end - start, FlightUtils.Up()));
+
+    let effect = Cast<FxResource>(r"base\\fx\\vehicles\\av\\av_panzer\\weapons\\v_panzer_muzzle_flash.effect");
+    GameInstance.GetFxSystem(this.GetVehicle().GetGame()).SpawnEffect(effect, wt);
+    
+    // let tp: WorldPosition;
+    // WorldPosition.SetVector4(tp, Vector4.Vector3To4(tracePosition));
+    // fxi.UpdateTargetPosition(tp);
+  }
 
 /*  private final func RegisterToHUDManager(shouldRegister: Bool) -> Void {
     let hudManager: ref<HUDManager>;
@@ -1497,11 +1513,11 @@ public native class FlightController extends IScriptable {
           uiSystem.QueueEvent(FlightController.ShowHintHelper("Roll", n"Roll", n"FlightController"));
           uiSystem.QueueEvent(FlightController.ShowHintHelper("Lift", n"Lift", n"FlightController"));
           uiSystem.QueueEvent(FlightController.ShowHintHelper("Brake", n"Flight_LinearBrake", n"FlightController"));
+          uiSystem.QueueEvent(FlightController.ShowHintHelper("Fire", n"Flight_Trick", n"FlightController"));
           // if this.trick {
           //   uiSystem.QueueEvent(FlightController.ShowHintHelper("Aileron Roll", n"Yaw", n"FlightController"));
           // } else {
             uiSystem.QueueEvent(FlightController.ShowHintHelper("Yaw", n"Yaw", n"FlightController"));
-            // uiSystem.QueueEvent(FlightController.ShowHintHelper("Tricks", n"Flight_Trick", n"FlightController"));
           // }
           // we may want to look at something else besides this input so ForceBrakesUntilStoppedOrFor will work (not entirely sure it doesn't now)
           // vehicle.GetBlackboard().GetInt(GetAllBlackboardDefs().VehicleFlight.IsHandbraking)
@@ -1568,26 +1584,37 @@ public native class FlightController extends IScriptable {
       // if Equals(actionName, n"Flight_Trick") {
       //   if ListenerAction.IsButtonJustPressed(action) {
 
-      //     let attack: ref<Attack_GameEffect>;
-      //     let attackContext: AttackInitContext;
-      //     let effect: ref<EffectInstance>;
-      //     let statMods: array<ref<gameStatModifierData>>;    
-      //     let position: Vector4;
-      //     let forward: Vector4;
-      //     attackContext.source = this.sys.playerComponent.GetVehicle();
-      //     attackContext.record = TweakDBInterface.GetAttackRecord(t"Attacks.Bullet_GameEffect");
-      //     attackContext.instigator = attackContext.source;
-      //     attack = IAttack.Create(attackContext) as Attack_GameEffect;
-      //     attack.GetStatModList(statMods);
-      //     effect = attack.PrepareAttack(this.sys.playerComponent.GetVehicle());
-      //     GameInstance.GetTargetingSystem(this.gameInstance).GetDefaultCrosshairData(this.sys.player, position, forward);
-      //     EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.position, position);
-      //     EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.muzzlePosition, position);
-      //     // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.forward, this.sys.playerComponent.stats.d_forward);
-      //     EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.forward, forward);
-      //     EffectData.SetVariant(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.attack, ToVariant(attack));
-      //     EffectData.SetVariant(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.attackStatModList, ToVariant(statMods));
-      //     attack.StartAttack();
+          // let ps = this.sys.playerComponent.FindComponentByName(n"projectileSpawn8722") as ProjectileSpawnComponent;
+          // ps.Spawn(Cast<Uint32>(0));
+
+          // let attack: ref<Attack_GameEffect>;
+          // let attackContext: AttackInitContext;
+          // let effect: ref<EffectInstance>;
+          // let statMods: array<ref<gameStatModifierData>>;    
+          // let position: Vector4;
+          // let forward: Vector4;
+          // attackContext.source = this.sys.playerComponent.GetVehicle();
+          // attackContext.record = TweakDBInterface.GetAttackRecord(t"Attacks.ExplodingPanzerBulletProjectile");
+          // attackContext.instigator = attackContext.source;
+          // attack = IAttack.Create(attackContext) as Attack_GameEffect;
+          // attack.GetStatModList(statMods);
+          // effect = attack.PrepareAttack(this.sys.playerComponent.GetVehicle());
+          // GameInstance.GetTargetingSystem(this.gameInstance).GetDefaultCrosshairData(this.sys.player, position, forward);
+          // position = this.sys.playerComponent.stats.d_position + new Vector4(0.0, 0.0, 1.0, 0.0);
+          // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.position, position);
+          // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.muzzlePosition, position);
+          // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.forward, this.sys.playerComponent.stats.d_forward);
+          // // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.forward, forward);
+          // EffectData.SetVariant(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.attack, ToVariant(attack));
+          // EffectData.SetVariant(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.attackStatModList, ToVariant(statMods));
+          // attack.StartAttack();
+          
+          // let wt: WorldTransform;
+          // WorldTransform.SetPosition(wt, position);
+          // WorldTransform.SetOrientation(wt, this.sys.playerComponent.stats.d_orientation);
+
+          // let effect = Cast<FxResource>(r"base\\fx\\vehicles\\av\\av_panzer\\weapons\\v_panzer_muzzle_flash.effect");
+          // GameInstance.GetFxSystem(this.sys.playerComponent.GetVehicle().GetGame()).SpawnEffect(effect, wt);
       //   }
       // }
 
@@ -2850,9 +2877,13 @@ public class FlightFx {
 
     this.HideWheelComponents();
 
+    let wt = new WorldTransform();
+
+    let laser = GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(Cast<FxResource>(r"user\\jackhumbert\\effects\\aim.effect"), wt);
+    laser.AttachToComponent(this.component.GetVehicle(), entAttachmentTarget.Transform, n"FunGun", wt);
+
     let effectTransform: WorldTransform;
     WorldTransform.SetPosition(effectTransform, this.component.stats.d_position);
-    let wt = new WorldTransform();
     WorldTransform.SetPosition(wt, new Vector4(0.0, 0.0, -0.25, 0.0));
     let chassisOffset = (vehicleComponent.FindComponentByName(n"Chassis") as vehicleChassisComponent).GetLocalPosition();
     let vehicleSlots = this.component.GetVehicle().GetVehicleComponent().FindComponentByName(n"vehicle_slots") as SlotComponent;
