@@ -321,7 +321,19 @@ public class FlightFx {
       this.ui_info.SetLocalOrientation(cq * y);
 
       let wp: WorldPosition;
-      WorldPosition.SetVector4(wp, Vector4.Vector3To4(this.component.GetVehicle().tracePosition));
+      let q = this.component.GetVehicle().GetWeaponPlaceholderOrientation(0);
+      let slotT: WorldTransform;
+      let vehicleSlots = this.component.GetVehicle().GetVehicleComponent().FindComponentByName(n"vehicle_slots") as SlotComponent;
+      vehicleSlots.GetSlotTransform(n"PanzerCannon", slotT);
+      let v = WorldTransform.GetOrientation(slotT) * (q * new Vector4(0.0, -100.0, 0.0, 0.0));
+      let p = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT));
+      let findTarget: TraceResult;
+      this.component.sqs.SyncRaycastByCollisionGroup(p, p - v, n"Shooting", findTarget, false, false);
+      if TraceResult.IsValid(findTarget) {
+        WorldPosition.SetVector4(wp, Vector4.Vector3To4(findTarget.position));
+      } else {
+        WorldPosition.SetVector4(wp, p - v);
+      }
       this.laserFx.UpdateTargetPosition(wp);
 
       let thrusterAmount = Vector4.Dot(new Vector4(0.0, 0.0, 1.0, 0.0), force);

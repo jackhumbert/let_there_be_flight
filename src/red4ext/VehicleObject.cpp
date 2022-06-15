@@ -4,7 +4,9 @@
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/Entity.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
+#include <RED4ext/Scripting/Natives/Generated/vehicle/Weapon.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/HardTransformBinding.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ent/PlaceholderComponent.hpp>
 
 
 
@@ -117,6 +119,23 @@ void VehicleAddFlightHelper(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   }
 }
 
+void GetWeaponPlaceholderOrientation(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Quaternion *aOut,
+                               int64_t a4) {
+  auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
+
+  int index;
+  RED4ext::GetParameter(aFrame, &index);
+  aFrame->code++; // skip ParamEnd;
+
+  if (aOut) {
+    if (vehicle->weapons.size > index && vehicle->weapons[index].weaponObject.GetPtr()->placeholder) {
+      *aOut = vehicle->weapons[index].weaponObject.GetPtr()->placeholder->worldTransform.Orientation;
+    } else {
+      *aOut = {0.0, 0.0, 0.0, 1.0};
+    }
+  }
+}
+
 void VehicleGetComponentsUsingSlot(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,
                                    RED4ext::DynArray<RED4ext::WeakHandle<RED4ext::ent::IComponent>> *aOut, int64_t a4) {
   // RED4ext::ScriptInstance fc;
@@ -214,8 +233,13 @@ struct VehicleObjectModule : FlightModule {
     auto addFlightHelper = RED4ext::CClassFunction::Create(vbc, "AddFlightHelper", "AddFlightHelper", &VehicleAddFlightHelper, {.isNative = true});
     vbc->RegisterFunction(addFlightHelper);
 
-    auto getComponentsUsingSlot = RED4ext::CClassFunction::Create(vbc, "GetComponentsUsingSlot", "GetComponentsUsingSlot", &VehicleGetComponentsUsingSlot, {.isNative = true});
+    auto getComponentsUsingSlot = RED4ext::CClassFunction::Create(
+        vbc, "GetComponentsUsingSlot", "GetComponentsUsingSlot", &VehicleGetComponentsUsingSlot, {.isNative = true});
     vbc->RegisterFunction(getComponentsUsingSlot);
+
+    auto getWeaponPlaceholderOrientation = RED4ext::CClassFunction::Create(
+        vbc, "GetWeaponPlaceholderOrientation", "GetWeaponPlaceholderOrientation", &GetWeaponPlaceholderOrientation, {.isNative = true});
+    vbc->RegisterFunction(getWeaponPlaceholderOrientation);
   }
 };
 

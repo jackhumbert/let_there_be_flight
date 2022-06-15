@@ -201,6 +201,7 @@ public native class FlightController extends IScriptable {
 
     if (this.showUI) {
       this.ui.Show();
+      FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, true);
     }
   
     if !silent {
@@ -225,6 +226,7 @@ public native class FlightController extends IScriptable {
     if (this.showUI) {
       this.ui.Hide();
     }
+    FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, false);
 
     FlightLog.Info("[FlightController] Deactivate");
     this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsActive, false, true);

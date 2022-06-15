@@ -20,6 +20,7 @@
 #include <RED4ext/Scripting/Natives/Generated/WidgetHudComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/Weapon.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ink/HudEntriesResource.hpp>
 #include "LoadResRef.hpp"
 #include <spdlog/spdlog.h>
 #include "VehiclePhysicsUpdate.hpp"
@@ -68,17 +69,17 @@ decltype(&VehicleProcessWeapons) VehicleProcessWeapons_Original;
 void __fastcall VehicleProcessWeapons(RED4ext::vehicle::BaseObject *vehicle, float timeDelta, unsigned int shootIndex) {
   VehicleProcessWeapons_Original(vehicle, timeDelta, shootIndex);
   if (vehicle->weapons[shootIndex].cycleTimer == 0.0) {
-    //RED4ext::Quaternion quat = {0.0, 0.0, 0.0, 1.0};
-    //auto ph = vehicle->weapons[shootIndex].weaponObject.GetPtr()->placeholder;
-    //if (ph) {
-    //  quat = ph->worldTransform.Orientation;
-    //}
+    RED4ext::Quaternion quat = {0.0, 0.0, 0.0, 1.0};
+    auto ph = vehicle->weapons[shootIndex].weaponObject.GetPtr()->placeholder;
+    if (ph) {
+      quat = ph->worldTransform.Orientation;
+    }
 
     auto rtti = RED4ext::CRTTISystem::Get();
     auto fcc = rtti->GetClass("FlightComponent");
     auto fc = GetFlightComponent(vehicle);
     auto onFireWeapon = fcc->GetFunction("OnFireWeapon");
-    auto args = RED4ext::CStackType(rtti->GetType("Vector3"), &vehicle->tracePosition);
+    auto args = RED4ext::CStackType(rtti->GetType("Quaternion"), &quat);
     auto stack = RED4ext::CStack(fc, &args, 1, nullptr, 0);
     onFireWeapon->Execute(&stack);
   }
@@ -112,9 +113,9 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
       weapon->genericTick = true;
       weapon->item = RED4ext::TweakDBID("Items.Panzer_Cannon");
       weapon->maxPitch = 30.0;
-      weapon->maxYaw = 10.0;
+      weapon->maxYaw = 30.0;
       weapon->minPitch = -30.0;
-      weapon->minYaw = -10.0;
+      weapon->minYaw = -30.0;
       weapon->singleProjectileCycleTime = 1.0;
       weapon->singleShotProjectiles = 1;
       weapon->slot = RED4ext::TweakDBID("AttachmentSlots.PanzerCannon");
@@ -358,12 +359,13 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
       entity->components.EmplaceBack(RED4ext::Handle<RED4ext::game::AttachmentSlots>(gas));
     }
 
-    //{
-    //  auto whc = (RED4ext::WidgetHudComponent *)rtti->GetClass("WidgetHudComponent")->AllocInstance();
-    //  whc->name = "WidgetHud1367";
-    //  whc->hudEntriesResource.hash = (RED4ext::CName)"base\\gameplay\\gui\\hud_tank.inkhud";
-    //  entity->components.EmplaceBack(RED4ext::Handle<RED4ext::WidgetHudComponent>(whc));
-    //}
+    {
+      auto whc = (RED4ext::WidgetHudComponent *)rtti->GetClass("WidgetHudComponent")->AllocInstance();
+      whc->name = "FlightHUD";
+      whc->hudEntriesResource.hash = (RED4ext::CName)"user\\jackhumbert\\widgets\\hud_flight.inkhud";
+      LoadResRef<RED4ext::ink::HudEntriesResource>(&whc->hudEntriesResource.hash, &whc->hudEntriesResource.handle, false);
+      entity->components.EmplaceBack(RED4ext::Handle<RED4ext::WidgetHudComponent>(whc));
+    }
 
   }
 

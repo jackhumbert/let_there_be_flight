@@ -540,8 +540,6 @@ public class FlightControllerUI extends inkCanvas {
   }
 
   public func Show() -> Void {
-    FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, true, true);
-    FlightController.GetInstance().GetBlackboard().SignalBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive);
     
     let startValue = this.GetOpacity();
     let duration = 1.0 - startValue;

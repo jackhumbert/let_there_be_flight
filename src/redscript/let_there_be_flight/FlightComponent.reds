@@ -945,14 +945,15 @@ public class FlightComponent extends ScriptableDeviceComponent {
     };
   }
 
-  public func OnFireWeapon(tracePosition: Vector3) -> Void {    
+  public func OnFireWeapon(placeholderQuat: Quaternion) -> Void {    
     let wt: WorldTransform;
     let vehicleSlots = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"vehicle_slots") as SlotComponent;
     vehicleSlots.GetSlotTransform(n"PanzerCannon", wt);
+    let quat = WorldTransform.GetOrientation(wt);
     // let start = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(wt));
     // let end = Vector4.Vector3To4(tracePosition);
-    // WorldTransform.SetPosition(wt, start);
-    // WorldTransform.SetOrientation(wt, Quaternion.BuildFromDirectionVector(end - start, FlightUtils.Up()));
+    // WorldTransform.SetPosition(wt, start)
+    WorldTransform.SetOrientation(wt, quat * placeholderQuat);
 
     let effect = Cast<FxResource>(r"base\\fx\\vehicles\\av\\av_panzer\\weapons\\v_panzer_muzzle_flash.effect");
     GameInstance.GetFxSystem(this.GetVehicle().GetGame()).SpawnEffect(effect, wt);

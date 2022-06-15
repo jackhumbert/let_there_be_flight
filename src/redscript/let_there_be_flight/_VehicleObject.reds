@@ -96,6 +96,9 @@ public native func AddFlightHelper() -> ref<vehicleFlightHelper>;
 @addMethod(VehicleObject)
 public native func GetComponentsUsingSlot(slotName: CName) -> array<ref<IComponent>>;
 
+@addMethod(VehicleObject)
+public native func GetWeaponPlaceholderOrientation(index: Int32) -> Quaternion;
+
 // working
 // @addMethod(VehicleObject)
 // protected cb func OnPhysicalCollision(evt: ref<PhysicalCollisionEvent>) -> Bool {
