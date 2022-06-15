@@ -6,6 +6,7 @@
 #include <RED4ext/Scripting/Natives/Generated/ent/IPlacedComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/MeshComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/PhysicalMeshComponent.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ent/PlaceholderComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/SlotComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/VisualControllerComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/ITransformBinding.hpp>
@@ -67,6 +68,12 @@ decltype(&VehicleProcessWeapons) VehicleProcessWeapons_Original;
 void __fastcall VehicleProcessWeapons(RED4ext::vehicle::BaseObject *vehicle, float timeDelta, unsigned int shootIndex) {
   VehicleProcessWeapons_Original(vehicle, timeDelta, shootIndex);
   if (vehicle->weapons[shootIndex].cycleTimer == 0.0) {
+    //RED4ext::Quaternion quat = {0.0, 0.0, 0.0, 1.0};
+    //auto ph = vehicle->weapons[shootIndex].weaponObject.GetPtr()->placeholder;
+    //if (ph) {
+    //  quat = ph->worldTransform.Orientation;
+    //}
+
     auto rtti = RED4ext::CRTTISystem::Get();
     auto fcc = rtti->GetClass("FlightComponent");
     auto fc = GetFlightComponent(vehicle);
@@ -104,10 +111,10 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
       weapon->genericShoot = true;
       weapon->genericTick = true;
       weapon->item = RED4ext::TweakDBID("Items.Panzer_Cannon");
-      weapon->maxPitch = 0.0;
-      weapon->maxYaw = 0.0;
-      weapon->minPitch = 0.0;
-      weapon->minYaw = 0.0;
+      weapon->maxPitch = 30.0;
+      weapon->maxYaw = 10.0;
+      weapon->minPitch = -30.0;
+      weapon->minYaw = -10.0;
       weapon->singleProjectileCycleTime = 1.0;
       weapon->singleShotProjectiles = 1;
       weapon->slot = RED4ext::TweakDBID("AttachmentSlots.PanzerCannon");

@@ -185,6 +185,7 @@ struct VehicleObjectModule : FlightModule {
     vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnX2", nullptr, 0x5B4));
     vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnX3", nullptr, 0x5B8));
     vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnX4", nullptr, 0x268));
+    vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Vector3"), "tracePosition", nullptr, offsetof(RED4ext::vehicle::BaseObject, tracePosition)));
     // vbc->props.PushBack(RED4ext::CProperty::Create(
     //  rtti->GetType("WorldTransform"), "unkWorldTransform", nullptr, 0x330));
     // vbc->props.PushBack(RED4ext::CProperty::Create(

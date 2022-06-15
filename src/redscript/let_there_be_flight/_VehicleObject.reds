@@ -61,6 +61,9 @@ public native let turnX3: Float;
 @addField(VehicleObject)
 public native let turnX4: Float;
 
+@addField(VehicleObject)
+public native let tracePosition: Vector3;
+
 @addMethod(VehicleObject)
 public native func UsesInertiaTensor() -> Bool;
 

@@ -149,11 +149,14 @@ public class FlightFx {
 
     let effectTransform: WorldTransform;
     WorldTransform.SetPosition(effectTransform, this.component.stats.d_position);
-    let laserFx = GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(this.laser, effectTransform);
-    WorldTransform.SetPosition(wt, new Vector4(0.0, 0.0, 0.5, 0.0));
-    laserFx.AttachToComponent(this.component.GetVehicle(), entAttachmentTarget.Transform, n"FunGun", wt);
-    WorldTransform.SetPosition(wt, new Vector4(0.0, -10.0, 0.5, 0.0));
-    laserFx.AttachToComponent(this.component.GetVehicle(), entAttachmentTarget.TargetPosition, n"FunGun", wt);
+    
+    if !IsDefined(this.laserFx) {
+      this.laserFx = GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(this.laser, effectTransform);
+      WorldTransform.SetPosition(wt, new Vector4(0.0, -0.5, 0.6, 0.0));
+      this.laserFx.AttachToComponent(this.component.GetVehicle(), entAttachmentTarget.Transform, n"FunGun", wt);
+    }
+    // WorldTransform.SetPosition(wt, new Vector4(0.0, -10.0, 0.5, 0.0));
+    // laserFx.AttachToComponent(this.component.GetVehicle(), entAttachmentTarget.TargetPosition, n"FunGun", wt);
     // laser.SetBlackboardValue(n"alpha", 1.0);
     WorldTransform.SetPosition(wt, new Vector4(0.0, 0.0, -0.25, 0.0));
     let chassisOffset = (vehicleComponent.FindComponentByName(n"Chassis") as vehicleChassisComponent).GetLocalPosition();
@@ -316,6 +319,10 @@ public class FlightFx {
       let cq = Quaternion.Conjugate(this.component.stats.d_orientation);
       // Quaternion.SetZRot(cq, 0.0);
       this.ui_info.SetLocalOrientation(cq * y);
+
+      let wp: WorldPosition;
+      WorldPosition.SetVector4(wp, Vector4.Vector3To4(this.component.GetVehicle().tracePosition));
+      this.laserFx.UpdateTargetPosition(wp);
 
       let thrusterAmount = Vector4.Dot(new Vector4(0.0, 0.0, 1.0, 0.0), force);
       // let thrusterAmount = ClampF(this.surge.GetValue(), 0.0, 1.0) * 1.0;
