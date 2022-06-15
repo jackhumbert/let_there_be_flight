@@ -25,7 +25,7 @@
 
 RED4ext::ent::PhysicalMeshComponent *CreateThrusterEngine(RED4ext::CRTTISystem *rtti, RED4ext::CName mesh,
                                                           RED4ext::CName name, RED4ext::CName slot,
-                                                          RED4ext::CName bindName = "thruster_slots") {
+                                                          RED4ext::CName bindName = "vehicle_slots") {
   auto mc = (RED4ext::ent::PhysicalMeshComponent *)rtti->GetClass("entPhysicalMeshComponent")->AllocInstance();
   mc->mesh.ref = mesh;
   // not sure why this doesn't carry through
@@ -152,6 +152,34 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
             sc->slots.EmplaceBack(*slot);
             sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
           }
+          {
+            auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+            slot->boneName = "swingarm_front_left";
+            slot->slotName = "thruster_front_left";
+            sc->slots.EmplaceBack(*slot);
+            sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
+          }
+          {
+            auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+            slot->boneName = "swingarm_front_right";
+            slot->slotName = "thruster_front_right";
+            sc->slots.EmplaceBack(*slot);
+            sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
+          }
+          {
+            auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+            slot->boneName = "swingarm_back_left";
+            slot->slotName = "thruster_back_left";
+            sc->slots.EmplaceBack(*slot);
+            sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
+          }
+          {
+            auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+            slot->boneName = "swingarm_back_right";
+            slot->slotName = "thruster_back_right";
+            sc->slots.EmplaceBack(*slot);
+            sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
+          }
         }
 
         break;
@@ -161,42 +189,42 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
     if (vcc != NULL) {
       {
         // SlotComponent
-        auto sc = (RED4ext::ent::SlotComponent *)rtti->GetClass("entSlotComponent")->AllocInstance();
-        sc->name = "thruster_slots";
-        auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->AllocInstance();
-        htb->bindName = "deformation_rig";
-        sc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
+        //auto sc = (RED4ext::ent::SlotComponent *)rtti->GetClass("entSlotComponent")->AllocInstance();
+        //sc->name = "thruster_slots";
+        //auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->AllocInstance();
+        //htb->bindName = "deformation_rig";
+        //sc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
 
-        {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
-          slot->boneName = "swingarm_front_left";
-          slot->slotName = "thruster_front_left";
-          sc->slots.EmplaceBack(*slot);
-          sc->slotIndexLookup.Emplace(slot->slotName, 0);
-        }
-        {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
-          slot->boneName = "swingarm_front_right";
-          slot->slotName = "thruster_front_right";
-          sc->slots.EmplaceBack(*slot);
-          sc->slotIndexLookup.Emplace(slot->slotName, 1);
-        }
-        {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
-          slot->boneName = "swingarm_back_left";
-          slot->slotName = "thruster_back_left";
-          sc->slots.EmplaceBack(*slot);
-          sc->slotIndexLookup.Emplace(slot->slotName, 2);
-        }
-        {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
-          slot->boneName = "swingarm_back_right";
-          slot->slotName = "thruster_back_right";
-          sc->slots.EmplaceBack(*slot);
-          sc->slotIndexLookup.Emplace(slot->slotName, 3);
-        }
+        //{
+        //  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+        //  slot->boneName = "swingarm_front_left";
+        //  slot->slotName = "thruster_front_left";
+        //  sc->slots.EmplaceBack(*slot);
+        //  sc->slotIndexLookup.Emplace(slot->slotName, 0);
+        //}
+        //{
+        //  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+        //  slot->boneName = "swingarm_front_right";
+        //  slot->slotName = "thruster_front_right";
+        //  sc->slots.EmplaceBack(*slot);
+        //  sc->slotIndexLookup.Emplace(slot->slotName, 1);
+        //}
+        //{
+        //  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+        //  slot->boneName = "swingarm_back_left";
+        //  slot->slotName = "thruster_back_left";
+        //  sc->slots.EmplaceBack(*slot);
+        //  sc->slotIndexLookup.Emplace(slot->slotName, 2);
+        //}
+        //{
+        //  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+        //  slot->boneName = "swingarm_back_right";
+        //  slot->slotName = "thruster_back_right";
+        //  sc->slots.EmplaceBack(*slot);
+        //  sc->slotIndexLookup.Emplace(slot->slotName, 3);
+        //}
 
-        entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::SlotComponent>(sc));
+        //entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::SlotComponent>(sc));
       }
 
       {

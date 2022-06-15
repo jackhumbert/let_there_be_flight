@@ -2751,9 +2751,11 @@ public class FlightFx {
   public let br_retroFx: ref<FxInstance>;
   public let fl_retroFx: ref<FxInstance>;
   public let fr_retroFx: ref<FxInstance>;
+  public let laserFx: ref<FxInstance>;
 
   public let resource: FxResource;
   public let retroResource: FxResource;
+  public let laser: FxResource;
 
   let f_fx_wt: WorldTransform;
   let b_fx_wt: WorldTransform;
@@ -2791,6 +2793,7 @@ public class FlightFx {
     this.component = component;
     this.resource = Cast<FxResource>(r"user\\jackhumbert\\effects\\ion_thruster.effect");
     this.retroResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\retro_thruster.effect");
+    this.laser = Cast<FxResource>(r"user\\jackhumbert\\effects\\aim.effect");
 
     let vehicleComponent = this.component.GetVehicle().GetVehicleComponent();
 
@@ -2879,11 +2882,15 @@ public class FlightFx {
 
     let wt = new WorldTransform();
 
-    let laser = GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(Cast<FxResource>(r"user\\jackhumbert\\effects\\aim.effect"), wt);
-    laser.AttachToComponent(this.component.GetVehicle(), entAttachmentTarget.Transform, n"FunGun", wt);
 
     let effectTransform: WorldTransform;
     WorldTransform.SetPosition(effectTransform, this.component.stats.d_position);
+    let laserFx = GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(this.laser, effectTransform);
+    WorldTransform.SetPosition(wt, new Vector4(0.0, 0.0, 0.5, 0.0));
+    laserFx.AttachToComponent(this.component.GetVehicle(), entAttachmentTarget.Transform, n"FunGun", wt);
+    WorldTransform.SetPosition(wt, new Vector4(0.0, -250.0, 0.5, 0.0));
+    laserFx.AttachToComponent(this.component.GetVehicle(), entAttachmentTarget.TargetPosition, n"FunGun", wt);
+    // laser.SetBlackboardValue(n"alpha", 1.0);
     WorldTransform.SetPosition(wt, new Vector4(0.0, 0.0, -0.25, 0.0));
     let chassisOffset = (vehicleComponent.FindComponentByName(n"Chassis") as vehicleChassisComponent).GetLocalPosition();
     let vehicleSlots = this.component.GetVehicle().GetVehicleComponent().FindComponentByName(n"vehicle_slots") as SlotComponent;
