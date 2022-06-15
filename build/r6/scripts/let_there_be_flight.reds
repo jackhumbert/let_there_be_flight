@@ -381,11 +381,6 @@ public class FlightComponent extends ScriptableDeviceComponent {
     } else {
       // FlightLog.Info("[FlightComponent] OnMountingEvent for other vehicle: " + this.GetVehicle().GetDisplayName());
     }
-    let normal: Vector4;
-    this.SetupTires();
-    if !this.FindGround(normal) || this.distance > 1.0 {
-      this.Activate();
-    }
   }
   
   protected cb func OnVehicleFinishedMountingEvent(evt: ref<VehicleFinishedMountingEvent>) -> Bool {
@@ -398,6 +393,11 @@ public class FlightComponent extends ScriptableDeviceComponent {
         //this.sys.audio.Play("vehicle3_on");
         // this.sys.audio.StartWithPitch("playerVehicle", "vehicle3_TPP", this.GetPitch());
       }
+    }
+    let normal: Vector4;
+    this.SetupTires();
+    if !this.FindGround(normal) || this.distance > 1.0 {
+      this.Activate();
     }
   }
 
