@@ -111,8 +111,8 @@
 
 	<mapping name="Flight_Pitch" type="Axis" >
 		<button id="IK_Pad_RightAxisY" />
-		<button id="IK_Mouse4" val="1.0" overridableUI="vehicleFlightPitchForward" />
-		<button id="IK_Mouse5" val="-1.0" overridableUI="vehicleFlightPitchBackward" />
+		<button id="IK_Space" val="1.0" overridableUI="vehicleFlightPitchForward" />
+		<button id="IK_LShift" val="-1.0" overridableUI="vehicleFlightPitchBackward" />
 	</mapping>
 
 	<mapping name="Flight_Roll" type="Axis" >
