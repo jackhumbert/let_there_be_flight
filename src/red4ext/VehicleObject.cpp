@@ -128,7 +128,8 @@ void GetWeaponPlaceholderOrientation(RED4ext::IScriptable *aContext, RED4ext::CS
   aFrame->code++; // skip ParamEnd;
 
   if (aOut) {
-    if (vehicle->weapons.size > index && vehicle->weapons[index].weaponObject.GetPtr()->placeholder) {
+    if (vehicle->weapons.size > index && vehicle->weapons[index].weaponObject &&
+        vehicle->weapons[index].weaponObject.GetPtr()->placeholder) {
       *aOut = vehicle->weapons[index].weaponObject.GetPtr()->placeholder->worldTransform.Orientation;
     } else {
       *aOut = {0.0, 0.0, 0.0, 1.0};
