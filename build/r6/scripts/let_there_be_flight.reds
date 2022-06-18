@@ -2753,10 +2753,12 @@ public class FlightFx {
   public let fl_retroFx: ref<FxInstance>;
   public let fr_retroFx: ref<FxInstance>;
   public let laserFx: ref<FxInstance>;
+  public let laserPointFx: ref<FxInstance>;
 
   public let resource: FxResource;
   public let retroResource: FxResource;
   public let laser: FxResource;
+  public let laserPoint: FxResource;
 
   let f_fx_wt: WorldTransform;
   let b_fx_wt: WorldTransform;
@@ -2795,6 +2797,7 @@ public class FlightFx {
     this.resource = Cast<FxResource>(r"user\\jackhumbert\\effects\\ion_thruster.effect");
     this.retroResource = Cast<FxResource>(r"user\\jackhumbert\\effects\\retro_thruster.effect");
     this.laser = Cast<FxResource>(r"user\\jackhumbert\\effects\\aim.effect");
+    this.laserPoint = Cast<FxResource>(r"user\\jackhumbert\\effects\\sparks.effect");
 
     let vehicleComponent = this.component.GetVehicle().GetVehicleComponent();
 
@@ -2892,6 +2895,10 @@ public class FlightFx {
       WorldTransform.SetPosition(wt, new Vector4(0.0, -0.5, 0.6, 0.0));
       this.laserFx.AttachToComponent(this.component.GetVehicle(), entAttachmentTarget.Transform, n"FunGun", wt);
     }
+    if !IsDefined(this.laserPointFx) {
+      this.laserPointFx = GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(this.laserPoint, wt);
+    }
+
     // WorldTransform.SetPosition(wt, new Vector4(0.0, -10.0, 0.5, 0.0));
     // laserFx.AttachToComponent(this.component.GetVehicle(), entAttachmentTarget.TargetPosition, n"FunGun", wt);
     // laser.SetBlackboardValue(n"alpha", 1.0);
@@ -3062,16 +3069,22 @@ public class FlightFx {
       let slotT: WorldTransform;
       let vehicleSlots = this.component.GetVehicle().GetVehicleComponent().FindComponentByName(n"vehicle_slots") as SlotComponent;
       vehicleSlots.GetSlotTransform(n"PanzerCannon", slotT);
+      // this.laserPointFx.UpdateTransform(slotT);
       let v = WorldTransform.GetOrientation(slotT) * (q * new Vector4(0.0, -100.0, 0.0, 0.0));
       let p = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT));
       let findTarget: TraceResult;
       this.component.sqs.SyncRaycastByCollisionGroup(p, p - v, n"Shooting", findTarget, false, false);
+      let pointWt: WorldTransform;
       if TraceResult.IsValid(findTarget) {
         WorldPosition.SetVector4(wp, Vector4.Vector3To4(findTarget.position));
+        WorldTransform.SetPosition(pointWt, Vector4.Vector3To4(findTarget.position));
       } else {
         WorldPosition.SetVector4(wp, p - v);
+        WorldTransform.SetPosition(pointWt, p - v);
       }
       this.laserFx.UpdateTargetPosition(wp);
+      // this.laserPointFx.UpdateTargetPosition(wp);
+      this.laserPointFx.UpdateTransform(pointWt);
 
       let thrusterAmount = Vector4.Dot(new Vector4(0.0, 0.0, 1.0, 0.0), force);
       // let thrusterAmount = ClampF(this.surge.GetValue(), 0.0, 1.0) * 1.0;

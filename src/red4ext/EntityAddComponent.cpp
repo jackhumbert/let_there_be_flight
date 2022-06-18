@@ -114,7 +114,7 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
       weapon->item = RED4ext::TweakDBID("Items.Panzer_Cannon");
       weapon->maxPitch = 30.0;
       weapon->maxYaw = 30.0;
-      weapon->minPitch = -30.0;
+      weapon->minPitch = -10.0;
       weapon->minYaw = -30.0;
       weapon->singleProjectileCycleTime = 1.0;
       weapon->singleShotProjectiles = 1;
