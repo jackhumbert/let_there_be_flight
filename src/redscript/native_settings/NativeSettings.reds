@@ -1,6 +1,6 @@
 public native class NativeSettings extends IScriptable {
     public native static func GetInstance() -> ref<NativeSettings>;
-    public native let isAccessingModspace: Bool;
+    public native let isAccessingModspace: Int32;
 
     public let fromMods: Bool;
     public let settingsOptionsList: inkCompoundRef;

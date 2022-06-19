@@ -14,15 +14,16 @@
 
 #include <RED4ext/Addresses.hpp>
 #include <RED4ext/NativeTypes.hpp>
+#include <fstream>
 
 struct NativeSettings : RED4ext::IScriptable {
   RED4ext::CClass *GetNativeType();
 
   static NativeSettings *GetInstance();
   RED4ext::user::RuntimeSettings *modSettings;
-  bool isAccessingModspace;
+  int32_t isAccessingModspace;
 };
-RED4EXT_ASSERT_SIZE(NativeSettings, 0x49);
+RED4EXT_ASSERT_SIZE(NativeSettings, 0x4C);
 RED4EXT_ASSERT_OFFSET(NativeSettings, isAccessingModspace, 0x48);
 
 RED4ext::TTypedClass<NativeSettings> cls("NativeSettings");
@@ -53,6 +54,13 @@ void GetInstanceScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aF
   }
 }
 
+struct FileFunctions {
+  uint64_t vft;
+  RED4ext::CString cache;
+  RED4ext::CString engine;
+  RED4ext::CString r6;
+};
+
 struct SettingsDataReader {
   void *__vftable;
   uint32_t unk08;
@@ -64,10 +72,35 @@ struct SettingsDataReader {
   RED4ext::CString filename;
 };
 
+struct BufferWriter {
+  void *__vftable;
+  uint32_t unk08;
+  uint32_t unk0C;
+  uint64_t unk10;
+  uint64_t unk18;
+  SettingsDataReader* fileWriter;
+  uint64_t unk28;
+  uint64_t unk30;
+  uint64_t unk38;
+  uint64_t unk40;
+  uint64_t unk48;
+  uint64_t unk50;
+  uint64_t unk58;
+  uint64_t unk60;
+  uint64_t unk68;
+};
+
 // 48 89 5C 24 08 48 89 6C 24 18 56 57 41 56 48 83 EC 40 48 8B F2 48 8D 4C 24 68 49 8B D0 41 8B E9
 constexpr uintptr_t CreateReaderAddr = 0x2B92D20 + 0x140000C00 - RED4ext::Addresses::ImageBase;
-RED4ext::RelocFunc<SettingsDataReader **(*)(uintptr_t *, SettingsDataReader **reader, RED4ext::CString* filename, char flags)>
+RED4ext::RelocFunc<SettingsDataReader **(*)(FileFunctions *, SettingsDataReader **reader, RED4ext::CString *filename,
+                                            char flags)>
   CreateReader(CreateReaderAddr);
+
+// 48 89 5C 24 20 55 57 41 56 48 83 EC 30 48 8B 01 4C 8B F2 49 8B D0 41 8B E9 49 8B F8 FF 90 A0 00
+constexpr uintptr_t CreateWriterAddr = 0x2B92EE0 + 0x140000C00 - RED4ext::Addresses::ImageBase;
+RED4ext::RelocFunc<BufferWriter **(*)(FileFunctions *, BufferWriter **writer, RED4ext::CString *filename,
+                                            uint64_t flags)>
+  CreateWriter(CreateWriterAddr);
 
 // 40 53 48 83 EC 20 65 48 8B 04 25 58 00 00 00 8B 0D EB DF FF 01 BA 9C 07 00 00 48 8B 0C C8 8B 04
 RED4ext::user::RuntimeSettings *__fastcall GetRuntimeSettings();
@@ -75,13 +108,12 @@ constexpr uintptr_t GetRuntimeSettingsAddr = 0x2B9A730 + 0x140000C00 - RED4ext::
 decltype(&GetRuntimeSettings) GetRuntimeSettings_Original;
 
 RED4ext::user::RuntimeSettings *__fastcall GetRuntimeSettings() { 
-  if (NativeSettings::GetInstance()->isAccessingModspace) {
+  if (NativeSettings::GetInstance()->isAccessingModspace > 0) {
     return NativeSettings::GetInstance()->modSettings;
   } else {
     return GetRuntimeSettings_Original();
   }
 }
-
 
 // 48 89 5C 24 08 48 89 74 24 10 48 89 7C 24 18 55 41 54 41 55 41 56 41 57 48 8D 6C 24 A0 48 81 EC - index 1
 bool __fastcall ReadSettingsOptions(RED4ext::user::RuntimeSettings **rcx0, RED4ext::CString *a2, RED4ext::CString *a3);
@@ -109,7 +141,7 @@ bool __fastcall ReadSettingsOptions(RED4ext::user::RuntimeSettings** settings, R
 
   // setup empty arrays/hashmaps
   nativeSettings->modSettings->m_validators =
-      RED4ext::HashMap<uint64_t, uint64_t>((*settings)->m_validators.GetAllocator());
+      RED4ext::HashMap<uint64_t, RED4ext::DynArray<void *>>((*settings)->m_validators.GetAllocator());
   nativeSettings->modSettings->unk70 = RED4ext::DynArray<void *>((*settings)->unk70.GetAllocator());
   nativeSettings->modSettings->unk80 = RED4ext::HashMap<uint64_t, uint64_t>((*settings)->unk80.GetAllocator());
   nativeSettings->modSettings->unkB0 = RED4ext::DynArray<void *>((*settings)->unkB0.GetAllocator());
@@ -123,10 +155,10 @@ bool __fastcall ReadSettingsOptions(RED4ext::user::RuntimeSettings** settings, R
       RED4ext::DynArray<RED4ext::user::RuntimeSettingsVar *>((*settings)->data.GetAllocator());
   nativeSettings->modSettings->delayedChanges =
       RED4ext::DynArray<RED4ext::user::RuntimeSettingsVar *>((*settings)->delayedChanges.GetAllocator());
-  nativeSettings->modSettings->unk220 = RED4ext::DynArray<void *>((*settings)->unk220.GetAllocator());
+  nativeSettings->modSettings->unk220 = RED4ext::DynArray<RED4ext::user::RuntimeSettingsVar *>((*settings)->unk220.GetAllocator());
   nativeSettings->modSettings->unk230 = RED4ext::DynArray<void *>((*settings)->unk230.GetAllocator());
 
-  nativeSettings->modSettings->unk266 = (*settings)->unk266;
+  nativeSettings->modSettings->unk266 = (*settings)->unk266; // set to 1 before load i think
   nativeSettings->modSettings->unk26C = (*settings)->unk26C;
   nativeSettings->modSettings->unk270 = (*settings)->unk270;
   nativeSettings->modSettings->unk274 = (*settings)->unk274;
@@ -140,52 +172,75 @@ bool __fastcall ReadSettingsOptions(RED4ext::user::RuntimeSettings** settings, R
                         "2077\\r6\\config\\settings\\mod_options_platform.json";
   RED4ext::CString optionsPath = RED4ext::CString(options);
 
-  nativeSettings->isAccessingModspace = true;
+  nativeSettings->isAccessingModspace++;
   auto mod = ReadSettingsOptions_Original(&nativeSettings->modSettings, &optionsDefPath, &optionsPath);
-  nativeSettings->isAccessingModspace = false;
+  nativeSettings->isAccessingModspace--;
   return og && mod; // ok to combine, i think
 }
 
-// 48 89 4C 24 08 55 57 41 55 48 8D 6C 24 B0 48 81 EC 50 01 00 00 48 8B FA 4C 8B E9 48 85 D2 75 0E
+// 40 53 48 83 EC 20 48 8B D9 E8 F2 8D 00 00 48 8B CB E8 1A 08 00 00 48 8B CB E8 C2 02 00 00 48 8B
+void * __fastcall ProcessSettingsData(RED4ext::user::RuntimeSettings *settings);
+constexpr uintptr_t ProcessSettingsDataAddr = 0x2B9B8A0 + 0x140000C00 - RED4ext::Addresses::ImageBase;
+decltype(&ProcessSettingsData) ProcessSettingsData_Original;
+
+void * __fastcall ProcessSettingsData(RED4ext::user::RuntimeSettings *settings) {
+
+  auto nativeSettings = NativeSettings::GetInstance();
+
+  auto og = nullptr;
+
+  if (nativeSettings->isAccessingModspace == 0) {
+    auto og = ProcessSettingsData_Original(settings);
+  }
+
+  nativeSettings->isAccessingModspace++;
+  auto mod = ProcessSettingsData_Original(nativeSettings->modSettings);
+  nativeSettings->isAccessingModspace--;
+
+  return og;
+}
+
+  // 48 89 4C 24 08 55 57 41 55 48 8D 6C 24 B0 48 81 EC 50 01 00 00 48 8B FA 4C 8B E9 48 85 D2 75 0E
 RED4ext::user::SettingsLoadStatus __fastcall ReadSettingsData(RED4ext::user::RuntimeSettings **settings,
                                                                   SettingsDataReader *reader);
 constexpr uintptr_t ReadSettingsDataAddr = 0x2BAD480 + 0x140000C00 - RED4ext::Addresses::ImageBase;
 decltype(&ReadSettingsData) ReadSettingsData_Original;
 
 RED4ext::user::SettingsLoadStatus __fastcall ReadSettingsData(RED4ext::user::RuntimeSettings** settings,
-  SettingsDataReader* reader)
-{
-  auto og = ReadSettingsData_Original(settings, reader);
+  SettingsDataReader* reader) {
 
   auto nativeSettings = NativeSettings::GetInstance();
-  nativeSettings->isAccessingModspace = true;
+
+  auto og = RED4ext::user::SettingsLoadStatus::Loaded;
+
+  if (nativeSettings->isAccessingModspace == 0) {
+    og = ReadSettingsData_Original(settings, reader);
+  }
+
+  nativeSettings->isAccessingModspace++;
 
   const char *data =
       "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\r6\\config\\settings\\mod_data.json";
-
   auto dataC = RED4ext::CString(data);
-  // nativeSettings->modSettings->version = (*settings)->version;
 
+  auto ff = *(FileFunctions **)(0x00007FF747415310);
   auto modReader = new SettingsDataReader();
-
-  CreateReader(nullptr, &modReader, &dataC, 0);
+  CreateReader(ff, &modReader, &dataC, 0);
 
   nativeSettings->modSettings->unk261 = 0x00;
   nativeSettings->modSettings->unk262 = 0x00;
   nativeSettings->modSettings->unk263 = 0x00;
   nativeSettings->modSettings->unk264 = 0x02;
 
-  // modReader->__vftable = reader->__vftable;
-  // modReader->unk08 = 0x0000000A;
-  // modReader->unk0C = 0x000000C3;
-  // modReader->unk10 = 0x0000000000000000;
-  // modReader->unk18 = 0x0000000000000000;
-  // modReader->unk20 = 0xFFFFFFFFFFFFFFFF;
-  // modReader->unk28 = 0x0000000000000000;
-  // modReader->filename = RED4ext::CString(data);
-
   auto mod = ReadSettingsData_Original(&nativeSettings->modSettings, modReader);
-  nativeSettings->isAccessingModspace = false;
+
+  if (modReader) {
+    auto mem = (*(void *(__fastcall **)(SettingsDataReader *))(*(uint64_t *)modReader))(modReader);
+    (*(void(__fastcall **)(SettingsDataReader *, uint64_t))(*(uint64_t *)modReader + 8i64))(modReader, 0i64);
+    //free(mem);
+  }
+
+  nativeSettings->isAccessingModspace--;
   if (mod == RED4ext::user::SettingsLoadStatus::FileIsMissing) {
     spdlog::error("Couldn't find settings data file: {}", data);
   } else if (mod == RED4ext::user::SettingsLoadStatus::FileIsCorrupted) {
@@ -194,7 +249,92 @@ RED4ext::user::SettingsLoadStatus __fastcall ReadSettingsData(RED4ext::user::Run
   return og; // not ok to combine, will restore defaults if it fails
 }
 
-struct ConfigVarModule : FlightModule {
+struct ModSettingsWriter {
+  virtual void sub_00() {}
+  virtual void sub_08() {}
+  virtual void WriteFile(char *contents, uint32_t length) {
+    std::ofstream modfile;
+    modfile.open(this->filename, std::ios::out);
+    if (modfile) {
+      modfile.write(contents, length);
+      spdlog::info("Wrote {} to settings file: {}", length, this->filename);
+      this->status = 0;
+    } else {
+      spdlog::error("Could not open file for writing: {}", this->filename);
+      this->status = 0x80000;
+    }
+    modfile.close();
+  }
+
+  uint32_t status;
+  const char *filename;
+};
+
+// 48 89 54 24 10 55 53 48 8D 6C 24 B1 48 81 EC E8 00 00 00 48 8B D9 48 85 D2 75 0C 33 C0 48 81 C4
+uint64_t __fastcall WriteSettingsData(RED4ext::user::RuntimeSettings **settings, BufferWriter *writer);
+constexpr uintptr_t WriteSettingsDataAddr = 0x2BB36D0 + 0x140000C00 - RED4ext::Addresses::ImageBase;
+decltype(&WriteSettingsData) WriteSettingsData_Original;
+
+uint64_t __fastcall WriteSettingsData(RED4ext::user::RuntimeSettings **settings, BufferWriter *writer) {
+  auto nativeSettings = NativeSettings::GetInstance();
+
+  // maybe these are data independent
+   nativeSettings->modSettings->m_validators = (*settings)->m_validators;
+  // nativeSettings->modSettings->unk70 = (*settings)->unk70;
+  // nativeSettings->modSettings->unk80 = (*settings)->unk80;
+  // nativeSettings->modSettings->unkB0 = (*settings)->unkB0;
+
+  auto og = 0i64;
+
+  if (nativeSettings->isAccessingModspace == 0) {
+    og = WriteSettingsData_Original(settings, writer);
+  }
+
+  nativeSettings->isAccessingModspace++;
+
+  nativeSettings->modSettings->unk263 = 0;
+
+  const char *data =
+      "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\r6\\config\\settings\\mod_data.json";
+  auto dataC = RED4ext::CString(data);
+  //  nativeSettings->modSettings->version = (*settings)->version;
+
+  // auto ff = new FileFunctions();
+  // ff->vft = 0x00007FF745E27188;
+  // const char *cache = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\cache\\";
+  // ff->cache = RED4ext::CString(cache);
+  // const char *engine = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\engine\\";
+  // ff->engine = RED4ext::CString(engine);
+  // const char *r6 = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\r6\\";
+  // ff->r6 = RED4ext::CString(r6);
+   auto ff = *(FileFunctions **)(0x00007FF747415310);
+
+   BufferWriter * modWriter = nullptr;
+  //auto modWriter = new ModSettingsWriter();
+  //modWriter->filename =
+      //"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\r6\\config\\settings\\mod_data.json";
+  CreateWriter(ff, &modWriter, &dataC, 1);
+  //RED4ext::RelocFunc<BufferWriter **(*)(FileFunctions *, BufferWriter * *writer, RED4ext::CString * filename,
+                                        //uint64_t flags)> CreateFileWriter(*(uint64_t*)(ff->vft + 0x10));
+  //CreateFileWriter(ff, &modWriter, &dataC, 1);
+
+  auto mod = WriteSettingsData_Original(&nativeSettings->modSettings, modWriter);
+
+  if (modWriter) {
+    auto mem = (*(void *(__fastcall **)(BufferWriter *))(*(uint64_t *)modWriter))(modWriter);
+    (*(void(__fastcall **)(BufferWriter *, uint64_t))(*(uint64_t *)modWriter + 8i64))(modWriter, 0i64);
+    // free(mem);
+  }
+
+  if (mod == 0) {
+    spdlog::error("Unable to write settings file: {}", data);
+  }
+  nativeSettings->isAccessingModspace--;
+
+  return og;
+}
+
+struct NativeSettingsModule : FlightModule {
   void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
     auto loadedRuntimeSettings = false;
     while (!loadedRuntimeSettings) {
@@ -211,7 +351,17 @@ struct ConfigVarModule : FlightModule {
     auto loadedData = false;
     while (!loadedData) {
       loadedData = aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(ReadSettingsDataAddr), &ReadSettingsData,
-                                     reinterpret_cast<void **>(&ReadSettingsData_Original));
+                                         reinterpret_cast<void **>(&ReadSettingsData_Original));
+    }
+    auto loadedProcess = false;
+    while (!loadedProcess) {
+      loadedProcess = aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(ProcessSettingsDataAddr), &ProcessSettingsData,
+                                         reinterpret_cast<void **>(&ProcessSettingsData_Original));
+    }
+    auto loadedDataWriter = false;
+    while (!loadedDataWriter) {
+      loadedDataWriter = aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(WriteSettingsDataAddr), &WriteSettingsData,
+                                         reinterpret_cast<void **>(&WriteSettingsData_Original));
     }
   }
 
@@ -225,7 +375,7 @@ struct ConfigVarModule : FlightModule {
 
   void PostRegisterTypes() {
     auto rtti = RED4ext::CRTTISystem::Get();
-    cls.props.EmplaceBack(RED4ext::CProperty::Create(rtti->GetType("Bool"), "isAccessingModspace", nullptr,
+    cls.props.EmplaceBack(RED4ext::CProperty::Create(rtti->GetType("Int32"), "isAccessingModspace", nullptr,
                                                      offsetof(NativeSettings, isAccessingModspace)));
     auto getInstance = RED4ext::CClassStaticFunction::Create(&cls, "GetInstance", "GetInstance", &GetInstanceScripts,
                                                              {.isNative = true, .isStatic = true});
@@ -236,7 +386,9 @@ struct ConfigVarModule : FlightModule {
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(GetRuntimeSettingsAddr));
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(ReadSettingsOptionsAddr));
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(ReadSettingsDataAddr));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(ProcessSettingsDataAddr));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(WriteSettingsDataAddr));
   }
 };
 
-REGISTER_FLIGHT_MODULE(ConfigVarModule);
+REGISTER_FLIGHT_MODULE(NativeSettingsModule);

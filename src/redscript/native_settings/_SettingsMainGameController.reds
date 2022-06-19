@@ -1,66 +1,64 @@
-@wrapMethod(SettingsMainGameController)
-protected cb func OnInitialize() -> Void {
-    let ns = NativeSettings.GetInstance();
+// @wrapMethod(SettingsMainGameController)
+// protected cb func OnInitialize() -> Void {
+//     let ns = NativeSettings.GetInstance();
     
-    if ns.fromMods {
-        // ns.settingsMainController = this;
-        let root = this.GetRootCompoundWidget();
-        root.GetWidgetByPathName(n"wrapper/extra/controller_btn").SetVisible(false);
-        root.GetWidgetByPathName(n"wrapper/extra/brightness_btn").SetVisible(false);
-        root.GetWidgetByPathName(n"wrapper/extra/hdr_btn").SetVisible(false);
-        ns.isAccessingModspace = true;
-        wrappedMethod();
-        // ns.isAccessingModspace = false;
-    } else {
-        wrappedMethod();
-    }
+//     if ns.fromMods {
+//         // ns.settingsMainController = this;
+//         let root = this.GetRootCompoundWidget();
+//         root.GetWidgetByPathName(n"wrapper/extra/controller_btn").SetVisible(false);
+//         root.GetWidgetByPathName(n"wrapper/extra/brightness_btn").SetVisible(false);
+//         root.GetWidgetByPathName(n"wrapper/extra/hdr_btn").SetVisible(false);
+//         ns.isAccessingModspace = true;
+//         wrappedMethod();
+//         // ns.isAccessingModspace = false;
+//     } else {
+//         wrappedMethod();
+//     }
 
 
-    // if ns.fromMods {
-    //     ns.settingsOptionsList = this.m_settingsOptionsList;
-    // }
-}
+//     // if ns.fromMods {
+//     //     ns.settingsOptionsList = this.m_settingsOptionsList;
+//     // }
+// }
 
 @wrapMethod(SettingsMainGameController)
 private final func CheckHDRSettingVisibility() -> Void {
-    let ns = NativeSettings.GetInstance();
-    if !ns.fromMods {
+    if !IsDefined(this as ModStngsMainGameController) {
         wrappedMethod();
     }
 }
 
-@wrapMethod(SettingsMainGameController)
-protected cb func OnUninitialize() -> Bool {
-    let ns = NativeSettings.GetInstance();
-    ns.isAccessingModspace = false;
-}
+// @wrapMethod(SettingsMainGameController)
+// protected cb func OnUninitialize() -> Bool {
+//     let ns = NativeSettings.GetInstance();
+//     ns.isAccessingModspace = false;
+// }
 
 @wrapMethod(SettingsMainGameController)
 private final func ShowBrightnessScreen() -> Void {
-    if !NativeSettings.GetInstance().fromMods {
+    if !IsDefined(this as ModStngsMainGameController) {
         wrappedMethod();
     }
 }
 
 @wrapMethod(SettingsMainGameController)
 private final func ShowControllerScreen() -> Void {
-    if !NativeSettings.GetInstance().fromMods {
+    if !IsDefined(this as ModStngsMainGameController) {
         wrappedMethod();
     }
 }
 
 @wrapMethod(SettingsMainGameController)
 private final func RequestClose() -> Void {
-    let ns = NativeSettings.GetInstance();
-    if ns.fromMods {
-        ns.RequestClose();
+    if !IsDefined(this as ModStngsMainGameController) {
+        NativeSettings.GetInstance().RequestClose();
     }
     wrappedMethod();
 }
 
 @wrapMethod(SettingsMainGameController)
 private final func PopulateCategories(idx: Int32) -> Void {
-    if NativeSettings.GetInstance().fromMods {
+    if !IsDefined(this as ModStngsMainGameController) {
         let curCategory: SettingsCategory;
         let newData: ref<ListItemData>;
         this.m_selectorCtrl.Clear();
