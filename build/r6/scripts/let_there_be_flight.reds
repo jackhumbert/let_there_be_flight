@@ -1292,6 +1292,8 @@ public native class FlightController extends IScriptable {
   private let uiBlackboard: ref<IBlackboard>;
   private let uiSystemBB: ref<UI_SystemDef>;
 
+  public let initialized: Bool;
+
   // public let effectInstance: ref<EffectInstance>;
 
   // protected let m_settingsListener: ref<FlightSettingsListener>;
@@ -1324,6 +1326,8 @@ public native class FlightController extends IScriptable {
     this.uiBlackboard = GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().UI_System);
     this.uiSystemBB = GetAllBlackboardDefs().UI_System;
 
+    this.initialized = true;
+
     // this.trackedMappinId = this.uiBlackboard.RegisterListenerVariant(this.uiSystemBB.TrackedMappin, this, n"OnTrackedMappinUpdated");
     // this.uiBlackboard.SignalVariant(this.uiSystemBB.TrackedMappin);
 
@@ -1341,10 +1345,12 @@ public native class FlightController extends IScriptable {
   }
   
   public static func CreateInstance(player: ref<PlayerPuppet>) {
-    FlightLog.Info("[FlightController] CreateInstance Started");
+    // FlightLog.Info("[FlightController] CreateInstance Started");
     // let self: ref<FlightController> = new FlightController();
     let self = FlightController.GetInstance();
-    self.Initialize(player);  
+    if !self.initialized {
+      self.Initialize(player);  
+    }
 
     // This strong reference will tie the lifetime of the singleton 
     // to the lifetime of the player entity
@@ -1353,7 +1359,7 @@ public native class FlightController extends IScriptable {
     // This weak reference is used as a global variable 
     // to access the mod instance anywhere
     // GetAllBlackboardDefs().flightController = self;
-    FlightLog.Info("[FlightController] CreateInstance Finished");
+    // FlightLog.Info("[FlightController] CreateInstance Finished");
   }
   
   // public static func GetInstance() -> wref<FlightController> {
