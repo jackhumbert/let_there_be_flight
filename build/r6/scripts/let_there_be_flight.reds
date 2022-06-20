@@ -191,6 +191,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   public let m_vehicleTPPCallbackID: ref<CallbackHandle>;
 
   public let active: Bool;
+  public let firstRun: Bool;
   public let hasUpdate: Bool;
   public let isPlayerMounted: Bool;
 
@@ -381,6 +382,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     } else {
       // FlightLog.Info("[FlightComponent] OnMountingEvent for other vehicle: " + this.GetVehicle().GetDisplayName());
     }
+    
   }
   
   protected cb func OnVehicleFinishedMountingEvent(evt: ref<VehicleFinishedMountingEvent>) -> Bool {
@@ -392,13 +394,19 @@ public class FlightComponent extends ScriptableDeviceComponent {
         // this.sys.audio.Stop("otherVehicle" + ToString(EntityID.GetHash(this.GetVehicle().GetEntityID())));
         //this.sys.audio.Play("vehicle3_on");
         // this.sys.audio.StartWithPitch("playerVehicle", "vehicle3_TPP", this.GetPitch());
+        
+      }
+      else{// make only work for player not npcs in non activated vehicle
+        let normal: Vector4;
+        this.SetupTires();
+        if !this.FindGround(normal) || this.distance > 1.0 && !this.firstRun {
+          this.firstRun = true; //only run once on load helps prevent random activations
+          
+          this.Activate();
+        }
       }
     }
-    let normal: Vector4;
-    this.SetupTires();
-    if !this.FindGround(normal) || this.distance > 1.0 {
-      this.Activate();
-    }
+    
   }
 
   protected cb func OnUnmountingEvent(evt: ref<UnmountingEvent>) -> Bool {
