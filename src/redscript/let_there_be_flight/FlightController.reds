@@ -73,13 +73,10 @@ public native class FlightController extends IScriptable {
   // protected let m_settingsListener: ref<FlightSettingsListener>;
   // protected let m_groupPath: CName;
 
-  private func Initialize(player: ref<PlayerPuppet>) {
+  private func Initialize() {
     FlightLog.Info("[FlightController] Initialize");
     this.sys = FlightSystem.GetInstance();
     // this.sys = GameInstance.GetScriptableSystemsContainer(player.GetGame()).Get(n"FlightSystem") as FlightSystem;
-    this.sys.Setup(player);
-    this.gameInstance = player.GetGame();
-    this.player = player;
     this.enabled = false;
     this.active = false;
     this.showOptions = false;
@@ -114,6 +111,12 @@ public native class FlightController extends IScriptable {
     // this.m_settingsListener.Register(this.m_groupPath);
   }
 
+  private func SetPlayer(player: ref<PlayerPuppet>) {
+    this.sys.Setup(player);
+    this.gameInstance = player.GetGame();
+    this.player = player;
+  }
+
   public const func GetBlackboard() -> ref<IBlackboard> {
     return GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().VehicleFlight);
   }
@@ -123,8 +126,9 @@ public native class FlightController extends IScriptable {
     // let self: ref<FlightController> = new FlightController();
     let self = FlightController.GetInstance();
     if !self.initialized {
-      self.Initialize(player);  
+      self.Initialize();  
     }
+    self.SetPlayer(player);
 
     // This strong reference will tie the lifetime of the singleton 
     // to the lifetime of the player entity
