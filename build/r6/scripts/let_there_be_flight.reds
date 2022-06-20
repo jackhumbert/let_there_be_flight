@@ -648,9 +648,15 @@ public class FlightComponent extends ScriptableDeviceComponent {
       force *= collisionDampener;
       this.collisionTimer += timeDelta;
     }
+    // only apply force if active - fixes bunnyhopping
+    if this.active { 
+      this.force += force;
+      this.torque += torque;
+    }else{
+      this.force =  Vector4.EmptyVector();
+      this.torque =  Vector4.EmptyVector();
+    }
 
-    this.force += force;
-    this.torque += torque;
   }
 
   protected cb func OnVehicleFlightDeactivationEvent(evt: ref<VehicleFlightDeactivationEvent>) -> Bool {
