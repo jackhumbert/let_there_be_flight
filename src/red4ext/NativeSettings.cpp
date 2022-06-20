@@ -54,31 +54,46 @@ void GetInstanceScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aF
   }
 }
 
+struct FileFunctions;
+struct FileReader;
+struct FileWriter;
+
+struct FileFunctions_vtbl {
+  FileFunctions * ( __fastcall * DestroyFileFunctions)(FileFunctions *, char);
+  FileReader ** (__fastcall * CreateReader)(FileFunctions *, FileReader **, RED4ext::CString *, char);
+  FileWriter ** (__fastcall * CreateWriter)(FileFunctions *, FileWriter **, RED4ext::CString *, uint64_t);
+};
+
 struct FileFunctions {
-  uint64_t vft;
+  FileFunctions_vtbl * vft;
   RED4ext::CString cache;
   RED4ext::CString engine;
   RED4ext::CString r6;
 };
 
-struct SettingsDataReader {
-  void *__vftable;
+struct FileHandler;
+
+struct FileHandler_vtbl {
+  RED4ext::Memory::IAllocator *(__fastcall * GetAllocator)(FileHandler *);
+  FileHandler * (__fastcall *Close)(FileHandler *, uint64_t);
+};
+
+struct FileHandler {
+  FileHandler_vtbl *vft;
   uint32_t unk08;
   uint32_t unk0C;
   uint64_t unk10;
   uint64_t unk18;
+};
+
+struct FileReader : FileHandler {
   uint64_t unk20;
   uint64_t unk28;
   RED4ext::CString filename;
 };
 
-struct BufferWriter {
-  void *__vftable;
-  uint32_t unk08;
-  uint32_t unk0C;
-  uint64_t unk10;
-  uint64_t unk18;
-  SettingsDataReader* fileWriter;
+struct FileWriter : FileHandler {
+  FileReader* fileWriter;
   uint64_t unk28;
   uint64_t unk30;
   uint64_t unk38;
@@ -92,13 +107,13 @@ struct BufferWriter {
 
 // 48 89 5C 24 08 48 89 6C 24 18 56 57 41 56 48 83 EC 40 48 8B F2 48 8D 4C 24 68 49 8B D0 41 8B E9
 constexpr uintptr_t CreateReaderAddr = 0x2B92D20 + 0x140000C00 - RED4ext::Addresses::ImageBase;
-RED4ext::RelocFunc<SettingsDataReader **(*)(FileFunctions *, SettingsDataReader **reader, RED4ext::CString *filename,
+RED4ext::RelocFunc<FileReader **(*)(FileFunctions *, FileReader **reader, RED4ext::CString *filename,
                                             char flags)>
   CreateReader(CreateReaderAddr);
 
 // 48 89 5C 24 20 55 57 41 56 48 83 EC 30 48 8B 01 4C 8B F2 49 8B D0 41 8B E9 49 8B F8 FF 90 A0 00
 constexpr uintptr_t CreateWriterAddr = 0x2B92EE0 + 0x140000C00 - RED4ext::Addresses::ImageBase;
-RED4ext::RelocFunc<BufferWriter **(*)(FileFunctions *, BufferWriter **writer, RED4ext::CString *filename,
+RED4ext::RelocFunc<FileWriter **(*)(FileFunctions *, FileWriter **writer, RED4ext::CString *filename,
                                             uint64_t flags)>
   CreateWriter(CreateWriterAddr);
 
@@ -114,6 +129,14 @@ RED4ext::user::RuntimeSettings *__fastcall GetRuntimeSettings() {
     return GetRuntimeSettings_Original();
   }
 }
+
+// 270
+// 40 53 48 83 EC 20 65 48 8B 04 25 58 00 00 00 8B 0D EB DF FF 01 BA 9C 07 00 00 48 8B 0C C8 8B 04
+// 0x00007FF7453DB330 - 0x7FF742840000
+
+// 274
+// 48 83 EC 28 65 48 8B 04 25 58 00 00 00 8B 0D 5D BC FF 01 BA 9C 07 00 00  48 8B 0C C8 8B 04 0A 39
+// 0x00007FF7453DD6C0 - 0x7FF742840000
 
 // 48 89 5C 24 08 48 89 74 24 10 48 89 7C 24 18 55 41 54 41 55 41 56 41 57 48 8D 6C 24 A0 48 81 EC - index 1
 bool __fastcall ReadSettingsOptions(RED4ext::user::RuntimeSettings **rcx0, RED4ext::CString *a2, RED4ext::CString *a3);
@@ -185,6 +208,8 @@ decltype(&ProcessSettingsData) ProcessSettingsData_Original;
 
 void * __fastcall ProcessSettingsData(RED4ext::user::RuntimeSettings *settings) {
 
+  // need to pass over iscriptable/userSettings thing
+
   auto nativeSettings = NativeSettings::GetInstance();
 
   auto og = nullptr;
@@ -202,12 +227,12 @@ void * __fastcall ProcessSettingsData(RED4ext::user::RuntimeSettings *settings) 
 
   // 48 89 4C 24 08 55 57 41 55 48 8D 6C 24 B0 48 81 EC 50 01 00 00 48 8B FA 4C 8B E9 48 85 D2 75 0E
 RED4ext::user::SettingsLoadStatus __fastcall ReadSettingsData(RED4ext::user::RuntimeSettings **settings,
-                                                                  SettingsDataReader *reader);
+                                                                  FileReader *reader);
 constexpr uintptr_t ReadSettingsDataAddr = 0x2BAD480 + 0x140000C00 - RED4ext::Addresses::ImageBase;
 decltype(&ReadSettingsData) ReadSettingsData_Original;
 
 RED4ext::user::SettingsLoadStatus __fastcall ReadSettingsData(RED4ext::user::RuntimeSettings** settings,
-  SettingsDataReader* reader) {
+  FileReader* reader) {
 
   auto nativeSettings = NativeSettings::GetInstance();
 
@@ -224,8 +249,9 @@ RED4ext::user::SettingsLoadStatus __fastcall ReadSettingsData(RED4ext::user::Run
   auto dataC = RED4ext::CString(data);
 
   auto ff = *(FileFunctions **)(0x00007FF747415310);
-  auto modReader = new SettingsDataReader();
-  CreateReader(ff, &modReader, &dataC, 0);
+  auto modReader = new FileReader();
+  //CreateReader(ff, &modReader, &dataC, 0);
+  ff->vft->CreateReader(ff, &modReader, &dataC, 0);
 
   nativeSettings->modSettings->unk261 = 0x00;
   nativeSettings->modSettings->unk262 = 0x00;
@@ -234,10 +260,16 @@ RED4ext::user::SettingsLoadStatus __fastcall ReadSettingsData(RED4ext::user::Run
 
   auto mod = ReadSettingsData_Original(&nativeSettings->modSettings, modReader);
 
+  //if (modReader) {
+  //  auto mem = (*(void *(__fastcall **)(FileReader *))(*(uint64_t *)modReader))(modReader);
+  //  (*(void(__fastcall **)(FileReader *, uint64_t))(*(uint64_t *)modReader + 8i64))(modReader, 0i64);
+  //  //free(mem);
+  //}
+
   if (modReader) {
-    auto mem = (*(void *(__fastcall **)(SettingsDataReader *))(*(uint64_t *)modReader))(modReader);
-    (*(void(__fastcall **)(SettingsDataReader *, uint64_t))(*(uint64_t *)modReader + 8i64))(modReader, 0i64);
-    //free(mem);
+    auto mem = modReader->vft->GetAllocator(modReader);
+    modReader->vft->Close(modReader, 0i64);
+    mem->Free(modReader);
   }
 
   nativeSettings->isAccessingModspace--;
@@ -271,11 +303,11 @@ struct ModSettingsWriter {
 };
 
 // 48 89 54 24 10 55 53 48 8D 6C 24 B1 48 81 EC E8 00 00 00 48 8B D9 48 85 D2 75 0C 33 C0 48 81 C4
-uint64_t __fastcall WriteSettingsData(RED4ext::user::RuntimeSettings **settings, BufferWriter *writer);
+uint64_t __fastcall WriteSettingsData(RED4ext::user::RuntimeSettings **settings, FileWriter *writer);
 constexpr uintptr_t WriteSettingsDataAddr = 0x2BB36D0 + 0x140000C00 - RED4ext::Addresses::ImageBase;
 decltype(&WriteSettingsData) WriteSettingsData_Original;
 
-uint64_t __fastcall WriteSettingsData(RED4ext::user::RuntimeSettings **settings, BufferWriter *writer) {
+uint64_t __fastcall WriteSettingsData(RED4ext::user::RuntimeSettings **settings, FileWriter *writer) {
   auto nativeSettings = NativeSettings::GetInstance();
 
   // maybe these are data independent
@@ -309,21 +341,29 @@ uint64_t __fastcall WriteSettingsData(RED4ext::user::RuntimeSettings **settings,
   // ff->r6 = RED4ext::CString(r6);
    auto ff = *(FileFunctions **)(0x00007FF747415310);
 
-   BufferWriter * modWriter = nullptr;
+   auto modWriter = new FileWriter();
   //auto modWriter = new ModSettingsWriter();
   //modWriter->filename =
       //"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\r6\\config\\settings\\mod_data.json";
-  CreateWriter(ff, &modWriter, &dataC, 1);
-  //RED4ext::RelocFunc<BufferWriter **(*)(FileFunctions *, BufferWriter * *writer, RED4ext::CString * filename,
+  //CreateWriter(ff, &modWriter, &dataC, 1);
+
+   ff->vft->CreateWriter(ff, &modWriter, &dataC, 1);
+  //RED4ext::RelocFunc<FileWriter **(*)(FileFunctions *, FileWriter * *writer, RED4ext::CString * filename,
                                         //uint64_t flags)> CreateFileWriter(*(uint64_t*)(ff->vft + 0x10));
   //CreateFileWriter(ff, &modWriter, &dataC, 1);
 
   auto mod = WriteSettingsData_Original(&nativeSettings->modSettings, modWriter);
 
+  //if (modWriter) {
+  //  auto mem = (*(void *(__fastcall **)(FileWriter *))(*(uint64_t *)modWriter))(modWriter);
+  //  (*(void(__fastcall **)(FileWriter *, uint64_t))(*(uint64_t *)modWriter + 8i64))(modWriter, 0i64);
+  //  // free(mem);
+  //}
+
   if (modWriter) {
-    auto mem = (*(void *(__fastcall **)(BufferWriter *))(*(uint64_t *)modWriter))(modWriter);
-    (*(void(__fastcall **)(BufferWriter *, uint64_t))(*(uint64_t *)modWriter + 8i64))(modWriter, 0i64);
-    // free(mem);
+    auto mem = modWriter->vft->GetAllocator(modWriter);
+    modWriter->vft->Close(modWriter, 0i64);
+    mem->Free(modWriter);
   }
 
   if (mod == 0) {
