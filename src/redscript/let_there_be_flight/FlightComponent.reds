@@ -380,10 +380,29 @@ public class FlightComponent extends ScriptableDeviceComponent {
         this.surge = fc.surge.GetValue();
         this.sway = fc.sway.GetValue();
       } else {
-        let v = this.GetVehicle();
-        this.surge = v.acceleration * 0.5 - v.deceleration * 0.1;
-        this.yaw = -v.turnX4;
-        this.brake = v.handbrake * 0.5;
+        // let v = this.GetVehicle();
+        // this.surge = v.acceleration * 0.5 - v.deceleration * 0.1;
+        // this.yaw = -v.turnX4;
+        // this.brake = v.handbrake * 0.5;
+        this.pitch = 0.0;
+        this.roll = 0.0;
+        this.yaw = 0.0;
+        this.sway = 0.0;
+        this.surge = 0.0;  
+        
+        this.force = Vector4.EmptyVector();
+        this.torque = Vector4.EmptyVector();
+
+        //return to earth feature
+
+        this.brake = 1.0;
+
+        if this.distance > 1.5 { 
+        this.lift -=  MinF(this.distance / 100.0 * 0.01, 0.001); //todo : add easing
+        }else{
+          this.Deactivate(true);
+        }
+        
       }
     } else {
       this.yaw = 0.0;
