@@ -27,7 +27,9 @@ If you want to install the mod outside of a release (not recommended), the `buil
 
 ## Bugs
 
-If you come across something that doesn't work quite right, or interferes with another mod, [search for or create an issue!](https://github.com/jackhumbert/let_there_be_flight/issues) I have a lot of things on a private TODO list still, but can start to move things to Github issues.
+If you come across something that doesn't work quite right, or interferes with another mod, [search for an issue!](https://github.com/jackhumbert/let_there_be_flight/issues) I have a lot of things on a private TODO list still, but can start to move things to Github issues.
+
+**New issues/pull requests are disabled until I get things closer to a release and can manage things better.**
 
 Special thanks to @psiberx for [Codeware Lib](https://github.com/psiberx/cp2077-codeware/), [InkPlayground Demo](https://github.com/psiberx/cp2077-playground), and Redscript & CET examples on Discord, @WopsS for [RED4ext](https://github.com/WopsS/RED4ext), @jac3km4 for [Redscript toolkit](https://github.com/jac3km4/redscript), @yamashi for [CET](https://github.com/yamashi/CyberEngineTweaks) and the [E-mode mod](https://www.nexusmods.com/cyberpunk2077/mods/3207?tab=description) (very helpful in figuring out how to work with FMOD), @rfuzzo & team (especially @seberoth!) for [WolvenKit](https://github.com/WolvenKit/WolvenKit), and all of them for being helpful on Discord.
 
