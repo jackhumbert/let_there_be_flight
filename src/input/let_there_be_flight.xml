@@ -117,8 +117,8 @@
 
 	<mapping name="Flight_Roll" type="Axis" >
 		<button id="IK_Pad_RightAxisX" />
-		<button id="IK_Comma" val="1.0" overridableUI="vehicleFlightRollRight"/>
-		<button id="IK_Slash" val="-1.0" overridableUI="vehicleFlightRollLeft"/>
+		<button id="IK_Slash" val="1.0" overridableUI="vehicleFlightRollRight"/>
+		<button id="IK_Comma" val="-1.0" overridableUI="vehicleFlightRollLeft"/>
 	</mapping>
 	
 	<mapping name="Flight_Lift" type="Axis" >
