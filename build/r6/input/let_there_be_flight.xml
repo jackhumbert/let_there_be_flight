@@ -35,7 +35,8 @@
 		<!-- <action name="Flight_Trick" 		map="Flight_Trick" /> -->
 		<action name="Flight_Options"		map="Flight_Options"/>
 		<action name="Flight_UIToggle"	map="Flight_UIToggle"/>
-		<action name="Flight_ModeSwitch" map="Flight_ModeSwitch"/>
+		<action name="Flight_ModeSwitchBackward" map="Flight_ModeSwitchBackward"/>
+		<action name="Flight_ModeSwitchForward" map="Flight_ModeSwitchForward"/>
 		<action name="Roll"							map="Flight_Roll"/>
 		<action name="Pitch"						map="Flight_Pitch"/>
 		<!-- <action name="FlightCombat_Toggle"  map="FlightCombat_Toggle" /> -->
@@ -45,6 +46,7 @@
 		<action name="TurnX"						map="Flight_Yaw" />
 		<action name="Yaw"							map="Flight_Yaw" />
 		<action name="Lift" 						map="Flight_Lift" />
+		<action name="Sway" 						map="Flight_Sway" />
 		<!--action name="LeanFB"						map="LeftY_Axis_Vehicle" /-->
 		<!--action name="RockFB"						map="LeftY_Axis_Vehicle_RockFB" /-->
 		<action name="ToggleVehCamera"	map="VehicleCameraToggle" />
@@ -87,8 +89,12 @@
 		<button id="IK_3" />
 	</mapping>
 
-	<mapping name="Flight_ModeSwitch" type="Button">
+	<mapping name="Flight_ModeSwitchBackward" type="Button">
 		<button id="IK_Pad_DigitLeft" />
+	</mapping>
+
+	<mapping name="Flight_ModeSwitchForward" type="Button">
+		<button id="IK_Pad_DigitRight" />
 		<button id="IK_G" />
 	</mapping>
 
@@ -121,8 +127,8 @@
 
 	<mapping name="Flight_Roll" type="Axis" >
 		<button id="IK_Pad_RightAxisX" />
-		<button id="IK_Comma" val="1.0" overridableUI="vehicleFlightRollRight"/>
-		<button id="IK_Slash" val="-1.0" overridableUI="vehicleFlightRollLeft"/>
+		<button id="IK_Slash" val="1.0" overridableUI="vehicleFlightRollRight"/>
+		<button id="IK_Comma" val="-1.0" overridableUI="vehicleFlightRollLeft"/>
 	</mapping>
 	
 	<mapping name="Flight_Lift" type="Axis" >
@@ -131,10 +137,10 @@
 		<button id="IK_LControl" val="-1.0" overridableUI="vehicleFlightLiftDown" />
 	</mapping>
 
-	<!-- <mapping name="Sway" type="Axis" >
+	<mapping name="Flight_Sway" type="Axis" >
 		<button id="IK_Right" val="1.0" overridableUI="vehicleFlightSwayRight"/>
 		<button id="IK_Left" val="-1.0" overridableUI="vehicleFlightSwayLeft"/>
-	</mapping> -->
+	</mapping>
 
 	<!-- PAIRED AXES -->
 	<pairedAxes name="LeftFlightStick" xAxisMapping="Flight_Yaw" yAxisMapping="Flight_Lift" deadzonePreset="Default" />

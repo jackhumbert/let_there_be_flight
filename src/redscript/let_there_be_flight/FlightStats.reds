@@ -34,6 +34,7 @@ public class FlightStats {
   public let d_direction: Vector4;
   public let d_localDirection: Vector4;
   public let d_direction2D: Vector4;
+  public let d_localDirection2D: Vector4;
 
   private let reset: Bool;
   private let ipp: ref<IPositionProvider>;
@@ -206,6 +207,7 @@ public class FlightStats {
     this.d_direction = Vector4.Normalize(this.d_velocity);
     this.d_localDirection = Vector4.Normalize(this.d_localVelocity);
     this.d_direction2D = Vector4.Normalize2D(this.d_velocity);
+    this.d_localDirection2D = Vector4.Normalize2D(this.d_localVelocity);
     this.d_velocity2D = this.d_direction2D * this.d_speed2D;
 
     // let minS = 0.3;

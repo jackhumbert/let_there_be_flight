@@ -7,6 +7,8 @@ public abstract class FlightMode {
 
   public static let gravityFactor: Float;
 
+  public let usesRightStickInput: Bool;
+
   public func Initialize(component: ref<FlightComponent>) -> Void {
     this.component = component;
     this.sys = component.sys;
