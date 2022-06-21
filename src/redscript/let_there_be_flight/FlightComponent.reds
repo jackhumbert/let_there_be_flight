@@ -45,7 +45,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
   private let pitch: Float;
   private let yaw: Float;
   private let sway: Float;
-  private let brake: Float;
+  private let linearBrake: Float;
+  private let angularBrake: Float;
 
   public let force: Vector4;
   public let torque: Vector4;
@@ -95,10 +96,12 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.distance = 0.0;
     this.hoverHeight = FlightSettings.GetFloat(n"defaultHoverHeight");
     
+    ArrayPush(this.modes, FlightModeAutomatic.Create(this));
     ArrayPush(this.modes, FlightModeHoverFly.Create(this));
-    // ArrayPush(this.modes, FlightModeHover.Create(this));
-    // ArrayPush(this.modes, FlightModeFly.Create(this));
+    ArrayPush(this.modes, FlightModeHover.Create(this));
+    ArrayPush(this.modes, FlightModeFly.Create(this));
     ArrayPush(this.modes, FlightModeDrone.Create(this));
+    ArrayPush(this.modes, FlightModeDroneAntiGravity.Create(this));
 
     this.audioUpdate = new FlightAudioUpdate();
   }
@@ -177,6 +180,14 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
   public func GetNextFlightMode() -> ref<FlightMode> {
     return this.modes[(this.mode + 1) % ArraySize(this.modes)];
+  }
+
+  public func GetNextFlightModeDescription() -> String {
+    if ArraySize(this.modes) > 0 {
+      return this.GetNextFlightMode().GetDescription();
+    } else {
+      return "None";
+    }
   }
 
   // callbacks
@@ -376,21 +387,24 @@ public class FlightComponent extends ScriptableDeviceComponent {
         this.roll = fc.roll.GetValue();
         this.pitch = fc.pitch.GetValue();
         this.lift = fc.lift.GetValue();
-        this.brake = fc.brake.GetValue();
+        this.linearBrake = fc.linearBrake.GetValue();
+        this.angularBrake = fc.angularBrake.GetValue();
         this.surge = fc.surge.GetValue();
         this.sway = fc.sway.GetValue();
       } else {
         let v = this.GetVehicle();
         this.surge = v.acceleration * 0.5 - v.deceleration * 0.1;
         this.yaw = -v.turnX4;
-        this.brake = v.handbrake * 0.5;
+        this.linearBrake = v.handbrake * 0.5;
+        this.angularBrake = v.handbrake * 0.5;
       }
     } else {
       this.yaw = 0.0;
       this.roll = 0.0;
       this.pitch = 0.0;
       this.lift = 0.0;
-      this.brake = 0.0;
+      this.linearBrake = 0.0;
+      this.angularBrake = 0.0;
       this.surge = 0.0;
       this.sway = 0.0;
     }
@@ -753,7 +767,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     // }
     // this.audioUpdate.lift = this.lift * ratio;
     // this.audioUpdate.brake = this.brake;
-    this.audioUpdate.brake = this.sys.ctlr.brake.GetInput();
+    this.audioUpdate.brake = MaxF(this.sys.ctlr.linearBrake.GetInput(), this.sys.ctlr.angularBrake.GetInput());
     // this.audioUpdate.brake = Vector4.Dot(-force, this.stats.d_direction);
 
     this.UpdateAudioParams(timeDelta);

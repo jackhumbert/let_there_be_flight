@@ -10,7 +10,21 @@ RED4ext::TTypedClass<FlightSettings> cls("FlightSettings");
 
 RED4ext::CClass *FlightSettings::GetNativeType() { return &cls; }
 
+RED4ext::Handle<FlightSettings> handle;
+
+FlightSettings *FlightSettings::GetInstance() {
+  if (!handle.instance) {
+    spdlog::info("[RED4ext] New FlightSettings Instance");
+    auto instance = reinterpret_cast<FlightSettings *>(cls.AllocInstance());
+    handle = RED4ext::Handle<FlightSettings>(instance);
+  }
+
+  return (FlightSettings *)handle.instance;
+}
+
 RED4ext::HashMap<RED4ext::CName, float> floats;
+
+bool floatsInitialized = false;
 
 void GetFloat(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, float *aOut, int64_t a4) {
   RED4ext::CName name;
@@ -19,7 +33,11 @@ void GetFloat(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, floa
   aFrame->code++;
 
   if (aOut) {
-    *aOut = *floats.Get(name);
+    if (floats.allocator) {
+      *aOut = *floats.Get(name);
+    } else {
+      *aOut = 0.0;
+    }
   }
 }
 
@@ -38,47 +56,52 @@ bool Setup(RED4ext::CGameApplication *aApp) {
   auto allocator = new RED4ext::Memory::DefaultAllocator();
   floats = RED4ext::HashMap<RED4ext::CName, float>(allocator);
 
-  floats.Insert("airResistance", 0.001);
-  floats.Insert("angularBrakeFactor", 10.0);
-  floats.Insert("angularDampFactor", 3.0);
-  floats.Insert("brakeFactor", 1.2);
-  floats.Insert("brakeOffset", 0.0);
-  floats.Insert("collisionRecoveryDelay", 0.8);
-  floats.Insert("collisionRecoveryDuration", 0.8);
-  floats.Insert("defaultHoverHeight", 3.50);
-  floats.Insert("distance", 0.0);
-  floats.Insert("distanceEase", 0.1);
-  floats.Insert("fwtfCorrection", 0.0);
-  floats.Insert("hoverClamp", 10.0);
-  floats.Insert("hoverFactor", 20.0);
-  floats.Insert("liftFactor", 8.0);
-  floats.Insert("liftFactorDrone", 40.0);
-  floats.Insert("lookAheadMax", 10.0);
-  floats.Insert("lookAheadMin", 1.0);
-  floats.Insert("maxHoverHeight", 7.0);
-  floats.Insert("minHoverHeight", 1.0);
-  floats.Insert("normalEase", 0.3);
-  floats.Insert("pitchAeroCorrectionFactor", 0.25);
-  floats.Insert("pitchCorrectionFactor", 3.0);
-  floats.Insert("pitchDirectionalityFactor", 80.0);
-  floats.Insert("pitchFactorDrone", 5.0);
-  floats.Insert("pitchWithLift", 0.0);
-  floats.Insert("pitchWithSurge", 0.0);
-  floats.Insert("referenceZ", 0.0);
-  floats.Insert("rollCorrectionFactor", 15.0);
-  floats.Insert("rollFactorDrone", 12.0);
-  floats.Insert("rollWithYaw", 0.15);
-  floats.Insert("secondCounter", 0.0);
-  floats.Insert("surgeFactor", 15.0);
-  floats.Insert("surgeOffset", 0.5);
-  floats.Insert("swayFactor", 5.0);
-  floats.Insert("swayWithYaw", 0.5);
-  floats.Insert("thrusterFactor", 0.05);
-  floats.Insert("yawCorrectionFactor", 0.25);
-  floats.Insert("yawD", 3.0);
-  floats.Insert("yawDirectionalityFactor", 50.0);
-  floats.Insert("yawFactor", 5.0);
-  floats.Insert("yawFactorDrone", 5.0);
+  //floats.Insert("airResistance", 0.001);
+  //floats.Insert("angularBrakeFactor", 10.0);
+  //floats.Insert("angularDampFactor", 3.0);
+  //floats.Insert("brakeFactor", 1.2);
+  //floats.Insert("brakeOffset", 0.0);
+  //floats.Insert("collisionRecoveryDelay", 0.8);
+  //floats.Insert("collisionRecoveryDuration", 0.8);
+  //floats.Insert("defaultHoverHeight", 3.50);
+  //floats.Insert("distance", 0.0);
+  //floats.Insert("distanceEase", 0.1);
+  //floats.Insert("fwtfCorrection", 0.0);
+  //floats.Insert("hoverClamp", 10.0);
+  //floats.Insert("hoverFactor", 20.0);
+  //floats.Insert("liftFactor", 8.0);
+  //floats.Insert("liftFactorDrone", 40.0);
+  //floats.Insert("lookAheadMax", 10.0);
+  //floats.Insert("lookAheadMin", 1.0);
+  //floats.Insert("maxHoverHeight", 7.0);
+  //floats.Insert("minHoverHeight", 1.0);
+  //floats.Insert("normalEase", 0.3);
+  //floats.Insert("pitchAeroCorrectionFactor", 0.25);
+  //floats.Insert("pitchCorrectionFactor", 3.0);
+  //floats.Insert("pitchDirectionalityFactor", 80.0);
+  //floats.Insert("pitchFactorDrone", 5.0);
+  //floats.Insert("pitchWithLift", 0.0);
+  //floats.Insert("pitchWithSurge", 0.0);
+  //floats.Insert("referenceZ", 0.0);
+  //floats.Insert("rollCorrectionFactor", 15.0);
+  //floats.Insert("rollFactorDrone", 12.0);
+  //floats.Insert("rollWithYaw", 0.15);
+  //floats.Insert("secondCounter", 0.0);
+  //floats.Insert("surgeFactor", 15.0);
+  //floats.Insert("surgeOffset", 0.5);
+  //floats.Insert("swayFactor", 5.0);
+  //floats.Insert("swayWithYaw", 0.5);
+  //floats.Insert("thrusterFactor", 0.05);
+  //floats.Insert("yawCorrectionFactor", 0.25);
+  //floats.Insert("yawD", 3.0);
+  //floats.Insert("yawDirectionalityFactor", 50.0);
+  //floats.Insert("yawFactor", 5.0);
+  //floats.Insert("yawFactorDrone", 5.0);
+
+  auto rtti = RED4ext::CRTTISystem::Get();
+  auto onUpdate = cls.GetFunction("OnAttach");
+  auto stack = RED4ext::CStack(aApp, nullptr, 0, nullptr, 0);
+  onUpdate->Execute(&stack);
 
   return true;
 }
@@ -100,7 +123,7 @@ struct FlightSettingsModule : FlightModule {
 
   void PostRegisterTypes() {
     auto rtti = RED4ext::CRTTISystem::Get();
-    auto scriptable = rtti->GetClass("IScriptable");
+    auto scriptable = rtti->GetClassByScriptName("ScriptableSystem");
     cls.parent = scriptable;
 
     auto getFloat = RED4ext::CClassStaticFunction::Create(&cls, "GetFloat", "GetFloat", &GetFloat,

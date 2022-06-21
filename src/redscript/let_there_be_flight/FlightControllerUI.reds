@@ -651,7 +651,7 @@ public class FlightControllerUI extends inkCanvas {
     // let marker_vector = Vector4.RotateAxis(Transform.GetRight(cameraTransform), Transform.GetForward(cameraTransform), Deg2Rad(Vector4.GetAngleBetween(this.stats.d_right, new Vector4(0.0, 0.0, 1.0, 0.0))));
     // this.GetWidget(n"rulers").SetTranslation(this.ScreenXY(this.stats.d_position - this.stats.d_velocity * timeDelta));
 
-    let splay = 1.0 + 0.2 * MaxF(0.0, FlightController.GetInstance().surge.GetValue()) - 0.2 * FlightController.GetInstance().brake.GetValue() + ((RandF() * 0.02 - 0.01) * this.stats.d_speedRatio);
+    let splay = 1.0 + 0.2 * MaxF(0.0, FlightController.GetInstance().surge.GetValue()) - 0.2 * FlightController.GetInstance().linearBrake.GetValue() + ((RandF() * 0.02 - 0.01) * this.stats.d_speedRatio);
     let mark = Vector4.GetAngleBetween(this.stats.d_right, new Vector4(0.0, 0.0, 1.0, 0.0)) + 90.0;
     let mark_effected = mark * splay;
     this.UpdateRollSplay(splay);

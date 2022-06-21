@@ -48,7 +48,8 @@ public native class FlightController extends IScriptable {
 
   public let showOptions: Bool;
   public let showUI: Bool;
-  public let brake: ref<InputPID>;
+  public let linearBrake: ref<InputPID>;
+  public let angularBrake: ref<InputPID>;
   public let lift: ref<InputPID>;
   public let surge: ref<InputPID>;
   public let roll: ref<InputPID>;
@@ -67,6 +68,7 @@ public native class FlightController extends IScriptable {
   private let uiSystemBB: ref<UI_SystemDef>;
 
   public let initialized: Bool;
+  public let usingKB: Bool;
 
   // public let effectInstance: ref<EffectInstance>;
 
@@ -82,7 +84,8 @@ public native class FlightController extends IScriptable {
     this.showOptions = false;
     this.showUI = true;
 
-    this.brake = InputPID.Create(0.5, 0.5);
+    this.linearBrake = InputPID.Create(0.5, 0.5);
+    this.angularBrake = InputPID.Create(0.5, 0.5);
     this.lift = InputPID.Create(0.05, 0.2);
     this.surge = InputPID.Create(0.2, 0.2);
     this.roll = InputPID.Create(0.25, 1.0);
@@ -193,7 +196,18 @@ public native class FlightController extends IScriptable {
     this.sway.Reset();
     this.surge.Reset();
     this.lift.Reset();
-    this.brake.Reset();
+    this.linearBrake.Reset();
+    this.angularBrake.Reset();
+
+    // let data: InputHintGroupData;
+    // data.localizedTitle = "Flight Control";
+    // data.localizedDescription = "The controls used in Let There Be Flight";
+    // data.sortingPriority = 0;
+    // let evt: ref<AddInputGroupEvent> = new AddInputGroupEvent();
+    // evt.data = data;
+    // evt.groupId = n"FlightController";
+    // evt.targetHintContainer = n"GameplayInputHelper";
+    // GameInstance.GetUISystem(this.gameInstance).QueueEvent(evt);
 
     // let wheel = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"wheel_01_br_a") as MeshComponent;
     // if IsDefined(wheel) {
@@ -239,6 +253,12 @@ public native class FlightController extends IScriptable {
     FlightLog.Info("[FlightController] Deactivate");
     this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsActive, false, true);
     this.GetBlackboard().SignalBool(GetAllBlackboardDefs().VehicleFlight.IsActive);
+
+    
+    // let evt: ref<DeleteInputGroupEvent> = new DeleteInputGroupEvent();
+    // evt.groupId = n"FlightControl";
+    // evt.targetHintContainer = n"GameplayInputHelper";
+    // GameInstance.GetUISystem(this.gameInstance).QueueEvent(evt);
   }  
 
   private func ShowMoreInfo() -> Void {
@@ -250,51 +270,65 @@ public native class FlightController extends IScriptable {
   }
 
   private func SetupActions() -> Void {
-    let player: ref<PlayerPuppet> = GetPlayer(this.gameInstance);
+    this.usingKB = this.player.PlayerLastUsedKBM();
+    let evt = new UpdateInputHintMultipleEvent();
+    evt.targetHintContainer = n"GameplayInputHelper";
+
     let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
-    player.UnregisterInputListener(this);    
-    // player.RegisterInputListener(this, n"OpenPauseMenu");
-    uiSystem.QueueEvent(FlightController.HideHintFromSource(n"FlightController"));
+    this.player.UnregisterInputListener(this);    
+    // this.player.RegisterInputListener(this, n"OpenPauseMenu");
+    // uiSystem.QueueEvent(FlightController.HideHintFromSource(n"FlightController"));
     if this.enabled {
-      // player.RegisterInputListener(this, n"Flight_Toggle");
+      // this.player.RegisterInputListener(this, n"Flight_Toggle");
       if this.active {
-        player.RegisterInputListener(this, n"Pitch");
-        player.RegisterInputListener(this, n"Roll");
-        player.RegisterInputListener(this, n"SurgePos");
-        player.RegisterInputListener(this, n"Lift");
-        player.RegisterInputListener(this, n"Yaw");
-        player.RegisterInputListener(this, n"SurgeNeg");
-        player.RegisterInputListener(this, n"Flight_LinearBrake");
-        player.RegisterInputListener(this, n"Flight_Trick");
-        player.RegisterInputListener(this, n"Flight_Options");
-        player.RegisterInputListener(this, n"Flight_UIToggle");
-        player.RegisterInputListener(this, n"Flight_ModeSwitch");
-        if this.showOptions {
-          uiSystem.QueueEvent(FlightController.ShowHintHelper("Sway", n"Yaw", n"FlightController"));
-          uiSystem.QueueEvent(FlightController.ShowHintHelper(this.sys.playerComponent.GetNextFlightMode().GetDescription(), n"Flight_ModeSwitch", n"FlightController"));
-          // uiSystem.QueueEvent(FlightController.ShowHintHelper("Raise Hover Height", n"FlightOptions_Up", n"FlightController"));
-          // uiSystem.QueueEvent(FlightController.ShowHintHelper("Lower Hover Height", n"FlightOptions_Down", n"FlightController"));
-          uiSystem.QueueEvent(FlightController.ShowHintHelper("Toggle UI", n"Flight_UIToggle", n"FlightController"));
-        } else {
-          uiSystem.QueueEvent(FlightController.ShowHintHelper("Disable Flight", n"Flight_Toggle", n"FlightController"));
-          uiSystem.QueueEvent(FlightController.ShowHintHelper("Pitch", n"Pitch", n"FlightController"));
-          uiSystem.QueueEvent(FlightController.ShowHintHelper("Roll", n"Roll", n"FlightController"));
-          uiSystem.QueueEvent(FlightController.ShowHintHelper("Lift", n"Lift", n"FlightController"));
-          uiSystem.QueueEvent(FlightController.ShowHintHelper("Brake", n"Flight_LinearBrake", n"FlightController"));
-          // if this.trick {
-          //   uiSystem.QueueEvent(FlightController.ShowHintHelper("Aileron Roll", n"Yaw", n"FlightController"));
-          // } else {
-            uiSystem.QueueEvent(FlightController.ShowHintHelper("Yaw", n"Yaw", n"FlightController"));
-            // uiSystem.QueueEvent(FlightController.ShowHintHelper("Tricks", n"Flight_Trick", n"FlightController"));
-          // }
-          // we may want to look at something else besides this input so ForceBrakesUntilStoppedOrFor will work (not entirely sure it doesn't now)
-          // vehicle.GetBlackboard().GetInt(GetAllBlackboardDefs().VehicleFlight.IsHandbraking)
-          uiSystem.QueueEvent(FlightController.ShowHintHelper("Flight Options", n"Flight_Options", n"FlightController"));
-        }
-      } else {
-        uiSystem.QueueEvent(FlightController.ShowHintHelper("Enable Flight", n"Flight_Toggle", n"FlightController"));
+        this.player.RegisterInputListener(this, n"__DEVICE_CHANGED__");
+        this.player.RegisterInputListener(this, n"Pitch");
+        this.player.RegisterInputListener(this, n"Sway");
+        this.player.RegisterInputListener(this, n"Roll");
+        this.player.RegisterInputListener(this, n"SurgePos");
+        this.player.RegisterInputListener(this, n"Lift");
+        this.player.RegisterInputListener(this, n"Yaw");
+        this.player.RegisterInputListener(this, n"SurgeNeg");
+        this.player.RegisterInputListener(this, n"Flight_LinearBrake");
+        this.player.RegisterInputListener(this, n"Flight_AngularBrake");
+        this.player.RegisterInputListener(this, n"Flight_Trick");
+        this.player.RegisterInputListener(this, n"Flight_Options");
+        this.player.RegisterInputListener(this, n"Flight_UIToggle");
+        this.player.RegisterInputListener(this, n"Flight_ModeSwitchForward");
+        this.player.RegisterInputListener(this, n"Flight_ModeSwitchBackward");
       }
     }
+
+    // if this.trick {
+    //   evt.AddInputHint(FlightController.CreateInputHint("Aileron Roll", n"Yaw"), true);
+    // } else {
+      // evt.AddInputHint(FlightController.CreateInputHint("Tricks", n"Flight_Trick"), true);
+    // }
+    // we may want to look at something else besides this input so ForceBrakesUntilStoppedOrFor will work (not entirely sure it doesn't now)
+    // vehicle.GetBlackboard().GetInt(GetAllBlackboardDefs().VehicleFlight.IsHandbraking)
+
+    evt.AddInputHint(FlightController.CreateInputHint("Enable Flight", n"Flight_Toggle"),       this.enabled && !this.active);
+
+    evt.AddInputHint(FlightController.CreateInputHint("Disable Flight", n"Flight_Toggle"),      this.active && !this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint("Yaw", n"Yaw"),                           this.active && !this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint("Pitch", n"Pitch"),                       this.active && !this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint("Roll", n"Roll"),                         this.active && !this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint("Lift", n"Lift"),                         this.active && !this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint("Linear Brake", n"Flight_LinearBrake"),   this.active && !this.showOptions && this.usingKB);
+    evt.AddInputHint(FlightController.CreateInputHint("Angular Brake", n"Flight_AngularBrake"), this.active && !this.showOptions && this.usingKB);
+    evt.AddInputHint(FlightController.CreateInputHint("Brake", n"Flight_LinearBrake"),          this.active && !this.showOptions && !this.usingKB);
+    evt.AddInputHint(FlightController.CreateInputHint("Flight Options", n"Flight_Options"),     this.active && !this.showOptions);
+
+    evt.AddInputHint(FlightController.CreateInputHint("Sway", n"Sway"),                         this.active && this.showOptions && this.usingKB);
+    // let desc: String;
+    // desc = this.sys.playerComponent.GetNextFlightModeDescription();
+    evt.AddInputHint(FlightController.CreateInputHint("Next Mode", n"Flight_ModeSwitchForward"),     this.active && (this.showOptions || this.usingKB));
+    evt.AddInputHint(FlightController.CreateInputHint("Prev Mode", n"Flight_ModeSwitchBackward"),     this.active && this.showOptions && !this.usingKB);
+    // evt.AddInputHint(FlightController.CreateInputHint("Raise Hover Height", n"FlightOptions_Up"), true);
+    // evt.AddInputHint(FlightController.CreateInputHint("Lower Hover Height", n"FlightOptions_Down"), true);
+    evt.AddInputHint(FlightController.CreateInputHint("Toggle UI", n"Flight_UIToggle"),         this.active && this.showOptions);
+
+    uiSystem.QueueEvent(evt);
   }
 
   private let trick: Bool;
@@ -305,7 +339,11 @@ public native class FlightController extends IScriptable {
 
   private func CycleMode(direction: Int32) -> Void {
     let newMode = this.sys.playerComponent.GetNextFlightMode();
-    this.mode = (this.mode + 1) % ArraySize(this.sys.playerComponent.modes);
+    this.mode = this.mode + direction;
+    if this.mode < 0 {
+      this.mode += ArraySize(this.sys.playerComponent.modes);
+    } 
+    this.mode = this.mode % ArraySize(this.sys.playerComponent.modes);
     this.GetBlackboard().SetInt(GetAllBlackboardDefs().VehicleFlight.Mode, this.mode);
     let evt = new VehicleFlightModeChangeEvent();
     evt.mode = this.mode;
@@ -315,10 +353,15 @@ public native class FlightController extends IScriptable {
     this.SetupActions();
   }
 
-  let tempYaw: Float;
-  let tempSway: Float;
-
   protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool {
+    if ListenerAction.IsAction(action, n"__DEVICE_CHANGED__") {
+      if this.player.PlayerLastUsedKBM() {
+        this.usingKB = true;
+      } else {
+        this.usingKB = false;
+      } 
+      this.SetupActions();
+    }
     let actionType: gameinputActionType = ListenerAction.GetType(action);
     let actionName: CName = ListenerAction.GetName(action);
     let value: Float = ListenerAction.GetValue(action);
@@ -328,7 +371,7 @@ public native class FlightController extends IScriptable {
         // ListenerActionConsumer.ConsumeSingleAction(consumer);
     // }
     if this.active {
-      // if Equals(actionName, n"Flight_ModeSwitch") && ListenerAction.IsButtonJustPressed(action) {
+      // if Equals(actionName, n"Flight_ModeSwitchForward") && ListenerAction.IsButtonJustPressed(action) {
       //   this.CycleMode(1);
       // }
       if Equals(actionName, n"Flight_Options") {
@@ -395,7 +438,6 @@ public native class FlightController extends IScriptable {
         //   this.SetupActions();
         // }
       // }
-      if this.showOptions {
         // if Equals(actionName, n"FlightOptions_Up") && ListenerAction.IsButtonJustPressed(action) {
         //     this.hoverHeight += 0.1;
         //     GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_menu_onpress");
@@ -406,20 +448,22 @@ public native class FlightController extends IScriptable {
         //     GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_menu_onpress");
         //     FlightLog.Info("hoverHeight = " + ToString(this.hoverHeight));
         // }
-        if Equals(actionName, n"Flight_ModeSwitch") && ListenerAction.IsButtonJustPressed(action) {
-          this.CycleMode(1);
-        }
-        if Equals(actionName, n"Flight_UIToggle") && ListenerAction.IsButtonJustPressed(action) {
-            this.showUI = !this.showUI;
-            if (this.showUI) {
-              this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, true, true);
-              this.ShowSimpleMessage("Flight UI Shown");
-            } else {
-              this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, false, true);
-              this.ShowSimpleMessage("Flight UI Hidden");
-            }
-            GameInstance.GetAudioSystem(this.gameInstance).Play(n"ui_menu_onpress");
-        }
+      if Equals(actionName, n"Flight_ModeSwitchForward") && ListenerAction.IsButtonJustPressed(action) && (this.showOptions || this.player.PlayerLastUsedKBM()) {
+        this.CycleMode(1);
+      }
+      if Equals(actionName, n"Flight_ModeSwitchBackward") && ListenerAction.IsButtonJustPressed(action) && (this.showOptions || this.player.PlayerLastUsedKBM()) {
+        this.CycleMode(-1);
+      }
+      if this.showOptions && Equals(actionName, n"Flight_UIToggle") && ListenerAction.IsButtonJustPressed(action) {
+          this.showUI = !this.showUI;
+          if (this.showUI) {
+            this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, true, true);
+            this.ShowSimpleMessage("Flight UI Shown");
+          } else {
+            this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, false, true);
+            this.ShowSimpleMessage("Flight UI Hidden");
+          }
+          GameInstance.GetAudioSystem(this.gameInstance).Play(n"ui_menu_onpress");
       }
       
       if Equals(actionType, gameinputActionType.AXIS_CHANGE) {
@@ -450,6 +494,9 @@ public native class FlightController extends IScriptable {
               }
             // }
             break;
+          case n"Sway":
+            this.sway.SetInput(value);
+            break;
           case n"Lift":
             if this.trick {
               this.lift.SetInput(0.0);
@@ -468,9 +515,16 @@ public native class FlightController extends IScriptable {
         // ListenerActionConsumer.ConsumeSingleAction(consumer);
       if Equals(actionName, n"Flight_LinearBrake") {
         if Equals(actionType, gameinputActionType.BUTTON_PRESSED) {
-          this.brake.SetInput(1.0);
+          this.linearBrake.SetInput(1.0);
         } else {
-          this.brake.SetInput(0.0);
+          this.linearBrake.SetInput(0.0);
+        }
+      }
+      if Equals(actionName, n"Flight_AngularBrake") {
+        if Equals(actionType, gameinputActionType.BUTTON_PRESSED) {
+          this.angularBrake.SetInput(1.0);
+        } else {
+          this.angularBrake.SetInput(0.0);
         }
       }
     } else {
@@ -480,7 +534,8 @@ public native class FlightController extends IScriptable {
       this.sway.SetInput(0.0);
       this.pitch.SetInput(0.0);
       this.roll.SetInput(0.0);
-      this.brake.SetInput(0.0);
+      this.linearBrake.SetInput(0.0);
+      this.angularBrake.SetInput(0.0);
     }
   }
 
@@ -490,7 +545,8 @@ public native class FlightController extends IScriptable {
     this.roll.GetValue(timeDelta);
     this.pitch.GetValue(timeDelta);
     this.lift.GetValue(timeDelta);
-    this.brake.GetValue(timeDelta);
+    this.linearBrake.GetValue(timeDelta);
+    this.angularBrake.GetValue(timeDelta);
     this.surge.GetValue(timeDelta);
   }
 
@@ -580,17 +636,13 @@ public native class FlightController extends IScriptable {
     GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().UI_Notifications).SetVariant(GetAllBlackboardDefs().UI_Notifications.OnscreenMessage, ToVariant(msg), true);
   }
 
-  public static func ShowHintHelper(label: String, action: CName, source: CName) -> ref<UpdateInputHintEvent> {
-    let evt: ref<UpdateInputHintEvent> = new UpdateInputHintEvent();
+  public static func CreateInputHint(label: String, action: CName) -> InputHintData {
     let data: InputHintData;
-    data.source = source;
+    data.source = n"FlightController";
     data.action = action;
     data.localizedLabel = label;
-
-    evt.data = data;
-    evt.show = true;
-    evt.targetHintContainer = n"GameplayInputHelper";
-    return evt;
+    // data.groupId = n"FlightController";
+    return data;
   }
 
   public static func HideHintFromSource(source: CName) -> ref<DeleteInputHintBySourceEvent> {

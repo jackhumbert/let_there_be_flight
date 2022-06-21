@@ -41,8 +41,8 @@ public abstract class FlightModeStandard extends FlightMode {
     // }
     // yawCorrection += FlightSettings.GetFloat(n"yawD") * changeAngle / timeDelta;
 
-    let velocityDamp: Vector4 = this.component.brake * FlightSettings.GetFloat(n"brakeFactor") * this.component.stats.s_brakingFrictionFactor * this.component.stats.d_localVelocity;
-    let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.brake * FlightSettings.GetFloat(n"angularBrakeFactor") * this.component.stats.s_brakingFrictionFactor;
+    let velocityDamp: Vector4 = this.component.linearBrake * FlightSettings.GetFloat(n"brakeFactor") * this.component.stats.s_brakingFrictionFactor * this.component.stats.d_localVelocity;
+    let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetFloat(n"angularBrakeFactor") * this.component.stats.s_brakingFrictionFactor;
 
     // let yawDirectionality: Float = (this.component.stats.d_speedRatio + AbsF(this.yaw.GetValue()) * this.swayWithYaw) * this.yawDirectionalityFactor;
     // actual in-game mass (i think)

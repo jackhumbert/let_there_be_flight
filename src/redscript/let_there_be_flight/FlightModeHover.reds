@@ -6,6 +6,12 @@ public class FlightModeHover extends FlightModeStandard {
   }
 
   public func GetDescription() -> String = "Hover";
+
+  public func Activate() -> Void {
+    let normal: Vector4;
+    this.component.FindGround(normal);
+    this.component.hoverHeight = MaxF(this.component.distance, FlightSettings.GetFloat(n"minHoverHeight"));
+  }
   
   public func Update(timeDelta: Float) -> Void {
     this.component.hoverHeight = MaxF(FlightSettings.GetFloat(n"minHoverHeight"), this.component.hoverHeight);
@@ -15,13 +21,13 @@ public class FlightModeHover extends FlightModeStandard {
     let normal: Vector4;
     let idealNormal = FlightUtils.Up();
 
-    this.component.sqs.SyncRaycastByCollisionGroup(this.component.stats.d_position, this.component.stats.d_position - FlightSettings.GetFloat(n"lookDown"), n"Water", findWater, true, false);
-    if !TraceResult.IsValid(findWater) {
+    // this.component.sqs.SyncRaycastByCollisionGroup(this.component.stats.d_position, this.component.stats.d_position - FlightSettings.GetFloat(n"lookDown"), n"Water", findWater, true, false);
+    // if !TraceResult.IsValid(findWater) {
       if (this.component.FindGround(normal)) {
           heightDifference = this.component.hoverHeight - this.component.distance;
           idealNormal = normal;
       }
-    }
+    // }
 
     this.UpdateWithNormalDistance(timeDelta, idealNormal, heightDifference);
   }
