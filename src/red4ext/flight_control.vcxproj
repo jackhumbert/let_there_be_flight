@@ -99,7 +99,6 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="NativeSettings.cpp" />
     <ClCompile Include="CustomHUDLayer.cpp" />
     <ClCompile Include="CustomOptions.cpp" />
     <ClCompile Include="DebugPrinter.cpp" />
