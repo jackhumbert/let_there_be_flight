@@ -14,9 +14,9 @@ Other features include:
 
 ## Installation
 
-[Get the latest release here](https://github.com/jackhumbert/let_there_be_flight/releases) - `packed-v*.zip` in the release contains all of the requirements listed below at their most up-to-date versions (at the time of release). Simply extract it and copy the contents in your game's installation folder. If you're upgrading, you may want to delete the contents of the `r6/scripts/flight_control` folder, since files may have been renamed/removed.
+For an up-to-date version of the mod, you can [download just the `build/` folder](https://downgit.github.io/#/home?url=https://github.com/jackhumbert/let_there_be_flight/tree/main/build), and install that into your game's directory.
 
-If you want to install the mod outside of a release (not recommended), the `build/` folder in the repo contains all of the mod-specific files that you can drag into your game's installation folder.
+There's also [releases available here](https://github.com/jackhumbert/let_there_be_flight/releases) - `*packed*.zip` in the release contains all of the requirements listed below at their most up-to-date versions (at the time of release). Simply extract it and copy the contents in your game's installation folder. If you're upgrading from v0.0.9, you'll need to delete the `r6/scripts/flight_control` folder, since files may have been renamed/removed.
 
 ## Requirements
 
