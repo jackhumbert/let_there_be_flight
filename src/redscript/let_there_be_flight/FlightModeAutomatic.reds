@@ -9,6 +9,11 @@ public class FlightModeAutomatic extends FlightModeStandard {
     return self;
   }
 
+  public func Initialize(component: ref<FlightComponent>) -> Void {
+    super.Initialize(component);
+    this.collisionPenalty = 1.0;
+  }
+
   public func Activate() -> Void {
     let normal: Vector4;
     this.referenceZ = this.component.stats.d_position.Z;

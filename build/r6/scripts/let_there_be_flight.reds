@@ -902,7 +902,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   }
 
   public func ProcessImpact(impact: Float) {
-    this.collisionTimer = FlightSettings.GetFloat(n"collisionRecoveryDelay") - impact;
+    this.collisionTimer = (FlightSettings.GetFloat(n"collisionRecoveryDelay") + FlightSettings.GetFloat(n"collisionRecoveryDuration")) * (1.0 - (impact * this.GetFlightMode().collisionPenalty));
     // this.ui_info.StartGlitching(impact, FlightSettings.GetFloat(n"collisionRecoveryDuration") + impact);
   }
 
@@ -3144,8 +3144,8 @@ public class FlightFx {
           this.fl_thruster.SetLocalOrientation(Quaternion.Slerp(this.fl_thruster.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
             -ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0), 
             180.0,
-            // torque.Z * 0.5 - ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Forward()), -15.0, 15.0)
-            0.0
+            torque.Z * 0.5 - ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Forward()), -15.0, 15.0)
+            // 0.0
           )), 0.1));
         }
         this.fl_retroFx.SetBlackboardValue(n"thruster_amount", (Vector4.Dot(new Vector4(1.0, 0.0, 0.0, 0.0), force) - torque.Z) * 0.1);
@@ -3314,6 +3314,11 @@ public class FlightModeAutomatic extends FlightModeStandard {
     return self;
   }
 
+  public func Initialize(component: ref<FlightComponent>) -> Void {
+    super.Initialize(component);
+    this.collisionPenalty = 1.0;
+  }
+
   public func Activate() -> Void {
     let normal: Vector4;
     this.referenceZ = this.component.stats.d_position.Z;
@@ -3452,7 +3457,7 @@ public class FlightModeHover extends FlightModeStandard {
   public func Update(timeDelta: Float) -> Void {
     this.component.hoverHeight = MaxF(FlightSettings.GetFloat(n"minHoverHeight"), this.component.hoverHeight);
 
-    let findWater: TraceResult;
+    // let findWater: TraceResult;
     let heightDifference = 1.0;
     let normal: Vector4;
     let idealNormal = FlightUtils.Up();
@@ -3527,6 +3532,7 @@ public abstract class FlightMode {
   public static let gravityFactor: Float;
 
   public let usesRightStickInput: Bool;
+  public let collisionPenalty: Float;
 
   public func Initialize(component: ref<FlightComponent>) -> Void {
     this.component = component;
@@ -3577,6 +3583,11 @@ public abstract class FlightMode {
  
 // FlightMode_Standard.reds 
 public abstract class FlightModeStandard extends FlightMode {
+  public func Initialize(component: ref<FlightComponent>) -> Void {
+    super.Initialize(component);
+    this.collisionPenalty = 0.5;
+  }
+
   protected func UpdateWithNormalDistance(timeDelta: Float, normal: Vector4, heightDifference: Float) -> Void {
     let hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, FlightSettings.GetFloat(n"hoverClamp"));// / FlightSettings.GetFloat(n"hoverClamp");
     let liftForce: Float = hoverCorrection * FlightSettings.GetFloat(n"hoverFactor") + (9.81000042) * this.gravityFactor;
