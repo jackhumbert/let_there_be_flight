@@ -8,6 +8,7 @@ namespace FlightSettings {
 
 struct FlightSettings : RED4ext::IScriptable {
   RED4ext::CClass *GetNativeType();
+  static FlightSettings *GetInstance();
 
   //static float GetFloat(RED4ext::CName);
 };

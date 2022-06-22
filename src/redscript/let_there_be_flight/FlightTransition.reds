@@ -145,7 +145,9 @@ public class FlightEvents extends VehicleEventsTransition {
     this.SetIsInVehicle(stateContext, true);
     this.SetSide(stateContext, scriptInterface);
     this.SendAnimFeature(stateContext, scriptInterface);
-    this.HandleCameraInput(scriptInterface);
+    if (!FlightController.GetInstance().showOptions) {
+      this.HandleCameraInput(scriptInterface);
+    }
     this.HandleFlightExitRequest(stateContext, scriptInterface);
   }
 

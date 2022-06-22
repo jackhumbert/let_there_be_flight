@@ -33,11 +33,13 @@ uintptr_t Camera::TPPCameraStatsUpdate(RED4ext::vehicle::TPPCameraComponent *cam
     auto fcomp = pcp->GetValue<RED4ext::Handle<RED4ext::IScriptable>>(fs);
     auto fcompc = rtti->GetClass("FlightComponent");
     RED4ext::Handle<RED4ext::IScriptable> mode;
-    auto result = RED4ext::CStackType(rtti->GetClass("FlightMode"), &mode);
+    auto flightModeCls = rtti->GetClass("FlightMode");
+    auto result = RED4ext::CStackType(flightModeCls, &mode);
     auto stack = RED4ext::CStack(fcomp, nullptr, 0, &result, 0);
     fcompc->GetFunction("GetFlightMode")->Execute(&stack);
+    auto usesRightStickInput = flightModeCls->GetProperty("usesRightStickInput")->GetValue<bool>(mode);
 
-    if (mode->GetType() == rtti->GetClass("FlightModeDrone") && !camera->isUsingMouse) {
+    if (usesRightStickInput && !camera->isUsingMouse) {
       camera->pitchDelta = 0.0;
       camera->yawDelta = 0.0;
       if (camera->slopeCorrectionOnGroundStrength != 0.0) {
