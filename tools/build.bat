@@ -6,6 +6,8 @@ xcopy /y /d fmod_studio\API\* build\bin\x64\
 if not exist "build\r6\scripts" mkdir build\r6\scripts
 if not exist "build\r6\scripts" mkdir build\r6\scripts\codeware
 xcopy /y /d /s src\redscript\codeware build\r6\scripts\codeware\
+if not exist "build\r6\scripts" mkdir build\r6\scripts\native_settings
+xcopy /y /d /s src\redscript\native_settings build\r6\scripts\native_settings\
 echo // Let There Be Flight > build\r6\scripts\let_there_be_flight.reds
 echo // https://github.com/jackhumbert/let_there_be_flight >> build\r6\scripts\let_there_be_flight.reds
 echo. >> build\r6\scripts\let_there_be_flight.reds

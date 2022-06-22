@@ -201,6 +201,8 @@ bool __fastcall ReadSettingsOptions(RED4ext::user::RuntimeSettings** settings, R
   return og && mod; // ok to combine, i think
 }
 
+const uintptr_t FileFunctionsAddr = 0x7FF747415310 - 0x7FF742840000 + RED4ext::RelocBase::GetImageBase();
+
 // 40 53 48 83 EC 20 48 8B D9 E8 F2 8D 00 00 48 8B CB E8 1A 08 00 00 48 8B CB E8 C2 02 00 00 48 8B
 void * __fastcall ProcessSettingsData(RED4ext::user::RuntimeSettings *settings);
 constexpr uintptr_t ProcessSettingsDataAddr = 0x2B9B8A0 + 0x140000C00 - RED4ext::Addresses::ImageBase;
@@ -248,7 +250,7 @@ RED4ext::user::SettingsLoadStatus __fastcall ReadSettingsData(RED4ext::user::Run
       "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\r6\\config\\settings\\mod_data.json";
   auto dataC = RED4ext::CString(data);
 
-  auto ff = *(FileFunctions **)(0x00007FF747415310);
+  auto ff = *(FileFunctions **)(FileFunctionsAddr);
   auto modReader = new FileReader();
   //CreateReader(ff, &modReader, &dataC, 0);
   ff->vft->CreateReader(ff, &modReader, &dataC, 0);
@@ -339,7 +341,7 @@ uint64_t __fastcall WriteSettingsData(RED4ext::user::RuntimeSettings **settings,
   // ff->engine = RED4ext::CString(engine);
   // const char *r6 = "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\r6\\";
   // ff->r6 = RED4ext::CString(r6);
-   auto ff = *(FileFunctions **)(0x00007FF747415310);
+  auto ff = *(FileFunctions **)(FileFunctionsAddr);
 
    auto modWriter = new FileWriter();
   //auto modWriter = new ModSettingsWriter();
