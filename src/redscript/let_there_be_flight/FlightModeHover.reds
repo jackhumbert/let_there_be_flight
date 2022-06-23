@@ -17,7 +17,7 @@ public class FlightModeHover extends FlightModeStandard {
     this.component.hoverHeight = MaxF(FlightSettings.GetFloat(n"minHoverHeight"), this.component.hoverHeight);
 
     // let findWater: TraceResult;
-    let heightDifference = 1.0;
+    let heightDifference = 0.0;
     let normal: Vector4;
     let idealNormal = FlightUtils.Up();
 

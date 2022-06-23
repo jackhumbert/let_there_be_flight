@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-06-23 02:17:29.8153076
+// This file was automatically generated on 2022-06-23 02:36:17.8843980
 
 // FlightAudio.reds
 
@@ -3370,7 +3370,7 @@ public class FlightModeAutomatic extends FlightModeStandard {
     this.UpdateWithNormalLift(timeDelta, idealNormal, liftFactor * FlightSettings.GetFloat(n"hoverFactor") + (9.81000042) * this.gravityFactor);
 
     let aeroFactor = Vector4.Dot(this.component.stats.d_forward, this.component.stats.d_direction);
-    let yawDirectionality: Float = this.component.stats.d_speedRatio * 300.0;
+    let yawDirectionality: Float = this.component.stats.d_speedRatio * FlightSettings.GetFloat(n"automaticModeYawDirectionality");
 
     let directionFactor = AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_right));
 
@@ -3378,7 +3378,7 @@ public class FlightModeAutomatic extends FlightModeStandard {
     this.force += -this.component.stats.d_localDirection * directionFactor * yawDirectionality * AbsF(aeroFactor);
 
     if AbsF(this.component.surge) < 1.0 {    
-      let velocityDamp: Vector4 = (1.0 - AbsF(this.component.surge)) * FlightSettings.GetFloat(n"assistedModeAutoBrakingFactor") * this.component.stats.d_localDirection2D * (this.component.stats.d_speed2D / 100.0);
+      let velocityDamp: Vector4 = (1.0 - AbsF(this.component.surge)) * FlightSettings.GetFloat(n"automaticModeAutoBrakingFactor") * this.component.stats.d_localDirection2D * (this.component.stats.d_speed2D / 100.0);
       this.force -= velocityDamp;
     }
 
@@ -3479,7 +3479,7 @@ public class FlightModeHover extends FlightModeStandard {
     this.component.hoverHeight = MaxF(FlightSettings.GetFloat(n"minHoverHeight"), this.component.hoverHeight);
 
     // let findWater: TraceResult;
-    let heightDifference = 1.0;
+    let heightDifference = 0.0;
     let normal: Vector4;
     let idealNormal = FlightUtils.Up();
 
@@ -3706,7 +3706,8 @@ public native class FlightSettings extends ScriptableSystem {
     FlightSettings.SetFloat(n"airResistance", 0.001);
     FlightSettings.SetFloat(n"angularBrakeFactor", 10.0);
     FlightSettings.SetFloat(n"angularDampFactor", 3.0);
-    FlightSettings.SetFloat(n"assistedModeAutoBrakingFactor", 200.0);
+    FlightSettings.SetFloat(n"automaticModeAutoBrakingFactor", 200.0);
+    FlightSettings.SetFloat(n"automaticModeYawDirectionality", 300.0);
     FlightSettings.SetFloat(n"brakeFactor", 1.2);
     FlightSettings.SetFloat(n"brakeOffset", 0.0);
     FlightSettings.SetFloat(n"collisionRecoveryDelay", 0.8);

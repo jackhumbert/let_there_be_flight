@@ -96,12 +96,12 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.distance = 0.0;
     this.hoverHeight = FlightSettings.GetFloat(n"defaultHoverHeight");
     
-    ArrayPush(this.modes, FlightModeAutomatic.Create(this));
     ArrayPush(this.modes, FlightModeHoverFly.Create(this));
     ArrayPush(this.modes, FlightModeHover.Create(this));
+    ArrayPush(this.modes, FlightModeAutomatic.Create(this));
     ArrayPush(this.modes, FlightModeFly.Create(this));
-    ArrayPush(this.modes, FlightModeDrone.Create(this));
     ArrayPush(this.modes, FlightModeDroneAntiGravity.Create(this));
+    ArrayPush(this.modes, FlightModeDrone.Create(this));
 
     this.audioUpdate = new FlightAudioUpdate();
   }
