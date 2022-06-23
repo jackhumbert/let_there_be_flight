@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-06-23 02:10:40.8759742
+// This file was automatically generated on 2022-06-23 02:17:29.8153076
 
 // FlightAudio.reds
 
@@ -416,7 +416,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     }
     let normal: Vector4;
     this.SetupTires();
-    if !this.FindGround(normal) || this.distance > 1.0 {
+    if !this.FindGround(normal) || this.distance > 2.0 {
       this.Activate();
     }
   }

@@ -231,7 +231,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     }
     let normal: Vector4;
     this.SetupTires();
-    if !this.FindGround(normal) || this.distance > 1.0 {
+    if !this.FindGround(normal) || this.distance > 2.0 {
       this.Activate();
     }
   }
