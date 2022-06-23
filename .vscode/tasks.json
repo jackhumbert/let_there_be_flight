@@ -75,7 +75,7 @@
       {
         "label": "Build",
         "type": "shell",
-        "command": "tools\\build.bat",
+        "command": "tools\\builder.exe",
         "options": {
           "shell": {
             "executable": "cmd.exe",
@@ -121,7 +121,7 @@
       {
         "label": "Lint/Build",
         "type": "shell",
-        "command": "tools\\build.bat",
+        "command": "tools\\builder.exe",
         "options": {
           "shell": {
             "executable": "cmd.exe",

@@ -178,13 +178,18 @@ public class FlightComponent extends ScriptableDeviceComponent {
     return this.modes[this.mode];
   }
 
-  public func GetNextFlightMode() -> ref<FlightMode> {
-    return this.modes[(this.mode + 1) % ArraySize(this.modes)];
+  public func GetNextFlightMode(direction: Int32) -> ref<FlightMode> {
+    let mode = this.mode + direction;
+    if mode < 0 {
+      mode += ArraySize(this.sys.playerComponent.modes);
+    } 
+    mode = mode % ArraySize(this.sys.playerComponent.modes);
+    return this.modes[mode];
   }
 
   public func GetNextFlightModeDescription() -> String {
     if ArraySize(this.modes) > 0 {
-      return this.GetNextFlightMode().GetDescription();
+      return this.GetNextFlightMode(1).GetDescription();
     } else {
       return "None";
     }
