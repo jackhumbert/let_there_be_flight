@@ -1,7 +1,10 @@
-# Let There Be Flight 
-# https://github.com/jackhumbert/let_there_be_flight 
- 
-# thrusters.yaml 
+# Let There Be Flight
+# (C) 2022 Jack Humbert
+# https://github.com/jackhumbert/let_there_be_flight
+# This file was automatically generated on 2022-06-24 03:27:26.3592720
+
+# thrusters.yaml
+
 # Vehicle.VehicleDestructionParamsThrusterFL:
 #   $base: Vehicle.VehicleDestructionParamsCaliburn_inline1 
 #   components: [ n"ThrusterFL" ]
@@ -147,9 +150,10 @@
 #   $base: Items.Panzer_Cannon_inline2
 #   modifierType: n"Multiplier" 
 #   statType: BaseStats.HitDismembermentFactor
-#   value: 3  
- 
-# vehicle_flight.yaml 
+#   value: 3 
+
+# vehicle_flight.yaml
+
 playerStateMachineInputContext.vehicleFlightContext.affinity: n"None" 
 playerStateMachineInputContext.vehicleFlightContext.alias: [ n"allVehicleContexts" ]
 playerStateMachineInputContext.vehicleFlightContext.forceInputContext: n"VehicleFlight"
@@ -242,5 +246,5 @@ playerStateMachineDefinitions.Vehicle.states:
 # GameplayRestriction.VehicleCombat.savable,Bool,true 
 # GameplayRestriction.VehicleCombat.statusEffectType,TweakDBID,"BaseStatusEffectTypes.Misc" 
 # GameplayRestriction.VehicleCombat.stopActiveSfxOnDeactivate,Bool,true 
-# GameplayRestriction.VehicleCombat.uiData,TweakDBID,""  
- 
+# GameplayRestriction.VehicleCombat.uiData,TweakDBID,"" 
+

@@ -1,7 +1,10 @@
-// Let There Be Flight 
-// https://github.com/jackhumbert/let_there_be_flight 
- 
-// FlightAudio.reds 
+// Let There Be Flight
+// (C) 2022 Jack Humbert
+// https://github.com/jackhumbert/let_there_be_flight
+// This file was automatically generated on 2022-06-24 03:27:26.1132470
+
+// FlightAudio.reds
+
 public class FlightAudioUpdate {
   public let speed: Float;
   public let surge: Float;
@@ -176,9 +179,10 @@ public class Vector4Wrapper {
 
 public class OrientationWrapper {
   public let quaternion: Quaternion;
-} 
- 
-// FlightComponent.reds 
+}
+
+// FlightComponent.reds
+
 public class FlightComponent extends ScriptableDeviceComponent {
   private let sys: ref<FlightSystem>;
   public let fx: ref<FlightFx>;
@@ -277,12 +281,12 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.distance = 0.0;
     this.hoverHeight = FlightSettings.GetFloat(n"defaultHoverHeight");
     
-    ArrayPush(this.modes, FlightModeAutomatic.Create(this));
     ArrayPush(this.modes, FlightModeHoverFly.Create(this));
     ArrayPush(this.modes, FlightModeHover.Create(this));
+    ArrayPush(this.modes, FlightModeAutomatic.Create(this));
     ArrayPush(this.modes, FlightModeFly.Create(this));
-    ArrayPush(this.modes, FlightModeDrone.Create(this));
     ArrayPush(this.modes, FlightModeDroneAntiGravity.Create(this));
+    ArrayPush(this.modes, FlightModeDrone.Create(this));
 
     this.audioUpdate = new FlightAudioUpdate();
   }
@@ -348,7 +352,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   }
 
   private func GetPitch() -> Float{
-    return 700.0 / this.stats.s_mass + 0.5;
+    return ClampF(700.0 / this.stats.s_mass + 0.5, 0.25, 2.0);
   }
 
   public func GetFlightModeIndex() -> Int32 {
@@ -359,13 +363,18 @@ public class FlightComponent extends ScriptableDeviceComponent {
     return this.modes[this.mode];
   }
 
-  public func GetNextFlightMode() -> ref<FlightMode> {
-    return this.modes[(this.mode + 1) % ArraySize(this.modes)];
+  public func GetNextFlightMode(direction: Int32) -> ref<FlightMode> {
+    let mode = this.mode + direction;
+    if mode < 0 {
+      mode += ArraySize(this.sys.playerComponent.modes);
+    } 
+    mode = mode % ArraySize(this.sys.playerComponent.modes);
+    return this.modes[mode];
   }
 
   public func GetNextFlightModeDescription() -> String {
     if ArraySize(this.modes) > 0 {
-      return this.GetNextFlightMode().GetDescription();
+      return this.GetNextFlightMode(1).GetDescription();
     } else {
       return "None";
     }
@@ -407,7 +416,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     }
     let normal: Vector4;
     this.SetupTires();
-    if !this.FindGround(normal) || this.distance > 1.0 {
+    if !this.FindGround(normal) || this.distance > 2.0 {
       this.Activate();
     }
   }
@@ -902,7 +911,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   }
 
   public func ProcessImpact(impact: Float) {
-    this.collisionTimer = FlightSettings.GetFloat(n"collisionRecoveryDelay") - impact;
+    this.collisionTimer = (FlightSettings.GetFloat(n"collisionRecoveryDelay") + FlightSettings.GetFloat(n"collisionRecoveryDuration")) * (1.0 - (impact * this.GetFlightMode().collisionPenalty));
     // this.ui_info.StartGlitching(impact, FlightSettings.GetFloat(n"collisionRecoveryDuration") + impact);
   }
 
@@ -1172,9 +1181,10 @@ public class FlightComponent extends ScriptableDeviceComponent {
     };
   }
 */
-} 
- 
-// FlightContextTransitions.reds 
+}
+
+// FlightContextTransitions.reds
+
 @addMethod(InputContextTransitionEvents)
 protected final const func ShowVehicleFlightInputHints(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
   // this.ShowInputHint(scriptInterface, n"Reload", n"VehicleFlight", "LocKey#36198");
@@ -1252,9 +1262,10 @@ public class VehicleFlightContextDecisions extends InputContextTransitionDecisio
     // };
     return true;
   }
-} 
- 
-// FlightController.reds 
+}
+
+// FlightController.reds
+
 // public class FlightSettingsListener extends ConfigVarListener {
 
 //   private let m_ctrl: wref<FlightController>;
@@ -1598,7 +1609,7 @@ public native class FlightController extends IScriptable {
   }
 
   private func CycleMode(direction: Int32) -> Void {
-    let newMode = this.sys.playerComponent.GetNextFlightMode();
+    let newMode = this.sys.playerComponent.GetNextFlightMode(direction);
     this.mode = this.mode + direction;
     if this.mode < 0 {
       this.mode += ArraySize(this.sys.playerComponent.modes);
@@ -2024,9 +2035,10 @@ protected cb func OnGameAttached() -> Bool {
   //       initData.occupiedByNeutral = mountingEvent.request.mountData.mountEventOptions.occupiedByNeutral;
   //       instanceData.initData = initData;
   //       this.AddStateMachine(n"Vehicle", instanceData, otherObject);
- 
- 
-// FlightControllerUI.reds 
+
+
+// FlightControllerUI.reds
+
 // handle this somewhere
 // this.m_tppBBConnectionId = this.m_activeVehicleUIBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this, n"OnCameraModeChanged");
 
@@ -2758,9 +2770,10 @@ public class FlightControllerUI extends inkCanvas {
     }
   }
 
-} 
- 
-// FlightDevice.reds 
+}
+
+// FlightDevice.reds
+
 public class FlightDevice extends GameObject {
   public let flightController: ref<FlightController>;
 
@@ -2784,9 +2797,10 @@ public class FlightDevice extends GameObject {
     super.OnDetach();
     FlightLog.Info("[FlightDevice] OnDetach");
   }
-} 
- 
-// FlightEvents.reds 
+}
+
+// FlightEvents.reds
+
 public abstract class vehicleFlightEvent extends Event {
   // public native let vehicle: ref<VehicleObject>;
 }
@@ -2809,9 +2823,10 @@ public class VehicleFlightUIActivationEvent extends vehicleFlightEvent {
 
 public class VehicleFlightModeChangeEvent extends vehicleFlightEvent {
   let mode: Int32;
-} 
- 
-// FlightFx.reds 
+}
+
+// FlightFx.reds
+
 public class FlightFx {
   private let sys: ref<FlightSystem>;
   public let component: ref<FlightComponent>;
@@ -3216,8 +3231,8 @@ public class FlightFx {
           this.fl_thruster.SetLocalOrientation(Quaternion.Slerp(this.fl_thruster.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
             -ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0), 
             180.0,
-            // torque.Z * 0.5 - ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Forward()), -15.0, 15.0)
-            0.0
+            torque.Z * 0.5 - ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Forward()), -15.0, 15.0)
+            // 0.0
           )), 0.1));
         }
         this.fl_retroFx.SetBlackboardValue(n"thruster_amount", (Vector4.Dot(new Vector4(1.0, 0.0, 0.0, 0.0), force) - torque.Z) * 0.1);
@@ -3363,18 +3378,20 @@ public class FlightFx {
         c.Toggle(true);
     }
   }
-} 
- 
-// FlightLog.reds 
+}
+
+// FlightLog.reds
+
 public native class FlightLog {
   // defined in red4ext part
   public static native func Info(value: String) -> Void;
   public static native func Warn(value: String) -> Void;
   public static native func Error(value: String) -> Void;
   public static native func Probe(image: ref<inkImage>, atlasResourcePath: ResRef) -> Void;
-} 
- 
-// FlightModeAutomatic.reds 
+}
+
+// FlightModeAutomatic.reds
+
 public class FlightModeAutomatic extends FlightModeStandard {
   protected let hovering: Float;
   protected let referenceZ: Float;
@@ -3384,6 +3401,11 @@ public class FlightModeAutomatic extends FlightModeStandard {
     self.Initialize(component);
     self.hovering = 1.0;
     return self;
+  }
+
+  public func Initialize(component: ref<FlightComponent>) -> Void {
+    super.Initialize(component);
+    this.collisionPenalty = 1.0;
   }
 
   public func Activate() -> Void {
@@ -3420,7 +3442,7 @@ public class FlightModeAutomatic extends FlightModeStandard {
     this.UpdateWithNormalLift(timeDelta, idealNormal, liftFactor * FlightSettings.GetFloat(n"hoverFactor") + (9.81000042) * this.gravityFactor);
 
     let aeroFactor = Vector4.Dot(this.component.stats.d_forward, this.component.stats.d_direction);
-    let yawDirectionality: Float = this.component.stats.d_speedRatio * 300.0;
+    let yawDirectionality: Float = this.component.stats.d_speedRatio * FlightSettings.GetFloat(n"automaticModeYawDirectionality");
 
     let directionFactor = AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_right));
 
@@ -3428,14 +3450,15 @@ public class FlightModeAutomatic extends FlightModeStandard {
     this.force += -this.component.stats.d_localDirection * directionFactor * yawDirectionality * AbsF(aeroFactor);
 
     if AbsF(this.component.surge) < 1.0 {    
-      let velocityDamp: Vector4 = (1.0 - AbsF(this.component.surge)) * FlightSettings.GetFloat(n"assistedModeAutoBrakingFactor") * this.component.stats.d_localDirection2D * (this.component.stats.d_speed2D / 100.0);
+      let velocityDamp: Vector4 = (1.0 - AbsF(this.component.surge)) * FlightSettings.GetFloat(n"automaticModeAutoBrakingFactor") * this.component.stats.d_localDirection2D * (this.component.stats.d_speed2D / 100.0);
       this.force -= velocityDamp;
     }
 
   }
-} 
- 
-// FlightModeDrone.reds 
+}
+
+// FlightModeDrone.reds
+
 public class FlightModeDrone extends FlightMode {
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeDrone> {
     let self = new FlightModeDrone();
@@ -3470,9 +3493,10 @@ public class FlightModeDrone extends FlightMode {
       // yaw correction
       this.torque.Z = -(this.component.yaw * FlightSettings.GetFloat(n"yawFactorDrone") + angularDamp.Z);
   }
-} 
- 
-// FlightModeDroneAntiGravity.reds 
+}
+
+// FlightModeDroneAntiGravity.reds
+
 public class FlightModeDroneAntiGravity extends FlightModeDrone {
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeDroneAntiGravity> {
     let self = new FlightModeDroneAntiGravity();
@@ -3486,9 +3510,10 @@ public class FlightModeDroneAntiGravity extends FlightModeDrone {
     super.Update(timeDelta);
     this.force += this.component.stats.d_localUp *  (9.81000042) * this.gravityFactor;
   }
-} 
- 
-// FlightModeFly.reds 
+}
+
+// FlightModeFly.reds
+
 public class FlightModeFly extends FlightModeStandard {
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeFly> {
     let self = new FlightModeFly();
@@ -3503,9 +3528,10 @@ public class FlightModeFly extends FlightModeStandard {
     let liftForce: Float = FlightSettings.GetFloat(n"liftFactor") * this.component.lift + (9.81000042) * this.gravityFactor;
     this.UpdateWithNormalLift(timeDelta, idealNormal, liftForce);
   }
-} 
- 
-// FlightModeHover.reds 
+}
+
+// FlightModeHover.reds
+
 public class FlightModeHover extends FlightModeStandard {
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeHover> {
     let self = new FlightModeHover();
@@ -3525,7 +3551,7 @@ public class FlightModeHover extends FlightModeStandard {
     this.component.hoverHeight = MaxF(FlightSettings.GetFloat(n"minHoverHeight"), this.component.hoverHeight);
 
     // let findWater: TraceResult;
-    let heightDifference = 1.0;
+    let heightDifference = 0.0;
     let normal: Vector4;
     let idealNormal = FlightUtils.Up();
 
@@ -3539,9 +3565,10 @@ public class FlightModeHover extends FlightModeStandard {
 
     this.UpdateWithNormalDistance(timeDelta, idealNormal, heightDifference);
   }
-} 
- 
-// FlightModeHoverFly.reds 
+}
+
+// FlightModeHoverFly.reds
+
 public class FlightModeHoverFly extends FlightModeStandard {
   protected let hovering: Float;
   protected let referenceZ: Float;
@@ -3586,9 +3613,10 @@ public class FlightModeHoverFly extends FlightModeStandard {
 
     this.UpdateWithNormalLift(timeDelta, idealNormal, liftFactor * FlightSettings.GetFloat(n"hoverFactor") + (9.81000042) * this.gravityFactor);
   }
-} 
- 
-// FlightMode_.reds 
+}
+
+// FlightMode_.reds
+
 public abstract class FlightMode {
   protected let sys: ref<FlightSystem>;
   protected let component: ref<FlightComponent>;
@@ -3599,6 +3627,7 @@ public abstract class FlightMode {
   public static let gravityFactor: Float;
 
   public let usesRightStickInput: Bool;
+  public let collisionPenalty: Float;
 
   public func Initialize(component: ref<FlightComponent>) -> Void {
     this.component = component;
@@ -3645,10 +3674,16 @@ public abstract class FlightMode {
     this.torque.Z -= aeroDynamicYaw * FlightSettings.GetFloat(n"yawCorrectionFactor");
     this.torque.X -= aeroDynamicPitch * FlightSettings.GetFloat(n"pitchAeroCorrectionFactor");
   }
-} 
- 
-// FlightMode_Standard.reds 
+}
+
+// FlightMode_Standard.reds
+
 public abstract class FlightModeStandard extends FlightMode {
+  public func Initialize(component: ref<FlightComponent>) -> Void {
+    super.Initialize(component);
+    this.collisionPenalty = 0.5;
+  }
+
   protected func UpdateWithNormalDistance(timeDelta: Float, normal: Vector4, heightDifference: Float) -> Void {
     let hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, FlightSettings.GetFloat(n"hoverClamp"));// / FlightSettings.GetFloat(n"hoverClamp");
     let liftForce: Float = hoverCorrection * FlightSettings.GetFloat(n"hoverFactor") + (9.81000042) * this.gravityFactor;
@@ -3730,9 +3765,10 @@ public abstract class FlightModeStandard extends FlightMode {
     //   this.component.stats.s_centerOfMass.position.Y -= torque.X * 0.1;
     // }
   }
-} 
- 
-// FlightSettings.reds 
+}
+
+// FlightSettings.reds
+
 public native class FlightSettings extends ScriptableSystem {
   public native static func GetFloat(name: CName) -> Float;
   public native static func SetFloat(name: CName, value: Float) -> Void;
@@ -3742,7 +3778,8 @@ public native class FlightSettings extends ScriptableSystem {
     FlightSettings.SetFloat(n"airResistance", 0.001);
     FlightSettings.SetFloat(n"angularBrakeFactor", 10.0);
     FlightSettings.SetFloat(n"angularDampFactor", 3.0);
-    FlightSettings.SetFloat(n"assistedModeAutoBrakingFactor", 200.0);
+    FlightSettings.SetFloat(n"automaticModeAutoBrakingFactor", 200.0);
+    FlightSettings.SetFloat(n"automaticModeYawDirectionality", 300.0);
     FlightSettings.SetFloat(n"brakeFactor", 1.2);
     FlightSettings.SetFloat(n"brakeOffset", 0.0);
     FlightSettings.SetFloat(n"collisionRecoveryDelay", 0.8);
@@ -3783,9 +3820,10 @@ public native class FlightSettings extends ScriptableSystem {
     FlightSettings.SetFloat(n"yawFactor", 5.0);
     FlightSettings.SetFloat(n"yawFactorDrone", 5.0);
   }
-} 
- 
-// FlightStats.reds 
+}
+
+// FlightStats.reds
+
 public class FlightStats {
   public let vehicle: wref<VehicleObject>;
   public let s_record: wref<Vehicle_Record>;
@@ -4006,9 +4044,10 @@ public class FlightStats {
     this.d_position =  position;
     // this.d_visualPosition = this.d_position - this.d_velocity * timeDelta;
   }
-} 
- 
-// FlightSystem.reds 
+}
+
+// FlightSystem.reds
+
 public native abstract importonly class IFlightSystem extends IGameSystem {
 }
 
@@ -4061,9 +4100,10 @@ public native class FlightSystem extends IFlightSystem {
 //   // }
 }
 
- 
- 
-// FlightTransition.reds 
+
+
+// FlightTransition.reds
+
 // public class FlightTransition extends VehicleTransition {
 
 //   protected final func SetIsVehicleFlying(stateContext: ref<StateContext>, value: Bool) -> Void {
@@ -4238,9 +4278,10 @@ public class FlightEvents extends VehicleEventsTransition {
       }
     }
   }
-} 
- 
-// FlightTricks.reds 
+}
+
+// FlightTricks.reds
+
 public abstract class FlightTrick
 {
   public let suspendMode: Bool;
@@ -4278,9 +4319,10 @@ public class FlightTrickAileronRoll extends FlightTrick {
       return true;
     }
   }
-} 
- 
-// FlightUtils.reds 
+}
+
+// FlightUtils.reds
+
 public class FlightUtils {
     public static func SqrtCurve(input: Float) -> Float {
         if input != 0.0 {
@@ -4311,9 +4353,10 @@ public class FlightUtils {
 
 	public static func PureBlack() -> HDRColor = new HDRColor(0.0, 0.0, 0.0, 1.0)
 	public static func PureWhite() -> HDRColor = new HDRColor(1.0, 1.0, 1.0, 1.0)
-} 
- 
-// hudFlightController.reds 
+}
+
+// hudFlightController.reds
+
 
 public class FlightUIVehicleHealthStatPoolListener extends CustomValueStatPoolsListener {
 
@@ -4522,9 +4565,10 @@ public class hudFlightController extends inkHUDGameController {
     };
   }
 }
- 
- 
-// inkWidgetBuilder.reds 
+
+
+// inkWidgetBuilder.reds
+
 enum inkWidgetBuilderType {
   inkCanvas = 0,
   inkFlex = 1,
@@ -4913,9 +4957,10 @@ public class inkWidgetBuilder {
 
 
 
-} 
- 
-// OperatorHelpers.reds 
+}
+
+// OperatorHelpers.reds
+
 // Matrix
 
 public static func OperatorMultiply(m: Matrix, v: Vector4) -> Vector4 {
@@ -5020,9 +5065,10 @@ public static func OperatorNotEqual(a: Vector3, b: Vector3) -> Bool {
 
 public static func OperatorNotEqual(a: Vector4, b: Vector4) -> Bool {
   return !OperatorEqual(a, b);
-} 
- 
-// PID.reds 
+}
+
+// PID.reds
+
 public class PID {
   private let valueFloat: Float;
   // private let valueVector: Vector4;
@@ -5191,9 +5237,10 @@ public class DualPID extends PID {
     this.I_aux = I_aux;
     this.D_aux = D_aux;
   }
-} 
- 
-// vehicleTPPCameraComponent.reds 
+}
+
+// vehicleTPPCameraComponent.reds
+
 public native class vehicleChassisComponent extends IPlacedComponent {
     public native func GetComOffset() -> Transform;
 }
@@ -5282,9 +5329,10 @@ public importonly class EffectSpawnerComponent extends IVisualComponent {
 // public native func AddWorldWidgetComponent() -> Bool;
 
 // @addMethod(IPlacedComponent)
-// public native func UpdateHardTransformBinding(bindName: CName, slotName: CName) -> Bool; 
- 
-// vflightUIGameController.reds 
+// public native func UpdateHardTransformBinding(bindName: CName, slotName: CName) -> Bool;
+
+// vflightUIGameController.reds
+
 public class vflightUIGameController extends inkHUDGameController {
   private let m_vehicleBlackboard: wref<IBlackboard>;
   private let m_vehicleFlightBlackboard: wref<IBlackboard>;
@@ -5955,9 +6003,10 @@ public class vflightUIGameController extends inkHUDGameController {
     };
   }
 }
- 
- 
-// _blackboardDefinitions.reds 
+
+
+// _blackboardDefinitions.reds
+
 
 public class VehicleFlightDef extends BlackboardDefinition {
 
@@ -6000,9 +6049,10 @@ public let VehicleFlight: ref<VehicleFlightDef>;
 // public let Torque: BlackboardID_Vector4;
 
 // @addField(VehicleDef)
-// public let Position: BlackboardID_Vector4; 
- 
-// _hudCarController.reds 
+// public let Position: BlackboardID_Vector4;
+
+// _hudCarController.reds
+
 @wrapMethod(hudCarController)
 private final func Reset() -> Void {
   wrappedMethod();
@@ -6074,9 +6124,10 @@ protected cb func OnSpeedValueChanged(speedValue: Float) -> Bool {
   } else {
     wrappedMethod(speedValue);
   }
-} 
- 
-// _inkBorder.reds 
+}
+
+// _inkBorder.reds
+
 @addField(inkBorder)
 native let thickness: Float;
 
@@ -6087,9 +6138,10 @@ public func SetThickness(thickness: Float) {
 @addMethod(inkBorder)
 public func GetThickness() -> Float{
     return this.thickness;
-} 
- 
-// _inkMask.reds 
+}
+
+// _inkMask.reds
+
 enum inkMaskDataSource {
     TextureAtlas = 0,
     DynamicTexture = 1
@@ -6167,9 +6219,10 @@ func SetMaskTransparency(value: Float) {
 //     this.textureAtlas = textureAtlas;
 // }
 @addMethod(inkMask)
-public native func SetAtlasResource(atlasResourcePath: ResRef) -> Bool; 
- 
-// _inkQuadShape.reds 
+public native func SetAtlasResource(atlasResourcePath: ResRef) -> Bool;
+
+// _inkQuadShape.reds
+
 public native class inkQuadShape extends inkBaseShapeWidget {
     // native let textureAtlas: ResRef;
     native let texturePart: CName;
@@ -6184,9 +6237,10 @@ public native class inkQuadShape extends inkBaseShapeWidget {
     public func GetVertexList() -> array<Vector2> {
         return this.vertexList;
     }
-} 
- 
-// _inkWidget.reds 
+}
+
+// _inkWidget.reds
+
 @addMethod(inkWidget)
 public native func CreateEffect(typeName: CName, effectName: CName) -> Void;
 
@@ -6197,13 +6251,15 @@ enum inkEBlurDimension
 }
 
 @addMethod(inkWidget)
-public native func SetBlurDimension(effectName: CName, blurDimension : inkEBlurDimension) -> Bool; 
- 
-// _MeshComponent.reds 
+public native func SetBlurDimension(effectName: CName, blurDimension : inkEBlurDimension) -> Bool;
+
+// _MeshComponent.reds
+
 @addField(MeshComponent)
-public native let visualScale: Vector3; 
- 
-// _Transitions.reds 
+public native let visualScale: Vector3;
+
+// _Transitions.reds
+
 // VehicleTransition
 
 @addMethod(VehicleTransition)
@@ -6267,9 +6323,10 @@ public final const func ToFlight(const stateContext: ref<StateContext>, const sc
     // };
   };
   return false;
-} 
- 
-// _VehicleComponent.reds 
+}
+
+// _VehicleComponent.reds
+
 @replaceMethod(VehicleComponent)
 protected cb func OnVehicleWaterEvent(evt: ref<VehicleWaterEvent>) -> Bool {
   if evt.isInWater  && !this.GetPS().GetIsSubmerged() {
@@ -6323,9 +6380,10 @@ private final func ExplodeVehicle(instigator: wref<GameObject>) -> Void {
 //   } else {
 //     GameObjectEffectHelper.BreakEffectLoopEvent(this.GetVehicle(), n"thrusters");
 //   };
-// } 
- 
-// _VehicleObject.reds 
+// }
+
+// _VehicleObject.reds
+
 @addField(VehicleObject)
 private let m_flightComponent: wref<FlightComponent>;
 
@@ -6477,5 +6535,5 @@ public final func IsOnPavement() -> Bool {
 // @addMethod(VehicleObject)
 // public const func IsQuickHacksExposed() -> Bool {
 //   return true;
-// } 
- 
+// }
+
