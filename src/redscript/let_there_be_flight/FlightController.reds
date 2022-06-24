@@ -118,6 +118,8 @@ public native class FlightController extends IScriptable {
     this.sys.Setup(player);
     this.gameInstance = player.GetGame();
     this.player = player;
+
+    this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, FlightSettings.GetFloat(n"isFlightUIActive") > 0.5);
   }
 
   public const func GetBlackboard() -> ref<IBlackboard> {
@@ -225,7 +227,7 @@ public native class FlightController extends IScriptable {
 
     if (this.showUI) {
       this.ui.Show();
-      FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, true);
+      // FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, true);
     }
   
     if !silent {
@@ -250,7 +252,7 @@ public native class FlightController extends IScriptable {
     if (this.showUI) {
       this.ui.Hide();
     }
-    FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, false);
+    // FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, false);
 
     FlightLog.Info("[FlightController] Deactivate");
     this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsActive, false, true);

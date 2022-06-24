@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-06-24 13:43:20.4784976
+// This file was automatically generated on 2022-06-24 19:31:42.4854877
 
 // FlightAudio.reds
 
@@ -981,7 +981,9 @@ public class FlightComponent extends ScriptableDeviceComponent {
         this.sys.audio.Update("windLeft", Vector4.EmptyVector(), windVolume, this.audioUpdate);
         this.sys.audio.Update("windRight", Vector4.EmptyVector(), windVolume, this.audioUpdate);
       }
-      this.sys.audio.Update("vehicle" + this.GetUniqueID(), Vector4.EmptyVector(), engineVolume, this.audioUpdate);
+      if this.active {
+        this.sys.audio.Update("vehicle" + this.GetUniqueID(), Vector4.EmptyVector(), engineVolume, this.audioUpdate);
+      }
       if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() {
         this.sys.audio.Update("vehicleDestroyed" + this.GetUniqueID(), Vector4.EmptyVector(), engineVolume, this.audioUpdate);
       }
@@ -1029,7 +1031,9 @@ public class FlightComponent extends ScriptableDeviceComponent {
     } else {
       this.audioUpdate.inside = 0.0;
     }
-    this.sys.audio.Update("vehicle" + this.GetUniqueID(), this.GetVehicle().GetWorldPosition(), engineVolume, this.audioUpdate);
+    if this.active {
+      this.sys.audio.Update("vehicle" + this.GetUniqueID(), this.GetVehicle().GetWorldPosition(), engineVolume, this.audioUpdate);
+    }
     if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() {
       this.sys.audio.Update("vehicleDestroyed" + this.GetUniqueID(), this.GetVehicle().GetWorldPosition(), engineVolume, this.audioUpdate);
     }
@@ -1386,6 +1390,8 @@ public native class FlightController extends IScriptable {
     this.sys.Setup(player);
     this.gameInstance = player.GetGame();
     this.player = player;
+
+    this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, FlightSettings.GetFloat(n"isFlightUIActive") > 0.5);
   }
 
   public const func GetBlackboard() -> ref<IBlackboard> {
@@ -1493,7 +1499,7 @@ public native class FlightController extends IScriptable {
 
     if (this.showUI) {
       this.ui.Show();
-      FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, true);
+      // FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, true);
     }
   
     if !silent {
@@ -1518,7 +1524,7 @@ public native class FlightController extends IScriptable {
     if (this.showUI) {
       this.ui.Hide();
     }
-    FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, false);
+    // FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, false);
 
     FlightLog.Info("[FlightController] Deactivate");
     this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsActive, false, true);
@@ -2617,8 +2623,8 @@ public class FlightControllerUI extends inkCanvas {
     if (FlightController.GetInstance().IsActive()) {
       this.HideInfo();
     } else {
-      FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, false, true);
-      FlightController.GetInstance().GetBlackboard().SignalBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive);
+      // FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, false, true);
+      // FlightController.GetInstance().GetBlackboard().SignalBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive);
     }
   }
 
@@ -3791,6 +3797,7 @@ public native class FlightSettings extends ScriptableSystem {
     FlightSettings.SetFloat(n"hoverClamp", 10.0);
     FlightSettings.SetFloat(n"hoverFactor", 40.0);
     FlightSettings.SetFloat(n"hoverLiftFactor", 8.0);
+    FlightSettings.SetFloat(n"isFlightUIActive", 1.0);
     FlightSettings.SetFloat(n"liftFactor", 8.0);
     FlightSettings.SetFloat(n"liftFactorDrone", 40.0);
     FlightSettings.SetFloat(n"lookAheadMax", 10.0);
@@ -4396,31 +4403,43 @@ public class hudFlightController extends inkHUDGameController {
   private let m_gameInstance: GameInstance;
   private let m_animationProxy: ref<inkAnimProxy>;
   private let m_vehicleFlightBlackboard: wref<IBlackboard>;
+  private let m_psmBlackboard: wref<IBlackboard>;
+  private let m_PSM_BBID: ref<CallbackHandle>;
+  private let m_playerStateBBConnectionId: ref<CallbackHandle>;
   private let m_vehicleBBUIActivId: ref<CallbackHandle>;
+  private let m_vehicleBBActivId: ref<CallbackHandle>;
   public let m_healthStatPoolListener: ref<FlightUIVehicleHealthStatPoolListener>;
   private let m_hp_mask: inkWidgetRef;
   private let m_hp_condition_text: inkTextRef;
+  private let m_currentZoom: Float;
 
   protected cb func OnInitialize() -> Bool {
     FlightLog.Info("[hudFlightController] OnInitialize");
     let delayInitialize: ref<DelayedHUDInitializeEvent>;
-    this.currentTime = GameInstance.GetTimeSystem(FlightSystem.GetInstance().gameInstance).GetGameTime();
     inkTextRef.SetText(this.m_Date, "XX-XX-XXXX");
     inkTextRef.SetText(this.m_CameraID, FlightSystem.GetInstance().playerComponent.GetFlightMode().GetDescription());
-    inkTextRef.SetText(this.m_Timer, ToString(GameTime.Hours(this.currentTime)) + ":" + ToString(GameTime.Minutes(this.currentTime)) + ":" + ToString(GameTime.Seconds(this.currentTime)));
     delayInitialize = new DelayedHUDInitializeEvent();
     GameInstance.GetDelaySystem(this.GetPlayerControlledObject().GetGame()).DelayEvent(this.GetPlayerControlledObject(), delayInitialize, 0.10);
     this.GetPlayerControlledObject().RegisterInputListener(this);
     this.offsetLeft = -838.0;
     this.offsetRight = 1495.0;
-    this.GetRootWidget().SetVisible(false);
+    // this.GetRootWidget().SetVisible(false);
+    // this.PlayLibraryAnimation(n"outro");
     
     this.m_vehicleFlightBlackboard = FlightController.GetInstance().GetBlackboard();
     if IsDefined(this.m_vehicleFlightBlackboard) {
       if !IsDefined(this.m_vehicleBBUIActivId) {
         this.m_vehicleBBUIActivId = this.m_vehicleFlightBlackboard.RegisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, this, n"OnActivateUI");
+      }
+      if !IsDefined(this.m_vehicleBBActivId) {
+        this.m_vehicleBBActivId = this.m_vehicleFlightBlackboard.RegisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this, n"OnActivate");
       };
     };
+  }
+
+  private func UpdateTime() -> Void {
+    this.currentTime = GameInstance.GetTimeSystem(this.m_gameInstance).GetGameTime();
+    inkTextRef.SetText(this.m_Timer, ToString(GameTime.Hours(this.currentTime)) + ":" + ToString(GameTime.Minutes(this.currentTime)) + ":" + ToString(GameTime.Seconds(this.currentTime)));
   }
 
   private final func IsUIactive() -> Bool {
@@ -4430,55 +4449,98 @@ public class hudFlightController extends inkHUDGameController {
     return false;
   }
 
+  private final func IsActive() -> Bool {
+    if IsDefined(this.m_vehicleFlightBlackboard) && this.m_vehicleFlightBlackboard.GetBool(GetAllBlackboardDefs().VehicleFlight.IsActive) {
+      return true;
+    };
+    return false;
+  }
+
   protected cb func OnActivateUI(activate: Bool) -> Bool {
     this.ActivateUI(activate);
   }
 
+  protected cb func OnActivate(activate: Bool) -> Bool {
+    if this.IsUIactive() {
+      this.ActivateUI(activate);
+    }
+  }
+
+  private let m_introAnimationProxy: ref<inkAnimProxy>;
+  private let m_outroAnimationProxy: ref<inkAnimProxy>;
+
   private func ActivateUI(activate: Bool) -> Void {
     if activate {
-      this.GetRootWidget().SetVisible(true);
-      let optionIntro: inkAnimOptions;
-      this.PlayLibraryAnimation(n"Malfunction");
-      optionIntro.executionDelay = 1.50;
-      // this.PlaySound(n"MiniGame", n"AccessGranted");
-      this.PlayLibraryAnimation(n"intro", optionIntro);
-      this.PlayAnim(n"intro2", n"OnIntroComplete");
-      optionIntro.executionDelay = 0.5;
-      this.PlayLibraryAnimation(n"Malfunction_off", optionIntro);
-      this.PlayAnim(n"Malfunction_timed", n"OnMalfunction");
-      this.UpdateJohnnyThemeOverride(true);
+      // this.GetRootWidget().SetVisible(true);
+      let options: inkAnimOptions;
+      options.executionDelay = 0.50;
+      if IsDefined(this.m_outroAnimationProxy) && this.m_outroAnimationProxy.IsPlaying() {
+        this.m_outroAnimationProxy.Stop();
+      }
+      this.m_introAnimationProxy = this.PlayLibraryAnimation(n"intro", options);
+      // this.PlayAnim(n"intro", n"OnIntroComplete");
+      // optionIntro.executionDelay = 0.25;
+      // this.PlayLibraryAnimation(n"Malfunction_off", optionIntro);
+      // this.PlayAnim(n"Malfunction_timed", n"OnMalfunction");
+      // this.UpdateJohnnyThemeOverride(true);
     } else {
-      this.PlayLibraryAnimation(n"outro");
-      this.UpdateJohnnyThemeOverride(false);
+      // this.GetRootWidget().SetVisible(false);
+      // this.PlayLibraryAnimation(n"outro");
+      // this.PlayLibraryAnimation(n"Malfunction");
+      let options: inkAnimOptions;
+      options.executionDelay = 0.50;
+      if IsDefined(this.m_introAnimationProxy) && this.m_introAnimationProxy.IsPlaying() {
+        this.m_introAnimationProxy.Stop();
+      }
+      this.m_outroAnimationProxy = this.PlayLibraryAnimation(n"outro", options);
+      // this.PlayAnim(n"outro", n"OnOutroComplete");
+      // this.UpdateJohnnyThemeOverride(false);
     }
   }
 
   protected cb func OnUninitialize() -> Bool {
-    TakeOverControlSystem.CreateInputHint(this.GetPlayerControlledObject().GetGame(), false);
-    SecurityTurret.CreateInputHint(this.GetPlayerControlledObject().GetGame(), false);
+    // TakeOverControlSystem.CreateInputHint(this.GetPlayerControlledObject().GetGame(), false);
+    // SecurityTurret.CreateInputHint(this.GetPlayerControlledObject().GetGame(), false);
+    
+    if IsDefined(this.m_vehicleFlightBlackboard) {
+      if IsDefined(this.m_vehicleBBUIActivId) {
+        this.m_vehicleFlightBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, this.m_vehicleBBUIActivId);
+      }
+      if IsDefined(this.m_vehicleBBActivId) {
+        this.m_vehicleFlightBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this.m_vehicleBBActivId);
+      };
+    };
   }
 
   protected cb func OnPlayerAttach(playerPuppet: ref<GameObject>) -> Bool {
-    FlightLog.Info("[hudFlightController] OnPlayerAttach");
+    // FlightLog.Info("[hudFlightController] OnPlayerAttach");
     this.m_bbPlayerStats = this.GetBlackboardSystem().Get(GetAllBlackboardDefs().UI_PlayerBioMonitor);
     this.m_bbPlayerEventId = this.m_bbPlayerStats.RegisterListenerVariant(GetAllBlackboardDefs().UI_PlayerBioMonitor.PlayerStatsInfo, this, n"OnStatsChanged");    
     this.m_playerObject = playerPuppet;
     this.m_playerPuppet = playerPuppet;
     this.m_gameInstance = this.GetPlayerControlledObject().GetGame();
+    this.UpdateTime();
     this.m_healthStatPoolListener = new FlightUIVehicleHealthStatPoolListener();
     this.m_healthStatPoolListener.m_owner = this;
     this.m_healthStatPoolListener.m_vehicle = FlightSystem.GetInstance().playerComponent.GetVehicle();
     inkTextRef.SetText(this.m_hp_condition_text, this.m_healthStatPoolListener.m_vehicle.GetDisplayName());
+
+    this.m_psmBlackboard = this.GetPSMBlackboard(playerPuppet);
+    if IsDefined(this.m_psmBlackboard) {
+      this.m_PSM_BBID = this.m_psmBlackboard.RegisterDelayedListenerFloat(GetAllBlackboardDefs().PlayerStateMachine.ZoomLevel, this, n"OnZoomChange");
+    };
+
     GameInstance.GetStatPoolsSystem(this.m_gameInstance).RequestRegisteringListener(Cast(this.m_healthStatPoolListener.m_vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
-    if this.IsUIactive() {
-      this.ActivateUI(true);
-    }
+    this.ActivateUI(this.IsUIactive() && this.IsActive());
   }
 
   protected cb func OnPlayerDetach(playerPuppet: ref<GameObject>) -> Bool {
     GameInstance.GetStatPoolsSystem(this.m_gameInstance).RequestUnregisteringListener(Cast(this.m_healthStatPoolListener.m_vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     if IsDefined(this.m_bbPlayerStats) {
       this.m_bbPlayerStats.UnregisterListenerVariant(GetAllBlackboardDefs().UI_PlayerBioMonitor.PlayerStatsInfo, this.m_bbPlayerEventId);
+    };
+    if IsDefined(this.m_psmBlackboard) {
+      this.m_psmBlackboard.UnregisterDelayedListener(GetAllBlackboardDefs().PlayerStateMachine.ZoomLevel, this.m_PSM_BBID);
     };
   }
 
@@ -4488,40 +4550,23 @@ public class hudFlightController extends inkHUDGameController {
     inkTextRef.SetText(this.m_pitchFluff, ToString(yaw * 1.50));
     inkWidgetRef.SetMargin(this.m_leftPart, new inkMargin(yaw, this.offsetLeft, 0.00, 0.00));
     inkWidgetRef.SetMargin(this.m_rightPart, new inkMargin(this.offsetRight, yaw, 0.00, 0.00));
+    this.UpdateTime();
   }
-
-  protected cb func OnMalfunction(anim: ref<inkAnimProxy>) -> Bool {
-    let optionIntro: inkAnimOptions;
-    let optionMalfunction: inkAnimOptions;
-    if GameInstance.GetQuestsSystem(this.m_gameInstance).GetFact(n"q104_turret_broken") == 1 && GameInstance.GetQuestsSystem(this.m_gameInstance).GetFact(n"q104_turret_fixed") == 0 {
-      this.PlaySound(n"MiniGame", n"AccessDenied");
-      inkTextRef.SetText(this.m_MessageText, "LocKey#11338");
-      optionMalfunction.fromMarker = n"intro";
-      optionMalfunction.toMarker = n"loop_start";
-      this.PlayAnim(n"Malfunction", n"OnMalfunctionLoop", optionMalfunction);
-      optionIntro.executionDelay = 28.00;
-      this.PlayLibraryAnimation(n"Malfunction_off", optionIntro);
-    };
-  }
-
-  protected cb func OnMalfunctionLoop(anim: ref<inkAnimProxy>) -> Bool {
-    let optionMalfunctionLoop: inkAnimOptions;
-    optionMalfunctionLoop.loopInfinite = false;
-    optionMalfunctionLoop.loopType = inkanimLoopType.Cycle;
-    optionMalfunctionLoop.loopCounter = 65u;
-    optionMalfunctionLoop.fromMarker = n"loop_start";
-    optionMalfunctionLoop.toMarker = n"loop_end";
-    this.PlayAnim(n"Malfunction", n"OnMalfunctionLoopEnd", optionMalfunctionLoop);
-  }
-
-  protected cb func OnMalfunctionLoopEnd(anim: ref<inkAnimProxy>) -> Bool {
-    let optionMalfunctionLoopEnd: inkAnimOptions;
-    optionMalfunctionLoopEnd.fromMarker = n"loop_end";
-    this.PlayAnim(n"Malfunction", n"", optionMalfunctionLoopEnd);
+  
+  protected cb func OnZoomChange(evt: Float) -> Bool {
+    // if evt > this.m_currentZoom {
+    //     this.PlayLibraryAnimation(n"zoomUp");
+    // } else {
+    //     this.PlayLibraryAnimation(n"zoomDown");
+    // }
+    // this.m_currentZoom = evt;
   }
 
   protected cb func OnIntroComplete(anim: ref<inkAnimProxy>) -> Bool {
-    GameInstance.GetAudioSystem(this.GetPlayerControlledObject().GetGame()).Play(n"ui_main_menu_cc_loading");
+    // GameInstance.GetAudioSystem(this.GetPlayerControlledObject().GetGame()).Play(n"ui_main_menu_cc_loading");
+  }
+  protected cb func OnOutroComplete(anim: ref<inkAnimProxy>) -> Bool {
+      // this.GetRootWidget().SetVisible(false);
   }
 
   protected cb func OnStatsChanged(value: Variant) -> Bool {
@@ -4540,8 +4585,8 @@ public class hudFlightController extends inkHUDGameController {
   }
 
   protected cb func OnDelayedHUDInitializeEvent(evt: ref<DelayedHUDInitializeEvent>) -> Bool {
-    TakeOverControlSystem.CreateInputHint(this.GetPlayerControlledObject().GetGame(), true);
-    SecurityTurret.CreateInputHint(this.GetPlayerControlledObject().GetGame(), true);
+    // TakeOverControlSystem.CreateInputHint(this.GetPlayerControlledObject().GetGame(), true);
+    // SecurityTurret.CreateInputHint(this.GetPlayerControlledObject().GetGame(), true);
   }
 
   public final func PlayAnim(animName: CName, opt callBack: CName, opt animOptions: inkAnimOptions) -> Void {

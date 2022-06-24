@@ -429,7 +429,9 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // is not initalized yet.
 
     Utils::CreateLogger();
-    spdlog::info("[RED4ext] Starting up");
+    spdlog::info("Starting up");
+    auto ptr = GetModuleHandle(nullptr);
+    spdlog::info("Base address: {}", fmt::ptr(ptr));
 
     RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
 
@@ -455,7 +457,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // Free memory, detach hooks.
     // The game's memory is already freed, to not try to do anything with it.
 
-    spdlog::info("[RED4ext] Shutting down");
+    spdlog::info("Shutting down");
     FlightModuleFactory::GetInstance().Unload(aSdk, aHandle);
     spdlog::shutdown();
     break;
@@ -468,7 +470,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 RED4EXT_C_EXPORT void RED4EXT_CALL Query(RED4ext::PluginInfo *aInfo) {
   aInfo->name = L"Let There Be Flight";
   aInfo->author = L"Jack Humbert";
-  aInfo->version = RED4EXT_SEMVER(0, 0, 10);
+  aInfo->version = RED4EXT_SEMVER(0, 0, 12);
   aInfo->runtime = RED4EXT_RUNTIME_LATEST;
   aInfo->sdk = RED4EXT_SDK_LATEST;
 }

@@ -20,6 +20,7 @@ public native class FlightSettings extends ScriptableSystem {
     FlightSettings.SetFloat(n"hoverClamp", 10.0);
     FlightSettings.SetFloat(n"hoverFactor", 40.0);
     FlightSettings.SetFloat(n"hoverLiftFactor", 8.0);
+    FlightSettings.SetFloat(n"isFlightUIActive", 1.0);
     FlightSettings.SetFloat(n"liftFactor", 8.0);
     FlightSettings.SetFloat(n"liftFactorDrone", 40.0);
     FlightSettings.SetFloat(n"lookAheadMax", 10.0);
