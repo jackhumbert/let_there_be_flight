@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-06-24 03:27:26.1132470
+// This file was automatically generated on 2022-06-24 13:43:20.4784976
 
 // FlightAudio.reds
 
@@ -4398,6 +4398,8 @@ public class hudFlightController extends inkHUDGameController {
   private let m_vehicleFlightBlackboard: wref<IBlackboard>;
   private let m_vehicleBBUIActivId: ref<CallbackHandle>;
   public let m_healthStatPoolListener: ref<FlightUIVehicleHealthStatPoolListener>;
+  private let m_hp_mask: inkWidgetRef;
+  private let m_hp_condition_text: inkTextRef;
 
   protected cb func OnInitialize() -> Bool {
     FlightLog.Info("[hudFlightController] OnInitialize");
@@ -4466,6 +4468,7 @@ public class hudFlightController extends inkHUDGameController {
     this.m_healthStatPoolListener = new FlightUIVehicleHealthStatPoolListener();
     this.m_healthStatPoolListener.m_owner = this;
     this.m_healthStatPoolListener.m_vehicle = FlightSystem.GetInstance().playerComponent.GetVehicle();
+    inkTextRef.SetText(this.m_hp_condition_text, this.m_healthStatPoolListener.m_vehicle.GetDisplayName());
     GameInstance.GetStatPoolsSystem(this.m_gameInstance).RequestRegisteringListener(Cast(this.m_healthStatPoolListener.m_vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     if this.IsUIactive() {
       this.ActivateUI(true);
@@ -4533,6 +4536,7 @@ public class hudFlightController extends inkHUDGameController {
 
   public func ReactToHPChange(value: Float) -> Void {
     inkTextRef.SetText(this.healthStatus, IntToString(RoundF(value)) + "/100");
+    inkWidgetRef.SetMargin(this.m_hp_mask, new inkMargin(-1720.0 - ((100.0 - value) * 9.0), 826.66638183, 0, 0));
   }
 
   protected cb func OnDelayedHUDInitializeEvent(evt: ref<DelayedHUDInitializeEvent>) -> Bool {
