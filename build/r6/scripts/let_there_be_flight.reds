@@ -4315,6 +4315,18 @@ public class FlightUtils {
  
 // hudFlightController.reds 
 
+public class FlightUIVehicleHealthStatPoolListener extends CustomValueStatPoolsListener {
+
+  public let m_owner: wref<hudFlightController>;
+  public let m_vehicle: wref<VehicleObject>;
+
+  public func OnStatPoolValueChanged(oldValue: Float, newValue: Float, percToPoints: Float) -> Void {
+    if IsDefined(this.m_owner) {
+      this.m_owner.ReactToHPChange(newValue);
+    };
+  }
+}
+
 public class hudFlightController extends inkHUDGameController {
 
   private let m_Date: inkTextRef;
@@ -4342,13 +4354,14 @@ public class hudFlightController extends inkHUDGameController {
   private let m_animationProxy: ref<inkAnimProxy>;
   private let m_vehicleFlightBlackboard: wref<IBlackboard>;
   private let m_vehicleBBUIActivId: ref<CallbackHandle>;
+  public let m_healthStatPoolListener: ref<FlightUIVehicleHealthStatPoolListener>;
 
   protected cb func OnInitialize() -> Bool {
+    FlightLog.Info("[hudFlightController] OnInitialize");
     let delayInitialize: ref<DelayedHUDInitializeEvent>;
-    let ownerObject: ref<GameObject> = this.GetOwnerEntity() as GameObject;
-    this.currentTime = GameInstance.GetTimeSystem(ownerObject.GetGame()).GetGameTime();
+    this.currentTime = GameInstance.GetTimeSystem(FlightSystem.GetInstance().gameInstance).GetGameTime();
     inkTextRef.SetText(this.m_Date, "XX-XX-XXXX");
-    inkTextRef.SetText(this.m_CameraID, GetLocalizedText("Story-base-gameplay-gui-widgets-turret_hud-turret_hud-_localizationString7"));
+    inkTextRef.SetText(this.m_CameraID, FlightSystem.GetInstance().playerComponent.GetFlightMode().GetDescription());
     inkTextRef.SetText(this.m_Timer, ToString(GameTime.Hours(this.currentTime)) + ":" + ToString(GameTime.Minutes(this.currentTime)) + ":" + ToString(GameTime.Seconds(this.currentTime)));
     delayInitialize = new DelayedHUDInitializeEvent();
     GameInstance.GetDelaySystem(this.GetPlayerControlledObject().GetGame()).DelayEvent(this.GetPlayerControlledObject(), delayInitialize, 0.10);
@@ -4401,17 +4414,23 @@ public class hudFlightController extends inkHUDGameController {
   }
 
   protected cb func OnPlayerAttach(playerPuppet: ref<GameObject>) -> Bool {
+    FlightLog.Info("[hudFlightController] OnPlayerAttach");
     this.m_bbPlayerStats = this.GetBlackboardSystem().Get(GetAllBlackboardDefs().UI_PlayerBioMonitor);
-    this.m_bbPlayerEventId = this.m_bbPlayerStats.RegisterListenerVariant(GetAllBlackboardDefs().UI_PlayerBioMonitor.PlayerStatsInfo, this, n"OnStatsChanged");
+    this.m_bbPlayerEventId = this.m_bbPlayerStats.RegisterListenerVariant(GetAllBlackboardDefs().UI_PlayerBioMonitor.PlayerStatsInfo, this, n"OnStatsChanged");    
     this.m_playerObject = playerPuppet;
     this.m_playerPuppet = playerPuppet;
     this.m_gameInstance = this.GetPlayerControlledObject().GetGame();
+    this.m_healthStatPoolListener = new FlightUIVehicleHealthStatPoolListener();
+    this.m_healthStatPoolListener.m_owner = this;
+    this.m_healthStatPoolListener.m_vehicle = FlightSystem.GetInstance().playerComponent.GetVehicle();
+    GameInstance.GetStatPoolsSystem(this.m_gameInstance).RequestRegisteringListener(Cast(this.m_healthStatPoolListener.m_vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     if this.IsUIactive() {
       this.ActivateUI(true);
     }
   }
 
   protected cb func OnPlayerDetach(playerPuppet: ref<GameObject>) -> Bool {
+    GameInstance.GetStatPoolsSystem(this.m_gameInstance).RequestUnregisteringListener(Cast(this.m_healthStatPoolListener.m_vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     if IsDefined(this.m_bbPlayerStats) {
       this.m_bbPlayerStats.UnregisterListenerVariant(GetAllBlackboardDefs().UI_PlayerBioMonitor.PlayerStatsInfo, this.m_bbPlayerEventId);
     };
@@ -4460,12 +4479,17 @@ public class hudFlightController extends inkHUDGameController {
   }
 
   protected cb func OnStatsChanged(value: Variant) -> Bool {
-    let incomingData: PlayerBioMonitor = FromVariant<PlayerBioMonitor>(value);
-    this.m_previousHealth = this.m_currentHealth;
-    this.m_maximumHealth = incomingData.maximumHealth;
-    this.m_currentHealth = CeilF(GameInstance.GetStatPoolsSystem(this.m_playerObject.GetGame()).GetStatPoolValue(Cast<StatsObjectID>(GetPlayer(this.m_playerObject.GetGame()).GetEntityID()), gamedataStatPoolType.Health, false));
-    this.m_currentHealth = Clamp(this.m_currentHealth, 0, this.m_maximumHealth);
-    inkTextRef.SetText(this.healthStatus, IntToString(RoundF(Cast<Float>(this.m_currentHealth))) + "/" + IntToString(RoundF(Cast<Float>(this.m_maximumHealth))));
+    // let incomingData: PlayerBioMonitor = FromVariant<PlayerBioMonitor>(value);
+    // this.m_previousHealth = this.m_currentHealth;
+    // this.m_maximumHealth = incomingData.maximumHealth;
+       
+   
+    // this.m_currentHealth = CeilF(GameInstance.GetStatPoolsSystem(this.m_playerObject.GetGame()).GetStatPoolValue(Cast<StatsObjectID>(GetPlayer(this.m_playerObject.GetGame()).GetEntityID()), gamedataStatPoolType.Health, false));
+    // this.m_currentHealth = Clamp(this.m_currentHealth, 0, this.m_maximumHealth);
+  }
+
+  public func ReactToHPChange(value: Float) -> Void {
+    inkTextRef.SetText(this.healthStatus, IntToString(RoundF(value)) + "/100");
   }
 
   protected cb func OnDelayedHUDInitializeEvent(evt: ref<DelayedHUDInitializeEvent>) -> Bool {
