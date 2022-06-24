@@ -341,7 +341,7 @@ public native class FlightController extends IScriptable {
   }
 
   private func CycleMode(direction: Int32) -> Void {
-    let newMode = this.sys.playerComponent.GetNextFlightMode();
+    let newMode = this.sys.playerComponent.GetNextFlightMode(direction);
     this.mode = this.mode + direction;
     if this.mode < 0 {
       this.mode += ArraySize(this.sys.playerComponent.modes);

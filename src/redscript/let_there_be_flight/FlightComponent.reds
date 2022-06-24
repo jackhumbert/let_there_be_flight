@@ -96,12 +96,12 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.distance = 0.0;
     this.hoverHeight = FlightSettings.GetFloat(n"defaultHoverHeight");
     
-    ArrayPush(this.modes, FlightModeAutomatic.Create(this));
     ArrayPush(this.modes, FlightModeHoverFly.Create(this));
     ArrayPush(this.modes, FlightModeHover.Create(this));
+    ArrayPush(this.modes, FlightModeAutomatic.Create(this));
     ArrayPush(this.modes, FlightModeFly.Create(this));
-    ArrayPush(this.modes, FlightModeDrone.Create(this));
     ArrayPush(this.modes, FlightModeDroneAntiGravity.Create(this));
+    ArrayPush(this.modes, FlightModeDrone.Create(this));
 
     this.audioUpdate = new FlightAudioUpdate();
   }
@@ -167,7 +167,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   }
 
   private func GetPitch() -> Float{
-    return 700.0 / this.stats.s_mass + 0.5;
+    return ClampF(700.0 / this.stats.s_mass + 0.5, 0.25, 2.0);
   }
 
   public func GetFlightModeIndex() -> Int32 {
@@ -178,13 +178,18 @@ public class FlightComponent extends ScriptableDeviceComponent {
     return this.modes[this.mode];
   }
 
-  public func GetNextFlightMode() -> ref<FlightMode> {
-    return this.modes[(this.mode + 1) % ArraySize(this.modes)];
+  public func GetNextFlightMode(direction: Int32) -> ref<FlightMode> {
+    let mode = this.mode + direction;
+    if mode < 0 {
+      mode += ArraySize(this.sys.playerComponent.modes);
+    } 
+    mode = mode % ArraySize(this.sys.playerComponent.modes);
+    return this.modes[mode];
   }
 
   public func GetNextFlightModeDescription() -> String {
     if ArraySize(this.modes) > 0 {
-      return this.GetNextFlightMode().GetDescription();
+      return this.GetNextFlightMode(1).GetDescription();
     } else {
       return "None";
     }
@@ -226,7 +231,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     }
     let normal: Vector4;
     this.SetupTires();
-    if !this.FindGround(normal) || this.distance > 1.0 {
+    if !this.FindGround(normal) || this.distance > 2.0 {
       this.Activate();
     }
   }
@@ -721,7 +726,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   }
 
   public func ProcessImpact(impact: Float) {
-    this.collisionTimer = FlightSettings.GetFloat(n"collisionRecoveryDelay") - impact;
+    this.collisionTimer = (FlightSettings.GetFloat(n"collisionRecoveryDelay") + FlightSettings.GetFloat(n"collisionRecoveryDuration")) * (1.0 - (impact * this.GetFlightMode().collisionPenalty));
     // this.ui_info.StartGlitching(impact, FlightSettings.GetFloat(n"collisionRecoveryDuration") + impact);
   }
 

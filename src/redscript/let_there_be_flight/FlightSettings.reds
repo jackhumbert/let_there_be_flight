@@ -7,7 +7,8 @@ public native class FlightSettings extends ScriptableSystem {
     FlightSettings.SetFloat(n"airResistance", 0.001);
     FlightSettings.SetFloat(n"angularBrakeFactor", 10.0);
     FlightSettings.SetFloat(n"angularDampFactor", 3.0);
-    FlightSettings.SetFloat(n"assistedModeAutoBrakingFactor", 200.0);
+    FlightSettings.SetFloat(n"automaticModeAutoBrakingFactor", 200.0);
+    FlightSettings.SetFloat(n"automaticModeYawDirectionality", 300.0);
     FlightSettings.SetFloat(n"brakeFactor", 1.2);
     FlightSettings.SetFloat(n"brakeOffset", 0.0);
     FlightSettings.SetFloat(n"collisionRecoveryDelay", 0.8);

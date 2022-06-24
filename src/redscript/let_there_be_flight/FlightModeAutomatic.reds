@@ -9,6 +9,11 @@ public class FlightModeAutomatic extends FlightModeStandard {
     return self;
   }
 
+  public func Initialize(component: ref<FlightComponent>) -> Void {
+    super.Initialize(component);
+    this.collisionPenalty = 1.0;
+  }
+
   public func Activate() -> Void {
     let normal: Vector4;
     this.referenceZ = this.component.stats.d_position.Z;
@@ -43,7 +48,7 @@ public class FlightModeAutomatic extends FlightModeStandard {
     this.UpdateWithNormalLift(timeDelta, idealNormal, liftFactor * FlightSettings.GetFloat(n"hoverFactor") + (9.81000042) * this.gravityFactor);
 
     let aeroFactor = Vector4.Dot(this.component.stats.d_forward, this.component.stats.d_direction);
-    let yawDirectionality: Float = this.component.stats.d_speedRatio * 300.0;
+    let yawDirectionality: Float = this.component.stats.d_speedRatio * FlightSettings.GetFloat(n"automaticModeYawDirectionality");
 
     let directionFactor = AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_right));
 
@@ -51,7 +56,7 @@ public class FlightModeAutomatic extends FlightModeStandard {
     this.force += -this.component.stats.d_localDirection * directionFactor * yawDirectionality * AbsF(aeroFactor);
 
     if AbsF(this.component.surge) < 1.0 {    
-      let velocityDamp: Vector4 = (1.0 - AbsF(this.component.surge)) * FlightSettings.GetFloat(n"assistedModeAutoBrakingFactor") * this.component.stats.d_localDirection2D * (this.component.stats.d_speed2D / 100.0);
+      let velocityDamp: Vector4 = (1.0 - AbsF(this.component.surge)) * FlightSettings.GetFloat(n"automaticModeAutoBrakingFactor") * this.component.stats.d_localDirection2D * (this.component.stats.d_speed2D / 100.0);
       this.force -= velocityDamp;
     }
 

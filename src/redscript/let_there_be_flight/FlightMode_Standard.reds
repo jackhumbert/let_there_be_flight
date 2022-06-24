@@ -1,4 +1,9 @@
 public abstract class FlightModeStandard extends FlightMode {
+  public func Initialize(component: ref<FlightComponent>) -> Void {
+    super.Initialize(component);
+    this.collisionPenalty = 0.5;
+  }
+
   protected func UpdateWithNormalDistance(timeDelta: Float, normal: Vector4, heightDifference: Float) -> Void {
     let hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, FlightSettings.GetFloat(n"hoverClamp"));// / FlightSettings.GetFloat(n"hoverClamp");
     let liftForce: Float = hoverCorrection * FlightSettings.GetFloat(n"hoverFactor") + (9.81000042) * this.gravityFactor;

@@ -71,7 +71,7 @@ char __fastcall Camera::FPPCameraUpdate(RED4ext::game::FPPCameraComponent *fpp, 
   //auto fpp = reinterpret_cast<RED4ext::game::FPPCameraComponent *>(a1 - 0x120);
 
   auto fc = FlightController::FlightController::GetInstance();
-  bool droneActive = false;
+  bool usesRightStickInput = false;
   if (fc->active) {
     auto rtti = RED4ext::CRTTISystem::Get();
     auto fcc = rtti->GetClass("FlightSystem");
@@ -80,12 +80,15 @@ char __fastcall Camera::FPPCameraUpdate(RED4ext::game::FPPCameraComponent *fpp, 
     auto fcomp = pcp->GetValue<RED4ext::Handle<RED4ext::IScriptable>>(fs);
     auto fcompc = rtti->GetClass("FlightComponent");
     RED4ext::Handle<RED4ext::IScriptable> mode;
-    auto result = RED4ext::CStackType(rtti->GetClass("FlightMode"), &mode);
+    auto flightModeCls = rtti->GetClass("FlightMode");
+    auto result = RED4ext::CStackType(flightModeCls, &mode);
     auto stack = RED4ext::CStack(fcomp, nullptr, 0, &result, 0);
     fcompc->GetFunction("GetFlightMode")->Execute(&stack);
-    droneActive = mode->GetType() == rtti->GetClass("FlightModeDrone");
+    usesRightStickInput = flightModeCls->GetProperty("usesRightStickInput")->GetValue<bool>(mode);
   }
-  if (droneActive)  {
+  // once we find it
+  //if (usesRightStickInput && !fpp->isUsingMouse) {
+  if (usesRightStickInput) {
     //fpp->pitchInput = 0.0;
     //fpp->yawInput = 0.0;
     fpp->yawOffset = 0.0;
