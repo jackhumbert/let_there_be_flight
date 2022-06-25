@@ -10,6 +10,21 @@ public class FlightModeDrone extends FlightMode {
     this.usesRightStickInput = true;
   }
 
+  public func Activate() -> Void {
+    let camera = this.component.FindComponentByName(n"frontCamera") as CameraComponent;
+    if IsDefined(camera) {
+      camera.SetLocalPosition(new Vector4(0.0, FlightSettings.GetFloat(n"FPVCameraOffsetY"), FlightSettings.GetFloat(n"FPVCameraOffsetZ"), 0.0));
+      camera.Activate(1.0);
+    }
+  }
+
+  public func Deactivate() -> Void {
+    let camera = this.component.FindComponentByName(n"frontCamera") as CameraComponent;
+    if IsDefined(camera) {
+      camera.Deactivate(1.0);
+    }
+  }
+
   public func GetDescription() -> String = "Drone";
 
   public func Update(timeDelta: Float) -> Void {

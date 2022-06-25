@@ -29,8 +29,8 @@
 		<include name="Combat" />
 		
 		<action name="ShootPrimary"			map="Flight_Trick" />
-		<action name="ShootSecondary"		map="Flight_Trick" />
-		<action name="ShootTertiary"		map="Flight_Trick" />
+		<action name="ShootSecondary"		map="Flight_LinearBrake" />
+		<action name="ShootTertiary"		map="Flight_Fire3" />
 
 		<!-- <action name="Flight_Trick" 		map="Flight_Trick" /> -->
 		<action name="Flight_Options"		map="Flight_Options"/>
@@ -99,6 +99,11 @@
 	</mapping>
 
 	<mapping name="Flight_UIToggle" type="Button">
+		<button id="IK_Pad_DigitUp" />
+		<button id="IK_Y" />
+	</mapping>
+
+	<mapping name="Flight_Fire3" type="Button">
 		<button id="IK_Pad_DigitUp" />
 		<button id="IK_Y" />
 	</mapping>

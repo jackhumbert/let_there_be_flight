@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-06-24 19:31:42.4854877
+// This file was automatically generated on 2022-06-25 22:05:51.3481006
 
 // FlightAudio.reds
 
@@ -268,7 +268,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.rollGroundPID =  DualPID.Create(0.5, 0.2, 0.05,  2.5, 1.5, 0.5);
     this.rollPID =  DualPID.Create(1.0, 0.5, 0.5,  1.0, 0.5, 0.5);
     this.yawPID = PID.Create(1.0, 0.01, 2.0);
-    this.pitchAeroPID = PID.Create(1.0, 0.01, 2.0);
+    this.pitchAeroPID = PID.Create(1.0, 0.01, 1.0);
 
     this.sys = FlightSystem.GetInstance();
     this.sqs = GameInstance.GetSpatialQueriesSystem(this.GetVehicle().GetGame());
@@ -3174,11 +3174,14 @@ public class FlightFx {
       this.component.sqs.SyncRaycastByCollisionGroup(p, p - v, n"Shooting", findTarget, false, false);
       let pointWt: WorldTransform;
       if TraceResult.IsValid(findTarget) {
-        WorldPosition.SetVector4(wp, Vector4.Vector3To4(findTarget.position));
-        WorldTransform.SetPosition(pointWt, Vector4.Vector3To4(findTarget.position));
+        let position = Vector4.Vector3To4(findTarget.position);
+        WorldPosition.SetVector4(wp, position);
+        WorldTransform.SetPosition(pointWt, position);
+        WorldTransform.SetOrientation(pointWt, Quaternion.BuildFromDirectionVector(position - p) * new Quaternion(0.0, -0.707, 0.707, 0.0));
       } else {
         WorldPosition.SetVector4(wp, p - v);
         WorldTransform.SetPosition(pointWt, p - v);
+        WorldTransform.SetOrientation(pointWt, Quaternion.BuildFromDirectionVector(v - p) * new Quaternion(0.0, -0.707, 0.707, 0.0));
       }
       this.laserFx.UpdateTargetPosition(wp);
       // this.laserPointFx.UpdateTargetPosition(wp);
@@ -3475,6 +3478,21 @@ public class FlightModeDrone extends FlightMode {
   public func Initialize(component: ref<FlightComponent>) -> Void {
     super.Initialize(component);
     this.usesRightStickInput = true;
+  }
+
+  public func Activate() -> Void {
+    let camera = this.component.FindComponentByName(n"frontCamera") as CameraComponent;
+    if IsDefined(camera) {
+      camera.SetLocalPosition(new Vector4(0.0, FlightSettings.GetFloat(n"FPVCameraOffsetY"), FlightSettings.GetFloat(n"FPVCameraOffsetZ"), 0.0));
+      camera.Activate(1.0);
+    }
+  }
+
+  public func Deactivate() -> Void {
+    let camera = this.component.FindComponentByName(n"frontCamera") as CameraComponent;
+    if IsDefined(camera) {
+      camera.Deactivate(1.0);
+    }
   }
 
   public func GetDescription() -> String = "Drone";
@@ -3793,6 +3811,8 @@ public native class FlightSettings extends ScriptableSystem {
     FlightSettings.SetFloat(n"defaultHoverHeight", 3.50);
     FlightSettings.SetFloat(n"distance", 0.0);
     FlightSettings.SetFloat(n"distanceEase", 0.1);
+    FlightSettings.SetFloat(n"FPVCameraOffsetY", -0.1);
+    FlightSettings.SetFloat(n"FPVCameraOffsetZ", 1.0);
     FlightSettings.SetFloat(n"fwtfCorrection", 0.0);
     FlightSettings.SetFloat(n"hoverClamp", 10.0);
     FlightSettings.SetFloat(n"hoverFactor", 40.0);

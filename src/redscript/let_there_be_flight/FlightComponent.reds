@@ -83,7 +83,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.rollGroundPID =  DualPID.Create(0.5, 0.2, 0.05,  2.5, 1.5, 0.5);
     this.rollPID =  DualPID.Create(1.0, 0.5, 0.5,  1.0, 0.5, 0.5);
     this.yawPID = PID.Create(1.0, 0.01, 2.0);
-    this.pitchAeroPID = PID.Create(1.0, 0.01, 2.0);
+    this.pitchAeroPID = PID.Create(1.0, 0.01, 1.0);
 
     this.sys = FlightSystem.GetInstance();
     this.sqs = GameInstance.GetSpatialQueriesSystem(this.GetVehicle().GetGame());

@@ -339,11 +339,14 @@ public class FlightFx {
       this.component.sqs.SyncRaycastByCollisionGroup(p, p - v, n"Shooting", findTarget, false, false);
       let pointWt: WorldTransform;
       if TraceResult.IsValid(findTarget) {
-        WorldPosition.SetVector4(wp, Vector4.Vector3To4(findTarget.position));
-        WorldTransform.SetPosition(pointWt, Vector4.Vector3To4(findTarget.position));
+        let position = Vector4.Vector3To4(findTarget.position);
+        WorldPosition.SetVector4(wp, position);
+        WorldTransform.SetPosition(pointWt, position);
+        WorldTransform.SetOrientation(pointWt, Quaternion.BuildFromDirectionVector(position - p) * new Quaternion(0.0, -0.707, 0.707, 0.0));
       } else {
         WorldPosition.SetVector4(wp, p - v);
         WorldTransform.SetPosition(pointWt, p - v);
+        WorldTransform.SetOrientation(pointWt, Quaternion.BuildFromDirectionVector(v - p) * new Quaternion(0.0, -0.707, 0.707, 0.0));
       }
       this.laserFx.UpdateTargetPosition(wp);
       // this.laserPointFx.UpdateTargetPosition(wp);
