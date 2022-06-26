@@ -52,7 +52,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   public let torque: Vector4;
 
   // public let ui: wref<worlduiWidgetComponent>;
-  public let ui_info: wref<worlduiWidgetComponent>;
+  // public let ui_info: wref<worlduiWidgetComponent>;
 
   private let uiBlackboard: wref<IBlackboard>;
   private let menuCallback: ref<CallbackHandle>;
@@ -83,7 +83,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.pitchPID = DualPID.Create(1.0, 0.5, 0.5,  1.0, 0.5, 0.5);
     this.rollGroundPID =  DualPID.Create(0.5, 0.2, 0.05,  2.5, 1.5, 0.5);
     this.rollPID =  DualPID.Create(1.0, 0.5, 0.5,  1.0, 0.5, 0.5);
-    this.yawPID = PID.Create(1.0, 0.01, 2.0);
+    this.yawPID = PID.Create(1.0, 0.01, 1.0);
     this.pitchAeroPID = PID.Create(1.0, 0.01, 1.0);
 
     this.sys = FlightSystem.GetInstance();
@@ -198,7 +198,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
   // callbacks
 
-  public let uiControl: ref<FlightControllerUI>;
+  // public let uiControl: ref<FlightControllerUI>;
   
   protected cb func OnMountingEvent(evt: ref<MountingEvent>) -> Bool {
     // this.helper = this.GetVehicle().AddFlightHelper();
@@ -212,8 +212,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
       // (this.GetVehicle().FindComponentByName(n"cars_sport_fx") as EffectSpawnerComponent).AddEffect();
       this.sys.playerComponent = this;
       this.isPlayerMounted = true;
-      this.uiControl = FlightControllerUI.Create(this.ui_info.GetGameController(), this.ui_info.GetGameController().GetRootCompoundWidget());
-      this.uiControl.Setup(this.stats);
+      // this.uiControl = FlightControllerUI.Create(this.ui_info.GetGameController(), this.ui_info.GetGameController().GetRootCompoundWidget());
+      // this.uiControl.Setup(this.stats);
     } else {
       // FlightLog.Info("[FlightComponent] OnMountingEvent for other vehicle: " + this.GetVehicle().GetDisplayName());
     }

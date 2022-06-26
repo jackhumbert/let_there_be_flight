@@ -4,8 +4,8 @@ private let m_flightComponent: wref<FlightComponent>;
 @wrapMethod(VehicleObject)
 protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> Bool {
   EntityRequestComponentsInterface.RequestComponent(ri, n"flightComponent", n"FlightComponent", true);
-  EntityRequestComponentsInterface.RequestComponent(ri, n"flight_ui", n"worlduiWidgetComponent", true);
-  EntityRequestComponentsInterface.RequestComponent(ri, n"flight_ui_info", n"worlduiWidgetComponent", true);
+  // EntityRequestComponentsInterface.RequestComponent(ri, n"flight_ui", n"worlduiWidgetComponent", true);
+  // EntityRequestComponentsInterface.RequestComponent(ri, n"flight_ui_info", n"worlduiWidgetComponent", true);
   wrappedMethod(ri);
 }
 
@@ -14,7 +14,7 @@ protected cb func OnTakeControl(ri: EntityResolveComponentsInterface) -> Bool {
   //FlightLog.Info("[VehicleObject] OnTakeControl: " + this.GetDisplayName());
   this.m_flightComponent = EntityResolveComponentsInterface.GetComponent(ri, n"flightComponent") as FlightComponent;
   // this.m_flightComponent.ui = EntityResolveComponentsInterface.GetComponent(ri, n"flight_ui") as worlduiWidgetComponent;
-  this.m_flightComponent.ui_info = EntityResolveComponentsInterface.GetComponent(ri, n"flight_ui_info") as worlduiWidgetComponent;
+  // this.m_flightComponent.ui_info = EntityResolveComponentsInterface.GetComponent(ri, n"flight_ui_info") as worlduiWidgetComponent;
   // this.m_flightComponent.Toggle(false);
   wrappedMethod(ri);
 }

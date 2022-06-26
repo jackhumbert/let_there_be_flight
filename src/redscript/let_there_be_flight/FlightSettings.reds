@@ -17,7 +17,7 @@ public native class FlightSettings extends ScriptableSystem {
     FlightSettings.SetFloat(n"distance", 0.0);
     FlightSettings.SetFloat(n"distanceEase", 0.1);
     FlightSettings.SetFloat(n"FPVCameraOffsetY", -0.1);
-    FlightSettings.SetFloat(n"FPVCameraOffsetZ", 1.0);
+    FlightSettings.SetFloat(n"FPVCameraOffsetZ", 0.5);
     FlightSettings.SetFloat(n"fwtfCorrection", 0.0);
     FlightSettings.SetFloat(n"hoverClamp", 10.0);
     FlightSettings.SetFloat(n"hoverFactor", 40.0);

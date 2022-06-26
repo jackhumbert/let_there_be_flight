@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-06-26 17:49:56.2669276
+// This file was automatically generated on 2022-06-26 20:28:59.3731230
 
 // FlightAudio.reds
 
@@ -237,7 +237,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   public let torque: Vector4;
 
   // public let ui: wref<worlduiWidgetComponent>;
-  public let ui_info: wref<worlduiWidgetComponent>;
+  // public let ui_info: wref<worlduiWidgetComponent>;
 
   private let uiBlackboard: wref<IBlackboard>;
   private let menuCallback: ref<CallbackHandle>;
@@ -268,7 +268,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.pitchPID = DualPID.Create(1.0, 0.5, 0.5,  1.0, 0.5, 0.5);
     this.rollGroundPID =  DualPID.Create(0.5, 0.2, 0.05,  2.5, 1.5, 0.5);
     this.rollPID =  DualPID.Create(1.0, 0.5, 0.5,  1.0, 0.5, 0.5);
-    this.yawPID = PID.Create(1.0, 0.01, 2.0);
+    this.yawPID = PID.Create(1.0, 0.01, 1.0);
     this.pitchAeroPID = PID.Create(1.0, 0.01, 1.0);
 
     this.sys = FlightSystem.GetInstance();
@@ -383,7 +383,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
   // callbacks
 
-  public let uiControl: ref<FlightControllerUI>;
+  // public let uiControl: ref<FlightControllerUI>;
   
   protected cb func OnMountingEvent(evt: ref<MountingEvent>) -> Bool {
     // this.helper = this.GetVehicle().AddFlightHelper();
@@ -397,8 +397,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
       // (this.GetVehicle().FindComponentByName(n"cars_sport_fx") as EffectSpawnerComponent).AddEffect();
       this.sys.playerComponent = this;
       this.isPlayerMounted = true;
-      this.uiControl = FlightControllerUI.Create(this.ui_info.GetGameController(), this.ui_info.GetGameController().GetRootCompoundWidget());
-      this.uiControl.Setup(this.stats);
+      // this.uiControl = FlightControllerUI.Create(this.ui_info.GetGameController(), this.ui_info.GetGameController().GetRootCompoundWidget());
+      // this.uiControl.Setup(this.stats);
     } else {
       // FlightLog.Info("[FlightComponent] OnMountingEvent for other vehicle: " + this.GetVehicle().GetDisplayName());
     }
@@ -3486,23 +3486,23 @@ public class FlightModeDrone extends FlightMode {
   }
 
   public func Activate() -> Void {
-    let camera = this.component.sys.player.GetFPPCameraComponent();
-    if IsDefined(camera) {
-      let slotT: WorldTransform;
-      let vehicleSlots = this.component.GetVehicle().GetVehicleComponent().FindComponentByName(n"OccupantSlots") as SlotComponent;
-      vehicleSlots.GetSlotTransform(n"seat_front_left", slotT);
-      let vwt = Matrix.GetInverted(this.component.GetVehicle().GetLocalToWorld());
-      let v = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT)) * vwt;
-      camera.SetLocalPosition(new Vector4(0.0, FlightSettings.GetFloat(n"FPVCameraOffsetY"), FlightSettings.GetFloat(n"FPVCameraOffsetZ"), 0.0) - v);
-      // camera.Activate(1.0);
-    }
+    // let camera = this.component.sys.player.GetFPPCameraComponent();
+    // if IsDefined(camera) {
+    //   let slotT: WorldTransform;
+    //   let vehicleSlots = this.component.GetVehicle().GetVehicleComponent().FindComponentByName(n"OccupantSlots") as SlotComponent;
+    //   vehicleSlots.GetSlotTransform(n"seat_front_left", slotT);
+    //   let vwt = Matrix.GetInverted(this.component.GetVehicle().GetLocalToWorld());
+    //   let v = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT)) * vwt;
+    //   camera.SetLocalPosition(new Vector4(0.0, FlightSettings.GetFloat(n"FPVCameraOffsetY"), FlightSettings.GetFloat(n"FPVCameraOffsetZ"), 0.0) - v);
+    //   // camera.Activate(1.0);
+    // }
   }
 
   public func Deactivate() -> Void {
-    let camera = this.component.sys.player.GetFPPCameraComponent();
-    if IsDefined(camera) {
-      camera.SetLocalPosition(new Vector4(0.0, 0.0, 0.0, 0.0));
-    }
+    // let camera = this.component.sys.player.GetFPPCameraComponent();
+    // if IsDefined(camera) {
+    //   camera.SetLocalPosition(new Vector4(0.0, 0.0, 0.0, 0.0));
+    // }
   }
 
   public func GetDescription() -> String = "Drone";
@@ -3822,7 +3822,7 @@ public native class FlightSettings extends ScriptableSystem {
     FlightSettings.SetFloat(n"distance", 0.0);
     FlightSettings.SetFloat(n"distanceEase", 0.1);
     FlightSettings.SetFloat(n"FPVCameraOffsetY", -0.1);
-    FlightSettings.SetFloat(n"FPVCameraOffsetZ", 1.0);
+    FlightSettings.SetFloat(n"FPVCameraOffsetZ", 0.5);
     FlightSettings.SetFloat(n"fwtfCorrection", 0.0);
     FlightSettings.SetFloat(n"hoverClamp", 10.0);
     FlightSettings.SetFloat(n"hoverFactor", 40.0);
@@ -4240,6 +4240,8 @@ public class FlightDecisions extends VehicleTransition {
 }
 
 public class FlightEvents extends VehicleEventsTransition {
+  let flightCamera: Int32;
+
   protected func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
     FlightLog.Info("[FlightEvents] OnEnter");
     super.OnEnter(stateContext, scriptInterface);
@@ -4249,6 +4251,16 @@ public class FlightEvents extends VehicleEventsTransition {
     this.SetBlackboardIntVariable(scriptInterface, GetAllBlackboardDefs().PlayerStateMachine.Vehicle, 8);
     this.SendAnimFeature(stateContext, scriptInterface);
     this.SetVehFppCameraParams(stateContext, scriptInterface, false);
+    switch (scriptInterface.owner as VehicleObject).GetCameraManager().GetActivePerspective() {
+      case vehicleCameraPerspective.FPP:
+        this.flightCamera = 0;
+        break;
+      case vehicleCameraPerspective.TPPClose:
+        this.flightCamera = 2;
+        break;
+      case vehicleCameraPerspective.TPPFar:
+        this.flightCamera = 3;
+    };
 
     this.PauseStateMachines(stateContext, scriptInterface.executionOwner);
     
@@ -4263,6 +4275,7 @@ public class FlightEvents extends VehicleEventsTransition {
 
   public final func OnExit(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
     FlightLog.Info("[FlightEvents] OnExit");
+    this.ExitCustomCamera(scriptInterface);
     this.SetIsInFlight(stateContext, false);
     // (scriptInterface.owner as VehicleObject).ToggleFlightComponent(false);
     // FlightController.GetInstance().Deactivate(false);
@@ -4275,6 +4288,7 @@ public class FlightEvents extends VehicleEventsTransition {
 
   public func OnForcedExit(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
     FlightLog.Info("[FlightEvents] OnForcedExit");
+    this.ExitCustomCamera(scriptInterface);
     this.SetIsInFlight(stateContext, false);
     // (scriptInterface.owner as VehicleObject).ToggleFlightComponent(false);
     //FlightController.GetInstance().Deactivate(true);
@@ -4291,9 +4305,74 @@ public class FlightEvents extends VehicleEventsTransition {
     this.SetSide(stateContext, scriptInterface);
     this.SendAnimFeature(stateContext, scriptInterface);
     if (!FlightController.GetInstance().showOptions) {
-      this.HandleCameraInput(scriptInterface);
+      this.HandleFlightCameraInput(scriptInterface);
     }
     this.HandleFlightExitRequest(stateContext, scriptInterface);
+  }
+
+  protected final func HandleFlightCameraInput(scriptInterface: ref<StateGameScriptInterface>) -> Void {
+    if scriptInterface.IsActionJustPressed(n"ToggleVehCamera") && !this.IsVehicleCameraChangeBlocked(scriptInterface) {
+      this.RequestToggleVehicleFlightCamera(scriptInterface);
+    };
+    if scriptInterface.IsActionJustTapped(n"VehicleCameraInverse") {
+      this.ResetVehicleCamera(scriptInterface);
+    };
+  }
+
+  protected final func RequestToggleVehicleFlightCamera(scriptInterface: ref<StateGameScriptInterface>) -> Void {
+    let camEvent: ref<vehicleRequestCameraPerspectiveEvent>;
+    if scriptInterface.localBlackboard.GetInt(GetAllBlackboardDefs().PlayerStateMachine.Vision) == EnumInt(gamePSMVision.Focus) {
+      return;
+    };
+    camEvent = new vehicleRequestCameraPerspectiveEvent();
+    switch (scriptInterface.owner as VehicleObject).GetCameraManager().GetActivePerspective() {
+      case vehicleCameraPerspective.FPP:
+        if this.flightCamera == 1 {
+          this.ExitCustomCamera(scriptInterface);
+          camEvent.cameraPerspective = vehicleCameraPerspective.TPPFar;
+          this.flightCamera = 2;
+        } else {
+          this.EnterCustomCamera(scriptInterface);
+          this.flightCamera = 1;
+        }
+        break;
+      case vehicleCameraPerspective.TPPClose:
+        this.ExitCustomCamera(scriptInterface);
+        camEvent.cameraPerspective = vehicleCameraPerspective.FPP;
+        this.flightCamera = 3;
+        break;
+      case vehicleCameraPerspective.TPPFar:
+        camEvent.cameraPerspective = vehicleCameraPerspective.TPPClose;
+        this.flightCamera = 0;
+    };
+    scriptInterface.executionOwner.QueueEvent(camEvent);
+  }
+
+  public func EnterCustomCamera(scriptInterface: ref<StateGameScriptInterface>) {
+    let camera = (scriptInterface.executionOwner as PlayerPuppet).GetFPPCameraComponent();
+    if IsDefined(camera) {
+      let slotT: WorldTransform;
+      let OccupantSlots = (scriptInterface.owner as VehicleObject).GetVehicleComponent().FindComponentByName(n"OccupantSlots") as SlotComponent;
+      OccupantSlots.GetSlotTransform(n"seat_front_left", slotT);
+      let roof: WorldTransform;
+      let vehicle_slots = (scriptInterface.owner as VehicleObject).GetVehicleComponent().FindComponentByName(n"vehicle_slots") as SlotComponent;
+      vehicle_slots.GetSlotTransform(n"roof_border_front", roof);
+      let vwt = Matrix.GetInverted((scriptInterface.owner as VehicleObject).GetLocalToWorld());
+      let v = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(roof)) * vwt - WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT)) * vwt;
+      camera.SetLocalPosition(v);
+    }
+
+    // let workspotSystem: ref<WorkspotGameSystem> = scriptInterface.GetWorkspotSystem();
+    // workspotSystem.SwitchSeatVehicle(scriptInterface.owner, scriptInterface.executionOwner, n"OccupantSlots", n"CustomFlightCamera");
+  }
+
+  public func ExitCustomCamera(scriptInterface: ref<StateGameScriptInterface>) {
+    let camera = (scriptInterface.executionOwner as PlayerPuppet).GetFPPCameraComponent();
+    if IsDefined(camera) {
+      camera.SetLocalPosition(new Vector4(0.0, 0.0, 0.0, 0.0));
+    }
+    // let workspotSystem: ref<WorkspotGameSystem> = scriptInterface.GetWorkspotSystem();
+    // workspotSystem.SwitchSeatVehicle(scriptInterface.owner, scriptInterface.executionOwner, n"OccupantSlots", n"seat_front_left");
   }
 
   public final func HandleFlightExitRequest(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
@@ -6479,8 +6558,8 @@ private let m_flightComponent: wref<FlightComponent>;
 @wrapMethod(VehicleObject)
 protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> Bool {
   EntityRequestComponentsInterface.RequestComponent(ri, n"flightComponent", n"FlightComponent", true);
-  EntityRequestComponentsInterface.RequestComponent(ri, n"flight_ui", n"worlduiWidgetComponent", true);
-  EntityRequestComponentsInterface.RequestComponent(ri, n"flight_ui_info", n"worlduiWidgetComponent", true);
+  // EntityRequestComponentsInterface.RequestComponent(ri, n"flight_ui", n"worlduiWidgetComponent", true);
+  // EntityRequestComponentsInterface.RequestComponent(ri, n"flight_ui_info", n"worlduiWidgetComponent", true);
   wrappedMethod(ri);
 }
 
@@ -6489,7 +6568,7 @@ protected cb func OnTakeControl(ri: EntityResolveComponentsInterface) -> Bool {
   //FlightLog.Info("[VehicleObject] OnTakeControl: " + this.GetDisplayName());
   this.m_flightComponent = EntityResolveComponentsInterface.GetComponent(ri, n"flightComponent") as FlightComponent;
   // this.m_flightComponent.ui = EntityResolveComponentsInterface.GetComponent(ri, n"flight_ui") as worlduiWidgetComponent;
-  this.m_flightComponent.ui_info = EntityResolveComponentsInterface.GetComponent(ri, n"flight_ui_info") as worlduiWidgetComponent;
+  // this.m_flightComponent.ui_info = EntityResolveComponentsInterface.GetComponent(ri, n"flight_ui_info") as worlduiWidgetComponent;
   // this.m_flightComponent.Toggle(false);
   wrappedMethod(ri);
 }

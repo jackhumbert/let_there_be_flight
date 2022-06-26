@@ -22,6 +22,7 @@
 #include <RED4ext/Scripting/Natives/Generated/vehicle/Weapon.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/HudEntriesResource.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/CameraComponent.hpp>
+#include <RED4ext/Scripting/Natives/Generated/game/OccupantSlotComponent.hpp>
 #include "LoadResRef.hpp"
 #include <spdlog/spdlog.h>
 #include "VehiclePhysicsUpdate.hpp"
@@ -177,14 +178,33 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
    //}
 
     // entVisualControllerComponent
-    RED4ext::ent::VisualControllerComponent *vcc = NULL;
-    for (auto const &handle : entity->components) {
-      auto component = handle.GetPtr();
-      if (component->GetNativeType() == rtti->GetClass("entVisualControllerComponent")) {
-        vcc = reinterpret_cast<RED4ext::ent::VisualControllerComponent *>(component);
-        break;
-      }
-    }
+   RED4ext::ent::VisualControllerComponent *vcc = NULL;
+   for (auto const &handle : entity->components) {
+     auto component = handle.GetPtr();
+     if (component->GetNativeType() == rtti->GetClass("entVisualControllerComponent")) {
+       vcc = reinterpret_cast<RED4ext::ent::VisualControllerComponent *>(component);
+       break;
+     }
+   }
+
+   RED4ext::game::OccupantSlotComponent *osc = NULL;
+   for (auto const &handle : entity->components) {
+     auto component = handle.GetPtr();
+     if (component->GetNativeType() == rtti->GetClass("gameOccupantSlotComponent")) {
+       osc = reinterpret_cast<RED4ext::game::OccupantSlotComponent *>(component);
+
+       {
+         auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+         slot->boneName = "roof_border_front";
+         //slot->relativePosition.Y -= 0.1;
+         //slot->relativePosition.Z += 0.5;
+         slot->slotName = "CustomFlightCamera";
+         osc->slots.EmplaceBack();
+         osc->slotIndexLookup.Emplace(slot->slotName, osc->slots.size - 1);
+       }
+       break;
+     }
+   }
 
     for (auto const &handle : entity->components) {
       auto component = handle.GetPtr();
@@ -192,6 +212,13 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
         auto sc = reinterpret_cast<RED4ext::ent::SlotComponent *>(component);
 
         if (sc->name == "vehicle_slots") {
+          {
+            auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+            slot->boneName = "roof_border_front";
+            slot->slotName = "roof_border_front";
+            sc->slots.EmplaceBack(*slot);
+            sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
+          }
           {
             auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
             slot->boneName = "swingarm_front_left";
@@ -378,35 +405,35 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
     //}
 
     // UI Info Panel
-    {
-      // MeshComponent
-      auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
+    //{
+    //  // MeshComponent
+    //  auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
 
-      RED4ext::CName mesh = "user\\jackhumbert\\meshes\\flight_ui_info.mesh";
-      mc->mesh.ref = mesh;
-      mc->name = "flight_screen_info";
-      mc->meshAppearance = "screen_ui";
-      mc->renderingPlane = RED4ext::ERenderingPlane::RPl_Weapon;
-      mc->forcedLodDistance = RED4ext::ent::ForcedLodDistance::VehicleInterior;
+    //  RED4ext::CName mesh = "user\\jackhumbert\\meshes\\flight_ui_info.mesh";
+    //  mc->mesh.ref = mesh;
+    //  mc->name = "flight_screen_info";
+    //  mc->meshAppearance = "screen_ui";
+    //  mc->renderingPlane = RED4ext::ERenderingPlane::RPl_Weapon;
+    //  mc->forcedLodDistance = RED4ext::ent::ForcedLodDistance::VehicleInterior;
 
-      entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::MeshComponent>(mc));
-    }
-    {
-      // WorldWidgetComponent
-      auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->AllocInstance();
+    //  entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::MeshComponent>(mc));
+    //}
+    //{
+    //  // WorldWidgetComponent
+    //  auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->AllocInstance();
 
-      wwc->name = "flight_ui_info";
+    //  wwc->name = "flight_ui_info";
 
-      RED4ext::CName fc = "user\\jackhumbert\\widgets\\flight_ui.inkwidget";
-      wwc->widgetResource.ref = fc;
-      wwc->spawnDistanceOverride = 20.0;
-      wwc->sceneWidgetProperties.renderingPlane = RED4ext::ERenderingPlane::RPl_Weapon;
-      auto mtb = (RED4ext::world::ui::MeshTargetBinding *)rtti->GetClass("worlduiMeshTargetBinding")->AllocInstance();
-      mtb->bindName = "flight_screen_info";
-      wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
+    //  RED4ext::CName fc = "user\\jackhumbert\\widgets\\flight_ui.inkwidget";
+    //  wwc->widgetResource.ref = fc;
+    //  wwc->spawnDistanceOverride = 20.0;
+    //  wwc->sceneWidgetProperties.renderingPlane = RED4ext::ERenderingPlane::RPl_Weapon;
+    //  auto mtb = (RED4ext::world::ui::MeshTargetBinding *)rtti->GetClass("worlduiMeshTargetBinding")->AllocInstance();
+    //  mtb->bindName = "flight_screen_info";
+    //  wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
 
-      entity->components.EmplaceBack(RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc));
-    }
+    //  entity->components.EmplaceBack(RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc));
+    //}
     { 
       auto gpsp = (RED4ext::game::projectile::SpawnComponent *)rtti->GetClass("gameprojectileSpawnComponent")->AllocInstance();
       gpsp->name = "projectileSpawn8722";
