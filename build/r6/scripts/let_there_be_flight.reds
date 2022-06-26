@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-06-25 22:05:51.3481006
+// This file was automatically generated on 2022-06-26 17:49:56.2669276
 
 // FlightAudio.reds
 
@@ -246,6 +246,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   private let uiGameDataBlackboard: wref<IBlackboard>;
   private let popupCallback: ref<CallbackHandle>;
   public let isPopupShown: Bool;
+  public let alarmIsPlaying: Bool;
 
   protected final const func GetVehicle() -> wref<VehicleObject> {
     return this.GetEntity() as VehicleObject;
@@ -554,6 +555,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     if this.GetVehicle().IsDestroyed() {
       if !this.isDestroyed {
         this.sys.audio.StartWithPitch("vehicleDestroyed" + this.GetUniqueID(), "vehicle3_destroyed", 1.0);
+        this.alarmIsPlaying = true;
         this.isDestroyed = true;
       }
       if this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() {
@@ -685,7 +687,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.active = false;
     this.fx.Stop();
 
-    if this.isDestroyed && this.hasExploded {
+    if this.isDestroyed && this.hasExploded && this.alarmIsPlaying {
         this.sys.audio.Stop("vehicleDestroyed" + this.GetUniqueID());
     }
 
@@ -984,7 +986,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
       if this.active {
         this.sys.audio.Update("vehicle" + this.GetUniqueID(), Vector4.EmptyVector(), engineVolume, this.audioUpdate);
       }
-      if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() {
+      if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() && this.alarmIsPlaying {
         this.sys.audio.Update("vehicleDestroyed" + this.GetUniqueID(), Vector4.EmptyVector(), engineVolume, this.audioUpdate);
       }
       // this.sys.audio.Update("leftFront", Vector4.EmptyVector(), engineVolume);
@@ -1034,7 +1036,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     if this.active {
       this.sys.audio.Update("vehicle" + this.GetUniqueID(), this.GetVehicle().GetWorldPosition(), engineVolume, this.audioUpdate);
     }
-    if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() {
+    if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() && this.alarmIsPlaying {
       this.sys.audio.Update("vehicleDestroyed" + this.GetUniqueID(), this.GetVehicle().GetWorldPosition(), engineVolume, this.audioUpdate);
     }
   }
@@ -1164,7 +1166,10 @@ public class FlightComponent extends ScriptableDeviceComponent {
     WorldTransform.SetOrientation(wt, quat * placeholderQuat);
 
     let effect = Cast<FxResource>(r"base\\fx\\vehicles\\av\\av_panzer\\weapons\\v_panzer_muzzle_flash.effect");
-    GameInstance.GetFxSystem(this.GetVehicle().GetGame()).SpawnEffect(effect, wt);
+    let fxSystem = GameInstance.GetFxSystem(this.GetVehicle().GetGame());
+    if IsDefined(fxSystem) {
+      fxSystem.SpawnEffect(effect, wt);
+    }
     
     // let tp: WorldPosition;
     // WorldPosition.SetVector4(tp, Vector4.Vector3To4(tracePosition));
@@ -2988,14 +2993,14 @@ public class FlightFx {
     let effectTransform: WorldTransform;
     WorldTransform.SetPosition(effectTransform, this.component.stats.d_position);
     
-    if !IsDefined(this.laserFx) {
-      this.laserFx = GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(this.laser, effectTransform);
-      WorldTransform.SetPosition(wt, new Vector4(0.0, -0.5, 0.6, 0.0));
-      this.laserFx.AttachToComponent(this.component.GetVehicle(), entAttachmentTarget.Transform, n"FunGun", wt);
-    }
-    if !IsDefined(this.laserPointFx) {
-      this.laserPointFx = GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(this.laserPoint, wt);
-    }
+    // if !IsDefined(this.laserFx) {
+    //   this.laserFx = GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(this.laser, effectTransform);
+    //   WorldTransform.SetPosition(wt, new Vector4(0.0, -0.5, 0.6, 0.0));
+    //   this.laserFx.AttachToComponent(this.component.GetVehicle(), entAttachmentTarget.Transform, n"FunGun", wt);
+    // }
+    // if !IsDefined(this.laserPointFx) {
+    //   this.laserPointFx = GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(this.laserPoint, wt);
+    // }
 
     // WorldTransform.SetPosition(wt, new Vector4(0.0, -10.0, 0.5, 0.0));
     // laserFx.AttachToComponent(this.component.GetVehicle(), entAttachmentTarget.TargetPosition, n"FunGun", wt);
@@ -3162,30 +3167,30 @@ public class FlightFx {
       // Quaternion.SetZRot(cq, 0.0);
       this.ui_info.SetLocalOrientation(cq * y);
 
-      let wp: WorldPosition;
-      let q = this.component.GetVehicle().GetWeaponPlaceholderOrientation(0);
-      let slotT: WorldTransform;
-      let vehicleSlots = this.component.GetVehicle().GetVehicleComponent().FindComponentByName(n"vehicle_slots") as SlotComponent;
-      vehicleSlots.GetSlotTransform(n"PanzerCannon", slotT);
-      // this.laserPointFx.UpdateTransform(slotT);
-      let v = WorldTransform.GetOrientation(slotT) * (q * new Vector4(0.0, -100.0, 0.0, 0.0));
-      let p = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT));
-      let findTarget: TraceResult;
-      this.component.sqs.SyncRaycastByCollisionGroup(p, p - v, n"Shooting", findTarget, false, false);
-      let pointWt: WorldTransform;
-      if TraceResult.IsValid(findTarget) {
-        let position = Vector4.Vector3To4(findTarget.position);
-        WorldPosition.SetVector4(wp, position);
-        WorldTransform.SetPosition(pointWt, position);
-        WorldTransform.SetOrientation(pointWt, Quaternion.BuildFromDirectionVector(position - p) * new Quaternion(0.0, -0.707, 0.707, 0.0));
-      } else {
-        WorldPosition.SetVector4(wp, p - v);
-        WorldTransform.SetPosition(pointWt, p - v);
-        WorldTransform.SetOrientation(pointWt, Quaternion.BuildFromDirectionVector(v - p) * new Quaternion(0.0, -0.707, 0.707, 0.0));
-      }
-      this.laserFx.UpdateTargetPosition(wp);
+      // let wp: WorldPosition;
+      // let q = this.component.GetVehicle().GetWeaponPlaceholderOrientation(0);
+      // let slotT: WorldTransform;
+      // let vehicleSlots = this.component.GetVehicle().GetVehicleComponent().FindComponentByName(n"vehicle_slots") as SlotComponent;
+      // vehicleSlots.GetSlotTransform(n"PanzerCannon", slotT);
+      // // this.laserPointFx.UpdateTransform(slotT);
+      // let v = WorldTransform.GetOrientation(slotT) * (q * new Vector4(0.0, -100.0, 0.0, 0.0));
+      // let p = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT));
+      // let findTarget: TraceResult;
+      // this.component.sqs.SyncRaycastByCollisionGroup(p, p - v, n"Shooting", findTarget, false, false);
+      // let pointWt: WorldTransform;
+      // if TraceResult.IsValid(findTarget) {
+      //   let position = Vector4.Vector3To4(findTarget.position);
+      //   WorldPosition.SetVector4(wp, position);
+      //   WorldTransform.SetPosition(pointWt, position);
+      //   WorldTransform.SetOrientation(pointWt, Quaternion.BuildFromDirectionVector(position - p) * new Quaternion(0.0, -0.707, 0.707, 0.0));
+      // } else {
+      //   WorldPosition.SetVector4(wp, p - v);
+      //   WorldTransform.SetPosition(pointWt, p - v);
+      //   WorldTransform.SetOrientation(pointWt, Quaternion.BuildFromDirectionVector(v - p) * new Quaternion(0.0, -0.707, 0.707, 0.0));
+      // }
+      // this.laserFx.UpdateTargetPosition(wp);
       // this.laserPointFx.UpdateTargetPosition(wp);
-      this.laserPointFx.UpdateTransform(pointWt);
+      // this.laserPointFx.UpdateTransform(pointWt);
 
       let thrusterAmount = Vector4.Dot(new Vector4(0.0, 0.0, 1.0, 0.0), force);
       // let thrusterAmount = ClampF(this.surge.GetValue(), 0.0, 1.0) * 1.0;
@@ -3481,17 +3486,22 @@ public class FlightModeDrone extends FlightMode {
   }
 
   public func Activate() -> Void {
-    let camera = this.component.FindComponentByName(n"frontCamera") as CameraComponent;
+    let camera = this.component.sys.player.GetFPPCameraComponent();
     if IsDefined(camera) {
-      camera.SetLocalPosition(new Vector4(0.0, FlightSettings.GetFloat(n"FPVCameraOffsetY"), FlightSettings.GetFloat(n"FPVCameraOffsetZ"), 0.0));
-      camera.Activate(1.0);
+      let slotT: WorldTransform;
+      let vehicleSlots = this.component.GetVehicle().GetVehicleComponent().FindComponentByName(n"OccupantSlots") as SlotComponent;
+      vehicleSlots.GetSlotTransform(n"seat_front_left", slotT);
+      let vwt = Matrix.GetInverted(this.component.GetVehicle().GetLocalToWorld());
+      let v = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT)) * vwt;
+      camera.SetLocalPosition(new Vector4(0.0, FlightSettings.GetFloat(n"FPVCameraOffsetY"), FlightSettings.GetFloat(n"FPVCameraOffsetZ"), 0.0) - v);
+      // camera.Activate(1.0);
     }
   }
 
   public func Deactivate() -> Void {
-    let camera = this.component.FindComponentByName(n"frontCamera") as CameraComponent;
+    let camera = this.component.sys.player.GetFPPCameraComponent();
     if IsDefined(camera) {
-      camera.Deactivate(1.0);
+      camera.SetLocalPosition(new Vector4(0.0, 0.0, 0.0, 0.0));
     }
   }
 
@@ -3820,12 +3830,14 @@ public native class FlightSettings extends ScriptableSystem {
     FlightSettings.SetFloat(n"isFlightUIActive", 1.0);
     FlightSettings.SetFloat(n"liftFactor", 8.0);
     FlightSettings.SetFloat(n"liftFactorDrone", 40.0);
+    FlightSettings.SetFloat(n"lockFPPCameraForDrone", 1.0);
     FlightSettings.SetFloat(n"lookAheadMax", 10.0);
     FlightSettings.SetFloat(n"lookAheadMin", 1.0);
     FlightSettings.SetFloat(n"maxHoverHeight", 7.0);
     FlightSettings.SetFloat(n"minHoverHeight", 1.0);
     FlightSettings.SetFloat(n"normalEase", 0.3);
-    FlightSettings.SetFloat(n"pitchAeroCorrectionFactor", 0.5);
+    // FlightSettings.SetFloat(n"pitchAeroCorrectionFactor", 0.25);
+    FlightSettings.SetFloat(n"pitchAeroCorrectionFactor", 0.0);
     FlightSettings.SetFloat(n"pitchCorrectionFactor", 3.0);
     FlightSettings.SetFloat(n"pitchDirectionalityFactor", 80.0);
     FlightSettings.SetFloat(n"pitchFactorDrone", 5.0);
@@ -6190,8 +6202,16 @@ protected cb func OnSpeedValueChanged(speedValue: Float) -> Bool {
     let speed = AbsF(fc.stats.d_speed);
     let multiplier: Float = GameInstance.GetStatsDataSystem(this.m_activeVehicle.GetGame()).GetValueFromCurve(n"vehicle_ui", speed, n"speed_to_multiplier");
     inkTextRef.SetText(this.m_SpeedValue, IntToString(RoundMath(speed * multiplier)));
+    this.drawRPMGaugeFull(AbsF(fc.surge) * 5000.0);
   } else {
     wrappedMethod(speedValue);
+  }
+}
+@wrapMethod(hudCarController)
+protected cb func OnRpmValueChanged(rpmValue: Float) -> Bool {
+  let fc = fs().playerComponent;
+  if !fc.active {
+    wrappedMethod(rpmValue);
   }
 }
 

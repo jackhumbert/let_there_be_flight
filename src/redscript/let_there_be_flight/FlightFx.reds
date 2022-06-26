@@ -153,14 +153,14 @@ public class FlightFx {
     let effectTransform: WorldTransform;
     WorldTransform.SetPosition(effectTransform, this.component.stats.d_position);
     
-    if !IsDefined(this.laserFx) {
-      this.laserFx = GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(this.laser, effectTransform);
-      WorldTransform.SetPosition(wt, new Vector4(0.0, -0.5, 0.6, 0.0));
-      this.laserFx.AttachToComponent(this.component.GetVehicle(), entAttachmentTarget.Transform, n"FunGun", wt);
-    }
-    if !IsDefined(this.laserPointFx) {
-      this.laserPointFx = GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(this.laserPoint, wt);
-    }
+    // if !IsDefined(this.laserFx) {
+    //   this.laserFx = GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(this.laser, effectTransform);
+    //   WorldTransform.SetPosition(wt, new Vector4(0.0, -0.5, 0.6, 0.0));
+    //   this.laserFx.AttachToComponent(this.component.GetVehicle(), entAttachmentTarget.Transform, n"FunGun", wt);
+    // }
+    // if !IsDefined(this.laserPointFx) {
+    //   this.laserPointFx = GameInstance.GetFxSystem(this.component.GetVehicle().GetGame()).SpawnEffect(this.laserPoint, wt);
+    // }
 
     // WorldTransform.SetPosition(wt, new Vector4(0.0, -10.0, 0.5, 0.0));
     // laserFx.AttachToComponent(this.component.GetVehicle(), entAttachmentTarget.TargetPosition, n"FunGun", wt);
@@ -327,30 +327,30 @@ public class FlightFx {
       // Quaternion.SetZRot(cq, 0.0);
       this.ui_info.SetLocalOrientation(cq * y);
 
-      let wp: WorldPosition;
-      let q = this.component.GetVehicle().GetWeaponPlaceholderOrientation(0);
-      let slotT: WorldTransform;
-      let vehicleSlots = this.component.GetVehicle().GetVehicleComponent().FindComponentByName(n"vehicle_slots") as SlotComponent;
-      vehicleSlots.GetSlotTransform(n"PanzerCannon", slotT);
-      // this.laserPointFx.UpdateTransform(slotT);
-      let v = WorldTransform.GetOrientation(slotT) * (q * new Vector4(0.0, -100.0, 0.0, 0.0));
-      let p = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT));
-      let findTarget: TraceResult;
-      this.component.sqs.SyncRaycastByCollisionGroup(p, p - v, n"Shooting", findTarget, false, false);
-      let pointWt: WorldTransform;
-      if TraceResult.IsValid(findTarget) {
-        let position = Vector4.Vector3To4(findTarget.position);
-        WorldPosition.SetVector4(wp, position);
-        WorldTransform.SetPosition(pointWt, position);
-        WorldTransform.SetOrientation(pointWt, Quaternion.BuildFromDirectionVector(position - p) * new Quaternion(0.0, -0.707, 0.707, 0.0));
-      } else {
-        WorldPosition.SetVector4(wp, p - v);
-        WorldTransform.SetPosition(pointWt, p - v);
-        WorldTransform.SetOrientation(pointWt, Quaternion.BuildFromDirectionVector(v - p) * new Quaternion(0.0, -0.707, 0.707, 0.0));
-      }
-      this.laserFx.UpdateTargetPosition(wp);
+      // let wp: WorldPosition;
+      // let q = this.component.GetVehicle().GetWeaponPlaceholderOrientation(0);
+      // let slotT: WorldTransform;
+      // let vehicleSlots = this.component.GetVehicle().GetVehicleComponent().FindComponentByName(n"vehicle_slots") as SlotComponent;
+      // vehicleSlots.GetSlotTransform(n"PanzerCannon", slotT);
+      // // this.laserPointFx.UpdateTransform(slotT);
+      // let v = WorldTransform.GetOrientation(slotT) * (q * new Vector4(0.0, -100.0, 0.0, 0.0));
+      // let p = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT));
+      // let findTarget: TraceResult;
+      // this.component.sqs.SyncRaycastByCollisionGroup(p, p - v, n"Shooting", findTarget, false, false);
+      // let pointWt: WorldTransform;
+      // if TraceResult.IsValid(findTarget) {
+      //   let position = Vector4.Vector3To4(findTarget.position);
+      //   WorldPosition.SetVector4(wp, position);
+      //   WorldTransform.SetPosition(pointWt, position);
+      //   WorldTransform.SetOrientation(pointWt, Quaternion.BuildFromDirectionVector(position - p) * new Quaternion(0.0, -0.707, 0.707, 0.0));
+      // } else {
+      //   WorldPosition.SetVector4(wp, p - v);
+      //   WorldTransform.SetPosition(pointWt, p - v);
+      //   WorldTransform.SetOrientation(pointWt, Quaternion.BuildFromDirectionVector(v - p) * new Quaternion(0.0, -0.707, 0.707, 0.0));
+      // }
+      // this.laserFx.UpdateTargetPosition(wp);
       // this.laserPointFx.UpdateTargetPosition(wp);
-      this.laserPointFx.UpdateTransform(pointWt);
+      // this.laserPointFx.UpdateTransform(pointWt);
 
       let thrusterAmount = Vector4.Dot(new Vector4(0.0, 0.0, 1.0, 0.0), force);
       // let thrusterAmount = ClampF(this.surge.GetValue(), 0.0, 1.0) * 1.0;

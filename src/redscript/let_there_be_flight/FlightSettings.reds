@@ -25,12 +25,14 @@ public native class FlightSettings extends ScriptableSystem {
     FlightSettings.SetFloat(n"isFlightUIActive", 1.0);
     FlightSettings.SetFloat(n"liftFactor", 8.0);
     FlightSettings.SetFloat(n"liftFactorDrone", 40.0);
+    FlightSettings.SetFloat(n"lockFPPCameraForDrone", 1.0);
     FlightSettings.SetFloat(n"lookAheadMax", 10.0);
     FlightSettings.SetFloat(n"lookAheadMin", 1.0);
     FlightSettings.SetFloat(n"maxHoverHeight", 7.0);
     FlightSettings.SetFloat(n"minHoverHeight", 1.0);
     FlightSettings.SetFloat(n"normalEase", 0.3);
-    FlightSettings.SetFloat(n"pitchAeroCorrectionFactor", 0.5);
+    // FlightSettings.SetFloat(n"pitchAeroCorrectionFactor", 0.25);
+    FlightSettings.SetFloat(n"pitchAeroCorrectionFactor", 0.0);
     FlightSettings.SetFloat(n"pitchCorrectionFactor", 3.0);
     FlightSettings.SetFloat(n"pitchDirectionalityFactor", 80.0);
     FlightSettings.SetFloat(n"pitchFactorDrone", 5.0);

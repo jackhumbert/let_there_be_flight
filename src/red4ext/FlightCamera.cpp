@@ -1,6 +1,7 @@
 #include "FlightCamera.hpp"
 #include "FlightController.hpp"
 #include "FlightSystem.hpp"
+#include "FlightSettings.hpp"
 #include <spdlog/spdlog.h>
 
 // Treat flying vehicles as being on the ground (for TPP camera)
@@ -61,12 +62,12 @@ uintptr_t Camera::TPPCameraStatsUpdate(RED4ext::vehicle::TPPCameraComponent *cam
   return result;
 }
 
-//48 8B C4 F3 0F 11 48 10  53 48 81 EC 30 01 00 00 80 B9 A0 04 00 00 00 48 8B D9 0F 29 70 D8 0F 28
+//48 8B C4 F3 0F 11 48 10 53 48 81 EC 30 01 00 00 80 B9 A0 04 00 00 00 48 8B D9 0F 29 70 D8 0F 28
 constexpr uintptr_t FPPCameraUpdateAddr = 0x16FC2A0 + 0x140000C00 - RED4ext::Addresses::ImageBase;
 decltype(&Camera::FPPCameraUpdate) FPPCameraUpdate_Original;
-char __fastcall Camera::FPPCameraUpdate(RED4ext::game::FPPCameraComponent *fpp, float a2, float a3, float a4,
-                                        int a5,
-                                 int a6, char a7) {
+char __fastcall Camera::FPPCameraUpdate(RED4ext::game::FPPCameraComponent *fpp, float deltaTime, float deltaYaw, float deltaPitch,
+                                        float deltaYawExternal,
+                                 float deltaPitchExternal, char a7) {
   // a1 is a shifted pointer - this gets the whole struct
   //auto fpp = reinterpret_cast<RED4ext::game::FPPCameraComponent *>(a1 - 0x120);
 
@@ -95,15 +96,24 @@ char __fastcall Camera::FPPCameraUpdate(RED4ext::game::FPPCameraComponent *fpp, 
     //fpp->headingLocked = true;
     //fpp->sensitivityMultX = 0.0;
     //fpp->sensitivityMultY = 0.0;
-    a3 = 0.0;
-    a4 = 0.0;
+    deltaYaw = 0.0;
+    deltaPitch = 0.0;
+    //fpp->unk484 = 0.0;
   } else {
     //fpp->headingLocked = false;
     //fpp->sensitivityMultX = 1.0;
     //fpp->sensitivityMultY = 1.0;
   }
 
-  return FPPCameraUpdate_Original(fpp, a2, a3, a4, a5, a6, a7);
+  auto og = FPPCameraUpdate_Original(fpp, deltaTime, deltaYaw, deltaPitch, deltaYawExternal, deltaPitchExternal, a7);
+
+  if (usesRightStickInput) {
+    fpp->animFeature->additiveCameraMovementsWeight = 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone");
+    fpp->animFeature->vehicleProceduralCameraWeight = 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone");
+    //fpp->pitchOffset = 0.0;
+    //fpp->yawOffset = 0.0;
+  }
+  return og;
 }
 
 void Camera::Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {

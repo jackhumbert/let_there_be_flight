@@ -61,6 +61,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   private let uiGameDataBlackboard: wref<IBlackboard>;
   private let popupCallback: ref<CallbackHandle>;
   public let isPopupShown: Bool;
+  public let alarmIsPlaying: Bool;
 
   protected final const func GetVehicle() -> wref<VehicleObject> {
     return this.GetEntity() as VehicleObject;
@@ -369,6 +370,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     if this.GetVehicle().IsDestroyed() {
       if !this.isDestroyed {
         this.sys.audio.StartWithPitch("vehicleDestroyed" + this.GetUniqueID(), "vehicle3_destroyed", 1.0);
+        this.alarmIsPlaying = true;
         this.isDestroyed = true;
       }
       if this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() {
@@ -500,7 +502,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.active = false;
     this.fx.Stop();
 
-    if this.isDestroyed && this.hasExploded {
+    if this.isDestroyed && this.hasExploded && this.alarmIsPlaying {
         this.sys.audio.Stop("vehicleDestroyed" + this.GetUniqueID());
     }
 
@@ -799,7 +801,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
       if this.active {
         this.sys.audio.Update("vehicle" + this.GetUniqueID(), Vector4.EmptyVector(), engineVolume, this.audioUpdate);
       }
-      if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() {
+      if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() && this.alarmIsPlaying {
         this.sys.audio.Update("vehicleDestroyed" + this.GetUniqueID(), Vector4.EmptyVector(), engineVolume, this.audioUpdate);
       }
       // this.sys.audio.Update("leftFront", Vector4.EmptyVector(), engineVolume);
@@ -849,7 +851,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     if this.active {
       this.sys.audio.Update("vehicle" + this.GetUniqueID(), this.GetVehicle().GetWorldPosition(), engineVolume, this.audioUpdate);
     }
-    if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() {
+    if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() && this.alarmIsPlaying {
       this.sys.audio.Update("vehicleDestroyed" + this.GetUniqueID(), this.GetVehicle().GetWorldPosition(), engineVolume, this.audioUpdate);
     }
   }
@@ -979,7 +981,10 @@ public class FlightComponent extends ScriptableDeviceComponent {
     WorldTransform.SetOrientation(wt, quat * placeholderQuat);
 
     let effect = Cast<FxResource>(r"base\\fx\\vehicles\\av\\av_panzer\\weapons\\v_panzer_muzzle_flash.effect");
-    GameInstance.GetFxSystem(this.GetVehicle().GetGame()).SpawnEffect(effect, wt);
+    let fxSystem = GameInstance.GetFxSystem(this.GetVehicle().GetGame());
+    if IsDefined(fxSystem) {
+      fxSystem.SpawnEffect(effect, wt);
+    }
     
     // let tp: WorldPosition;
     // WorldPosition.SetVector4(tp, Vector4.Vector3To4(tracePosition));

@@ -26,6 +26,14 @@ RED4ext::HashMap<RED4ext::CName, float> floats;
 
 bool floatsInitialized = false;
 
+float GetFloat(RED4ext::CName name) {
+  if (floats.allocator) {
+    return *floats.Get(name);
+  } else {
+    return 0.0;
+  }
+}
+
 void GetFloat(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, float *aOut, int64_t a4) {
   RED4ext::CName name;
   RED4ext::GetParameter(aFrame, &name);

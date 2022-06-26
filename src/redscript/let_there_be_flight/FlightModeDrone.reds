@@ -11,17 +11,22 @@ public class FlightModeDrone extends FlightMode {
   }
 
   public func Activate() -> Void {
-    let camera = this.component.FindComponentByName(n"frontCamera") as CameraComponent;
+    let camera = this.component.sys.player.GetFPPCameraComponent();
     if IsDefined(camera) {
-      camera.SetLocalPosition(new Vector4(0.0, FlightSettings.GetFloat(n"FPVCameraOffsetY"), FlightSettings.GetFloat(n"FPVCameraOffsetZ"), 0.0));
-      camera.Activate(1.0);
+      let slotT: WorldTransform;
+      let vehicleSlots = this.component.GetVehicle().GetVehicleComponent().FindComponentByName(n"OccupantSlots") as SlotComponent;
+      vehicleSlots.GetSlotTransform(n"seat_front_left", slotT);
+      let vwt = Matrix.GetInverted(this.component.GetVehicle().GetLocalToWorld());
+      let v = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT)) * vwt;
+      camera.SetLocalPosition(new Vector4(0.0, FlightSettings.GetFloat(n"FPVCameraOffsetY"), FlightSettings.GetFloat(n"FPVCameraOffsetZ"), 0.0) - v);
+      // camera.Activate(1.0);
     }
   }
 
   public func Deactivate() -> Void {
-    let camera = this.component.FindComponentByName(n"frontCamera") as CameraComponent;
+    let camera = this.component.sys.player.GetFPPCameraComponent();
     if IsDefined(camera) {
-      camera.Deactivate(1.0);
+      camera.SetLocalPosition(new Vector4(0.0, 0.0, 0.0, 0.0));
     }
   }
 

@@ -21,10 +21,23 @@
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/Weapon.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/HudEntriesResource.hpp>
-#include <RED4ext/Scripting/Natives/Generated/game/FPPCameraComponent.hpp>
+#include <RED4ext/Scripting/Natives/Generated/game/CameraComponent.hpp>
 #include "LoadResRef.hpp"
 #include <spdlog/spdlog.h>
 #include "VehiclePhysicsUpdate.hpp"
+
+// weird bug fix
+
+// 48 89 5C 24 08 48 89 74 24 10 48 89 7C 24 18 4C 89 64 24 20 55 41 56 41 57 48 8D 6C 24 C9 48 81
+void __fastcall SpawnEffect(uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t);
+constexpr uintptr_t SpawnEffectAddr = 0x00007FF73F0D86B0 - 0x7ff73dfe0000;
+decltype(&SpawnEffect) SpawnEffect_Original;
+
+void __fastcall SpawnEffect(uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6) {
+  if (a1) {
+    SpawnEffect_Original(a1, a2, a3, a4, a5, a6);
+  }
+}
 
 RED4ext::ent::PhysicalMeshComponent *CreateThrusterEngine(RED4ext::CRTTISystem *rtti, RED4ext::CName mesh,
                                                           RED4ext::CName name, RED4ext::CName slot,
@@ -124,44 +137,44 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
       weapon->wholeBurstProjectiles = 1;
       vehicle->weapons.EmplaceBack(*weapon);
    }
-   {
-     auto weapon = new RED4ext::vehicle::Weapon();
-     weapon->attackRange = 100.0;
-     weapon->canFriendlyFire = true;
-     weapon->cycleTime = 1.0;
-     weapon->genericShoot = true;
-     weapon->genericTick = true;
-     weapon->item = RED4ext::TweakDBID("Items.Griffin_Rifle_Left");
-     weapon->maxPitch = 90.0;
-     weapon->maxYaw = 180.0;
-     weapon->minPitch = -90.0;
-     weapon->minYaw = -180.0;
-     weapon->singleProjectileCycleTime = 1.0;
-     weapon->singleShotProjectiles = 1;
-     weapon->slot = RED4ext::TweakDBID("AttachmentSlots.WeaponLeft");
-     weapon->weaponShootAnimEvent = "shoot_rocket";
-     weapon->wholeBurstProjectiles = 1;
-     vehicle->weapons.EmplaceBack(*weapon);
-   }
-   {
-     auto weapon = new RED4ext::vehicle::Weapon();
-     weapon->attackRange = 100.0;
-     weapon->canFriendlyFire = true;
-     weapon->cycleTime = 0.1;
-     weapon->genericShoot = true;
-     weapon->genericTick = true;
-     weapon->item = RED4ext::TweakDBID("Items.CPO_HMG");
-     weapon->maxPitch = 90.0;
-     weapon->maxYaw = 180.0;
-     weapon->minPitch = -90.0;
-     weapon->minYaw = -180.0;
-     weapon->singleProjectileCycleTime = 1.0;
-     weapon->singleShotProjectiles = 1;
-     weapon->slot = RED4ext::TweakDBID("AttachmentSlots.WeaponRight");
-     weapon->weaponShootAnimEvent = "shoot_rocket";
-     weapon->wholeBurstProjectiles = 1;
-     vehicle->weapons.EmplaceBack(*weapon);
-   }
+   //{
+   //  auto weapon = new RED4ext::vehicle::Weapon();
+   //  weapon->attackRange = 100.0;
+   //  weapon->canFriendlyFire = true;
+   //  weapon->cycleTime = 1.0;
+   //  weapon->genericShoot = true;
+   //  weapon->genericTick = true;
+   //  weapon->item = RED4ext::TweakDBID("Items.Griffin_Rifle_Left");
+   //  weapon->maxPitch = 90.0;
+   //  weapon->maxYaw = 180.0;
+   //  weapon->minPitch = -90.0;
+   //  weapon->minYaw = -180.0;
+   //  weapon->singleProjectileCycleTime = 1.0;
+   //  weapon->singleShotProjectiles = 1;
+   //  weapon->slot = RED4ext::TweakDBID("AttachmentSlots.WeaponLeft");
+   //  weapon->weaponShootAnimEvent = "shoot_rocket";
+   //  weapon->wholeBurstProjectiles = 1;
+   //  vehicle->weapons.EmplaceBack(*weapon);
+   //}
+   //{
+   //  auto weapon = new RED4ext::vehicle::Weapon();
+   //  weapon->attackRange = 100.0;
+   //  weapon->canFriendlyFire = true;
+   //  weapon->cycleTime = 0.1;
+   //  weapon->genericShoot = true;
+   //  weapon->genericTick = true;
+   //  weapon->item = RED4ext::TweakDBID("Items.CPO_HMG");
+   //  weapon->maxPitch = 90.0;
+   //  weapon->maxYaw = 180.0;
+   //  weapon->minPitch = -90.0;
+   //  weapon->minYaw = -180.0;
+   //  weapon->singleProjectileCycleTime = 1.0;
+   //  weapon->singleShotProjectiles = 1;
+   //  weapon->slot = RED4ext::TweakDBID("AttachmentSlots.WeaponRight");
+   //  weapon->weaponShootAnimEvent = "shoot_rocket";
+   //  weapon->wholeBurstProjectiles = 1;
+   //  vehicle->weapons.EmplaceBack(*weapon);
+   //}
 
     // entVisualControllerComponent
     RED4ext::ent::VisualControllerComponent *vcc = NULL;
@@ -299,23 +312,23 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
         AddToController(rtti, vcc, fl);
 
 
-        auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
-        mc->mesh.ref =
-            (RED4ext::CName)"base\\weapons\\turrets\\maxtac_turret\\entities\\meshes\\w_turret__maxtac_turret__base1_guns.mesh";
-        mc->visualScale.X = 1.0;
-        mc->visualScale.Y = 1.0;
-        mc->visualScale.Z = 1.0;
-        mc->name = "FunGun";
-        mc->motionBlurScale = 0.1;
-        mc->meshAppearance = "default";
-        mc->objectTypeID = RED4ext::ERenderObjectType::ROT_Vehicle;
-        mc->LODMode = RED4ext::ent::MeshComponentLODMode::Appearance;
-        auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->AllocInstance();
-        htb->bindName = "vehicle_slots";
-        htb->slotName = "gun_front_left";
-        mc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
-        entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::MeshComponent>(mc));
-        AddToController(rtti, vcc, mc);
+        //auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
+        //mc->mesh.ref =
+        //    (RED4ext::CName)"base\\weapons\\turrets\\maxtac_turret\\entities\\meshes\\w_turret__maxtac_turret__base1_guns.mesh";
+        //mc->visualScale.X = 1.0;
+        //mc->visualScale.Y = 1.0;
+        //mc->visualScale.Z = 1.0;
+        //mc->name = "FunGun";
+        //mc->motionBlurScale = 0.1;
+        //mc->meshAppearance = "default";
+        //mc->objectTypeID = RED4ext::ERenderObjectType::ROT_Vehicle;
+        //mc->LODMode = RED4ext::ent::MeshComponentLODMode::Appearance;
+        //auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->AllocInstance();
+        //htb->bindName = "vehicle_slots";
+        //htb->slotName = "gun_front_left";
+        //mc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
+        //entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::MeshComponent>(mc));
+        //AddToController(rtti, vcc, mc);
 
         auto fr = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterFR",
                                        "thruster_front_right");
@@ -437,13 +450,13 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
     }
 
     { 
-      auto gcc = (RED4ext::game::FPPCameraComponent *)rtti->GetClass("gameFPPCameraComponent")->AllocInstance();
+      auto gcc = (RED4ext::game::CameraComponent *)rtti->GetClass("gameCameraComponent")->AllocInstance();
       gcc->name = "frontCamera";
       auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->AllocInstance();
       htb->bindName = "vehicle_slots";
       htb->slotName = "Base";
       gcc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
-      entity->components.EmplaceBack(RED4ext::Handle<RED4ext::game::FPPCameraComponent>(gcc));
+      entity->components.EmplaceBack(RED4ext::Handle<RED4ext::game::CameraComponent>(gcc));
     }
 
   }
@@ -572,10 +585,13 @@ struct EntityAddComponentModule : FlightModule {
                           reinterpret_cast<void **>(&Entity_InitializeComponents_Original));
     aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleProcessWeaponsAddr), &VehicleProcessWeapons,
                           reinterpret_cast<void **>(&VehicleProcessWeapons_Original));
+    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(SpawnEffectAddr), &SpawnEffect,
+                          reinterpret_cast<void **>(&SpawnEffect_Original));
   }
   void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(Entity_InitializeComponentsAddr));
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleProcessWeaponsAddr));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(SpawnEffectAddr));
   }
   void PostRegisterTypes() {
     auto rtti = RED4ext::CRTTISystem::Get();
