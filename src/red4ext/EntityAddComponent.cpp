@@ -121,7 +121,7 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
 
    {
       auto weapon = new RED4ext::vehicle::Weapon();
-      weapon->attackRange = 100.0;
+      weapon->attackRange = 300.0;
       weapon->canFriendlyFire = true;
       weapon->cycleTime = 0.5;
       weapon->genericShoot = true;
@@ -216,6 +216,7 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
             auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
             slot->boneName = "roof_border_front";
             slot->slotName = "roof_border_front";
+            slot->relativePosition.Z -= 0.2;
             sc->slots.EmplaceBack(*slot);
             sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
           }

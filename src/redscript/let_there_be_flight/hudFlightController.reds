@@ -57,7 +57,7 @@ public class hudFlightController extends inkHUDGameController {
     this.GetPlayerControlledObject().RegisterInputListener(this);
     this.offsetLeft = -838.0;
     this.offsetRight = 1495.0;
-    // this.GetRootWidget().SetVisible(false);
+    this.GetRootWidget().SetVisible(false);
     // this.PlayLibraryAnimation(n"outro");
     
     this.m_vehicleFlightBlackboard = FlightController.GetInstance().GetBlackboard();
@@ -105,7 +105,7 @@ public class hudFlightController extends inkHUDGameController {
 
   private func ActivateUI(activate: Bool) -> Void {
     if activate {
-      // this.GetRootWidget().SetVisible(true);
+      this.GetRootWidget().SetVisible(true);
       let options: inkAnimOptions;
       options.executionDelay = 0.50;
       if IsDefined(this.m_outroAnimationProxy) && this.m_outroAnimationProxy.IsPlaying() {

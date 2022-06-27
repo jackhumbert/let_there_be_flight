@@ -183,7 +183,6 @@ public class FlightEvents extends VehicleEventsTransition {
     switch (scriptInterface.owner as VehicleObject).GetCameraManager().GetActivePerspective() {
       case vehicleCameraPerspective.FPP:
         if this.flightCamera == 1 {
-          this.ExitCustomCamera(scriptInterface);
           camEvent.cameraPerspective = vehicleCameraPerspective.TPPFar;
           this.flightCamera = 2;
         } else {
@@ -213,7 +212,7 @@ public class FlightEvents extends VehicleEventsTransition {
       let vehicle_slots = (scriptInterface.owner as VehicleObject).GetVehicleComponent().FindComponentByName(n"vehicle_slots") as SlotComponent;
       vehicle_slots.GetSlotTransform(n"roof_border_front", roof);
       let vwt = Matrix.GetInverted((scriptInterface.owner as VehicleObject).GetLocalToWorld());
-      let v = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(roof)) * vwt - WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT)) * vwt;
+      let v = (WorldPosition.ToVector4(WorldTransform.GetWorldPosition(roof)) * vwt) - (WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT)) * vwt);
       camera.SetLocalPosition(v);
     }
 

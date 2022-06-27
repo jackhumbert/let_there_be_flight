@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-06-26 20:28:59.3731230
+// This file was automatically generated on 2022-06-27 02:07:24.5980409
 
 // FlightAudio.reds
 
@@ -4328,7 +4328,6 @@ public class FlightEvents extends VehicleEventsTransition {
     switch (scriptInterface.owner as VehicleObject).GetCameraManager().GetActivePerspective() {
       case vehicleCameraPerspective.FPP:
         if this.flightCamera == 1 {
-          this.ExitCustomCamera(scriptInterface);
           camEvent.cameraPerspective = vehicleCameraPerspective.TPPFar;
           this.flightCamera = 2;
         } else {
@@ -4358,7 +4357,7 @@ public class FlightEvents extends VehicleEventsTransition {
       let vehicle_slots = (scriptInterface.owner as VehicleObject).GetVehicleComponent().FindComponentByName(n"vehicle_slots") as SlotComponent;
       vehicle_slots.GetSlotTransform(n"roof_border_front", roof);
       let vwt = Matrix.GetInverted((scriptInterface.owner as VehicleObject).GetLocalToWorld());
-      let v = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(roof)) * vwt - WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT)) * vwt;
+      let v = (WorldPosition.ToVector4(WorldTransform.GetWorldPosition(roof)) * vwt) - (WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT)) * vwt);
       camera.SetLocalPosition(v);
     }
 
@@ -4534,7 +4533,7 @@ public class hudFlightController extends inkHUDGameController {
     this.GetPlayerControlledObject().RegisterInputListener(this);
     this.offsetLeft = -838.0;
     this.offsetRight = 1495.0;
-    // this.GetRootWidget().SetVisible(false);
+    this.GetRootWidget().SetVisible(false);
     // this.PlayLibraryAnimation(n"outro");
     
     this.m_vehicleFlightBlackboard = FlightController.GetInstance().GetBlackboard();
@@ -4582,7 +4581,7 @@ public class hudFlightController extends inkHUDGameController {
 
   private func ActivateUI(activate: Bool) -> Void {
     if activate {
-      // this.GetRootWidget().SetVisible(true);
+      this.GetRootWidget().SetVisible(true);
       let options: inkAnimOptions;
       options.executionDelay = 0.50;
       if IsDefined(this.m_outroAnimationProxy) && this.m_outroAnimationProxy.IsPlaying() {
