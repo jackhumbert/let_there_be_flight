@@ -129,7 +129,7 @@ void build_input() {
 void build_info() {
   fs::copy("readme.md", "build/red4ext/plugins/let_there_be_flight/readme.md",
            fs::copy_options::update_existing);
-  cout << "Copied input file: readme.mb" << endl;
+  cout << "Copied input file: readme.md" << endl;
   fs::copy("license.md", "build/red4ext/plugins/let_there_be_flight/license.md",
            fs::copy_options::update_existing);
   cout << "Copied input file: license.md" << endl;

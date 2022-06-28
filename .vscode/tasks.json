@@ -27,6 +27,28 @@
         "problemMatcher": []
       },
       {
+        "label": "Generate Addresses",
+        "command": "tools\\addresses.bat",
+        "options": {
+          "shell": {
+            "executable": "cmd.exe",
+            "args": [
+              "/d", "/c"
+            ]
+          }
+        },
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared",
+          "showReuseMessage": false,
+          "clear": false
+        },
+        "group": "build",
+        "problemMatcher": []
+      },
+      {
         "label": "Lint",
         "type": "shell",
         "command": "tools\\lint.bat",

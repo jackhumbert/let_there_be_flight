@@ -117,6 +117,7 @@
     <ClCompile Include="FlightStats_Record.cpp" />
     <ClCompile Include="FlightSystem.cpp" />
     <ClCompile Include="CreateStaticEffect.cpp" />
+    <ClCompile Include="FlightWeapons.cpp" />
     <ClCompile Include="FxResource.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="FlightAudio.cpp" />
@@ -130,6 +131,8 @@
     <ClCompile Include="VehicleSpeedUnlimiter.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Addresses.hpp" />
+    <ClInclude Include="Signatures.hpp" />
     <ClInclude Include="DriveHelper-inl.hpp" />
     <ClInclude Include="DriveHelper.hpp" />
     <ClInclude Include="FlightAudio.hpp" />
@@ -142,6 +145,7 @@
     <ClInclude Include="FlightSettings.hpp" />
     <ClInclude Include="FlightStats_Record.hpp" />
     <ClInclude Include="FlightSystem.hpp" />
+    <ClInclude Include="FlightWeapons.hpp" />
     <ClInclude Include="LoadResRef.hpp" />
     <ClInclude Include="stdafx.hpp" />
     <ClInclude Include="Utils.hpp" />

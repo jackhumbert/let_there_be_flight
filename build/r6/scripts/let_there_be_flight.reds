@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-06-27 02:07:24.5980409
+// This file was automatically generated on 2022-06-28 21:27:16.1466556
 
 // FlightAudio.reds
 
@@ -636,7 +636,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
     if this.isPlayerMounted {
       this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Force, force);
       this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Torque, torque);
-      this.sys.ctlr.GetBlackboard().SetFloat(GetAllBlackboardDefs().VehicleFlight.Pitch, Vector4.GetAngleBetween(this.stats.d_forward, FlightUtils.Up()));
+      this.sys.ctlr.GetBlackboard().SetFloat(GetAllBlackboardDefs().VehicleFlight.Pitch, Vector4.GetAngleDegAroundAxis(this.stats.d_localUp, FlightUtils.Up(), FlightUtils.Right()));
+      this.sys.ctlr.GetBlackboard().SetFloat(GetAllBlackboardDefs().VehicleFlight.Roll, Vector4.GetAngleDegAroundAxis(this.stats.d_localUp, FlightUtils.Up(), FlightUtils.Forward()));
       // this.sys.ctlr.GetBlackboard().SignalFloat(GetAllBlackboardDefs().VehicleFlight.Pitch);
       this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Position, this.stats.d_position);
       // this.sys.ctlr.GetBlackboard().SignalVector4(GetAllBlackboardDefs().VehicleFlight.Position);
@@ -1155,10 +1156,13 @@ public class FlightComponent extends ScriptableDeviceComponent {
     };
   }
 
-  public func OnFireWeapon(placeholderQuat: Quaternion) -> Void {    
+  protected let m_attacksSpawned: array<ref<EffectInstance>>;
+
+  public func OnFireWeapon(placeholderQuat: Quaternion, weaponItem:TweakDBID, attachmentSlot: TweakDBID) -> Void {    
+    let weapon = TweakDBInterface.GetWeaponItemRecord(weaponItem);
     let wt: WorldTransform;
     let vehicleSlots = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"vehicle_slots") as SlotComponent;
-    vehicleSlots.GetSlotTransform(n"PanzerCannon", wt);
+    vehicleSlots.GetSlotTransform(StringToName(TweakDBInterface.GetAttachmentSlotRecord(attachmentSlot).EntitySlotName()), wt);
     let quat = WorldTransform.GetOrientation(wt);
     // let start = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(wt));
     // let end = Vector4.Vector3To4(tracePosition);
@@ -1166,10 +1170,51 @@ public class FlightComponent extends ScriptableDeviceComponent {
     WorldTransform.SetOrientation(wt, quat * placeholderQuat);
 
     let effect = Cast<FxResource>(r"base\\fx\\vehicles\\av\\av_panzer\\weapons\\v_panzer_muzzle_flash.effect");
+    // let effect = Cast<FxResource>(r"base\\fx\\weapons\\firearms\\_muzzle_lights\\smart\\w_s_rifles_mq_muzzle_lights_tpp.effect");
     let fxSystem = GameInstance.GetFxSystem(this.GetVehicle().GetGame());
     if IsDefined(fxSystem) {
       fxSystem.SpawnEffect(effect, wt);
     }
+
+    
+    // let attack: ref<Attack_GameEffect>;
+    // let attackContext: AttackInitContext;
+    // let effect: ref<EffectInstance>;
+    // let position: Vector4;
+    // let slotTransform: WorldTransform;
+    // let statMods: array<ref<gameStatModifierData>>;
+    // let slotName = StringToName(TweakDBInterface.GetAttachmentSlotRecord(attachmentSlot).EntitySlotName());
+    // let validSlotPosition: Bool = vehicleSlots.GetSlotTransform(slotName, slotTransform);
+    // if validSlotPosition {
+    //   position = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotTransform));
+    // } else {
+    //   position = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(this.GetVehicle().GetWorldTransform()));
+    // };
+    // attackContext.source = this.GetVehicle();
+    // attackContext.record = weapon.RangedAttacks().DefaultFire().PlayerAttack();
+    // attackContext.instigator = this.sys.player;
+    // attack = IAttack.Create(attackContext) as Attack_GameEffect;
+    // attack.GetStatModList(statMods);
+    // effect = attack.PrepareAttack(this.sys.player);
+    // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.position, position);
+    // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.muzzlePosition, position);
+    // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.forward, Quaternion.GetForward(placeholderQuat));
+    // EffectData.SetVariant(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.attack, ToVariant(attack));
+    // EffectData.SetVariant(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.attackStatModList, ToVariant(statMods));
+    // attack.StartAttack();
+    
+    // effect.AttachToSlot(this.GetVehicle(), slotName, GetAllBlackboardDefs().EffectSharedData.position, GetAllBlackboardDefs().EffectSharedData.forward);
+    
+    // ArrayPush(this.m_attacksSpawned, effect);
+
+    let broadcaster = this.sys.player.GetStimBroadcasterComponent();
+    if IsDefined(broadcaster) {
+      broadcaster.TriggerSingleBroadcast(this.sys.player, gamedataStimType.Gunshot, 25.0);
+      let data: stimInvestigateData;
+      data.illegalAction = true;
+      data.attackInstigator = this.sys.player;
+      broadcaster.TriggerSingleBroadcast(this.sys.player, gamedataStimType.Gunshot, 100.0, data, true);
+    };
     
     // let tp: WorldPosition;
     // WorldPosition.SetVector4(tp, Vector4.Vector3To4(tracePosition));
@@ -3821,8 +3866,8 @@ public native class FlightSettings extends ScriptableSystem {
     FlightSettings.SetFloat(n"defaultHoverHeight", 3.50);
     FlightSettings.SetFloat(n"distance", 0.0);
     FlightSettings.SetFloat(n"distanceEase", 0.1);
-    FlightSettings.SetFloat(n"FPVCameraOffsetY", -0.1);
-    FlightSettings.SetFloat(n"FPVCameraOffsetZ", 0.5);
+    FlightSettings.SetFloat(n"FPVCameraOffsetY", 0.0);
+    FlightSettings.SetFloat(n"FPVCameraOffsetZ", -0.5);
     FlightSettings.SetFloat(n"fwtfCorrection", 0.0);
     FlightSettings.SetFloat(n"hoverClamp", 10.0);
     FlightSettings.SetFloat(n"hoverFactor", 40.0);
@@ -4358,7 +4403,7 @@ public class FlightEvents extends VehicleEventsTransition {
       vehicle_slots.GetSlotTransform(n"roof_border_front", roof);
       let vwt = Matrix.GetInverted((scriptInterface.owner as VehicleObject).GetLocalToWorld());
       let v = (WorldPosition.ToVector4(WorldTransform.GetWorldPosition(roof)) * vwt) - (WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT)) * vwt);
-      camera.SetLocalPosition(v);
+      camera.SetLocalPosition(v + new Vector4(0.0, FlightSettings.GetFloat(n"FPVCameraOffsetY"), FlightSettings.GetFloat(n"FPVCameraOffsetZ"), 0.0));
     }
 
     // let workspotSystem: ref<WorkspotGameSystem> = scriptInterface.GetWorkspotSystem();
@@ -4512,12 +4557,17 @@ public class hudFlightController extends inkHUDGameController {
   private let m_playerPuppet: wref<GameObject>;
   private let m_gameInstance: GameInstance;
   private let m_animationProxy: ref<inkAnimProxy>;
+  private let m_vehicleBlackboard: wref<IBlackboard>;
   private let m_vehicleFlightBlackboard: wref<IBlackboard>;
   private let m_psmBlackboard: wref<IBlackboard>;
   private let m_PSM_BBID: ref<CallbackHandle>;
   private let m_playerStateBBConnectionId: ref<CallbackHandle>;
   private let m_vehicleBBUIActivId: ref<CallbackHandle>;
   private let m_vehicleBBActivId: ref<CallbackHandle>;
+  private let m_vehicleBBModeId: ref<CallbackHandle>;
+  private let m_vehicleRollID: ref<CallbackHandle>;
+  private let m_tppBBConnectionId: ref<CallbackHandle>;
+
   public let m_healthStatPoolListener: ref<FlightUIVehicleHealthStatPoolListener>;
   private let m_hp_mask: inkWidgetRef;
   private let m_hp_condition_text: inkTextRef;
@@ -4536,6 +4586,7 @@ public class hudFlightController extends inkHUDGameController {
     this.GetRootWidget().SetVisible(false);
     // this.PlayLibraryAnimation(n"outro");
     
+    this.m_vehicleBlackboard = FlightController.GetInstance().GetBlackboard();
     this.m_vehicleFlightBlackboard = FlightController.GetInstance().GetBlackboard();
     if IsDefined(this.m_vehicleFlightBlackboard) {
       if !IsDefined(this.m_vehicleBBUIActivId) {
@@ -4544,7 +4595,41 @@ public class hudFlightController extends inkHUDGameController {
       if !IsDefined(this.m_vehicleBBActivId) {
         this.m_vehicleBBActivId = this.m_vehicleFlightBlackboard.RegisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this, n"OnActivate");
       };
+      if !IsDefined(this.m_vehicleBBModeId) {
+        this.m_vehicleBBModeId = this.m_vehicleFlightBlackboard.RegisterListenerInt(GetAllBlackboardDefs().VehicleFlight.Mode, this, n"OnModeChange");
+      };
+      if !IsDefined(this.m_vehicleRollID) {
+        this.m_vehicleRollID = this.m_vehicleFlightBlackboard.RegisterListenerFloat(GetAllBlackboardDefs().VehicleFlight.Roll, this, n"OnVehicleRollChanged");
+      };
     };
+    if IsDefined(this.m_vehicleBlackboard) {
+      this.m_tppBBConnectionId = this.m_vehicleBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this, n"OnCameraModeChanged", true);
+    }
+  }
+
+  protected cb func OnUninitialize() -> Bool {
+    // TakeOverControlSystem.CreateInputHint(this.GetPlayerControlledObject().GetGame(), false);
+    // SecurityTurret.CreateInputHint(this.GetPlayerControlledObject().GetGame(), false);
+    
+    if IsDefined(this.m_vehicleFlightBlackboard) {
+      if IsDefined(this.m_vehicleBBUIActivId) {
+        this.m_vehicleFlightBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, this.m_vehicleBBUIActivId);
+      }
+      if IsDefined(this.m_vehicleBBActivId) {
+        this.m_vehicleFlightBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this.m_vehicleBBActivId);
+      };
+      if IsDefined(this.m_vehicleBBModeId) {
+        this.m_vehicleFlightBlackboard.UnregisterListenerInt(GetAllBlackboardDefs().VehicleFlight.Mode, this.m_vehicleBBModeId);
+      };
+      if IsDefined(this.m_vehicleRollID) {
+        this.m_vehicleFlightBlackboard.UnregisterListenerFloat(GetAllBlackboardDefs().VehicleFlight.Roll, this.m_vehicleRollID);
+      };
+    }
+    if IsDefined(this.m_vehicleBlackboard) {
+      if IsDefined(this.m_tppBBConnectionId) {
+        this.m_vehicleBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this.m_tppBBConnectionId);
+      }
+    }
   }
 
   private func UpdateTime() -> Void {
@@ -4573,6 +4658,31 @@ public class hudFlightController extends inkHUDGameController {
   protected cb func OnActivate(activate: Bool) -> Bool {
     if this.IsUIactive() {
       this.ActivateUI(activate);
+    }
+  }
+
+  protected cb func OnModeChange(mode: Int32) -> Bool {
+    inkTextRef.SetText(this.m_CameraID, FlightSystem.GetInstance().playerComponent.GetFlightMode().GetDescription());
+  }
+
+  protected cb func OnCameraModeChanged(tpp: Bool) -> Bool {
+    let hp_gauge = this.GetRootCompoundWidget().GetWidget(n"hp_gauge");
+    if IsDefined(hp_gauge) {
+      if tpp {
+        hp_gauge.SetMargin(new inkMargin(1559.0, -116.0, 0.0, 0.0));
+      } else {
+        hp_gauge.SetMargin(new inkMargin(1559.0, -116.0 - 100.0, 0.0, 0.0));
+      }
+    }
+  }
+
+  protected cb func OnVehicleRollChanged(roll: Float) -> Bool {
+    let container = this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers");
+    if IsDefined(container) {
+      if FlightSystem.GetInstance().playerComponent.GetFlightMode().usesRightStickInput && !FlightSystem.GetInstance().ctlr.isTPP {
+        roll = -roll;
+      }
+      container.SetRotation(roll);
     }
   }
 
@@ -4606,20 +4716,6 @@ public class hudFlightController extends inkHUDGameController {
       // this.PlayAnim(n"outro", n"OnOutroComplete");
       // this.UpdateJohnnyThemeOverride(false);
     }
-  }
-
-  protected cb func OnUninitialize() -> Bool {
-    // TakeOverControlSystem.CreateInputHint(this.GetPlayerControlledObject().GetGame(), false);
-    // SecurityTurret.CreateInputHint(this.GetPlayerControlledObject().GetGame(), false);
-    
-    if IsDefined(this.m_vehicleFlightBlackboard) {
-      if IsDefined(this.m_vehicleBBUIActivId) {
-        this.m_vehicleFlightBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, this.m_vehicleBBUIActivId);
-      }
-      if IsDefined(this.m_vehicleBBActivId) {
-        this.m_vehicleFlightBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this.m_vehicleBBActivId);
-      };
-    };
   }
 
   protected cb func OnPlayerAttach(playerPuppet: ref<GameObject>) -> Bool {
@@ -6177,6 +6273,7 @@ public class VehicleFlightDef extends BlackboardDefinition {
   public let Torque: BlackboardID_Vector4;
   public let Position: BlackboardID_Vector4;
   public let Pitch: BlackboardID_Float;
+  public let Roll: BlackboardID_Float;
 
   public const func AutoCreateInSystem() -> Bool {
     return true;

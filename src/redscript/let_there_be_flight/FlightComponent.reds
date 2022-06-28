@@ -451,7 +451,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
     if this.isPlayerMounted {
       this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Force, force);
       this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Torque, torque);
-      this.sys.ctlr.GetBlackboard().SetFloat(GetAllBlackboardDefs().VehicleFlight.Pitch, Vector4.GetAngleBetween(this.stats.d_forward, FlightUtils.Up()));
+      this.sys.ctlr.GetBlackboard().SetFloat(GetAllBlackboardDefs().VehicleFlight.Pitch, Vector4.GetAngleDegAroundAxis(this.stats.d_localUp, FlightUtils.Up(), FlightUtils.Right()));
+      this.sys.ctlr.GetBlackboard().SetFloat(GetAllBlackboardDefs().VehicleFlight.Roll, Vector4.GetAngleDegAroundAxis(this.stats.d_localUp, FlightUtils.Up(), FlightUtils.Forward()));
       // this.sys.ctlr.GetBlackboard().SignalFloat(GetAllBlackboardDefs().VehicleFlight.Pitch);
       this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Position, this.stats.d_position);
       // this.sys.ctlr.GetBlackboard().SignalVector4(GetAllBlackboardDefs().VehicleFlight.Position);
@@ -970,10 +971,13 @@ public class FlightComponent extends ScriptableDeviceComponent {
     };
   }
 
-  public func OnFireWeapon(placeholderQuat: Quaternion) -> Void {    
+  protected let m_attacksSpawned: array<ref<EffectInstance>>;
+
+  public func OnFireWeapon(placeholderQuat: Quaternion, weaponItem:TweakDBID, attachmentSlot: TweakDBID) -> Void {    
+    let weapon = TweakDBInterface.GetWeaponItemRecord(weaponItem);
     let wt: WorldTransform;
     let vehicleSlots = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"vehicle_slots") as SlotComponent;
-    vehicleSlots.GetSlotTransform(n"PanzerCannon", wt);
+    vehicleSlots.GetSlotTransform(StringToName(TweakDBInterface.GetAttachmentSlotRecord(attachmentSlot).EntitySlotName()), wt);
     let quat = WorldTransform.GetOrientation(wt);
     // let start = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(wt));
     // let end = Vector4.Vector3To4(tracePosition);
@@ -981,10 +985,51 @@ public class FlightComponent extends ScriptableDeviceComponent {
     WorldTransform.SetOrientation(wt, quat * placeholderQuat);
 
     let effect = Cast<FxResource>(r"base\\fx\\vehicles\\av\\av_panzer\\weapons\\v_panzer_muzzle_flash.effect");
+    // let effect = Cast<FxResource>(r"base\\fx\\weapons\\firearms\\_muzzle_lights\\smart\\w_s_rifles_mq_muzzle_lights_tpp.effect");
     let fxSystem = GameInstance.GetFxSystem(this.GetVehicle().GetGame());
     if IsDefined(fxSystem) {
       fxSystem.SpawnEffect(effect, wt);
     }
+
+    
+    // let attack: ref<Attack_GameEffect>;
+    // let attackContext: AttackInitContext;
+    // let effect: ref<EffectInstance>;
+    // let position: Vector4;
+    // let slotTransform: WorldTransform;
+    // let statMods: array<ref<gameStatModifierData>>;
+    // let slotName = StringToName(TweakDBInterface.GetAttachmentSlotRecord(attachmentSlot).EntitySlotName());
+    // let validSlotPosition: Bool = vehicleSlots.GetSlotTransform(slotName, slotTransform);
+    // if validSlotPosition {
+    //   position = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotTransform));
+    // } else {
+    //   position = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(this.GetVehicle().GetWorldTransform()));
+    // };
+    // attackContext.source = this.GetVehicle();
+    // attackContext.record = weapon.RangedAttacks().DefaultFire().PlayerAttack();
+    // attackContext.instigator = this.sys.player;
+    // attack = IAttack.Create(attackContext) as Attack_GameEffect;
+    // attack.GetStatModList(statMods);
+    // effect = attack.PrepareAttack(this.sys.player);
+    // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.position, position);
+    // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.muzzlePosition, position);
+    // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.forward, Quaternion.GetForward(placeholderQuat));
+    // EffectData.SetVariant(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.attack, ToVariant(attack));
+    // EffectData.SetVariant(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.attackStatModList, ToVariant(statMods));
+    // attack.StartAttack();
+    
+    // effect.AttachToSlot(this.GetVehicle(), slotName, GetAllBlackboardDefs().EffectSharedData.position, GetAllBlackboardDefs().EffectSharedData.forward);
+    
+    // ArrayPush(this.m_attacksSpawned, effect);
+
+    let broadcaster = this.sys.player.GetStimBroadcasterComponent();
+    if IsDefined(broadcaster) {
+      broadcaster.TriggerSingleBroadcast(this.sys.player, gamedataStimType.Gunshot, 25.0);
+      let data: stimInvestigateData;
+      data.illegalAction = true;
+      data.attackInstigator = this.sys.player;
+      broadcaster.TriggerSingleBroadcast(this.sys.player, gamedataStimType.Gunshot, 100.0, data, true);
+    };
     
     // let tp: WorldPosition;
     // WorldPosition.SetVector4(tp, Vector4.Vector3To4(tracePosition));

@@ -26,6 +26,8 @@
 #include "LoadResRef.hpp"
 #include <spdlog/spdlog.h>
 #include "VehiclePhysicsUpdate.hpp"
+#include "FlightWeapons.hpp"
+#include "Signatures.hpp"
 
 // weird bug fix
 
@@ -75,13 +77,11 @@ void AddToController(RED4ext::CRTTISystem *rtti, RED4ext::ent::VisualControllerC
   vcc->appearanceDependency.EmplaceBack(*vcd);
 }
 
-// 48 8B C4 55 56 41 54 41 55 41 56 41 57 48 8D A8 28 FE FF FF 48 81 EC A8 02 00 00 44 0F 29 A8 48
-void __fastcall VehicleProcessWeapons(RED4ext::vehicle::BaseObject *vehicle, float timeDelta, unsigned int shootIndex);
-constexpr uintptr_t VehicleProcessWeaponsAddr = 0x140000C00 + 0x1C5F1D0 - RED4ext::Addresses::ImageBase;
-decltype(&VehicleProcessWeapons) VehicleProcessWeapons_Original;
+VehicleProcessWeapons VehicleProcessWeapons_Hook;
+decltype(&VehicleProcessWeapons_Hook) VehicleProcessWeapons_Original;
 
-
-void __fastcall VehicleProcessWeapons(RED4ext::vehicle::BaseObject *vehicle, float timeDelta, unsigned int shootIndex) {
+void __fastcall VehicleProcessWeapons_Hook(RED4ext::vehicle::BaseObject *vehicle, float timeDelta,
+                                           unsigned int shootIndex) {
   VehicleProcessWeapons_Original(vehicle, timeDelta, shootIndex);
   if (vehicle->weapons[shootIndex].cycleTimer == 0.0) {
     RED4ext::Quaternion quat = {0.0, 0.0, 0.0, 1.0};
@@ -94,117 +94,70 @@ void __fastcall VehicleProcessWeapons(RED4ext::vehicle::BaseObject *vehicle, flo
     auto fcc = rtti->GetClass("FlightComponent");
     auto fc = GetFlightComponent(vehicle);
     auto onFireWeapon = fcc->GetFunction("OnFireWeapon");
-    auto args = RED4ext::CStackType(rtti->GetType("Quaternion"), &quat);
-    auto stack = RED4ext::CStack(fc, &args, 1, nullptr, 0);
+    RED4ext::CStackType args[3];
+    args[0] = RED4ext::CStackType(rtti->GetType("Quaternion"), &quat);
+    args[1] = RED4ext::CStackType(rtti->GetType("TweakDBID"), &vehicle->weapons[shootIndex].item);
+    args[2] = RED4ext::CStackType(rtti->GetType("TweakDBID"), &vehicle->weapons[shootIndex].slot);
+    auto stack = RED4ext::CStack(fc, args, 3, nullptr, 0);
     onFireWeapon->Execute(&stack);
   }
 }
 
-// 48 89 54 24 10 55 53 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 B8 FB FF FF 48 81 EC 48 05 00 00
-void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity *entity, uintptr_t, uintptr_t);
-constexpr uintptr_t Entity_InitializeComponentsAddr = 0x140000C00 + 0x1035B00 - RED4ext::Addresses::ImageBase;
-decltype(&Entity_InitializeComponents) Entity_InitializeComponents_Original;
+//#ifndef ZOLTAN
+//#define ZOLTAN(name, returnType, signature) using name = returnType signature; \
+//name name##_Hook;                                                                                                         \
+//  decltype(&name##_Hook) name##_Original;                                                                                   \
+//  returnType name##_Hook signature
+//#endif
+//ZOLTAN(Entity_InitializeComponents, void, (RED4ext::ent::Entity * entity, void *a2, void *a3))
 
 
-void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintptr_t a2, uintptr_t a3) {
+Entity_InitializeComponents Entity_InitializeComponents_Hook;
+decltype(&Entity_InitializeComponents_Hook) Entity_InitializeComponents_Original;
 
+void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, void *a2, void *a3)
+{
   auto rtti = RED4ext::CRTTISystem::Get();
   
   auto type = entity->GetNativeType();
   auto isVehicle = false;
   do {
-    isVehicle |= type == rtti->GetClass("vehicleCarBaseObject");
+    isVehicle |= type == rtti->GetClass("vehicleBaseObject");
   } while (type = type->parent);
 
   if (isVehicle) {
     auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(entity);
 
-   {
-      auto weapon = new RED4ext::vehicle::Weapon();
-      weapon->attackRange = 300.0;
-      weapon->canFriendlyFire = true;
-      weapon->cycleTime = 0.5;
-      weapon->genericShoot = true;
-      weapon->genericTick = true;
-      weapon->item = RED4ext::TweakDBID("Items.Panzer_Cannon");
-      weapon->maxPitch = 90.0;
-      weapon->maxYaw = 120.0;
-      weapon->minPitch = -90.0;
-      weapon->minYaw = -120.0;
-      weapon->singleProjectileCycleTime = 1.0;
-      weapon->singleShotProjectiles = 1;
-      weapon->slot = RED4ext::TweakDBID("AttachmentSlots.PanzerCannon");
-      weapon->weaponShootAnimEvent = "shoot_rocket";
-      weapon->wholeBurstProjectiles = 1;
-      vehicle->weapons.EmplaceBack(*weapon);
-   }
-   //{
-   //  auto weapon = new RED4ext::vehicle::Weapon();
-   //  weapon->attackRange = 100.0;
-   //  weapon->canFriendlyFire = true;
-   //  weapon->cycleTime = 1.0;
-   //  weapon->genericShoot = true;
-   //  weapon->genericTick = true;
-   //  weapon->item = RED4ext::TweakDBID("Items.Griffin_Rifle_Left");
-   //  weapon->maxPitch = 90.0;
-   //  weapon->maxYaw = 180.0;
-   //  weapon->minPitch = -90.0;
-   //  weapon->minYaw = -180.0;
-   //  weapon->singleProjectileCycleTime = 1.0;
-   //  weapon->singleShotProjectiles = 1;
-   //  weapon->slot = RED4ext::TweakDBID("AttachmentSlots.WeaponLeft");
-   //  weapon->weaponShootAnimEvent = "shoot_rocket";
-   //  weapon->wholeBurstProjectiles = 1;
-   //  vehicle->weapons.EmplaceBack(*weapon);
-   //}
-   //{
-   //  auto weapon = new RED4ext::vehicle::Weapon();
-   //  weapon->attackRange = 100.0;
-   //  weapon->canFriendlyFire = true;
-   //  weapon->cycleTime = 0.1;
-   //  weapon->genericShoot = true;
-   //  weapon->genericTick = true;
-   //  weapon->item = RED4ext::TweakDBID("Items.CPO_HMG");
-   //  weapon->maxPitch = 90.0;
-   //  weapon->maxYaw = 180.0;
-   //  weapon->minPitch = -90.0;
-   //  weapon->minYaw = -180.0;
-   //  weapon->singleProjectileCycleTime = 1.0;
-   //  weapon->singleShotProjectiles = 1;
-   //  weapon->slot = RED4ext::TweakDBID("AttachmentSlots.WeaponRight");
-   //  weapon->weaponShootAnimEvent = "shoot_rocket";
-   //  weapon->wholeBurstProjectiles = 1;
-   //  vehicle->weapons.EmplaceBack(*weapon);
-   //}
+    FlightWeapons::AddWeapons(vehicle);
 
     // entVisualControllerComponent
-   RED4ext::ent::VisualControllerComponent *vcc = NULL;
-   for (auto const &handle : entity->components) {
-     auto component = handle.GetPtr();
-     if (component->GetNativeType() == rtti->GetClass("entVisualControllerComponent")) {
-       vcc = reinterpret_cast<RED4ext::ent::VisualControllerComponent *>(component);
-       break;
-     }
-   }
+    RED4ext::ent::VisualControllerComponent *vcc = NULL;
+    for (auto const &handle : entity->components) {
+      auto component = handle.GetPtr();
+      if (component->GetNativeType() == rtti->GetClass("entVisualControllerComponent")) {
+        vcc = reinterpret_cast<RED4ext::ent::VisualControllerComponent *>(component);
+        break;
+      }
+    }
 
-   RED4ext::game::OccupantSlotComponent *osc = NULL;
-   for (auto const &handle : entity->components) {
-     auto component = handle.GetPtr();
-     if (component->GetNativeType() == rtti->GetClass("gameOccupantSlotComponent")) {
-       osc = reinterpret_cast<RED4ext::game::OccupantSlotComponent *>(component);
+    RED4ext::game::OccupantSlotComponent *osc = NULL;
+    for (auto const &handle : entity->components) {
+      auto component = handle.GetPtr();
+      if (component->GetNativeType() == rtti->GetClass("gameOccupantSlotComponent")) {
+        osc = reinterpret_cast<RED4ext::game::OccupantSlotComponent *>(component);
 
-       {
-         auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
-         slot->boneName = "roof_border_front";
-         //slot->relativePosition.Y -= 0.1;
-         //slot->relativePosition.Z += 0.5;
-         slot->slotName = "CustomFlightCamera";
-         osc->slots.EmplaceBack();
-         osc->slotIndexLookup.Emplace(slot->slotName, osc->slots.size - 1);
-       }
-       break;
-     }
-   }
+        {
+          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+          slot->boneName = "roof_border_front";
+          // slot->relativePosition.Y -= 0.1;
+          // slot->relativePosition.Z += 0.5;
+          slot->slotName = "CustomFlightCamera";
+          osc->slots.EmplaceBack();
+          osc->slotIndexLookup.Emplace(slot->slotName, osc->slots.size - 1);
+        }
+        break;
+      }
+    }
 
     for (auto const &handle : entity->components) {
       auto component = handle.GetPtr();
@@ -216,48 +169,21 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
             auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
             slot->boneName = "roof_border_front";
             slot->slotName = "roof_border_front";
-            slot->relativePosition.Z -= 0.2;
             sc->slots.EmplaceBack(*slot);
             sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
           }
-          {
-            auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
-            slot->boneName = "swingarm_front_left";
-            slot->relativePosition.X -= 0.25;
-            slot->relativePosition.Y += 0.75;
-            slot->slotName = "PanzerCannon";
-            sc->slots.EmplaceBack(*slot);
-            sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
-          }
-          {
-            auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
-            slot->boneName = "swingarm_front_left";
-            slot->relativePosition.X -= 0.25;
-            //slot->relativePosition.Y += 0.75;
-            slot->slotName = "WeaponLeft";
-            sc->slots.EmplaceBack(*slot);
-            sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
-          }
-          {
-            auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
-            slot->boneName = "swingarm_front_right";
-            slot->relativePosition.X += 0.25;
-            //slot->relativePosition.Y += 0.75;
-            slot->slotName = "WeaponRight";
-            sc->slots.EmplaceBack(*slot);
-            sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
-          }
-          {
-            auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
-            slot->boneName = "swingarm_front_left";
-            slot->relativePosition.X = -0.25;
-            slot->relativePosition.Z = -0.6;
-            slot->relativeRotation.k = 1.0;
-            slot->relativeRotation.r = 0.0;
-            slot->slotName = "gun_front_left";
-            sc->slots.EmplaceBack(*slot);
-            sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
-          }
+          FlightWeapons::AddWeaponSlots(sc);
+          //{
+          //  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+          //  slot->boneName = "swingarm_front_left";
+          //  slot->relativePosition.X = -0.25;
+          //  slot->relativePosition.Z = -0.6;
+          //  slot->relativeRotation.k = 1.0;
+          //  slot->relativeRotation.r = 0.0;
+          //  slot->slotName = "gun_front_left";
+          //  sc->slots.EmplaceBack(*slot);
+          //  sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
+          //}
           {
             auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
             slot->boneName = "swingarm_front_left";
@@ -294,43 +220,43 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
 
     if (vcc != NULL) {
       {
-        // SlotComponent
-        //auto sc = (RED4ext::ent::SlotComponent *)rtti->GetClass("entSlotComponent")->AllocInstance();
-        //sc->name = "thruster_slots";
-        //auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->AllocInstance();
-        //htb->bindName = "deformation_rig";
-        //sc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
+          // SlotComponent
+          // auto sc = (RED4ext::ent::SlotComponent *)rtti->GetClass("entSlotComponent")->AllocInstance();
+          // sc->name = "thruster_slots";
+          // auto htb = (RED4ext::ent::HardTransformBinding
+          // *)rtti->GetClass("entHardTransformBinding")->AllocInstance(); htb->bindName = "deformation_rig";
+          // sc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
 
-        //{
-        //  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
-        //  slot->boneName = "swingarm_front_left";
-        //  slot->slotName = "thruster_front_left";
-        //  sc->slots.EmplaceBack(*slot);
-        //  sc->slotIndexLookup.Emplace(slot->slotName, 0);
-        //}
-        //{
-        //  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
-        //  slot->boneName = "swingarm_front_right";
-        //  slot->slotName = "thruster_front_right";
-        //  sc->slots.EmplaceBack(*slot);
-        //  sc->slotIndexLookup.Emplace(slot->slotName, 1);
-        //}
-        //{
-        //  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
-        //  slot->boneName = "swingarm_back_left";
-        //  slot->slotName = "thruster_back_left";
-        //  sc->slots.EmplaceBack(*slot);
-        //  sc->slotIndexLookup.Emplace(slot->slotName, 2);
-        //}
-        //{
-        //  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
-        //  slot->boneName = "swingarm_back_right";
-        //  slot->slotName = "thruster_back_right";
-        //  sc->slots.EmplaceBack(*slot);
-        //  sc->slotIndexLookup.Emplace(slot->slotName, 3);
-        //}
+          //{
+          //  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+          //  slot->boneName = "swingarm_front_left";
+          //  slot->slotName = "thruster_front_left";
+          //  sc->slots.EmplaceBack(*slot);
+          //  sc->slotIndexLookup.Emplace(slot->slotName, 0);
+          //}
+          //{
+          //  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+          //  slot->boneName = "swingarm_front_right";
+          //  slot->slotName = "thruster_front_right";
+          //  sc->slots.EmplaceBack(*slot);
+          //  sc->slotIndexLookup.Emplace(slot->slotName, 1);
+          //}
+          //{
+          //  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+          //  slot->boneName = "swingarm_back_left";
+          //  slot->slotName = "thruster_back_left";
+          //  sc->slots.EmplaceBack(*slot);
+          //  sc->slotIndexLookup.Emplace(slot->slotName, 2);
+          //}
+          //{
+          //  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+          //  slot->boneName = "swingarm_back_right";
+          //  slot->slotName = "thruster_back_right";
+          //  sc->slots.EmplaceBack(*slot);
+          //  sc->slotIndexLookup.Emplace(slot->slotName, 3);
+          //}
 
-        //entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::SlotComponent>(sc));
+          // entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::SlotComponent>(sc));
       }
 
       {
@@ -339,24 +265,23 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
         entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(fl));
         AddToController(rtti, vcc, fl);
 
-
-        //auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
-        //mc->mesh.ref =
-        //    (RED4ext::CName)"base\\weapons\\turrets\\maxtac_turret\\entities\\meshes\\w_turret__maxtac_turret__base1_guns.mesh";
-        //mc->visualScale.X = 1.0;
-        //mc->visualScale.Y = 1.0;
-        //mc->visualScale.Z = 1.0;
-        //mc->name = "FunGun";
-        //mc->motionBlurScale = 0.1;
-        //mc->meshAppearance = "default";
-        //mc->objectTypeID = RED4ext::ERenderObjectType::ROT_Vehicle;
-        //mc->LODMode = RED4ext::ent::MeshComponentLODMode::Appearance;
-        //auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->AllocInstance();
-        //htb->bindName = "vehicle_slots";
-        //htb->slotName = "gun_front_left";
-        //mc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
-        //entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::MeshComponent>(mc));
-        //AddToController(rtti, vcc, mc);
+        // auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
+        // mc->mesh.ref =
+        //     (RED4ext::CName)"base\\weapons\\turrets\\maxtac_turret\\entities\\meshes\\w_turret__maxtac_turret__base1_guns.mesh";
+        // mc->visualScale.X = 1.0;
+        // mc->visualScale.Y = 1.0;
+        // mc->visualScale.Z = 1.0;
+        // mc->name = "FunGun";
+        // mc->motionBlurScale = 0.1;
+        // mc->meshAppearance = "default";
+        // mc->objectTypeID = RED4ext::ERenderObjectType::ROT_Vehicle;
+        // mc->LODMode = RED4ext::ent::MeshComponentLODMode::Appearance;
+        // auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->AllocInstance();
+        // htb->bindName = "vehicle_slots";
+        // htb->slotName = "gun_front_left";
+        // mc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
+        // entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::MeshComponent>(mc));
+        // AddToController(rtti, vcc, mc);
 
         auto fr = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterFR",
                                        "thruster_front_right");
@@ -435,60 +360,37 @@ void __fastcall Entity_InitializeComponents(RED4ext::ent::Entity* entity, uintpt
 
     //  entity->components.EmplaceBack(RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc));
     //}
-    { 
-      auto gpsp = (RED4ext::game::projectile::SpawnComponent *)rtti->GetClass("gameprojectileSpawnComponent")->AllocInstance();
-      gpsp->name = "projectileSpawn8722";
-      gpsp->projectileTemplates.EmplaceBack("exploding_bullet");
-      auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->AllocInstance();
-      htb->bindName = "vehicle_slots";
-      htb->slotName = "ThrusterFL";
-      gpsp->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
-      entity->components.EmplaceBack(RED4ext::Handle<RED4ext::game::projectile::SpawnComponent>(gpsp));
-    }
-    {
-      auto gas = (RED4ext::game::AttachmentSlots *)rtti->GetClass("gameAttachmentSlots")->AllocInstance();
-      gas->name = "AttachmentSlots";
-      {
-        auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->AllocInstance();
-        gapso->slotID = "AttachmentSlots.PanzerCannon";
-        gapso->paramName = "renderPlane";
-        gas->animParams.EmplaceBack(*gapso);
-      }
-      {
-        auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->AllocInstance();
-        gapso->slotID = "AttachmentSlots.WeaponLeft";
-        gapso->paramName = "renderPlane";
-        gas->animParams.EmplaceBack(*gapso);
-      }
-      {
-        auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->AllocInstance();
-        gapso->slotID = "AttachmentSlots.WeaponRight";
-        gapso->paramName = "renderPlane";
-        gas->animParams.EmplaceBack(*gapso);
-      }
-      entity->components.EmplaceBack(RED4ext::Handle<RED4ext::game::AttachmentSlots>(gas));
-    }
+    //{
+    //  auto gpsp =
+    //      (RED4ext::game::projectile::SpawnComponent *)rtti->GetClass("gameprojectileSpawnComponent")->AllocInstance();
+    //  gpsp->name = "projectileSpawn8722";
+    //  gpsp->projectileTemplates.EmplaceBack("exploding_bullet");
+    //  auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->AllocInstance();
+    //  htb->bindName = "vehicle_slots";
+    //  htb->slotName = "ThrusterFL";
+    //  gpsp->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
+    //  entity->components.EmplaceBack(RED4ext::Handle<RED4ext::game::projectile::SpawnComponent>(gpsp));
+    //}
 
     {
       auto whc = (RED4ext::WidgetHudComponent *)rtti->GetClass("WidgetHudComponent")->AllocInstance();
       whc->name = "FlightHUD";
-      whc->hudEntriesResource.hash = (RED4ext::CName)"user\\jackhumbert\\widgets\\hud_flight.inkhud";
-      LoadResRef<RED4ext::ink::HudEntriesResource>(&whc->hudEntriesResource.hash, &whc->hudEntriesResource.handle, false);
+      whc->hudEntriesResource.hash = (RED4ext::CName) "user\\jackhumbert\\widgets\\hud_flight.inkhud";
+      LoadResRef<RED4ext::ink::HudEntriesResource>(&whc->hudEntriesResource.hash, &whc->hudEntriesResource.handle,
+                                                   false);
       entity->components.EmplaceBack(RED4ext::Handle<RED4ext::WidgetHudComponent>(whc));
     }
 
-    { 
-      auto gcc = (RED4ext::game::CameraComponent *)rtti->GetClass("gameCameraComponent")->AllocInstance();
-      gcc->name = "frontCamera";
-      auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->AllocInstance();
-      htb->bindName = "vehicle_slots";
-      htb->slotName = "Base";
-      gcc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
-      entity->components.EmplaceBack(RED4ext::Handle<RED4ext::game::CameraComponent>(gcc));
-    }
-
+    //{
+    //  auto gcc = (RED4ext::game::CameraComponent *)rtti->GetClass("gameCameraComponent")->AllocInstance();
+    //  gcc->name = "frontCamera";
+    //  auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->AllocInstance();
+    //  htb->bindName = "vehicle_slots";
+    //  htb->slotName = "roof_border_front";
+    //  gcc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
+    //  entity->components.EmplaceBack(RED4ext::Handle<RED4ext::game::CameraComponent>(gcc));
+    //}
   }
-
 
   Entity_InitializeComponents_Original(entity, a2, a3);
 }
@@ -608,17 +510,17 @@ void IPlacedComponentUpdateHardTransformBinding(RED4ext::IScriptable *aContext, 
 
 struct EntityAddComponentModule : FlightModule {
   void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(Entity_InitializeComponentsAddr),
-                          &Entity_InitializeComponents,
+    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(ENTITY_INITIALIZECOMPONENTS_ADDR),
+                          &Entity_InitializeComponents_Hook,
                           reinterpret_cast<void **>(&Entity_InitializeComponents_Original));
-    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleProcessWeaponsAddr), &VehicleProcessWeapons,
+    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VEHICLEPROCESSWEAPONS_ADDR), &VehicleProcessWeapons_Hook,
                           reinterpret_cast<void **>(&VehicleProcessWeapons_Original));
     aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(SpawnEffectAddr), &SpawnEffect,
                           reinterpret_cast<void **>(&SpawnEffect_Original));
   }
   void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(Entity_InitializeComponentsAddr));
-    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleProcessWeaponsAddr));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(ENTITY_INITIALIZECOMPONENTS_ADDR));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(VEHICLEPROCESSWEAPONS_ADDR));
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(SpawnEffectAddr));
   }
   void PostRegisterTypes() {

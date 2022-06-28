@@ -213,7 +213,7 @@ public class FlightEvents extends VehicleEventsTransition {
       vehicle_slots.GetSlotTransform(n"roof_border_front", roof);
       let vwt = Matrix.GetInverted((scriptInterface.owner as VehicleObject).GetLocalToWorld());
       let v = (WorldPosition.ToVector4(WorldTransform.GetWorldPosition(roof)) * vwt) - (WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT)) * vwt);
-      camera.SetLocalPosition(v);
+      camera.SetLocalPosition(v + new Vector4(0.0, FlightSettings.GetFloat(n"FPVCameraOffsetY"), FlightSettings.GetFloat(n"FPVCameraOffsetZ"), 0.0));
     }
 
     // let workspotSystem: ref<WorkspotGameSystem> = scriptInterface.GetWorkspotSystem();

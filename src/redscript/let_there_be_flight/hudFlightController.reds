@@ -36,12 +36,17 @@ public class hudFlightController extends inkHUDGameController {
   private let m_playerPuppet: wref<GameObject>;
   private let m_gameInstance: GameInstance;
   private let m_animationProxy: ref<inkAnimProxy>;
+  private let m_vehicleBlackboard: wref<IBlackboard>;
   private let m_vehicleFlightBlackboard: wref<IBlackboard>;
   private let m_psmBlackboard: wref<IBlackboard>;
   private let m_PSM_BBID: ref<CallbackHandle>;
   private let m_playerStateBBConnectionId: ref<CallbackHandle>;
   private let m_vehicleBBUIActivId: ref<CallbackHandle>;
   private let m_vehicleBBActivId: ref<CallbackHandle>;
+  private let m_vehicleBBModeId: ref<CallbackHandle>;
+  private let m_vehicleRollID: ref<CallbackHandle>;
+  private let m_tppBBConnectionId: ref<CallbackHandle>;
+
   public let m_healthStatPoolListener: ref<FlightUIVehicleHealthStatPoolListener>;
   private let m_hp_mask: inkWidgetRef;
   private let m_hp_condition_text: inkTextRef;
@@ -60,6 +65,7 @@ public class hudFlightController extends inkHUDGameController {
     this.GetRootWidget().SetVisible(false);
     // this.PlayLibraryAnimation(n"outro");
     
+    this.m_vehicleBlackboard = FlightController.GetInstance().GetBlackboard();
     this.m_vehicleFlightBlackboard = FlightController.GetInstance().GetBlackboard();
     if IsDefined(this.m_vehicleFlightBlackboard) {
       if !IsDefined(this.m_vehicleBBUIActivId) {
@@ -68,7 +74,41 @@ public class hudFlightController extends inkHUDGameController {
       if !IsDefined(this.m_vehicleBBActivId) {
         this.m_vehicleBBActivId = this.m_vehicleFlightBlackboard.RegisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this, n"OnActivate");
       };
+      if !IsDefined(this.m_vehicleBBModeId) {
+        this.m_vehicleBBModeId = this.m_vehicleFlightBlackboard.RegisterListenerInt(GetAllBlackboardDefs().VehicleFlight.Mode, this, n"OnModeChange");
+      };
+      if !IsDefined(this.m_vehicleRollID) {
+        this.m_vehicleRollID = this.m_vehicleFlightBlackboard.RegisterListenerFloat(GetAllBlackboardDefs().VehicleFlight.Roll, this, n"OnVehicleRollChanged");
+      };
     };
+    if IsDefined(this.m_vehicleBlackboard) {
+      this.m_tppBBConnectionId = this.m_vehicleBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this, n"OnCameraModeChanged", true);
+    }
+  }
+
+  protected cb func OnUninitialize() -> Bool {
+    // TakeOverControlSystem.CreateInputHint(this.GetPlayerControlledObject().GetGame(), false);
+    // SecurityTurret.CreateInputHint(this.GetPlayerControlledObject().GetGame(), false);
+    
+    if IsDefined(this.m_vehicleFlightBlackboard) {
+      if IsDefined(this.m_vehicleBBUIActivId) {
+        this.m_vehicleFlightBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, this.m_vehicleBBUIActivId);
+      }
+      if IsDefined(this.m_vehicleBBActivId) {
+        this.m_vehicleFlightBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this.m_vehicleBBActivId);
+      };
+      if IsDefined(this.m_vehicleBBModeId) {
+        this.m_vehicleFlightBlackboard.UnregisterListenerInt(GetAllBlackboardDefs().VehicleFlight.Mode, this.m_vehicleBBModeId);
+      };
+      if IsDefined(this.m_vehicleRollID) {
+        this.m_vehicleFlightBlackboard.UnregisterListenerFloat(GetAllBlackboardDefs().VehicleFlight.Roll, this.m_vehicleRollID);
+      };
+    }
+    if IsDefined(this.m_vehicleBlackboard) {
+      if IsDefined(this.m_tppBBConnectionId) {
+        this.m_vehicleBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this.m_tppBBConnectionId);
+      }
+    }
   }
 
   private func UpdateTime() -> Void {
@@ -97,6 +137,31 @@ public class hudFlightController extends inkHUDGameController {
   protected cb func OnActivate(activate: Bool) -> Bool {
     if this.IsUIactive() {
       this.ActivateUI(activate);
+    }
+  }
+
+  protected cb func OnModeChange(mode: Int32) -> Bool {
+    inkTextRef.SetText(this.m_CameraID, FlightSystem.GetInstance().playerComponent.GetFlightMode().GetDescription());
+  }
+
+  protected cb func OnCameraModeChanged(tpp: Bool) -> Bool {
+    let hp_gauge = this.GetRootCompoundWidget().GetWidget(n"hp_gauge");
+    if IsDefined(hp_gauge) {
+      if tpp {
+        hp_gauge.SetMargin(new inkMargin(1559.0, -116.0, 0.0, 0.0));
+      } else {
+        hp_gauge.SetMargin(new inkMargin(1559.0, -116.0 - 100.0, 0.0, 0.0));
+      }
+    }
+  }
+
+  protected cb func OnVehicleRollChanged(roll: Float) -> Bool {
+    let container = this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers");
+    if IsDefined(container) {
+      if FlightSystem.GetInstance().playerComponent.GetFlightMode().usesRightStickInput && !FlightSystem.GetInstance().ctlr.isTPP {
+        roll = -roll;
+      }
+      container.SetRotation(roll);
     }
   }
 
@@ -130,20 +195,6 @@ public class hudFlightController extends inkHUDGameController {
       // this.PlayAnim(n"outro", n"OnOutroComplete");
       // this.UpdateJohnnyThemeOverride(false);
     }
-  }
-
-  protected cb func OnUninitialize() -> Bool {
-    // TakeOverControlSystem.CreateInputHint(this.GetPlayerControlledObject().GetGame(), false);
-    // SecurityTurret.CreateInputHint(this.GetPlayerControlledObject().GetGame(), false);
-    
-    if IsDefined(this.m_vehicleFlightBlackboard) {
-      if IsDefined(this.m_vehicleBBUIActivId) {
-        this.m_vehicleFlightBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, this.m_vehicleBBUIActivId);
-      }
-      if IsDefined(this.m_vehicleBBActivId) {
-        this.m_vehicleFlightBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this.m_vehicleBBActivId);
-      };
-    };
   }
 
   protected cb func OnPlayerAttach(playerPuppet: ref<GameObject>) -> Bool {

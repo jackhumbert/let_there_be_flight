@@ -2,6 +2,7 @@
 #include "FlightController.hpp"
 #include "FlightSystem.hpp"
 #include "FlightSettings.hpp"
+#include <RED4ext/Scripting/Natives/Generated/physics/VehiclePhysics.hpp>
 #include <spdlog/spdlog.h>
 
 // Treat flying vehicles as being on the ground (for TPP camera)
@@ -108,10 +109,18 @@ char __fastcall Camera::FPPCameraUpdate(RED4ext::game::FPPCameraComponent *fpp, 
   auto og = FPPCameraUpdate_Original(fpp, deltaTime, deltaYaw, deltaPitch, deltaYawExternal, deltaPitchExternal, a7);
 
   if (usesRightStickInput) {
-    fpp->animFeature->additiveCameraMovementsWeight = 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone");
+    //fpp->animFeature->additiveCameraMovementsWeight = 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone");
     fpp->animFeature->vehicleProceduralCameraWeight = 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone");
+    //fpp->animFeature->vehicleOffsetWeight = 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone");
+    //fpp->animFeature->gameplayCameraPoseWeight = 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone");
     //fpp->pitchOffset = 0.0;
     //fpp->yawOffset = 0.0;
+    auto vehicle = *(RED4ext::vehicle::BaseObject **)&fpp->entity;
+    if (vehicle->physics) {
+      vehicle->physics->customTiltTarget = 0.0;
+    }
+  } else {
+    fpp->animFeature->vehicleProceduralCameraWeight = 1.0;
   }
   return og;
 }
