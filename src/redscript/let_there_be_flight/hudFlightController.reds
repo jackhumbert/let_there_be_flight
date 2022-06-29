@@ -64,51 +64,11 @@ public class hudFlightController extends inkHUDGameController {
     this.offsetRight = 1495.0;
     this.GetRootWidget().SetVisible(false);
     // this.PlayLibraryAnimation(n"outro");
-    
-    this.m_vehicleBlackboard = FlightController.GetInstance().GetBlackboard();
-    this.m_vehicleFlightBlackboard = FlightController.GetInstance().GetBlackboard();
-    if IsDefined(this.m_vehicleFlightBlackboard) {
-      if !IsDefined(this.m_vehicleBBUIActivId) {
-        this.m_vehicleBBUIActivId = this.m_vehicleFlightBlackboard.RegisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, this, n"OnActivateUI");
-      }
-      if !IsDefined(this.m_vehicleBBActivId) {
-        this.m_vehicleBBActivId = this.m_vehicleFlightBlackboard.RegisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this, n"OnActivate");
-      };
-      if !IsDefined(this.m_vehicleBBModeId) {
-        this.m_vehicleBBModeId = this.m_vehicleFlightBlackboard.RegisterListenerInt(GetAllBlackboardDefs().VehicleFlight.Mode, this, n"OnModeChange");
-      };
-      if !IsDefined(this.m_vehicleRollID) {
-        this.m_vehicleRollID = this.m_vehicleFlightBlackboard.RegisterListenerFloat(GetAllBlackboardDefs().VehicleFlight.Roll, this, n"OnVehicleRollChanged");
-      };
-    };
-    if IsDefined(this.m_vehicleBlackboard) {
-      this.m_tppBBConnectionId = this.m_vehicleBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this, n"OnCameraModeChanged", true);
-    }
   }
 
   protected cb func OnUninitialize() -> Bool {
     // TakeOverControlSystem.CreateInputHint(this.GetPlayerControlledObject().GetGame(), false);
     // SecurityTurret.CreateInputHint(this.GetPlayerControlledObject().GetGame(), false);
-    
-    if IsDefined(this.m_vehicleFlightBlackboard) {
-      if IsDefined(this.m_vehicleBBUIActivId) {
-        this.m_vehicleFlightBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, this.m_vehicleBBUIActivId);
-      }
-      if IsDefined(this.m_vehicleBBActivId) {
-        this.m_vehicleFlightBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this.m_vehicleBBActivId);
-      };
-      if IsDefined(this.m_vehicleBBModeId) {
-        this.m_vehicleFlightBlackboard.UnregisterListenerInt(GetAllBlackboardDefs().VehicleFlight.Mode, this.m_vehicleBBModeId);
-      };
-      if IsDefined(this.m_vehicleRollID) {
-        this.m_vehicleFlightBlackboard.UnregisterListenerFloat(GetAllBlackboardDefs().VehicleFlight.Roll, this.m_vehicleRollID);
-      };
-    }
-    if IsDefined(this.m_vehicleBlackboard) {
-      if IsDefined(this.m_tppBBConnectionId) {
-        this.m_vehicleBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this.m_tppBBConnectionId);
-      }
-    }
   }
 
   private func UpdateTime() -> Void {
@@ -156,12 +116,17 @@ public class hudFlightController extends inkHUDGameController {
   }
 
   protected cb func OnVehicleRollChanged(roll: Float) -> Bool {
-    let container = this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers");
-    if IsDefined(container) {
-      if FlightSystem.GetInstance().playerComponent.GetFlightMode().usesRightStickInput && !FlightSystem.GetInstance().ctlr.isTPP {
-        roll = -roll;
-      }
-      container.SetRotation(roll);
+    // if FlightSystem.GetInstance().playerComponent.GetFlightMode().usesRightStickInput && !FlightSystem.GetInstance().ctlr.isTPP {
+    if !FlightSystem.GetInstance().ctlr.isTPP {
+      this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers").SetRotation(0);
+      this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers/h").SetRotation(-roll);
+      this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/crosshair").SetRotation(0);
+      this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/RADIUS").SetRotation(-roll);
+    } else {
+      this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers").SetRotation(roll);
+      this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers/h").SetRotation(-roll);
+      this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/crosshair").SetRotation(roll);
+      this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/RADIUS").SetRotation(roll);
     }
   }
 
@@ -209,11 +174,32 @@ public class hudFlightController extends inkHUDGameController {
     this.m_healthStatPoolListener.m_owner = this;
     this.m_healthStatPoolListener.m_vehicle = FlightSystem.GetInstance().playerComponent.GetVehicle();
     inkTextRef.SetText(this.m_hp_condition_text, this.m_healthStatPoolListener.m_vehicle.GetDisplayName());
+    this.ReactToHPChange(GameInstance.GetStatPoolsSystem(this.m_gameInstance).GetStatPoolValue(Cast(this.m_healthStatPoolListener.m_vehicle.GetEntityID()), gamedataStatPoolType.Health, true));
 
     this.m_psmBlackboard = this.GetPSMBlackboard(playerPuppet);
     if IsDefined(this.m_psmBlackboard) {
       this.m_PSM_BBID = this.m_psmBlackboard.RegisterDelayedListenerFloat(GetAllBlackboardDefs().PlayerStateMachine.ZoomLevel, this, n"OnZoomChange");
     };
+
+    this.m_vehicleBlackboard = FlightSystem.GetInstance().playerComponent.GetVehicle().GetBlackboard();
+    this.m_vehicleFlightBlackboard = FlightController.GetInstance().GetBlackboard();
+    if IsDefined(this.m_vehicleFlightBlackboard) {
+      if !IsDefined(this.m_vehicleBBUIActivId) {
+        this.m_vehicleBBUIActivId = this.m_vehicleFlightBlackboard.RegisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, this, n"OnActivateUI");
+      }
+      if !IsDefined(this.m_vehicleBBActivId) {
+        this.m_vehicleBBActivId = this.m_vehicleFlightBlackboard.RegisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this, n"OnActivate");
+      };
+      if !IsDefined(this.m_vehicleBBModeId) {
+        this.m_vehicleBBModeId = this.m_vehicleFlightBlackboard.RegisterListenerInt(GetAllBlackboardDefs().VehicleFlight.Mode, this, n"OnModeChange");
+      };
+      if !IsDefined(this.m_vehicleRollID) {
+        this.m_vehicleRollID = this.m_vehicleFlightBlackboard.RegisterListenerFloat(GetAllBlackboardDefs().VehicleFlight.Roll, this, n"OnVehicleRollChanged");
+      };
+    };
+    if IsDefined(this.m_vehicleBlackboard) {
+      this.m_tppBBConnectionId = this.m_vehicleBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this, n"OnCameraModeChanged", true);
+    }
 
     GameInstance.GetStatPoolsSystem(this.m_gameInstance).RequestRegisteringListener(Cast(this.m_healthStatPoolListener.m_vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     this.ActivateUI(this.IsUIactive() && this.IsActive());
@@ -227,6 +213,25 @@ public class hudFlightController extends inkHUDGameController {
     if IsDefined(this.m_psmBlackboard) {
       this.m_psmBlackboard.UnregisterDelayedListener(GetAllBlackboardDefs().PlayerStateMachine.ZoomLevel, this.m_PSM_BBID);
     };
+    if IsDefined(this.m_vehicleFlightBlackboard) {
+      if IsDefined(this.m_vehicleBBUIActivId) {
+        this.m_vehicleFlightBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, this.m_vehicleBBUIActivId);
+      }
+      if IsDefined(this.m_vehicleBBActivId) {
+        this.m_vehicleFlightBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this.m_vehicleBBActivId);
+      };
+      if IsDefined(this.m_vehicleBBModeId) {
+        this.m_vehicleFlightBlackboard.UnregisterListenerInt(GetAllBlackboardDefs().VehicleFlight.Mode, this.m_vehicleBBModeId);
+      };
+      if IsDefined(this.m_vehicleRollID) {
+        this.m_vehicleFlightBlackboard.UnregisterListenerFloat(GetAllBlackboardDefs().VehicleFlight.Roll, this.m_vehicleRollID);
+      };
+    }
+    if IsDefined(this.m_vehicleBlackboard) {
+      if IsDefined(this.m_tppBBConnectionId) {
+        this.m_vehicleBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this.m_tppBBConnectionId);
+      }
+    }
   }
 
   protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool {

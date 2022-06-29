@@ -331,7 +331,7 @@ public native class FlightController extends IScriptable {
     // evt.AddInputHint(FlightController.CreateInputHint("Raise Hover Height", n"FlightOptions_Up"), true);
     // evt.AddInputHint(FlightController.CreateInputHint("Lower Hover Height", n"FlightOptions_Down"), true);
     evt.AddInputHint(FlightController.CreateInputHint("Toggle UI", n"Flight_UIToggle"),         this.active && this.showOptions);
-    evt.AddInputHint(FlightController.CreateInputHint("Fire", n"Flight_Trick"),                 this.active && !this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint("Fire", n"ShootPrimary"),                 this.active && !this.showOptions);
 
     uiSystem.QueueEvent(evt);
   }

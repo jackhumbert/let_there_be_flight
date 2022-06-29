@@ -28,7 +28,7 @@
 		<include name="VehicleFlightToggle" />
 		<include name="Combat" />
 		
-		<action name="ShootPrimary"			map="Flight_Trick" />
+		<action name="ShootPrimary"			map="Flight_Fire1" />
 		<action name="ShootSecondary"		map="Flight_Fire2" />
 		<!-- <action name="ShootTertiary"		map="Flight_Fire3" /> -->
 
@@ -68,6 +68,7 @@
 		<event name="BUTTON_PRESSED" />
 		<event name="BUTTON_RELEASED" />
 	</acceptedEvents>
+
 	<acceptedEvents action="Flight_Trick">
 	 <event name="BUTTON_PRESSED" />
 	 <event name="BUTTON_RELEASED" />
@@ -103,9 +104,14 @@
 		<button id="IK_Y" />
 	</mapping>
 
+	<mapping name="Flight_Fire1" type="Button">
+		<button id="IK_Pad_RightShoulder" />
+		<button id="IK_LeftMouse" />
+	</mapping>
+
 	<mapping name="Flight_Fire2" type="Button">
 		<button id="IK_Pad_DigitUp" />
-		<button id="IK_Y" />
+		<button id="IK_RightMouse" />
 	</mapping>
 
 	<mapping name="Flight_LinearBrake" type="Button">
