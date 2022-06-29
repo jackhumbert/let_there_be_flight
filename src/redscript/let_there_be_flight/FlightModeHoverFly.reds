@@ -13,7 +13,7 @@ public class FlightModeHoverFly extends FlightModeStandard {
     let normal: Vector4;
     this.referenceZ = this.component.stats.d_position.Z;
     this.component.FindGround(normal);
-    this.component.hoverHeight = MaxF(this.component.distance, FlightSettings.GetFloat(n"minHoverHeight"));
+    this.component.hoverHeight = MaxF(this.component.distance, FlightSettings.GetFloat(n"hoverModeMinHoverHeight"));
   }
   
   public func GetDescription() -> String = "Hover & Fly";
@@ -23,15 +23,15 @@ public class FlightModeHoverFly extends FlightModeStandard {
     let normal: Vector4;
     let foundGround = this.component.FindGround(normal);
     if foundGround {
-      this.hovering = ClampF(1.0 - (this.component.distance - FlightSettings.GetFloat(n"minHoverHeight")) / (FlightSettings.GetFloat(n"maxHoverHeight") - FlightSettings.GetFloat(n"minHoverHeight")), 0.0, 1.0);
+      this.hovering = ClampF(1.0 - (this.component.distance - FlightSettings.GetFloat(n"hoverModeMinHoverHeight")) / (FlightSettings.GetFloat(n"hoverModeMaxHoverHeight") - FlightSettings.GetFloat(n"hoverModeMinHoverHeight")), 0.0, 1.0);
     } else {
       this.hovering = 0.0;
     }
 
     if lastHovering == 0.0 && this.hovering > 0.0 {
-      this.component.hoverHeight = MaxF(this.component.distance + this.component.lift * timeDelta * FlightSettings.GetFloat(n"hoverLiftFactor"), FlightSettings.GetFloat(n"minHoverHeight"));
+      this.component.hoverHeight = MaxF(this.component.distance + this.component.lift * timeDelta * FlightSettings.GetFloat(n"hoverModeLiftFactor"), FlightSettings.GetFloat(n"hoverModeMinHoverHeight"));
     } else {
-      this.component.hoverHeight = MaxF(this.component.hoverHeight + this.component.lift * timeDelta * FlightSettings.GetFloat(n"hoverLiftFactor"), FlightSettings.GetFloat(n"minHoverHeight"));
+      this.component.hoverHeight = MaxF(this.component.hoverHeight + this.component.lift * timeDelta * FlightSettings.GetFloat(n"hoverModeLiftFactor"), FlightSettings.GetFloat(n"hoverModeMinHoverHeight"));
     }
 
     let heightDifference = this.component.hoverHeight - this.component.distance;

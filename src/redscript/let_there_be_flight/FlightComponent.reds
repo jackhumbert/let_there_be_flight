@@ -16,9 +16,9 @@ public class FlightComponent extends ScriptableDeviceComponent {
   let hoverGroundPID: ref<PID>;
   let hoverPID: ref<PID>;
   let pitchGroundPID: ref<DualPID>;
-  let pitchPID: ref<DualPID>;
+  let pitchPID: ref<PID>;
   let rollGroundPID: ref<DualPID>;
-  let rollPID: ref<DualPID>;
+  let rollPID: ref<PID>;
   let yawPID: ref<PID>;
   let pitchAeroPID: ref<PID>;
 
@@ -80,9 +80,11 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.hoverGroundPID = PID.Create(1.0, 0.005, 0.5);
     this.hoverPID = PID.Create(1.0, 0.01, 0.1);
     this.pitchGroundPID = DualPID.Create(0.8, 0.2, 0.05,  0.8, 0.2, 0.05);
-    this.pitchPID = DualPID.Create(1.0, 0.5, 0.5,  1.0, 0.5, 0.5);
+    // this.pitchPID = DualPID.Create(1.0, 0.5, 0.5,  1.0, 0.5, 0.5);
+    this.pitchPID = PID.Create(1.0, 0.5, 0.5);
     this.rollGroundPID =  DualPID.Create(0.5, 0.2, 0.05,  2.5, 1.5, 0.5);
-    this.rollPID =  DualPID.Create(1.0, 0.5, 0.5,  1.0, 0.5, 0.5);
+    // this.rollPID =  DualPID.Create(1.0, 0.5, 0.5,  1.0, 0.5, 0.5);
+    this.rollPID =  PID.Create(1.0, 0.5, 0.5);
     this.yawPID = PID.Create(1.0, 0.01, 1.0);
     this.pitchAeroPID = PID.Create(1.0, 0.01, 1.0);
 

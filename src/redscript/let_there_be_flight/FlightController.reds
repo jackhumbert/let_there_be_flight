@@ -300,6 +300,7 @@ public native class FlightController extends IScriptable {
         this.player.RegisterInputListener(this, n"Flight_UIToggle");
         this.player.RegisterInputListener(this, n"Flight_ModeSwitchForward");
         this.player.RegisterInputListener(this, n"Flight_ModeSwitchBackward");
+        this.player.RegisterInputListener(this, n"Flight_RightStickToggle");
       }
     }
 
@@ -464,6 +465,9 @@ public native class FlightController extends IScriptable {
         //     GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_menu_onpress");
         //     FlightLog.Info("hoverHeight = " + ToString(this.hoverHeight));
         // }
+      if Equals(actionName, n"Flight_RightStickToggle") && ListenerAction.IsButtonJustPressed(action) {
+        this.sys.playerComponent.GetFlightMode().usesRightStickInput = !this.sys.playerComponent.GetFlightMode().usesRightStickInput;
+      }
       if Equals(actionName, n"Flight_ModeSwitchForward") && ListenerAction.IsButtonJustPressed(action) && (this.showOptions || this.player.PlayerLastUsedKBM()) {
         this.CycleMode(1);
       }
@@ -485,10 +489,18 @@ public native class FlightController extends IScriptable {
       if Equals(actionType, gameinputActionType.AXIS_CHANGE) {
         switch(actionName) {
           case n"Roll":
+           if this.sys.playerComponent.GetFlightMode().usesRightStickInput || this.player.PlayerLastUsedKBM() {
             this.roll.SetInput(value);
+           } else {
+            this.roll.SetInput(0.0);
+           }
             break;
           case n"Pitch":
-            this.pitch.SetInput(value);
+            if this.sys.playerComponent.GetFlightMode().usesRightStickInput || this.player.PlayerLastUsedKBM() {
+              this.pitch.SetInput(value);
+            } else {
+              this.pitch.SetInput(0.0);
+            }
             break;
           case n"SurgePos":
             this.surge.SetInput(value);

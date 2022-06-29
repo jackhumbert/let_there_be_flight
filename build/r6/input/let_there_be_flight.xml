@@ -35,6 +35,7 @@
 		<!-- <action name="Flight_Trick" 		map="Flight_Trick" /> -->
 		<action name="Flight_Options"		map="Flight_Options"/>
 		<action name="Flight_UIToggle"	map="Flight_UIToggle"/>
+		<action name="Flight_RightStickToggle"	map="Flight_RightStickToggle"/>
 		<action name="Flight_ModeSwitchBackward" map="Flight_ModeSwitchBackward"/>
 		<action name="Flight_ModeSwitchForward" map="Flight_ModeSwitchForward"/>
 		<action name="Roll"							map="Flight_Roll"/>
@@ -78,6 +79,10 @@
 	<mapping name="Flight_Toggle" type="Button">
 		<button id="IK_Pad_LeftThumb" />
 		<button id="IK_E" overridableUI="vehicleFlight"/>
+  </mapping>
+
+	<mapping name="Flight_RightStickToggle" type="Button">
+		<button id="IK_Pad_RightThumb" />
   </mapping>
 
 	<mapping name="Flight_Options" type="Button">

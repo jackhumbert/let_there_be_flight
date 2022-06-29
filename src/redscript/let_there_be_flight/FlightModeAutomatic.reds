@@ -59,6 +59,5 @@ public class FlightModeAutomatic extends FlightModeStandard {
       let velocityDamp: Vector4 = (1.0 - AbsF(this.component.surge)) * FlightSettings.GetFloat(n"automaticModeAutoBrakingFactor") * this.component.stats.d_localDirection2D * (this.component.stats.d_speed2D / 100.0);
       this.force -= velocityDamp;
     }
-
   }
 }

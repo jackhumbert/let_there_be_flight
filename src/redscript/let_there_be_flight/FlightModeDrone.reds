@@ -33,23 +33,23 @@ public class FlightModeDrone extends FlightMode {
   public func GetDescription() -> String = "Drone";
 
   public func Update(timeDelta: Float) -> Void {
-      let velocityDamp: Vector4 = this.component.stats.d_localVelocity * this.component.linearBrake * FlightSettings.GetFloat(n"brakeFactor") * this.component.stats.s_brakingFrictionFactor;   
-      let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetFloat(n"angularBrakeFactor") * this.component.stats.s_brakingFrictionFactor;
+      let velocityDamp: Vector4 = this.component.stats.d_localVelocity * this.component.linearBrake * FlightSettings.GetFloat(n"brakeFactorLinear") * this.component.stats.s_brakingFrictionFactor;   
+      let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetFloat(n"brakeFactorAngular") * this.component.stats.s_brakingFrictionFactor;
 
       this.force = new Vector4(0.0, 0.0, 0.0, 0.0);
       // lift
-      this.force += FlightUtils.Up() * this.component.lift * FlightSettings.GetFloat(n"liftFactorDrone");
+      this.force += FlightUtils.Up() * this.component.lift * FlightSettings.GetFloat(n"droneModeLiftFactor");
       // surge
-      this.force += FlightUtils.Forward() * this.component.surge * FlightSettings.GetFloat(n"surgeFactor");
+      this.force += FlightUtils.Forward() * this.component.surge * FlightSettings.GetFloat(n"droneModeSurgeFactor");
       // directional brake
       this.force -= velocityDamp;
 
       this.torque = new Vector4(0.0, 0.0, 0.0, 0.0);
       // pitch correction
-      this.torque.X = -(this.component.pitch * FlightSettings.GetFloat(n"pitchFactorDrone") + angularDamp.X);
+      this.torque.X = -(this.component.pitch * FlightSettings.GetFloat(n"droneModePitchFactor") + angularDamp.X);
       // roll correction
-      this.torque.Y = (this.component.roll * FlightSettings.GetFloat(n"rollFactorDrone") - angularDamp.Y);
+      this.torque.Y = (this.component.roll * FlightSettings.GetFloat(n"droneModeRollFactor") - angularDamp.Y);
       // yaw correction
-      this.torque.Z = -(this.component.yaw * FlightSettings.GetFloat(n"yawFactorDrone") + angularDamp.Z);
+      this.torque.Z = -(this.component.yaw * FlightSettings.GetFloat(n"droneModeYawFactor") + angularDamp.Z);
   }
 }
