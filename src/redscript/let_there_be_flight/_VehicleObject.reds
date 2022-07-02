@@ -99,6 +99,9 @@ public native func GetComponentsUsingSlot(slotName: CName) -> array<ref<ICompone
 @addMethod(VehicleObject)
 public native func GetWeaponPlaceholderOrientation(index: Int32) -> Quaternion;
 
+@addMethod(VehicleObject)
+public native func GetWeapons() -> array<ref<WeaponObject>>;
+
 // working
 // @addMethod(VehicleObject)
 // protected cb func OnPhysicalCollision(evt: ref<PhysicalCollisionEvent>) -> Bool {

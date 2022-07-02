@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-06-29 18:01:13.0580589
+// This file was automatically generated on 2022-07-02 02:57:13.5688709
 
 // FlightAudio.reds
 
@@ -199,12 +199,12 @@ public class FlightComponent extends ScriptableDeviceComponent {
   public let isPlayerMounted: Bool;
 
   let hoverGroundPID: ref<PID>;
-  let hoverPID: ref<PID>;
-  let pitchGroundPID: ref<DualPID>;
+  // let hoverPID: ref<PID>;
+  // let pitchGroundPID: ref<DualPID>;
   let pitchPID: ref<PID>;
-  let rollGroundPID: ref<DualPID>;
+  // let rollGroundPID: ref<DualPID>;
   let rollPID: ref<PID>;
-  let yawPID: ref<PID>;
+  let aeroYawPID: ref<PID>;
   let pitchAeroPID: ref<PID>;
 
   private let sqs: ref<SpatialQueriesSystem>;
@@ -262,16 +262,12 @@ public class FlightComponent extends ScriptableDeviceComponent {
     // QuickhackModule.RequestRefreshQuickhackMenu(this.GetVehicle().GetGame(), this.GetVehicle().GetEntityID());
 
     // this.hoverGroundPID = PID.Create(1.0, 0.01, 0.1);
-    this.hoverGroundPID = PID.Create(1.0, 0.005, 0.5);
-    this.hoverPID = PID.Create(1.0, 0.01, 0.1);
-    this.pitchGroundPID = DualPID.Create(0.8, 0.2, 0.05,  0.8, 0.2, 0.05);
-    // this.pitchPID = DualPID.Create(1.0, 0.5, 0.5,  1.0, 0.5, 0.5);
-    this.pitchPID = PID.Create(1.0, 0.5, 0.5);
-    this.rollGroundPID =  DualPID.Create(0.5, 0.2, 0.05,  2.5, 1.5, 0.5);
-    // this.rollPID =  DualPID.Create(1.0, 0.5, 0.5,  1.0, 0.5, 0.5);
-    this.rollPID =  PID.Create(1.0, 0.5, 0.5);
-    this.yawPID = PID.Create(1.0, 0.01, 1.0);
-    this.pitchAeroPID = PID.Create(1.0, 0.01, 1.0);
+    this.hoverGroundPID = PID.Create(FlightSettings.GetVector3("hoverModePID"));
+    // this.hoverPID = PID.Create(1.0, 0.01, 0.1);
+    this.pitchPID = PID.Create(FlightSettings.GetVector3("inputPitchPID"));
+    this.rollPID =  PID.Create(FlightSettings.GetVector3("inputRollPID"));
+    this.aeroYawPID = PID.Create(FlightSettings.GetVector3("aeroYawPID"));
+    this.pitchAeroPID = PID.Create(FlightSettings.GetVector3("aeroPitchPID"));
 
     this.sys = FlightSystem.GetInstance();
     this.sqs = GameInstance.GetSpatialQueriesSystem(this.GetVehicle().GetGame());
@@ -280,9 +276,9 @@ public class FlightComponent extends ScriptableDeviceComponent {
     // this.helper = this.GetVehicle().AddFlightHelper();
     // this.stats = FlightStats.Create(this.GetVehicle());
 
-    this.collisionTimer = FlightSettings.GetFloat(n"collisionRecoveryDelay");
+    this.collisionTimer = FlightSettings.GetFloat("collisionRecoveryDelay");
     this.distance = 0.0;
-    this.hoverHeight = FlightSettings.GetFloat(n"defaultHoverHeight");
+    this.hoverHeight = FlightSettings.GetFloat("defaultHoverHeight");
     
     ArrayPush(this.modes, FlightModeHoverFly.Create(this));
     ArrayPush(this.modes, FlightModeHover.Create(this));
@@ -416,10 +412,24 @@ public class FlightComponent extends ScriptableDeviceComponent {
         //this.sys.audio.Play("vehicle3_on");
         // this.sys.audio.StartWithPitch("playerVehicle", "vehicle3_TPP", this.GetPitch());
       }
+
+      let weapons = this.GetVehicle().GetWeapons();
+      if ArraySize(weapons) > 0 {
+        FlightLog.Info("[FlightWeapon] " + weapons[0].GetDisplayName());
+        FlightLog.Info("[FlightWeapon] ammo count: " + ToString(WeaponObject.GetMagazineAmmoCount(weapons[0])));
+        FlightLog.Info("[FlightWeapon] capacity: " + ToString(WeaponObject.GetMagazineCapacity(weapons[0])));
+        if ArraySize(weapons) > 1 {
+          FlightLog.Info("[FlightWeapon] " + weapons[1].GetDisplayName());
+          FlightLog.Info("[FlightWeapon] ammo count: " + ToString(WeaponObject.GetMagazineAmmoCount(weapons[1])));
+          FlightLog.Info("[FlightWeapon] capacity: " + ToString(WeaponObject.GetMagazineCapacity(weapons[1])));
+        }
+      } else {
+        FlightLog.Info("[FlightWeapon] no weapons");
+      }
     }
     let normal: Vector4;
     this.SetupTires();
-    if !this.FindGround(normal) || this.distance > 2.0 {
+    if !this.FindGround(normal) || this.distance > FlightSettings.GetFloat("autoActivationHeight") {
       this.Activate();
     }
   }
@@ -516,12 +526,12 @@ public class FlightComponent extends ScriptableDeviceComponent {
       this.GetVehicle().GetVehicleComponent().GetVehicleController().ToggleLights(true);
 
       this.hoverGroundPID.Reset();
-      this.hoverPID.Reset();
-      this.pitchGroundPID.Reset();
+      // this.hoverPID.Reset();
+      // this.pitchGroundPID.Reset();
       this.pitchPID.Reset();
-      this.rollGroundPID.Reset();
+      // this.rollGroundPID.Reset();
       this.rollPID.Reset();
-      this.yawPID.Reset();
+      this.aeroYawPID.Reset();
       this.pitchAeroPID.Reset();
 
       this.modes[this.mode].Activate();
@@ -585,6 +595,11 @@ public class FlightComponent extends ScriptableDeviceComponent {
         this.angularBrake = fc.angularBrake.GetValue();
         this.surge = fc.surge.GetValue();
         this.sway = fc.sway.GetValue();
+
+        if this.GetFlightMode().usesRightStickInput {
+          let v = this.GetVehicle();
+          v.turnX = this.roll;
+        }
       } else {
         let v = this.GetVehicle();
         this.surge = v.acceleration * 0.5 - v.deceleration * 0.1;
@@ -636,12 +651,12 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.UpdateAudioParams(timeDelta, force, torque);
     
     if this.isPlayerMounted {
-      this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Force, force);
-      this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Torque, torque);
-      this.sys.ctlr.GetBlackboard().SetFloat(GetAllBlackboardDefs().VehicleFlight.Pitch, Vector4.GetAngleDegAroundAxis(this.stats.d_localUp, FlightUtils.Up(), FlightUtils.Right()));
-      this.sys.ctlr.GetBlackboard().SetFloat(GetAllBlackboardDefs().VehicleFlight.Roll, Vector4.GetAngleDegAroundAxis(this.stats.d_localUp, FlightUtils.Up(), FlightUtils.Forward()));
+      // this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Force, force);
+      // this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Torque, torque);
+      // this.sys.ctlr.GetBlackboard().SetFloat(GetAllBlackboardDefs().VehicleFlight.Pitch, Vector4.GetAngleDegAroundAxis(this.stats.d_localUp, FlightUtils.Up(), FlightUtils.Right()));
+      this.sys.ctlr.GetBlackboard().SetFloat(GetAllBlackboardDefs().VehicleFlight.Roll, Vector4.GetAngleDegAroundAxis(this.stats.d_localUp, FlightUtils.Up(), FlightUtils.Forward()), false);
       // this.sys.ctlr.GetBlackboard().SignalFloat(GetAllBlackboardDefs().VehicleFlight.Pitch);
-      this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Position, this.stats.d_position);
+      // this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Position, this.stats.d_position);
       // this.sys.ctlr.GetBlackboard().SignalVector4(GetAllBlackboardDefs().VehicleFlight.Position);
     }
     
@@ -670,8 +685,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
     // convert to global
     torque = this.stats.d_orientation * torque;
     
-    if this.collisionTimer < FlightSettings.GetFloat(n"collisionRecoveryDelay") + FlightSettings.GetFloat(n"collisionRecoveryDuration") {
-      let collisionDampener = MinF(MaxF(0.0, (this.collisionTimer - FlightSettings.GetFloat(n"collisionRecoveryDelay")) / FlightSettings.GetFloat(n"collisionRecoveryDuration")), 1.0);
+    if this.collisionTimer < FlightSettings.GetFloat("collisionRecoveryDelay") + FlightSettings.GetFloat("collisionRecoveryDuration") {
+      let collisionDampener = MinF(MaxF(0.0, (this.collisionTimer - FlightSettings.GetFloat("collisionRecoveryDelay")) / FlightSettings.GetFloat("collisionRecoveryDuration")), 1.0);
       torque *= collisionDampener;
       force *= collisionDampener;
       this.collisionTimer += timeDelta;
@@ -916,16 +931,16 @@ public class FlightComponent extends ScriptableDeviceComponent {
   }
 
   public func ProcessImpact(impact: Float) {
-    this.collisionTimer = (FlightSettings.GetFloat(n"collisionRecoveryDelay") + FlightSettings.GetFloat(n"collisionRecoveryDuration")) * (1.0 - (impact * this.GetFlightMode().collisionPenalty));
-    // this.ui_info.StartGlitching(impact, FlightSettings.GetFloat(n"collisionRecoveryDuration") + impact);
+    this.collisionTimer = (FlightSettings.GetFloat("collisionRecoveryDelay") + FlightSettings.GetFloat("collisionRecoveryDuration")) * (1.0 - (impact * this.GetFlightMode().collisionPenalty));
+    // this.ui_info.StartGlitching(impact, FlightSettings.GetFloat("collisionRecoveryDuration") + impact);
   }
 
   public let audioUpdate: ref<FlightAudioUpdate>;
 
   public func UpdateAudioParams(timeDelta: Float, force: Vector4, torque: Vector4) -> Void {
     let ratio = 1.0;
-    if this.collisionTimer < FlightSettings.GetFloat(n"collisionRecoveryDelay") + FlightSettings.GetFloat(n"collisionRecoveryDuration") {
-      ratio = MaxF(0.0, (this.collisionTimer - FlightSettings.GetFloat(n"collisionRecoveryDelay")) / FlightSettings.GetFloat(n"collisionRecoveryDuration"));
+    if this.collisionTimer < FlightSettings.GetFloat("collisionRecoveryDelay") + FlightSettings.GetFloat("collisionRecoveryDuration") {
+      ratio = MaxF(0.0, (this.collisionTimer - FlightSettings.GetFloat("collisionRecoveryDelay")) / FlightSettings.GetFloat("collisionRecoveryDuration"));
     }
     
     let vehicleID = Cast<StatsObjectID>(this.GetVehicle().GetEntityID());
@@ -1087,7 +1102,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
     // all in engine\physics\collision_presets.json
     // VehicleBlocker? RagdollVehicle?
-    let lookDown = new Vector4(0.0, 0.0, -FlightSettings.GetFloat(n"maxHoverHeight") - 10.0, 0.0);
+    let lookDown = new Vector4(0.0, 0.0, -FlightSettings.GetFloat("hoverModeMaxHoverHeight") - 10.0, 0.0);
     this.sqs.SyncRaycastByCollisionGroup(fl_tire, fl_tire + lookDown, n"VehicleBlocker", findGround1, false, false);
     this.sqs.SyncRaycastByCollisionGroup(fr_tire, fr_tire + lookDown, n"VehicleBlocker", findGround2, false, false);
     this.sqs.SyncRaycastByCollisionGroup(bl_tire, bl_tire + lookDown, n"VehicleBlocker", findGround3, false, false);
@@ -1161,7 +1176,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   protected let m_attacksSpawned: array<ref<EffectInstance>>;
 
   public func OnFireWeapon(placeholderQuat: Quaternion, weaponItem:TweakDBID, attachmentSlot: TweakDBID) -> Void {    
-    let weapon = TweakDBInterface.GetWeaponItemRecord(weaponItem);
+    // let weapon = TweakDBInterface.GetWeaponItemRecord(weaponItem);
     let wt: WorldTransform;
     let vehicleSlots = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"vehicle_slots") as SlotComponent;
     vehicleSlots.GetSlotTransform(StringToName(TweakDBInterface.GetAttachmentSlotRecord(attachmentSlot).EntitySlotName()), wt);
@@ -1443,7 +1458,7 @@ public native class FlightController extends IScriptable {
     this.gameInstance = player.GetGame();
     this.player = player;
 
-    this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, FlightSettings.GetFloat(n"isFlightUIActive") > 0.5);
+    this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, FlightSettings.GetFloat("isFlightUIActive") > 0.5);
   }
 
   public const func GetBlackboard() -> ref<IBlackboard> {
@@ -1560,7 +1575,7 @@ public native class FlightController extends IScriptable {
     
     FlightLog.Info("[FlightController] Activate");
     this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsActive, true, true);
-    this.GetBlackboard().SignalBool(GetAllBlackboardDefs().VehicleFlight.IsActive);
+    // this.GetBlackboard().SignalBool(GetAllBlackboardDefs().VehicleFlight.IsActive);
   }
 
   private func Deactivate(silent: Bool) -> Void {
@@ -1580,7 +1595,7 @@ public native class FlightController extends IScriptable {
 
     FlightLog.Info("[FlightController] Deactivate");
     this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsActive, false, true);
-    this.GetBlackboard().SignalBool(GetAllBlackboardDefs().VehicleFlight.IsActive);
+    // this.GetBlackboard().SignalBool(GetAllBlackboardDefs().VehicleFlight.IsActive);
 
     
     // let evt: ref<DeleteInputGroupEvent> = new DeleteInputGroupEvent();
@@ -1636,12 +1651,14 @@ public native class FlightController extends IScriptable {
     // we may want to look at something else besides this input so ForceBrakesUntilStoppedOrFor will work (not entirely sure it doesn't now)
     // vehicle.GetBlackboard().GetInt(GetAllBlackboardDefs().VehicleFlight.IsHandbraking)
 
+    let usesRightStick = this.sys.playerComponent.GetFlightMode().usesRightStickInput;
+
     evt.AddInputHint(FlightController.CreateInputHint("Enable Flight", n"Flight_Toggle"),       this.enabled && !this.active);
 
     evt.AddInputHint(FlightController.CreateInputHint("Disable Flight", n"Flight_Toggle"),      this.active && !this.showOptions);
     evt.AddInputHint(FlightController.CreateInputHint("Yaw", n"Yaw"),                           this.active && !this.showOptions);
-    evt.AddInputHint(FlightController.CreateInputHint("Pitch", n"Pitch"),                       this.active && !this.showOptions);
-    evt.AddInputHint(FlightController.CreateInputHint("Roll", n"Roll"),                         this.active && !this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint("Pitch", n"Pitch"),                       this.active && !this.showOptions && (usesRightStick || this.usingKB));
+    evt.AddInputHint(FlightController.CreateInputHint("Roll", n"Roll"),                         this.active && !this.showOptions && (usesRightStick || this.usingKB));
     evt.AddInputHint(FlightController.CreateInputHint("Lift", n"Lift"),                         this.active && !this.showOptions);
     evt.AddInputHint(FlightController.CreateInputHint("Linear Brake", n"Flight_LinearBrake"),   this.active && !this.showOptions && this.usingKB);
     evt.AddInputHint(FlightController.CreateInputHint("Angular Brake", n"Flight_AngularBrake"), this.active && !this.showOptions && this.usingKB);
@@ -1791,12 +1808,19 @@ public native class FlightController extends IScriptable {
         // }
       if Equals(actionName, n"Flight_RightStickToggle") && ListenerAction.IsButtonJustPressed(action) {
         this.sys.playerComponent.GetFlightMode().usesRightStickInput = !this.sys.playerComponent.GetFlightMode().usesRightStickInput;
+        this.SetupActions();
       }
       if Equals(actionName, n"Flight_ModeSwitchForward") && ListenerAction.IsButtonJustPressed(action) && (this.showOptions || this.player.PlayerLastUsedKBM()) {
         this.CycleMode(1);
+        this.SetupActions();
+        let weapons = this.sys.playerComponent.GetVehicle().GetWeapons();
+        if ArraySize(weapons) > 0 {
+          weapons[0].SetTriggerDown(true);
+        }
       }
       if Equals(actionName, n"Flight_ModeSwitchBackward") && ListenerAction.IsButtonJustPressed(action) && (this.showOptions || this.player.PlayerLastUsedKBM()) {
         this.CycleMode(-1);
+        this.SetupActions();
       }
       if this.showOptions && Equals(actionName, n"Flight_UIToggle") && ListenerAction.IsButtonJustPressed(action) {
           this.showUI = !this.showUI;
@@ -3254,7 +3278,7 @@ public class FlightFx {
       let thrusterAmount = Vector4.Dot(new Vector4(0.0, 0.0, 1.0, 0.0), force);
       // let thrusterAmount = ClampF(this.surge.GetValue(), 0.0, 1.0) * 1.0;
       if this.HasFWheel() {
-        this.f_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount + torque.X + torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat(n"thrusterFactor"));
+        this.f_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount + torque.X + torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat("thrusterFactor"));
         if thrusterAmount > 0.0 {
           this.component.fl_tire.SetLocalOrientation(Quaternion.Slerp(this.component.fl_tire.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
             ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0),
@@ -3264,7 +3288,7 @@ public class FlightFx {
         }
       }
       if this.HasBWheel() {
-        this.b_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount + torque.X - torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat(n"thrusterFactor"));
+        this.b_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount + torque.X - torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat("thrusterFactor"));
         if thrusterAmount > 0.0 {
           this.component.bl_tire.SetLocalOrientation(Quaternion.Slerp(this.component.bl_tire.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
             ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0), 
@@ -3275,7 +3299,7 @@ public class FlightFx {
       }
       if this.HasBLWheel() {
         this.bl_thruster.visualScale = Vector4.Vector4To3(Vector4.Interpolate(Vector4.Vector3To4(this.bl_thruster.visualScale), new Vector4(1.0, 1.0, 1.0, 1.0), 0.1));
-        this.bl_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount + torque.X + torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat(n"thrusterFactor"));
+        this.bl_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount + torque.X + torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat("thrusterFactor"));
         if thrusterAmount > 0.0 {
           this.bl_thruster.SetLocalOrientation(Quaternion.Slerp(this.bl_thruster.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
             -ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0),
@@ -3287,7 +3311,7 @@ public class FlightFx {
       }
       if this.HasBRWheel() {
         this.br_thruster.visualScale = Vector4.Vector4To3(Vector4.Interpolate(Vector4.Vector3To4(this.br_thruster.visualScale), new Vector4(1.0, 1.0, 1.0, 1.0), 0.1));
-        this.br_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount + torque.X - torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat(n"thrusterFactor"));
+        this.br_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount + torque.X - torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat("thrusterFactor"));
         if thrusterAmount > 0.0 {
           this.br_thruster.SetLocalOrientation(Quaternion.Slerp(this.br_thruster.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
             ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0), 
@@ -3299,7 +3323,7 @@ public class FlightFx {
       }
       if this.HasFLWheel() {
         this.fl_thruster.visualScale = Vector4.Vector4To3(Vector4.Interpolate(Vector4.Vector3To4(this.fl_thruster.visualScale), new Vector4(1.0, 1.0, 1.0, 1.0), 0.1));
-        this.fl_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount - torque.X + torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat(n"thrusterFactor"));
+        this.fl_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount - torque.X + torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat("thrusterFactor"));
         if thrusterAmount > 0.0 {
           this.fl_thruster.SetLocalOrientation(Quaternion.Slerp(this.fl_thruster.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
             -ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0), 
@@ -3312,7 +3336,7 @@ public class FlightFx {
       }
       if this.HasFRWheel() {
         this.fr_thruster.visualScale = Vector4.Vector4To3(Vector4.Interpolate(Vector4.Vector3To4(this.fr_thruster.visualScale), new Vector4(1.0, 1.0, 1.0, 1.0), 0.1));
-        this.fr_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount - torque.X - torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat(n"thrusterFactor"));
+        this.fr_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount - torque.X - torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat("thrusterFactor"));
         if thrusterAmount > 0.0 {
           this.fr_thruster.SetLocalOrientation(Quaternion.Slerp(this.fr_thruster.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
             ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0), 
@@ -3323,7 +3347,7 @@ public class FlightFx {
         this.fr_retroFx.SetBlackboardValue(n"thruster_amount", (Vector4.Dot(new Vector4(-1.0, 0.0, 0.0, 0.0), force) + torque.Z) * 0.1);
       }
       if this.HasFLBWheel() {
-        this.flb_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount - torque.X + torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat(n"thrusterFactor"));
+        this.flb_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount - torque.X + torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat("thrusterFactor"));
         if thrusterAmount > 0.0 {
           this.component.hood.SetLocalOrientation(Quaternion.Slerp(this.component.hood.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
             ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0), 
@@ -3333,7 +3357,7 @@ public class FlightFx {
         }
       }
       if this.HasFRBWheel() {
-        this.frb_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount - torque.X - torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat(n"thrusterFactor"));
+        this.frb_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount - torque.X - torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat("thrusterFactor"));
         if thrusterAmount > 0.0 {
           this.component.trunk.SetLocalOrientation(Quaternion.Slerp(this.component.trunk.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
             ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0), 
@@ -3485,7 +3509,7 @@ public class FlightModeAutomatic extends FlightModeStandard {
     let normal: Vector4;
     this.referenceZ = this.component.stats.d_position.Z;
     this.component.FindGround(normal);
-    this.component.hoverHeight = MaxF(this.component.distance, FlightSettings.GetFloat(n"minHoverHeight"));
+    this.component.hoverHeight = MaxF(this.component.distance, FlightSettings.GetFloat("hoverModeMinHoverHeight"));
   }
   
   public func GetDescription() -> String = "Automatic";
@@ -3495,27 +3519,27 @@ public class FlightModeAutomatic extends FlightModeStandard {
     let normal: Vector4;
     let foundGround = this.component.FindGround(normal);
     if foundGround {
-      this.hovering = ClampF(1.0 - (this.component.distance - FlightSettings.GetFloat(n"minHoverHeight")) / (FlightSettings.GetFloat(n"maxHoverHeight") - FlightSettings.GetFloat(n"minHoverHeight")), 0.0, 1.0);
+      this.hovering = ClampF(1.0 - (this.component.distance - FlightSettings.GetFloat("hoverModeMinHoverHeight")) / (FlightSettings.GetFloat("hoverModeMaxHoverHeight") - FlightSettings.GetFloat("hoverModeMinHoverHeight")), 0.0, 1.0);
     } else {
       this.hovering = 0.0;
     }
 
     if lastHovering == 0.0 && this.hovering > 0.0 {
-      this.component.hoverHeight = MaxF(this.component.distance + this.component.lift * timeDelta * FlightSettings.GetFloat(n"hoverLiftFactor"), FlightSettings.GetFloat(n"minHoverHeight"));
+      this.component.hoverHeight = MaxF(this.component.distance + this.component.lift * timeDelta * FlightSettings.GetFloat("hoverLiftFactor"), FlightSettings.GetFloat("hoverModeMinHoverHeight"));
     } else {
-      this.component.hoverHeight = MaxF(this.component.hoverHeight + this.component.lift * timeDelta * FlightSettings.GetFloat(n"hoverLiftFactor"), FlightSettings.GetFloat(n"minHoverHeight"));
+      this.component.hoverHeight = MaxF(this.component.hoverHeight + this.component.lift * timeDelta * FlightSettings.GetFloat("hoverLiftFactor"), FlightSettings.GetFloat("hoverModeMinHoverHeight"));
     }
 
     let heightDifference = this.component.hoverHeight - this.component.distance;
     let idealNormal = Vector4.Interpolate(FlightUtils.Up(), normal, this.hovering);
 
-    let hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, FlightSettings.GetFloat(n"hoverClamp"));// / FlightSettings.GetFloat(n"hoverClamp");
+    let hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, FlightSettings.GetFloat("hoverClamp"));// / FlightSettings.GetFloat("hoverClamp");
     let liftFactor = LerpF(this.hovering, this.component.lift - this.component.stats.d_velocity.Z * 0.1, hoverCorrection);
 
-    this.UpdateWithNormalLift(timeDelta, idealNormal, liftFactor * FlightSettings.GetFloat(n"hoverFactor") + (9.81000042) * this.gravityFactor);
+    this.UpdateWithNormalLift(timeDelta, idealNormal, liftFactor * FlightSettings.GetFloat("hoverFactor") + (9.81000042) * this.gravityFactor);
 
     let aeroFactor = Vector4.Dot(this.component.stats.d_forward, this.component.stats.d_direction);
-    let yawDirectionality: Float = this.component.stats.d_speedRatio * FlightSettings.GetFloat(n"automaticModeYawDirectionality");
+    let yawDirectionality: Float = this.component.stats.d_speedRatio * FlightSettings.GetFloat("automaticModeYawDirectionality");
 
     let directionFactor = AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_right));
 
@@ -3523,7 +3547,7 @@ public class FlightModeAutomatic extends FlightModeStandard {
     this.force += -this.component.stats.d_localDirection * directionFactor * yawDirectionality * AbsF(aeroFactor);
 
     if AbsF(this.component.surge) < 1.0 {    
-      let velocityDamp: Vector4 = (1.0 - AbsF(this.component.surge)) * FlightSettings.GetFloat(n"automaticModeAutoBrakingFactor") * this.component.stats.d_localDirection2D * (this.component.stats.d_speed2D / 100.0);
+      let velocityDamp: Vector4 = (1.0 - AbsF(this.component.surge)) * FlightSettings.GetFloat("automaticModeAutoBrakingFactor") * this.component.stats.d_localDirection2D * (this.component.stats.d_speed2D / 100.0);
       this.force -= velocityDamp;
     }
   }
@@ -3551,7 +3575,7 @@ public class FlightModeDrone extends FlightMode {
     //   vehicleSlots.GetSlotTransform(n"seat_front_left", slotT);
     //   let vwt = Matrix.GetInverted(this.component.GetVehicle().GetLocalToWorld());
     //   let v = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT)) * vwt;
-    //   camera.SetLocalPosition(new Vector4(0.0, FlightSettings.GetFloat(n"FPVCameraOffsetY"), FlightSettings.GetFloat(n"FPVCameraOffsetZ"), 0.0) - v);
+    //   camera.SetLocalPosition(new Vector4(0.0, FlightSettings.GetFloat("FPVCameraOffsetY"), FlightSettings.GetFloat("FPVCameraOffsetZ"), 0.0) - v);
     //   // camera.Activate(1.0);
     // }
   }
@@ -3566,24 +3590,24 @@ public class FlightModeDrone extends FlightMode {
   public func GetDescription() -> String = "Drone";
 
   public func Update(timeDelta: Float) -> Void {
-      let velocityDamp: Vector4 = this.component.stats.d_localVelocity * this.component.linearBrake * FlightSettings.GetFloat(n"brakeFactorLinear") * this.component.stats.s_brakingFrictionFactor;   
-      let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetFloat(n"brakeFactorAngular") * this.component.stats.s_brakingFrictionFactor;
+      let velocityDamp: Vector4 = this.component.stats.d_localVelocity * this.component.linearBrake * FlightSettings.GetFloat("brakeFactorLinear") * this.component.stats.s_brakingFrictionFactor;   
+      let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetFloat("brakeFactorAngular") * this.component.stats.s_brakingFrictionFactor;
 
       this.force = new Vector4(0.0, 0.0, 0.0, 0.0);
       // lift
-      this.force += FlightUtils.Up() * this.component.lift * FlightSettings.GetFloat(n"droneModeLiftFactor");
+      this.force += FlightUtils.Up() * this.component.lift * FlightSettings.GetFloat("droneModeLiftFactor");
       // surge
-      this.force += FlightUtils.Forward() * this.component.surge * FlightSettings.GetFloat(n"droneModeSurgeFactor");
+      this.force += FlightUtils.Forward() * this.component.surge * FlightSettings.GetFloat("droneModeSurgeFactor");
       // directional brake
       this.force -= velocityDamp;
 
       this.torque = new Vector4(0.0, 0.0, 0.0, 0.0);
       // pitch correction
-      this.torque.X = -(this.component.pitch * FlightSettings.GetFloat(n"droneModePitchFactor") + angularDamp.X);
+      this.torque.X = -(this.component.pitch * FlightSettings.GetFloat("droneModePitchFactor") + angularDamp.X);
       // roll correction
-      this.torque.Y = (this.component.roll * FlightSettings.GetFloat(n"droneModeRollFactor") - angularDamp.Y);
+      this.torque.Y = (this.component.roll * FlightSettings.GetFloat("droneModeRollFactor") - angularDamp.Y);
       // yaw correction
-      this.torque.Z = -(this.component.yaw * FlightSettings.GetFloat(n"droneModeYawFactor") + angularDamp.Z);
+      this.torque.Z = -(this.component.yaw * FlightSettings.GetFloat("droneModeYawFactor") + angularDamp.Z);
   }
 }
 
@@ -3617,7 +3641,7 @@ public class FlightModeFly extends FlightModeStandard {
 
   public func Update(timeDelta: Float) -> Void {
     let idealNormal = FlightUtils.Up();  
-    let liftForce: Float = FlightSettings.GetFloat(n"flyModeLiftFactor") * this.component.lift + (9.81000042) * this.gravityFactor;
+    let liftForce: Float = FlightSettings.GetFloat("flyModeLiftFactor") * this.component.lift + (9.81000042) * this.gravityFactor;
     this.UpdateWithNormalLift(timeDelta, idealNormal, liftForce);
   }
 }
@@ -3636,18 +3660,18 @@ public class FlightModeHover extends FlightModeStandard {
   public func Activate() -> Void {
     let normal: Vector4;
     this.component.FindGround(normal);
-    this.component.hoverHeight = MaxF(this.component.distance, FlightSettings.GetFloat(n"hoverModeMinHoverHeight"));
+    this.component.hoverHeight = MaxF(this.component.distance, FlightSettings.GetFloat("hoverModeMinHoverHeight"));
   }
   
   public func Update(timeDelta: Float) -> Void {
-    this.component.hoverHeight = MaxF(FlightSettings.GetFloat(n"hoverModeMinHoverHeight"), this.component.hoverHeight);
+    this.component.hoverHeight = MaxF(FlightSettings.GetFloat("hoverModeMinHoverHeight"), this.component.hoverHeight);
 
     // let findWater: TraceResult;
     let heightDifference = 0.0;
     let normal: Vector4;
     let idealNormal = FlightUtils.Up();
 
-    // this.component.sqs.SyncRaycastByCollisionGroup(this.component.stats.d_position, this.component.stats.d_position - FlightSettings.GetFloat(n"lookDown"), n"Water", findWater, true, false);
+    // this.component.sqs.SyncRaycastByCollisionGroup(this.component.stats.d_position, this.component.stats.d_position - FlightSettings.GetFloat("lookDown"), n"Water", findWater, true, false);
     // if !TraceResult.IsValid(findWater) {
       if (this.component.FindGround(normal)) {
           heightDifference = this.component.hoverHeight - this.component.distance;
@@ -3676,7 +3700,7 @@ public class FlightModeHoverFly extends FlightModeStandard {
     let normal: Vector4;
     this.referenceZ = this.component.stats.d_position.Z;
     this.component.FindGround(normal);
-    this.component.hoverHeight = MaxF(this.component.distance, FlightSettings.GetFloat(n"hoverModeMinHoverHeight"));
+    this.component.hoverHeight = MaxF(this.component.distance, FlightSettings.GetFloat("hoverModeMinHoverHeight"));
   }
   
   public func GetDescription() -> String = "Hover & Fly";
@@ -3686,24 +3710,24 @@ public class FlightModeHoverFly extends FlightModeStandard {
     let normal: Vector4;
     let foundGround = this.component.FindGround(normal);
     if foundGround {
-      this.hovering = ClampF(1.0 - (this.component.distance - FlightSettings.GetFloat(n"hoverModeMinHoverHeight")) / (FlightSettings.GetFloat(n"hoverModeMaxHoverHeight") - FlightSettings.GetFloat(n"hoverModeMinHoverHeight")), 0.0, 1.0);
+      this.hovering = ClampF(1.0 - (this.component.distance - FlightSettings.GetFloat("hoverModeMinHoverHeight")) / (FlightSettings.GetFloat("hoverModeMaxHoverHeight") - FlightSettings.GetFloat("hoverModeMinHoverHeight")), 0.0, 1.0);
     } else {
       this.hovering = 0.0;
     }
 
     if lastHovering == 0.0 && this.hovering > 0.0 {
-      this.component.hoverHeight = MaxF(this.component.distance + this.component.lift * timeDelta * FlightSettings.GetFloat(n"hoverModeLiftFactor"), FlightSettings.GetFloat(n"hoverModeMinHoverHeight"));
+      this.component.hoverHeight = MaxF(this.component.distance + this.component.lift * timeDelta * FlightSettings.GetFloat("hoverModeLiftFactor"), FlightSettings.GetFloat("hoverModeMinHoverHeight"));
     } else {
-      this.component.hoverHeight = MaxF(this.component.hoverHeight + this.component.lift * timeDelta * FlightSettings.GetFloat(n"hoverModeLiftFactor"), FlightSettings.GetFloat(n"hoverModeMinHoverHeight"));
+      this.component.hoverHeight = MaxF(this.component.hoverHeight + this.component.lift * timeDelta * FlightSettings.GetFloat("hoverModeLiftFactor"), FlightSettings.GetFloat("hoverModeMinHoverHeight"));
     }
 
     let heightDifference = this.component.hoverHeight - this.component.distance;
     let idealNormal = Vector4.Interpolate(FlightUtils.Up(), normal, this.hovering);
 
-    let hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, FlightSettings.GetFloat(n"hoverClamp"));// / FlightSettings.GetFloat(n"hoverClamp");
+    let hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, FlightSettings.GetFloat("hoverClamp"));// / FlightSettings.GetFloat("hoverClamp");
     let liftFactor = LerpF(this.hovering, this.component.lift - this.component.stats.d_velocity.Z * 0.1, hoverCorrection);
 
-    this.UpdateWithNormalLift(timeDelta, idealNormal, liftFactor * FlightSettings.GetFloat(n"hoverFactor") + (9.81000042) * this.gravityFactor);
+    this.UpdateWithNormalLift(timeDelta, idealNormal, liftFactor * FlightSettings.GetFloat("hoverFactor") + (9.81000042) * this.gravityFactor);
   }
 }
 
@@ -3736,8 +3760,8 @@ public abstract class FlightMode {
 
   public func ApplyPhysics(timeDelta: Float) -> Void {
     
-    let velocityDamp: Vector4 = this.component.stats.d_speed * this.component.stats.d_localVelocity * FlightSettings.GetFloat(n"generalDampFactorLinear") * this.component.stats.s_airResistanceFactor;
-    let angularDamp: Vector4 = this.component.stats.d_angularVelocity * FlightSettings.GetFloat(n"generalDampFactorAngular");
+    let velocityDamp: Vector4 = this.component.stats.d_speed * this.component.stats.d_localVelocity * FlightSettings.GetFloat("generalDampFactorLinear") * this.component.stats.s_airResistanceFactor;
+    let angularDamp: Vector4 = this.component.stats.d_angularVelocity * FlightSettings.GetFloat("generalDampFactorAngular");
 
     let direction = this.component.stats.d_direction;
     if Vector4.Dot(this.component.stats.d_direction, this.component.stats.d_forward) < 0.0 {
@@ -3746,11 +3770,11 @@ public abstract class FlightMode {
     let yawDirectionAngle: Float = Vector4.GetAngleDegAroundAxis(direction, this.component.stats.d_forward, this.component.stats.d_up);
     let pitchDirectionAngle: Float = Vector4.GetAngleDegAroundAxis(direction, this.component.stats.d_forward, this.component.stats.d_right);
 
-    let aeroDynamicYaw = this.component.yawPID.GetCorrectionClamped(yawDirectionAngle, timeDelta, 10.0) * this.component.stats.d_speedRatio;// / 10.0;
+    let aeroDynamicYaw = this.component.aeroYawPID.GetCorrectionClamped(yawDirectionAngle, timeDelta, 10.0) * this.component.stats.d_speedRatio;// / 10.0;
     let aeroDynamicPitch = this.component.pitchAeroPID.GetCorrectionClamped(pitchDirectionAngle, timeDelta, 10.0) * this.component.stats.d_speedRatio;// / 10.0;
 
-    let yawDirectionality: Float = this.component.stats.d_speedRatio * FlightSettings.GetFloat(n"generalYawDirectionalityFactor");
-    let pitchDirectionality: Float = this.component.stats.d_speedRatio * FlightSettings.GetFloat(n"generalPitchDirectionalityFactor");
+    let yawDirectionality: Float = this.component.stats.d_speedRatio * FlightSettings.GetFloat("generalYawDirectionalityFactor");
+    let pitchDirectionality: Float = this.component.stats.d_speedRatio * FlightSettings.GetFloat("generalPitchDirectionalityFactor");
     let aeroFactor = Vector4.Dot(this.component.stats.d_forward, this.component.stats.d_direction);
     // yawDirectionality - redirect non-directional velocity to vehicle forward
 
@@ -3763,8 +3787,8 @@ public abstract class FlightMode {
     this.force += -this.component.stats.d_localDirection * AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_up)) * pitchDirectionality * AbsF(aeroFactor);
 
     this.torque = -angularDamp;
-    this.torque.Z -= aeroDynamicYaw * FlightSettings.GetFloat(n"generalYawAeroFactor");
-    this.torque.X -= aeroDynamicPitch * FlightSettings.GetFloat(n"generalPitchAeroFactor");
+    this.torque.Z -= aeroDynamicYaw * FlightSettings.GetFloat("generalYawAeroFactor");
+    this.torque.X -= aeroDynamicPitch * FlightSettings.GetFloat("generalPitchAeroFactor");
   }
 }
 
@@ -3777,8 +3801,8 @@ public abstract class FlightModeStandard extends FlightMode {
   }
 
   protected func UpdateWithNormalDistance(timeDelta: Float, normal: Vector4, heightDifference: Float) -> Void {
-    let hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, FlightSettings.GetFloat(n"hoverClamp"));// / FlightSettings.GetFloat(n"hoverClamp");
-    let liftForce: Float = hoverCorrection * FlightSettings.GetFloat(n"hoverFactor") + (9.81000042) * this.gravityFactor;
+    let hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, FlightSettings.GetFloat("hoverClamp"));// / FlightSettings.GetFloat("hoverClamp");
+    let liftForce: Float = hoverCorrection * FlightSettings.GetFloat("hoverFactor") + (9.81000042) * this.gravityFactor;
     this.UpdateWithNormalLift(timeDelta, normal, liftForce);
   }
 
@@ -3786,9 +3810,9 @@ public abstract class FlightModeStandard extends FlightMode {
     let pitchCorrection: Float = 0.0;
     let rollCorrection: Float = 0.0;
 
-    normal = Vector4.RotateAxis(normal, this.component.stats.d_forward, this.component.yaw * FlightSettings.GetFloat(n"rollWithYaw"));
-    normal = Vector4.RotateAxis(normal, this.component.stats.d_right, this.component.lift * FlightSettings.GetFloat(n"pitchWithLift") * Vector4.Dot(this.component.stats.d_forward, this.component.stats.d_direction));
-    normal = Vector4.RotateAxis(normal, this.component.stats.d_right, this.component.surge * FlightSettings.GetFloat(n"pitchWithSurge"));
+    normal = Vector4.RotateAxis(normal, this.component.stats.d_forward, this.component.yaw * FlightSettings.GetFloat("rollWithYaw"));
+    normal = Vector4.RotateAxis(normal, this.component.stats.d_right, this.component.lift * FlightSettings.GetFloat("pitchWithLift") * Vector4.Dot(this.component.stats.d_forward, this.component.stats.d_direction));
+    normal = Vector4.RotateAxis(normal, this.component.stats.d_right, this.component.surge * FlightSettings.GetFloat("pitchWithSurge"));
     // normal = Vector4.RotateAxis(normal, this.component.stats.d_right, this.component.surge * this.component.stats.s_forwardWeightTransferFactor);
     
 
@@ -3798,9 +3822,9 @@ public abstract class FlightModeStandard extends FlightMode {
     // pitchCorrection = this.component.pitchPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(normal, FlightUtils.Forward())) + this.lift.GetValue() * this.pitchWithLift, timeDelta, 10.0) + this.pitch.GetValue() / 10.0;
     // rollCorrection = this.component.rollPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(normal, FlightUtils.Right())), timeDelta, 10.0) + this.yaw.GetValue() * this.rollWithYaw + this.roll.GetValue() / 10.0;
     let pitchDegOff = 90.0 - AbsF(Vector4.GetAngleDegAroundAxis(normal, this.component.stats.d_forward, this.component.stats.d_right));
-    pitchDegOff += this.component.pitch * FlightSettings.GetFloat(n"standardModePitchInputAngle");
+    pitchDegOff += this.component.pitch * FlightSettings.GetFloat("standardModePitchInputAngle");
     let rollDegOff = 90.0 - AbsF(Vector4.GetAngleDegAroundAxis(normal, this.component.stats.d_right, this.component.stats.d_forward));
-    rollDegOff += this.component.roll * FlightSettings.GetFloat(n"standardModeRollInputAngle");
+    rollDegOff += this.component.roll * FlightSettings.GetFloat("standardModeRollInputAngle");
     if AbsF(pitchDegOff) < 120.0  {
       // pitchCorrection = this.component.pitchPID.GetCorrectionClamped(pitchDegOff / 90.0 + this.lift.GetValue() * this.pitchWithLift, timeDelta, 10.0) + this.pitch.GetValue() / 10.0;
       pitchCorrection = this.component.pitchPID.GetCorrectionClamped(pitchDegOff / 90.0, timeDelta, 10.0);// + this.component.pitch / 10.0;
@@ -3812,22 +3836,22 @@ public abstract class FlightModeStandard extends FlightMode {
     // adjust with speed ratio 
     // pitchCorrection = pitchCorrection * (this.pitchCorrectionFactor + 1.0 * this.pitchCorrectionFactor * this.component.stats.d_speedRatio);
     // rollCorrection = rollCorrection * (this.rollCorrectionFactor + 1.0 * this.rollCorrectionFactor * this.component.stats.d_speedRatio);
-    pitchCorrection *= FlightSettings.GetFloat(n"standardModePitchFactor");
-    rollCorrection *= FlightSettings.GetFloat(n"standardModeRollFactor");
+    pitchCorrection *= FlightSettings.GetFloat("standardModePitchFactor");
+    rollCorrection *= FlightSettings.GetFloat("standardModeRollFactor");
     // let changeAngle: Float = Vector4.GetAngleDegAroundAxis(Quaternion.GetForward(this.component.stats.d_lastOrientation), this.component.stats.d_forward, this.component.stats.d_up);
     // if AbsF(pitchDegOff) < 30.0 && AbsF(rollDegOff) < 30.0 {
 
     // }
-    // yawCorrection += FlightSettings.GetFloat(n"yawD") * changeAngle / timeDelta;
+    // yawCorrection += FlightSettings.GetFloat("yawD") * changeAngle / timeDelta;
 
-    let velocityDamp: Vector4 = this.component.linearBrake * FlightSettings.GetFloat(n"brakeFactorLinear") * this.component.stats.s_brakingFrictionFactor * this.component.stats.d_localVelocity;
-    let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetFloat(n"brakeFactorAngular") * this.component.stats.s_brakingFrictionFactor;
+    let velocityDamp: Vector4 = this.component.linearBrake * FlightSettings.GetFloat("brakeFactorLinear") * this.component.stats.s_brakingFrictionFactor * this.component.stats.d_localVelocity;
+    let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetFloat("brakeFactorAngular") * this.component.stats.s_brakingFrictionFactor;
 
     // let yawDirectionality: Float = (this.component.stats.d_speedRatio + AbsF(this.yaw.GetValue()) * this.swayWithYaw) * this.yawDirectionalityFactor;
     // actual in-game mass (i think)
     // this.averageMass = this.averageMass * 0.99 + (liftForce / 9.8) * 0.01;
     // FlightLog.Info(ToString(this.averageMass) + " vs " + ToString(this.component.stats.s_mass));
-    let surgeForce: Float = this.component.surge * FlightSettings.GetFloat(n"standardModeSurgeFactor");
+    let surgeForce: Float = this.component.surge * FlightSettings.GetFloat("standardModeSurgeFactor");
 
     //this.CreateImpulse(this.component.stats.d_position, FlightUtils.Right() * Vector4.Dot(FlightUtils.Forward() - direction, FlightUtils.Right()) * yawDirectionality / 2.0);
 
@@ -3838,10 +3862,11 @@ public abstract class FlightModeStandard extends FlightMode {
     // lift
     // force += new Vector4(0.00, 0.00, liftForce + this.component.stats.d_speedRatio * liftForce, 0.00);
     this.force += liftForce * this.component.stats.d_localUp;
+    // this.force += liftForce * FlightUtils.Up();
     // surge
     this.force += FlightUtils.Forward() * surgeForce;
     // sway
-    this.force += FlightUtils.Right() * this.component.sway * FlightSettings.GetFloat(n"standardModeSwayFactor");
+    this.force += FlightUtils.Right() * this.component.sway * FlightSettings.GetFloat("standardModeSwayFactor");
     // directional brake
     this.force -= velocityDamp;
 
@@ -3850,7 +3875,7 @@ public abstract class FlightModeStandard extends FlightMode {
     // roll correction
     this.torque.Y = (rollCorrection - angularDamp.Y);
     // yaw correction
-    this.torque.Z = -(this.component.yaw * FlightSettings.GetFloat(n"standardModeYawFactor") + angularDamp.Z);
+    this.torque.Z = -(this.component.yaw * FlightSettings.GetFloat("standardModeYawFactor") + angularDamp.Z);
     // rotational brake
     // torque = torque + (angularDamp);
 
@@ -3863,75 +3888,85 @@ public abstract class FlightModeStandard extends FlightMode {
 
 // FlightSettings.reds
 
-public native class FlightSettings extends ScriptableSystem {
-  public native static func GetFloat(name: CName) -> Float;
-  public native static func SetFloat(name: CName, value: Float) -> Float;
-  public native static func GetVector3(name: CName) -> Vector3;
-  // public native static func SetVector3(name: CName, value: Vector3) -> Vector3;
-  public native static func SetVector3(name: CName, x: Float, y: Float, z: Float) -> Vector3;
+public native class FlightSettings extends IScriptable {
+  public native static func GetFloat(name: String) -> Float;
+  public native static func SetFloat(name: String, value: Float) -> Float;
+  public native static func GetVector3(name: String) -> Vector3;
+  public native static func SetVector3(name: String, x: Float, y: Float, z: Float) -> Vector3;
 
   private func OnAttach() -> Void {
     FlightLog.Info("[FlightSettings] OnAttach");
-    FlightSettings.SetFloat(n"generalDampFactorLinear", 0.001);
-    FlightSettings.SetFloat(n"generalDampFactorAngular", 3.0);
-    // FlightSettings.SetFloat(n"generalPitchAeroFactor", 0.25);
-    FlightSettings.SetFloat(n"generalPitchAeroFactor", 0.0);
-    FlightSettings.SetFloat(n"generalPitchDirectionalityFactor", 80.0);
-    FlightSettings.SetFloat(n"generalYawAeroFactor", 0.1);
-    FlightSettings.SetFloat(n"generalYawDirectionalityFactor", 50.0);
 
-    FlightSettings.SetFloat(n"brakeFactorAngular", 10.0);
-    FlightSettings.SetFloat(n"brakeFactorLinear", 1.2);
-
-    FlightSettings.SetFloat(n"automaticModeAutoBrakingFactor", 200.0);
-    FlightSettings.SetFloat(n"automaticModeYawDirectionality", 300.0);
-    FlightSettings.SetFloat(n"brakeOffset", 0.0);
-    FlightSettings.SetFloat(n"collisionRecoveryDelay", 0.8);
-    FlightSettings.SetFloat(n"collisionRecoveryDuration", 0.8);
-    FlightSettings.SetFloat(n"defaultHoverHeight", 3.50);
-    FlightSettings.SetFloat(n"distance", 0.0);
-    FlightSettings.SetFloat(n"distanceEase", 0.1);
-
-    FlightSettings.SetFloat(n"droneModeLiftFactor", 40.0);
-    FlightSettings.SetFloat(n"droneModePitchFactor", 5.0);
-    FlightSettings.SetFloat(n"droneModeRollFactor", 12.0);
-    FlightSettings.SetFloat(n"droneModeSurgeFactor", 15.0);
-    FlightSettings.SetFloat(n"droneModeYawFactor", 5.0);
-
-    FlightSettings.SetFloat(n"flyModeLiftFactor", 8.0);
-
-    FlightSettings.SetVector3(n"FPVCameraOffset", 0.0, 0.0, -0.5);
-
-    FlightSettings.SetFloat(n"fwtfCorrection", 0.0);
-    FlightSettings.SetFloat(n"hoverClamp", 10.0);
-    FlightSettings.SetFloat(n"hoverFactor", 40.0);
-    FlightSettings.SetFloat(n"hoverModeLiftFactor", 8.0);
-    FlightSettings.SetFloat(n"isFlightUIActive", 1.0);
-    FlightSettings.SetFloat(n"liftFactor", 8.0);
-    FlightSettings.SetFloat(n"lockFPPCameraForDrone", 1.0);
-    FlightSettings.SetFloat(n"lookAheadMax", 10.0);
-    FlightSettings.SetFloat(n"lookAheadMin", 1.0);
-    FlightSettings.SetFloat(n"hoverModeMaxHoverHeight", 7.0);
-    FlightSettings.SetFloat(n"hoverModeMinHoverHeight", 1.0);
-    FlightSettings.SetFloat(n"normalEase", 0.3);
-    FlightSettings.SetFloat(n"pitchWithLift", 0.0);
-    FlightSettings.SetFloat(n"pitchWithSurge", 0.0);
-    FlightSettings.SetFloat(n"referenceZ", 0.0);
-    FlightSettings.SetFloat(n"rollWithYaw", 0.15);
-    FlightSettings.SetFloat(n"secondCounter", 0.0);
-
-    FlightSettings.SetFloat(n"standardModePitchFactor", 3.0);
-    FlightSettings.SetFloat(n"standardModePitchInputAngle", 45.0);
-    FlightSettings.SetFloat(n"standardModeRollFactor", 15.0);
-    FlightSettings.SetFloat(n"standardModeRollInputAngle", 45.0);
-    FlightSettings.SetFloat(n"standardModeSurgeFactor", 15.0);
-    FlightSettings.SetFloat(n"standardModeSwayFactor", 5.0);
-    FlightSettings.SetFloat(n"standardModeYawFactor", 5.0);
+    FlightSettings.SetFloat("autoActivationHeight", 2.0);
     
-    FlightSettings.SetFloat(n"surgeOffset", 0.5);
-    FlightSettings.SetFloat(n"swayWithYaw", 0.5);
-    FlightSettings.SetFloat(n"thrusterFactor", 0.05);
-    FlightSettings.SetFloat(n"yawD", 3.0);
+    FlightSettings.SetVector3("inputPitchPID", 1.0, 0.5, 0.5);
+    FlightSettings.SetVector3("inputRollPID", 1.0, 0.5, 0.5);
+    
+    FlightSettings.SetVector3("aeroYawPID", 1.0, 0.01, 1.0);
+    FlightSettings.SetVector3("aeroPitchPID", 1.0, 0.01, 1.0);
+
+    FlightSettings.SetVector3("hoverModePID", 1.0, 0.005, 0.5);
+
+    FlightSettings.SetFloat("generalDampFactorLinear", 0.001);
+    FlightSettings.SetFloat("generalDampFactorAngular", 3.0);
+    // FlightSettings.SetFloat("generalPitchAeroFactor", 0.25);
+    FlightSettings.SetFloat("generalPitchAeroFactor", 0.0);
+    FlightSettings.SetFloat("generalPitchDirectionalityFactor", 80.0);
+    FlightSettings.SetFloat("generalYawAeroFactor", 0.1);
+    FlightSettings.SetFloat("generalYawDirectionalityFactor", 50.0);
+
+    FlightSettings.SetFloat("brakeFactorAngular", 10.0);
+    FlightSettings.SetFloat("brakeFactorLinear", 1.2);
+
+    FlightSettings.SetFloat("automaticModeAutoBrakingFactor", 200.0);
+    FlightSettings.SetFloat("automaticModeYawDirectionality", 300.0);
+    FlightSettings.SetFloat("brakeOffset", 0.0);
+    FlightSettings.SetFloat("collisionRecoveryDelay", 0.8);
+    FlightSettings.SetFloat("collisionRecoveryDuration", 0.8);
+    FlightSettings.SetFloat("defaultHoverHeight", 3.50);
+    FlightSettings.SetFloat("distance", 0.0);
+    FlightSettings.SetFloat("distanceEase", 0.1);
+
+    FlightSettings.SetFloat("droneModeLiftFactor", 40.0);
+    FlightSettings.SetFloat("droneModePitchFactor", 5.0);
+    FlightSettings.SetFloat("droneModeRollFactor", 12.0);
+    FlightSettings.SetFloat("droneModeSurgeFactor", 15.0);
+    FlightSettings.SetFloat("droneModeYawFactor", 5.0);
+
+    FlightSettings.SetFloat("flyModeLiftFactor", 20.0);
+
+    FlightSettings.SetVector3("FPVCameraOffset", 0.0, 0.0, -0.5);
+
+    FlightSettings.SetFloat("fwtfCorrection", 0.0);
+    FlightSettings.SetFloat("hoverClamp", 10.0);
+    FlightSettings.SetFloat("hoverFactor", 40.0);
+    FlightSettings.SetFloat("hoverModeLiftFactor", 8.0);
+    FlightSettings.SetFloat("isFlightUIActive", 1.0);
+    FlightSettings.SetFloat("liftFactor", 8.0);
+    FlightSettings.SetFloat("lockFPPCameraForDrone", 1.0);
+    FlightSettings.SetFloat("lookAheadMax", 10.0);
+    FlightSettings.SetFloat("lookAheadMin", 1.0);
+    FlightSettings.SetFloat("hoverModeMaxHoverHeight", 7.0);
+    FlightSettings.SetFloat("hoverModeMinHoverHeight", 1.0);
+    FlightSettings.SetFloat("normalEase", 0.3);
+    FlightSettings.SetFloat("pitchWithLift", 0.0);
+    FlightSettings.SetFloat("pitchWithSurge", 0.0);
+    FlightSettings.SetFloat("referenceZ", 0.0);
+    FlightSettings.SetFloat("rollWithYaw", 0.15);
+    FlightSettings.SetFloat("secondCounter", 0.0);
+
+    FlightSettings.SetFloat("standardModePitchFactor", 3.0);
+    FlightSettings.SetFloat("standardModePitchInputAngle", 45.0);
+    FlightSettings.SetFloat("standardModeRollFactor", 15.0);
+    FlightSettings.SetFloat("standardModeRollInputAngle", 45.0);
+    FlightSettings.SetFloat("standardModeSurgeFactor", 15.0);
+    FlightSettings.SetFloat("standardModeSwayFactor", 5.0);
+    FlightSettings.SetFloat("standardModeYawFactor", 5.0);
+    
+    FlightSettings.SetFloat("surgeOffset", 0.5);
+    FlightSettings.SetFloat("swayWithYaw", 0.5);
+    FlightSettings.SetFloat("thrusterFactor", 0.05);
+    FlightSettings.SetFloat("yawD", 3.0);
   }
 }
 
@@ -4170,20 +4205,22 @@ public native class FlightSystem extends IFlightSystem {
   public static native func GetInstance() -> ref<FlightSystem>;
 
   public let gameInstance: GameInstance;
-  public let player: ref<PlayerPuppet>;
+  public let player: wref<PlayerPuppet>;
   public let ctlr: ref<FlightController>;
   public let stats: ref<FlightStats>;
   public let audio: ref<FlightAudio>;
   public let fx: ref<FlightFx>;
-  public let tppCamera: ref<vehicleTPPCameraComponent>;
+  public let tppCamera: wref<vehicleTPPCameraComponent>;
   public let playerComponent: wref<FlightComponent>;
 
   public func Setup(player: ref<PlayerPuppet>) -> Void {
     // FlightLog.Info("[FlightSystem] FlightSettings Created");
     this.player = player;
     this.gameInstance = player.GetGame();
-    this.audio = FlightAudio.Create();
-    FlightLog.Info("[FlightSystem] FlightAudio Created");
+    if !IsDefined(this.audio) {
+      this.audio = FlightAudio.Create();
+      FlightLog.Info("[FlightSystem] FlightAudio Created");
+    }
     this.ctlr = FlightController.GetInstance();
     this.tppCamera = player.FindComponentByName(n"vehicleTPPCamera") as vehicleTPPCameraComponent;
   }
@@ -4432,7 +4469,7 @@ public class FlightEvents extends VehicleEventsTransition {
       vehicle_slots.GetSlotTransform(n"roof_border_front", roof);
       let vwt = Matrix.GetInverted((scriptInterface.owner as VehicleObject).GetLocalToWorld());
       let v = (WorldPosition.ToVector4(WorldTransform.GetWorldPosition(roof)) * vwt) - (WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT)) * vwt);
-      camera.SetLocalPosition(v + Vector4.Vector3To4(FlightSettings.GetVector3(n"FPVCameraOffset")));
+      camera.SetLocalPosition(v + Vector4.Vector3To4(FlightSettings.GetVector3("FPVCameraOffset")));
     }
 
     // let workspotSystem: ref<WorkspotGameSystem> = scriptInterface.GetWorkspotSystem();
@@ -4577,8 +4614,6 @@ public class hudFlightController extends inkHUDGameController {
   // @default(hudFlightController, 1495.0f)
   private let offsetRight: Float;
   private let currentTime: GameTime;
-  private let m_bbPlayerStats: wref<IBlackboard>;
-  private let m_bbPlayerEventId: ref<CallbackHandle>;
   private let m_currentHealth: Int32;
   private let m_previousHealth: Int32;
   private let m_maximumHealth: Int32;
@@ -4586,9 +4621,15 @@ public class hudFlightController extends inkHUDGameController {
   private let m_playerPuppet: wref<GameObject>;
   private let m_gameInstance: GameInstance;
   private let m_animationProxy: ref<inkAnimProxy>;
+
+  private let m_bbPlayerStats: wref<IBlackboard>;
+  private let m_scannerBlackboard: wref<IBlackboard>;
   private let m_vehicleBlackboard: wref<IBlackboard>;
   private let m_vehicleFlightBlackboard: wref<IBlackboard>;
   private let m_psmBlackboard: wref<IBlackboard>;
+
+  private let m_uiScannerVisibleCallbackID: ref<CallbackHandle>;
+  private let m_bbPlayerEventId: ref<CallbackHandle>;
   private let m_PSM_BBID: ref<CallbackHandle>;
   private let m_playerStateBBConnectionId: ref<CallbackHandle>;
   private let m_vehicleBBUIActivId: ref<CallbackHandle>;
@@ -4605,20 +4646,32 @@ public class hudFlightController extends inkHUDGameController {
   protected cb func OnInitialize() -> Bool {
     FlightLog.Info("[hudFlightController] OnInitialize");
     let delayInitialize: ref<DelayedHUDInitializeEvent>;
-    inkTextRef.SetText(this.m_Date, "XX-XX-XXXX");
-    inkTextRef.SetText(this.m_CameraID, FlightSystem.GetInstance().playerComponent.GetFlightMode().GetDescription());
+    // inkTextRef.SetText(this.m_Date, "XX-XX-XXXX");
     delayInitialize = new DelayedHUDInitializeEvent();
     GameInstance.GetDelaySystem(this.GetPlayerControlledObject().GetGame()).DelayEvent(this.GetPlayerControlledObject(), delayInitialize, 0.10);
-    this.GetPlayerControlledObject().RegisterInputListener(this);
+    // this.GetPlayerControlledObject().RegisterInputListener(this);
     this.offsetLeft = -838.0;
     this.offsetRight = 1495.0;
     this.GetRootWidget().SetVisible(false);
     // this.PlayLibraryAnimation(n"outro");
+
+    let vehicle = FlightSystem.GetInstance().playerComponent.GetVehicle();
+    this.m_healthStatPoolListener = new FlightUIVehicleHealthStatPoolListener();
+    this.m_healthStatPoolListener.m_owner = this;
+    this.m_healthStatPoolListener.m_vehicle = vehicle;
+    let stats = GameInstance.GetStatPoolsSystem(vehicle.GetGame());
+    if IsDefined(stats) {  
+      stats.RequestRegisteringListener(Cast<StatsObjectID>(vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
+    }
   }
 
   protected cb func OnUninitialize() -> Bool {
+    FlightLog.Info("[hudFlightController] OnUninitialize");
     // TakeOverControlSystem.CreateInputHint(this.GetPlayerControlledObject().GetGame(), false);
     // SecurityTurret.CreateInputHint(this.GetPlayerControlledObject().GetGame(), false);
+    if IsDefined(this.m_healthStatPoolListener) {
+      GameInstance.GetStatPoolsSystem(this.m_gameInstance).RequestUnregisteringListener(Cast(this.m_healthStatPoolListener.m_vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
+    }
   }
 
   private func UpdateTime() -> Void {
@@ -4658,9 +4711,9 @@ public class hudFlightController extends inkHUDGameController {
     let hp_gauge = this.GetRootCompoundWidget().GetWidget(n"hp_gauge");
     if IsDefined(hp_gauge) {
       if tpp {
-        hp_gauge.SetMargin(new inkMargin(1559.0, -116.0, 0.0, 0.0));
+        hp_gauge.SetMargin(new inkMargin(1555.0, -120.0, 0.0, 0.0));
       } else {
-        hp_gauge.SetMargin(new inkMargin(1559.0, -116.0 - 100.0, 0.0, 0.0));
+        hp_gauge.SetMargin(new inkMargin(1555.0, -120.0 - 100.0, 0.0, 0.0));
       }
     }
   }
@@ -4684,7 +4737,17 @@ public class hudFlightController extends inkHUDGameController {
   private let m_outroAnimationProxy: ref<inkAnimProxy>;
 
   private func ActivateUI(activate: Bool) -> Void {
+    FlightLog.Info("[hudFlightController] ActivateUI");
     if activate {
+      let vehicle = FlightSystem.GetInstance().playerComponent.GetVehicle();
+      if IsDefined(vehicle) {
+        inkTextRef.SetText(this.m_hp_condition_text, vehicle.GetDisplayName());
+        let stats = GameInstance.GetStatPoolsSystem(this.m_gameInstance);
+        this.ReactToHPChange(stats.GetStatPoolValue(Cast<StatsObjectID>(vehicle.GetEntityID()), gamedataStatPoolType.Health, true));  
+      }
+      inkTextRef.SetText(this.m_CameraID, FlightSystem.GetInstance().playerComponent.GetFlightMode().GetDescription());
+
+
       this.GetRootWidget().SetVisible(true);
       let options: inkAnimOptions;
       options.executionDelay = 0.50;
@@ -4702,37 +4765,37 @@ public class hudFlightController extends inkHUDGameController {
       // this.PlayLibraryAnimation(n"outro");
       // this.PlayLibraryAnimation(n"Malfunction");
       let options: inkAnimOptions;
-      options.executionDelay = 0.50;
       if IsDefined(this.m_introAnimationProxy) && this.m_introAnimationProxy.IsPlaying() {
         this.m_introAnimationProxy.Stop();
       }
       this.m_outroAnimationProxy = this.PlayLibraryAnimation(n"outro", options);
+
       // this.PlayAnim(n"outro", n"OnOutroComplete");
       // this.UpdateJohnnyThemeOverride(false);
     }
   }
 
   protected cb func OnPlayerAttach(playerPuppet: ref<GameObject>) -> Bool {
-    // FlightLog.Info("[hudFlightController] OnPlayerAttach");
-    this.m_bbPlayerStats = this.GetBlackboardSystem().Get(GetAllBlackboardDefs().UI_PlayerBioMonitor);
-    this.m_bbPlayerEventId = this.m_bbPlayerStats.RegisterListenerVariant(GetAllBlackboardDefs().UI_PlayerBioMonitor.PlayerStatsInfo, this, n"OnStatsChanged");    
+    FlightLog.Info("[hudFlightController] OnPlayerAttach");
     this.m_playerObject = playerPuppet;
     this.m_playerPuppet = playerPuppet;
-    this.m_gameInstance = this.GetPlayerControlledObject().GetGame();
-    this.UpdateTime();
-    this.m_healthStatPoolListener = new FlightUIVehicleHealthStatPoolListener();
-    this.m_healthStatPoolListener.m_owner = this;
-    this.m_healthStatPoolListener.m_vehicle = FlightSystem.GetInstance().playerComponent.GetVehicle();
-    inkTextRef.SetText(this.m_hp_condition_text, this.m_healthStatPoolListener.m_vehicle.GetDisplayName());
-    this.ReactToHPChange(GameInstance.GetStatPoolsSystem(this.m_gameInstance).GetStatPoolValue(Cast(this.m_healthStatPoolListener.m_vehicle.GetEntityID()), gamedataStatPoolType.Health, true));
-
-    this.m_psmBlackboard = this.GetPSMBlackboard(playerPuppet);
-    if IsDefined(this.m_psmBlackboard) {
-      this.m_PSM_BBID = this.m_psmBlackboard.RegisterDelayedListenerFloat(GetAllBlackboardDefs().PlayerStateMachine.ZoomLevel, this, n"OnZoomChange");
-    };
-
+    this.m_gameInstance = playerPuppet.GetGame();
+    // this.UpdateTime();
     this.m_vehicleBlackboard = FlightSystem.GetInstance().playerComponent.GetVehicle().GetBlackboard();
     this.m_vehicleFlightBlackboard = FlightController.GetInstance().GetBlackboard();
+    this.m_scannerBlackboard = GameInstance.GetBlackboardSystem(this.m_gameInstance).Get(GetAllBlackboardDefs().UI_Scanner);
+    this.RegisterBB();
+    this.ActivateUI(this.IsUIactive() && this.IsActive());
+  }
+
+  protected func RegisterBB() {
+    // this.m_bbPlayerStats = this.GetBlackboardSystem().Get(GetAllBlackboardDefs().UI_PlayerBioMonitor);
+    // this.m_bbPlayerEventId = this.m_bbPlayerStats.RegisterListenerVariant(GetAllBlackboardDefs().UI_PlayerBioMonitor.PlayerStatsInfo, this, n"OnStatsChanged");    
+    // this.m_psmBlackboard = this.GetPSMBlackboard(this.m_playerPuppet);
+    // if IsDefined(this.m_psmBlackboard) {
+    //   this.m_PSM_BBID = this.m_psmBlackboard.RegisterDelayedListenerFloat(GetAllBlackboardDefs().PlayerStateMachine.ZoomLevel, this, n"OnZoomChange");
+    // };
+
     if IsDefined(this.m_vehicleFlightBlackboard) {
       if !IsDefined(this.m_vehicleBBUIActivId) {
         this.m_vehicleBBUIActivId = this.m_vehicleFlightBlackboard.RegisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, this, n"OnActivateUI");
@@ -4748,21 +4811,20 @@ public class hudFlightController extends inkHUDGameController {
       };
     };
     if IsDefined(this.m_vehicleBlackboard) {
-      this.m_tppBBConnectionId = this.m_vehicleBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this, n"OnCameraModeChanged", true);
+      this.m_tppBBConnectionId = this.m_vehicleBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this, n"OnCameraModeChanged");
     }
-
-    GameInstance.GetStatPoolsSystem(this.m_gameInstance).RequestRegisteringListener(Cast(this.m_healthStatPoolListener.m_vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
-    this.ActivateUI(this.IsUIactive() && this.IsActive());
+    if IsDefined(this.m_scannerBlackboard) && !IsDefined(this.m_uiScannerVisibleCallbackID) {
+      this.m_uiScannerVisibleCallbackID = this.m_scannerBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UI_Scanner.UIVisible, this, n"OnScannerUIVisibleChanged");
+    };
   }
 
-  protected cb func OnPlayerDetach(playerPuppet: ref<GameObject>) -> Bool {
-    GameInstance.GetStatPoolsSystem(this.m_gameInstance).RequestUnregisteringListener(Cast(this.m_healthStatPoolListener.m_vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
-    if IsDefined(this.m_bbPlayerStats) {
-      this.m_bbPlayerStats.UnregisterListenerVariant(GetAllBlackboardDefs().UI_PlayerBioMonitor.PlayerStatsInfo, this.m_bbPlayerEventId);
-    };
-    if IsDefined(this.m_psmBlackboard) {
-      this.m_psmBlackboard.UnregisterDelayedListener(GetAllBlackboardDefs().PlayerStateMachine.ZoomLevel, this.m_PSM_BBID);
-    };
+  protected func UnregisterBB() {
+    // if IsDefined(this.m_bbPlayerStats) {
+      // this.m_bbPlayerStats.UnregisterListenerVariant(GetAllBlackboardDefs().UI_PlayerBioMonitor.PlayerStatsInfo, this.m_bbPlayerEventId);
+    // };
+    // if IsDefined(this.m_psmBlackboard) && IsDefined(this.m_PSM_BBID) {
+    //   this.m_psmBlackboard.UnregisterDelayedListener(GetAllBlackboardDefs().PlayerStateMachine.ZoomLevel, this.m_PSM_BBID);
+    // };
     if IsDefined(this.m_vehicleFlightBlackboard) {
       if IsDefined(this.m_vehicleBBUIActivId) {
         this.m_vehicleFlightBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, this.m_vehicleBBUIActivId);
@@ -4782,16 +4844,26 @@ public class hudFlightController extends inkHUDGameController {
         this.m_vehicleBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this.m_tppBBConnectionId);
       }
     }
+    if IsDefined(this.m_scannerBlackboard) {
+      if IsDefined(this.m_uiScannerVisibleCallbackID) {
+        this.m_scannerBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UI_Scanner.UIVisible, this.m_uiScannerVisibleCallbackID);
+      }
+    }
   }
 
-  protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool {
-    let yaw: Float = ClampF(this.m_playerPuppet.GetWorldYaw(), -300.00, 300.00);
-    inkTextRef.SetText(this.m_yawFluff, ToString(yaw));
-    inkTextRef.SetText(this.m_pitchFluff, ToString(yaw * 1.50));
-    inkWidgetRef.SetMargin(this.m_leftPart, new inkMargin(yaw, this.offsetLeft, 0.00, 0.00));
-    inkWidgetRef.SetMargin(this.m_rightPart, new inkMargin(this.offsetRight, yaw, 0.00, 0.00));
-    this.UpdateTime();
+  protected cb func OnPlayerDetach(playerPuppet: ref<GameObject>) -> Bool {
+    FlightLog.Info("[hudFlightController] OnPlayerDetach");
+    this.UnregisterBB();
   }
+
+  // protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool {
+  //   let yaw: Float = ClampF(this.m_playerPuppet.GetWorldYaw(), -300.00, 300.00);
+  //   inkTextRef.SetText(this.m_yawFluff, ToString(yaw));
+  //   inkTextRef.SetText(this.m_pitchFluff, ToString(yaw * 1.50));
+  //   inkWidgetRef.SetMargin(this.m_leftPart, new inkMargin(yaw, this.offsetLeft, 0.00, 0.00));
+  //   inkWidgetRef.SetMargin(this.m_rightPart, new inkMargin(this.offsetRight, yaw, 0.00, 0.00));
+  //   this.UpdateTime();
+  // }
   
   protected cb func OnZoomChange(evt: Float) -> Bool {
     // if evt > this.m_currentZoom {
@@ -4817,6 +4889,10 @@ public class hudFlightController extends inkHUDGameController {
    
     // this.m_currentHealth = CeilF(GameInstance.GetStatPoolsSystem(this.m_playerObject.GetGame()).GetStatPoolValue(Cast<StatsObjectID>(GetPlayer(this.m_playerObject.GetGame()).GetEntityID()), gamedataStatPoolType.Health, false));
     // this.m_currentHealth = Clamp(this.m_currentHealth, 0, this.m_maximumHealth);
+  }
+
+  protected cb func OnScannerUIVisibleChanged(visible: Bool) -> Bool {
+    this.ActivateUI(!visible);
   }
 
   public func ReactToHPChange(value: Float) -> Void {
@@ -5377,6 +5453,9 @@ public class PID {
     instance.D = D;
     instance.Reset();
     return instance;
+  }
+  public static func Create(v: Vector3) -> ref<PID> {
+    return PID.Create(v.X, v.Y, v.Z);
   }
   public static func Create(P: Float, I: Float, D: Float, initialValue: Float) -> ref<PID> {
     let instance: ref<PID> = PID.Create(P, I, D);
@@ -6789,6 +6868,9 @@ public native func GetComponentsUsingSlot(slotName: CName) -> array<ref<ICompone
 @addMethod(VehicleObject)
 public native func GetWeaponPlaceholderOrientation(index: Int32) -> Quaternion;
 
+@addMethod(VehicleObject)
+public native func GetWeapons() -> array<ref<WeaponObject>>;
+
 // working
 // @addMethod(VehicleObject)
 // protected cb func OnPhysicalCollision(evt: ref<PhysicalCollisionEvent>) -> Bool {
@@ -6840,4 +6922,36 @@ public final func IsOnPavement() -> Bool {
 // public const func IsQuickHacksExposed() -> Bool {
 //   return true;
 // }
+
+// _weaponRoster.reds
+
+@addField(weaponRosterGameController)
+let m_FlightStateBlackboardId: ref<CallbackHandle>;
+
+@wrapMethod(weaponRosterGameController)
+private final func RegisterBB() -> Void {
+  wrappedMethod();
+  let flightBB = FlightController.GetInstance().GetBlackboard();
+  if IsDefined(flightBB) {
+    if !IsDefined(this.m_FlightStateBlackboardId) {
+      this.m_FlightStateBlackboardId = flightBB.RegisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this, n"OnFlightActivate");
+    }
+  }
+}
+
+@wrapMethod(weaponRosterGameController)
+private final func UnregisterBB() -> Void {
+  wrappedMethod();
+  let flightBB = FlightController.GetInstance().GetBlackboard();
+  if IsDefined(flightBB) {
+    if IsDefined(this.m_FlightStateBlackboardId) {
+       flightBB.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this.m_FlightStateBlackboardId);
+    }
+  }
+}
+
+@addMethod(weaponRosterGameController)
+private cb func OnFlightActivate() -> Void {
+  this.PlayFold();
+}
 

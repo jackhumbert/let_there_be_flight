@@ -1,7 +1,7 @@
 # Let There Be Flight
 # (C) 2022 Jack Humbert
 # https://github.com/jackhumbert/let_there_be_flight
-# This file was automatically generated on 2022-06-29 18:01:13.4801256
+# This file was automatically generated on 2022-07-02 02:57:13.7954593
 
 # thrusters.yaml
 
@@ -151,6 +151,12 @@
 #   modifierType: n"Multiplier" 
 #   statType: BaseStats.HitDismembermentFactor
 #   value: 3 
+
+
+# Items.Preset_Overture_Legendary_Leveled:
+#   $base: Items.Preset_Overture_Legendary
+#   statModifiers:
+#     - !append Character.ScaleToPlayerLevel
 
   
 # Items.FlyingWeapon2:

@@ -119,7 +119,7 @@ public native class FlightController extends IScriptable {
     this.gameInstance = player.GetGame();
     this.player = player;
 
-    this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, FlightSettings.GetFloat(n"isFlightUIActive") > 0.5);
+    this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, FlightSettings.GetFloat("isFlightUIActive") > 0.5);
   }
 
   public const func GetBlackboard() -> ref<IBlackboard> {
@@ -236,7 +236,7 @@ public native class FlightController extends IScriptable {
     
     FlightLog.Info("[FlightController] Activate");
     this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsActive, true, true);
-    this.GetBlackboard().SignalBool(GetAllBlackboardDefs().VehicleFlight.IsActive);
+    // this.GetBlackboard().SignalBool(GetAllBlackboardDefs().VehicleFlight.IsActive);
   }
 
   private func Deactivate(silent: Bool) -> Void {
@@ -256,7 +256,7 @@ public native class FlightController extends IScriptable {
 
     FlightLog.Info("[FlightController] Deactivate");
     this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsActive, false, true);
-    this.GetBlackboard().SignalBool(GetAllBlackboardDefs().VehicleFlight.IsActive);
+    // this.GetBlackboard().SignalBool(GetAllBlackboardDefs().VehicleFlight.IsActive);
 
     
     // let evt: ref<DeleteInputGroupEvent> = new DeleteInputGroupEvent();
@@ -312,12 +312,14 @@ public native class FlightController extends IScriptable {
     // we may want to look at something else besides this input so ForceBrakesUntilStoppedOrFor will work (not entirely sure it doesn't now)
     // vehicle.GetBlackboard().GetInt(GetAllBlackboardDefs().VehicleFlight.IsHandbraking)
 
+    let usesRightStick = this.sys.playerComponent.GetFlightMode().usesRightStickInput;
+
     evt.AddInputHint(FlightController.CreateInputHint("Enable Flight", n"Flight_Toggle"),       this.enabled && !this.active);
 
     evt.AddInputHint(FlightController.CreateInputHint("Disable Flight", n"Flight_Toggle"),      this.active && !this.showOptions);
     evt.AddInputHint(FlightController.CreateInputHint("Yaw", n"Yaw"),                           this.active && !this.showOptions);
-    evt.AddInputHint(FlightController.CreateInputHint("Pitch", n"Pitch"),                       this.active && !this.showOptions);
-    evt.AddInputHint(FlightController.CreateInputHint("Roll", n"Roll"),                         this.active && !this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint("Pitch", n"Pitch"),                       this.active && !this.showOptions && (usesRightStick || this.usingKB));
+    evt.AddInputHint(FlightController.CreateInputHint("Roll", n"Roll"),                         this.active && !this.showOptions && (usesRightStick || this.usingKB));
     evt.AddInputHint(FlightController.CreateInputHint("Lift", n"Lift"),                         this.active && !this.showOptions);
     evt.AddInputHint(FlightController.CreateInputHint("Linear Brake", n"Flight_LinearBrake"),   this.active && !this.showOptions && this.usingKB);
     evt.AddInputHint(FlightController.CreateInputHint("Angular Brake", n"Flight_AngularBrake"), this.active && !this.showOptions && this.usingKB);
@@ -467,12 +469,19 @@ public native class FlightController extends IScriptable {
         // }
       if Equals(actionName, n"Flight_RightStickToggle") && ListenerAction.IsButtonJustPressed(action) {
         this.sys.playerComponent.GetFlightMode().usesRightStickInput = !this.sys.playerComponent.GetFlightMode().usesRightStickInput;
+        this.SetupActions();
       }
       if Equals(actionName, n"Flight_ModeSwitchForward") && ListenerAction.IsButtonJustPressed(action) && (this.showOptions || this.player.PlayerLastUsedKBM()) {
         this.CycleMode(1);
+        this.SetupActions();
+        let weapons = this.sys.playerComponent.GetVehicle().GetWeapons();
+        if ArraySize(weapons) > 0 {
+          weapons[0].SetTriggerDown(true);
+        }
       }
       if Equals(actionName, n"Flight_ModeSwitchBackward") && ListenerAction.IsButtonJustPressed(action) && (this.showOptions || this.player.PlayerLastUsedKBM()) {
         this.CycleMode(-1);
+        this.SetupActions();
       }
       if this.showOptions && Equals(actionName, n"Flight_UIToggle") && ListenerAction.IsButtonJustPressed(action) {
           this.showUI = !this.showUI;

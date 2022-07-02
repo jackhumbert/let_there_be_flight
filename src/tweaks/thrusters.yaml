@@ -145,6 +145,12 @@
 #   statType: BaseStats.HitDismembermentFactor
 #   value: 3 
 
+
+# Items.Preset_Overture_Legendary_Leveled:
+#   $base: Items.Preset_Overture_Legendary
+#   statModifiers:
+#     - !append Character.ScaleToPlayerLevel
+
   
 # Items.FlyingWeapon2:
 #   $base: Items.Panzer_Cannon

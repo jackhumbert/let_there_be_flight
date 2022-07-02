@@ -29,8 +29,8 @@ short SpeedUnlimiter::PhysicsStructUpdate(RED4ext::physics::VehiclePhysicsStruct
 }
 
 void SpeedUnlimiter::Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-  aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(PhysicsStructUpdateAddr), &PhysicsStructUpdate,
-                        reinterpret_cast<void **>(&PhysicsStructUpdate_Original));
+  while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(PhysicsStructUpdateAddr), &PhysicsStructUpdate,
+                        reinterpret_cast<void **>(&PhysicsStructUpdate_Original)));
 }
 
 void SpeedUnlimiter::Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {

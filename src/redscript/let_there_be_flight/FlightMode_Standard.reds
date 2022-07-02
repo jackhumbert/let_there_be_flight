@@ -5,8 +5,8 @@ public abstract class FlightModeStandard extends FlightMode {
   }
 
   protected func UpdateWithNormalDistance(timeDelta: Float, normal: Vector4, heightDifference: Float) -> Void {
-    let hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, FlightSettings.GetFloat(n"hoverClamp"));// / FlightSettings.GetFloat(n"hoverClamp");
-    let liftForce: Float = hoverCorrection * FlightSettings.GetFloat(n"hoverFactor") + (9.81000042) * this.gravityFactor;
+    let hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, FlightSettings.GetFloat("hoverClamp"));// / FlightSettings.GetFloat("hoverClamp");
+    let liftForce: Float = hoverCorrection * FlightSettings.GetFloat("hoverFactor") + (9.81000042) * this.gravityFactor;
     this.UpdateWithNormalLift(timeDelta, normal, liftForce);
   }
 
@@ -14,9 +14,9 @@ public abstract class FlightModeStandard extends FlightMode {
     let pitchCorrection: Float = 0.0;
     let rollCorrection: Float = 0.0;
 
-    normal = Vector4.RotateAxis(normal, this.component.stats.d_forward, this.component.yaw * FlightSettings.GetFloat(n"rollWithYaw"));
-    normal = Vector4.RotateAxis(normal, this.component.stats.d_right, this.component.lift * FlightSettings.GetFloat(n"pitchWithLift") * Vector4.Dot(this.component.stats.d_forward, this.component.stats.d_direction));
-    normal = Vector4.RotateAxis(normal, this.component.stats.d_right, this.component.surge * FlightSettings.GetFloat(n"pitchWithSurge"));
+    normal = Vector4.RotateAxis(normal, this.component.stats.d_forward, this.component.yaw * FlightSettings.GetFloat("rollWithYaw"));
+    normal = Vector4.RotateAxis(normal, this.component.stats.d_right, this.component.lift * FlightSettings.GetFloat("pitchWithLift") * Vector4.Dot(this.component.stats.d_forward, this.component.stats.d_direction));
+    normal = Vector4.RotateAxis(normal, this.component.stats.d_right, this.component.surge * FlightSettings.GetFloat("pitchWithSurge"));
     // normal = Vector4.RotateAxis(normal, this.component.stats.d_right, this.component.surge * this.component.stats.s_forwardWeightTransferFactor);
     
 
@@ -26,9 +26,9 @@ public abstract class FlightModeStandard extends FlightMode {
     // pitchCorrection = this.component.pitchPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(normal, FlightUtils.Forward())) + this.lift.GetValue() * this.pitchWithLift, timeDelta, 10.0) + this.pitch.GetValue() / 10.0;
     // rollCorrection = this.component.rollPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(normal, FlightUtils.Right())), timeDelta, 10.0) + this.yaw.GetValue() * this.rollWithYaw + this.roll.GetValue() / 10.0;
     let pitchDegOff = 90.0 - AbsF(Vector4.GetAngleDegAroundAxis(normal, this.component.stats.d_forward, this.component.stats.d_right));
-    pitchDegOff += this.component.pitch * FlightSettings.GetFloat(n"standardModePitchInputAngle");
+    pitchDegOff += this.component.pitch * FlightSettings.GetFloat("standardModePitchInputAngle");
     let rollDegOff = 90.0 - AbsF(Vector4.GetAngleDegAroundAxis(normal, this.component.stats.d_right, this.component.stats.d_forward));
-    rollDegOff += this.component.roll * FlightSettings.GetFloat(n"standardModeRollInputAngle");
+    rollDegOff += this.component.roll * FlightSettings.GetFloat("standardModeRollInputAngle");
     if AbsF(pitchDegOff) < 120.0  {
       // pitchCorrection = this.component.pitchPID.GetCorrectionClamped(pitchDegOff / 90.0 + this.lift.GetValue() * this.pitchWithLift, timeDelta, 10.0) + this.pitch.GetValue() / 10.0;
       pitchCorrection = this.component.pitchPID.GetCorrectionClamped(pitchDegOff / 90.0, timeDelta, 10.0);// + this.component.pitch / 10.0;
@@ -40,22 +40,22 @@ public abstract class FlightModeStandard extends FlightMode {
     // adjust with speed ratio 
     // pitchCorrection = pitchCorrection * (this.pitchCorrectionFactor + 1.0 * this.pitchCorrectionFactor * this.component.stats.d_speedRatio);
     // rollCorrection = rollCorrection * (this.rollCorrectionFactor + 1.0 * this.rollCorrectionFactor * this.component.stats.d_speedRatio);
-    pitchCorrection *= FlightSettings.GetFloat(n"standardModePitchFactor");
-    rollCorrection *= FlightSettings.GetFloat(n"standardModeRollFactor");
+    pitchCorrection *= FlightSettings.GetFloat("standardModePitchFactor");
+    rollCorrection *= FlightSettings.GetFloat("standardModeRollFactor");
     // let changeAngle: Float = Vector4.GetAngleDegAroundAxis(Quaternion.GetForward(this.component.stats.d_lastOrientation), this.component.stats.d_forward, this.component.stats.d_up);
     // if AbsF(pitchDegOff) < 30.0 && AbsF(rollDegOff) < 30.0 {
 
     // }
-    // yawCorrection += FlightSettings.GetFloat(n"yawD") * changeAngle / timeDelta;
+    // yawCorrection += FlightSettings.GetFloat("yawD") * changeAngle / timeDelta;
 
-    let velocityDamp: Vector4 = this.component.linearBrake * FlightSettings.GetFloat(n"brakeFactorLinear") * this.component.stats.s_brakingFrictionFactor * this.component.stats.d_localVelocity;
-    let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetFloat(n"brakeFactorAngular") * this.component.stats.s_brakingFrictionFactor;
+    let velocityDamp: Vector4 = this.component.linearBrake * FlightSettings.GetFloat("brakeFactorLinear") * this.component.stats.s_brakingFrictionFactor * this.component.stats.d_localVelocity;
+    let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetFloat("brakeFactorAngular") * this.component.stats.s_brakingFrictionFactor;
 
     // let yawDirectionality: Float = (this.component.stats.d_speedRatio + AbsF(this.yaw.GetValue()) * this.swayWithYaw) * this.yawDirectionalityFactor;
     // actual in-game mass (i think)
     // this.averageMass = this.averageMass * 0.99 + (liftForce / 9.8) * 0.01;
     // FlightLog.Info(ToString(this.averageMass) + " vs " + ToString(this.component.stats.s_mass));
-    let surgeForce: Float = this.component.surge * FlightSettings.GetFloat(n"standardModeSurgeFactor");
+    let surgeForce: Float = this.component.surge * FlightSettings.GetFloat("standardModeSurgeFactor");
 
     //this.CreateImpulse(this.component.stats.d_position, FlightUtils.Right() * Vector4.Dot(FlightUtils.Forward() - direction, FlightUtils.Right()) * yawDirectionality / 2.0);
 
@@ -66,10 +66,11 @@ public abstract class FlightModeStandard extends FlightMode {
     // lift
     // force += new Vector4(0.00, 0.00, liftForce + this.component.stats.d_speedRatio * liftForce, 0.00);
     this.force += liftForce * this.component.stats.d_localUp;
+    // this.force += liftForce * FlightUtils.Up();
     // surge
     this.force += FlightUtils.Forward() * surgeForce;
     // sway
-    this.force += FlightUtils.Right() * this.component.sway * FlightSettings.GetFloat(n"standardModeSwayFactor");
+    this.force += FlightUtils.Right() * this.component.sway * FlightSettings.GetFloat("standardModeSwayFactor");
     // directional brake
     this.force -= velocityDamp;
 
@@ -78,7 +79,7 @@ public abstract class FlightModeStandard extends FlightMode {
     // roll correction
     this.torque.Y = (rollCorrection - angularDamp.Y);
     // yaw correction
-    this.torque.Z = -(this.component.yaw * FlightSettings.GetFloat(n"standardModeYawFactor") + angularDamp.Z);
+    this.torque.Z = -(this.component.yaw * FlightSettings.GetFloat("standardModeYawFactor") + angularDamp.Z);
     // rotational brake
     // torque = torque + (angularDamp);
 

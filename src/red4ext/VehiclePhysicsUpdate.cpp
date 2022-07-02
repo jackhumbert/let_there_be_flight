@@ -131,14 +131,14 @@ void __fastcall TorqueUpdate(RED4ext::physics::VehiclePhysicsStruct* a1, uintptr
 
 struct VehiclePhysicsUpdateModule : FlightModule {
   void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehiclePhysicsUpdateAddr), &VehiclePhysicsUpdate,
-                          reinterpret_cast<void **>(&VehiclePhysicsUpdate_Original));
-    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleHelperUpdateAddr), &VehicleHelperUpdate,
-                          reinterpret_cast<void **>(&VehicleHelperUpdate_Original));
-    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(AirControlProcessAddr), &AirControlProcess,
-                          reinterpret_cast<void **>(&AirControlProcess_Original));
-    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(TorqueUpdateAddr), &TorqueUpdate,
-                          reinterpret_cast<void **>(&TorqueUpdate_Original));
+    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehiclePhysicsUpdateAddr), &VehiclePhysicsUpdate,
+                          reinterpret_cast<void **>(&VehiclePhysicsUpdate_Original)));
+    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleHelperUpdateAddr), &VehicleHelperUpdate,
+                          reinterpret_cast<void **>(&VehicleHelperUpdate_Original)));
+    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(AirControlProcessAddr), &AirControlProcess,
+                          reinterpret_cast<void **>(&AirControlProcess_Original)));
+    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(TorqueUpdateAddr), &TorqueUpdate,
+                          reinterpret_cast<void **>(&TorqueUpdate_Original)));
   }
   void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehiclePhysicsUpdateAddr));

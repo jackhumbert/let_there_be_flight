@@ -432,6 +432,8 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     spdlog::info("Starting up");
     auto ptr = GetModuleHandle(nullptr);
     spdlog::info("Base address: {}", fmt::ptr(ptr));
+    auto modPtr = aHandle;
+    spdlog::info("Mod address: {}", fmt::ptr(modPtr));
 
     RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
 

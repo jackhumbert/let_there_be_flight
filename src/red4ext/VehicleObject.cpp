@@ -193,6 +193,25 @@ void VehicleGetComponentsUsingSlot(RED4ext::IScriptable *aContext, RED4ext::CSta
   }
 }
 
+void VehicleGetWeapons(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::DynArray<RED4ext::Handle<RED4ext::game::weapon::Object>> *aOut, int64_t a4) {
+  aFrame->code++; // skip ParamEnd
+
+  auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
+
+  auto allocator = new RED4ext::Memory::DefaultAllocator();
+  auto weapons = RED4ext::DynArray<RED4ext::Handle<RED4ext::game::weapon::Object>>(allocator);
+  for (const auto &weapon : v->weapons) {
+    if (weapon.weaponObject) {
+      weapon.weaponObject.refCount->IncRef();
+      weapons.EmplaceBack(weapon.weaponObject);
+    }
+  }
+
+  if (aOut) {
+    *aOut = weapons;
+  }
+}
+
 struct VehicleObjectModule : FlightModule {
   void PostRegisterTypes() {
     auto rtti = RED4ext::CRTTISystem::Get();
@@ -205,7 +224,8 @@ struct VehicleObjectModule : FlightModule {
     vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnX2", nullptr, 0x5B4));
     vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnX3", nullptr, 0x5B8));
     vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnX4", nullptr, 0x268));
-    vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Vector3"), "tracePosition", nullptr, offsetof(RED4ext::vehicle::BaseObject, tracePosition)));
+    vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Vector3"), "tracePosition", nullptr,
+                                                   offsetof(RED4ext::vehicle::BaseObject, tracePosition)));
     // vbc->props.PushBack(RED4ext::CProperty::Create(
     //  rtti->GetType("WorldTransform"), "unkWorldTransform", nullptr, 0x330));
     // vbc->props.PushBack(RED4ext::CProperty::Create(
@@ -241,6 +261,10 @@ struct VehicleObjectModule : FlightModule {
     auto getWeaponPlaceholderOrientation = RED4ext::CClassFunction::Create(
         vbc, "GetWeaponPlaceholderOrientation", "GetWeaponPlaceholderOrientation", &GetWeaponPlaceholderOrientation, {.isNative = true});
     vbc->RegisterFunction(getWeaponPlaceholderOrientation);
+
+    auto getWeapons = RED4ext::CClassFunction::Create(vbc, "GetWeapons", "GetWeapons",
+                                                            &VehicleGetWeapons, {.isNative = true});
+    vbc->RegisterFunction(getWeapons);
   }
 };
 

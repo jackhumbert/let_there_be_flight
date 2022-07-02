@@ -510,13 +510,17 @@ void IPlacedComponentUpdateHardTransformBinding(RED4ext::IScriptable *aContext, 
 
 struct EntityAddComponentModule : FlightModule {
   void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(ENTITY_INITIALIZECOMPONENTS_ADDR),
-                          &Entity_InitializeComponents_Hook,
-                          reinterpret_cast<void **>(&Entity_InitializeComponents_Original));
-    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VEHICLEPROCESSWEAPONS_ADDR), &VehicleProcessWeapons_Hook,
-                          reinterpret_cast<void **>(&VehicleProcessWeapons_Original));
-    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(SpawnEffectAddr), &SpawnEffect,
-                          reinterpret_cast<void **>(&SpawnEffect_Original));
+    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(ENTITY_INITIALIZECOMPONENTS_ADDR),
+                                  &Entity_InitializeComponents_Hook,
+                                  reinterpret_cast<void **>(&Entity_InitializeComponents_Original)))
+      ;
+    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VEHICLEPROCESSWEAPONS_ADDR),
+                                  &VehicleProcessWeapons_Hook,
+                                  reinterpret_cast<void **>(&VehicleProcessWeapons_Original)))
+      ;
+    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(SpawnEffectAddr), &SpawnEffect,
+                                  reinterpret_cast<void **>(&SpawnEffect_Original)))
+      ;
   }
   void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(ENTITY_INITIALIZECOMPONENTS_ADDR));

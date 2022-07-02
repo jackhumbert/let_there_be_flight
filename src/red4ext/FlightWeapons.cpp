@@ -53,6 +53,30 @@ void __fastcall AddWeapons(RED4ext::vehicle::BaseObject *vehicle) {
       gapso->paramName = "renderPlane";
       gas->animParams.EmplaceBack(*gapso);
     }
+    {
+      auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->AllocInstance();
+      gapso->slotID = "AttachmentSlots.PanamVehicleTurret";
+      gapso->paramName = "renderPlane";
+      gas->animParams.EmplaceBack(*gapso);
+    }
+    {
+      auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->AllocInstance();
+      gapso->slotID = "AttachmentSlots.PanzerHomingMissiles";
+      gapso->paramName = "renderPlane";
+      gas->animParams.EmplaceBack(*gapso);
+    }
+    {
+      auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->AllocInstance();
+      gapso->slotID = "AttachmentSlots.PanzerCounterMeasuresLeft";
+      gapso->paramName = "renderPlane";
+      gas->animParams.EmplaceBack(*gapso);
+    }
+    {
+      auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->AllocInstance();
+      gapso->slotID = "AttachmentSlots.PanzerCounterMeasuresRight";
+      gapso->paramName = "renderPlane";
+      gas->animParams.EmplaceBack(*gapso);
+    }
     vehicle->components.EmplaceBack(RED4ext::Handle<RED4ext::game::AttachmentSlots>(gas));
   }
 
@@ -75,44 +99,44 @@ void __fastcall AddWeapons(RED4ext::vehicle::BaseObject *vehicle) {
     weapon->wholeBurstProjectiles = 1;
     vehicle->weapons.EmplaceBack(*weapon);
   }
-  {
-    auto weapon = new RED4ext::vehicle::Weapon();
-    weapon->attackRange = 100.0;
-    weapon->canFriendlyFire = true;
-    weapon->cycleTime = 0.01;
-    weapon->genericShoot = true;
-    weapon->genericTick = true;
-    weapon->item = RED4ext::TweakDBID("Items.Smasher_Auto_Shotgun");
-    weapon->maxPitch = 90.0;
-    weapon->maxYaw = 180.0;
-    weapon->minPitch = -90.0;
-    weapon->minYaw = -180.0;
-    weapon->singleProjectileCycleTime = 1.0;
-    weapon->singleShotProjectiles = 1;
-    weapon->slot = RED4ext::TweakDBID("AttachmentSlots.WeaponRight");
-    weapon->weaponShootAnimEvent = "shoot_rocket";
-    weapon->wholeBurstProjectiles = 1;
-    vehicle->weapons.EmplaceBack(*weapon);
-  }
   //{
   //  auto weapon = new RED4ext::vehicle::Weapon();
   //  weapon->attackRange = 100.0;
   //  weapon->canFriendlyFire = true;
-  //  weapon->cycleTime = 0.1;
-  //  weapon->genericShoot = true;
+  //  weapon->cycleTime = 0.5;
+  //  weapon->genericShoot = false;
   //  weapon->genericTick = true;
-  //  weapon->item = RED4ext::TweakDBID("Items.CPO_HMG");
+  //  weapon->item = RED4ext::TweakDBID("Items.Panzer_Counter_Measures_Launcher");
   //  weapon->maxPitch = 90.0;
   //  weapon->maxYaw = 180.0;
   //  weapon->minPitch = -90.0;
   //  weapon->minYaw = -180.0;
   //  weapon->singleProjectileCycleTime = 1.0;
   //  weapon->singleShotProjectiles = 1;
-  //  weapon->slot = RED4ext::TweakDBID("AttachmentSlots.WeaponRight");
+  //  weapon->slot = RED4ext::TweakDBID("AttachmentSlots.PanzerCounterMeasuresRight");
   //  weapon->weaponShootAnimEvent = "shoot_rocket";
   //  weapon->wholeBurstProjectiles = 1;
   //  vehicle->weapons.EmplaceBack(*weapon);
   //}
+  {
+    auto weapon = new RED4ext::vehicle::Weapon();
+    weapon->attackRange = 100.0;
+    weapon->canFriendlyFire = true;
+    weapon->cycleTime = 0.5;
+    weapon->genericShoot = true;
+    weapon->genericTick = true;
+    weapon->item = RED4ext::TweakDBID("Items.Panzer_Missile_Launcher");
+    weapon->maxPitch = 90.0;
+    weapon->maxYaw = 180.0;
+    weapon->minPitch = -90.0;
+    weapon->minYaw = -180.0;
+    weapon->singleProjectileCycleTime = 0.017;
+    weapon->singleShotProjectiles = 1;
+    weapon->slot = RED4ext::TweakDBID("AttachmentSlots.PanzerHomingMissiles");
+    weapon->weaponShootAnimEvent = "shoot_rocket";
+    weapon->wholeBurstProjectiles = 15;
+    vehicle->weapons.EmplaceBack(*weapon);
+  }
 }
 
 void __fastcall AddWeaponSlots(RED4ext::ent::SlotComponent *sc) {
@@ -128,6 +152,24 @@ void __fastcall AddWeaponSlots(RED4ext::ent::SlotComponent *sc) {
   }
   {
     auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+    slot->boneName = "swingarm_front_right";
+    slot->relativePosition.X += 0.25;
+    slot->relativePosition.Y += 0.75;
+    slot->slotName = "PanamVehicleTurret";
+    sc->slots.EmplaceBack(*slot);
+    sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
+  }
+  {
+    auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+    slot->boneName = "swingarm_front_right";
+    slot->relativePosition.X += 0.25;
+    slot->relativePosition.Y += 0.75;
+    slot->slotName = "PanzerHomingMissiles";
+    sc->slots.EmplaceBack(*slot);
+    sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
+  }
+  {
+    auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
     slot->boneName = "swingarm_front_left";
     slot->relativePosition.X -= 0.25;
     // slot->relativePosition.Y += 0.75;
@@ -137,10 +179,28 @@ void __fastcall AddWeaponSlots(RED4ext::ent::SlotComponent *sc) {
   }
   {
     auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+    slot->boneName = "swingarm_front_left";
+    slot->relativePosition.X -= 0.25;
+    // slot->relativePosition.Y += 0.75;
+    slot->slotName = "PanzerCounterMeasuresLeft";
+    sc->slots.EmplaceBack(*slot);
+    sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
+  }
+  {
+    auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
     slot->boneName = "swingarm_front_right";
     slot->relativePosition.X += 0.25;
     // slot->relativePosition.Y += 0.75;
     slot->slotName = "WeaponRight";
+    sc->slots.EmplaceBack(*slot);
+    sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
+  }
+  {
+    auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+    slot->boneName = "swingarm_front_right";
+    slot->relativePosition.X += 0.25;
+    // slot->relativePosition.Y += 0.75;
+    slot->slotName = "PanzerCounterMeasuresRight";
     sc->slots.EmplaceBack(*slot);
     sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
   }

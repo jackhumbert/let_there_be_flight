@@ -93,13 +93,12 @@ void build_tweaks() {
 }
 
 void build_fmod() {
-  fs::create_directories("build/bin/x64");
+  fs::create_directories("build/red4ext/plugins/let_there_be_flight");
   vector<string> files;
   for (const auto &entry : fs::directory_iterator("fmod_studio/API")) {
-    fs::copy(entry.path(), "build/bin/x64/" + entry.path().filename().string(),
+    fs::copy(entry.path(), "build/red4ext/plugins/let_there_be_flight/" + entry.path().filename().string(),
              fs::copy_options::update_existing);
     cout << "Copied FMOD file: " << entry.path().filename().string() << endl;
-    installedFiles.push_back("bin/x64/" + entry.path().filename().string());
   }
 
   fs::create_directories("build/red4ext/plugins/let_there_be_flight");

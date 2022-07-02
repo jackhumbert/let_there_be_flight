@@ -126,14 +126,12 @@ char __fastcall Camera::FPPCameraUpdate(RED4ext::game::FPPCameraComponent *fpp, 
 }
 
 void Camera::Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-  if (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(TPPCameraStatsUpdateAddr), &TPPCameraStatsUpdate,
-                             reinterpret_cast<void **>(&TPPCameraStatsUpdate_Original))) {
-    spdlog::error("TPP Camera hook could not be attached");
-  }
-  if (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(FPPCameraUpdateAddr), &FPPCameraUpdate,
-    reinterpret_cast<void**>(&FPPCameraUpdate_Original))) {
-    spdlog::error("FPP Camera hook could not be attached");
-  }
+  while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(TPPCameraStatsUpdateAddr), &TPPCameraStatsUpdate,
+                                reinterpret_cast<void **>(&TPPCameraStatsUpdate_Original)))
+    ;
+  while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(FPPCameraUpdateAddr), &FPPCameraUpdate,
+                                reinterpret_cast<void **>(&FPPCameraUpdate_Original)))
+    ;
 }
 
 void Camera::Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {

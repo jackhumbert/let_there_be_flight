@@ -1,9 +1,9 @@
 #include "FlightSettings.hpp"
 #include "FlightModule.hpp"
+#include "FlightLog.hpp"
 
 #include "Utils.hpp"
 #include "stdafx.hpp"
-#include <RED4ext/Scripting/Natives/Generated/Vector3.hpp>
 
 namespace FlightSettings {
 
@@ -26,18 +26,19 @@ FlightSettings *FlightSettings::GetInstance() {
 RED4ext::HashMap<RED4ext::CName, float> floats;
 RED4ext::HashMap<RED4ext::CName, RED4ext::Vector3> vector3s;
 
-float GetFloat(RED4ext::CName name) {
+float GetFloat(RED4ext::CString name) {
   if (floats.allocator) {
-    auto fl = floats.Get(name);
+    auto fl = floats.Get(RED4ext::CName(name.c_str()));
     if (fl) {
       return *fl;
     }
   }
+  spdlog::warn("Could not find Float: {0}", name.c_str());
   return 0.0;
 }
 
 void GetFloat(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, float *aOut, int64_t a4) {
-  RED4ext::CName name;
+  RED4ext::CString name;
   RED4ext::GetParameter(aFrame, &name);
 
   aFrame->code++;
@@ -48,7 +49,7 @@ void GetFloat(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, floa
 }
 
 void SetFloat(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, float *aOut, int64_t a4) {
-  RED4ext::CName name;
+  RED4ext::CString name;
   float value;
   RED4ext::GetParameter(aFrame, &name);
   RED4ext::GetParameter(aFrame, &value);
@@ -59,21 +60,22 @@ void SetFloat(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, floa
     *aOut = GetFloat(name);
   }
 
-  floats.InsertOrAssign(name, value);
+  floats.InsertOrAssign(RED4ext::CName(name.c_str()), value);
 }
 
-RED4ext::Vector3 GetVector3(RED4ext::CName name) {
+RED4ext::Vector3 GetVector3(RED4ext::CString name) {
   if (vector3s.allocator) {
-    auto vector3 = vector3s.Get(name);
+    auto vector3 = vector3s.Get(RED4ext::CName(name.c_str()));
     if (vector3) {
       return *vector3;
     }
   }
+  spdlog::warn("Could not find Vector3: {0}", name.c_str());
   return RED4ext::Vector3(0.0, 0.0, 0.0);
 }
 
 void GetVector3(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Vector3 *aOut, int64_t a4) {
-  RED4ext::CName name;
+  RED4ext::CString name;
   RED4ext::GetParameter(aFrame, &name);
 
   aFrame->code++;
@@ -84,7 +86,7 @@ void GetVector3(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RE
 }
 
 void SetVector3(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Vector3 *aOut, int64_t a4) {
-  RED4ext::CName name;
+  RED4ext::CString name;
   float x;
   float y;
   float z;
@@ -99,7 +101,7 @@ void SetVector3(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RE
     *aOut = GetVector3(name);
   }
 
-  vector3s.InsertOrAssign(name, RED4ext::Vector3(x, y, z));
+  vector3s.InsertOrAssign(RED4ext::CName(name.c_str()), RED4ext::Vector3(x, y, z));
 }
 
 bool Setup(RED4ext::CGameApplication *aApp) {
@@ -132,7 +134,7 @@ struct FlightSettingsModule : FlightModule {
 
   void PostRegisterTypes() {
     auto rtti = RED4ext::CRTTISystem::Get();
-    auto scriptable = rtti->GetClassByScriptName("ScriptableSystem");
+    auto scriptable = rtti->GetClassByScriptName("IScriptable");
     cls.parent = scriptable;
 
     auto getFloat = RED4ext::CClassStaticFunction::Create(&cls, "GetFloat", "GetFloat", &GetFloat,

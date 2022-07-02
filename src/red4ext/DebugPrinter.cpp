@@ -15,8 +15,9 @@ void __fastcall DebugPrint(uintptr_t a1, RED4ext::CString *a2) {
 
 struct DebugPrintModule : FlightModule {
   void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-    aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(DebugPrintAddr), &DebugPrint,
-                          reinterpret_cast<void **>(&DebugPrint_Original));
+    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(DebugPrintAddr), &DebugPrint,
+                                  reinterpret_cast<void **>(&DebugPrint_Original)))
+      ;
   }
   void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(DebugPrintAddr));

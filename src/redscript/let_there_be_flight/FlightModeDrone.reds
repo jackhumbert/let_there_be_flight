@@ -18,7 +18,7 @@ public class FlightModeDrone extends FlightMode {
     //   vehicleSlots.GetSlotTransform(n"seat_front_left", slotT);
     //   let vwt = Matrix.GetInverted(this.component.GetVehicle().GetLocalToWorld());
     //   let v = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT)) * vwt;
-    //   camera.SetLocalPosition(new Vector4(0.0, FlightSettings.GetFloat(n"FPVCameraOffsetY"), FlightSettings.GetFloat(n"FPVCameraOffsetZ"), 0.0) - v);
+    //   camera.SetLocalPosition(new Vector4(0.0, FlightSettings.GetFloat("FPVCameraOffsetY"), FlightSettings.GetFloat("FPVCameraOffsetZ"), 0.0) - v);
     //   // camera.Activate(1.0);
     // }
   }
@@ -33,23 +33,23 @@ public class FlightModeDrone extends FlightMode {
   public func GetDescription() -> String = "Drone";
 
   public func Update(timeDelta: Float) -> Void {
-      let velocityDamp: Vector4 = this.component.stats.d_localVelocity * this.component.linearBrake * FlightSettings.GetFloat(n"brakeFactorLinear") * this.component.stats.s_brakingFrictionFactor;   
-      let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetFloat(n"brakeFactorAngular") * this.component.stats.s_brakingFrictionFactor;
+      let velocityDamp: Vector4 = this.component.stats.d_localVelocity * this.component.linearBrake * FlightSettings.GetFloat("brakeFactorLinear") * this.component.stats.s_brakingFrictionFactor;   
+      let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetFloat("brakeFactorAngular") * this.component.stats.s_brakingFrictionFactor;
 
       this.force = new Vector4(0.0, 0.0, 0.0, 0.0);
       // lift
-      this.force += FlightUtils.Up() * this.component.lift * FlightSettings.GetFloat(n"droneModeLiftFactor");
+      this.force += FlightUtils.Up() * this.component.lift * FlightSettings.GetFloat("droneModeLiftFactor");
       // surge
-      this.force += FlightUtils.Forward() * this.component.surge * FlightSettings.GetFloat(n"droneModeSurgeFactor");
+      this.force += FlightUtils.Forward() * this.component.surge * FlightSettings.GetFloat("droneModeSurgeFactor");
       // directional brake
       this.force -= velocityDamp;
 
       this.torque = new Vector4(0.0, 0.0, 0.0, 0.0);
       // pitch correction
-      this.torque.X = -(this.component.pitch * FlightSettings.GetFloat(n"droneModePitchFactor") + angularDamp.X);
+      this.torque.X = -(this.component.pitch * FlightSettings.GetFloat("droneModePitchFactor") + angularDamp.X);
       // roll correction
-      this.torque.Y = (this.component.roll * FlightSettings.GetFloat(n"droneModeRollFactor") - angularDamp.Y);
+      this.torque.Y = (this.component.roll * FlightSettings.GetFloat("droneModeRollFactor") - angularDamp.Y);
       // yaw correction
-      this.torque.Z = -(this.component.yaw * FlightSettings.GetFloat(n"droneModeYawFactor") + angularDamp.Z);
+      this.torque.Z = -(this.component.yaw * FlightSettings.GetFloat("droneModeYawFactor") + angularDamp.Z);
   }
 }
