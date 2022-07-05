@@ -227,20 +227,6 @@ public class FlightComponent extends ScriptableDeviceComponent {
         //this.sys.audio.Play("vehicle3_on");
         // this.sys.audio.StartWithPitch("playerVehicle", "vehicle3_TPP", this.GetPitch());
       }
-
-      let weapons = this.GetVehicle().GetWeapons();
-      if ArraySize(weapons) > 0 {
-        FlightLog.Info("[FlightWeapon] " + weapons[0].GetDisplayName());
-        FlightLog.Info("[FlightWeapon] ammo count: " + ToString(WeaponObject.GetMagazineAmmoCount(weapons[0])));
-        FlightLog.Info("[FlightWeapon] capacity: " + ToString(WeaponObject.GetMagazineCapacity(weapons[0])));
-        if ArraySize(weapons) > 1 {
-          FlightLog.Info("[FlightWeapon] " + weapons[1].GetDisplayName());
-          FlightLog.Info("[FlightWeapon] ammo count: " + ToString(WeaponObject.GetMagazineAmmoCount(weapons[1])));
-          FlightLog.Info("[FlightWeapon] capacity: " + ToString(WeaponObject.GetMagazineCapacity(weapons[1])));
-        }
-      } else {
-        FlightLog.Info("[FlightWeapon] no weapons");
-      }
     }
     let normal: Vector4;
     this.SetupTires();
