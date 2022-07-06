@@ -104,17 +104,17 @@ struct DebugPrintModule : FlightModule {
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(DebugPrintAddr), &DebugPrint,
                                   reinterpret_cast<void **>(&DebugPrint_Original)))
       ;
-    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(CallFuncAddr), &CallFunc,
-                                  reinterpret_cast<void **>(&CallFunc_Original)))
-      ;
-    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(CrashFuncAddr), &CrashFunc,
-                                  reinterpret_cast<void **>(&CrashFunc_Original)))
-      ;
+    //while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(CallFuncAddr), &CallFunc,
+                                  //reinterpret_cast<void **>(&CallFunc_Original)))
+      //;
+    //while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(CrashFuncAddr), &CrashFunc,
+                                  //reinterpret_cast<void **>(&CrashFunc_Original)))
+      //;
   }
   void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(DebugPrintAddr));
-    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(CallFuncAddr));
-    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(CrashFuncAddr));
+    //aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(CallFuncAddr));
+    //aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(CrashFuncAddr));
   }
 };
 
