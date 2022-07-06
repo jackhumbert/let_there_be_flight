@@ -55,7 +55,7 @@ public class FlightFx {
   }
 
   public func Initialize(component: ref<FlightComponent>) -> ref<FlightFx> {
-    FlightLog.Info("[FlightFx] Initialize");
+    // FlightLog.Info("[FlightFx] Initialize");
     this.sys = component.sys;
     this.component = component;
     this.resource = Cast<FxResource>(r"user\\jackhumbert\\effects\\ion_thruster.effect");

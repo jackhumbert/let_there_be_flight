@@ -9,6 +9,7 @@
 #include <hidpi.h>
 #include <concrt.h>
 #include <winrt/Windows.Gaming.Input.h>
+#include <winrt/Windows.Foundation.h>
 using namespace winrt;
 using namespace Windows::Gaming::Input;
 
@@ -48,7 +49,7 @@ struct Input {
   uint32_t unk0C;
   uint32_t unk10;
   uint32_t unk14;
-  uint32_t unk18;
+  uint32_t unk18; // two disables
   uint32_t unk1C;
   HWND hwnd;
   uint64_t index;
@@ -99,17 +100,30 @@ protected:
 //std::vector<RawGameController> myRawGameControllers;
 //concurrency::critical_section myLock{};
 
-winrt::array_view<bool> buttons;
-winrt::array_view<GameControllerSwitchPosition> switches;
-winrt::array_view<double> axes;
-
-winrt::array_view<bool> buttonsNew;
-winrt::array_view<GameControllerSwitchPosition> switchesNew;
-winrt::array_view<double> axesNew;
 
 struct Joystick {
+
   bool connected;
-  RawGameController rawGameController;
+  RawGameController rawGameController = RawGameController(nullptr);
+
+  bool buttons[0x100];
+  std::vector<GameControllerSwitchPosition> switches;
+  std::vector<double> axes;
+
+  bool buttonsNew[0x100];
+  std::vector<GameControllerSwitchPosition> switchesNew;
+  std::vector<double> axesNew;
+
+  Joystick(RawGameController const &rgc) {
+    rawGameController = rgc;
+    axes.resize(rawGameController.AxisCount());
+    axesNew.resize(rawGameController.AxisCount());
+    connected = true;
+  }
+
+  void Update() {
+    rawGameController.GetCurrentReading(buttonsNew, switchesNew, axesNew);
+  }
 };
 
 std::vector<Joystick> joysticks;
@@ -129,7 +143,8 @@ public:
               return;
             }
           }
-          joysticks.push_back({true, addedController});
+          auto joystick = new Joystick(addedController);
+          joysticks.push_back(*joystick);
         });
 
     RawGameController::RawGameControllerRemoved(
@@ -150,52 +165,121 @@ public:
     return this;
   }
 
-  RED4ext::EInputKey GetKeyForAxis(uint32_t axis) {
-    switch (axis) { 
-    case 0:
-      return RED4ext::EInputKey::IK_Pad_RightAxisX;
-      break;
-    case 1:
-      return RED4ext::EInputKey::IK_Pad_RightAxisY;
-      break;
-    case 2:
+  RED4ext::EInputKey GetKeyForButton(uint32_t button) {
+    switch (button) {
+    case (1 - 1):
+      return RED4ext::EInputKey::IK_Joy1;
+    case (2 - 1):
+      return RED4ext::EInputKey::IK_Joy2;
+    case (3 - 1):
       return RED4ext::EInputKey::IK_Joy3;
-      break;
-    case 3:
-      return RED4ext::EInputKey::IK_Pad_LeftAxisX;
-      break;
-    case 4:
-      return RED4ext::EInputKey::IK_Pad_LeftAxisY;
-      break;
-    case 5:
+    case (4 - 1):
+      return RED4ext::EInputKey::IK_Pad_Start;
+    case (6 - 1):
+      return RED4ext::EInputKey::IK_Pad_Y_TRIANGLE;
+    case (7 - 1):
+      return RED4ext::EInputKey::IK_Pad_B_CIRCLE;
+    case (8 - 1):
+      return RED4ext::EInputKey::IK_Pad_A_BOX;
+    case (9 - 1):
+      return RED4ext::EInputKey::IK_Pad_X_SQUARE;
+    case (10 - 1):
+      return RED4ext::EInputKey::IK_Pad_RightThumb;
+    case (11 - 1):
+      return RED4ext::EInputKey::IK_Pad_RightShoulder;
+    case (50 - 1):
+      return RED4ext::EInputKey::IK_Joy4;
+    case (51 - 1):
+      return RED4ext::EInputKey::IK_Joy5;
+    case (52 - 1):
       return RED4ext::EInputKey::IK_Joy6;
-      break;
+    case (54 - 1):
+      return RED4ext::EInputKey::IK_Pad_LeftThumb;
+    case (56 - 1):
+      return RED4ext::EInputKey::IK_Pad_Back_Select;
+    case (61 - 1):
+      return RED4ext::EInputKey::IK_Pad_DigitDown;
+    case (62 - 1):
+      return RED4ext::EInputKey::IK_Pad_DigitUp;
+    case (63 - 1):
+      return RED4ext::EInputKey::IK_Pad_DigitLeft;
+    case (64 - 1):
+      return RED4ext::EInputKey::IK_Pad_DigitRight;
+    case (66 - 1):
+      return RED4ext::EInputKey::IK_Pad_LeftShoulder;
     default:
       return RED4ext::EInputKey::IK_None;
-      break;
+    }
+  }
+
+  RED4ext::EInputKey GetKeyForAxis(uint32_t axis) {
+    switch (axis) {
+    case 0: 
+      return RED4ext::EInputKey::IK_Pad_LeftAxisX;
+    case 1: 
+      return RED4ext::EInputKey::IK_Pad_LeftAxisY;
+    case 2: 
+      return RED4ext::EInputKey::IK_JoyR;
+    case 3: 
+      return RED4ext::EInputKey::IK_Pad_RightAxisX;
+    case 4: 
+      return RED4ext::EInputKey::IK_Pad_RightAxisY;
+    case 5: 
+      return RED4ext::EInputKey::IK_Joy6;
+    default: 
+      return RED4ext::EInputKey::IK_None;
+    }
+  }
+
+  double GetInversionForAxis(uint32_t axis) {
+    switch (axis) {
+    case 0: 
+      return 1.0;
+    case 1: 
+      return -1.0;
+    case 2: 
+      return 1.0;
+    case 3: 
+      return 1.0;
+    case 4: 
+      return -1.0;
+    case 5: 
+      return 1.0;
+    default: 
+      return 1.0;
     }
   }
 
   Input *__fastcall GetInputs(RED4ext::DynArray<Input> *inputs, HWND hwnd) { 
-    for (auto const &joystick : joysticks) {
+    for (auto &joystick : joysticks) {
       if (!joystick.connected)
         continue;
-
-      joystick.rawGameController.GetCurrentReading(buttonsNew, switchesNew, axesNew);
-      for (int i = 0; i < axesNew.size(); ++i) {
-        bool update = false;
-        if (i >= axes.size()) {
-          update = true;
-          axes = axesNew;
+      joystick.Update();
+      auto buttonCount = 0x100;
+      for (int i = 0; i < buttonCount; ++i) {
+        if (joystick.buttons[i] != joystick.buttonsNew[i]) {
+          joystick.buttons[i] = joystick.buttonsNew[i];
+          auto key = GetKeyForButton(i);
+          if (key != RED4ext::EInputKey::IK_None) {
+            auto input = new Input();
+            UpdateInput(input, key, joystick.buttons[i] ? EInputAction::IACT_Press : EInputAction::IACT_Release, 1.0, 0,
+                        0, hwnd,
+                        userIndex);
+            inputs->EmplaceBack(*input);
+          }
         }
-        if (axes[i] != axesNew[i]) {
-          update = true;
-          axes[i] = axesNew[i];
-        }
-        if (update) {
-          auto input1 = new Input();
-          UpdateInput(input1, GetKeyForAxis(i), EInputAction::IACT_Axis, axes[i], 0, 0, hwnd, userIndex);
-          inputs->EmplaceBack(*input1);
+      }
+      for (int i = 0; i < joystick.axesNew.size(); ++i) {
+        if (joystick.axes[i] != joystick.axesNew[i]) {
+          joystick.axes[i] = joystick.axesNew[i];
+          auto key = GetKeyForAxis(i);
+          if (key != RED4ext::EInputKey::IK_None) {
+            auto input = new Input();
+            UpdateInput(input, key, EInputAction::IACT_Axis, (joystick.axes[i] - 0.5) * 2.0 * GetInversionForAxis(i), 0,
+                        0, hwnd,
+                        userIndex);
+            inputs->EmplaceBack(*input);
+          }
         }
       }
     }
@@ -243,103 +327,103 @@ CustomGamepad *__fastcall InitializeXPad(CustomGamepad *gamepad, uint32_t gamepa
   return gamepad;
 }
 
-// 48 83 EC 48 33 C0 48 C7 44 24 20 01 00 06 00 48
-bool SetupRawInputDevices();
-constexpr uintptr_t SetupRawInputDevicesAddr = 0x7988F0;
-decltype(&SetupRawInputDevices) SetupRawInputDevices_Original;
+//// 48 83 EC 48 33 C0 48 C7 44 24 20 01 00 06 00 48
+//bool SetupRawInputDevices();
+//constexpr uintptr_t SetupRawInputDevicesAddr = 0x7988F0;
+//decltype(&SetupRawInputDevices) SetupRawInputDevices_Original;
+//
+//RAWINPUTDEVICE deviceList[2];
+//
+//bool SetupRawInputDevices() {
+//
+//  deviceList[0].usUsagePage = HID_USAGE_PAGE_GENERIC;
+//  deviceList[0].usUsage = HID_USAGE_GENERIC_KEYBOARD;
+//  deviceList[0].dwFlags = 0;
+//  deviceList[0].hwndTarget = 0;
+//
+//  deviceList[1].usUsagePage = HID_USAGE_PAGE_GENERIC;
+//  deviceList[1].usUsage = HID_USAGE_GENERIC_MOUSE;
+//  deviceList[1].dwFlags = 0;
+//  deviceList[1].hwndTarget = 0;
+//
+//
+//  //deviceList[2].usUsagePage = HID_USAGE_PAGE_GENERIC;
+//  //deviceList[2].usUsage = HID_USAGE_GENERIC_GAMEPAD;
+//  ////deviceList[2].dwFlags = RIDEV_INPUTSINK;
+//  //deviceList[2].dwFlags = 0;
+//  //deviceList[2].hwndTarget = 0;
+//
+//  //deviceList[3].usUsagePage = HID_USAGE_PAGE_GENERIC;
+//  //deviceList[3].usUsage = HID_USAGE_GENERIC_JOYSTICK;
+//  ////deviceList[3].dwFlags = RIDEV_INPUTSINK;
+//  //deviceList[3].dwFlags = 0;
+//  //deviceList[3].hwndTarget = 0;
+//
+//  //UINT deviceCount = sizeof(deviceList) / sizeof(*deviceList);
+//  return RegisterRawInputDevices(deviceList, 2, 0x10);
+//}
 
-RAWINPUTDEVICE deviceList[2];
 
-bool SetupRawInputDevices() {
-
-  deviceList[0].usUsagePage = HID_USAGE_PAGE_GENERIC;
-  deviceList[0].usUsage = HID_USAGE_GENERIC_KEYBOARD;
-  deviceList[0].dwFlags = 0;
-  deviceList[0].hwndTarget = 0;
-
-  deviceList[1].usUsagePage = HID_USAGE_PAGE_GENERIC;
-  deviceList[1].usUsage = HID_USAGE_GENERIC_MOUSE;
-  deviceList[1].dwFlags = 0;
-  deviceList[1].hwndTarget = 0;
-
-
-  //deviceList[2].usUsagePage = HID_USAGE_PAGE_GENERIC;
-  //deviceList[2].usUsage = HID_USAGE_GENERIC_GAMEPAD;
-  ////deviceList[2].dwFlags = RIDEV_INPUTSINK;
-  //deviceList[2].dwFlags = 0;
-  //deviceList[2].hwndTarget = 0;
-
-  //deviceList[3].usUsagePage = HID_USAGE_PAGE_GENERIC;
-  //deviceList[3].usUsage = HID_USAGE_GENERIC_JOYSTICK;
-  ////deviceList[3].dwFlags = RIDEV_INPUTSINK;
-  //deviceList[3].dwFlags = 0;
-  //deviceList[3].hwndTarget = 0;
-
-  //UINT deviceCount = sizeof(deviceList) / sizeof(*deviceList);
-  return RegisterRawInputDevices(deviceList, 2, 0x10);
-}
-
-
-// 48 89 6C 24 20 57 41 56 41 57 48 81 EC 90 00 00
-__int64 __fastcall ProcessMouseAndKeyboardInputs(RAWINPUT *rawInput, __int64 a2, HWND hwnd);
-constexpr uintptr_t ProcessMouseAndKeyboardInputsAddr = 0x798100;
-decltype(&ProcessMouseAndKeyboardInputs) ProcessMouseAndKeyboardInputs_Original;
-
-__int64 __fastcall ProcessMouseAndKeyboardInputs(RAWINPUT *rawInput, __int64 a2, HWND hwnd) {
-  auto og = ProcessMouseAndKeyboardInputs_Original(rawInput, a2, hwnd);
-  //if (rawInput->header.dwType == RIM_TYPEHID) {
-  //  UINT size = 0;
-  //  GetRawInputDeviceInfo(rawInput->header.hDevice, RIDI_PREPARSEDDATA, 0, &size);
-  //  _HIDP_PREPARSED_DATA *data = (_HIDP_PREPARSED_DATA *)malloc(size);
-  //  bool gotPreparsedData = GetRawInputDeviceInfo(rawInput->header.hDevice, RIDI_PREPARSEDDATA, data, &size) > 0;
-  //  if (gotPreparsedData) {
-  //    HIDP_CAPS caps;
-  //    HidP_GetCaps(data, &caps);
-
-  //    HIDP_VALUE_CAPS *valueCaps = (HIDP_VALUE_CAPS *)malloc(caps.NumberInputValueCaps * sizeof(HIDP_VALUE_CAPS));
-  //    HidP_GetValueCaps(HidP_Input, valueCaps, &caps.NumberInputValueCaps, data);
-  //    for (USHORT i = 0; i < caps.NumberInputValueCaps && i < 8; ++i) {
-  //      HidP_GetUsageValue(HidP_Input, valueCaps[i].UsagePage, 0, valueCaps[i].Range.UsageMin, &capValues[i], data,
-  //                         (PCHAR)rawInput->data.hid.bRawData, rawInput->data.hid.dwSizeHid);
-  //    }
-  //    free(valueCaps);
-
-  //    HIDP_BUTTON_CAPS *buttonCaps = (HIDP_BUTTON_CAPS *)malloc(caps.NumberInputButtonCaps * sizeof(HIDP_BUTTON_CAPS));
-  //    HidP_GetButtonCaps(HidP_Input, buttonCaps, &caps.NumberInputButtonCaps, data);
-  //    for (USHORT i = 0; i < caps.NumberInputButtonCaps; ++i) {
-  //      ULONG usageCount = buttonCaps->Range.UsageMax - buttonCaps->Range.UsageMin + 1;
-  //      USAGE *usages = (USAGE *)malloc(sizeof(USAGE) * usageCount);
-  //      HidP_GetUsages(HidP_Input, buttonCaps[i].UsagePage, 0, usages, &usageCount, data,
-  //                     (PCHAR)rawInput->data.hid.bRawData, rawInput->data.hid.dwSizeHid);
-  //      for (ULONG usageIndex = 0; usageIndex < usageCount && usageIndex < 0x80; ++usageIndex) {
-  //        usageValues[usageIndex] = usages[usageIndex];
-  //      }
-  //      free(usages);
-  //    }
-  //    free(buttonCaps);
-  //  }
-  //  free(data);
-  //}
-  return og;
-}
+//// 48 89 6C 24 20 57 41 56 41 57 48 81 EC 90 00 00
+//__int64 __fastcall ProcessMouseAndKeyboardInputs(RAWINPUT *rawInput, __int64 a2, HWND hwnd);
+//constexpr uintptr_t ProcessMouseAndKeyboardInputsAddr = 0x798100;
+//decltype(&ProcessMouseAndKeyboardInputs) ProcessMouseAndKeyboardInputs_Original;
+//
+//__int64 __fastcall ProcessMouseAndKeyboardInputs(RAWINPUT *rawInput, __int64 a2, HWND hwnd) {
+//  auto og = ProcessMouseAndKeyboardInputs_Original(rawInput, a2, hwnd);
+//  //if (rawInput->header.dwType == RIM_TYPEHID) {
+//  //  UINT size = 0;
+//  //  GetRawInputDeviceInfo(rawInput->header.hDevice, RIDI_PREPARSEDDATA, 0, &size);
+//  //  _HIDP_PREPARSED_DATA *data = (_HIDP_PREPARSED_DATA *)malloc(size);
+//  //  bool gotPreparsedData = GetRawInputDeviceInfo(rawInput->header.hDevice, RIDI_PREPARSEDDATA, data, &size) > 0;
+//  //  if (gotPreparsedData) {
+//  //    HIDP_CAPS caps;
+//  //    HidP_GetCaps(data, &caps);
+//
+//  //    HIDP_VALUE_CAPS *valueCaps = (HIDP_VALUE_CAPS *)malloc(caps.NumberInputValueCaps * sizeof(HIDP_VALUE_CAPS));
+//  //    HidP_GetValueCaps(HidP_Input, valueCaps, &caps.NumberInputValueCaps, data);
+//  //    for (USHORT i = 0; i < caps.NumberInputValueCaps && i < 8; ++i) {
+//  //      HidP_GetUsageValue(HidP_Input, valueCaps[i].UsagePage, 0, valueCaps[i].Range.UsageMin, &capValues[i], data,
+//  //                         (PCHAR)rawInput->data.hid.bRawData, rawInput->data.hid.dwSizeHid);
+//  //    }
+//  //    free(valueCaps);
+//
+//  //    HIDP_BUTTON_CAPS *buttonCaps = (HIDP_BUTTON_CAPS *)malloc(caps.NumberInputButtonCaps * sizeof(HIDP_BUTTON_CAPS));
+//  //    HidP_GetButtonCaps(HidP_Input, buttonCaps, &caps.NumberInputButtonCaps, data);
+//  //    for (USHORT i = 0; i < caps.NumberInputButtonCaps; ++i) {
+//  //      ULONG usageCount = buttonCaps->Range.UsageMax - buttonCaps->Range.UsageMin + 1;
+//  //      USAGE *usages = (USAGE *)malloc(sizeof(USAGE) * usageCount);
+//  //      HidP_GetUsages(HidP_Input, buttonCaps[i].UsagePage, 0, usages, &usageCount, data,
+//  //                     (PCHAR)rawInput->data.hid.bRawData, rawInput->data.hid.dwSizeHid);
+//  //      for (ULONG usageIndex = 0; usageIndex < usageCount && usageIndex < 0x80; ++usageIndex) {
+//  //        usageValues[usageIndex] = usages[usageIndex];
+//  //      }
+//  //      free(usages);
+//  //    }
+//  //    free(buttonCaps);
+//  //  }
+//  //  free(data);
+//  //}
+//  return og;
+//}
 
 struct CustomInputModule : FlightModule {
   void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(InitializeXPadAddr), &InitializeXPad,
                                   reinterpret_cast<void **>(&InitializeXPad_Original)))
       ;
-    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(SetupRawInputDevicesAddr), &SetupRawInputDevices,
-                                  reinterpret_cast<void **>(&SetupRawInputDevices_Original)))
-      ;
-    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(ProcessMouseAndKeyboardInputsAddr),
-                                  &ProcessMouseAndKeyboardInputs,
-                                  reinterpret_cast<void **>(&ProcessMouseAndKeyboardInputs_Original)))
-      ;
+    //while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(SetupRawInputDevicesAddr), &SetupRawInputDevices,
+    //                              reinterpret_cast<void **>(&SetupRawInputDevices_Original)))
+    //  ;
+    //while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(ProcessMouseAndKeyboardInputsAddr),
+    //                              &ProcessMouseAndKeyboardInputs,
+    //                              reinterpret_cast<void **>(&ProcessMouseAndKeyboardInputs_Original)))
+    //  ;
   }
   void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(InitializeXPadAddr));
-    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(SetupRawInputDevicesAddr));
-    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(ProcessMouseAndKeyboardInputsAddr));
+    //aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(SetupRawInputDevicesAddr));
+    //aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(ProcessMouseAndKeyboardInputsAddr));
   }
 };
 

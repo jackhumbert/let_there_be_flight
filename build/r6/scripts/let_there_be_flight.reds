@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-07-02 02:57:13.5688709
+// This file was automatically generated on 2022-07-06 04:25:50.8638623
 
 // FlightAudio.reds
 
@@ -411,20 +411,6 @@ public class FlightComponent extends ScriptableDeviceComponent {
         // this.sys.audio.Stop("otherVehicle" + ToString(EntityID.GetHash(this.GetVehicle().GetEntityID())));
         //this.sys.audio.Play("vehicle3_on");
         // this.sys.audio.StartWithPitch("playerVehicle", "vehicle3_TPP", this.GetPitch());
-      }
-
-      let weapons = this.GetVehicle().GetWeapons();
-      if ArraySize(weapons) > 0 {
-        FlightLog.Info("[FlightWeapon] " + weapons[0].GetDisplayName());
-        FlightLog.Info("[FlightWeapon] ammo count: " + ToString(WeaponObject.GetMagazineAmmoCount(weapons[0])));
-        FlightLog.Info("[FlightWeapon] capacity: " + ToString(WeaponObject.GetMagazineCapacity(weapons[0])));
-        if ArraySize(weapons) > 1 {
-          FlightLog.Info("[FlightWeapon] " + weapons[1].GetDisplayName());
-          FlightLog.Info("[FlightWeapon] ammo count: " + ToString(WeaponObject.GetMagazineAmmoCount(weapons[1])));
-          FlightLog.Info("[FlightWeapon] capacity: " + ToString(WeaponObject.GetMagazineCapacity(weapons[1])));
-        }
-      } else {
-        FlightLog.Info("[FlightWeapon] no weapons");
       }
     }
     let normal: Vector4;
@@ -2978,6 +2964,7 @@ public class FlightFx {
   }
 
   public func Initialize(component: ref<FlightComponent>) -> ref<FlightFx> {
+    // FlightLog.Info("[FlightFx] Initialize");
     this.sys = component.sys;
     this.component = component;
     this.resource = Cast<FxResource>(r"user\\jackhumbert\\effects\\ion_thruster.effect");

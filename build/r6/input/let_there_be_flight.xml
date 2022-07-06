@@ -43,7 +43,9 @@
 		<!-- <action name="FlightCombat_Toggle"  map="FlightCombat_Toggle" /> -->
 		<action name="UseConsumable"		map="UseConsumable_Button" />
 		<action name="SurgePos"					map="Acceleration_Axis" />
+		<action name="SurgePos"					map="Flight_SurgePos" />
 		<action name="SurgeNeg"					map="Deceleration_Axis" />
+		<action name="SurgeNeg"					map="Flight_SurgeNeg" />
 		<action name="TurnX"						map="Flight_Yaw" />
 		<action name="Yaw"							map="Flight_Yaw" />
 		<action name="Lift" 						map="Flight_Lift" />
@@ -112,11 +114,13 @@
 	<mapping name="Flight_Fire1" type="Button">
 		<button id="IK_Pad_RightShoulder" />
 		<button id="IK_LeftMouse" />
+		<button id="IK_Joy3" />
 	</mapping>
 
 	<mapping name="Flight_Fire2" type="Button">
 		<button id="IK_Pad_DigitUp" />
 		<button id="IK_RightMouse" />
+		<button id="IK_Joy6" />
 	</mapping>
 
 	<mapping name="Flight_LinearBrake" type="Button">
@@ -129,6 +133,16 @@
 		<button id="IK_C" />
 	</mapping>
 
+	<mapping name="Flight_SurgePos" type="Axis" >
+		<button id="IK_Joy1" val="0.5" />
+		<button id="IK_Joy2" val="2.0" />
+	</mapping>
+
+	<mapping name="Flight_SurgeNeg" type="Axis" >
+		<button id="IK_Joy4" val="0.5" />
+		<button id="IK_Joy5" val="2.0" />
+	</mapping>
+
 	<mapping name="Flight_Yaw" type="Axis" >
 		<button id="IK_Pad_LeftAxisX" />
 		<button id="IK_D" val="1.0" overridableUI="vehicleFlightYawRight"/>
@@ -137,12 +151,14 @@
 
 	<mapping name="Flight_Pitch" type="Axis" >
 		<button id="IK_Pad_RightAxisY" />
+		<button id="IK_JoyY" />
 		<button id="IK_L" val="1.0" overridableUI="vehicleFlightPitchForward" />
 		<button id="IK_Period" val="-1.0" overridableUI="vehicleFlightPitchBackward" />
 	</mapping>
 
 	<mapping name="Flight_Roll" type="Axis" >
 		<button id="IK_Pad_RightAxisX" />
+		<button id="IK_JoyX" />
 		<button id="IK_Slash" val="1.0" overridableUI="vehicleFlightRollRight"/>
 		<button id="IK_Comma" val="-1.0" overridableUI="vehicleFlightRollLeft"/>
 	</mapping>
@@ -154,6 +170,7 @@
 	</mapping>
 
 	<mapping name="Flight_Sway" type="Axis" >
+		<button id="IK_Joy3" />
 		<button id="IK_Right" val="1.0" overridableUI="vehicleFlightSwayRight"/>
 		<button id="IK_Left" val="-1.0" overridableUI="vehicleFlightSwayLeft"/>
 	</mapping>
