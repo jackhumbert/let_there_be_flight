@@ -35,12 +35,18 @@ enum EInputAction {
   IACT_Axis = 0x3,
 };
 
-enum EControllerType {
-  UndefinedController = 0x0,
-  PS4 = 0x1,
-  PS5 = 0x2,
-  Xbox = 0x5,
+enum EInputDevice {
+  INVALID = 0x0,
+  KBD_MOUSE = 0x1,
+  ORBIS = 0x2,
+  DURANGO = 0x3,
+  STEAM = 0x4,
+  XINPUT_PAD = 0x5,
+  STADIA = 0x6,
+  NINTENDO_SWITCH = 0x7,
+  EID_COUNT = 0xC,
 };
+
 
 struct Input {
   RED4ext::EInputKey key;
@@ -83,7 +89,7 @@ class BaseGamepad {
   virtual Input* GetInputs(RED4ext::DynArray<Input> *inputs, HWND hwnd) = 0;
   virtual Input* ResetInputs(RED4ext::DynArray<Input> *inputs, HWND hwnd) = 0;
   virtual RED4ext::CName* GetCName(RED4ext::CName*) = 0;
-  virtual EControllerType GetType() = 0;
+  virtual EInputDevice GetType() = 0;
   virtual void sub_28() { }
   virtual void sub_30() { }
   virtual uint32_t GetIndex() = 0;
@@ -94,65 +100,155 @@ protected:
   XINPUT_STATE inputState;
 };
 
-//ULONG capValues[8];
-//ULONG usageValues[0x80];
-//
-//std::vector<RawGameController> myRawGameControllers;
-//concurrency::critical_section myLock{};
+concurrency::critical_section controllerListLock;
 
+struct ICustomGameController : RED4ext::IScriptable {
+  RED4ext::CClass *GetNativeType();
 
-struct Joystick {
-
-  bool connected;
-  RawGameController rawGameController = RawGameController(nullptr);
-
-  bool buttons[0x100];
-  std::vector<GameControllerSwitchPosition> switches;
-  std::vector<double> axes;
+  RED4ext::DynArray<bool> buttons;
+  RED4ext::DynArray<GameControllerSwitchPosition> switches;
+  RED4ext::DynArray<float> axes;
 
   bool buttonsNew[0x100];
   std::vector<GameControllerSwitchPosition> switchesNew;
   std::vector<double> axesNew;
 
-  Joystick(RawGameController const &rgc) {
-    rawGameController = rgc;
-    axes.resize(rawGameController.AxisCount());
-    axesNew.resize(rawGameController.AxisCount());
-    connected = true;
+  RED4ext::DynArray<RED4ext::EInputKey> buttonKeys;
+  RED4ext::DynArray<RED4ext::EInputKey> axisKeys;
+  RED4ext::DynArray<bool> axisInversions;
+
+  bool connected;
+  RawGameController rawGameController = RawGameController(nullptr);
+
+  void Setup();
+
+  void Update();
+};
+
+RED4ext::TTypedClass<ICustomGameController> cls("ICustomGameController");
+
+RED4ext::CClass *ICustomGameController::GetNativeType() { return &cls; }
+
+void ICustomGameController::Setup() {
+
+  connected = true;
+
+  auto numButtons = rawGameController.ButtonCount();
+  for (int i = 0; i < numButtons; ++i) {
+    buttons.EmplaceBack(false);
+    buttonKeys.EmplaceBack(RED4ext::EInputKey::IK_None);
   }
 
-  void Update() {
-    rawGameController.GetCurrentReading(buttonsNew, switchesNew, axesNew);
+  auto numAxes = rawGameController.AxisCount();
+  for (int i = 0; i < numAxes; ++i) {
+    axes.EmplaceBack(false);
+    axisKeys.EmplaceBack(RED4ext::EInputKey::IK_None);
+    axisInversions.EmplaceBack(false);
+  }
+  axesNew.resize(numAxes);
+
+  auto numSwitches = rawGameController.SwitchCount();
+  for (int i = 0; i < numSwitches; ++i) {
+    switches.EmplaceBack(GameControllerSwitchPosition::Center);
+  }
+  switchesNew.resize(numSwitches);
+
+  auto onInit = GetType()->GetFunction("OnSetup");
+  if (onInit) {
+    auto stack = RED4ext::CStack(this, nullptr, 0, nullptr, 0);
+    onInit->Execute(&stack);
   }
 };
 
-std::vector<Joystick> joysticks;
-concurrency::critical_section controllerListLock;
+ void ICustomGameController::Update() {
+  if (rawGameController) {
+    rawGameController.GetCurrentReading(buttonsNew, switchesNew, axesNew);
+  }
+
+  auto onUpdate = GetType()->GetFunction("OnUpdate");
+  if (onUpdate) {
+    auto stack = RED4ext::CStack(this, nullptr, 0, nullptr, 0);
+    onUpdate->Execute(&stack);
+  }
+ };
+
+ void SetButtonScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, void *aOut, int64_t a4) {
+   uint32_t button;
+   RED4ext::EInputKey key;
+   RED4ext::GetParameter(aFrame, &button);
+   RED4ext::GetParameter(aFrame, &key);
+
+   aFrame->code++;
+
+   auto icgc = reinterpret_cast<ICustomGameController *>(aContext);
+
+   if (button < icgc->buttonKeys.size) {
+     icgc->buttonKeys[button] = key;
+   }
+ }
+
+ void SetAxisScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, void *aOut, int64_t a4) {
+   uint32_t axis;
+   RED4ext::EInputKey key;
+   bool inverted;
+   RED4ext::GetParameter(aFrame, &axis);
+   RED4ext::GetParameter(aFrame, &key);
+   RED4ext::GetParameter(aFrame, &inverted);
+
+   aFrame->code++;
+
+   auto icgc = reinterpret_cast<ICustomGameController *>(aContext);
+
+   if (axis < icgc->axisKeys.size) {
+     icgc->axisKeys[axis] = key;
+     icgc->axisInversions[axis] = inverted;
+   }
+ }
 
 class CustomGamepad : BaseGamepad {
 public:
+  RED4ext::DynArray<ICustomGameController> controllers;
+
   void __fastcall Initialize(uint32_t gamepadIndex) {
     userIndex = gamepadIndex;
     RawGameController::RawGameControllerAdded(
-        [](winrt::Windows::Foundation::IInspectable const &, RawGameController const &addedController) {
+        [this](winrt::Windows::Foundation::IInspectable const &, RawGameController const &addedController) {
           concurrency::critical_section::scoped_lock{controllerListLock};
-          for (auto &joystick : joysticks) {
-            if (!joystick.connected) {
-              joystick.rawGameController = addedController;
-              joystick.connected = true;
+          for (auto &controller : controllers) {
+            if (!controller.connected) {
+              controller.rawGameController = addedController;
+              controller.connected = true;
               return;
             }
           }
-          auto joystick = new Joystick(addedController);
-          joysticks.push_back(*joystick);
+
+          auto rtti = RED4ext::CRTTISystem::Get();
+          char className[100];
+          sprintf(className, "CustomGameController_%04X_%04X", addedController.HardwareVendorId(), addedController.HardwareProductId());
+          auto controllerCls = rtti->GetClassByScriptName(className);
+          if (!controllerCls) {
+            controllerCls = rtti->GetClassByScriptName("CustomGameController");
+          }
+          if (controllerCls) {
+            auto controller = reinterpret_cast<ICustomGameController *>(controllerCls->AllocInstance(true));
+            controllerCls->ConstructCls(controller);
+
+            auto handle = RED4ext::Handle<ICustomGameController>(controller);
+            controller->ref = RED4ext::WeakHandle(*reinterpret_cast<RED4ext::Handle<RED4ext::ISerializable> *>(&handle));
+            controller->unk30 = controllerCls;
+
+            controller->rawGameController = addedController;
+            controller->Setup();
+            controllers.EmplaceBack(*controller);
+          }
         });
 
     RawGameController::RawGameControllerRemoved(
-        [](winrt::Windows::Foundation::IInspectable const &, RawGameController const &removedController) {
+        [this](winrt::Windows::Foundation::IInspectable const &, RawGameController const &removedController) {
           concurrency::critical_section::scoped_lock{controllerListLock};
-          for (auto &joystick : joysticks) {
-            if (joystick.rawGameController == removedController) {
-              joystick.connected = false;
+          for (auto &controller : controllers) {
+            if (controller.rawGameController == removedController) {
+              controller.connected = false;
               return;
             }
           }
@@ -165,119 +261,37 @@ public:
     return this;
   }
 
-  RED4ext::EInputKey GetKeyForButton(uint32_t button) {
-    switch (button) {
-    case (1 - 1):
-      return RED4ext::EInputKey::IK_Joy1;
-    case (2 - 1):
-      return RED4ext::EInputKey::IK_Joy2;
-    case (3 - 1):
-      return RED4ext::EInputKey::IK_Joy3;
-    case (4 - 1):
-      return RED4ext::EInputKey::IK_Pad_Start;
-    case (6 - 1):
-      return RED4ext::EInputKey::IK_Pad_Y_TRIANGLE;
-    case (7 - 1):
-      return RED4ext::EInputKey::IK_Pad_B_CIRCLE;
-    case (8 - 1):
-      return RED4ext::EInputKey::IK_Pad_A_BOX;
-    case (9 - 1):
-      return RED4ext::EInputKey::IK_Pad_X_SQUARE;
-    case (10 - 1):
-      return RED4ext::EInputKey::IK_Pad_RightThumb;
-    case (11 - 1):
-      return RED4ext::EInputKey::IK_Pad_RightShoulder;
-    case (50 - 1):
-      return RED4ext::EInputKey::IK_Joy4;
-    case (51 - 1):
-      return RED4ext::EInputKey::IK_Joy5;
-    case (52 - 1):
-      return RED4ext::EInputKey::IK_Joy6;
-    case (54 - 1):
-      return RED4ext::EInputKey::IK_Pad_LeftThumb;
-    case (56 - 1):
-      return RED4ext::EInputKey::IK_Pad_Back_Select;
-    case (61 - 1):
-      return RED4ext::EInputKey::IK_Pad_DigitDown;
-    case (62 - 1):
-      return RED4ext::EInputKey::IK_Pad_DigitUp;
-    case (63 - 1):
-      return RED4ext::EInputKey::IK_Pad_DigitLeft;
-    case (64 - 1):
-      return RED4ext::EInputKey::IK_Pad_DigitRight;
-    case (66 - 1):
-      return RED4ext::EInputKey::IK_Pad_LeftShoulder;
-    default:
-      return RED4ext::EInputKey::IK_None;
-    }
-  }
-
-  RED4ext::EInputKey GetKeyForAxis(uint32_t axis) {
-    switch (axis) {
-    case 0: 
-      return RED4ext::EInputKey::IK_Pad_LeftAxisX;
-    case 1: 
-      return RED4ext::EInputKey::IK_Pad_LeftAxisY;
-    case 2: 
-      return RED4ext::EInputKey::IK_JoyR;
-    case 3: 
-      return RED4ext::EInputKey::IK_Pad_RightAxisX;
-    case 4: 
-      return RED4ext::EInputKey::IK_Pad_RightAxisY;
-    case 5: 
-      return RED4ext::EInputKey::IK_Joy6;
-    default: 
-      return RED4ext::EInputKey::IK_None;
-    }
-  }
-
-  double GetInversionForAxis(uint32_t axis) {
-    switch (axis) {
-    case 0: 
-      return 1.0;
-    case 1: 
-      return -1.0;
-    case 2: 
-      return 1.0;
-    case 3: 
-      return 1.0;
-    case 4: 
-      return -1.0;
-    case 5: 
-      return 1.0;
-    default: 
-      return 1.0;
-    }
-  }
-
   Input *__fastcall GetInputs(RED4ext::DynArray<Input> *inputs, HWND hwnd) { 
-    for (auto &joystick : joysticks) {
-      if (!joystick.connected)
+    for (auto &controller : controllers) {
+      if (!controller.connected)
         continue;
-      joystick.Update();
-      auto buttonCount = 0x100;
+
+
+      controller.Update();
+
+      auto buttonCount = controller.rawGameController.ButtonCount();
       for (int i = 0; i < buttonCount; ++i) {
-        if (joystick.buttons[i] != joystick.buttonsNew[i]) {
-          joystick.buttons[i] = joystick.buttonsNew[i];
-          auto key = GetKeyForButton(i);
+        if (controller.buttons[i] != controller.buttonsNew[i]) {
+          controller.buttons[i] = controller.buttonsNew[i];
+          auto key = controller.buttonKeys[i];
           if (key != RED4ext::EInputKey::IK_None) {
             auto input = new Input();
-            UpdateInput(input, key, joystick.buttons[i] ? EInputAction::IACT_Press : EInputAction::IACT_Release, 1.0, 0,
+            UpdateInput(input, key, controller.buttons[i] ? EInputAction::IACT_Press : EInputAction::IACT_Release, 1.0, 0,
                         0, hwnd,
                         userIndex);
             inputs->EmplaceBack(*input);
           }
         }
       }
-      for (int i = 0; i < joystick.axesNew.size(); ++i) {
-        if (joystick.axes[i] != joystick.axesNew[i]) {
-          joystick.axes[i] = joystick.axesNew[i];
-          auto key = GetKeyForAxis(i);
+      auto axisCount = controller.rawGameController.AxisCount();
+      for (int i = 0; i < axisCount; ++i) {
+        if (controller.axes[i] != controller.axesNew[i]) {
+          controller.axes[i] = controller.axesNew[i];
+          auto key = controller.axisKeys[i];
           if (key != RED4ext::EInputKey::IK_None) {
             auto input = new Input();
-            UpdateInput(input, key, EInputAction::IACT_Axis, (joystick.axes[i] - 0.5) * 2.0 * GetInversionForAxis(i), 0,
-                        0, hwnd,
-                        userIndex);
+            UpdateInput(input, key, EInputAction::IACT_Axis, (controller.axes[i] - 0.5) * 2.0 * (controller.axisInversions[i] ? -1.0 : 1.0), 0,
+                        0, hwnd, userIndex);
             inputs->EmplaceBack(*input);
           }
         }
@@ -290,6 +304,12 @@ public:
     auto input = new Input();
     UpdateInput(input, RED4ext::EInputKey::IK_Pad_RightAxisX, EInputAction::IACT_Axis, 0.0, 0, 0, hwnd, userIndex);
     inputs->EmplaceBack(*input);
+    UpdateInput(input, RED4ext::EInputKey::IK_Pad_RightAxisY, EInputAction::IACT_Axis, 0.0, 0, 0, hwnd, userIndex);
+    inputs->EmplaceBack(*input);
+    UpdateInput(input, RED4ext::EInputKey::IK_Pad_LeftAxisX, EInputAction::IACT_Axis, 0.0, 0, 0, hwnd, userIndex);
+    inputs->EmplaceBack(*input);
+    UpdateInput(input, RED4ext::EInputKey::IK_Pad_LeftAxisY, EInputAction::IACT_Axis, 0.0, 0, 0, hwnd, userIndex);
+    inputs->EmplaceBack(*input);
     return input;
   };
 
@@ -298,8 +318,8 @@ public:
     return cname;
   }
 
-  EControllerType __fastcall GetType() { 
-    return EControllerType::Xbox;
+  EInputDevice __fastcall GetType() { 
+    return EInputDevice::XINPUT_PAD;
   }
 
   uint32_t __fastcall GetIndex() {
@@ -327,103 +347,80 @@ CustomGamepad *__fastcall InitializeXPad(CustomGamepad *gamepad, uint32_t gamepa
   return gamepad;
 }
 
-//// 48 83 EC 48 33 C0 48 C7 44 24 20 01 00 06 00 48
-//bool SetupRawInputDevices();
-//constexpr uintptr_t SetupRawInputDevicesAddr = 0x7988F0;
-//decltype(&SetupRawInputDevices) SetupRawInputDevices_Original;
-//
-//RAWINPUTDEVICE deviceList[2];
-//
-//bool SetupRawInputDevices() {
-//
-//  deviceList[0].usUsagePage = HID_USAGE_PAGE_GENERIC;
-//  deviceList[0].usUsage = HID_USAGE_GENERIC_KEYBOARD;
-//  deviceList[0].dwFlags = 0;
-//  deviceList[0].hwndTarget = 0;
-//
-//  deviceList[1].usUsagePage = HID_USAGE_PAGE_GENERIC;
-//  deviceList[1].usUsage = HID_USAGE_GENERIC_MOUSE;
-//  deviceList[1].dwFlags = 0;
-//  deviceList[1].hwndTarget = 0;
-//
-//
-//  //deviceList[2].usUsagePage = HID_USAGE_PAGE_GENERIC;
-//  //deviceList[2].usUsage = HID_USAGE_GENERIC_GAMEPAD;
-//  ////deviceList[2].dwFlags = RIDEV_INPUTSINK;
-//  //deviceList[2].dwFlags = 0;
-//  //deviceList[2].hwndTarget = 0;
-//
-//  //deviceList[3].usUsagePage = HID_USAGE_PAGE_GENERIC;
-//  //deviceList[3].usUsage = HID_USAGE_GENERIC_JOYSTICK;
-//  ////deviceList[3].dwFlags = RIDEV_INPUTSINK;
-//  //deviceList[3].dwFlags = 0;
-//  //deviceList[3].hwndTarget = 0;
-//
-//  //UINT deviceCount = sizeof(deviceList) / sizeof(*deviceList);
-//  return RegisterRawInputDevices(deviceList, 2, 0x10);
-//}
-
-
-//// 48 89 6C 24 20 57 41 56 41 57 48 81 EC 90 00 00
-//__int64 __fastcall ProcessMouseAndKeyboardInputs(RAWINPUT *rawInput, __int64 a2, HWND hwnd);
-//constexpr uintptr_t ProcessMouseAndKeyboardInputsAddr = 0x798100;
-//decltype(&ProcessMouseAndKeyboardInputs) ProcessMouseAndKeyboardInputs_Original;
-//
-//__int64 __fastcall ProcessMouseAndKeyboardInputs(RAWINPUT *rawInput, __int64 a2, HWND hwnd) {
-//  auto og = ProcessMouseAndKeyboardInputs_Original(rawInput, a2, hwnd);
-//  //if (rawInput->header.dwType == RIM_TYPEHID) {
-//  //  UINT size = 0;
-//  //  GetRawInputDeviceInfo(rawInput->header.hDevice, RIDI_PREPARSEDDATA, 0, &size);
-//  //  _HIDP_PREPARSED_DATA *data = (_HIDP_PREPARSED_DATA *)malloc(size);
-//  //  bool gotPreparsedData = GetRawInputDeviceInfo(rawInput->header.hDevice, RIDI_PREPARSEDDATA, data, &size) > 0;
-//  //  if (gotPreparsedData) {
-//  //    HIDP_CAPS caps;
-//  //    HidP_GetCaps(data, &caps);
-//
-//  //    HIDP_VALUE_CAPS *valueCaps = (HIDP_VALUE_CAPS *)malloc(caps.NumberInputValueCaps * sizeof(HIDP_VALUE_CAPS));
-//  //    HidP_GetValueCaps(HidP_Input, valueCaps, &caps.NumberInputValueCaps, data);
-//  //    for (USHORT i = 0; i < caps.NumberInputValueCaps && i < 8; ++i) {
-//  //      HidP_GetUsageValue(HidP_Input, valueCaps[i].UsagePage, 0, valueCaps[i].Range.UsageMin, &capValues[i], data,
-//  //                         (PCHAR)rawInput->data.hid.bRawData, rawInput->data.hid.dwSizeHid);
-//  //    }
-//  //    free(valueCaps);
-//
-//  //    HIDP_BUTTON_CAPS *buttonCaps = (HIDP_BUTTON_CAPS *)malloc(caps.NumberInputButtonCaps * sizeof(HIDP_BUTTON_CAPS));
-//  //    HidP_GetButtonCaps(HidP_Input, buttonCaps, &caps.NumberInputButtonCaps, data);
-//  //    for (USHORT i = 0; i < caps.NumberInputButtonCaps; ++i) {
-//  //      ULONG usageCount = buttonCaps->Range.UsageMax - buttonCaps->Range.UsageMin + 1;
-//  //      USAGE *usages = (USAGE *)malloc(sizeof(USAGE) * usageCount);
-//  //      HidP_GetUsages(HidP_Input, buttonCaps[i].UsagePage, 0, usages, &usageCount, data,
-//  //                     (PCHAR)rawInput->data.hid.bRawData, rawInput->data.hid.dwSizeHid);
-//  //      for (ULONG usageIndex = 0; usageIndex < usageCount && usageIndex < 0x80; ++usageIndex) {
-//  //        usageValues[usageIndex] = usages[usageIndex];
-//  //      }
-//  //      free(usages);
-//  //    }
-//  //    free(buttonCaps);
-//  //  }
-//  //  free(data);
-//  //}
-//  return og;
-//}
-
 struct CustomInputModule : FlightModule {
   void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(InitializeXPadAddr), &InitializeXPad,
                                   reinterpret_cast<void **>(&InitializeXPad_Original)))
       ;
-    //while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(SetupRawInputDevicesAddr), &SetupRawInputDevices,
-    //                              reinterpret_cast<void **>(&SetupRawInputDevices_Original)))
-    //  ;
-    //while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(ProcessMouseAndKeyboardInputsAddr),
-    //                              &ProcessMouseAndKeyboardInputs,
-    //                              reinterpret_cast<void **>(&ProcessMouseAndKeyboardInputs_Original)))
-    //  ;
+  
   }
+
+  void RegisterTypes() {
+    auto rtti = RED4ext::CRTTISystem::Get();
+    cls.flags = {.isNative = true};
+    //cls.flags = {.isAbstract = true, .isNative = true, .isImportOnly = true};
+    cls.parent = rtti->GetClass("IScriptable");
+    rtti->RegisterType(&cls);
+
+    //RED4ext::CNamePool::Add("GameControllerSwitchPosition");
+    //auto gcsp = RED4ext::CEnum::CEnum("GameControllerSwitchPosition", 4, {.isScripted = true});
+    //gcsp.hashList.EmplaceBack(RED4ext::CName("Center"));
+    //gcsp.hashList.EmplaceBack(RED4ext::CName("Up"));
+    //gcsp.hashList.EmplaceBack(RED4ext::CName("UpRight"));
+    //gcsp.hashList.EmplaceBack(RED4ext::CName("Right"));
+    //gcsp.hashList.EmplaceBack(RED4ext::CName("DownRight"));
+    //gcsp.hashList.EmplaceBack(RED4ext::CName("Down"));
+    //gcsp.hashList.EmplaceBack(RED4ext::CName("DownLeft"));
+    //gcsp.hashList.EmplaceBack(RED4ext::CName("Left"));
+    //gcsp.hashList.EmplaceBack(RED4ext::CName("UpLeft"));
+    //gcsp.valueList.EmplaceBack(0);
+    //gcsp.valueList.EmplaceBack(1);
+    //gcsp.valueList.EmplaceBack(2);
+    //gcsp.valueList.EmplaceBack(3);
+    //gcsp.valueList.EmplaceBack(4);
+    //gcsp.valueList.EmplaceBack(5);
+    //gcsp.valueList.EmplaceBack(6);
+    //gcsp.valueList.EmplaceBack(7);
+    //gcsp.valueList.EmplaceBack(8);
+    //rtti->RegisterType(&gcsp);
+
+  }
+
+  void PostRegisterTypes() {
+    RED4ext::CNamePool::Add("array:EInputKey");
+    //RED4ext::CNamePool::Add("array:GameControllerSwitchPosition");
+    auto rtti = RED4ext::CRTTISystem::Get();
+
+    RED4ext::CProperty::Flags flags = {
+        //.b21 = true,
+        //.b29 = true,
+        //.b31 = true,
+        //.b35 = true,
+        //.b36 = true,
+    };
+
+    cls.props.PushBack(RED4ext::CProperty::Create(rtti->GetType("array:Bool"), "buttons", nullptr,
+                                                  offsetof(ICustomGameController, buttons), "CustomGameController", flags));
+    //cls.props.PushBack(RED4ext::CProperty::Create(rtti->GetType("array:GameControllerSwitchPosition"), "switches", .ullptr,
+                                                  //offsetof(ICustomGameController, switches)));
+    cls.props.PushBack(RED4ext::CProperty::Create(rtti->GetType("array:Float"), "axes", nullptr,
+                                                  offsetof(ICustomGameController, axes), "CustomGameController", flags));
+    //cls.props.PushBack(RED4ext::CProperty::Create(rtti->GetType("array:EInputKey"), "buttonKeys", nullptr,
+    //                                              offsetof(ICustomGameController, buttonKeys), "CustomGameController", flags));
+    //cls.props.PushBack(RED4ext::CProperty::Create(rtti->GetType("array:EInputKey"), "axisKeys", nullptr,
+    //                                              offsetof(ICustomGameController, axisKeys), "CustomGameController", flags));
+    //cls.props.PushBack(RED4ext::CProperty::Create(rtti->GetType("array:Bool"), "axisInversions", nullptr,
+    //                                              offsetof(ICustomGameController, axisInversions), "CustomGameController", flags));
+
+    auto setButton =
+        RED4ext::CClassFunction::Create(&cls, "SetButton", "SetButton", &SetButtonScripts, {.isNative = true});
+    cls.RegisterFunction(setButton);
+    auto setAxis = RED4ext::CClassFunction::Create(&cls, "SetAxis", "SetAxis", &SetAxisScripts, {.isNative = true});
+    cls.RegisterFunction(setAxis);
+  }
+
   void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(InitializeXPadAddr));
-    //aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(SetupRawInputDevicesAddr));
-    //aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(ProcessMouseAndKeyboardInputsAddr));
   }
 };
 
