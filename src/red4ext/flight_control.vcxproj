@@ -100,7 +100,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CustomHUDLayer.cpp" />
-    <ClCompile Include="CustomInput.cpp" />
     <ClCompile Include="CustomOptions.cpp" />
     <ClCompile Include="DebugPrinter.cpp" />
     <ClCompile Include="EntityAddComponent.cpp" />
