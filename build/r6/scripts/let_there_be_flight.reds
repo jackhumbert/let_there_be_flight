@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-07-08 01:08:24.0160825
+// This file was automatically generated on 2022-07-08 20:55:56.1145432
 
 // FlightAudio.reds
 
@@ -1416,7 +1416,7 @@ public native class FlightController extends IScriptable {
     this.roll = InputPID.Create(0.25, 1.0);
     this.pitch = InputPID.Create(0.25, 1.0);
     this.yaw = InputPID.Create(0.1, 0.2);
-    this.sway = InputPID.Create(0.1, 0.2);
+    this.sway = InputPID.Create(0.2, 0.2);
     
     this.secondCounter = 0.0;
 
@@ -1849,9 +1849,9 @@ public native class FlightController extends IScriptable {
             // } else {
               if this.showOptions {
                 this.sway.SetInput(value);
-                this.yaw.SetInput(0.0);
+                // this.yaw.SetInput(0.0);
               } else {
-                this.sway.SetInput(0.0);
+                // this.sway.SetInput(0.0);
                 this.yaw.SetInput(value);
               }
             // }
@@ -3585,6 +3585,8 @@ public class FlightModeDrone extends FlightMode {
       this.force += FlightUtils.Up() * this.component.lift * FlightSettings.GetFloat("droneModeLiftFactor");
       // surge
       this.force += FlightUtils.Forward() * this.component.surge * FlightSettings.GetFloat("droneModeSurgeFactor");
+      // sway
+      this.force += FlightUtils.Right() * this.component.sway * FlightSettings.GetFloat("droneModeSwayFactor");
       // directional brake
       this.force -= velocityDamp;
 
@@ -3919,6 +3921,7 @@ public native class FlightSettings extends IScriptable {
     FlightSettings.SetFloat("droneModeRollFactor", 12.0);
     FlightSettings.SetFloat("droneModeSurgeFactor", 15.0);
     FlightSettings.SetFloat("droneModeYawFactor", 5.0);
+    FlightSettings.SetFloat("droneModeSwayFactor", 15.0);
 
     FlightSettings.SetFloat("flyModeLiftFactor", 20.0);
 

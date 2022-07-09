@@ -41,6 +41,8 @@ public class FlightModeDrone extends FlightMode {
       this.force += FlightUtils.Up() * this.component.lift * FlightSettings.GetFloat("droneModeLiftFactor");
       // surge
       this.force += FlightUtils.Forward() * this.component.surge * FlightSettings.GetFloat("droneModeSurgeFactor");
+      // sway
+      this.force += FlightUtils.Right() * this.component.sway * FlightSettings.GetFloat("droneModeSwayFactor");
       // directional brake
       this.force -= velocityDamp;
 

@@ -42,6 +42,7 @@ public native class FlightSettings extends IScriptable {
     FlightSettings.SetFloat("droneModeRollFactor", 12.0);
     FlightSettings.SetFloat("droneModeSurgeFactor", 15.0);
     FlightSettings.SetFloat("droneModeYawFactor", 5.0);
+    FlightSettings.SetFloat("droneModeSwayFactor", 15.0);
 
     FlightSettings.SetFloat("flyModeLiftFactor", 20.0);
 

@@ -134,6 +134,7 @@
 	</mapping>
 
 	<mapping name="Flight_SurgePos" type="Axis" >
+		<button id="IK_JoySlider2" />
 		<button id="IK_Joy1" val="0.5" />
 		<button id="IK_Joy2" val="2.0" />
 	</mapping>
@@ -145,6 +146,7 @@
 
 	<mapping name="Flight_Yaw" type="Axis" >
 		<button id="IK_Pad_LeftAxisX" />
+		<button id="IK_JoyZ" />
 		<button id="IK_D" val="1.0" overridableUI="vehicleFlightYawRight"/>
 		<button id="IK_A" val="-1.0" overridableUI="vehicleFlightYawLeft"/>
 	</mapping>
@@ -164,13 +166,14 @@
 	</mapping>
 	
 	<mapping name="Flight_Lift" type="Axis" >
+		<button id="IK_JoyV" />
 		<button id="IK_Pad_LeftAxisY" />
 		<button id="IK_Space" val="1.0" overridableUI="vehicleFlightLiftUp" />
 		<button id="IK_LControl" val="-1.0" overridableUI="vehicleFlightLiftDown" />
 	</mapping>
 
 	<mapping name="Flight_Sway" type="Axis" >
-		<button id="IK_Joy3" />
+		<button id="IK_JoyU" />
 		<button id="IK_Right" val="1.0" overridableUI="vehicleFlightSwayRight"/>
 		<button id="IK_Left" val="-1.0" overridableUI="vehicleFlightSwayLeft"/>
 	</mapping>

@@ -91,7 +91,7 @@ public native class FlightController extends IScriptable {
     this.roll = InputPID.Create(0.25, 1.0);
     this.pitch = InputPID.Create(0.25, 1.0);
     this.yaw = InputPID.Create(0.1, 0.2);
-    this.sway = InputPID.Create(0.1, 0.2);
+    this.sway = InputPID.Create(0.2, 0.2);
     
     this.secondCounter = 0.0;
 
@@ -524,9 +524,9 @@ public native class FlightController extends IScriptable {
             // } else {
               if this.showOptions {
                 this.sway.SetInput(value);
-                this.yaw.SetInput(0.0);
+                // this.yaw.SetInput(0.0);
               } else {
-                this.sway.SetInput(0.0);
+                // this.sway.SetInput(0.0);
                 this.yaw.SetInput(value);
               }
             // }
