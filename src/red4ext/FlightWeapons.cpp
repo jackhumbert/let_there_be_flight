@@ -80,25 +80,25 @@ void __fastcall AddWeapons(RED4ext::vehicle::BaseObject *vehicle) {
     vehicle->components.EmplaceBack(RED4ext::Handle<RED4ext::game::AttachmentSlots>(gas));
   }
 
-  {
-    auto weapon = new RED4ext::vehicle::Weapon();
-    weapon->attackRange = 300.0;
-    weapon->canFriendlyFire = true;
-    weapon->cycleTime = 0.5;
-    weapon->genericShoot = true;
-    weapon->genericTick = true;
-    weapon->item = RED4ext::TweakDBID("Items.Panzer_Cannon");
-    weapon->maxPitch = 90.0;
-    weapon->maxYaw = 120.0;
-    weapon->minPitch = -90.0;
-    weapon->minYaw = -120.0;
-    weapon->singleProjectileCycleTime = 1.0;
-    weapon->singleShotProjectiles = 1;
-    weapon->slot = RED4ext::TweakDBID("AttachmentSlots.PanzerCannon");
-    weapon->weaponShootAnimEvent = "shoot_rocket";
-    weapon->wholeBurstProjectiles = 1;
-    vehicle->weapons.EmplaceBack(*weapon);
-  }
+  //{
+  //  auto weapon = new RED4ext::vehicle::Weapon();
+  //  weapon->attackRange = 300.0;
+  //  weapon->canFriendlyFire = true;
+  //  weapon->cycleTime = 0.5;
+  //  weapon->genericShoot = true;
+  //  weapon->genericTick = true;
+  //  weapon->item = RED4ext::TweakDBID("Items.Panzer_Cannon");
+  //  weapon->maxPitch = 90.0;
+  //  weapon->maxYaw = 120.0;
+  //  weapon->minPitch = -90.0;
+  //  weapon->minYaw = -120.0;
+  //  weapon->singleProjectileCycleTime = 1.0;
+  //  weapon->singleShotProjectiles = 1;
+  //  weapon->slot = RED4ext::TweakDBID("AttachmentSlots.PanzerCannon");
+  //  weapon->weaponShootAnimEvent = "shoot_rocket";
+  //  weapon->wholeBurstProjectiles = 1;
+  //  vehicle->weapons.EmplaceBack(*weapon);
+  //}
   //{
   //  auto weapon = new RED4ext::vehicle::Weapon();
   //  weapon->attackRange = 100.0;
@@ -118,25 +118,25 @@ void __fastcall AddWeapons(RED4ext::vehicle::BaseObject *vehicle) {
   //  weapon->wholeBurstProjectiles = 1;
   //  vehicle->weapons.EmplaceBack(*weapon);
   //}
-  {
-    auto weapon = new RED4ext::vehicle::Weapon();
-    weapon->attackRange = 100.0;
-    weapon->canFriendlyFire = true;
-    weapon->cycleTime = 0.5;
-    weapon->genericShoot = true;
-    weapon->genericTick = true;
-    weapon->item = RED4ext::TweakDBID("Items.Panzer_Missile_Launcher");
-    weapon->maxPitch = 90.0;
-    weapon->maxYaw = 180.0;
-    weapon->minPitch = -90.0;
-    weapon->minYaw = -180.0;
-    weapon->singleProjectileCycleTime = 0.017;
-    weapon->singleShotProjectiles = 1;
-    weapon->slot = RED4ext::TweakDBID("AttachmentSlots.PanzerHomingMissiles");
-    weapon->weaponShootAnimEvent = "shoot_rocket";
-    weapon->wholeBurstProjectiles = 15;
-    vehicle->weapons.EmplaceBack(*weapon);
-  }
+  //{
+  //  auto weapon = new RED4ext::vehicle::Weapon();
+  //  weapon->attackRange = 100.0;
+  //  weapon->canFriendlyFire = true;
+  //  weapon->cycleTime = 0.5;
+  //  weapon->genericShoot = true;
+  //  weapon->genericTick = true;
+  //  weapon->item = RED4ext::TweakDBID("Items.Panzer_Missile_Launcher");
+  //  weapon->maxPitch = 90.0;
+  //  weapon->maxYaw = 180.0;
+  //  weapon->minPitch = -90.0;
+  //  weapon->minYaw = -180.0;
+  //  weapon->singleProjectileCycleTime = 0.017;
+  //  weapon->singleShotProjectiles = 1;
+  //  weapon->slot = RED4ext::TweakDBID("AttachmentSlots.PanzerHomingMissiles");
+  //  weapon->weaponShootAnimEvent = "shoot_rocket";
+  //  weapon->wholeBurstProjectiles = 15;
+  //  vehicle->weapons.EmplaceBack(*weapon);
+  //}
 }
 
 void __fastcall AddWeaponSlots(RED4ext::ent::SlotComponent *sc) {

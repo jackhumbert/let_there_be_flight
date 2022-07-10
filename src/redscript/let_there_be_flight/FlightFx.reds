@@ -377,7 +377,9 @@ public class FlightFx {
       }
       if this.HasBLWheel() {
         this.bl_thruster.visualScale = Vector4.Vector4To3(Vector4.Interpolate(Vector4.Vector3To4(this.bl_thruster.visualScale), new Vector4(1.0, 1.0, 1.0, 1.0), 0.1));
-        this.bl_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount + torque.X + torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat("thrusterFactor"));
+        let amount = (thrusterAmount + torque.X + torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat("thrusterFactor");
+        this.bl_fx.SetBlackboardValue(n"thruster_amount", amount);
+        AnimationControllerComponent.SetInputFloat(this.component.GetVehicle(), n"veh_rad_w_b_l", 1.0 - amount * 0.1);
         if thrusterAmount > 0.0 {
           this.bl_thruster.SetLocalOrientation(Quaternion.Slerp(this.bl_thruster.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
             -ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0),
@@ -389,7 +391,9 @@ public class FlightFx {
       }
       if this.HasBRWheel() {
         this.br_thruster.visualScale = Vector4.Vector4To3(Vector4.Interpolate(Vector4.Vector3To4(this.br_thruster.visualScale), new Vector4(1.0, 1.0, 1.0, 1.0), 0.1));
-        this.br_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount + torque.X - torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat("thrusterFactor"));
+        let amount = (thrusterAmount + torque.X - torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat("thrusterFactor");
+        this.br_fx.SetBlackboardValue(n"thruster_amount", amount);
+        AnimationControllerComponent.SetInputFloat(this.component.GetVehicle(), n"veh_rad_w_b_r", 1.0 - amount * 0.1);
         if thrusterAmount > 0.0 {
           this.br_thruster.SetLocalOrientation(Quaternion.Slerp(this.br_thruster.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
             ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0), 
@@ -401,7 +405,9 @@ public class FlightFx {
       }
       if this.HasFLWheel() {
         this.fl_thruster.visualScale = Vector4.Vector4To3(Vector4.Interpolate(Vector4.Vector3To4(this.fl_thruster.visualScale), new Vector4(1.0, 1.0, 1.0, 1.0), 0.1));
-        this.fl_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount - torque.X + torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat("thrusterFactor"));
+        let amount = (thrusterAmount - torque.X + torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat("thrusterFactor");
+        this.fl_fx.SetBlackboardValue(n"thruster_amount", amount);
+        AnimationControllerComponent.SetInputFloat(this.component.GetVehicle(), n"veh_rad_w_f_l", 1.0 - amount * 0.1);
         if thrusterAmount > 0.0 {
           this.fl_thruster.SetLocalOrientation(Quaternion.Slerp(this.fl_thruster.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
             -ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0), 
@@ -414,7 +420,9 @@ public class FlightFx {
       }
       if this.HasFRWheel() {
         this.fr_thruster.visualScale = Vector4.Vector4To3(Vector4.Interpolate(Vector4.Vector3To4(this.fr_thruster.visualScale), new Vector4(1.0, 1.0, 1.0, 1.0), 0.1));
-        this.fr_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount - torque.X - torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat("thrusterFactor"));
+        let amount = (thrusterAmount - torque.X - torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat("thrusterFactor");
+        this.fr_fx.SetBlackboardValue(n"thruster_amount", amount);
+        AnimationControllerComponent.SetInputFloat(this.component.GetVehicle(), n"veh_rad_w_f_r", 1.0 - amount * 0.1);
         if thrusterAmount > 0.0 {
           this.fr_thruster.SetLocalOrientation(Quaternion.Slerp(this.fr_thruster.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
             ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0), 
@@ -425,7 +433,9 @@ public class FlightFx {
         this.fr_retroFx.SetBlackboardValue(n"thruster_amount", (Vector4.Dot(new Vector4(-1.0, 0.0, 0.0, 0.0), force) + torque.Z) * 0.1);
       }
       if this.HasFLBWheel() {
-        this.flb_fx.SetBlackboardValue(n"thruster_amount", (thrusterAmount - torque.X + torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat("thrusterFactor"));
+        let amount = (thrusterAmount - torque.X + torque.Y + AbsF(force.Y)) * FlightSettings.GetFloat("thrusterFactor");
+        this.flb_fx.SetBlackboardValue(n"thruster_amount", amount);
+        AnimationControllerComponent.SetInputFloat(this.component.GetVehicle(), n"veh_rad_w_f_l", 1.0 - amount * 0.1);
         if thrusterAmount > 0.0 {
           this.component.hood.SetLocalOrientation(Quaternion.Slerp(this.component.hood.GetLocalOrientation(), EulerAngles.ToQuat(new EulerAngles(
             ClampF(Vector4.GetAngleDegAroundAxis(FlightUtils.Up(), force, FlightUtils.Right()), -45.0, 45.0), 

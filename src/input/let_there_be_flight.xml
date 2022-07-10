@@ -166,8 +166,8 @@
 	</mapping>
 	
 	<mapping name="Flight_Lift" type="Axis" >
-		<button id="IK_JoyV" />
 		<button id="IK_Pad_LeftAxisY" />
+		<button id="IK_JoyV" />
 		<button id="IK_Space" val="1.0" overridableUI="vehicleFlightLiftUp" />
 		<button id="IK_LControl" val="-1.0" overridableUI="vehicleFlightLiftDown" />
 	</mapping>
