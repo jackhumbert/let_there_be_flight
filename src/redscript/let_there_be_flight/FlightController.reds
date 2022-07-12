@@ -301,6 +301,7 @@ public native class FlightController extends IScriptable {
         this.player.RegisterInputListener(this, n"Flight_ModeSwitchForward");
         this.player.RegisterInputListener(this, n"Flight_ModeSwitchBackward");
         this.player.RegisterInputListener(this, n"Flight_RightStickToggle");
+        this.player.RegisterInputListener(this, n"Flight_HoodDetach");
       }
     }
 
@@ -467,6 +468,10 @@ public native class FlightController extends IScriptable {
         //     GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_menu_onpress");
         //     FlightLog.Info("hoverHeight = " + ToString(this.hoverHeight));
         // }
+      if Equals(actionName, n"Flight_HoodDetach") && ListenerAction.IsButtonJustPressed(action) {
+        this.sys.playerComponent.GetVehicle().DetachPart(n"Hood");
+        this.sys.playerComponent.GetVehicle().DetachPart(n"Trunk");
+      }
       if Equals(actionName, n"Flight_RightStickToggle") && ListenerAction.IsButtonJustPressed(action) {
         this.sys.playerComponent.GetFlightMode().usesRightStickInput = !this.sys.playerComponent.GetFlightMode().usesRightStickInput;
         this.SetupActions();
@@ -474,10 +479,6 @@ public native class FlightController extends IScriptable {
       if Equals(actionName, n"Flight_ModeSwitchForward") && ListenerAction.IsButtonJustPressed(action) && (this.showOptions || this.player.PlayerLastUsedKBM()) {
         this.CycleMode(1);
         this.SetupActions();
-        let weapons = this.sys.playerComponent.GetVehicle().GetWeapons();
-        if ArraySize(weapons) > 0 {
-          weapons[0].SetTriggerDown(true);
-        }
       }
       if Equals(actionName, n"Flight_ModeSwitchBackward") && ListenerAction.IsButtonJustPressed(action) && (this.showOptions || this.player.PlayerLastUsedKBM()) {
         this.CycleMode(-1);

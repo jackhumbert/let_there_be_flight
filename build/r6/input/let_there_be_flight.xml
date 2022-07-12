@@ -38,6 +38,7 @@
 		<action name="Flight_RightStickToggle"	map="Flight_RightStickToggle"/>
 		<action name="Flight_ModeSwitchBackward" map="Flight_ModeSwitchBackward"/>
 		<action name="Flight_ModeSwitchForward" map="Flight_ModeSwitchForward"/>
+		<action name="Flight_HoodDetach" map="Flight_HoodDetach"/>
 		<action name="Roll"							map="Flight_Roll"/>
 		<action name="Pitch"						map="Flight_Pitch"/>
 		<!-- <action name="FlightCombat_Toggle"  map="FlightCombat_Toggle" /> -->
@@ -106,6 +107,10 @@
 		<button id="IK_G" />
 	</mapping>
 
+	<mapping name="Flight_HoodDetach" type="Button">
+		<button id="IK_Joy5" />
+	</mapping>
+
 	<mapping name="Flight_UIToggle" type="Button">
 		<button id="IK_Pad_DigitUp" />
 		<button id="IK_Y" />
@@ -135,14 +140,14 @@
 
 	<mapping name="Flight_SurgePos" type="Axis" >
 		<button id="IK_JoySlider2" />
-		<button id="IK_Joy1" val="0.5" />
-		<button id="IK_Joy2" val="2.0" />
+		<!-- <button id="IK_Joy1" val="0.5" /> -->
+		<!-- <button id="IK_Joy2" val="2.0" /> -->
 	</mapping>
 
-	<mapping name="Flight_SurgeNeg" type="Axis" >
+	<!-- <mapping name="Flight_SurgeNeg" type="Axis" >
 		<button id="IK_Joy4" val="0.5" />
 		<button id="IK_Joy5" val="2.0" />
-	</mapping>
+	</mapping> -->
 
 	<mapping name="Flight_Yaw" type="Axis" >
 		<button id="IK_Pad_LeftAxisX" />

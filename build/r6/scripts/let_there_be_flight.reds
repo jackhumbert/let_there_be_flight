@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-07-10 15:31:36.6363693
+// This file was automatically generated on 2022-07-12 18:53:58.4755439
 
 // FlightAudio.reds
 
@@ -1626,6 +1626,7 @@ public native class FlightController extends IScriptable {
         this.player.RegisterInputListener(this, n"Flight_ModeSwitchForward");
         this.player.RegisterInputListener(this, n"Flight_ModeSwitchBackward");
         this.player.RegisterInputListener(this, n"Flight_RightStickToggle");
+        this.player.RegisterInputListener(this, n"Flight_HoodDetach");
       }
     }
 
@@ -1792,6 +1793,10 @@ public native class FlightController extends IScriptable {
         //     GameInstance.GetAudioSystem(this.gameInstance).PlayFlightSound(n"ui_menu_onpress");
         //     FlightLog.Info("hoverHeight = " + ToString(this.hoverHeight));
         // }
+      if Equals(actionName, n"Flight_HoodDetach") && ListenerAction.IsButtonJustPressed(action) {
+        this.sys.playerComponent.GetVehicle().DetachPart(n"Hood");
+        this.sys.playerComponent.GetVehicle().DetachPart(n"Trunk");
+      }
       if Equals(actionName, n"Flight_RightStickToggle") && ListenerAction.IsButtonJustPressed(action) {
         this.sys.playerComponent.GetFlightMode().usesRightStickInput = !this.sys.playerComponent.GetFlightMode().usesRightStickInput;
         this.SetupActions();
@@ -1799,10 +1804,6 @@ public native class FlightController extends IScriptable {
       if Equals(actionName, n"Flight_ModeSwitchForward") && ListenerAction.IsButtonJustPressed(action) && (this.showOptions || this.player.PlayerLastUsedKBM()) {
         this.CycleMode(1);
         this.SetupActions();
-        let weapons = this.sys.playerComponent.GetVehicle().GetWeapons();
-        if ArraySize(weapons) > 0 {
-          weapons[0].SetTriggerDown(true);
-        }
       }
       if Equals(actionName, n"Flight_ModeSwitchBackward") && ListenerAction.IsButtonJustPressed(action) && (this.showOptions || this.player.PlayerLastUsedKBM()) {
         this.CycleMode(-1);
