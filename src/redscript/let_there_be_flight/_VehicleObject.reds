@@ -38,6 +38,7 @@ public func GetLocalToWorld() -> Matrix {
 public let chassis: ref<vehicleChassisComponent>;
 
 @addField(VehicleObject)
+@runtimeProperty("offset", "0x24C")
 public native let isOnGround: Bool;
 
 @addField(VehicleObject)

@@ -124,6 +124,9 @@
     <ClCompile Include="FmodHelper.hpp" />
     <ClCompile Include="FmodHelper.cpp" />
     <ClCompile Include="FlightHUDGameController.hpp" />
+    <ClCompile Include="ModSettings.cpp" />
+    <ClCompile Include="RuntimeProperties.cpp" />
+    <ClCompile Include="ScriptDefinitions\ScriptDefinitions.hpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Utils.cpp" />
     <ClCompile Include="VehicleObject.cpp" />
@@ -131,6 +134,10 @@
     <ClCompile Include="VehicleSpeedUnlimiter.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Addresses.hpp" />
+    <ClInclude Include="ModSettings.hpp" />
+    <ClInclude Include="ScriptDefinitions\ScriptHost.hpp" />
+    <ClInclude Include="Signatures.hpp" />
     <ClInclude Include="DriveHelper-inl.hpp" />
     <ClInclude Include="DriveHelper.hpp" />
     <ClInclude Include="FlightAudio.hpp" />

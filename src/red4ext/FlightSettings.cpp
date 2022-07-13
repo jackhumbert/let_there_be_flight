@@ -22,6 +22,17 @@ FlightSettings *FlightSettings::GetInstance() {
   return (FlightSettings *)handle.instance;
 }
 
+void GetInstanceScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,
+                        RED4ext::Handle<FlightSettings> *aOut, int64_t a4) {
+  aFrame->code++;
+
+  if (aOut) {
+    auto h = RED4ext::Handle<FlightSettings>(FlightSettings::GetInstance());
+    h.refCount->IncRef();
+    *aOut = h;
+  }
+}
+
 RED4ext::HashMap<RED4ext::CName, float> floats;
 
 bool floatsInitialized = false;
@@ -125,6 +136,10 @@ struct FlightSettingsModule : FlightModule {
     auto rtti = RED4ext::CRTTISystem::Get();
     auto scriptable = rtti->GetClassByScriptName("ScriptableSystem");
     cls.parent = scriptable;
+
+    auto getInstance = RED4ext::CClassStaticFunction::Create(&cls, "GetInstance", "GetInstance", &GetInstanceScripts,
+                                                             {.isNative = true, .isStatic = true});
+    cls.RegisterFunction(getInstance);
 
     auto getFloat = RED4ext::CClassStaticFunction::Create(&cls, "GetFloat", "GetFloat", &GetFloat,
                                                           {.isNative = true, .isStatic = true});
