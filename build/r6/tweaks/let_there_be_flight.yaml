@@ -1,7 +1,10 @@
-# Let There Be Flight 
-# https://github.com/jackhumbert/let_there_be_flight 
- 
-# thrusters.yaml 
+# Let There Be Flight
+# (C) 2022 Jack Humbert
+# https://github.com/jackhumbert/let_there_be_flight
+# This file was automatically generated on 2022-07-12 18:53:58.5412606
+
+# thrusters.yaml
+
 # Vehicle.VehicleDestructionParamsThrusterFL:
 #   $base: Vehicle.VehicleDestructionParamsCaliburn_inline1 
 #   components: [ n"ThrusterFL" ]
@@ -15,107 +18,107 @@
 
 # Items.FlyingWeapon:
 #   $base: Items.Panzer_Cannon
-#   CraftingData: "" 
+#   # CraftingData:
 #   IsIKEnabled: true 
-#   NPCAnimWrapperWeightOverride: "None" 
-#   OnAttach: TweakDBID,[ ]
-#   OnEquip: TweakDBID,[ ]
-#   OnLooted: TweakDBID,[ ]
-#   ammo: "Ammo.Standard" 
-#   animFeatureName: "WeaponData" 
-#   animName: "ui_garment_pose" 
-#   animSetResource: CResource,0 
-#   animationParameters: CName,[ ]
-#   appearanceName: "None" 
-#   appearanceResourceName: "None" 
-#   appearanceSuffixes: TweakDBID,[ ]
-#   appearanceSuffixesOwnerOverride: Bool,[ ]
-#   attachmentSlots: TweakDBID,[ ]
-#   attacks: TweakDBID,[ "Attacks.ExplodingPanzerBulletProjectile" ]
-#   audioName: "v_av_panzer_wea_set_cannon" 
-#   audioSwitchName: "None" 
-#   audioSwitchValue: "None" 
-#   audioWeaponConfiguration: "None" 
-#   blueprint: "" 
-#   buyPrice: TweakDBID,[ "Price.BasePrice" "Price.BuyMultiplier" "Price.ItemQualityMultiplier" "Price.WeightMultiplier" "Price.RangedWeapon" 00000026d74227f7 ]
+#   NPCAnimWrapperWeightOverride: n"None" 
+#   OnAttach: [ ]
+#   OnEquip: [ ]
+#   OnLooted: [ ]
+#   ammo: Ammo.Standard 
+#   animFeatureName: n"WeaponData" 
+#   animName: n"ui_garment_pose" 
+#   animSetResource: 0 
+#   animationParameters: [ ]
+#   appearanceName: n"None" 
+#   appearanceResourceName: n"None" 
+#   appearanceSuffixes: [ ]
+#   appearanceSuffixesOwnerOverride: [ ]
+#   attachmentSlots: [ ]
+#   attacks: [ Attacks.ExplodingPanzerBulletProjectile ]
+#   audioName: n"v_av_panzer_wea_set_cannon" 
+#   audioSwitchName: n"None" 
+#   audioSwitchValue: n"None" 
+#   audioWeaponConfiguration: n"None" 
+#   blueprint: 0 
+#   buyPrice: [ Price.BasePrice, Price.BuyMultiplier, Price.ItemQualityMultiplier, Price.WeightMultiplier, Price.RangedWeapon ]
 #   cameraForward: { x:0 y:0 z:0 } 
 #   cameraUp: { x:0 y:0 z:0 } 
-#   connections: TweakDBID,[ ]
-#   cpoItemCategory: "" 
-#   crosshair: "Crosshairs.Custom_HMG" 
-#   damageType: "DamageTypes.Physical" 
+#   connections: [ ]
+#   # cpoItemCategory: 
+#   crosshair: Crosshairs.Custom_HMG
+#   damageType: DamageTypes.Physical
 #   displayName: 50343 
-#   dropObject: "defaultItemDrop" 
+#   dropObject: n"defaultItemDrop" 
 #   dropSettings: "" 
-#   effectiveRangeCurve: "None" 
-#   effectiveRangeFalloffCurve: "StandardFalloff" 
-#   effectors: TweakDBID,[ ]
+#   effectiveRangeCurve: n"None" 
+#   effectiveRangeFalloffCurve: n"StandardFalloff" 
+#   effectors: [ ]
 #   enableNpcRPGData: false 
-#   entityName: "blank_weapon" 
-#   equipArea: "EquipmentArea.Weapon" 
-#   equipAreas: TweakDBID,[ ]
-#   equipPrereqs: TweakDBID,[ ]
-#   equipSoundMetadata: "None" 
-#   equivalent: "" 
-#   evolution: "WeaponEvolution.Power" 
+#   entityName: n"blank_weapon" 
+#   equipArea: n"EquipmentArea.Weapon" 
+#   equipAreas: [ ]
+#   equipPrereqs: [ ]
+#   equipSoundMetadata: n"None" 
+#   # equivalent:
+#   evolution: WeaponEvolution.Power
 #   forcedMinHitReaction: -1 
 #   friendlyName: "w_panzer_cannon" 
-#   fxPackage: "WeaponFxPackage.PowerLargeCaliber" 
-#   fxPackageQuickMelee: "WeaponFxPackage.QuickMeleeFxPackage" 
-#   gameplayRestrictions: TweakDBID,[ "GameplayRestriction.VehicleCombatNoInterruptions" ]
+#   fxPackage: WeaponFxPackage.PowerLargeCaliber
+#   fxPackageQuickMelee: WeaponFxPackage.QuickMeleeFxPackage
+#   gameplayRestrictions: [ GameplayRestriction.VehicleCombatNoInterruptions ]
 #   garmentOffset: 0 
-#   hairSkinnedMeshComponents: CName,[ ]
+#   hairSkinnedMeshComponents: [ ]
 #   hide_nametag: true 
-#   holsteredItem: "" 
-#   hudIcon: "HUDWeaponIcons.Default" 
-#   icon: "UIIcon.ItemIcon" 
+#   # holsteredItem:
+#   hudIcon: HUDWeaponIcons.Default
+#   icon: UIIcon.ItemIcon
 #   iconPath: "" 
 #   isCustomizable: false 
 #   isGarment: false 
 #   isPart: false 
 #   isSingleInstance: false 
-#   itemCategory: "ItemCategory.Weapon" 
-#   itemSecondaryAction: "ItemAction.Equip" 
+#   itemCategory: ItemCategory.Weapon 
+#   itemSecondaryAction: ItemAction.Equip
 #   itemStructure: "" 
-#   itemType: "ItemType.Wea_HeavyMachineGun" 
+#   itemType: ItemType.Wea_HeavyMachineGun
 #   localizedDescription: 50343 
 #   localizedName: "" 
-#   manufacturer: "WeaponManufacturer.Street" 
+#   manufacturer: WeaponManufacturer.Street
 #   mass: 20 
-#   minigameInstance: "minigame_v2.DefaultItemMinigame" 
-#   movementPattern: "None" 
+#   minigameInstance: minigame_v2.DefaultItemMinigame 
+#   movementPattern: n"None"
 #   movementSound: "" 
 #   npcRPGData: "" 
-#   objectActions: TweakDBID,[ "ItemAction.Drop" "ItemAction.Disassemble" "ItemAction.WeaponDisassemble" ]
+#   objectActions: [ ItemAction.Drop, ItemAction.Disassemble, ItemAction.WeaponDisassemble ]
 #   onEquipStats: "" 
-#   parentAttachmentType: "ParentAttachmentType.Slot" 
-#   parts: TweakDBID,[ ]
-#   placementSlots: TweakDBID,[ "AttachmentSlots.PanzerCannon" ]
-#   previewEffectName: "None" 
-#   previewEffectTag: "None" 
+#   parentAttachmentType: ParentAttachmentType.Slot
+#   parts: [ ]
+#   placementSlots: [ AttachmentSlots.PanzerCannon ]
+#   previewEffectName: n"None" 
+#   previewEffectTag: n"None" 
 #   primaryTriggerMode: "" 
-#   projectileEaseOutCurveName: "ProjectileEaseOut" 
-#   quality: "Quality.Random" 
-#   rangedAttacks: "Attacks.PhysicalBulletPackage" 
+#   projectileEaseOutCurveName: n"ProjectileEaseOut" 
+#   quality: Quality.Random 
+#   rangedAttacks: Attacks.PhysicalBulletPackage 
 #   replicateWhenNotActive: false 
-#   requiredSlots: TweakDBID,[ ]
+#   requiredSlots: [ ]
 #   safeActionDuration: 2 
 #   savable: false 
 #   secondaryTriggerMode: "" 
-#   sellPrice: TweakDBID,[ "Price.BasePrice" "Price.SellMultiplier" "Price.ItemQualitySellMultiplier" "Price.WeightMultiplier" "Price.CraftingTraitMultiplier" "Price.WeaponSellMultiplier" "Price.RangedWeapon" 00000026d74227f7 ]
-#   shootingPatternPackages: TweakDBID,[ ]
-#   slotPartList: TweakDBID,[ ]
-#   slotPartListPreset: TweakDBID,[ ]
-#   statModifierGroups: TweakDBID,[ "Items.Base_Weapon_Status_Effect_Application_Stats" "Items.Base_Weapon_Damage_Type_Min_Max" "Items.Base_Weapon_Damage_Type_Randomization" "Items.QualityRandomization" "Items.Base_Panzer_Weapon_Stats" ]
-#   statModifiers: TweakDBID,[ "Items.FlyingWeapon_inline0" "Items.FlyingWeapon_inline1" "Items.FlyingWeapon_inline2" ]
-#   statPools: TweakDBID,[ ]
-#   stateMachineName: "Weapon" 
-#   tags: CName,[ "Weapon" "RangedWeapon" "Preload" "Weapon" "Unique" "HeavyWeapon" ]
-#   triggerModes: TweakDBID,[ "TriggerMode.FullAuto" ]
+#   sellPrice: [ Price.BasePrice, Price.SellMultiplier, Price.ItemQualitySellMultiplier, Price.WeightMultiplier, Price.CraftingTraitMultiplier, Price.WeaponSellMultiplier, Price.RangedWeapon ]
+#   shootingPatternPackages: [ ]
+#   slotPartList: [ ]
+#   slotPartListPreset: [ ]
+#   statModifierGroups: [ Items.Base_Weapon_Status_Effect_Application_Stats, Items.Base_Weapon_Damage_Type_Min_Max, Items.Base_Weapon_Damage_Type_Randomization, Items.QualityRandomization, Items.Base_Panzer_Weapon_Stats ]
+#   statModifiers: [ Items.FlyingWeapon_inline0, Items.FlyingWeapon_inline1, Items.FlyingWeapon_inline2 ]
+#   statPools: [ ]
+#   stateMachineName: n"Weapon" 
+#   tags: [ n"Weapon", n"RangedWeapon", n"Preload", n"Weapon", n"Unique", n"HeavyWeapon" ]
+#   triggerModes: [ TriggerMode.FullAuto ]
 #   useForcedTBHZOffset: false 
 #   useNewSpawnMethod: false 
-#   visualTags: CName,[ "Default" "Neon" "Military" "Pimp" ]
-#   weakspots: TweakDBID,[ ]
+#   visualTags: [ n"Default", n"Neon", n"Military", n"Pimp" ]
+#   weakspots: [ ]
 #   weaponBlurIntensity: 1 
 #   weaponBlurIntensity_aim: 1 
 #   weaponEdgesSharpness: 0 
@@ -147,9 +150,153 @@
 #   $base: Items.Panzer_Cannon_inline2
 #   modifierType: n"Multiplier" 
 #   statType: BaseStats.HitDismembermentFactor
-#   value: 3  
- 
-# vehicle_flight.yaml 
+#   value: 3 
+
+
+# Items.Preset_Overture_Legendary_Leveled:
+#   $base: Items.Preset_Overture_Legendary
+#   statModifiers:
+#     - !append Character.ScaleToPlayerLevel
+
+  
+# Items.FlyingWeapon2:
+#   $base: Items.Panzer_Cannon
+#   # CraftingData:
+#   IsIKEnabled: true 
+#   NPCAnimWrapperWeightOverride: n"None" 
+#   OnAttach: [ ]
+#   OnEquip: [ ]
+#   OnLooted: [ ]
+#   ammo: Ammo.SniperRifleAmmo 
+#   animFeatureName: n"WeaponData" 
+#   animName: n"ui_garment_pose" 
+#   animSetResource: 0 
+#   animationParameters: [ ]
+#   appearanceName: n"None" 
+#   appearanceResourceName: n"Preset_Grad_Default" 
+#   appearanceSuffixes: [ ]
+#   appearanceSuffixesOwnerOverride: [ ]
+#   attachmentSlots: [ ]
+#   attacks: [ Attacks.Bullet_GameEffect, Attacks.ThermalBulletEffect, Attacks.ChemicalBulletEffect, Attacks.ElectricBulletEffect, Attacks.BurningBulletEffect, Attacks.SmartBulletLow, Attacks.SmartBulletMed, Attacks.SmartBulletHigh, Attacks.SmartBulletTwoStage, Attacks.QuickMelee, Attacks.Bullet_Projectile, Attacks.ThermalBulletProjectile, Attacks.ChemicalBulletProjectile, Attacks.ElectricBulletProjectile, Attacks.BurningBulletProjectile, Attacks.PowerRounds_Projectile, Attacks.PowerBuckshots_Projectile, Attacks.PowerBullets_Projectile, Attacks.NPCBulletEffect, Attacks.NPCThermalBulletEffect, Attacks.NPCChemicalBulletEffect, Attacks.NPCElectricBulletEffect, Attacks.NPCBurningBulletEffect, Attacks.NPCSmartBullet, Attacks.NPCBulletProjectile, Attacks.NPCThermalBulletProjectile, Attacks.NPCChemicalBulletProjectile, Attacks.NPCElectricBulletProjectile, Attacks.NPCBurningBulletProjectile, NPCAttacks.QuickMelee, NPCAttacks.StompAttackStagger, NPCAttacks.StrongAttackStagger, NPCAttacks.StrongAttackStompKnockdown, NPCAttacks.StrongAttackStompStun, NPCAttacks.PushEffect, NPCAttacks.ParryEffect, Attacks.BaseLaserSight, Attacks.TechLaserSight, Attacks.ExplodingBulletProjectile, Attacks.ExplodingBulletSmallProjectile ]
+#   audioName: n"wea_set_grad" 
+#   audioSwitchName: n"None" 
+#   audioSwitchValue: n"None" 
+#   audioWeaponConfiguration: n"None" 
+#   blueprint: Items.Base_Sniper_Rifle_Blueprint
+#   buyPrice: [ Price.BasePrice, Price.BuyMultiplier, Price.ItemQualityMultiplier, Price.WeightMultiplier, Price.RangedWeapon ]
+#   cameraForward: { x:0 y:0 z:0 } 
+#   cameraUp: { x:0 y:0 z:0 } 
+#   connections: [ ]
+#   # cpoItemCategory: 
+#   crosshair: Crosshairs.Simple
+#   damageType: DamageTypes.Physical
+#   displayName: 40575 
+#   dropObject: n"defaultItemDrop" 
+#   dropSettings: "" 
+#   effectiveRangeCurve: n"None" 
+#   effectiveRangeFalloffCurve: n"SniperRifleFalloff" 
+#   effectors: [ ]
+#   enableNpcRPGData: false 
+#   entityName: n"blank_weapon" 
+#   equipArea: n"EquipmentArea.Weapon" 
+#   equipAreas: [ ]
+#   equipPrereqs: [ ]
+#   equipSoundMetadata: n"None" 
+#   # equivalent:
+#   evolution: WeaponEvolution.Power
+#   forcedMinHitReaction: -1 
+#   friendlyName: "w_rifle_sniper_techtronika_grad" 
+#   fxPackage: Items.Base_Grad_inline9
+#   fxPackageQuickMelee: WeaponFxPackage.QuickMeleeFxPackage
+#   gameplayRestrictions: [ GameplayRestriction.VehicleCombatNoInterruptions ]
+#   garmentOffset: 0 
+#   hairSkinnedMeshComponents: [ ]
+#   hide_nametag: true 
+#   # holsteredItem:
+#   hudIcon: HUDWeaponIcons.Grad
+#   icon: UIIcon.ItemIcon
+#   iconPath: "" 
+#   isCustomizable: false 
+#   isGarment: false 
+#   isPart: false 
+#   isSingleInstance: false 
+#   itemCategory: ItemCategory.Weapon 
+#   itemSecondaryAction: ItemAction.Equip
+#   itemStructure: "" 
+#   itemType: ItemType.Wea_SniperRifle
+#   localizedDescription: 40576 
+#   localizedName: "" 
+#   manufacturer: WeaponManufacturer.Corporation
+#   mass: 20 
+#   minigameInstance: minigame_v2.DefaultItemMinigame 
+#   movementPattern: n"None"
+#   movementSound: "" 
+#   npcRPGData: "" 
+#   objectActions: [ ItemAction.Drop, ItemAction.Disassemble, ItemAction.WeaponDisassemble ]
+#   onEquipStats: "" 
+#   parentAttachmentType: ParentAttachmentType.Slot
+#   parts: [ ]
+#   placementSlots: [ AttachmentSlots.PanzerCannon ]
+#   previewEffectName: n"weaponPreview" 
+#   previewEffectTag: n"ricochet" 
+#   primaryTriggerMode: TriggerMode.SemiAuto
+#   projectileEaseOutCurveName: n"ProjectileEaseOut" 
+#   quality: Quality.Legendary 
+#   rangedAttacks: Attacks.ExplodingBulletPackage
+#   replicateWhenNotActive: false 
+#   requiredSlots: [ ]
+#   safeActionDuration: 2 
+#   savable: false 
+#   secondaryTriggerMode: "" 
+#   sellPrice: [ Price.BasePrice, Price.SellMultiplier, Price.ItemQualitySellMultiplier, Price.WeightMultiplier, Price.CraftingTraitMultiplier, Price.WeaponSellMultiplier, Price.RangedWeapon ]
+#   shootingPatternPackages: [ ShootingPatterns.SemiAutoSniperShootingPackage ]
+#   slotPartList: [ ]
+#   slotPartListPreset: [ ]
+#   statModifierGroups: [ Items.Base_Grad_Technical_Stats, Items.Base_Grad_Handling_Stats, Items.Base_Grad_Recoil_Stats, Items.Base_Grad_Spread_Stats, Items.Base_Grad_Aim_Stats, Items.Base_Grad_Constant_Stats, Items.Base_Power_Sniper_Rifle_Mult_Stats, Items.Base_Power_Sniper_Rifle_Stats, Items.Base_Power_Sniper_Rifle_RPG_Randomized_Stats, Items.Base_Sniper_Rifle_Sway_Stats, Items.Base_Sniper_Rifle_RPG_Stats, Items.Base_Sniper_Rifle_Misc_Stats, Items.Base_PlayerState_Spread_Stats, Proficiencies.AssaultSniperRifleStats, Items.Base_Weapon_Status_Effect_Application_Stats, Items.Base_Weapon_Damage_Type_Min_Max, Items.Base_Weapon_Damage_Type_Thermal ]
+#   statModifiers: [ Items.Base_Weapon_inline0, Items.Base_Weapon_inline1, Items.Base_Weapon_inline2, Items.Base_Weapon_inline3, Items.Base_Weapon_inline4, Items.Base_Weapon_inline5, Items.Base_Weapon_inline6, Items.Base_Weapon_inline7, Items.Base_Weapon_inline8, Items.Base_Weapon_inline9, Items.Base_Weapon_inline10, Items.Base_Weapon_inline11, Items.Base_Weapon_inline12, Items.Base_Weapon_inline13, Items.Base_Weapon_inline14, Items.Base_Weapon_inline15, Items.Base_Weapon_inline16, Items.Base_Weapon_inline17, Items.Base_Weapon_inline18, Items.Base_Weapon_inline19, Items.Base_Weapon_inline20, Items.Base_Weapon_inline21, Items.Base_Weapon_inline22, Items.Base_Weapon_inline23, Items.Base_Weapon_inline24, Items.Base_Weapon_inline25, Items.Base_Weapon_inline26, Items.Base_Weapon_inline27, Items.Base_Weapon_inline28, Items.Base_Weapon_inline29, Items.Base_Weapon_inline30, Items.Base_Weapon_inline31, Items.Base_Weapon_inline32, Items.Base_Weapon_inline33, Items.Base_Weapon_inline34, Items.Base_Weapon_inline35, Items.Base_Weapon_inline36, Items.Base_Weapon_inline37, Items.Base_Weapon_inline38, Items.Base_Weapon_inline39, Items.Base_Weapon_inline40, Items.Base_Weapon_inline41, Items.Base_Weapon_inline42, Items.Base_Weapon_inline43, Items.Base_Weapon_inline44, Items.Base_Weapon_inline45, Items.Base_Weapon_inline46, Items.Base_Weapon_inline47, Items.Base_Weapon_inline48, Items.Base_Weapon_inline49, Items.Base_Weapon_inline50, Items.Base_Weapon_inline51, Items.Base_Weapon_inline52, Items.Base_Weapon_inline53, Items.Base_Weapon_inline54, Items.Base_Weapon_inline55, Items.Base_Weapon_inline56, Items.Base_Weapon_inline57, Items.Base_Weapon_inline58, Items.Base_Weapon_inline59, Items.Base_Weapon_inline60, Items.Base_Weapon_inline61, Items.Base_Weapon_inline62, Items.Base_Weapon_inline63, Items.Base_Weapon_inline64, Items.Base_Weapon_inline65, Items.Base_Weapon_inline66, Items.Base_Weapon_inline67, Items.Base_Weapon_inline68, Items.Base_Weapon_inline69, Items.Base_Weapon_inline70, Items.Base_Weapon_inline71, Items.Base_Weapon_inline72, Items.Base_Weapon_inline73, Items.Base_Weapon_inline74, Items.Base_Weapon_inline75, Items.Base_Weapon_inline76, Items.Base_Weapon_inline77, Items.Base_Weapon_inline78, Items.Base_Weapon_inline79, Items.Base_Weapon_inline80, Items.Base_Weapon_inline81, Items.Base_Weapon_inline82, Items.Base_Weapon_inline83, Items.Base_Weapon_inline84, Items.Base_Weapon_inline85, Items.Base_Weapon_inline86, Items.Base_Weapon_inline87, Items.Base_Weapon_inline88, Items.Base_Weapon_inline89, Items.Base_Weapon_inline90, Items.Base_Weapon_inline91, Items.Base_Weapon_inline92, Items.Base_Weapon_inline93, Items.Base_Weapon_inline94, Items.Base_Weapon_inline95, Quality.IconicItem ]
+#   statPools: [ ]
+#   stateMachineName: n"Weapon" 
+#   tags: [ n"Weapon", n"RangedWeapon", n"inventoryDoubleSlot", n"Preload", n"Weapon", n"Rifle ,Sniper" n"AnimCycleRound" ]
+#   triggerModes: [ TriggerMode.SemiAuto ]
+#   useForcedTBHZOffset: false 
+#   useNewSpawnMethod: false 
+#   visualTags: [ n"Buck_Grad" ]
+#   weakspots: [ ]
+#   weaponBlurIntensity: 1 
+#   weaponBlurIntensity_aim: 1 
+#   weaponEdgesSharpness: 0.495799989 
+#   weaponEdgesSharpness_aim: 0.495799989 
+#   weaponFarPlane: 0.600000024 
+#   weaponFarPlane_aim: 0.5 
+#   weaponNearPlane: 0.270000011 
+#   weaponNearPlane_aim: 0.189999998 
+#   weaponVignetteCircular: 0 
+#   weaponVignetteCircular_aim: 0.174500003 
+#   weaponVignetteIntensity: 0.135700002 
+#   weaponVignetteIntensity_aim: 0.135700002 
+#   weaponVignetteRadius: 0.648199975 
+#   weaponVignetteRadius_aim: 0.681400001 
+
+# Items.FlyingWeapon2_inline0:
+#   $base: Items.Panzer_Cannon_inline0
+#   modifierType: n"Multiplier" 
+#   statType: BaseStats.HitReactionFactor
+#   value: 3 
+  
+# Items.FlyingWeapon2_inline1:
+#   $base: Items.Panzer_Cannon_inline1
+#   modifierType: n"Multiplier" 
+#   statType: BaseStats.HitWoundsFactor 
+#   value: 3 
+
+# Items.FlyingWeapon2_inline2:
+#   $base: Items.Panzer_Cannon_inline2
+#   modifierType: n"Multiplier" 
+#   statType: BaseStats.HitDismembermentFactor
+#   value: 3 
+
+# vehicle_flight.yaml
+
 playerStateMachineInputContext.vehicleFlightContext.affinity: n"None" 
 playerStateMachineInputContext.vehicleFlightContext.alias: [ n"allVehicleContexts" ]
 playerStateMachineInputContext.vehicleFlightContext.forceInputContext: n"VehicleFlight"
@@ -242,5 +389,5 @@ playerStateMachineDefinitions.Vehicle.states:
 # GameplayRestriction.VehicleCombat.savable,Bool,true 
 # GameplayRestriction.VehicleCombat.statusEffectType,TweakDBID,"BaseStatusEffectTypes.Misc" 
 # GameplayRestriction.VehicleCombat.stopActiveSfxOnDeactivate,Bool,true 
-# GameplayRestriction.VehicleCombat.uiData,TweakDBID,""  
- 
+# GameplayRestriction.VehicleCombat.uiData,TweakDBID,"" 
+

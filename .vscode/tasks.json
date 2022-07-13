@@ -27,6 +27,28 @@
         "problemMatcher": []
       },
       {
+        "label": "Generate Addresses",
+        "command": "tools\\addresses.bat",
+        "options": {
+          "shell": {
+            "executable": "cmd.exe",
+            "args": [
+              "/d", "/c"
+            ]
+          }
+        },
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared",
+          "showReuseMessage": false,
+          "clear": false
+        },
+        "group": "build",
+        "problemMatcher": []
+      },
+      {
         "label": "Lint",
         "type": "shell",
         "command": "tools\\lint.bat",
@@ -75,7 +97,7 @@
       {
         "label": "Build",
         "type": "shell",
-        "command": "tools\\build.bat",
+        "command": "tools\\builder.exe",
         "options": {
           "shell": {
             "executable": "cmd.exe",
@@ -121,7 +143,7 @@
       {
         "label": "Lint/Build",
         "type": "shell",
-        "command": "tools\\build.bat",
+        "command": "tools\\builder.exe",
         "options": {
           "shell": {
             "executable": "cmd.exe",

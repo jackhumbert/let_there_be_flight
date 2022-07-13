@@ -1,5 +1,6 @@
 #include "FlightSettings.hpp"
 #include "FlightModule.hpp"
+#include "FlightLog.hpp"
 
 #include "Utils.hpp"
 #include "stdafx.hpp"
@@ -34,80 +35,90 @@ void GetInstanceScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aF
 }
 
 RED4ext::HashMap<RED4ext::CName, float> floats;
+RED4ext::HashMap<RED4ext::CName, RED4ext::Vector3> vector3s;
 
-bool floatsInitialized = false;
+float GetFloat(RED4ext::CString name) {
+  if (floats.allocator) {
+    auto fl = floats.Get(RED4ext::CName(name.c_str()));
+    if (fl) {
+      return *fl;
+    }
+  }
+  spdlog::warn("Could not find Float: {0}", name.c_str());
+  return 0.0;
+}
 
 void GetFloat(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, float *aOut, int64_t a4) {
-  RED4ext::CName name;
+  RED4ext::CString name;
   RED4ext::GetParameter(aFrame, &name);
 
   aFrame->code++;
 
   if (aOut) {
-    if (floats.allocator) {
-      *aOut = *floats.Get(name);
-    } else {
-      *aOut = 0.0;
-    }
+    *aOut = GetFloat(name);
   }
 }
 
-void SetFloat(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, void *aOut, int64_t a4) {
-  RED4ext::CName name;
+void SetFloat(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, float *aOut, int64_t a4) {
+  RED4ext::CString name;
   float value;
   RED4ext::GetParameter(aFrame, &name);
   RED4ext::GetParameter(aFrame, &value);
 
   aFrame->code++;
 
-  floats.InsertOrAssign(name, value);
+  if (aOut) {
+    *aOut = GetFloat(name);
+  }
+
+  floats.InsertOrAssign(RED4ext::CName(name.c_str()), value);
+}
+
+RED4ext::Vector3 GetVector3(RED4ext::CString name) {
+  if (vector3s.allocator) {
+    auto vector3 = vector3s.Get(RED4ext::CName(name.c_str()));
+    if (vector3) {
+      return *vector3;
+    }
+  }
+  spdlog::warn("Could not find Vector3: {0}", name.c_str());
+  return RED4ext::Vector3(0.0, 0.0, 0.0);
+}
+
+void GetVector3(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Vector3 *aOut, int64_t a4) {
+  RED4ext::CString name;
+  RED4ext::GetParameter(aFrame, &name);
+
+  aFrame->code++;
+
+  if (aOut) {
+    *aOut = GetVector3(name);
+  }
+}
+
+void SetVector3(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Vector3 *aOut, int64_t a4) {
+  RED4ext::CString name;
+  float x;
+  float y;
+  float z;
+  RED4ext::GetParameter(aFrame, &name);
+  RED4ext::GetParameter(aFrame, &x);
+  RED4ext::GetParameter(aFrame, &y);
+  RED4ext::GetParameter(aFrame, &z);
+
+  aFrame->code++;
+
+  if (aOut) {
+    *aOut = GetVector3(name);
+  }
+
+  vector3s.InsertOrAssign(RED4ext::CName(name.c_str()), RED4ext::Vector3(x, y, z));
 }
 
 bool Setup(RED4ext::CGameApplication *aApp) {
   auto allocator = new RED4ext::Memory::DefaultAllocator();
   floats = RED4ext::HashMap<RED4ext::CName, float>(allocator);
-
-  //floats.Insert("airResistance", 0.001);
-  //floats.Insert("angularBrakeFactor", 10.0);
-  //floats.Insert("angularDampFactor", 3.0);
-  //floats.Insert("brakeFactor", 1.2);
-  //floats.Insert("brakeOffset", 0.0);
-  //floats.Insert("collisionRecoveryDelay", 0.8);
-  //floats.Insert("collisionRecoveryDuration", 0.8);
-  //floats.Insert("defaultHoverHeight", 3.50);
-  //floats.Insert("distance", 0.0);
-  //floats.Insert("distanceEase", 0.1);
-  //floats.Insert("fwtfCorrection", 0.0);
-  //floats.Insert("hoverClamp", 10.0);
-  //floats.Insert("hoverFactor", 20.0);
-  //floats.Insert("liftFactor", 8.0);
-  //floats.Insert("liftFactorDrone", 40.0);
-  //floats.Insert("lookAheadMax", 10.0);
-  //floats.Insert("lookAheadMin", 1.0);
-  //floats.Insert("maxHoverHeight", 7.0);
-  //floats.Insert("minHoverHeight", 1.0);
-  //floats.Insert("normalEase", 0.3);
-  //floats.Insert("pitchAeroCorrectionFactor", 0.25);
-  //floats.Insert("pitchCorrectionFactor", 3.0);
-  //floats.Insert("pitchDirectionalityFactor", 80.0);
-  //floats.Insert("pitchFactorDrone", 5.0);
-  //floats.Insert("pitchWithLift", 0.0);
-  //floats.Insert("pitchWithSurge", 0.0);
-  //floats.Insert("referenceZ", 0.0);
-  //floats.Insert("rollCorrectionFactor", 15.0);
-  //floats.Insert("rollFactorDrone", 12.0);
-  //floats.Insert("rollWithYaw", 0.15);
-  //floats.Insert("secondCounter", 0.0);
-  //floats.Insert("surgeFactor", 15.0);
-  //floats.Insert("surgeOffset", 0.5);
-  //floats.Insert("swayFactor", 5.0);
-  //floats.Insert("swayWithYaw", 0.5);
-  //floats.Insert("thrusterFactor", 0.05);
-  //floats.Insert("yawCorrectionFactor", 0.25);
-  //floats.Insert("yawD", 3.0);
-  //floats.Insert("yawDirectionalityFactor", 50.0);
-  //floats.Insert("yawFactor", 5.0);
-  //floats.Insert("yawFactorDrone", 5.0);
+  vector3s = RED4ext::HashMap<RED4ext::CName, RED4ext::Vector3>(allocator);
 
   auto rtti = RED4ext::CRTTISystem::Get();
   auto onUpdate = cls.GetFunction("OnAttach");
@@ -134,7 +145,7 @@ struct FlightSettingsModule : FlightModule {
 
   void PostRegisterTypes() {
     auto rtti = RED4ext::CRTTISystem::Get();
-    auto scriptable = rtti->GetClassByScriptName("ScriptableSystem");
+    auto scriptable = rtti->GetClassByScriptName("IScriptable");
     cls.parent = scriptable;
 
     auto getInstance = RED4ext::CClassStaticFunction::Create(&cls, "GetInstance", "GetInstance", &GetInstanceScripts,
@@ -148,6 +159,14 @@ struct FlightSettingsModule : FlightModule {
     auto setFloat = RED4ext::CClassStaticFunction::Create(&cls, "SetFloat", "SetFloat", &SetFloat,
                                                           {.isNative = true, .isStatic = true});
     cls.RegisterFunction(setFloat);
+
+    auto getVector3 = RED4ext::CClassStaticFunction::Create(&cls, "GetVector3", "GetVector3", &GetVector3,
+                                                          {.isNative = true, .isStatic = true});
+    cls.RegisterFunction(getVector3);
+
+    auto setVector3 = RED4ext::CClassStaticFunction::Create(&cls, "SetVector3", "SetVector3", &SetVector3,
+                                                          {.isNative = true, .isStatic = true});
+    cls.RegisterFunction(setVector3);
 
   }
 };

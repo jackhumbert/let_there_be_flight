@@ -11,5 +11,6 @@
         "**/.DS_Store": true,
         "**/Thumbs.db": true,
         "build": true
-    }
+    },
+    "terminal.integrated.shellArgs.windows": ["-ExecutionPolicy", "Bypass"]
 }

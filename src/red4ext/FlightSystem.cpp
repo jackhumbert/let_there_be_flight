@@ -53,7 +53,7 @@ FlightSystem *FlightSystem::GetInstance() {
     fsHandle = RED4ext::Handle<FlightSystem>(instance);
   }
 
-  return (FlightSystem *)fsHandle.instance;
+  return fsHandle.GetPtr();
 }
 
 void GetInstanceScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,

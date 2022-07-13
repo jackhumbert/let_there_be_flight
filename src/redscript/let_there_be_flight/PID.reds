@@ -18,6 +18,9 @@ public class PID {
     instance.Reset();
     return instance;
   }
+  public static func Create(v: Vector3) -> ref<PID> {
+    return PID.Create(v.X, v.Y, v.Z);
+  }
   public static func Create(P: Float, I: Float, D: Float, initialValue: Float) -> ref<PID> {
     let instance: ref<PID> = PID.Create(P, I, D);
     instance.valueFloat = initialValue;

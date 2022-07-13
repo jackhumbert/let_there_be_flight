@@ -14,12 +14,12 @@ public class FlightComponent extends ScriptableDeviceComponent {
   public let isPlayerMounted: Bool;
 
   let hoverGroundPID: ref<PID>;
-  let hoverPID: ref<PID>;
-  let pitchGroundPID: ref<DualPID>;
-  let pitchPID: ref<DualPID>;
-  let rollGroundPID: ref<DualPID>;
-  let rollPID: ref<DualPID>;
-  let yawPID: ref<PID>;
+  // let hoverPID: ref<PID>;
+  // let pitchGroundPID: ref<DualPID>;
+  let pitchPID: ref<PID>;
+  // let rollGroundPID: ref<DualPID>;
+  let rollPID: ref<PID>;
+  let aeroYawPID: ref<PID>;
   let pitchAeroPID: ref<PID>;
 
   private let sqs: ref<SpatialQueriesSystem>;
@@ -52,7 +52,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   public let torque: Vector4;
 
   // public let ui: wref<worlduiWidgetComponent>;
-  public let ui_info: wref<worlduiWidgetComponent>;
+  // public let ui_info: wref<worlduiWidgetComponent>;
 
   private let uiBlackboard: wref<IBlackboard>;
   private let menuCallback: ref<CallbackHandle>;
@@ -61,6 +61,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   private let uiGameDataBlackboard: wref<IBlackboard>;
   private let popupCallback: ref<CallbackHandle>;
   public let isPopupShown: Bool;
+  public let alarmIsPlaying: Bool;
 
   protected final const func GetVehicle() -> wref<VehicleObject> {
     return this.GetEntity() as VehicleObject;
@@ -76,14 +77,12 @@ public class FlightComponent extends ScriptableDeviceComponent {
     // QuickhackModule.RequestRefreshQuickhackMenu(this.GetVehicle().GetGame(), this.GetVehicle().GetEntityID());
 
     // this.hoverGroundPID = PID.Create(1.0, 0.01, 0.1);
-    this.hoverGroundPID = PID.Create(1.0, 0.005, 0.5);
-    this.hoverPID = PID.Create(1.0, 0.01, 0.1);
-    this.pitchGroundPID = DualPID.Create(0.8, 0.2, 0.05,  0.8, 0.2, 0.05);
-    this.pitchPID = DualPID.Create(1.0, 0.5, 0.5,  1.0, 0.5, 0.5);
-    this.rollGroundPID =  DualPID.Create(0.5, 0.2, 0.05,  2.5, 1.5, 0.5);
-    this.rollPID =  DualPID.Create(1.0, 0.5, 0.5,  1.0, 0.5, 0.5);
-    this.yawPID = PID.Create(1.0, 0.01, 2.0);
-    this.pitchAeroPID = PID.Create(1.0, 0.01, 2.0);
+    this.hoverGroundPID = PID.Create(FlightSettings.GetVector3("hoverModePID"));
+    // this.hoverPID = PID.Create(1.0, 0.01, 0.1);
+    this.pitchPID = PID.Create(FlightSettings.GetVector3("inputPitchPID"));
+    this.rollPID =  PID.Create(FlightSettings.GetVector3("inputRollPID"));
+    this.aeroYawPID = PID.Create(FlightSettings.GetVector3("aeroYawPID"));
+    this.pitchAeroPID = PID.Create(FlightSettings.GetVector3("aeroPitchPID"));
 
     this.sys = FlightSystem.GetInstance();
     this.sqs = GameInstance.GetSpatialQueriesSystem(this.GetVehicle().GetGame());
@@ -92,16 +91,16 @@ public class FlightComponent extends ScriptableDeviceComponent {
     // this.helper = this.GetVehicle().AddFlightHelper();
     // this.stats = FlightStats.Create(this.GetVehicle());
 
-    this.collisionTimer = FlightSettings.GetFloat(n"collisionRecoveryDelay");
+    this.collisionTimer = FlightSettings.GetFloat("collisionRecoveryDelay");
     this.distance = 0.0;
-    this.hoverHeight = FlightSettings.GetFloat(n"defaultHoverHeight");
+    this.hoverHeight = FlightSettings.GetFloat("defaultHoverHeight");
     
-    ArrayPush(this.modes, FlightModeAutomatic.Create(this));
     ArrayPush(this.modes, FlightModeHoverFly.Create(this));
     ArrayPush(this.modes, FlightModeHover.Create(this));
+    ArrayPush(this.modes, FlightModeAutomatic.Create(this));
     ArrayPush(this.modes, FlightModeFly.Create(this));
-    ArrayPush(this.modes, FlightModeDrone.Create(this));
     ArrayPush(this.modes, FlightModeDroneAntiGravity.Create(this));
+    ArrayPush(this.modes, FlightModeDrone.Create(this));
 
     this.audioUpdate = new FlightAudioUpdate();
   }
@@ -167,7 +166,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   }
 
   private func GetPitch() -> Float{
-    return 700.0 / this.stats.s_mass + 0.5;
+    return ClampF(700.0 / this.stats.s_mass + 0.5, 0.25, 2.0);
   }
 
   public func GetFlightModeIndex() -> Int32 {
@@ -178,13 +177,18 @@ public class FlightComponent extends ScriptableDeviceComponent {
     return this.modes[this.mode];
   }
 
-  public func GetNextFlightMode() -> ref<FlightMode> {
-    return this.modes[(this.mode + 1) % ArraySize(this.modes)];
+  public func GetNextFlightMode(direction: Int32) -> ref<FlightMode> {
+    let mode = this.mode + direction;
+    if mode < 0 {
+      mode += ArraySize(this.sys.playerComponent.modes);
+    } 
+    mode = mode % ArraySize(this.sys.playerComponent.modes);
+    return this.modes[mode];
   }
 
   public func GetNextFlightModeDescription() -> String {
     if ArraySize(this.modes) > 0 {
-      return this.GetNextFlightMode().GetDescription();
+      return this.GetNextFlightMode(1).GetDescription();
     } else {
       return "None";
     }
@@ -192,7 +196,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
   // callbacks
 
-  public let uiControl: ref<FlightControllerUI>;
+  // public let uiControl: ref<FlightControllerUI>;
   
   protected cb func OnMountingEvent(evt: ref<MountingEvent>) -> Bool {
     // this.helper = this.GetVehicle().AddFlightHelper();
@@ -206,8 +210,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
       // (this.GetVehicle().FindComponentByName(n"cars_sport_fx") as EffectSpawnerComponent).AddEffect();
       this.sys.playerComponent = this;
       this.isPlayerMounted = true;
-      this.uiControl = FlightControllerUI.Create(this.ui_info.GetGameController(), this.ui_info.GetGameController().GetRootCompoundWidget());
-      this.uiControl.Setup(this.stats);
+      // this.uiControl = FlightControllerUI.Create(this.ui_info.GetGameController(), this.ui_info.GetGameController().GetRootCompoundWidget());
+      // this.uiControl.Setup(this.stats);
     } else {
       // FlightLog.Info("[FlightComponent] OnMountingEvent for other vehicle: " + this.GetVehicle().GetDisplayName());
     }
@@ -226,8 +230,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
     }
     let normal: Vector4;
     this.SetupTires();
-    if !this.FindGround(normal) || this.distance > 1.0 {
-      this.Activate();
+    if this.isPlayerMounted && !this.FindGround(normal) || this.distance > FlightSettings.GetFloat("autoActivationHeight") {
+      this.Activate(true);
     }
   }
 
@@ -323,12 +327,12 @@ public class FlightComponent extends ScriptableDeviceComponent {
       this.GetVehicle().GetVehicleComponent().GetVehicleController().ToggleLights(true);
 
       this.hoverGroundPID.Reset();
-      this.hoverPID.Reset();
-      this.pitchGroundPID.Reset();
+      // this.hoverPID.Reset();
+      // this.pitchGroundPID.Reset();
       this.pitchPID.Reset();
-      this.rollGroundPID.Reset();
+      // this.rollGroundPID.Reset();
       this.rollPID.Reset();
-      this.yawPID.Reset();
+      this.aeroYawPID.Reset();
       this.pitchAeroPID.Reset();
 
       this.modes[this.mode].Activate();
@@ -364,6 +368,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     if this.GetVehicle().IsDestroyed() {
       if !this.isDestroyed {
         this.sys.audio.StartWithPitch("vehicleDestroyed" + this.GetUniqueID(), "vehicle3_destroyed", 1.0);
+        this.alarmIsPlaying = true;
         this.isDestroyed = true;
       }
       if this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() {
@@ -391,6 +396,11 @@ public class FlightComponent extends ScriptableDeviceComponent {
         this.angularBrake = fc.angularBrake.GetValue();
         this.surge = fc.surge.GetValue();
         this.sway = fc.sway.GetValue();
+
+        if this.GetFlightMode().usesRightStickInput {
+          let v = this.GetVehicle();
+          v.turnX = this.roll;
+        }
       } else {
         let v = this.GetVehicle();
         this.surge = v.acceleration * 0.5 - v.deceleration * 0.1;
@@ -442,11 +452,12 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.UpdateAudioParams(timeDelta, force, torque);
     
     if this.isPlayerMounted {
-      this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Force, force);
-      this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Torque, torque);
-      this.sys.ctlr.GetBlackboard().SetFloat(GetAllBlackboardDefs().VehicleFlight.Pitch, Vector4.GetAngleBetween(this.stats.d_forward, FlightUtils.Up()));
+      // this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Force, force);
+      // this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Torque, torque);
+      // this.sys.ctlr.GetBlackboard().SetFloat(GetAllBlackboardDefs().VehicleFlight.Pitch, Vector4.GetAngleDegAroundAxis(this.stats.d_localUp, FlightUtils.Up(), FlightUtils.Right()));
+      this.sys.ctlr.GetBlackboard().SetFloat(GetAllBlackboardDefs().VehicleFlight.Roll, Vector4.GetAngleDegAroundAxis(this.stats.d_localUp, FlightUtils.Up(), FlightUtils.Forward()), false);
       // this.sys.ctlr.GetBlackboard().SignalFloat(GetAllBlackboardDefs().VehicleFlight.Pitch);
-      this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Position, this.stats.d_position);
+      // this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Position, this.stats.d_position);
       // this.sys.ctlr.GetBlackboard().SignalVector4(GetAllBlackboardDefs().VehicleFlight.Position);
     }
     
@@ -475,8 +486,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
     // convert to global
     torque = this.stats.d_orientation * torque;
     
-    if this.collisionTimer < FlightSettings.GetFloat(n"collisionRecoveryDelay") + FlightSettings.GetFloat(n"collisionRecoveryDuration") {
-      let collisionDampener = MinF(MaxF(0.0, (this.collisionTimer - FlightSettings.GetFloat(n"collisionRecoveryDelay")) / FlightSettings.GetFloat(n"collisionRecoveryDuration")), 1.0);
+    if this.collisionTimer < FlightSettings.GetFloat("collisionRecoveryDelay") + FlightSettings.GetFloat("collisionRecoveryDuration") {
+      let collisionDampener = MinF(MaxF(0.0, (this.collisionTimer - FlightSettings.GetFloat("collisionRecoveryDelay")) / FlightSettings.GetFloat("collisionRecoveryDuration")), 1.0);
       torque *= collisionDampener;
       force *= collisionDampener;
       this.collisionTimer += timeDelta;
@@ -495,7 +506,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.active = false;
     this.fx.Stop();
 
-    if this.isDestroyed && this.hasExploded {
+    if this.isDestroyed && this.hasExploded && this.alarmIsPlaying {
         this.sys.audio.Stop("vehicleDestroyed" + this.GetUniqueID());
     }
 
@@ -721,16 +732,16 @@ public class FlightComponent extends ScriptableDeviceComponent {
   }
 
   public func ProcessImpact(impact: Float) {
-    this.collisionTimer = FlightSettings.GetFloat(n"collisionRecoveryDelay") - impact;
-    // this.ui_info.StartGlitching(impact, FlightSettings.GetFloat(n"collisionRecoveryDuration") + impact);
+    this.collisionTimer = (FlightSettings.GetFloat("collisionRecoveryDelay") + FlightSettings.GetFloat("collisionRecoveryDuration")) * (1.0 - (impact * this.GetFlightMode().collisionPenalty));
+    // this.ui_info.StartGlitching(impact, FlightSettings.GetFloat("collisionRecoveryDuration") + impact);
   }
 
   public let audioUpdate: ref<FlightAudioUpdate>;
 
   public func UpdateAudioParams(timeDelta: Float, force: Vector4, torque: Vector4) -> Void {
     let ratio = 1.0;
-    if this.collisionTimer < FlightSettings.GetFloat(n"collisionRecoveryDelay") + FlightSettings.GetFloat(n"collisionRecoveryDuration") {
-      ratio = MaxF(0.0, (this.collisionTimer - FlightSettings.GetFloat(n"collisionRecoveryDelay")) / FlightSettings.GetFloat(n"collisionRecoveryDuration"));
+    if this.collisionTimer < FlightSettings.GetFloat("collisionRecoveryDelay") + FlightSettings.GetFloat("collisionRecoveryDuration") {
+      ratio = MaxF(0.0, (this.collisionTimer - FlightSettings.GetFloat("collisionRecoveryDelay")) / FlightSettings.GetFloat("collisionRecoveryDuration"));
     }
     
     let vehicleID = Cast<StatsObjectID>(this.GetVehicle().GetEntityID());
@@ -791,8 +802,10 @@ public class FlightComponent extends ScriptableDeviceComponent {
         this.sys.audio.Update("windLeft", Vector4.EmptyVector(), windVolume, this.audioUpdate);
         this.sys.audio.Update("windRight", Vector4.EmptyVector(), windVolume, this.audioUpdate);
       }
-      this.sys.audio.Update("vehicle" + this.GetUniqueID(), Vector4.EmptyVector(), engineVolume, this.audioUpdate);
-      if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() {
+      if this.active {
+        this.sys.audio.Update("vehicle" + this.GetUniqueID(), Vector4.EmptyVector(), engineVolume, this.audioUpdate);
+      }
+      if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() && this.alarmIsPlaying {
         this.sys.audio.Update("vehicleDestroyed" + this.GetUniqueID(), Vector4.EmptyVector(), engineVolume, this.audioUpdate);
       }
       // this.sys.audio.Update("leftFront", Vector4.EmptyVector(), engineVolume);
@@ -839,8 +852,10 @@ public class FlightComponent extends ScriptableDeviceComponent {
     } else {
       this.audioUpdate.inside = 0.0;
     }
-    this.sys.audio.Update("vehicle" + this.GetUniqueID(), this.GetVehicle().GetWorldPosition(), engineVolume, this.audioUpdate);
-    if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() {
+    if this.active {
+      this.sys.audio.Update("vehicle" + this.GetUniqueID(), this.GetVehicle().GetWorldPosition(), engineVolume, this.audioUpdate);
+    }
+    if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() && this.alarmIsPlaying {
       this.sys.audio.Update("vehicleDestroyed" + this.GetUniqueID(), this.GetVehicle().GetWorldPosition(), engineVolume, this.audioUpdate);
     }
   }
@@ -888,7 +903,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
     // all in engine\physics\collision_presets.json
     // VehicleBlocker? RagdollVehicle?
-    let lookDown = new Vector4(0.0, 0.0, -FlightSettings.GetFloat(n"maxHoverHeight") - 10.0, 0.0);
+    let lookDown = new Vector4(0.0, 0.0, -FlightSettings.GetFloat("hoverModeMaxHoverHeight") - 10.0, 0.0);
     this.sqs.SyncRaycastByCollisionGroup(fl_tire, fl_tire + lookDown, n"VehicleBlocker", findGround1, false, false);
     this.sqs.SyncRaycastByCollisionGroup(fr_tire, fr_tire + lookDown, n"VehicleBlocker", findGround2, false, false);
     this.sqs.SyncRaycastByCollisionGroup(bl_tire, bl_tire + lookDown, n"VehicleBlocker", findGround3, false, false);
@@ -959,10 +974,13 @@ public class FlightComponent extends ScriptableDeviceComponent {
     };
   }
 
-  public func OnFireWeapon(placeholderQuat: Quaternion) -> Void {    
+  protected let m_attacksSpawned: array<ref<EffectInstance>>;
+
+  public func OnFireWeapon(placeholderQuat: Quaternion, weaponItem:TweakDBID, attachmentSlot: TweakDBID) -> Void {    
+    // let weapon = TweakDBInterface.GetWeaponItemRecord(weaponItem);
     let wt: WorldTransform;
     let vehicleSlots = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"vehicle_slots") as SlotComponent;
-    vehicleSlots.GetSlotTransform(n"PanzerCannon", wt);
+    vehicleSlots.GetSlotTransform(StringToName(TweakDBInterface.GetAttachmentSlotRecord(attachmentSlot).EntitySlotName()), wt);
     let quat = WorldTransform.GetOrientation(wt);
     // let start = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(wt));
     // let end = Vector4.Vector3To4(tracePosition);
@@ -970,7 +988,51 @@ public class FlightComponent extends ScriptableDeviceComponent {
     WorldTransform.SetOrientation(wt, quat * placeholderQuat);
 
     let effect = Cast<FxResource>(r"base\\fx\\vehicles\\av\\av_panzer\\weapons\\v_panzer_muzzle_flash.effect");
-    GameInstance.GetFxSystem(this.GetVehicle().GetGame()).SpawnEffect(effect, wt);
+    // let effect = Cast<FxResource>(r"base\\fx\\weapons\\firearms\\_muzzle_lights\\smart\\w_s_rifles_mq_muzzle_lights_tpp.effect");
+    let fxSystem = GameInstance.GetFxSystem(this.GetVehicle().GetGame());
+    if IsDefined(fxSystem) {
+      fxSystem.SpawnEffect(effect, wt);
+    }
+
+    
+    // let attack: ref<Attack_GameEffect>;
+    // let attackContext: AttackInitContext;
+    // let effect: ref<EffectInstance>;
+    // let position: Vector4;
+    // let slotTransform: WorldTransform;
+    // let statMods: array<ref<gameStatModifierData>>;
+    // let slotName = StringToName(TweakDBInterface.GetAttachmentSlotRecord(attachmentSlot).EntitySlotName());
+    // let validSlotPosition: Bool = vehicleSlots.GetSlotTransform(slotName, slotTransform);
+    // if validSlotPosition {
+    //   position = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotTransform));
+    // } else {
+    //   position = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(this.GetVehicle().GetWorldTransform()));
+    // };
+    // attackContext.source = this.GetVehicle();
+    // attackContext.record = weapon.RangedAttacks().DefaultFire().PlayerAttack();
+    // attackContext.instigator = this.sys.player;
+    // attack = IAttack.Create(attackContext) as Attack_GameEffect;
+    // attack.GetStatModList(statMods);
+    // effect = attack.PrepareAttack(this.sys.player);
+    // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.position, position);
+    // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.muzzlePosition, position);
+    // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.forward, Quaternion.GetForward(placeholderQuat));
+    // EffectData.SetVariant(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.attack, ToVariant(attack));
+    // EffectData.SetVariant(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.attackStatModList, ToVariant(statMods));
+    // attack.StartAttack();
+    
+    // effect.AttachToSlot(this.GetVehicle(), slotName, GetAllBlackboardDefs().EffectSharedData.position, GetAllBlackboardDefs().EffectSharedData.forward);
+    
+    // ArrayPush(this.m_attacksSpawned, effect);
+
+    let broadcaster = this.sys.player.GetStimBroadcasterComponent();
+    if IsDefined(broadcaster) {
+      broadcaster.TriggerSingleBroadcast(this.sys.player, gamedataStimType.Gunshot, 25.0);
+      let data: stimInvestigateData;
+      data.illegalAction = true;
+      data.attackInstigator = this.sys.player;
+      broadcaster.TriggerSingleBroadcast(this.sys.player, gamedataStimType.Gunshot, 100.0, data, true);
+    };
     
     // let tp: WorldPosition;
     // WorldPosition.SetVector4(tp, Vector4.Vector3To4(tracePosition));
