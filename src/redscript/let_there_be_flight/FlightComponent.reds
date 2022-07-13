@@ -230,8 +230,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
     }
     let normal: Vector4;
     this.SetupTires();
-    if !this.FindGround(normal) || this.distance > FlightSettings.GetFloat("autoActivationHeight") {
-      this.Activate();
+    if this.isPlayerMounted && !this.FindGround(normal) || this.distance > FlightSettings.GetFloat("autoActivationHeight") {
+      this.Activate(true);
     }
   }
 

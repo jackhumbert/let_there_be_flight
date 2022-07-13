@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-07-12 18:53:58.4755439
+// This file was automatically generated on 2022-07-13 16:20:15.4513985
 
 // FlightAudio.reds
 
@@ -415,8 +415,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
     }
     let normal: Vector4;
     this.SetupTires();
-    if !this.FindGround(normal) || this.distance > FlightSettings.GetFloat("autoActivationHeight") {
-      this.Activate();
+    if this.isPlayerMounted && !this.FindGround(normal) || this.distance > FlightSettings.GetFloat("autoActivationHeight") {
+      this.Activate(true);
     }
   }
 
@@ -1660,7 +1660,7 @@ public native class FlightController extends IScriptable {
     // evt.AddInputHint(FlightController.CreateInputHint("Raise Hover Height", n"FlightOptions_Up"), true);
     // evt.AddInputHint(FlightController.CreateInputHint("Lower Hover Height", n"FlightOptions_Down"), true);
     evt.AddInputHint(FlightController.CreateInputHint("Toggle UI", n"Flight_UIToggle"),         this.active && this.showOptions);
-    evt.AddInputHint(FlightController.CreateInputHint("Fire", n"ShootPrimary"),                 this.active && !this.showOptions);
+    // evt.AddInputHint(FlightController.CreateInputHint("Fire", n"ShootPrimary"),                 this.active && !this.showOptions);
 
     uiSystem.QueueEvent(evt);
   }
@@ -1794,10 +1794,12 @@ public native class FlightController extends IScriptable {
         //     FlightLog.Info("hoverHeight = " + ToString(this.hoverHeight));
         // }
       if Equals(actionName, n"Flight_HoodDetach") && ListenerAction.IsButtonJustPressed(action) {
+        GameInstance.GetAudioSystem(this.gameInstance).Play(n"ui_menu_onpress");
         this.sys.playerComponent.GetVehicle().DetachPart(n"Hood");
         this.sys.playerComponent.GetVehicle().DetachPart(n"Trunk");
       }
       if Equals(actionName, n"Flight_RightStickToggle") && ListenerAction.IsButtonJustPressed(action) {
+        GameInstance.GetAudioSystem(this.gameInstance).Play(n"ui_menu_onpress");
         this.sys.playerComponent.GetFlightMode().usesRightStickInput = !this.sys.playerComponent.GetFlightMode().usesRightStickInput;
         this.SetupActions();
       }
@@ -3897,7 +3899,7 @@ public native class FlightSettings extends IScriptable {
   private func OnAttach() -> Void {
     FlightLog.Info("[FlightSettings] OnAttach");
 
-    FlightSettings.SetFloat("autoActivationHeight", 2.0);
+    FlightSettings.SetFloat("autoActivationHeight", 3.0);
     
     FlightSettings.SetVector3("inputPitchPID", 1.0, 0.5, 0.5);
     FlightSettings.SetVector3("inputRollPID", 1.0, 0.5, 0.5);
@@ -6808,6 +6810,7 @@ public func GetLocalToWorld() -> Matrix {
 public let chassis: ref<vehicleChassisComponent>;
 
 @addField(VehicleObject)
+@runtimeProperty("offset", "0x24C")
 public native let isOnGround: Bool;
 
 @addField(VehicleObject)
