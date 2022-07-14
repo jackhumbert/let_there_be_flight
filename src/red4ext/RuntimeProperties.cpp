@@ -54,24 +54,88 @@ bool __fastcall ProcessScriptTypes(uint32_t *version, ScriptData *scriptData, vo
           }
         }
 
-        auto mod = prop->runtimeProperties.Get("modSettings.mod");
+        auto mod = prop->runtimeProperties.Get("ModSettings.mod");
         if (mod) {
-          ModSettingsVariable *variable = (ModSettingsVariable*)modSettingsVariable.AllocInstance();
-          variable->mod = *mod;
+          auto variable = (ModSettingsVariable *)RED4ext::CRTTISystem::Get()->GetClass("ModSettings")->AllocInstance(true);
+          variable->mod = RED4ext::CNamePool::Add(mod->c_str());
           variable->scriptClass = scriptClass;
-          variable->scriptProperty = prop;
+          variable->className = scriptClass->name;
 
-          auto displayName = prop->runtimeProperties.Get("modSettings.displayName");
-          if (displayName) {
-            variable->displayName = *displayName;
+          auto category = prop->runtimeProperties.Get("ModSettings.category");
+          if (category) {
+            variable->category = RED4ext::CNamePool::Add(category->c_str());
           } else {
-            variable->displayName = prop->name.ToString();
+            variable->category = "None";
           }
-          auto description = prop->runtimeProperties.Get("modSettings.description");
+
+          auto defaultValue = 0.0;
+          if (prop->defaultValues.size) {
+            std::string valueStr(prop->defaultValues[0].c_str());
+            defaultValue = std::stof(valueStr);
+          }
+
+          auto rtm = (new RED4ext::Memory::DefaultAllocator())
+                         ->AllocAligned(sizeof(RED4ext::user::RuntimeSettingsVarFloat), 8);
+          memset(rtm.memory, 0, sizeof(RED4ext::user::RuntimeSettingsVarFloat));
+          auto rt = new RED4ext::user::RuntimeSettingsVarFloat(*(RED4ext::user::RuntimeSettingsVarFloat *)rtm.memory);
+
+          rt->minValue = 0.0;
+          rt->maxValue = 10.0;
+          rt->stepValue = 0.5;
+          rt->valueInput = defaultValue;
+          rt->defaultValue = defaultValue;
+          rt->valueValidated = defaultValue;
+          rt->valueWrittenToFile = defaultValue;
+          rt->type = RED4ext::user::EConfigVarType::Float;
+
+          
+          rt->name = prop->name;
+          rt->displayNameKeys = RED4ext::DynArray<RED4ext::CName>(new RED4ext::Memory::DefaultAllocator());
+          rt->groupPath =
+              RED4ext::CNamePool::Add("/mods/" + *scriptClass->name.ToString() + *"/" + *prop->name.ToString());
+          rt->updatePolicy = RED4ext::user::EConfigVarUpdatePolicy::Immediately;
+          rt->unk44 = 0xFF;
+          rt->unk45 = 0xFF;
+          rt->bitfield.isInPreGame = true;
+          rt->bitfield.isInGame = true;
+          rt->bitfield.isVisible = true;
+          rt->bitfield.isInitialized = true;
+          rt->bitfield.isDisabled = false;
+          rt->bitfield.canBeRestoredToDefault = true;
+
+          variable->settingsVar = rt;
+
+          auto displayName = prop->runtimeProperties.Get("ModSettings.displayName");
+          if (displayName) {
+            rt->displayName = RED4ext::CNamePool::Add(displayName->c_str());
+          } else {
+            rt->displayName = prop->name;
+          }
+
+          auto description = prop->runtimeProperties.Get("ModSettings.description");
           if (description) {
-            variable->description = *description;
+            rt->description = RED4ext::CNamePool::Add(description->c_str());
           }
-          ModSettingsVariables.EmplaceBack(*variable);
+
+          auto step = prop->runtimeProperties.Get("ModSettings.step");
+          if (step) {
+            std::string valueStr(step->c_str());
+            rt->stepValue = std::stof(valueStr);
+          }
+
+          auto min = prop->runtimeProperties.Get("ModSettings.min");
+          if (min) {
+            std::string valueStr(min->c_str());
+            rt->minValue = std::stof(valueStr);
+          }
+
+          auto max = prop->runtimeProperties.Get("ModSettings.max");
+          if (max) {
+            std::string valueStr(max->c_str());
+            rt->maxValue = std::stof(valueStr);
+          }
+
+          ModSettings::AddVariable(variable);
         }
       }
     }
@@ -108,7 +172,6 @@ bool __fastcall ProcessScriptTypes(uint32_t *version, ScriptData *scriptData, vo
 
 struct RuntimePropertiesModule : FlightModule {
   void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-    ModSettingsVariables = RED4ext::DynArray<ModSettingsVariable>(new RED4ext::Memory::DefaultAllocator());
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(ProcessScriptTypesAddr), &ProcessScriptTypes,
                                   reinterpret_cast<void **>(&ProcessScriptTypes_Original)))
       ;

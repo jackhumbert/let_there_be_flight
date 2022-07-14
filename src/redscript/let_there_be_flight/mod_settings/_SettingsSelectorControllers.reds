@@ -37,6 +37,16 @@
 //         wrappedMethod(forward);
 //     }
 // }
+
+@addMethod(SettingsSelectorController)
+public func SetupMod(entry: ref<ConfigVar>, isPreGame: Bool) -> Void {
+  this.m_SettingsEntry = entry;
+  this.m_IsPreGame = isPreGame;
+  this.m_varGroupPath = this.m_SettingsEntry.GetGroupPath();
+  this.m_varName = this.m_SettingsEntry.GetName();
+  this.BindSettings(entry);
+}
+
 @replaceMethod(SettingsSelectorController)
 public func Refresh() -> Void {
   let i: Int32;

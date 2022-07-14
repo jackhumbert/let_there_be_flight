@@ -433,4 +433,4 @@ struct NativeSettingsModule : FlightModule {
   }
 };
 
-REGISTER_FLIGHT_MODULE(NativeSettingsModule);
+//REGISTER_FLIGHT_MODULE(NativeSettingsModule);

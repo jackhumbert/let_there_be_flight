@@ -9,10 +9,34 @@ public native class FlightSettings extends IScriptable {
   public native static func GetVector3(name: String) -> Vector3;
   public native static func SetVector3(name: String, x: Float, y: Float, z: Float) -> Vector3;
 
-  @runtimeProperty("modSettings.mod", "Let There Be Flight")
-  @runtimeProperty("modSettings.displayName", "Auto Activation Height")
-  @runtimeProperty("modSettings.description", "In-game units for detecting when flight should automatically be activated")
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "General Flight Settings")
+  @runtimeProperty("ModSettings.displayName", "Auto Activation Height")
+  @runtimeProperty("ModSettings.description", "In-game units for detecting when flight should automatically be activated")
+  @runtimeProperty("ModSettings.step", "0.1")
   public let autoActivationHeight: Float = 3.0;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "General Flight Settings")
+  @runtimeProperty("ModSettings.displayName", "General Damp Factor (linear)")
+  @runtimeProperty("ModSettings.description", "Linear damp Factor")
+  @runtimeProperty("ModSettings.step", "0.0001")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "0.01")
+  public let generalDampFactorLinear: Float = 0.001;
+
+  @runtimeProperty("ModSettings.mod", "Test Mod")
+  @runtimeProperty("ModSettings.displayName", "Nothing rnTISen")
+  @runtimeProperty("ModSettings.description", "Blah")
+  public let diestr: Float = 0.001;
+
+  public cb func OnModSettingVarChanged(variable: CName, value: Variant) {
+    switch (variable) {
+      case n"autoActivationHeight":
+        this.autoActivationHeight = FromVariant<Float>(value);
+        break;
+    }
+  }
 
   private func OnAttach() -> Void {
     FlightLog.Info("[FlightSettings] OnAttach");
