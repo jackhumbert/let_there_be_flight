@@ -1,7 +1,12 @@
 #include "FlightModule.hpp"
 #include "ModSettings.hpp"
 #include "stdafx.hpp"
+#include <RED4ext/Scripting/Natives/Generated/user/SettingsVar.hpp>
+#include <RED4ext/Scripting/Natives/Generated/user/SettingsVarBool.hpp>
 #include <RED4ext/Scripting/Natives/Generated/user/SettingsVarFloat.hpp>
+#include <RED4ext/Scripting/Natives/Generated/user/SettingsVarInt.hpp>
+#include <RED4ext/Scripting/Natives/Generated/user/SettingsVarListInt.hpp>
+#include <RED4ext/Scripting/Natives/Generated/user/SettingsVarListName.hpp>
 
 RED4ext::TTypedClass<ModSettings> modSettings("ModSettings");
 
@@ -19,16 +24,168 @@ ModSettings *ModSettings::GetInstance() {
   return (ModSettings *)handle.instance;
 }
 
-void ModSettings::AddVariable(ModSettingsVariable *variable) { 
+RED4ext::user::RuntimeSettingsVar *ModSettings::CreateSettingVarFromBool(ScriptProperty *prop) {
+  //auto rtm = (new RED4ext::Memory::DefaultAllocator())->AllocAligned(sizeof(RED4ext::user::RuntimeSettingsVarBool), 8);
+  //memset(rtm.memory, 0, sizeof(RED4ext::user::RuntimeSettingsVarBool));
+  //auto boolVar = new RED4ext::user::RuntimeSettingsVarBool(*(RED4ext::user::RuntimeSettingsVarBool *)rtm.memory);
+  auto boolVar = new RED4ext::user::RuntimeSettingsVarBool();
+
+  boolVar->type = RED4ext::user::EConfigVarType::Bool;
+
+  auto defaultValue = false;
+  if (prop->defaultValues.size) {
+    auto cstr = prop->defaultValues[0].c_str();
+    char *p;
+    auto value = strtoul(cstr, &p, 10);
+    if (*p == 0) {
+      defaultValue = value;
+    }
+  }
+
+  boolVar->valueInput = defaultValue;
+  boolVar->defaultValue = defaultValue;
+  boolVar->valueValidated = defaultValue;
+  boolVar->valueWrittenToFile = defaultValue;
+
+  return boolVar;
+}
+
+RED4ext::user::RuntimeSettingsVar *ModSettings::CreateSettingVarFromInt(ScriptProperty *prop) {
+  //auto rtm = (new RED4ext::Memory::DefaultAllocator())->AllocAligned(sizeof(RED4ext::user::RuntimeSettingsVarInt), 8);
+  //memset(rtm.memory, 0, sizeof(RED4ext::user::RuntimeSettingsVarInt));
+  //auto intVar = new RED4ext::user::RuntimeSettingsVarInt(*(RED4ext::user::RuntimeSettingsVarInt *)rtm.memory);
+  auto intVar = new RED4ext::user::RuntimeSettingsVarInt();
+
+  intVar->type = RED4ext::user::EConfigVarType::Int;
+
+  auto defaultValue = 0;
+  if (prop->defaultValues.size) {
+    auto cstr = prop->defaultValues[0].c_str();
+    char *p;
+    auto value = strtoul(cstr, &p, 10);
+    if (*p == 0) {
+      defaultValue = value;
+    }
+  }
+
+  intVar->valueInput = defaultValue;
+  intVar->defaultValue = defaultValue;
+  intVar->valueValidated = defaultValue;
+  intVar->valueWrittenToFile = defaultValue;
+
+  auto step = prop->runtimeProperties.Get("ModSettings.step");
+  if (step) {
+    std::string valueStr(step->c_str());
+    intVar->stepValue = std::stoi(valueStr);
+  } else {
+    intVar->stepValue = 1;
+  }
+
+  auto min = prop->runtimeProperties.Get("ModSettings.min");
+  if (min) {
+    std::string valueStr(min->c_str());
+    intVar->minValue = std::stoi(valueStr);
+  } else {
+    intVar->minValue = 0;
+  }
+
+  auto max = prop->runtimeProperties.Get("ModSettings.max");
+  if (max) {
+    std::string valueStr(max->c_str());
+    intVar->maxValue = std::stoi(valueStr);
+  } else {
+    intVar->maxValue = 10;
+  }
+  return intVar;
+}
+
+RED4ext::user::RuntimeSettingsVar *ModSettings::CreateSettingVarFromFloat(ScriptProperty *prop) {
+  //auto rtm = (new RED4ext::Memory::DefaultAllocator())->AllocAligned(sizeof(RED4ext::user::RuntimeSettingsVarFloat), 8);
+  //memset(rtm.memory, 0, sizeof(RED4ext::user::RuntimeSettingsVarFloat));
+  //auto floatVar = new RED4ext::user::RuntimeSettingsVarFloat(*(RED4ext::user::RuntimeSettingsVarFloat *)rtm.memory);
+  auto floatVar = new RED4ext::user::RuntimeSettingsVarFloat();
+
+  floatVar->type = RED4ext::user::EConfigVarType::Float;
+
+  auto defaultValue = 0.0;
+  if (prop->defaultValues.size) {
+    std::string valueStr(prop->defaultValues[0].c_str());
+    defaultValue = std::stof(valueStr);
+  }
+
+  floatVar->valueInput = defaultValue;
+  floatVar->defaultValue = defaultValue;
+  floatVar->valueValidated = defaultValue;
+  floatVar->valueWrittenToFile = defaultValue;
+
+  auto step = prop->runtimeProperties.Get("ModSettings.step");
+  if (step) {
+    std::string valueStr(step->c_str());
+    floatVar->stepValue = std::stof(valueStr);
+  } else {
+    floatVar->stepValue = 0.1;
+  }
+
+  auto min = prop->runtimeProperties.Get("ModSettings.min");
+  if (min) {
+    std::string valueStr(min->c_str());
+    floatVar->minValue = std::stof(valueStr);
+  } else {
+    floatVar->minValue = 0.0;
+  }
+
+  auto max = prop->runtimeProperties.Get("ModSettings.max");
+  if (max) {
+    std::string valueStr(max->c_str());
+    floatVar->maxValue = std::stof(valueStr);
+  } else {
+    floatVar->maxValue = 10.0;
+  }
+  return floatVar;
+}
+
+RED4ext::user::RuntimeSettingsVar *ModSettings::CreateSettingVarFromEnum(ScriptProperty *prop) {
+  //auto rtm = (new RED4ext::Memory::DefaultAllocator())->AllocAligned(sizeof(RED4ext::user::RuntimeSettingsVarIntList), 8);
+  //memset(rtm.memory, 0, sizeof(RED4ext::user::RuntimeSettingsVarIntList));
+  //auto intVar = new RED4ext::user::RuntimeSettingsVarIntList(*(RED4ext::user::RuntimeSettingsVarIntList *)rtm.memory);
+  auto intVar = new RED4ext::user::RuntimeSettingsVarNameList();
+  intVar->type = RED4ext::user::EConfigVarType::NameList;
+
+  auto e = (RED4ext::CEnum*)RED4ext::CRTTISystem::Get()->GetType(prop->type->name);
+  if (e) {
+    intVar->displayValues = e->hashList;
+    for (const auto &value : e->valueList) {
+      intVar->values.EmplaceBack((int32_t)value);
+    }
+  }
+
+  auto defaultValue = 0;
+  if (prop->defaultValues.size) {
+    auto cstr = prop->defaultValues[0].c_str();
+    char *p;
+    auto value = strtoul(cstr, &p, 10);
+    if (*p == 0) {
+      defaultValue = value;
+    }
+  }
+
+  intVar->valueInput = defaultValue;
+  intVar->defaultValue = defaultValue;
+  intVar->valueValidated = defaultValue;
+  intVar->valueWrittenToFile = defaultValue;
+
+  return intVar;
+}
+
+void ModSettings::AddVariable(ModSettingsVariable *variable) {
   auto self = ModSettings::GetInstance();
 
   if (!self->variables.size) {
-    self->variables =
-        RED4ext::DynArray<ModSettingsVariable *>(new RED4ext::Memory::DefaultAllocator());
+    self->variables = RED4ext::DynArray<ModSettingsVariable *>(new RED4ext::Memory::DefaultAllocator());
   }
 
-  self->variables.EmplaceBack(variable); 
-  
+  self->variables.EmplaceBack(variable);
+
   if (!self->variablesByMod.size) {
     self->variablesByMod = RED4ext::HashMap<RED4ext::CName, RED4ext::DynArray<ModSettingsVariable *>>(
         new RED4ext::Memory::DefaultAllocator);
@@ -44,8 +201,8 @@ void ModSettings::AddVariable(ModSettingsVariable *variable) {
   }
 
   if (!self->categoriesByMod.size) {
-    self->categoriesByMod = RED4ext::HashMap<RED4ext::CName, RED4ext::DynArray<RED4ext::CName>>(
-        new RED4ext::Memory::DefaultAllocator);
+    self->categoriesByMod =
+        RED4ext::HashMap<RED4ext::CName, RED4ext::DynArray<RED4ext::CName>>(new RED4ext::Memory::DefaultAllocator);
   }
 
   auto modCategories = self->categoriesByMod.Get(variable->mod);
@@ -92,7 +249,7 @@ void GetModsScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame
 }
 
 void GetCategoriesScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,
-                    RED4ext::DynArray<RED4ext::CName> *aOut, int64_t a4) {
+                          RED4ext::DynArray<RED4ext::CName> *aOut, int64_t a4) {
   RED4ext::CName mod;
   RED4ext::GetParameter(aFrame, &mod);
   aFrame->code++;
@@ -129,11 +286,35 @@ void GetVarsScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame
     for (const auto &variable : *modVars) {
       if (variable->category != category)
         continue;
-      auto configVar = (RED4ext::user::SettingsVarFloat*)RED4ext::CRTTISystem::Get()->GetClass("userSettingsVarFloat")->AllocInstance();
-      configVar->runtimeVar = variable->settingsVar;
-      auto h = RED4ext::Handle<RED4ext::user::SettingsVar>(configVar);
-      h.refCount->IncRef();
-      aOut->EmplaceBack(h);
+      RED4ext::user::SettingsVar *configVar = NULL;
+      switch (variable->settingsVar->type) {
+      case RED4ext::user::EConfigVarType::Bool:
+        configVar = (RED4ext::user::SettingsVarBool *)RED4ext::CRTTISystem::Get()
+                        ->GetClass("userSettingsVarBool")
+                        ->AllocInstance();
+        break;
+      case RED4ext::user::EConfigVarType::Float:
+        configVar = (RED4ext::user::SettingsVarFloat *)RED4ext::CRTTISystem::Get()
+                        ->GetClass("userSettingsVarFloat")
+                        ->AllocInstance();
+        break;
+      case RED4ext::user::EConfigVarType::Int:
+        configVar = (RED4ext::user::SettingsVarInt *)RED4ext::CRTTISystem::Get()
+                        ->GetClass("userSettingsVarInt")
+                        ->AllocInstance();
+        break;
+      case RED4ext::user::EConfigVarType::NameList:
+        configVar = (RED4ext::user::SettingsVarListName *)RED4ext::CRTTISystem::Get()
+                        ->GetClass("userSettingsVarListName")
+                        ->AllocInstance();
+        break;
+      }
+      if (configVar) {
+        configVar->runtimeVar = variable->settingsVar;
+        auto h = RED4ext::Handle<RED4ext::user::SettingsVar>(configVar);
+        h.refCount->IncRef();
+        aOut->EmplaceBack(h);
+      }
     }
   }
 }

@@ -23,8 +23,8 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
   private let m_data: array<SettingsCategory>;
   private let m_menusList: array<CName>;
   private let m_eventsList: array<CName>;
-  // private let m_settingsListener: ref<SettingsVarListener>;
-  private let m_settingsNotificationListener: ref<SettingsNotificationListener>;
+  private let m_settingsListener: ref<ModSettingsVarListener>;
+  private let m_settingsNotificationListener: ref<ModSettingsNotificationListener>;
   private let m_settings: ref<UserSettings>;
   private let m_isPreGame: Bool;
   private let m_benchmarkNotificationToken: ref<inkGameNotificationToken>;
@@ -45,11 +45,11 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
 
     this.m_settings = this.GetSystemRequestsHandler().GetUserSettings();
     this.m_isPreGame = this.GetSystemRequestsHandler().IsPreGame();
-    // this.m_settingsListener = new SettingsVarListener();
-    // this.m_settingsListener.RegisterController(this);
-    // this.m_settingsNotificationListener = new SettingsNotificationListener();
-    // this.m_settingsNotificationListener.RegisterController(this);
-    // this.m_settingsNotificationListener.Register();
+    this.m_settingsListener = new ModSettingsVarListener();
+    this.m_settingsListener.RegisterController(this);
+    this.m_settingsNotificationListener = new ModSettingsNotificationListener();
+    this.m_settingsNotificationListener.RegisterController(this);
+    this.m_settingsNotificationListener.Register();
     // this.m_languageInstallProgressBar = inkWidgetRef.GetControllerByType(this.m_languageInstallProgressBarRoot, n"SettingsLanguageInstallProgressBar") as SettingsLanguageInstallProgressBar;
     this.RegisterToGlobalInputCallback(n"OnPostOnRelease", this, n"OnButtonRelease");
     inkWidgetRef.GetControllerByType(this.m_applyButton, n"inkButtonController").RegisterToCallback(n"OnButtonClick", this, n"OnApplyButtonReleased");
@@ -234,34 +234,33 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
   // }
 
   private final func PopulateSettingsData() -> Void {
-    if IsDefined(this as ModStngsMainGameController) {
-        ArrayClear(this.m_data);
-        let mods = ModSettings.GetMods();
-        let i = 0;
-        while i < ArraySize(mods) {
-        let category: SettingsCategory;
-          category.label = mods[i];
-          category.options = ModSettings.GetVars(mods[i], n"None");
-          category.isEmpty = false;
-          let categories = ModSettings.GetCategories(mods[i]);
-          let j = 0;
-          while j < ArraySize(categories) {
-            let currentSubcategory: SettingsCategory;
-            currentSubcategory.label = categories[i];
-            currentSubcategory.options = ModSettings.GetVars(mods[i], categories[j]);
-            currentSubcategory.isEmpty = false;
-            ArrayPush(category.subcategories, currentSubcategory);
-            j += 1;
-          }
-          // FlightLog.Info("[ModStngsMainGameController] " + NameToString(mods[i]) + ": " + i);
-          // let j = 0;
-          // while j < ArraySize(currentSubcategory.options) {
-          //     FlightLog.Info("var: " + ToString(currentSubcategory.options[j].GetDisplayName()));
-          //     j += 1;
-          // }
-          ArrayPush(this.m_data, category);
-          i += 1;
-        }
+    this.m_settingsListener.Register(n"/mods");
+    ArrayClear(this.m_data);
+    let mods = ModSettings.GetMods();
+    let i = 0;
+    while i < ArraySize(mods) {
+    let category: SettingsCategory;
+      category.label = mods[i];
+      category.options = ModSettings.GetVars(mods[i], n"None");
+      category.isEmpty = false;
+      let categories = ModSettings.GetCategories(mods[i]);
+      let j = 0;
+      while j < ArraySize(categories) {
+        let currentSubcategory: SettingsCategory;
+        currentSubcategory.label = categories[i];
+        currentSubcategory.options = ModSettings.GetVars(mods[i], categories[j]);
+        currentSubcategory.isEmpty = false;
+        ArrayPush(category.subcategories, currentSubcategory);
+        j += 1;
+      }
+      // FlightLog.Info("[ModStngsMainGameController] " + NameToString(mods[i]) + ": " + i);
+      // let j = 0;
+      // while j < ArraySize(currentSubcategory.options) {
+      //     FlightLog.Info("var: " + ToString(currentSubcategory.options[j].GetDisplayName()));
+      //     j += 1;
+      // }
+      ArrayPush(this.m_data, category);
+      i += 1;
     }
   }
 

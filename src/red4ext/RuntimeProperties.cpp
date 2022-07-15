@@ -43,7 +43,7 @@ bool __fastcall ProcessScriptTypes(uint32_t *version, ScriptData *scriptData, vo
           auto offsetValue = strtoul(cstr, &p, 16);
           if (*p == 0) {
             spdlog::info("{}.{} at 0x{:X}", scriptClass->name.ToString(), prop->name.ToString(), offsetValue);
-            if (prop->flags & prop_isNative) {
+            if (prop->flags.isNative) {
               auto rttiClass = RED4ext::CRTTISystem::Get()->GetClassByScriptName(scriptClass->name);
               auto rttiType = RED4ext::CRTTISystem::Get()->GetType(prop->type->name);
               rttiClass->props.PushBack(
@@ -53,7 +53,12 @@ bool __fastcall ProcessScriptTypes(uint32_t *version, ScriptData *scriptData, vo
             }
           }
         }
-
+  //    }
+  //  }
+  //}
+  //for (const auto &scriptClass : scriptData->classes) {
+  //  for (const auto &prop : scriptClass->properties) {
+  //    if (prop->runtimeProperties.size) {
         auto mod = prop->runtimeProperties.Get("ModSettings.mod");
         if (mod) {
           auto variable = (ModSettingsVariable *)RED4ext::CRTTISystem::Get()->GetClass("ModSettings")->AllocInstance(true);
@@ -68,79 +73,45 @@ bool __fastcall ProcessScriptTypes(uint32_t *version, ScriptData *scriptData, vo
             variable->category = "None";
           }
 
-          auto defaultValue = 0.0;
-          if (prop->defaultValues.size) {
-            std::string valueStr(prop->defaultValues[0].c_str());
-            defaultValue = std::stof(valueStr);
+          RED4ext::user::RuntimeSettingsVar *settingsVar = NULL;
+
+          if (prop->type->name == "Bool") {
+            settingsVar = ModSettings::CreateSettingVarFromBool(prop);
+          } else if (prop->type->name == "Float") {
+            settingsVar = ModSettings::CreateSettingVarFromFloat(prop);
+          } else if (prop->type->name == "Int32" || prop->type->name == "Uint32") {
+            settingsVar = ModSettings::CreateSettingVarFromInt(prop);
+          } else if (RED4ext::CRTTISystem::Get()->GetType(prop->type->name)->GetType() == RED4ext::ERTTIType::Enum) {
+            settingsVar = ModSettings::CreateSettingVarFromEnum(prop);
           }
 
-          auto rtm = (new RED4ext::Memory::DefaultAllocator())
-                         ->AllocAligned(sizeof(RED4ext::user::RuntimeSettingsVarFloat), 8);
-          memset(rtm.memory, 0, sizeof(RED4ext::user::RuntimeSettingsVarFloat));
-          auto rt = new RED4ext::user::RuntimeSettingsVarFloat(*(RED4ext::user::RuntimeSettingsVarFloat *)rtm.memory);
+          if (settingsVar) {
+            settingsVar->name = prop->name;
+            settingsVar->groupPath =
+                RED4ext::CNamePool::Add("/mods/" + *scriptClass->name.ToString() + *"/" + *prop->name.ToString());
 
-          rt->minValue = 0.0;
-          rt->maxValue = 10.0;
-          rt->stepValue = 0.5;
-          rt->valueInput = defaultValue;
-          rt->defaultValue = defaultValue;
-          rt->valueValidated = defaultValue;
-          rt->valueWrittenToFile = defaultValue;
-          rt->type = RED4ext::user::EConfigVarType::Float;
+            auto displayName = prop->runtimeProperties.Get("ModSettings.displayName");
+            if (displayName) {
+              settingsVar->displayName = RED4ext::CNamePool::Add(displayName->c_str());
+            } else {
+              settingsVar->displayName = prop->name;
+            }
 
-          
-          rt->name = prop->name;
-          rt->displayNameKeys = RED4ext::DynArray<RED4ext::CName>(new RED4ext::Memory::DefaultAllocator());
-          rt->groupPath =
-              RED4ext::CNamePool::Add("/mods/" + *scriptClass->name.ToString() + *"/" + *prop->name.ToString());
-          rt->updatePolicy = RED4ext::user::EConfigVarUpdatePolicy::Immediately;
-          rt->unk44 = 0xFF;
-          rt->unk45 = 0xFF;
-          rt->bitfield.isInPreGame = true;
-          rt->bitfield.isInGame = true;
-          rt->bitfield.isVisible = true;
-          rt->bitfield.isInitialized = true;
-          rt->bitfield.isDisabled = false;
-          rt->bitfield.canBeRestoredToDefault = true;
+            auto description = prop->runtimeProperties.Get("ModSettings.description");
+            if (description) {
+              settingsVar->description = RED4ext::CNamePool::Add(description->c_str());
+            }
 
-          variable->settingsVar = rt;
+            variable->settingsVar = settingsVar;
 
-          auto displayName = prop->runtimeProperties.Get("ModSettings.displayName");
-          if (displayName) {
-            rt->displayName = RED4ext::CNamePool::Add(displayName->c_str());
-          } else {
-            rt->displayName = prop->name;
+            ModSettings::AddVariable(variable);
           }
-
-          auto description = prop->runtimeProperties.Get("ModSettings.description");
-          if (description) {
-            rt->description = RED4ext::CNamePool::Add(description->c_str());
-          }
-
-          auto step = prop->runtimeProperties.Get("ModSettings.step");
-          if (step) {
-            std::string valueStr(step->c_str());
-            rt->stepValue = std::stof(valueStr);
-          }
-
-          auto min = prop->runtimeProperties.Get("ModSettings.min");
-          if (min) {
-            std::string valueStr(min->c_str());
-            rt->minValue = std::stof(valueStr);
-          }
-
-          auto max = prop->runtimeProperties.Get("ModSettings.max");
-          if (max) {
-            std::string valueStr(max->c_str());
-            rt->maxValue = std::stof(valueStr);
-          }
-
-          ModSettings::AddVariable(variable);
         }
       }
     }
   }
-  return ProcessScriptTypes_Original(version, scriptData, scriptLogger);
+  auto og = ProcessScriptTypes_Original(version, scriptData, scriptLogger);
+  return og;
 }
 
 //bool __fastcall ProcessScriptClass(ScriptRTTIContainer *rttiCont, ScriptClass *scriptClass, uintptr_t logger);

@@ -25,6 +25,27 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.max", "0.01")
   public let generalDampFactorLinear: Float = 0.001;
 
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "General Flight Settings")
+  @runtimeProperty("ModSettings.displayName", "Random Value")
+  @runtimeProperty("ModSettings.description", "Doesn't do anything")
+  @runtimeProperty("ModSettings.step", "1")
+  @runtimeProperty("ModSettings.min", "0")
+  @runtimeProperty("ModSettings.max", "120")
+  public let randomValue: Int32 = 114;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "General Flight Settings")
+  @runtimeProperty("ModSettings.displayName", "Gameplay Tier")
+  @runtimeProperty("ModSettings.description", "Doesn't do anything")
+  public let gameplayThing: GameplayTier = GameplayTier.Tier1_FullGameplay;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "General Flight Settings")
+  @runtimeProperty("ModSettings.displayName", "Thing Enabled")
+  @runtimeProperty("ModSettings.description", "Doesn't do anything")
+  public let thingEnabled: Bool = false;
+
   @runtimeProperty("ModSettings.mod", "Test Mod")
   @runtimeProperty("ModSettings.displayName", "Nothing rnTISen")
   @runtimeProperty("ModSettings.description", "Blah")

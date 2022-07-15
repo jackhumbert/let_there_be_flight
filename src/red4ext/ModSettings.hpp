@@ -20,7 +20,11 @@ struct ModSettingsVariable : RED4ext::IScriptable {
 struct ModSettings : RED4ext::IScriptable {
   RED4ext::CClass *GetNativeType();
   static ModSettings *GetInstance();
-  static void AddVariable(ModSettingsVariable*);
+  static void AddVariable(ModSettingsVariable *);
+  static RED4ext::user::RuntimeSettingsVar *CreateSettingVarFromBool(ScriptProperty *prop);
+  static RED4ext::user::RuntimeSettingsVar *CreateSettingVarFromInt(ScriptProperty *prop);
+  static RED4ext::user::RuntimeSettingsVar *CreateSettingVarFromFloat(ScriptProperty *prop);
+  static RED4ext::user::RuntimeSettingsVar *CreateSettingVarFromEnum(ScriptProperty *prop);
 
   int32_t isAccessingModspace;
   RED4ext::DynArray<ModSettingsVariable *> variables;

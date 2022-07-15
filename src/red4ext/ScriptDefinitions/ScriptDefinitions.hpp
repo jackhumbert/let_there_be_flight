@@ -1,7 +1,7 @@
 #pragma once
 #include <RED4ext/RED4ext.hpp>
 
-enum EDefinitionType : __int8 {
+enum class EDefinitionType : char {
  Type = 0x0,
  Class = 0x1,
  Constant = 0x2,
@@ -14,15 +14,16 @@ enum EDefinitionType : __int8 {
  SourceFile = 0x9,
 };
 
-enum EScriptType {
+enum class EScriptType : long {
   Simple = 0x0,
   Cls = 0x1,
   Handle = 0x2,
-  Unk3 = 0x3,
+  WeakHandle = 0x3,
   Array = 0x4,
+  NativeArray = 0x5
 };
 
-enum EVisibility : __int8 {
+enum class EVisibility : char {
   Public = 0x0,
   Protected = 0x1,
   Private = 0x2,
@@ -50,19 +51,19 @@ struct ScriptType : ScriptDefinition {
   EScriptType type;
 };
 
-enum ScriptPropertyFlags : __int16 {
- prop_isNative = 0x1,
- prop_isEditable = 0x2,
- prop_isInline = 0x4,
- prop_isConst = 0x8,
- prop_isReplicated = 0x10,
- prop_hasHint = 0x20,
- prop_isInstanceEditable = 0x40,
- prop_hasDefault = 0x80,
- prop_isPersistent = 0x100,
- prop_isTestOnly = 0x200,
- prop_isMutable = 0x400,
- prop_isBrowsable = 0x800,
+struct ScriptPropertyFlags {
+  uint16_t isNative : 1;
+  uint16_t isEditable : 1;
+  uint16_t isInline : 1;
+  uint16_t isConst : 1;
+  uint16_t isReplicated : 1;
+  uint16_t hasHint : 1;
+  uint16_t isInstanceEditable : 1;
+  uint16_t hasDefault : 1;
+  uint16_t isPersistent : 1;
+  uint16_t isTestOnly : 1;
+  uint16_t isMutable : 1;
+  uint16_t isBrowsable : 1;
 };
 
 struct ScriptProperty : ScriptDefinition {
@@ -81,19 +82,20 @@ struct ScriptProperty : ScriptDefinition {
 RED4EXT_ASSERT_SIZE(ScriptProperty, 0x98);
 RED4EXT_ASSERT_OFFSET(ScriptProperty, runtimeProperties, 0x60);
 
-enum ScriptClassFlags : __int32 {
-  cls_isNative = 0x1,
-  cls_isAbstract = 0x2,
-  cls_isFinal = 0x4,
-  cls_isStruct = 0x8,
-  cls_hasFunctions = 0x10,
-  cls_hasFields = 0x20,
-  cls_isImportOnly = 0x40,
-  cls_isTestOnly = 0x80,
-  cls_hasOverrides = 0x100,
-  cls_unk200 = 0x200,
-  cls_unk400 = 0x400,
+struct ScriptClassFlags {
+  uint32_t isNative : 1;
+  uint32_t isAbstract : 1;
+  uint32_t isFinal : 1;
+  uint32_t isStruct : 1;
+  uint32_t hasFunctions : 1;
+  uint32_t hasFields : 1;
+  uint32_t isImportOnly : 1;
+  uint32_t isTestOnly : 1;
+  uint32_t hasOverrides : 1;
+  uint32_t unk200 : 1;
+  uint32_t unk400 : 1;
 };
+
 struct ScriptClass : ScriptDefinition {
   RED4ext::CClass *rttiType;
   ScriptClass *parent;
