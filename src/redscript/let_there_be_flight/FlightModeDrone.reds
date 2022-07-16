@@ -1,4 +1,53 @@
 public class FlightModeDrone extends FlightMode {
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Drone Mode")
+  @runtimeProperty("ModSettings.displayName", "Lift Factor")
+  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.min", "0")
+  @runtimeProperty("ModSettings.max", "200")
+  public let droneModeLiftFactor: Float = 40.0;
+  
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Drone Mode")
+  @runtimeProperty("ModSettings.displayName", "Pitch Factor")
+  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "100")
+  public let droneModePitchFactor: Float = 5.0;
+  
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Drone Mode")
+  @runtimeProperty("ModSettings.displayName", "Roll Factor")
+  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "100")
+  public let droneModeRollFactor: Float = 12.0;
+  
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Drone Mode")
+  @runtimeProperty("ModSettings.displayName", "Surge Factor")
+  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.min", "0")
+  @runtimeProperty("ModSettings.max", "200")
+  public let droneModeSurgeFactor: Float = 15.0;
+  
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Drone Mode")
+  @runtimeProperty("ModSettings.displayName", "Yaw Factor")
+  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "100")
+  public let droneModeYawFactor: Float = 5.0;
+  
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Drone Mode")
+  @runtimeProperty("ModSettings.displayName", "Sway Factor")
+  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.min", "0")
+  @runtimeProperty("ModSettings.max", "200")
+  public let droneModeSwayFactor: Float = 15.0;
+
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeDrone> {
     let self = new FlightModeDrone();
     self.Initialize(component);
@@ -8,6 +57,7 @@ public class FlightModeDrone extends FlightMode {
   public func Initialize(component: ref<FlightComponent>) -> Void {
     super.Initialize(component);
     this.usesRightStickInput = true;
+    ModSettings.RegisterListenerToClass(this);
   }
 
   public func Activate() -> Void {
@@ -38,20 +88,20 @@ public class FlightModeDrone extends FlightMode {
 
       this.force = new Vector4(0.0, 0.0, 0.0, 0.0);
       // lift
-      this.force += FlightUtils.Up() * this.component.lift * FlightSettings.GetFloat("droneModeLiftFactor");
+      this.force += FlightUtils.Up() * this.component.lift * this.droneModeLiftFactor;
       // surge
-      this.force += FlightUtils.Forward() * this.component.surge * FlightSettings.GetFloat("droneModeSurgeFactor");
+      this.force += FlightUtils.Forward() * this.component.surge * this.droneModeSurgeFactor;
       // sway
-      this.force += FlightUtils.Right() * this.component.sway * FlightSettings.GetFloat("droneModeSwayFactor");
+      this.force += FlightUtils.Right() * this.component.sway * this.droneModeSwayFactor;
       // directional brake
       this.force -= velocityDamp;
 
       this.torque = new Vector4(0.0, 0.0, 0.0, 0.0);
       // pitch correction
-      this.torque.X = -(this.component.pitch * FlightSettings.GetFloat("droneModePitchFactor") + angularDamp.X);
+      this.torque.X = -(this.component.pitch * this.droneModePitchFactor + angularDamp.X);
       // roll correction
-      this.torque.Y = (this.component.roll * FlightSettings.GetFloat("droneModeRollFactor") - angularDamp.Y);
+      this.torque.Y = (this.component.roll * this.droneModeRollFactor - angularDamp.Y);
       // yaw correction
-      this.torque.Z = -(this.component.yaw * FlightSettings.GetFloat("droneModeYawFactor") + angularDamp.Z);
+      this.torque.Z = -(this.component.yaw * this.droneModeYawFactor + angularDamp.Z);
   }
 }

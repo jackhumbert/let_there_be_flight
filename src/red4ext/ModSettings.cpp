@@ -6,7 +6,7 @@
 #include <RED4ext/Scripting/Natives/Generated/user/SettingsVarFloat.hpp>
 #include <RED4ext/Scripting/Natives/Generated/user/SettingsVarInt.hpp>
 #include <RED4ext/Scripting/Natives/Generated/user/SettingsVarListInt.hpp>
-#include <RED4ext/Scripting/Natives/Generated/user/SettingsVarListName.hpp>
+#include "Utils.hpp"
 
 RED4ext::TTypedClass<ModSettings> modSettings("ModSettings");
 
@@ -148,24 +148,30 @@ RED4ext::user::RuntimeSettingsVar *ModSettings::CreateSettingVarFromEnum(ScriptP
   //auto rtm = (new RED4ext::Memory::DefaultAllocator())->AllocAligned(sizeof(RED4ext::user::RuntimeSettingsVarIntList), 8);
   //memset(rtm.memory, 0, sizeof(RED4ext::user::RuntimeSettingsVarIntList));
   //auto intVar = new RED4ext::user::RuntimeSettingsVarIntList(*(RED4ext::user::RuntimeSettingsVarIntList *)rtm.memory);
-  auto intVar = new RED4ext::user::RuntimeSettingsVarNameList();
-  intVar->type = RED4ext::user::EConfigVarType::NameList;
+  auto intVar = new RED4ext::user::RuntimeSettingsVarIntList();
+  intVar->type = RED4ext::user::EConfigVarType::IntList;
 
   auto e = (RED4ext::CEnum*)RED4ext::CRTTISystem::Get()->GetType(prop->type->name);
   if (e) {
-    intVar->displayValues = e->hashList;
+    for (const auto &value : e->hashList) {
+      intVar->displayValues.EmplaceBack(value);
+    }
     for (const auto &value : e->valueList) {
       intVar->values.EmplaceBack((int32_t)value);
     }
   }
 
-  auto defaultValue = 0;
+  uint32_t defaultValue = 0;
   if (prop->defaultValues.size) {
-    auto cstr = prop->defaultValues[0].c_str();
-    char *p;
-    auto value = strtoul(cstr, &p, 10);
-    if (*p == 0) {
-      defaultValue = value;
+    if (e) {
+      e->FromString(&defaultValue, prop->defaultValues[0]);
+    } else {
+      auto cstr = prop->defaultValues[0].c_str();
+      char *p;
+      auto value = strtoul(cstr, &p, 10);
+      if (*p == 0) {
+        defaultValue = value;
+      }
     }
   }
 
@@ -174,11 +180,16 @@ RED4ext::user::RuntimeSettingsVar *ModSettings::CreateSettingVarFromEnum(ScriptP
   intVar->valueValidated = defaultValue;
   intVar->valueWrittenToFile = defaultValue;
 
+  intVar->bitfield.listHasDisplayValues = true;
+
   return intVar;
 }
 
 void ModSettings::AddVariable(ModSettingsVariable *variable) {
   auto self = ModSettings::GetInstance();
+  
+  std::shared_lock<RED4ext::SharedMutex> _(self->variables_lock);
+  variable->listeners = RED4ext::DynArray<RED4ext::WeakHandle<RED4ext::IScriptable>>(new RED4ext::Memory::DefaultAllocator());
 
   if (!self->variables.size) {
     self->variables = RED4ext::DynArray<ModSettingsVariable *>(new RED4ext::Memory::DefaultAllocator());
@@ -200,24 +211,40 @@ void ModSettings::AddVariable(ModSettingsVariable *variable) {
     self->variablesByMod.Insert(variable->mod, ra);
   }
 
-  if (!self->categoriesByMod.size) {
-    self->categoriesByMod =
-        RED4ext::HashMap<RED4ext::CName, RED4ext::DynArray<RED4ext::CName>>(new RED4ext::Memory::DefaultAllocator);
+  if (!self->variablesByClass.size) {
+    self->variablesByClass = RED4ext::HashMap<RED4ext::CName, RED4ext::DynArray<ModSettingsVariable *>>(
+        new RED4ext::Memory::DefaultAllocator);
   }
 
-  auto modCategories = self->categoriesByMod.Get(variable->mod);
-  if (modCategories) {
-    auto found = false;
-    for (const auto &category : *modCategories) {
-      found |= (variable->category == category);
+  auto classVars = self->variablesByClass.Get(variable->className);
+  if (classVars) {
+    classVars->EmplaceBack(variable);
+  } else {
+    auto ra = RED4ext::DynArray<ModSettingsVariable *>(new RED4ext::Memory::DefaultAllocator);
+    ra.EmplaceBack(variable);
+    self->variablesByClass.Insert(variable->className, ra);
+  }
+
+  if (variable->category != "None") {
+    if (!self->categoriesByMod.size) {
+      self->categoriesByMod =
+          RED4ext::HashMap<RED4ext::CName, RED4ext::DynArray<RED4ext::CName>>(new RED4ext::Memory::DefaultAllocator);
     }
-    if (!found && variable->category != "None") {
-      modCategories->EmplaceBack(variable->category);
+
+    auto modCategories = self->categoriesByMod.Get(variable->mod);
+    if (modCategories) {
+      auto found = false;
+      for (const auto &category : *modCategories) {
+        found |= (variable->category == category);
+      }
+      if (!found) {
+        modCategories->EmplaceBack(variable->category);
+      }
+    } else {
+      auto ra = RED4ext::DynArray<RED4ext::CName>(new RED4ext::Memory::DefaultAllocator);
+      ra.EmplaceBack(variable->category);
+      self->categoriesByMod.Insert(variable->mod, ra);
     }
-  } else if (variable->category != "None") {
-    auto ra = RED4ext::DynArray<RED4ext::CName>(new RED4ext::Memory::DefaultAllocator);
-    ra.EmplaceBack(variable->category);
-    self->categoriesByMod.Insert(variable->mod, ra);
   }
 }
 
@@ -303,9 +330,9 @@ void GetVarsScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame
                         ->GetClass("userSettingsVarInt")
                         ->AllocInstance();
         break;
-      case RED4ext::user::EConfigVarType::NameList:
-        configVar = (RED4ext::user::SettingsVarListName *)RED4ext::CRTTISystem::Get()
-                        ->GetClass("userSettingsVarListName")
+      case RED4ext::user::EConfigVarType::IntList:
+        configVar = (RED4ext::user::SettingsVarListInt *)RED4ext::CRTTISystem::Get()
+                        ->GetClass("userSettingsVarListInt")
                         ->AllocInstance();
         break;
       }
@@ -319,9 +346,180 @@ void GetVarsScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame
   }
 }
 
-RED4ext::TTypedClass<ModSettingsVariable> modSettingsVariable("ModSettingsVariable");
+void ModSettings::WriteToFile() {
+  auto self = ModSettings::GetInstance();
+  std::ofstream configFile(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "modSettings.ini");
+  if (configFile.is_open()) {
+    for (const auto &node : self->variablesByClass) {
+      configFile << "[" << node.key.ToString() << "]\n";
+      for (const auto &variable : node.value) {
+        if (variable->settingsVar->WasModifiedSinceLastSave()) {
+          variable->UpdateValues();
+          variable->settingsVar->ChangeWasWritten();
+        }
+        const char * value;
+        auto str = RED4ext::CString::CString(new RED4ext::Memory::DefaultAllocator());
+        //variable->settingsVar->GetValueToWrite(value);
 
-RED4ext::CClass *ModSettingsVariable::GetNativeType() { return &modSettingsVariable; }
+        RED4ext::CRTTISystem::Get()->GetType(variable->typeName)->ToString(variable->settingsVar->GetValuePtr(), str);
+
+        //switch (variable->settingsVar->type) {
+        //case RED4ext::user::EConfigVarType::Bool: {
+        //  auto settingsVar = (RED4ext::user::RuntimeSettingsVarBool *)variable->settingsVar;
+        //  RED4ext::CRTTISystem::Get()->GetType(variable->typeName)->ToString(&settingsVar->valueValidated, str);
+        //} break;
+        //case RED4ext::user::EConfigVarType::Int: {
+        //  auto settingsVar = (RED4ext::user::RuntimeSettingsVarInt *)variable->settingsVar;
+        //  RED4ext::CRTTISystem::Get()->GetType(variable->typeName)->ToString(&settingsVar->valueValidated, str);
+        //  break;
+        //}
+        //case RED4ext::user::EConfigVarType::IntList: {
+        //  auto settingsVar = (RED4ext::user::RuntimeSettingsVarInt *)variable->settingsVar;
+        //  RED4ext::CRTTISystem::Get()->GetType(variable->typeName)->ToString(&settingsVar->valueValidated, str);
+        //} break;
+        //case RED4ext::user::EConfigVarType::Float: {
+        //  auto settingsVar = (RED4ext::user::RuntimeSettingsVarFloat *)variable->settingsVar;
+        //  RED4ext::CRTTISystem::Get()->GetType(variable->typeName)->ToString(&settingsVar->valueValidated, str);
+        //} break;
+        //}
+
+        value = str.c_str();
+
+        configFile << variable->settingsVar->name.ToString() << " = " << value << "\n";
+      }
+      configFile << "\n";
+    }
+    configFile.close();
+  }
+}
+
+#include <iostream>
+#include "INIReader.h"
+
+void ModSettings::ReadFromFile() {
+  auto self = ModSettings::GetInstance();
+  auto file = Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "modSettings.ini";
+  INIReader reader(file.string());
+
+  if (reader.ParseError() != 0) {
+    return;
+  }
+
+  for (auto section : reader.Sections()) {
+    auto variables = self->variablesByClass.Get(section.c_str());
+    if (variables) {
+      for (auto &variable : *variables) {
+        uint64_t value = 0;
+        void * value_p = &value;
+        auto defaultStr = RED4ext::CString::CString(new RED4ext::Memory::DefaultAllocator());
+        RED4ext::CRTTISystem::Get()
+            ->GetType(variable->typeName)
+            ->ToString(variable->settingsVar->GetValuePtr(), defaultStr);
+        auto valueStr = reader.Get(section, variable->settingsVar->name.ToString(), defaultStr.c_str());
+        auto cstr = RED4ext::CString(valueStr.c_str());
+        RED4ext::CRTTISystem::Get()
+            ->GetType(variable->typeName)
+            ->FromString(value_p, cstr);
+
+        variable->settingsVar->UpdateAll(value_p);
+        variable->UpdateValues();
+
+        //switch (var->settingsVar->type) {
+        //case RED4ext::user::EConfigVarType::Bool: {
+        //  auto settingsVar = (RED4ext::user::RuntimeSettingsVarBool *)var->settingsVar;
+        //  value = reader.GetInteger(section, var->settingsVar->name.ToString(), settingsVar->defaultValue);
+        //  value_p = &value;
+        //}
+        //  break;
+        //case RED4ext::user::EConfigVarType::Int:
+        //  {
+        //  auto settingsVar = (RED4ext::user::RuntimeSettingsVarInt *)var->settingsVar;
+        //  value = reader.GetInteger(section, var->settingsVar->name.ToString(), settingsVar->defaultValue);
+        //  break;
+        //  }
+        //case RED4ext::user::EConfigVarType::IntList:
+        //  {
+        //  auto settingsVar = (RED4ext::user::RuntimeSettingsVarInt *)var->settingsVar;
+        //  value = reader.GetInteger(section, var->settingsVar->name.ToString(), settingsVar->defaultValue);
+        //  value_p = &value;
+        //  }
+        //  break;
+        //case RED4ext::user::EConfigVarType::Float:
+        //  {
+        //  auto settingsVar = (RED4ext::user::RuntimeSettingsVarFloat *)var->settingsVar;
+        //  value = reader.GetReal(section, var->settingsVar->name.ToString(), settingsVar->defaultValue);
+        //  value_p = &value;
+        //  }
+        //  break;
+        //}
+      }
+    }
+  }
+
+
+}
+
+void AcceptChangesScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, void *aOut, int64_t a4) {
+  aFrame->code++;
+  ModSettings::WriteToFile();
+}
+
+void RejectChangesScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, void *aOut, int64_t a4) {
+  aFrame->code++;
+  auto ms = ModSettings::GetInstance();
+
+  for (const auto &variable : ms->variables) {
+    if (variable->settingsVar->HasChange()) {
+      variable->settingsVar->RevertChange();
+    }
+  }
+}
+
+void RegisterListenerToClassScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, void *aOut,
+                                    int64_t a4) {
+  RED4ext::Handle<RED4ext::IScriptable> instance;
+  RED4ext::GetParameter(aFrame, &instance);
+  aFrame->code++;
+
+  if (instance) {
+    auto ms = ModSettings::GetInstance();
+    auto className = instance->GetType()->GetName();
+    std::shared_lock<RED4ext::SharedMutex> _(ms->variables_lock);
+    auto vars_p = ms->variablesByClass.Get(className);
+    if (vars_p) {
+      auto vars = *vars_p;
+      for (auto i = 0; i < vars.size; i++) {
+        std::shared_lock<RED4ext::SharedMutex> _(vars[i]->listeners_lock);
+        vars[i]->listeners.EmplaceBack(RED4ext::WeakHandle(instance));
+      }
+    }
+  }
+}
+
+void UnregisterListenerToClassScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, void *aOut,
+                                    int64_t a4) {
+  RED4ext::Handle<RED4ext::IScriptable> handle;
+  RED4ext::GetParameter(aFrame, &handle);
+  aFrame->code++;
+
+  if (handle) {
+    auto ms = ModSettings::GetInstance();
+    auto className = handle->GetType()->GetName();
+    auto vars = ms->variablesByClass.Get(className);
+    if (vars) {
+      for (auto &var : *vars) {
+        auto i = 0;
+        for (const auto &listener : var->listeners) {
+          if (listener.instance == handle.instance) {
+            var->listeners.RemoveAt(i);
+            break;
+          }
+          i++;
+        }
+      }
+    }
+  }
+}
 
 struct ModSettingsModule : FlightModule {
   void RegisterTypes() {
@@ -330,9 +528,6 @@ struct ModSettingsModule : FlightModule {
     modSettings.flags = {.isNative = true};
     modSettings.parent = scriptable;
     RED4ext::CRTTISystem::Get()->RegisterType(&modSettings);
-    modSettingsVariable.flags = {.isNative = true};
-    modSettingsVariable.parent = scriptable;
-    RED4ext::CRTTISystem::Get()->RegisterType(&modSettingsVariable);
   };
 
   void PostRegisterTypes() {
@@ -349,8 +544,21 @@ struct ModSettingsModule : FlightModule {
     auto getCategories = RED4ext::CClassStaticFunction::Create(&modSettings, "GetCategories", "GetCategories", &GetCategoriesScripts,
                                                          {.isNative = true, .isStatic = true});
     modSettings.RegisterFunction(getCategories);
-    modSettings.props.EmplaceBack(RED4ext::CProperty::Create(rtti->GetType("Int32"), "isAccessingModspace", nullptr,
-                                                     offsetof(ModSettings, isAccessingModspace)));
+    auto acceptChanges = RED4ext::CClassStaticFunction::Create(&modSettings, "AcceptChanges", "AcceptChanges", &AcceptChangesScripts,
+                                                         {.isNative = true, .isStatic = true});
+    modSettings.RegisterFunction(acceptChanges);
+    auto rejectChanges = RED4ext::CClassStaticFunction::Create(&modSettings, "RejectChanges", "RejectChanges", &RejectChangesScripts,
+                                                         {.isNative = true, .isStatic = true});
+    modSettings.RegisterFunction(rejectChanges);
+    auto registerListenerToClass =
+        RED4ext::CClassStaticFunction::Create(&modSettings, "RegisterListenerToClass", "RegisterListenerToClass",
+                                              &RegisterListenerToClassScripts, {.isNative = true, .isStatic = true});
+    modSettings.RegisterFunction(registerListenerToClass);
+    auto unregisterListenerToClass =
+        RED4ext::CClassStaticFunction::Create(&modSettings, "UnregisterListenerToClass", "UnregisterListenerToClass",
+                                              &UnregisterListenerToClassScripts, {.isNative = true, .isStatic = true});
+    modSettings.RegisterFunction(unregisterListenerToClass);
+
   }
 };
 

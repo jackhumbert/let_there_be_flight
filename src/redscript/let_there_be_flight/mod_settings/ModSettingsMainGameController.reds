@@ -37,7 +37,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
   private let m_selectorCtrl: wref<ListController>;
 
   protected cb func OnInitialize() -> Void {
-        
+    ModSettings.GetInstance().isActive = true;
     inkWidgetRef.SetVisible(this.m_hdrButton, false);
     inkWidgetRef.SetVisible(this.m_controllerButton, false);
     inkWidgetRef.SetVisible(this.m_brightnessButton, false);
@@ -67,6 +67,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     this.PlayLibraryAnimation(n"intro");
     this.m_closeSettingsRequest = false;
     this.m_resetSettingsRequest = false;
+    super.OnInitialize();
   }
 
   protected cb func OnSetUserData(userData: ref<IScriptable>) -> Bool {
@@ -77,6 +78,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
   }
 
   protected cb func OnUninitialize() -> Bool {
+    ModSettings.GetInstance().isActive = false;
     this.UnregisterFromGlobalInputCallback(n"OnPostOnRelease", this, n"OnButtonRelease");
     this.m_menuEventDispatcher.UnregisterFromEvent(n"OnBack", this, n"OnBack");
     this.m_selectorCtrl.UnregisterFromCallback(n"OnItemActivated", this, n"OnMenuChanged");
@@ -84,6 +86,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     inkWidgetRef.GetControllerByType(this.m_resetButton, n"inkButtonController").UnregisterFromCallback(n"OnButtonClick", this, n"OnResetButtonReleased");
     inkWidgetRef.GetControllerByType(this.m_controllerButton, n"inkButtonController").UnregisterFromCallback(n"OnButtonClick", this, n"OnControllerButtonReleased");
     inkWidgetRef.GetControllerByType(this.m_defaultButton, n"inkButtonController").UnregisterFromCallback(n"OnButtonClick", this, n"OnDefaultButtonReleased");
+    super.OnUninitialize();
   }
 
   public final func EnableApplyButton() -> Void {
@@ -115,13 +118,13 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
   }
 
   public final func CheckButtons() -> Void {
-    if !this.m_isDlcSettings && (this.m_settings.NeedsConfirmation() || this.m_settings.NeedsRestartToApply() || this.m_settings.NeedsLoadLastCheckpoint()) {
+    // if !this.m_isDlcSettings && (this.m_settings.NeedsConfirmation() || this.m_settings.NeedsRestartToApply() || this.m_settings.NeedsLoadLastCheckpoint()) {
       this.EnableApplyButton();
       this.EnableResetButton();
-    } else {
-      this.DisableApplyButton();
-      this.DisableResetButton();
-    };
+    // } else {
+      // this.DisableApplyButton();
+      // this.DisableResetButton();
+    // };
   }
 
   public final func OnVarModified(groupPath: CName, varName: CName, varType: ConfigVarType, reason: ConfigChangeReason) -> Void {
@@ -247,7 +250,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
       let j = 0;
       while j < ArraySize(categories) {
         let currentSubcategory: SettingsCategory;
-        currentSubcategory.label = categories[i];
+        currentSubcategory.label = categories[j];
         currentSubcategory.options = ModSettings.GetVars(mods[i], categories[j]);
         currentSubcategory.isEmpty = false;
         ArrayPush(category.subcategories, currentSubcategory);
@@ -295,10 +298,10 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
   }
 
   protected cb func OnBack(userData: ref<IScriptable>) -> Bool {
-    if !StatusEffectSystem.ObjectHasStatusEffectWithTag(this.GetPlayerControlledObject(), n"LockInHubMenu") {
+    // if !StatusEffectSystem.ObjectHasStatusEffectWithTag(this.GetPlayerControlledObject(), n"LockInHubMenu") {
       this.m_closeSettingsRequest = true;
       this.CheckSettings();
-    };
+    // };
   }
 
   private final func RequestClose() -> Void {
@@ -306,8 +309,8 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
   }
 
   private final func RequestRestoreDefaults() -> Void {
-    let index: Int32 = this.m_selectorCtrl.GetToggledIndex();
-    let groupPath: CName = this.m_data[index].groupPath;
+    // let index: Int32 = this.m_selectorCtrl.GetToggledIndex();
+    // let groupPath: CName = this.m_data[index].groupPath;
     // this.m_settings.RequestRestoreDefaultDialog(this.m_isPreGame, false, groupPath);
   }
 
@@ -320,50 +323,53 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
   }
 
   private final func CheckRejectSettings() -> Void {
-    if this.m_settings.NeedsConfirmation() {
-      this.m_settings.RejectChanges();
-    } else {
-      if this.m_settings.NeedsRestartToApply() {
-        this.m_settings.RejectRestartToApply();
-      } else {
-        if this.m_settings.NeedsLoadLastCheckpoint() {
-          this.m_settings.RejectLoadLastCheckpointChanges();
-        } else {
-          this.m_resetSettingsRequest = false;
-          if this.m_closeSettingsRequest {
-            this.m_closeSettingsRequest = false;
-            this.RequestClose();
-          };
-        };
-      };
-    };
+    ModSettings.RejectChanges();
+    this.m_resetSettingsRequest = false;
+    // if this.m_settings.NeedsConfirmation() {
+    //   this.m_settings.RejectChanges();
+    // } else {
+    //   if this.m_settings.NeedsRestartToApply() {
+    //     this.m_settings.RejectRestartToApply();
+    //   } else {
+    //     if this.m_settings.NeedsLoadLastCheckpoint() {
+    //       this.m_settings.RejectLoadLastCheckpointChanges();
+    //     } else {
+    //       this.m_resetSettingsRequest = false;
+    //       if this.m_closeSettingsRequest {
+    //         this.m_closeSettingsRequest = false;
+    //         this.RequestClose();
+    //       };
+    //     };
+    //   };
+    // };
   }
 
   private final func CheckAcceptSettings() -> Void {
-    if this.m_settings.WasModifiedSinceLastSave() {
-      if this.m_settings.NeedsConfirmation() {
-        this.m_settings.RequestConfirmationDialog();
-      } else {
-        if this.m_settings.NeedsRestartToApply() {
-          this.m_settings.RequestNeedsRestartDialog();
-        } else {
-          if this.m_settings.NeedsLoadLastCheckpoint() {
-            this.m_settings.RequestLoadLastCheckpointDialog();
-          } else {
-            this.GetSystemRequestsHandler().RequestSaveUserSettings();
-            if this.m_closeSettingsRequest {
-              this.m_closeSettingsRequest = false;
-              this.RequestClose();
-            };
-          };
-        };
-      };
-    } else {
-      if this.m_closeSettingsRequest {
-        this.m_closeSettingsRequest = false;
-        this.RequestClose();
-      };
-    };
+    ModSettings.AcceptChanges();
+    // if this.m_settings.WasModifiedSinceLastSave() {
+    //   if this.m_settings.NeedsConfirmation() {
+    //     this.m_settings.RequestConfirmationDialog();
+    //   } else {
+    //     if this.m_settings.NeedsRestartToApply() {
+    //       this.m_settings.RequestNeedsRestartDialog();
+    //     } else {
+    //       if this.m_settings.NeedsLoadLastCheckpoint() {
+    //         this.m_settings.RequestLoadLastCheckpointDialog();
+    //       } else {
+    //         this.GetSystemRequestsHandler().RequestSaveUserSettings();
+    //         if this.m_closeSettingsRequest {
+    //           this.m_closeSettingsRequest = false;
+    //           this.RequestClose();
+    //         };
+    //       };
+    //     };
+    //   };
+    // } else {
+    //   if this.m_closeSettingsRequest {
+    //     this.m_closeSettingsRequest = false;
+    //     this.RequestClose();
+    //   };
+    // };
   }
 
   protected cb func OnMenuChanged(index: Int32, target: ref<ListItemController>) -> Bool {
@@ -468,19 +474,31 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
       if Equals(updatePolicy, ConfigVarUpdatePolicy.ConfirmationRequired) {
         params = new inkTextParams();
         // params.AddLocalizedName("description", descriptionName);
-        params.AddString("description", ToString(descriptionName));
+          if !Equals(descriptionName, n"None") {
+            params.AddString("description", ToString(descriptionName));
+          } else {
+            params.AddString("description", "");
+          }
         params.AddLocalizedString("additional_text", "LocKey#76947");
         inkTextRef.SetLocalizedTextScript(this.m_descriptionText, "LocKey#76949", params);
       } else {
         if Equals(updatePolicy, ConfigVarUpdatePolicy.RestartRequired) {
           params = new inkTextParams();
           // params.AddLocalizedName("description", descriptionName);
-          params.AddString("description", ToString(descriptionName));
+          if !Equals(descriptionName, n"None") {
+            params.AddString("description", ToString(descriptionName));
+          } else {
+            params.AddString("description", "");
+          }
           params.AddLocalizedString("additional_text", "LocKey#76948");
           inkTextRef.SetLocalizedTextScript(this.m_descriptionText, "LocKey#76949", params);
         } else {
           // inkTextRef.SetLocalizedTextScript(this.m_descriptionText, descriptionName);
-          inkTextRef.SetText(this.m_descriptionText, ToString(descriptionName), params);
+          if !Equals(descriptionName, n"None") {
+            inkTextRef.SetText(this.m_descriptionText, ToString(descriptionName), params);
+          } else {
+            inkTextRef.SetText(this.m_descriptionText, "", params);
+          }
         };
       };
       inkWidgetRef.SetVisible(this.m_descriptionText, true);

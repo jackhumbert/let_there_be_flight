@@ -51,13 +51,13 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.description", "Blah")
   public let diestr: Float = 0.001;
 
-  public cb func OnModSettingVarChanged(variable: CName, value: Variant) {
-    switch (variable) {
-      case n"autoActivationHeight":
-        this.autoActivationHeight = FromVariant<Float>(value);
-        break;
-    }
-  }
+  // public cb func OnModSettingsUpdate(variable: CName, value: Variant) {
+  //   switch (variable) {
+  //     case n"autoActivationHeight":
+  //       this.autoActivationHeight = FromVariant<Float>(value);
+  //       break;
+  //   }
+  // }
 
   private func OnAttach() -> Void {
     FlightLog.Info("[FlightSettings] OnAttach");
