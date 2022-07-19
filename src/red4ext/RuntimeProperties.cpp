@@ -33,6 +33,7 @@ constexpr uintptr_t ProcessScriptTypesAddr = 0x272560 + 0xC00;
 decltype(&ProcessScriptTypes) ProcessScriptTypes_Original;
 
 bool __fastcall ProcessScriptTypes(uint32_t* version, ScriptData* scriptData, void* scriptLogger) {
+  ModSettings::ReadFromFile();
   for (const auto& scriptClass : scriptData->classes) {
     for (const auto& prop : scriptClass->properties) {
       if (prop->runtimeProperties.size) {
@@ -76,18 +77,16 @@ bool __fastcall ProcessScriptTypes(uint32_t* version, ScriptData* scriptData, vo
           }
 
           RED4ext::user::RuntimeSettingsVar* settingsVar = NULL;
+          auto propType = RED4ext::CRTTISystem::Get()->GetType(prop->type->name);
 
           if (prop->type->name == "Bool") {
-            settingsVar = ModSettings::CreateSettingVarFromBool(prop);
-          }
-          else if (prop->type->name == "Float") {
-            settingsVar = ModSettings::CreateSettingVarFromFloat(prop);
-          }
-          else if (prop->type->name == "Int32" || prop->type->name == "Uint32") {
-            settingsVar = ModSettings::CreateSettingVarFromInt(prop);
-          }
-          else if (RED4ext::CRTTISystem::Get()->GetType(prop->type->name)->GetType() == RED4ext::ERTTIType::Enum) {
-            settingsVar = ModSettings::CreateSettingVarFromEnum(prop);
+            settingsVar = variable->CreateSettingVarFromBool(prop);
+          } else if (prop->type->name == "Float") {
+            settingsVar = variable->CreateSettingVarFromFloat(prop);
+          } else if (prop->type->name == "Int32" || prop->type->name == "Uint32") {
+            settingsVar = variable->CreateSettingVarFromInt(prop);
+          } else if (propType->GetType() == RED4ext::ERTTIType::Enum) {
+            settingsVar = variable->CreateSettingVarFromEnum(prop);
           }
 
           if (settingsVar) {
@@ -108,6 +107,25 @@ bool __fastcall ProcessScriptTypes(uint32_t* version, ScriptData* scriptData, vo
               settingsVar->description = RED4ext::CNamePool::Add(description->c_str());
             }
 
+            uint64_t defaultValue = 0;
+            void *defaultValue_p = &defaultValue;
+
+            if (prop->defaultValues.size) {
+              propType->FromString(defaultValue_p, prop->defaultValues[0]);
+            }
+            settingsVar->UpdateDefault(defaultValue_p);
+
+            uint64_t value = defaultValue;
+            void *value_p = &value;
+
+            RED4ext::CString settingFromFile;
+            if (ModSettings::GetSettingString(scriptClass->name, prop->name, &settingFromFile)) {
+              propType->FromString(value_p, settingFromFile);
+            }
+            settingsVar->UpdateAll(value_p);
+
+            propType->ToString(value_p, prop->defaultValues[0]);
+
             variable->settingsVar = settingsVar;
 
             ModSettings::AddVariable(variable);
@@ -127,7 +145,7 @@ decltype(&ScriptHost_LoadScripts) ScriptHost_LoadScripts_Original;
 
 uintptr_t __fastcall ScriptHost_LoadScripts(ScriptHost* scriptHost, RED4ext::CString* scriptLocation, uintptr_t scriptLoader){
   auto og = ScriptHost_LoadScripts_Original(scriptHost, scriptLocation, scriptLoader);
-  ModSettings::ReadFromFile();
+  //ModSettings::ReadFromFile();
   return og;
 }
 

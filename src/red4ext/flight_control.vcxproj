@@ -139,6 +139,7 @@
     <ClInclude Include="INIReader.h" />
     <ClInclude Include="ModSettings.hpp" />
     <ClInclude Include="ModSettingsVariable.hpp" />
+    <ClInclude Include="RuntimeClass.hpp" />
     <ClInclude Include="ScriptDefinitions\ScriptHost.hpp" />
     <ClInclude Include="Signatures.hpp" />
     <ClInclude Include="DriveHelper-inl.hpp" />

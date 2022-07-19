@@ -13,4 +13,8 @@ struct ModSettingsVariable {
   RED4ext::SharedMutex listeners_lock;
 
   void UpdateValues();
+  RED4ext::user::RuntimeSettingsVar *CreateSettingVarFromBool(ScriptProperty *prop);
+  RED4ext::user::RuntimeSettingsVar *CreateSettingVarFromInt(ScriptProperty *prop);
+  RED4ext::user::RuntimeSettingsVar *CreateSettingVarFromFloat(ScriptProperty *prop);
+  RED4ext::user::RuntimeSettingsVar *CreateSettingVarFromEnum(ScriptProperty *prop);
 };
