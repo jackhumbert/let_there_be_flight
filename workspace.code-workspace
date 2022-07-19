@@ -90,6 +90,7 @@
 			"xtree": "cpp",
 			"xutility": "cpp"
 		},
-		"editor.tabSize": 2
+		"editor.tabSize": 2,
+		"redscript.scriptCachePath": "C:\\Users\\Jack\\Documents\\cyberpunk\\flight_control\\prereqs.redscripts"
 	}
 }

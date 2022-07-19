@@ -2,6 +2,11 @@ public class FlightModeHoverFly extends FlightModeStandard {
   protected let hovering: Float;
   protected let referenceZ: Float;
 
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Mode Settings")
+  @runtimeProperty("ModSettings.displayName", "Hover & Fly Enabled")
+  public let enabled: Bool = true;
+
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeHoverFly> {
     let self = new FlightModeHoverFly();
     self.Initialize(component);

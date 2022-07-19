@@ -8,5 +8,7 @@ public native class ModSettings extends IScriptable {
     public native static func RegisterListenerToClass(self: ref<IScriptable>) -> Void;
     public native static func UnregisterListenerToClass(self: ref<IScriptable>) -> Void;
 
+    public native let changeMade: Bool;
+    
     public let isActive: Bool;
 }

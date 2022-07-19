@@ -95,14 +95,22 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.distance = 0.0;
     this.hoverHeight = FlightSettings.GetFloat("defaultHoverHeight");
     
-    ArrayPush(this.modes, FlightModeHoverFly.Create(this));
+    let hoverFlyMode = FlightModeHoverFly.Create(this);
+    if hoverFlyMode.enabled {
+      ArrayPush(this.modes, hoverFlyMode);
+    }
     ArrayPush(this.modes, FlightModeHover.Create(this));
     ArrayPush(this.modes, FlightModeAutomatic.Create(this));
     ArrayPush(this.modes, FlightModeFly.Create(this));
     ArrayPush(this.modes, FlightModeDroneAntiGravity.Create(this));
-    ArrayPush(this.modes, FlightModeDrone.Create(this));
+    let droneMode = FlightModeDrone.Create(this);
+    if droneMode.enabled {
+      ArrayPush(this.modes, droneMode);
+    }
 
     this.audioUpdate = new FlightAudioUpdate();
+    
+    ModSettings.RegisterListenerToClass(this);
   }
 
   private final func OnGameDetach() -> Void {

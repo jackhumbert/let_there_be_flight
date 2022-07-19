@@ -1,1 +1,2 @@
-tools\redscript-cli.exe lint -s src\redscript -b "C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\r6\cache\final.redscripts.bk"
+tools\redscript-cli.exe compile -s prereqs\r6\scripts -b "C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\r6\cache\final.redscripts.bk" -o ".\prereqs.redscripts"
+tools\redscript-cli.exe lint -s src\redscript,prereqs\r6\scripts -b ".\prereqs.redscripts"

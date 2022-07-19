@@ -71,8 +71,8 @@ void __fastcall CallFunc(RED4ext::IScriptable *context, RED4ext::CStackFrame *st
     }
     call->fullName = func->fullName;
     call->shortName = func->shortName;
-    if (stackFrame->unk8) {
-      auto parent = reinterpret_cast<RED4ext::CBaseFunction *>(stackFrame->unk8);
+    if (stackFrame->func) {
+      auto parent = reinterpret_cast<RED4ext::CBaseFunction *>(stackFrame->func);
       call->parentFullName = parent->fullName;
       call->parentShortName = parent->shortName;
     }

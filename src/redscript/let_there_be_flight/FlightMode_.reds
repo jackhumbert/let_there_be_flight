@@ -10,6 +10,8 @@ public abstract class FlightMode {
   public let usesRightStickInput: Bool;
   public let collisionPenalty: Float;
 
+  // public let enabled: Bool;
+
   public func Initialize(component: ref<FlightComponent>) -> Void {
     this.component = component;
     this.sys = component.sys;

@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-07-18 22:52:20.0588425
+// This file was automatically generated on 2022-07-19 18:48:04.2355691
 
 // FlightAudio.reds
 
@@ -280,14 +280,22 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.distance = 0.0;
     this.hoverHeight = FlightSettings.GetFloat("defaultHoverHeight");
     
-    ArrayPush(this.modes, FlightModeHoverFly.Create(this));
+    let hoverFlyMode = FlightModeHoverFly.Create(this);
+    if hoverFlyMode.enabled {
+      ArrayPush(this.modes, hoverFlyMode);
+    }
     ArrayPush(this.modes, FlightModeHover.Create(this));
     ArrayPush(this.modes, FlightModeAutomatic.Create(this));
     ArrayPush(this.modes, FlightModeFly.Create(this));
     ArrayPush(this.modes, FlightModeDroneAntiGravity.Create(this));
-    ArrayPush(this.modes, FlightModeDrone.Create(this));
+    let droneMode = FlightModeDrone.Create(this);
+    if droneMode.enabled {
+      ArrayPush(this.modes, droneMode);
+    }
 
     this.audioUpdate = new FlightAudioUpdate();
+    
+    ModSettings.RegisterListenerToClass(this);
   }
 
   private final func OnGameDetach() -> Void {
@@ -3558,9 +3566,14 @@ public class FlightModeAutomatic extends FlightModeStandard {
 public class FlightModeDrone extends FlightMode {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Mode Settings")
+  @runtimeProperty("ModSettings.displayName", "Drone Mode Enabled")
+  public let enabled: Bool = true;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "Drone Mode")
   @runtimeProperty("ModSettings.displayName", "Lift Factor")
-  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0")
   @runtimeProperty("ModSettings.max", "200")
   public let droneModeLiftFactor: Float = 40.0;
@@ -3568,7 +3581,7 @@ public class FlightModeDrone extends FlightMode {
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "Drone Mode")
   @runtimeProperty("ModSettings.displayName", "Pitch Factor")
-  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "100")
   public let droneModePitchFactor: Float = 5.0;
@@ -3576,7 +3589,7 @@ public class FlightModeDrone extends FlightMode {
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "Drone Mode")
   @runtimeProperty("ModSettings.displayName", "Roll Factor")
-  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "100")
   public let droneModeRollFactor: Float = 12.0;
@@ -3584,7 +3597,7 @@ public class FlightModeDrone extends FlightMode {
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "Drone Mode")
   @runtimeProperty("ModSettings.displayName", "Surge Factor")
-  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0")
   @runtimeProperty("ModSettings.max", "200")
   public let droneModeSurgeFactor: Float = 15.0;
@@ -3592,7 +3605,7 @@ public class FlightModeDrone extends FlightMode {
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "Drone Mode")
   @runtimeProperty("ModSettings.displayName", "Yaw Factor")
-  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "100")
   public let droneModeYawFactor: Float = 5.0;
@@ -3600,7 +3613,7 @@ public class FlightModeDrone extends FlightMode {
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "Drone Mode")
   @runtimeProperty("ModSettings.displayName", "Sway Factor")
-  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0")
   @runtimeProperty("ModSettings.max", "200")
   public let droneModeSwayFactor: Float = 15.0;
@@ -3741,6 +3754,11 @@ public class FlightModeHoverFly extends FlightModeStandard {
   protected let hovering: Float;
   protected let referenceZ: Float;
 
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Mode Settings")
+  @runtimeProperty("ModSettings.displayName", "Hover & Fly Enabled")
+  public let enabled: Bool = true;
+
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeHoverFly> {
     let self = new FlightModeHoverFly();
     self.Initialize(component);
@@ -3796,6 +3814,8 @@ public abstract class FlightMode {
 
   public let usesRightStickInput: Bool;
   public let collisionPenalty: Float;
+
+  // public let enabled: Bool;
 
   public func Initialize(component: ref<FlightComponent>) -> Void {
     this.component = component;
@@ -3956,6 +3976,7 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.displayName", "Auto Activation Height")
   @runtimeProperty("ModSettings.description", "In-game units for detecting when flight should automatically be activated")
   @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.max", "5.0")
   public let autoActivationHeight: Float = 3.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
@@ -3966,32 +3987,6 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "0.01")
   public let generalDampFactorLinear: Float = 0.001;
-
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "General Flight Settings")
-  @runtimeProperty("ModSettings.displayName", "Random Value")
-  @runtimeProperty("ModSettings.description", "Doesn't do anything")
-  @runtimeProperty("ModSettings.step", "1")
-  @runtimeProperty("ModSettings.min", "0")
-  @runtimeProperty("ModSettings.max", "120")
-  public let randomValue: Int32 = 114;
-
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "General Flight Settings")
-  @runtimeProperty("ModSettings.displayName", "Gameplay Tier")
-  @runtimeProperty("ModSettings.description", "Doesn't do anything")
-  public let gameplayThing: GameplayTier = GameplayTier.Tier1_FullGameplay;
-
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "General Flight Settings")
-  @runtimeProperty("ModSettings.displayName", "Thing Enabled")
-  @runtimeProperty("ModSettings.description", "Doesn't do anything")
-  public let thingEnabled: Bool = false;
-
-  @runtimeProperty("ModSettings.mod", "Test Mod")
-  @runtimeProperty("ModSettings.displayName", "Nothing rnTISen")
-  @runtimeProperty("ModSettings.description", "Blah")
-  public let diestr: Float = 0.001;
 
   // public cb func OnModSettingsUpdate(variable: CName, value: Variant) {
   //   switch (variable) {

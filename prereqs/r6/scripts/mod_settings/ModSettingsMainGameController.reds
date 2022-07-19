@@ -119,12 +119,13 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
 
   public final func CheckButtons() -> Void {
     // if !this.m_isDlcSettings && (this.m_settings.NeedsConfirmation() || this.m_settings.NeedsRestartToApply() || this.m_settings.NeedsLoadLastCheckpoint()) {
+    if ModSettings.GetInstance().changeMade {
       this.EnableApplyButton();
       this.EnableResetButton();
-    // } else {
-      // this.DisableApplyButton();
-      // this.DisableResetButton();
-    // };
+    } else {
+      this.DisableApplyButton();
+      this.DisableResetButton();
+    }
   }
 
   public final func OnVarModified(groupPath: CName, varName: CName, varType: ConfigVarType, reason: ConfigChangeReason) -> Void {

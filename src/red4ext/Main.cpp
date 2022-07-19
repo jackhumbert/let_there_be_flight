@@ -157,7 +157,7 @@ void ChassisGetComOffset(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *a
   auto vccClass = rtti->GetClass("vehicleChassisComponent");
   auto crProp = vccClass->GetProperty("collisionResource");
   auto cr = crProp->GetValue<RED4ext::Ref<RED4ext::physics::SystemResource>>(aContext);
-  RED4ext::Handle<RED4ext::physics::SystemBody> hpsb = cr.handle.wrapper->resource->bodies[0];
+  RED4ext::Handle<RED4ext::physics::SystemBody> hpsb = cr.Fetch().GetPtr()->bodies[0];
   auto params = hpsb->params;
 
   if (aOut) {
@@ -205,7 +205,7 @@ void EffectSpawnerAddEffect(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   //ed->effect.ref = wrapper->self->resource;
 
   //ed->effect.ref = 3990659875028156682;
-  ed->effect.ref = 2413621465439885870; // base\fx\vehicles\flight.effect
+  ed->effect.path = 2413621465439885870; // base\fx\vehicles\flight.effect
 
   {
     auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->AllocInstance());
