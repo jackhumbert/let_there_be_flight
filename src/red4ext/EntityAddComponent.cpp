@@ -46,7 +46,7 @@ RED4ext::ent::PhysicalMeshComponent *CreateThrusterEngine(RED4ext::CRTTISystem *
                                                           RED4ext::CName name, RED4ext::CName slot,
                                                           RED4ext::CName bindName = "vehicle_slots") {
   auto mc = (RED4ext::ent::PhysicalMeshComponent *)rtti->GetClass("entPhysicalMeshComponent")->AllocInstance();
-  mc->mesh.ref = mesh;
+  mc->mesh.path = mesh;
   // not sure why this doesn't carry through
   //mc->isEnabled = false;
   mc->visualScale.X = 0.0;
@@ -73,7 +73,7 @@ void AddToController(RED4ext::CRTTISystem *rtti, RED4ext::ent::VisualControllerC
       rtti->GetClass("entVisualControllerDependency")->AllocInstance());
   vcd->appearanceName = mc->meshAppearance;
   vcd->componentName = mc->name;
-  vcd->mesh.ref = mc->mesh.ref;
+  vcd->mesh.path = mc->mesh.path;
   vcc->appearanceDependency.EmplaceBack(*vcd);
 }
 
@@ -375,9 +375,11 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     {
       auto whc = (RED4ext::WidgetHudComponent *)rtti->GetClass("WidgetHudComponent")->AllocInstance();
       whc->name = "FlightHUD";
-      whc->hudEntriesResource.hash = (RED4ext::CName) "user\\jackhumbert\\widgets\\hud_flight.inkhud";
-      LoadResRef<RED4ext::ink::HudEntriesResource>(&whc->hudEntriesResource.hash, &whc->hudEntriesResource.handle,
-                                                   false);
+      //auto resource =
+          //RED4ext::Ref<RED4ext::ink::HudEntriesResource>("user\\jackhumbert\\widgets\\hud_flight.inkhud", true);
+      whc->hudEntriesResource.path = "user\\jackhumbert\\widgets\\hud_flight.inkhud";
+      //whc->hudEntriesResource.token = resource.token;
+      LoadResRef(&whc->hudEntriesResource.path, &whc->hudEntriesResource.token, false);
       entity->components.EmplaceBack(RED4ext::Handle<RED4ext::WidgetHudComponent>(whc));
     }
 
@@ -421,10 +423,9 @@ void EntityAddWorldWidgetComponent(RED4ext::IScriptable *aContext, RED4ext::CSta
 
   // MeshComponent
   auto mc = (RED4ext::ent::MeshComponent*)rtti->GetClass("entMeshComponent")->AllocInstance();
-  
-  RED4ext::CName mesh =
+ 
+  mc->mesh.path =
       "base\\environment\\decoration\\advertising\\holograms\\common\\common_holograms_transparent_a_w500_h150.mesh";
-  mc->mesh.ref = mesh;
   mc->name = "radio_screen";
   mc->meshAppearance = "screen_ui";
   mc->localTransform.Position.x.Bits = 216270;
@@ -439,9 +440,7 @@ void EntityAddWorldWidgetComponent(RED4ext::IScriptable *aContext, RED4ext::CSta
   auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->AllocInstance();
 
   wwc->name = "radio_ui";
-
-  RED4ext::CName fc = "base\\gameplay\\gui\\world\\radio\\radio_ui.inkwidget";
-  wwc->widgetResource.ref = fc;
+  wwc->widgetResource.path = "base\\gameplay\\gui\\world\\radio\\radio_ui.inkwidget";
 
   auto mtb = (RED4ext::world::ui::MeshTargetBinding *)rtti->GetClass("worlduiMeshTargetBinding")->AllocInstance();
   mtb->bindName = "radio_screen";

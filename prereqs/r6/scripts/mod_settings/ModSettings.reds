@@ -7,6 +7,8 @@ public native class ModSettings extends IScriptable {
     public native static func RejectChanges() -> Void;
     public native static func RegisterListenerToClass(self: ref<IScriptable>) -> Void;
     public native static func UnregisterListenerToClass(self: ref<IScriptable>) -> Void;
+    public native static func RegisterListenerToModifications(self: ref<IScriptable>) -> Void;
+    public native static func UnregisterListenerToModifications(self: ref<IScriptable>) -> Void;
 
     public native let changeMade: Bool;
     

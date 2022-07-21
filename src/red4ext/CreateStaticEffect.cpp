@@ -22,10 +22,11 @@ uintptr_t CreateStaticEffect(RED4ext::game::EffectSystem *es, uintptr_t effectRe
   }
 
   if (!exists) {
-    auto handle = new RED4ext::ResourceHandle<RED4ext::game::EffectSet>();
-    LoadResRef<RED4ext::game::EffectSet>(&effectNameHash, handle, true);
+    //auto handle = new RED4ext::ResourceHandle<RED4ext::game::EffectSet>();
+    //LoadResRef<RED4ext::game::EffectSet>(&effectNameHash, handle, true);
+    auto resource = RED4ext::RaRef<RED4ext::game::EffectSet>(effectNameHash);
     es->effectNameHashes.EmplaceBack(effectNameHash);
-    es->effectResources.EmplaceBack(*handle);
+    es->effectResources.EmplaceBack(resource);
     es->unkA0 = 1; // needs sorting maybe?
   }
 

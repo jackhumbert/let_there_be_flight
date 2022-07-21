@@ -10,14 +10,16 @@ void CastResRefToFxResource(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   RED4ext::GetParameter(aFrame, &value);
   aFrame->code++; // skip ParamEnd
 
-  auto resHandle = new RED4ext::ResourceHandle<RED4ext::world::Effect>();
-  if (value.resource.ref != 0) {
-    RED4ext::CName fc = value.resource.ref;
-    LoadResRef<RED4ext::world::Effect>((uint64_t *)&fc, resHandle, true);
-  }
+  //auto resHandle = new RED4ext::ResourceHandle<RED4ext::world::Effect>();
+  //if (value.resource.path.hash != 0) {
+    //RED4ext::CName fc = value.resource.path.hash;
+    //value.resource.Resolve();
+    //LoadResRef<RED4ext::world::Effect>((uint64_t *)&fc, resHandle, true);
+  //}
 
   if (aOut) {
-    *aOut = *(RED4ext::game::FxResource*)&value.resource;
+    aOut->effect.path = value.resource.path;
+    //aOut->effect.Resolve();
   }
 }
 

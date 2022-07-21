@@ -49,15 +49,16 @@ void CopyHUDWidgetSpawnEntries(HUDLayerUnknown *a1, RED4ext::DynArray<RED4ext::i
 
   //RED4ext::RelocFunc<WaitUntilLoadedSig> WaitUntilLoaded(WaitUntilLoadedAddr);
 
-  auto handle = new RED4ext::ResourceHandle<RED4ext::ink::WidgetLibraryResource>();
+  //auto handle = new RED4ext::ResourceHandle<RED4ext::ink::WidgetLibraryResource>();
   uint64_t hash = 2783178642409560840; // flight
   //uint64_t hash = 11046326377887898612; // car
-  LoadResRef<RED4ext::ink::WidgetLibraryResource>(&hash, handle, true);
+  //LoadResRef<RED4ext::ink::WidgetLibraryResource>(&hash, handle, true);
   //WaitUntilLoaded(handle->self);
 
-  instance->widgetResource.hash = hash;
-  instance->widgetResource.handle = *handle;
-  instance->widgetResource.handle.refCount->IncRef();
+  instance->widgetResource.path = hash;
+  //instance->widgetResource.Fetch();
+  //instance->widgetResource.token.instance = *handle;
+  //instance->widgetResource.token.refCount->IncRef();
 
   //for (const auto &entry : a1->spawnEntries) {
   //  if (entry.hudEntryName == "car hud") {
