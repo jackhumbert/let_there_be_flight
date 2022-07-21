@@ -2,7 +2,7 @@
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/HudWidgetSpawnEntry.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/WidgetLibraryResource.hpp>
-#include "LoadResRef.hpp"
+//#include "LoadResRef.hpp"
 
 namespace vehicle {
 namespace flight {

@@ -379,7 +379,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
           //RED4ext::Ref<RED4ext::ink::HudEntriesResource>("user\\jackhumbert\\widgets\\hud_flight.inkhud", true);
       whc->hudEntriesResource.path = "user\\jackhumbert\\widgets\\hud_flight.inkhud";
       //whc->hudEntriesResource.token = resource.token;
-      LoadResRef(&whc->hudEntriesResource.path, &whc->hudEntriesResource.token, false);
+      LoadResRef<bool>(&whc->hudEntriesResource.path, &whc->hudEntriesResource.token, false);
       entity->components.EmplaceBack(RED4ext::Handle<RED4ext::WidgetHudComponent>(whc));
     }
 

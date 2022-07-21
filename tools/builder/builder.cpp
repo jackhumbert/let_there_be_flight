@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <chrono>
+#include "INIReader.h"
 
 using namespace std;
 namespace fs = std::filesystem;
@@ -134,16 +135,7 @@ void build_info() {
   cout << "Copied input file: license.md" << endl;
 }
 
-int main() {
-  //clear_build();
-  build_archive();
-  build_redscript();
-  build_tweaks();
-  build_fmod();
-  build_red4ext();
-  build_input();
-  build_info();
-
+void build_uninstaller() {
   stringstream contents;
   contents << "DEL /S /Q";
   for (const auto &file : installedFiles) {
@@ -154,9 +146,60 @@ int main() {
     contents << " ..\\..\\..\\" << fs::path(folder).make_preferred().string();
   }
 
-  ofstream uninstaller("build/red4ext/plugins/let_there_be_flight/uninstall.bat");
+  ofstream uninstaller(
+      "build/red4ext/plugins/let_there_be_flight/uninstall.bat");
   uninstaller << contents.rdbuf();
   uninstaller.close();
+}
+
+int main() {
+
+  //auto reader = INIReader::INIReader("build.ini");
+
+  //if (reader.ParseError() != 0) {
+  //  cout << "Couldn't read build.ini" << endl;
+  //} else {
+  //  auto project_name_safe = reader.Get("mod", "project_name_safe", "");
+  //  auto sections = reader.Sections();
+  //  for (const auto &section : sections) {
+  //    cout << "[" << section << "]" << endl;
+  //    if (section == "mod" || section == "core")
+  //      continue;
+  //    auto path = reader.Get(section, "path", "");
+  //    if (path == "")
+  //      continue;
+  //    auto build_path = "build/" + path;
+  //    fs::create_directories(build_path);
+  //    auto file = reader.Get(section, "file", "");
+  //    if (file != "") {
+  //      auto file_path = path + fs::path(file).filename().string();
+  //      fs::copy(file, file_path, fs::copy_options::update_existing);
+  //      cout << "Copied " << section << " file : " << file << endl;
+  //      installedFiles.push_back(file_path);
+  //    }
+  //    auto folder = reader.Get(section, "folder", "");
+  //    if (folder != "") {
+  //      cout << "Folder: " << build_path << endl;
+  //      for (const auto &entry : fs::directory_iterator(folder)) {
+  //        fs::copy(entry.path(), build_path + entry.path().filename().string(),
+  //                 fs::copy_options::update_existing);
+  //        cout << "Copied " << section
+  //             << " file : " << entry.path().filename().string() << endl;
+  //        installedFolders.push_back(path);
+  //      }
+  //    }
+  //  }
+  //}
+
+  //clear_build();
+  build_archive();
+  build_redscript();
+  build_tweaks();
+  build_fmod();
+  build_red4ext();
+  build_input();
+  build_info();
+  build_uninstaller();
 
 	return EXIT_SUCCESS;
 }

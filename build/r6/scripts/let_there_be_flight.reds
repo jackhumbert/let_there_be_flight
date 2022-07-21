@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-07-21 00:41:45.2259199
+// This file was automatically generated on 2022-07-21 16:15:35.4937263
 
 // FlightAudio.reds
 
@@ -295,7 +295,6 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
     this.audioUpdate = new FlightAudioUpdate();
     
-    ModSettings.RegisterListenerToClass(this);
   }
 
   private final func OnGameDetach() -> Void {
@@ -405,6 +404,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
       this.isPlayerMounted = true;
       // this.uiControl = FlightControllerUI.Create(this.ui_info.GetGameController(), this.ui_info.GetGameController().GetRootCompoundWidget());
       // this.uiControl.Setup(this.stats);
+      // ModSettings.RegisterListenerToClass(this);
     } else {
       // FlightLog.Info("[FlightComponent] OnMountingEvent for other vehicle: " + this.GetVehicle().GetDisplayName());
     }
@@ -431,6 +431,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   protected cb func OnUnmountingEvent(evt: ref<UnmountingEvent>) -> Bool {
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if IsDefined(mountChild) && mountChild.IsPlayer() {
+      // ModSettings.UnregisterListenerToClass(this);
       this.UnregisterVehicleTPPBBListener();
       this.sys.audio.Stop("windLeft");
       this.sys.audio.Stop("windRight");
@@ -4995,7 +4996,9 @@ public class hudFlightController extends inkHUDGameController {
   }
 
   protected cb func OnScannerUIVisibleChanged(visible: Bool) -> Bool {
-    this.ActivateUI(!visible);
+    if this.IsUIactive() && this.IsActive() {
+      this.ActivateUI(!visible);
+    }
   }
 
   public func ReactToHPChange(value: Float) -> Void {

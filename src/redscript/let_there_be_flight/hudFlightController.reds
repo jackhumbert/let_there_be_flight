@@ -305,7 +305,9 @@ public class hudFlightController extends inkHUDGameController {
   }
 
   protected cb func OnScannerUIVisibleChanged(visible: Bool) -> Bool {
-    this.ActivateUI(!visible);
+    if this.IsUIactive() && this.IsActive() {
+      this.ActivateUI(!visible);
+    }
   }
 
   public func ReactToHPChange(value: Float) -> Void {

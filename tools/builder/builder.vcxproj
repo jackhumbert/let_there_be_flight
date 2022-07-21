@@ -139,6 +139,9 @@
   <ItemGroup>
     <ClCompile Include="builder.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="INIReader.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

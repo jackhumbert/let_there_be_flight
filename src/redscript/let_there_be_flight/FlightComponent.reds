@@ -110,7 +110,6 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
     this.audioUpdate = new FlightAudioUpdate();
     
-    ModSettings.RegisterListenerToClass(this);
   }
 
   private final func OnGameDetach() -> Void {
@@ -220,6 +219,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
       this.isPlayerMounted = true;
       // this.uiControl = FlightControllerUI.Create(this.ui_info.GetGameController(), this.ui_info.GetGameController().GetRootCompoundWidget());
       // this.uiControl.Setup(this.stats);
+      // ModSettings.RegisterListenerToClass(this);
     } else {
       // FlightLog.Info("[FlightComponent] OnMountingEvent for other vehicle: " + this.GetVehicle().GetDisplayName());
     }
@@ -246,6 +246,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   protected cb func OnUnmountingEvent(evt: ref<UnmountingEvent>) -> Bool {
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if IsDefined(mountChild) && mountChild.IsPlayer() {
+      // ModSettings.UnregisterListenerToClass(this);
       this.UnregisterVehicleTPPBBListener();
       this.sys.audio.Stop("windLeft");
       this.sys.audio.Stop("windRight");
