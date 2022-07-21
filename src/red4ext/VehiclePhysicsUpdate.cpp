@@ -56,11 +56,11 @@ RED4ext::ent::IComponent *GetFlightComponent(RED4ext::vehicle::BaseObject *v) {
   }
 }
 
-#define NUM_FRAMES 0x0180
-
-uint16_t frameIndex = 0;
-clock_t fullFrame[NUM_FRAMES];
-clock_t lastBegin = 0;
+//#define NUM_FRAMES 0x0180
+//
+//uint16_t frameIndex = 0;
+//clock_t fullFrame[NUM_FRAMES];
+//clock_t lastBegin = 0;
 
 uintptr_t __fastcall VehiclePhysicsUpdate(RED4ext::physics::VehiclePhysics *p, float deltaTime) {
   // spdlog::info(a2->c_str());
@@ -98,18 +98,18 @@ uintptr_t __fastcall VehiclePhysicsUpdate(RED4ext::physics::VehiclePhysics *p, f
     torqueProp->SetValue(fc, torque);
   }
 
-  clock_t begin = std::clock();
-  fullFrame[frameIndex] = begin - lastBegin;
-  lastBegin = begin;
-  if (frameIndex == 0) {
-    float total = 0.0;
-    for (auto i = 0; i < NUM_FRAMES; i++) {
-      total += (fullFrame[i] / (double)CLOCKS_PER_SEC);
-    }
-    spdlog::info("Loop: {:.6f} ms average over {} s", total * 1000.0 / NUM_FRAMES, total);
-  }
+  //clock_t begin = std::clock();
+  //fullFrame[frameIndex] = begin - lastBegin;
+  //lastBegin = begin;
+  //if (frameIndex == 0) {
+  //  float total = 0.0;
+  //  for (auto i = 0; i < NUM_FRAMES; i++) {
+  //    total += (fullFrame[i] / (double)CLOCKS_PER_SEC);
+  //  }
+  //  spdlog::info("Loop: {:.6f} ms average over {} s", total * 1000.0 / NUM_FRAMES, total);
+  //}
 
-  frameIndex = (frameIndex + 1) % NUM_FRAMES;
+  //frameIndex = (frameIndex + 1) % NUM_FRAMES;
 
 
   return VehiclePhysicsUpdate_Original(p, deltaTime);
