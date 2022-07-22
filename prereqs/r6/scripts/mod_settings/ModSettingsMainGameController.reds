@@ -45,11 +45,11 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
 
     this.m_settings = this.GetSystemRequestsHandler().GetUserSettings();
     this.m_isPreGame = this.GetSystemRequestsHandler().IsPreGame();
-    this.m_settingsListener = new ModSettingsVarListener();
-    this.m_settingsListener.RegisterController(this);
-    this.m_settingsNotificationListener = new ModSettingsNotificationListener();
-    this.m_settingsNotificationListener.RegisterController(this);
-    this.m_settingsNotificationListener.Register();
+    // this.m_settingsListener = new ModSettingsVarListener();
+    // this.m_settingsListener.RegisterController(this);
+    // this.m_settingsNotificationListener = new ModSettingsNotificationListener();
+    // this.m_settingsNotificationListener.RegisterController(this);
+    // this.m_settingsNotificationListener.Register();
     // this.m_languageInstallProgressBar = inkWidgetRef.GetControllerByType(this.m_languageInstallProgressBarRoot, n"SettingsLanguageInstallProgressBar") as SettingsLanguageInstallProgressBar;
     this.RegisterToGlobalInputCallback(n"OnPostOnRelease", this, n"OnButtonRelease");
     inkWidgetRef.GetControllerByType(this.m_applyButton, n"inkButtonController").RegisterToCallback(n"OnButtonClick", this, n"OnApplyButtonReleased");
@@ -67,7 +67,17 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     this.PlayLibraryAnimation(n"intro");
     this.m_closeSettingsRequest = false;
     this.m_resetSettingsRequest = false;
-    super.OnInitialize();
+
+    ModSettings.RegisterListenerToModifications(this);
+
+    //super.OnInitialize();
+  }
+
+  public func OnModSettingsChange() -> Void {
+    this.CheckButtons();
+    this.PopulateSettingsData();
+    this.PopulateCategorySettingsOptions(-1);
+    this.RefreshInputIcons();
   }
 
   protected cb func OnSetUserData(userData: ref<IScriptable>) -> Bool {
@@ -86,7 +96,10 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     inkWidgetRef.GetControllerByType(this.m_resetButton, n"inkButtonController").UnregisterFromCallback(n"OnButtonClick", this, n"OnResetButtonReleased");
     inkWidgetRef.GetControllerByType(this.m_controllerButton, n"inkButtonController").UnregisterFromCallback(n"OnButtonClick", this, n"OnControllerButtonReleased");
     inkWidgetRef.GetControllerByType(this.m_defaultButton, n"inkButtonController").UnregisterFromCallback(n"OnButtonClick", this, n"OnDefaultButtonReleased");
-    super.OnUninitialize();
+
+    ModSettings.UnregisterListenerToModifications(this);
+
+    //super.OnUninitialize();
   }
 
   public final func EnableApplyButton() -> Void {
@@ -119,7 +132,8 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
 
   public final func CheckButtons() -> Void {
     // if !this.m_isDlcSettings && (this.m_settings.NeedsConfirmation() || this.m_settings.NeedsRestartToApply() || this.m_settings.NeedsLoadLastCheckpoint()) {
-    if ModSettings.GetInstance().changeMade {
+    let ms = ModSettings.GetInstance();
+    if ms.changeMade {
       this.EnableApplyButton();
       this.EnableResetButton();
     } else {
@@ -238,7 +252,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
   // }
 
   private final func PopulateSettingsData() -> Void {
-    this.m_settingsListener.Register(n"/mods");
+    // this.m_settingsListener.Register(n"/mods");
     ArrayClear(this.m_data);
     let mods = ModSettings.GetMods();
     let i = 0;
@@ -302,6 +316,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     // if !StatusEffectSystem.ObjectHasStatusEffectWithTag(this.GetPlayerControlledObject(), n"LockInHubMenu") {
       this.m_closeSettingsRequest = true;
       this.CheckSettings();
+      ModSettings.AcceptChanges();
     // };
   }
 
@@ -310,8 +325,9 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
   }
 
   private final func RequestRestoreDefaults() -> Void {
-    // let index: Int32 = this.m_selectorCtrl.GetToggledIndex();
-    // let groupPath: CName = this.m_data[index].groupPath;
+    let index: Int32 = this.m_selectorCtrl.GetToggledIndex();
+    let mod: CName = this.m_data[index].label;
+    ModSettings.RestoreDefaults(mod);
     // this.m_settings.RequestRestoreDefaultDialog(this.m_isPreGame, false, groupPath);
   }
 
@@ -377,7 +393,7 @@ public class ModStngsMainGameController extends gameuiSettingsMenuGameController
     this.PlaySound(n"Button", n"OnPress");
     this.PopulateCategorySettingsOptions(index);
     (inkWidgetRef.GetController(this.m_scrollPanel) as inkScrollController).SetScrollPosition(0.00);
-    this.m_settings.SetMenuIndex(index);
+    // this.m_settings.SetMenuIndex(index);
   }
 
   protected cb func OnApplyButtonReleased(controller: wref<inkButtonController>) -> Bool {
