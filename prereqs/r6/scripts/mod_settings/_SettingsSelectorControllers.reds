@@ -96,19 +96,19 @@ public func Refresh() -> Void {
 //   this.Refresh();
 // }
 
-// @wrapMethod(SettingsSelectorController)
-// protected cb func OnLeft(e: ref<inkPointerEvent>) -> Bool {
-//   let og = wrappedMethod(e);
-//   this.Refresh();
-//   return og;
-// }
+@wrapMethod(SettingsSelectorController)
+protected cb func OnLeft(e: ref<inkPointerEvent>) -> Bool {
+  let og = wrappedMethod(e);
+  this.Refresh();
+  return og;
+}
 
-// @wrapMethod(SettingsSelectorController)
-// protected cb func OnRight(e: ref<inkPointerEvent>) -> Bool {
-//   let og = wrappedMethod(e);
-//   this.Refresh();
-//   return og;
-// }
+@wrapMethod(SettingsSelectorController)
+protected cb func OnRight(e: ref<inkPointerEvent>) -> Bool {
+  let og = wrappedMethod(e);
+  this.Refresh();
+  return og;
+}
 
 // @wrapMethod(SettingsSelectorControllerListName)
 // public func Refresh() -> Void {
@@ -296,7 +296,7 @@ public class ModStngsSelectorControllerFloat extends SettingsSelectorControllerR
   public func Refresh() -> Void {
     super.Refresh();
     this.UpdateValueTextLanguageResources();
-    let value = this.m_SettingsEntry as ConfigVarFloat;
+    let value = this.m_SettingsEntry as ModConfigVarFloat;
     let step = value.GetStepValue();
     let prec = 1;
     if (step < 0.1) {
@@ -352,9 +352,9 @@ public class ModStngsSelectorControllerListInt extends SettingsSelectorControlle
 
   public func Refresh() -> Void {
     let index: Int32;
-    let value: ref<ConfigVarListInt>;
+    let value: ref<ModConfigVarEnum>;
     super.Refresh();
-    value = this.m_SettingsEntry as ConfigVarListInt;
+    value = this.m_SettingsEntry as ModConfigVarEnum;
     index = value.GetIndex();
     this.UpdateValueTextLanguageResources();
     if !value.ListHasDisplayValues() {

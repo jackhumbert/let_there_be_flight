@@ -14,6 +14,7 @@ struct Call {
   std::time_t callTime;
 };
 
+std::mutex queueLock;
 std::map<size_t, std::deque<Call>> callQueues;
 
 bool scriptLinkingError = false;
@@ -80,6 +81,8 @@ void __fastcall CallFunc(RED4ext::IScriptable *context, RED4ext::CStackFrame *st
 
     auto thread = std::this_thread::get_id();
     auto hash = std::hash<std::thread::id>()(thread);
+
+    std::lock_guard<std::mutex> lock(queueLock);
     if (!callQueues.contains(hash)) {
       callQueues.insert_or_assign(hash, std::deque<Call>());
     }

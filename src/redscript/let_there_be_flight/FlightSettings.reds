@@ -12,19 +12,86 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "General Flight Settings")
   @runtimeProperty("ModSettings.displayName", "Auto Activation Height")
-  @runtimeProperty("ModSettings.description", "In-game units for detecting when flight should automatically be activated")
-  @runtimeProperty("ModSettings.step", "0.1")
-  @runtimeProperty("ModSettings.max", "5.0")
+  @runtimeProperty("ModSettings.description", "In-game units for detecting when flight should automatically be activated on spawn")
+  @runtimeProperty("ModSettings.step", "0.5")
+  @runtimeProperty("ModSettings.max", "10.0")
   public let autoActivationHeight: Float = 3.0;
 
+  // Flight Control Settings
+
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "General Flight Settings")
-  @runtimeProperty("ModSettings.displayName", "General Damp Factor (linear)")
-  @runtimeProperty("ModSettings.description", "Linear damp Factor")
+  @runtimeProperty("ModSettings.category", "Flight Control Settings")
+  @runtimeProperty("ModSettings.displayName", "Linear Brake Factor")
+  @runtimeProperty("ModSettings.description", "How much the linear brake button slows the vehicle's velocity")
+  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "10.0")
+  public let brakeFactorLinear: Float = 1.2;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Control Settings")
+  @runtimeProperty("ModSettings.displayName", "Angular Brake Factor")
+  @runtimeProperty("ModSettings.description", "How much the angular brake button slows the vehicle's rotation")
+  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "50.0")
+  public let brakeFactorAngular: Float = 10.0;
+  
+  // Flight Physics Settings
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Physics Settings")
+  @runtimeProperty("ModSettings.displayName", "Linear Damp Factor")
+  @runtimeProperty("ModSettings.description", "How much resistance any linear movement is given")
   @runtimeProperty("ModSettings.step", "0.0001")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "0.01")
   public let generalDampFactorLinear: Float = 0.001;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Physics Settings")
+  @runtimeProperty("ModSettings.displayName", "Angular Damp Factor")
+  @runtimeProperty("ModSettings.description", "How much resistance any angular movement is given")
+  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "10.0")
+  public let generalDampFactorAngular: Float = 3.0;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Physics Settings")
+  @runtimeProperty("ModSettings.displayName", "Pitch Aero Factor")
+  @runtimeProperty("ModSettings.description", "How much the vehicle is rotated (pitch) towards its velocity")
+  @runtimeProperty("ModSettings.step", "0.05")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "1.0")
+  public let generalPitchAeroFactor: Float = 0.25;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Physics Settings")
+  @runtimeProperty("ModSettings.displayName", "Yaw Aero Factor")
+  @runtimeProperty("ModSettings.description", "How much the vehicle is rotated (yaw) towards its velocity")
+  @runtimeProperty("ModSettings.step", "0.05")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "1.0")
+  public let generalYawAeroFactor: Float = 0.1;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Physics Settings")
+  @runtimeProperty("ModSettings.displayName", "Pitch Directionality Factor")
+  @runtimeProperty("ModSettings.description", "How much the vehicle's pitch affects its velocity")
+  @runtimeProperty("ModSettings.step", "1.0")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "100.0")
+  public let generalPitchDirectionalityFactor: Float = 80.0;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Physics Settings")
+  @runtimeProperty("ModSettings.displayName", "Yaw Directionality Factor")
+  @runtimeProperty("ModSettings.description", "How much the vehicle's yaw affects its velocity")
+  @runtimeProperty("ModSettings.step", "1.0")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "100.0")
+  public let generalYawDirectionalityFactor: Float = 50.0;
 
   // public cb func OnModSettingsUpdate(variable: CName, value: Variant) {
   //   switch (variable) {
@@ -36,8 +103,6 @@ public native class FlightSettings extends IScriptable {
 
   private func OnAttach() -> Void {
     FlightLog.Info("[FlightSettings] OnAttach");
-
-    FlightSettings.SetFloat("autoActivationHeight", 3.0);
     
     FlightSettings.SetVector3("inputPitchPID", 1.0, 0.5, 0.5);
     FlightSettings.SetVector3("inputRollPID", 1.0, 0.5, 0.5);
@@ -47,32 +112,15 @@ public native class FlightSettings extends IScriptable {
 
     FlightSettings.SetVector3("hoverModePID", 1.0, 0.005, 0.5);
 
-    FlightSettings.SetFloat("generalDampFactorLinear", 0.001);
-    FlightSettings.SetFloat("generalDampFactorAngular", 3.0);
-    // FlightSettings.SetFloat("generalPitchAeroFactor", 0.25);
-    FlightSettings.SetFloat("generalPitchAeroFactor", 0.0);
-    FlightSettings.SetFloat("generalPitchDirectionalityFactor", 80.0);
-    FlightSettings.SetFloat("generalYawAeroFactor", 0.1);
-    FlightSettings.SetFloat("generalYawDirectionalityFactor", 50.0);
-
-    FlightSettings.SetFloat("brakeFactorAngular", 10.0);
-    FlightSettings.SetFloat("brakeFactorLinear", 1.2);
-
     FlightSettings.SetFloat("automaticModeAutoBrakingFactor", 200.0);
     FlightSettings.SetFloat("automaticModeYawDirectionality", 300.0);
+
     FlightSettings.SetFloat("brakeOffset", 0.0);
     FlightSettings.SetFloat("collisionRecoveryDelay", 0.8);
     FlightSettings.SetFloat("collisionRecoveryDuration", 0.8);
     FlightSettings.SetFloat("defaultHoverHeight", 3.50);
     FlightSettings.SetFloat("distance", 0.0);
     FlightSettings.SetFloat("distanceEase", 0.1);
-
-    FlightSettings.SetFloat("droneModeLiftFactor", 40.0);
-    FlightSettings.SetFloat("droneModePitchFactor", 5.0);
-    FlightSettings.SetFloat("droneModeRollFactor", 12.0);
-    FlightSettings.SetFloat("droneModeSurgeFactor", 15.0);
-    FlightSettings.SetFloat("droneModeYawFactor", 5.0);
-    FlightSettings.SetFloat("droneModeSwayFactor", 15.0);
 
     FlightSettings.SetFloat("flyModeLiftFactor", 20.0);
 
@@ -90,22 +138,16 @@ public native class FlightSettings extends IScriptable {
     FlightSettings.SetFloat("hoverModeMaxHoverHeight", 7.0);
     FlightSettings.SetFloat("hoverModeMinHoverHeight", 1.0);
     FlightSettings.SetFloat("normalEase", 0.3);
-    FlightSettings.SetFloat("pitchWithLift", 0.0);
-    FlightSettings.SetFloat("pitchWithSurge", 0.0);
     FlightSettings.SetFloat("referenceZ", 0.0);
-    FlightSettings.SetFloat("rollWithYaw", 0.15);
     FlightSettings.SetFloat("secondCounter", 0.0);
-
-    FlightSettings.SetFloat("standardModePitchFactor", 3.0);
-    FlightSettings.SetFloat("standardModePitchInputAngle", 45.0);
-    FlightSettings.SetFloat("standardModeRollFactor", 15.0);
-    FlightSettings.SetFloat("standardModeRollInputAngle", 45.0);
-    FlightSettings.SetFloat("standardModeSurgeFactor", 15.0);
-    FlightSettings.SetFloat("standardModeSwayFactor", 5.0);
-    FlightSettings.SetFloat("standardModeYawFactor", 5.0);
     
     FlightSettings.SetFloat("surgeOffset", 0.5);
+
     FlightSettings.SetFloat("swayWithYaw", 0.5);
+    FlightSettings.SetFloat("rollWithYaw", 0.15);
+    FlightSettings.SetFloat("pitchWithLift", 0.0);
+    FlightSettings.SetFloat("pitchWithSurge", 0.0);
+
     FlightSettings.SetFloat("thrusterFactor", 0.05);
     FlightSettings.SetFloat("yawD", 3.0);
   }

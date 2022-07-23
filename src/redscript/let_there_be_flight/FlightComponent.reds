@@ -128,6 +128,9 @@ public class FlightComponent extends ScriptableDeviceComponent {
     if IsDefined(this.uiGameDataBlackboard) && IsDefined(this.popupCallback) {
       this.uiGameDataBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown, this.popupCallback);
     }
+    for mode in this.modes {
+      mode.Deinitialize();
+    }
   }
 
   protected cb func OnIsInMenu(inMenu: Bool) -> Bool {
@@ -238,7 +241,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     }
     let normal: Vector4;
     this.SetupTires();
-    if this.isPlayerMounted && !this.FindGround(normal) || this.distance > FlightSettings.GetFloat("autoActivationHeight") {
+    if this.isPlayerMounted && !this.FindGround(normal) || this.distance > FlightSettings.GetInstance().autoActivationHeight {
       this.Activate(true);
     }
   }
