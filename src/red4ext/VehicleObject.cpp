@@ -128,12 +128,14 @@ void GetWeaponPlaceholderOrientation(RED4ext::IScriptable *aContext, RED4ext::CS
   aFrame->code++; // skip ParamEnd;
 
   if (aOut) {
-    if (vehicle->weapons.size > index && vehicle->weapons[index].weaponObject &&
-        vehicle->weapons[index].weaponObject.GetPtr()->placeholder) {
-      *aOut = vehicle->weapons[index].weaponObject.GetPtr()->placeholder->worldTransform.Orientation;
-    } else {
-      *aOut = {0.0, 0.0, 0.0, 1.0};
+    if (vehicle->weapons.size > index && vehicle->weapons[index].weaponObject) {
+      auto ph = (RED4ext::ent::PlaceholderComponent*)vehicle->weapons[index].weaponObject.GetPtr()->placeholder;
+      if (ph) {
+        *aOut = ph->worldTransform.Orientation;
+        return;
+      }
     }
+    *aOut = {0.0, 0.0, 0.0, 1.0};
   }
 }
 
@@ -153,7 +155,7 @@ void VehicleGetComponentsUsingSlot(RED4ext::IScriptable *aContext, RED4ext::CSta
     auto doubleCheck = RED4ext::DynArray<RED4ext::Handle<RED4ext::ent::IComponent>>();
 
     auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-    for (const auto &h : v->components) {
+    for (const auto &h : v->componentsStorage.components) {
       auto c = h.GetPtr();
       bool isIPC = false;
       auto ct = c->GetType();
@@ -217,15 +219,16 @@ struct VehicleObjectModule : FlightModule {
     auto rtti = RED4ext::CRTTISystem::Get();
     auto vbc = rtti->GetClass("vehicleBaseObject");
     //vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Bool"), "isOnGround", nullptr, 0x24C));
-    vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "acceleration", nullptr, 0x254));
-    vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "deceleration", nullptr, 0x258));
-    vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "handbrake", nullptr, 0x25C));
-    vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnX", nullptr, 0x5B0));
-    vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnX2", nullptr, 0x5B4));
-    vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnX3", nullptr, 0x5B8));
-    vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnX4", nullptr, 0x268));
-    vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Vector3"), "tracePosition", nullptr,
-                                                   offsetof(RED4ext::vehicle::BaseObject, tracePosition)));
+    //vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "acceleration", nullptr, 0x254));
+    //vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "deceleration", nullptr, 0x258));
+    //vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "handbrake", nullptr, 0x25C));
+    //vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnX", nullptr, 0x5B0));
+    //vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnX2", nullptr, 0x5B4));
+    //vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnX3", nullptr, 0x5B8));
+    //vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnX4", nullptr, 0x268));
+    //vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnInput", nullptr, offsetof(RED4ext::vehicle::BaseObject, turnInput)));
+    //vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Vector3"), "tracePosition", nullptr,
+                                                   //offsetof(RED4ext::vehicle::BaseObject, tracePosition)));
     // vbc->props.PushBack(RED4ext::CProperty::Create(
     //  rtti->GetType("WorldTransform"), "unkWorldTransform", nullptr, 0x330));
     // vbc->props.PushBack(RED4ext::CProperty::Create(

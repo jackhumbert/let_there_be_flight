@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-07-23 17:04:28.3666675
+// This file was automatically generated on 2022-07-29 13:19:00.8343422
 
 // FlightAudio.reds
 
@@ -248,6 +248,30 @@ public class FlightComponent extends ScriptableDeviceComponent {
   public let isPopupShown: Bool;
   public let alarmIsPlaying: Bool;
 
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Audio Settings")
+  @runtimeProperty("ModSettings.displayName", "Engine Volume")
+  @runtimeProperty("ModSettings.step", "0.05")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "1.0")
+  public let engineVolume: Float = 1.0;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Audio Settings")
+  @runtimeProperty("ModSettings.displayName", "Wind Volume")
+  @runtimeProperty("ModSettings.step", "0.05")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "1.0")
+  public let windVolume: Float = 0.6;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Audio Settings")
+  @runtimeProperty("ModSettings.displayName", "Warning Volume")
+  @runtimeProperty("ModSettings.step", "0.05")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "1.0")
+  public let warningVolume: Float = 0.5;
+
   protected final const func GetVehicle() -> wref<VehicleObject> {
     return this.GetEntity() as VehicleObject;
   }
@@ -283,6 +307,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
     let hoverFlyMode = FlightModeHoverFly.Create(this);
     if hoverFlyMode.enabled {
       ArrayPush(this.modes, hoverFlyMode);
+    } else {
+      hoverFlyMode.Deinitialize();
     }
     ArrayPush(this.modes, FlightModeHover.Create(this));
     ArrayPush(this.modes, FlightModeAutomatic.Create(this));
@@ -291,6 +317,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
     let droneMode = FlightModeDrone.Create(this);
     if droneMode.enabled {
       ArrayPush(this.modes, droneMode);
+    } else {
+      droneMode.Deinitialize();
     }
 
     this.audioUpdate = new FlightAudioUpdate();
@@ -395,6 +423,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   
   protected cb func OnMountingEvent(evt: ref<MountingEvent>) -> Bool {
     // this.helper = this.GetVehicle().AddFlightHelper();
+    ModSettings.RegisterListenerToClass(this);
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if mountChild.IsPlayer() {
       // this.GetVehicle().TurnOffAirControl();
@@ -432,6 +461,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   }
 
   protected cb func OnUnmountingEvent(evt: ref<UnmountingEvent>) -> Bool {
+    ModSettings.UnregisterListenerToClass(this);
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if IsDefined(mountChild) && mountChild.IsPlayer() {
       // ModSettings.UnregisterListenerToClass(this);
@@ -593,15 +623,10 @@ public class FlightComponent extends ScriptableDeviceComponent {
         this.angularBrake = fc.angularBrake.GetValue();
         this.surge = fc.surge.GetValue();
         this.sway = fc.sway.GetValue();
-
-        if this.GetFlightMode().usesRightStickInput {
-          let v = this.GetVehicle();
-          v.turnX = this.roll;
-        }
       } else {
         let v = this.GetVehicle();
         this.surge = v.acceleration * 0.5 - v.deceleration * 0.1;
-        this.yaw = -v.turnX4;
+        this.yaw = -v.turnX;
         this.linearBrake = v.handbrake * 0.5;
         this.angularBrake = v.handbrake * 0.5;
       }
@@ -709,6 +734,10 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
     if !silent {
       this.GetVehicle().TurnEngineOn(true);
+    }
+
+    if !FlightSettings.GetInstance().generalApplyFlightPhysicsWhenDeactivated {
+      this.hasUpdate = false;
     }
 
     if this.isPlayerMounted {
@@ -982,18 +1011,21 @@ public class FlightComponent extends ScriptableDeviceComponent {
   }
 
   public func UpdateAudioParams(timeDelta: Float) -> Void {
-    let engineVolume = 1.0;
-    let windVolume = 0.6;
+    let engineVolume = this.engineVolume;
+    let windVolume = this.windVolume;
+    let warningVolume = this.warningVolume;
     let master = Cast<Float>((GameInstance.GetSettingsSystem(this.GetVehicle().GetGame()).GetVar(n"/audio/volume", n"MasterVolume") as ConfigVarInt).GetValue()) / 100.0;
     let sfx = Cast<Float>((GameInstance.GetSettingsSystem(this.GetVehicle().GetGame()).GetVar(n"/audio/volume", n"SfxVolume") as ConfigVarInt).GetValue()) / 100.0;
     engineVolume *= (master * sfx);
     windVolume *= (master * sfx);
+    warningVolume *= (master * sfx);
     if this.isPopupShown || this.isInMenu || GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsPausedState() ||
       GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsTimeDilationActive(n"HubMenu") || 
       GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsTimeDilationActive(n"WorldMap")
       {
       engineVolume = 0.0;
       windVolume = 0.0;
+      warningVolume = 0.0;
       if this.isPlayerMounted {
         // this.sys.audio.Update("playerVehicle", Vector4.EmptyVector(), engineVolume);
         this.sys.audio.Update("windLeft", Vector4.EmptyVector(), windVolume, this.audioUpdate);
@@ -1003,7 +1035,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
         this.sys.audio.Update("vehicle" + this.GetUniqueID(), Vector4.EmptyVector(), engineVolume, this.audioUpdate);
       }
       if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() && this.alarmIsPlaying {
-        this.sys.audio.Update("vehicleDestroyed" + this.GetUniqueID(), Vector4.EmptyVector(), engineVolume, this.audioUpdate);
+        this.sys.audio.Update("vehicleDestroyed" + this.GetUniqueID(), Vector4.EmptyVector(), warningVolume, this.audioUpdate);
       }
       // this.sys.audio.Update("leftFront", Vector4.EmptyVector(), engineVolume);
       // this.sys.audio.Update("rightFront", Vector4.EmptyVector(), engineVolume);
@@ -1016,6 +1048,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     if GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsTimeDilationActive(n"radialMenu") {
       engineVolume *= 0.1;
       windVolume *= 0.1;
+      warningVolume *= 0.1;
     }
 
     this.sys.audio.UpdateSlotProviders();
@@ -1053,7 +1086,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
       this.sys.audio.Update("vehicle" + this.GetUniqueID(), this.GetVehicle().GetWorldPosition(), engineVolume, this.audioUpdate);
     }
     if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() && this.alarmIsPlaying {
-      this.sys.audio.Update("vehicleDestroyed" + this.GetUniqueID(), this.GetVehicle().GetWorldPosition(), engineVolume, this.audioUpdate);
+      this.sys.audio.Update("vehicleDestroyed" + this.GetUniqueID(), this.GetVehicle().GetWorldPosition(), warningVolume, this.audioUpdate);
     }
   }
 
@@ -3576,6 +3609,11 @@ public class FlightModeDrone extends FlightMode {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "Drone Mode")
+  @runtimeProperty("ModSettings.displayName", "Drone Mode Name")
+  public let droneModeName: CName = n"Drone Mode";
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Drone Mode")
   @runtimeProperty("ModSettings.displayName", "Lift Factor")
   @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0")
@@ -3633,7 +3671,7 @@ public class FlightModeDrone extends FlightMode {
     this.usesRightStickInput = true;
     ModSettings.RegisterListenerToClass(this);
   }
-  
+
   public func Deinitialize() -> Void {
     ModSettings.UnregisterListenerToClass(this);
   }
@@ -4075,6 +4113,12 @@ public native class FlightSettings extends IScriptable {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "Flight Physics Settings")
+  @runtimeProperty("ModSettings.displayName", "Apply Flight Physics When Deactivated")
+  @runtimeProperty("ModSettings.description", "Useful for continuing to control the vehicle mid-air when deactivating")
+  public let generalApplyFlightPhysicsWhenDeactivated: Bool = true;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Physics Settings")
   @runtimeProperty("ModSettings.displayName", "Linear Damp Factor")
   @runtimeProperty("ModSettings.description", "How much resistance any linear movement is given")
   @runtimeProperty("ModSettings.step", "0.0001")
@@ -4127,6 +4171,24 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.max", "100.0")
   public let generalYawDirectionalityFactor: Float = 50.0;
 
+  // Flight Camera Settings
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Camera Settings")
+  @runtimeProperty("ModSettings.displayName", "Driving Direction Compensation Angle Smoothing")
+  @runtimeProperty("ModSettings.step", "1.0")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "180.0")
+  public let drivingDirectionCompensationAngleSmooth: Float = 120.0;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Camera Settings")
+  @runtimeProperty("ModSettings.displayName", "Driving Direction Compensation Speed Coef")
+  @runtimeProperty("ModSettings.step", "0.05")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "1.0")
+  public let drivingDirectionCompensationSpeedCoef: Float = 0.1;
+
   // public cb func OnModSettingsUpdate(variable: CName, value: Variant) {
   //   switch (variable) {
   //     case n"autoActivationHeight":
@@ -4137,6 +4199,7 @@ public native class FlightSettings extends IScriptable {
 
   private func OnAttach() -> Void {
     FlightLog.Info("[FlightSettings] OnAttach");
+    ModSettings.RegisterListenerToClass(this);
     
     FlightSettings.SetVector3("inputPitchPID", 1.0, 0.5, 0.5);
     FlightSettings.SetVector3("inputRollPID", 1.0, 0.5, 0.5);
@@ -4174,14 +4237,6 @@ public native class FlightSettings extends IScriptable {
     FlightSettings.SetFloat("normalEase", 0.3);
     FlightSettings.SetFloat("referenceZ", 0.0);
     FlightSettings.SetFloat("secondCounter", 0.0);
-
-    // FlightSettings.SetFloat("standardModePitchFactor", 3.0);
-    // FlightSettings.SetFloat("standardModePitchInputAngle", 45.0);
-    // FlightSettings.SetFloat("standardModeRollFactor", 15.0);
-    // FlightSettings.SetFloat("standardModeRollInputAngle", 45.0);
-    // FlightSettings.SetFloat("standardModeSurgeFactor", 15.0);
-    // FlightSettings.SetFloat("standardModeSwayFactor", 5.0);
-    // FlightSettings.SetFloat("standardModeYawFactor", 5.0);
     
     FlightSettings.SetFloat("surgeOffset", 0.5);
 
@@ -4189,7 +4244,7 @@ public native class FlightSettings extends IScriptable {
     FlightSettings.SetFloat("rollWithYaw", 0.15);
     FlightSettings.SetFloat("pitchWithLift", 0.0);
     FlightSettings.SetFloat("pitchWithSurge", 0.0);
-    
+
     FlightSettings.SetFloat("thrusterFactor", 0.05);
     FlightSettings.SetFloat("yawD", 3.0);
   }
@@ -7038,27 +7093,32 @@ public let chassis: ref<vehicleChassisComponent>;
 public native let isOnGround: Bool;
 
 @addField(VehicleObject)
+@runtimeProperty("offset", "0x254")
 public native let acceleration: Float;
 
 @addField(VehicleObject)
+@runtimeProperty("offset", "0x258")
 public native let deceleration: Float;
 
 @addField(VehicleObject)
+@runtimeProperty("offset", "0x25C")
 public native let handbrake: Float;
 
+// @addField(VehicleObject)
+// public native let turnX: Float;
+
+// @addField(VehicleObject)
+// public native let turnX2: Float;
+
+// @addField(VehicleObject)
+// public native let turnX3: Float;
+
 @addField(VehicleObject)
+@runtimeProperty("offset", "0x268")
 public native let turnX: Float;
 
 @addField(VehicleObject)
-public native let turnX2: Float;
-
-@addField(VehicleObject)
-public native let turnX3: Float;
-
-@addField(VehicleObject)
-public native let turnX4: Float;
-
-@addField(VehicleObject)
+@runtimeProperty("offset", "0x950")
 public native let tracePosition: Vector3;
 
 @addMethod(VehicleObject)

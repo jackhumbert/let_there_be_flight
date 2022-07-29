@@ -77,7 +77,7 @@ void __fastcall AddWeapons(RED4ext::vehicle::BaseObject *vehicle) {
       gapso->paramName = "renderPlane";
       gas->animParams.EmplaceBack(*gapso);
     }
-    vehicle->components.EmplaceBack(RED4ext::Handle<RED4ext::game::AttachmentSlots>(gas));
+    vehicle->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::game::AttachmentSlots>(gas));
   }
 
   //{

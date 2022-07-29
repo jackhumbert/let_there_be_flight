@@ -42,27 +42,32 @@ public let chassis: ref<vehicleChassisComponent>;
 public native let isOnGround: Bool;
 
 @addField(VehicleObject)
+@runtimeProperty("offset", "0x254")
 public native let acceleration: Float;
 
 @addField(VehicleObject)
+@runtimeProperty("offset", "0x258")
 public native let deceleration: Float;
 
 @addField(VehicleObject)
+@runtimeProperty("offset", "0x25C")
 public native let handbrake: Float;
 
+// @addField(VehicleObject)
+// public native let turnX: Float;
+
+// @addField(VehicleObject)
+// public native let turnX2: Float;
+
+// @addField(VehicleObject)
+// public native let turnX3: Float;
+
 @addField(VehicleObject)
+@runtimeProperty("offset", "0x268")
 public native let turnX: Float;
 
 @addField(VehicleObject)
-public native let turnX2: Float;
-
-@addField(VehicleObject)
-public native let turnX3: Float;
-
-@addField(VehicleObject)
-public native let turnX4: Float;
-
-@addField(VehicleObject)
+@runtimeProperty("offset", "0x950")
 public native let tracePosition: Vector3;
 
 @addMethod(VehicleObject)

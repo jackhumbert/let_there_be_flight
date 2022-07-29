@@ -19,7 +19,7 @@ FlightSettings *FlightSettings::GetInstance() {
     auto instance = reinterpret_cast<FlightSettings *>(cls.AllocInstance());
     handle = RED4ext::Handle<FlightSettings>(instance);
   }
-
+  handle.refCount->IncRef();
   return (FlightSettings *)handle.instance;
 }
 
@@ -122,8 +122,11 @@ bool Setup(RED4ext::CGameApplication *aApp) {
 
   auto rtti = RED4ext::CRTTISystem::Get();
   auto onUpdate = cls.GetFunction("OnAttach");
-  auto stack = RED4ext::CStack(aApp, nullptr, 0, nullptr, 0);
+  auto stack = RED4ext::CStack(FlightSettings::GetInstance(), nullptr, 0, nullptr, 0);
   onUpdate->Execute(&stack);
+
+  auto mesh = RED4ext::ResourceReference::ResourceReference("user\\jackhumbert\\meshes\\engine_corpo.mesh");
+  mesh.Load();
 
   return true;
 }

@@ -16,4 +16,10 @@ struct FlightSettings : RED4ext::IScriptable {
 float GetFloat(RED4ext::CString);
 RED4ext::Vector3 GetVector3(RED4ext::CString);
 
+template <typename T> static T GetProperty(RED4ext::CName name) {
+  auto fs = FlightSettings::GetInstance();
+  auto prop = fs->GetNativeType()->GetProperty(name);
+  return prop->GetValue<T>(fs);
+}
+
 } // namespace FlightSettings

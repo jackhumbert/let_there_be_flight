@@ -7,6 +7,11 @@ public class FlightModeDrone extends FlightMode {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "Drone Mode")
+  @runtimeProperty("ModSettings.displayName", "Drone Mode Name")
+  public let droneModeName: CName = n"Drone Mode";
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Drone Mode")
   @runtimeProperty("ModSettings.displayName", "Lift Factor")
   @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0")
@@ -64,7 +69,7 @@ public class FlightModeDrone extends FlightMode {
     this.usesRightStickInput = true;
     ModSettings.RegisterListenerToClass(this);
   }
-  
+
   public func Deinitialize() -> Void {
     ModSettings.UnregisterListenerToClass(this);
   }

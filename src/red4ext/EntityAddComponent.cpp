@@ -28,6 +28,7 @@
 #include "VehiclePhysicsUpdate.hpp"
 #include "FlightWeapons.hpp"
 #include "Signatures.hpp"
+#include <thread>
 
 // weird bug fix
 
@@ -67,6 +68,21 @@ RED4ext::ent::PhysicalMeshComponent *CreateThrusterEngine(RED4ext::CRTTISystem *
   return mc;
 }
 
+void AddResourceToController(RED4ext::ent::VisualControllerComponent *vcc, RED4ext::ResourcePath resourcePath) {
+  if (vcc->resourcePaths.size) {
+    for (int i = 0; i < vcc->resourcePaths.size; i++) {
+      if (vcc->resourcePaths[i] == resourcePath) {
+        break;
+      } else if (vcc->resourcePaths[i] > resourcePath) {
+        vcc->resourcePaths.Emplace(&vcc->resourcePaths[i], resourcePath);
+        break;
+      }
+    }
+  } else {
+    vcc->resourcePaths.EmplaceBack(resourcePath);
+  }
+}
+
 void AddToController(RED4ext::CRTTISystem *rtti, RED4ext::ent::VisualControllerComponent *vcc,
                      RED4ext::ent::MeshComponent *mc) {
   auto vcd = reinterpret_cast<RED4ext::ent::VisualControllerDependency *>(
@@ -75,6 +91,7 @@ void AddToController(RED4ext::CRTTISystem *rtti, RED4ext::ent::VisualControllerC
   vcd->componentName = mc->name;
   vcd->mesh.path = mc->mesh.path;
   vcc->appearanceDependency.EmplaceBack(*vcd);
+  AddResourceToController(vcc, mc->mesh.path);
 }
 
 VehicleProcessWeapons VehicleProcessWeapons_Hook;
@@ -85,7 +102,7 @@ void __fastcall VehicleProcessWeapons_Hook(RED4ext::vehicle::BaseObject *vehicle
   VehicleProcessWeapons_Original(vehicle, timeDelta, shootIndex);
   if (vehicle->weapons[shootIndex].cycleTimer == 0.0) {
     RED4ext::Quaternion quat = {0.0, 0.0, 0.0, 1.0};
-    auto ph = vehicle->weapons[shootIndex].weaponObject.GetPtr()->placeholder;
+    auto ph = (RED4ext::ent::PlaceholderComponent*)vehicle->weapons[shootIndex].weaponObject.GetPtr()->placeholder;
     if (ph) {
       quat = ph->worldTransform.Orientation;
     }
@@ -115,8 +132,7 @@ void __fastcall VehicleProcessWeapons_Hook(RED4ext::vehicle::BaseObject *vehicle
 Entity_InitializeComponents Entity_InitializeComponents_Hook;
 decltype(&Entity_InitializeComponents_Hook) Entity_InitializeComponents_Original;
 
-void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, void *a2, void *a3)
-{
+void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, void *a2, void *a3) {
   auto rtti = RED4ext::CRTTISystem::Get();
   
   auto type = entity->GetNativeType();
@@ -132,7 +148,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
 
     // entVisualControllerComponent
     RED4ext::ent::VisualControllerComponent *vcc = NULL;
-    for (auto const &handle : entity->components) {
+    for (auto const &handle : entity->componentsStorage.components) {
       auto component = handle.GetPtr();
       if (component->GetNativeType() == rtti->GetClass("entVisualControllerComponent")) {
         vcc = reinterpret_cast<RED4ext::ent::VisualControllerComponent *>(component);
@@ -141,7 +157,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     }
 
     RED4ext::game::OccupantSlotComponent *osc = NULL;
-    for (auto const &handle : entity->components) {
+    for (auto const &handle : entity->componentsStorage.components) {
       auto component = handle.GetPtr();
       if (component->GetNativeType() == rtti->GetClass("gameOccupantSlotComponent")) {
         osc = reinterpret_cast<RED4ext::game::OccupantSlotComponent *>(component);
@@ -159,7 +175,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
       }
     }
 
-    for (auto const &handle : entity->components) {
+    for (auto const &handle : entity->componentsStorage.components) {
       auto component = handle.GetPtr();
       if (component->GetNativeType() == rtti->GetClass("entSlotComponent")) {
         auto sc = reinterpret_cast<RED4ext::ent::SlotComponent *>(component);
@@ -256,13 +272,13 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
           //  sc->slotIndexLookup.Emplace(slot->slotName, 3);
           //}
 
-          // entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::SlotComponent>(sc));
+          // entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::SlotComponent>(sc));
       }
 
       {
         auto fl = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterFL",
                                        "thruster_front_left");
-        entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(fl));
+        entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(fl));
         AddToController(rtti, vcc, fl);
 
         // auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
@@ -285,18 +301,21 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
 
         auto fr = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterFR",
                                        "thruster_front_right");
-        entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(fr));
+        entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(fr));
         AddToController(rtti, vcc, fr);
 
         auto bl = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterBL",
                                        "thruster_back_left");
-        entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(bl));
+        entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(bl));
         AddToController(rtti, vcc, bl);
 
         auto br = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterBR",
                                        "thruster_back_right");
-        entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(br));
+        entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(br));
         AddToController(rtti, vcc, br);
+
+        AddResourceToController(vcc, "base\\environment\\architecture\\common\\int\\int_common_techpanel_a\\textures\\ml_int_"
+                                     "common_techpanel_walls_a_grey_dark.mi");
       }
     }
 
@@ -380,7 +399,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
       whc->hudEntriesResource.path = "user\\jackhumbert\\widgets\\hud_flight.inkhud";
       //whc->hudEntriesResource.token = resource.token;
       LoadResRef<bool>(&whc->hudEntriesResource.path, &whc->hudEntriesResource.token, false);
-      entity->components.EmplaceBack(RED4ext::Handle<RED4ext::WidgetHudComponent>(whc));
+      entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::WidgetHudComponent>(whc));
     }
 
     //{
@@ -390,7 +409,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     //  htb->bindName = "vehicle_slots";
     //  htb->slotName = "roof_border_front";
     //  gcc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
-    //  entity->components.EmplaceBack(RED4ext::Handle<RED4ext::game::CameraComponent>(gcc));
+    //  entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::game::CameraComponent>(gcc));
     //}
   }
 
@@ -405,25 +424,25 @@ void EntityAddComponent(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aF
   aFrame->code++; // skip ParamEnd
   // auto handle = RED4ext::Handle<RED4ext::ent::IComponent>(value);
   // auto handle = *(RED4ext::Handle<RED4ext::ent::IComponent> *)&value;
-  // ent->components.EmplaceBack(handle);
-  ent->components.EmplaceBack(value);
+  // ent->componentsStorage.components.EmplaceBack(handle);
+  ent->componentsStorage.components.EmplaceBack(value);
 
   if (aOut) {
     *aOut = true;
   }
 }
 
-void EntityAddWorldWidgetComponent(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, bool *aOut, int64_t a4) {
+void EntityAddWorldWidgetComponent(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, bool *aOut,
+                                   int64_t a4) {
   auto ent = reinterpret_cast<RED4ext::ent::Entity *>(aContext);
 
   aFrame->code++; // skip ParamEnd
 
   auto rtti = RED4ext::CRTTISystem::Get();
 
-
   // MeshComponent
-  auto mc = (RED4ext::ent::MeshComponent*)rtti->GetClass("entMeshComponent")->AllocInstance();
- 
+  auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
+
   mc->mesh.path =
       "base\\environment\\decoration\\advertising\\holograms\\common\\common_holograms_transparent_a_w500_h150.mesh";
   mc->name = "radio_screen";
@@ -434,7 +453,7 @@ void EntityAddWorldWidgetComponent(RED4ext::IScriptable *aContext, RED4ext::CSta
   mc->visualScale.X = 10.0;
 
   auto mcHandle = RED4ext::Handle<RED4ext::ent::MeshComponent>(mc);
-  ent->components.EmplaceBack(mcHandle);
+  ent->componentsStorage.components.EmplaceBack(mcHandle);
 
   // WorldWidgetComponent
   auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->AllocInstance();
@@ -447,7 +466,7 @@ void EntityAddWorldWidgetComponent(RED4ext::IScriptable *aContext, RED4ext::CSta
   wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
 
   auto wwcHandle = RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc);
-  ent->components.EmplaceBack(wwcHandle);
+  ent->componentsStorage.components.EmplaceBack(wwcHandle);
 
   if (aOut) {
     *aOut = true;
@@ -509,11 +528,11 @@ void IPlacedComponentUpdateHardTransformBinding(RED4ext::IScriptable *aContext, 
 
 struct EntityAddComponentModule : FlightModule {
   void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(ENTITY_INITIALIZECOMPONENTS_ADDR),
+    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(Entity_InitializeComponentsAddr),
                                   &Entity_InitializeComponents_Hook,
                                   reinterpret_cast<void **>(&Entity_InitializeComponents_Original)))
       ;
-    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VEHICLEPROCESSWEAPONS_ADDR),
+    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleProcessWeaponsAddr),
                                   &VehicleProcessWeapons_Hook,
                                   reinterpret_cast<void **>(&VehicleProcessWeapons_Original)))
       ;
@@ -522,8 +541,8 @@ struct EntityAddComponentModule : FlightModule {
       ;
   }
   void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(ENTITY_INITIALIZECOMPONENTS_ADDR));
-    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(VEHICLEPROCESSWEAPONS_ADDR));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(Entity_InitializeComponentsAddr));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleProcessWeaponsAddr));
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(SpawnEffectAddr));
   }
   void PostRegisterTypes() {
@@ -541,7 +560,6 @@ struct EntityAddComponentModule : FlightModule {
     
     auto mc = rtti->GetClass("entMeshComponent");
     mc->props.EmplaceBack(RED4ext::CProperty::Create(rtti->GetType("Vector3"), "visualScale", nullptr, 0x178));
-
   }
 };
 

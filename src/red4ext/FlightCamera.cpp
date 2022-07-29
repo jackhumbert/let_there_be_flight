@@ -25,8 +25,10 @@ uintptr_t Camera::TPPCameraStatsUpdate(RED4ext::vehicle::TPPCameraComponent *cam
   bool resetSlope = false;
   if (fc->active) {
     camera->isInAir = false;
-    camera->drivingDirectionCompensationAngleSmooth = 120.0;
-    camera->drivingDirectionCompensationSpeedCoef = 0.1;
+    camera->drivingDirectionCompensationAngleSmooth =
+        FlightSettings::GetProperty<float>("drivingDirectionCompensationAngleSmooth");
+    camera->drivingDirectionCompensationSpeedCoef =
+        FlightSettings::GetProperty<float>("drivingDirectionCompensationSpeedCoef");
 
     auto rtti = RED4ext::CRTTISystem::Get();
     auto fcc = rtti->GetClass("FlightSystem");
@@ -116,9 +118,10 @@ char __fastcall Camera::FPPCameraUpdate(RED4ext::game::FPPCameraComponent *fpp, 
     //fpp->pitchOffset = 0.0;
     //fpp->yawOffset = 0.0;
     auto vehicle = *(RED4ext::vehicle::BaseObject **)&fpp->entity;
-    if (vehicle->physics) {
-      vehicle->physics->customTiltTarget = 0.0;
-    }
+    //if (vehicle->physics) {
+    //  vehicle->physics->customTiltTarget = 0.0;
+    //}
+
   } else {
     fpp->animFeature->vehicleProceduralCameraWeight = 1.0;
   }
