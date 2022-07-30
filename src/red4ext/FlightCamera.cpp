@@ -2,7 +2,7 @@
 #include "FlightController.hpp"
 #include "FlightSystem.hpp"
 #include "FlightSettings.hpp"
-#include <RED4ext/Scripting/Natives/Generated/physics/VehiclePhysics.hpp>
+#include <RED4ext/Scripting/Natives/vehiclePhysics.hpp>
 #include <spdlog/spdlog.h>
 
 // Treat flying vehicles as being on the ground (for TPP camera)

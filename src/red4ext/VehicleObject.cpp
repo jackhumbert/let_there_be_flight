@@ -4,7 +4,7 @@
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/Entity.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
-#include <RED4ext/Scripting/Natives/Generated/vehicle/Weapon.hpp>
+#include <RED4ext/Scripting/Natives/vehicleWeapon.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/HardTransformBinding.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/PlaceholderComponent.hpp>
 
@@ -14,7 +14,7 @@ void VehicleUsesInertiaTensor(RED4ext::IScriptable *aContext, RED4ext::CStackFra
   aFrame->code++; // skip ParamEnd
 
   auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-  auto ps = v->physicsStruct;
+  auto ps = v->physicsData;
 
   if (aOut) {
     *aOut = ps->usesInertiaTensor;
@@ -44,7 +44,7 @@ void VehicleGetMomentOfInertiaScale(RED4ext::IScriptable *aContext, RED4ext::CSt
   aFrame->code++; // skip ParamEnd
 
   auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-  auto ps = v->physicsStruct;
+  auto ps = v->physicsData;
 
   if (aOut) {
     *aOut = ps->momentOfInertiaScale;
@@ -56,7 +56,7 @@ void VehicleGetInertiaTensor(RED4ext::IScriptable *aContext, RED4ext::CStackFram
   aFrame->code++; // skip ParamEnd
 
   auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-  auto ps = v->physicsStruct;
+  auto ps = v->physicsData;
 
   if (aOut) {
     *aOut = ps->localInertiaTensor;
@@ -68,7 +68,7 @@ void VehicleGetWorldInertiaTensor(RED4ext::IScriptable *aContext, RED4ext::CStac
   aFrame->code++; // skip ParamEnd
 
   auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-  auto ps = v->physicsStruct;
+  auto ps = v->physicsData;
 
   if (aOut) {
     *aOut = ps->worldInertiaTensor;
@@ -80,7 +80,7 @@ void VehicleGetCenterOfMass(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   aFrame->code++; // skip ParamEnd
 
   auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-  auto ps = v->physicsStruct;
+  auto ps = v->physicsData;
 
   if (aOut) {
     *aOut = ps->centerOfMass;
@@ -92,7 +92,7 @@ void VehicleGetAngularVelocity(RED4ext::IScriptable *aContext, RED4ext::CStackFr
   aFrame->code++; // skip ParamEnd
 
   auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-  auto ps = v->physicsStruct;
+  auto ps = v->physicsData;
 
   if (aOut) {
     *aOut = ps->angularVelocity;
@@ -106,7 +106,7 @@ void VehicleAddFlightHelper(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   aFrame->code++; // skip ParamEnd
 
   auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-  auto p = v->physics;
+  auto p = (RED4ext::vehicle::WheeledPhysics*)v->physics;
   if (p) {
     auto helper = vehicle::flight::Helper::AddToDriverHelpers(&p->driveHelpers);
     if (aOut) {

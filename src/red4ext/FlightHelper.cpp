@@ -61,13 +61,13 @@ void Helper::PhysicsUpdate(RED4ext::vehicle::BaseObject *vehicle, float timeDelt
 
   //vehicle->isOnGround = true;
 
-  vehicle->physicsStruct->force.X += this->wrapper->force.X;
-  vehicle->physicsStruct->force.Y += this->wrapper->force.Y;
-  vehicle->physicsStruct->force.Z += this->wrapper->force.Z;
+  vehicle->physicsData->force.X += this->wrapper->force.X;
+  vehicle->physicsData->force.Y += this->wrapper->force.Y;
+  vehicle->physicsData->force.Z += this->wrapper->force.Z;
 
-  vehicle->physicsStruct->torque.X += this->wrapper->torque.X;
-  vehicle->physicsStruct->torque.Y += this->wrapper->torque.Y;
-  vehicle->physicsStruct->torque.Z += this->wrapper->torque.Z;
+  vehicle->physicsData->torque.X += this->wrapper->torque.X;
+  vehicle->physicsData->torque.Y += this->wrapper->torque.Y;
+  vehicle->physicsData->torque.Z += this->wrapper->torque.Z;
 
   this->wrapper->force.X = 0.0;
   this->wrapper->force.Y = 0.0;

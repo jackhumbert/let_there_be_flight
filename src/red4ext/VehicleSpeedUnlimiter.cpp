@@ -7,15 +7,15 @@ namespace vehicle {
 struct SpeedUnlimiter : FlightModule {
   void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle);
   void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle);
-  static short PhysicsStructUpdate(RED4ext::physics::VehiclePhysicsStruct *ps);
-  static short PhysicsUnkStructVelocityUpdate(RED4ext::physics::VehiclePhysicsStruct *ps, RED4ext::Vector3 *);
+  static short PhysicsStructUpdate(RED4ext::vehicle::PhysicsData *ps);
+  static short PhysicsUnkStructVelocityUpdate(RED4ext::vehicle::PhysicsData *ps, RED4ext::Vector3 *);
 };
 
 // 40 53 48 81 EC 80 00 00 00 F3 0F 10 41 40 48 8B D9 F3 0F 10 51 08 0F 28 C8 F3 0F 59 09 0F 29 74
 constexpr uintptr_t PhysicsStructUpdateAddr = 0x1CE1960;
 decltype(&SpeedUnlimiter::PhysicsStructUpdate) PhysicsStructUpdate_Original;
 
-short SpeedUnlimiter::PhysicsStructUpdate(RED4ext::physics::VehiclePhysicsStruct *ps) {
+short SpeedUnlimiter::PhysicsStructUpdate(RED4ext::vehicle::PhysicsData *ps) {
 
   // apply force to linear velocity
   RED4ext::Vector3 unlimitedVelocity;
@@ -36,7 +36,7 @@ short SpeedUnlimiter::PhysicsStructUpdate(RED4ext::physics::VehiclePhysicsStruct
 constexpr uintptr_t PhysicsUnkStructVelocityUpdateAddr = 0x1CE03C0 + 0xC00;
 decltype(&SpeedUnlimiter::PhysicsUnkStructVelocityUpdate) PhysicsUnkStructVelocityUpdate_Original;
 
-short SpeedUnlimiter::PhysicsUnkStructVelocityUpdate(RED4ext::physics::VehiclePhysicsStruct *vps,
+short SpeedUnlimiter::PhysicsUnkStructVelocityUpdate(RED4ext::vehicle::PhysicsData *vps,
                                                      RED4ext::Vector3 *velocity) {
   auto result = PhysicsUnkStructVelocityUpdate_Original(vps, velocity);
 

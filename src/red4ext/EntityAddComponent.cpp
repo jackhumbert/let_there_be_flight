@@ -19,7 +19,7 @@
 #include <RED4ext/Scripting/Natives/Generated/game/AnimParamSlotsOption.hpp>
 #include <RED4ext/Scripting/Natives/Generated/WidgetHudComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
-#include <RED4ext/Scripting/Natives/Generated/vehicle/Weapon.hpp>
+#include <RED4ext/Scripting/Natives/vehicleWeapon.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/HudEntriesResource.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/CameraComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/OccupantSlotComponent.hpp>
@@ -296,7 +296,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
         // htb->bindName = "vehicle_slots";
         // htb->slotName = "gun_front_left";
         // mc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
-        // entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::MeshComponent>(mc));
+        // entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::MeshComponent>(mc));
         // AddToController(rtti, vcc, mc);
 
         auto fr = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterFR",
@@ -330,7 +330,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     //  mc->meshAppearance = "default";
 
     //  auto mcHandle = RED4ext::Handle<RED4ext::ent::MeshComponent>(mc);
-    //  entity->components.EmplaceBack(mcHandle);
+    //  entity->componentsStorage.components.EmplaceBack(mcHandle);
     //}
     //{
     //  // WorldWidgetComponent
@@ -346,7 +346,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     //  wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
 
     //  auto wwcHandle = RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc);
-    //  entity->components.EmplaceBack(wwcHandle);
+    //  entity->componentsStorage.components.EmplaceBack(wwcHandle);
     //}
 
     // UI Info Panel
@@ -361,7 +361,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     //  mc->renderingPlane = RED4ext::ERenderingPlane::RPl_Weapon;
     //  mc->forcedLodDistance = RED4ext::ent::ForcedLodDistance::VehicleInterior;
 
-    //  entity->components.EmplaceBack(RED4ext::Handle<RED4ext::ent::MeshComponent>(mc));
+    //  entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::MeshComponent>(mc));
     //}
     //{
     //  // WorldWidgetComponent
@@ -377,7 +377,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     //  mtb->bindName = "flight_screen_info";
     //  wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
 
-    //  entity->components.EmplaceBack(RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc));
+    //  entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc));
     //}
     //{
     //  auto gpsp =
@@ -388,7 +388,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     //  htb->bindName = "vehicle_slots";
     //  htb->slotName = "ThrusterFL";
     //  gpsp->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
-    //  entity->components.EmplaceBack(RED4ext::Handle<RED4ext::game::projectile::SpawnComponent>(gpsp));
+    //  entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::game::projectile::SpawnComponent>(gpsp));
     //}
 
     {
@@ -492,7 +492,7 @@ void EntityAddWorldWidgetComponent(RED4ext::IScriptable *aContext, RED4ext::CSta
 //    et->sub_28(true);
 //
 //    auto handle = RED4ext::Handle<RED4ext::ent::IComponent>(value);
-//    ent->components.EmplaceBack(handle);
+//    ent->componentsStorage.components.EmplaceBack(handle);
 //
 //    if (aOut) {
 //      *aOut = true;

@@ -19,7 +19,7 @@
 #include <RED4ext/Scripting/Natives/Generated/game/AnimParamSlotsOption.hpp>
 #include <RED4ext/Scripting/Natives/Generated/WidgetHudComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
-#include <RED4ext/Scripting/Natives/Generated/vehicle/Weapon.hpp>
+#include <RED4ext/Scripting/Natives/vehicleWeapon.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/HudEntriesResource.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/CameraComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/OccupantSlotComponent.hpp>

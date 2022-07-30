@@ -7,7 +7,7 @@
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/RTTITypes.hpp>
 #include <RED4ext/Relocation.hpp>
-#include <RED4ext/Scripting/Natives/Generated/physics/VehiclePhysicsStruct.hpp>
+#include <RED4ext/Scripting/Natives/vehiclePhysicsData.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 #include "FlightModule.hpp"
 
