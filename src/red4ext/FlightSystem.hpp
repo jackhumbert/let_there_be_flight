@@ -9,10 +9,10 @@ struct IFlightSystem : RED4ext::game::IGameSystem {
 };
 
 struct FlightSystem : IFlightSystem {
-  RED4ext::CClass *GetNativeType();
-  bool sub_118(void *);
-  bool sub_120();
-  void *RegisterUpdate(uintptr_t lookup); // 110
+  RED4ext::CClass *GetNativeType() override;
+  bool sub_118(void *) override;
+  bool sub_120() override;
+  void *RegisterUpdate(uintptr_t lookup) override; // 110
 
   static FlightSystem *GetInstance();
   RED4ext::DynArray<RED4ext::WeakHandle<RED4ext::IScriptable>> components;

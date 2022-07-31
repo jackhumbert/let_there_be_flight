@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-07-30 18:15:05.2853414
+// This file was automatically generated on 2022-07-31 14:00:04.0291726
 
 // FlightAudio.reds
 
@@ -524,6 +524,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   public func Activate(opt silent: Bool) -> Void {
     // this.helper = this.GetVehicle().AddFlightHelper();
     FlightLog.Info("[FlightComponent] OnVehicleFlightActivationEvent: " + this.GetVehicle().GetDisplayName());
+    this.GetVehicle().ScheduleAppearanceChange(this.GetVehicle().GetCurrentAppearanceName());
     if !this.active {
 
       this.uiBlackboard = GameInstance.GetBlackboardSystem(this.sys.ctlr.gameInstance).Get(GetAllBlackboardDefs().UI_System);

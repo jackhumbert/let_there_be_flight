@@ -339,6 +339,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   public func Activate(opt silent: Bool) -> Void {
     // this.helper = this.GetVehicle().AddFlightHelper();
     FlightLog.Info("[FlightComponent] OnVehicleFlightActivationEvent: " + this.GetVehicle().GetDisplayName());
+    this.GetVehicle().ScheduleAppearanceChange(this.GetVehicle().GetCurrentAppearanceName());
     if !this.active {
 
       this.uiBlackboard = GameInstance.GetBlackboardSystem(this.sys.ctlr.gameInstance).Get(GetAllBlackboardDefs().UI_System);
