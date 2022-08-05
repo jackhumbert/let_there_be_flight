@@ -210,12 +210,12 @@ uintptr_t __fastcall BikeAnimationUpdate(RED4ext::vehicle::BikePhysics *a1) {
     //a1->parent3->turnInput = rollProp->GetValue<float>(fc);
     a1->parent3->turnInput = 0.0;
     a1->turnRate = 0.0;
-    a1->tiltEnabled = 0;
+    a1->tiltControlEnabled = 0;
   } else {
-    a1->tiltEnabled = 1;
+    a1->tiltControlEnabled = 1;
   }
   auto og = BikeAnimationUpdate_Original(a1);
-  UpdateAnimValueForCName(a1->parent3, "veh_bike_tilt", 0.0);
+  //UpdateAnimValueForCName(a1->parent3, "throttle", 0.0);
   return og;
 }
 

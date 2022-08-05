@@ -49,6 +49,7 @@ public class hudFlightController extends inkHUDGameController {
   private let m_vehicleBBActivId: ref<CallbackHandle>;
   private let m_vehicleBBModeId: ref<CallbackHandle>;
   private let m_vehicleRollID: ref<CallbackHandle>;
+  private let m_vehiclePitchID: ref<CallbackHandle>;
   private let m_tppBBConnectionId: ref<CallbackHandle>;
 
   public let m_healthStatPoolListener: ref<FlightUIVehicleHealthStatPoolListener>;
@@ -136,14 +137,22 @@ public class hudFlightController extends inkHUDGameController {
     if !FlightSystem.GetInstance().ctlr.isTPP {
       this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers").SetRotation(0);
       this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers/h").SetRotation(-roll);
+      this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers/pitch").SetRotation(-roll);
       this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/crosshair").SetRotation(0);
       this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/RADIUS").SetRotation(-roll);
     } else {
       this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers").SetRotation(roll);
       this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers/h").SetRotation(-roll);
+      this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers/pitch").SetRotation(-roll);
+      // this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers/pitch_mask").SetRotation(-roll);
       this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/crosshair").SetRotation(roll);
       this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/RADIUS").SetRotation(roll);
     }
+  }
+
+  protected cb func OnVehiclePitchChanged(pitch: Float) -> Bool {
+    this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers/pitch/major").SetTranslation(new Vector2(0.0, pitch/90.0 * 900.0));
+    this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers/pitch/minor").SetTranslation(new Vector2(0.0, pitch/90.0 * 900.0));
   }
 
   private let m_introAnimationProxy: ref<inkAnimProxy>;
@@ -222,6 +231,9 @@ public class hudFlightController extends inkHUDGameController {
       if !IsDefined(this.m_vehicleRollID) {
         this.m_vehicleRollID = this.m_vehicleFlightBlackboard.RegisterListenerFloat(GetAllBlackboardDefs().VehicleFlight.Roll, this, n"OnVehicleRollChanged");
       };
+      if !IsDefined(this.m_vehiclePitchID) {
+        this.m_vehiclePitchID = this.m_vehicleFlightBlackboard.RegisterListenerFloat(GetAllBlackboardDefs().VehicleFlight.Pitch, this, n"OnVehiclePitchChanged");
+      };
     };
     if IsDefined(this.m_vehicleBlackboard) {
       this.m_tppBBConnectionId = this.m_vehicleBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this, n"OnCameraModeChanged");
@@ -250,6 +262,9 @@ public class hudFlightController extends inkHUDGameController {
       };
       if IsDefined(this.m_vehicleRollID) {
         this.m_vehicleFlightBlackboard.UnregisterListenerFloat(GetAllBlackboardDefs().VehicleFlight.Roll, this.m_vehicleRollID);
+      };
+      if IsDefined(this.m_vehiclePitchID) {
+        this.m_vehicleFlightBlackboard.UnregisterListenerFloat(GetAllBlackboardDefs().VehicleFlight.Pitch, this.m_vehiclePitchID);
       };
     }
     if IsDefined(this.m_vehicleBlackboard) {

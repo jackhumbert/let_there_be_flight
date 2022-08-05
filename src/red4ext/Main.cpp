@@ -1,7 +1,6 @@
 #include <RED4ext/InstanceType.hpp>
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/RTTITypes.hpp>
-#include <RED4ext/Scripting/IScriptable.hpp>
 #include <RED4ext/Scripting/Natives/Generated/Vector4.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/EffectDesc.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/EffectSpawnerComponent.hpp>

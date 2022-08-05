@@ -29,6 +29,7 @@
 #include "FlightWeapons.hpp"
 #include "Signatures.hpp"
 #include <thread>
+#include "FlightSystem.hpp"
 
 // weird bug fix
 
