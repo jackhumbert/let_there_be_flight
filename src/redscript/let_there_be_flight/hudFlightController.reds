@@ -134,25 +134,35 @@ public class hudFlightController extends inkHUDGameController {
 
   protected cb func OnVehicleRollChanged(roll: Float) -> Bool {
     // if FlightSystem.GetInstance().playerComponent.GetFlightMode().usesRightStickInput && !FlightSystem.GetInstance().ctlr.isTPP {
-    if !FlightSystem.GetInstance().ctlr.isTPP {
+    if !FlightSystem.GetInstance().ctlr.isTPP { // FPP
       this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers").SetRotation(0);
       this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers/h").SetRotation(-roll);
-      this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers/pitch").SetRotation(-roll);
-      this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/crosshair").SetRotation(0);
+      this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/pitch/rotation").SetRotation(-roll);
+      // this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/pitch/mask").SetVisible(false);
+      // this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/pitch/mask").SetRotation(0);
+      // this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/pitch_mask").SetVisible(true);
+      // this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/pitch/mask").SetRotation(0);
+      // this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/pitch/mask").SetScale(new Vector2(1.0, 1.0));
+      // this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/crosshair").SetRotation(0);
+      this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/crosshair/reticle").SetRotation(-roll);
       this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/RADIUS").SetRotation(-roll);
-    } else {
+    } else { // TPP
       this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers").SetRotation(roll);
       this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers/h").SetRotation(-roll);
-      this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers/pitch").SetRotation(-roll);
-      // this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers/pitch_mask").SetRotation(-roll);
-      this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/crosshair").SetRotation(roll);
+      this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/pitch/rotation").SetRotation(0);
+      // this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/pitch/mask").SetVisible(true);
+      // this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/pitch/mask").SetRotation(roll);
+      // this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/pitch_mask").SetVisible(false);
+      // this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/pitch_mask").SetRotation(roll);
+      // this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/pitch/mask").SetScale(new Vector2(1.0, 1.0));
+      // this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/crosshair").SetRotation(roll);
+      this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/crosshair/reticle").SetRotation(0);
       this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/RADIUS").SetRotation(roll);
     }
   }
 
   protected cb func OnVehiclePitchChanged(pitch: Float) -> Bool {
-    this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers/pitch/major").SetTranslation(new Vector2(0.0, pitch/90.0 * 900.0));
-    this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/rulers/pitch/minor").SetTranslation(new Vector2(0.0, pitch/90.0 * 900.0));
+    this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/pitch/rotation/translation").SetTranslation(new Vector2(0.0, pitch/90.0 * 900.0));
   }
 
   private let m_introAnimationProxy: ref<inkAnimProxy>;
