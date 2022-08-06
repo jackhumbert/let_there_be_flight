@@ -15,6 +15,7 @@
 #include "FlightLog.hpp"
 #include "Utils.hpp"
 #include "stdafx.hpp"
+#include "LoadResRef.hpp"
 
 namespace FlightSystem {
 
@@ -43,7 +44,7 @@ void GetInstanceScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aF
 }
 
 void PrePhysics(RED4ext::Unk2* unk2, float* deltaTime, void* unkStruct) {
-  spdlog::info("[FlightSystem] PrePhysics!");
+  //spdlog::info("[FlightSystem] PrePhysics!");
 }
 
  void FlightSystem::RegisterUpdates(RED4ext::UpdateManagerHolder *holder) {
@@ -84,6 +85,10 @@ void FlightSystem::sub_148() {
 
 void FlightSystem::sub_150(void * a1, uint64_t a2, uint64_t a3) { 
   spdlog::info("[FlightSystem] sub_150!");
+  auto r = new RED4ext::ResourceReference("user\\jackhumbert\\meshes\\engine_corpo.mesh");
+  //r->Fetch();
+  //RED4ext::ResourceLoader::Get();
+  LoadResRef<bool>(&r->path, &r->token, false);
 }
 
 bool FlightSystem::sub_158() {

@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-08-05 19:13:29.4242714
+// This file was automatically generated on 2022-08-06 03:06:09.7887242
 
 // FlightAudio.reds
 
@@ -389,7 +389,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   }
 
   private func GetPitch() -> Float{
-    return ClampF(700.0 / this.stats.s_mass + 0.5, 0.25, 2.0);
+    return ClampF(700.0 / this.stats.s_mass + 0.5, 0.5, 1.5);
   }
 
   public func GetFlightModeIndex() -> Int32 {

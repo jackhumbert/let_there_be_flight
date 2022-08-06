@@ -204,7 +204,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   }
 
   private func GetPitch() -> Float{
-    return ClampF(700.0 / this.stats.s_mass + 0.5, 0.25, 2.0);
+    return ClampF(700.0 / this.stats.s_mass + 0.5, 0.5, 1.5);
   }
 
   public func GetFlightModeIndex() -> Int32 {
