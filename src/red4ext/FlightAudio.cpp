@@ -5,6 +5,7 @@
 #include <RED4ext/RTTITypes.hpp>
 #include <RED4ext/Scripting/IScriptable.hpp>
 #include <RED4ext/Scripting/Natives/Generated/Vector4.hpp>
+#include <RED4ext/Scripting/Natives/Generated/Matrix.hpp>
 #include <RED4ext/Scripting/Natives/ScriptGameInstance.hpp>
 
 #include "Utils.hpp"
@@ -154,16 +155,12 @@ void Stop(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, void *aO
   }
 }
 void UpdateListener(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, void *aOut, int64_t a4) {
-  RED4ext::Vector4 listenerPosition;
-  RED4ext::Vector4 listenerForward;
-  RED4ext::Vector4 listenerUp;
-  RED4ext::GetParameter(aFrame, &listenerPosition);
-  RED4ext::GetParameter(aFrame, &listenerForward);
-  RED4ext::GetParameter(aFrame, &listenerUp);
+  RED4ext::Matrix matrix;
+  RED4ext::GetParameter(aFrame, &matrix);
   aFrame->code++; // skip ParamEnd;
-  listenerAttributes.position = {.x = listenerPosition.X, .y = listenerPosition.Z, .z = -listenerPosition.Y};
-  listenerAttributes.forward = {.x = listenerForward.X, .y = listenerForward.Z, .z = -listenerForward.Y};
-  listenerAttributes.up = {.x = listenerUp.X, .y = listenerUp.Z, .z = -listenerUp.Y};
+  listenerAttributes.position = {.x = matrix.W.X, .y = matrix.W.Z, .z = -matrix.W.Y};
+  listenerAttributes.up = {.x = matrix.Z.X, .y = matrix.Z.Z, .z = -matrix.Z.Y};
+  listenerAttributes.forward = {.x = matrix.Y.X, .y = matrix.Y.Z, .z = -matrix.Y.Y};
   ERRCHECK(fmod_system->setListenerAttributes(0, &listenerAttributes));
   ERRCHECK(fmod_system->update());
 }
@@ -172,11 +169,11 @@ void Update(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, void *
   auto self = reinterpret_cast<FlightAudio *>(aContext);
 
   RED4ext::CString emitterName;
-  RED4ext::Vector4 eventLocation;
+  RED4ext::Matrix matrix;
   float eventVolume;
   RED4ext::Handle<RED4ext::IScriptable> update;
   RED4ext::GetParameter(aFrame, &emitterName);
-  RED4ext::GetParameter(aFrame, &eventLocation);
+  RED4ext::GetParameter(aFrame, &matrix);
   RED4ext::GetParameter(aFrame, &eventVolume);
   RED4ext::GetParameter(aFrame, &update);
   aFrame->code++; // skip ParamEnd
@@ -185,12 +182,9 @@ void Update(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, void *
   auto flightAudioCls = rtti->GetClass("FlightAudio");
   auto flightAudioUpdateCls = rtti->GetClass("FlightAudioUpdate");
 
-  // RED4ext::Vector4 listenerPosition =
-  // flightAudioCls->GetProperty("listenerPosition")->GetValue<RED4ext::Vector4>(aContext); RED4ext::Vector4
-  // listenerForward = flightAudioCls->GetProperty("listenerForward")->GetValue<RED4ext::Vector4>(aContext);
-  // RED4ext::Vector4 listenerUp = flightAudioCls->GetProperty("listenerUp")->GetValue<RED4ext::Vector4>(aContext);
-
-  eventAttributes.position = {.x = eventLocation.X, .y = eventLocation.Z, .z = -eventLocation.Y};
+  eventAttributes.position = {.x = matrix.W.X, .y = matrix.W.Z, .z = -matrix.W.Y};
+  eventAttributes.up = {.x = matrix.Z.X, .y = matrix.Z.Z, .z = -matrix.Z.Y};
+  eventAttributes.forward = {.x = matrix.Y.X, .y = matrix.Y.Z, .z = -matrix.Y.Y};
 
   ERRCHECK(eventMap[emitterName.c_str()]->set3DAttributes(&eventAttributes));
   ERRCHECK(eventMap[emitterName.c_str()]->setVolume(eventVolume));

@@ -182,7 +182,7 @@
 			<value>true</value>
 		</property>
 		<property name="length">
-			<value>150</value>
+			<value>300</value>
 		</property>
 		<property name="looping">
 			<value>true</value>
@@ -443,7 +443,7 @@
 	</object>
 	<object class="AutomationPoint" id="{f3bd6348-5bb7-48d2-bf07-42d006149a8b}">
 		<property name="position">
-			<value>150</value>
+			<value>300</value>
 		</property>
 		<property name="value">
 			<value>11</value>
@@ -451,7 +451,7 @@
 	</object>
 	<object class="AutomationPoint" id="{d6020a90-49b0-4975-84eb-4c357aad5616}">
 		<property name="position">
-			<value>147.66949152542372</value>
+			<value>295.33898305084745</value>
 		</property>
 		<property name="value">
 			<value>1200</value>
@@ -536,7 +536,7 @@
 	</object>
 	<object class="AutomationPoint" id="{a12b1efb-b29c-48bf-aa6b-313d0d4d4f71}">
 		<property name="position">
-			<value>150</value>
+			<value>300</value>
 		</property>
 		<property name="value">
 			<value>0</value>
@@ -544,7 +544,7 @@
 	</object>
 	<object class="AutomationPoint" id="{81853d9c-8f48-4a51-8cc0-19e9dcb6ac5a}">
 		<property name="position">
-			<value>7.5</value>
+			<value>15</value>
 		</property>
 		<property name="value">
 			<value>0</value>
@@ -578,7 +578,7 @@
 	</object>
 	<object class="AutomationPoint" id="{f159103a-e2bc-4e91-82b5-c5889e7ecf54}">
 		<property name="position">
-			<value>150</value>
+			<value>300</value>
 		</property>
 		<property name="value">
 			<value>12</value>
@@ -586,7 +586,7 @@
 	</object>
 	<object class="AutomationPoint" id="{31216a85-9226-4c60-87d9-7d4261f7e375}">
 		<property name="position">
-			<value>150</value>
+			<value>300</value>
 		</property>
 		<property name="value">
 			<value>8</value>
@@ -610,7 +610,7 @@
 	</object>
 	<object class="AutomationPoint" id="{d08b960d-4225-4cb2-afc5-320cf5fff8e2}">
 		<property name="position">
-			<value>150</value>
+			<value>300</value>
 		</property>
 		<property name="value">
 			<value>7</value>
@@ -618,7 +618,7 @@
 	</object>
 	<object class="AutomationPoint" id="{20f52f35-978f-4ecc-8fb0-c1f5b659df93}">
 		<property name="position">
-			<value>150</value>
+			<value>300</value>
 		</property>
 		<property name="value">
 			<value>7</value>

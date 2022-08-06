@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-08-06 15:14:08.5946976
+// This file was automatically generated on 2022-08-06 16:16:55.3062349
 
 // FlightAudio.reds
 
@@ -18,6 +18,7 @@ public class FlightAudioUpdate {
   public let water: Float;
   public let roll: Float;
   public let pitch: Float;
+  public let sway: Float;
 }
 
 public native class FlightAudio {
@@ -27,8 +28,8 @@ public native class FlightAudio {
   public native func Play(eventName: String) -> Void;
   public native func Stop(emitterName: String) -> Void;
   // public native func Update(emitterName: String, eventLocation: Vector3, eventForward: Vector3, eventUp: Vector3, volume: Float) -> Void;
-  public native func Update(emitterName: String, eventLocation: Vector4, volume: Float, update: ref<FlightAudioUpdate>) -> Void;
-  public static native func UpdateListener(position: Vector4, forward: Vector4, up: Vector4) -> Void;
+  public native func Update(emitterName: String, eventMatrix: Matrix, volume: Float, update: ref<FlightAudioUpdate>) -> Void;
+  public static native func UpdateListener(matrix: Matrix) -> Void;
 
   public let parameters: array<String>;
 
@@ -53,7 +54,8 @@ public native class FlightAudio {
       "damage",
       "water",
       "roll",
-      "pitch"
+      "pitch",
+      "sway"
     ];
 
     self.m_positionProviders = new inkHashMap();
@@ -983,6 +985,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
       // more responsive-sounding
       this.audioUpdate.surge = this.sys.ctlr.surge.GetInput() * ratio;
       this.audioUpdate.yaw = this.sys.ctlr.yaw.GetInput() * ratio;
+      this.audioUpdate.sway = this.sys.ctlr.sway.GetInput() * ratio;
       if IsDefined(this.GetFlightMode() as FlightModeDrone) {
         this.audioUpdate.lift = this.sys.ctlr.lift.GetInput() * ratio;
         this.audioUpdate.roll = this.sys.ctlr.roll.GetInput() * ratio;
@@ -1029,14 +1032,14 @@ public class FlightComponent extends ScriptableDeviceComponent {
       warningVolume = 0.0;
       if this.isPlayerMounted {
         // this.sys.audio.Update("playerVehicle", Vector4.EmptyVector(), engineVolume);
-        this.sys.audio.Update("windLeft", Vector4.EmptyVector(), windVolume, this.audioUpdate);
-        this.sys.audio.Update("windRight", Vector4.EmptyVector(), windVolume, this.audioUpdate);
+        this.sys.audio.Update("windLeft", Matrix.Identity(), windVolume, this.audioUpdate);
+        this.sys.audio.Update("windRight", Matrix.Identity(), windVolume, this.audioUpdate);
       }
       if this.active {
-        this.sys.audio.Update("vehicle" + this.GetUniqueID(), Vector4.EmptyVector(), engineVolume, this.audioUpdate);
+        this.sys.audio.Update("vehicle" + this.GetUniqueID(), Matrix.Identity(), engineVolume, this.audioUpdate);
       }
       if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() && this.alarmIsPlaying {
-        this.sys.audio.Update("vehicleDestroyed" + this.GetUniqueID(), Vector4.EmptyVector(), warningVolume, this.audioUpdate);
+        this.sys.audio.Update("vehicleDestroyed" + this.GetUniqueID(), Matrix.Identity(), warningVolume, this.audioUpdate);
       }
       // this.sys.audio.Update("leftFront", Vector4.EmptyVector(), engineVolume);
       // this.sys.audio.Update("rightFront", Vector4.EmptyVector(), engineVolume);
@@ -1064,7 +1067,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
     // let listenerMatrix = (this.sys.ctlr.player.FindComponentByName(n"soundListener") as IPlacedComponent).GetLocalToWorld();
     let listenerMatrix = this.sys.tppCamera.GetLocalToWorld();
-    FlightAudio.UpdateListener(Matrix.GetTranslation(listenerMatrix), Matrix.GetAxisY(listenerMatrix), Matrix.GetAxisZ(listenerMatrix));
+    // FlightAudio.UpdateListener(Matrix.GetTranslation(listenerMatrix), Matrix.GetAxisY(listenerMatrix), Matrix.GetAxisZ(listenerMatrix));
+    FlightAudio.UpdateListener(listenerMatrix);
 
     this.audioUpdate.speed = this.stats.d_speed;
     this.audioUpdate.yawDiff = Vector4.GetAngleDegAroundAxis(this.stats.d_forward, this.stats.d_direction, this.stats.d_up);
@@ -1078,16 +1082,16 @@ public class FlightComponent extends ScriptableDeviceComponent {
     // this.sys.audio.Update("rightRear", rightRearPosition, engineVolume);
     if this.isPlayerMounted {
       this.audioUpdate.inside = this.sys.ctlr.isTPP ? MaxF(0.0, this.audioUpdate.inside - timeDelta * 4.0) : MinF(1.0, this.audioUpdate.inside + timeDelta * 4.0);
-      this.sys.audio.Update("windLeft", windLeftPosition, windVolume, this.audioUpdate);
-      this.sys.audio.Update("windRight", windRightPosition, windVolume, this.audioUpdate);
+      this.sys.audio.Update("windLeft", Matrix.BuiltTranslation(windLeftPosition), windVolume, this.audioUpdate);
+      this.sys.audio.Update("windRight",  Matrix.BuiltTranslation(windRightPosition), windVolume, this.audioUpdate);
     } else {
       this.audioUpdate.inside = 0.0;
     }
     if this.active {
-      this.sys.audio.Update("vehicle" + this.GetUniqueID(), this.GetVehicle().GetWorldPosition(), engineVolume, this.audioUpdate);
+      this.sys.audio.Update("vehicle" + this.GetUniqueID(), this.GetVehicle().GetLocalToWorld(), engineVolume, this.audioUpdate);
     }
     if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() && this.alarmIsPlaying {
-      this.sys.audio.Update("vehicleDestroyed" + this.GetUniqueID(), this.GetVehicle().GetWorldPosition(), warningVolume, this.audioUpdate);
+      this.sys.audio.Update("vehicleDestroyed" + this.GetUniqueID(), this.GetVehicle().GetLocalToWorld(), warningVolume, this.audioUpdate);
     }
   }
 

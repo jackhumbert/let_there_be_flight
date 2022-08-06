@@ -11,6 +11,7 @@ public class FlightAudioUpdate {
   public let water: Float;
   public let roll: Float;
   public let pitch: Float;
+  public let sway: Float;
 }
 
 public native class FlightAudio {
@@ -20,8 +21,8 @@ public native class FlightAudio {
   public native func Play(eventName: String) -> Void;
   public native func Stop(emitterName: String) -> Void;
   // public native func Update(emitterName: String, eventLocation: Vector3, eventForward: Vector3, eventUp: Vector3, volume: Float) -> Void;
-  public native func Update(emitterName: String, eventLocation: Vector4, volume: Float, update: ref<FlightAudioUpdate>) -> Void;
-  public static native func UpdateListener(position: Vector4, forward: Vector4, up: Vector4) -> Void;
+  public native func Update(emitterName: String, eventMatrix: Matrix, volume: Float, update: ref<FlightAudioUpdate>) -> Void;
+  public static native func UpdateListener(matrix: Matrix) -> Void;
 
   public let parameters: array<String>;
 
@@ -46,7 +47,8 @@ public native class FlightAudio {
       "damage",
       "water",
       "roll",
-      "pitch"
+      "pitch",
+      "sway"
     ];
 
     self.m_positionProviders = new inkHashMap();

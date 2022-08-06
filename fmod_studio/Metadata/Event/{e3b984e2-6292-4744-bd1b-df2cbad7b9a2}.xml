@@ -523,7 +523,7 @@
 			<value>true</value>
 		</property>
 		<property name="length">
-			<value>150</value>
+			<value>300</value>
 		</property>
 		<property name="volume">
 			<value>-26.5</value>
@@ -2061,7 +2061,7 @@
 	</object>
 	<object class="AutomationPoint" id="{8579b7d7-f558-43e1-83a8-19bdb5ca8646}">
 		<property name="position">
-			<value>149.41075211864407</value>
+			<value>298.82150423728814</value>
 		</property>
 		<property name="value">
 			<value>8</value>
@@ -2251,7 +2251,7 @@
 	</object>
 	<object class="AutomationPoint" id="{dc18a94d-0f3c-4db9-a7a5-2df8fde5bf5f}">
 		<property name="position">
-			<value>148.51694915254237</value>
+			<value>297.03389830508473</value>
 		</property>
 		<property name="value">
 			<value>1</value>
@@ -2270,7 +2270,7 @@
 	</object>
 	<object class="AutomationPoint" id="{8718576e-4304-45d4-98b9-647525b8bc4c}">
 		<property name="position">
-			<value>22.5</value>
+			<value>45</value>
 		</property>
 		<property name="value">
 			<value>-24</value>
@@ -2294,7 +2294,7 @@
 	</object>
 	<object class="AutomationPoint" id="{bba442e0-3d72-4193-93f7-a905a031fd8e}">
 		<property name="position">
-			<value>150</value>
+			<value>300</value>
 		</property>
 		<property name="value">
 			<value>30</value>
@@ -2310,7 +2310,7 @@
 	</object>
 	<object class="AutomationPoint" id="{1f21a79d-4c54-4f8d-a2ca-18cc097e3303}">
 		<property name="position">
-			<value>148.71451167737024</value>
+			<value>297.42902335474048</value>
 		</property>
 		<property name="value">
 			<value>20</value>
@@ -2329,7 +2329,7 @@
 	</object>
 	<object class="AutomationPoint" id="{7eb4c8a8-0e2d-46cb-8baf-d7e077fa1d4d}">
 		<property name="position">
-			<value>150</value>
+			<value>300</value>
 		</property>
 		<property name="value">
 			<value>0.0599999987</value>
@@ -2348,7 +2348,7 @@
 	</object>
 	<object class="AutomationPoint" id="{e5ac711a-4892-44ab-a3e7-3e6f6e41b41b}">
 		<property name="position">
-			<value>15</value>
+			<value>30</value>
 		</property>
 		<property name="value">
 			<value>0.959999979</value>

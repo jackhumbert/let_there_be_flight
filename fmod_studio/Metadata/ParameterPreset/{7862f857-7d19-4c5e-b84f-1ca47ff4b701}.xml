@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <objects serializationModel="Studio.02.02.00">
-	<object class="ParameterPreset" id="{93311843-1289-4ac4-a45c-6e3ddfff1b95}">
+	<object class="ParameterPreset" id="{7862f857-7d19-4c5e-b84f-1ca47ff4b701}">
 		<property name="name">
-			<value>speed</value>
+			<value>sway</value>
 		</property>
 		<relationship name="folder">
 			<destination>{37bcb955-bb46-4db0-96d9-38f1f6d86753}</destination>
 		</relationship>
 		<relationship name="parameter">
-			<destination>{c5ab9198-78fe-4473-ab02-0304f0a3bffb}</destination>
+			<destination>{7dd3b729-19fe-4dd1-b85d-5de582a93fe9}</destination>
 		</relationship>
 	</object>
-	<object class="GameParameter" id="{c5ab9198-78fe-4473-ab02-0304f0a3bffb}">
-		<property name="maximum">
-			<value>300</value>
+	<object class="GameParameter" id="{7dd3b729-19fe-4dd1-b85d-5de582a93fe9}">
+		<property name="minimum">
+			<value>-1</value>
 		</property>
 		<property name="initialValue">
 			<value>0</value>
 		</property>
 		<property name="seekSpeed">
-			<value>1400</value>
+			<value>3.7999999523162842</value>
 		</property>
 	</object>
 </objects>
