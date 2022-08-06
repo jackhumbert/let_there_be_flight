@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-08-06 14:36:15.2459100
+// This file was automatically generated on 2022-08-06 15:14:08.5946976
 
 // FlightAudio.reds
 
@@ -4004,10 +4004,12 @@ public abstract class FlightModeStandard extends FlightMode {
 
     // pitchCorrection = this.component.pitchPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(normal, FlightUtils.Forward())) + this.lift.GetValue() * this.pitchWithLift, timeDelta, 10.0) + this.pitch.GetValue() / 10.0;
     // rollCorrection = this.component.rollPID.GetCorrectionClamped(FlightUtils.IdentCurve(Vector4.Dot(normal, FlightUtils.Right())), timeDelta, 10.0) + this.yaw.GetValue() * this.rollWithYaw + this.roll.GetValue() / 10.0;
-    let pitchDegOff = 90.0 - AbsF(Vector4.GetAngleDegAroundAxis(normal, this.component.stats.d_forward, this.component.stats.d_right));
-    pitchDegOff += this.component.pitch * this.standardModePitchInputAngle;
-    let rollDegOff = 90.0 - AbsF(Vector4.GetAngleDegAroundAxis(normal, this.component.stats.d_right, this.component.stats.d_forward));
-    rollDegOff += this.component.roll * this.standardModeRollInputAngle;
+    let pitchDegOffNormal = 90.0 - AbsF(Vector4.GetAngleDegAroundAxis(normal, this.component.stats.d_forward, this.component.stats.d_right));
+    let pitchDegOffInput = this.component.pitch * this.standardModePitchInputAngle;
+    let pitchDegOff = pitchDegOffNormal + pitchDegOffInput;
+    let rollDegOffNormal = 90.0 - AbsF(Vector4.GetAngleDegAroundAxis(normal, this.component.stats.d_right, this.component.stats.d_forward));
+    let rollDegOffInput = this.component.roll * this.standardModeRollInputAngle;
+    let rollDegOff = rollDegOffNormal + rollDegOffInput;
     if AbsF(pitchDegOff) < 120.0  {
       // pitchCorrection = this.component.pitchPID.GetCorrectionClamped(pitchDegOff / 90.0 + this.lift.GetValue() * this.pitchWithLift, timeDelta, 10.0) + this.pitch.GetValue() / 10.0;
       pitchCorrection = this.component.pitchPID.GetCorrectionClamped(pitchDegOff / 90.0, timeDelta, 10.0);// + this.component.pitch / 10.0;
@@ -4058,7 +4060,7 @@ public abstract class FlightModeStandard extends FlightMode {
     // roll correction
     this.torque.Y = (rollCorrection - angularDamp.Y);
     // yaw correction
-    this.torque.Z = -(this.component.yaw * this.standardModeYawFactor + angularDamp.Z);
+    this.torque.Z = -((this.component.yaw - (rollDegOffInput * pitchDegOffInput / 1800.0)) * this.standardModeYawFactor + angularDamp.Z );
     // rotational brake
     // torque = torque + (angularDamp);
 
