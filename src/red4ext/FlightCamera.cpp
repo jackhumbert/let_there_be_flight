@@ -46,6 +46,9 @@ uintptr_t Camera::TPPCameraStatsUpdate(RED4ext::vehicle::TPPCameraComponent *cam
     if (usesRightStickInput && !camera->isUsingMouse) {
       camera->pitchDelta = 0.0;
       camera->yawDelta = 0.0;
+      //camera->lockedCamera = true;
+      //camera->pitch = 30.0;
+      //camera->yaw = 0.0;
       if (camera->slopeCorrectionOnGroundStrength != 0.0) {
         defaultSlopeCorrectionOnGroundStrength = camera->slopeCorrectionOnGroundStrength;
       }
