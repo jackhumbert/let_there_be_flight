@@ -125,10 +125,30 @@ public class FlightComponent extends ScriptableDeviceComponent {
     } else {
       hoverFlyMode.Deinitialize();
     }
-    ArrayPush(this.modes, FlightModeHover.Create(this));
-    ArrayPush(this.modes, FlightModeAutomatic.Create(this));
-    ArrayPush(this.modes, FlightModeFly.Create(this));
-    ArrayPush(this.modes, FlightModeDroneAntiGravity.Create(this));
+    let hoverMode = FlightModeHover.Create(this);
+    if hoverMode.enabled {
+      ArrayPush(this.modes, hoverMode);
+    } else {
+      hoverMode.Deinitialize();
+    }
+    let automaticMode = FlightModeAutomatic.Create(this);
+    if automaticMode.enabled {
+      ArrayPush(this.modes, automaticMode);
+    } else {
+      automaticMode.Deinitialize();
+    }
+    let flyMode = FlightModeFly.Create(this);
+    if flyMode.enabled {
+      ArrayPush(this.modes, flyMode);
+    } else {
+      flyMode.Deinitialize();
+    }
+    let agDroneMode = FlightModeDroneAntiGravity.Create(this);
+    if agDroneMode.agEnabled {
+      ArrayPush(this.modes, agDroneMode);
+    } else {
+      agDroneMode.Deinitialize();
+    }
     let droneMode = FlightModeDrone.Create(this);
     if droneMode.enabled {
       ArrayPush(this.modes, droneMode);

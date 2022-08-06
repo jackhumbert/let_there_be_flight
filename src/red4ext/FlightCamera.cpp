@@ -78,11 +78,12 @@ char __fastcall Camera::FPPCameraUpdate(RED4ext::game::FPPCameraComponent *fpp, 
   //auto fpp = reinterpret_cast<RED4ext::game::FPPCameraComponent *>(a1 - 0x120);
 
   auto fc = FlightController::FlightController::GetInstance();
-  bool usesRightStickInput = false;
+  bool lockCamera = false;
   if (fc->active) {
     auto rtti = RED4ext::CRTTISystem::Get();
     auto fcc = rtti->GetClass("FlightSystem");
     auto fs = FlightSystem::FlightSystem::GetInstance();
+    lockCamera |= fs->cameraIndex == 1;
     auto pcp = fcc->GetProperty("playerComponent");
     auto fcomp = pcp->GetValue<RED4ext::Handle<RED4ext::IScriptable>>(fs);
     auto fcompc = rtti->GetClass("FlightComponent");
@@ -91,11 +92,11 @@ char __fastcall Camera::FPPCameraUpdate(RED4ext::game::FPPCameraComponent *fpp, 
     auto result = RED4ext::CStackType(flightModeCls, &mode);
     auto stack = RED4ext::CStack(fcomp, nullptr, 0, &result, 0);
     fcompc->GetFunction("GetFlightMode")->Execute(&stack);
-    usesRightStickInput = flightModeCls->GetProperty("usesRightStickInput")->GetValue<bool>(mode);
+    lockCamera |= flightModeCls->GetProperty("usesRightStickInput")->GetValue<bool>(mode);
   }
   // once we find it
   //if (usesRightStickInput && !fpp->isUsingMouse) {
-  if (usesRightStickInput) {
+  if (lockCamera) {
     //fpp->pitchInput = 0.0;
     //fpp->yawInput = 0.0;
     fpp->yawOffset = 0.0;
@@ -113,7 +114,7 @@ char __fastcall Camera::FPPCameraUpdate(RED4ext::game::FPPCameraComponent *fpp, 
 
   auto og = FPPCameraUpdate_Original(fpp, deltaTime, deltaYaw, deltaPitch, deltaYawExternal, deltaPitchExternal, a7);
 
-  if (usesRightStickInput) {
+  if (lockCamera) {
     //fpp->animFeature->additiveCameraMovementsWeight = 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone");
     fpp->animFeature->vehicleProceduralCameraWeight = 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone");
     //fpp->animFeature->vehicleOffsetWeight = 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone");

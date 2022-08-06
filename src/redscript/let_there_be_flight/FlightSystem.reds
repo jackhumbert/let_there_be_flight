@@ -6,6 +6,9 @@ public func fs() -> ref<FlightSystem> = FlightSystem.GetInstance();
 public native class FlightSystem extends IFlightSystem {
   public static native func GetInstance() -> ref<FlightSystem>;
 
+  @runtimeProperty("offset", "0x48")
+  public native let cameraIndex: Int32;
+
   public let gameInstance: GameInstance;
   public let player: wref<PlayerPuppet>;
   public let ctlr: ref<FlightController>;

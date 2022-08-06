@@ -1,4 +1,10 @@
 public class FlightModeDroneAntiGravity extends FlightModeDrone {
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Mode Settings")
+  @runtimeProperty("ModSettings.displayName", "Anti-Gravity Drone Mode Enabled")
+  public let agEnabled: Bool = false;
+
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeDroneAntiGravity> {
     let self = new FlightModeDroneAntiGravity();
     self.Initialize(component);

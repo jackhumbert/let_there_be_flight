@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-08-06 19:12:41.8001373
+// This file was automatically generated on 2022-08-06 21:54:17.2247143
 
 // FlightAudio.reds
 
@@ -312,10 +312,30 @@ public class FlightComponent extends ScriptableDeviceComponent {
     } else {
       hoverFlyMode.Deinitialize();
     }
-    ArrayPush(this.modes, FlightModeHover.Create(this));
-    ArrayPush(this.modes, FlightModeAutomatic.Create(this));
-    ArrayPush(this.modes, FlightModeFly.Create(this));
-    ArrayPush(this.modes, FlightModeDroneAntiGravity.Create(this));
+    let hoverMode = FlightModeHover.Create(this);
+    if hoverMode.enabled {
+      ArrayPush(this.modes, hoverMode);
+    } else {
+      hoverMode.Deinitialize();
+    }
+    let automaticMode = FlightModeAutomatic.Create(this);
+    if automaticMode.enabled {
+      ArrayPush(this.modes, automaticMode);
+    } else {
+      automaticMode.Deinitialize();
+    }
+    let flyMode = FlightModeFly.Create(this);
+    if flyMode.enabled {
+      ArrayPush(this.modes, flyMode);
+    } else {
+      flyMode.Deinitialize();
+    }
+    let agDroneMode = FlightModeDroneAntiGravity.Create(this);
+    if agDroneMode.agEnabled {
+      ArrayPush(this.modes, agDroneMode);
+    } else {
+      agDroneMode.Deinitialize();
+    }
     let droneMode = FlightModeDrone.Create(this);
     if droneMode.enabled {
       ArrayPush(this.modes, droneMode);
@@ -3540,6 +3560,12 @@ public native class FlightLog {
 // FlightModeAutomatic.reds
 
 public class FlightModeAutomatic extends FlightModeStandard {
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Mode Settings")
+  @runtimeProperty("ModSettings.displayName", "Automatic Mode Enabled")
+  public let enabled: Bool = false;
+
   protected let hovering: Float;
   protected let referenceZ: Float;
 
@@ -3730,6 +3756,12 @@ public class FlightModeDrone extends FlightMode {
 // FlightModeDroneAntiGravity.reds
 
 public class FlightModeDroneAntiGravity extends FlightModeDrone {
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Mode Settings")
+  @runtimeProperty("ModSettings.displayName", "Anti-Gravity Drone Mode Enabled")
+  public let agEnabled: Bool = false;
+
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeDroneAntiGravity> {
     let self = new FlightModeDroneAntiGravity();
     self.Initialize(component);
@@ -3747,6 +3779,12 @@ public class FlightModeDroneAntiGravity extends FlightModeDrone {
 // FlightModeFly.reds
 
 public class FlightModeFly extends FlightModeStandard {
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Mode Settings")
+  @runtimeProperty("ModSettings.displayName", "Fly Mode Enabled")
+  public let enabled: Bool = false;
+
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeFly> {
     let self = new FlightModeFly();
     self.Initialize(component);
@@ -3765,6 +3803,12 @@ public class FlightModeFly extends FlightModeStandard {
 // FlightModeHover.reds
 
 public class FlightModeHover extends FlightModeStandard {
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Mode Settings")
+  @runtimeProperty("ModSettings.displayName", "Hover Mode Enabled")
+  public let enabled: Bool = false;
+
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeHover> {
     let self = new FlightModeHover();
     self.Initialize(component);
@@ -4491,6 +4535,9 @@ public func fs() -> ref<FlightSystem> = FlightSystem.GetInstance();
 public native class FlightSystem extends IFlightSystem {
   public static native func GetInstance() -> ref<FlightSystem>;
 
+  @runtimeProperty("offset", "0x48")
+  public native let cameraIndex: Int32;
+
   public let gameInstance: GameInstance;
   public let player: wref<PlayerPuppet>;
   public let ctlr: ref<FlightController>;
@@ -4638,7 +4685,6 @@ public class FlightDecisions extends VehicleTransition {
 }
 
 public class FlightEvents extends VehicleEventsTransition {
-  let flightCamera: Int32;
 
   protected func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
     FlightLog.Info("[FlightEvents] OnEnter");
@@ -4651,13 +4697,13 @@ public class FlightEvents extends VehicleEventsTransition {
     this.SetVehFppCameraParams(stateContext, scriptInterface, false);
     switch (scriptInterface.owner as VehicleObject).GetCameraManager().GetActivePerspective() {
       case vehicleCameraPerspective.FPP:
-        this.flightCamera = 0;
+        FlightSystem.GetInstance().cameraIndex = 0;
         break;
       case vehicleCameraPerspective.TPPClose:
-        this.flightCamera = 2;
+        FlightSystem.GetInstance().cameraIndex = 2;
         break;
       case vehicleCameraPerspective.TPPFar:
-        this.flightCamera = 3;
+        FlightSystem.GetInstance().cameraIndex = 3;
     };
 
     this.PauseStateMachines(stateContext, scriptInterface.executionOwner);
@@ -4725,22 +4771,22 @@ public class FlightEvents extends VehicleEventsTransition {
     camEvent = new vehicleRequestCameraPerspectiveEvent();
     switch (scriptInterface.owner as VehicleObject).GetCameraManager().GetActivePerspective() {
       case vehicleCameraPerspective.FPP:
-        if this.flightCamera == 1 {
+        if FlightSystem.GetInstance().cameraIndex == 1 {
           camEvent.cameraPerspective = vehicleCameraPerspective.TPPFar;
-          this.flightCamera = 2;
+          FlightSystem.GetInstance().cameraIndex = 2;
         } else {
           this.EnterCustomCamera(scriptInterface);
-          this.flightCamera = 1;
+          FlightSystem.GetInstance().cameraIndex = 1;
         }
         break;
       case vehicleCameraPerspective.TPPClose:
         this.ExitCustomCamera(scriptInterface);
         camEvent.cameraPerspective = vehicleCameraPerspective.FPP;
-        this.flightCamera = 3;
+        FlightSystem.GetInstance().cameraIndex = 3;
         break;
       case vehicleCameraPerspective.TPPFar:
         camEvent.cameraPerspective = vehicleCameraPerspective.TPPClose;
-        this.flightCamera = 0;
+        FlightSystem.GetInstance().cameraIndex = 0;
     };
     scriptInterface.executionOwner.QueueEvent(camEvent);
   }

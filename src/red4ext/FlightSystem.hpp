@@ -34,8 +34,9 @@ struct FlightSystem : IFlightSystem {
 
 
   static FlightSystem *GetInstance();
+  int32_t cameraIndex = 0;
   RED4ext::DynArray<RED4ext::WeakHandle<RED4ext::IScriptable>> components;
 };
-//RED4EXT_ASSERT_OFFSET(FlightSystem, components, 0x48);
+RED4EXT_ASSERT_OFFSET(FlightSystem, cameraIndex, 0x48);
 
 }  // namespace FlightSystem

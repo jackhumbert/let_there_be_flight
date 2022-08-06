@@ -95,7 +95,6 @@ public class FlightDecisions extends VehicleTransition {
 }
 
 public class FlightEvents extends VehicleEventsTransition {
-  let flightCamera: Int32;
 
   protected func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
     FlightLog.Info("[FlightEvents] OnEnter");
@@ -108,13 +107,13 @@ public class FlightEvents extends VehicleEventsTransition {
     this.SetVehFppCameraParams(stateContext, scriptInterface, false);
     switch (scriptInterface.owner as VehicleObject).GetCameraManager().GetActivePerspective() {
       case vehicleCameraPerspective.FPP:
-        this.flightCamera = 0;
+        FlightSystem.GetInstance().cameraIndex = 0;
         break;
       case vehicleCameraPerspective.TPPClose:
-        this.flightCamera = 2;
+        FlightSystem.GetInstance().cameraIndex = 2;
         break;
       case vehicleCameraPerspective.TPPFar:
-        this.flightCamera = 3;
+        FlightSystem.GetInstance().cameraIndex = 3;
     };
 
     this.PauseStateMachines(stateContext, scriptInterface.executionOwner);
@@ -182,22 +181,22 @@ public class FlightEvents extends VehicleEventsTransition {
     camEvent = new vehicleRequestCameraPerspectiveEvent();
     switch (scriptInterface.owner as VehicleObject).GetCameraManager().GetActivePerspective() {
       case vehicleCameraPerspective.FPP:
-        if this.flightCamera == 1 {
+        if FlightSystem.GetInstance().cameraIndex == 1 {
           camEvent.cameraPerspective = vehicleCameraPerspective.TPPFar;
-          this.flightCamera = 2;
+          FlightSystem.GetInstance().cameraIndex = 2;
         } else {
           this.EnterCustomCamera(scriptInterface);
-          this.flightCamera = 1;
+          FlightSystem.GetInstance().cameraIndex = 1;
         }
         break;
       case vehicleCameraPerspective.TPPClose:
         this.ExitCustomCamera(scriptInterface);
         camEvent.cameraPerspective = vehicleCameraPerspective.FPP;
-        this.flightCamera = 3;
+        FlightSystem.GetInstance().cameraIndex = 3;
         break;
       case vehicleCameraPerspective.TPPFar:
         camEvent.cameraPerspective = vehicleCameraPerspective.TPPClose;
-        this.flightCamera = 0;
+        FlightSystem.GetInstance().cameraIndex = 0;
     };
     scriptInterface.executionOwner.QueueEvent(camEvent);
   }

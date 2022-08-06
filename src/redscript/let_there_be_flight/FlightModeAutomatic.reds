@@ -1,4 +1,10 @@
 public class FlightModeAutomatic extends FlightModeStandard {
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Mode Settings")
+  @runtimeProperty("ModSettings.displayName", "Automatic Mode Enabled")
+  public let enabled: Bool = false;
+
   protected let hovering: Float;
   protected let referenceZ: Float;
 
