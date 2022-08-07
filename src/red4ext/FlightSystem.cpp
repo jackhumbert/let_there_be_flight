@@ -17,7 +17,51 @@
 #include "stdafx.hpp"
 #include "LoadResRef.hpp"
 
+struct StaticVariable {
+  virtual void __fastcall sub_00() = 0;                           // 00
+  virtual bool __fastcall Print(RED4ext::CString*) = 0;           // 08
+  virtual bool __fastcall GetValue(void*, char) = 0;              // 10
+  virtual void __fastcall Parse(RED4ext::CString *) = 0;          // 18
+  virtual void __fastcall Set(void*, char) = 0;                   // 20
+  virtual bool __fastcall PrintDefault(RED4ext::CString *) = 0;   // 28
+  virtual void __fastcall GetDefaultValue(void*, char) = 0;       // 30
+  virtual bool __fastcall GetUnk1(void*, char) = 0;               // 38
+  virtual bool __fastcall GetUnk2(void*, char) = 0;               // 40
+  virtual bool __fastcall GetUnk3() = 0;                          // 48
+  virtual bool __fastcall sub_50() = 0;
+  virtual bool __fastcall sub_58() = 0;
+  virtual bool __fastcall RestoreDefault() = 0;
+
+  const char *variableName;
+  const char *categoryName;
+  uint64_t unk18;
+  uint64_t unk20;
+  uint8_t values;
+};
+
+struct StaticVariableBool : StaticVariable {
+  bool value;
+  bool unk1;
+  bool unk2;
+  bool defaultValue;
+  bool unk3;
+};
+
+struct StaticVariableFloat : StaticVariable {
+  float value;
+  float unk1;
+  float unk2;
+  float defaultValue;
+  bool unk3;
+};
+
 namespace FlightSystem {
+
+RED4ext::RelocPtr<StaticVariableBool> PhysXClampHugeImpacts(0x4782878);
+RED4ext::RelocPtr<StaticVariableBool> PhysXClampHugeSpeeds(0x47827F8);
+RED4ext::RelocPtr<StaticVariableBool> AirControlCarRollHelper(0x47818C8);
+RED4ext::RelocPtr<StaticVariableFloat> ForceMoveToMaxLinearSpeed(0x4781A40);
+RED4ext::RelocPtr<StaticVariableBool> physicsCCD(0x4780960);
 
 RED4ext::TTypedClass<FlightSystem> icls("IFlightSystem");
 RED4ext::TTypedClass<FlightSystem> cls("FlightSystem");
@@ -89,6 +133,18 @@ void FlightSystem::sub_150(void * a1, uint64_t a2, uint64_t a3) {
   //r->Fetch();
   //RED4ext::ResourceLoader::Get();
   LoadResRef<bool>(&r->path, &r->token, false);
+
+  PhysXClampHugeImpacts.GetAddr()->value = false;
+  PhysXClampHugeSpeeds.GetAddr()->value = false;
+  AirControlCarRollHelper.GetAddr()->value = false;
+  physicsCCD.GetAddr()->value = true;
+  ForceMoveToMaxLinearSpeed.GetAddr()->value = 100.0;
+  //physicsCCD = true;
+
+  
+  spdlog::info("[FlightSystem] Settings updates: {}, {}, {}, {}, {}", PhysXClampHugeImpacts.GetAddr()->value,
+               PhysXClampHugeSpeeds.GetAddr()->value, AirControlCarRollHelper.GetAddr()->value,
+               ForceMoveToMaxLinearSpeed.GetAddr()->value, physicsCCD.GetAddr()->value);
 }
 
 bool FlightSystem::sub_158() {
