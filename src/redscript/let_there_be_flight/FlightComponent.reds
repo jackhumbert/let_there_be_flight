@@ -1,6 +1,7 @@
 public class FlightComponent extends ScriptableDeviceComponent {
   private let sys: ref<FlightSystem>;
-  public let fx: ref<FlightFx>;
+  // public let fx: ref<FlightFx>;
+  public let thrusters: array<ref<FlightThruster>>;
   private let helper: ref<vehicleFlightHelper>;
   private let stats: ref<FlightStats>;
 
@@ -110,7 +111,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
     this.sys = FlightSystem.GetInstance();
     this.sqs = GameInstance.GetSpatialQueriesSystem(this.GetVehicle().GetGame());
-    this.fx = FlightFx.Create(this);
+    // this.fx = FlightFx.Create(this);
+    // this.thrusters = FlightThruster.CreateThrusters(this);
     
     // this.helper = this.GetVehicle().AddFlightHelper();
     // this.stats = FlightStats.Create(this.GetVehicle());
@@ -382,7 +384,12 @@ public class FlightComponent extends ScriptableDeviceComponent {
       this.sys.ctlr.ui.Setup(this.stats);
 
       this.SetupTires();
-      this.fx.Start();
+      if ArraySize(this.thrusters) == 0 {
+        this.thrusters = FlightThruster.CreateThrusters(this);
+      }
+      for thruster in this.thrusters {
+        thruster.Start();
+      }
       // these stop engine noises if they were already playing?
       this.GetVehicle().TurnEngineOn(false);
       // this.GetVehicle().TurnOn(true);
@@ -506,7 +513,9 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
 
     // process user-inputted force/torque in visuals/audio
-    this.fx.Update(force, torque);
+    for thruster in this.thrusters {
+      thruster.Update(force, torque);
+    }
     this.UpdateAudioParams(timeDelta, force, torque);
     
     if this.isPlayerMounted {
@@ -568,7 +577,9 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
   public func Deactivate(silent: Bool) -> Void{
     this.active = false;
-    this.fx.Stop();
+    for thruster in this.thrusters {
+      thruster.Stop();
+    }
 
     if this.isDestroyed && this.hasExploded && this.alarmIsPlaying {
         this.sys.audio.Stop("vehicleDestroyed" + this.GetUniqueID());

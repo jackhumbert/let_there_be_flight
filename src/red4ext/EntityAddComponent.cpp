@@ -217,6 +217,20 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
           }
           {
             auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+            slot->boneName = "swingarm_front_left_b";
+            slot->slotName = "thruster_front_left_b";
+            sc->slots.EmplaceBack(*slot);
+            sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
+          }
+          {
+            auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+            slot->boneName = "swingarm_front_right_b";
+            slot->slotName = "thruster_front_right_b";
+            sc->slots.EmplaceBack(*slot);
+            sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
+          }
+          {
+            auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
             slot->boneName = "swingarm_back_left";
             slot->slotName = "thruster_back_left";
             sc->slots.EmplaceBack(*slot);
@@ -237,73 +251,25 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
 
     if (vcc != NULL) {
       {
-          // SlotComponent
-          // auto sc = (RED4ext::ent::SlotComponent *)rtti->GetClass("entSlotComponent")->AllocInstance();
-          // sc->name = "thruster_slots";
-          // auto htb = (RED4ext::ent::HardTransformBinding
-          // *)rtti->GetClass("entHardTransformBinding")->AllocInstance(); htb->bindName = "deformation_rig";
-          // sc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
-
-          //{
-          //  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
-          //  slot->boneName = "swingarm_front_left";
-          //  slot->slotName = "thruster_front_left";
-          //  sc->slots.EmplaceBack(*slot);
-          //  sc->slotIndexLookup.Emplace(slot->slotName, 0);
-          //}
-          //{
-          //  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
-          //  slot->boneName = "swingarm_front_right";
-          //  slot->slotName = "thruster_front_right";
-          //  sc->slots.EmplaceBack(*slot);
-          //  sc->slotIndexLookup.Emplace(slot->slotName, 1);
-          //}
-          //{
-          //  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
-          //  slot->boneName = "swingarm_back_left";
-          //  slot->slotName = "thruster_back_left";
-          //  sc->slots.EmplaceBack(*slot);
-          //  sc->slotIndexLookup.Emplace(slot->slotName, 2);
-          //}
-          //{
-          //  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
-          //  slot->boneName = "swingarm_back_right";
-          //  slot->slotName = "thruster_back_right";
-          //  sc->slots.EmplaceBack(*slot);
-          //  sc->slotIndexLookup.Emplace(slot->slotName, 3);
-          //}
-
-          // entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::SlotComponent>(sc));
-      }
-
-      {
         auto fl = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterFL",
                                        "thruster_front_left");
         entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(fl));
         AddToController(rtti, vcc, fl);
 
-        // auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
-        // mc->mesh.ref =
-        //     (RED4ext::CName)"base\\weapons\\turrets\\maxtac_turret\\entities\\meshes\\w_turret__maxtac_turret__base1_guns.mesh";
-        // mc->visualScale.X = 1.0;
-        // mc->visualScale.Y = 1.0;
-        // mc->visualScale.Z = 1.0;
-        // mc->name = "FunGun";
-        // mc->motionBlurScale = 0.1;
-        // mc->meshAppearance = "default";
-        // mc->objectTypeID = RED4ext::ERenderObjectType::ROT_Vehicle;
-        // mc->LODMode = RED4ext::ent::MeshComponentLODMode::Appearance;
-        // auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->AllocInstance();
-        // htb->bindName = "vehicle_slots";
-        // htb->slotName = "gun_front_left";
-        // mc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
-        // entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::MeshComponent>(mc));
-        // AddToController(rtti, vcc, mc);
-
         auto fr = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterFR",
                                        "thruster_front_right");
         entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(fr));
         AddToController(rtti, vcc, fr);
+
+        auto flb = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterFLB",
+                                       "thruster_front_left_b");
+        entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(flb));
+        AddToController(rtti, vcc, flb);
+
+        auto frb = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterFRB",
+                                       "thruster_front_right_b");
+        entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(frb));
+        AddToController(rtti, vcc, frb);
 
         auto bl = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterBL",
                                        "thruster_back_left");
@@ -315,8 +281,8 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
         entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(br));
         AddToController(rtti, vcc, br);
 
-        AddResourceToController(vcc, "base\\environment\\architecture\\common\\int\\int_common_techpanel_a\\textures\\ml_int_"
-                                     "common_techpanel_walls_a_grey_dark.mi");
+        //AddResourceToController(vcc, "base\\environment\\architecture\\common\\int\\int_common_techpanel_a\\textures\\ml_int_"
+        //                             "common_techpanel_walls_a_grey_dark.mi");
       }
     }
 

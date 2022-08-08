@@ -173,7 +173,6 @@ public native class FlightSettings extends IScriptable {
     FlightSettings.SetFloat("pitchWithLift", 0.0);
     FlightSettings.SetFloat("pitchWithSurge", 0.0);
 
-    FlightSettings.SetFloat("thrusterFactor", 0.05);
     FlightSettings.SetFloat("yawD", 3.0);
   }
 }
