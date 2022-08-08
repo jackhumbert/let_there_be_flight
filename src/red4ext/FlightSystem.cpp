@@ -11,57 +11,23 @@
 #include <fmod.hpp>
 #include <fmod_studio.hpp>
 #include <iostream>
+#include <RED4ext/GameOptions.hpp>
 
 #include "FlightLog.hpp"
 #include "Utils.hpp"
 #include "stdafx.hpp"
 #include "LoadResRef.hpp"
-
-struct StaticVariable {
-  virtual void __fastcall sub_00() = 0;                           // 00
-  virtual bool __fastcall Print(RED4ext::CString*) = 0;           // 08
-  virtual bool __fastcall GetValue(void*, char) = 0;              // 10
-  virtual void __fastcall Parse(RED4ext::CString *) = 0;          // 18
-  virtual void __fastcall Set(void*, char) = 0;                   // 20
-  virtual bool __fastcall PrintDefault(RED4ext::CString *) = 0;   // 28
-  virtual void __fastcall GetDefaultValue(void*, char) = 0;       // 30
-  virtual bool __fastcall GetUnk1(void*, char) = 0;               // 38
-  virtual bool __fastcall GetUnk2(void*, char) = 0;               // 40
-  virtual bool __fastcall GetUnk3() = 0;                          // 48
-  virtual bool __fastcall sub_50() = 0;
-  virtual bool __fastcall sub_58() = 0;
-  virtual bool __fastcall RestoreDefault() = 0;
-
-  const char *variableName;
-  const char *categoryName;
-  uint64_t unk18;
-  uint64_t unk20;
-  uint8_t values;
-};
-
-struct StaticVariableBool : StaticVariable {
-  bool value;
-  bool unk1;
-  bool unk2;
-  bool defaultValue;
-  bool unk3;
-};
-
-struct StaticVariableFloat : StaticVariable {
-  float value;
-  float unk1;
-  float unk2;
-  float defaultValue;
-  bool unk3;
-};
+#include "FlightAudio.hpp"
+#include <RED4ext/Scripting/Natives/Generated/Matrix.hpp>
 
 namespace FlightSystem {
 
-RED4ext::RelocPtr<StaticVariableBool> PhysXClampHugeImpacts(0x4782878);
-RED4ext::RelocPtr<StaticVariableBool> PhysXClampHugeSpeeds(0x47827F8);
-RED4ext::RelocPtr<StaticVariableBool> AirControlCarRollHelper(0x47818C8);
-RED4ext::RelocPtr<StaticVariableFloat> ForceMoveToMaxLinearSpeed(0x4781A40);
-RED4ext::RelocPtr<StaticVariableBool> physicsCCD(0x4780960);
+RED4ext::RelocPtr<RED4ext::GameOptionBool> PhysXClampHugeImpacts(0x4782878);
+RED4ext::RelocPtr<RED4ext::GameOptionBool> PhysXClampHugeSpeeds(0x47827F8);
+RED4ext::RelocPtr<RED4ext::GameOptionBool> AirControlCarRollHelper(0x47818C8);
+RED4ext::RelocPtr<RED4ext::GameOptionFloat> ForceMoveToMaxLinearSpeed(0x4781A40);
+RED4ext::RelocPtr<RED4ext::GameOptionBool> physicsCCD(0x4780960);
+RED4ext::RelocPtr<RED4ext::GameOptionBool> EnableSmoothWheelContacts(0x4781FE8);
 
 RED4ext::TTypedClass<FlightSystem> icls("IFlightSystem");
 RED4ext::TTypedClass<FlightSystem> cls("FlightSystem");
@@ -87,8 +53,27 @@ void GetInstanceScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aF
   }
 }
 
+// 1.52 RVA: 0x1C58B0 / 1857712
+/// @pattern 4C 8B DC 48 81 EC B8 00 00 00 0F 10 21 41 0F 29 73 E8 0F 28 DC 0F 59 DC C7 44 24 0C 00 00 00 00
+RED4ext::Matrix* __fastcall GetMatrixFromOrientation(RED4ext::Quaternion* q, RED4ext::Matrix* m) {
+  RED4ext::RelocFunc<decltype(&GetMatrixFromOrientation)> call(0x1C58B0);
+  return call(q, m);
+}
+
 void PrePhysics(RED4ext::Unk2* unk2, float* deltaTime, void* unkStruct) {
   //spdlog::info("[FlightSystem] PrePhysics!");
+  auto wh = FlightSystem::GetInstance()->soundListener;
+  if (!wh.Expired()) {
+    RED4ext::Matrix matrix;
+    auto h = wh.Lock();
+    auto t = h.GetPtr()->localTransform;
+    GetMatrixFromOrientation(&t.Orientation, &matrix);
+    matrix.W.X = t.Position.x.Bits * 0.0000076293945;
+    matrix.W.Y = t.Position.y.Bits * 0.0000076293945;
+    matrix.W.Z = t.Position.z.Bits * 0.0000076293945; 
+    matrix.W.W = 1.0;
+    FlightAudio::UpdateListenerMatrix(&matrix);
+  }
 }
 
  void FlightSystem::RegisterUpdates(RED4ext::UpdateManagerHolder *holder) {
@@ -134,6 +119,7 @@ void FlightSystem::sub_150(void * a1, uint64_t a2, uint64_t a3) {
   //RED4ext::ResourceLoader::Get();
   LoadResRef<bool>(&r->path, &r->token, false);
 
+  EnableSmoothWheelContacts.GetAddr()->value = false;
   PhysXClampHugeImpacts.GetAddr()->value = false;
   PhysXClampHugeSpeeds.GetAddr()->value = false;
   AirControlCarRollHelper.GetAddr()->value = false;
@@ -141,10 +127,11 @@ void FlightSystem::sub_150(void * a1, uint64_t a2, uint64_t a3) {
   ForceMoveToMaxLinearSpeed.GetAddr()->value = 100.0;
   //physicsCCD = true;
 
-  
-  spdlog::info("[FlightSystem] Settings updates: {}, {}, {}, {}, {}", PhysXClampHugeImpacts.GetAddr()->value,
-               PhysXClampHugeSpeeds.GetAddr()->value, AirControlCarRollHelper.GetAddr()->value,
-               ForceMoveToMaxLinearSpeed.GetAddr()->value, physicsCCD.GetAddr()->value);
+  spdlog::info("[FlightSystem] PhysXClampHugeImpacts: {}", PhysXClampHugeImpacts.GetAddr()->value);
+  spdlog::info("[FlightSystem] PhysXClampHugeSpeeds: {}", PhysXClampHugeSpeeds.GetAddr()->value);
+  spdlog::info("[FlightSystem] AirControlCarRollHelper: {}", AirControlCarRollHelper.GetAddr()->value);
+  spdlog::info("[FlightSystem] ForceMoveToMaxLinearSpeed: {}", ForceMoveToMaxLinearSpeed.GetAddr()->value);
+  spdlog::info("[FlightSystem] physicsCCD: {}", physicsCCD.GetAddr()->value);
 }
 
 bool FlightSystem::sub_158() {

@@ -165,6 +165,14 @@ void UpdateListener(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame
   ERRCHECK(fmod_system->update());
 }
 
+void UpdateListenerMatrix(RED4ext::Matrix* matrix) {
+  listenerAttributes.position = {.x = matrix->W.X, .y = matrix->W.Z, .z = -matrix->W.Y};
+  listenerAttributes.up = {.x = matrix->Z.X, .y = matrix->Z.Z, .z = -matrix->Z.Y};
+  listenerAttributes.forward = {.x = matrix->Y.X, .y = matrix->Y.Z, .z = -matrix->Y.Y};
+  ERRCHECK(fmod_system->setListenerAttributes(0, &listenerAttributes));
+  ERRCHECK(fmod_system->update());
+}
+
 void Update(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, void *aOut, int64_t a4) {
   auto self = reinterpret_cast<FlightAudio *>(aContext);
 

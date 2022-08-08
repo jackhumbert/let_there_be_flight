@@ -9,6 +9,9 @@ public native class FlightSystem extends IFlightSystem {
   @runtimeProperty("offset", "0x48")
   public native let cameraIndex: Int32;
 
+  @runtimeProperty("offset", "0x50")
+  public native let soundListener: wref<IPlacedComponent>;
+
   public let gameInstance: GameInstance;
   public let player: wref<PlayerPuppet>;
   public let ctlr: ref<FlightController>;
@@ -21,6 +24,7 @@ public native class FlightSystem extends IFlightSystem {
   public func Setup(player: ref<PlayerPuppet>) -> Void {
     // FlightLog.Info("[FlightSystem] FlightSettings Created");
     this.player = player;
+    // this.soundListener = player.FindComponentByName(n"soundListener") as IPlacedComponent;
     this.gameInstance = player.GetGame();
     if !IsDefined(this.audio) {
       this.audio = FlightAudio.Create();
@@ -28,6 +32,7 @@ public native class FlightSystem extends IFlightSystem {
     }
     this.ctlr = FlightController.GetInstance();
     this.tppCamera = player.FindComponentByName(n"vehicleTPPCamera") as vehicleTPPCameraComponent;
+    this.soundListener = this.tppCamera;
   }
 
 //   public static func Get(gameInstance: GameInstance) -> ref<FlightSystem> {

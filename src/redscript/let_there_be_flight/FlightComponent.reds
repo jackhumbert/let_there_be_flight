@@ -560,6 +560,12 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.Deactivate(evt.silent);
   }
 
+  protected cb func OnFlightFxCleanedUp(evt: ref<FlightFxCleanedUpEvent>) -> Bool {
+    if !this.active {
+      this.hasUpdate = false;
+    }
+  }
+
   public func Deactivate(silent: Bool) -> Void{
     this.active = false;
     this.fx.Stop();
@@ -573,7 +579,8 @@ public class FlightComponent extends ScriptableDeviceComponent {
     }
 
     if !FlightSettings.GetInstance().generalApplyFlightPhysicsWhenDeactivated {
-      this.hasUpdate = false;
+      let evt = new FlightFxCleanedUpEvent();
+      GameInstance.GetDelaySystem(this.GetVehicle().GetGame()).DelayEvent(this.GetVehicle(), evt, evt.delay);
     }
 
     if this.isPlayerMounted {
@@ -898,10 +905,10 @@ public class FlightComponent extends ScriptableDeviceComponent {
     let windLeftPosition = this.sys.audio.GetPosition(n"window_front_left_a"); // - (this.stats.d_velocity * timeDelta);
     let windRightPosition = this.sys.audio.GetPosition(n"window_front_right_a"); //- (this.stats.d_velocity * timeDelta);
 
-    // let listenerMatrix = (this.sys.ctlr.player.FindComponentByName(n"soundListener") as IPlacedComponent).GetLocalToWorld();
-    let listenerMatrix = this.sys.tppCamera.GetLocalToWorld();
+    // let listenerMatrix = (this.sys.player.FindComponentByName(n"soundListener") as IPlacedComponent).GetLocalToWorld();
+    // let listenerMatrix = this.sys.tppCamera.GetLocalToWorld();
     // FlightAudio.UpdateListener(Matrix.GetTranslation(listenerMatrix), Matrix.GetAxisY(listenerMatrix), Matrix.GetAxisZ(listenerMatrix));
-    FlightAudio.UpdateListener(listenerMatrix);
+    // FlightAudio.UpdateListener(listenerMatrix);
 
     this.audioUpdate.speed = this.stats.d_speed;
     this.audioUpdate.yawDiff = Vector4.GetAngleDegAroundAxis(this.stats.d_forward, this.stats.d_direction, this.stats.d_up);
