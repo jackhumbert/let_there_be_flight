@@ -8,23 +8,28 @@ public class FlightAudioUpdate {
   public let brake: Float;
   public let inside: Float;
   public let damage: Float;
-  public let water: Float;
   public let roll: Float;
   public let pitch: Float;
   public let sway: Float;
 }
 
-public native class FlightAudio {
+
+public native class FlightAudio extends IScriptable {
   // defined in red4ext part
   public native func Start(emitterName: String, eventName: String) -> Void;
   public native func StartWithPitch(emitterName: String, eventName: String, pitch: Float) -> Void;
   public native func Play(eventName: String) -> Void;
   public native func Stop(emitterName: String) -> Void;
   // public native func Update(emitterName: String, eventLocation: Vector3, eventForward: Vector3, eventUp: Vector3, volume: Float) -> Void;
-  public native func Update(emitterName: String, eventMatrix: Matrix, volume: Float, update: ref<FlightAudioUpdate>) -> Void;
-  public static native func UpdateListener(matrix: Matrix) -> Void;
+  public native func UpdateEvent(emitterName: String, eventMatrix: Matrix, volume: Float, update: ref<FlightAudioUpdate>) -> Void;
+  public native func UpdateEventMatrix(emitterName: String, eventMatrix: Matrix) -> Void;
+  public native func UpdateListenerMatrix(matrix: Matrix) -> Void;
+  public native func UpdateParameter(parameterName: String, value: Float) -> Void;
 
-  public let parameters: array<String>;
+
+  public static func Get() -> ref<FlightAudio> {
+    return FlightSystem.GetInstance().audio;
+  }
 
   private let m_positionProviders: ref<inkHashMap>;
   private let m_orientationProviders: ref<inkHashMap>;
@@ -66,22 +71,6 @@ public native class FlightAudio {
   public static func Create() -> ref<FlightAudio> {
     let self = new FlightAudio();
 
-    self.parameters = [
-      "speed",
-      "surge",
-      "yawDiff",
-      "lift",
-      "yaw",
-      "pitchDiff",
-      "brake",
-      "inside",
-      "damage",
-      "water",
-      "roll",
-      "pitch",
-      "sway"
-    ];
-
     self.m_positionProviders = new inkHashMap();
     self.m_positions = new inkHashMap();
     self.m_orientationProviders = new inkHashMap();
@@ -97,12 +86,12 @@ public native class FlightAudio {
       // n"bumper_front_b",
       // n"mirror_front_left",
       // n"mirror_front_right",
-      n"wheel_front",
-      n"wheel_back",
-      n"wheel_front_left",
-      n"wheel_front_right",
-      n"wheel_back_left",
-      n"wheel_back_right",
+      // n"wheel_front",
+      // n"wheel_back",
+      // n"wheel_front_left",
+      // n"wheel_front_right",
+      // n"wheel_back_left",
+      // n"wheel_back_right",
       // n"bumper_back",
       n"window_front_left_a",
       n"window_front_right_a"

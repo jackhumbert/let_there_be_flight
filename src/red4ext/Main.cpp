@@ -19,6 +19,7 @@
 #include <RED4ext/Scripting/Natives/ScriptGameInstance.hpp>
 #include <iostream>
 
+#include "Engine/RTTIClass.hpp"
 #include "FlightAudio.hpp"
 #include "Utils.hpp"
 #include "stdafx.hpp"
@@ -35,7 +36,6 @@
 
 RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes() {
   spdlog::info("Registering classes & types");
-  FlightAudio::RegisterTypes();
   FlightModuleFactory::GetInstance().RegisterTypes();
 }
 
@@ -316,7 +316,6 @@ void EffectSpawnerAddEffect(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
 
 RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
   spdlog::info("Registering functions");
-  FlightAudio::RegisterFunctions();
 
   FlightModuleFactory::GetInstance().PostRegisterTypes();
 
@@ -435,6 +434,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     spdlog::info("Mod address: {}", fmt::ptr(modPtr));
 
     RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
+    Engine::RTTIRegistrar::RegisterPending();
 
     RED4ext::GameState initState;
     initState.OnEnter = nullptr;

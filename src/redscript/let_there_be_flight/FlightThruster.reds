@@ -135,7 +135,7 @@ public class FlightThruster {
     // this.retroFx.AttachToSlot(this.component.GetVehicle(), entAttachmentTarget.Transform, n"Base", wt_retro);
     this.retroFx.AttachToComponent(vehicle, entAttachmentTarget.Transform, this.GetComponentName(), wt_retro);
 
-    FlightSystem.GetInstance().audio.StartWithPitch(this.id, "vehicle3_TPP", this.audioPitch);
+    FlightAudio.Get().StartWithPitch(this.id, "vehicle3_TPP", this.audioPitch);
 
   }
 
@@ -184,11 +184,11 @@ public class FlightThruster {
       volume = ClampF(this.flightComponent.stats.d_speed / 100.0, 0.0, 1.0);
     }
     // this.audioUpdate.pitch = retroAmount;
-    FlightSystem.GetInstance().audio.Update(this.id, this.meshComponent.GetLocalToWorld(), volume, this.audioUpdate);
+    FlightAudio.Get().UpdateEvent(this.id, this.meshComponent.GetLocalToWorld(), volume, this.audioUpdate);
   }
 
   public func Stop() {
-    FlightSystem.GetInstance().audio.Stop(this.id);
+    FlightAudio.Get().Stop(this.id);
     if IsDefined(this.mainFx) {
       this.mainFx.BreakLoop();
     }

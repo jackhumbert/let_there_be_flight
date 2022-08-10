@@ -39,7 +39,7 @@ struct FlightSystem : IFlightSystem {
   int32_t cameraIndex = 0;
   RED4ext::WeakHandle<RED4ext::ent::IPlacedComponent> soundListener;
   RED4ext::DynArray<RED4ext::WeakHandle<RED4ext::IScriptable>> components;
-  RED4ext::Handle<FlightAudio::FlightAudio> audio;
+  RED4ext::Handle<FlightAudio> audio;
 };
 RED4EXT_ASSERT_OFFSET(FlightSystem, cameraIndex, 0x48);
 RED4EXT_ASSERT_OFFSET(FlightSystem, soundListener, 0x50);

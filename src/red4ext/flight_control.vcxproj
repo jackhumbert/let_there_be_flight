@@ -102,6 +102,7 @@
     <ClCompile Include="CustomHUDLayer.cpp" />
     <ClCompile Include="CustomOptions.cpp" />
     <ClCompile Include="DebugPrinter.cpp" />
+    <ClCompile Include="Engine\RTTIRegistrar.cpp" />
     <ClCompile Include="EntityAddComponent.cpp" />
     <ClCompile Include="FlightCamera.cpp" />
     <ClCompile Include="FlightController.cpp" />
@@ -134,6 +135,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Addresses.hpp" />
+    <ClInclude Include="Engine\Common.hpp" />
+    <ClInclude Include="Engine\RTTIClass.hpp" />
+    <ClInclude Include="Engine\RTTIEnum.hpp" />
+    <ClInclude Include="Engine\RTTIExpansion.hpp" />
+    <ClInclude Include="Engine\RTTIRegistrar.hpp" />
     <ClInclude Include="INIReader.h" />
     <ClInclude Include="RuntimeClass.hpp" />
     <ClInclude Include="ScriptDefinitions\ScriptHost.hpp" />
@@ -159,6 +165,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="..\..\deps\red4ext.sdk\include\RED4ext\.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

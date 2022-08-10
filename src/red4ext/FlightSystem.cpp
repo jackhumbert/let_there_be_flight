@@ -72,8 +72,8 @@ void PrePhysics(RED4ext::Unk2* unk2, float* deltaTime, void* unkStruct) {
     matrix.W.Y = t.Position.y.Bits * 0.0000076293945;
     matrix.W.Z = t.Position.z.Bits * 0.0000076293945; 
     matrix.W.W = 1.0;
-    FlightAudio::UpdateListenerMatrix(&matrix);
-    fs->audio->UpdateVolume(1.0);
+    fs->audio->UpdateListenerMatrix(matrix);
+    fs->audio->UpdateVolume();
   }
 }
 
