@@ -55,38 +55,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   // public let ui: wref<worlduiWidgetComponent>;
   // public let ui_info: wref<worlduiWidgetComponent>;
 
-  private let uiBlackboard: wref<IBlackboard>;
-  private let menuCallback: ref<CallbackHandle>;
-  public let isInMenu: Bool;
-
-  private let uiGameDataBlackboard: wref<IBlackboard>;
-  private let popupCallback: ref<CallbackHandle>;
-  public let isPopupShown: Bool;
   public let alarmIsPlaying: Bool;
-
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Audio Settings")
-  @runtimeProperty("ModSettings.displayName", "Engine Volume")
-  @runtimeProperty("ModSettings.step", "0.05")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "1.0")
-  public let engineVolume: Float = 1.0;
-
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Audio Settings")
-  @runtimeProperty("ModSettings.displayName", "Wind Volume")
-  @runtimeProperty("ModSettings.step", "0.05")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "1.0")
-  public let windVolume: Float = 0.6;
-
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Audio Settings")
-  @runtimeProperty("ModSettings.displayName", "Warning Volume")
-  @runtimeProperty("ModSettings.step", "0.05")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "1.0")
-  public let warningVolume: Float = 0.5;
 
   protected final const func GetVehicle() -> wref<VehicleObject> {
     return this.GetEntity() as VehicleObject;
@@ -172,24 +141,9 @@ public class FlightComponent extends ScriptableDeviceComponent {
       this.Deactivate(true);
     }
     this.hasUpdate = false;
-    if IsDefined(this.uiBlackboard) && IsDefined(this.menuCallback) {
-      this.uiBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UI_System.IsInMenu, this.menuCallback);
-    }
-    if IsDefined(this.uiGameDataBlackboard) && IsDefined(this.popupCallback) {
-      this.uiGameDataBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown, this.popupCallback);
-    }
     for mode in this.modes {
       mode.Deinitialize();
     }
-  }
-
-  protected cb func OnIsInMenu(inMenu: Bool) -> Bool {
-    this.isInMenu = inMenu;
-    this.UpdateAudioParams(1.0/60.0);
-  }
-  protected cb func OnPopupIsShown(isShown: Bool) -> Bool {
-    this.isPopupShown = isShown;
-    this.UpdateAudioParams(1.0/60.0);
   }
   
   // private final func RegisterInputListener() -> Void {
@@ -364,22 +318,6 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.GetVehicle().ScheduleAppearanceChange(this.GetVehicle().GetCurrentAppearanceName());
     if !this.active {
 
-      this.uiBlackboard = GameInstance.GetBlackboardSystem(this.sys.ctlr.gameInstance).Get(GetAllBlackboardDefs().UI_System);
-      if IsDefined(this.uiBlackboard) {
-        if !IsDefined(this.menuCallback) {
-          this.menuCallback = this.uiBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UI_System.IsInMenu, this, n"OnIsInMenu");
-          this.isInMenu = this.uiBlackboard.GetBool(GetAllBlackboardDefs().UI_System.IsInMenu);
-        }
-      }
-
-      this.uiGameDataBlackboard = GameInstance.GetBlackboardSystem(this.sys.ctlr.gameInstance).Get(GetAllBlackboardDefs().UIGameData);
-      if IsDefined(this.uiGameDataBlackboard) {
-        if !IsDefined(this.popupCallback) {
-          this.popupCallback = this.uiGameDataBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown, this, n"OnPopupIsShown");
-          this.isPopupShown = this.uiGameDataBlackboard.GetBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown);
-        }
-      }
-
       this.stats = FlightStats.Create(this.GetVehicle());
       this.sys.ctlr.ui.Setup(this.stats);
 
@@ -417,7 +355,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
         // this.sys.audio.Start("leftRear", "vehicle3_TPP");
         // this.sys.audio.Start("rightRear", "vehicle3_TPP");
       }
-      this.sys.audio.StartWithPitch("vehicle" + this.GetUniqueID(), "vehicle3_TPP", this.GetPitch());
+      // this.sys.audio.StartWithPitch("vehicle" + this.GetUniqueID(), "vehicle3_TPP", this.GetPitch());
       this.active = true;
       this.hasUpdate = true;
     }
@@ -437,7 +375,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   protected func OnUpdate(timeDelta: Float) -> Void {
     if this.GetVehicle().IsDestroyed() {
       if !this.isDestroyed {
-        this.sys.audio.StartWithPitch("vehicleDestroyed" + this.GetUniqueID(), "vehicle3_destroyed", 1.0);
+        this.sys.audio.Start("vehicleDestroyed" + this.GetUniqueID(), "vehicle3_destroyed");
         this.alarmIsPlaying = true;
         this.isDestroyed = true;
       }
@@ -605,7 +543,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
       // this.sys.audio.Stop("leftRear");
       // this.sys.audio.Stop("rightRear");
     }
-    this.sys.audio.Stop("vehicle" + this.GetUniqueID());
+    // this.sys.audio.Stop("vehicle" + this.GetUniqueID());
   }
 
   protected cb func OnGridDestruction(evt: ref<VehicleGridDestructionEvent>) -> Bool {
@@ -866,46 +804,6 @@ public class FlightComponent extends ScriptableDeviceComponent {
   }
 
   public func UpdateAudioParams(timeDelta: Float) -> Void {
-    let engineVolume = this.engineVolume;
-    let windVolume = this.windVolume;
-    let warningVolume = this.warningVolume;
-    let master = Cast<Float>((GameInstance.GetSettingsSystem(this.GetVehicle().GetGame()).GetVar(n"/audio/volume", n"MasterVolume") as ConfigVarInt).GetValue()) / 100.0;
-    let sfx = Cast<Float>((GameInstance.GetSettingsSystem(this.GetVehicle().GetGame()).GetVar(n"/audio/volume", n"SfxVolume") as ConfigVarInt).GetValue()) / 100.0;
-    engineVolume *= (master * sfx);
-    windVolume *= (master * sfx);
-    warningVolume *= (master * sfx);
-    if this.isPopupShown || this.isInMenu || GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsPausedState() ||
-      GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsTimeDilationActive(n"HubMenu") || 
-      GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsTimeDilationActive(n"WorldMap")
-      {
-      engineVolume = 0.0;
-      windVolume = 0.0;
-      warningVolume = 0.0;
-      if this.isPlayerMounted {
-        // this.sys.audio.Update("playerVehicle", Vector4.EmptyVector(), engineVolume);
-        this.sys.audio.Update("windLeft", Matrix.Identity(), windVolume, this.audioUpdate);
-        this.sys.audio.Update("windRight", Matrix.Identity(), windVolume, this.audioUpdate);
-      }
-      if this.active {
-        this.sys.audio.Update("vehicle" + this.GetUniqueID(), Matrix.Identity(), engineVolume, this.audioUpdate);
-      }
-      if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() && this.alarmIsPlaying {
-        this.sys.audio.Update("vehicleDestroyed" + this.GetUniqueID(), Matrix.Identity(), warningVolume, this.audioUpdate);
-      }
-      // this.sys.audio.Update("leftFront", Vector4.EmptyVector(), engineVolume);
-      // this.sys.audio.Update("rightFront", Vector4.EmptyVector(), engineVolume);
-      // this.sys.audio.Update("leftRear", Vector4.EmptyVector(), engineVolume);
-      // this.sys.audio.Update("rightRear", Vector4.EmptyVector(), engineVolume);
-      return;
-    }
-
-    // might need to handle just the scanning system's dilation, and the pause menu
-    if GameInstance.GetTimeSystem(this.GetVehicle().GetGame()).IsTimeDilationActive(n"radialMenu") {
-      engineVolume *= 0.1;
-      windVolume *= 0.1;
-      warningVolume *= 0.1;
-    }
-
     this.sys.audio.UpdateSlotProviders();
 
     // let leftFrontPosition = this.sys.audio.GetPosition(n"wheel_front_left") - (this.stats.d_velocity * timeDelta);
@@ -933,16 +831,16 @@ public class FlightComponent extends ScriptableDeviceComponent {
     // this.sys.audio.Update("rightRear", rightRearPosition, engineVolume);
     if this.isPlayerMounted {
       this.audioUpdate.inside = this.sys.ctlr.isTPP ? MaxF(0.0, this.audioUpdate.inside - timeDelta * 4.0) : MinF(1.0, this.audioUpdate.inside + timeDelta * 4.0);
-      this.sys.audio.Update("windLeft", Matrix.BuiltTranslation(windLeftPosition), windVolume, this.audioUpdate);
-      this.sys.audio.Update("windRight",  Matrix.BuiltTranslation(windRightPosition), windVolume, this.audioUpdate);
+      this.sys.audio.Update("windLeft", Matrix.BuiltTranslation(windLeftPosition), 1.0, this.audioUpdate);
+      this.sys.audio.Update("windRight",  Matrix.BuiltTranslation(windRightPosition), 1.0, this.audioUpdate);
     } else {
       this.audioUpdate.inside = 0.0;
     }
     if this.active {
-      this.sys.audio.Update("vehicle" + this.GetUniqueID(), this.GetVehicle().GetLocalToWorld(), engineVolume, this.audioUpdate);
+      // this.sys.audio.Update("vehicle" + this.GetUniqueID(), this.GetVehicle().GetLocalToWorld(), engineVolume, this.audioUpdate);
     }
     if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() && this.alarmIsPlaying {
-      this.sys.audio.Update("vehicleDestroyed" + this.GetUniqueID(), this.GetVehicle().GetLocalToWorld(), warningVolume, this.audioUpdate);
+      this.sys.audio.Update("vehicleDestroyed" + this.GetUniqueID(), this.GetVehicle().GetLocalToWorld(), 1.0, this.audioUpdate);
     }
   }
 

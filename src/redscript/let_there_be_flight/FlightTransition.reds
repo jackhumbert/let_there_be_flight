@@ -213,6 +213,7 @@ public class FlightEvents extends VehicleEventsTransition {
       let vwt = Matrix.GetInverted((scriptInterface.owner as VehicleObject).GetLocalToWorld());
       let v = (WorldPosition.ToVector4(WorldTransform.GetWorldPosition(roof)) * vwt) - (WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT)) * vwt);
       camera.SetLocalPosition(v + Vector4.Vector3To4(FlightSettings.GetVector3("FPVCameraOffset")));
+      camera.SetLocalOrientation(EulerAngles.ToQuat(new EulerAngles(FlightSettings.GetInstance().fpvCameraPitchOffset, 0.0, 0.0)));
     }
 
     // let workspotSystem: ref<WorkspotGameSystem> = scriptInterface.GetWorkspotSystem();
@@ -223,6 +224,7 @@ public class FlightEvents extends VehicleEventsTransition {
     let camera = (scriptInterface.executionOwner as PlayerPuppet).GetFPPCameraComponent();
     if IsDefined(camera) {
       camera.SetLocalPosition(new Vector4(0.0, 0.0, 0.0, 0.0));
+      camera.SetLocalOrientation(EulerAngles.ToQuat(new EulerAngles(0.0, 0.0, 0.0)));
     }
     // let workspotSystem: ref<WorkspotGameSystem> = scriptInterface.GetWorkspotSystem();
     // workspotSystem.SwitchSeatVehicle(scriptInterface.owner, scriptInterface.executionOwner, n"OccupantSlots", n"seat_front_left");

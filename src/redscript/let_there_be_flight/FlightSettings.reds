@@ -117,6 +117,15 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.max", "1.0")
   public let drivingDirectionCompensationSpeedCoef: Float = 0.1;
 
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Camera Settings")
+  @runtimeProperty("ModSettings.displayName", "FPV Camera Pitch Offset")
+  @runtimeProperty("ModSettings.description", "Angle in degrees")
+  @runtimeProperty("ModSettings.step", "5.0")
+  @runtimeProperty("ModSettings.min", "-60.0")
+  @runtimeProperty("ModSettings.max", "60.0")
+  public let fpvCameraPitchOffset: Float = 0.0;
+
   // public cb func OnModSettingsUpdate(variable: CName, value: Variant) {
   //   switch (variable) {
   //     case n"autoActivationHeight":

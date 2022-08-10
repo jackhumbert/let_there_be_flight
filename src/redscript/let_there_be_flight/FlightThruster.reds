@@ -22,7 +22,7 @@ public class FlightThruster {
   public let retroResRef: ResRef = r"user\\jackhumbert\\effects\\retro_thruster.effect";
   public let retroFxRes: FxResource;
   public let mainFx: ref<FxInstance>;
-  public let mainThrusterFactor: Float = 0.05;
+  // public let mainThrusterFactor: Float = 0.05;
   public let mainThrusterYawFactor: Float = 0.5;
   public let retroFx: ref<FxInstance>;
   public let retroThrusterFactor: Float = 0.1;
@@ -31,6 +31,10 @@ public class FlightThruster {
   public let isRight: Bool;
   public let isFront: Bool;
   public let isB: Bool;
+  public let id: String;
+  public let audioUpdate: ref<FlightAudioUpdate>;
+  public let audioPitch: Float;
+  public let audioPitchSeparation: Float = 0.001;
 
   public static func CreateThrusters(fc: ref<FlightComponent>) -> array<ref<FlightThruster>> {
     let thrusters: array<ref<FlightThruster>>;
@@ -85,6 +89,29 @@ public class FlightThruster {
     this.meshComponent.Toggle(false);
     this.meshComponent.SetLocalOrientation(EulerAngles.ToQuat(this.GetEulerAngles()));
 
+    this.id = "vehicle";
+    this.audioPitch = this.flightComponent.GetPitch();
+    if this.isFront {
+      this.id += "F";
+      // this.audioPitch *= 1.02;
+    } else {
+      this.id += "B";
+      // this.audioPitch *= 0.5;
+      this.audioPitch *= 2.0;
+    }
+    if this.isRight {
+      this.id += "R";
+      // this.audioPitch *= (1.0 + this.audioPitchSeparation);
+    } else {
+      this.id += "L";
+      // this.audioPitch /= (1.0 + this.audioPitchSeparation);
+    }
+    if this.isB {
+      this.id += "B";
+    }
+    this.id += this.flightComponent.GetUniqueID();
+    this.audioUpdate = new FlightAudioUpdate();
+
     return this;
   }
 
@@ -107,11 +134,22 @@ public class FlightThruster {
     this.retroFx =  GameInstance.GetFxSystem(vehicle.GetGame()).SpawnEffect(this.retroFxRes, effectTransform);
     // this.retroFx.AttachToSlot(this.component.GetVehicle(), entAttachmentTarget.Transform, n"Base", wt_retro);
     this.retroFx.AttachToComponent(vehicle, entAttachmentTarget.Transform, this.GetComponentName(), wt_retro);
+
+    FlightSystem.GetInstance().audio.StartWithPitch(this.id, "vehicle3_TPP", this.audioPitch);
+
   }
 
   public func Update(force: Vector4, torque: Vector4) {
-    this.force = force;
-    this.torque = torque;
+    if Vector4.Length(this.force) > 1.0 {
+      this.force = Vector4.Normalize(force);
+    } else {
+      this.force = force;
+    }
+    if Vector4.Length(this.torque) > 1.0 {
+      this.torque = Vector4.Normalize(torque);
+    } else {
+      this.torque = torque;
+    }
     
     let vec = new Vector4(1.0, 1.0, 1.0, 1.0);
     if !this.flightComponent.active {
@@ -123,16 +161,34 @@ public class FlightThruster {
 
     let amount = Vector4.Dot(Quaternion.GetUp(this.meshComponent.GetLocalOrientation()), force);
     amount += this.GetMainThrusterTorqueAmount();
-    amount *= this.mainThrusterFactor;
+    // amount *= this.mainThrusterFactor;
+    amount = ClampF(amount, -1.0, 1.0);
     this.mainFx.SetBlackboardValue(n"thruster_amount", amount);
 
     this.bone = LerpF(this.boneLerpAmount, this.bone, -0.05 + ClampF(amount, -1.0, 1.0) * 0.05);
     AnimationControllerComponent.SetInputFloat(this.flightComponent.GetVehicle(), this.GetBoneName(), this.bone);
 
-    this.retroFx.SetBlackboardValue(n"thruster_amount", this.GetRetroThrusterAmount());
+    let retroAmount = this.GetRetroThrusterAmount();
+    this.retroFx.SetBlackboardValue(n"thruster_amount", retroAmount);
+    
+    this.audioUpdate = this.flightComponent.audioUpdate;
+    // amount *= 0.5;
+    this.audioUpdate.surge *= amount;
+    this.audioUpdate.pitch *= amount;
+    this.audioUpdate.yaw *= amount;
+    this.audioUpdate.sway *= amount;
+    this.audioUpdate.lift *= amount;
+    this.audioUpdate.roll *= amount;
+    let volume = 1.0;
+    if !this.isFront {
+      volume = ClampF(this.flightComponent.stats.d_speed / 100.0, 0.0, 1.0);
+    }
+    // this.audioUpdate.pitch = retroAmount;
+    FlightSystem.GetInstance().audio.Update(this.id, this.meshComponent.GetLocalToWorld(), volume, this.audioUpdate);
   }
 
   public func Stop() {
+    FlightSystem.GetInstance().audio.Stop(this.id);
     if IsDefined(this.mainFx) {
       this.mainFx.BreakLoop();
     }

@@ -31,6 +31,37 @@ public native class FlightAudio {
   private let m_positions: ref<inkHashMap>;
   private let m_orientations: ref<inkHashMap>;
   private let slots: array<CName>;
+  private let uiBlackboard: wref<IBlackboard>;
+  private let menuCallback: ref<CallbackHandle>;
+  public let isInMenu: Bool;
+
+  private let uiGameDataBlackboard: wref<IBlackboard>;
+  private let popupCallback: ref<CallbackHandle>;
+  public let isPopupShown: Bool;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Audio Settings")
+  @runtimeProperty("ModSettings.displayName", "Engine Volume")
+  @runtimeProperty("ModSettings.step", "0.05")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "1.0")
+  public let engineVolume: Float = 1.0;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Audio Settings")
+  @runtimeProperty("ModSettings.displayName", "Wind Volume")
+  @runtimeProperty("ModSettings.step", "0.05")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "1.0")
+  public let windVolume: Float = 0.6;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight Audio Settings")
+  @runtimeProperty("ModSettings.displayName", "Warning Volume")
+  @runtimeProperty("ModSettings.step", "0.05")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "1.0")
+  public let warningVolume: Float = 0.5;
 
   public static func Create() -> ref<FlightAudio> {
     let self = new FlightAudio();
@@ -76,7 +107,76 @@ public native class FlightAudio {
       n"window_front_left_a",
       n"window_front_right_a"
     ];
+
+    // if IsDefined(self.uiBlackboard) && IsDefined(self.menuCallback) {
+    //   self.uiBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UI_System.IsInMenu, self.menuCallback);
+    // }
+    // if IsDefined(self.uiGameDataBlackboard) && IsDefined(self.popupCallback) {
+    //   self.uiGameDataBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown, self.popupCallback);
+    // }
+    
+    ModSettings.RegisterListenerToClass(self);
+
     return self;
+  }
+
+  protected cb func OnGameLoaded() {
+    let gameInstance = FlightSystem.GetInstance().gameInstance;
+    this.uiBlackboard = GameInstance.GetBlackboardSystem(gameInstance).Get(GetAllBlackboardDefs().UI_System);
+    if IsDefined(this.uiBlackboard) {
+      if !IsDefined(this.menuCallback) {
+        this.menuCallback = this.uiBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UI_System.IsInMenu, this, n"OnIsInMenu");
+        this.isInMenu = this.uiBlackboard.GetBool(GetAllBlackboardDefs().UI_System.IsInMenu);
+      }
+    }
+
+    this.uiGameDataBlackboard = GameInstance.GetBlackboardSystem(gameInstance).Get(GetAllBlackboardDefs().UIGameData);
+    if IsDefined(this.uiGameDataBlackboard) {
+      if !IsDefined(this.popupCallback) {
+        this.popupCallback = this.uiGameDataBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown, this, n"OnPopupIsShown");
+        this.isPopupShown = this.uiGameDataBlackboard.GetBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown);
+      }
+    }
+  }
+
+  protected cb func OnIsInMenu(inMenu: Bool) -> Bool {
+    this.isInMenu = inMenu;
+  }
+  protected cb func OnPopupIsShown(isShown: Bool) -> Bool {
+    this.isPopupShown = isShown;
+  }
+
+  public func GetGameVolume() -> Float {
+    let gameInstance = FlightSystem.GetInstance().gameInstance;
+    if this.isPopupShown || this.isInMenu || GameInstance.GetTimeSystem(gameInstance).IsPausedState() ||
+      GameInstance.GetTimeSystem(gameInstance).IsTimeDilationActive(n"HubMenu") || 
+      GameInstance.GetTimeSystem(gameInstance).IsTimeDilationActive(n"WorldMap")
+    {
+      return 0.0;
+    }
+    let volume = 1.0;
+    let master = Cast<Float>((GameInstance.GetSettingsSystem(gameInstance).GetVar(n"/audio/volume", n"MasterVolume") as ConfigVarInt).GetValue()) / 100.0;
+    let sfx = Cast<Float>((GameInstance.GetSettingsSystem(gameInstance).GetVar(n"/audio/volume", n"SfxVolume") as ConfigVarInt).GetValue()) / 100.0;
+    volume *= master * sfx;
+
+    // might need to handle just the scanning system's dilation, and the pause menu
+    if GameInstance.GetTimeSystem(gameInstance).IsTimeDilationActive(n"radialMenu") {
+      volume *= 0.1;
+    }
+  
+    return volume;
+  }
+
+  public func GetEngineVolume() -> Float {
+    return this.engineVolume;
+  }
+
+  public func GetWindVolume() -> Float {
+    return this.windVolume;
+  }
+
+  public func GetWarningVolume() -> Float {
+    return this.warningVolume;
   }
 
   public func AddSlotProvider(entity: ref<Entity>, slot: CName) {

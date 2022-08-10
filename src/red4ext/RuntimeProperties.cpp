@@ -33,6 +33,13 @@ RED4ext::CRTTIWeakHandleType ** __fastcall CreateCRTTIWeakHandleTypeFromClass(RE
   return call(a1, a2);
 }
 
+// 1.52 RVA: 0x1FBD20 / 2080032
+/// @pattern 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 30 48 8B FA 48 8B F1 BA 28 00 00 00 48 8D 4C 24 20 E8
+RED4ext::CRTTIHandleType **__fastcall CreateCRTTIHandleTypeFromClass(RED4ext::CRTTIHandleType **a1, RED4ext::CBaseRTTIType *a2) {
+  RED4ext::RelocFunc<decltype(&CreateCRTTIHandleTypeFromClass)> call(0x1FBD20);
+  return call(a1, a2);
+}
+
 bool __fastcall ProcessScriptTypes(uint32_t* version, ScriptData* scriptData, void* scriptLogger);
 constexpr uintptr_t ProcessScriptTypesAddr = 0x272560 + 0xC00;
 decltype(&ProcessScriptTypes) ProcessScriptTypes_Original;
@@ -64,6 +71,11 @@ bool __fastcall ProcessScriptTypes(uint32_t* version, ScriptData* scriptData, vo
                     if (outerTypeStr.starts_with("wref")) {
                       RED4ext::CRTTIWeakHandleType *whType;
                       CreateCRTTIWeakHandleTypeFromClass(&whType, innerType);
+                      rtti->RegisterType(whType);
+                      rttiType = whType;
+                    } else if (outerTypeStr.starts_with("ref")) {
+                      RED4ext::CRTTIHandleType *whType;
+                      CreateCRTTIHandleTypeFromClass(&whType, innerType);
                       rtti->RegisterType(whType);
                       rttiType = whType;
                     }

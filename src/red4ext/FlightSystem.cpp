@@ -17,7 +17,6 @@
 #include "Utils.hpp"
 #include "stdafx.hpp"
 #include "LoadResRef.hpp"
-#include "FlightAudio.hpp"
 #include <RED4ext/Scripting/Natives/Generated/Matrix.hpp>
 
 namespace FlightSystem {
@@ -62,7 +61,8 @@ RED4ext::Matrix* __fastcall GetMatrixFromOrientation(RED4ext::Quaternion* q, RED
 
 void PrePhysics(RED4ext::Unk2* unk2, float* deltaTime, void* unkStruct) {
   //spdlog::info("[FlightSystem] PrePhysics!");
-  auto wh = FlightSystem::GetInstance()->soundListener;
+  auto fs = FlightSystem::GetInstance();
+  auto wh = fs->soundListener;
   if (!wh.Expired()) {
     RED4ext::Matrix matrix;
     auto h = wh.Lock();
@@ -73,6 +73,7 @@ void PrePhysics(RED4ext::Unk2* unk2, float* deltaTime, void* unkStruct) {
     matrix.W.Z = t.Position.z.Bits * 0.0000076293945; 
     matrix.W.W = 1.0;
     FlightAudio::UpdateListenerMatrix(&matrix);
+    fs->audio->UpdateVolume(1.0);
   }
 }
 
@@ -132,6 +133,8 @@ void FlightSystem::sub_150(void * a1, uint64_t a2, uint64_t a3) {
   spdlog::info("[FlightSystem] AirControlCarRollHelper: {}", AirControlCarRollHelper.GetAddr()->value);
   spdlog::info("[FlightSystem] ForceMoveToMaxLinearSpeed: {}", ForceMoveToMaxLinearSpeed.GetAddr()->value);
   spdlog::info("[FlightSystem] physicsCCD: {}", physicsCCD.GetAddr()->value);
+
+  this->audio->ExecuteFunction("OnGameLoaded");
 }
 
 bool FlightSystem::sub_158() {
@@ -145,10 +148,12 @@ void FlightSystem::sub_160() {
 
 void FlightSystem::sub_168() {
   spdlog::info("[FlightSystem] sub_168!");
+  this->audio->Pause();
 }
 
 void FlightSystem::sub_170() {
   spdlog::info("[FlightSystem] sub_170!");
+  this->audio->Resume();
 }
 
 void FlightSystem::sub_178(uintptr_t a1, bool a2) {

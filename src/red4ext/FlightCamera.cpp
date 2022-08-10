@@ -49,15 +49,19 @@ uintptr_t Camera::TPPCameraStatsUpdate(RED4ext::vehicle::TPPCameraComponent *cam
       //camera->lockedCamera = true;
       //camera->pitch = 30.0;
       //camera->yaw = 0.0;
-      if (camera->slopeCorrectionOnGroundStrength != 0.0) {
-        defaultSlopeCorrectionOnGroundStrength = camera->slopeCorrectionOnGroundStrength;
-      }
-      camera->slopeCorrectionOnGroundStrength = 0.0;
+      //if (camera->slopeCorrectionOnGroundStrength != 0.0) {
+      //  defaultSlopeCorrectionOnGroundStrength = camera->slopeCorrectionOnGroundStrength;
+      //}
+      //camera->slopeCorrectionOnGroundStrength = 0.0;
     } else {
-      resetSlope = true;
+      //resetSlope = true;
     }
+    camera->slopeCorrectionOnGroundPitchMax = 90.0;
+    camera->slopeCorrectionOnGroundPitchMin = -90.0;
+    camera->slopeCorrectionInAirPitchMax = 90.0;
+    camera->slopeCorrectionInAirPitchMin = -90.0;
   } else {
-    resetSlope = true;
+    //resetSlope = true;
   }
 
   if (resetSlope && camera->slopeCorrectionOnGroundStrength == 0.0 && defaultSlopeCorrectionOnGroundStrength != 0.0) {

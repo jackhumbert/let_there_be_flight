@@ -12,11 +12,13 @@ public native class FlightSystem extends IFlightSystem {
   @runtimeProperty("offset", "0x50")
   public native let soundListener: wref<IPlacedComponent>;
 
+  @runtimeProperty("offset", "0x70")
+  public native let audio: ref<FlightAudio>;
+
   public let gameInstance: GameInstance;
   public let player: wref<PlayerPuppet>;
   public let ctlr: ref<FlightController>;
   public let stats: ref<FlightStats>;
-  public let audio: ref<FlightAudio>;
   // public let fx: ref<FlightFx>;
   public let tppCamera: wref<vehicleTPPCameraComponent>;
   public let playerComponent: wref<FlightComponent>;

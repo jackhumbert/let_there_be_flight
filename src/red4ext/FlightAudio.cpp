@@ -32,15 +32,16 @@ FMOD::Studio::System *fmod_system;
 FMOD::System *coreSystem;
 FMOD::Studio::Bank *soundBank;
 FMOD::Studio::Bank *stringsBank;
+FMOD::Studio::Bus *engine;
+FMOD::Studio::Bus *wind;
+FMOD::Studio::Bus *warning;
 std::unordered_map<std::string, FMOD::Studio::EventInstance *> eventMap;
 FMOD_3D_ATTRIBUTES listenerAttributes = {{0}};
 FMOD_3D_ATTRIBUTES eventAttributes = {{0}, {0}, {.x = 0, .y = 0, .z = -1}, {.x = 0, .y = 1, .z = 0}};
 
-struct FlightAudio : RED4ext::IScriptable {
-  RED4ext::CClass *GetNativeType();
-};
 
 RED4ext::TTypedClass<FlightAudio> flightAudioCls("FlightAudio");
+RED4ext::CClass *classPointer = &flightAudioCls;
 
 RED4ext::CClass *FlightAudio::GetNativeType() { return &flightAudioCls; }
 
@@ -82,6 +83,45 @@ bool Unload(RED4ext::CGameApplication *aApp) {
   return true;
 }
 
+void FlightAudio::UpdateVolume(float volumeOverride) {
+  if (!engine) {
+    fmod_system->getBus("bus:/Engine", &engine);
+  }
+  if (!wind) {
+    fmod_system->getBus("bus:/Wind", &wind);
+  }
+  if (!warning) {
+    fmod_system->getBus("bus:/Warning", &warning);
+  }
+  float volume;
+  auto stack = RED4ext::CStack(this);
+  stack.result = new RED4ext::CStackType(RED4ext::CRTTISystem::Get()->GetType("Float"), &volume);
+  classPointer->GetFunction("GetGameVolume")->Execute(&stack);
+  auto gameVolume = volume * volumeOverride;
+  classPointer->GetFunction("GetEngineVolume")->Execute(&stack);
+  engine->setVolume(volume * gameVolume);
+  classPointer->GetFunction("GetWindVolume")->Execute(&stack);
+  wind->setVolume(volume * gameVolume);
+  classPointer->GetFunction("GetWarningVolume")->Execute(&stack);
+  warning->setVolume(volume * gameVolume);
+}
+
+void FlightAudio::Pause() {
+  for (auto const &evt : eventMap) {
+    ERRCHECK(evt.second->setPaused(true));
+    //evt.second->stop(FMOD_STUDIO_STOP_IMMEDIATE);
+    ERRCHECK(fmod_system->update());
+  }
+}
+
+void FlightAudio::Resume() {
+  for (auto const &evt : eventMap) {
+    ERRCHECK(evt.second->setPaused(false));
+    // evt.second->start();
+    ERRCHECK(fmod_system->update());
+  }
+}
+
 void Start(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, void *aOut, int64_t a4) {
   RED4ext::CString emitterName;
   RED4ext::CString eventName;
@@ -96,9 +136,9 @@ void Start(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, void *a
   FMOD::Studio::EventInstance *eventInstance;
   ERRCHECK(eventDescription->createInstance(&eventInstance));
   ERRCHECK(eventInstance->start());
-  ERRCHECK(eventInstance->setTimelinePosition(rand()));
-  float pitch = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-  ERRCHECK(eventInstance->setPitch(1.0 + pitch * 0.01));
+  //ERRCHECK(eventInstance->setTimelinePosition(rand()));
+  //float pitch = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+  //ERRCHECK(eventInstance->setPitch(1.0 + pitch * 0.01));
   eventMap[emitterName.c_str()] = eventInstance;
   ERRCHECK(fmod_system->update());
 }
@@ -119,7 +159,7 @@ void StartWithPitch(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame
   FMOD::Studio::EventInstance *eventInstance;
   ERRCHECK(eventDescription->createInstance(&eventInstance));
   ERRCHECK(eventInstance->start());
-  // ERRCHECK(eventInstance->setTimelinePosition(rand()));
+   ERRCHECK(eventInstance->setTimelinePosition(rand()));
   ERRCHECK(eventInstance->setPitch(pitch));
   eventMap[emitterName.c_str()] = eventInstance;
   ERRCHECK(fmod_system->update());
@@ -206,7 +246,6 @@ void Update(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, void *
     eventMap[emitterName.c_str()]->setParameterByName(
         pParameterName->c_str(), flightAudioUpdateCls->GetProperty(pParameterName->c_str())->GetValue<float>(update));
   }
-
   ERRCHECK(fmod_system->update());
 }
 
