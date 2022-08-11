@@ -105,6 +105,7 @@
     <ClCompile Include="Engine\RTTIRegistrar.cpp" />
     <ClCompile Include="EntityAddComponent.cpp" />
     <ClCompile Include="FlightCamera.cpp" />
+    <ClCompile Include="FlightComponent.cpp" />
     <ClCompile Include="FlightController.cpp" />
     <ClCompile Include="FlightEvents.cpp" />
     <ClCompile Include="FlightHelper.cpp" />
@@ -140,6 +141,7 @@
     <ClInclude Include="Engine\RTTIEnum.hpp" />
     <ClInclude Include="Engine\RTTIExpansion.hpp" />
     <ClInclude Include="Engine\RTTIRegistrar.hpp" />
+    <ClInclude Include="FlightComponent.hpp" />
     <ClInclude Include="INIReader.h" />
     <ClInclude Include="RuntimeClass.hpp" />
     <ClInclude Include="ScriptDefinitions\ScriptHost.hpp" />

@@ -65,7 +65,7 @@ bool __fastcall ProcessScriptTypes(uint32_t* version, ScriptData* scriptData, vo
                 if (del != -1) {
                   auto outerTypeStr = typeStr.substr(0, del);
                   auto innerTypeStr = typeStr.substr(del + 1, typeStr.length());
-                  spdlog::info("{} & {}", outerTypeStr, innerTypeStr);
+                  //spdlog::info("{} & {}", outerTypeStr, innerTypeStr);
                   auto innerType = rtti->GetClassByScriptName(innerTypeStr.c_str());
                   if (innerType) {
                     if (outerTypeStr.starts_with("wref")) {

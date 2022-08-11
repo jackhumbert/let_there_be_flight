@@ -1,6 +1,19 @@
-public class FlightComponent extends ScriptableDeviceComponent {
-  private let sys: ref<FlightSystem>;
-  // public let fx: ref<FlightFx>;
+public native class FlightComponent extends DeviceComponent {
+  @runtimeProperty("offset", "0xA8")
+  public native let sys: ref<FlightSystem>;
+  
+  @runtimeProperty("offset", "0xB8")
+  public native let active: Bool;
+
+  @runtimeProperty("offset", "0xB9")
+  public native let hasUpdate: Bool;
+
+  @runtimeProperty("offset", "0xBC")
+  public native let force: Vector4;
+
+  @runtimeProperty("offset", "0xCC")
+  public native let torque: Vector4;
+
   public let thrusters: array<ref<FlightThruster>>;
   private let helper: ref<vehicleFlightHelper>;
   private let stats: ref<FlightStats>;
@@ -10,8 +23,6 @@ public class FlightComponent extends ScriptableDeviceComponent {
   public let m_vehicleBlackboard: wref<IBlackboard>;
   public let m_vehicleTPPCallbackID: ref<CallbackHandle>;
 
-  public let active: Bool;
-  public let hasUpdate: Bool;
   public let isPlayerMounted: Bool;
 
   let hoverGroundPID: ref<PID>;
@@ -49,9 +60,6 @@ public class FlightComponent extends ScriptableDeviceComponent {
   private let linearBrake: Float;
   private let angularBrake: Float;
 
-  public let force: Vector4;
-  public let torque: Vector4;
-
   // public let ui: wref<worlduiWidgetComponent>;
   // public let ui_info: wref<worlduiWidgetComponent>;
 
@@ -79,6 +87,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     this.pitchAeroPID = PID.Create(FlightSettings.GetVector3("aeroPitchPID"));
 
     this.sys = FlightSystem.GetInstance();
+    this.sys.RegisterComponent(this);
     this.sqs = GameInstance.GetSpatialQueriesSystem(this.GetVehicle().GetGame());
     // this.fx = FlightFx.Create(this);
     // this.thrusters = FlightThruster.CreateThrusters(this);
@@ -147,6 +156,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
     for mode in this.modes {
       mode.Deinitialize();
     }
+    this.sys.UnregisterComponent(this);
   }
   
   // private final func RegisterInputListener() -> Void {

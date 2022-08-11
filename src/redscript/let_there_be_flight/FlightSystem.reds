@@ -5,6 +5,8 @@ public func fs() -> ref<FlightSystem> = FlightSystem.GetInstance();
 
 public native class FlightSystem extends IFlightSystem {
   public static native func GetInstance() -> ref<FlightSystem>;
+  public native func RegisterComponent(component: wref<FlightComponent>) -> Void;
+  public native func UnregisterComponent(component: wref<FlightComponent>) -> Void;
 
   @runtimeProperty("offset", "0x48")
   public native let cameraIndex: Int32;
