@@ -129,6 +129,9 @@ public class FlightComponent extends ScriptableDeviceComponent {
 
     this.audioUpdate = new FlightAudioUpdate();
     
+    if ArraySize(this.thrusters) == 0 {
+      this.thrusters = FlightThruster.CreateThrusters(this);
+    }
   }
 
   private final func OnGameDetach() -> Void {
@@ -180,7 +183,7 @@ public class FlightComponent extends ScriptableDeviceComponent {
   }
 
   private func GetPitch() -> Float{
-    return ClampF(700.0 / this.stats.s_mass + 0.5, 0.5, 1.5);
+    return ClampF(700.0 / this.GetVehicle().GetTotalMass() + 0.5, 0.5, 1.5);
   }
 
   public func GetFlightModeIndex() -> Int32 {
@@ -313,6 +316,24 @@ public class FlightComponent extends ScriptableDeviceComponent {
   protected cb func OnVehicleFlightActivationEvent(evt: ref<VehicleFlightActivationEvent>) -> Bool {
     this.Activate();
   }
+  
+  protected cb func OnSummonStartedEvent(evt: ref<SummonStartedEvent>) -> Bool {
+    if Equals(evt.state, vehicleSummonState.EnRoute) || Equals(evt.state, vehicleSummonState.AlreadySummoned) {
+      // this.CreateMappin();
+      if Equals(evt.state, vehicleSummonState.EnRoute) {
+        // this.SendParkEvent(false);
+      };
+      if Equals(evt.state, vehicleSummonState.AlreadySummoned) {
+        // this.HonkAndFlash();
+        if this.active {
+          this.Deactivate(false);
+        } else {
+          this.Activate();
+        }
+        this.GetVehicle().PhysicsWakeUp();
+      };
+    };
+  }
 
   public func Activate(opt silent: Bool) -> Void {
     // this.helper = this.GetVehicle().AddFlightHelper();
@@ -324,9 +345,6 @@ public class FlightComponent extends ScriptableDeviceComponent {
       this.sys.ctlr.ui.Setup(this.stats);
 
       this.SetupTires();
-      if ArraySize(this.thrusters) == 0 {
-        this.thrusters = FlightThruster.CreateThrusters(this);
-      }
       for thruster in this.thrusters {
         thruster.Start();
       }

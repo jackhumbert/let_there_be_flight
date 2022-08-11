@@ -4,7 +4,9 @@ enum FlightThrusterType {
   BackLeft = 2,
   BackRight = 3,
   FrontLeftB = 4,
-  FrontRightB = 5
+  FrontRightB = 5,
+  Front = 6,
+  Back = 7
 }
 
 public class FlightThruster {
@@ -30,6 +32,7 @@ public class FlightThruster {
   public let torque: Vector4;
   public let isRight: Bool;
   public let isFront: Bool;
+  public let isMotorcycle: Bool;
   public let isB: Bool;
   public let id: String;
   public let audioUpdate: ref<FlightAudioUpdate>;
@@ -38,15 +41,33 @@ public class FlightThruster {
 
   public static func CreateThrusters(fc: ref<FlightComponent>) -> array<ref<FlightThruster>> {
     let thrusters: array<ref<FlightThruster>>;
-    ArrayPush(thrusters, new FlightThruster().Initialize(fc, FlightThrusterType.FrontLeft));
-    ArrayPush(thrusters, new FlightThruster().Initialize(fc, FlightThrusterType.FrontRight));
-    ArrayPush(thrusters, new FlightThruster().Initialize(fc, FlightThrusterType.BackLeft));
-    ArrayPush(thrusters, new FlightThruster().Initialize(fc, FlightThrusterType.BackRight));
-    // if ArraySize(fc.GetVehicle().GetComponentsUsingSlot(n"wheel_front_left_b")) > 0 {
-    // if (!Equals(fc.GetVehicle().GetBoneNameFromSlot(n"wheel_front_left_b"), n"None")) {
-      // ArrayPush(thrusters, new FlightThruster().Initialize(fc, FlightThrusterType.FrontLeftB));
-      // ArrayPush(thrusters, new FlightThruster().Initialize(fc, FlightThrusterType.FrontRightB));
-    // }
+    let vehicleComponent = fc.GetVehicle().GetVehicleComponent();
+
+    if IsDefined(vehicleComponent.FindComponentByName(n"ThrusterFL") as MeshComponent) {
+      ArrayPush(thrusters, new FlightThruster().Initialize(fc, FlightThrusterType.FrontLeft));
+    }
+    if IsDefined(vehicleComponent.FindComponentByName(n"ThrusterFR") as MeshComponent) {
+      ArrayPush(thrusters, new FlightThruster().Initialize(fc, FlightThrusterType.FrontRight));
+    }
+    if IsDefined(vehicleComponent.FindComponentByName(n"ThrusterBL") as MeshComponent) {
+      ArrayPush(thrusters, new FlightThruster().Initialize(fc, FlightThrusterType.BackLeft));
+    }
+    if IsDefined(vehicleComponent.FindComponentByName(n"ThrusterBR") as MeshComponent) {
+      ArrayPush(thrusters, new FlightThruster().Initialize(fc, FlightThrusterType.BackRight));
+    }
+    if IsDefined(vehicleComponent.FindComponentByName(n"ThrusterFLB") as MeshComponent) {
+      ArrayPush(thrusters, new FlightThruster().Initialize(fc, FlightThrusterType.FrontLeftB));
+    }
+    if IsDefined(vehicleComponent.FindComponentByName(n"ThrusterFRB") as MeshComponent) {
+      ArrayPush(thrusters, new FlightThruster().Initialize(fc, FlightThrusterType.FrontRightB));
+    }
+    if IsDefined(vehicleComponent.FindComponentByName(n"ThrusterF") as MeshComponent) {
+      ArrayPush(thrusters, new FlightThruster().Initialize(fc, FlightThrusterType.Front));
+    }
+    if IsDefined(vehicleComponent.FindComponentByName(n"ThrusterB") as MeshComponent) {
+      ArrayPush(thrusters, new FlightThruster().Initialize(fc, FlightThrusterType.Back));
+    }
+
     return thrusters;
   }
 
@@ -80,6 +101,13 @@ public class FlightThruster {
     if Equals(type, FlightThrusterType.BackLeft) {
       this.isRight = false;
       this.isFront = false;
+    }
+    if Equals(type, FlightThrusterType.Front) {
+      this.isFront = true;
+      this.isMotorcycle = true;
+    }
+    if Equals(type, FlightThrusterType.Back) {
+      this.isMotorcycle = true;
     }
 
     let vehicleComponent = this.flightComponent.GetVehicle().GetVehicleComponent();
@@ -184,7 +212,13 @@ public class FlightThruster {
       volume = ClampF(this.flightComponent.stats.d_speed / 100.0, 0.0, 1.0);
     }
     // this.audioUpdate.pitch = retroAmount;
-    FlightAudio.Get().UpdateEvent(this.id, this.meshComponent.GetLocalToWorld(), volume, this.audioUpdate);
+    
+    let matrix = this.meshComponent.GetLocalToWorld();
+    // rotates the event cone down
+    let quat = Matrix.ToQuat(matrix) * new Quaternion(-0.707, 0.0, 0.0, 0.707);
+    let rotatedMatrix = Quaternion.ToMatrix(quat);
+    rotatedMatrix.W = matrix.W;
+    FlightAudio.Get().UpdateEvent(this.id, rotatedMatrix, volume, this.audioUpdate);
   }
 
   public func Stop() {
@@ -202,17 +236,39 @@ public class FlightThruster {
     return new EulerAngles(this.GetPitch(), this.GetRoll(), this.GetYaw());
   }
 
+  public let componentSizes: ref<inkHashMap>;
+
   public func HideOGComponents() {
     for c in this.ogComponents {
-      if c.IsEnabled() {
-        c.Toggle(false);
+      // if c.IsEnabled() {
+      //   c.Toggle(false);
+      // }
+      let mc = c as MeshComponent;
+      if IsDefined(mc) {
+        let key = TDBID.ToNumber(TDBID.Create(NameToString(mc.GetName())));
+        if !this.componentSizes.KeyExist(key) {
+          this.componentSizes.Insert(key, Vector3Wrapper.Create(mc.visualScale));
+        } else {
+          this.componentSizes.Set(key, Vector3Wrapper.Create(mc.visualScale));
+        }
+        mc.visualScale = new Vector3(0.0, 0.0, 0.0);
       }
     }
   }
 
   public func ShowOGComponents() {
     for c in this.ogComponents {
-      c.Toggle(true);
+      // c.Toggle(true);
+      let mc = c as MeshComponent;
+      if IsDefined(mc) {
+        let key = TDBID.ToNumber(TDBID.Create(NameToString(mc.GetName())));
+        if this.componentSizes.KeyExist(key) {
+          let v = this.componentSizes.Get(key) as Vector3Wrapper;
+          mc.visualScale = v.vector;
+        } else {
+          mc.visualScale = new Vector3(1.0, 1.0, 1.0);
+        }
+      }
     }
   }
 
@@ -237,49 +293,65 @@ public class FlightThruster {
   }
 
   public func GetComponentName() -> CName {
-    if this.isRight {
-      if this.isFront {
-        if this.isB {
-          return n"ThrusterFRB";
+    if this.isMotorcycle {
+        if this.isFront {
+          return n"ThrusterF";
         } else {
-          return n"ThrusterFR";
+          return n"ThrusterB";
         }
-      } else {
-        return n"ThrusterBR";
-      }
     } else {
-      if this.isFront {
-        if this.isB {
-          return n"ThrusterFLB";
+      if this.isRight {
+        if this.isFront {
+          if this.isB {
+            return n"ThrusterFRB";
+          } else {
+            return n"ThrusterFR";
+          }
         } else {
-          return n"ThrusterFL";
+          return n"ThrusterBR";
         }
       } else {
-        return n"ThrusterBL";
+        if this.isFront {
+          if this.isB {
+            return n"ThrusterFLB";
+          } else {
+            return n"ThrusterFL";
+          }
+        } else {
+          return n"ThrusterBL";
+        }
       }
     }
   }
 
   public func GetSlotName() -> CName {
-    if this.isRight {
-      if this.isFront {
-        if this.isB {
-          return n"wheel_front_right_b";
+    if this.isMotorcycle {
+        if this.isFront {
+          return n"wheel_front_spring";
         } else {
-          return n"wheel_front_right";
+          return n"axel_back";
         }
-      } else {
-        return n"wheel_back_right";
-      }
     } else {
-      if this.isFront {
-        if this.isB {
-          return n"wheel_front_left_b";
+      if this.isRight {
+        if this.isFront {
+          if this.isB {
+            return n"wheel_front_right_b";
+          } else {
+            return n"wheel_front_right";
+          }
         } else {
-          return n"wheel_front_left";
+          return n"wheel_back_right";
         }
       } else {
-        return n"wheel_back_left";
+        if this.isFront {
+          if this.isB {
+            return n"wheel_front_left_b";
+          } else {
+            return n"wheel_front_left";
+          }
+        } else {
+          return n"wheel_back_left";
+        }
       }
     }
   }
@@ -350,5 +422,15 @@ public class FlightThruster {
     } else {
       return 180;
     }
+  }
+}
+
+
+public class Vector3Wrapper {
+  public let vector: Vector3;
+  public static func Create(v: Vector3) -> ref<Vector3Wrapper> {
+    let vw = new Vector3Wrapper();
+    vw.vector = v;
+    return vw;
   }
 }

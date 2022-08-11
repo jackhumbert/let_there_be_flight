@@ -259,6 +259,11 @@ public native class FlightAudio extends IScriptable {
 
 public class Vector4Wrapper {
   public let vector: Vector4;
+  public static func Create(v: Vector4) -> ref<Vector4Wrapper> {
+    let vw = new Vector4Wrapper();
+    vw.vector = v;
+    return vw;
+  }
 }
 
 public class OrientationWrapper {
