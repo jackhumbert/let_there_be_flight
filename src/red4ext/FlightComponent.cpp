@@ -1,11 +1,11 @@
 #include "FlightComponent.hpp"
 
 // idk
-uint64_t FlightComponent::PS_Destruct(char a1) {
-	return 0;
-}
+//void FlightComponent::PS_Destruct(char a1) {
+//	this->~FlightComponent();
+//}
 
 // no PS class
-uint64_t FlightComponent::PS_sub_08() {
+RED4ext::CClass* FlightComponent::GetPSClass() {
 	return 0;
 }

@@ -2,15 +2,19 @@
 
 #include "Engine/RTTIClass.hpp"
 #include <RED4ext/RED4ext.hpp>
+#include <RED4ext/NativeTypes.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/DeviceComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/Vector4.hpp>
+#include <RED4ext/Scripting/Natives/gamePSInterface.hpp>
+#include "FlightSystem.hpp"
 
-struct FlightSystem;
+//struct FlightSystem;
 
 class FlightComponent : public Engine::RTTIClass<FlightComponent, RED4ext::game::DeviceComponent> {
 public:
-  virtual uint64_t PS_Destruct(char a1) override;
-  virtual uint64_t PS_sub_08() override;
+  //virtual ~FlightComponent() override = default;
+  //virtual ~PSInterface() override = default;
+  virtual RED4ext::CClass* GetPSClass() override;
 
   RED4ext::Handle<FlightSystem> sys;
   bool active;
