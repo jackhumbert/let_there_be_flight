@@ -138,11 +138,14 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
   auto rtti = RED4ext::CRTTISystem::Get();
   
   auto type = entity->GetNativeType();
+  bool isCar = false;
+  bool isBike = false;
   auto isVehicle = false;
   do {
     isVehicle |= type == rtti->GetClass("vehicleBaseObject");
+    isCar |= type == rtti->GetClass("vehicleCarBaseObject");
+    isBike |= type == rtti->GetClass("vehicleBikeBaseObject");
   } while (type = type->parent);
-
   if (isVehicle) {
     auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(entity);
 
@@ -205,20 +208,13 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
         }
         FlightWeapons::AddWeaponSlots(vs);
 
-        
-        bool isCar = false;
-        bool isMotorcycle = false;
         bool isSixWheeler = false;
         for (auto const &slot : vs->slots) {
-          if (slot.slotName == "wheel_front")
-            isMotorcycle = true;
-          if (slot.slotName == "wheel_front_left")
-            isCar = true;
           if (slot.slotName == "wheel_front_left_b")
             isSixWheeler = true;
         }
 
-        if (isMotorcycle)
+        if (isBike)
         {
           auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
           slot->boneName = "suspension_front_offset";
@@ -231,7 +227,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
           entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(fl));
           AddToController(rtti, vcc, fl);
         }
-        if (isMotorcycle)
+        if (isBike)
         {
           auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
           slot->boneName = "suspension_back";

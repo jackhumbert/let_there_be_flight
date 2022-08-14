@@ -92,20 +92,21 @@ void PrePhysics(RED4ext::Unk2 *unk2, float *deltaTime, void *unkStruct) {
   }
 }
 
-void PhysicsExecuteAsyncQueries(RED4ext::Unk2 *unk2, float *deltaTime, void *unkStruct) {
+void UpdateComponents(RED4ext::Unk2 *unk2, float *deltaTime, void *unkStruct) {
   auto rtti = RED4ext::CRTTISystem::Get();
   auto fcc = FlightComponent::GetRTTIType();
   for (auto const &wh : FlightSystem::GetInstance()->flightComponents) {
     if (wh.Expired())
       continue;
     auto fc = wh.Lock().GetPtr();
-    auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject*>(fc->entity.GetPtr());
-    auto activeProp = fcc->GetProperty("hasUpdate");
-    if (activeProp->GetValue<bool>(fc) && vehicle->physicsData) {
-      //auto onUpdate = fcc->GetFunction("OnUpdate");
-      //auto args = RED4ext::CStackType(rtti->GetType("Float"), &deltaTime);
-      //auto stack = RED4ext::CStack(fc, &args, 1, nullptr, 0);
-      //onUpdate->Execute(&stack);
+    auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(fc->entity.GetPtr());
+    //auto activeProp = fcc->GetProperty("hasUpdate");
+    if (fc->hasUpdate && vehicle->physicsData) {
+      vehicle->SetPhysicsState(0x10u, 1u);
+      // auto onUpdate = fcc->GetFunction("OnUpdate");
+      // auto args = RED4ext::CStackType(rtti->GetType("Float"), &deltaTime);
+      // auto stack = RED4ext::CStack(fc, &args, 1, nullptr, 0);
+      // onUpdate->Execute(&stack);
       fc->ExecuteFunction("OnUpdate", deltaTime);
 
       vehicle->physicsData->force.X += fc->force.X;
@@ -129,13 +130,13 @@ void PhysicsExecuteAsyncQueries(RED4ext::Unk2 *unk2, float *deltaTime, void *unk
   }
 }
 
- void FlightSystem::RegisterUpdates(RED4ext::UpdateManagerHolder *holder) {
+void FlightSystem::RegisterUpdates(RED4ext::UpdateManagerHolder *holder) {
   spdlog::info("[FlightSystem] sub_110/RegisterUpdates!");
 
   holder->RegisterBucketUpdate(RED4ext::Unk2::OnPreWorldTick, RED4ext::Unk1::PrePhysicsTick, this,
                                "FlightSystem/PrePhysics", &PrePhysics);
   holder->RegisterBucketUpdate(RED4ext::Unk2::OnPreWorldTick, RED4ext::Unk1::PhysicsExecuteAsyncQueries, this,
-                               "FlightSystem/PhysicsExecuteAsyncQueries", &PhysicsExecuteAsyncQueries);
+                               "FlightSystem/UpdateComponents", &UpdateComponents);
  }
 
  bool FlightSystem::sub_118(RED4ext::world::RuntimeScene *runtimeScene) {

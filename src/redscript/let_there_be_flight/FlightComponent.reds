@@ -340,7 +340,7 @@ public native class FlightComponent extends GameComponent {
         } else {
           this.Activate();
         }
-        this.GetVehicle().PhysicsWakeUp();
+        // this.GetVehicle().PhysicsWakeUp();
       };
     };
   }

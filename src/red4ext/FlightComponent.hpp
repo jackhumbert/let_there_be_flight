@@ -22,25 +22,25 @@ public:
     return true;
   }
 
-  inline virtual void sub_188(void *a1) override {
-    //spdlog::info("[FlightComponent] sub_188");
-    //if (this) {
-      //RED4ext::game::Component::sub_188(a1);
-    //}
-    this->unk88 |= 2u;
-    this->ExecuteFunction("OnGameAttach");
-  }
+  //inline virtual void sub_188(void *a1) override {
+  //  //spdlog::info("[FlightComponent] sub_188");
+  //  //if (this) {
+  //    //RED4ext::game::Component::sub_188(a1);
+  //  //}
+  //  this->unk88 |= 2u;
+  //  this->ExecuteFunction("OnGameAttach");
+  //}
 
-  inline virtual bool sub_198(void *a1) override {
-    //spdlog::info("[FlightComponent] sub_198");
-    //if (this) {
-      //return RED4ext::game::Component::sub_198(a1);
-    //}
-    this->unk88 &= 0xFD;
-    this->unk88 |= 8u;
-    this->ExecuteFunction("OnGameDetach");
-    return 0;
-  }
+  //inline virtual bool sub_198(void *a1) override {
+  //  //spdlog::info("[FlightComponent] sub_198");
+  //  //if (this) {
+  //    //return RED4ext::game::Component::sub_198(a1);
+  //  //}
+  //  this->unk88 &= 0xFD;
+  //  this->unk88 |= 8u;
+  //  this->ExecuteFunction("OnGameDetach");
+  //  return 0;
+  //}
 
   RED4ext::Handle<FlightSystem> sys;
   bool active;

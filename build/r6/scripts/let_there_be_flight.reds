@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-08-14 13:39:01.3644444
+// This file was automatically generated on 2022-08-14 16:37:39.9651996
 
 // FlightAudio.reds
 
@@ -621,7 +621,7 @@ public native class FlightComponent extends GameComponent {
         } else {
           this.Activate();
         }
-        this.GetVehicle().PhysicsWakeUp();
+        // this.GetVehicle().PhysicsWakeUp();
       };
     };
   }
