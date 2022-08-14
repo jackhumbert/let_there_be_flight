@@ -1,5 +1,5 @@
 @addField(VehicleObject)
-private let m_flightComponent: wref<FlightComponent>;
+private let m_flightComponent: ref<FlightComponent>;
 
 @wrapMethod(VehicleObject)
 protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> Bool {

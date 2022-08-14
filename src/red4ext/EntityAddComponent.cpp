@@ -30,6 +30,7 @@
 #include "Signatures.hpp"
 #include <thread>
 #include "FlightSystem.hpp"
+#include "FlightComponent.hpp"
 
 // weird bug fix
 
@@ -146,6 +147,12 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(entity);
 
     FlightWeapons::AddWeapons(vehicle);
+
+    //auto fc = (FlightComponent*)FlightComponent::GetRTTIType()->AllocInstance();
+    //fc->name = "flightComponent";
+    //auto h = RED4ext::Handle<FlightComponent>(fc);
+    //h.refCount->IncRef();
+    //entity->componentsStorage.components.EmplaceBack(h);
 
     // entVisualControllerComponent
     RED4ext::ent::VisualControllerComponent *vcc = NULL;

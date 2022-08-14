@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-08-14 03:38:45.1864011
+// This file was automatically generated on 2022-08-14 13:39:01.3644444
 
 // FlightAudio.reds
 
@@ -279,7 +279,7 @@ public class OrientationWrapper {
 
 // FlightComponent.reds
 
-public native class FlightComponent extends DeviceComponent {
+public native class FlightComponent extends GameComponent {
   @runtimeProperty("offset", "0xA8")
   public native let sys: ref<FlightSystem>;
   
@@ -289,10 +289,10 @@ public native class FlightComponent extends DeviceComponent {
   @runtimeProperty("offset", "0xB9")
   public native let hasUpdate: Bool;
 
-  @runtimeProperty("offset", "0xBC")
+  @runtimeProperty("offset", "0xC0")
   public native let force: Vector4;
 
-  @runtimeProperty("offset", "0xCC")
+  @runtimeProperty("offset", "0xD0")
   public native let torque: Vector4;
 
   public let thrusters: array<ref<FlightThruster>>;
@@ -369,7 +369,6 @@ public native class FlightComponent extends DeviceComponent {
 
     this.sys = FlightSystem.GetInstance();
     this.sys.RegisterComponent(this);
-    FlightLog.Info("[FlightComponent] tried to register :(");
     this.sqs = GameInstance.GetSpatialQueriesSystem(this.GetVehicle().GetGame());
     // this.fx = FlightFx.Create(this);
     // this.thrusters = FlightThruster.CreateThrusters(this);
@@ -7676,7 +7675,7 @@ private final func ExplodeVehicle(instigator: wref<GameObject>) -> Void {
 // _VehicleObject.reds
 
 @addField(VehicleObject)
-private let m_flightComponent: wref<FlightComponent>;
+private let m_flightComponent: ref<FlightComponent>;
 
 @wrapMethod(VehicleObject)
 protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> Bool {

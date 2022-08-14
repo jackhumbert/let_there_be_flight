@@ -56,7 +56,7 @@ RED4ext::Matrix* __fastcall GetMatrixFromOrientation(RED4ext::Quaternion* q, RED
 
 void FlightSystem::RegisterComponent(RED4ext::WeakHandle<FlightComponent> fc) {
   this->flightComponents.EmplaceBack(fc);
-  spdlog::info("[FlightSystem] Component added");
+  //spdlog::info("[FlightSystem] Component added");
 }
 
 void FlightSystem::UnregisterComponent(RED4ext::WeakHandle<FlightComponent> fc) {
@@ -67,7 +67,7 @@ void FlightSystem::UnregisterComponent(RED4ext::WeakHandle<FlightComponent> fc) 
       auto efc = this->flightComponents[i].Lock().GetPtr();
       if (efc == fc.Lock().GetPtr()) {
         this->flightComponents.RemoveAt(i);
-        spdlog::info("[FlightSystem] Component removed");
+        //spdlog::info("[FlightSystem] Component removed");
         break;
       }
     }
@@ -106,7 +106,7 @@ void PhysicsExecuteAsyncQueries(RED4ext::Unk2 *unk2, float *deltaTime, void *unk
       //auto args = RED4ext::CStackType(rtti->GetType("Float"), &deltaTime);
       //auto stack = RED4ext::CStack(fc, &args, 1, nullptr, 0);
       //onUpdate->Execute(&stack);
-      fc->ExecuteFunction("OnUpdate", *deltaTime);
+      fc->ExecuteFunction("OnUpdate", deltaTime);
 
       vehicle->physicsData->force.X += fc->force.X;
       vehicle->physicsData->force.Y += fc->force.Y;
