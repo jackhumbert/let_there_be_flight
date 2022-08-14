@@ -88,6 +88,7 @@ public native class FlightComponent extends DeviceComponent {
 
     this.sys = FlightSystem.GetInstance();
     this.sys.RegisterComponent(this);
+    FlightLog.Info("[FlightComponent] tried to register :(");
     this.sqs = GameInstance.GetSpatialQueriesSystem(this.GetVehicle().GetGame());
     // this.fx = FlightFx.Create(this);
     // this.thrusters = FlightThruster.CreateThrusters(this);

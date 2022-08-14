@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-08-12 12:11:54.5889305
+// This file was automatically generated on 2022-08-14 03:38:45.1864011
 
 // FlightAudio.reds
 
@@ -369,6 +369,7 @@ public native class FlightComponent extends DeviceComponent {
 
     this.sys = FlightSystem.GetInstance();
     this.sys.RegisterComponent(this);
+    FlightLog.Info("[FlightComponent] tried to register :(");
     this.sqs = GameInstance.GetSpatialQueriesSystem(this.GetVehicle().GetGame());
     // this.fx = FlightFx.Create(this);
     // this.thrusters = FlightThruster.CreateThrusters(this);

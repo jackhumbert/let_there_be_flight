@@ -56,6 +56,7 @@ RED4ext::Matrix* __fastcall GetMatrixFromOrientation(RED4ext::Quaternion* q, RED
 
 void FlightSystem::RegisterComponent(RED4ext::WeakHandle<FlightComponent> fc) {
   this->flightComponents.EmplaceBack(fc);
+  spdlog::info("[FlightSystem] Component added");
 }
 
 void FlightSystem::UnregisterComponent(RED4ext::WeakHandle<FlightComponent> fc) {
@@ -66,6 +67,7 @@ void FlightSystem::UnregisterComponent(RED4ext::WeakHandle<FlightComponent> fc) 
       auto efc = this->flightComponents[i].Lock().GetPtr();
       if (efc == fc.Lock().GetPtr()) {
         this->flightComponents.RemoveAt(i);
+        spdlog::info("[FlightSystem] Component removed");
         break;
       }
     }
