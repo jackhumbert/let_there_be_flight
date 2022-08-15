@@ -125,7 +125,7 @@ public class FlightThruster {
     } else {
       this.id += "B";
       // this.audioPitch *= 0.5;
-      this.audioPitch *= 2.0;
+      // this.audioPitch *= 2.0;
     }
     if this.isRight {
       this.id += "R";
@@ -136,6 +136,7 @@ public class FlightThruster {
     }
     if this.isB {
       this.id += "B";
+      // this.audioPitch *= 0.5;
     }
     this.id += this.flightComponent.GetUniqueID();
     this.audioUpdate = new FlightAudioUpdate();

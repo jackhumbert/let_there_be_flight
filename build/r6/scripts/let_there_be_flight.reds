@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-08-14 16:37:39.9651996
+// This file was automatically generated on 2022-08-15 02:10:46.0433148
 
 // FlightAudio.reds
 
@@ -4821,7 +4821,7 @@ public class FlightThruster {
     } else {
       this.id += "B";
       // this.audioPitch *= 0.5;
-      this.audioPitch *= 2.0;
+      // this.audioPitch *= 2.0;
     }
     if this.isRight {
       this.id += "R";
@@ -4832,6 +4832,7 @@ public class FlightThruster {
     }
     if this.isB {
       this.id += "B";
+      // this.audioPitch *= 0.5;
     }
     this.id += this.flightComponent.GetUniqueID();
     this.audioUpdate = new FlightAudioUpdate();

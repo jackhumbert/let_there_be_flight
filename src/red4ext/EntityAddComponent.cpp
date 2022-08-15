@@ -146,6 +146,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     isCar |= type == rtti->GetClass("vehicleCarBaseObject");
     isBike |= type == rtti->GetClass("vehicleBikeBaseObject");
   } while (type = type->parent);
+
   if (isVehicle) {
     auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(entity);
 
@@ -209,10 +210,30 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
         FlightWeapons::AddWeaponSlots(vs);
 
         bool isSixWheeler = false;
-        for (auto const &slot : vs->slots) {
-          if (slot.slotName == "wheel_front_left_b")
-            isSixWheeler = true;
+        //for (auto const &slot : vs->slots) {
+        //  if (slot.slotName == "wheel_front_left_b")
+        //    isSixWheeler = true;
+        //}
+
+        for (auto const &handle : entity->componentsStorage.components) {
+          auto component = handle.GetPtr();
+          type = component->GetNativeType();
+          bool isPlacedComponent = false;
+          do {
+            isPlacedComponent |= type == rtti->GetClass("entIPlacedComponent");
+          } while (type = type->parent);
+
+          if (isPlacedComponent) {
+            auto pth = ((RED4ext::ent::IPlacedComponent *)component)->parentTransform;
+            if (pth) {
+              auto pt = reinterpret_cast<RED4ext::ent::HardTransformBinding *>(pth.GetPtr());
+              if (pt && pt->slotName == "wheel_front_left_b") {
+                isSixWheeler |= true;
+              }
+            }
+          }
         }
+
 
         if (isBike)
         {
