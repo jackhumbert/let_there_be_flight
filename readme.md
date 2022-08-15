@@ -17,12 +17,13 @@ For an up-to-date version of the mod, you can [download just the `build/` folder
 
 [Official, numbered releases are available here](https://github.com/jackhumbert/let_there_be_flight/releases) - `*packed*.zip` in the release contains all of the dependencies listed below at their most up-to-date versions (at the time of release). Simply extract it and copy the contents in your game's installation folder. If you're upgrading from v0.0.9, you'll need to delete the `r6/scripts/flight_control` folder, since files may have been renamed/removed. All files named `flight_control` can safely be removed.
 
-## Dependencies
+## Dependencies (available in `/prereqs`)
 
 * [RED4ext](https://github.com/WopsS/RED4ext)
 * [TweakXL](https://github.com/psiberx/cp2077-tweak-xl)
 * [Input Loader](https://github.com/jackhumbert/cyberpunk2077-input-loader)
 * [Redscript](https://github.com/jac3km4/redscript)
+* [Mod Settings](https://github.com/jackhumbert/mod_settings)
 
 ## Configuration
 
