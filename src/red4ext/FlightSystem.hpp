@@ -1,5 +1,7 @@
 #pragma once
 
+
+#include <RED4ext/RED4ext.hpp>
 #include "Engine/RTTIClass.hpp"
 #include <RED4ext/Scripting/Natives/gameIGameSystem.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/IPlacedComponent.hpp>
@@ -18,8 +20,6 @@ private:
   static void OnDescribe(Descriptor *aType, RED4ext::CRTTISystem *) {
   }
 };
-
-#include <RED4ext/RED4ext.hpp>
 
 class FlightSystem : public Engine::RTTIClass<FlightSystem, IFlightSystem> {
 public:
@@ -58,8 +58,8 @@ public:
 private:
   friend Descriptor;
   static void OnRegister(Descriptor *aType) {
-    aType->flags.b20000 = true;
-    aType->flags.isAlwaysTransient = true;
+    //aType->flags.b20000 = true;
+    //aType->flags.isAlwaysTransient = true;
   }
 
   static void OnDescribe(Descriptor *aType, RED4ext::CRTTISystem *) {

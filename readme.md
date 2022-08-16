@@ -31,7 +31,7 @@ For an up-to-date version of the mod, you can [download just the `build/` folder
 
 Other settings can be found in [`r6/scripts/let_there_be_flight.reds`](https://github.com/jackhumbert/let_there_be_flight/tree/main/build/r6/scripts/let_there_be_flight.reds) for the time being - search for `FlightSettings.SetFloat` to see all the variables used by the mod.
 
-## Bugs
+## Troubleshooting
 
 After a crash or error, please save your `red4ext/logs/let_there_be_flight.log` file - this will get written over the next time you start the game, and may contain helpful information regarding the issue.
 
