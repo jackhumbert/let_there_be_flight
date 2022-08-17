@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-08-17 14:18:41.4218791
+// This file was automatically generated on 2022-08-17 19:38:27.8692125
 
 // FlightAudio.reds
 
@@ -4708,7 +4708,7 @@ enum FlightThrusterType {
 public class FlightThruster {
   public let flightComponent: ref<FlightComponent>;
   public let bone: Float = 0.0;
-  public let boneLerpAmount: Float = 0.1;
+  public let boneLerpAmount: Float = 0.25;
   public let maxThrusterAnglePitch: Float = 90.0;
   public let maxThrusterAngleOutside: Float = 60.0;
   public let maxThrusterAngleInside: Float = 15.0;
@@ -4867,6 +4867,10 @@ public class FlightThruster {
   let forceThreshold: Float = 10.0;
   let torqueThreshold: Float = 1.0;
 
+  let animDeviation: Float = 0.0;
+  let animRadius: Float = 0.0;
+
+
   public func Update(force: Vector4, torque: Vector4) {
     if Vector4.Length(force) > this.forceThreshold {
       this.force = Vector4.Normalize(force);
@@ -4893,13 +4897,23 @@ public class FlightThruster {
     amount = ClampF(amount, -1.0, 1.0);
     this.mainFx.SetBlackboardValue(n"thruster_amount", amount);
 
-    // let animCenter = -0.3;
-    let animCenter = -0.05;
-    let animScale = 0.05;
-    // let animScale = 4.0;
+    // -4, 4 / -10, 10
+    let animDeviationCenter = 0.0;
+    let animDeviationScale = 0.1;
+    // 0, 16
+    // let animRadiusCenter = 1.0;
+    // let animRadiusScale = -1.0;
+
     // this.bone = LerpF(this.boneLerpAmount, this.bone, -animScale + ClampF(amount, -1.0, 1.0) * animScale);
-    this.bone = animCenter + ClampF(amount, -1.0, 1.0) * animScale;
-    AnimationControllerComponent.SetInputFloatToReplicate(this.flightComponent.GetVehicle(), this.GetBoneName(), this.bone);
+    this.animDeviation = LerpF(this.boneLerpAmount, this.animDeviation, animDeviationCenter + amount * animDeviationScale);
+    // this.animDeviation = animDeviationCenter + amount * animDeviationScale;
+    // this.animRadius = animRadiusCenter + amount * animRadiusScale;
+    // AnimationControllerComponent.SetInputFloatToReplicate(this.flightComponent.GetVehicle(), this.GetDeviationName(), this.animDeviation);
+    // AnimationControllerComponent.SetInputFloatToReplicate(this.flightComponent.GetVehicle(), this.GetRadiusName(), this.animRadius);
+
+    let acc = this.flightComponent.FindComponentByName(n"AnimationController") as AnimationControllerComponent;
+    acc.SetInputFloat(this.GetDeviationName(), this.animDeviation);
+    // acc.SetInputFloat(this.GetRadiusName(), this.animRadius);
 
     let retroAmount = this.GetRetroThrusterAmount();
     this.retroFx.SetBlackboardValue(n"thruster_amount", retroAmount);
@@ -5072,7 +5086,7 @@ public class FlightThruster {
     }
   }
 
-  public func GetBoneName() -> CName {
+  public func GetRadiusName() -> CName {
     if this.isRight {
       if this.isFront {
         if this.isB {
@@ -5092,6 +5106,30 @@ public class FlightThruster {
         }
       } else {
         return n"veh_rad_w_b_l";
+      }
+    }
+  }
+
+  public func GetDeviationName() -> CName {
+    if this.isRight {
+      if this.isFront {
+        if this.isB {
+          return n"veh_press_w_1_r";
+        } else {
+          return n"veh_press_w_f_r";
+        }
+      } else {
+        return n"veh_press_w_b_r";
+      }
+    } else {
+      if this.isFront {
+        if this.isB {
+          return n"veh_press_w_1_l";
+        } else {
+          return n"veh_press_w_f_l";
+        }
+      } else {
+        return n"veh_press_w_b_l";
       }
     }
   }
@@ -5162,7 +5200,7 @@ public class FlightThrusterFLB extends FlightThruster {
     return n"wheel_front_left_b";
   }
 
-  public func GetBoneName() -> CName {
+  public func GetRadiusName() -> CName {
     return n"veh_rad_w_1_l";
   }
 }
