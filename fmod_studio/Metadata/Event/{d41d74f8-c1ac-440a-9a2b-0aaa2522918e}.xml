@@ -4925,7 +4925,7 @@
 			<value>0</value>
 		</property>
 		<property name="value">
-			<value>6</value>
+			<value>0</value>
 		</property>
 		<property name="curveShape">
 			<value>-1</value>
@@ -4936,7 +4936,7 @@
 			<value>180</value>
 		</property>
 		<property name="value">
-			<value>0</value>
+			<value>-80</value>
 		</property>
 	</object>
 	<object class="AutomationPoint" id="{ed80e6fc-9011-49b6-b873-665430ccf00f}">

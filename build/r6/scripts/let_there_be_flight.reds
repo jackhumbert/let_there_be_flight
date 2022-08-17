@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-08-16 13:47:47.2116231
+// This file was automatically generated on 2022-08-17 14:18:41.4218791
 
 // FlightAudio.reds
 
@@ -4752,7 +4752,7 @@ public class FlightThruster {
       ArrayPush(thrusters, new FlightThruster().Initialize(fc, FlightThrusterType.BackRight));
     }
     if IsDefined(vehicleComponent.FindComponentByName(n"ThrusterFLB") as MeshComponent) {
-      ArrayPush(thrusters, new FlightThruster().Initialize(fc, FlightThrusterType.FrontLeftB));
+      ArrayPush(thrusters, new FlightThrusterFLB().Create(fc));
     }
     if IsDefined(vehicleComponent.FindComponentByName(n"ThrusterFRB") as MeshComponent) {
       ArrayPush(thrusters, new FlightThruster().Initialize(fc, FlightThrusterType.FrontRightB));
@@ -4864,16 +4864,19 @@ public class FlightThruster {
 
   }
 
+  let forceThreshold: Float = 10.0;
+  let torqueThreshold: Float = 1.0;
+
   public func Update(force: Vector4, torque: Vector4) {
-    if Vector4.Length(this.force) > 1.0 {
+    if Vector4.Length(force) > this.forceThreshold {
       this.force = Vector4.Normalize(force);
     } else {
-      this.force = force;
+      this.force = force / this.forceThreshold;
     }
-    if Vector4.Length(this.torque) > 1.0 {
+    if Vector4.Length(torque) > this.torqueThreshold {
       this.torque = Vector4.Normalize(torque);
     } else {
-      this.torque = torque;
+      this.torque = torque / this.torqueThreshold;
     }
     
     let vec = new Vector4(1.0, 1.0, 1.0, 1.0);
@@ -4884,26 +4887,31 @@ public class FlightThruster {
 
     this.meshComponent.SetLocalOrientation(Quaternion.Slerp(this.meshComponent.GetLocalOrientation(), EulerAngles.ToQuat(this.GetEulerAngles()), 0.1));
 
-    let amount = Vector4.Dot(Quaternion.GetUp(this.meshComponent.GetLocalOrientation()), force);
+    let amount = Vector4.Dot(Quaternion.GetUp(this.meshComponent.GetLocalOrientation()), this.force);
     amount += this.GetMainThrusterTorqueAmount();
     // amount *= this.mainThrusterFactor;
     amount = ClampF(amount, -1.0, 1.0);
     this.mainFx.SetBlackboardValue(n"thruster_amount", amount);
 
-    this.bone = LerpF(this.boneLerpAmount, this.bone, -0.05 + ClampF(amount, -1.0, 1.0) * 0.05);
-    AnimationControllerComponent.SetInputFloat(this.flightComponent.GetVehicle(), this.GetBoneName(), this.bone);
+    // let animCenter = -0.3;
+    let animCenter = -0.05;
+    let animScale = 0.05;
+    // let animScale = 4.0;
+    // this.bone = LerpF(this.boneLerpAmount, this.bone, -animScale + ClampF(amount, -1.0, 1.0) * animScale);
+    this.bone = animCenter + ClampF(amount, -1.0, 1.0) * animScale;
+    AnimationControllerComponent.SetInputFloatToReplicate(this.flightComponent.GetVehicle(), this.GetBoneName(), this.bone);
 
     let retroAmount = this.GetRetroThrusterAmount();
     this.retroFx.SetBlackboardValue(n"thruster_amount", retroAmount);
     
     this.audioUpdate = this.flightComponent.audioUpdate;
     // amount *= 0.5;
-    this.audioUpdate.surge *= amount;
-    this.audioUpdate.pitch *= amount;
-    this.audioUpdate.yaw *= amount;
-    this.audioUpdate.sway *= amount;
-    this.audioUpdate.lift *= amount;
-    this.audioUpdate.roll *= amount;
+    // this.audioUpdate.surge *= amount;
+    // this.audioUpdate.pitch *= amount;
+    // this.audioUpdate.yaw *= retroAmount;
+    // this.audioUpdate.sway *= retroAmount;
+    // this.audioUpdate.lift *= amount;
+    // this.audioUpdate.roll *= amount;
     let volume = 1.0;
     if !this.isFront {
       volume = ClampF(this.flightComponent.stats.d_speed / 100.0, 0.0, 1.0);
@@ -4970,7 +4978,18 @@ public class FlightThruster {
   }
 
   public func GetMainThrusterTorqueAmount() -> Float {
-    return this.torque.X - this.torque.Y;
+    let amount: Float = 0;
+    if this.isFront {
+      amount += this.torque.X;
+    } else {
+      amount -= this.torque.X;
+    }
+    if this.isRight {
+      amount -= this.torque.Y;
+    } else {
+      amount += this.torque.Y;
+    }
+    return amount;
   }
 
   public func GetRetroThrusterAmount() -> Float {
@@ -5056,13 +5075,21 @@ public class FlightThruster {
   public func GetBoneName() -> CName {
     if this.isRight {
       if this.isFront {
-        return n"veh_rad_w_f_r";
+        if this.isB {
+          return n"veh_rad_w_1_r";
+        } else {
+          return n"veh_rad_w_f_r";
+        }
       } else {
         return n"veh_rad_w_b_r";
       }
     } else {
       if this.isFront {
-        return n"veh_rad_w_f_l";
+        if this.isB {
+          return n"veh_rad_w_1_l";
+        } else {
+          return n"veh_rad_w_f_l";
+        }
       } else {
         return n"veh_rad_w_b_l";
       }
@@ -5122,6 +5149,23 @@ public class FlightThruster {
   }
 }
 
+
+public class FlightThrusterFLB extends FlightThruster {
+  public func Create(fc: ref<FlightComponent>) -> ref<FlightThruster> {
+    return this.Initialize(fc, FlightThrusterType.FrontLeftB);
+  }
+  public func GetComponentName() -> CName {
+    return n"ThrusterFLB";
+  }
+
+  public func GetSlotName() -> CName {
+    return n"wheel_front_left_b";
+  }
+
+  public func GetBoneName() -> CName {
+    return n"veh_rad_w_1_l";
+  }
+}
 
 public class Vector3Wrapper {
   public let vector: Vector3;
