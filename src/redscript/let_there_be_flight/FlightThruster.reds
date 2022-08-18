@@ -197,6 +197,7 @@ public class FlightThruster {
 
     let amount = Vector4.Dot(Quaternion.GetUp(this.meshComponent.GetLocalOrientation()), this.force);
     amount += this.GetMainThrusterTorqueAmount();
+    // let amount = Vector4.Dot(Quaternion.GetUp(this.meshComponent.GetLocalOrientation()), Quaternion.GetUp(EulerAngles.ToQuat(this.GetEulerAngles())));
     // amount *= this.mainThrusterFactor;
     amount = ClampF(amount, -1.0, 1.0);
     this.mainFx.SetBlackboardValue(n"thruster_amount", amount);
@@ -449,6 +450,7 @@ public class FlightThruster {
     } else {
       dir = -1.0;
     }
+    angle *= (1.0 - AbsF(this.torque.Y) * 0.5);
     return ClampF(angle, -this.maxThrusterAnglePitch, this.maxThrusterAnglePitch) * dir;
   }
 
@@ -486,7 +488,7 @@ public class FlightThruster {
       }
       return tor * this.mainThrusterYawFactor + ClampF(angle, -inside, outside) * dir;
     } else {
-      return 180;
+      return 180.0;
     }
   }
 }
@@ -496,6 +498,7 @@ public class FlightThrusterFLB extends FlightThruster {
   public func Create(fc: ref<FlightComponent>) -> ref<FlightThruster> {
     return this.Initialize(fc, FlightThrusterType.FrontLeftB);
   }
+
   public func GetComponentName() -> CName {
     return n"ThrusterFLB";
   }
@@ -506,6 +509,10 @@ public class FlightThrusterFLB extends FlightThruster {
 
   public func GetRadiusName() -> CName {
     return n"veh_rad_w_1_l";
+  }
+
+  public func GetDeviationName() -> CName {
+    return n"veh_press_w_1_l";
   }
 }
 

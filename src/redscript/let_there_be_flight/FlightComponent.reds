@@ -401,6 +401,10 @@ public native class FlightComponent extends GameComponent {
   let smoothTorque: Vector4;
   let isDestroyed: Bool;
   let hasExploded: Bool;
+  let lastVelocity: Vector4;
+  public let accelerationFx: ref<FxInstance>;
+  public let smoothFx: Float = 1.0;
+  public let accThreshold: Float = 1.0;
 
   protected func OnUpdate(timeDelta: Float) -> Void {
     if this.GetVehicle().IsDestroyed() {
@@ -420,8 +424,28 @@ public native class FlightComponent extends GameComponent {
     if timeDelta <= 0.0 {
       this.stats.UpdateDynamic();
       this.UpdateAudioParams(1.0/60.0);
+      for thruster in this.thrusters {
+        thruster.Update(this.smoothForce, this.smoothTorque);
+      }
       return;
     }
+    // something that responds to acceleration & collisions
+    // maybe just need a custom effect
+    // let velocity = this.GetVehicle().GetLinearVelocity();
+    // let acceleration = velocity - this.lastVelocity;
+    // this.lastVelocity = velocity;
+    // if Vector4.Length(acceleration) > this.accThreshold {
+    //   // if !IsDefined(this.accelerationFx) {
+    //     let fx = Cast<FxResource>(r"base\\fx\\player\\p_damage\\p_health_low.effect");
+    //     this.accelerationFx = GameInstance.GetFxSystem(this.GetVehicle().GetGame()).SpawnEffect(fx, new WorldTransform());
+    //   // }
+    //   this.smoothFx = LerpF(0.1, this.smoothFx, Vector4.Length(acceleration));
+    //   this.accelerationFx.SetBlackboardValue(n"health_state", ClampF(1.0 - (this.smoothFx - this.accThreshold) * 0.5, 0.0, 1.0));
+    // } else {
+    //   // if IsDefined(this.accelerationFx) {
+    //     this.accelerationFx.BreakLoop();
+    //   // }
+    // }
     if this.active {
       if this.isPlayerMounted {
         this.sys.ctlr.OnUpdate(timeDelta);
@@ -476,15 +500,15 @@ public native class FlightComponent extends GameComponent {
       }
     }
 
-    // this.smoothForce = Vector4.Interpolate(this.smoothForce, force, 0.99);
-    // this.smoothTorque = Vector4.Interpolate(this.smoothTorque, torque, 0.99);
 
 
     // process user-inputted force/torque in visuals/audio
+    this.UpdateAudioParams(timeDelta, force, torque);
+    this.smoothForce = force;
+    this.smoothTorque = torque;
     for thruster in this.thrusters {
       thruster.Update(force, torque);
     }
-    this.UpdateAudioParams(timeDelta, force, torque);
     
     if this.isPlayerMounted {
       // this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Force, force);

@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-08-17 19:38:27.8692125
+// This file was automatically generated on 2022-08-17 23:51:18.2509441
 
 // FlightAudio.reds
 
@@ -682,6 +682,10 @@ public native class FlightComponent extends GameComponent {
   let smoothTorque: Vector4;
   let isDestroyed: Bool;
   let hasExploded: Bool;
+  let lastVelocity: Vector4;
+  public let accelerationFx: ref<FxInstance>;
+  public let smoothFx: Float = 1.0;
+  public let accThreshold: Float = 1.0;
 
   protected func OnUpdate(timeDelta: Float) -> Void {
     if this.GetVehicle().IsDestroyed() {
@@ -701,7 +705,25 @@ public native class FlightComponent extends GameComponent {
     if timeDelta <= 0.0 {
       this.stats.UpdateDynamic();
       this.UpdateAudioParams(1.0/60.0);
+      for thruster in this.thrusters {
+        thruster.Update(this.smoothForce, this.smoothTorque);
+      }
       return;
+    }
+    let velocity = this.GetVehicle().GetLinearVelocity();
+    let acceleration = velocity - this.lastVelocity;
+    this.lastVelocity = velocity;
+    if Vector4.Length(acceleration) > this.accThreshold {
+      // if !IsDefined(this.accelerationFx) {
+        let fx = Cast<FxResource>(r"base\\fx\\player\\p_damage\\p_health_low.effect");
+        this.accelerationFx = GameInstance.GetFxSystem(this.GetVehicle().GetGame()).SpawnEffect(fx, new WorldTransform());
+      // }
+      this.smoothFx = LerpF(0.1, this.smoothFx, Vector4.Length(acceleration));
+      this.accelerationFx.SetBlackboardValue(n"health_state", ClampF(1.0 - (this.smoothFx - this.accThreshold) * 0.5, 0.0, 1.0));
+    } else {
+      // if IsDefined(this.accelerationFx) {
+        this.accelerationFx.BreakLoop();
+      // }
     }
     if this.active {
       if this.isPlayerMounted {
@@ -757,15 +779,15 @@ public native class FlightComponent extends GameComponent {
       }
     }
 
-    // this.smoothForce = Vector4.Interpolate(this.smoothForce, force, 0.99);
-    // this.smoothTorque = Vector4.Interpolate(this.smoothTorque, torque, 0.99);
 
 
     // process user-inputted force/torque in visuals/audio
+    this.UpdateAudioParams(timeDelta, force, torque);
+    this.smoothForce = force;
+    this.smoothTorque = torque;
     for thruster in this.thrusters {
       thruster.Update(force, torque);
     }
-    this.UpdateAudioParams(timeDelta, force, torque);
     
     if this.isPlayerMounted {
       // this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Force, force);
@@ -4893,6 +4915,7 @@ public class FlightThruster {
 
     let amount = Vector4.Dot(Quaternion.GetUp(this.meshComponent.GetLocalOrientation()), this.force);
     amount += this.GetMainThrusterTorqueAmount();
+    // let amount = Vector4.Dot(Quaternion.GetUp(this.meshComponent.GetLocalOrientation()), Quaternion.GetUp(EulerAngles.ToQuat(this.GetEulerAngles())));
     // amount *= this.mainThrusterFactor;
     amount = ClampF(amount, -1.0, 1.0);
     this.mainFx.SetBlackboardValue(n"thruster_amount", amount);
@@ -5145,6 +5168,7 @@ public class FlightThruster {
     } else {
       dir = -1.0;
     }
+    angle *= (1.0 - AbsF(this.torque.Y) * 0.5);
     return ClampF(angle, -this.maxThrusterAnglePitch, this.maxThrusterAnglePitch) * dir;
   }
 
@@ -5182,7 +5206,7 @@ public class FlightThruster {
       }
       return tor * this.mainThrusterYawFactor + ClampF(angle, -inside, outside) * dir;
     } else {
-      return 180;
+      return 180.0;
     }
   }
 }
@@ -5192,6 +5216,7 @@ public class FlightThrusterFLB extends FlightThruster {
   public func Create(fc: ref<FlightComponent>) -> ref<FlightThruster> {
     return this.Initialize(fc, FlightThrusterType.FrontLeftB);
   }
+
   public func GetComponentName() -> CName {
     return n"ThrusterFLB";
   }
@@ -5202,6 +5227,10 @@ public class FlightThrusterFLB extends FlightThruster {
 
   public func GetRadiusName() -> CName {
     return n"veh_rad_w_1_l";
+  }
+
+  public func GetDeviationName() -> CName {
+    return n"veh_press_w_1_l";
   }
 }
 
