@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-08-17 23:51:18.2509441
+// This file was automatically generated on 2022-08-18 00:04:38.2343187
 
 // FlightAudio.reds
 
@@ -710,21 +710,23 @@ public native class FlightComponent extends GameComponent {
       }
       return;
     }
-    let velocity = this.GetVehicle().GetLinearVelocity();
-    let acceleration = velocity - this.lastVelocity;
-    this.lastVelocity = velocity;
-    if Vector4.Length(acceleration) > this.accThreshold {
-      // if !IsDefined(this.accelerationFx) {
-        let fx = Cast<FxResource>(r"base\\fx\\player\\p_damage\\p_health_low.effect");
-        this.accelerationFx = GameInstance.GetFxSystem(this.GetVehicle().GetGame()).SpawnEffect(fx, new WorldTransform());
-      // }
-      this.smoothFx = LerpF(0.1, this.smoothFx, Vector4.Length(acceleration));
-      this.accelerationFx.SetBlackboardValue(n"health_state", ClampF(1.0 - (this.smoothFx - this.accThreshold) * 0.5, 0.0, 1.0));
-    } else {
-      // if IsDefined(this.accelerationFx) {
-        this.accelerationFx.BreakLoop();
-      // }
-    }
+    // something that responds to acceleration & collisions
+    // maybe just need a custom effect
+    // let velocity = this.GetVehicle().GetLinearVelocity();
+    // let acceleration = velocity - this.lastVelocity;
+    // this.lastVelocity = velocity;
+    // if Vector4.Length(acceleration) > this.accThreshold {
+    //   // if !IsDefined(this.accelerationFx) {
+    //     let fx = Cast<FxResource>(r"base\\fx\\player\\p_damage\\p_health_low.effect");
+    //     this.accelerationFx = GameInstance.GetFxSystem(this.GetVehicle().GetGame()).SpawnEffect(fx, new WorldTransform());
+    //   // }
+    //   this.smoothFx = LerpF(0.1, this.smoothFx, Vector4.Length(acceleration));
+    //   this.accelerationFx.SetBlackboardValue(n"health_state", ClampF(1.0 - (this.smoothFx - this.accThreshold) * 0.5, 0.0, 1.0));
+    // } else {
+    //   // if IsDefined(this.accelerationFx) {
+    //     this.accelerationFx.BreakLoop();
+    //   // }
+    // }
     if this.active {
       if this.isPlayerMounted {
         this.sys.ctlr.OnUpdate(timeDelta);
