@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-08-18 00:04:38.2343187
+// This file was automatically generated on 2022-08-19 02:59:12.4666230
 
 // FlightAudio.reds
 
@@ -115,8 +115,38 @@ public native class FlightAudio extends IScriptable {
 
     return self;
   }
+  
+  public cb func Initialize() {
+    this.m_positionProviders = new inkHashMap();
+    this.m_positions = new inkHashMap();
+    this.m_orientationProviders = new inkHashMap();
+    this.m_orientations = new inkHashMap();
+    this.slots = [
+      // n"steering_wheel",
+      // n"roofhatch",
+      // n"glove_box",
+      // n"Base",
+      // n"dseat_a",
+      // n"dseat_b",
+      // n"bumper_front_a",
+      // n"bumper_front_b",
+      // n"mirror_front_left",
+      // n"mirror_front_right",
+      // n"wheel_front",
+      // n"wheel_back",
+      // n"wheel_front_left",
+      // n"wheel_front_right",
+      // n"wheel_back_left",
+      // n"wheel_back_right",
+      // n"bumper_back",
+      n"window_front_left_a",
+      n"window_front_right_a"
+    ];
+    
+    ModSettings.RegisterListenerToClass(this);
+  }
 
-  protected cb func OnGameLoaded() {
+  protected cb func OnWorldAttached() {
     let gameInstance = FlightSystem.GetInstance().gameInstance;
     this.uiBlackboard = GameInstance.GetBlackboardSystem(gameInstance).Get(GetAllBlackboardDefs().UI_System);
     if IsDefined(this.uiBlackboard) {
@@ -132,6 +162,15 @@ public native class FlightAudio extends IScriptable {
         this.popupCallback = this.uiGameDataBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown, this, n"OnPopupIsShown");
         this.isPopupShown = this.uiGameDataBlackboard.GetBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown);
       }
+    }
+  }
+
+  protected cb func OnWorldPendingDetach() {
+    if IsDefined(this.uiBlackboard) && IsDefined(this.menuCallback) {
+      this.uiBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UI_System.IsInMenu, this.menuCallback);
+    }
+    if IsDefined(this.uiGameDataBlackboard) && IsDefined(this.popupCallback) {
+      this.uiGameDataBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown, this.popupCallback);
     }
   }
 
@@ -279,6 +318,11 @@ public class OrientationWrapper {
 
 // FlightComponent.reds
 
+
+public native class FlightComponentPS extends GameComponentPS {
+
+}
+
 public native class FlightComponent extends GameComponent {
   @runtimeProperty("offset", "0xA8")
   public native let sys: ref<FlightSystem>;
@@ -348,6 +392,10 @@ public native class FlightComponent extends GameComponent {
 
   protected final const func GetVehicle() -> wref<VehicleObject> {
     return this.GetEntity() as VehicleObject;
+  }
+  
+  private final const func GetMyPS() -> ref<FlightComponentPS> {
+    return this.GetPS() as FlightComponentPS;
   }
 
   private final func OnGameAttach() -> Void {
@@ -511,6 +559,7 @@ public native class FlightComponent extends GameComponent {
     ModSettings.RegisterListenerToClass(this);
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if mountChild.IsPlayer() {
+      FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName());
       // this.GetVehicle().TurnOffAirControl();
       this.SetupVehicleTPPBBListener();
       // FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName());
@@ -4676,14 +4725,14 @@ public native class FlightSystem extends IFlightSystem {
   public let playerComponent: wref<FlightComponent>;
 
   public func Setup(player: ref<PlayerPuppet>) -> Void {
-    // FlightLog.Info("[FlightSystem] FlightSettings Created");
+    FlightLog.Info("[FlightSystem] Player updated");
     this.player = player;
     this.soundListener = player.FindComponentByName(n"soundListener") as IPlacedComponent;
     this.gameInstance = player.GetGame();
-    if !IsDefined(this.audio) {
-      this.audio = FlightAudio.Create();
-      FlightLog.Info("[FlightSystem] FlightAudio Created");
-    }
+    // if !IsDefined(this.audio) {
+    //   this.audio = FlightAudio.Create();
+    //   FlightLog.Info("[FlightSystem] FlightAudio Created");
+    // }
     this.ctlr = FlightController.GetInstance();
     this.tppCamera = player.FindComponentByName(n"vehicleTPPCamera") as vehicleTPPCameraComponent;
     // this.soundListener = this.tppCamera;

@@ -143,29 +143,31 @@ void FlightSystem::RegisterUpdates(RED4ext::UpdateManagerHolder *holder) {
                                "FlightSystem/UpdateComponents", &UpdateComponents);
  }
 
- bool FlightSystem::sub_118(RED4ext::world::RuntimeScene *runtimeScene) {
-  spdlog::info("[FlightSystem] sub_118!");
+ bool FlightSystem::WorldAttached(RED4ext::world::RuntimeScene *runtimeScene) {
+  spdlog::info("[FlightSystem] WorldAttached!");
+  this->audio->ExecuteFunction("OnWorldAttached");
   return true;
 }
 
-void FlightSystem::sub_120(RED4ext::world::RuntimeScene *runtimeScene) {
-  spdlog::info("[FlightSystem] sub_120!");
+void FlightSystem::WorldPendingDetach(RED4ext::world::RuntimeScene *runtimeScene) {
+  spdlog::info("[FlightSystem] WorldPendingDetach!");
+  this->audio->ExecuteFunction("OnWorldPendingDetach");
 }
 
-void FlightSystem::sub_128(RED4ext::world::RuntimeScene *runtimeScene) {
-	spdlog::info("[FlightSystem] sub_128!");
+void FlightSystem::WorldDetached(RED4ext::world::RuntimeScene *runtimeScene) {
+	spdlog::info("[FlightSystem] WorldDetached!");
 }
 
 void FlightSystem::sub_130() {
 	spdlog::info("[FlightSystem] sub_130!");
 }
 
-bool FlightSystem::sub_138() {
+uint32_t FlightSystem::sub_138(uint64_t a1, uint64_t a2) {
 	spdlog::info("[FlightSystem] sub_138!");
   return 0;
 }
 
-void FlightSystem::sub_140() {
+void FlightSystem::sub_140(uint64_t a1) {
 	spdlog::info("[FlightSystem] sub_140!");
 }
 
@@ -173,8 +175,8 @@ void FlightSystem::sub_148() {
 	spdlog::info("[FlightSystem] sub_148!");
 }
 
-void FlightSystem::sub_150(void * a1, uint64_t a2, uint64_t a3) { 
-  spdlog::info("[FlightSystem] sub_150!");
+void FlightSystem::OnGameLoad(void *a1, uint64_t a2, uint64_t a3) { 
+  spdlog::info("[FlightSystem] OnGameLoad!");
   auto r = new RED4ext::ResourceReference("user\\jackhumbert\\meshes\\engine_corpo.mesh");
   //r->Fetch();
   //RED4ext::ResourceLoader::Get();
@@ -193,8 +195,6 @@ void FlightSystem::sub_150(void * a1, uint64_t a2, uint64_t a3) {
   spdlog::info("[FlightSystem] AirControlCarRollHelper: {}", AirControlCarRollHelper.GetAddr()->value);
   spdlog::info("[FlightSystem] ForceMoveToMaxLinearSpeed: {}", ForceMoveToMaxLinearSpeed.GetAddr()->value);
   spdlog::info("[FlightSystem] physicsCCD: {}", physicsCCD.GetAddr()->value);
-
-  this->audio->ExecuteFunction("OnGameLoaded");
 }
 
 bool FlightSystem::sub_158() {
@@ -202,8 +202,8 @@ bool FlightSystem::sub_158() {
   return true;
 }
 
-void FlightSystem::sub_160() {
-  spdlog::info("[FlightSystem] sub_160!");
+void FlightSystem::OnGamePrepared() {
+  spdlog::info("[FlightSystem] OnGamePrepared!");
 }
 
 void FlightSystem::sub_168() {
@@ -221,22 +221,22 @@ void FlightSystem::sub_178(uintptr_t a1, bool a2) {
   RED4ext::game::IGameSystem::sub_178(a1, a2);
 }
 
-void FlightSystem::sub_180(uint64_t, bool isGameLoaded, uint64_t) {
-  spdlog::info("[FlightSystem] sub_180!");
+void FlightSystem::OnStreamingWorldLoaded(uint64_t, bool isGameLoaded, uint64_t) {
+  spdlog::info("[FlightSystem] OnStreamingWorldLoaded!");
 }
 
 void FlightSystem::sub_188() {
   spdlog::info("[FlightSystem] sub_188!");
 }
 
-// called from GameInstance->sub_20
 void FlightSystem::sub_190(HighLow *) {
   spdlog::info("[FlightSystem] sub_190!");
 }
 
-void** FlightSystem::sub_198(void ** unkThing) {
-  spdlog::info("[FlightSystem] sub_198!");
-  return unkThing;
+void FlightSystem::Initialize(void **unkThing) {
+  spdlog::info("[FlightSystem] Initialize!");
+  this->audio = RED4ext::Handle<FlightAudio>((FlightAudio*)FlightAudio::GetRTTIType()->AllocInstance());
+  this->audio->ExecuteFunction("Initialize");
 }
 
 void FlightSystem::sub_1A0() {

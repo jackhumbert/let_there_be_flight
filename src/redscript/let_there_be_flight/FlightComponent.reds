@@ -1,3 +1,8 @@
+
+public native class FlightComponentPS extends GameComponentPS {
+
+}
+
 public native class FlightComponent extends GameComponent {
   @runtimeProperty("offset", "0xA8")
   public native let sys: ref<FlightSystem>;
@@ -67,6 +72,10 @@ public native class FlightComponent extends GameComponent {
 
   protected final const func GetVehicle() -> wref<VehicleObject> {
     return this.GetEntity() as VehicleObject;
+  }
+  
+  private final const func GetMyPS() -> ref<FlightComponentPS> {
+    return this.GetPS() as FlightComponentPS;
   }
 
   private final func OnGameAttach() -> Void {
@@ -230,6 +239,7 @@ public native class FlightComponent extends GameComponent {
     ModSettings.RegisterListenerToClass(this);
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if mountChild.IsPlayer() {
+      FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName());
       // this.GetVehicle().TurnOffAirControl();
       this.SetupVehicleTPPBBListener();
       // FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName());

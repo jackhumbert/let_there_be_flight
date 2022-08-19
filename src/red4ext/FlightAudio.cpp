@@ -101,10 +101,12 @@ void FlightAudio::UpdateVolume() {
   wind->setVolume(volume * gameVolume);
   FlightAudio::GetRTTIType()->GetFunction("GetWarningVolume")->Execute(&stack);
   warning->setVolume(volume * gameVolume);
+  ERRCHECK(fmod_system->update());
 }
 
 void FlightAudio::UpdateParameter(RED4ext::CString  name, float value) {
   ERRCHECK(fmod_system->setParameterByName(name.c_str(), value));
+  ERRCHECK(fmod_system->update());
 }
 
 void FlightAudio::Pause() {

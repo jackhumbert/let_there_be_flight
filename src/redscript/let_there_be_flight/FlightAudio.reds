@@ -108,8 +108,38 @@ public native class FlightAudio extends IScriptable {
 
     return self;
   }
+  
+  public cb func Initialize() {
+    this.m_positionProviders = new inkHashMap();
+    this.m_positions = new inkHashMap();
+    this.m_orientationProviders = new inkHashMap();
+    this.m_orientations = new inkHashMap();
+    this.slots = [
+      // n"steering_wheel",
+      // n"roofhatch",
+      // n"glove_box",
+      // n"Base",
+      // n"dseat_a",
+      // n"dseat_b",
+      // n"bumper_front_a",
+      // n"bumper_front_b",
+      // n"mirror_front_left",
+      // n"mirror_front_right",
+      // n"wheel_front",
+      // n"wheel_back",
+      // n"wheel_front_left",
+      // n"wheel_front_right",
+      // n"wheel_back_left",
+      // n"wheel_back_right",
+      // n"bumper_back",
+      n"window_front_left_a",
+      n"window_front_right_a"
+    ];
+    
+    ModSettings.RegisterListenerToClass(this);
+  }
 
-  protected cb func OnGameLoaded() {
+  protected cb func OnWorldAttached() {
     let gameInstance = FlightSystem.GetInstance().gameInstance;
     this.uiBlackboard = GameInstance.GetBlackboardSystem(gameInstance).Get(GetAllBlackboardDefs().UI_System);
     if IsDefined(this.uiBlackboard) {
@@ -125,6 +155,15 @@ public native class FlightAudio extends IScriptable {
         this.popupCallback = this.uiGameDataBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown, this, n"OnPopupIsShown");
         this.isPopupShown = this.uiGameDataBlackboard.GetBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown);
       }
+    }
+  }
+
+  protected cb func OnWorldPendingDetach() {
+    if IsDefined(this.uiBlackboard) && IsDefined(this.menuCallback) {
+      this.uiBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UI_System.IsInMenu, this.menuCallback);
+    }
+    if IsDefined(this.uiGameDataBlackboard) && IsDefined(this.popupCallback) {
+      this.uiGameDataBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown, this.popupCallback);
     }
   }
 

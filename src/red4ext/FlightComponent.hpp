@@ -4,18 +4,25 @@
 #include "Engine/RTTIClass.hpp"
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/NativeTypes.hpp>
-#include <RED4ext/Scripting/Natives/Generated/game/DeviceComponent.hpp>
+#include <RED4ext/Scripting/Natives/Generated/game/Component.hpp>
+#include <RED4ext/Scripting/Natives/Generated/game/ComponentPS.hpp>
 #include <RED4ext/Scripting/Natives/Generated/Vector4.hpp>
 #include <RED4ext/Scripting/Natives/gamePSInterface.hpp>
 #include "FlightSystem.hpp"
 
-//struct FlightSystem;
+class FlightComponentPS : public Engine::RTTIClass<FlightComponentPS, RED4ext::game::ComponentPS> {
+public:
+private:
+  friend Descriptor;
+};
 
 class FlightComponent : public Engine::RTTIClass<FlightComponent, RED4ext::game::Component> {
 public:
   //virtual ~FlightComponent() override = default;
   //virtual ~PSInterface() override = default;
-  virtual RED4ext::CClass* GetPSClass() override;
+  inline virtual RED4ext::CClass* GetPSClass() override {
+    return FlightComponentPS::GetRTTIType();
+  }
 
   // has scripted callbacks?
   inline virtual bool sub_240() override {

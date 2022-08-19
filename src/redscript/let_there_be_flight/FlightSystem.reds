@@ -26,14 +26,14 @@ public native class FlightSystem extends IFlightSystem {
   public let playerComponent: wref<FlightComponent>;
 
   public func Setup(player: ref<PlayerPuppet>) -> Void {
-    // FlightLog.Info("[FlightSystem] FlightSettings Created");
+    FlightLog.Info("[FlightSystem] Player updated");
     this.player = player;
     this.soundListener = player.FindComponentByName(n"soundListener") as IPlacedComponent;
     this.gameInstance = player.GetGame();
-    if !IsDefined(this.audio) {
-      this.audio = FlightAudio.Create();
-      FlightLog.Info("[FlightSystem] FlightAudio Created");
-    }
+    // if !IsDefined(this.audio) {
+    //   this.audio = FlightAudio.Create();
+    //   FlightLog.Info("[FlightSystem] FlightAudio Created");
+    // }
     this.ctlr = FlightController.GetInstance();
     this.tppCamera = player.FindComponentByName(n"vehicleTPPCamera") as vehicleTPPCameraComponent;
     // this.soundListener = this.tppCamera;
