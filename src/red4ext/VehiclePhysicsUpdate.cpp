@@ -143,6 +143,44 @@ uintptr_t __fastcall VehiclePhysicsUpdate(RED4ext::vehicle::Physics *p, float de
   return VehiclePhysicsUpdate_Original(p, deltaTime);
 }
 
+
+// update with pid
+void __fastcall ProcessAirResistance(RED4ext::vehicle::WheeledPhysics *a1, float deltaTime);
+
+// 48 8B C4 53 48 81 EC A0 00 00 00 0F 29 70 E8 48 8B D9 0F 29 78 D8 44 0F 29 40 C8 44 0F 29 48 B8
+constexpr uintptr_t ProcessAirResistanceAddr = 0x1D0E5F0;
+decltype(&ProcessAirResistance) ProcessAirResistance_Original;
+
+void __fastcall ProcessAirResistance(RED4ext::vehicle::WheeledPhysics *a1, float deltaTime) {
+  auto physicsData = a1->parent->physicsData;
+  auto velocity = physicsData->velocity;
+  auto X = velocity.X;
+  auto Y = velocity.Y;
+  auto Z = velocity.Z;
+  auto speedSquared = (float)((float)(X * X) + (float)(Y * Y)) + (float)(Z * Z);
+  if (_fdclass(speedSquared) != 1 && speedSquared >= 10000.0) {
+    auto unk568 = a1->parent2->unk568;
+    if (speedSquared > 0.0099999998) {
+      auto speed = sqrt(speedSquared);
+      if (speed != 0.0) {
+        X = X / speed;
+        Y = Y / speed;
+        Z = Z / speed;
+      }
+      RED4ext::Vector3 airResistanceForce;
+      auto yankX = (float)((float)(X * -1.2) * a1->airResistanceFactor) * speedSquared;
+      auto yankY = (float)((float)(Y * -1.2) * a1->airResistanceFactor) * speedSquared;
+      auto yankZ = (float)((float)(Z * -1.2) * a1->airResistanceFactor) * speedSquared;
+      airResistanceForce.X = yankX * deltaTime;
+      airResistanceForce.Y = yankY * deltaTime;
+      airResistanceForce.Z = yankZ * deltaTime;
+      physicsData->force += airResistanceForce;
+      unk568->unk108 = sqrt((float)((float)(yankX * yankX) + (float)(yankY * yankY)) + (float)(yankZ * yankZ));
+    }
+  }
+  ProcessAirResistance_Original(a1, deltaTime);
+}
+
 void __fastcall AirControlProcess(RED4ext::vehicle::AirControl *ac, float deltaTime) {
   auto fc = GetFlightComponent(ac->vehicle);
   if (fc) {
@@ -243,6 +281,8 @@ struct VehiclePhysicsUpdateModule : FlightModule {
   void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehiclePhysicsUpdateAddr), &VehiclePhysicsUpdate,
                           reinterpret_cast<void **>(&VehiclePhysicsUpdate_Original)));
+    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(ProcessAirResistanceAddr), &ProcessAirResistance,
+                          reinterpret_cast<void **>(&ProcessAirResistance_Original)));
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleHelperUpdateAddr), &VehicleHelperUpdate,
                           reinterpret_cast<void **>(&VehicleHelperUpdate_Original)));
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(AirControlProcessAddr), &AirControlProcess,
@@ -258,6 +298,7 @@ struct VehiclePhysicsUpdateModule : FlightModule {
                                   reinterpret_cast<void **>(&BikeAnimationUpdate_Original)));
   }
   void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(ProcessAirResistanceAddr));
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehiclePhysicsUpdateAddr));
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleHelperUpdateAddr));
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(AirControlProcessAddr));
