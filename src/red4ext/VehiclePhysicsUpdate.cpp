@@ -5,6 +5,7 @@
 #include <RED4ext/RED4ext.hpp>
 #include <spdlog/spdlog.h>
 #include "VehiclePhysicsUpdate.hpp"
+#include "FlightComponent.hpp"
 
 // main vehicle physics update
 uintptr_t __fastcall VehiclePhysicsUpdate(RED4ext::vehicle::Physics *, float);
@@ -61,24 +62,12 @@ uint64_t __fastcall UpdateAnimValueForCName(RED4ext::vehicle::BaseObject *vehicl
   return call(vehicle->unk570, name, value);
 }
 
-
-RED4ext::ent::IComponent *GetFlightComponent(RED4ext::vehicle::Physics *p) {
-  auto rtti = RED4ext::CRTTISystem::Get();
-  auto fcc = rtti->GetClass("FlightComponent");
-  for (auto const &c : p->parent->componentsStorage.components) {
-    if (c.GetPtr()->GetType() == fcc) {
-      return c.GetPtr();
-    }
-  }
-  return NULL;
-}
-
-RED4ext::ent::IComponent *GetFlightComponent(RED4ext::vehicle::BaseObject *v) {
+FlightComponent *GetFlightComponent(RED4ext::vehicle::BaseObject *v) {
   auto rtti = RED4ext::CRTTISystem::Get();
   auto fcc = rtti->GetClass("FlightComponent");
   for (auto const &c : v->componentsStorage.components) {
     if (c.GetPtr()->GetType() == fcc) {
-      return c.GetPtr();
+      return (FlightComponent*)c.GetPtr();
     }
   }
   return NULL;
@@ -143,8 +132,6 @@ uintptr_t __fastcall VehiclePhysicsUpdate(RED4ext::vehicle::Physics *p, float de
   return VehiclePhysicsUpdate_Original(p, deltaTime);
 }
 
-
-// update with pid
 void __fastcall ProcessAirResistance(RED4ext::vehicle::WheeledPhysics *a1, float deltaTime);
 
 // 48 8B C4 53 48 81 EC A0 00 00 00 0F 29 70 E8 48 8B D9 0F 29 78 D8 44 0F 29 40 C8 44 0F 29 48 B8
@@ -196,7 +183,7 @@ void __fastcall AirControlProcess(RED4ext::vehicle::AirControl *ac, float deltaT
 uintptr_t __fastcall VehicleHelperUpdate(RED4ext::vehicle::WheeledPhysics *p, float deltaTime) {
   auto rtti = RED4ext::CRTTISystem::Get();
   auto fcc = rtti->GetClass("FlightComponent");
-  auto fc = GetFlightComponent(p);
+  auto fc = GetFlightComponent(p->parent);
   if (fc) {
     auto activeProp = fcc->GetProperty("active");
     auto size = p->driveHelpers.size;
@@ -277,6 +264,22 @@ uintptr_t __fastcall BikeAnimationUpdate(RED4ext::vehicle::BikePhysics *a1) {
   return og;
 }
 
+void __fastcall FourWheelTorque(RED4ext::vehicle::WheeledPhysics *physics, unsigned __int8 rearWheelIndex,
+                                unsigned __int8 frontWheelIndex, float a4, RED4ext::Transform *transform);
+
+// 40 53 48 81 EC A0 00 00 00 44 0F B6 D2 4C 8D 89 D0 05 00 00 41 0F B6 C0 48 8B D9 4D 69 C2 30 01
+constexpr uintptr_t FourWheelTorqueAddr = 0x1D0E8D0;
+decltype(&FourWheelTorque) FourWheelTorque_Original;
+
+void __fastcall FourWheelTorque(RED4ext::vehicle::WheeledPhysics *physics,
+                                                   unsigned __int8 rearWheelIndex, unsigned __int8 frontWheelIndex,
+                                                   float a4, RED4ext::Transform *transform) {
+  auto fc = GetFlightComponent(physics->parent);
+  if (!fc->hasUpdate) {
+    FourWheelTorque_Original(physics, rearWheelIndex, frontWheelIndex, a4, transform);
+  }
+}
+
 struct VehiclePhysicsUpdateModule : FlightModule {
   void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehiclePhysicsUpdateAddr), &VehiclePhysicsUpdate,
@@ -296,6 +299,8 @@ struct VehiclePhysicsUpdateModule : FlightModule {
                                   reinterpret_cast<void **>(&AnimationUpdate_Original)));
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(RED4ext::vehicle::BikePhysics::AnimationUpdateAddr), &BikeAnimationUpdate,
                                   reinterpret_cast<void **>(&BikeAnimationUpdate_Original)));
+    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(FourWheelTorqueAddr), &FourWheelTorque,
+                                  reinterpret_cast<void **>(&FourWheelTorque_Original)));
   }
   void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(ProcessAirResistanceAddr));
@@ -306,6 +311,7 @@ struct VehiclePhysicsUpdateModule : FlightModule {
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleUpdateOrientationWithPIDAddr));
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(AnimationUpdateAddr));
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(RED4ext::vehicle::BikePhysics::AnimationUpdateAddr));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(FourWheelTorqueAddr));
   }
 };
 

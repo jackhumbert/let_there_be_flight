@@ -105,6 +105,7 @@ void UpdateComponents(RED4ext::Unk2 *unk2, float *deltaTime, void *unkStruct) {
       auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(fc->entity.GetPtr());
       //auto activeProp = fcc->GetProperty("hasUpdate");
       if (fc->hasUpdate && vehicle->physicsData) {
+        // removes Asleep/0x10
         vehicle->SetPhysicsState(0x10u, 1u);
         // auto onUpdate = fcc->GetFunction("OnUpdate");
         // auto args = RED4ext::CStackType(rtti->GetType("Float"), &deltaTime);
