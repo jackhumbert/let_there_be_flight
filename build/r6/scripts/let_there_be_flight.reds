@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-08-20 16:42:17.9271975
+// This file was automatically generated on 2022-08-25 22:32:42.2022012
 
 // FlightAudio.reds
 
@@ -338,6 +338,9 @@ public native class FlightComponent extends GameComponent {
 
   @runtimeProperty("offset", "0xD0")
   public native let torque: Vector4;
+
+  public native func ChaseTarget(target: wref<GameObject>) -> Void;
+  // public native func ChaseTarget() -> Void;
 
   public let thrusters: array<ref<FlightThruster>>;
   private let helper: ref<vehicleFlightHelper>;
@@ -951,6 +954,11 @@ public native class FlightComponent extends GameComponent {
       if this.isPlayerMounted {
         this.sys.ctlr.ProcessImpact(biggestImpact);
       } else {
+        // let pc = FlightSystem.GetInstance().playerComponent;
+        // if IsDefined(pc) && IsDefined(pc.GetVehicle()) {
+        //   this.ChaseTarget(pc.GetVehicle());
+        //   // this.ChaseTarget();
+        // }
         // if biggestImpact > 0.00 {
         //   if !this.active {
         //     this.Activate();

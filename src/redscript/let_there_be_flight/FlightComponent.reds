@@ -19,6 +19,9 @@ public native class FlightComponent extends GameComponent {
   @runtimeProperty("offset", "0xD0")
   public native let torque: Vector4;
 
+  public native func ChaseTarget(target: wref<GameObject>) -> Void;
+  // public native func ChaseTarget() -> Void;
+
   public let thrusters: array<ref<FlightThruster>>;
   private let helper: ref<vehicleFlightHelper>;
   private let stats: ref<FlightStats>;
@@ -631,6 +634,11 @@ public native class FlightComponent extends GameComponent {
       if this.isPlayerMounted {
         this.sys.ctlr.ProcessImpact(biggestImpact);
       } else {
+        // let pc = FlightSystem.GetInstance().playerComponent;
+        // if IsDefined(pc) && IsDefined(pc.GetVehicle()) {
+        //   this.ChaseTarget(pc.GetVehicle());
+        //   // this.ChaseTarget();
+        // }
         // if biggestImpact > 0.00 {
         //   if !this.active {
         //     this.Activate();

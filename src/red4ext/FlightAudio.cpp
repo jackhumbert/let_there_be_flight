@@ -15,8 +15,6 @@
 #include <fmod_studio.hpp>
 #include "FlightSystem.hpp"
 
-#include "stdafx.hpp"
-
 #define ERRCHECK(_result) ERRCHECK_fn(_result, __FILE__, __LINE__)
 
 void ERRCHECK_fn(FMOD_RESULT result, const char *file, int line) {

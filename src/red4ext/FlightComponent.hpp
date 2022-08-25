@@ -9,6 +9,10 @@
 #include <RED4ext/Scripting/Natives/Generated/Vector4.hpp>
 #include <RED4ext/Scripting/Natives/gamePSInterface.hpp>
 #include "FlightSystem.hpp"
+#include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
+#include <RED4ext/Scripting/Natives/actionActionBase.hpp>
+#include <RED4ext/Scripting/Natives/actionDriveChaseTarget.hpp>
+#include <RED4ext/Scripting/Natives/Generated/vehicle/AutonomousData.hpp>
 
 class FlightComponentPS : public Engine::RTTIClass<FlightComponentPS, RED4ext::game::ComponentPS> {
 public:
@@ -28,6 +32,8 @@ public:
   inline virtual bool sub_240() override {
     return true;
   }
+
+  void ChaseTarget(RED4ext::WeakHandle<RED4ext::game::Object> target);
 
   //inline virtual void sub_188(void *a1) override {
   //  //spdlog::info("[FlightComponent] sub_188");
@@ -59,7 +65,7 @@ private:
   friend Descriptor;
 
   static void OnDescribe(Descriptor *aType, RED4ext::CRTTISystem *) {
-    //aType->AddFunction<&FlightComponent::UpdateListenerMatrix>("UpdateListenerMatrix");
+    aType->AddFunction<&FlightComponent::ChaseTarget>("ChaseTarget");
   }
 };
 RED4EXT_ASSERT_OFFSET(FlightComponent, sys, 0xA8);

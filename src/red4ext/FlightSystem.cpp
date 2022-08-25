@@ -55,7 +55,7 @@ RED4ext::Matrix* __fastcall GetMatrixFromOrientation(RED4ext::Quaternion* q, RED
 
 
 void FlightSystem::RegisterComponent(RED4ext::WeakHandle<FlightComponent> fc) {
-  if (!fc.Expired()) {
+  if (fc.instance && !fc.Expired()) {
     this->flightComponents.EmplaceBack(fc);
   }
   //spdlog::info("[FlightSystem] Component added");
@@ -104,9 +104,12 @@ void UpdateComponents(RED4ext::Unk2 *unk2, float *deltaTime, void *unkStruct) {
     if (fc) {
       auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(fc->entity.GetPtr());
       //auto activeProp = fcc->GetProperty("hasUpdate");
-      if (fc->hasUpdate && vehicle->physicsData) {
+      if (vehicle && fc->hasUpdate && vehicle->physicsData) {
         // removes Asleep/0x10
-        vehicle->SetPhysicsState(0x10u, 1u);
+        //vehicle->SetPhysicsState(RED4ext::vehicle::PhysicsState::Asleep, 1u);
+        //vehicle->UnsetPhysicsStates();
+        // just locks the brakes
+        //vehicle->PersistentDataPS->ToggleQuestForceBraking(true);
         // auto onUpdate = fcc->GetFunction("OnUpdate");
         // auto args = RED4ext::CStackType(rtti->GetType("Float"), &deltaTime);
         // auto stack = RED4ext::CStack(fc, &args, 1, nullptr, 0);
@@ -147,6 +150,46 @@ void FlightSystem::RegisterUpdates(RED4ext::UpdateManagerHolder *holder) {
  bool FlightSystem::WorldAttached(RED4ext::world::RuntimeScene *runtimeScene) {
   spdlog::info("[FlightSystem] WorldAttached!");
   this->audio->ExecuteFunction("OnWorldAttached");
+
+  //auto rtti = RED4ext::CRTTISystem::Get();
+
+  //// auto types = RED4ext::DynArray<RED4ext::CBaseRTTIType*>(new RED4ext::Memory::DefaultAllocator());
+  //// rtti->GetNativeTypes(types);
+  //auto classes = RED4ext::DynArray<RED4ext::CClass *>(new RED4ext::Memory::DefaultAllocator());
+  //rtti->GetClasses(nullptr, classes);
+
+  //for (const auto &cls : classes) {
+  //  if (cls && cls->name != "None" && !cls->flags.isAbstract) {
+  //    if (cls->name == "inkInputKeyIconManager")
+  //      continue;
+  //    auto name = cls->name.ToString();
+  //    auto instance = cls->AllocMemory();
+  //    cls->ConstructCls(instance);
+  //    if (instance) {
+  //      auto rva = *reinterpret_cast<uintptr_t *>(instance);
+  //      if (rva > RED4ext::RelocBase::GetImageBase()) {
+  //        spdlog::info("#define {}_VFT_RVA 0x{:X}", name, rva - RED4ext::RelocBase::GetImageBase());
+  //      }
+  //    }
+  //  }
+  //}
+
+  //auto classes = RED4ext::DynArray<RED4ext::CClass *>(new RED4ext::Memory::DefaultAllocator());
+  //rtti->GetClasses(nullptr, classes);
+  //auto vbc = rtti->GetClass("vehicleBaseObject");
+  //for (auto const &cb : vbc->callbacks) {
+  //  if (cb.type.name == "function") {
+  //    RED4ext::CName typeName = "None";
+  //    for (auto const &cls : classes) {
+  //      if (cls->callbackTypeId == cb.typeId) {
+  //        typeName = cls->name;
+  //      }
+  //    }
+  //    spdlog::info("static constexpr const uintptr_t On_{}_Addr = {}", typeName.ToString(), (uintptr_t)(cb.action.OnEvent) - RED4ext::RelocBase::GetImageBase());
+  //  }
+  //}
+
+
   return true;
 }
 

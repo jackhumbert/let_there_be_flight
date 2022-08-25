@@ -101,6 +101,7 @@ bool __fastcall ProcessScriptTypes(uint32_t* version, ScriptData* scriptData, vo
     }
   }
   auto og = ProcessScriptTypes_Original(version, scriptData, scriptLogger);
+
   return og;
 }
 
