@@ -226,7 +226,7 @@ void FlightSystem::OnGameLoad(void *a1, uint64_t a2, uint64_t a3) {
   //RED4ext::ResourceLoader::Get();
   LoadResRef<bool>(&r->path, &r->token, false);
 
-  EnableSmoothWheelContacts.GetAddr()->value = false;
+  //EnableSmoothWheelContacts.GetAddr()->value = false;
   PhysXClampHugeImpacts.GetAddr()->value = false;
   PhysXClampHugeSpeeds.GetAddr()->value = false;
   AirControlCarRollHelper.GetAddr()->value = false;

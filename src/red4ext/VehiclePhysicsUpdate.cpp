@@ -146,7 +146,7 @@ void __fastcall ProcessAirResistance(RED4ext::vehicle::WheeledPhysics *a1, float
   auto Z = velocity.Z;
   auto speedSquared = (float)((float)(X * X) + (float)(Y * Y)) + (float)(Z * Z);
   if (_fdclass(speedSquared) != 1 && speedSquared >= 10000.0) {
-    auto unk568 = a1->parent2->unk568;
+    auto unk568 = a1->parent->unk568;
     if (speedSquared > 0.0099999998) {
       auto speed = sqrt(speedSquared);
       if (speed != 0.0) {
@@ -229,21 +229,21 @@ void __fastcall VehicleUpdateOrientationWithPID(RED4ext::vehicle::CarBaseObject 
 }
 
 uintptr_t __fastcall AnimationUpdate(RED4ext::vehicle::CarPhysics *a1, float timeDelta) {
-  auto fc = GetFlightComponent(a1->parent3);
+  auto fc = GetFlightComponent(a1->parent);
   if (fc) {
     auto rtti = RED4ext::CRTTISystem::Get();
     auto fcc = rtti->GetClass("FlightComponent");
     auto activeProp = fcc->GetProperty("active");
     auto rollProp = fcc->GetProperty("roll");
     if (activeProp->GetValue<bool>(fc)) {
-      a1->parent3->turnInput = rollProp->GetValue<float>(fc);
+      a1->parent->turnInput = rollProp->GetValue<float>(fc);
     }
   }
   return AnimationUpdate_Original(a1, timeDelta);
 }
 
 uintptr_t __fastcall BikeAnimationUpdate(RED4ext::vehicle::BikePhysics *a1) {
-  auto fc = GetFlightComponent(a1->parent3);
+  auto fc = GetFlightComponent(a1->parent);
   if (fc) {
     auto rtti = RED4ext::CRTTISystem::Get();
     auto fcc = rtti->GetClass("FlightComponent");
@@ -252,7 +252,7 @@ uintptr_t __fastcall BikeAnimationUpdate(RED4ext::vehicle::BikePhysics *a1) {
     ;
     if (activeProp->GetValue<bool>(fc)) {
       //a1->parent3->turnInput = rollProp->GetValue<float>(fc);
-      a1->parent3->turnInput = 0.0;
+      a1->parent->turnInput = 0.0;
       a1->turnRate = 0.0;
       a1->tiltControlEnabled = 0;
     } else {

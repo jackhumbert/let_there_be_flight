@@ -92,7 +92,7 @@ struct CustomHUDLayer : FlightModule {
   }
 };
 
-REGISTER_FLIGHT_MODULE(CustomHUDLayer);
+//REGISTER_FLIGHT_MODULE(CustomHUDLayer);
 
 } // namespace flight
 } // namespace vehicle
