@@ -1,6 +1,3 @@
-public class FlightFxCleanedUpEvent extends Event {
-  public let delay: Float = 0.5;
-}
 
 // public class FlightFx {
 //   private let sys: ref<FlightSystem>;

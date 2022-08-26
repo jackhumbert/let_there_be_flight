@@ -230,13 +230,13 @@ public native class FlightAudio extends IScriptable {
     }
   }
 
-  public func DrawSlotPositions(ui: ref<FlightControllerUI>) {
-    for slot in this.slots {
-      let position = this.GetPosition(slot);
-      ui.DrawMark(position);
-      ui.DrawText(position, NameToString(slot));
-    }
-  }
+  // public func DrawSlotPositions(ui: ref<FlightControllerUI>) {
+  //   for slot in this.slots {
+  //     let position = this.GetPosition(slot);
+  //     ui.DrawMark(position);
+  //     ui.DrawText(position, NameToString(slot));
+  //   }
+  // }
 
 	public func UpdatePosition(name: CName) -> Void {
 		let key: Uint64 = TDBID.ToNumber(TDBID.Create(NameToString(name)));

@@ -33,11 +33,19 @@ Other settings can be found in [`r6/scripts/let_there_be_flight.reds`](https://g
 
 ## Troubleshooting
 
-After a crash or error, please save your `red4ext/logs/let_there_be_flight.log` file - this will get written over the next time you start the game, and may contain helpful information regarding the issue.
+To better report crashes, click on "What does this report contain?" in the crash handler window:
 
-If you come across something that doesn't work quite right, or interferes with another mod, [search for an issue!](https://github.com/jackhumbert/let_there_be_flight/issues) I have a lot of things on a private TODO list still, but can start to move things to Github issues.
+<img width="420" alt="CrashReporter_ZpKyOJoSbT" src="https://user-images.githubusercontent.com/141431/186788162-9898b344-a22c-42b8-9ed3-e21518e17179.png">
 
-**New issues/pull requests are disabled until I get things closer to a release and can manage things better.**
+And find the Cyberpunk2077.dmp file, shown here:
+
+<img width="584" alt="explorer_iuXThrg7iB" src="https://user-images.githubusercontent.com/141431/186788246-eaa77ba1-5891-4f93-9abd-2f033b7e6f1a.png">
+
+Copy this file, along with your `red4ext/logs/let_there_be_flight.log` file *before* you run the game again - it will get overwritten on each launch:
+
+<img width="584" alt="explorer_vV4IdIzcT7" src="https://user-images.githubusercontent.com/141431/186788320-f909c7b4-ca0d-4fcc-b77a-14b3021fe45b.png">
+
+If you can include both of these files in any report, it should make it a lot easier to track down bugs.
 
 ## Uninstallation
 

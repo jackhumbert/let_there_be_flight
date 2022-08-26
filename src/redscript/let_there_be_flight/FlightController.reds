@@ -35,10 +35,10 @@ public native class FlightController extends IScriptable {
   private let player: ref<PlayerPuppet>;
   private let m_callbackID: ref<CallbackHandle>;
   private let m_vehicleCollisionBBStateID: ref<CallbackHandle>;
-  private let ui: ref<FlightControllerUI>;
-  public final func SetUI(ui: ref<FlightControllerUI>) {
-    this.ui = ui;
-  }
+  // private let ui: ref<FlightControllerUI>;
+  // public final func SetUI(ui: ref<FlightControllerUI>) {
+  //   this.ui = ui;
+  // }
   public final const func IsEnabled() -> Bool {
     return this.enabled;
   }
@@ -225,10 +225,10 @@ public native class FlightController extends IScriptable {
     // let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
     // uiSystem.PushGameContext(IntEnum(10));
 
-    if (this.showUI) {
-      this.ui.Show();
+    // if (this.showUI) {
+      // this.ui.Show();
       // FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, true);
-    }
+    // }
   
     if !silent {
       this.ShowSimpleMessage("Flight Control Engaged");
@@ -249,9 +249,9 @@ public native class FlightController extends IScriptable {
     if !silent {
       this.ShowSimpleMessage("Flight Control Disengaged");
     }
-    if (this.showUI) {
-      this.ui.Hide();
-    }
+    // if (this.showUI) {
+    //   this.ui.Hide();
+    // }
     // FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, false);
 
     FlightLog.Info("[FlightController] Deactivate");
@@ -388,9 +388,9 @@ public native class FlightController extends IScriptable {
           // FlightLog.Info("Options button pressed");
           this.showOptions = true;
           // GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"summon_hologram", true);
-          if (this.showUI) {
-            this.ui.ShowInfo();
-          }
+          // if (this.showUI) {
+          //   this.ui.ShowInfo();
+          // }
           this.SetupActions();
         }
         if ListenerAction.IsButtonJustReleased(action) {

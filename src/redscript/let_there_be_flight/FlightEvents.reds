@@ -21,3 +21,7 @@ public class VehicleFlightUIActivationEvent extends vehicleFlightEvent {
 public class VehicleFlightModeChangeEvent extends vehicleFlightEvent {
   let mode: Int32;
 }
+
+public class FlightFxCleanedUpEvent extends Event {
+  public let delay: Float = 0.5;
+}

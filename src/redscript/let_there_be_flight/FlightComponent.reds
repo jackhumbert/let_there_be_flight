@@ -365,7 +365,7 @@ public native class FlightComponent extends GameComponent {
     if !this.active {
 
       this.stats = FlightStats.Create(this.GetVehicle());
-      this.sys.ctlr.ui.Setup(this.stats);
+      // this.sys.ctlr.ui.Setup(this.stats);
 
       this.SetupTires();
       for thruster in this.thrusters {

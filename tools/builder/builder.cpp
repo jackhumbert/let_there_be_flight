@@ -26,7 +26,7 @@ void build_archive() {
 }
 
 void build_redscript() {
-  fs::create_directories("build/r6/scripts");
+  fs::create_directories("build/r6/scripts/let_there_be_flight");
   stringstream contents;
   contents << "// Let There Be Flight" << endl
            << "// (C) 2022 Jack Humbert" << endl
@@ -50,15 +50,15 @@ void build_redscript() {
            << endl;
     }
   }
-  ofstream compiledFile("build/r6/scripts/let_there_be_flight.reds");
-  installedFiles.push_back("r6/scripts/let_there_be_flight.reds");
+  ofstream compiledFile("build/r6/scripts/let_there_be_flight/let_there_be_flight.packed.reds");
+  installedFiles.push_back("r6/scripts/let_there_be_flight/let_there_be_flight.packed.reds");
   compiledFile << contents.rdbuf();
 
   compiledFile.close();
 
-  fs::copy("src/redscript/codeware", "build/r6/scripts/codeware",
-           fs::copy_options::update_existing | fs::copy_options::recursive);
-  installedFolders.push_back("r6/scripts/codeware");
+  //fs::copy("src/redscript/codeware", "build/r6/scripts/codeware",
+  //         fs::copy_options::update_existing | fs::copy_options::recursive);
+  //installedFolders.push_back("r6/scripts/codeware");
 }
 
 void build_tweaks() {
