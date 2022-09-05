@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-08-26 13:50:02.2656701
+// This file was automatically generated on 2022-09-01 13:28:41.6631585
 
 // FlightAudio.reds
 
@@ -2953,7 +2953,7 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.step", "0.1")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "50.0")
-  public let brakeFactorAngular: Float = 10.0;
+  public let brakeFactorAngular: Float = 5.0;
   
   // Flight Physics Settings
 
@@ -2970,7 +2970,7 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.step", "0.0001")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "0.01")
-  public let generalDampFactorLinear: Float = 0.001;
+  public let generalDampFactorLinear: Float = 0.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "Flight Physics Settings")
@@ -3619,7 +3619,9 @@ public class FlightThruster {
     // AnimationControllerComponent.SetInputFloatToReplicate(this.flightComponent.GetVehicle(), this.GetRadiusName(), this.animRadius);
 
     let acc = this.flightComponent.FindComponentByName(n"AnimationController") as AnimationControllerComponent;
-    acc.SetInputFloat(this.GetDeviationName(), this.animDeviation);
+    if IsDefined(acc) {
+      acc.SetInputFloat(this.GetDeviationName(), this.animDeviation);
+    }
     // acc.SetInputFloat(this.GetRadiusName(), this.animRadius);
 
     let retroAmount = this.GetRetroThrusterAmount();

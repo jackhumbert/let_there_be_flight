@@ -102,7 +102,7 @@ void UpdateComponents(RED4ext::Unk2 *unk2, float *deltaTime, void *unkStruct) {
       continue;
     auto fc = wh.Lock().GetPtr();
     if (fc) {
-      auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(fc->entity.GetPtr());
+      auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(fc->entity);
       //auto activeProp = fcc->GetProperty("hasUpdate");
       if (vehicle && fc->hasUpdate && vehicle->physicsData) {
         // removes Asleep/0x10

@@ -3,7 +3,7 @@
 void FlightComponent::ChaseTarget(RED4ext::WeakHandle<RED4ext::game::Object> target) {
   //spdlog::info("[FlightComponent] ChaseTarget");
   RED4ext::action::ActionBase * action;
-  auto vehicle = (RED4ext::vehicle::BaseObject *)this->entity.instance;
+  auto vehicle = (RED4ext::vehicle::BaseObject *)this->entity;
   vehicle->UnsetPhysicsStates();
   vehicle->SetPhysicsState(RED4ext::vehicle::PhysicsState::Chase, false);
   vehicle->CreateAction(&action, RED4ext::action::Type::DriveFollowTarget);

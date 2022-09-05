@@ -427,7 +427,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // is not initalized yet.
 
     Utils::CreateLogger();
-    spdlog::info("Starting up");
+    spdlog::info("Starting up Let There Be Flight v0.0.13");
     auto ptr = GetModuleHandle(nullptr);
     spdlog::info("Base address: {}", fmt::ptr(ptr));
     auto modPtr = aHandle;
