@@ -1,6 +1,7 @@
 #include "FlightSettings.hpp"
 #include "FlightModule.hpp"
 #include "FlightLog.hpp"
+#include <RED4ext/Scripting/Natives/Generated/ent/MeshComponent.hpp>
 
 #include "Utils.hpp"
 #include "stdafx.hpp"
@@ -125,7 +126,8 @@ bool Setup(RED4ext::CGameApplication *aApp) {
   auto stack = RED4ext::CStack(FlightSettings::GetInstance(), nullptr, 0, nullptr, 0);
   onUpdate->Execute(&stack);
 
-  auto mesh = RED4ext::ResourceReference::ResourceReference("user\\jackhumbert\\meshes\\engine_corpo.mesh");
+  auto mesh = RED4ext::ResourceReference<RED4ext::ent::MeshComponent>(
+      "user\\jackhumbert\\meshes\\engine_corpo.mesh");
   mesh.Load();
 
   return true;

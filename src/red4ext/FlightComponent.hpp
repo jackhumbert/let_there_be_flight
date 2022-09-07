@@ -8,7 +8,7 @@
 #include <RED4ext/Scripting/Natives/Generated/game/ComponentPS.hpp>
 #include <RED4ext/Scripting/Natives/Generated/Vector4.hpp>
 #include <RED4ext/Scripting/Natives/gamePSInterface.hpp>
-#include "FlightSystem.hpp"
+#include "IFlightSystem.hpp"
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 #include <RED4ext/Scripting/Natives/actionActionBase.hpp>
 #include <RED4ext/Scripting/Natives/actionDriveChaseTarget.hpp>
@@ -55,7 +55,7 @@ public:
   //  return 0;
   //}
 
-  RED4ext::Handle<FlightSystem> sys;
+  RED4ext::Handle<IFlightSystem> sys;
   bool active;
   bool hasUpdate;
   alignas(0x10) RED4ext::Vector4 force;
@@ -73,4 +73,4 @@ RED4EXT_ASSERT_OFFSET(FlightComponent, active, 0xB8);
 RED4EXT_ASSERT_OFFSET(FlightComponent, hasUpdate, 0xB9);
 RED4EXT_ASSERT_OFFSET(FlightComponent, force, 0xC0);
 RED4EXT_ASSERT_OFFSET(FlightComponent, torque, 0xD0);
-//char (*__kaboom)[offsetof(FlightComponent, force] = 1;
+//char (*__kaboom)[offsetof(FlightComponent, sys] = 1;

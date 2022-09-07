@@ -5,5 +5,5 @@
 constexpr uintptr_t LoadResRefAddr = 0x200060;
 
 template<typename T>
-RED4ext::RelocFunc<RED4ext::ResourceReference::ResourceTokenPtr *(*)(RED4ext::ResourcePath*, RED4ext::ResourceReference::ResourceTokenPtr *wrapper, T sync)>
+RED4ext::RelocFunc<RED4ext::ResourceToken<T> *(*)(RED4ext::ResourcePath *, RED4ext::SharedPtr<RED4ext::ResourceToken<T>> *wrapper, bool sync)>
     LoadResRef(LoadResRefAddr);

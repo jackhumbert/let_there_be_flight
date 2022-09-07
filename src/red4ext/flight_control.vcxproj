@@ -142,6 +142,7 @@
     <ClInclude Include="Engine\RTTIExpansion.hpp" />
     <ClInclude Include="Engine\RTTIRegistrar.hpp" />
     <ClInclude Include="FlightComponent.hpp" />
+    <ClInclude Include="IFlightSystem.hpp" />
     <ClInclude Include="INIReader.h" />
     <ClInclude Include="RuntimeClass.hpp" />
     <ClInclude Include="ScriptDefinitions\ScriptHost.hpp" />

@@ -100,7 +100,7 @@ char __fastcall OptionsLoad(uintptr_t rcx0, RED4ext::CString *common, RED4ext::C
   //filePath.allocator = allocator;
 
   RED4ext::CString contents;
-  contents.text.str[0] = 0;
+  contents.text.inline_str[0] = 0;
   contents.length = 0;
   contents.allocator = 0;
 
@@ -109,7 +109,7 @@ char __fastcall OptionsLoad(uintptr_t rcx0, RED4ext::CString *common, RED4ext::C
   }
 
   OptionData *data = new OptionData();
-  auto content = contents.text.ptr;
+  auto content = contents.text.inline_str;
   auto length = contents.Length();
   auto end = &content[length];
   data->contentStart = content;

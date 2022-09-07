@@ -418,6 +418,35 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
   // 0x14342E6C0
 }
 
+bool GetVFTRVA(RED4ext::CGameApplication * app) {
+
+ auto rtti = RED4ext::CRTTISystem::Get();
+
+//// auto types = RED4ext::DynArray<RED4ext::CBaseRTTIType*>(new RED4ext::Memory::DefaultAllocator());
+//// rtti->GetNativeTypes(types);
+ auto classes = RED4ext::DynArray<RED4ext::CClass *>(new RED4ext::Memory::DefaultAllocator());
+ rtti->GetClasses(nullptr, classes);
+
+ for (const auto &cls : classes) {
+   if (cls && cls->name != "None" && !cls->flags.isAbstract) {
+     if (cls->name == "inkInputKeyIconManager")
+       continue;
+     auto name = cls->name.ToString();
+     auto instance = cls->AllocMemory();
+     cls->ConstructCls(instance);
+     if (instance) {
+       auto va = *reinterpret_cast<uintptr_t *>(instance);
+       auto rva = va - RED4ext::RelocBase::GetImageBase();
+       if (va > RED4ext::RelocBase::GetImageBase() && rva < 0x4700000) {
+         spdlog::info("#define {}_VFT_RVA 0x{:X}", name, rva);
+       }
+     }
+   }
+ }
+ return true;
+}
+
+
 RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::EMainReason aReason,
                                         const RED4ext::Sdk *aSdk) {
   switch (aReason) {
@@ -443,6 +472,11 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 
     aSdk->gameStates->Add(aHandle, RED4ext::EGameStateType::Initialization, &initState);
 
+    initState.OnEnter = &GetVFTRVA;
+    initState.OnUpdate = nullptr;
+    initState.OnExit = nullptr;
+    aSdk->gameStates->Add(aHandle, RED4ext::EGameStateType::Running, &initState);
+
     RED4ext::GameState shutdownState;
     shutdownState.OnEnter = nullptr;
     shutdownState.OnUpdate = &FlightAudio::Unload;
@@ -450,7 +484,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 
     aSdk->gameStates->Add(aHandle, RED4ext::EGameStateType::Shutdown, &shutdownState);
 
-    FlightModuleFactory::GetInstance().Load(aSdk, aHandle);
+    //FlightModuleFactory::GetInstance().Load(aSdk, aHandle);
 
     break;
   }
@@ -459,7 +493,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // The game's memory is already freed, to not try to do anything with it.
 
     spdlog::info("Shutting down");
-    FlightModuleFactory::GetInstance().Unload(aSdk, aHandle);
+    //FlightModuleFactory::GetInstance().Unload(aSdk, aHandle);
     spdlog::shutdown();
     break;
   }

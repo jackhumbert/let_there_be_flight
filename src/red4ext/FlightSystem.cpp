@@ -20,6 +20,7 @@
 #include <RED4ext/Scripting/Natives/Generated/Matrix.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 #include "FlightComponent.hpp"
+#include <RED4ext/Scripting/Natives/Generated/ent/MeshComponent.hpp>
 
 RED4ext::RelocPtr<RED4ext::GameOptionBool> PhysXClampHugeImpacts(0x4782878);
 RED4ext::RelocPtr<RED4ext::GameOptionBool> PhysXClampHugeSpeeds(0x47827F8);
@@ -221,10 +222,10 @@ void FlightSystem::sub_148() {
 
 void FlightSystem::OnGameLoad(void *a1, uint64_t a2, uint64_t a3) { 
   spdlog::info("[FlightSystem] OnGameLoad!");
-  auto r = new RED4ext::ResourceReference("user\\jackhumbert\\meshes\\engine_corpo.mesh");
+  auto r = new RED4ext::ResourceReference<RED4ext::ent::MeshComponent>("user\\jackhumbert\\meshes\\engine_corpo.mesh");
   //r->Fetch();
   //RED4ext::ResourceLoader::Get();
-  LoadResRef<bool>(&r->path, &r->token, false);
+  LoadResRef<RED4ext::ent::MeshComponent>(&r->path, &r->token, false);
 
   //EnableSmoothWheelContacts.GetAddr()->value = false;
   PhysXClampHugeImpacts.GetAddr()->value = false;
