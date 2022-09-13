@@ -29,7 +29,7 @@ For an up-to-date version of the mod, you can [download just the `build/` folder
 
 [`r6/input/let_there_be_flight.xml`](https://github.com/jackhumbert/let_there_be_flight/tree/main/build/r6/input/let_there_be_flight.xml) contains all the keybindings for the keyboard & controller - you can customize these to your liking. See all possibilities here: https://redscript.redmodding.org/#5993
 
-Other settings can be found in [`r6/scripts/let_there_be_flight.reds`](https://github.com/jackhumbert/let_there_be_flight/tree/main/build/r6/scripts/let_there_be_flight/let_there_be_flight.packed.reds) for the time being - search for `FlightSettings.SetFloat` to see all the variables used by the mod.
+Other settings can be found in [`r6/scripts/let_there_be_flight/let_there_be_flight.packed.reds`](https://github.com/jackhumbert/let_there_be_flight/tree/main/build/r6/scripts/let_there_be_flight/let_there_be_flight.packed.reds) for the time being - search for `FlightSettings.SetFloat` to see all the variables used by the mod.
 
 ## Troubleshooting
 
