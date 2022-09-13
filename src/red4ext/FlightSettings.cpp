@@ -126,9 +126,9 @@ bool Setup(RED4ext::CGameApplication *aApp) {
   auto stack = RED4ext::CStack(FlightSettings::GetInstance(), nullptr, 0, nullptr, 0);
   onUpdate->Execute(&stack);
 
-  auto mesh = RED4ext::ResourceReference<RED4ext::ent::MeshComponent>(
-      "user\\jackhumbert\\meshes\\engine_corpo.mesh");
-  mesh.Load();
+  //auto mesh = RED4ext::ResourceReference<RED4ext::ent::MeshComponent>(
+      //"user\\jackhumbert\\meshes\\engine_corpo.mesh");
+  //mesh.Load();
 
   return true;
 }
@@ -136,8 +136,8 @@ bool Setup(RED4ext::CGameApplication *aApp) {
 struct FlightSettingsModule : FlightModule {
   void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
     RED4ext::GameState runningState;
-    runningState.OnEnter = nullptr;
-    runningState.OnUpdate = &Setup;
+    runningState.OnEnter = &Setup;
+    runningState.OnUpdate = nullptr;
     runningState.OnExit = nullptr;
 
     aSdk->gameStates->Add(aHandle, RED4ext::EGameStateType::Running, &runningState);

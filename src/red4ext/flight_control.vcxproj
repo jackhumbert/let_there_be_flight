@@ -101,7 +101,6 @@
   <ItemGroup>
     <ClCompile Include="CustomHUDLayer.cpp" />
     <ClCompile Include="CustomOptions.cpp" />
-    <ClCompile Include="DebugPrinter.cpp" />
     <ClCompile Include="Engine\RTTIRegistrar.cpp" />
     <ClCompile Include="EntityAddComponent.cpp" />
     <ClCompile Include="FlightCamera.cpp" />
@@ -114,9 +113,7 @@
     <ClCompile Include="FlightLog.cpp" />
     <ClCompile Include="FlightModule.cpp" />
     <ClCompile Include="FlightModule.hpp" />
-    <ClCompile Include="FlightNavPath.cpp" />
     <ClCompile Include="FlightSettings.cpp" />
-    <ClCompile Include="FlightStats_Record.cpp" />
     <ClCompile Include="FlightSystem.cpp" />
     <ClCompile Include="CreateStaticEffect.cpp" />
     <ClCompile Include="FlightWeapons.cpp" />
@@ -157,7 +154,6 @@
     <ClInclude Include="FlightHelperWrapper.hpp" />
     <ClInclude Include="FlightLog.hpp" />
     <ClInclude Include="FlightSettings.hpp" />
-    <ClInclude Include="FlightStats_Record.hpp" />
     <ClInclude Include="FlightSystem.hpp" />
     <ClInclude Include="FlightWeapons.hpp" />
     <ClInclude Include="LoadResRef.hpp" />

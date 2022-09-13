@@ -70,7 +70,7 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.step", "0.05")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "1.0")
-  public let generalPitchAeroFactor: Float = 0.25;
+  public let generalPitchAeroFactor: Float = 0.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "Flight Physics Settings")

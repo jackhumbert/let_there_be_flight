@@ -13,6 +13,7 @@
 #include <iostream>
 #include <RED4ext/GameOptions.hpp>
 
+#include "Addresses.hpp"
 #include "FlightLog.hpp"
 #include "Utils.hpp"
 #include "stdafx.hpp"
@@ -22,12 +23,25 @@
 #include "FlightComponent.hpp"
 #include <RED4ext/Scripting/Natives/Generated/ent/MeshComponent.hpp>
 
-RED4ext::RelocPtr<RED4ext::GameOptionBool> PhysXClampHugeImpacts(0x4782878);
-RED4ext::RelocPtr<RED4ext::GameOptionBool> PhysXClampHugeSpeeds(0x47827F8);
-RED4ext::RelocPtr<RED4ext::GameOptionBool> AirControlCarRollHelper(0x47818C8);
-RED4ext::RelocPtr<RED4ext::GameOptionFloat> ForceMoveToMaxLinearSpeed(0x4781A40);
-RED4ext::RelocPtr<RED4ext::GameOptionBool> physicsCCD(0x4780960);
-RED4ext::RelocPtr<RED4ext::GameOptionBool> EnableSmoothWheelContacts(0x4781FE8);
+// These can be found in strings via their variable names
+// 1.52 RVA: 0x4782878
+// 1.6 RVA: 0x4846C18
+RED4ext::RelocPtr<RED4ext::GameOptionBool> PhysXClampHugeImpacts(0x4846C18);
+// 1.52 RVA: 0x47827F8
+// 1.6 RVA: 0x4846B98
+RED4ext::RelocPtr<RED4ext::GameOptionBool> PhysXClampHugeSpeeds(0x4846B98);
+// 1.52 RVA: 0x47818C8
+// 1.6 RVA: 0x4845C68
+RED4ext::RelocPtr<RED4ext::GameOptionBool> AirControlCarRollHelper(0x4845C68);
+// 1.52 RVA: 0x4781A40
+// 1.6 RVA: 0x4845DE0
+RED4ext::RelocPtr<RED4ext::GameOptionFloat> ForceMoveToMaxLinearSpeed(0x4845DE0);
+// 1.52 RVA: 0x4780960
+// 1.6 RVA: 0x4844D00
+RED4ext::RelocPtr<RED4ext::GameOptionBool> physicsCCD(0x4844D00);
+// 1.52 RVA: 0x4781FE8
+// 1.6 RVA: 0x4846388
+RED4ext::RelocPtr<RED4ext::GameOptionBool> EnableSmoothWheelContacts(0x4846388);
 
 //RED4ext::TTypedClass<FlightSystem> icls("IFlightSystem");
 //RED4ext::TTypedClass<FlightSystem> cls("FlightSystem");
@@ -47,13 +61,10 @@ RED4ext::Handle<FlightSystem> FlightSystem::GetInstance() {
   return RED4ext::Handle<FlightSystem>(fs);
 }
 
-// 1.52 RVA: 0x1C58B0 / 1857712
-/// @pattern 4C 8B DC 48 81 EC B8 00 00 00 0F 10 21 41 0F 29 73 E8 0F 28 DC 0F 59 DC C7 44 24 0C 00 00 00 00
 RED4ext::Matrix* __fastcall GetMatrixFromOrientation(RED4ext::Quaternion* q, RED4ext::Matrix* m) {
-  RED4ext::RelocFunc<decltype(&GetMatrixFromOrientation)> call(0x1C58B0);
+  RED4ext::RelocFunc<decltype(&GetMatrixFromOrientation)> call(GetMatrixFromOrientationAddr);
   return call(q, m);
 }
-
 
 void FlightSystem::RegisterComponent(RED4ext::WeakHandle<FlightComponent> fc) {
   if (fc.instance && !fc.Expired()) {
@@ -228,18 +239,18 @@ void FlightSystem::OnGameLoad(void *a1, uint64_t a2, uint64_t a3) {
   LoadResRef<RED4ext::ent::MeshComponent>(&r->path, &r->token, false);
 
   //EnableSmoothWheelContacts.GetAddr()->value = false;
-  PhysXClampHugeImpacts.GetAddr()->value = false;
-  PhysXClampHugeSpeeds.GetAddr()->value = false;
-  AirControlCarRollHelper.GetAddr()->value = false;
-  physicsCCD.GetAddr()->value = true;
-  ForceMoveToMaxLinearSpeed.GetAddr()->value = 100.0;
+  //PhysXClampHugeImpacts.GetAddr()->value = false;
+  //PhysXClampHugeSpeeds.GetAddr()->value = false;
+  //AirControlCarRollHelper.GetAddr()->value = false;
+  //physicsCCD.GetAddr()->value = true;
+  //ForceMoveToMaxLinearSpeed.GetAddr()->value = 100.0;
   //physicsCCD = true;
 
-  spdlog::info("[FlightSystem] PhysXClampHugeImpacts: {}", PhysXClampHugeImpacts.GetAddr()->value);
-  spdlog::info("[FlightSystem] PhysXClampHugeSpeeds: {}", PhysXClampHugeSpeeds.GetAddr()->value);
-  spdlog::info("[FlightSystem] AirControlCarRollHelper: {}", AirControlCarRollHelper.GetAddr()->value);
-  spdlog::info("[FlightSystem] ForceMoveToMaxLinearSpeed: {}", ForceMoveToMaxLinearSpeed.GetAddr()->value);
-  spdlog::info("[FlightSystem] physicsCCD: {}", physicsCCD.GetAddr()->value);
+  //spdlog::info("[FlightSystem] PhysXClampHugeImpacts: {}", PhysXClampHugeImpacts.GetAddr()->value);
+  //spdlog::info("[FlightSystem] PhysXClampHugeSpeeds: {}", PhysXClampHugeSpeeds.GetAddr()->value);
+  //spdlog::info("[FlightSystem] AirControlCarRollHelper: {}", AirControlCarRollHelper.GetAddr()->value);
+  //spdlog::info("[FlightSystem] ForceMoveToMaxLinearSpeed: {}", ForceMoveToMaxLinearSpeed.GetAddr()->value);
+  //spdlog::info("[FlightSystem] physicsCCD: {}", physicsCCD.GetAddr()->value);
 }
 
 bool FlightSystem::sub_158() {
@@ -289,11 +300,7 @@ void FlightSystem::sub_1A0() {
 }
 
 // add FlightSystem to the game systems list to load on start
-
-constexpr uintptr_t GetGameSystemsDataAddr = 0x2D028A0;
-/// @pattern 40 53 48 83 EC 20 48 8B D9 48 8D 4C 24 30 E8 FD F9 48 FD 48 8B D0 48 8B CB E8 12 29 4A FD 48 8D
-RED4ext::DynArray<RED4ext::GameSystemData> *__fastcall GetGameSystemsData(
-    RED4ext::DynArray<RED4ext::GameSystemData> *gameSystemsData);
+RED4ext::DynArray<RED4ext::GameSystemData>* __fastcall GetGameSystemsData(RED4ext::DynArray<RED4ext::GameSystemData>* gameSystemsData);
 
 decltype(&GetGameSystemsData) GetGameSystemsData_Original;
 

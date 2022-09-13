@@ -4,6 +4,7 @@
 #include "FlightSettings.hpp"
 #include <RED4ext/Scripting/Natives/vehiclePhysics.hpp>
 #include <spdlog/spdlog.h>
+#include "Addresses.hpp"
 
 // Treat flying vehicles as being on the ground (for TPP camera)
 
@@ -12,8 +13,6 @@ namespace flight {
 
 REGISTER_FLIGHT_MODULE(Camera);
 
-// F3 0F 10 42 04 8B 02 F3 0F 10 4A 08 F3 0F 11 81 B4 02 00 00 F3 0F 11 89 B8 02 00 00 89 81 B0 02
-constexpr uintptr_t TPPCameraStatsUpdateAddr = 0x141CC7560 - RED4ext::Addresses::ImageBase;
 decltype(&Camera::TPPCameraStatsUpdate) TPPCameraStatsUpdate_Original;
 
 float defaultSlopeCorrectionOnGroundStrength = 0.0;
@@ -72,9 +71,8 @@ uintptr_t Camera::TPPCameraStatsUpdate(RED4ext::vehicle::TPPCameraComponent *cam
   return result;
 }
 
-//48 8B C4 F3 0F 11 48 10 53 48 81 EC 30 01 00 00 80 B9 A0 04 00 00 00 48 8B D9 0F 29 70 D8 0F 28
-constexpr uintptr_t FPPCameraUpdateAddr = 0x16FC2A0 + 0x140000C00 - RED4ext::Addresses::ImageBase;
 decltype(&Camera::FPPCameraUpdate) FPPCameraUpdate_Original;
+
 char __fastcall Camera::FPPCameraUpdate(RED4ext::game::FPPCameraComponent *fpp, float deltaTime, float deltaYaw, float deltaPitch,
                                         float deltaYawExternal,
                                  float deltaPitchExternal, char a7) {

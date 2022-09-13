@@ -25,7 +25,7 @@
 #include "stdafx.hpp"
 //#include "FlightHUDGameController.hpp"
 #include "FlightLog.hpp"
-#include "FlightStats_Record.hpp"
+//#include "FlightStats_Record.hpp"
 #include "FlightSystem.hpp"
 #include "FmodHelper.hpp"
 #include "VehicleSpeedUnlimiter.hpp"
@@ -472,10 +472,10 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 
     aSdk->gameStates->Add(aHandle, RED4ext::EGameStateType::Initialization, &initState);
 
-    initState.OnEnter = &GetVFTRVA;
-    initState.OnUpdate = nullptr;
-    initState.OnExit = nullptr;
-    aSdk->gameStates->Add(aHandle, RED4ext::EGameStateType::Running, &initState);
+    //initState.OnEnter = &GetVFTRVA;
+    //initState.OnUpdate = nullptr;
+    //initState.OnExit = nullptr;
+    //aSdk->gameStates->Add(aHandle, RED4ext::EGameStateType::Running, &initState);
 
     RED4ext::GameState shutdownState;
     shutdownState.OnEnter = nullptr;
@@ -484,7 +484,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 
     aSdk->gameStates->Add(aHandle, RED4ext::EGameStateType::Shutdown, &shutdownState);
 
-    //FlightModuleFactory::GetInstance().Load(aSdk, aHandle);
+    FlightModuleFactory::GetInstance().Load(aSdk, aHandle);
 
     break;
   }
@@ -493,7 +493,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // The game's memory is already freed, to not try to do anything with it.
 
     spdlog::info("Shutting down");
-    //FlightModuleFactory::GetInstance().Unload(aSdk, aHandle);
+    FlightModuleFactory::GetInstance().Unload(aSdk, aHandle);
     spdlog::shutdown();
     break;
   }

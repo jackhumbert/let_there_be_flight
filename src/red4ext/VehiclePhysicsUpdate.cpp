@@ -11,29 +11,36 @@
 uintptr_t __fastcall VehiclePhysicsUpdate(RED4ext::vehicle::Physics *, float);
 
 // F3 0F 11 4C 24 10 55 53 57 41 54 41 55 41 56 48 8D AC 24 98 FD FF FF 48 81 EC 68 03 00 00 48 8B
-constexpr uintptr_t VehiclePhysicsUpdateAddr = 0x141D0FE70 - RED4ext::Addresses::ImageBase;
+constexpr uintptr_t VehiclePhysicsUpdateAddr = 0x1D3C5D0;
 decltype(&VehiclePhysicsUpdate) VehiclePhysicsUpdate_Original;
 
 // where driverHelpers are processed
 uintptr_t __fastcall VehicleHelperUpdate(RED4ext::vehicle::WheeledPhysics *, float);
 
+// vehicleWheeledPhysics::sub_58
 // 48 8B C4 48 89 58 08 48 89 70 10 48 89 78 18 41 56 48 81 EC B0 00 00 00 0F 29 70 E8 4C 8B F1 0F
-constexpr uintptr_t VehicleHelperUpdateAddr = 0x141D123B0 - RED4ext::Addresses::ImageBase;
+constexpr uintptr_t VehicleHelperUpdateAddr = 0x1D3EB10;
 decltype(&VehicleHelperUpdate) VehicleHelperUpdate_Original;
 
 // where airControl is processed
 void __fastcall AirControlProcess(RED4ext::vehicle::AirControl *ac, float deltaTime);
 
 // 48 89 5C 24 20 56 48 83 EC 60 0F 29 74 24 50 48 8B F1 0F 57 F6 44 0F 29 44 24 30 0F 2E 71 08 44
-constexpr uintptr_t AirControlProcessAddr = 0x141CE4080 - RED4ext::Addresses::ImageBase;
+constexpr uintptr_t AirControlProcessAddr = 0x1D108A0;
 decltype(&AirControlProcess) AirControlProcess_Original;
+
+void __fastcall ProcessAirResistance(RED4ext::vehicle::WheeledPhysics *a1, float deltaTime);
+
+// 48 8B C4 53 48 81 EC A0 00 00 00 0F 29 70 E8 48 8B D9 0F 29 78 D8 44 0F 29 40 C8 44 0F 29 48 B8
+constexpr uintptr_t ProcessAirResistanceAddr = 0x1D3AD50;
+decltype(&ProcessAirResistance) ProcessAirResistance_Original;
 
 // add vector to torque
 void __fastcall TorqueUpdate(RED4ext::vehicle::PhysicsData *a1, uintptr_t);
 // void __fastcall TorqueUpdate(RED4ext::physics::VehicleBaseObjectAirControl *ac, float deltaTime);
 
 // F3 0F 10 41 0C F3 0F 58  02 F3 0F 11 41 0C F3 0F 10 4A 04 F3 0F 58 49 10 F3 0F 11 49 10 F3 0F 10
-constexpr uintptr_t TorqueUpdateAddr = 0x1CE0D10;
+constexpr uintptr_t TorqueUpdateAddr = 0x1D0D4C0;
 decltype(&TorqueUpdate) TorqueUpdate_Original;
 
 // update with pid
@@ -41,20 +48,29 @@ void __fastcall VehicleUpdateOrientationWithPID(RED4ext::vehicle::CarBaseObject 
                                                 float);
 
 // 48 8B C4 F3 0F 11 58 20 F3 0F 11 50 18 55 53 56 57 41 54 41 55 41 56 41 57 48 8D A8 58 FC FF FF
-constexpr uintptr_t VehicleUpdateOrientationWithPIDAddr = 0x1C6E270;
+constexpr uintptr_t VehicleUpdateOrientationWithPIDAddr = 0x1C9A750;
 decltype(&VehicleUpdateOrientationWithPID) VehicleUpdateOrientationWithPID_Original;
 
-// update with pid
+// vehicleCarPhysics::AnimationUpdate
 uintptr_t __fastcall AnimationUpdate(RED4ext::vehicle::CarPhysics *a1, float);
 
 // 48 89 5C 24 18 56 48 81 EC D0 00 00 00 48 8B F1 0F 29 B4 24 C0 00 00 00 48 8B 89 20 0D 00 00 BA
-constexpr uintptr_t AnimationUpdateAddr = 0x1D0C290;
+constexpr uintptr_t AnimationUpdateAddr = 0x1D389F0;
 decltype(&AnimationUpdate) AnimationUpdate_Original;
 
-
+// vehicleBikePhysics::AnimationUpdate
 uintptr_t __fastcall BikeAnimationUpdate(RED4ext::vehicle::BikePhysics *a1);
 decltype(&BikeAnimationUpdate) BikeAnimationUpdate_Original;
 
+// something with 4 wheels
+void __fastcall FourWheelTorque(RED4ext::vehicle::WheeledPhysics *physics, unsigned __int8 rearWheelIndex,
+                                unsigned __int8 frontWheelIndex, float a4, RED4ext::Transform *transform);
+
+// 40 53 48 81 EC A0 00 00 00 44 0F B6 D2 4C 8D 89 D0 05 00 00 41 0F B6 C0 48 8B D9 4D 69 C2 30 01
+constexpr uintptr_t FourWheelTorqueAddr = 0x1D3B030;
+decltype(&FourWheelTorque) FourWheelTorque_Original;
+
+// 1.6 not found
 /// 48 8B 49 08 E9 47 1D 2D FF
 constexpr uintptr_t UpdateAnimValueForCNameAddr = 0x1CFD9F0;
 uint64_t __fastcall UpdateAnimValueForCName(RED4ext::vehicle::BaseObject *vehicle, RED4ext::CName name, float value) {
@@ -132,12 +148,6 @@ uintptr_t __fastcall VehiclePhysicsUpdate(RED4ext::vehicle::Physics *p, float de
   return VehiclePhysicsUpdate_Original(p, deltaTime);
 }
 
-void __fastcall ProcessAirResistance(RED4ext::vehicle::WheeledPhysics *a1, float deltaTime);
-
-// 48 8B C4 53 48 81 EC A0 00 00 00 0F 29 70 E8 48 8B D9 0F 29 78 D8 44 0F 29 40 C8 44 0F 29 48 B8
-constexpr uintptr_t ProcessAirResistanceAddr = 0x1D0E5F0;
-decltype(&ProcessAirResistance) ProcessAirResistance_Original;
-
 void __fastcall ProcessAirResistance(RED4ext::vehicle::WheeledPhysics *a1, float deltaTime) {
   auto physicsData = a1->parent->physicsData;
   auto velocity = physicsData->velocity;
@@ -170,24 +180,17 @@ void __fastcall ProcessAirResistance(RED4ext::vehicle::WheeledPhysics *a1, float
 
 void __fastcall AirControlProcess(RED4ext::vehicle::AirControl *ac, float deltaTime) {
   auto fc = GetFlightComponent(ac->vehicle);
-  if (fc) {
-    auto rtti = RED4ext::CRTTISystem::Get();
-    auto fcc = rtti->GetClass("FlightComponent");
-    auto activeProp = fcc->GetProperty("active");
-    if (!activeProp->GetValue<bool>(fc)) {
-      AirControlProcess_Original(ac, deltaTime);
-    }
+  if (fc && fc->active) {
+    return;
   }
+  AirControlProcess_Original(ac, deltaTime);
 }
 
 uintptr_t __fastcall VehicleHelperUpdate(RED4ext::vehicle::WheeledPhysics *p, float deltaTime) {
-  auto rtti = RED4ext::CRTTISystem::Get();
-  auto fcc = rtti->GetClass("FlightComponent");
   auto fc = GetFlightComponent(p->parent);
   if (fc) {
-    auto activeProp = fcc->GetProperty("active");
     auto size = p->driveHelpers.size;
-    if (activeProp->GetValue<bool>(fc)) {
+    if (fc->active) {
       p->driveHelpers.size = 0;
     }
     auto result = VehicleHelperUpdate_Original(p, deltaTime);
@@ -198,34 +201,20 @@ uintptr_t __fastcall VehicleHelperUpdate(RED4ext::vehicle::WheeledPhysics *p, fl
   }
 }
 
-
 void __fastcall TorqueUpdate(RED4ext::vehicle::PhysicsData* a1, uintptr_t a2) {
-  auto rtti = RED4ext::CRTTISystem::Get();
-  auto fcc = rtti->GetClass("FlightComponent");
   auto fc = GetFlightComponent(a1->vehicle);
-  if (fc) {
-    auto activeProp = fcc->GetProperty("active");
-    if (!activeProp->GetValue<bool>(fc)) {
-      TorqueUpdate_Original(a1, a2);
-    }
-  } else {
-    TorqueUpdate_Original(a1, a2);
+  if (fc && fc->active) {
+    return;
   }
+  TorqueUpdate_Original(a1, a2);
 }
-
 
 void __fastcall VehicleUpdateOrientationWithPID(RED4ext::vehicle::CarBaseObject *a1, RED4ext::Transform * a2, float a3, float a4) {
   auto fc = GetFlightComponent(a1);
-  if (fc) {
-    auto rtti = RED4ext::CRTTISystem::Get();
-    auto fcc = rtti->GetClass("FlightComponent");
-    auto activeProp = fcc->GetProperty("active");
-    if (!activeProp->GetValue<bool>(fc)) {
-      VehicleUpdateOrientationWithPID_Original(a1, a2, a3, a4);
-    }
-  } else {
-    VehicleUpdateOrientationWithPID_Original(a1, a2, a3, a4);
+  if (fc && fc->active) {
+    return;
   }
+  VehicleUpdateOrientationWithPID_Original(a1, a2, a3, a4);
 }
 
 uintptr_t __fastcall AnimationUpdate(RED4ext::vehicle::CarPhysics *a1, float timeDelta) {
@@ -233,9 +222,8 @@ uintptr_t __fastcall AnimationUpdate(RED4ext::vehicle::CarPhysics *a1, float tim
   if (fc) {
     auto rtti = RED4ext::CRTTISystem::Get();
     auto fcc = rtti->GetClass("FlightComponent");
-    auto activeProp = fcc->GetProperty("active");
     auto rollProp = fcc->GetProperty("roll");
-    if (activeProp->GetValue<bool>(fc)) {
+    if (fc->active) {
       a1->parent->turnInput = rollProp->GetValue<float>(fc);
     }
   }
@@ -244,32 +232,17 @@ uintptr_t __fastcall AnimationUpdate(RED4ext::vehicle::CarPhysics *a1, float tim
 
 uintptr_t __fastcall BikeAnimationUpdate(RED4ext::vehicle::BikePhysics *a1) {
   auto fc = GetFlightComponent(a1->parent);
-  if (fc) {
-    auto rtti = RED4ext::CRTTISystem::Get();
-    auto fcc = rtti->GetClass("FlightComponent");
-    auto activeProp = fcc->GetProperty("active");
-    //auto rollProp = fcc->GetProperty("roll")
-    ;
-    if (activeProp->GetValue<bool>(fc)) {
-      //a1->parent3->turnInput = rollProp->GetValue<float>(fc);
-      a1->parent->turnInput = 0.0;
-      a1->turnRate = 0.0;
-      a1->tiltControlEnabled = 0;
-    } else {
-      a1->tiltControlEnabled = 1;
-    }
+  if (fc && fc->active) {
+    a1->parent->turnInput = 0.0;
+    a1->turnRate = 0.0;
+    a1->tiltControlEnabled = 0;
+  } else {
+    a1->tiltControlEnabled = 1;
   }
   auto og = BikeAnimationUpdate_Original(a1);
   //UpdateAnimValueForCName(a1->parent3, "throttle", 0.0);
   return og;
 }
-
-void __fastcall FourWheelTorque(RED4ext::vehicle::WheeledPhysics *physics, unsigned __int8 rearWheelIndex,
-                                unsigned __int8 frontWheelIndex, float a4, RED4ext::Transform *transform);
-
-// 40 53 48 81 EC A0 00 00 00 44 0F B6 D2 4C 8D 89 D0 05 00 00 41 0F B6 C0 48 8B D9 4D 69 C2 30 01
-constexpr uintptr_t FourWheelTorqueAddr = 0x1D0E8D0;
-decltype(&FourWheelTorque) FourWheelTorque_Original;
 
 void __fastcall FourWheelTorque(RED4ext::vehicle::WheeledPhysics *physics,
                                                    unsigned __int8 rearWheelIndex, unsigned __int8 frontWheelIndex,

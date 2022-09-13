@@ -27,21 +27,28 @@ void* unk138;
 };
 
 // 1.52 RVA: 0x1FC0C0 / 2080960
+// 1.6 RVA: 0x2003F0 / 2098160
 /// @pattern 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 30 48 8B FA 48 8B F1 BA 28 00 00 00 48 8D 4C 24 20 E8
+/// @nth 4/7
 RED4ext::CRTTIWeakHandleType ** __fastcall CreateCRTTIWeakHandleTypeFromClass(RED4ext::CRTTIWeakHandleType **a1, RED4ext::CBaseRTTIType *a2) {
-  RED4ext::RelocFunc<decltype(&CreateCRTTIWeakHandleTypeFromClass)> call(0x1FC0C0);
+  RED4ext::RelocFunc<decltype(&CreateCRTTIWeakHandleTypeFromClass)> call(0x2003F0);
   return call(a1, a2);
 }
 
 // 1.52 RVA: 0x1FBD20 / 2080032
+// 1.6 RVA: 0x200050 / 2080032
 /// @pattern 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 30 48 8B FA 48 8B F1 BA 28 00 00 00 48 8D 4C 24 20 E8
+/// @nth 0/7
 RED4ext::CRTTIHandleType **__fastcall CreateCRTTIHandleTypeFromClass(RED4ext::CRTTIHandleType **a1, RED4ext::CBaseRTTIType *a2) {
-  RED4ext::RelocFunc<decltype(&CreateCRTTIHandleTypeFromClass)> call(0x1FBD20);
+  RED4ext::RelocFunc<decltype(&CreateCRTTIHandleTypeFromClass)> call(0x200050);
   return call(a1, a2);
 }
 
+// 1.52 RVA: 0x273160 / 2568544
+// 1.6 RVA: 0x276F30 / 2584368
+/// @pattern 48 8B C4 4C 89 40 18 48 89 48 08 55 53 48 8D 68 A1 48 81 EC A8 00 00 00 48 89 70 10 48 8B DA 48
 bool __fastcall ProcessScriptTypes(uint32_t* version, ScriptData* scriptData, void* scriptLogger);
-constexpr uintptr_t ProcessScriptTypesAddr = 0x272560 + 0xC00;
+constexpr uintptr_t ProcessScriptTypesAddr = 0x276F30;
 decltype(&ProcessScriptTypes) ProcessScriptTypes_Original;
 
 bool __fastcall ProcessScriptTypes(uint32_t* version, ScriptData* scriptData, void* scriptLogger) {
