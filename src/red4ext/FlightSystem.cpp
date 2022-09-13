@@ -239,18 +239,17 @@ void FlightSystem::OnGameLoad(void *a1, uint64_t a2, uint64_t a3) {
   LoadResRef<RED4ext::ent::MeshComponent>(&r->path, &r->token, false);
 
   //EnableSmoothWheelContacts.GetAddr()->value = false;
-  //PhysXClampHugeImpacts.GetAddr()->value = false;
-  //PhysXClampHugeSpeeds.GetAddr()->value = false;
-  //AirControlCarRollHelper.GetAddr()->value = false;
-  //physicsCCD.GetAddr()->value = true;
-  //ForceMoveToMaxLinearSpeed.GetAddr()->value = 100.0;
-  //physicsCCD = true;
+  PhysXClampHugeImpacts.GetAddr()->value = false;
+  PhysXClampHugeSpeeds.GetAddr()->value = false;
+  AirControlCarRollHelper.GetAddr()->value = false;
+  physicsCCD.GetAddr()->value = true;
+  ForceMoveToMaxLinearSpeed.GetAddr()->value = 100.0;
 
-  //spdlog::info("[FlightSystem] PhysXClampHugeImpacts: {}", PhysXClampHugeImpacts.GetAddr()->value);
-  //spdlog::info("[FlightSystem] PhysXClampHugeSpeeds: {}", PhysXClampHugeSpeeds.GetAddr()->value);
-  //spdlog::info("[FlightSystem] AirControlCarRollHelper: {}", AirControlCarRollHelper.GetAddr()->value);
-  //spdlog::info("[FlightSystem] ForceMoveToMaxLinearSpeed: {}", ForceMoveToMaxLinearSpeed.GetAddr()->value);
-  //spdlog::info("[FlightSystem] physicsCCD: {}", physicsCCD.GetAddr()->value);
+  spdlog::info("[FlightSystem] PhysXClampHugeImpacts: {}", PhysXClampHugeImpacts.GetAddr()->value);
+  spdlog::info("[FlightSystem] PhysXClampHugeSpeeds: {}", PhysXClampHugeSpeeds.GetAddr()->value);
+  spdlog::info("[FlightSystem] AirControlCarRollHelper: {}", AirControlCarRollHelper.GetAddr()->value);
+  spdlog::info("[FlightSystem] ForceMoveToMaxLinearSpeed: {}", ForceMoveToMaxLinearSpeed.GetAddr()->value);
+  spdlog::info("[FlightSystem] physicsCCD: {}", physicsCCD.GetAddr()->value);
 }
 
 bool FlightSystem::sub_158() {
