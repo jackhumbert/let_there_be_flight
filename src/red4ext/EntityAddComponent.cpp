@@ -150,7 +150,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
   if (isVehicle) {
     auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(entity);
 
-    FlightWeapons::AddWeapons(vehicle);
+    //FlightWeapons::AddWeapons(vehicle);
 
     //auto fc = (FlightComponent*)FlightComponent::GetRTTIType()->AllocInstance();
     //fc->name = "flightComponent";
@@ -207,7 +207,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
           vs->slots.EmplaceBack(*slot);
           vs->slotIndexLookup.Emplace(slot->slotName, vs->slots.size - 1);
         }
-        FlightWeapons::AddWeaponSlots(vs);
+        //FlightWeapons::AddWeaponSlots(vs);
 
         bool isSixWheeler = false;
         //for (auto const &slot : vs->slots) {

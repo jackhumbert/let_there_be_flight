@@ -150,6 +150,16 @@ void UpdateComponents(RED4ext::Unk2 *unk2, float *deltaTime, void *unkStruct) {
   }
 }
 
+// vehicle allocator
+// 1.52 RVA: 0x1CA37A0 / 30029728
+/// @pattern E9 2B 12 6E FF
+constexpr const uintptr_t VehicleAllocator = 0x1CA37A0;
+
+RED4ext::Memory::IAllocator* FlightSystem::GetAllocator() {
+  RED4ext::RelocFunc<decltype(&FlightSystem::GetAllocator)> call(VehicleAllocator);
+  return call(this);
+}
+
 void FlightSystem::RegisterUpdates(RED4ext::UpdateManagerHolder *holder) {
   spdlog::info("[FlightSystem] sub_110/RegisterUpdates!");
 

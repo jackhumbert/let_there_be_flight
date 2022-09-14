@@ -22,6 +22,14 @@ private:
 
 class FlightComponent : public Engine::RTTIClass<FlightComponent, RED4ext::game::Component> {
 public:
+  // 1.52 RVA: 0x1CA0980 / 30017920
+  /// @pattern E9 0B 42 6E FF
+  static constexpr const uintptr_t VehicleControllerAllocator = 0x1CA0980;
+  inline virtual RED4ext::Memory::IAllocator* GetAllocator() {
+    RED4ext::RelocFunc<decltype(&FlightComponent::GetAllocator)> call(VehicleControllerAllocator);
+    return call(this);
+  }
+
   //virtual ~FlightComponent() override = default;
   //virtual ~PSInterface() override = default;
   inline virtual RED4ext::CClass* GetPSClass() override {

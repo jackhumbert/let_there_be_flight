@@ -11,6 +11,7 @@
 
 class FlightSystem : public Engine::RTTIClass<FlightSystem, IFlightSystem> {
 public:
+  virtual RED4ext::Memory::IAllocator* GetAllocator() override;
   virtual void RegisterUpdates(RED4ext::UpdateManagerHolder *holder) override;
   virtual bool WorldAttached(RED4ext::world::RuntimeScene *runtimeScene) override;
   virtual void WorldPendingDetach(RED4ext::world::RuntimeScene *runtimeScene) override;

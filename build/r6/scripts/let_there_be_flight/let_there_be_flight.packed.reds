@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-09-13 20:38:35.8489041
+// This file was automatically generated on 2022-09-14 20:05:51.2510588
 
 // FlightAudio.reds
 
@@ -3573,7 +3573,7 @@ public class FlightThruster {
   let forceThreshold: Float = 10.0;
   let torqueThreshold: Float = 1.0;
 
-  let animDeviation: Float = 0.0;
+  let animDeviation: Float = 0.3;
   let animRadius: Float = 0.0;
 
 
@@ -3618,10 +3618,12 @@ public class FlightThruster {
     // AnimationControllerComponent.SetInputFloatToReplicate(this.flightComponent.GetVehicle(), this.GetDeviationName(), this.animDeviation);
     // AnimationControllerComponent.SetInputFloatToReplicate(this.flightComponent.GetVehicle(), this.GetRadiusName(), this.animRadius);
 
-    let acc = this.flightComponent.FindComponentByName(n"AnimationController") as AnimationControllerComponent;
-    if IsDefined(acc) {
-      acc.SetInputFloat(this.GetDeviationName(), this.animDeviation);
-    }
+    // let acc = this.flightComponent.FindComponentByName(n"AnimationController") as AnimationControllerComponent;
+    // if IsDefined(acc) {
+    //   acc.SetInputFloat(this.GetDeviationName(), this.animDeviation);
+    // }
+    // AnimationControllerComponent.SetInputFloat(this.flightComponent.GetVehicle(), this.GetDeviationName(), this.animDeviation);
+
     // acc.SetInputFloat(this.GetRadiusName(), this.animRadius);
 
     let retroAmount = this.GetRetroThrusterAmount();

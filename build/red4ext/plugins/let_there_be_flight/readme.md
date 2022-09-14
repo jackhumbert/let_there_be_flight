@@ -29,7 +29,7 @@ For an up-to-date version of the mod, you can [download just the `build/` folder
 
 [`r6/input/let_there_be_flight.xml`](https://github.com/jackhumbert/let_there_be_flight/tree/main/build/r6/input/let_there_be_flight.xml) contains all the keybindings for the keyboard & controller - you can customize these to your liking. See all possibilities here: https://redscript.redmodding.org/#5993
 
-Other settings can be found in [`r6/scripts/let_there_be_flight.reds`](https://github.com/jackhumbert/let_there_be_flight/tree/main/build/r6/scripts/let_there_be_flight.reds) for the time being - search for `FlightSettings.SetFloat` to see all the variables used by the mod.
+Other settings can be found in [`r6/scripts/let_there_be_flight/let_there_be_flight.packed.reds`](https://github.com/jackhumbert/let_there_be_flight/tree/main/build/r6/scripts/let_there_be_flight/let_there_be_flight.packed.reds) for the time being - search for `FlightSettings.SetFloat` to see all the variables used by the mod.
 
 ## Troubleshooting
 
@@ -41,7 +41,7 @@ And find the Cyberpunk2077.dmp file, shown here:
 
 <img width="584" alt="explorer_iuXThrg7iB" src="https://user-images.githubusercontent.com/141431/186788246-eaa77ba1-5891-4f93-9abd-2f033b7e6f1a.png">
 
-Copy this file, along with your `red4ext/logs/let_there_be_flight.log` file *before* you run the game again - it will get overwritten on each launch:
+Copy this file, along with your `red4ext/logs/ctd_helper.log` file *before* you run the game again - it will get overwritten on each launch:
 
 <img width="584" alt="explorer_vV4IdIzcT7" src="https://user-images.githubusercontent.com/141431/186788320-f909c7b4-ca0d-4fcc-b77a-14b3021fe45b.png">
 
