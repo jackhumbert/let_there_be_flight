@@ -33,7 +33,8 @@ public:
   //virtual ~FlightComponent() override = default;
   //virtual ~PSInterface() override = default;
   inline virtual RED4ext::CClass* GetPSClass() override {
-    return FlightComponentPS::GetRTTIType();
+    //return FlightComponentPS::GetRTTIType();
+    return nullptr;
   }
 
   // has scripted callbacks?

@@ -3,7 +3,7 @@ private let m_flightComponent: ref<FlightComponent>;
 
 @wrapMethod(VehicleObject)
 protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> Bool {
-  EntityRequestComponentsInterface.RequestComponent(ri, n"flightComponent", n"FlightComponent", true);
+  EntityRequestComponentsInterface.RequestComponent(ri, n"flightComponent", n"FlightComponent", false);
   // EntityRequestComponentsInterface.RequestComponent(ri, n"flight_ui", n"worlduiWidgetComponent", true);
   // EntityRequestComponentsInterface.RequestComponent(ri, n"flight_ui_info", n"worlduiWidgetComponent", true);
   wrappedMethod(ri);

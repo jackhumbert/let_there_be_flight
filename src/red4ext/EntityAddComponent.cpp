@@ -150,6 +150,10 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
   if (isVehicle) {
     auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(entity);
 
+    auto fc = (FlightComponent *)FlightComponent::GetRTTIType()->AllocInstance(true);
+    fc->name = "flightComponent";
+    vehicle->componentsStorage.components.EmplaceBack(RED4ext::Handle<FlightComponent>(fc));
+
     //FlightWeapons::AddWeapons(vehicle);
 
     //auto fc = (FlightComponent*)FlightComponent::GetRTTIType()->AllocInstance();
