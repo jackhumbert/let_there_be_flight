@@ -43,6 +43,7 @@ public:
   RED4ext::DynArray<RED4ext::WeakHandle<RED4ext::IScriptable>> components;
   RED4ext::Handle<FlightAudio> audio;
   RED4ext::DynArray<RED4ext::WeakHandle<FlightComponent>> flightComponents;
+  RED4ext::SharedMutex flightComponentsMutex;
 
 private:
   friend Descriptor;
