@@ -264,40 +264,28 @@ public class FlightThruster {
     return new EulerAngles(this.GetPitch(), this.GetRoll(), this.GetYaw());
   }
 
-  public let componentSizes: ref<inkHashMap>;
+  public let componentSizeArray: array<Vector3>;
 
   public func HideOGComponents() {
     for c in this.ogComponents {
-      // if c.IsEnabled() {
-      //   c.Toggle(false);
-      // }
       let mc = c as MeshComponent;
       if IsDefined(mc) {
-        let key = TDBID.ToNumber(TDBID.Create(NameToString(mc.GetName())));
-        if !this.componentSizes.KeyExist(key) {
-          this.componentSizes.Insert(key, Vector3Wrapper.Create(mc.visualScale));
-        } else {
-          this.componentSizes.Set(key, Vector3Wrapper.Create(mc.visualScale));
-        }
+        ArrayPush(this.componentSizeArray, mc.visualScale);
         mc.visualScale = new Vector3(0.0, 0.0, 0.0);
       }
     }
   }
 
   public func ShowOGComponents() {
+    let i = 0;
     for c in this.ogComponents {
-      // c.Toggle(true);
       let mc = c as MeshComponent;
       if IsDefined(mc) {
-        let key = TDBID.ToNumber(TDBID.Create(NameToString(mc.GetName())));
-        if this.componentSizes.KeyExist(key) {
-          let v = this.componentSizes.Get(key) as Vector3Wrapper;
-          mc.visualScale = v.vector;
-        } else {
-          mc.visualScale = new Vector3(1.0, 1.0, 1.0);
-        }
+        mc.visualScale = this.componentSizeArray[i];
+        i += 1;
       }
     }
+    ArrayClear(this.componentSizeArray);
   }
 
   public func GetMainThrusterTorqueAmount() -> Float {
