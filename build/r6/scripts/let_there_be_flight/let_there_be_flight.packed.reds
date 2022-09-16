@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-09-15 20:18:57.8411537
+// This file was automatically generated on 2022-09-16 02:14:45.2347531
 
 // FlightAudio.reds
 
@@ -4268,6 +4268,11 @@ public class FlightUIVehicleHealthStatPoolListener extends CustomValueStatPoolsL
 
 public class hudFlightController extends inkHUDGameController {
 
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Flight UI Settings")
+  @runtimeProperty("ModSettings.displayName", "Enabled")
+  public let enabled: Bool = true;
+
   private let m_Date: inkTextRef;
   private let m_Timer: inkTextRef;
   private let m_CameraID: inkTextRef;
@@ -4424,29 +4429,32 @@ public class hudFlightController extends inkHUDGameController {
   private let m_outroAnimationProxy: ref<inkAnimProxy>;
 
   private func ActivateUI(activate: Bool) -> Void {
+
     FlightLog.Info("[hudFlightController] ActivateUI");
     if activate {
-      let vehicle = FlightSystem.GetInstance().playerComponent.GetVehicle();
-      if IsDefined(vehicle) {
-        inkTextRef.SetText(this.m_hp_condition_text, vehicle.GetDisplayName());
-        let stats = GameInstance.GetStatPoolsSystem(this.m_gameInstance);
-        this.ReactToHPChange(stats.GetStatPoolValue(Cast<StatsObjectID>(vehicle.GetEntityID()), gamedataStatPoolType.Health, true));  
-      }
-      inkTextRef.SetText(this.m_CameraID, FlightSystem.GetInstance().playerComponent.GetFlightMode().GetDescription());
+      if this.enabled {
+        let vehicle = FlightSystem.GetInstance().playerComponent.GetVehicle();
+        if IsDefined(vehicle) {
+          inkTextRef.SetText(this.m_hp_condition_text, vehicle.GetDisplayName());
+          let stats = GameInstance.GetStatPoolsSystem(this.m_gameInstance);
+          this.ReactToHPChange(stats.GetStatPoolValue(Cast<StatsObjectID>(vehicle.GetEntityID()), gamedataStatPoolType.Health, true));  
+        }
+        inkTextRef.SetText(this.m_CameraID, FlightSystem.GetInstance().playerComponent.GetFlightMode().GetDescription());
 
 
-      this.GetRootWidget().SetVisible(true);
-      let options: inkAnimOptions;
-      options.executionDelay = 0.50;
-      if IsDefined(this.m_outroAnimationProxy) && this.m_outroAnimationProxy.IsPlaying() {
-        this.m_outroAnimationProxy.Stop();
+        this.GetRootWidget().SetVisible(true);
+        let options: inkAnimOptions;
+        options.executionDelay = 0.50;
+        if IsDefined(this.m_outroAnimationProxy) && this.m_outroAnimationProxy.IsPlaying() {
+          this.m_outroAnimationProxy.Stop();
+        }
+        this.m_introAnimationProxy = this.PlayLibraryAnimation(n"intro", options);
+        // this.PlayAnim(n"intro", n"OnIntroComplete");
+        // optionIntro.executionDelay = 0.25;
+        // this.PlayLibraryAnimation(n"Malfunction_off", optionIntro);
+        // this.PlayAnim(n"Malfunction_timed", n"OnMalfunction");
+        // this.UpdateJohnnyThemeOverride(true);
       }
-      this.m_introAnimationProxy = this.PlayLibraryAnimation(n"intro", options);
-      // this.PlayAnim(n"intro", n"OnIntroComplete");
-      // optionIntro.executionDelay = 0.25;
-      // this.PlayLibraryAnimation(n"Malfunction_off", optionIntro);
-      // this.PlayAnim(n"Malfunction_timed", n"OnMalfunction");
-      // this.UpdateJohnnyThemeOverride(true);
     } else {
       // this.GetRootWidget().SetVisible(false);
       // this.PlayLibraryAnimation(n"outro");
