@@ -90,7 +90,8 @@ void FlightAudio::UpdateVolume() {
   }
   float volume;
   auto stack = RED4ext::CStack(this);
-  stack.result = new RED4ext::CStackType(RED4ext::CRTTISystem::Get()->GetType("Float"), &volume);
+  auto result = RED4ext::CStackType(RED4ext::CRTTISystem::Get()->GetType("Float"), &volume);
+  stack.result = &result;
   FlightAudio::GetRTTIType()->GetFunction("GetGameVolume")->Execute(&stack);
   auto gameVolume = volume;
   FlightAudio::GetRTTIType()->GetFunction("GetEngineVolume")->Execute(&stack);

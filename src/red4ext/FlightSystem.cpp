@@ -247,10 +247,10 @@ void FlightSystem::sub_148() {
 
 void FlightSystem::OnGameLoad(void *a1, uint64_t a2, uint64_t a3) { 
   spdlog::info("[FlightSystem] OnGameLoad!");
-  auto r = new RED4ext::ResourceReference<RED4ext::ent::MeshComponent>("user\\jackhumbert\\meshes\\engine_corpo.mesh");
+  auto r = RED4ext::ResourceReference<RED4ext::ent::MeshComponent>("user\\jackhumbert\\meshes\\engine_corpo.mesh");
   //r->Fetch();
   //RED4ext::ResourceLoader::Get();
-  LoadResRef<RED4ext::ent::MeshComponent>(&r->path, &r->token, false);
+  LoadResRef<RED4ext::ent::MeshComponent>(&r.path, &r.token, false);
 
   //EnableSmoothWheelContacts.GetAddr()->value = false;
   PhysXClampHugeImpacts.GetAddr()->value = false;
@@ -320,10 +320,10 @@ decltype(&GetGameSystemsData) GetGameSystemsData_Original;
 RED4ext::DynArray<RED4ext::GameSystemData>* __fastcall GetGameSystemsData(
   RED4ext::DynArray<RED4ext::GameSystemData>* gameSystemsData) {
   GetGameSystemsData_Original(gameSystemsData);
-  auto flightSystem = new RED4ext::GameSystemData();
-  flightSystem->name = "FlightSystem";
-  flightSystem->inSingleplayer = true;
-  gameSystemsData->EmplaceBack(*flightSystem);
+  auto flightSystem = RED4ext::GameSystemData();
+  flightSystem.name = "FlightSystem";
+  flightSystem.inSingleplayer = true;
+  gameSystemsData->EmplaceBack(flightSystem);
   return gameSystemsData;
 }
 
