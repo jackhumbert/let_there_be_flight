@@ -339,24 +339,25 @@ public native class FlightComponent extends GameComponent {
   protected cb func OnVehicleFlightActivationEvent(evt: ref<VehicleFlightActivationEvent>) -> Bool {
     this.Activate();
   }
-  
-  protected cb func OnSummonStartedEvent(evt: ref<SummonStartedEvent>) -> Bool {
-    if Equals(evt.state, vehicleSummonState.EnRoute) || Equals(evt.state, vehicleSummonState.AlreadySummoned) {
-      // this.CreateMappin();
-      if Equals(evt.state, vehicleSummonState.EnRoute) {
-        // this.SendParkEvent(false);
-      };
-      if Equals(evt.state, vehicleSummonState.AlreadySummoned) {
-        // this.HonkAndFlash();
-        if this.active {
-          this.Deactivate(false);
-        } else {
-          this.Activate();
-        }
-        // this.GetVehicle().PhysicsWakeUp();
-      };
-    };
-  }
+
+  // Toggles flight on summon button press  
+  // protected cb func OnSummonStartedEvent(evt: ref<SummonStartedEvent>) -> Bool {
+  //   if Equals(evt.state, vehicleSummonState.EnRoute) || Equals(evt.state, vehicleSummonState.AlreadySummoned) {
+  //     // this.CreateMappin();
+  //     if Equals(evt.state, vehicleSummonState.EnRoute) {
+  //       // this.SendParkEvent(false);
+  //     };
+  //     if Equals(evt.state, vehicleSummonState.AlreadySummoned) {
+  //       // this.HonkAndFlash();
+  //       if this.active {
+  //         this.Deactivate(false);
+  //       } else {
+  //         this.Activate();
+  //       }
+  //       // this.GetVehicle().PhysicsWakeUp();
+  //     };
+  //   };
+  // }
 
   public func Activate(opt silent: Bool) -> Void {
     // this.helper = this.GetVehicle().AddFlightHelper();
