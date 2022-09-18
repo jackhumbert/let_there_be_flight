@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-09-17 23:35:58.1296159
+// This file was automatically generated on 2022-09-18 19:09:25.6695870
 
 // FlightAudio.reds
 
@@ -2362,6 +2362,24 @@ public class FlightModeAutomatic extends FlightModeStandard {
   @runtimeProperty("ModSettings.displayName", "Automatic Mode Enabled")
   public let enabled: Bool = false;
 
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Automatic Mode")
+  @runtimeProperty("ModSettings.displayName", "Auto Braking Factor")
+  @runtimeProperty("ModSettings.description", "How much the vehicle brakes when you let off the gas")
+  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.min", "0")
+  @runtimeProperty("ModSettings.max", "10")
+  public let automaticModeAutoBrakingFactor: Float = 3.0;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Automatic Mode")
+  @runtimeProperty("ModSettings.displayName", "Yaw Directionality")
+  @runtimeProperty("ModSettings.description", "How much your velocity follows your direction")
+  @runtimeProperty("ModSettings.step", "1.0")
+  @runtimeProperty("ModSettings.min", "0")
+  @runtimeProperty("ModSettings.max", "1000")
+  public let automaticModeYawDirectionality: Float = 300.0;
+
   protected let hovering: Float;
   protected let referenceZ: Float;
 
@@ -2411,7 +2429,7 @@ public class FlightModeAutomatic extends FlightModeStandard {
     this.UpdateWithNormalLift(timeDelta, idealNormal, liftFactor * FlightSettings.GetFloat("hoverFactor") + (9.81000042) * this.gravityFactor);
 
     let aeroFactor = Vector4.Dot(this.component.stats.d_forward, this.component.stats.d_direction);
-    let yawDirectionality: Float = this.component.stats.d_speedRatio * FlightSettings.GetFloat("automaticModeYawDirectionality");
+    let yawDirectionality: Float = this.component.stats.d_speedRatio * this.automaticModeYawDirectionality;
 
     let directionFactor = AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_right));
 
@@ -2419,8 +2437,11 @@ public class FlightModeAutomatic extends FlightModeStandard {
     this.force += -this.component.stats.d_localDirection * directionFactor * yawDirectionality * AbsF(aeroFactor);
 
     if AbsF(this.component.surge) < 1.0 {    
-      let velocityDamp: Vector4 = (1.0 - AbsF(this.component.surge)) * FlightSettings.GetFloat("automaticModeAutoBrakingFactor") * this.component.stats.d_localDirection2D * (this.component.stats.d_speed2D / 100.0);
-      this.force -= velocityDamp;
+      // let velocityDamp: Vector4 = (1.0 - AbsF(this.component.surge)) * this.automaticModeAutoBrakingFactor * this.component.stats.d_localDirection2D * (this.component.stats.d_speed2D / 100.0);
+      // this.force -= velocityDamp;
+      let velocityDamp: Vector4 = (1.0 - AbsF(this.component.surge)) * this.automaticModeAutoBrakingFactor * this.component.stats.s_brakingFrictionFactor * this.component.stats.d_localVelocity;
+      this.force.X -= velocityDamp.X;
+      this.force.Y -= velocityDamp.Y;
     }
   }
 }
@@ -2727,6 +2748,27 @@ public abstract class FlightMode {
     
     let velocityDamp: Vector4 = this.component.stats.d_speed * this.component.stats.d_localVelocity * FlightSettings.GetInstance().generalDampFactorLinear * this.component.stats.s_airResistanceFactor;
     let angularDamp: Vector4 = this.component.stats.d_angularVelocity * FlightSettings.GetInstance().generalDampFactorAngular;
+    // if angularDamp.X < 0.0 {
+    //   angularDamp.X *= angularDamp.X * -1.0;
+    // } else {
+    //   angularDamp.X *= angularDamp.X;
+    // }
+    // if angularDamp.Y < 0.0 {
+    //   angularDamp.Y *= angularDamp.Y * -1.0;
+    // } else {
+    //   angularDamp.Y *= angularDamp.Y;
+    // }
+    // if angularDamp.Z < 0.0 {
+    //   angularDamp.Z *= angularDamp.Z * -1.0;
+    // } else {
+    //   angularDamp.Z *= angularDamp.Z;
+    // }
+    // if angularDamp.W < 0.0 {
+    //   angularDamp.W *= angularDamp.W * -1.0;
+    // } else {
+    //   angularDamp.W *= angularDamp.W;
+    // }
+    
 
     let direction = this.component.stats.d_direction;
     if Vector4.Dot(this.component.stats.d_direction, this.component.stats.d_forward) < 0.0 {
@@ -2735,8 +2777,10 @@ public abstract class FlightMode {
     let yawDirectionAngle: Float = Vector4.GetAngleDegAroundAxis(direction, this.component.stats.d_forward, this.component.stats.d_up);
     let pitchDirectionAngle: Float = Vector4.GetAngleDegAroundAxis(direction, this.component.stats.d_forward, this.component.stats.d_right);
 
-    let aeroDynamicYaw = this.component.aeroYawPID.GetCorrectionClamped(yawDirectionAngle, timeDelta, 10.0) * this.component.stats.d_speedRatio;// / 10.0;
-    let aeroDynamicPitch = this.component.pitchAeroPID.GetCorrectionClamped(pitchDirectionAngle, timeDelta, 10.0) * this.component.stats.d_speedRatio;// / 10.0;
+    // let aeroDynamicYaw = this.component.aeroYawPID.GetCorrectionClamped(yawDirectionAngle, timeDelta, 10.0) * this.component.stats.d_speedRatio;// / 10.0;
+    // let aeroDynamicPitch = this.component.pitchAeroPID.GetCorrectionClamped(pitchDirectionAngle, timeDelta, 10.0) * this.component.stats.d_speedRatio;// / 10.0;
+    let aeroDynamicYaw = yawDirectionAngle * this.component.stats.d_speedRatio;// / 10.0;
+    let aeroDynamicPitch = pitchDirectionAngle * this.component.stats.d_speedRatio;// / 10.0;
 
     let yawDirectionality: Float = this.component.stats.d_speedRatio * FlightSettings.GetInstance().generalYawDirectionalityFactor;
     let pitchDirectionality: Float = this.component.stats.d_speedRatio * FlightSettings.GetInstance().generalPitchDirectionalityFactor;
@@ -2977,10 +3021,10 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.category", "Flight Physics Settings")
   @runtimeProperty("ModSettings.displayName", "Angular Damp Factor")
   @runtimeProperty("ModSettings.description", "How much resistance any angular movement is given")
-  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.step", "0.01")
   @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "10.0")
-  public let generalDampFactorAngular: Float = 3.0;
+  @runtimeProperty("ModSettings.max", "3.0")
+  public let generalDampFactorAngular: Float = 1.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "Flight Physics Settings")
@@ -3064,9 +3108,6 @@ public native class FlightSettings extends IScriptable {
     FlightSettings.SetVector3("aeroPitchPID", 1.0, 0.01, 1.0);
 
     FlightSettings.SetVector3("hoverModePID", 1.0, 0.005, 0.5);
-
-    FlightSettings.SetFloat("automaticModeAutoBrakingFactor", 200.0);
-    FlightSettings.SetFloat("automaticModeYawDirectionality", 300.0);
 
     FlightSettings.SetFloat("brakeOffset", 0.0);
     FlightSettings.SetFloat("collisionRecoveryDelay", 0.8);

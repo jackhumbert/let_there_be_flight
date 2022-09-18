@@ -5,6 +5,24 @@ public class FlightModeAutomatic extends FlightModeStandard {
   @runtimeProperty("ModSettings.displayName", "Automatic Mode Enabled")
   public let enabled: Bool = false;
 
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Automatic Mode")
+  @runtimeProperty("ModSettings.displayName", "Auto Braking Factor")
+  @runtimeProperty("ModSettings.description", "How much the vehicle brakes when you let off the gas")
+  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.min", "0")
+  @runtimeProperty("ModSettings.max", "10")
+  public let automaticModeAutoBrakingFactor: Float = 3.0;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "Automatic Mode")
+  @runtimeProperty("ModSettings.displayName", "Yaw Directionality")
+  @runtimeProperty("ModSettings.description", "How much your velocity follows your direction")
+  @runtimeProperty("ModSettings.step", "1.0")
+  @runtimeProperty("ModSettings.min", "0")
+  @runtimeProperty("ModSettings.max", "1000")
+  public let automaticModeYawDirectionality: Float = 300.0;
+
   protected let hovering: Float;
   protected let referenceZ: Float;
 
@@ -54,7 +72,7 @@ public class FlightModeAutomatic extends FlightModeStandard {
     this.UpdateWithNormalLift(timeDelta, idealNormal, liftFactor * FlightSettings.GetFloat("hoverFactor") + (9.81000042) * this.gravityFactor);
 
     let aeroFactor = Vector4.Dot(this.component.stats.d_forward, this.component.stats.d_direction);
-    let yawDirectionality: Float = this.component.stats.d_speedRatio * FlightSettings.GetFloat("automaticModeYawDirectionality");
+    let yawDirectionality: Float = this.component.stats.d_speedRatio * this.automaticModeYawDirectionality;
 
     let directionFactor = AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_right));
 
@@ -62,8 +80,11 @@ public class FlightModeAutomatic extends FlightModeStandard {
     this.force += -this.component.stats.d_localDirection * directionFactor * yawDirectionality * AbsF(aeroFactor);
 
     if AbsF(this.component.surge) < 1.0 {    
-      let velocityDamp: Vector4 = (1.0 - AbsF(this.component.surge)) * FlightSettings.GetFloat("automaticModeAutoBrakingFactor") * this.component.stats.d_localDirection2D * (this.component.stats.d_speed2D / 100.0);
-      this.force -= velocityDamp;
+      // let velocityDamp: Vector4 = (1.0 - AbsF(this.component.surge)) * this.automaticModeAutoBrakingFactor * this.component.stats.d_localDirection2D * (this.component.stats.d_speed2D / 100.0);
+      // this.force -= velocityDamp;
+      let velocityDamp: Vector4 = (1.0 - AbsF(this.component.surge)) * this.automaticModeAutoBrakingFactor * this.component.stats.s_brakingFrictionFactor * this.component.stats.d_localVelocity;
+      this.force.X -= velocityDamp.X;
+      this.force.Y -= velocityDamp.Y;
     }
   }
 }

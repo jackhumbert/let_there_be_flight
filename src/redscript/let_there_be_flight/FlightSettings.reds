@@ -58,10 +58,10 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.category", "Flight Physics Settings")
   @runtimeProperty("ModSettings.displayName", "Angular Damp Factor")
   @runtimeProperty("ModSettings.description", "How much resistance any angular movement is given")
-  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.step", "0.01")
   @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "10.0")
-  public let generalDampFactorAngular: Float = 3.0;
+  @runtimeProperty("ModSettings.max", "3.0")
+  public let generalDampFactorAngular: Float = 1.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "Flight Physics Settings")
@@ -145,9 +145,6 @@ public native class FlightSettings extends IScriptable {
     FlightSettings.SetVector3("aeroPitchPID", 1.0, 0.01, 1.0);
 
     FlightSettings.SetVector3("hoverModePID", 1.0, 0.005, 0.5);
-
-    FlightSettings.SetFloat("automaticModeAutoBrakingFactor", 200.0);
-    FlightSettings.SetFloat("automaticModeYawDirectionality", 300.0);
 
     FlightSettings.SetFloat("brakeOffset", 0.0);
     FlightSettings.SetFloat("collisionRecoveryDelay", 0.8);
