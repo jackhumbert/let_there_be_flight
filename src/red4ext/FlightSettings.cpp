@@ -121,10 +121,19 @@ bool Setup(RED4ext::CGameApplication *aApp) {
   floats = RED4ext::HashMap<RED4ext::CName, float>(allocator);
   vector3s = RED4ext::HashMap<RED4ext::CName, RED4ext::Vector3>(allocator);
 
-  auto rtti = RED4ext::CRTTISystem::Get();
-  auto onUpdate = cls.GetFunction("OnAttach");
-  auto stack = RED4ext::CStack(FlightSettings::GetInstance(), nullptr, 0, nullptr, 0);
-  onUpdate->Execute(&stack);
+  auto fs = FlightSettings::GetInstance();
+  if (fs) {
+    fs->ExecuteFunction("OnAttach");
+  } else {
+    spdlog::error("[FlightSettings] Could not initialize");
+  }
+
+  //auto rtti = RED4ext::CRTTISystem::Get();
+  //auto onUpdate = cls.GetFunction("OnAttach");
+  //if (onUpdate) {
+  //  auto stack = RED4ext::CStack(FlightSettings::GetInstance(), nullptr, 0, nullptr, 0);
+  //  onUpdate->Execute(&stack);
+  //}
 
   //auto mesh = RED4ext::ResourceReference<RED4ext::ent::MeshComponent>(
       //"user\\jackhumbert\\meshes\\engine_corpo.mesh");
