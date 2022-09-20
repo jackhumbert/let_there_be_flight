@@ -1,7 +1,7 @@
 # Let There Be Flight
 # (C) 2022 Jack Humbert
 # https://github.com/jackhumbert/let_there_be_flight
-# This file was automatically generated on 2022-09-20 03:31:25.4092038
+# This file was automatically generated on 2022-09-20 16:56:34.7621320
 
 # quickhacks.yaml
 
@@ -51,6 +51,8 @@ DeviceAction.FlightMalfunction:
     - Prereqs.ConnectedToBackdoorActive
   targetPrereqs: [ ]
 
+DeviceAction.FlightMalfunction.isQuickHack: true
+
 BaseStatusEffect.FlightMalfunction:
   # $base: BaseStatusEffect.Ping
   $type: StatusEffect
@@ -69,7 +71,7 @@ BaseStatusEffect.FlightMalfunction:
       - $type: ConstantStatModifier
         modifierType: n"Additive" 
         statType: t"BaseStats.MaxDuration" 
-        value: 20 
+        value: 2
     statModsLimit: -1 
     statModsLimitModifier: t"" 
   gameplayTags:
@@ -83,16 +85,7 @@ BaseStatusEffect.FlightMalfunction:
   maxStacks: 0x1995f8f814 
   packages:
     - $type: GameplayLogicPackage
-      UIData: 
-        description: "Flight Malfunction Description" 
-        displayName: "LocKey#40980" 
-        floatValues: [ ]
-        fluffText: "Flight Malfunction Fluff" 
-        iconPath: "knockdown_icon" 
-        intValues: [ ]
-        nameValues: [ ]
-        priority: 10 
-        stats: [ ]
+      UIData: t""
       animationWrapperOverrides: [ ]
       effectors: 
         - $type: Effector

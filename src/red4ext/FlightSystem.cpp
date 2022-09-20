@@ -123,7 +123,7 @@ void UpdateComponents(RED4ext::Unk2 *unk2, float *deltaTime, void *unkStruct) {
       if (vehicle && fc->hasUpdate && vehicle->physicsData) {
         // removes Asleep/0x10
         //vehicle->SetPhysicsState(RED4ext::vehicle::PhysicsState::Asleep, 1u);
-        //vehicle->UnsetPhysicsStates();
+        vehicle->UnsetPhysicsStates();
         // just locks the brakes
         //vehicle->PersistentDataPS->ToggleQuestForceBraking(true);
         // auto onUpdate = fcc->GetFunction("OnUpdate");

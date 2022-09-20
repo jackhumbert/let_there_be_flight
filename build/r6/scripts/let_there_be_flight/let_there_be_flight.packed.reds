@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-09-20 03:31:25.3290928
+// This file was automatically generated on 2022-09-20 16:56:34.6894704
 
 // FlightAudio.reds
 
@@ -5113,8 +5113,6 @@ public class FlightMalfunction extends ActionBool {
   }
 }
 
-
-
 @addMethod(VehicleComponentPS)
 public func OnFlightMalfunction(evt: ref<FlightMalfunction>) -> EntityNotificationType {
   FlightLog.Info("[VehicleComponentPS] OnFlightMalfunction");
@@ -5170,14 +5168,73 @@ protected func SendQuickhackCommands(shouldOpen: Bool) {
     action.SetObjectActionID(t"DeviceAction.FlightMalfunction");
     // action.SetInactiveWithReason(false, "LocKey#49279");
     ArrayPush(actions, action);
-    // if this.m_isQhackUploadInProgerss {
-      // ScriptableDeviceComponentPS.SetActionsInactiveAll(actions, "LocKey#7020");
-    // };
+    if this.m_isQhackUploadInProgerss {
+      ScriptableDeviceComponentPS.SetActionsInactiveAll(actions, "LocKey#7020");
+    };
     this.TranslateActionsIntoQuickSlotCommands(actions, commands);
     quickSlotsManagerNotification.commands = commands;
   };
   HUDManager.SetQHDescriptionVisibility(this.GetGame(), shouldOpen);
   GameInstance.GetUISystem(this.GetGame()).QueueEvent(quickSlotsManagerNotification);
+}
+
+@addMethod(VehicleObject)
+protected cb func OnQuickSlotCommandUsed(evt: ref<QuickSlotCommandUsed>) -> Bool {
+  this.ExecuteAction(evt.action, GameInstance.GetPlayerSystem(this.GetGame()).GetLocalPlayerControlledGameObject());
+}
+
+@addMethod(VehicleObject)
+protected final const func ExecuteAction(choice: InteractionChoice, executor: wref<GameObject>, layerTag: CName) -> Void {
+  let action: ref<DeviceAction>;
+  let sAction: ref<ScriptableDeviceAction>;
+  let i: Int32 = 0;
+  while i < ArraySize(choice.data) {
+    action = FromVariant<ref<DeviceAction>>(choice.data[i]);
+    if IsDefined(action) {
+      if ChoiceTypeWrapper.IsType(choice.choiceMetaData.type, gameinteractionsChoiceType.CheckFailed) {
+        return;
+      };
+      this.ExecuteAction(action, executor);
+    };
+    sAction = action as ScriptableDeviceAction;
+    if IsDefined(sAction) {
+      sAction.SetInteractionLayer(layerTag);
+    };
+    i += 1;
+  };
+}
+
+@addMethod(VehicleObject)
+protected final const func ExecuteAction(action: ref<DeviceAction>, opt executor: wref<GameObject>) -> Bool {
+  let sAction: ref<ScriptableDeviceAction> = action as ScriptableDeviceAction;
+  if sAction != null {
+    sAction.RegisterAsRequester(this.GetEntityID());
+    if executor != null {
+      sAction.SetExecutor(executor);
+    };
+    sAction.ProcessRPGAction(this.GetGame());
+    return true;
+  };
+  return false;
+}
+
+@addField(VehicleObject)
+public let m_isQhackUploadInProgerss: Bool;
+
+@addMethod(VehicleObject)
+protected cb func OnUploadProgressStateChanged(evt: ref<UploadProgramProgressEvent>) -> Bool {
+  FlightLog.Info("[VehicleObject] OnUploadProgressStateChanged");
+  if Equals(evt.progressBarContext, EProgressBarContext.QuickHack) {
+    if Equals(evt.progressBarType, EProgressBarType.UPLOAD) {
+      if Equals(evt.state, EUploadProgramState.STARTED) {
+        this.m_isQhackUploadInProgerss = true;
+      } else {
+        if Equals(evt.state, EUploadProgramState.COMPLETED) {
+          this.m_isQhackUploadInProgerss = false;
+        };
+      };
+    };
+  };
 }
 
 @addMethod(VehicleObject)
@@ -5234,15 +5291,15 @@ protected func SendQuickhackCommands(shouldOpen: Bool) {
           newCommand.m_actionOwnerName = actionOwnerName;
           // newCommand.m_title = LocKeyToString(actionRecord.ObjectActionUI().Caption());
           newCommand.m_title = "Launch The Motherfucker";
-          // newCommand.m_description = LocKeyToString(actionRecord.ObjectActionUI().Description());
-          newCommand.m_description = "Rip a hole in the sky and throw this particular asshole in it";
+          newCommand.m_description = LocKeyToString(actionRecord.ObjectActionUI().Description());
+          // newCommand.m_description = "Rip a hole in the sky and throw this particular asshole in it";
           newCommand.m_icon = actionRecord.ObjectActionUI().CaptionIcon().TexturePartID().GetID();
           newCommand.m_iconCategory = actionRecord.GameplayCategory().IconName();
           newCommand.m_type = actionRecord.ObjectActionType().Type();
           newCommand.m_actionOwner = this.GetEntityID();
           newCommand.m_isInstant = false;
           newCommand.m_ICELevel = iceLVL;
-          newCommand.m_ICELevelVisible = false;
+          newCommand.m_ICELevelVisible = true;
           // newCommand.m_vulnerabilities = this.GetPS().GetActiveQuickHackVulnerabilities();
           newCommand.m_actionState = EActionInactivityReson.Locked;
           newCommand.m_quality = playerQHacksList[i].quality;
@@ -5338,13 +5395,19 @@ public class FlightMalfunctionEffector extends Effector {
       return;
     };
     let vehicle = owner as VehicleObject;
-    vehicle.m_flightComponent.Toggle(true);
+    if IsDefined(vehicle) {
+      vehicle.m_flightComponent.Activate(true);
+      vehicle.m_flightComponent.lift = 10.0;
+      vehicle.m_vehicleComponent.CreateHitEventOnSelf(0.1);
+    }
   }
 
   protected func ActionOff(owner: ref<GameObject>) -> Void {
     FlightLog.Info("[FlightMalfunctionEffector] ActionOff");
     let vehicle = owner as VehicleObject;
-    vehicle.m_flightComponent.Toggle(false);
+    if IsDefined(vehicle) {
+      vehicle.m_flightComponent.Activate(false);
+    }
   }
 
   protected func Uninitialize(game: GameInstance) -> Void {
