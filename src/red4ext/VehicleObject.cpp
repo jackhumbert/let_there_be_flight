@@ -99,6 +99,29 @@ void VehicleGetAngularVelocity(RED4ext::IScriptable *aContext, RED4ext::CStackFr
   }
 }
 
+void VehicleEnableGravity(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Vector3 *aOut,
+                          int64_t a4) {
+
+  bool enable;
+  RED4ext::GetParameter(aFrame, &enable);
+  aFrame->code++; // skip ParamEnd;
+
+  auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
+  auto ps = v->physicsData;
+  if (ps) {
+    ps->unk1B0 = enable;
+  }
+}
+
+void VehicleUnsetPhysicsStates(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Vector3 *aOut,
+                          int64_t a4) {
+
+  aFrame->code++; // skip ParamEnd;
+
+  auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
+  v->UnsetPhysicsStates();
+}
+
 void VehicleAddFlightHelper(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,
                             RED4ext::Handle<vehicle::flight::HelperWrapper> *aOut, int64_t a4) {
   // RED4ext::ScriptInstance fc;
@@ -253,9 +276,15 @@ struct VehicleObjectModule : FlightModule {
 
     auto turnOffAirControl = RED4ext::CClassFunction::Create(vbc, "TurnOffAirControl", "TurnOffAirControl",  &VehicleTurnOffAirControl, {.isNative = true});
     vbc->RegisterFunction(turnOffAirControl);
-
+    
     auto addFlightHelper = RED4ext::CClassFunction::Create(vbc, "AddFlightHelper", "AddFlightHelper", &VehicleAddFlightHelper, {.isNative = true});
     vbc->RegisterFunction(addFlightHelper);
+
+    auto enableGravity = RED4ext::CClassFunction::Create(vbc, "EnableGravity", "EnableGravity", &VehicleEnableGravity, {.isNative = true});
+    vbc->RegisterFunction(enableGravity);
+
+    auto unsetPhysics = RED4ext::CClassFunction::Create(vbc, "UnsetPhysicsStates", "UnsetPhysicsStates", &VehicleUnsetPhysicsStates, {.isNative = true});
+    vbc->RegisterFunction(unsetPhysics);
 
     auto getComponentsUsingSlot = RED4ext::CClassFunction::Create(
         vbc, "GetComponentsUsingSlot", "GetComponentsUsingSlot", &VehicleGetComponentsUsingSlot, {.isNative = true});

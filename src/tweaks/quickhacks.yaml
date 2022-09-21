@@ -1,7 +1,7 @@
-DeviceAction.FlightMalfunction:
+DeviceAction.FlightAction:
   # $base: DeviceAction.PingDevice
   $type: ObjectAction
-  actionName: n"FlightMalfunction" 
+  actionName: n"FlightAction" 
   activationTime:
     - QuickHack.QuickHack_inline0
     - QuickHack.QuickHack_inline1
@@ -25,7 +25,13 @@ DeviceAction.FlightMalfunction:
   #   $type: Bool
   #   value: true 
   objectActionType: ObjectActionType.DeviceQuickHack
-  objectActionUI: Interactions.QuickHackCallElevator
+  objectActionUI:
+    action: "Choice1" 
+    caption: 367 
+    captionIcon: ChoiceCaptionParts.ToggleStateIcon
+    description: 6982 
+    name: "FlightAction" 
+    prereqID: "" 
   priority: 10.0 
   rewards:
     - RPGActionRewards.CombatHacking
@@ -33,20 +39,76 @@ DeviceAction.FlightMalfunction:
     - QuickHack.QuickHack_inline12
     - QuickHack.QuickHack_inline13
     - $type: ObjectActionEffect
-      effectorToTrigger: t"" 
-      recipient: ObjectActionReference.Instigator
-      statusEffect: BaseStatusEffect.HackingTutorialStage01PingUsed
-    - $type: ObjectActionEffect
       effectorToTrigger: t""
       recipient: ObjectActionReference.Target
-      statusEffect: BaseStatusEffect.FlightMalfunction
+      statusEffect: BaseStatusEffect.FlightAction
   targetActivePrereqs:
     - Prereqs.ConnectedToBackdoorActive
   targetPrereqs: [ ]
 
+
+DeviceAction.FlightMalfunction:
+  $base: DeviceAction.FlightAction
+  actionName: n"FlightMalfunction" 
+  costs: [ DeviceAction.DeviceQuickHack_inline1 ]
+  objectActionUI:
+    action: "Choice1" 
+    caption: 368
+    captionIcon: ChoiceCaptionParts.ToggleStateIcon
+    description: 6983
+    name: "FlightMalfunction" 
+    prereqID: "" 
+  startEffects: 
+    - QuickHack.QuickHack_inline12
+    - QuickHack.QuickHack_inline13
+    - $type: ObjectActionEffect
+      effectorToTrigger: t""
+      recipient: ObjectActionReference.Target
+      statusEffect: BaseStatusEffect.FlightMalfunction
 DeviceAction.FlightMalfunction.isQuickHack: true
 
-BaseStatusEffect.FlightMalfunction:
+
+DeviceAction.DisableGravity:
+  $base: DeviceAction.FlightAction
+  actionName: n"DisableGravity" 
+  costs: [ DeviceAction.DeviceQuickHack_inline1 ]
+  objectActionUI:
+    action: "Choice1" 
+    caption: 367 
+    captionIcon: ChoiceCaptionParts.ToggleStateIcon
+    description: 6982 
+    name: "DisableGravity" 
+    prereqID: "" 
+  startEffects: 
+    - QuickHack.QuickHack_inline12
+    - QuickHack.QuickHack_inline13
+    - $type: ObjectActionEffect
+      effectorToTrigger: t""
+      recipient: ObjectActionReference.Target
+      statusEffect: BaseStatusEffect.DisableGravity
+DeviceAction.DisableGravity.isQuickHack: true
+
+DeviceAction.Bouncy:
+  $base: DeviceAction.FlightAction
+  actionName: n"Bouncy" 
+  costs: [ DeviceAction.DeviceQuickHack_inline1 ]
+  objectActionUI:
+    action: "Choice1" 
+    caption: 367 
+    captionIcon: ChoiceCaptionParts.ToggleStateIcon
+    description: 6982 
+    name: "Bouncy" 
+    prereqID: "" 
+  startEffects: 
+    - QuickHack.QuickHack_inline12
+    - QuickHack.QuickHack_inline13
+    - $type: ObjectActionEffect
+      effectorToTrigger: t""
+      recipient: ObjectActionReference.Target
+      statusEffect: BaseStatusEffect.Bouncy
+DeviceAction.Bouncy.isQuickHack: true
+
+BaseStatusEffect.FlightAction:
   # $base: BaseStatusEffect.Ping
   $type: StatusEffect
   AIData: BaseStatusEffect.BaseQuickHackStatusEffect_inline0
@@ -54,7 +116,6 @@ BaseStatusEffect.FlightMalfunction:
     - $type: StatusEffectFX
       name: n"quickhack_ping" 
       shouldReapply: false 
-  VFX: [ ]
   additionalParam: n"None" 
   debugTags: [ ]
   duration: 
@@ -70,12 +131,52 @@ BaseStatusEffect.FlightMalfunction:
   gameplayTags:
     - n"Debuff"
     - n"Quickhack"
-    - n"Ping"
     - n"Stealth"
   immunityStats: [ ]
   isAffectedByTimeDilationNPC: true 
   isAffectedByTimeDilationPlayer: true 
   maxStacks: 0x1995f8f814 
+  packages:
+    - $type: GameplayLogicPackage
+      UIData: t""
+      animationWrapperOverrides: [ ]
+      effectors: 
+        - $type: Effector
+          effectorClassName: n"FlightActionEffector" 
+          prereqRecord: Prereqs.AlwaysTruePrereq
+          removeAfterActionCall: false 
+          statModifierGroups: [ ]
+          statPoolUpdates: [ ]
+      items: [ ]
+      prereq: n"None" 
+      stackable: false 
+      statPools: [ ]
+      stats: [ ]
+  playerData: "" 
+  removeAllStacksWhenDurationEnds: false 
+  removeAllStacksWhenDurationEndsStatModifiers: "" 
+  removeOnStoryTier: false 
+  replicated: false 
+  savable: false 
+  statusEffectType: BaseStatusEffectTypes.Misc
+  stopActiveSfxOnDeactivate: true 
+  uiData:
+    description: "Flight Action Description" 
+    displayName: "LocKey#40980" 
+    floatValues: [ ]
+    fluffText: "Flight Action Fluff" 
+    iconPath: "knockdown_icon" 
+    intValues: [ ]
+    nameValues: [ ]
+    priority: 10 
+    stats: [ ]
+
+BaseStatusEffect.FlightMalfunction:
+  $base: BaseStatusEffect.FlightAction
+  VFX: 
+    - $type: StatusEffectFX
+      name: n"explosion"
+      shouldReapply: true 
   packages:
     - $type: GameplayLogicPackage
       UIData: t""
@@ -92,14 +193,6 @@ BaseStatusEffect.FlightMalfunction:
       stackable: false 
       statPools: [ ]
       stats: [ ]
-  playerData: "" 
-  removeAllStacksWhenDurationEnds: false 
-  removeAllStacksWhenDurationEndsStatModifiers: "" 
-  removeOnStoryTier: false 
-  replicated: false 
-  savable: true 
-  statusEffectType: BaseStatusEffectTypes.Misc
-  stopActiveSfxOnDeactivate: true 
   uiData:
     description: "Flight Malfunction Description" 
     displayName: "LocKey#40980" 
@@ -110,3 +203,41 @@ BaseStatusEffect.FlightMalfunction:
     nameValues: [ ]
     priority: 10 
     stats: [ ]
+
+BaseStatusEffect.DisableGravity:
+  $base: BaseStatusEffect.FlightAction
+  packages:
+    - $type: GameplayLogicPackage
+      UIData: t""
+      animationWrapperOverrides: [ ]
+      effectors: 
+        - $type: Effector
+          effectorClassName: n"DisableGravityEffector" 
+          prereqRecord: Prereqs.AlwaysTruePrereq
+          removeAfterActionCall: false 
+          statModifierGroups: [ ]
+          statPoolUpdates: [ ]
+      items: [ ]
+      prereq: n"None" 
+      stackable: false 
+      statPools: [ ]
+      stats: [ ]
+
+BaseStatusEffect.Bouncy:
+  $base: BaseStatusEffect.FlightAction
+  packages:
+    - $type: GameplayLogicPackage
+      UIData: t""
+      animationWrapperOverrides: [ ]
+      effectors: 
+        - $type: Effector
+          effectorClassName: n"BouncyEffector" 
+          prereqRecord: Prereqs.AlwaysTruePrereq
+          removeAfterActionCall: false 
+          statModifierGroups: [ ]
+          statPoolUpdates: [ ]
+      items: [ ]
+      prereq: n"None" 
+      stackable: false 
+      statPools: [ ]
+      stats: [ ]

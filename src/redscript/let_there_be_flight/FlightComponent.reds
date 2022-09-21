@@ -647,9 +647,9 @@ public native class FlightComponent extends GameComponent {
         //     // this.Deactivate(true);
         //   }
         // }
-        // if !this.active {
-        //   this.FireVerticalImpulse(gridID);
-        // }
+        if !this.active && this.GetVehicle().bouncy {
+          this.FireVerticalImpulse(gridID);
+        }
         if biggestImpact > 0.20 {
           GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"explosion");
         }
@@ -1035,14 +1035,14 @@ public native class FlightComponent extends GameComponent {
   }
 
   
-	protected cb func OnFlightMalfunction(evt : ref<FlightMalfunction>) -> Bool {
-      FlightLog.Info("[FlightComponent] OnFlightMalfunction");
-		if evt.IsCompleted() {
-			this.Activate(false);
-		} else {
-			this.Activate(true);
-		}
-	}
+	// protected cb func OnFlightMalfunction(evt : ref<FlightMalfunction>) -> Bool {
+  //     FlightLog.Info("[FlightComponent] OnFlightMalfunction");
+	// 	if evt.IsCompleted() {
+	// 		this.Activate(false);
+	// 	} else {
+	// 		this.Activate(true);
+	// 	}
+	// }
 
 
 	// protected event OnHUDInstruction( evt : HUDInstruction )

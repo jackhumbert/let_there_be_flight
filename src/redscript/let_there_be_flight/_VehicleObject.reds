@@ -86,6 +86,9 @@ public native func GetMomentOfInertiaScale() -> Vector3;
 public native func GetCenterOfMass() -> Vector3;
 
 @addMethod(VehicleObject)
+public native func EnableGravity(enabled: Bool) -> Void;
+
+@addMethod(VehicleObject)
 public native func GetAngularVelocity() -> Vector3;
 
 @addMethod(VehicleObject)
@@ -108,18 +111,22 @@ public native func GetWeaponPlaceholderOrientation(index: Int32) -> Quaternion;
 @addMethod(VehicleObject)
 public native func GetWeapons() -> array<ref<WeaponObject>>;
 
+@addMethod(VehicleObject)
+public native func UnsetPhysicsStates() -> Void;
+
+@addField(VehicleObject)
+public let bouncy: Bool;
+
 // working
 // @addMethod(VehicleObject)
 // protected cb func OnPhysicalCollision(evt: ref<PhysicalCollisionEvent>) -> Bool {
-//   FlightLog.Info("[VehicleObject] OnPhysicalCollision");
+//   // FlightLog.Info("[VehicleObject] OnPhysicalCollision");
 //   let vehicle = evt.otherEntity as VehicleObject;
 //   if IsDefined(vehicle) {
 //     let gameInstance: GameInstance = this.GetGame();
 //     let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
 //     let isPlayerMounted = VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), vehicle);
-//     if isPlayerMounted {
-//       // FlightController.GetInstance().ProcessImpact(evt.attackData.vehicleImpactForce);
-//     } else {
+//     if !isPlayerMounted && this.bouncy {
 //       let impulseEvent: ref<PhysicalImpulseEvent> = new PhysicalImpulseEvent();
 //       impulseEvent.radius = 1.0;
 //       impulseEvent.worldPosition = Vector4.Vector4To3(evt.worldPosition);

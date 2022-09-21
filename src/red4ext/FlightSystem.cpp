@@ -245,8 +245,9 @@ void FlightSystem::sub_148() {
 	spdlog::info("[FlightSystem] sub_148!");
 }
 
-void FlightSystem::OnGameLoad(void *a1, uint64_t a2, uint64_t a3) { 
+void FlightSystem::OnGameLoad(void *a1, uint64_t a2, uint64_t a3) {
   RED4ext::CNamePool::Add("FlightMalfunctionEffector");
+  RED4ext::CNamePool::Add("DisableGravityEffector");
   spdlog::info("[FlightSystem] OnGameLoad!");
   auto r = RED4ext::ResourceReference<RED4ext::ent::MeshComponent>("user\\jackhumbert\\meshes\\engine_corpo.mesh");
   //r->Fetch();
