@@ -1,7 +1,7 @@
 # Let There Be Flight
 # (C) 2022 Jack Humbert
 # https://github.com/jackhumbert/let_there_be_flight
-# This file was automatically generated on 2022-09-21 02:28:52.9245038
+# This file was automatically generated on 2022-09-21 17:50:07.3096745
 
 # quickhacks.yaml
 
@@ -13,8 +13,6 @@ DeviceAction.FlightAction:
     - QuickHack.QuickHack_inline0
     - QuickHack.QuickHack_inline1
     - QuickHack.QuickHack_inline2
-    - DeviceAction.DeviceQuickHack_inline0
-    - DeviceAction.PingDevice_inline0
   completionEffects:
     - QuickHack.QuickHack_inline4
     - QuickHack.QuickHack_inline8
@@ -57,7 +55,18 @@ DeviceAction.FlightAction:
 DeviceAction.FlightMalfunction:
   $base: DeviceAction.FlightAction
   actionName: n"FlightMalfunction" 
-  costs: [ DeviceAction.DeviceQuickHack_inline1 ]
+  costs:
+    - $type: StatPoolCost
+      costMods:
+        - QuickHack.MemoryCostReductionMod
+        - QuickHack.TargetResistance
+        - QuickHack.ConsumableCostReduction
+        - $type: ConstantStatModifier
+          modifierType: n"Additive" 
+          statType: BaseStats.Memory
+          value: 4
+      statPool: BaseStatPools.Memory 
+    - QuickHack.MemoryIncreaseTier3
   objectActionUI:
     action: "Choice1" 
     caption: 368
@@ -98,7 +107,9 @@ DeviceAction.DisableGravity.isQuickHack: true
 DeviceAction.Bouncy:
   $base: DeviceAction.FlightAction
   actionName: n"Bouncy" 
-  costs: [ DeviceAction.DeviceQuickHack_inline1 ]
+  costs: 
+    - QuickHack.BaseContagionHack_inline4
+    - QuickHack.MemoryIncreaseTier3
   objectActionUI:
     action: "Choice1" 
     caption: 367 
@@ -184,6 +195,16 @@ BaseStatusEffect.FlightMalfunction:
     - $type: StatusEffectFX
       name: n"explosion"
       shouldReapply: true 
+  duration: 
+    drawBasedOnStatType: false 
+    statModifiers: 
+      - BaseStatusEffect.BaseQuickHackDuration_inline0
+      - $type: ConstantStatModifier
+        modifierType: n"Additive" 
+        statType: BaseStats.MaxDuration
+        value: 2
+    statModsLimit: -1 
+    statModsLimitModifier: t"" 
   packages:
     - $type: GameplayLogicPackage
       UIData: t""

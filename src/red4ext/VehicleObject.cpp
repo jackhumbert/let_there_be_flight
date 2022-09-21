@@ -113,6 +113,27 @@ void VehicleEnableGravity(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *
   }
 }
 
+void VehicleHasGravity(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, bool *aOut,
+                          int64_t a4) {
+
+  aFrame->code++; // skip ParamEnd;
+
+  auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
+  auto ps = v->physicsData;
+  if (aOut && ps) {
+    *aOut = ps->unk1B0;
+  }
+}
+
+void VehicleEndActions(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Vector3 *aOut,
+                          int64_t a4) {
+
+  aFrame->code++; // skip ParamEnd;
+
+  auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
+  v->actionInterface.EndActions();
+}
+
 void VehicleUnsetPhysicsStates(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Vector3 *aOut,
                           int64_t a4) {
 
@@ -283,8 +304,14 @@ struct VehicleObjectModule : FlightModule {
     auto enableGravity = RED4ext::CClassFunction::Create(vbc, "EnableGravity", "EnableGravity", &VehicleEnableGravity, {.isNative = true});
     vbc->RegisterFunction(enableGravity);
 
+    auto hasGravity = RED4ext::CClassFunction::Create(vbc, "HasGravity", "HasGravity", &VehicleHasGravity, {.isNative = true});
+    vbc->RegisterFunction(hasGravity);
+    
     auto unsetPhysics = RED4ext::CClassFunction::Create(vbc, "UnsetPhysicsStates", "UnsetPhysicsStates", &VehicleUnsetPhysicsStates, {.isNative = true});
     vbc->RegisterFunction(unsetPhysics);
+
+    auto endActions = RED4ext::CClassFunction::Create(vbc, "EndActions", "EndActions", &VehicleEndActions, {.isNative = true});
+    vbc->RegisterFunction(endActions);
 
     auto getComponentsUsingSlot = RED4ext::CClassFunction::Create(
         vbc, "GetComponentsUsingSlot", "GetComponentsUsingSlot", &VehicleGetComponentsUsingSlot, {.isNative = true});

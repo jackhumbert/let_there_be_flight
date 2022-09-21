@@ -63,12 +63,22 @@ public native let handbrake: Float;
 // public native let turnX3: Float;
 
 @addField(VehicleObject)
+@runtimeProperty("offset", "0x611")
+public native let ignoreImpulses: Bool;
+
+@addField(VehicleObject)
 @runtimeProperty("offset", "0x268")
 public native let turnX: Float;
 
 @addField(VehicleObject)
 @runtimeProperty("offset", "0x950")
 public native let tracePosition: Vector3;
+
+@addMethod(VehicleObject)
+public native func EndActions() -> Void;
+
+@addMethod(VehicleObject)
+public native func HasGravity() -> Bool;
 
 @addMethod(VehicleObject)
 public native func UsesInertiaTensor() -> Bool;
