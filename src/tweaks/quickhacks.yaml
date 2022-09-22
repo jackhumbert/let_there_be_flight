@@ -168,16 +168,7 @@ BaseStatusEffect.FlightAction:
   savable: false 
   statusEffectType: BaseStatusEffectTypes.Misc
   stopActiveSfxOnDeactivate: true 
-  uiData:
-    description: "Flight Action Description" 
-    displayName: "LocKey#40980" 
-    floatValues: [ ]
-    fluffText: "" 
-    iconPath: "knockdown_icon" 
-    intValues: [ ]
-    nameValues: [ ]
-    priority: 10 
-    stats: [ ]
+  uiData: t"""
 
 BaseStatusEffect.FlightMalfunction:
   $base: BaseStatusEffect.FlightAction
@@ -210,16 +201,6 @@ BaseStatusEffect.FlightMalfunction:
       stackable: false 
       statPools: [ ]
       stats: [ ]
-  uiData:
-    description: "Flight Malfunction Description" 
-    displayName: "LocKey#40980" 
-    floatValues: [ ]
-    fluffText: "" 
-    iconPath: "knockdown_icon" 
-    intValues: [ ]
-    nameValues: [ ]
-    priority: 10 
-    stats: [ ]
 
 BaseStatusEffect.DisableGravity:
   $base: BaseStatusEffect.FlightAction

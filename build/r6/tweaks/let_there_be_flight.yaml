@@ -1,7 +1,7 @@
 # Let There Be Flight
 # (C) 2022 Jack Humbert
 # https://github.com/jackhumbert/let_there_be_flight
-# This file was automatically generated on 2022-09-22 00:35:14.5603042
+# This file was automatically generated on 2022-09-22 01:11:12.3203153
 
 # quickhacks.yaml
 
@@ -175,16 +175,7 @@ BaseStatusEffect.FlightAction:
   savable: false 
   statusEffectType: BaseStatusEffectTypes.Misc
   stopActiveSfxOnDeactivate: true 
-  uiData:
-    description: "Flight Action Description" 
-    displayName: "LocKey#40980" 
-    floatValues: [ ]
-    fluffText: "" 
-    iconPath: "knockdown_icon" 
-    intValues: [ ]
-    nameValues: [ ]
-    priority: 10 
-    stats: [ ]
+  uiData: t"""
 
 BaseStatusEffect.FlightMalfunction:
   $base: BaseStatusEffect.FlightAction
@@ -217,16 +208,6 @@ BaseStatusEffect.FlightMalfunction:
       stackable: false 
       statPools: [ ]
       stats: [ ]
-  uiData:
-    description: "Flight Malfunction Description" 
-    displayName: "LocKey#40980" 
-    floatValues: [ ]
-    fluffText: "" 
-    iconPath: "knockdown_icon" 
-    intValues: [ ]
-    nameValues: [ ]
-    priority: 10 
-    stats: [ ]
 
 BaseStatusEffect.DisableGravity:
   $base: BaseStatusEffect.FlightAction
