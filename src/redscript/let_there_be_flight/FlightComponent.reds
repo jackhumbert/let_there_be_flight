@@ -647,9 +647,9 @@ public native class FlightComponent extends GameComponent {
         //     // this.Deactivate(true);
         //   }
         // }
-        // if !this.active {
-        //   this.FireVerticalImpulse(gridID);
-        // }
+        if !this.active && this.GetVehicle().bouncy {
+          this.FireVerticalImpulse(gridID);
+        }
         if biggestImpact > 0.20 {
           GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"explosion");
         }
@@ -1025,11 +1025,50 @@ public native class FlightComponent extends GameComponent {
   } 
 
   protected cb func OnHUDInstruction(evt: ref<HUDInstruction>) -> Bool {
+    // working
+    // FlightLog.Info("[FlightComponent] OnHUDInstruction");
     if evt.quickhackInstruction.ShouldProcess() {
-      FlightLog.Info("[FlightComponent] OnHUDInstruction");
+      // FlightLog.Info("[FlightComponent] quickhackInstructions.ShouldProcess");
+      // this.GetVehicle().TryOpenQuickhackMenu(true);
       this.GetVehicle().TryOpenQuickhackMenu(evt.quickhackInstruction.ShouldOpen());
     };
   }
+
+  
+	// protected cb func OnFlightMalfunction(evt : ref<FlightMalfunction>) -> Bool {
+  //     FlightLog.Info("[FlightComponent] OnFlightMalfunction");
+	// 	if evt.IsCompleted() {
+	// 		this.Activate(false);
+	// 	} else {
+	// 		this.Activate(true);
+	// 	}
+	// }
+
+
+	// protected event OnHUDInstruction( evt : HUDInstruction )
+	// {
+	// 	super.OnHUDInstruction( evt );
+	// 	if( evt.highlightInstructions.GetState() == InstanceState.ON )
+	// 	{
+	// 		GetDevicePS().SetFocusModeData( true );
+	// 		ResolveDeviceOperationOnFocusMode( gameVisionModeType.Focus, true );
+	// 	}
+	// 	else
+	// 	{
+	// 		if( evt.highlightInstructions.WasProcessed() )
+	// 		{
+	// 			GetDevicePS().SetFocusModeData( false );
+	// 			ToggleAreaIndicator( false );
+	// 			ResolveDeviceOperationOnFocusMode( gameVisionModeType.Default, false );
+	// 			NotifyConnectionHighlightSystem( false, false );
+	// 		}
+	// 	}
+	// 	if( evt.quickhackInstruction.ShouldProcess() )
+	// 	{
+	// 		TryOpenQuickhackMenu( evt.quickhackInstruction.ShouldOpen() );
+	// 	}
+	// }
+
 
   protected let m_attacksSpawned: array<ref<EffectInstance>>;
 

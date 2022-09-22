@@ -123,7 +123,7 @@ void UpdateComponents(RED4ext::Unk2 *unk2, float *deltaTime, void *unkStruct) {
       if (vehicle && fc->hasUpdate && vehicle->physicsData) {
         // removes Asleep/0x10
         //vehicle->SetPhysicsState(RED4ext::vehicle::PhysicsState::Asleep, 1u);
-        //vehicle->UnsetPhysicsStates();
+        vehicle->UnsetPhysicsStates();
         // just locks the brakes
         //vehicle->PersistentDataPS->ToggleQuestForceBraking(true);
         // auto onUpdate = fcc->GetFunction("OnUpdate");
@@ -245,7 +245,9 @@ void FlightSystem::sub_148() {
 	spdlog::info("[FlightSystem] sub_148!");
 }
 
-void FlightSystem::OnGameLoad(void *a1, uint64_t a2, uint64_t a3) { 
+void FlightSystem::OnGameLoad(void *a1, uint64_t a2, uint64_t a3) {
+  RED4ext::CNamePool::Add("FlightMalfunctionEffector");
+  RED4ext::CNamePool::Add("DisableGravityEffector");
   spdlog::info("[FlightSystem] OnGameLoad!");
   auto r = RED4ext::ResourceReference<RED4ext::ent::MeshComponent>("user\\jackhumbert\\meshes\\engine_corpo.mesh");
   //r->Fetch();

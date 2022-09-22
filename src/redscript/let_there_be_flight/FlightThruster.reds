@@ -216,10 +216,10 @@ public class FlightThruster {
     // AnimationControllerComponent.SetInputFloatToReplicate(this.flightComponent.GetVehicle(), this.GetDeviationName(), this.animDeviation);
     // AnimationControllerComponent.SetInputFloatToReplicate(this.flightComponent.GetVehicle(), this.GetRadiusName(), this.animRadius);
 
-    // let acc = this.flightComponent.FindComponentByName(n"AnimationController") as AnimationControllerComponent;
-    // if IsDefined(acc) {
-    //   acc.SetInputFloat(this.GetDeviationName(), this.animDeviation);
-    // }
+    let acc = this.flightComponent.FindComponentByName(n"AnimationController") as AnimationControllerComponent;
+    if IsDefined(acc) {
+      acc.SetInputFloat(this.GetDeviationName(), this.animDeviation);
+    }
     // AnimationControllerComponent.SetInputFloat(this.flightComponent.GetVehicle(), this.GetDeviationName(), this.animDeviation);
 
     // acc.SetInputFloat(this.GetRadiusName(), this.animRadius);
