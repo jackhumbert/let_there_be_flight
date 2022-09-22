@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-09-21 17:50:07.2229832
+// This file was automatically generated on 2022-09-22 00:35:14.4686723
 
 // FlightAudio.reds
 
@@ -3699,10 +3699,10 @@ public class FlightThruster {
     // AnimationControllerComponent.SetInputFloatToReplicate(this.flightComponent.GetVehicle(), this.GetDeviationName(), this.animDeviation);
     // AnimationControllerComponent.SetInputFloatToReplicate(this.flightComponent.GetVehicle(), this.GetRadiusName(), this.animRadius);
 
-    // let acc = this.flightComponent.FindComponentByName(n"AnimationController") as AnimationControllerComponent;
-    // if IsDefined(acc) {
-    //   acc.SetInputFloat(this.GetDeviationName(), this.animDeviation);
-    // }
+    let acc = this.flightComponent.FindComponentByName(n"AnimationController") as AnimationControllerComponent;
+    if IsDefined(acc) {
+      acc.SetInputFloat(this.GetDeviationName(), this.animDeviation);
+    }
     // AnimationControllerComponent.SetInputFloat(this.flightComponent.GetVehicle(), this.GetDeviationName(), this.animDeviation);
 
     // acc.SetInputFloat(this.GetRadiusName(), this.animRadius);
@@ -5105,6 +5105,53 @@ public class FlightAction extends ScriptableDeviceAction {
   public let m_owner: wref<VehicleObject>;
   public let title: String;
   public let description: String;
+  public let icon: TweakDBID;
+}
+
+public class FlightEnable extends FlightAction {
+  public final func SetProperties() -> Void {
+    this.actionName = n"FlightEnable";
+    this.title = "Enable Flight";
+    this.description = "Grant this vehicle clear for take-off and use the default mode";
+    this.icon = t"UIIcon.SystemCollapse";
+    this.SetObjectActionID(t"DeviceAction.FlightAction");
+  }
+
+  public func IsPossible(target: wref<GameObject>, opt actionRecord: wref<ObjectAction_Record>, opt objectActionsCallbackController: wref<gameObjectActionsCallbackController>) -> Bool {
+    let v = target as VehicleObject;
+    return super.IsPossible(target, actionRecord, objectActionsCallbackController) && !v.m_flightComponent.active;
+  }
+
+  public func CompleteAction(gameInstance: GameInstance) -> Void {
+    FlightLog.Info("[FlightEnable] CompleteAction");
+    super.CompleteAction(gameInstance);
+    this.m_owner.UnsetPhysicsStates();
+    this.m_owner.EndActions();
+    this.m_owner.m_flightComponent.Activate(true);
+  }
+}
+
+public class FlightDisable extends FlightAction {
+  public final func SetProperties() -> Void {
+    this.actionName = n"FlightDisable";
+    this.title = "Disable Flight";
+    this.description = "Turn off flight mode and let the occupants suffer the consequences";
+    this.icon = t"UIIcon.SystemCollapse";
+    this.SetObjectActionID(t"DeviceAction.FlightAction");
+  }
+
+  public func IsPossible(target: wref<GameObject>, opt actionRecord: wref<ObjectAction_Record>, opt objectActionsCallbackController: wref<gameObjectActionsCallbackController>) -> Bool {
+    let v = target as VehicleObject;
+    return super.IsPossible(target, actionRecord, objectActionsCallbackController) && v.m_flightComponent.active;
+  }
+
+  public func CompleteAction(gameInstance: GameInstance) -> Void {
+    FlightLog.Info("[FlightDisable] CompleteAction");
+    super.CompleteAction(gameInstance);
+    this.m_owner.UnsetPhysicsStates();
+    this.m_owner.EndActions();
+    this.m_owner.m_flightComponent.Deactivate(true);
+  }
 }
 
 public class FlightMalfunction extends FlightAction {
@@ -5112,29 +5159,18 @@ public class FlightMalfunction extends FlightAction {
     this.actionName = n"FlightMalfunction";
     this.title = "Initiate Launch";
     this.description = "Rip a hole in the sky and throw this particular asshole in it";
+    this.icon = t"UIIcon.TurretMalfunction";
     this.SetObjectActionID(t"DeviceAction.FlightMalfunction");
-  }
-
-  public func StartAction(gameInstance: GameInstance) -> Void {
-    FlightLog.Info("[FlightMalfunction] StartAction");
-    super.StartAction(gameInstance);
-    // this.m_owner.m_flightComponent.Activate(true);
-    // this.m_owner.m_flightComponent.lift = 2.0;
-  }
-
-  public func CompleteAction(gameInstance: GameInstance) -> Void {
-    FlightLog.Info("[FlightMalfunction] CompleteAction");
-    super.CompleteAction(gameInstance);
-    // this.m_owner.m_flightComponent.Deactivate(true);
   }
 }
 
 public class DisableGravity extends FlightAction {
   public final func SetProperties() -> Void {
     this.actionName = n"DisableGravity";
-    this.title = "Disable Gravity";
-    this.description = "Enables the antigrav plates on the vehicle";
-    this.SetObjectActionID(t"DeviceAction.DisableGravity");
+    this.title = "Enable Antigrav";
+    this.description = "Free this vehicle the prison that is Earth's gravity";
+    this.icon = t"UIIcon.SystemCollapse";
+    this.SetObjectActionID(t"ChoiceIcons.EngineeringIcon");
   }
 
   public func IsPossible(target: wref<GameObject>, opt actionRecord: wref<ObjectAction_Record>, opt objectActionsCallbackController: wref<gameObjectActionsCallbackController>) -> Bool {
@@ -5154,9 +5190,10 @@ public class DisableGravity extends FlightAction {
 public class EnableGravity extends FlightAction {
   public final func SetProperties() -> Void {
     this.actionName = n"EnableGravity";
-    this.title = "Enable Gravity";
-    this.description = "Disables the antigrav plates on the vehicle";
-    this.SetObjectActionID(t"DeviceAction.DisableGravity");
+    this.title = "Disable Antigrav";
+    this.description = "Accept Newton's law and bring this vehicle back to Earth at that lovely 9.8 m/s^2";
+    this.icon = t"UIIcon.SystemCollapse";
+    this.SetObjectActionID(t"ChoiceIcons.EngineeringIcon");
   }
 
   public func IsPossible(target: wref<GameObject>, opt actionRecord: wref<ObjectAction_Record>, opt objectActionsCallbackController: wref<gameObjectActionsCallbackController>) -> Bool {
@@ -5175,7 +5212,8 @@ public class Bouncy extends FlightAction {
   public final func SetProperties() -> Void {
     this.actionName = n"Bouncy";
     this.title = "Funhouse";
-    this.description = "Make things extra bouncy";
+    this.description = "Charm this vehicle with the folly of youth and make it a little bouncy";
+    this.icon = t"ChoiceIcons.SabotageIcon";
     this.SetObjectActionID(t"DeviceAction.Bouncy");
   }
 
@@ -5224,12 +5262,33 @@ public class Bouncy extends FlightAction {
 //   // this.ResolveQuestImportanceOnPerformedAction(action);
 // }
 
+public func ActionFlightEnable(owner: ref<VehicleObject>) -> ref<FlightEnable> {
+    let action: ref<FlightEnable> = new FlightEnable();
+    action.clearanceLevel = DefaultActionsParametersHolder.GetInteractiveClearance();
+    action.m_owner = owner;
+    action.SetUp(owner.GetPS());
+    action.SetProperties();
+    action.SetExecutor(GetPlayer(owner.GetGame()));
+    return action;
+}
+
+public func ActionFlightDisable(owner: ref<VehicleObject>) -> ref<FlightDisable> {
+    let action: ref<FlightDisable> = new FlightDisable();
+    action.clearanceLevel = DefaultActionsParametersHolder.GetInteractiveClearance();
+    action.m_owner = owner;
+    action.SetUp(owner.GetPS());
+    action.SetProperties();
+    action.SetExecutor(GetPlayer(owner.GetGame()));
+    return action;
+}
+
 public func ActionFlightMalfunction(owner: ref<VehicleObject>) -> ref<FlightMalfunction> {
     let action: ref<FlightMalfunction> = new FlightMalfunction();
     action.clearanceLevel = DefaultActionsParametersHolder.GetInteractiveClearance();
     action.m_owner = owner;
     action.SetUp(owner.GetPS());
     action.SetProperties();
+    action.SetExecutor(GetPlayer(owner.GetGame()));
     return action;
 }
 
@@ -5239,6 +5298,7 @@ public func ActionDisableGravity(owner: ref<VehicleObject>) -> ref<DisableGravit
     action.clearanceLevel = DefaultActionsParametersHolder.GetInteractiveClearance();
     action.SetUp(owner.GetPS());
     action.SetProperties();
+    action.SetExecutor(GetPlayer(owner.GetGame()));
     return action;
 }
 
@@ -5248,6 +5308,7 @@ public func ActionEnableGravity(owner: ref<VehicleObject>) -> ref<EnableGravity>
     action.clearanceLevel = DefaultActionsParametersHolder.GetInteractiveClearance();
     action.SetUp(owner.GetPS());
     action.SetProperties();
+    action.SetExecutor(GetPlayer(owner.GetGame()));
     return action;
 }
 
@@ -5275,6 +5336,8 @@ protected func SendQuickhackCommands(shouldOpen: Bool) {
     // this.GetPS().GetRemoteActions(actions, context);
     
     // action.SetInactiveWithReason(false, "LocKey#49279");
+    ArrayPush(actions, ActionFlightEnable(this));
+    ArrayPush(actions, ActionFlightDisable(this));
     ArrayPush(actions, ActionFlightMalfunction(this));
     ArrayPush(actions, ActionDisableGravity(this));
     ArrayPush(actions, ActionEnableGravity(this));
@@ -5475,13 +5538,13 @@ private final const func GetICELevel() -> Float {
         } else {
           newCommand.m_uploadTime = sAction.GetActivationTime();
           // newCommand.m_duration = sAction.GetDurationValue();
-          newCommand.m_duration = this.GetQuickHackDuration(actionRecord, EntityGameInterface.GetEntity(this.GetEntity()) as GameObject, Cast<StatsObjectID>(this.GetEntityID()), playerRef.GetEntityID());
+          newCommand.m_duration = this.GetQuickHackDuration(actionRecord, this, Cast<StatsObjectID>(this.GetEntityID()), playerRef.GetEntityID());
           newCommand.m_title = sAction.title;
           newCommand.m_description = sAction.description;
           newCommand.m_actionOwnerName = actionOwnerName;
           // newCommand.m_title = LocKeyToString(actionRecord.ObjectActionUI().Caption());
           // newCommand.m_description = LocKeyToString(actionRecord.ObjectActionUI().Description());
-          newCommand.m_icon = actionRecord.ObjectActionUI().CaptionIcon().TexturePartID().GetID();
+          newCommand.m_icon = sAction.icon;
           newCommand.m_iconCategory = actionRecord.GameplayCategory().IconName();
           newCommand.m_type = actionRecord.ObjectActionType().Type();
           newCommand.m_actionOwner = this.GetEntityID();
@@ -5490,8 +5553,8 @@ private final const func GetICELevel() -> Float {
           newCommand.m_ICELevelVisible = true;
           // newCommand.m_vulnerabilities = this.GetPS().GetActiveQuickHackVulnerabilities();
           newCommand.m_actionState = EActionInactivityReson.Locked;
-          newCommand.m_quality = 1;
-          // newCommand.m_costRaw = BaseScriptableAction.GetBaseCostStatic(playerRef, actionRecord);
+          // newCommand.m_quality = sAction.quality;
+          newCommand.m_costRaw = BaseScriptableAction.GetBaseCostStatic(playerRef, actionRecord);
           newCommand.m_category = actionRecord.HackCategory();
           ArrayClear(actionCompletionEffects);
           actionRecord.CompletionEffects(actionCompletionEffects);
@@ -5533,7 +5596,7 @@ private final const func GetICELevel() -> Float {
             };
             if sAction.IsInactive() {
             } else {
-              if !sAction.CanPayCost() {
+              if !sAction.CanPayCost(playerRef) {
                 newCommand.m_actionState = EActionInactivityReson.OutOfMemory;
                 sAction.SetInactiveWithReason(false, "LocKey#27398");
               };
@@ -5612,7 +5675,7 @@ public class FlightMalfunctionEffector extends Effector {
       this.m_owner.UnsetPhysicsStates();
       this.m_owner.EndActions();
       this.m_owner.m_flightComponent.Activate(true);
-      this.m_owner.m_flightComponent.lift = 2.0;
+      this.m_owner.m_flightComponent.lift = 5.0;
     }
   }
 
@@ -5633,42 +5696,7 @@ public class FlightMalfunctionEffector extends Effector {
 }
 
 public class DisableGravityEffector extends Effector {
-  public let m_owner: wref<GameObject>;
 
-  protected func Initialize(record: TweakDBID, game: GameInstance, parentRecord: TweakDBID) -> Void {
-    FlightLog.Info("[DisableGravityEffector] Initialize");
-    // this.m_quickhackLevel = TweakDBInterface.GetFloat(record + t".level", 1.00);
-  }
-
-  protected func ActionOn(owner: ref<GameObject>) -> Void {
-    FlightLog.Info("[DisableGravityEffector] ActionOn");
-    this.m_owner = owner;
-    // let vehicle = owner as VehicleObject;
-    // if IsDefined(vehicle) {
-    //   vehicle.EnableGravity(false);
-    //   vehicle.ignoreImpulses = false;
-    //   vehicle.UnsetPhysicsStates();
-    //   vehicle.EndActions();
-    // }
-  }
-
-  protected func ActionOff(owner: ref<GameObject>) -> Void {
-    FlightLog.Info("[DisableGravityEffector] ActionOff");
-    // let vehicle = owner as VehicleObject;
-    // if IsDefined(vehicle) {
-    //   vehicle.EnableGravity(true);
-    // }
-  }
-
-  protected func Uninitialize(game: GameInstance) -> Void {
-    if !IsDefined(this.m_owner) || !this.m_owner.IsAttached() {
-      return;
-    };
-    // let vehicle = this.m_owner as VehicleObject;
-    // if IsDefined(vehicle) {
-    //   vehicle.EnableGravity(true);
-    // }
-  }
 }
 
 public class BouncyEffector extends Effector {
@@ -5707,102 +5735,42 @@ public class BouncyEffector extends Effector {
   }
 }
 
-@wrapMethod(QuickhacksListGameController)
-private final func SelectData(data: ref<QuickhackData>) -> Void {
-  wrappedMethod(data);
-  let description: String = GetLocalizedText(this.m_selectedData.m_description);
-  if StrLen(description) == 0 || Equals(description, "Loading") {
-      description = ToString(this.m_selectedData.m_description);
-  };
-  inkTextRef.SetText(this.m_description, description);
-}
-
-// @replaceMethod(QuickhacksListGameController)
+// @wrapMethod(QuickhacksListGameController)
 // private final func SelectData(data: ref<QuickhackData>) -> Void {
-//   this.m_selectedData = data;
-//   let description: String = GetLocalizedText(this.m_selectedData.m_description);
-//   if StrLen(description) == 0 {
-//       description = ToString(this.m_selectedData.m_description);
-//   };
-//   let title = GetLocalizedText(this.m_selectedData.m_title);
-//   if StrLen(title) == 0 {
-//       title = ToString(this.m_selectedData.m_title);
-//   };
-//   inkTextRef.SetText(this.m_subHeader, title);
-//   if this.m_selectedData.m_isLocked && this.m_selectedData.m_actionMatchesTarget && this.m_hasActiveUpload {
-//     inkWidgetRef.SetState(this.m_executeBtn, n"Disabled");
-//     inkWidgetRef.SetState(this.m_executeAndCloseBtn, n"Disabled");
-//     inkWidgetRef.SetState(this.m_description, n"Locked");
-//     inkWidgetRef.SetState(this.m_subHeader, n"Locked");
-//     if IsDefined(this.inkWarningAnimProxy) {
-//       this.inkWarningAnimProxy.Stop();
-//     };
-//     this.inkWarningAnimProxy = this.PlayLibraryAnimation(n"deviceOnly_hack", GetAnimOptionsInfiniteLoop(inkanimLoopType.Cycle));
-//     if NotEquals(this.m_lastMemoryWarningTransitionAnimName, n"memoryToWarning_transition") {
-//       if IsDefined(this.inkMemoryWarningTransitionAnimProxy) {
-//         this.inkMemoryWarningTransitionAnimProxy.Stop();
-//       };
-//       this.inkMemoryWarningTransitionAnimProxy = this.PlayLibraryAnimation(n"memoryToWarning_transition");
-//       this.m_lastMemoryWarningTransitionAnimName = n"memoryToWarning_transition";
-//     };
-//     this.ApplyQuickhackSelection();
-//     inkTextRef.SetText(this.m_warningText, GetLocalizedText(this.m_selectedData.m_inactiveReason));
-//   } else {
-//     if this.m_selectedData.m_isLocked {
-//       this.ResetQuickhackSelection();
-//       inkWidgetRef.SetState(this.m_executeBtn, n"Disabled");
-//       inkWidgetRef.SetState(this.m_executeAndCloseBtn, n"Disabled");
-//       inkWidgetRef.SetState(this.m_description, n"Locked");
-//       inkWidgetRef.SetState(this.m_subHeader, n"Locked");
-//       if IsDefined(this.inkWarningAnimProxy) {
-//         this.inkWarningAnimProxy.Stop();
-//       };
-//       this.inkWarningAnimProxy = this.PlayLibraryAnimation(n"deviceOnly_hack");
-//       if NotEquals(this.m_lastMemoryWarningTransitionAnimName, n"memoryToWarning_transition") {
-//         if IsDefined(this.inkMemoryWarningTransitionAnimProxy) {
-//           this.inkMemoryWarningTransitionAnimProxy.Stop();
-//         };
-//         this.inkMemoryWarningTransitionAnimProxy = this.PlayLibraryAnimation(n"memoryToWarning_transition");
-//         this.m_lastMemoryWarningTransitionAnimName = n"memoryToWarning_transition";
-//       };
-//       inkTextRef.SetText(this.m_warningText, GetLocalizedText(this.m_selectedData.m_inactiveReason));
-//     } else {
-//       inkWidgetRef.SetState(this.m_executeBtn, n"Default");
-//       inkWidgetRef.SetState(this.m_executeAndCloseBtn, n"Default");
-//       inkWidgetRef.SetState(this.m_description, n"Default");
-//       inkWidgetRef.SetState(this.m_subHeader, n"Default");
-//       this.ApplyQuickhackSelection();
-//       if IsDefined(this.inkWarningAnimProxy) {
-//         this.inkWarningAnimProxy.Stop();
-//       };
-//       this.inkWarningAnimProxy = this.PlayLibraryAnimation(n"warningOut");
-//       if NotEquals(this.m_lastMemoryWarningTransitionAnimName, n"warningToMemory_transition") {
-//         if IsDefined(this.inkMemoryWarningTransitionAnimProxy) {
-//           this.inkMemoryWarningTransitionAnimProxy.Stop();
-//         };
-//         this.inkMemoryWarningTransitionAnimProxy = this.PlayLibraryAnimation(n"warningToMemory_transition");
-//         this.m_lastMemoryWarningTransitionAnimName = n"warningToMemory_transition";
-//       };
-//     };
-//   };
-//   if !this.m_timeBetweenIntroAndDescritpionCheck {
-//   };
+//   wrappedMethod(data);
+//   // let description: String = GetLocalizedText(this.m_selectedData.m_description);
+//   // if StrLen(description) == 0 || Equals(description, "Loading") {
+//       let description = ToString(this.m_selectedData.m_description);
+//   // };
 //   inkTextRef.SetText(this.m_description, description);
-//   this.SetupTargetName();
-//   this.SetupTier();
-//   this.SetupVulnerabilities();
-//   this.SetupICE();
-//   this.SetupUploadTime();
-//   this.SetupDuration();
-//   this.SetupMaxCooldown();
-//   this.SetupMemoryCost();
-//   this.SetupMemoryCostDifferance();
-//   this.SetupNetworkBreach();
-//   if !this.IsCurrentSelectionOnStatPoolIndexes() {
-//     this.UpdateRecompileTime(false, 0.00);
-//   };
-//   GameInstance.GetBlackboardSystem(this.GetPlayerControlledObject().GetGame()).Get(GetAllBlackboardDefs().UI_QuickSlotsData).SetVariant(GetAllBlackboardDefs().UI_QuickSlotsData.quickHackDataSelected, ToVariant(this.m_selectedData), true);
 // }
+
+
+@wrapMethod(QuickHackDescriptionGameController)
+protected cb func OnQuickHackDataChanged(value: Variant) -> Bool {
+  this.m_selectedData = FromVariant<ref<QuickhackData>>(value);
+  if IsDefined(this.m_selectedData) {
+    let title: String = GetLocalizedText(this.m_selectedData.m_title);
+    if StrLen(title) == 0 {
+      title = ToString(this.m_selectedData.m_title);
+    }
+    inkTextRef.SetText(this.m_subHeader, title);
+
+    let description: String = GetLocalizedText(this.m_selectedData.m_description);
+    if StrLen(description) == 0 {
+      description = ToString(this.m_selectedData.m_description);
+    }
+    inkTextRef.SetText(this.m_description, description);
+
+    this.SetupTier();
+    this.SetupDuration();
+    this.SetupMaxCooldown();
+    this.SetupUploadTime();
+    this.SetupMemotyCost();
+    this.SetupCategory();
+    this.SetupDamage();
+  };
+}
 
 // vehicleTPPCameraComponent.reds
 

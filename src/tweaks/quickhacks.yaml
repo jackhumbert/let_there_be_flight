@@ -100,9 +100,7 @@ DeviceAction.DisableGravity.isQuickHack: true
 DeviceAction.Bouncy:
   $base: DeviceAction.FlightAction
   actionName: n"Bouncy" 
-  costs: 
-    - QuickHack.BaseContagionHack_inline4
-    - QuickHack.MemoryIncreaseTier3
+  costs: [ DeviceAction.DeviceQuickHack_inline1 ]
   objectActionUI:
     action: "Choice1" 
     caption: 367 
@@ -132,11 +130,10 @@ BaseStatusEffect.FlightAction:
   duration: 
     drawBasedOnStatType: false 
     statModifiers: 
-      - BaseStatusEffect.BaseQuickHackDuration_inline0
       - $type: ConstantStatModifier
         modifierType: n"Additive" 
-        statType: t"BaseStats.MaxDuration" 
-        value: 2
+        statType: BaseStats.MaxDuration
+        value: 1
     statModsLimit: -1 
     statModsLimitModifier: t"" 
   gameplayTags:
@@ -175,7 +172,7 @@ BaseStatusEffect.FlightAction:
     description: "Flight Action Description" 
     displayName: "LocKey#40980" 
     floatValues: [ ]
-    fluffText: "Flight Action Fluff" 
+    fluffText: "" 
     iconPath: "knockdown_icon" 
     intValues: [ ]
     nameValues: [ ]
@@ -191,7 +188,6 @@ BaseStatusEffect.FlightMalfunction:
   duration: 
     drawBasedOnStatType: false 
     statModifiers: 
-      - BaseStatusEffect.BaseQuickHackDuration_inline0
       - $type: ConstantStatModifier
         modifierType: n"Additive" 
         statType: BaseStats.MaxDuration
@@ -218,7 +214,7 @@ BaseStatusEffect.FlightMalfunction:
     description: "Flight Malfunction Description" 
     displayName: "LocKey#40980" 
     floatValues: [ ]
-    fluffText: "Flight Malfunction Fluff" 
+    fluffText: "" 
     iconPath: "knockdown_icon" 
     intValues: [ ]
     nameValues: [ ]
