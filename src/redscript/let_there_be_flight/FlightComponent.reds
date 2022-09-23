@@ -272,7 +272,8 @@ public native class FlightComponent extends GameComponent {
     }
     let normal: Vector4;
     this.SetupTires();
-    if this.isPlayerMounted && !this.FindGround(normal) || this.distance > FlightSettings.GetInstance().autoActivationHeight {
+    let wheeled = this.GetVehicle() as WheeledObject;
+    if (this.isPlayerMounted && !this.FindGround(normal) || this.distance > FlightSettings.GetInstance().autoActivationHeight) && IsDefined(wheeled) {
       this.Activate(true);
     }
   }
