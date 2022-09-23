@@ -70,9 +70,9 @@ public class VehicleFlightContextDecisions extends InputContextTransitionDecisio
     // if StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"VehicleOnlyForward") {
     //   return false;
     // };
-    // if StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"NoDriving") {
-    //   return false;
-    // };
+    if StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"NoDriving") {
+      return false;
+    };
     return true;
   }
 }
