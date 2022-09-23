@@ -168,14 +168,14 @@ BaseStatusEffect.FlightAction:
   savable: false 
   statusEffectType: BaseStatusEffectTypes.Misc
   stopActiveSfxOnDeactivate: true 
-  uiData: t"""
+  uiData: t""
 
 BaseStatusEffect.FlightMalfunction:
   $base: BaseStatusEffect.FlightAction
-  VFX: 
-    - $type: StatusEffectFX
-      name: n"explosion"
-      shouldReapply: true 
+  # VFX: 
+  #   - $type: StatusEffectFX
+  #     name: n"explosion"
+  #     shouldReapply: true 
   duration: 
     drawBasedOnStatType: false 
     statModifiers: 
