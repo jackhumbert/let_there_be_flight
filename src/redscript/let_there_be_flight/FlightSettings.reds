@@ -11,6 +11,12 @@ public native class FlightSettings extends IScriptable {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "General Flight Settings")
+  @runtimeProperty("ModSettings.displayName", "Enable Auto Activation")
+  @runtimeProperty("ModSettings.description", "Automatically enable flight when loading vehicle if it's above the specified height")
+  public let autoActivationEnabled: Bool = false;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "General Flight Settings")
   @runtimeProperty("ModSettings.displayName", "Auto Activation Height")
   @runtimeProperty("ModSettings.description", "In-game units for detecting when flight should automatically be activated on spawn")
   @runtimeProperty("ModSettings.step", "0.5")

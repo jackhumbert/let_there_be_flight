@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-09-23 00:20:38.6154193
+// This file was automatically generated on 2022-09-23 00:50:43.1773427
 
 // FlightAudio.reds
 
@@ -593,7 +593,7 @@ public native class FlightComponent extends GameComponent {
     let normal: Vector4;
     this.SetupTires();
     let wheeled = this.GetVehicle() as WheeledObject;
-    if (this.isPlayerMounted && !this.FindGround(normal) || this.distance > FlightSettings.GetInstance().autoActivationHeight) && IsDefined(wheeled) {
+    if (this.isPlayerMounted && !this.FindGround(normal) || this.distance > FlightSettings.GetInstance().autoActivationHeight) && IsDefined(wheeled) && FlightSettings.GetInstance().autoActivationEnabled {
       this.Activate(true);
     }
   }
@@ -3011,6 +3011,12 @@ public native class FlightSettings extends IScriptable {
   public native static func SetFloat(name: String, value: Float) -> Float;
   public native static func GetVector3(name: String) -> Vector3;
   public native static func SetVector3(name: String, x: Float, y: Float, z: Float) -> Vector3;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "General Flight Settings")
+  @runtimeProperty("ModSettings.displayName", "Enable Auto Activation")
+  @runtimeProperty("ModSettings.description", "Automatically enable flight when loading vehicle if it's above the specified height")
+  public let autoActivationEnabled: Bool = false;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "General Flight Settings")
