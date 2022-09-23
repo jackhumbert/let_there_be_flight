@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-09-22 01:11:12.2066037
+// This file was automatically generated on 2022-09-23 00:20:38.6154193
 
 // FlightAudio.reds
 
@@ -183,7 +183,7 @@ public native class FlightAudio extends IScriptable {
 
   public func GetGameVolume() -> Float {
     let gameInstance = FlightSystem.GetInstance().gameInstance;
-    if this.isPopupShown || this.isInMenu || GameInstance.GetTimeSystem(gameInstance).IsPausedState() ||
+    if this.isInMenu || GameInstance.GetTimeSystem(gameInstance).IsPausedState() ||
       GameInstance.GetTimeSystem(gameInstance).IsTimeDilationActive(n"HubMenu") || 
       GameInstance.GetTimeSystem(gameInstance).IsTimeDilationActive(n"WorldMap")
     {
@@ -592,7 +592,8 @@ public native class FlightComponent extends GameComponent {
     }
     let normal: Vector4;
     this.SetupTires();
-    if this.isPlayerMounted && !this.FindGround(normal) || this.distance > FlightSettings.GetInstance().autoActivationHeight {
+    let wheeled = this.GetVehicle() as WheeledObject;
+    if (this.isPlayerMounted && !this.FindGround(normal) || this.distance > FlightSettings.GetInstance().autoActivationHeight) && IsDefined(wheeled) {
       this.Activate(true);
     }
   }
@@ -1545,9 +1546,9 @@ public class VehicleFlightContextDecisions extends InputContextTransitionDecisio
     // if StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"VehicleOnlyForward") {
     //   return false;
     // };
-    // if StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"NoDriving") {
-    //   return false;
-    // };
+    if StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"NoDriving") {
+      return false;
+    };
     return true;
   }
 }

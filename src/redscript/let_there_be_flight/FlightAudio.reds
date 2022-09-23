@@ -176,7 +176,7 @@ public native class FlightAudio extends IScriptable {
 
   public func GetGameVolume() -> Float {
     let gameInstance = FlightSystem.GetInstance().gameInstance;
-    if this.isPopupShown || this.isInMenu || GameInstance.GetTimeSystem(gameInstance).IsPausedState() ||
+    if this.isInMenu || GameInstance.GetTimeSystem(gameInstance).IsPausedState() ||
       GameInstance.GetTimeSystem(gameInstance).IsTimeDilationActive(n"HubMenu") || 
       GameInstance.GetTimeSystem(gameInstance).IsTimeDilationActive(n"WorldMap")
     {

@@ -1,7 +1,7 @@
 # Let There Be Flight
 # (C) 2022 Jack Humbert
 # https://github.com/jackhumbert/let_there_be_flight
-# This file was automatically generated on 2022-09-22 01:11:12.3203153
+# This file was automatically generated on 2022-09-23 00:20:38.7338613
 
 # quickhacks.yaml
 
@@ -175,14 +175,14 @@ BaseStatusEffect.FlightAction:
   savable: false 
   statusEffectType: BaseStatusEffectTypes.Misc
   stopActiveSfxOnDeactivate: true 
-  uiData: t"""
+  uiData: t""
 
 BaseStatusEffect.FlightMalfunction:
   $base: BaseStatusEffect.FlightAction
-  VFX: 
-    - $type: StatusEffectFX
-      name: n"explosion"
-      shouldReapply: true 
+  # VFX: 
+  #   - $type: StatusEffectFX
+  #     name: n"explosion"
+  #     shouldReapply: true 
   duration: 
     drawBasedOnStatType: false 
     statModifiers: 
