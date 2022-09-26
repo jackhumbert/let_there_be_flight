@@ -49,7 +49,7 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.category", "Flight Physics Settings")
   @runtimeProperty("ModSettings.displayName", "Apply Flight Physics When Deactivated")
   @runtimeProperty("ModSettings.description", "Useful for continuing to control the vehicle mid-air when deactivating")
-  public let generalApplyFlightPhysicsWhenDeactivated: Bool = true;
+  public let generalApplyFlightPhysicsWhenDeactivated: Bool = false;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "Flight Physics Settings")
