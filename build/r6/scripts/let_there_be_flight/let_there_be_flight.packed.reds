@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-09-23 18:44:35.6991804
+// This file was automatically generated on 2022-09-26 15:57:04.1396129
 
 // FlightAudio.reds
 
@@ -3052,7 +3052,7 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.category", "Flight Physics Settings")
   @runtimeProperty("ModSettings.displayName", "Apply Flight Physics When Deactivated")
   @runtimeProperty("ModSettings.description", "Useful for continuing to control the vehicle mid-air when deactivating")
-  public let generalApplyFlightPhysicsWhenDeactivated: Bool = true;
+  public let generalApplyFlightPhysicsWhenDeactivated: Bool = false;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "Flight Physics Settings")
