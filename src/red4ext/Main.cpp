@@ -35,6 +35,36 @@
 #include "FlightCamera.hpp"
 
 RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes() {
+  auto inputLoaderDLL = Utils::GetRootDir() / L"red4ext" / L"plugins" / L"input_loader" / L"input_loader.dll";
+  auto tweakXLDLL = Utils::GetRootDir() / L"red4ext" / L"plugins" / L"TweakXL" / L"TweakXL.dll";
+
+  std::ifstream inputLoaderFile;
+  inputLoaderFile.open(inputLoaderDLL);
+  if (!inputLoaderFile) {
+    spdlog::error("Input Loader is not installed/installed properly - aborting");
+    MessageBoxW(0,
+                L"Input Loader is not installed or not installed properly. Please ensure you've installed it correctly. The game will now close.",
+                L"Input Loader could not be found", MB_SYSTEMMODAL | MB_ICONERROR);
+  } else {
+    spdlog::info("Input Loader installation found");
+  }
+
+  std::ifstream tweakXLFile;
+  tweakXLFile.open(tweakXLDLL);
+  if (!tweakXLFile) {
+    spdlog::error("TweakXL is not installed/installed properly - aborting");
+    MessageBoxW(0,
+                L"TweakXL is not installed or not installed properly. Please ensure you've installed it correctly. The "
+                L"game will now close.",
+                L"TweakXL could not be found", MB_SYSTEMMODAL | MB_ICONERROR);
+  } else {
+    spdlog::info("TweakXL installation found");
+  }
+
+  if (!inputLoaderFile || !tweakXLFile) {
+    __debugbreak();
+  }
+
   spdlog::info("Registering classes & types");
   FlightModuleFactory::GetInstance().RegisterTypes();
 }
@@ -324,6 +354,16 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
   // "ColliderComponent"); FlightStats_Record::RegisterFunctions();
 
   auto rtti = RED4ext::CRTTISystem::Get();
+
+  // this works, but a dll check might be better
+  //auto sTweak = rtti->GetClassByScriptName("ScriptableTweak");
+  //if (sTweak == NULL) {
+  //  spdlog::error("TweakXL is not installed/installed properly - aborting");
+  //  MessageBoxW(
+  //      0, L"TweakXL is not installed or not installed properly. Please ensure you've installed it correctly. The game will now close.",
+  //      L"TweakXL could not be found", MB_SYSTEMMODAL | MB_ICONERROR);
+  //  __debugbreak();
+  //}
 
   auto inkMaskWidget = rtti->GetClass("inkMaskWidget");
   auto setAtlasTextureFunc = RED4ext::CClassFunction::Create(inkMaskWidget, "SetAtlasResource", "SetAtlasResource",

@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-10-07 21:23:45.4704541
+// This file was automatically generated on 2022-10-08 16:47:19.6776847
 
 // FlightAudio.reds
 
@@ -3096,7 +3096,7 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.step", "1.0")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "100.0")
-  public let generalPitchDirectionalityFactor: Float = 80.0;
+  public let generalPitchDirectionalityFactor: Float = 15.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "Flight Physics Settings")
@@ -3105,7 +3105,7 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.step", "1.0")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "100.0")
-  public let generalYawDirectionalityFactor: Float = 50.0;
+  public let generalYawDirectionalityFactor: Float = 5.0;
 
   // Flight Camera Settings
 
