@@ -41,7 +41,9 @@ protected final const func IsPlayerAllowedToExitFlight(const scriptInterface: re
 public final const func ToFlight(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
   // if this.IsPlayerAllowedToEnterVehicleFlight(scriptInterface) && VehicleTransition.CanEnterVehicleFlight() {
   // if VehicleTransitiorn.CanEnterVehicleFlight() {
-    if scriptInterface.IsActionJustPressed(n"Flight_Toggle") || (IsDefined(fs().playerComponent) && fs().playerComponent.active) {
+    if (scriptInterface.IsActionJustPressed(n"Flight_Toggle") || (IsDefined(fs().playerComponent) && fs().playerComponent.active)) &&
+      GameInstance.GetQuestsSystem(scriptInterface.GetGame()).GetFact(n"map_blocked") == 0 &&
+      Equals(this.GetCurrentTier(stateContext), GameplayTier.Tier1_FullGameplay) {
       FlightLog.Info("[DriveDecisions] ToFlight");
       return true;
     };

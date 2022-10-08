@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-09-26 15:57:04.1396129
+// This file was automatically generated on 2022-10-07 21:23:45.4704541
 
 // FlightAudio.reds
 
@@ -111,7 +111,7 @@ public native class FlightAudio extends IScriptable {
     //   self.uiGameDataBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown, self.popupCallback);
     // }
     
-    ModSettings.RegisterListenerToClass(self);
+    LTBF_RegisterListener(self);
 
     return self;
   }
@@ -143,7 +143,7 @@ public native class FlightAudio extends IScriptable {
       n"window_front_right_a"
     ];
     
-    ModSettings.RegisterListenerToClass(this);
+    LTBF_RegisterListener(this);
   }
 
   protected cb func OnWorldAttached() {
@@ -559,7 +559,7 @@ public native class FlightComponent extends GameComponent {
   
   protected cb func OnMountingEvent(evt: ref<MountingEvent>) -> Bool {
     // this.helper = this.GetVehicle().AddFlightHelper();
-    ModSettings.RegisterListenerToClass(this);
+    LTBF_RegisterListener(this);
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if mountChild.IsPlayer() {
       FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName());
@@ -573,7 +573,6 @@ public native class FlightComponent extends GameComponent {
       this.isPlayerMounted = true;
       // this.uiControl = FlightControllerUI.Create(this.ui_info.GetGameController(), this.ui_info.GetGameController().GetRootCompoundWidget());
       // this.uiControl.Setup(this.stats);
-      // ModSettings.RegisterListenerToClass(this);
     } else {
       // FlightLog.Info("[FlightComponent] OnMountingEvent for other vehicle: " + this.GetVehicle().GetDisplayName());
     }
@@ -599,10 +598,10 @@ public native class FlightComponent extends GameComponent {
   }
 
   protected cb func OnUnmountingEvent(evt: ref<UnmountingEvent>) -> Bool {
-    ModSettings.UnregisterListenerToClass(this);
+    
+    LTBF_UnregisterListener(this);
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if IsDefined(mountChild) && mountChild.IsPlayer() {
-      // ModSettings.UnregisterListenerToClass(this);
       this.UnregisterVehicleTPPBBListener();
       FlightAudio.Get().Stop("windLeft");
       FlightAudio.Get().Stop("windRight");
@@ -2557,11 +2556,11 @@ public class FlightModeDrone extends FlightMode {
   public func Initialize(component: ref<FlightComponent>) -> Void {
     super.Initialize(component);
     this.usesRightStickInput = true;
-    ModSettings.RegisterListenerToClass(this);
+    LTBF_RegisterListener(this);
   }
 
   public func Deinitialize() -> Void {
-    ModSettings.UnregisterListenerToClass(this);
+    LTBF_UnregisterListener(this);
   }
 
   public func Activate() -> Void {
@@ -2904,11 +2903,11 @@ public abstract class FlightModeStandard extends FlightMode {
   public func Initialize(component: ref<FlightComponent>) -> Void {
     super.Initialize(component);
     this.collisionPenalty = 0.5;
-    ModSettings.RegisterListenerToClass(this);
+    LTBF_RegisterListener(this);
   }
 
   public func Deinitialize() -> Void {
-    ModSettings.UnregisterListenerToClass(this);
+    LTBF_UnregisterListener(this);
   }
 
   protected func UpdateWithNormalDistance(timeDelta: Float, normal: Vector4, heightDifference: Float) -> Void {
@@ -3145,7 +3144,7 @@ public native class FlightSettings extends IScriptable {
 
   private func OnAttach() -> Void {
     FlightLog.Info("[FlightSettings] OnAttach");
-    ModSettings.RegisterListenerToClass(this);
+    LTBF_RegisterListener(this);
     
     FlightSettings.SetVector3("inputPitchPID", 1.0, 0.5, 0.5);
     FlightSettings.SetVector3("inputRollPID", 1.0, 0.5, 0.5);
@@ -4723,6 +4722,24 @@ public class hudFlightController extends inkHUDGameController {
 }
 
 
+// ModSettings.reds
+
+@if(ModuleExists("ModSettingsModule")) 
+public func LTBF_RegisterListener(listener: ref<IScriptable>) {
+  ModSettings.RegisterListenerToClass(listener);
+}
+
+@if(!ModuleExists("ModSettingsModule")) 
+public func LTBF_RegisterListener(listener: ref<IScriptable>) { }
+
+@if(ModuleExists("ModSettingsModule")) 
+public func LTBF_UnregisterListener(listener: ref<IScriptable>) {
+  ModSettings.UnregisterListenerToClass(listener);
+}
+
+@if(!ModuleExists("ModSettingsModule")) 
+public func LTBF_UnregisterListener(listener: ref<IScriptable>) { }
+
 // OperatorHelpers.reds
 
 // Matrix
@@ -6184,7 +6201,9 @@ protected final const func IsPlayerAllowedToExitFlight(const scriptInterface: re
 public final const func ToFlight(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
   // if this.IsPlayerAllowedToEnterVehicleFlight(scriptInterface) && VehicleTransition.CanEnterVehicleFlight() {
   // if VehicleTransitiorn.CanEnterVehicleFlight() {
-    if scriptInterface.IsActionJustPressed(n"Flight_Toggle") || (IsDefined(fs().playerComponent) && fs().playerComponent.active) {
+    if (scriptInterface.IsActionJustPressed(n"Flight_Toggle") || (IsDefined(fs().playerComponent) && fs().playerComponent.active)) &&
+      GameInstance.GetQuestsSystem(scriptInterface.GetGame()).GetFact(n"map_blocked") == 0 &&
+      Equals(this.GetCurrentTier(stateContext), GameplayTier.Tier1_FullGameplay) {
       FlightLog.Info("[DriveDecisions] ToFlight");
       return true;
     };

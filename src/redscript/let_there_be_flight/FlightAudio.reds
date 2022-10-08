@@ -104,7 +104,7 @@ public native class FlightAudio extends IScriptable {
     //   self.uiGameDataBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown, self.popupCallback);
     // }
     
-    ModSettings.RegisterListenerToClass(self);
+    LTBF_RegisterListener(self);
 
     return self;
   }
@@ -136,7 +136,7 @@ public native class FlightAudio extends IScriptable {
       n"window_front_right_a"
     ];
     
-    ModSettings.RegisterListenerToClass(this);
+    LTBF_RegisterListener(this);
   }
 
   protected cb func OnWorldAttached() {

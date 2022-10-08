@@ -59,11 +59,11 @@ public abstract class FlightModeStandard extends FlightMode {
   public func Initialize(component: ref<FlightComponent>) -> Void {
     super.Initialize(component);
     this.collisionPenalty = 0.5;
-    ModSettings.RegisterListenerToClass(this);
+    LTBF_RegisterListener(this);
   }
 
   public func Deinitialize() -> Void {
-    ModSettings.UnregisterListenerToClass(this);
+    LTBF_UnregisterListener(this);
   }
 
   protected func UpdateWithNormalDistance(timeDelta: Float, normal: Vector4, heightDifference: Float) -> Void {

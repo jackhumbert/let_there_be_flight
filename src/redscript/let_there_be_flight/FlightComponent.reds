@@ -239,7 +239,7 @@ public native class FlightComponent extends GameComponent {
   
   protected cb func OnMountingEvent(evt: ref<MountingEvent>) -> Bool {
     // this.helper = this.GetVehicle().AddFlightHelper();
-    ModSettings.RegisterListenerToClass(this);
+    LTBF_RegisterListener(this);
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if mountChild.IsPlayer() {
       FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName());
@@ -253,7 +253,6 @@ public native class FlightComponent extends GameComponent {
       this.isPlayerMounted = true;
       // this.uiControl = FlightControllerUI.Create(this.ui_info.GetGameController(), this.ui_info.GetGameController().GetRootCompoundWidget());
       // this.uiControl.Setup(this.stats);
-      // ModSettings.RegisterListenerToClass(this);
     } else {
       // FlightLog.Info("[FlightComponent] OnMountingEvent for other vehicle: " + this.GetVehicle().GetDisplayName());
     }
@@ -279,10 +278,10 @@ public native class FlightComponent extends GameComponent {
   }
 
   protected cb func OnUnmountingEvent(evt: ref<UnmountingEvent>) -> Bool {
-    ModSettings.UnregisterListenerToClass(this);
+    
+    LTBF_UnregisterListener(this);
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if IsDefined(mountChild) && mountChild.IsPlayer() {
-      // ModSettings.UnregisterListenerToClass(this);
       this.UnregisterVehicleTPPBBListener();
       FlightAudio.Get().Stop("windLeft");
       FlightAudio.Get().Stop("windRight");

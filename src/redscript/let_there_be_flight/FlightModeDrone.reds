@@ -67,11 +67,11 @@ public class FlightModeDrone extends FlightMode {
   public func Initialize(component: ref<FlightComponent>) -> Void {
     super.Initialize(component);
     this.usesRightStickInput = true;
-    ModSettings.RegisterListenerToClass(this);
+    LTBF_RegisterListener(this);
   }
 
   public func Deinitialize() -> Void {
-    ModSettings.UnregisterListenerToClass(this);
+    LTBF_UnregisterListener(this);
   }
 
   public func Activate() -> Void {

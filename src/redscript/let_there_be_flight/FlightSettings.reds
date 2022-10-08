@@ -94,7 +94,7 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.step", "1.0")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "100.0")
-  public let generalPitchDirectionalityFactor: Float = 80.0;
+  public let generalPitchDirectionalityFactor: Float = 15.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "Flight Physics Settings")
@@ -103,7 +103,7 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.step", "1.0")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "100.0")
-  public let generalYawDirectionalityFactor: Float = 50.0;
+  public let generalYawDirectionalityFactor: Float = 5.0;
 
   // Flight Camera Settings
 
@@ -142,7 +142,7 @@ public native class FlightSettings extends IScriptable {
 
   private func OnAttach() -> Void {
     FlightLog.Info("[FlightSettings] OnAttach");
-    ModSettings.RegisterListenerToClass(this);
+    LTBF_RegisterListener(this);
     
     FlightSettings.SetVector3("inputPitchPID", 1.0, 0.5, 0.5);
     FlightSettings.SetVector3("inputRollPID", 1.0, 0.5, 0.5);
