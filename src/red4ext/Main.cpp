@@ -395,13 +395,13 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
   gamePSMVehicleEnum->hashList.PushBack("Flight");
   gamePSMVehicleEnum->valueList.PushBack(8);
 
-  auto UIGameContextEnum = rtti->GetEnum("UIGameContext");
-  UIGameContextEnum->hashList.PushBack("VehicleFlight");
-  UIGameContextEnum->valueList.PushBack(10);
+  //auto UIGameContextEnum = rtti->GetEnum("UIGameContext");
+  //UIGameContextEnum->hashList.PushBack("VehicleFlight");
+  //UIGameContextEnum->valueList.PushBack(10);
 
-  auto NavGenAgentSizeEnum = rtti->GetEnum("NavGenAgentSize");
-  NavGenAgentSizeEnum->hashList.PushBack("Vehicle");
-  NavGenAgentSizeEnum->valueList.PushBack(1);
+  //auto NavGenAgentSizeEnum = rtti->GetEnum("NavGenAgentSize");
+  //NavGenAgentSizeEnum->hashList.PushBack("Vehicle");
+  //NavGenAgentSizeEnum->valueList.PushBack(1);
 
   // auto UIGameContextEnum = rtti->GetEnum("HUDActorType");
   // UIGameContextEnum->hashList.PushBack("FLIGHT");

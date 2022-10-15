@@ -82,6 +82,7 @@ public class hudFlightController extends inkHUDGameController {
     if IsDefined(stats) {  
       stats.RequestRegisteringListener(Cast<StatsObjectID>(vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     }
+    GameInstance.GetBlackboardSystem(vehicle.GetGame()).Get(GetAllBlackboardDefs().UI_ActiveVehicleData).SetBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsPlayerMounted, true); 
   }
 
   protected cb func OnUninitialize() -> Bool {
@@ -91,6 +92,7 @@ public class hudFlightController extends inkHUDGameController {
     if IsDefined(this.m_healthStatPoolListener) {
       GameInstance.GetStatPoolsSystem(this.m_gameInstance).RequestUnregisteringListener(Cast(this.m_healthStatPoolListener.m_vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     }
+    GameInstance.GetBlackboardSystem(this.m_gameInstance).Get(GetAllBlackboardDefs().UI_ActiveVehicleData).SetBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsPlayerMounted, false); 
   }
 
   private func UpdateTime() -> Void {
