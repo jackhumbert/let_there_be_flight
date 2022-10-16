@@ -10,13 +10,13 @@ public native class FlightSettings extends IScriptable {
   public native static func SetVector3(name: String, x: Float, y: Float, z: Float) -> Vector3;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "General Flight Settings")
+  @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")
   @runtimeProperty("ModSettings.displayName", "Enable Auto Activation")
   @runtimeProperty("ModSettings.description", "Automatically enable flight when loading vehicle if it's above the specified height")
   public let autoActivationEnabled: Bool = false;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "General Flight Settings")
+  @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")
   @runtimeProperty("ModSettings.displayName", "Auto Activation Height")
   @runtimeProperty("ModSettings.description", "In-game units for detecting when flight should automatically be activated on spawn")
   @runtimeProperty("ModSettings.step", "0.5")
@@ -26,7 +26,7 @@ public native class FlightSettings extends IScriptable {
   // Flight Control Settings
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Control Settings")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Control-Settings")
   @runtimeProperty("ModSettings.displayName", "Linear Brake Factor")
   @runtimeProperty("ModSettings.description", "How much the linear brake button slows the vehicle's velocity")
   @runtimeProperty("ModSettings.step", "0.1")
@@ -35,7 +35,7 @@ public native class FlightSettings extends IScriptable {
   public let brakeFactorLinear: Float = 1.2;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Control Settings")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Control-Settings")
   @runtimeProperty("ModSettings.displayName", "Angular Brake Factor")
   @runtimeProperty("ModSettings.description", "How much the angular brake button slows the vehicle's rotation")
   @runtimeProperty("ModSettings.step", "0.1")
@@ -46,31 +46,31 @@ public native class FlightSettings extends IScriptable {
   // Flight Physics Settings
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Physics Settings")
-  @runtimeProperty("ModSettings.displayName", "Apply Flight Physics When Deactivated")
-  @runtimeProperty("ModSettings.description", "Useful for continuing to control the vehicle mid-air when deactivating")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Apply-Flight-Physics-When-Deactivated")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Apply-Flight-Physics-When-Deactivated-Description")
   public let generalApplyFlightPhysicsWhenDeactivated: Bool = false;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Physics Settings")
-  @runtimeProperty("ModSettings.displayName", "Linear Damp Factor")
-  @runtimeProperty("ModSettings.description", "How much resistance any linear movement is given")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Linear-Damp-Factor")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Linear-Damp-Factor-Description")
   @runtimeProperty("ModSettings.step", "0.0001")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "0.01")
   public let generalDampFactorLinear: Float = 0.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Physics Settings")
-  @runtimeProperty("ModSettings.displayName", "Angular Damp Factor")
-  @runtimeProperty("ModSettings.description", "How much resistance any angular movement is given")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Angular-Damp-Factor")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Angular-Damp-Factor-Description")
   @runtimeProperty("ModSettings.step", "0.01")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "3.0")
   public let generalDampFactorAngular: Float = 1.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Physics Settings")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
   @runtimeProperty("ModSettings.displayName", "Pitch Aero Factor")
   @runtimeProperty("ModSettings.description", "How much the vehicle is rotated (pitch) towards its velocity")
   @runtimeProperty("ModSettings.step", "0.05")
@@ -79,7 +79,7 @@ public native class FlightSettings extends IScriptable {
   public let generalPitchAeroFactor: Float = 0.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Physics Settings")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
   @runtimeProperty("ModSettings.displayName", "Yaw Aero Factor")
   @runtimeProperty("ModSettings.description", "How much the vehicle is rotated (yaw) towards its velocity")
   @runtimeProperty("ModSettings.step", "0.05")
@@ -88,7 +88,7 @@ public native class FlightSettings extends IScriptable {
   public let generalYawAeroFactor: Float = 0.1;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Physics Settings")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
   @runtimeProperty("ModSettings.displayName", "Pitch Directionality Factor")
   @runtimeProperty("ModSettings.description", "How much the vehicle's pitch affects its velocity")
   @runtimeProperty("ModSettings.step", "1.0")
@@ -97,7 +97,7 @@ public native class FlightSettings extends IScriptable {
   public let generalPitchDirectionalityFactor: Float = 15.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Physics Settings")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
   @runtimeProperty("ModSettings.displayName", "Yaw Directionality Factor")
   @runtimeProperty("ModSettings.description", "How much the vehicle's yaw affects its velocity")
   @runtimeProperty("ModSettings.step", "1.0")

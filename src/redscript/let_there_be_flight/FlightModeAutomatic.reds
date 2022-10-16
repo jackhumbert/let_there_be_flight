@@ -1,23 +1,23 @@
 public class FlightModeAutomatic extends FlightModeStandard {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Mode Settings")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Mode-Settings")
   @runtimeProperty("ModSettings.displayName", "Automatic Mode Enabled")
   public let enabled: Bool = false;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Automatic Mode")
-  @runtimeProperty("ModSettings.displayName", "Auto Braking Factor")
-  @runtimeProperty("ModSettings.description", "How much the vehicle brakes when you let off the gas")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Automatic-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Auto-Braking-Factor")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Auto-Braking-Factor-Description")
   @runtimeProperty("ModSettings.step", "0.1")
   @runtimeProperty("ModSettings.min", "0")
   @runtimeProperty("ModSettings.max", "10")
   public let automaticModeAutoBrakingFactor: Float = 3.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Automatic Mode")
-  @runtimeProperty("ModSettings.displayName", "Yaw Directionality")
-  @runtimeProperty("ModSettings.description", "How much your velocity follows your direction")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Automatic-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Yaw-Directionality")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Yaw-Directionality-Description")
   @runtimeProperty("ModSettings.step", "1.0")
   @runtimeProperty("ModSettings.min", "0")
   @runtimeProperty("ModSettings.max", "1000")

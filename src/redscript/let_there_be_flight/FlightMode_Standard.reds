@@ -1,56 +1,56 @@
 public abstract class FlightModeStandard extends FlightMode {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Standard (Non-Drone) Mode")
-  @runtimeProperty("ModSettings.displayName", "Surge Factor")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Standard-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Surge-Factor")
   @runtimeProperty("ModSettings.step", "1.0")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "200.0")
   public let standardModeSurgeFactor: Float = 15.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Standard (Non-Drone) Mode")
-  @runtimeProperty("ModSettings.displayName", "Yaw Factor")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Standard-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Yaw-Factor")
   @runtimeProperty("ModSettings.step", "1.0")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "50.0")
   public let standardModeYawFactor: Float = 5.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Standard (Non-Drone) Mode")
-  @runtimeProperty("ModSettings.displayName", "Sway Factor")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Standard-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Sway-Factor")
   @runtimeProperty("ModSettings.step", "1.0")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "50.0")
   public let standardModeSwayFactor: Float = 5.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Standard (Non-Drone) Mode")
-  @runtimeProperty("ModSettings.displayName", "Pitch Factor")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Standard-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Pitch-Factor")
   @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "20.0")
   public let standardModePitchFactor: Float = 3.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Standard (Non-Drone) Mode")
-  @runtimeProperty("ModSettings.displayName", "Pitch Input Angle")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Standard-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Pitch-Input-Angle")
   @runtimeProperty("ModSettings.step", "5.0")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "90.0")
   public let standardModePitchInputAngle: Float = 45.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Standard (Non-Drone) Mode")
-  @runtimeProperty("ModSettings.displayName", "Roll Factor")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Standard-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Roll-Factor")
   @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "20.0")
   public let standardModeRollFactor: Float = 15.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Standard (Non-Drone) Mode")
-  @runtimeProperty("ModSettings.displayName", "Roll Input Angle")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Standard-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Roll-Input-Angle")
   @runtimeProperty("ModSettings.step", "5.0")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "90.0")

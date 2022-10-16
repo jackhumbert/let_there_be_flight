@@ -21,8 +21,13 @@ void build_archive() {
            "build/archive/pc/mod/let_there_be_flight.archive",
            fs::copy_options::update_existing);
   cout << "Copied archive file: let_there_be_flight.archive" << endl;
+  fs::copy("wolvenkit/packed/archive/pc/mod/let_there_be_flight.archive.xl",
+           "build/archive/pc/mod/let_there_be_flight.archive.xl",
+           fs::copy_options::update_existing);
+  cout << "Copied archive file: let_there_be_flight.archive.xl" << endl;
 
   installedFiles.push_back("archive/pc/mod/let_there_be_flight.archive");
+  installedFiles.push_back("archive/pc/mod/let_there_be_flight.archive.xl");
 }
 
 void build_redscript() {
