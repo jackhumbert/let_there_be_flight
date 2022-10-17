@@ -437,6 +437,66 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Warning-Volume",
               "femaleVariant": "Warning Volume"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Enable-Flight",
+              "femaleVariant": "Enabled Flight"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Enable-Flight-Description",
+              "femaleVariant": "Grant this vehicle clear for take-off and use the default mode"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Disable-Flight",
+              "femaleVariant": "Disable Flight"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Disable-Flight-Description",
+              "femaleVariant": "Turn off flight mode and let the occupants suffer the consequences"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Initiate-Launch",
+              "femaleVariant": "Initiate Launch"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Initiate-Launch-Description",
+              "femaleVariant": "Rip a hole in the sky and throw this particular asshole in it"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Enable-Antigrav",
+              "femaleVariant": "Enable Antigrav"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Enable-Antigrav-Description",
+              "femaleVariant": "Free this vehicle the prison that is Earth's gravity"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Disable-Antigrav",
+              "femaleVariant": "Disable Antigrav"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Disable-Antigrav-Description",
+              "femaleVariant": "Accept Newton's law and bring this vehicle back to Earth at that lovely 9.8 m/s^2"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Funhouse",
+              "femaleVariant": "Funhouse"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Funhouse-Description",
+              "femaleVariant": "Charm this vehicle with the folly of youth and make it a little bouncy"
             }
           ]
         }

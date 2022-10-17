@@ -100,16 +100,16 @@ public const func ShouldRegisterToHUD() -> Bool {
 
 public class FlightAction extends ScriptableDeviceAction {
   public let m_owner: wref<VehicleObject>;
-  public let title: String;
-  public let description: String;
+  public let title: CName;
+  public let description: CName;
   public let icon: TweakDBID;
 }
 
 public class FlightEnable extends FlightAction {
   public final func SetProperties() -> Void {
     this.actionName = n"FlightEnable";
-    this.title = "Enable Flight";
-    this.description = "Grant this vehicle clear for take-off and use the default mode";
+    this.title = n"Quickhacks-Enable-Flight";
+    this.description = n"Quickhacks-Enable-Flight-Description";
     this.icon = t"UIIcon.SystemCollapse";
     this.SetObjectActionID(t"DeviceAction.FlightAction");
   }
@@ -131,8 +131,8 @@ public class FlightEnable extends FlightAction {
 public class FlightDisable extends FlightAction {
   public final func SetProperties() -> Void {
     this.actionName = n"FlightDisable";
-    this.title = "Disable Flight";
-    this.description = "Turn off flight mode and let the occupants suffer the consequences";
+    this.title = n"Quickhacks-Disable-Flight";
+    this.description = n"Quickhacks-Disable-Flight-Description";
     this.icon = t"UIIcon.SystemCollapse";
     this.SetObjectActionID(t"DeviceAction.FlightAction");
   }
@@ -154,8 +154,8 @@ public class FlightDisable extends FlightAction {
 public class FlightMalfunction extends FlightAction {
   public final func SetProperties() -> Void {
     this.actionName = n"FlightMalfunction";
-    this.title = "Initiate Launch";
-    this.description = "Rip a hole in the sky and throw this particular asshole in it";
+    this.title = n"Quickhacks-Initiate-Launch";
+    this.description = n"Quickhacks-Initiate-Launch-Description";
     this.icon = t"UIIcon.TurretMalfunction";
     this.SetObjectActionID(t"DeviceAction.FlightMalfunction");
   }
@@ -164,8 +164,8 @@ public class FlightMalfunction extends FlightAction {
 public class DisableGravity extends FlightAction {
   public final func SetProperties() -> Void {
     this.actionName = n"DisableGravity";
-    this.title = "Enable Antigrav";
-    this.description = "Free this vehicle the prison that is Earth's gravity";
+    this.title = n"Quickhacks-Enable-Antigrav";
+    this.description = n"Quickhacks-Enable-Antigrav-Description";
     this.icon = t"UIIcon.SystemCollapse";
     this.SetObjectActionID(t"ChoiceIcons.EngineeringIcon");
   }
@@ -187,8 +187,8 @@ public class DisableGravity extends FlightAction {
 public class EnableGravity extends FlightAction {
   public final func SetProperties() -> Void {
     this.actionName = n"EnableGravity";
-    this.title = "Disable Antigrav";
-    this.description = "Accept Newton's law and bring this vehicle back to Earth at that lovely 9.8 m/s^2";
+    this.title = n"Quickhacks-Disable-Antigrav";
+    this.description = n"Quickhacks-Disable-Antigrav-Description";
     this.icon = t"UIIcon.SystemCollapse";
     this.SetObjectActionID(t"ChoiceIcons.EngineeringIcon");
   }
@@ -208,8 +208,8 @@ public class EnableGravity extends FlightAction {
 public class Bouncy extends FlightAction {
   public final func SetProperties() -> Void {
     this.actionName = n"Bouncy";
-    this.title = "Funhouse";
-    this.description = "Charm this vehicle with the folly of youth and make it a little bouncy";
+    this.title = n"Quickhacks-Funhouse";
+    this.description = n"Quickhacks-Funhouse-Description";
     this.icon = t"ChoiceIcons.SabotageIcon";
     this.SetObjectActionID(t"DeviceAction.Bouncy");
   }
@@ -535,9 +535,15 @@ private final const func GetICELevel() -> Float {
         } else {
           newCommand.m_uploadTime = sAction.GetActivationTime();
           // newCommand.m_duration = sAction.GetDurationValue();
-          newCommand.m_duration = this.GetQuickHackDuration(actionRecord, this, Cast<StatsObjectID>(this.GetEntityID()), playerRef.GetEntityID());
-          newCommand.m_title = sAction.title;
-          newCommand.m_description = sAction.description;
+          newCommand.m_duration = this.GetQuickHackDuration(actionRecord, this, Cast<StatsObjectID>(this.GetEntityID()), playerRef.GetEntityID());         
+          newCommand.m_title = GetLocalizedTextByKey(sAction.title);
+          if StrLen(newCommand.m_title) == 0 {
+            newCommand.m_title = ToString(sAction.title);
+          };
+          newCommand.m_description = GetLocalizedTextByKey(sAction.description);
+          if StrLen(newCommand.m_description) == 0 {
+            newCommand.m_description = ToString(sAction.title);
+          };
           newCommand.m_actionOwnerName = actionOwnerName;
           // newCommand.m_title = LocKeyToString(actionRecord.ObjectActionUI().Caption());
           // newCommand.m_description = LocKeyToString(actionRecord.ObjectActionUI().Description());
