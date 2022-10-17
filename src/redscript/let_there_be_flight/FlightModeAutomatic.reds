@@ -2,7 +2,7 @@ public class FlightModeAutomatic extends FlightModeStandard {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Mode-Settings")
-  @runtimeProperty("ModSettings.displayName", "Automatic Mode Enabled")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Automatic-Mode-Enabled")
   public let enabled: Bool = false;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")

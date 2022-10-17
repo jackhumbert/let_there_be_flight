@@ -1,58 +1,58 @@
 public class FlightModeDrone extends FlightMode {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Mode Settings")
-  @runtimeProperty("ModSettings.displayName", "Drone Mode Enabled")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Mode-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Drone-Mode-Enabled")
   public let enabled: Bool = true;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Drone Mode")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
   @runtimeProperty("ModSettings.displayName", "Drone Mode Name")
   public let droneModeName: CName = n"Drone Mode";
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Drone Mode")
-  @runtimeProperty("ModSettings.displayName", "Lift Factor")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Lift-Factor")
   @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0")
   @runtimeProperty("ModSettings.max", "200")
   public let droneModeLiftFactor: Float = 40.0;
   
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Drone Mode")
-  @runtimeProperty("ModSettings.displayName", "Pitch Factor")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Pitch-Factor")
   @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "100")
   public let droneModePitchFactor: Float = 5.0;
   
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Drone Mode")
-  @runtimeProperty("ModSettings.displayName", "Roll Factor")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Roll-Factor")
   @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "100")
   public let droneModeRollFactor: Float = 12.0;
   
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Drone Mode")
-  @runtimeProperty("ModSettings.displayName", "Surge Factor")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Surge-Factor")
   @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0")
   @runtimeProperty("ModSettings.max", "200")
   public let droneModeSurgeFactor: Float = 15.0;
   
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Drone Mode")
-  @runtimeProperty("ModSettings.displayName", "Yaw Factor")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Yaw-Factor")
   @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "100")
   public let droneModeYawFactor: Float = 5.0;
   
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Drone Mode")
-  @runtimeProperty("ModSettings.displayName", "Sway Factor")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Sway-Factor")
   @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0")
   @runtimeProperty("ModSettings.max", "200")

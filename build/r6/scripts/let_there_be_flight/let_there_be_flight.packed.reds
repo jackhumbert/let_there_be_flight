@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-10-16 15:19:18.4746957
+// This file was automatically generated on 2022-10-17 14:40:09.9677305
 
 // FlightAudio.reds
 
@@ -1862,36 +1862,36 @@ public native class FlightController extends IScriptable {
     }
 
     // if this.trick {
-    //   evt.AddInputHint(FlightController.CreateInputHint("Aileron Roll", n"Yaw"), true);
+    //   evt.AddInputHint(FlightController.CreateInputHint(n"Aileron Roll", n"Yaw"), true);
     // } else {
-      // evt.AddInputHint(FlightController.CreateInputHint("Tricks", n"Flight_Trick"), true);
+      // evt.AddInputHint(FlightController.CreateInputHint("nTricks", n"Flight_Trick"), true);
     // }
     // we may want to look at something else besides this input so ForceBrakesUntilStoppedOrFor will work (not entirely sure it doesn't now)
     // vehicle.GetBlackboard().GetInt(GetAllBlackboardDefs().VehicleFlight.IsHandbraking)
 
     let usesRightStick = this.sys.playerComponent.GetFlightMode().usesRightStickInput;
 
-    evt.AddInputHint(FlightController.CreateInputHint("Enable Flight", n"Flight_Toggle"),       this.enabled && !this.active);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Enable-Flight", n"Flight_Toggle"),       this.enabled && !this.active);
 
-    evt.AddInputHint(FlightController.CreateInputHint("Disable Flight", n"Flight_Toggle"),      this.active && !this.showOptions);
-    evt.AddInputHint(FlightController.CreateInputHint("Yaw", n"Yaw"),                           this.active && !this.showOptions);
-    evt.AddInputHint(FlightController.CreateInputHint("Pitch", n"Pitch"),                       this.active && !this.showOptions && (usesRightStick || this.usingKB));
-    evt.AddInputHint(FlightController.CreateInputHint("Roll", n"Roll"),                         this.active && !this.showOptions && (usesRightStick || this.usingKB));
-    evt.AddInputHint(FlightController.CreateInputHint("Lift", n"Lift"),                         this.active && !this.showOptions);
-    evt.AddInputHint(FlightController.CreateInputHint("Linear Brake", n"Flight_LinearBrake"),   this.active && !this.showOptions && this.usingKB);
-    evt.AddInputHint(FlightController.CreateInputHint("Angular Brake", n"Flight_AngularBrake"), this.active && !this.showOptions && this.usingKB);
-    evt.AddInputHint(FlightController.CreateInputHint("Brake", n"Flight_LinearBrake"),          this.active && !this.showOptions && !this.usingKB);
-    evt.AddInputHint(FlightController.CreateInputHint("Flight Options", n"Flight_Options"),     this.active && !this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Disable-Flight", n"Flight_Toggle"),      this.active && !this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Yaw", n"Yaw"),                           this.active && !this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Pitch", n"Pitch"),                       this.active && !this.showOptions && (usesRightStick || this.usingKB));
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Roll", n"Roll"),                         this.active && !this.showOptions && (usesRightStick || this.usingKB));
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Lift", n"Lift"),                         this.active && !this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Linear-Brake", n"Flight_LinearBrake"),   this.active && !this.showOptions && this.usingKB);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Angular-Brake", n"Flight_AngularBrake"), this.active && !this.showOptions && this.usingKB);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Brake", n"Flight_LinearBrake"),          this.active && !this.showOptions && !this.usingKB);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Flight-Options", n"Flight_Options"),     this.active && !this.showOptions);
 
-    evt.AddInputHint(FlightController.CreateInputHint("Sway", n"Sway"),                         this.active && this.showOptions && this.usingKB);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Sway", n"Sway"),                         this.active && this.showOptions && this.usingKB);
     // let desc: String;
     // desc = this.sys.playerComponent.GetNextFlightModeDescription();
-    evt.AddInputHint(FlightController.CreateInputHint("Next Mode", n"Flight_ModeSwitchForward"),     this.active && (this.showOptions || this.usingKB));
-    evt.AddInputHint(FlightController.CreateInputHint("Prev Mode", n"Flight_ModeSwitchBackward"),     this.active && this.showOptions && !this.usingKB);
-    // evt.AddInputHint(FlightController.CreateInputHint("Raise Hover Height", n"FlightOptions_Up"), true);
-    // evt.AddInputHint(FlightController.CreateInputHint("Lower Hover Height", n"FlightOptions_Down"), true);
-    evt.AddInputHint(FlightController.CreateInputHint("Toggle UI", n"Flight_UIToggle"),         this.active && this.showOptions);
-    // evt.AddInputHint(FlightController.CreateInputHint("Fire", n"ShootPrimary"),                 this.active && !this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Next-Mode", n"Flight_ModeSwitchForward"),     this.active && (this.showOptions || this.usingKB));
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Prev-Mode", n"Flight_ModeSwitchBackward"),     this.active && this.showOptions && !this.usingKB);
+    // evt.AddInputHint(FlightController.CreateInputHint(n"Raise Hover Height", n"FlightOptions_Up"), true);
+    // evt.AddInputHint(FlightController.CreateInputHint(n"Lower Hover Height", n"FlightOptions_Down"), true);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Toggle-UI", n"Flight_UIToggle"),         this.active && this.showOptions);
+    // evt.AddInputHint(FlightController.CreateInputHint(n"Fire", n"ShootPrimary"),                 this.active && !this.showOptions);
 
     uiSystem.QueueEvent(evt);
   }
@@ -2232,11 +2232,14 @@ public native class FlightController extends IScriptable {
     GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().UI_Notifications).SetVariant(GetAllBlackboardDefs().UI_Notifications.OnscreenMessage, ToVariant(msg), true);
   }
 
-  public static func CreateInputHint(label: String, action: CName) -> InputHintData {
+  public static func CreateInputHint(label: CName, action: CName) -> InputHintData {
     let data: InputHintData;
     data.source = n"FlightController";
     data.action = action;
-    data.localizedLabel = label;
+    data.localizedLabel = GetLocalizedTextByKey(label);
+    if StrLen( data.localizedLabel) == 0 {
+         data.localizedLabel = ToString(label);
+    };
     // data.groupId = n"FlightController";
     return data;
   }
@@ -2398,7 +2401,7 @@ public class FlightModeAutomatic extends FlightModeStandard {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Mode-Settings")
-  @runtimeProperty("ModSettings.displayName", "Automatic Mode Enabled")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Automatic-Mode-Enabled")
   public let enabled: Bool = false;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
@@ -2490,58 +2493,58 @@ public class FlightModeAutomatic extends FlightModeStandard {
 public class FlightModeDrone extends FlightMode {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Mode Settings")
-  @runtimeProperty("ModSettings.displayName", "Drone Mode Enabled")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Mode-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Drone-Mode-Enabled")
   public let enabled: Bool = true;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Drone Mode")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
   @runtimeProperty("ModSettings.displayName", "Drone Mode Name")
   public let droneModeName: CName = n"Drone Mode";
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Drone Mode")
-  @runtimeProperty("ModSettings.displayName", "Lift Factor")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Lift-Factor")
   @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0")
   @runtimeProperty("ModSettings.max", "200")
   public let droneModeLiftFactor: Float = 40.0;
   
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Drone Mode")
-  @runtimeProperty("ModSettings.displayName", "Pitch Factor")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Pitch-Factor")
   @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "100")
   public let droneModePitchFactor: Float = 5.0;
   
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Drone Mode")
-  @runtimeProperty("ModSettings.displayName", "Roll Factor")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Roll-Factor")
   @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "100")
   public let droneModeRollFactor: Float = 12.0;
   
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Drone Mode")
-  @runtimeProperty("ModSettings.displayName", "Surge Factor")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Surge-Factor")
   @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0")
   @runtimeProperty("ModSettings.max", "200")
   public let droneModeSurgeFactor: Float = 15.0;
   
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Drone Mode")
-  @runtimeProperty("ModSettings.displayName", "Yaw Factor")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Yaw-Factor")
   @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "100")
   public let droneModeYawFactor: Float = 5.0;
   
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Drone Mode")
-  @runtimeProperty("ModSettings.displayName", "Sway Factor")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Sway-Factor")
   @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0")
   @runtimeProperty("ModSettings.max", "200")
@@ -2614,8 +2617,8 @@ public class FlightModeDrone extends FlightMode {
 public class FlightModeDroneAntiGravity extends FlightModeDrone {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Mode Settings")
-  @runtimeProperty("ModSettings.displayName", "Anti-Gravity Drone Mode Enabled")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Mode-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Anti-Gravity-Drone-Mode-Enabled")
   public let agEnabled: Bool = false;
 
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeDroneAntiGravity> {
@@ -2637,8 +2640,8 @@ public class FlightModeDroneAntiGravity extends FlightModeDrone {
 public class FlightModeFly extends FlightModeStandard {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Mode Settings")
-  @runtimeProperty("ModSettings.displayName", "Fly Mode Enabled")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Mode-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Fly-Mode-Enabled")
   public let enabled: Bool = false;
 
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeFly> {
@@ -2661,8 +2664,8 @@ public class FlightModeFly extends FlightModeStandard {
 public class FlightModeHover extends FlightModeStandard {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Mode Settings")
-  @runtimeProperty("ModSettings.displayName", "Hover Mode Enabled")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Mode-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Hover-Mode-Enabled")
   public let enabled: Bool = false;
 
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeHover> {
@@ -2706,8 +2709,8 @@ public class FlightModeHoverFly extends FlightModeStandard {
   protected let referenceZ: Float;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Mode Settings")
-  @runtimeProperty("ModSettings.displayName", "Hover & Fly Enabled")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Mode-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Hover-And-Fly-Enabled")
   public let enabled: Bool = true;
 
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeHoverFly> {
@@ -3013,14 +3016,14 @@ public native class FlightSettings extends IScriptable {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")
-  @runtimeProperty("ModSettings.displayName", "Enable Auto Activation")
-  @runtimeProperty("ModSettings.description", "Automatically enable flight when loading vehicle if it's above the specified height")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Enable-Auto-Activation")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Enable-Auto-Activation-Description")
   public let autoActivationEnabled: Bool = false;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")
-  @runtimeProperty("ModSettings.displayName", "Auto Activation Height")
-  @runtimeProperty("ModSettings.description", "In-game units for detecting when flight should automatically be activated on spawn")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Auto-Activation-Height")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Auto-Activation-Height-Description")
   @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.max", "10.0")
   public let autoActivationHeight: Float = 3.0;
@@ -3029,8 +3032,8 @@ public native class FlightSettings extends IScriptable {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Control-Settings")
-  @runtimeProperty("ModSettings.displayName", "Linear Brake Factor")
-  @runtimeProperty("ModSettings.description", "How much the linear brake button slows the vehicle's velocity")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Linear-Brake-Factor")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Linear-Brake-Factor-Description")
   @runtimeProperty("ModSettings.step", "0.1")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "10.0")
@@ -3038,8 +3041,8 @@ public native class FlightSettings extends IScriptable {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Control-Settings")
-  @runtimeProperty("ModSettings.displayName", "Angular Brake Factor")
-  @runtimeProperty("ModSettings.description", "How much the angular brake button slows the vehicle's rotation")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Angular-Brake-Factor")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Angular-Brake-Factor-Description")
   @runtimeProperty("ModSettings.step", "0.1")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "50.0")
@@ -3073,8 +3076,8 @@ public native class FlightSettings extends IScriptable {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
-  @runtimeProperty("ModSettings.displayName", "Pitch Aero Factor")
-  @runtimeProperty("ModSettings.description", "How much the vehicle is rotated (pitch) towards its velocity")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Pitch-Aero-Factor")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Pitch-Aero-Factor-Description")
   @runtimeProperty("ModSettings.step", "0.05")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "1.0")
@@ -3082,8 +3085,8 @@ public native class FlightSettings extends IScriptable {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
-  @runtimeProperty("ModSettings.displayName", "Yaw Aero Factor")
-  @runtimeProperty("ModSettings.description", "How much the vehicle is rotated (yaw) towards its velocity")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Yaw-Aero-Factor")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Yaw-Aero-Factor-Description")
   @runtimeProperty("ModSettings.step", "0.05")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "1.0")
@@ -3091,8 +3094,8 @@ public native class FlightSettings extends IScriptable {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
-  @runtimeProperty("ModSettings.displayName", "Pitch Directionality Factor")
-  @runtimeProperty("ModSettings.description", "How much the vehicle's pitch affects its velocity")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Pitch-Directionality-Factor")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Pitch-Directionality-Factor-Description")
   @runtimeProperty("ModSettings.step", "1.0")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "100.0")
@@ -3100,8 +3103,8 @@ public native class FlightSettings extends IScriptable {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
-  @runtimeProperty("ModSettings.displayName", "Yaw Directionality Factor")
-  @runtimeProperty("ModSettings.description", "How much the vehicle's yaw affects its velocity")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Yaw-Directionality-Factor")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Yaw-Directionality-Factor-Description")
   @runtimeProperty("ModSettings.step", "1.0")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "100.0")
@@ -3110,25 +3113,25 @@ public native class FlightSettings extends IScriptable {
   // Flight Camera Settings
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Camera Settings")
-  @runtimeProperty("ModSettings.displayName", "Driving Direction Compensation Angle Smoothing")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Camera-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Driving-Direction-Compensation-Angle-Smoothing")
   @runtimeProperty("ModSettings.step", "1.0")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "180.0")
   public let drivingDirectionCompensationAngleSmooth: Float = 120.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Camera Settings")
-  @runtimeProperty("ModSettings.displayName", "Driving Direction Compensation Speed Coef")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Camera-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Driving-Direction-Compensation-Speed-Coef")
   @runtimeProperty("ModSettings.step", "0.05")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "1.0")
   public let drivingDirectionCompensationSpeedCoef: Float = 0.1;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Camera Settings")
-  @runtimeProperty("ModSettings.displayName", "FPV Camera Pitch Offset")
-  @runtimeProperty("ModSettings.description", "Angle in degrees")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Camera-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-FPV-Camera-Pitch-Offset")
+  @runtimeProperty("ModSettings.description", "UI-Settings-FPV-Camera-Pitch-Offset-Description")
   @runtimeProperty("ModSettings.step", "5.0")
   @runtimeProperty("ModSettings.min", "-60.0")
   @runtimeProperty("ModSettings.max", "60.0")

@@ -1,8 +1,8 @@
 public class FlightModeHover extends FlightModeStandard {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Mode Settings")
-  @runtimeProperty("ModSettings.displayName", "Hover Mode Enabled")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Mode-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Hover-Mode-Enabled")
   public let enabled: Bool = false;
 
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeHover> {

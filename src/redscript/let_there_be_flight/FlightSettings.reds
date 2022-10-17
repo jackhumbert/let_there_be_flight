@@ -11,14 +11,14 @@ public native class FlightSettings extends IScriptable {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")
-  @runtimeProperty("ModSettings.displayName", "Enable Auto Activation")
-  @runtimeProperty("ModSettings.description", "Automatically enable flight when loading vehicle if it's above the specified height")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Enable-Auto-Activation")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Enable-Auto-Activation-Description")
   public let autoActivationEnabled: Bool = false;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")
-  @runtimeProperty("ModSettings.displayName", "Auto Activation Height")
-  @runtimeProperty("ModSettings.description", "In-game units for detecting when flight should automatically be activated on spawn")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Auto-Activation-Height")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Auto-Activation-Height-Description")
   @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.max", "10.0")
   public let autoActivationHeight: Float = 3.0;
@@ -27,8 +27,8 @@ public native class FlightSettings extends IScriptable {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Control-Settings")
-  @runtimeProperty("ModSettings.displayName", "Linear Brake Factor")
-  @runtimeProperty("ModSettings.description", "How much the linear brake button slows the vehicle's velocity")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Linear-Brake-Factor")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Linear-Brake-Factor-Description")
   @runtimeProperty("ModSettings.step", "0.1")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "10.0")
@@ -36,8 +36,8 @@ public native class FlightSettings extends IScriptable {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Control-Settings")
-  @runtimeProperty("ModSettings.displayName", "Angular Brake Factor")
-  @runtimeProperty("ModSettings.description", "How much the angular brake button slows the vehicle's rotation")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Angular-Brake-Factor")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Angular-Brake-Factor-Description")
   @runtimeProperty("ModSettings.step", "0.1")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "50.0")
@@ -71,8 +71,8 @@ public native class FlightSettings extends IScriptable {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
-  @runtimeProperty("ModSettings.displayName", "Pitch Aero Factor")
-  @runtimeProperty("ModSettings.description", "How much the vehicle is rotated (pitch) towards its velocity")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Pitch-Aero-Factor")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Pitch-Aero-Factor-Description")
   @runtimeProperty("ModSettings.step", "0.05")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "1.0")
@@ -80,8 +80,8 @@ public native class FlightSettings extends IScriptable {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
-  @runtimeProperty("ModSettings.displayName", "Yaw Aero Factor")
-  @runtimeProperty("ModSettings.description", "How much the vehicle is rotated (yaw) towards its velocity")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Yaw-Aero-Factor")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Yaw-Aero-Factor-Description")
   @runtimeProperty("ModSettings.step", "0.05")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "1.0")
@@ -89,8 +89,8 @@ public native class FlightSettings extends IScriptable {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
-  @runtimeProperty("ModSettings.displayName", "Pitch Directionality Factor")
-  @runtimeProperty("ModSettings.description", "How much the vehicle's pitch affects its velocity")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Pitch-Directionality-Factor")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Pitch-Directionality-Factor-Description")
   @runtimeProperty("ModSettings.step", "1.0")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "100.0")
@@ -98,8 +98,8 @@ public native class FlightSettings extends IScriptable {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
-  @runtimeProperty("ModSettings.displayName", "Yaw Directionality Factor")
-  @runtimeProperty("ModSettings.description", "How much the vehicle's yaw affects its velocity")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Yaw-Directionality-Factor")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Yaw-Directionality-Factor-Description")
   @runtimeProperty("ModSettings.step", "1.0")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "100.0")
@@ -108,25 +108,25 @@ public native class FlightSettings extends IScriptable {
   // Flight Camera Settings
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Camera Settings")
-  @runtimeProperty("ModSettings.displayName", "Driving Direction Compensation Angle Smoothing")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Camera-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Driving-Direction-Compensation-Angle-Smoothing")
   @runtimeProperty("ModSettings.step", "1.0")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "180.0")
   public let drivingDirectionCompensationAngleSmooth: Float = 120.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Camera Settings")
-  @runtimeProperty("ModSettings.displayName", "Driving Direction Compensation Speed Coef")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Camera-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Driving-Direction-Compensation-Speed-Coef")
   @runtimeProperty("ModSettings.step", "0.05")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "1.0")
   public let drivingDirectionCompensationSpeedCoef: Float = 0.1;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Camera Settings")
-  @runtimeProperty("ModSettings.displayName", "FPV Camera Pitch Offset")
-  @runtimeProperty("ModSettings.description", "Angle in degrees")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Camera-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-FPV-Camera-Pitch-Offset")
+  @runtimeProperty("ModSettings.description", "UI-Settings-FPV-Camera-Pitch-Offset-Description")
   @runtimeProperty("ModSettings.step", "5.0")
   @runtimeProperty("ModSettings.min", "-60.0")
   @runtimeProperty("ModSettings.max", "60.0")

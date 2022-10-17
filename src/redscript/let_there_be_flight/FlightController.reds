@@ -306,36 +306,36 @@ public native class FlightController extends IScriptable {
     }
 
     // if this.trick {
-    //   evt.AddInputHint(FlightController.CreateInputHint("Aileron Roll", n"Yaw"), true);
+    //   evt.AddInputHint(FlightController.CreateInputHint(n"Aileron Roll", n"Yaw"), true);
     // } else {
-      // evt.AddInputHint(FlightController.CreateInputHint("Tricks", n"Flight_Trick"), true);
+      // evt.AddInputHint(FlightController.CreateInputHint("nTricks", n"Flight_Trick"), true);
     // }
     // we may want to look at something else besides this input so ForceBrakesUntilStoppedOrFor will work (not entirely sure it doesn't now)
     // vehicle.GetBlackboard().GetInt(GetAllBlackboardDefs().VehicleFlight.IsHandbraking)
 
     let usesRightStick = this.sys.playerComponent.GetFlightMode().usesRightStickInput;
 
-    evt.AddInputHint(FlightController.CreateInputHint("Enable Flight", n"Flight_Toggle"),       this.enabled && !this.active);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Enable-Flight", n"Flight_Toggle"),       this.enabled && !this.active);
 
-    evt.AddInputHint(FlightController.CreateInputHint("Disable Flight", n"Flight_Toggle"),      this.active && !this.showOptions);
-    evt.AddInputHint(FlightController.CreateInputHint("Yaw", n"Yaw"),                           this.active && !this.showOptions);
-    evt.AddInputHint(FlightController.CreateInputHint("Pitch", n"Pitch"),                       this.active && !this.showOptions && (usesRightStick || this.usingKB));
-    evt.AddInputHint(FlightController.CreateInputHint("Roll", n"Roll"),                         this.active && !this.showOptions && (usesRightStick || this.usingKB));
-    evt.AddInputHint(FlightController.CreateInputHint("Lift", n"Lift"),                         this.active && !this.showOptions);
-    evt.AddInputHint(FlightController.CreateInputHint("Linear Brake", n"Flight_LinearBrake"),   this.active && !this.showOptions && this.usingKB);
-    evt.AddInputHint(FlightController.CreateInputHint("Angular Brake", n"Flight_AngularBrake"), this.active && !this.showOptions && this.usingKB);
-    evt.AddInputHint(FlightController.CreateInputHint("Brake", n"Flight_LinearBrake"),          this.active && !this.showOptions && !this.usingKB);
-    evt.AddInputHint(FlightController.CreateInputHint("Flight Options", n"Flight_Options"),     this.active && !this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Disable-Flight", n"Flight_Toggle"),      this.active && !this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Yaw", n"Yaw"),                           this.active && !this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Pitch", n"Pitch"),                       this.active && !this.showOptions && (usesRightStick || this.usingKB));
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Roll", n"Roll"),                         this.active && !this.showOptions && (usesRightStick || this.usingKB));
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Lift", n"Lift"),                         this.active && !this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Linear-Brake", n"Flight_LinearBrake"),   this.active && !this.showOptions && this.usingKB);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Angular-Brake", n"Flight_AngularBrake"), this.active && !this.showOptions && this.usingKB);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Brake", n"Flight_LinearBrake"),          this.active && !this.showOptions && !this.usingKB);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Flight-Options", n"Flight_Options"),     this.active && !this.showOptions);
 
-    evt.AddInputHint(FlightController.CreateInputHint("Sway", n"Sway"),                         this.active && this.showOptions && this.usingKB);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Sway", n"Sway"),                         this.active && this.showOptions && this.usingKB);
     // let desc: String;
     // desc = this.sys.playerComponent.GetNextFlightModeDescription();
-    evt.AddInputHint(FlightController.CreateInputHint("Next Mode", n"Flight_ModeSwitchForward"),     this.active && (this.showOptions || this.usingKB));
-    evt.AddInputHint(FlightController.CreateInputHint("Prev Mode", n"Flight_ModeSwitchBackward"),     this.active && this.showOptions && !this.usingKB);
-    // evt.AddInputHint(FlightController.CreateInputHint("Raise Hover Height", n"FlightOptions_Up"), true);
-    // evt.AddInputHint(FlightController.CreateInputHint("Lower Hover Height", n"FlightOptions_Down"), true);
-    evt.AddInputHint(FlightController.CreateInputHint("Toggle UI", n"Flight_UIToggle"),         this.active && this.showOptions);
-    // evt.AddInputHint(FlightController.CreateInputHint("Fire", n"ShootPrimary"),                 this.active && !this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Next-Mode", n"Flight_ModeSwitchForward"),     this.active && (this.showOptions || this.usingKB));
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Prev-Mode", n"Flight_ModeSwitchBackward"),     this.active && this.showOptions && !this.usingKB);
+    // evt.AddInputHint(FlightController.CreateInputHint(n"Raise Hover Height", n"FlightOptions_Up"), true);
+    // evt.AddInputHint(FlightController.CreateInputHint(n"Lower Hover Height", n"FlightOptions_Down"), true);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Toggle-UI", n"Flight_UIToggle"),         this.active && this.showOptions);
+    // evt.AddInputHint(FlightController.CreateInputHint(n"Fire", n"ShootPrimary"),                 this.active && !this.showOptions);
 
     uiSystem.QueueEvent(evt);
   }
@@ -676,11 +676,14 @@ public native class FlightController extends IScriptable {
     GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().UI_Notifications).SetVariant(GetAllBlackboardDefs().UI_Notifications.OnscreenMessage, ToVariant(msg), true);
   }
 
-  public static func CreateInputHint(label: String, action: CName) -> InputHintData {
+  public static func CreateInputHint(label: CName, action: CName) -> InputHintData {
     let data: InputHintData;
     data.source = n"FlightController";
     data.action = action;
-    data.localizedLabel = label;
+    data.localizedLabel = GetLocalizedTextByKey(label);
+    if StrLen( data.localizedLabel) == 0 {
+         data.localizedLabel = ToString(label);
+    };
     // data.groupId = n"FlightController";
     return data;
   }
