@@ -1,2 +1,2 @@
-DEL /S /Q ..\..\..\archive\pc\mod\let_there_be_flight.archive ..\..\..\archive\pc\mod\let_there_be_flight.archive.xl ..\..\..\r6\scripts\let_there_be_flight\let_there_be_flight.packed.reds ..\..\..\r6\tweaks\let_there_be_flight.yaml ..\..\..\r6\input\let_there_be_flight.xml
-@RD /S /Q ..\..\..\red4ext\plugins\let_there_be_flight
+DEL /S /Q ..\..\..\archive\pc\mod\let_there_be_flight.archive ..\..\..\archive\pc\mod\let_there_be_flight.archive.xl ..\..\..\r6\tweaks\let_there_be_flight.yaml ..\..\..\r6\input\let_there_be_flight.xml
+@RD /S /Q ..\..\..\r6\scripts\let_there_be_flight ..\..\..\red4ext\plugins\let_there_be_flight

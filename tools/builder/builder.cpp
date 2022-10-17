@@ -56,10 +56,17 @@ void build_redscript() {
     }
   }
   ofstream compiledFile("build/r6/scripts/let_there_be_flight/let_there_be_flight.packed.reds");
-  installedFiles.push_back("r6/scripts/let_there_be_flight/let_there_be_flight.packed.reds");
+  installedFolders.push_back("r6/scripts/let_there_be_flight");
   compiledFile << contents.rdbuf();
 
   compiledFile.close();
+
+  
+  ofstream moduleFile(
+      "build/r6/scripts/let_there_be_flight/let_there_be_flight.module.reds");
+  moduleFile << "module LetThereBeFlight" << endl;
+
+  moduleFile.close();
 
   //fs::copy("src/redscript/codeware", "build/r6/scripts/codeware",
   //         fs::copy_options::update_existing | fs::copy_options::recursive);
