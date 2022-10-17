@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-10-17 14:40:09.9677305
+// This file was automatically generated on 2022-10-17 14:49:16.1954877
 
 // FlightAudio.reds
 
@@ -1787,7 +1787,7 @@ public native class FlightController extends IScriptable {
     // }
   
     if !silent {
-      this.ShowSimpleMessage("Flight Control Engaged");
+      this.ShowSimpleMessage(n"Simple-Message-Flight-Control-Engaged");
     }
     
     FlightLog.Info("[FlightController] Activate");
@@ -1803,7 +1803,7 @@ public native class FlightController extends IScriptable {
     //uiSystem.PopGameContext(IntEnum(10));
 
     if !silent {
-      this.ShowSimpleMessage("Flight Control Disengaged");
+      this.ShowSimpleMessage(n"Simple-Message-Flight-Control-Disengaged");
     }
     // if (this.showUI) {
     //   this.ui.Hide();
@@ -1913,7 +1913,7 @@ public native class FlightController extends IScriptable {
     let evt = new VehicleFlightModeChangeEvent();
     evt.mode = this.mode;
     GetMountedVehicle(this.player).QueueEvent(evt);
-    this.ShowSimpleMessage(newMode.GetDescription() + " Enabled");
+    this.ShowSimpleMessage(StringToName(newMode.GetDescription() + " " + GetLocalizedTextByKey(n"Simple-Message-Suffix-Enabled")));
     GameInstance.GetAudioSystem(this.gameInstance).Play(n"ui_menu_onpress");
     this.SetupActions();
   }
@@ -2046,10 +2046,10 @@ public native class FlightController extends IScriptable {
           this.showUI = !this.showUI;
           if (this.showUI) {
             this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, true, true);
-            this.ShowSimpleMessage("Flight UI Shown");
+            this.ShowSimpleMessage(n"Simple-Message-Flight-UI-Shown");
           } else {
             this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, false, true);
-            this.ShowSimpleMessage("Flight UI Hidden");
+            this.ShowSimpleMessage(n"Simple-Message-Flight-UI-Hidden");
           }
           GameInstance.GetAudioSystem(this.gameInstance).Play(n"ui_menu_onpress");
       }
@@ -2223,11 +2223,14 @@ public native class FlightController extends IScriptable {
     // this.timeDelta = timeDelta * 0.001 + this.timeDelta * 0.999;
   }
 
-  public func ShowSimpleMessage(message: String) -> Void {
+  public func ShowSimpleMessage(message: CName) -> Void {
     let msg: SimpleScreenMessage;
     msg.isShown = true;
     msg.duration = 2.00;
-    msg.message = message;
+    msg.message = GetLocalizedTextByKey(message);
+    if StrLen( msg.message) == 0 {
+      msg.message = ToString(message);
+    };
     msg.isInstant = true;
     GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().UI_Notifications).SetVariant(GetAllBlackboardDefs().UI_Notifications.OnscreenMessage, ToVariant(msg), true);
   }

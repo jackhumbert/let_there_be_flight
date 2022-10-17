@@ -30,6 +30,31 @@
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Simple-Message-Flight-Control-Engaged",
+              "femaleVariant": "Flight Control Engaged"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Simple-Message-Flight-Control-Disengaged",
+              "femaleVariant": "Flight Control Disengaged"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Simple-Message-Flight-UI-Shown",
+              "femaleVariant": "Flight UI Shown"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Simple-Message-Flight-UI-Hidden",
+              "femaleVariant": "Flight UI Hidden"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Simple-Message-Suffix-Enabled",
+              "femaleVariant": "Enabled"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "Input-Hint-Enable-Flight",
               "femaleVariant": "Enable Flight"
             },
