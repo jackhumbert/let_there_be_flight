@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-10-17 14:49:16.1954877
+// This file was automatically generated on 2022-10-17 14:57:27.7959844
 
 // FlightAudio.reds
 
@@ -52,24 +52,24 @@ public native class FlightAudio extends IScriptable {
   public let isPopupShown: Bool;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Audio Settings")
-  @runtimeProperty("ModSettings.displayName", "Engine Volume")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Audio-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Engine-Volume")
   @runtimeProperty("ModSettings.step", "0.05")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "1.0")
   public let engineVolume: Float = 1.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Audio Settings")
-  @runtimeProperty("ModSettings.displayName", "Wind Volume")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Audio-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Wind-Volume")
   @runtimeProperty("ModSettings.step", "0.05")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "1.0")
   public let windVolume: Float = 0.6;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight Audio Settings")
-  @runtimeProperty("ModSettings.displayName", "Warning Volume")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Audio-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Warning-Volume")
   @runtimeProperty("ModSettings.step", "0.05")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "1.0")
@@ -4362,8 +4362,8 @@ public class FlightUIVehicleHealthStatPoolListener extends CustomValueStatPoolsL
 public class hudFlightController extends inkHUDGameController {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight UI Settings")
-  @runtimeProperty("ModSettings.displayName", "Enabled")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-UI-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Enabled")
   public let enabled: Bool = true;
 
   private let m_Date: inkTextRef;

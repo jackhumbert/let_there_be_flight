@@ -145,6 +145,16 @@
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-UI-Settings",
+              "femaleVariant": "Flight UI Settings"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-Audio-Settings",
+              "femaleVariant": "Flight Audio Settings"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Flight-Mode-Settings",
               "femaleVariant": "Flight Mode Settings"
             },
@@ -407,6 +417,26 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Hover-And-Fly-Enabled",
               "femaleVariant": "Hover & Fly Enabled"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Enabled",
+              "femaleVariant": "Enabled"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Engine-Volume",
+              "femaleVariant": "Engine Volume"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Wind-Volume",
+              "femaleVariant": "Wind Volume"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Warning-Volume",
+              "femaleVariant": "Warning Volume"
             }
           ]
         }

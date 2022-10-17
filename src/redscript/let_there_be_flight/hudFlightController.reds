@@ -14,8 +14,8 @@ public class FlightUIVehicleHealthStatPoolListener extends CustomValueStatPoolsL
 public class hudFlightController extends inkHUDGameController {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "Flight UI Settings")
-  @runtimeProperty("ModSettings.displayName", "Enabled")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-UI-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Enabled")
   public let enabled: Bool = true;
 
   private let m_Date: inkTextRef;
