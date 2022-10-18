@@ -476,7 +476,7 @@
             {
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "Quickhacks-Enable-Antigrav-Description",
-              "femaleVariant": "Free this vehicle the prison that is Earth's gravity"
+              "femaleVariant": "Free this vehicle from the prison that is Earth's gravity"
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",

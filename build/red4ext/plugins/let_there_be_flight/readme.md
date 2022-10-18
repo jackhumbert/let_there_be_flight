@@ -47,9 +47,24 @@ Copy this file, along with your `red4ext/logs/ctd_helper.log` file *before* you 
 
 If you can include both of these files in any report, it should make it a lot easier to track down bugs.
 
+## Translating
+
+The en-us localization dictionary can be seen in /wolvenkit/source/raw/user/jackhumbert/localization/let_there_be_flight.en-us.json.json - this is a JSON-formatted file. To create a new translation, copy this file, and adjust all of the `femaleVariant` values. Please use the standard language tag (like 'en-us', 'fr-fr', etc) as the file name. You can send this to me and I'll include it with LTBF, or you can host it yourself on Nexus, etc.
+
+If you want to distribute your own language pack for LTBF, you'll need to use Wolvenkit convert & pack this into an `.archive` file (please name this file using the language tag, like this: `let_there_be_flight.fr-fr.archive`), which needs to be paired with a `let_there_be_flight.fr-fr.archive.xl` file to be read correctly by Archive-XL. Example contents are below:
+
+```yaml
+localization:
+  onscreens:
+    fr-fr: user\jackhumbert\localization\let_there_be_flight.fr-fr.json
+```
+
+You'll need to replace all `fr-fr` instances with your language code.
+
+
 ## Uninstallation
 
-There's an installation script at `red4ext/plugins/let_there_be_flight/uninstall.bat` - if you run this, all LTBF mod files (FMOD files) will be deleted, but its dependencies will remain.
+There's an installation script at `red4ext/plugins/let_there_be_flight/uninstall.bat` - if you run this, all LTBF mod files will be deleted, but its dependencies will remain.
 
 Special thanks to @psiberx for [Codeware Lib](https://github.com/psiberx/cp2077-codeware/), [InkPlayground Demo](https://github.com/psiberx/cp2077-playground), and Redscript & CET examples on Discord, @WopsS for [RED4ext](https://github.com/WopsS/RED4ext), @jac3km4 for [Redscript toolkit](https://github.com/jac3km4/redscript), @yamashi for [CET](https://github.com/yamashi/CyberEngineTweaks) and the [E-mode mod](https://www.nexusmods.com/cyberpunk2077/mods/3207?tab=description) (very helpful in figuring out how to work with FMOD), @rfuzzo & team (especially @seberoth!) for [WolvenKit](https://github.com/WolvenKit/WolvenKit), and all of them for being helpful on Discord.
 
