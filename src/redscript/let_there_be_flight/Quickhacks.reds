@@ -333,12 +333,14 @@ protected func SendQuickhackCommands(shouldOpen: Bool) {
     // this.GetPS().GetRemoteActions(actions, context);
     
     // action.SetInactiveWithReason(false, "LocKey#49279");
-    ArrayPush(actions, ActionFlightEnable(this));
-    ArrayPush(actions, ActionFlightDisable(this));
-    ArrayPush(actions, ActionFlightMalfunction(this));
-    ArrayPush(actions, ActionDisableGravity(this));
-    ArrayPush(actions, ActionEnableGravity(this));
-    ArrayPush(actions, ActionBouncy(this));
+    if this.m_flightComponent.isQuickHackable {
+      ArrayPush(actions, ActionFlightEnable(this));
+      ArrayPush(actions, ActionFlightDisable(this));
+      ArrayPush(actions, ActionFlightMalfunction(this));
+      ArrayPush(actions, ActionDisableGravity(this));
+      ArrayPush(actions, ActionEnableGravity(this));
+      ArrayPush(actions, ActionBouncy(this));
+    }
 
     if this.m_isQhackUploadInProgerss {
       ScriptableDeviceComponentPS.SetActionsInactiveAll(actions, "LocKey#7020");

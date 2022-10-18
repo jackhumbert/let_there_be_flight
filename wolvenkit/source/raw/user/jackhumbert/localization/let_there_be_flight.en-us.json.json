@@ -440,8 +440,13 @@
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-Quickhacks",
+              "femaleVariant": "Flight Quickhacks"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "Quickhacks-Enable-Flight",
-              "femaleVariant": "Enabled Flight"
+              "femaleVariant": "Enable Flight"
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",

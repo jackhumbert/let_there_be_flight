@@ -19,6 +19,12 @@ public native class FlightComponent extends GameComponent {
   @runtimeProperty("offset", "0xD0")
   public native let torque: Vector4;
 
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Quickhacks")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Enabled")
+  public let isQuickHackable: Bool = true;
+
   public native func ChaseTarget(target: wref<GameObject>) -> Void;
   // public native func ChaseTarget() -> Void;
 
@@ -82,6 +88,7 @@ public native class FlightComponent extends GameComponent {
   }
 
   private final func OnGameAttach() -> Void {
+    LTBF_RegisterListener(this);
     //FlightLog.Info("[FlightComponent] OnGameAttach: " + this.GetVehicle().GetDisplayName());
     this.m_interaction = this.FindComponentByName(n"interaction") as InteractionComponent;
     this.m_healthStatPoolListener = new VehicleHealthStatPoolListener();
@@ -156,6 +163,7 @@ public native class FlightComponent extends GameComponent {
   }
 
   private final func OnGameDetach() -> Void {
+    LTBF_UnregisterListener(this);
     //FlightLog.Info("[FlightComponent] OnGameDetach: " + this.GetVehicle().GetDisplayName());
     GameInstance.GetStatPoolsSystem(this.GetVehicle().GetGame()).RequestUnregisteringListener(Cast(this.GetVehicle().GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     this.UnregisterVehicleTPPBBListener();
