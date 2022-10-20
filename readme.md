@@ -21,6 +21,7 @@ For an up-to-date version of the mod, you can [download just the `build/` folder
 
 * [RED4ext](https://github.com/WopsS/RED4ext)
 * [TweakXL](https://github.com/psiberx/cp2077-tweak-xl)
+* [ArchiveXL](https://github.com/psiberx/cp2077-archive-xl)
 * [Input Loader](https://github.com/jackhumbert/cyberpunk2077-input-loader)
 * [Redscript](https://github.com/jac3km4/redscript)
 * [Mod Settings](https://github.com/jackhumbert/mod_settings)

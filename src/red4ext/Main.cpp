@@ -37,6 +37,7 @@
 RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes() {
   auto inputLoaderDLL = Utils::GetRootDir() / L"red4ext" / L"plugins" / L"input_loader" / L"input_loader.dll";
   auto tweakXLDLL = Utils::GetRootDir() / L"red4ext" / L"plugins" / L"TweakXL" / L"TweakXL.dll";
+  auto archiveXLDLL = Utils::GetRootDir() / L"red4ext" / L"plugins" / L"ArchiveXL" / L"ArchiveXL.dll";
 
   std::ifstream inputLoaderFile;
   inputLoaderFile.open(inputLoaderDLL);
@@ -61,7 +62,19 @@ RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes() {
     spdlog::info("TweakXL installation found");
   }
 
-  if (!inputLoaderFile || !tweakXLFile) {
+  std::ifstream archiveXLFile;
+  archiveXLFile.open(archiveXLDLL);
+  if (!archiveXLFile) {
+    spdlog::error("ArchiveXL is not installed/installed properly - aborting");
+    MessageBoxW(0,
+                L"ArchiveXL is not installed or not installed properly. Please ensure you've installed it correctly. The "
+                L"game will now close.",
+                L"ArchiveXL could not be found", MB_SYSTEMMODAL | MB_ICONERROR);
+  } else {
+    spdlog::info("ArchiveXL installation found");
+  }
+
+  if (!inputLoaderFile || !tweakXLFile || !archiveXLFile) {
     __debugbreak();
   }
 
@@ -496,7 +509,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // is not initalized yet.
 
     Utils::CreateLogger();
-    spdlog::info("Starting up Let There Be Flight v0.1.7");
+    spdlog::info("Starting up Let There Be Flight v0.1.8");
     auto ptr = GetModuleHandle(nullptr);
     spdlog::info("Base address: {}", fmt::ptr(ptr));
     auto modPtr = aHandle;
@@ -545,7 +558,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 RED4EXT_C_EXPORT void RED4EXT_CALL Query(RED4ext::PluginInfo *aInfo) {
   aInfo->name = L"Let There Be Flight";
   aInfo->author = L"Jack Humbert";
-  aInfo->version = RED4EXT_SEMVER(0, 1, 7);
+  aInfo->version = RED4EXT_SEMVER(0, 1, 8);
   aInfo->runtime = RED4EXT_RUNTIME_LATEST;
   aInfo->sdk = RED4EXT_SDK_LATEST;
 }
