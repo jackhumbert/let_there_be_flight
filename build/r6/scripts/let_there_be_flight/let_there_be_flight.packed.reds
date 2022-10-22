@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-10-20 15:05:12.3776835
+// This file was automatically generated on 2022-10-22 20:54:10.2164433
 
 // FlightAudio.reds
 
@@ -3024,6 +3024,7 @@ public native class FlightSettings extends IScriptable {
   public native static func SetFloat(name: String, value: Float) -> Float;
   public native static func GetVector3(name: String) -> Vector3;
   public native static func SetVector3(name: String, x: Float, y: Float, z: Float) -> Vector3;
+  public native static func DebugBreak() -> Void;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")
@@ -3159,6 +3160,8 @@ public native class FlightSettings extends IScriptable {
   private func OnAttach() -> Void {
     FlightLog.Info("[FlightSettings] OnAttach");
     LTBF_RegisterListener(this);
+
+    // FlightSettings.DebugBreak();
     
     FlightSettings.SetVector3("inputPitchPID", 1.0, 0.5, 0.5);
     FlightSettings.SetVector3("inputRollPID", 1.0, 0.5, 0.5);

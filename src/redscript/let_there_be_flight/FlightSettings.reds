@@ -8,6 +8,7 @@ public native class FlightSettings extends IScriptable {
   public native static func SetFloat(name: String, value: Float) -> Float;
   public native static func GetVector3(name: String) -> Vector3;
   public native static func SetVector3(name: String, x: Float, y: Float, z: Float) -> Vector3;
+  public native static func DebugBreak() -> Void;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")
@@ -143,6 +144,8 @@ public native class FlightSettings extends IScriptable {
   private func OnAttach() -> Void {
     FlightLog.Info("[FlightSettings] OnAttach");
     LTBF_RegisterListener(this);
+
+    // FlightSettings.DebugBreak();
     
     FlightSettings.SetVector3("inputPitchPID", 1.0, 0.5, 0.5);
     FlightSettings.SetVector3("inputRollPID", 1.0, 0.5, 0.5);

@@ -116,6 +116,11 @@ void SetVector3(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RE
   vector3s.InsertOrAssign(RED4ext::CName(name.c_str()), RED4ext::Vector3(x, y, z));
 }
 
+void DebugBreak(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Vector3 *aOut, int64_t a4) {
+  aFrame->code++;
+  __debugbreak();
+}
+
 bool Setup(RED4ext::CGameApplication *aApp) {
   auto allocator = new RED4ext::Memory::DefaultAllocator();
   floats = RED4ext::HashMap<RED4ext::CName, float>(allocator);
@@ -179,8 +184,12 @@ struct FlightSettingsModule : FlightModule {
     cls.RegisterFunction(getVector3);
 
     auto setVector3 = RED4ext::CClassStaticFunction::Create(&cls, "SetVector3", "SetVector3", &SetVector3,
-                                                          {.isNative = true, .isStatic = true});
+                                                            {.isNative = true, .isStatic = true});
     cls.RegisterFunction(setVector3);
+
+    auto debugBreak = RED4ext::CClassStaticFunction::Create(&cls, "DebugBreak", "DebugBreak", &DebugBreak,
+                                                            {.isNative = true, .isStatic = true});
+    cls.RegisterFunction(debugBreak);
 
   }
 };
