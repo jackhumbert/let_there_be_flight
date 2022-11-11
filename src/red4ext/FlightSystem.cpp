@@ -25,23 +25,29 @@
 
 // These can be found in strings via their variable names
 // 1.52 RVA: 0x4782878
-// 1.6 RVA: 0x4846C18
-RED4ext::RelocPtr<RED4ext::GameOptionBool> PhysXClampHugeImpacts(0x4846C18);
+// 1.6  RVA: 0x4846C18
+// 1.61 RVA: 0x484D2B8
+RED4ext::RelocPtr<RED4ext::GameOptionBool> PhysXClampHugeImpacts(0x484D2B8);
 // 1.52 RVA: 0x47827F8
-// 1.6 RVA: 0x4846B98
-RED4ext::RelocPtr<RED4ext::GameOptionBool> PhysXClampHugeSpeeds(0x4846B98);
+// 1.6  RVA: 0x4846B98
+// 1.61 RVA: 0x484D238
+RED4ext::RelocPtr<RED4ext::GameOptionBool> PhysXClampHugeSpeeds(0x484D238);
 // 1.52 RVA: 0x47818C8
-// 1.6 RVA: 0x4845C68
-RED4ext::RelocPtr<RED4ext::GameOptionBool> AirControlCarRollHelper(0x4845C68);
+// 1.6  RVA: 0x4845C68
+// 1.61 RVA: 0x484C308
+RED4ext::RelocPtr<RED4ext::GameOptionBool> AirControlCarRollHelper(0x484C308);
 // 1.52 RVA: 0x4781A40
-// 1.6 RVA: 0x4845DE0
-RED4ext::RelocPtr<RED4ext::GameOptionFloat> ForceMoveToMaxLinearSpeed(0x4845DE0);
+// 1.6  RVA: 0x4845DE0
+// 1.61 RVA: 0x484C480
+RED4ext::RelocPtr<RED4ext::GameOptionFloat> ForceMoveToMaxLinearSpeed(0x484C480);
 // 1.52 RVA: 0x4780960
-// 1.6 RVA: 0x4844D00
-RED4ext::RelocPtr<RED4ext::GameOptionBool> physicsCCD(0x4844D00);
+// 1.6  RVA: 0x4844D00
+// 1.61 RVA: 0x484B3A0
+RED4ext::RelocPtr<RED4ext::GameOptionBool> physicsCCD(0x484B3A0);
 // 1.52 RVA: 0x4781FE8
-// 1.6 RVA: 0x4846388
-RED4ext::RelocPtr<RED4ext::GameOptionBool> EnableSmoothWheelContacts(0x4846388);
+// 1.6  RVA: 0x4846388
+// 1.61 RVA: 0x484CA28
+RED4ext::RelocPtr<RED4ext::GameOptionBool> EnableSmoothWheelContacts(0x484CA28);
 
 //RED4ext::TTypedClass<FlightSystem> icls("IFlightSystem");
 //RED4ext::TTypedClass<FlightSystem> cls("FlightSystem");
@@ -179,27 +185,29 @@ void FlightSystem::RegisterUpdates(RED4ext::UpdateManagerHolder *holder) {
 
   //auto rtti = RED4ext::CRTTISystem::Get();
 
-  //// auto types = RED4ext::DynArray<RED4ext::CBaseRTTIType*>(new RED4ext::Memory::DefaultAllocator());
-  //// rtti->GetNativeTypes(types);
-  //auto classes = RED4ext::DynArray<RED4ext::CClass *>(new RED4ext::Memory::DefaultAllocator());
-  //rtti->GetClasses(nullptr, classes);
+  // get class vfts
+ /* auto classes = RED4ext::DynArray<RED4ext::CClass *>(new RED4ext::Memory::DefaultAllocator());
+  rtti->GetClasses(nullptr, classes);
 
-  //for (const auto &cls : classes) {
-  //  if (cls && cls->name != "None" && !cls->flags.isAbstract) {
-  //    if (cls->name == "inkInputKeyIconManager")
-  //      continue;
-  //    auto name = cls->name.ToString();
-  //    auto instance = cls->AllocMemory();
-  //    cls->ConstructCls(instance);
-  //    if (instance) {
-  //      auto rva = *reinterpret_cast<uintptr_t *>(instance);
-  //      if (rva > RED4ext::RelocBase::GetImageBase()) {
-  //        spdlog::info("#define {}_VFT_RVA 0x{:X}", name, rva - RED4ext::RelocBase::GetImageBase());
-  //      }
-  //    }
-  //  }
-  //}
+  for (const auto &cls : classes) {
+    if (cls && cls->name != "None" && !cls->flags.isAbstract) {
+      if (cls->name == "inkInputKeyIconManager")
+        continue;
+      auto name = cls->name.ToString();
+      auto instance = cls->AllocMemory();
+      cls->ConstructCls(instance);
+      if (instance) {
+        auto va = *reinterpret_cast<uintptr_t *>(instance);
+        auto rva = va - RED4ext::RelocBase::GetImageBase();
+        if (rva > 0 && rva < 0x3AB847E) {
+          spdlog::info("#define {}_VFT_RVA 0x{:X}", name, rva);
+        }
+      }
+    }
+  }
+  DebugBreak();*/
 
+  // get event vfts
   //auto classes = RED4ext::DynArray<RED4ext::CClass *>(new RED4ext::Memory::DefaultAllocator());
   //rtti->GetClasses(nullptr, classes);
   //auto vbc = rtti->GetClass("vehicleBaseObject");
@@ -306,7 +314,7 @@ void FlightSystem::sub_190(HighLow *) {
 
 void FlightSystem::Initialize(void **unkThing) {
   spdlog::info("[FlightSystem] Initialize!");
-  this->audio = RED4ext::Handle<FlightAudio>((FlightAudio*)FlightAudio::GetRTTIType()->AllocInstance());
+  this->audio = RED4ext::Handle<FlightAudio>((FlightAudio *)FlightAudio::GetRTTIType()->CreateInstance());
   this->audio->ExecuteFunction("Initialize");
 }
 

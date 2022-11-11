@@ -79,6 +79,7 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.max", "1.0")
   public let generalPitchAeroFactor: Float = 0.0;
 
+  // How much the vehicle is rotated (yaw) towards its velocity
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Yaw-Aero-Factor")
@@ -97,6 +98,7 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.max", "100.0")
   public let generalPitchDirectionalityFactor: Float = 15.0;
 
+  // How much the vehicle's yaw affects its velocity
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Yaw-Directionality-Factor")
@@ -144,8 +146,6 @@ public native class FlightSettings extends IScriptable {
   private func OnAttach() -> Void {
     FlightLog.Info("[FlightSettings] OnAttach");
     LTBF_RegisterListener(this);
-
-    // FlightSettings.DebugBreak();
     
     FlightSettings.SetVector3("inputPitchPID", 1.0, 0.5, 0.5);
     FlightSettings.SetVector3("inputRollPID", 1.0, 0.5, 0.5);

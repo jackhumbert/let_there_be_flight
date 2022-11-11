@@ -22,9 +22,10 @@ private:
 
 class FlightComponent : public Engine::RTTIClass<FlightComponent, RED4ext::game::Component> {
 public:
-  // 1.52 RVA: 0x1CA0980 / 30017920
+  // 1.6  RVA: 0x1CA0980 / 30017920
+  // 1.61 RVA: 0x1CA0BE0
   /// @pattern E9 0B 42 6E FF
-  static constexpr const uintptr_t VehicleControllerAllocator = 0x1CA0980;
+  static constexpr const uintptr_t VehicleControllerAllocator = 0x1CA0BE0;
   inline virtual RED4ext::Memory::IAllocator* GetAllocator() {
     RED4ext::RelocFunc<decltype(&FlightComponent::GetAllocator)> call(VehicleControllerAllocator);
     return call(this);

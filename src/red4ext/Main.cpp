@@ -116,7 +116,7 @@ void CreateEffect(RED4ext::IScriptable *apContext, RED4ext::CStackFrame *apFrame
   auto pRtti = RED4ext::CRTTISystem::Get();
 
   auto pEffectClass = pRtti->GetClass(typeName);
-  auto pEffectInstance = reinterpret_cast<RED4ext::ISerializable *>(pEffectClass->AllocInstance());
+  auto pEffectInstance = reinterpret_cast<RED4ext::ISerializable *>(pEffectClass->CreateInstance());
   auto pEffectHandle = RED4ext::Handle<RED4ext::ISerializable>(pEffectInstance);
 
   pEffectClass->GetProperty("effectName")->SetValue(pEffectInstance, effectName);
@@ -234,23 +234,23 @@ void EffectSpawnerAddEffect(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   auto cepi = rtti->GetClass("worldCompiledEffectPlacementInfo");
   auto v3 = rtti->GetClass("Vector3");
   auto q = rtti->GetClass("Quaternion");
-  auto ed = reinterpret_cast<RED4ext::ent::EffectDesc *>(effectDescCls->AllocInstance());
+  auto ed = reinterpret_cast<RED4ext::ent::EffectDesc *>(effectDescCls->CreateInstance());
 
   ed->effectName = "test_effect";
   ed->id.unk00 = 2738936757675336192; // 2738936757675335680 changed a bit
-  //auto existingEffect = (RED4ext::ent::EffectDesc *)esc->effectDescs[0].instance;
-  //ed->effect.ref = existingEffect->effect.ref;
+  // auto existingEffect = (RED4ext::ent::EffectDesc *)esc->effectDescs[0].instance;
+  // ed->effect.ref = existingEffect->effect.ref;
 
-  //auto wrapper = new RED4ext::ResourceWrapper<RED4ext::world::Effect>();
-  //uint64_t hash = 2413621465439885870;
-  //LoadResRef<RED4ext::world::Effect>(&hash, wrapper, true);
-  //ed->effect.ref = wrapper->self->resource;
+  // auto wrapper = new RED4ext::ResourceWrapper<RED4ext::world::Effect>();
+  // uint64_t hash = 2413621465439885870;
+  // LoadResRef<RED4ext::world::Effect>(&hash, wrapper, true);
+  // ed->effect.ref = wrapper->self->resource;
 
-  //ed->effect.ref = 3990659875028156682;
+  // ed->effect.ref = 3990659875028156682;
   ed->effect.path = 2413621465439885870; // base\fx\vehicles\flight.effect
 
   {
-    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->AllocInstance());
+    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->CreateInstance());
     eventInfo->eventRUID.unk00 = 2738876334750015488;
     eventInfo->placementIndexMask = 15;
     eventInfo->flags = 1;
@@ -258,7 +258,7 @@ void EffectSpawnerAddEffect(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   }
 
   {
-    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->AllocInstance());
+    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->CreateInstance());
     eventInfo->eventRUID.unk00 = 2738876938696237056;
     eventInfo->placementIndexMask = 15;
     eventInfo->flags = 1;
@@ -266,7 +266,7 @@ void EffectSpawnerAddEffect(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   }
 
   {
-    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->AllocInstance());
+    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->CreateInstance());
     eventInfo->eventRUID.unk00 = 2738888051890561024;
     eventInfo->placementIndexMask = 15;
     eventInfo->flags = 1;
@@ -274,7 +274,7 @@ void EffectSpawnerAddEffect(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   }
 
   {
-    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->AllocInstance());
+    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->CreateInstance());
     eventInfo->eventRUID.unk00 = 2738893332334747648;
     eventInfo->placementIndexMask = 15;
     eventInfo->flags = 1;
@@ -282,7 +282,7 @@ void EffectSpawnerAddEffect(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   }
 
   {
-    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->AllocInstance());
+    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->CreateInstance());
     eventInfo->eventRUID.unk00 = 2738893580167782400;
     eventInfo->placementIndexMask = 15;
     eventInfo->flags = 1;
@@ -290,7 +290,7 @@ void EffectSpawnerAddEffect(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   }
 
   {
-    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->AllocInstance());
+    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->CreateInstance());
     eventInfo->eventRUID.unk00 = 2738893796308656128;
     eventInfo->placementIndexMask = 15;
     eventInfo->flags = 1;
@@ -298,7 +298,7 @@ void EffectSpawnerAddEffect(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   }
 
   {
-    auto placementInfo = reinterpret_cast<RED4ext::world::CompiledEffectPlacementInfo *>(cepi->AllocInstance());
+    auto placementInfo = reinterpret_cast<RED4ext::world::CompiledEffectPlacementInfo *>(cepi->CreateInstance());
     placementInfo->flags = 5;
     placementInfo->placementTagIndex = 0;
     placementInfo->relativePositionIndex = 0;
@@ -307,7 +307,7 @@ void EffectSpawnerAddEffect(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   }
 
   {
-    auto placementInfo = reinterpret_cast<RED4ext::world::CompiledEffectPlacementInfo *>(cepi->AllocInstance());
+    auto placementInfo = reinterpret_cast<RED4ext::world::CompiledEffectPlacementInfo *>(cepi->CreateInstance());
     placementInfo->flags = 5;
     placementInfo->placementTagIndex = 1;
     placementInfo->relativePositionIndex = 0;
@@ -316,7 +316,7 @@ void EffectSpawnerAddEffect(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   }
 
   {
-    auto placementInfo = reinterpret_cast<RED4ext::world::CompiledEffectPlacementInfo *>(cepi->AllocInstance());
+    auto placementInfo = reinterpret_cast<RED4ext::world::CompiledEffectPlacementInfo *>(cepi->CreateInstance());
     placementInfo->flags = 5;
     placementInfo->placementTagIndex = 2;
     placementInfo->relativePositionIndex = 0;
@@ -325,7 +325,7 @@ void EffectSpawnerAddEffect(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   }
 
   {
-    auto placementInfo = reinterpret_cast<RED4ext::world::CompiledEffectPlacementInfo *>(cepi->AllocInstance());
+    auto placementInfo = reinterpret_cast<RED4ext::world::CompiledEffectPlacementInfo *>(cepi->CreateInstance());
     placementInfo->flags = 5;
     placementInfo->placementTagIndex = 3;
     placementInfo->relativePositionIndex = 0;
@@ -338,10 +338,10 @@ void EffectSpawnerAddEffect(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
   ed->compiledEffectInfo.placementTags.EmplaceBack("fx_holo_corner_bl");
   ed->compiledEffectInfo.placementTags.EmplaceBack("fx_holo_corner_br");
 
-  auto vector = reinterpret_cast<RED4ext::Vector3 *>(v3->AllocInstance());
+  auto vector = reinterpret_cast<RED4ext::Vector3 *>(v3->CreateInstance());
   ed->compiledEffectInfo.relativePositions.EmplaceBack(*vector);
 
-  auto quaternion = reinterpret_cast<RED4ext::Quaternion *>(q->AllocInstance());
+  auto quaternion = reinterpret_cast<RED4ext::Quaternion *>(q->CreateInstance());
   quaternion->r = 1.0;
   ed->compiledEffectInfo.relativeRotations.EmplaceBack(*quaternion);
 

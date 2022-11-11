@@ -48,7 +48,7 @@
 RED4ext::ent::PhysicalMeshComponent *CreateThrusterEngine(RED4ext::CRTTISystem *rtti, RED4ext::CName mesh,
                                                           RED4ext::CName name, RED4ext::CName slot,
                                                           RED4ext::CName bindName = "vehicle_slots") {
-  auto mc = (RED4ext::ent::PhysicalMeshComponent *)rtti->GetClass("entPhysicalMeshComponent")->AllocInstance();
+  auto mc = (RED4ext::ent::PhysicalMeshComponent *)rtti->GetClass("entPhysicalMeshComponent")->CreateInstance();
   mc->mesh.path = mesh;
   // not sure why this doesn't carry through
   //mc->isEnabled = false;
@@ -56,14 +56,14 @@ RED4ext::ent::PhysicalMeshComponent *CreateThrusterEngine(RED4ext::CRTTISystem *
   mc->visualScale.Y = 0.0;
   mc->visualScale.Z = 0.0;
   mc->filterDataSource = RED4ext::physics::FilterDataSource::Collider;
-  auto filterData = (RED4ext::physics::FilterData *)rtti->GetClass("physicsFilterData")->AllocInstance();
+  auto filterData = (RED4ext::physics::FilterData *)rtti->GetClass("physicsFilterData")->CreateInstance();
   mc->filterData = RED4ext::Handle<RED4ext::physics::FilterData>(filterData);
   mc->name = name;
   mc->motionBlurScale = 0.1;
   mc->meshAppearance = "default";
   mc->objectTypeID = RED4ext::ERenderObjectType::ROT_Vehicle;
   mc->LODMode = RED4ext::ent::MeshComponentLODMode::Appearance;
-  auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->AllocInstance();
+  auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->CreateInstance();
   htb->bindName = bindName;
   htb->slotName = slot;
   mc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
@@ -88,7 +88,7 @@ void AddResourceToController(RED4ext::ent::VisualControllerComponent *vcc, RED4e
 void AddToController(RED4ext::CRTTISystem *rtti, RED4ext::ent::VisualControllerComponent *vcc,
                      RED4ext::ent::MeshComponent *mc) {
   auto vcd = reinterpret_cast<RED4ext::ent::VisualControllerDependency *>(
-      rtti->GetClass("entVisualControllerDependency")->AllocInstance());
+      rtti->GetClass("entVisualControllerDependency")->CreateInstance());
   vcd->appearanceName = mc->meshAppearance;
   vcd->componentName = mc->name;
   vcd->mesh.path = mc->mesh.path;
@@ -150,13 +150,13 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
   if (isVehicle) {
     auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(entity);
 
-    auto fc = (FlightComponent *)FlightComponent::GetRTTIType()->AllocInstance(true);
+    auto fc = (FlightComponent *)FlightComponent::GetRTTIType()->CreateInstance(true);
     fc->name = "flightComponent";
     vehicle->componentsStorage.components.EmplaceBack(RED4ext::Handle<FlightComponent>(fc));
 
     //FlightWeapons::AddWeapons(vehicle);
 
-    //auto fc = (FlightComponent*)FlightComponent::GetRTTIType()->AllocInstance();
+    //auto fc = (FlightComponent*)FlightComponent::GetRTTIType()->CreateInstance();
     //fc->name = "flightComponent";
     //auto h = RED4ext::Handle<FlightComponent>(fc);
     //h.refCount->IncRef();
@@ -179,7 +179,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
         osc = reinterpret_cast<RED4ext::game::OccupantSlotComponent *>(component);
 
         {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
           slot->boneName = "roof_border_front";
           slot->slotName = "CustomFlightCamera";
           osc->slots.EmplaceBack();
@@ -205,7 +205,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
 
       if (vs != NULL) {
         {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
           slot->boneName = "roof_border_front";
           slot->slotName = "roof_border_front";
           vs->slots.EmplaceBack(*slot);
@@ -241,7 +241,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
 
         if (isBike)
         {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
           slot->boneName = "suspension_front_offset";
           slot->slotName = "thruster_front";
           vs->slots.EmplaceBack(*slot);
@@ -254,7 +254,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
         }
         if (isBike)
         {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
           slot->boneName = "suspension_back";
           slot->slotName = "thruster_back";
           vs->slots.EmplaceBack(*slot);
@@ -267,7 +267,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
         }
         if (isCar)
         {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
           slot->boneName = "swingarm_front_left";
           slot->slotName = "thruster_front_left";
           vs->slots.EmplaceBack(*slot);
@@ -280,7 +280,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
         }
         if (isCar)
         {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
           slot->boneName = "swingarm_front_right";
           slot->slotName = "thruster_front_right";
           vs->slots.EmplaceBack(*slot);
@@ -293,7 +293,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
         }
         if (isSixWheeler)
         {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
           slot->boneName = "swingarm_front_left_b";
           slot->slotName = "thruster_front_left_b";
           vs->slots.EmplaceBack(*slot);
@@ -306,7 +306,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
         }
         if (isSixWheeler)
         {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
           slot->boneName = "swingarm_front_right_b";
           slot->slotName = "thruster_front_right_b";
           vs->slots.EmplaceBack(*slot);
@@ -319,7 +319,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
         }
         if (isCar)
         {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
           slot->boneName = "swingarm_back_left";
           slot->slotName = "thruster_back_left";
           vs->slots.EmplaceBack(*slot);
@@ -332,7 +332,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
         }
         if (isCar)
         {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->AllocInstance());
+          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
           slot->boneName = "swingarm_back_right";
           slot->slotName = "thruster_back_right";
           vs->slots.EmplaceBack(*slot);
@@ -349,7 +349,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     // UI
     //{
     //  // MeshComponent
-    //  auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
+    //  auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->CreateInstance();
 
     //  RED4ext::CName mesh = "user\\jackhumbert\\meshes\\flight_ui.mesh";
     //  mc->mesh.ref = mesh;
@@ -361,7 +361,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     //}
     //{
     //  // WorldWidgetComponent
-    //  auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->AllocInstance();
+    //  auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->CreateInstance();
 
     //  wwc->name = "flight_ui";
 
@@ -369,7 +369,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     //  wwc->widgetResource.ref = fc;
 
     //  auto mtb = (RED4ext::world::ui::MeshTargetBinding
-    //  *)rtti->GetClass("worlduiMeshTargetBinding")->AllocInstance(); mtb->bindName = "flight_screen";
+    //  *)rtti->GetClass("worlduiMeshTargetBinding")->CreateInstance(); mtb->bindName = "flight_screen";
     //  wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
 
     //  auto wwcHandle = RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc);
@@ -379,7 +379,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     // UI Info Panel
     //{
     //  // MeshComponent
-    //  auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
+    //  auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->CreateInstance();
 
     //  RED4ext::CName mesh = "user\\jackhumbert\\meshes\\flight_ui_info.mesh";
     //  mc->mesh.ref = mesh;
@@ -392,7 +392,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     //}
     //{
     //  // WorldWidgetComponent
-    //  auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->AllocInstance();
+    //  auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->CreateInstance();
 
     //  wwc->name = "flight_ui_info";
 
@@ -400,7 +400,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     //  wwc->widgetResource.ref = fc;
     //  wwc->spawnDistanceOverride = 20.0;
     //  wwc->sceneWidgetProperties.renderingPlane = RED4ext::ERenderingPlane::RPl_Weapon;
-    //  auto mtb = (RED4ext::world::ui::MeshTargetBinding *)rtti->GetClass("worlduiMeshTargetBinding")->AllocInstance();
+    //  auto mtb = (RED4ext::world::ui::MeshTargetBinding *)rtti->GetClass("worlduiMeshTargetBinding")->CreateInstance();
     //  mtb->bindName = "flight_screen_info";
     //  wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
 
@@ -408,10 +408,10 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     //}
     //{
     //  auto gpsp =
-    //      (RED4ext::game::projectile::SpawnComponent *)rtti->GetClass("gameprojectileSpawnComponent")->AllocInstance();
+    //      (RED4ext::game::projectile::SpawnComponent *)rtti->GetClass("gameprojectileSpawnComponent")->CreateInstance();
     //  gpsp->name = "projectileSpawn8722";
     //  gpsp->projectileTemplates.EmplaceBack("exploding_bullet");
-    //  auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->AllocInstance();
+    //  auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->CreateInstance();
     //  htb->bindName = "vehicle_slots";
     //  htb->slotName = "ThrusterFL";
     //  gpsp->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
@@ -419,7 +419,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     //}
 
     {
-      auto whc = (RED4ext::WidgetHudComponent *)rtti->GetClass("WidgetHudComponent")->AllocInstance();
+      auto whc = (RED4ext::WidgetHudComponent *)rtti->GetClass("WidgetHudComponent")->CreateInstance();
       whc->name = "FlightHUD";
       //auto resource =
           //RED4ext::Ref<RED4ext::ink::HudEntriesResource>("user\\jackhumbert\\widgets\\hud_flight.inkhud", true);
@@ -431,9 +431,9 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     }
 
     //{
-    //  auto gcc = (RED4ext::game::CameraComponent *)rtti->GetClass("gameCameraComponent")->AllocInstance();
+    //  auto gcc = (RED4ext::game::CameraComponent *)rtti->GetClass("gameCameraComponent")->CreateInstance();
     //  gcc->name = "frontCamera";
-    //  auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->AllocInstance();
+    //  auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->CreateInstance();
     //  htb->bindName = "vehicle_slots";
     //  htb->slotName = "roof_border_front";
     //  gcc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
@@ -469,7 +469,7 @@ void EntityAddWorldWidgetComponent(RED4ext::IScriptable *aContext, RED4ext::CSta
   auto rtti = RED4ext::CRTTISystem::Get();
 
   // MeshComponent
-  auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->AllocInstance();
+  auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->CreateInstance();
 
   mc->mesh.path =
       "base\\environment\\decoration\\advertising\\holograms\\common\\common_holograms_transparent_a_w500_h150.mesh";
@@ -484,12 +484,12 @@ void EntityAddWorldWidgetComponent(RED4ext::IScriptable *aContext, RED4ext::CSta
   ent->componentsStorage.components.EmplaceBack(mcHandle);
 
   // WorldWidgetComponent
-  auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->AllocInstance();
+  auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->CreateInstance();
 
   wwc->name = "radio_ui";
   wwc->widgetResource.path = "base\\gameplay\\gui\\world\\radio\\radio_ui.inkwidget";
 
-  auto mtb = (RED4ext::world::ui::MeshTargetBinding *)rtti->GetClass("worlduiMeshTargetBinding")->AllocInstance();
+  auto mtb = (RED4ext::world::ui::MeshTargetBinding *)rtti->GetClass("worlduiMeshTargetBinding")->CreateInstance();
   mtb->bindName = "radio_screen";
   wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
 

@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-10-22 20:54:10.2164433
+// This file was automatically generated on 2022-11-11 17:36:34.1709282
 
 // FlightAudio.reds
 
@@ -3095,6 +3095,7 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.max", "1.0")
   public let generalPitchAeroFactor: Float = 0.0;
 
+  // How much the vehicle is rotated (yaw) towards its velocity
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Yaw-Aero-Factor")
@@ -3113,6 +3114,7 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.max", "100.0")
   public let generalPitchDirectionalityFactor: Float = 15.0;
 
+  // How much the vehicle's yaw affects its velocity
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Yaw-Directionality-Factor")
@@ -3160,8 +3162,6 @@ public native class FlightSettings extends IScriptable {
   private func OnAttach() -> Void {
     FlightLog.Info("[FlightSettings] OnAttach");
     LTBF_RegisterListener(this);
-
-    // FlightSettings.DebugBreak();
     
     FlightSettings.SetVector3("inputPitchPID", 1.0, 0.5, 0.5);
     FlightSettings.SetVector3("inputRollPID", 1.0, 0.5, 0.5);

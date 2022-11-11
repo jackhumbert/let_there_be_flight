@@ -15,7 +15,7 @@ RED4ext::Handle<FlightController> handle;
 FlightController* FlightController::GetInstance() { 
   if (!handle.instance) {
     spdlog::info("[RED4ext] New FlightController Instance");
-    auto instance = reinterpret_cast<FlightController *>(cls.AllocInstance());
+    auto instance = reinterpret_cast<FlightController *>(cls.CreateInstance());
     handle = RED4ext::Handle<FlightController>(instance);
   }
   
@@ -27,9 +27,9 @@ void GetInstanceScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aF
 
   if (!handle.instance) {
     spdlog::info("[RED4ext] New FlightController Instance");
-    auto instance = reinterpret_cast<FlightController *>(cls.AllocInstance());
+    auto instance = reinterpret_cast<FlightController *>(cls.CreateInstance());
     handle = RED4ext::Handle<FlightController>(instance);
-    //handle.instance = (FlightController *)cls.AllocInstance();
+    //handle.instance = (FlightController *)cls.CreateInstance();
     //handle.refCount = new RED4ext::RefCnt();
   }
 
