@@ -14,7 +14,8 @@ enum EBreakpointState : unsigned __int8 {
 };
 
 struct ScriptHost {
-  const uintptr_t VFT_RVA = 0x30E74C0;
+  // 1.52? RVA: 0x30E74C0
+  //const uintptr_t VFT_RVA = 0x30E74C0;
 
   void sub_00(); // empty
   void sub_08(); // load
