@@ -27,27 +27,33 @@
 // 1.52 RVA: 0x4782878
 // 1.6  RVA: 0x4846C18
 // 1.61 RVA: 0x484D2B8
-RED4ext::RelocPtr<RED4ext::GameOptionBool> PhysXClampHugeImpacts(0x484D2B8);
+// 1.62 RVA: 0x484F4A8 diff 0x21F0
+RED4ext::RelocPtr<RED4ext::GameOptionBool> PhysXClampHugeImpacts(0x484F4A8);
 // 1.52 RVA: 0x47827F8
 // 1.6  RVA: 0x4846B98
 // 1.61 RVA: 0x484D238
-RED4ext::RelocPtr<RED4ext::GameOptionBool> PhysXClampHugeSpeeds(0x484D238);
+// 1.62 RVA: 0x484F428
+RED4ext::RelocPtr<RED4ext::GameOptionBool> PhysXClampHugeSpeeds(0x484F428);
 // 1.52 RVA: 0x47818C8
 // 1.6  RVA: 0x4845C68
 // 1.61 RVA: 0x484C308
-RED4ext::RelocPtr<RED4ext::GameOptionBool> AirControlCarRollHelper(0x484C308);
+// 1.62 RVA: 0x484E4F8
+RED4ext::RelocPtr<RED4ext::GameOptionBool> AirControlCarRollHelper(0x484E4F8);
 // 1.52 RVA: 0x4781A40
 // 1.6  RVA: 0x4845DE0
 // 1.61 RVA: 0x484C480
-RED4ext::RelocPtr<RED4ext::GameOptionFloat> ForceMoveToMaxLinearSpeed(0x484C480);
+// 1.62 RVA: 0x484E670
+RED4ext::RelocPtr<RED4ext::GameOptionFloat> ForceMoveToMaxLinearSpeed(0x484E670);
 // 1.52 RVA: 0x4780960
 // 1.6  RVA: 0x4844D00
 // 1.61 RVA: 0x484B3A0
-RED4ext::RelocPtr<RED4ext::GameOptionBool> physicsCCD(0x484B3A0);
+// 1.62 RVA: 0x484D590
+RED4ext::RelocPtr<RED4ext::GameOptionBool> physicsCCD(0x484D590);
 // 1.52 RVA: 0x4781FE8
 // 1.6  RVA: 0x4846388
 // 1.61 RVA: 0x484CA28
-RED4ext::RelocPtr<RED4ext::GameOptionBool> EnableSmoothWheelContacts(0x484CA28);
+// 1.62 RVA: 0x484EC18
+RED4ext::RelocPtr<RED4ext::GameOptionBool> EnableSmoothWheelContacts(0x484EC18);
 
 //RED4ext::TTypedClass<FlightSystem> icls("IFlightSystem");
 //RED4ext::TTypedClass<FlightSystem> cls("FlightSystem");
@@ -161,14 +167,15 @@ void UpdateComponents(RED4ext::Unk2 *unk2, float *deltaTime, void *unkStruct) {
 }
 
 // vehicle allocator
-// 1.52 RVA: 0x1CA37A0 / 30029728
-/// @pattern E9 2B 12 6E FF
-constexpr const uintptr_t VehicleAllocator = 0x1CA37A0;
+// 1.52 RVA: 0x1CA37A0
+// 1.62 RVA: 0x1CA4690
+//constexpr const uintptr_t VehicleSystemAllocator = 0x1CA4690;
 
-RED4ext::Memory::IAllocator* FlightSystem::GetAllocator() {
-  RED4ext::RelocFunc<decltype(&FlightSystem::GetAllocator)> call(VehicleAllocator);
-  return call(this);
-}
+//RED4ext::Memory::IAllocator* FlightSystem::GetAllocator() {
+  //RED4ext::RelocFunc<decltype(&FlightSystem::GetAllocator)> call(VehicleSystemAllocator);
+  //return call(this);
+  //return new RED4ext::Memory::DefaultAllocator();
+//}
 
 void FlightSystem::RegisterUpdates(RED4ext::UpdateManagerHolder *holder) {
   spdlog::info("[FlightSystem] sub_110/RegisterUpdates!");
@@ -183,31 +190,31 @@ void FlightSystem::RegisterUpdates(RED4ext::UpdateManagerHolder *holder) {
   spdlog::info("[FlightSystem] WorldAttached!");
   this->audio->ExecuteFunction("OnWorldAttached");
 
+  // VFT Finder
   //auto rtti = RED4ext::CRTTISystem::Get();
+  //auto classes = RED4ext::DynArray<RED4ext::CClass *>(new RED4ext::Memory::DefaultAllocator());
+  //rtti->GetClasses(nullptr, classes);
 
-  // get class vfts
- /* auto classes = RED4ext::DynArray<RED4ext::CClass *>(new RED4ext::Memory::DefaultAllocator());
-  rtti->GetClasses(nullptr, classes);
+  //spdlog::info("Printing all class VFTs");
+  //for (const auto &cls : classes) {
+  //  if (cls && cls->name != "None" && !cls->flags.isAbstract) {
+  //    if (cls->name == "inkInputKeyIconManager")
+  //      continue;
+  //    auto name = cls->name.ToString();
+  //    auto instance = cls->AllocMemory();
+  //    cls->ConstructCls(instance);
+  //    if (instance) {
+  //      auto va = *reinterpret_cast<uintptr_t *>(instance);
+  //      auto rva = va - RED4ext::RelocBase::GetImageBase();
+  //      if (rva > 0 && rva < 0x3AB847E) {
+  //        spdlog::info("#define {}_VFT_RVA 0x{:X}", name, rva);
+  //      }
+  //    }
+  //  }
+  //}
+  //DebugBreak();
 
-  for (const auto &cls : classes) {
-    if (cls && cls->name != "None" && !cls->flags.isAbstract) {
-      if (cls->name == "inkInputKeyIconManager")
-        continue;
-      auto name = cls->name.ToString();
-      auto instance = cls->AllocMemory();
-      cls->ConstructCls(instance);
-      if (instance) {
-        auto va = *reinterpret_cast<uintptr_t *>(instance);
-        auto rva = va - RED4ext::RelocBase::GetImageBase();
-        if (rva > 0 && rva < 0x3AB847E) {
-          spdlog::info("#define {}_VFT_RVA 0x{:X}", name, rva);
-        }
-      }
-    }
-  }
-  DebugBreak();*/
-
-  // get event vfts
+  // Event VFT Finder
   //auto classes = RED4ext::DynArray<RED4ext::CClass *>(new RED4ext::Memory::DefaultAllocator());
   //rtti->GetClasses(nullptr, classes);
   //auto vbc = rtti->GetClass("vehicleBaseObject");
@@ -222,6 +229,7 @@ void FlightSystem::RegisterUpdates(RED4ext::UpdateManagerHolder *holder) {
   //    spdlog::info("static constexpr const uintptr_t On_{}_Addr = {}", typeName.ToString(), (uintptr_t)(cb.action.OnEvent) - RED4ext::RelocBase::GetImageBase());
   //  }
   //}
+  //DebugBreak();
 
 
   return true;

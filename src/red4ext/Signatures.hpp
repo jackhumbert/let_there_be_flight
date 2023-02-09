@@ -3,6 +3,7 @@
 #include <RED4ext/Scripting/Natives/Generated/ent/Entity.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 #include "Addresses.hpp"
+#include <RED4ext/Scripting/Natives/Generated/game/EffectSystem.hpp>
 
 // right before components are processed for entites, and an appropriate time to insert our own
 // can also look for string "Entity/InitializeComponents"
@@ -32,7 +33,7 @@ using GetGameSystemsData = RED4ext::DynArray<RED4ext::GameSystemData> *(RED4ext:
 // 1.52 RVA: 0x1C58B0 / 1857712
 // 1.6 RVA: 0x1C9A30 / 1874480
 /// @pattern 4C 8B DC 48 81 EC B8 00 00 00 0F 10 21 41 0F 29 73 E8 0F 28 DC 0F 59 DC C7 44 24 0C 00 00 00 00
-RED4ext::Matrix *__fastcall GetMatrixFromOrientation(RED4ext::Quaternion *q, RED4ext::Matrix *m);
+using GetMatrixFromOrientation = RED4ext::Matrix *__fastcall(RED4ext::Quaternion *q, RED4ext::Matrix *m);
 
 // 1.6 RVA: 0x1CF3C10
 /// @pattern F3 0F 10 42 04 8B 02 F3 0F 10 4A 08 F3 0F 11 81 B4 02 00 00 F3 0F 11 89 B8 02 00 00 89 81 B0 02
@@ -41,5 +42,94 @@ using TPPCameraStatsUpdate = uintptr_t (RED4ext::vehicle::TPPCameraComponent *ca
 
 // 1.6 RVA: 0x17190A0
 /// @pattern 48 8B C4 F3 0F 11 48 10 53 48 81 EC 30 01 00 00 80 B9 A0 04 00 00 00 48 8B D9 0F 29 70 D8 0F 28
-using FPPCameraUpdate = char __fastcall(RED4ext::game::FPPCameraComponent *fpp, float deltaTime, float deltaYaw,
+using FPPCameraUpdate = char __fastcall (RED4ext::game::FPPCameraComponent *fpp, float deltaTime, float deltaYaw,
                                         float deltaPitch, float deltaYawExternal, float deltaPitchExternal, char a7);
+
+// main vehicle physics update
+// 1.6  RVA: 0x1D3C5D0
+// 1.61 RVA: 0x1D3C990
+/// @pattern F3 0F 11 4C 24 10 55 53 57 41 54 41 55 41 56 48 8D AC 24 98 FD FF FF 48 81 EC 68 03 00 00 48 8B
+using VehiclePhysicsUpdate = uintptr_t __fastcall (RED4ext::vehicle::Physics *, float);
+
+// where driverHelpers are processed
+// vehicleWheeledPhysics::sub_58
+// 1.6  RVA: 0x1D3EB10
+// 1.61 RVA: 0x1D3EED0
+/// @pattern 48 8B C4 48 89 58 08 48 89 70 10 48 89 78 18 41 56 48 81 EC B0 00 00 00 0F 29 70 E8 4C 8B F1 0F
+using VehicleHelperUpdate = uintptr_t __fastcall (RED4ext::vehicle::WheeledPhysics *, float);
+
+// where airControl is processed
+// 1.6  RVA: 0x1D108A0
+// 1.61 RVA: 0x1D10C60
+/// @pattern 48 89 5C 24 20 56 48 83 EC 60 0F 29 74 24 50 48 8B F1 0F 57 F6 44 0F 29 44 24 30 0F 2E 71 08 44
+using AirControlProcess = void __fastcall (RED4ext::vehicle::AirControl *ac, float deltaTime);
+
+// 1.6  RVA: 0x1D3AD50
+// 1.61 RVA: 0x1D3B110
+/// @pattern 48 8B C4 53 48 81 EC A0 00 00 00 0F 29 70 E8 48 8B D9 0F 29 78 D8 44 0F 29 40 C8 44 0F 29 48 B8
+using ProcessAirResistance = void __fastcall (RED4ext::vehicle::WheeledPhysics *a1, float deltaTime);
+
+// add vector to torque
+// 1.6  RVA: 0x1D0D4C0
+// 1.61 RVA: 0x1D0D880
+/// @pattern F3 0F 10 41 0C F3 0F 58 02 F3 0F 11 41 0C F3 0F 10 4A 04 F3 0F 58 49 10 F3 0F 11 49 10 F3 0F 10
+using TorqueUpdate = void __fastcall (RED4ext::vehicle::PhysicsData *a1, uintptr_t);
+
+// update with pid
+// 1.6  RVA: 0x1C9A750
+// 1.61 RVA: 0x1C9A9B0
+/// @pattern 48 8B C4 F3 0F 11 58 20 F3 0F 11 50 18 55 53 56 57 41 54 41 55 41 56 41 57 48 8D A8 58 FC FF FF
+using VehicleUpdateOrientationWithPID = void __fastcall(RED4ext::vehicle::CarBaseObject *a1, RED4ext::Transform *, float, float);
+
+// something with 4 wheels
+// 1.6  RVA: 0x1D3B030
+// 1.61 RVA: 0x1D3B3F0
+/// @pattern 40 53 48 81 EC A0 00 00 00 44 0F B6 D2 4C 8D 89 D0 05 00 00 41 0F B6 C0 48 8B D9 4D 69 C2 30 01
+using FourWheelTorque = void __fastcall (RED4ext::vehicle::WheeledPhysics *physics, unsigned __int8 rearWheelIndex,
+                                unsigned __int8 frontWheelIndex, float a4, RED4ext::Transform *transform);
+
+// 1.52 RVA : 0x1478200
+// 1.6  RVA: 0x148ED00 / 21556480
+// 1.61 RVA: 0x148F3F0
+/// @pattern 48 89 5C 24 10 48 89 74 24 18 48 89 7C 24 20 48 89 4C 24 08 55 41 54 41 55 41 56 41 57 48 8D 6C 24 D0 48 81 EC 30 01 00 00 4C 8B AD 80 00 00 00
+using CreateStaticEffect = uintptr_t (RED4ext::game::EffectSystem *, uintptr_t, uint64_t, uint64_t, uintptr_t, uintptr_t);
+
+// 1.6  RVA: 0x1D0E180 / 30466432
+// 1.61 RVA: 0x1D0E540
+/// @pattern 40 53 48 81 EC 80 00 00 00 F3 0F 10 41 40 48 8B D9 F3 0F 10 51 08 0F 28 C8 F3 0F 59 09 0F 29 74
+using PhysicsStructUpdate = short (RED4ext::vehicle::PhysicsData *ps);
+
+// 1.52 RVA: 0x1CE0FC0 / 30281664
+// 1.6  RVA: 0x1D0D770 / 30463856
+// 1.61 RVA: 0x1D0DB30
+/// @pattern 48 89 5C 24 08 57 48 83 EC 30 0F 29 74 24 20 48 8B DA 0F 10 32 48 8B F9 66 0F 3A 40 F6 7F 0F 28
+using PhysicsUnkStructVelocityUpdate = short (RED4ext::vehicle::PhysicsData *ps, RED4ext::Vector3 *);
+
+
+// 1.52 RVA: 0x1FBD20 / 2080032
+// 1.6  RVA: 0x200050 / 2080032
+// 1.61 RVA: 0x200600
+/// @pattern 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 30 48 8B FA 48 8B F1 BA 28 00 00 00 48 8D 4C 24 20 E8
+/// @nth 0/7
+using CreateCRTTIHandleTypeFromClass = RED4ext::CRTTIHandleType **__fastcall(RED4ext::CRTTIHandleType **a1,
+                                                                     RED4ext::CBaseRTTIType *a2);
+
+// 1.52 RVA: 0x1FC0C0 / 2080960
+// 1.6  RVA: 0x2003F0 / 2098160
+// 1.61 RVA: 0x2009A0
+/// @pattern 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 30 48 8B FA 48 8B F1 BA 28 00 00 00 48 8D 4C 24 20 E8
+/// @nth 4/7
+using CreateCRTTIWeakHandleTypeFromClass = RED4ext::CRTTIWeakHandleType **__fastcall (RED4ext::CRTTIWeakHandleType **a1,
+                                                                             RED4ext::CBaseRTTIType *a2);
+struct ScriptData;
+
+// 1.52 RVA: 0x273160 / 2568544
+// 1.6  RVA: 0x276F30 / 2584368
+// 1.61 RVA: 0x2774E0
+/// @pattern 48 8B C4 4C 89 40 18 48 89 48 08 55 53 48 8D 68 A1 48 81 EC A8 00 00 00 48 89 70 10 48 8B DA 48
+using ProcessScriptTypes = bool __fastcall (uint32_t *version, ScriptData *scriptData, void *scriptLogger);
+
+// 1.6  RVA: 0x204390
+// 1.61 RVA: 0x204940
+/// @pattern 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 60 41 0F B6 D8 48 8B FA 48 8B F1 48 C7 44 24 20 00 00
+using LoadResRefT = void * (void *, void*, bool);

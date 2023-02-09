@@ -3,7 +3,8 @@ public native abstract importonly class IFlightSystem extends IGameSystem {
 
 public func fs() -> ref<FlightSystem> = FlightSystem.GetInstance();
 
-public native class FlightSystem extends IFlightSystem {
+// public native class FlightSystem extends IFlightSystem {
+public native class FlightSystem extends IGameSystem {
   public static native func GetInstance() -> ref<FlightSystem>;
   public native func RegisterComponent(component: wref<FlightComponent>) -> Void;
   public native func UnregisterComponent(component: wref<FlightComponent>) -> Void;

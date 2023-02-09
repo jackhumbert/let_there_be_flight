@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2022-11-15 18:07:27.6139876
+// This file was automatically generated on 2023-02-09 01:36:18.4371979
 
 // FlightAudio.reds
 
@@ -3439,7 +3439,8 @@ public native abstract importonly class IFlightSystem extends IGameSystem {
 
 public func fs() -> ref<FlightSystem> = FlightSystem.GetInstance();
 
-public native class FlightSystem extends IFlightSystem {
+// public native class FlightSystem extends IFlightSystem {
+public native class FlightSystem extends IGameSystem {
   public static native func GetInstance() -> ref<FlightSystem>;
   public native func RegisterComponent(component: wref<FlightComponent>) -> Void;
   public native func UnregisterComponent(component: wref<FlightComponent>) -> Void;

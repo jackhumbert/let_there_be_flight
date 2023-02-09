@@ -67,6 +67,21 @@ You'll need to replace all `fr-fr` instances with your language code.
 
 There's an installation script at `red4ext/plugins/let_there_be_flight/uninstall.bat` - if you run this, all LTBF mod files will be deleted, but its dependencies will remain.
 
+## Development
+
+These are some of the steps I take to update the mod for new versions of the game - it involves some manual address looking-up using IDA, a custom version of Zoltan, and my fork of RED4ext.SDK:
+
+1. Merge deps/red4ext.sdk from upstream
+1. Update all addresses with "1.62 RVA:" (that matches latest game version) in RED4ext.SDK
+  1. Patterns & hints for each addresss should be in each file
+  1. Addresses that don't have the current version likely aren't used by LTBF
+1. Run "Generate Addresses" in the VS Code project
+1. Update the game option addresses in src/red4ext/FlightSystem.cpp
+1. Update RED4ext.SDK VFTs
+  1. Uncomment the VFT finder in src/red4ext/FlightSystem.cpp:L192
+  1. Run the game until it crashes (expected)
+  1. Copy the `#define`s from red4ext/logs/let_there_be_flight.log to deps/red4ext.sdk/include/RED4ext/Addresses_VFT.hpp
+
 Special thanks to @psiberx for [Codeware Lib](https://github.com/psiberx/cp2077-codeware/), [InkPlayground Demo](https://github.com/psiberx/cp2077-playground), and Redscript & CET examples on Discord, @WopsS for [RED4ext](https://github.com/WopsS/RED4ext), @jac3km4 for [Redscript toolkit](https://github.com/jac3km4/redscript), @yamashi for [CET](https://github.com/yamashi/CyberEngineTweaks) and the [E-mode mod](https://www.nexusmods.com/cyberpunk2077/mods/3207?tab=description) (very helpful in figuring out how to work with FMOD), @rfuzzo & team (especially @seberoth!) for [WolvenKit](https://github.com/WolvenKit/WolvenKit), and all of them for being helpful on Discord.
 
 Interested in adding flying vehicles or a similar mechanic to an existing game? Let me know!

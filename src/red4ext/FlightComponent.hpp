@@ -24,12 +24,13 @@ class FlightComponent : public Engine::RTTIClass<FlightComponent, RED4ext::game:
 public:
   // 1.6  RVA: 0x1CA0980 / 30017920
   // 1.61 RVA: 0x1CA0BE0
+  // 1.62 RVA: 0x1CA12D0
   /// @pattern E9 0B 42 6E FF
-  static constexpr const uintptr_t VehicleControllerAllocator = 0x1CA0BE0;
+ /* static constexpr const uintptr_t VehicleControllerAllocator = 0x1CA12D0;
   inline virtual RED4ext::Memory::IAllocator* GetAllocator() {
     RED4ext::RelocFunc<decltype(&FlightComponent::GetAllocator)> call(VehicleControllerAllocator);
     return call(this);
-  }
+  }*/
 
   //virtual ~FlightComponent() override = default;
   //virtual ~PSInterface() override = default;
@@ -65,7 +66,7 @@ public:
   //  return 0;
   //}
 
-  RED4ext::Handle<IFlightSystem> sys;
+  RED4ext::Handle<RED4ext::game::IGameSystem> sys;
   bool active;
   bool hasUpdate;
   alignas(0x10) RED4ext::Vector4 force;

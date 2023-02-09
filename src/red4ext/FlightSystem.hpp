@@ -1,17 +1,16 @@
 #pragma once
 
-
 #include <RED4ext/RED4ext.hpp>
 #include "Engine/RTTIClass.hpp"
 #include <RED4ext/Scripting/Natives/gameIGameSystem.hpp>
+#include "IFlightSystem.hpp"
 #include <RED4ext/Scripting/Natives/Generated/ent/IPlacedComponent.hpp>
 #include "FlightAudio.hpp"
-#include "IFlightSystem.hpp"
 #include "FlightComponent.hpp"
 
 class FlightSystem : public Engine::RTTIClass<FlightSystem, IFlightSystem> {
 public:
-  virtual RED4ext::Memory::IAllocator* GetAllocator() override;
+  //virtual RED4ext::Memory::IAllocator* GetAllocator() override;
   virtual void RegisterUpdates(RED4ext::UpdateManagerHolder *holder) override;
   virtual bool WorldAttached(RED4ext::world::RuntimeScene *runtimeScene) override;
   virtual void WorldPendingDetach(RED4ext::world::RuntimeScene *runtimeScene) override;

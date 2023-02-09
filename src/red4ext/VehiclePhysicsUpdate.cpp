@@ -6,92 +6,44 @@
 #include <spdlog/spdlog.h>
 #include "VehiclePhysicsUpdate.hpp"
 #include "FlightComponent.hpp"
+#include "Addresses.hpp"
 
-// main vehicle physics update
 uintptr_t __fastcall VehiclePhysicsUpdate(RED4ext::vehicle::Physics *, float);
-
-// 1.6  RVA: 0x1D3C5D0
-// 1.61 RVA: 0x1D3C990
-// F3 0F 11 4C 24 10 55 53 57 41 54 41 55 41 56 48 8D AC 24 98 FD FF FF 48 81 EC 68 03 00 00 48 8B
-constexpr uintptr_t VehiclePhysicsUpdateAddr = 0x1D3C990;
 decltype(&VehiclePhysicsUpdate) VehiclePhysicsUpdate_Original;
 
-// where driverHelpers are processed
 uintptr_t __fastcall VehicleHelperUpdate(RED4ext::vehicle::WheeledPhysics *, float);
-
-// vehicleWheeledPhysics::sub_58
-// 1.6  RVA: 0x1D3EB10
-// 1.61 RVA: 0x1D3EED0
-// 48 8B C4 48 89 58 08 48 89 70 10 48 89 78 18 41 56 48 81 EC B0 00 00 00 0F 29 70 E8 4C 8B F1 0F
-constexpr uintptr_t VehicleHelperUpdateAddr = 0x1D3EED0;
 decltype(&VehicleHelperUpdate) VehicleHelperUpdate_Original;
 
-// where airControl is processed
 void __fastcall AirControlProcess(RED4ext::vehicle::AirControl *ac, float deltaTime);
-
-// 1.6  RVA: 0x1D108A0
-// 1.61 RVA: 0x1D10C60
-// 48 89 5C 24 20 56 48 83 EC 60 0F 29 74 24 50 48 8B F1 0F 57 F6 44 0F 29 44 24 30 0F 2E 71 08 44
-constexpr uintptr_t AirControlProcessAddr = 0x1D10C60;
 decltype(&AirControlProcess) AirControlProcess_Original;
 
 void __fastcall ProcessAirResistance(RED4ext::vehicle::WheeledPhysics *a1, float deltaTime);
-
-// 1.6  RVA: 0x1D3AD50
-// 1.61 RVA: 0x1D3B110
-// 48 8B C4 53 48 81 EC A0 00 00 00 0F 29 70 E8 48 8B D9 0F 29 78 D8 44 0F 29 40 C8 44 0F 29 48 B8
-constexpr uintptr_t ProcessAirResistanceAddr = 0x1D3B110;
 decltype(&ProcessAirResistance) ProcessAirResistance_Original;
 
-// add vector to torque
 void __fastcall TorqueUpdate(RED4ext::vehicle::PhysicsData *a1, uintptr_t);
-// void __fastcall TorqueUpdate(RED4ext::physics::VehicleBaseObjectAirControl *ac, float deltaTime);
-
-// 1.6  RVA: 0x1D0D4C0
-// 1.61 RVA: 0x1D0D880
-// F3 0F 10 41 0C F3 0F 58  02 F3 0F 11 41 0C F3 0F 10 4A 04 F3 0F 58 49 10 F3 0F 11 49 10 F3 0F 10
-constexpr uintptr_t TorqueUpdateAddr = 0x1D0D880;
 decltype(&TorqueUpdate) TorqueUpdate_Original;
 
-// update with pid
-void __fastcall VehicleUpdateOrientationWithPID(RED4ext::vehicle::CarBaseObject *a1, RED4ext::Transform *, float,
-                                                float);
-// 1.6  RVA: 0x1C9A750
-// 1.61 RVA: 0x1C9A9B0
-// 48 8B C4 F3 0F 11 58 20 F3 0F 11 50 18 55 53 56 57 41 54 41 55 41 56 41 57 48 8D A8 58 FC FF FF
-constexpr uintptr_t VehicleUpdateOrientationWithPIDAddr = 0x1C9A9B0;
+void __fastcall VehicleUpdateOrientationWithPID(RED4ext::vehicle::CarBaseObject *a1, RED4ext::Transform *, float, float);
 decltype(&VehicleUpdateOrientationWithPID) VehicleUpdateOrientationWithPID_Original;
 
-// vehicleCarPhysics::AnimationUpdate
-uintptr_t __fastcall AnimationUpdate(RED4ext::vehicle::CarPhysics *a1, float);
-
-// 1.6  RVA: 0x1D389F0
-// 1.61 RVA: 0x1D38DB0
-// 48 89 5C 24 18 56 48 81 EC D0 00 00 00 48 8B F1 0F 29 B4 24 C0 00 00 00 48 8B 89 20 0D 00 00 BA
-constexpr uintptr_t AnimationUpdateAddr = 0x1D38DB0;
-decltype(&AnimationUpdate) AnimationUpdate_Original;
+uintptr_t __fastcall CarAnimationUpdate(RED4ext::vehicle::CarPhysics *a1, float);
+decltype(&CarAnimationUpdate) CarAnimationUpdate_Original;
 
 // vehicleBikePhysics::AnimationUpdate
 uintptr_t __fastcall BikeAnimationUpdate(RED4ext::vehicle::BikePhysics *a1);
 decltype(&BikeAnimationUpdate) BikeAnimationUpdate_Original;
 
-// something with 4 wheels
 void __fastcall FourWheelTorque(RED4ext::vehicle::WheeledPhysics *physics, unsigned __int8 rearWheelIndex,
                                 unsigned __int8 frontWheelIndex, float a4, RED4ext::Transform *transform);
-
-// 1.6  RVA: 0x1D3B030
-// 1.61 RVA: 0x1D3B3F0
-// 40 53 48 81 EC A0 00 00 00 44 0F B6 D2 4C 8D 89 D0 05 00 00 41 0F B6 C0 48 8B D9 4D 69 C2 30 01
-constexpr uintptr_t FourWheelTorqueAddr = 0x1D3B3F0;
 decltype(&FourWheelTorque) FourWheelTorque_Original;
 
-// 1.6 not found
+// 1.6, 1.62 not found
 /// 48 8B 49 08 E9 47 1D 2D FF
-constexpr uintptr_t UpdateAnimValueForCNameAddr = 0x1CFD9F0;
-uint64_t __fastcall UpdateAnimValueForCName(RED4ext::vehicle::BaseObject *vehicle, RED4ext::CName name, float value) {
-  RED4ext::RelocFunc<uint64_t (__fastcall *)(void *, uint64_t, float)> call(UpdateAnimValueForCNameAddr);
-  return call(vehicle->unk570, name, value);
-}
+//constexpr uintptr_t UpdateAnimValueForCNameAddr = 0x1CFD9F0;
+//uint64_t __fastcall UpdateAnimValueForCName(RED4ext::vehicle::BaseObject *vehicle, RED4ext::CName name, float value) {
+//  RED4ext::RelocFunc<uint64_t (__fastcall *)(void *, uint64_t, float)> call(UpdateAnimValueForCNameAddr);
+//  return call(vehicle->unk570, name, value);
+//}
 
 FlightComponent *GetFlightComponent(RED4ext::vehicle::BaseObject *v) {
   auto rtti = RED4ext::CRTTISystem::Get();
@@ -232,7 +184,7 @@ void __fastcall VehicleUpdateOrientationWithPID(RED4ext::vehicle::CarBaseObject 
   VehicleUpdateOrientationWithPID_Original(a1, a2, a3, a4);
 }
 
-uintptr_t __fastcall AnimationUpdate(RED4ext::vehicle::CarPhysics *a1, float timeDelta) {
+uintptr_t __fastcall CarAnimationUpdate(RED4ext::vehicle::CarPhysics *a1, float timeDelta) {
   auto fc = GetFlightComponent(a1->parent);
   if (fc) {
     auto rtti = RED4ext::CRTTISystem::Get();
@@ -242,7 +194,7 @@ uintptr_t __fastcall AnimationUpdate(RED4ext::vehicle::CarPhysics *a1, float tim
       a1->parent->turnInput = rollProp->GetValue<float>(fc);
     }
   }
-  return AnimationUpdate_Original(a1, timeDelta);
+  return CarAnimationUpdate_Original(a1, timeDelta);
 }
 
 uintptr_t __fastcall BikeAnimationUpdate(RED4ext::vehicle::BikePhysics *a1) {
@@ -283,12 +235,15 @@ struct VehiclePhysicsUpdateModule : FlightModule {
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleUpdateOrientationWithPIDAddr),
                                   &VehicleUpdateOrientationWithPID,
                                   reinterpret_cast<void **>(&VehicleUpdateOrientationWithPID_Original)));
-    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(AnimationUpdateAddr), &AnimationUpdate,
-                                  reinterpret_cast<void **>(&AnimationUpdate_Original)));
-    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(RED4ext::vehicle::BikePhysics::AnimationUpdateAddr), &BikeAnimationUpdate,
-                                  reinterpret_cast<void **>(&BikeAnimationUpdate_Original)));
+    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(vehicleCarPhysics_AnimationUpdateAddr),
+                                  &CarAnimationUpdate, reinterpret_cast<void **>(&CarAnimationUpdate_Original)))
+      ;
+    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(vehicleBikePhysics_AnimationUpdateAddr),
+                                  &BikeAnimationUpdate, reinterpret_cast<void **>(&BikeAnimationUpdate_Original)))
+      ;
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(FourWheelTorqueAddr), &FourWheelTorque,
-                                  reinterpret_cast<void **>(&FourWheelTorque_Original)));
+                                  reinterpret_cast<void **>(&FourWheelTorque_Original)))
+      ;
   }
   void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(ProcessAirResistanceAddr));
@@ -297,8 +252,8 @@ struct VehiclePhysicsUpdateModule : FlightModule {
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(AirControlProcessAddr));
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(TorqueUpdateAddr));
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleUpdateOrientationWithPIDAddr));
-    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(AnimationUpdateAddr));
-    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(RED4ext::vehicle::BikePhysics::AnimationUpdateAddr));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(vehicleCarPhysics_AnimationUpdateAddr));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(vehicleBikePhysics_AnimationUpdateAddr));
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(FourWheelTorqueAddr));
   }
 };

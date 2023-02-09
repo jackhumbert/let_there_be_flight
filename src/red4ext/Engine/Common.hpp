@@ -1,5 +1,7 @@
 #pragma once
 
+#include <concepts>
+#include <tuple>
 #include <type_traits>
 
 #include <RED4ext/NativeTypes.hpp>
@@ -39,25 +41,25 @@ concept IsMemberCallCompatible = IsScripable<T> and IsCompatible<T, U> and sizeo
 template<typename T>
 concept HasTypeGetter = requires(T)
 {
-    { T::GetRTTIType() } -> std::convertible_to<RED4ext::CClass*>;
+    { T::GetType() } -> std::convertible_to<RED4ext::CClass*>;
 };
 
 template<typename T>
 concept HasTypeNameGetter = requires(T)
 {
-    { T::GetRTTIName() } -> std::same_as<RED4ext::CName>;
+    { T::GetName() } -> std::same_as<RED4ext::CName>;
 };
 
 template<typename T>
 concept HasTypeNameConst = requires(T)
 {
-    { T::RTTIName } -> std::convertible_to<const char*>;
+    { T::Name } -> std::convertible_to<const char*>;
 };
 
 template<typename T>
 concept HasTypeFlagsConst = requires(T)
 {
-    { T::RTTIFlags } -> std::convertible_to<RED4ext::CClass::Flags>;
+    { T::Flags } -> std::convertible_to<RED4ext::CClass::Flags>;
 };
 
 template<typename T>
@@ -136,6 +138,11 @@ template<typename C, typename R, typename... Args>
 struct FunctionPtr<R (C::*)(Args...)> : FunctionPtr<R (*)(Args...)>
 {
     using context_type = C;
+};
+
+template<typename R, typename... Args>
+struct FunctionPtr<R(Args...)> : FunctionPtr<R (*)(Args...)>
+{
 };
 
 template<typename T>
@@ -286,7 +293,7 @@ template<typename T, RED4ext::CName Prefix = 0xCBF29CE484222325>
 consteval RED4ext::CName ResolveConstTypeName()
 {
     // if constexpr (HasTypeNameConst<T>)
-    //     return RED4ext::FNV1a64(T::RTTIName, Prefix);
+    //     return RED4ext::FNV1a64(T::Name, Prefix);
 
     if constexpr (HasGeneratedNameConst<T>)
         return RED4ext::FNV1a64(T::NAME, Prefix);
@@ -321,7 +328,7 @@ template<typename T>
 std::string BuildDynamicTypeName()
 {
     if constexpr (HasTypeNameGetter<T>)
-        return T::GetRTTIName().ToString();
+        return T::GetName().ToString();
 
     if constexpr (IsRedSpecialization<T>)
         return std::string(RedSpecialization<T>::prefix)
@@ -345,14 +352,14 @@ constexpr RED4ext::CName ResolveTypeName()
         return name;
 
     if constexpr (HasTypeNameGetter<U>)
-        return U::GetRTTIName();
+        return U::GetName();
 
     auto type = TypeDescriptor<U>::GetType();
     if (type)
         return type->GetName().ToString();
 
     // To create a composite type (array, handle, etc.) it's enough to add
-    // the full type name to the name pool. The RTTI system generates the
+    // the full type name to the name pool. The  system generates the
     // missing types dynamically if it can get the name as a string.
     return RED4ext::CNamePool::Add(BuildDynamicTypeName<U>().c_str());
 }
@@ -379,17 +386,17 @@ inline void ExtractArgs(RED4ext::CStackFrame* aFrame, std::tuple<Args...>& aArgs
 
 template<typename R, typename RT>
 requires detail::IsTypeInfoOrVoid<RT>
-using RTTIStaticFunction = void (*)(RED4ext::IScriptable*, RED4ext::CStackFrame*, R*, RT*);
+using StaticFunction = void (*)(RED4ext::IScriptable*, RED4ext::CStackFrame*, R*, RT*);
 
 template<class C, typename R, typename RT>
 requires detail::IsScripable<C> and detail::IsTypeInfoOrVoid<RT>
-using RTTIMemberFunction = void (C::*)(RED4ext::CStackFrame*, R*, RT*);
+using MemberFunction = void (C::*)(RED4ext::CStackFrame*, R*, RT*);
 
 template<typename R, typename... Args>
-using StaticFunction = R (*)(Args...);
+using RTTIStaticFunction = R (*)(Args...);
 
 template<class C, typename R, typename... Args>
-using MemberFunction = R (C::*)(Args...);
+using RTTIMemberFunction = R (C::*)(Args...);
 
 template<auto AFunc>
 requires detail::IsFunctionPtr<decltype(AFunc)>
@@ -403,6 +410,7 @@ inline RED4ext::ScriptingFunction_t<void*> WrapScriptableFunction()
     using Args = typename FunctionPtr<F>::arguments_type;
 
     static const auto s_func = AFunc;
+    static const auto s_retType = !std::is_void_v<R> ? RED4ext::CRTTISystem::Get()->GetType(ResolveTypeName<R>()) : nullptr;
 
     auto f = [](RED4ext::IScriptable* aContext, RED4ext::CStackFrame* aFrame,
                 R* aRet, RED4ext::CBaseRTTIType* aRetType) -> void
@@ -420,6 +428,7 @@ inline RED4ext::ScriptingFunction_t<void*> WrapScriptableFunction()
         else
         {
             R ret;
+
             if constexpr (std::is_void_v<C>)
                 ret = std::apply(s_func, args);
             else
@@ -430,6 +439,7 @@ inline RED4ext::ScriptingFunction_t<void*> WrapScriptableFunction()
                 aRetType->Assign(aRet, &ret);
               } else {
                 *aRet = ret;
+                //s_retType->Assign(aRet, &ret);
               }
             }
         }
@@ -439,7 +449,7 @@ inline RED4ext::ScriptingFunction_t<void*> WrapScriptableFunction()
 }
 
 template<typename R, typename... Args>
-void DescribeScriptableFunction(RED4ext::CBaseFunction* aScriptFunc, StaticFunction<R, Args...>)
+void DescribeScriptableFunction(RED4ext::CBaseFunction* aScriptFunc, RTTIStaticFunction<R, Args...>)
 {
     using namespace detail;
 
@@ -450,7 +460,7 @@ void DescribeScriptableFunction(RED4ext::CBaseFunction* aScriptFunc, StaticFunct
 }
 
 template<typename C, typename R, typename... Args>
-void DescribeScriptableFunction(RED4ext::CBaseFunction* aScriptFunc, MemberFunction<C, R, Args...>)
+void DescribeScriptableFunction(RED4ext::CBaseFunction* aScriptFunc, RTTIMemberFunction<C, R, Args...>)
 {
     using namespace detail;
 
