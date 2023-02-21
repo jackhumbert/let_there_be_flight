@@ -16,9 +16,10 @@ using Entity_InitializeComponents = void (RED4ext::ent::Entity * entity, void * 
 /// @pattern 48 8B C4 55 56 41 54 41 55 41 56 41 57 48 8D A8
 using VehicleProcessWeapons = void (RED4ext::vehicle::BaseObject *vehicle, float timeDelta, unsigned int shootIndex);
 
+// not used anymore
 // 1.52 RVA: 0x184300 / 1590016
 /// @pattern 48 83 EC 28 49 B9 25 23 22 84 E4 9C F2 CB 48 8D 05 E3 6B 47 03 41 B2 62 49 BB B3 01 00 00 00 01
-using ReadFromGameSystemsStartFile = int();
+//using ReadFromGameSystemsStartFile = int();
 
 // look for base\\systems\\game_systems_startup.csv
 // 1.52
