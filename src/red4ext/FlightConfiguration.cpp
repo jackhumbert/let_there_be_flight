@@ -17,6 +17,8 @@ void IFlightConfiguration::AddSlots(RED4ext::ent::SlotComponent *slotComponent) 
     auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
     slot->boneName = thruster->boneName;
     slot->slotName = thruster->slotName;
+    slot->relativePosition = thruster->relativePosition;
+    //slot->relativeRotation = thruster->relativeRotation;
     slotComponent->slots.EmplaceBack(*slot);
     slotComponent->slotIndexLookup.Emplace(slot->slotName, slotComponent->slots.size - 1);
   }

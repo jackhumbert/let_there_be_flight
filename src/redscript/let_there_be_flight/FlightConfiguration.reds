@@ -61,6 +61,11 @@ public class FlightConfiguration_quadra_type66__basic_jen_rowley extends IFlight
     ArrayPush(this.thrusters, new FlightThrusterBL().Create());
     ArrayPush(this.thrusters, new FlightThrusterBR().Create());
 
+    // this.thrusters[0].relativePosition = new Vector3(0.0, 0.0, 1.0);
+
+    this.thrusters[2].meshPath = n"user\\jackhumbert\\meshes\\engine_nomad.mesh";
+    this.thrusters[3].meshPath = n"user\\jackhumbert\\meshes\\engine_nomad.mesh";
+
     for thruster in this.thrusters {
       thruster.OnSetup(this.component);
     }

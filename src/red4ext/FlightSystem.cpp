@@ -266,8 +266,8 @@ void FlightSystem::OnGameLoad(void *a1, uint64_t a2, uint64_t a3) {
   RED4ext::CNamePool::Add("DisableGravityEffector");
   spdlog::info("[FlightSystem] OnGameLoad!");
   auto r = RED4ext::ResourceReference<RED4ext::ent::MeshComponent>("user\\jackhumbert\\meshes\\engine_corpo.mesh");
-  //r->Fetch();
-  //RED4ext::ResourceLoader::Get();
+  LoadResRef<RED4ext::ent::MeshComponent>(&r.path, &r.token, false);
+  r = RED4ext::ResourceReference<RED4ext::ent::MeshComponent>("user\\jackhumbert\\meshes\\engine_nomad.mesh");
   LoadResRef<RED4ext::ent::MeshComponent>(&r.path, &r.token, false);
 
   //EnableSmoothWheelContacts.GetAddr()->value = false;

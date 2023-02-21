@@ -10,12 +10,18 @@ public abstract native class IFlightThruster extends IScriptable {
   public native let slotName: CName;
 
   @runtimeProperty("offset", "0x60")
-  public native let meshPath: CName; // "user\\jackhumbert\\meshes\\engine_corpo.mesh"
-
-  @runtimeProperty("offset", "0x68")
-  public native let meshName: CName; // "Thruster"
+  public native let relativePosition: Vector3; // 0, 0, 0
 
   @runtimeProperty("offset", "0x70")
+  public native let relativeRotation: Quaternion; // 0, 0, 0, 1
+
+  @runtimeProperty("offset", "0x80")
+  public native let meshPath: CName; // "user\\jackhumbert\\meshes\\engine_corpo.mesh"
+
+  @runtimeProperty("offset", "0x88")
+  public native let meshName: CName; // "Thruster"
+
+  @runtimeProperty("offset", "0x90")
   public native let meshComponent: ref<MeshComponent>;
 
   public let parentSlotName: CName;

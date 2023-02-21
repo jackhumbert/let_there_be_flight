@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2023-02-21 20:17:01.0145746
+// This file was automatically generated on 2023-02-21 20:47:48.7942156
 
 // FlightAudio.reds
 
@@ -1548,6 +1548,11 @@ public class FlightConfiguration_quadra_type66__basic_jen_rowley extends IFlight
     ArrayPush(this.thrusters, new FlightThrusterFR().Create());
     ArrayPush(this.thrusters, new FlightThrusterBL().Create());
     ArrayPush(this.thrusters, new FlightThrusterBR().Create());
+
+    // this.thrusters[0].relativePosition = new Vector3(0.0, 0.0, 1.0);
+
+    this.thrusters[2].meshPath = n"user\\jackhumbert\\meshes\\engine_nomad.mesh";
+    this.thrusters[3].meshPath = n"user\\jackhumbert\\meshes\\engine_nomad.mesh";
 
     for thruster in this.thrusters {
       thruster.OnSetup(this.component);
@@ -3593,12 +3598,18 @@ public abstract native class IFlightThruster extends IScriptable {
   public native let slotName: CName;
 
   @runtimeProperty("offset", "0x60")
-  public native let meshPath: CName; // "user\\jackhumbert\\meshes\\engine_corpo.mesh"
-
-  @runtimeProperty("offset", "0x68")
-  public native let meshName: CName; // "Thruster"
+  public native let relativePosition: Vector3; // 0, 0, 0
 
   @runtimeProperty("offset", "0x70")
+  public native let relativeRotation: Quaternion; // 0, 0, 0, 1
+
+  @runtimeProperty("offset", "0x80")
+  public native let meshPath: CName; // "user\\jackhumbert\\meshes\\engine_corpo.mesh"
+
+  @runtimeProperty("offset", "0x88")
+  public native let meshName: CName; // "Thruster"
+
+  @runtimeProperty("offset", "0x90")
   public native let meshComponent: ref<MeshComponent>;
 
   public let parentSlotName: CName;
