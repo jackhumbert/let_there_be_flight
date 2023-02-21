@@ -19,6 +19,12 @@ public native class FlightComponent extends GameComponent {
   @runtimeProperty("offset", "0xD0")
   public native let torque: Vector4;
 
+  // @runtimeProperty("offset", "0xE0")
+  // public native let thrusters: array<ref<IFlightThruster>>;
+
+  @runtimeProperty("offset", "0xE0")
+  public native let configuration: ref<IFlightConfiguration>;
+
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Quickhacks")
@@ -28,7 +34,6 @@ public native class FlightComponent extends GameComponent {
   public native func ChaseTarget(target: wref<GameObject>) -> Void;
   // public native func ChaseTarget() -> Void;
 
-  public let thrusters: array<ref<FlightThruster>>;
   private let helper: ref<vehicleFlightHelper>;
   private let stats: ref<FlightStats>;
 
@@ -157,9 +162,9 @@ public native class FlightComponent extends GameComponent {
 
     this.audioUpdate = new FlightAudioUpdate();
     
-    if ArraySize(this.thrusters) == 0 {
-      this.thrusters = FlightThruster.CreateThrusters(this);
-    }
+    // if ArraySize(this.configuration.thrusters) == 0 {
+    //   this.configuration.thrusters = IFlightThruster.CreateThrusters(this);
+    // }
   }
 
   private final func OnGameDetach() -> Void {
@@ -377,7 +382,7 @@ public native class FlightComponent extends GameComponent {
       // this.sys.ctlr.ui.Setup(this.stats);
 
       this.SetupTires();
-      for thruster in this.thrusters {
+      for thruster in this.configuration.thrusters {
         thruster.Start();
       }
       // these stop engine noises if they were already playing?
@@ -446,7 +451,7 @@ public native class FlightComponent extends GameComponent {
     if timeDelta <= 0.0 {
       this.stats.UpdateDynamic();
       this.UpdateAudioParams(1.0/60.0);
-      for thruster in this.thrusters {
+      for thruster in this.configuration.thrusters {
         thruster.Update(this.smoothForce, this.smoothTorque);
       }
       return;
@@ -528,7 +533,7 @@ public native class FlightComponent extends GameComponent {
     this.UpdateAudioParams(timeDelta, force, torque);
     this.smoothForce = force;
     this.smoothTorque = torque;
-    for thruster in this.thrusters {
+    for thruster in this.configuration.thrusters {
       thruster.Update(force, torque);
     }
     
@@ -591,7 +596,7 @@ public native class FlightComponent extends GameComponent {
 
   public func Deactivate(silent: Bool) -> Void{
     this.active = false;
-    for thruster in this.thrusters {
+    for thruster in this.configuration.thrusters {
       thruster.Stop();
     }
 

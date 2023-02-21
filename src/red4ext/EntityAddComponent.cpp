@@ -31,6 +31,7 @@
 #include <thread>
 #include "FlightSystem.hpp"
 #include "FlightComponent.hpp"
+#include "EntityAddComponent.hpp"
 
 // weird bug fix
 
@@ -45,9 +46,11 @@
 //  }
 //}
 
-RED4ext::ent::PhysicalMeshComponent *CreateThrusterEngine(RED4ext::CRTTISystem *rtti, RED4ext::CName mesh,
+RED4ext::ent::PhysicalMeshComponent *CreateThrusterEngine(RED4ext::CName mesh,
                                                           RED4ext::CName name, RED4ext::CName slot,
-                                                          RED4ext::CName bindName = "vehicle_slots") {
+                                                          RED4ext::CName bindName) {
+
+  auto rtti = RED4ext::CRTTISystem::Get();
   auto mc = (RED4ext::ent::PhysicalMeshComponent *)rtti->GetClass("entPhysicalMeshComponent")->CreateInstance();
   mc->mesh.path = mesh;
   // not sure why this doesn't carry through
@@ -85,8 +88,8 @@ void AddResourceToController(RED4ext::ent::VisualControllerComponent *vcc, RED4e
   }
 }
 
-void AddToController(RED4ext::CRTTISystem *rtti, RED4ext::ent::VisualControllerComponent *vcc,
-                     RED4ext::ent::MeshComponent *mc) {
+void AddToController(RED4ext::ent::VisualControllerComponent *vcc, RED4ext::ent::MeshComponent *mc) {
+  auto rtti = RED4ext::CRTTISystem::Get();
   auto vcd = reinterpret_cast<RED4ext::ent::VisualControllerDependency *>(
       rtti->GetClass("entVisualControllerDependency")->CreateInstance());
   vcd->appearanceName = mc->meshAppearance;
@@ -152,7 +155,8 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
 
     auto fc = (FlightComponent *)FlightComponent::GetRTTIType()->CreateInstance(true);
     fc->name = "flightComponent";
-    vehicle->componentsStorage.components.EmplaceBack(RED4ext::Handle<FlightComponent>(fc));
+    auto fch = RED4ext::Handle<FlightComponent>(fc);
+    vehicle->componentsStorage.components.EmplaceBack(fch);
 
     //FlightWeapons::AddWeapons(vehicle);
 
@@ -238,110 +242,36 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
           }
         }
 
+        char className[256];
+        sprintf(className, "FlightConfiguration_%s", entity->currentAppearance.ToString());
 
-        if (isBike)
-        {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
-          slot->boneName = "suspension_front_offset";
-          slot->slotName = "thruster_front";
-          vs->slots.EmplaceBack(*slot);
-          vs->slotIndexLookup.Emplace(slot->slotName, vs->slots.size - 1);
-
-          auto fl =
-              CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterF", "thruster_front");
-          entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(fl));
-          AddToController(rtti, vcc, fl);
+        auto configurationCls = rtti->GetClassByScriptName(className);
+        if (!configurationCls) {
+          if (isSixWheeler) {
+            configurationCls = rtti->GetClassByScriptName("SixWheelCarFlightConfiguration");
+          } else if (isCar) {
+            configurationCls = rtti->GetClassByScriptName("CarFlightConfiguration");
+          } else if (isBike) {
+            configurationCls = rtti->GetClassByScriptName("BikeFlightConfiguration");
+          }
         }
-        if (isBike)
-        {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
-          slot->boneName = "suspension_back";
-          slot->slotName = "thruster_back";
-          vs->slots.EmplaceBack(*slot);
-          vs->slotIndexLookup.Emplace(slot->slotName, vs->slots.size - 1);
 
-          auto fl =
-              CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterB", "thruster_back");
-          entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(fl));
-          AddToController(rtti, vcc, fl);
-        }
-        if (isCar)
-        {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
-          slot->boneName = "swingarm_front_left";
-          slot->slotName = "thruster_front_left";
-          vs->slots.EmplaceBack(*slot);
-          vs->slotIndexLookup.Emplace(slot->slotName, vs->slots.size - 1);
+        if (configurationCls) {
+          spdlog::info("Looked for class '{}' using '{}'", className, configurationCls->name.ToString());
+          auto configuration = reinterpret_cast<IFlightConfiguration *>(configurationCls->CreateInstance(true));
+          configurationCls->ConstructCls(configuration);
 
-          auto fl = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterFL",
-                                         "thruster_front_left");
-          entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(fl));
-          AddToController(rtti, vcc, fl);
-        }
-        if (isCar)
-        {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
-          slot->boneName = "swingarm_front_right";
-          slot->slotName = "thruster_front_right";
-          vs->slots.EmplaceBack(*slot);
-          vs->slotIndexLookup.Emplace(slot->slotName, vs->slots.size - 1);
+          auto handle = RED4ext::Handle<IFlightConfiguration>(configuration);
+          configuration->ref = RED4ext::WeakHandle(*reinterpret_cast<RED4ext::Handle<RED4ext::ISerializable> *>(&handle));
+          configuration->unk30 = configurationCls;
 
-          auto fr = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterFR",
-                                          "thruster_front_right");
-          entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(fr));
-          AddToController(rtti, vcc, fr);
-        }
-        if (isSixWheeler)
-        {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
-          slot->boneName = "swingarm_front_left_b";
-          slot->slotName = "thruster_front_left_b";
-          vs->slots.EmplaceBack(*slot);
-          vs->slotIndexLookup.Emplace(slot->slotName, vs->slots.size - 1);
+          fc->configuration = handle;
 
-          auto flb = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterFLB",
-                                          "thruster_front_left_b");
-          entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(flb));
-          AddToController(rtti, vcc, flb);
-        }
-        if (isSixWheeler)
-        {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
-          slot->boneName = "swingarm_front_right_b";
-          slot->slotName = "thruster_front_right_b";
-          vs->slots.EmplaceBack(*slot);
-          vs->slotIndexLookup.Emplace(slot->slotName, vs->slots.size - 1);
-
-          auto frb = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterFRB",
-                                          "thruster_front_right_b");
-          entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(frb));
-          AddToController(rtti, vcc, frb);
-        }
-        if (isCar)
-        {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
-          slot->boneName = "swingarm_back_left";
-          slot->slotName = "thruster_back_left";
-          vs->slots.EmplaceBack(*slot);
-          vs->slotIndexLookup.Emplace(slot->slotName, vs->slots.size - 1);
-
-          auto bl = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterBL",
-                                          "thruster_back_left");
-          entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(bl));
-          AddToController(rtti, vcc, bl);
-        }
-        if (isCar)
-        {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
-          slot->boneName = "swingarm_back_right";
-          slot->slotName = "thruster_back_right";
-          vs->slots.EmplaceBack(*slot);
-          vs->slotIndexLookup.Emplace(slot->slotName, vs->slots.size - 1);
-
-          auto br = CreateThrusterEngine(rtti, "user\\jackhumbert\\meshes\\engine_corpo.mesh", "ThrusterBR",
-                                          "thruster_back_right");
-          entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::ent::PhysicalMeshComponent>(br));
-          AddToController(rtti, vcc, br);
+          configuration->Setup(fc);
+          configuration->AddSlots(vs);
+          configuration->AddMeshes(entity, vcc);
+        } else {
+          spdlog::info("Looked for class '{}'", className);
         }
       }
     }

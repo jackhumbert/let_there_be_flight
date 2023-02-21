@@ -16,6 +16,7 @@
 #define CreateStaticEffectAddr 0x148FAE0
 #define PhysicsStructUpdateAddr 0x1D0EC40
 #define PhysicsUnkStructVelocityUpdateAddr 0x1D0E230
+#define CreateCRTTIArrayTypeFromClassAddr 0x200660
 #define CreateCRTTIHandleTypeFromClassAddr 0x200750
 #define CreateCRTTIWeakHandleTypeFromClassAddr 0x200AF0
 #define ProcessScriptTypesAddr 0x277560

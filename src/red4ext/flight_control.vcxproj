@@ -109,6 +109,7 @@
     <ClCompile Include="EntityAddComponent.cpp" />
     <ClCompile Include="FlightCamera.cpp" />
     <ClCompile Include="FlightComponent.cpp" />
+    <ClCompile Include="FlightConfiguration.cpp" />
     <ClCompile Include="FlightController.cpp" />
     <ClCompile Include="FlightEvents.cpp" />
     <ClCompile Include="FlightHelper.cpp" />
@@ -120,6 +121,7 @@
     <ClCompile Include="FlightSettings.cpp" />
     <ClCompile Include="FlightSystem.cpp" />
     <ClCompile Include="CreateStaticEffect.cpp" />
+    <ClCompile Include="FlightThruster.cpp" />
     <ClCompile Include="FlightWeapons.cpp" />
     <ClCompile Include="FxResource.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -142,7 +144,10 @@
     <ClInclude Include="Engine\RTTIEnum.hpp" />
     <ClInclude Include="Engine\RTTIExpansion.hpp" />
     <ClInclude Include="Engine\RTTIRegistrar.hpp" />
+    <ClInclude Include="EntityAddComponent.hpp" />
     <ClInclude Include="FlightComponent.hpp" />
+    <ClInclude Include="FlightConfiguration.hpp" />
+    <ClInclude Include="FlightThruster.hpp" />
     <ClInclude Include="IFlightSystem.hpp" />
     <ClInclude Include="INIReader.h" />
     <ClInclude Include="RuntimeClass.hpp" />

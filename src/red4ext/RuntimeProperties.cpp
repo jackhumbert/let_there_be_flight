@@ -27,6 +27,11 @@ struct ScriptData {
 void* unk138;
 };
 
+RED4ext::CRTTIHandleType **__fastcall CreateCRTTIArrayTypeFromClass(RED4ext::CRTTIArrayType **a1, RED4ext::CBaseRTTIType *a2) {
+  RED4ext::RelocFunc<decltype(&CreateCRTTIArrayTypeFromClass)> call(CreateCRTTIArrayTypeFromClassAddr);
+  return call(a1, a2);
+}
+
 RED4ext::CRTTIWeakHandleType ** __fastcall CreateCRTTIWeakHandleTypeFromClass(RED4ext::CRTTIWeakHandleType **a1, RED4ext::CBaseRTTIType *a2) {
 RED4ext::RelocFunc<decltype(&CreateCRTTIWeakHandleTypeFromClass)> call(CreateCRTTIWeakHandleTypeFromClassAddr);
   return call(a1, a2);
@@ -62,7 +67,30 @@ bool __fastcall ProcessScriptTypes(uint32_t* version, ScriptData* scriptData, vo
                   auto outerTypeStr = typeStr.substr(0, del);
                   auto innerTypeStr = typeStr.substr(del + 1, typeStr.length());
                   //spdlog::info("{} & {}", outerTypeStr, innerTypeStr);
-                  auto innerType = rtti->GetClassByScriptName(innerTypeStr.c_str());
+                  RED4ext::CBaseRTTIType * innerType = rtti->GetClassByScriptName(innerTypeStr.c_str());
+                  if (!innerType) {
+                    auto del = innerTypeStr.find(":");
+                    if (del != -1) {
+                      auto innerInnerTypeStr = innerTypeStr.substr(del + 1, innerTypeStr.length());
+                      auto innerInnerType = rtti->GetClassByScriptName(innerInnerTypeStr.c_str());
+                      if (innerTypeStr.starts_with("wref")) {
+                        RED4ext::CRTTIWeakHandleType *whType;
+                        CreateCRTTIWeakHandleTypeFromClass(&whType, innerInnerType);
+                        rtti->RegisterType(whType);
+                        innerType = whType;
+                      } else if (innerTypeStr.starts_with("ref")) {
+                        RED4ext::CRTTIHandleType *whType;
+                        CreateCRTTIHandleTypeFromClass(&whType, innerInnerType);
+                        rtti->RegisterType(whType);
+                        innerType = whType;
+                      } else if (innerTypeStr.starts_with("array")) {
+                        RED4ext::CRTTIArrayType *whType;
+                        CreateCRTTIArrayTypeFromClass(&whType, innerInnerType);
+                        rtti->RegisterType(whType);
+                        innerType = whType;
+                      }
+                    }
+                  }
                   if (innerType) {
                     if (outerTypeStr.starts_with("wref")) {
                       RED4ext::CRTTIWeakHandleType *whType;
@@ -74,9 +102,14 @@ bool __fastcall ProcessScriptTypes(uint32_t* version, ScriptData* scriptData, vo
                       CreateCRTTIHandleTypeFromClass(&whType, innerType);
                       rtti->RegisterType(whType);
                       rttiType = whType;
+                    } else if (outerTypeStr.starts_with("array")) {
+                      RED4ext::CRTTIArrayType *whType;
+                      CreateCRTTIArrayTypeFromClass(&whType, innerType);
+                      rtti->RegisterType(whType);
+                      rttiType = whType;
                     }
                   } else {
-                    spdlog::warn("could not find inner type: {}", innerTypeStr);
+                    spdlog::warn("could not find inner type '{}' in '{}'", innerTypeStr, typeStr);
                   }
                 }
               }

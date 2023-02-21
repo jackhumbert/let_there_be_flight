@@ -13,6 +13,10 @@
 #include <RED4ext/Scripting/Natives/actionActionBase.hpp>
 #include <RED4ext/Scripting/Natives/actionDriveChaseTarget.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/AutonomousData.hpp>
+#include "FlightConfiguration.hpp"
+//#include "FlightThruster.hpp"
+
+struct IFlightConfiguration;
 
 class FlightComponentPS : public Engine::RTTIClass<FlightComponentPS, RED4ext::game::ComponentPS> {
 public:
@@ -71,6 +75,8 @@ public:
   bool hasUpdate;
   alignas(0x10) RED4ext::Vector4 force;
   RED4ext::Vector4 torque;
+  //RED4ext::DynArray<RED4ext::Handle<IFlightThruster>> thrusters;
+  RED4ext::Handle<IFlightConfiguration> configuration;
 
 private:
   friend Descriptor;
@@ -84,4 +90,6 @@ RED4EXT_ASSERT_OFFSET(FlightComponent, active, 0xB8);
 RED4EXT_ASSERT_OFFSET(FlightComponent, hasUpdate, 0xB9);
 RED4EXT_ASSERT_OFFSET(FlightComponent, force, 0xC0);
 RED4EXT_ASSERT_OFFSET(FlightComponent, torque, 0xD0);
+//RED4EXT_ASSERT_OFFSET(FlightComponent, thrusters, 0xE0);
+RED4EXT_ASSERT_OFFSET(FlightComponent, configuration, 0xE0);
 //char (*__kaboom)[offsetof(FlightComponent, sys] = 1;

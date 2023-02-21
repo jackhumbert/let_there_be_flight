@@ -106,6 +106,10 @@ using PhysicsStructUpdate = short (RED4ext::vehicle::PhysicsData *ps);
 /// @pattern 48 89 5C 24 08 57 48 83 EC 30 0F 29 74 24 20 48 8B DA 0F 10 32 48 8B F9 66 0F 3A 40 F6 7F 0F 28
 using PhysicsUnkStructVelocityUpdate = short (RED4ext::vehicle::PhysicsData *ps, RED4ext::Vector3 *);
 
+// 1.62 RVA: 0x200660 / 2098784
+/// @pattern 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 30 48 8B FA 48 8B F1 BA 20 00 00 00 48 8D 4C 24 20 E8
+/// @nth 0/2
+using CreateCRTTIArrayTypeFromClass = RED4ext::CRTTIArrayType **__fastcall(RED4ext::CRTTIArrayType **a1, RED4ext::CBaseRTTIType *a2);
 
 // 1.52 RVA: 0x1FBD20 / 2080032
 // 1.6  RVA: 0x200050 / 2080032
