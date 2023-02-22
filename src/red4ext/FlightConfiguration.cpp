@@ -26,7 +26,8 @@ void IFlightConfiguration::AddSlots(RED4ext::ent::SlotComponent *slotComponent) 
     slot->boneName = thruster->boneName;
     slot->slotName = thruster->slotName;
     slot->relativePosition = thruster->relativePosition;
-    //slot->relativeRotation = thruster->relativeRotation;
+    slot->relativeRotation = thruster->relativeRotation;
+    //slot->relativeRotation = RED4ext::Quaternion(0.0, 0.0, 0.0, 1.0);
     slotComponent->slots.EmplaceBack(*slot);
     slotComponent->slotIndexLookup.Emplace(slot->slotName, slotComponent->slots.size - 1);
   }

@@ -311,6 +311,8 @@ public class FlightThrusterFront extends IFlightThruster {
     this.boneName = n"suspension_front_offset";
     this.slotName = n"thruster_front";
     this.meshName = n"ThrusterF";
+    this.relativePosition = new Vector3(0.0, 0.0, -0.5);
+    this.relativeRotation = new Quaternion(0.22627002, 0.0, 0.0, -0.974064708);
 
     this.isFront = true;
     this.parentSlotName = n"wheel_front_spring";
@@ -380,6 +382,8 @@ public class FlightThrusterBack extends IFlightThruster {
     this.boneName = n"suspension_back";
     this.slotName = n"thruster_back";
     this.meshName = n"ThrusterB";
+    this.relativePosition = new Vector3(0.0, 0.0, -0.5);
+    this.relativeRotation = new Quaternion(0.0, 0.0, 0.0, 1.0);
 
     this.parentSlotName = n"axel_back";
     this.radiusName = n"None";
@@ -444,6 +448,7 @@ public class FlightThrusterFL extends IFlightThruster {
     this.boneName = n"swingarm_front_left";
     this.slotName = n"thruster_front_left";
     this.meshName = n"ThrusterFL";
+    this.relativeRotation = new Quaternion(0.0, 0.0, 0.0, 1.0);
 
     this.isFront = true;
     this.parentSlotName = n"wheel_front_left";
@@ -468,6 +473,7 @@ public class FlightThrusterFR extends IFlightThruster {
     this.boneName = n"swingarm_front_right";
     this.slotName = n"thruster_front_right";
     this.meshName = n"ThrusterFR";
+    this.relativeRotation = new Quaternion(0.0, 0.0, 0.0, 1.0);
 
     this.isFront = true;
     this.isRight = true;
@@ -493,6 +499,7 @@ public class FlightThrusterBR extends IFlightThruster {
     this.boneName = n"swingarm_back_right";
     this.slotName = n"thruster_back_right";
     this.meshName = n"ThrusterBR";
+    this.relativeRotation = new Quaternion(0.0, 0.0, 0.0, 1.0);
 
     this.isRight = true;
     this.parentSlotName = n"wheel_back_right";
@@ -517,6 +524,7 @@ public class FlightThrusterBL extends IFlightThruster {
     this.boneName = n"swingarm_back_left";
     this.slotName = n"thruster_back_left";
     this.meshName = n"ThrusterBL";
+    this.relativeRotation = new Quaternion(0.0, 0.0, 0.0, 1.0);
 
     this.parentSlotName = n"wheel_back_left";
     this.radiusName = n"veh_rad_w_b_l";
@@ -540,6 +548,7 @@ public class FlightThrusterFLB extends IFlightThruster {
     this.boneName = n"swingarm_front_left_b";
     this.slotName = n"thruster_front_left_b";
     this.meshName = n"ThrusterFLB";
+    this.relativeRotation = new Quaternion(0.0, 0.0, 0.0, 1.0);
 
     this.isFront = true;
     this.isB = true;
@@ -565,6 +574,7 @@ public class FlightThrusterFRB extends IFlightThruster {
     this.boneName = n"swingarm_front_right_b";
     this.slotName = n"thruster_front_right_b";
     this.meshName = n"ThrusterFRB";
+    this.relativeRotation = new Quaternion(0.0, 0.0, 0.0, 1.0);
 
     this.isFront = true;
     this.isRight = true;

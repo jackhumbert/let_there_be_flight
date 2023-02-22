@@ -51,13 +51,10 @@ public class SixWheelCarFlightConfiguration extends CarFlightConfiguration {
 
 public class BikeFlightConfiguration extends IFlightConfiguration {
   public func OnSetup() {
-    this.flightCameraOffset = new Vector3(0.0, 1.0, 1.0);
+    this.flightCameraOffset = new Vector3(0.0, 1.0, 0.5);
 
     ArrayPush(this.thrusters, new FlightThrusterFront().Create());
     ArrayPush(this.thrusters, new FlightThrusterBack().Create());
-
-    this.thrusters[0].relativePosition = new Vector3(0.0, 0.0, -0.5);
-    this.thrusters[1].relativePosition = new Vector3(0.0, 0.0, -0.5);
 
     for thruster in this.thrusters {
       thruster.OnSetup(this.component);

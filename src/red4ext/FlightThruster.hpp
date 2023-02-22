@@ -12,8 +12,8 @@ public:
   RED4ext::Handle<FlightComponent> flightComponent;
   RED4ext::CName boneName;
   RED4ext::CName slotName;
-  RED4ext::Vector3 relativePosition = RED4ext::Vector3(0, 0, 0);
-  alignas(0x10) RED4ext::Quaternion relativeRotation;
+  RED4ext::Vector3 relativePosition = RED4ext::Vector3(0.0, 0.0, 0.0);
+  alignas(0x10) RED4ext::Quaternion relativeRotation = RED4ext::Quaternion(0.0, 0.0, 0.0, 1.0);
   RED4ext::CName meshPath = "user\\jackhumbert\\meshes\\engine_corpo.mesh";
   RED4ext::CName meshName = "Thruster";
   RED4ext::Handle<RED4ext::ent::MeshComponent> meshComponent;
