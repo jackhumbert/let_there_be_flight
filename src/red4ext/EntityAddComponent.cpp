@@ -183,11 +183,11 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
         osc = reinterpret_cast<RED4ext::game::OccupantSlotComponent *>(component);
 
         {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
+ /*         auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
           slot->boneName = "roof_border_front";
           slot->slotName = "CustomFlightCamera";
           osc->slots.EmplaceBack();
-          osc->slotIndexLookup.Emplace(slot->slotName, osc->slots.size - 1);
+          osc->slotIndexLookup.Emplace(slot->slotName, osc->slots.size - 1);*/
         }
         break;
       }
@@ -209,11 +209,11 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
 
       if (vs != NULL) {
         {
-          auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
-          slot->boneName = "roof_border_front";
-          slot->slotName = "roof_border_front";
-          vs->slots.EmplaceBack(*slot);
-          vs->slotIndexLookup.Emplace(slot->slotName, vs->slots.size - 1);
+          //auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
+          //slot->boneName = "roof_border_front";
+          //slot->slotName = "roof_border_front";
+          //vs->slots.EmplaceBack(*slot);
+          //vs->slotIndexLookup.Emplace(slot->slotName, vs->slots.size - 1);
         }
         //FlightWeapons::AddWeaponSlots(vs);
 

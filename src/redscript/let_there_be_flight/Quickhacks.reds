@@ -753,6 +753,7 @@ public class BouncyEffector extends Effector {
 
 @wrapMethod(QuickHackDescriptionGameController)
 protected cb func OnQuickHackDataChanged(value: Variant) -> Bool {
+  wrappedMethod(value);
   this.m_selectedData = FromVariant<ref<QuickhackData>>(value);
   if IsDefined(this.m_selectedData) {
     let title: String = GetLocalizedText(this.m_selectedData.m_title);
@@ -766,13 +767,5 @@ protected cb func OnQuickHackDataChanged(value: Variant) -> Bool {
       description = ToString(this.m_selectedData.m_description);
     }
     inkTextRef.SetText(this.m_description, description);
-
-    this.SetupTier();
-    this.SetupDuration();
-    this.SetupMaxCooldown();
-    this.SetupUploadTime();
-    this.SetupMemotyCost();
-    this.SetupCategory();
-    this.SetupDamage();
-  };
+  }
 }

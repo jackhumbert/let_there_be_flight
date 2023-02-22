@@ -12,8 +12,16 @@ void IFlightConfiguration::Setup(FlightComponent * component) {
 }
 
 void IFlightConfiguration::AddSlots(RED4ext::ent::SlotComponent *slotComponent) {
+  auto rtti = RED4ext::CRTTISystem::Get();
+
+  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
+  slot->boneName = this->flightCameraBone;
+  slot->slotName = "CustomFlightCamera";
+  slot->relativePosition = this->flightCameraOffset;
+  slotComponent->slots.EmplaceBack(*slot);
+  slotComponent->slotIndexLookup.Emplace(slot->slotName, slotComponent->slots.size - 1);
+
   for (auto thruster : thrusters) {
-    auto rtti = RED4ext::CRTTISystem::Get();
     auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
     slot->boneName = thruster->boneName;
     slot->slotName = thruster->slotName;

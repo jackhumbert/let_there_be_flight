@@ -17,6 +17,8 @@ class IFlightConfiguration : public Engine::RTTIClass<IFlightConfiguration, RED4
 public:
   RED4ext::Handle<FlightComponent> component;
   RED4ext::DynArray<RED4ext::Handle<IFlightThruster>> thrusters;
+  RED4ext::CName flightCameraBone = "roof_border_front";
+  RED4ext::Vector3 flightCameraOffset = RED4ext::Vector3(0.0, 0.0, 0.0);
   
   void Setup(FlightComponent* component);
   void AddSlots(RED4ext::ent::SlotComponent* slotComponent);
@@ -50,3 +52,5 @@ private:
 };
 RED4EXT_ASSERT_OFFSET(IFlightConfiguration, component, 0x40);
 RED4EXT_ASSERT_OFFSET(IFlightConfiguration, thrusters, 0x50);
+RED4EXT_ASSERT_OFFSET(IFlightConfiguration, flightCameraBone, 0x60);
+RED4EXT_ASSERT_OFFSET(IFlightConfiguration, flightCameraOffset, 0x68);

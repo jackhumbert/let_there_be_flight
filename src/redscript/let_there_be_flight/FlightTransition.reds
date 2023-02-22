@@ -209,7 +209,7 @@ public class FlightEvents extends VehicleEventsTransition {
       OccupantSlots.GetSlotTransform(n"seat_front_left", slotT);
       let roof: WorldTransform;
       let vehicle_slots = (scriptInterface.owner as VehicleObject).GetVehicleComponent().FindComponentByName(n"vehicle_slots") as SlotComponent;
-      vehicle_slots.GetSlotTransform(n"roof_border_front", roof);
+      vehicle_slots.GetSlotTransform(n"CustomFlightCamera", roof);
       let vwt = Matrix.GetInverted((scriptInterface.owner as VehicleObject).GetLocalToWorld());
       let v = (WorldPosition.ToVector4(WorldTransform.GetWorldPosition(roof)) * vwt) - (WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT)) * vwt);
       camera.SetLocalPosition(v + Vector4.Vector3To4(FlightSettings.GetVector3("FPVCameraOffset")));
