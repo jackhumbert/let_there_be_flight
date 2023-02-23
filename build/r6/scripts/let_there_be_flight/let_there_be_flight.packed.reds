@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2023-02-23 17:04:25.9728444
+// This file was automatically generated on 2023-02-23 19:25:25.6515460
 
 // FlightAudio.reds
 
@@ -1489,7 +1489,10 @@ public native class FlightComponent extends GameComponent {
 enum FlightVehicleType {
   Streetkid = 0,
   Nomad = 1,
-  Corpo = 2
+  Corpo = 2,
+  Poor = 3,
+  Suburban = 4,
+  Urban = 5
 }
 
 public abstract native class IFlightConfiguration extends IScriptable {
@@ -1508,21 +1511,27 @@ public abstract native class IFlightConfiguration extends IScriptable {
   public let type: FlightVehicleType = FlightVehicleType.Corpo;
 
   public func OnSetup(vehicle: ref<VehicleObject>) {
-    // switch (vehicle.currentAppearance) {
-    //   case n"thorton_galena_nomad_player_01":
-    //     this.type = FlightVehicleType.Nomad;
-    //     break;
-    //   case n"chevalier_emperor__basic_police":
-    //     this.type = FlightVehicleType.Corpo;
-    //     break;
-    //   case n"quadra_type66__basic_poor_03":
-    //   case n"arch_nemesis_basic_jackie":
-    //   case n"mahir_supron__basic_urban_02":
-    //   case n"thorton_galena__basic_player_01":
-    //   default:
-    //     this.type = FlightVehicleType.Streetkid;
-    //     break;
-    // }
+    let name = NameToString(vehicle.GetCurrentAppearanceName());
+    if StrFindFirst(name, "nomad") > -1 {
+      this.type = FlightVehicleType.Nomad;
+    }
+
+    if StrFindFirst(name, "tyger") > -1 
+    || StrFindFirst(name, "6th_street") > -1 
+    || StrFindFirst(name, "animals") > -1 
+    || StrFindFirst(name, "valentinos") > -1 {
+      this.type = FlightVehicleType.Streetkid;
+    }
+    
+    if StrFindFirst(name, "poor") > -1 {
+      this.type = FlightVehicleType.Poor;
+    }
+    if StrFindFirst(name, "urban") > -1 {
+      this.type = FlightVehicleType.Urban;
+    }
+    if StrFindFirst(name, "suburban") > -1 {
+      this.type = FlightVehicleType.Suburban;
+    }
   }
 }
 
@@ -1563,6 +1572,11 @@ public class CarFlightConfiguration extends IFlightConfiguration {
       ArrayPush(this.thrusters, new FlightThrusterFR().Create(vehicle, CreateNomadThruster()));
       ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, CreateNomadThruster()));
       ArrayPush(this.thrusters, new FlightThrusterBR().Create(vehicle, CreateNomadThruster()));
+      
+      this.thrusters[0].hasRetroThruster = false;
+      this.thrusters[1].hasRetroThruster = false;
+      this.thrusters[2].hasRetroThruster = false;
+      this.thrusters[3].hasRetroThruster = false;
     }
 
     for thruster in this.thrusters {
@@ -1593,23 +1607,31 @@ public class BikeFlightConfiguration extends IFlightConfiguration {
 
     this.flightCameraOffset = new Vector3(0.0, 1.0, 0.5);
 
-    ArrayPush(this.thrusters, new FlightThrusterFront().Create(vehicle, CreateEmptyThruster()));
-    ArrayPush(this.thrusters, new FlightThrusterBack().Create(vehicle, CreateEmptyThruster()));
+    if (Equals(this.type, FlightVehicleType.Corpo)) {
+      ArrayPush(this.thrusters, new FlightThrusterFront().Create(vehicle, CreateCorpoThruster()));
+      ArrayPush(this.thrusters, new FlightThrusterBack().Create(vehicle, CreateCorpoThruster()));
+    } else {
+      ArrayPush(this.thrusters, new FlightThrusterFront().Create(vehicle, CreateEmptyThruster()));
+      ArrayPush(this.thrusters, new FlightThrusterBack().Create(vehicle, CreateEmptyThruster()));
 
-    let mesh: ref<MeshComponent>;
-    mesh = CreateNomadThruster();
-    // mesh.visualScale = new Vector3(1.0, 0.5, 1.0);
-    // mesh.SetLocalPosition(new Vector4(0.0, 0.0, -0.2, 1.0));
-    mesh.SetLocalOrientation(new Quaternion(0.0, 0.0, 0.707, -0.707));
-    mesh.SetParentTransform(this.thrusters[0].meshComponent.name, n"None");
-    vehicle.AddComponent(mesh);
+      let mesh: ref<MeshComponent>;
+      mesh = CreateNomadThruster();
+      // mesh.visualScale = new Vector3(1.0, 0.5, 1.0);
+      // mesh.SetLocalPosition(new Vector4(0.0, 0.0, -0.2, 1.0));
+      mesh.SetLocalOrientation(new Quaternion(0.0, 0.0, 0.707, -0.707));
+      mesh.SetParentTransform(this.thrusters[0].meshComponent.name, n"None");
+      vehicle.AddComponent(mesh);
 
-    mesh = CreateNomadThruster();
-    // mesh.visualScale = new Vector3(1.0, 0.5, 1.0);
-    // mesh.SetLocalPosition(new Vector4(0.0, 0.0, -0.2, 1.0));
-    mesh.SetLocalOrientation(new Quaternion(0.0, 0.0, -0.707, -0.707));
-    mesh.SetParentTransform(this.thrusters[1].meshComponent.name, n"None");
-    vehicle.AddComponent(mesh);
+      mesh = CreateNomadThruster();
+      // mesh.visualScale = new Vector3(1.0, 0.5, 1.0);
+      // mesh.SetLocalPosition(new Vector4(0.0, 0.0, -0.2, 1.0));
+      mesh.SetLocalOrientation(new Quaternion(0.0, 0.0, -0.707, -0.707));
+      mesh.SetParentTransform(this.thrusters[1].meshComponent.name, n"None");
+      vehicle.AddComponent(mesh);
+
+      this.thrusters[0].hasRetroThruster = false;
+      this.thrusters[1].hasRetroThruster = false;
+    }
 
     for thruster in this.thrusters {
       vehicle.AddComponent(thruster.meshComponent);
@@ -3710,6 +3732,7 @@ public abstract native class IFlightThruster extends IScriptable {
   public let mainFx: ref<FxInstance>;
   // public let mainThrusterFactor: Float = 0.05;
   public let mainThrusterYawFactor: Float = 0.5;
+  public let hasRetroThruster: Bool = true;
   public let retroFx: ref<FxInstance>;
   public let retroThrusterFactor: Float = 0.1;
   public let force: Vector4;
@@ -3726,7 +3749,13 @@ public abstract native class IFlightThruster extends IScriptable {
   public func OnSetup(fc : ref<FlightComponent>) {
     this.flightComponent = fc;
     this.mainFxRes = Cast<FxResource>(this.mainResRef);
-    this.retroFxRes = Cast<FxResource>(this.retroResRef);
+    
+    if !this.hasRetroThruster {
+      this.mainThrusterYawFactor = 30.0;
+    } else {
+      this.mainThrusterYawFactor = 5.0;
+      this.retroFxRes = Cast<FxResource>(this.retroResRef);
+    }
 
     // this.meshComponent = vehicleComponent.FindComponentByName(this.meshName) as MeshComponent;
     this.meshComponent.visualScale = new Vector3(0.0, 0.0, 0.0);
@@ -3836,11 +3865,13 @@ public abstract native class IFlightThruster extends IScriptable {
     this.mainFx.AttachToComponent(this.vehicle, entAttachmentTarget.Transform, this.meshComponent.name, wt);
     this.meshComponent.Toggle(true);
 
-    let wt_retro: WorldTransform;
-    WorldTransform.SetOrientation(wt_retro, EulerAngles.ToQuat(new EulerAngles(0.0, 0.0, -90.0)));
-    this.retroFx =  GameInstance.GetFxSystem(this.vehicle.GetGame()).SpawnEffect(this.retroFxRes, effectTransform);
-    // this.retroFx.AttachToSlot(this.component.Getthis.Vehicle(), entAttachmentTarget.Transform, n"Base", wt_retro);
-    this.retroFx.AttachToComponent(this.vehicle, entAttachmentTarget.Transform, this.meshComponent.name, wt_retro);
+    if this.hasRetroThruster {
+      let wt_retro: WorldTransform;
+      WorldTransform.SetOrientation(wt_retro, EulerAngles.ToQuat(new EulerAngles(0.0, 0.0, -90.0)));
+      this.retroFx =  GameInstance.GetFxSystem(this.vehicle.GetGame()).SpawnEffect(this.retroFxRes, effectTransform);
+      // this.retroFx.AttachToSlot(this.component.Getthis.Vehicle(), entAttachmentTarget.Transform, n"Base", wt_retro);
+      this.retroFx.AttachToComponent(this.vehicle, entAttachmentTarget.Transform, this.meshComponent.name, wt_retro);
+    }
 
     // FlightAudio.Get().StartWithPitch(this.id, "vehicle3_TPP", this.audioPitch);
     FlightAudio.Get().StartWithPitch(this.id, "vehicle3_TPP", this.flightComponent.GetPitch());
@@ -3903,8 +3934,10 @@ public abstract native class IFlightThruster extends IScriptable {
 
     // acc.SetInputFloat(this.GetRadiusName(), this.animRadius);
 
-    let retroAmount = this.GetRetroThrusterAmount();
-    this.retroFx.SetBlackboardValue(n"thruster_amount", retroAmount);
+    if this.hasRetroThruster {
+      let retroAmount = this.GetRetroThrusterAmount();
+      this.retroFx.SetBlackboardValue(n"thruster_amount", retroAmount);
+    }
     
     this.audioUpdate = this.flightComponent.audioUpdate;
     // amount *= 0.5;
@@ -6449,9 +6482,9 @@ public native func SetBlurDimension(effectName: CName, blurDimension : inkEBlurD
 
 // Entity
 
-@addField(Entity)
-@runtimeProperty("offset", "0x50")
-public native let currentAppearance: CName;
+// @addField(Entity)
+// @runtimeProperty("offset", "0x50")
+// public native let currentAppearance: CName;
 
 @addField(Entity)
 @runtimeProperty("offset", "0x138")

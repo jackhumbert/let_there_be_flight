@@ -1,7 +1,10 @@
 enum FlightVehicleType {
   Streetkid = 0,
   Nomad = 1,
-  Corpo = 2
+  Corpo = 2,
+  Poor = 3,
+  Suburban = 4,
+  Urban = 5
 }
 
 public abstract native class IFlightConfiguration extends IScriptable {
@@ -20,21 +23,27 @@ public abstract native class IFlightConfiguration extends IScriptable {
   public let type: FlightVehicleType = FlightVehicleType.Corpo;
 
   public func OnSetup(vehicle: ref<VehicleObject>) {
-    // switch (vehicle.currentAppearance) {
-    //   case n"thorton_galena_nomad_player_01":
-    //     this.type = FlightVehicleType.Nomad;
-    //     break;
-    //   case n"chevalier_emperor__basic_police":
-    //     this.type = FlightVehicleType.Corpo;
-    //     break;
-    //   case n"quadra_type66__basic_poor_03":
-    //   case n"arch_nemesis_basic_jackie":
-    //   case n"mahir_supron__basic_urban_02":
-    //   case n"thorton_galena__basic_player_01":
-    //   default:
-    //     this.type = FlightVehicleType.Streetkid;
-    //     break;
-    // }
+    let name = NameToString(vehicle.GetCurrentAppearanceName());
+    if StrFindFirst(name, "nomad") > -1 {
+      this.type = FlightVehicleType.Nomad;
+    }
+
+    if StrFindFirst(name, "tyger") > -1 
+    || StrFindFirst(name, "6th_street") > -1 
+    || StrFindFirst(name, "animals") > -1 
+    || StrFindFirst(name, "valentinos") > -1 {
+      this.type = FlightVehicleType.Streetkid;
+    }
+    
+    if StrFindFirst(name, "poor") > -1 {
+      this.type = FlightVehicleType.Poor;
+    }
+    if StrFindFirst(name, "urban") > -1 {
+      this.type = FlightVehicleType.Urban;
+    }
+    if StrFindFirst(name, "suburban") > -1 {
+      this.type = FlightVehicleType.Suburban;
+    }
   }
 }
 
@@ -75,6 +84,11 @@ public class CarFlightConfiguration extends IFlightConfiguration {
       ArrayPush(this.thrusters, new FlightThrusterFR().Create(vehicle, CreateNomadThruster()));
       ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, CreateNomadThruster()));
       ArrayPush(this.thrusters, new FlightThrusterBR().Create(vehicle, CreateNomadThruster()));
+      
+      this.thrusters[0].hasRetroThruster = false;
+      this.thrusters[1].hasRetroThruster = false;
+      this.thrusters[2].hasRetroThruster = false;
+      this.thrusters[3].hasRetroThruster = false;
     }
 
     for thruster in this.thrusters {
@@ -105,23 +119,31 @@ public class BikeFlightConfiguration extends IFlightConfiguration {
 
     this.flightCameraOffset = new Vector3(0.0, 1.0, 0.5);
 
-    ArrayPush(this.thrusters, new FlightThrusterFront().Create(vehicle, CreateEmptyThruster()));
-    ArrayPush(this.thrusters, new FlightThrusterBack().Create(vehicle, CreateEmptyThruster()));
+    if (Equals(this.type, FlightVehicleType.Corpo)) {
+      ArrayPush(this.thrusters, new FlightThrusterFront().Create(vehicle, CreateCorpoThruster()));
+      ArrayPush(this.thrusters, new FlightThrusterBack().Create(vehicle, CreateCorpoThruster()));
+    } else {
+      ArrayPush(this.thrusters, new FlightThrusterFront().Create(vehicle, CreateEmptyThruster()));
+      ArrayPush(this.thrusters, new FlightThrusterBack().Create(vehicle, CreateEmptyThruster()));
 
-    let mesh: ref<MeshComponent>;
-    mesh = CreateNomadThruster();
-    // mesh.visualScale = new Vector3(1.0, 0.5, 1.0);
-    // mesh.SetLocalPosition(new Vector4(0.0, 0.0, -0.2, 1.0));
-    mesh.SetLocalOrientation(new Quaternion(0.0, 0.0, 0.707, -0.707));
-    mesh.SetParentTransform(this.thrusters[0].meshComponent.name, n"None");
-    vehicle.AddComponent(mesh);
+      let mesh: ref<MeshComponent>;
+      mesh = CreateNomadThruster();
+      // mesh.visualScale = new Vector3(1.0, 0.5, 1.0);
+      // mesh.SetLocalPosition(new Vector4(0.0, 0.0, -0.2, 1.0));
+      mesh.SetLocalOrientation(new Quaternion(0.0, 0.0, 0.707, -0.707));
+      mesh.SetParentTransform(this.thrusters[0].meshComponent.name, n"None");
+      vehicle.AddComponent(mesh);
 
-    mesh = CreateNomadThruster();
-    // mesh.visualScale = new Vector3(1.0, 0.5, 1.0);
-    // mesh.SetLocalPosition(new Vector4(0.0, 0.0, -0.2, 1.0));
-    mesh.SetLocalOrientation(new Quaternion(0.0, 0.0, -0.707, -0.707));
-    mesh.SetParentTransform(this.thrusters[1].meshComponent.name, n"None");
-    vehicle.AddComponent(mesh);
+      mesh = CreateNomadThruster();
+      // mesh.visualScale = new Vector3(1.0, 0.5, 1.0);
+      // mesh.SetLocalPosition(new Vector4(0.0, 0.0, -0.2, 1.0));
+      mesh.SetLocalOrientation(new Quaternion(0.0, 0.0, -0.707, -0.707));
+      mesh.SetParentTransform(this.thrusters[1].meshComponent.name, n"None");
+      vehicle.AddComponent(mesh);
+
+      this.thrusters[0].hasRetroThruster = false;
+      this.thrusters[1].hasRetroThruster = false;
+    }
 
     for thruster in this.thrusters {
       vehicle.AddComponent(thruster.meshComponent);

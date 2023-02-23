@@ -46,6 +46,7 @@ public abstract native class IFlightThruster extends IScriptable {
   public let mainFx: ref<FxInstance>;
   // public let mainThrusterFactor: Float = 0.05;
   public let mainThrusterYawFactor: Float = 0.5;
+  public let hasRetroThruster: Bool = true;
   public let retroFx: ref<FxInstance>;
   public let retroThrusterFactor: Float = 0.1;
   public let force: Vector4;
@@ -62,7 +63,13 @@ public abstract native class IFlightThruster extends IScriptable {
   public func OnSetup(fc : ref<FlightComponent>) {
     this.flightComponent = fc;
     this.mainFxRes = Cast<FxResource>(this.mainResRef);
-    this.retroFxRes = Cast<FxResource>(this.retroResRef);
+    
+    if !this.hasRetroThruster {
+      this.mainThrusterYawFactor = 30.0;
+    } else {
+      this.mainThrusterYawFactor = 5.0;
+      this.retroFxRes = Cast<FxResource>(this.retroResRef);
+    }
 
     // this.meshComponent = vehicleComponent.FindComponentByName(this.meshName) as MeshComponent;
     this.meshComponent.visualScale = new Vector3(0.0, 0.0, 0.0);
@@ -172,11 +179,13 @@ public abstract native class IFlightThruster extends IScriptable {
     this.mainFx.AttachToComponent(this.vehicle, entAttachmentTarget.Transform, this.meshComponent.name, wt);
     this.meshComponent.Toggle(true);
 
-    let wt_retro: WorldTransform;
-    WorldTransform.SetOrientation(wt_retro, EulerAngles.ToQuat(new EulerAngles(0.0, 0.0, -90.0)));
-    this.retroFx =  GameInstance.GetFxSystem(this.vehicle.GetGame()).SpawnEffect(this.retroFxRes, effectTransform);
-    // this.retroFx.AttachToSlot(this.component.Getthis.Vehicle(), entAttachmentTarget.Transform, n"Base", wt_retro);
-    this.retroFx.AttachToComponent(this.vehicle, entAttachmentTarget.Transform, this.meshComponent.name, wt_retro);
+    if this.hasRetroThruster {
+      let wt_retro: WorldTransform;
+      WorldTransform.SetOrientation(wt_retro, EulerAngles.ToQuat(new EulerAngles(0.0, 0.0, -90.0)));
+      this.retroFx =  GameInstance.GetFxSystem(this.vehicle.GetGame()).SpawnEffect(this.retroFxRes, effectTransform);
+      // this.retroFx.AttachToSlot(this.component.Getthis.Vehicle(), entAttachmentTarget.Transform, n"Base", wt_retro);
+      this.retroFx.AttachToComponent(this.vehicle, entAttachmentTarget.Transform, this.meshComponent.name, wt_retro);
+    }
 
     // FlightAudio.Get().StartWithPitch(this.id, "vehicle3_TPP", this.audioPitch);
     FlightAudio.Get().StartWithPitch(this.id, "vehicle3_TPP", this.flightComponent.GetPitch());
@@ -239,8 +248,10 @@ public abstract native class IFlightThruster extends IScriptable {
 
     // acc.SetInputFloat(this.GetRadiusName(), this.animRadius);
 
-    let retroAmount = this.GetRetroThrusterAmount();
-    this.retroFx.SetBlackboardValue(n"thruster_amount", retroAmount);
+    if this.hasRetroThruster {
+      let retroAmount = this.GetRetroThrusterAmount();
+      this.retroFx.SetBlackboardValue(n"thruster_amount", retroAmount);
+    }
     
     this.audioUpdate = this.flightComponent.audioUpdate;
     // amount *= 0.5;

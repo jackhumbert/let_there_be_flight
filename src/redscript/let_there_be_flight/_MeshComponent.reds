@@ -1,8 +1,8 @@
 // Entity
 
-@addField(Entity)
-@runtimeProperty("offset", "0x50")
-public native let currentAppearance: CName;
+// @addField(Entity)
+// @runtimeProperty("offset", "0x50")
+// public native let currentAppearance: CName;
 
 @addField(Entity)
 @runtimeProperty("offset", "0x138")
