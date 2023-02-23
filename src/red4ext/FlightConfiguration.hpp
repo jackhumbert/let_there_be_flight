@@ -20,7 +20,7 @@ public:
   RED4ext::CName flightCameraBone = "roof_border_front";
   RED4ext::Vector3 flightCameraOffset = RED4ext::Vector3(0.0, 0.0, 0.0);
   
-  void Setup(FlightComponent* component);
+  void Setup(RED4ext::vehicle::BaseObject * vehicle);
   void AddSlots(RED4ext::ent::SlotComponent* slotComponent);
   void AddMeshes(RED4ext::ent::Entity * entity, RED4ext::ent::VisualControllerComponent * vcc);
 

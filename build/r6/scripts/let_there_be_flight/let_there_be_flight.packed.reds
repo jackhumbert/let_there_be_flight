@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2023-02-22 04:16:50.6035886
+// This file was automatically generated on 2023-02-23 04:49:14.3090946
 
 // FlightAudio.reds
 
@@ -1499,52 +1499,70 @@ public abstract native class IFlightConfiguration extends IScriptable {
   @runtimeProperty("offset", "0x68")
   public native let flightCameraOffset: Vector3; // 0, 0, 0
 
-  public func OnSetup() {
+  public func OnSetup(vehicle: ref<VehicleObject>) {
 
   }
 }
 
-// public class FlightConfiguration extends IFlightConfiguration {
+public func CreateCorpoThruster() -> ref<MeshComponent> {
+  let mc = new PhysicalMeshComponent();
+  mc.SetMesh(r"user\\jackhumbert\\meshes\\engine_corpo.mesh");
+  mc.meshApperance = n"default";
+  mc.motionBlurScale = 0.1;
+  mc.LODMode = entMeshComponentLODMode.Appearance;
+  return mc;
+}
 
-// }
+public func CreateNomadThruster() -> ref<MeshComponent> {
+  let mc = new PhysicalMeshComponent();
+  mc.SetMesh(r"user\\jackhumbert\\meshes\\engine_nomad.mesh");
+  mc.meshApperance = n"default";
+  mc.motionBlurScale = 0.1;
+  mc.LODMode = entMeshComponentLODMode.Appearance;
+  return mc;
+}
+
 
 public class CarFlightConfiguration extends IFlightConfiguration {
-  public func OnSetup() {
+  public func OnSetup(vehicle: ref<VehicleObject>) {
     // FlightLog.Info("[CarFlightConfiguration] OnSetup");
-    ArrayPush(this.thrusters, new FlightThrusterFL().Create());
-    ArrayPush(this.thrusters, new FlightThrusterFR().Create());
-    ArrayPush(this.thrusters, new FlightThrusterBL().Create());
-    ArrayPush(this.thrusters, new FlightThrusterBR().Create());
+    ArrayPush(this.thrusters, new FlightThrusterFL().Create(vehicle, CreateCorpoThruster()));
+    ArrayPush(this.thrusters, new FlightThrusterFR().Create(vehicle, CreateCorpoThruster()));
+    ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, CreateCorpoThruster()));
+    ArrayPush(this.thrusters, new FlightThrusterBR().Create(vehicle, CreateCorpoThruster()));
 
     for thruster in this.thrusters {
+      vehicle.AddComponent(thruster.meshComponent);
       thruster.OnSetup(this.component);
     }
   }
 }
 
 public class SixWheelCarFlightConfiguration extends CarFlightConfiguration {
-  public func OnSetup() {
-    ArrayPush(this.thrusters, new FlightThrusterFL().Create());
-    ArrayPush(this.thrusters, new FlightThrusterFR().Create());
-    ArrayPush(this.thrusters, new FlightThrusterFLB().Create());
-    ArrayPush(this.thrusters, new FlightThrusterFRB().Create());
-    ArrayPush(this.thrusters, new FlightThrusterBL().Create());
-    ArrayPush(this.thrusters, new FlightThrusterBR().Create());
+  public func OnSetup(vehicle: ref<VehicleObject>) {
+    ArrayPush(this.thrusters, new FlightThrusterFL().Create(vehicle, CreateCorpoThruster()));
+    ArrayPush(this.thrusters, new FlightThrusterFR().Create(vehicle, CreateCorpoThruster()));
+    // ArrayPush(this.thrusters, new FlightThrusterFLB().Create());
+    // ArrayPush(this.thrusters, new FlightThrusterFRB().Create());
+    ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, CreateCorpoThruster()));
+    ArrayPush(this.thrusters, new FlightThrusterBR().Create(vehicle, CreateCorpoThruster()));
 
     for thruster in this.thrusters {
+      vehicle.AddComponent(thruster.meshComponent);
       thruster.OnSetup(this.component);
     }
   }
 }
 
 public class BikeFlightConfiguration extends IFlightConfiguration {
-  public func OnSetup() {
+  public func OnSetup(vehicle: ref<VehicleObject>) {
     this.flightCameraOffset = new Vector3(0.0, 1.0, 0.5);
 
-    ArrayPush(this.thrusters, new FlightThrusterFront().Create());
-    ArrayPush(this.thrusters, new FlightThrusterBack().Create());
+    ArrayPush(this.thrusters, new FlightThrusterFront().Create(vehicle, CreateCorpoThruster()));
+    ArrayPush(this.thrusters, new FlightThrusterBack().Create(vehicle, CreateCorpoThruster()));
 
     for thruster in this.thrusters {
+      vehicle.AddComponent(thruster.meshComponent);
       thruster.OnSetup(this.component);
     }
   }
@@ -3620,6 +3638,9 @@ public abstract native class IFlightThruster extends IScriptable {
   @runtimeProperty("offset", "0x90")
   public native let meshComponent: ref<MeshComponent>;
 
+  @runtimeProperty("offset", "0xA0")
+  public native let vehicle: ref<VehicleObject>;
+
   public let parentSlotName: CName;
   public let radiusName: CName;
   public let deviationName: CName;
@@ -3656,8 +3677,6 @@ public abstract native class IFlightThruster extends IScriptable {
     this.flightComponent = fc;
     this.mainFxRes = Cast<FxResource>(this.mainResRef);
     this.retroFxRes = Cast<FxResource>(this.retroResRef);
-
-    // let vehicleComponent = this.flightComponent.GetVehicle().GetVehicleComponent();
 
     // this.meshComponent = vehicleComponent.FindComponentByName(this.meshName) as MeshComponent;
     this.meshComponent.visualScale = new Vector3(0.0, 0.0, 0.0);
@@ -3751,11 +3770,10 @@ public abstract native class IFlightThruster extends IScriptable {
   }
 
   public func SetOGComponents() {
-    this.ogComponents = this.flightComponent.GetVehicle().GetComponentsUsingSlot(this.parentSlotName);
+    this.ogComponents = this.vehicle.GetComponentsUsingSlot(this.parentSlotName);
   }
 
   public func Start() {
-    let vehicle = this.flightComponent.GetVehicle();
     let effectTransform: WorldTransform;
     let wt = new WorldTransform();
 
@@ -3763,16 +3781,16 @@ public abstract native class IFlightThruster extends IScriptable {
     this.HideOGComponents();
 
     WorldTransform.SetPosition(effectTransform, this.flightComponent.stats.d_position);
-    this.mainFx = GameInstance.GetFxSystem(vehicle.GetGame()).SpawnEffect(this.mainFxRes, effectTransform);
+    this.mainFx = GameInstance.GetFxSystem(this.vehicle.GetGame()).SpawnEffect(this.mainFxRes, effectTransform);
     this.mainFx.SetBlackboardValue(n"thruster_amount", 0.0);
-    this.mainFx.AttachToComponent(vehicle, entAttachmentTarget.Transform, this.meshName, wt);
+    this.mainFx.AttachToComponent(this.vehicle, entAttachmentTarget.Transform, this.meshComponent.name, wt);
     this.meshComponent.Toggle(true);
 
     let wt_retro: WorldTransform;
     WorldTransform.SetOrientation(wt_retro, EulerAngles.ToQuat(new EulerAngles(0.0, 0.0, -90.0)));
-    this.retroFx =  GameInstance.GetFxSystem(vehicle.GetGame()).SpawnEffect(this.retroFxRes, effectTransform);
-    // this.retroFx.AttachToSlot(this.component.GetVehicle(), entAttachmentTarget.Transform, n"Base", wt_retro);
-    this.retroFx.AttachToComponent(vehicle, entAttachmentTarget.Transform, this.meshName, wt_retro);
+    this.retroFx =  GameInstance.GetFxSystem(this.vehicle.GetGame()).SpawnEffect(this.retroFxRes, effectTransform);
+    // this.retroFx.AttachToSlot(this.component.Getthis.Vehicle(), entAttachmentTarget.Transform, n"Base", wt_retro);
+    this.retroFx.AttachToComponent(this.vehicle, entAttachmentTarget.Transform, this.meshComponent.name, wt_retro);
 
     // FlightAudio.Get().StartWithPitch(this.id, "vehicle3_TPP", this.audioPitch);
     FlightAudio.Get().StartWithPitch(this.id, "vehicle3_TPP", this.flightComponent.GetPitch());
@@ -3824,14 +3842,14 @@ public abstract native class IFlightThruster extends IScriptable {
     this.animDeviation = LerpF(this.boneLerpAmount, this.animDeviation, animDeviationCenter + amount * animDeviationScale);
     // this.animDeviation = animDeviationCenter + amount * animDeviationScale;
     // this.animRadius = animRadiusCenter + amount * animRadiusScale;
-    // AnimationControllerComponent.SetInputFloatToReplicate(this.flightComponent.GetVehicle(), this.deviationName, this.animDeviation);
-    // AnimationControllerComponent.SetInputFloatToReplicate(this.flightComponent.GetVehicle(), this.GetRadiusName(), this.animRadius);
+    // AnimationControllerComponent.SetInputFloatToReplicate(this.vehicle, this.deviationName, this.animDeviation);
+    // AnimationControllerComponent.SetInputFloatToReplicate(this.vehicle, this.GetRadiusName(), this.animRadius);
 
     let acc = this.flightComponent.FindComponentByName(n"AnimationController") as AnimationControllerComponent;
     if IsDefined(acc) {
       acc.SetInputFloat(this.deviationName, this.animDeviation);
     }
-    // AnimationControllerComponent.SetInputFloat(this.flightComponent.GetVehicle(), this.deviationName, this.animDeviation);
+    // AnimationControllerComponent.SetInputFloat(this.vehicle, this.deviationName, this.animDeviation);
 
     // acc.SetInputFloat(this.GetRadiusName(), this.animRadius);
 
@@ -3902,13 +3920,16 @@ public abstract native class IFlightThruster extends IScriptable {
   }
 }
 
+// FRONT
+
 public class FlightThrusterFront extends IFlightThruster {
-  public func Create() -> ref<IFlightThruster> {
-    this.boneName = n"suspension_front_offset";
-    this.slotName = n"thruster_front";
-    this.meshName = n"ThrusterF";
-    this.relativePosition = new Vector3(0.0, 0.0, -0.5);
-    this.relativeRotation = new Quaternion(0.22627002, 0.0, 0.0, -0.974064708);
+  public func Create(vehicle: ref<VehicleObject>, meshComponent: ref<MeshComponent>) -> ref<IFlightThruster> {
+    this.vehicle = vehicle;
+    this.vehicle.AddSlot(n"suspension_front_offset", n"thruster_front", new Vector3(0.0, 0.0, -0.5), new Quaternion(0.22627002, 0.0, 0.0, -0.974064708));
+
+    this.meshComponent = meshComponent;
+    this.meshComponent.name = n"ThrusterF"; 
+    this.meshComponent.SetParentTransform(n"vehicle_slots", n"thruster_front");
 
     this.isFront = true;
     this.parentSlotName = n"wheel_front_spring";
@@ -3933,7 +3954,7 @@ public class FlightThrusterFront extends IFlightThruster {
     if IsDefined(comp) {
       ArrayPush(this.ogComponents, comp);
     }
-    let comps = this.flightComponent.GetVehicle().GetComponentsUsingSlot(n"wheel_front_rot_set");
+    let comps = this.vehicle.GetComponentsUsingSlot(n"wheel_front_rot_set");
     for c in comps {
       ArrayPush(this.ogComponents, c);
     }
@@ -3953,7 +3974,7 @@ public class FlightThrusterFront extends IFlightThruster {
       angle = 0.0;
     }
     angle *= (1.0 - AbsF(this.torque.Y) * 0.5);
-    return -ClampF(angle, -this.maxThrusterAnglePitch, this.maxThrusterAnglePitch);
+    return ClampF(angle, -this.maxThrusterAnglePitch, this.maxThrusterAnglePitch);
   }
 
   public func GetYaw() -> Float {
@@ -3973,13 +3994,16 @@ public class FlightThrusterFront extends IFlightThruster {
   }
 }
 
+// BACK
+
 public class FlightThrusterBack extends IFlightThruster {
-  public func Create() -> ref<IFlightThruster> {
-    this.boneName = n"suspension_back";
-    this.slotName = n"thruster_back";
-    this.meshName = n"ThrusterB";
-    this.relativePosition = new Vector3(0.0, 0.0, -0.5);
-    this.relativeRotation = new Quaternion(0.0, 0.0, 0.0, 1.0);
+  public func Create(vehicle: ref<VehicleObject>, meshComponent: ref<MeshComponent>) -> ref<IFlightThruster> {
+    this.vehicle = vehicle;
+    this.vehicle.AddSlot(n"suspension_back", n"thruster_back", new Vector3(0.0, 0.0, -0.5), new Quaternion(0.0, 0.0, 0.0, 1.0));
+
+    this.meshComponent = meshComponent;
+    this.meshComponent.name = n"ThrusterB"; 
+    this.meshComponent.SetParentTransform(n"vehicle_slots", n"thruster_back");
 
     this.parentSlotName = n"axel_back";
     this.radiusName = n"None";
@@ -4007,7 +4031,7 @@ public class FlightThrusterBack extends IFlightThruster {
     if IsDefined(comp) {
       ArrayPush(this.ogComponents, comp);
     }
-    let comps = this.flightComponent.GetVehicle().GetComponentsUsingSlot(n"axel_back_wheel");
+    let comps = this.vehicle.GetComponentsUsingSlot(n"axel_back_wheel");
     for c in comps {
       ArrayPush(this.ogComponents, c);
     }
@@ -4039,12 +4063,16 @@ public class FlightThrusterBack extends IFlightThruster {
   }
 }
 
+// FRONT LEFT
+
 public class FlightThrusterFL extends IFlightThruster {
-  public func Create() -> ref<IFlightThruster> {
-    this.boneName = n"swingarm_front_left";
-    this.slotName = n"thruster_front_left";
-    this.meshName = n"ThrusterFL";
-    this.relativeRotation = new Quaternion(0.0, 0.0, 0.0, 1.0);
+  public func Create(vehicle: ref<VehicleObject>, meshComponent: ref<MeshComponent>) -> ref<IFlightThruster> {
+    this.vehicle = vehicle;
+    this.vehicle.AddSlot(n"swingarm_front_left", n"thruster_front_left", new Vector3(0.0, 0.0, 0.0), new Quaternion(0.0, 0.0, 0.0, 1.0));
+
+    this.meshComponent = meshComponent;
+    this.meshComponent.name = n"ThrusterFL"; 
+    this.meshComponent.SetParentTransform(n"vehicle_slots", n"thruster_front_left");
 
     this.isFront = true;
     this.parentSlotName = n"wheel_front_left";
@@ -4065,11 +4093,13 @@ public class FlightThrusterFL extends IFlightThruster {
 }
 
 public class FlightThrusterFR extends IFlightThruster {
-  public func Create() -> ref<IFlightThruster> {
-    this.boneName = n"swingarm_front_right";
-    this.slotName = n"thruster_front_right";
-    this.meshName = n"ThrusterFR";
-    this.relativeRotation = new Quaternion(0.0, 0.0, 0.0, 1.0);
+  public func Create(vehicle: ref<VehicleObject>, meshComponent: ref<MeshComponent>) -> ref<IFlightThruster> {
+    this.vehicle = vehicle;
+    this.vehicle.AddSlot(n"swingarm_front_right", n"thruster_front_right", new Vector3(0.0, 0.0, 0.0), new Quaternion(0.0, 0.0, 0.0, 1.0));
+
+    this.meshComponent = meshComponent;
+    this.meshComponent.name = n"ThrusterFR"; 
+    this.meshComponent.SetParentTransform(n"vehicle_slots", n"thruster_front_right");
 
     this.isFront = true;
     this.isRight = true;
@@ -4090,12 +4120,16 @@ public class FlightThrusterFR extends IFlightThruster {
   }
 }
 
+// BACK RIGHT
+
 public class FlightThrusterBR extends IFlightThruster {
-  public func Create() -> ref<IFlightThruster> {
-    this.boneName = n"swingarm_back_right";
-    this.slotName = n"thruster_back_right";
-    this.meshName = n"ThrusterBR";
-    this.relativeRotation = new Quaternion(0.0, 0.0, 0.0, 1.0);
+  public func Create(vehicle: ref<VehicleObject>, meshComponent: ref<MeshComponent>) -> ref<IFlightThruster> {
+    this.vehicle = vehicle;
+    this.vehicle.AddSlot(n"swingarm_back_right", n"thruster_back_right", new Vector3(0.0, 0.0, 0.0), new Quaternion(0.0, 0.0, 0.0, 1.0));
+
+    this.meshComponent = meshComponent;
+    this.meshComponent.name = n"ThrusterBR"; 
+    this.meshComponent.SetParentTransform(n"vehicle_slots", n"thruster_back_right");
 
     this.isRight = true;
     this.parentSlotName = n"wheel_back_right";
@@ -4115,12 +4149,16 @@ public class FlightThrusterBR extends IFlightThruster {
   }
 }
 
+// BACK LEFT
+
 public class FlightThrusterBL extends IFlightThruster {
-  public func Create() -> ref<IFlightThruster> {
-    this.boneName = n"swingarm_back_left";
-    this.slotName = n"thruster_back_left";
-    this.meshName = n"ThrusterBL";
-    this.relativeRotation = new Quaternion(0.0, 0.0, 0.0, 1.0);
+  public func Create(vehicle: ref<VehicleObject>, meshComponent: ref<MeshComponent>) -> ref<IFlightThruster> {
+    this.vehicle = vehicle;
+    this.vehicle.AddSlot(n"swingarm_back_left", n"thruster_back_left", new Vector3(0.0, 0.0, 0.0), new Quaternion(0.0, 0.0, 0.0, 1.0));
+
+    this.meshComponent = meshComponent;
+    this.meshComponent.name = n"ThrusterBL"; 
+    this.meshComponent.SetParentTransform(n"vehicle_slots", n"thruster_back_left");
 
     this.parentSlotName = n"wheel_back_left";
     this.radiusName = n"veh_rad_w_b_l";
@@ -4138,6 +4176,8 @@ public class FlightThrusterBL extends IFlightThruster {
     return (Vector4.Dot(vec, this.force) + tor) * this.retroThrusterFactor;
   }
 }
+
+// FRONT LEFT B
 
 public class FlightThrusterFLB extends IFlightThruster {
   public func Create() -> ref<IFlightThruster> {
@@ -4164,6 +4204,8 @@ public class FlightThrusterFLB extends IFlightThruster {
     return (Vector4.Dot(vec, this.force) + tor) * this.retroThrusterFactor;
   }
 }
+
+// FRONT LEFT B
 
 public class FlightThrusterFRB extends IFlightThruster {
   public func Create() -> ref<IFlightThruster> {
@@ -6351,8 +6393,106 @@ public native func SetBlurDimension(effectName: CName, blurDimension : inkEBlurD
 
 // _MeshComponent.reds
 
+// Entity
+
+@addMethod(Entity)
+public native func AddComponent(component: ref<IComponent>);
+
+@addMethod(Entity)
+public native func AddSlot(boneName: CName, slotName: CName, relativePosition: Vector3, relativeRotation: Quaternion);
+
+// IComponent
+
+@addField(IComponent)
+@runtimeProperty("offset", "0x40")
+public native let name: CName;
+
+@addField(IComponent)
+@runtimeProperty("offset", "0x48")
+public native let appearanceName: CName;
+
+// IPlacedComponent
+
+@addMethod(IPlacedComponent)
+public native func SetParentTransform(bindName: CName, slotName: CName);
+
+// MeshComponent
+
+@addMethod(MeshComponent)
+public native func SetMesh(mesh: ResRef);
+
 @addField(MeshComponent)
+@runtimeProperty("offset", "0x178")
 public native let visualScale: Vector3;
+
+enum ERenderObjectType {
+    ROT_Static = 0,
+    ROT_Terrain = 1,
+    ROT_Road = 2,
+    ROT_CustomCharacter1 = 12,
+    ROT_CustomCharacter2 = 13,
+    ROT_CustomCharacter3 = 14,
+    ROT_MainPlayer = 15,
+    ROT_NoAO = 16,
+    ROT_NoLighting = 17,
+    ROT_NoTXAA = 18,
+    ROT_Skinned = 20,
+    ROT_Character = 21,
+    ROT_Foliage = 22,
+    ROT_Grass = 23,
+    ROT_Vehicle = 24,
+    ROT_Weapon = 25,
+    ROT_Particle = 26,
+    ROT_Enemy = 27,
+}
+
+@addField(MeshComponent)
+@runtimeProperty("offset", "0x188")
+public native let objectTypeID: ERenderObjectType;
+
+@addField(MeshComponent)
+@runtimeProperty("offset", "0x190")
+public native let meshApperance: CName;
+
+@addField(MeshComponent)
+@runtimeProperty("offset", "0x198")
+public native let chunkMask: Uint64;
+
+@addField(MeshComponent)
+@runtimeProperty("offset", "0x1A4")
+public native let motionBlurScale: Float;
+
+enum entMeshComponentLODMode {
+    AlwaysVisible = 0,
+    Appearance = 1,
+    AppearanceProxy = 2,
+}
+
+@addField(MeshComponent)
+@runtimeProperty("offset", "0x1A8")
+public native let LODMode: entMeshComponentLODMode;
+
+@addField(MeshComponent)
+@runtimeProperty("offset", "0x1AB")
+public native let order: Uint8;
+
+@addField(MeshComponent)
+@runtimeProperty("offset", "0x1AC")
+public native let castShadows: Bool;
+
+@addField(MeshComponent)
+@runtimeProperty("offset", "0x1AD")
+public native let castLocalShadows: Bool;
+
+// PhysicalMeshComponent
+
+@addField(PhysicalMeshComponent)
+@runtimeProperty("offset", "0x228")
+public native let visibilityAnimationParam: CName;
+
+@addField(PhysicalMeshComponent)
+@runtimeProperty("offset", "0x23A")
+public native let startInactive: Bool;
 
 // _Transitions.reds
 

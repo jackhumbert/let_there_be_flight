@@ -17,6 +17,7 @@ public:
   RED4ext::CName meshPath = "user\\jackhumbert\\meshes\\engine_corpo.mesh";
   RED4ext::CName meshName = "Thruster";
   RED4ext::Handle<RED4ext::ent::MeshComponent> meshComponent;
+  RED4ext::Handle<RED4ext::vehicle::BaseObject> vehicle;
 
 private:
   friend Descriptor;
@@ -36,3 +37,4 @@ RED4EXT_ASSERT_OFFSET(IFlightThruster, relativeRotation, 0x70);
 RED4EXT_ASSERT_OFFSET(IFlightThruster, meshPath, 0x80);
 RED4EXT_ASSERT_OFFSET(IFlightThruster, meshName, 0x88);
 RED4EXT_ASSERT_OFFSET(IFlightThruster, meshComponent, 0x90);
+RED4EXT_ASSERT_OFFSET(IFlightThruster, vehicle, 0xA0);

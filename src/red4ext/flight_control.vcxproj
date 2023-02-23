@@ -129,6 +129,7 @@
     <ClCompile Include="FmodHelper.hpp" />
     <ClCompile Include="FmodHelper.cpp" />
     <ClCompile Include="FlightHUDGameController.hpp" />
+    <ClCompile Include="MeshComponent.cpp" />
     <ClCompile Include="RuntimeProperties.cpp" />
     <ClCompile Include="ScriptDefinitions\ScriptDefinitions.hpp" />
     <ClCompile Include="stdafx.cpp" />
@@ -150,6 +151,7 @@
     <ClInclude Include="FlightThruster.hpp" />
     <ClInclude Include="IFlightSystem.hpp" />
     <ClInclude Include="INIReader.h" />
+    <ClInclude Include="MeshComponent.hpp" />
     <ClInclude Include="RuntimeClass.hpp" />
     <ClInclude Include="ScriptDefinitions\ScriptHost.hpp" />
     <ClInclude Include="Signatures.hpp" />

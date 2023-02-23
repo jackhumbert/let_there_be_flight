@@ -11,52 +11,70 @@ public abstract native class IFlightConfiguration extends IScriptable {
   @runtimeProperty("offset", "0x68")
   public native let flightCameraOffset: Vector3; // 0, 0, 0
 
-  public func OnSetup() {
+  public func OnSetup(vehicle: ref<VehicleObject>) {
 
   }
 }
 
-// public class FlightConfiguration extends IFlightConfiguration {
+public func CreateCorpoThruster() -> ref<MeshComponent> {
+  let mc = new PhysicalMeshComponent();
+  mc.SetMesh(r"user\\jackhumbert\\meshes\\engine_corpo.mesh");
+  mc.meshApperance = n"default";
+  mc.motionBlurScale = 0.1;
+  mc.LODMode = entMeshComponentLODMode.Appearance;
+  return mc;
+}
 
-// }
+public func CreateNomadThruster() -> ref<MeshComponent> {
+  let mc = new PhysicalMeshComponent();
+  mc.SetMesh(r"user\\jackhumbert\\meshes\\engine_nomad.mesh");
+  mc.meshApperance = n"default";
+  mc.motionBlurScale = 0.1;
+  mc.LODMode = entMeshComponentLODMode.Appearance;
+  return mc;
+}
+
 
 public class CarFlightConfiguration extends IFlightConfiguration {
-  public func OnSetup() {
+  public func OnSetup(vehicle: ref<VehicleObject>) {
     // FlightLog.Info("[CarFlightConfiguration] OnSetup");
-    ArrayPush(this.thrusters, new FlightThrusterFL().Create());
-    ArrayPush(this.thrusters, new FlightThrusterFR().Create());
-    ArrayPush(this.thrusters, new FlightThrusterBL().Create());
-    ArrayPush(this.thrusters, new FlightThrusterBR().Create());
+    ArrayPush(this.thrusters, new FlightThrusterFL().Create(vehicle, CreateCorpoThruster()));
+    ArrayPush(this.thrusters, new FlightThrusterFR().Create(vehicle, CreateCorpoThruster()));
+    ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, CreateCorpoThruster()));
+    ArrayPush(this.thrusters, new FlightThrusterBR().Create(vehicle, CreateCorpoThruster()));
 
     for thruster in this.thrusters {
+      vehicle.AddComponent(thruster.meshComponent);
       thruster.OnSetup(this.component);
     }
   }
 }
 
 public class SixWheelCarFlightConfiguration extends CarFlightConfiguration {
-  public func OnSetup() {
-    ArrayPush(this.thrusters, new FlightThrusterFL().Create());
-    ArrayPush(this.thrusters, new FlightThrusterFR().Create());
-    ArrayPush(this.thrusters, new FlightThrusterFLB().Create());
-    ArrayPush(this.thrusters, new FlightThrusterFRB().Create());
-    ArrayPush(this.thrusters, new FlightThrusterBL().Create());
-    ArrayPush(this.thrusters, new FlightThrusterBR().Create());
+  public func OnSetup(vehicle: ref<VehicleObject>) {
+    ArrayPush(this.thrusters, new FlightThrusterFL().Create(vehicle, CreateCorpoThruster()));
+    ArrayPush(this.thrusters, new FlightThrusterFR().Create(vehicle, CreateCorpoThruster()));
+    // ArrayPush(this.thrusters, new FlightThrusterFLB().Create());
+    // ArrayPush(this.thrusters, new FlightThrusterFRB().Create());
+    ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, CreateCorpoThruster()));
+    ArrayPush(this.thrusters, new FlightThrusterBR().Create(vehicle, CreateCorpoThruster()));
 
     for thruster in this.thrusters {
+      vehicle.AddComponent(thruster.meshComponent);
       thruster.OnSetup(this.component);
     }
   }
 }
 
 public class BikeFlightConfiguration extends IFlightConfiguration {
-  public func OnSetup() {
+  public func OnSetup(vehicle: ref<VehicleObject>) {
     this.flightCameraOffset = new Vector3(0.0, 1.0, 0.5);
 
-    ArrayPush(this.thrusters, new FlightThrusterFront().Create());
-    ArrayPush(this.thrusters, new FlightThrusterBack().Create());
+    ArrayPush(this.thrusters, new FlightThrusterFront().Create(vehicle, CreateCorpoThruster()));
+    ArrayPush(this.thrusters, new FlightThrusterBack().Create(vehicle, CreateCorpoThruster()));
 
     for thruster in this.thrusters {
+      vehicle.AddComponent(thruster.meshComponent);
       thruster.OnSetup(this.component);
     }
   }

@@ -42,6 +42,11 @@ RED4ext::CRTTIHandleType **__fastcall CreateCRTTIHandleTypeFromClass(RED4ext::CR
   return call(a1, a2);
 }
 
+RED4ext::CRTTIResourceAsyncReferenceType **__fastcall CreateCRTTIRaRefTypeFromClass(RED4ext::CRTTIResourceAsyncReferenceType **a1, RED4ext::CBaseRTTIType *a2) {
+  RED4ext::RelocFunc<decltype(&CreateCRTTIRaRefTypeFromClass)> call(CreateCRTTIRaRefTypeFromClassAddr);
+  return call(a1, a2);
+}
+
 bool __fastcall ProcessScriptTypes(uint32_t* version, ScriptData* scriptData, void* scriptLogger);
 decltype(&ProcessScriptTypes) ProcessScriptTypes_Original;
 
@@ -54,14 +59,21 @@ bool __fastcall ProcessScriptTypes(uint32_t* version, ScriptData* scriptData, vo
           auto cstr = offsetStr->c_str();
           char* p;
           auto offsetValue = strtoul(cstr, &p, 16);
+          RED4ext::CName typeName = prop->type->name;
           if (*p == 0) {
             spdlog::info("{}.{} at 0x{:X} {}", scriptClass->name.ToString(), prop->name.ToString(), offsetValue, prop->type->name.ToString());
             if (prop->flags.isNative) {
+              auto customTypeStr = prop->runtimeProperties.Get("type");
+              if (customTypeStr) {
+                spdlog::info("Custom type: {}", customTypeStr->c_str());
+                typeName = RED4ext::CName(customTypeStr->c_str());
+                //prop->type->name = typeName;
+              }
               auto rtti = RED4ext::CRTTISystem::Get();
               auto rttiClass = rtti->GetClassByScriptName(scriptClass->name);
-              auto rttiType = rtti->GetType(prop->type->name);
+              auto rttiType = rtti->GetType(typeName);
               if (!rttiType) {
-                std::string typeStr(prop->type->name.ToString());
+                std::string typeStr(typeName.ToString());
                 auto del = typeStr.find(":");
                 if (del != -1) {
                   auto outerTypeStr = typeStr.substr(0, del);
@@ -88,10 +100,22 @@ bool __fastcall ProcessScriptTypes(uint32_t* version, ScriptData* scriptData, vo
                         CreateCRTTIArrayTypeFromClass(&whType, innerInnerType);
                         rtti->RegisterType(whType);
                         innerType = whType;
+                      } else if (innerTypeStr.starts_with("raRef")) {
+                        RED4ext::CRTTIResourceAsyncReferenceType *whType;
+                        CreateCRTTIRaRefTypeFromClass(&whType, innerInnerType);
+                        rtti->RegisterType(whType);
+                        innerType = whType;
                       }
                     }
                   }
                   if (innerType) {
+                    //if (customTypeStr) {
+                    //  //innerScriptType = ScriptType();
+                    //  ScriptClass *innerScriptCls = (ScriptClass*)malloc(0x90);
+                    //  innerScriptCls->rttiType = (RED4ext::CClass*)innerType;
+                    //  innerScriptCls->name = RED4ext::CName(innerTypeStr.c_str());
+                    //  prop->type->innerType = innerScriptCls;
+                    //}
                     if (outerTypeStr.starts_with("wref")) {
                       RED4ext::CRTTIWeakHandleType *whType;
                       CreateCRTTIWeakHandleTypeFromClass(&whType, innerType);
@@ -107,12 +131,20 @@ bool __fastcall ProcessScriptTypes(uint32_t* version, ScriptData* scriptData, vo
                       CreateCRTTIArrayTypeFromClass(&whType, innerType);
                       rtti->RegisterType(whType);
                       rttiType = whType;
+                    } else if (innerTypeStr.starts_with("raRef")) {
+                      RED4ext::CRTTIResourceAsyncReferenceType *whType;
+                      CreateCRTTIRaRefTypeFromClass(&whType, innerType);
+                      rtti->RegisterType(whType);
+                      innerType = whType;
                     }
                   } else {
                     spdlog::warn("could not find inner type '{}' in '{}'", innerTypeStr, typeStr);
                   }
                 }
               }
+              //if (customTypeStr) {
+              //  prop->type->rttiType = rttiType;
+              //}
               if (rttiType) {
                 rttiClass->props.PushBack(
                     RED4ext::CProperty::Create(rttiType, prop->name.ToString(), nullptr, offsetValue));

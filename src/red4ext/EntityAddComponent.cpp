@@ -155,6 +155,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
 
     auto fc = (FlightComponent *)FlightComponent::GetRTTIType()->CreateInstance(true);
     fc->name = "flightComponent";
+    fc->entity = entity;
     auto fch = RED4ext::Handle<FlightComponent>(fc);
     vehicle->componentsStorage.components.EmplaceBack(fch);
 
@@ -264,12 +265,12 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
           auto handle = RED4ext::Handle<IFlightConfiguration>(configuration);
           configuration->ref = RED4ext::WeakHandle(*reinterpret_cast<RED4ext::Handle<RED4ext::ISerializable> *>(&handle));
           configuration->unk30 = configurationCls;
-
+          configuration->component = RED4ext::Handle<FlightComponent>(fc);
           fc->configuration = handle;
 
-          configuration->Setup(fc);
+          configuration->Setup(vehicle);
           configuration->AddSlots(vs);
-          configuration->AddMeshes(entity, vcc);
+          //configuration->AddMeshes(entity, vcc);
         } else {
           spdlog::info("Looked for class '{}'", className);
         }
@@ -516,8 +517,8 @@ struct EntityAddComponentModule : FlightModule {
                                                           &IPlacedComponentUpdateHardTransformBinding, {.isNative = true}));
 
     
-    auto mc = rtti->GetClass("entMeshComponent");
-    mc->props.EmplaceBack(RED4ext::CProperty::Create(rtti->GetType("Vector3"), "visualScale", nullptr, 0x178));
+    //auto mc = rtti->GetClass("entMeshComponent");
+    //mc->props.EmplaceBack(RED4ext::CProperty::Create(rtti->GetType("Vector3"), "visualScale", nullptr, 0x178));
   }
 };
 

@@ -126,6 +126,13 @@ using CreateCRTTIHandleTypeFromClass = RED4ext::CRTTIHandleType **__fastcall(RED
 /// @nth 4/7
 using CreateCRTTIWeakHandleTypeFromClass = RED4ext::CRTTIWeakHandleType **__fastcall (RED4ext::CRTTIWeakHandleType **a1,
                                                                              RED4ext::CBaseRTTIType *a2);
+
+// 1.62 RVA: 0x200920 / 2099488
+/// @pattern 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 30 48 8B FA 48 8B F1 BA 28 00 00 00 48 8D 4C 24 20 E8
+/// @nth 2/7
+using CreateCRTTIRaRefTypeFromClass = RED4ext::CRTTIResourceAsyncReferenceType **__fastcall (RED4ext::CRTTIResourceAsyncReferenceType **a1,
+                                                                               RED4ext::CBaseRTTIType *a2);
+
 struct ScriptData;
 
 // 1.52 RVA: 0x273160 / 2568544

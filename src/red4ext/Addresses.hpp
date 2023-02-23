@@ -19,6 +19,7 @@
 #define CreateCRTTIArrayTypeFromClassAddr 0x200660
 #define CreateCRTTIHandleTypeFromClassAddr 0x200750
 #define CreateCRTTIWeakHandleTypeFromClassAddr 0x200AF0
+#define CreateCRTTIRaRefTypeFromClassAddr 0x200920
 #define ProcessScriptTypesAddr 0x277560
 #define LoadResRefTAddr 0x204A90
 #define CGameFramework_Systems_120_128_130Addr 0x13A19A0

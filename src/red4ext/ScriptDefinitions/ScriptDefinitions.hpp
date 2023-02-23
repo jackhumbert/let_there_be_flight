@@ -50,6 +50,7 @@ struct ScriptType : ScriptDefinition {
   uint32_t unk28;
   EScriptType type;
 };
+RED4EXT_ASSERT_SIZE(ScriptType, 0x30);
 
 struct ScriptPropertyFlags {
   uint16_t isNative : 1;
