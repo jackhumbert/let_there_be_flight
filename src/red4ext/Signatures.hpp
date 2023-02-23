@@ -145,3 +145,12 @@ using ProcessScriptTypes = bool __fastcall (uint32_t *version, ScriptData *scrip
 // 1.61 RVA: 0x204940
 /// @pattern 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 60 41 0F B6 D8 48 8B FA 48 8B F1 48 C7 44 24 20 00 00
 using LoadResRefT = void * (void *, void*, bool);
+
+// 1.52 RVA: 0x9A4290 / 10109584
+// 1.62 RVA: 0x9AE2D0 / 10150608
+/// @pattern 48 89 5C 24 08 48 89 74 24 10 57 48 81 EC A0 00 00 00 48 8D 4C 24 30 49 8B F0 48 8B FA E8
+//using GetLocalizedTextScripts = void __fastcall (void *, RED4ext::CStackFrame *, RED4ext::CString *);
+
+// 1.62 RVA: 0x6FA540 / 7316800
+/// @pattern 40 53 48 83 EC 30 F2 41 0F 10 00 48 8B DA 41 8B 40 08 4C 8D 44 24 20 44 0F B6 89 39 04 00 00 F2
+using LookupLocalizedString = RED4ext::CString * __fastcall (__int64, RED4ext::CString * result, char * locKey);

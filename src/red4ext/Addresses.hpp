@@ -22,6 +22,7 @@
 #define CreateCRTTIRaRefTypeFromClassAddr 0x200920
 #define ProcessScriptTypesAddr 0x277560
 #define LoadResRefTAddr 0x204A90
+#define LookupLocalizedStringAddr 0x6FA540
 #define CGameFramework_Systems_120_128_130Addr 0x13A19A0
 #define CClass_AddEventCallbackTypeAddr 0x1F96B0
 #define CClass_SetupScriptCallbacksAddr 0x1F9790

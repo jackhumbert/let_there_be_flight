@@ -158,6 +158,8 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     fc->entity = entity;
     auto fch = RED4ext::Handle<FlightComponent>(fc);
     vehicle->componentsStorage.components.EmplaceBack(fch);
+    
+    //vehicle->entityTags.tags;
 
     //FlightWeapons::AddWeapons(vehicle);
 

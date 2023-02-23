@@ -1,5 +1,13 @@
 // Entity
 
+@addField(Entity)
+@runtimeProperty("offset", "0x50")
+public native let currentAppearance: CName;
+
+@addField(Entity)
+@runtimeProperty("offset", "0x138")
+public native let entityTags: array<CName>;
+
 @addMethod(Entity)
 public native func AddComponent(component: ref<IComponent>);
 
@@ -18,6 +26,7 @@ public native let appearanceName: CName;
 
 // IPlacedComponent
 
+// bindName is component name - can be SlotComponent like vehicle_slots
 @addMethod(IPlacedComponent)
 public native func SetParentTransform(bindName: CName, slotName: CName);
 

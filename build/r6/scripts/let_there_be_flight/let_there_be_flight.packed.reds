@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2023-02-23 04:49:14.3090946
+// This file was automatically generated on 2023-02-23 17:04:25.9728444
 
 // FlightAudio.reds
 
@@ -1486,6 +1486,12 @@ public native class FlightComponent extends GameComponent {
 
 // FlightConfiguration.reds
 
+enum FlightVehicleType {
+  Streetkid = 0,
+  Nomad = 1,
+  Corpo = 2
+}
+
 public abstract native class IFlightConfiguration extends IScriptable {
   @runtimeProperty("offset", "0x40")
   public native let component: ref<FlightComponent>;
@@ -1499,9 +1505,30 @@ public abstract native class IFlightConfiguration extends IScriptable {
   @runtimeProperty("offset", "0x68")
   public native let flightCameraOffset: Vector3; // 0, 0, 0
 
-  public func OnSetup(vehicle: ref<VehicleObject>) {
+  public let type: FlightVehicleType = FlightVehicleType.Corpo;
 
+  public func OnSetup(vehicle: ref<VehicleObject>) {
+    // switch (vehicle.currentAppearance) {
+    //   case n"thorton_galena_nomad_player_01":
+    //     this.type = FlightVehicleType.Nomad;
+    //     break;
+    //   case n"chevalier_emperor__basic_police":
+    //     this.type = FlightVehicleType.Corpo;
+    //     break;
+    //   case n"quadra_type66__basic_poor_03":
+    //   case n"arch_nemesis_basic_jackie":
+    //   case n"mahir_supron__basic_urban_02":
+    //   case n"thorton_galena__basic_player_01":
+    //   default:
+    //     this.type = FlightVehicleType.Streetkid;
+    //     break;
+    // }
   }
+}
+
+public func CreateEmptyThruster() -> ref<MeshComponent> {
+  let mc = new MeshComponent();
+  return mc;
 }
 
 public func CreateCorpoThruster() -> ref<MeshComponent> {
@@ -1522,14 +1549,21 @@ public func CreateNomadThruster() -> ref<MeshComponent> {
   return mc;
 }
 
-
 public class CarFlightConfiguration extends IFlightConfiguration {
   public func OnSetup(vehicle: ref<VehicleObject>) {
-    // FlightLog.Info("[CarFlightConfiguration] OnSetup");
-    ArrayPush(this.thrusters, new FlightThrusterFL().Create(vehicle, CreateCorpoThruster()));
-    ArrayPush(this.thrusters, new FlightThrusterFR().Create(vehicle, CreateCorpoThruster()));
-    ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, CreateCorpoThruster()));
-    ArrayPush(this.thrusters, new FlightThrusterBR().Create(vehicle, CreateCorpoThruster()));
+    super.OnSetup(vehicle);
+
+    if (Equals(this.type, FlightVehicleType.Corpo)) {
+      ArrayPush(this.thrusters, new FlightThrusterFL().Create(vehicle, CreateCorpoThruster()));
+      ArrayPush(this.thrusters, new FlightThrusterFR().Create(vehicle, CreateCorpoThruster()));
+      ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, CreateCorpoThruster()));
+      ArrayPush(this.thrusters, new FlightThrusterBR().Create(vehicle, CreateCorpoThruster()));
+    } else {
+      ArrayPush(this.thrusters, new FlightThrusterFL().Create(vehicle, CreateNomadThruster()));
+      ArrayPush(this.thrusters, new FlightThrusterFR().Create(vehicle, CreateNomadThruster()));
+      ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, CreateNomadThruster()));
+      ArrayPush(this.thrusters, new FlightThrusterBR().Create(vehicle, CreateNomadThruster()));
+    }
 
     for thruster in this.thrusters {
       vehicle.AddComponent(thruster.meshComponent);
@@ -1540,26 +1574,42 @@ public class CarFlightConfiguration extends IFlightConfiguration {
 
 public class SixWheelCarFlightConfiguration extends CarFlightConfiguration {
   public func OnSetup(vehicle: ref<VehicleObject>) {
-    ArrayPush(this.thrusters, new FlightThrusterFL().Create(vehicle, CreateCorpoThruster()));
-    ArrayPush(this.thrusters, new FlightThrusterFR().Create(vehicle, CreateCorpoThruster()));
-    // ArrayPush(this.thrusters, new FlightThrusterFLB().Create());
-    // ArrayPush(this.thrusters, new FlightThrusterFRB().Create());
-    ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, CreateCorpoThruster()));
-    ArrayPush(this.thrusters, new FlightThrusterBR().Create(vehicle, CreateCorpoThruster()));
+    super.OnSetup(vehicle);
 
-    for thruster in this.thrusters {
-      vehicle.AddComponent(thruster.meshComponent);
-      thruster.OnSetup(this.component);
-    }
+    ArrayPush(this.thrusters, new FlightThrusterFLB().Create(vehicle, CreateNomadThruster()));
+    ArrayPush(this.thrusters, new FlightThrusterFRB().Create(vehicle, CreateNomadThruster()));
+
+    vehicle.AddComponent(this. thrusters[4].meshComponent);
+    this.thrusters[4].OnSetup(this.component);
+
+    vehicle.AddComponent(this. thrusters[5].meshComponent);
+    this.thrusters[5].OnSetup(this.component);
   }
 }
 
 public class BikeFlightConfiguration extends IFlightConfiguration {
   public func OnSetup(vehicle: ref<VehicleObject>) {
+    super.OnSetup(vehicle);
+
     this.flightCameraOffset = new Vector3(0.0, 1.0, 0.5);
 
-    ArrayPush(this.thrusters, new FlightThrusterFront().Create(vehicle, CreateCorpoThruster()));
-    ArrayPush(this.thrusters, new FlightThrusterBack().Create(vehicle, CreateCorpoThruster()));
+    ArrayPush(this.thrusters, new FlightThrusterFront().Create(vehicle, CreateEmptyThruster()));
+    ArrayPush(this.thrusters, new FlightThrusterBack().Create(vehicle, CreateEmptyThruster()));
+
+    let mesh: ref<MeshComponent>;
+    mesh = CreateNomadThruster();
+    // mesh.visualScale = new Vector3(1.0, 0.5, 1.0);
+    // mesh.SetLocalPosition(new Vector4(0.0, 0.0, -0.2, 1.0));
+    mesh.SetLocalOrientation(new Quaternion(0.0, 0.0, 0.707, -0.707));
+    mesh.SetParentTransform(this.thrusters[0].meshComponent.name, n"None");
+    vehicle.AddComponent(mesh);
+
+    mesh = CreateNomadThruster();
+    // mesh.visualScale = new Vector3(1.0, 0.5, 1.0);
+    // mesh.SetLocalPosition(new Vector4(0.0, 0.0, -0.2, 1.0));
+    mesh.SetLocalOrientation(new Quaternion(0.0, 0.0, -0.707, -0.707));
+    mesh.SetParentTransform(this.thrusters[1].meshComponent.name, n"None");
+    vehicle.AddComponent(mesh);
 
     for thruster in this.thrusters {
       vehicle.AddComponent(thruster.meshComponent);
@@ -3974,7 +4024,7 @@ public class FlightThrusterFront extends IFlightThruster {
       angle = 0.0;
     }
     angle *= (1.0 - AbsF(this.torque.Y) * 0.5);
-    return ClampF(angle, -this.maxThrusterAnglePitch, this.maxThrusterAnglePitch);
+    return -ClampF(angle, -this.maxThrusterAnglePitch, this.maxThrusterAnglePitch);
   }
 
   public func GetYaw() -> Float {
@@ -4180,11 +4230,13 @@ public class FlightThrusterBL extends IFlightThruster {
 // FRONT LEFT B
 
 public class FlightThrusterFLB extends IFlightThruster {
-  public func Create() -> ref<IFlightThruster> {
-    this.boneName = n"swingarm_front_left_b";
-    this.slotName = n"thruster_front_left_b";
-    this.meshName = n"ThrusterFLB";
-    this.relativeRotation = new Quaternion(0.0, 0.0, 0.0, 1.0);
+  public func Create(vehicle: ref<VehicleObject>, meshComponent: ref<MeshComponent>) -> ref<IFlightThruster> {
+    this.vehicle = vehicle;
+    this.vehicle.AddSlot(n"swingarm_front_left_b", n"thruster_front_left_b", new Vector3(0.0, 0.0, 0.0), new Quaternion(0.0, 0.0, 0.0, 1.0));
+
+    this.meshComponent = meshComponent;
+    this.meshComponent.name = n"ThrusterFLB"; 
+    this.meshComponent.SetParentTransform(n"vehicle_slots", n"thruster_front_left_b");
 
     this.isFront = true;
     this.isB = true;
@@ -4208,11 +4260,13 @@ public class FlightThrusterFLB extends IFlightThruster {
 // FRONT LEFT B
 
 public class FlightThrusterFRB extends IFlightThruster {
-  public func Create() -> ref<IFlightThruster> {
-    this.boneName = n"swingarm_front_right_b";
-    this.slotName = n"thruster_front_right_b";
-    this.meshName = n"ThrusterFRB";
-    this.relativeRotation = new Quaternion(0.0, 0.0, 0.0, 1.0);
+  public func Create(vehicle: ref<VehicleObject>, meshComponent: ref<MeshComponent>) -> ref<IFlightThruster> {
+    this.vehicle = vehicle;
+    this.vehicle.AddSlot(n"swingarm_front_right_b", n"thruster_front_right_b", new Vector3(0.0, 0.0, 0.0), new Quaternion(0.0, 0.0, 0.0, 1.0));
+
+    this.meshComponent = meshComponent;
+    this.meshComponent.name = n"ThrusterFRB"; 
+    this.meshComponent.SetParentTransform(n"vehicle_slots", n"thruster_front_right_b");
 
     this.isFront = true;
     this.isRight = true;
@@ -6017,24 +6071,24 @@ public class BouncyEffector extends Effector {
 // }
 
 
-@wrapMethod(QuickHackDescriptionGameController)
-protected cb func OnQuickHackDataChanged(value: Variant) -> Bool {
-  wrappedMethod(value);
-  this.m_selectedData = FromVariant<ref<QuickhackData>>(value);
-  if IsDefined(this.m_selectedData) {
-    let title: String = GetLocalizedText(this.m_selectedData.m_title);
-    if StrLen(title) == 0 {
-      title = ToString(this.m_selectedData.m_title);
-    }
-    inkTextRef.SetText(this.m_subHeader, title);
+// @wrapMethod(QuickHackDescriptionGameController)
+// protected cb func OnQuickHackDataChanged(value: Variant) -> Bool {
+//   wrappedMethod(value);
+//   this.m_selectedData = FromVariant<ref<QuickhackData>>(value);
+//   if IsDefined(this.m_selectedData) {
+//     let title: String = GetLocalizedText(this.m_selectedData.m_title);
+//     if StrLen(title) == 0 {
+//       title = ToString(this.m_selectedData.m_title);
+//     }
+//     inkTextRef.SetText(this.m_subHeader, title);
 
-    let description: String = GetLocalizedText(this.m_selectedData.m_description);
-    if StrLen(description) == 0 {
-      description = ToString(this.m_selectedData.m_description);
-    }
-    inkTextRef.SetText(this.m_description, description);
-  }
-}
+//     let description: String = GetLocalizedText(this.m_selectedData.m_description);
+//     if StrLen(description) == 0 {
+//       description = ToString(this.m_selectedData.m_description);
+//     }
+//     inkTextRef.SetText(this.m_description, description);
+//   }
+// }
 
 // vehicleTPPCameraComponent.reds
 
@@ -6395,6 +6449,14 @@ public native func SetBlurDimension(effectName: CName, blurDimension : inkEBlurD
 
 // Entity
 
+@addField(Entity)
+@runtimeProperty("offset", "0x50")
+public native let currentAppearance: CName;
+
+@addField(Entity)
+@runtimeProperty("offset", "0x138")
+public native let entityTags: array<CName>;
+
 @addMethod(Entity)
 public native func AddComponent(component: ref<IComponent>);
 
@@ -6413,6 +6475,7 @@ public native let appearanceName: CName;
 
 // IPlacedComponent
 
+// bindName is component name - can be SlotComponent like vehicle_slots
 @addMethod(IPlacedComponent)
 public native func SetParentTransform(bindName: CName, slotName: CName);
 

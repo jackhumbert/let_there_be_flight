@@ -124,6 +124,7 @@
     <ClCompile Include="FlightThruster.cpp" />
     <ClCompile Include="FlightWeapons.cpp" />
     <ClCompile Include="FxResource.cpp" />
+    <ClCompile Include="GetLocalizedText.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="FlightAudio.cpp" />
     <ClCompile Include="FmodHelper.hpp" />

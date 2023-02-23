@@ -360,7 +360,7 @@ public class FlightThrusterFront extends IFlightThruster {
       angle = 0.0;
     }
     angle *= (1.0 - AbsF(this.torque.Y) * 0.5);
-    return ClampF(angle, -this.maxThrusterAnglePitch, this.maxThrusterAnglePitch);
+    return -ClampF(angle, -this.maxThrusterAnglePitch, this.maxThrusterAnglePitch);
   }
 
   public func GetYaw() -> Float {
@@ -566,11 +566,13 @@ public class FlightThrusterBL extends IFlightThruster {
 // FRONT LEFT B
 
 public class FlightThrusterFLB extends IFlightThruster {
-  public func Create() -> ref<IFlightThruster> {
-    this.boneName = n"swingarm_front_left_b";
-    this.slotName = n"thruster_front_left_b";
-    this.meshName = n"ThrusterFLB";
-    this.relativeRotation = new Quaternion(0.0, 0.0, 0.0, 1.0);
+  public func Create(vehicle: ref<VehicleObject>, meshComponent: ref<MeshComponent>) -> ref<IFlightThruster> {
+    this.vehicle = vehicle;
+    this.vehicle.AddSlot(n"swingarm_front_left_b", n"thruster_front_left_b", new Vector3(0.0, 0.0, 0.0), new Quaternion(0.0, 0.0, 0.0, 1.0));
+
+    this.meshComponent = meshComponent;
+    this.meshComponent.name = n"ThrusterFLB"; 
+    this.meshComponent.SetParentTransform(n"vehicle_slots", n"thruster_front_left_b");
 
     this.isFront = true;
     this.isB = true;
@@ -594,11 +596,13 @@ public class FlightThrusterFLB extends IFlightThruster {
 // FRONT LEFT B
 
 public class FlightThrusterFRB extends IFlightThruster {
-  public func Create() -> ref<IFlightThruster> {
-    this.boneName = n"swingarm_front_right_b";
-    this.slotName = n"thruster_front_right_b";
-    this.meshName = n"ThrusterFRB";
-    this.relativeRotation = new Quaternion(0.0, 0.0, 0.0, 1.0);
+  public func Create(vehicle: ref<VehicleObject>, meshComponent: ref<MeshComponent>) -> ref<IFlightThruster> {
+    this.vehicle = vehicle;
+    this.vehicle.AddSlot(n"swingarm_front_right_b", n"thruster_front_right_b", new Vector3(0.0, 0.0, 0.0), new Quaternion(0.0, 0.0, 0.0, 1.0));
+
+    this.meshComponent = meshComponent;
+    this.meshComponent.name = n"ThrusterFRB"; 
+    this.meshComponent.SetParentTransform(n"vehicle_slots", n"thruster_front_right_b");
 
     this.isFront = true;
     this.isRight = true;
