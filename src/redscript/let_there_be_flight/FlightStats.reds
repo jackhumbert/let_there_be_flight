@@ -24,6 +24,7 @@ public class FlightStats {
   public let d_forward2D: Vector4;
   public let d_orientationChange: Quaternion;
   public let d_angularVelocity: Vector4;
+  public let d_angularAcceleration: Vector4;
   public let d_velocity: Vector4;
   public let d_localVelocity: Vector4;
   public let d_velocity2D: Vector4;
@@ -152,7 +153,11 @@ public class FlightStats {
     // let orientation = Matrix.ToQuat(this.vehicle.chassis.GetLocalToWorld());
     this.d_orientation = orientation;
     this.d_orientationChange = Quaternion.MulInverse(this.d_orientation, this.d_lastOrientation);
-    this.d_angularVelocity = Quaternion.Conjugate(this.d_orientation) * Vector4.Vector3To4(this.vehicle.GetAngularVelocity());
+
+    let angularVelocity = Quaternion.Conjugate(this.d_orientation) * Vector4.Vector3To4(this.vehicle.GetAngularVelocity());
+    this.d_angularAcceleration = (angularVelocity - this.d_angularVelocity);
+    this.d_angularVelocity = angularVelocity;
+
     Quaternion.GetAxes(this.d_orientation, this.d_forward, this.d_right, this.d_up);
     this.d_forward2D = Vector4.Normalize2D(this.d_forward);
     // this.d_forward = Vector4.Normalize(Quaternion.GetForward(this.d_orientation));

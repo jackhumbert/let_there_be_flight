@@ -154,3 +154,7 @@ using LoadResRefT = void * (void *, void*, bool);
 // 1.62 RVA: 0x6FA540 / 7316800
 /// @pattern 40 53 48 83 EC 30 F2 41 0F 10 00 48 8B DA 41 8B 40 08 4C 8D 44 24 20 44 0F B6 89 39 04 00 00 F2
 using LookupLocalizedString = RED4ext::CString * __fastcall (__int64, RED4ext::CString * result, char * locKey);
+
+// 1.62 RVA: 0x6FA5B0 / 7316912
+/// @pattern 40 53 48 83 EC 30 F2 41 0F 10 00 48 8B DA 41 8B 40 08 48 8D 54 24 20 F2 0F 11 44 24 20 89 44 24
+using SetLocalizedTextString = RED4ext::CString *__fastcall (__int64, RED4ext::CString *, RED4ext::CString *);

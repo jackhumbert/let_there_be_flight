@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2023-02-23 19:25:25.6515460
+// This file was automatically generated on 2023-02-24 23:38:35.7865404
 
 // FlightAudio.reds
 
@@ -805,6 +805,19 @@ public native class FlightComponent extends GameComponent {
         this.angularBrake = fc.angularBrake.GetValue();
         this.surge = fc.surge.GetValue();
         this.sway = fc.sway.GetValue();
+
+        let total = SqrtF(PowF(this.surge, 2.0) + PowF(this.lift, 2.0) + PowF(this.sway, 2.0));
+        if (total > 1.0) {
+          this.surge /= total;
+          this.lift /= total;
+          this.sway /= total;
+        }
+        total = SqrtF(PowF(this.yaw, 2.0) + PowF(this.roll, 2.0) + PowF(this.pitch, 2.0));
+        if (total > 1.0) {
+          this.yaw /= total;
+          this.roll /= total;
+          this.pitch /= total;
+        }
       } else {
         let v = this.GetVehicle();
         this.surge = v.acceleration * 0.5 - v.deceleration * 0.1;
@@ -964,6 +977,7 @@ public native class FlightComponent extends GameComponent {
     };
       // FlightLog.Info("[FlightComponent] OnGridDestruction: " + FloatToStringPrec(biggestImpact, 2));
     if biggestImpact > 0.00 {
+      this.modes[this.mode].timeSinceLastCollision = 0.0;
       this.ProcessImpact(biggestImpact);
       if this.isPlayerMounted {
         this.sys.ctlr.ProcessImpact(biggestImpact);
@@ -1512,16 +1526,6 @@ public abstract native class IFlightConfiguration extends IScriptable {
 
   public func OnSetup(vehicle: ref<VehicleObject>) {
     let name = NameToString(vehicle.GetCurrentAppearanceName());
-    if StrFindFirst(name, "nomad") > -1 {
-      this.type = FlightVehicleType.Nomad;
-    }
-
-    if StrFindFirst(name, "tyger") > -1 
-    || StrFindFirst(name, "6th_street") > -1 
-    || StrFindFirst(name, "animals") > -1 
-    || StrFindFirst(name, "valentinos") > -1 {
-      this.type = FlightVehicleType.Streetkid;
-    }
     
     if StrFindFirst(name, "poor") > -1 {
       this.type = FlightVehicleType.Poor;
@@ -1531,6 +1535,17 @@ public abstract native class IFlightConfiguration extends IScriptable {
     }
     if StrFindFirst(name, "suburban") > -1 {
       this.type = FlightVehicleType.Suburban;
+    }
+
+    if StrFindFirst(name, "nomad") > -1 {
+      this.type = FlightVehicleType.Nomad;
+    }
+
+    if StrFindFirst(name, "tyger") > -1 
+    || StrFindFirst(name, "6th_street") > -1 
+    || StrFindFirst(name, "animals") > -1 
+    || StrFindFirst(name, "valentinos") > -1 {
+      this.type = FlightVehicleType.Streetkid;
     }
   }
 }
@@ -1580,6 +1595,12 @@ public class CarFlightConfiguration extends IFlightConfiguration {
     }
 
     for thruster in this.thrusters {
+      if (Equals(this.type, FlightVehicleType.Corpo)) {
+        ArrayPush(thruster.fxs, new MainFlightThrusterFX().Create(thruster));
+        ArrayPush(thruster.fxs, new SideFlightThrusterFX().Create(thruster));
+      } else {
+        ArrayPush(thruster.fxs, new RegularFlightThrusterFX().Create(thruster));
+      }
       vehicle.AddComponent(thruster.meshComponent);
       thruster.OnSetup(this.component);
     }
@@ -1595,9 +1616,13 @@ public class SixWheelCarFlightConfiguration extends CarFlightConfiguration {
 
     vehicle.AddComponent(this. thrusters[4].meshComponent);
     this.thrusters[4].OnSetup(this.component);
+    ArrayPush(this.thrusters[4].fxs, new MainFlightThrusterFX().Create(this.thrusters[4]));
+    ArrayPush(this.thrusters[4].fxs, new SideFlightThrusterFX().Create(this.thrusters[4]));
 
     vehicle.AddComponent(this. thrusters[5].meshComponent);
     this.thrusters[5].OnSetup(this.component);
+    ArrayPush(this.thrusters[5].fxs, new MainFlightThrusterFX().Create(this.thrusters[5]));
+    ArrayPush(this.thrusters[5].fxs, new SideFlightThrusterFX().Create(this.thrusters[5]));
   }
 }
 
@@ -1628,12 +1653,13 @@ public class BikeFlightConfiguration extends IFlightConfiguration {
       mesh.SetLocalOrientation(new Quaternion(0.0, 0.0, -0.707, -0.707));
       mesh.SetParentTransform(this.thrusters[1].meshComponent.name, n"None");
       vehicle.AddComponent(mesh);
-
-      this.thrusters[0].hasRetroThruster = false;
-      this.thrusters[1].hasRetroThruster = false;
     }
+    
+    this.thrusters[0].hasRetroThruster = false;
+    this.thrusters[1].hasRetroThruster = false;
 
     for thruster in this.thrusters {
+      ArrayPush(thruster.fxs, new RegularFlightThrusterFX().Create(thruster));
       vehicle.AddComponent(thruster.meshComponent);
       thruster.OnSetup(this.component);
     }
@@ -1829,12 +1855,12 @@ public native class FlightController extends IScriptable {
 
     this.linearBrake = InputPID.Create(0.5, 0.5);
     this.angularBrake = InputPID.Create(0.5, 0.5);
-    this.lift = InputPID.Create(0.05, 0.2);
-    this.surge = InputPID.Create(0.2, 0.2);
+    this.lift = InputPID.Create(0.1, 1.0);
+    this.surge = InputPID.Create(0.1, 1.0);
     this.roll = InputPID.Create(0.25, 1.0);
     this.pitch = InputPID.Create(0.25, 1.0);
-    this.yaw = InputPID.Create(0.1, 0.2);
-    this.sway = InputPID.Create(0.2, 0.2);
+    this.yaw = InputPID.Create(0.25, 1.0);
+    this.sway = InputPID.Create(0.1, 1.0);
     
     this.secondCounter = 0.0;
 
@@ -2959,6 +2985,11 @@ public abstract class FlightMode {
   public let usesRightStickInput: Bool;
   public let collisionPenalty: Float;
 
+  public let timeSinceLastCollision: Float;
+
+  public let dampAccVector: Vector3;
+  // public let lastAngularDamp: Vector4;
+
   // public let enabled: Bool;
 
   public func Initialize(component: ref<FlightComponent>) -> Void {
@@ -2980,27 +3011,36 @@ public abstract class FlightMode {
     
     let velocityDamp: Vector4 = this.component.stats.d_speed * this.component.stats.d_localVelocity * FlightSettings.GetInstance().generalDampFactorLinear * this.component.stats.s_airResistanceFactor;
     let angularDamp: Vector4 = this.component.stats.d_angularVelocity * FlightSettings.GetInstance().generalDampFactorAngular;
-    // if angularDamp.X < 0.0 {
-    //   angularDamp.X *= angularDamp.X * -1.0;
-    // } else {
-    //   angularDamp.X *= angularDamp.X;
-    // }
-    // if angularDamp.Y < 0.0 {
-    //   angularDamp.Y *= angularDamp.Y * -1.0;
-    // } else {
-    //   angularDamp.Y *= angularDamp.Y;
-    // }
-    // if angularDamp.Z < 0.0 {
-    //   angularDamp.Z *= angularDamp.Z * -1.0;
-    // } else {
-    //   angularDamp.Z *= angularDamp.Z;
-    // }
-    // if angularDamp.W < 0.0 {
-    //   angularDamp.W *= angularDamp.W * -1.0;
-    // } else {
-    //   angularDamp.W *= angularDamp.W;
-    // }
+    // angularDamp += this.component.stats.d_angularAcceleration;
     
+    // only damp if no input is being received on that axis
+    angularDamp.X *= (1.0 - AbsF(this.component.pitch));
+    angularDamp.Y *= (1.0 - AbsF(this.component.roll));
+    angularDamp.Z *= (1.0 - AbsF(this.component.yaw));
+
+    // detect when we hit stuff and delay the damping by a second from an impact
+    this.dampAccVector.X = MinF(MaxF(this.dampAccVector.X, this.component.stats.d_angularAcceleration.X / timeDelta / 5.0), 1.0);
+    this.dampAccVector.Y = MinF(MaxF(this.dampAccVector.Y, this.component.stats.d_angularAcceleration.Y / timeDelta / 5.0), 1.0);
+    this.dampAccVector.Z = MinF(MaxF(this.dampAccVector.Z, this.component.stats.d_angularAcceleration.Z / timeDelta / 5.0), 1.0);
+
+    // angularDamp.X *= (1.0 - this.dampAccVector.X);
+    // angularDamp.Y *= (1.0 - this.dampAccVector.Y);
+    // angularDamp.Z *= (1.0 - this.dampAccVector.Z);
+
+    this.dampAccVector.X -= timeDelta;
+    this.dampAccVector.Y -= timeDelta;
+    this.dampAccVector.Z -= timeDelta;
+
+    // clamp the dampening
+    angularDamp.X = MinF(angularDamp.X, 10.0);
+    angularDamp.Y = MinF(angularDamp.Y, 10.0);
+    angularDamp.Z = MinF(angularDamp.Z, 10.0);
+
+    // this.lastAngularDamp = angularDamp;
+
+    // let the world throw us around on collisions
+    // angularDamp *= this.timeSinceLastCollision;
+    // this.timeSinceLastCollision = MinF(this.timeSinceLastCollision + timeDelta, 1.0);
 
     let direction = this.component.stats.d_direction;
     if Vector4.Dot(this.component.stats.d_direction, this.component.stats.d_forward) < 0.0 {
@@ -3260,9 +3300,9 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Angular-Damp-Factor")
   @runtimeProperty("ModSettings.description", "UI-Settings-Angular-Damp-Factor-Description")
-  @runtimeProperty("ModSettings.step", "0.01")
+  @runtimeProperty("ModSettings.step", "0.1")
   @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "3.0")
+  @runtimeProperty("ModSettings.max", "5.0")
   public let generalDampFactorAngular: Float = 1.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
@@ -3415,6 +3455,7 @@ public class FlightStats {
   public let d_forward2D: Vector4;
   public let d_orientationChange: Quaternion;
   public let d_angularVelocity: Vector4;
+  public let d_angularAcceleration: Vector4;
   public let d_velocity: Vector4;
   public let d_localVelocity: Vector4;
   public let d_velocity2D: Vector4;
@@ -3543,7 +3584,11 @@ public class FlightStats {
     // let orientation = Matrix.ToQuat(this.vehicle.chassis.GetLocalToWorld());
     this.d_orientation = orientation;
     this.d_orientationChange = Quaternion.MulInverse(this.d_orientation, this.d_lastOrientation);
-    this.d_angularVelocity = Quaternion.Conjugate(this.d_orientation) * Vector4.Vector3To4(this.vehicle.GetAngularVelocity());
+
+    let angularVelocity = Quaternion.Conjugate(this.d_orientation) * Vector4.Vector3To4(this.vehicle.GetAngularVelocity());
+    this.d_angularAcceleration = (angularVelocity - this.d_angularVelocity);
+    this.d_angularVelocity = angularVelocity;
+
     Quaternion.GetAxes(this.d_orientation, this.d_forward, this.d_right, this.d_up);
     this.d_forward2D = Vector4.Normalize2D(this.d_forward);
     // this.d_forward = Vector4.Normalize(Quaternion.GetForward(this.d_orientation));
@@ -3689,24 +3734,6 @@ public abstract native class IFlightThruster extends IScriptable {
   @runtimeProperty("offset", "0x40")
   public native let flightComponent: ref<FlightComponent>;
 
-  @runtimeProperty("offset", "0x50")
-  public native let boneName: CName;
-
-  @runtimeProperty("offset", "0x58")
-  public native let slotName: CName;
-
-  @runtimeProperty("offset", "0x60")
-  public native let relativePosition: Vector3; // 0, 0, 0
-
-  @runtimeProperty("offset", "0x70")
-  public native let relativeRotation: Quaternion; // 0, 0, 0, 1
-
-  @runtimeProperty("offset", "0x80")
-  public native let meshPath: CName; // "user\\jackhumbert\\meshes\\engine_corpo.mesh"
-
-  @runtimeProperty("offset", "0x88")
-  public native let meshName: CName; // "Thruster"
-
   @runtimeProperty("offset", "0x90")
   public native let meshComponent: ref<MeshComponent>;
 
@@ -3716,10 +3743,13 @@ public abstract native class IFlightThruster extends IScriptable {
   public let parentSlotName: CName;
   public let radiusName: CName;
   public let deviationName: CName;
-  public let mainResRef: ResRef = r"user\\jackhumbert\\effects\\ion_thruster.effect";
-  public let mainFxRes: FxResource;
-  public let retroResRef: ResRef = r"user\\jackhumbert\\effects\\retro_thruster.effect";
-  public let retroFxRes: FxResource;
+
+  public let fxs: array<ref<IFlightThrusterFX>>;
+
+  // public let mainResRef: ResRef = r"user\\jackhumbert\\effects\\ion_thruster.effect";
+  // public let mainFxRes: FxResource;
+  // public let retroResRef: ResRef = r"user\\jackhumbert\\effects\\retro_thruster.effect";
+  // public let retroFxRes: FxResource;
   
   public let bone: Float = 0.0;
   public let boneLerpAmount: Float = 0.25;
@@ -3729,12 +3759,12 @@ public abstract native class IFlightThruster extends IScriptable {
   public let thrusterAngleAllowance: Float = 15.0;
   public let ogComponents: array<ref<IComponent>>;
   public let componentSizeArray: array<Vector3>;
-  public let mainFx: ref<FxInstance>;
+  // public let mainFx: ref<FxInstance>;
   // public let mainThrusterFactor: Float = 0.05;
   public let mainThrusterYawFactor: Float = 0.5;
   public let hasRetroThruster: Bool = true;
-  public let retroFx: ref<FxInstance>;
-  public let retroThrusterFactor: Float = 0.1;
+  // public let retroFx: ref<FxInstance>;
+  // public let retroThrusterFactor: Float = 0.1;
   public let force: Vector4;
   public let torque: Vector4;
   public let isRight: Bool = false;
@@ -3748,16 +3778,13 @@ public abstract native class IFlightThruster extends IScriptable {
 
   public func OnSetup(fc : ref<FlightComponent>) {
     this.flightComponent = fc;
-    this.mainFxRes = Cast<FxResource>(this.mainResRef);
     
     if !this.hasRetroThruster {
       this.mainThrusterYawFactor = 30.0;
     } else {
       this.mainThrusterYawFactor = 5.0;
-      this.retroFxRes = Cast<FxResource>(this.retroResRef);
     }
 
-    // this.meshComponent = vehicleComponent.FindComponentByName(this.meshName) as MeshComponent;
     this.meshComponent.visualScale = new Vector3(0.0, 0.0, 0.0);
     this.meshComponent.Toggle(false);
     this.meshComponent.SetLocalOrientation(EulerAngles.ToQuat(this.GetEulerAngles()));
@@ -3853,25 +3880,15 @@ public abstract native class IFlightThruster extends IScriptable {
   }
 
   public func Start() {
-    let effectTransform: WorldTransform;
-    let wt = new WorldTransform();
 
     this.SetOGComponents();
     this.HideOGComponents();
 
-    WorldTransform.SetPosition(effectTransform, this.flightComponent.stats.d_position);
-    this.mainFx = GameInstance.GetFxSystem(this.vehicle.GetGame()).SpawnEffect(this.mainFxRes, effectTransform);
-    this.mainFx.SetBlackboardValue(n"thruster_amount", 0.0);
-    this.mainFx.AttachToComponent(this.vehicle, entAttachmentTarget.Transform, this.meshComponent.name, wt);
-    this.meshComponent.Toggle(true);
-
-    if this.hasRetroThruster {
-      let wt_retro: WorldTransform;
-      WorldTransform.SetOrientation(wt_retro, EulerAngles.ToQuat(new EulerAngles(0.0, 0.0, -90.0)));
-      this.retroFx =  GameInstance.GetFxSystem(this.vehicle.GetGame()).SpawnEffect(this.retroFxRes, effectTransform);
-      // this.retroFx.AttachToSlot(this.component.Getthis.Vehicle(), entAttachmentTarget.Transform, n"Base", wt_retro);
-      this.retroFx.AttachToComponent(this.vehicle, entAttachmentTarget.Transform, this.meshComponent.name, wt_retro);
+    for fx in this.fxs {
+      fx.Start();
     }
+
+    this.meshComponent.Toggle(true);
 
     // FlightAudio.Get().StartWithPitch(this.id, "vehicle3_TPP", this.audioPitch);
     FlightAudio.Get().StartWithPitch(this.id, "vehicle3_TPP", this.flightComponent.GetPitch());
@@ -3906,11 +3923,10 @@ public abstract native class IFlightThruster extends IScriptable {
     this.meshComponent.SetLocalOrientation(Quaternion.Slerp(this.meshComponent.GetLocalOrientation(), EulerAngles.ToQuat(this.GetEulerAngles()), 0.1));
 
     let amount = Vector4.Dot(Quaternion.GetUp(this.meshComponent.GetLocalOrientation()), this.force);
-    amount += this.GetMainThrusterTorqueAmount();
-    // let amount = Vector4.Dot(Quaternion.GetUp(this.meshComponent.GetLocalOrientation()), Quaternion.GetUp(EulerAngles.ToQuat(this.GetEulerAngles())));
-    // amount *= this.mainThrusterFactor;
-    amount = ClampF(amount, -1.0, 1.0);
-    this.mainFx.SetBlackboardValue(n"thruster_amount", amount);
+
+    for fx in this.fxs {
+      amount += fx.UpdateGetDisplacement();
+    }
 
     // -4, 4 / -10, 10
     let animDeviationCenter = 0.0;
@@ -3933,11 +3949,6 @@ public abstract native class IFlightThruster extends IScriptable {
     // AnimationControllerComponent.SetInputFloat(this.vehicle, this.deviationName, this.animDeviation);
 
     // acc.SetInputFloat(this.GetRadiusName(), this.animRadius);
-
-    if this.hasRetroThruster {
-      let retroAmount = this.GetRetroThrusterAmount();
-      this.retroFx.SetBlackboardValue(n"thruster_amount", retroAmount);
-    }
     
     this.audioUpdate = this.flightComponent.audioUpdate;
     // amount *= 0.5;
@@ -3963,11 +3974,8 @@ public abstract native class IFlightThruster extends IScriptable {
 
   public func Stop() {
     FlightAudio.Get().Stop(this.id);
-    if IsDefined(this.mainFx) {
-      this.mainFx.BreakLoop();
-    }
-    if IsDefined(this.retroFx) {
-      this.retroFx.BreakLoop();
+    for fx in this.fxs {
+      fx.Stop();
     }
     this.ShowOGComponents();
   }
@@ -3993,14 +4001,6 @@ public abstract native class IFlightThruster extends IScriptable {
     }
     ArrayClear(this.componentSizeArray);
   }
-
-  public func GetMainThrusterTorqueAmount() -> Float {
-    return 0;
-  }
-
-  public func GetRetroThrusterAmount() -> Float {
-    return 0;
-  }
 }
 
 // FRONT
@@ -4019,14 +4019,6 @@ public class FlightThrusterFront extends IFlightThruster {
     this.radiusName = n"None";
     this.deviationName = n"None";
     return this;
-  }
-
-  public func GetMainThrusterTorqueAmount() -> Float {
-    return this.torque.X + this.torque.Y + this.torque.Y;
-  }
-
-  public func GetRetroThrusterAmount() -> Float {
-    return 0;
   }
   
   public func SetOGComponents() {
@@ -4093,14 +4085,6 @@ public class FlightThrusterBack extends IFlightThruster {
     this.deviationName = n"None";
     return this;
   }
-
-  public func GetMainThrusterTorqueAmount() -> Float {
-    return this.torque.X + this.torque.Y + this.torque.Z;
-  }
-
-  public func GetRetroThrusterAmount() -> Float {
-    return 0;
-  }    
   
   public func SetOGComponents() {
     let comp: ref<IComponent>;
@@ -4163,16 +4147,6 @@ public class FlightThrusterFL extends IFlightThruster {
     this.deviationName = n"veh_press_w_f_l";
     return this;
   }
-
-  public func GetMainThrusterTorqueAmount() -> Float {
-    return this.torque.X + this.torque.Y;
-  }
-
-  public func GetRetroThrusterAmount() -> Float {
-    let vec = new Vector4(1.0, 0.0, 0.0, 0.0);
-    let tor = -this.torque.Z;
-    return (Vector4.Dot(vec, this.force) + tor) * this.retroThrusterFactor;
-  }
 }
 
 public class FlightThrusterFR extends IFlightThruster {
@@ -4190,16 +4164,6 @@ public class FlightThrusterFR extends IFlightThruster {
     this.radiusName = n"veh_rad_w_f_r";
     this.deviationName = n"veh_press_w_f_r";
     return this;
-  }
-
-  public func GetMainThrusterTorqueAmount() -> Float {
-    return this.torque.X - this.torque.Y;
-  }
-
-  public func GetRetroThrusterAmount() -> Float {
-    let vec = new Vector4(-1.0, 0.0, 0.0, 0.0);
-    let tor = this.torque.Z;
-    return (Vector4.Dot(vec, this.force) + tor) * this.retroThrusterFactor;
   }
 }
 
@@ -4220,16 +4184,6 @@ public class FlightThrusterBR extends IFlightThruster {
     this.deviationName = n"veh_press_w_b_r";
     return this;
   }
-
-  public func GetMainThrusterTorqueAmount() -> Float {
-    return -this.torque.X - this.torque.Y;
-  }
-
-  public func GetRetroThrusterAmount() -> Float {
-    let vec = new Vector4(-1.0, 0.0, 0.0, 0.0);
-    let tor = -this.torque.Z;
-    return (Vector4.Dot(vec, this.force) + tor) * this.retroThrusterFactor;
-  }
 }
 
 // BACK LEFT
@@ -4247,16 +4201,6 @@ public class FlightThrusterBL extends IFlightThruster {
     this.radiusName = n"veh_rad_w_b_l";
     this.deviationName = n"veh_press_w_b_l";
     return this;
-  }
-
-  public func GetMainThrusterTorqueAmount() -> Float {
-    return -this.torque.X + this.torque.Y;
-  }
-
-  public func GetRetroThrusterAmount() -> Float {
-    let vec = new Vector4(1.0, 0.0, 0.0, 0.0);
-    let tor = this.torque.Z;
-    return (Vector4.Dot(vec, this.force) + tor) * this.retroThrusterFactor;
   }
 }
 
@@ -4278,19 +4222,9 @@ public class FlightThrusterFLB extends IFlightThruster {
     this.deviationName = n"veh_press_w_1_l";
     return this;
   }
-
-  public func GetMainThrusterTorqueAmount() -> Float {
-    return this.torque.X + this.torque.Y;
-  }
-
-  public func GetRetroThrusterAmount() -> Float {
-    let vec = new Vector4(1.0, 0.0, 0.0, 0.0);
-    let tor = -this.torque.Z;
-    return (Vector4.Dot(vec, this.force) + tor) * this.retroThrusterFactor;
-  }
 }
 
-// FRONT LEFT B
+// FRONT RIGHT B
 
 public class FlightThrusterFRB extends IFlightThruster {
   public func Create(vehicle: ref<VehicleObject>, meshComponent: ref<MeshComponent>) -> ref<IFlightThruster> {
@@ -4309,16 +4243,6 @@ public class FlightThrusterFRB extends IFlightThruster {
     this.deviationName = n"veh_press_w_1_r";
     return this;
   }
-
-  public func GetMainThrusterTorqueAmount() -> Float {
-    return this.torque.X - this.torque.Y;
-  }
-
-  public func GetRetroThrusterAmount() -> Float {
-    let vec = new Vector4(-1.0, 0.0, 0.0, 0.0);
-    let tor = this.torque.Z;
-    return (Vector4.Dot(vec, this.force) + tor) * this.retroThrusterFactor;
-  }
 }
 
 public class Vector3Wrapper {
@@ -4327,6 +4251,117 @@ public class Vector3Wrapper {
     let vw = new Vector3Wrapper();
     vw.vector = v;
     return vw;
+  }
+}
+
+// FlightThrusterFX.reds
+
+public abstract class IFlightThrusterFX extends IScriptable {
+  public let resource: FxResource;
+  public let instance: ref<FxInstance>;
+  public let thruster: ref<IFlightThruster>;
+  public let position: Vector3;
+  public let rotation: Quaternion;
+
+  public func SetResource(resource: ResRef) {
+    this.resource = Cast<FxResource>(resource);
+  }
+
+  public func Create(thruster: ref<IFlightThruster>) -> ref<IFlightThrusterFX> {
+    this.thruster = thruster;
+    return this;
+  }
+
+  public func Start() {    
+    let effectTransform: WorldTransform;
+    let wt = new WorldTransform();
+
+    WorldTransform.SetPosition(effectTransform, this.thruster.flightComponent.stats.d_position);
+    WorldTransform.SetPosition(wt, Vector4.Vector3To4(this.position));
+    WorldTransform.SetOrientation(wt, this.rotation);
+    this.instance = GameInstance.GetFxSystem(this.thruster.vehicle.GetGame()).SpawnEffect(this.resource, effectTransform);
+    this.instance.SetBlackboardValue(n"thruster_amount", 0.0);
+    this.instance.AttachToComponent(this.thruster.vehicle, entAttachmentTarget.Transform, this.thruster.meshComponent.name, wt);
+  }
+
+  public func Stop() {
+    if IsDefined(this.instance) {
+      this.instance.BreakLoop();
+    }
+  }
+
+  // returns how much the bone should be affected
+  public func UpdateGetDisplacement() -> Float{
+    this.instance.SetBlackboardValue(n"thruster_amount", ClampF(0.0, -1.0, 1.0));
+    return 0.0;
+  }
+}
+
+public class RegularFlightThrusterFX extends IFlightThrusterFX {
+  public func Create(thruster: ref<IFlightThruster>) -> ref<IFlightThrusterFX> {
+    super.Create(thruster);
+    this.SetResource(r"user\\jackhumbert\\effects\\ion_thruster.effect");
+    return this;
+  }
+
+  public func UpdateGetDisplacement() -> Float {    
+    let amount = Vector4.Dot(Quaternion.GetUp(this.thruster.meshComponent.GetLocalOrientation()), this.thruster.force);
+    let x = this.thruster.torque.X;
+    if !this.thruster.isFront {
+      x *= -1.0;
+    }
+    amount += x + this.thruster.torque.Y;
+
+    this.instance.SetBlackboardValue(n"thruster_amount", ClampF(amount + this.thruster.torque.Z, -1.0, 1.0));
+    return amount;
+  }
+}
+
+public class MainFlightThrusterFX extends IFlightThrusterFX {
+  public func Create(thruster: ref<IFlightThruster>) -> ref<IFlightThrusterFX> {
+    super.Create(thruster);
+    this.SetResource(r"user\\jackhumbert\\effects\\ion_thruster.effect");
+    return this;
+  }
+
+  public func UpdateGetDisplacement() -> Float {
+    let amount = Vector4.Dot(Quaternion.GetUp(this.thruster.meshComponent.GetLocalOrientation()), this.thruster.force);
+    let x = this.thruster.torque.X;
+    let y = this.thruster.torque.Y;
+    if !this.thruster.isFront {
+      x *= -1.0;
+    }
+    if this.thruster.isRight {
+      y *= -1.0;
+    }
+    return amount + x + y;
+
+    this.instance.SetBlackboardValue(n"thruster_amount", ClampF(amount, -1.0, 1.0));
+    return amount;
+  }
+}
+
+public class SideFlightThrusterFX extends IFlightThrusterFX {
+  public func Create(thruster: ref<IFlightThruster>) -> ref<IFlightThrusterFX> {
+    super.Create(thruster);
+    this.SetResource(r"user\\jackhumbert\\effects\\retro_thruster.effect");
+    this.rotation = EulerAngles.ToQuat(new EulerAngles(0.0, 0.0, -90.0));
+    return this;
+  }
+
+  public func UpdateGetDisplacement() -> Float {
+    let tor = this.thruster.torque.Z;
+    let vec = new Vector4(1.0, 0.0, 0.0, 0.0);
+    if this.thruster.isRight {
+      tor *= -1.0;
+      vec *= -1.0;
+    }
+    if !this.thruster.isFront {
+      vec *= -1.0;
+    }
+    let amount = (Vector4.Dot(vec, this.thruster.force) + tor) * 0.1;
+    this.instance.SetBlackboardValue(n"thruster_amount", ClampF(amount, -1.0, 1.0));
+    return 0.0;
   }
 }
 
@@ -6104,24 +6139,24 @@ public class BouncyEffector extends Effector {
 // }
 
 
-// @wrapMethod(QuickHackDescriptionGameController)
-// protected cb func OnQuickHackDataChanged(value: Variant) -> Bool {
-//   wrappedMethod(value);
-//   this.m_selectedData = FromVariant<ref<QuickhackData>>(value);
-//   if IsDefined(this.m_selectedData) {
-//     let title: String = GetLocalizedText(this.m_selectedData.m_title);
-//     if StrLen(title) == 0 {
-//       title = ToString(this.m_selectedData.m_title);
-//     }
-//     inkTextRef.SetText(this.m_subHeader, title);
+@wrapMethod(QuickHackDescriptionGameController)
+protected cb func OnQuickHackDataChanged(value: Variant) -> Bool {
+  wrappedMethod(value);
+  this.m_selectedData = FromVariant<ref<QuickhackData>>(value);
+  if IsDefined(this.m_selectedData) {
+    let title: String = GetLocalizedText(this.m_selectedData.m_title);
+    if StrLen(title) == 0 {
+      title = ToString(this.m_selectedData.m_title);
+    }
+    inkTextRef.SetText(this.m_subHeader, title);
 
-//     let description: String = GetLocalizedText(this.m_selectedData.m_description);
-//     if StrLen(description) == 0 {
-//       description = ToString(this.m_selectedData.m_description);
-//     }
-//     inkTextRef.SetText(this.m_description, description);
-//   }
-// }
+    let description: String = GetLocalizedText(this.m_selectedData.m_description);
+    if StrLen(description) == 0 {
+      description = ToString(this.m_selectedData.m_description);
+    }
+    inkTextRef.SetText(this.m_description, description);
+  }
+}
 
 // vehicleTPPCameraComponent.reds
 

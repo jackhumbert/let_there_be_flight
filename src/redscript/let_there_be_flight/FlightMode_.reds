@@ -10,6 +10,11 @@ public abstract class FlightMode {
   public let usesRightStickInput: Bool;
   public let collisionPenalty: Float;
 
+  public let timeSinceLastCollision: Float;
+
+  public let dampAccVector: Vector3;
+  // public let lastAngularDamp: Vector4;
+
   // public let enabled: Bool;
 
   public func Initialize(component: ref<FlightComponent>) -> Void {
@@ -31,27 +36,37 @@ public abstract class FlightMode {
     
     let velocityDamp: Vector4 = this.component.stats.d_speed * this.component.stats.d_localVelocity * FlightSettings.GetInstance().generalDampFactorLinear * this.component.stats.s_airResistanceFactor;
     let angularDamp: Vector4 = this.component.stats.d_angularVelocity * FlightSettings.GetInstance().generalDampFactorAngular;
-    // if angularDamp.X < 0.0 {
-    //   angularDamp.X *= angularDamp.X * -1.0;
-    // } else {
-    //   angularDamp.X *= angularDamp.X;
-    // }
-    // if angularDamp.Y < 0.0 {
-    //   angularDamp.Y *= angularDamp.Y * -1.0;
-    // } else {
-    //   angularDamp.Y *= angularDamp.Y;
-    // }
-    // if angularDamp.Z < 0.0 {
-    //   angularDamp.Z *= angularDamp.Z * -1.0;
-    // } else {
-    //   angularDamp.Z *= angularDamp.Z;
-    // }
-    // if angularDamp.W < 0.0 {
-    //   angularDamp.W *= angularDamp.W * -1.0;
-    // } else {
-    //   angularDamp.W *= angularDamp.W;
-    // }
+    // angularDamp += this.component.stats.d_angularAcceleration;
     
+    // only damp if no input is being received on that axis
+    angularDamp.X *= (1.0 - AbsF(this.component.pitch));
+    angularDamp.Y *= (1.0 - AbsF(this.component.roll));
+    angularDamp.Z *= (1.0 - AbsF(this.component.yaw));
+
+    // detect when we hit stuff and delay the damping by a second from an impact
+    this.dampAccVector.X = MinF(MaxF(this.dampAccVector.X, this.component.stats.d_angularAcceleration.X / timeDelta / 5.0), 1.0);
+    this.dampAccVector.Y = MinF(MaxF(this.dampAccVector.Y, this.component.stats.d_angularAcceleration.Y / timeDelta / 5.0), 1.0);
+    this.dampAccVector.Z = MinF(MaxF(this.dampAccVector.Z, this.component.stats.d_angularAcceleration.Z / timeDelta / 5.0), 1.0);
+
+    angularDamp.X *= (1.0 - this.dampAccVector.X);
+    angularDamp.Y *= (1.0 - this.dampAccVector.Y);
+    angularDamp.Z *= (1.0 - this.dampAccVector.Z);
+
+    // decay over 100ms
+    this.dampAccVector.X -= timeDelta * 10.0;
+    this.dampAccVector.Y -= timeDelta * 10.0;
+    this.dampAccVector.Z -= timeDelta * 10.0;
+
+    // clamp the dampening
+    // angularDamp.X = MinF(angularDamp.X, 10.0);
+    // angularDamp.Y = MinF(angularDamp.Y, 10.0);
+    // angularDamp.Z = MinF(angularDamp.Z, 10.0);
+
+    // this.lastAngularDamp = angularDamp;
+
+    // let the world throw us around on collisions
+    // angularDamp *= this.timeSinceLastCollision;
+    // this.timeSinceLastCollision = MinF(this.timeSinceLastCollision + timeDelta, 1.0);
 
     let direction = this.component.stats.d_direction;
     if Vector4.Dot(this.component.stats.d_direction, this.component.stats.d_forward) < 0.0 {

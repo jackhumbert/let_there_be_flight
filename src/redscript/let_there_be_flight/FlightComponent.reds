@@ -485,6 +485,19 @@ public native class FlightComponent extends GameComponent {
         this.angularBrake = fc.angularBrake.GetValue();
         this.surge = fc.surge.GetValue();
         this.sway = fc.sway.GetValue();
+
+        let total = SqrtF(PowF(this.surge, 2.0) + PowF(this.lift, 2.0) + PowF(this.sway, 2.0));
+        if (total > 1.0) {
+          this.surge /= total;
+          this.lift /= total;
+          this.sway /= total;
+        }
+        total = SqrtF(PowF(this.yaw, 2.0) + PowF(this.roll, 2.0) + PowF(this.pitch, 2.0));
+        if (total > 1.0) {
+          this.yaw /= total;
+          this.roll /= total;
+          this.pitch /= total;
+        }
       } else {
         let v = this.GetVehicle();
         this.surge = v.acceleration * 0.5 - v.deceleration * 0.1;
@@ -644,6 +657,7 @@ public native class FlightComponent extends GameComponent {
     };
       // FlightLog.Info("[FlightComponent] OnGridDestruction: " + FloatToStringPrec(biggestImpact, 2));
     if biggestImpact > 0.00 {
+      this.modes[this.mode].timeSinceLastCollision = 0.0;
       this.ProcessImpact(biggestImpact);
       if this.isPlayerMounted {
         this.sys.ctlr.ProcessImpact(biggestImpact);

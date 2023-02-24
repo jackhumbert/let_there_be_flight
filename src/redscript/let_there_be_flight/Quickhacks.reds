@@ -751,21 +751,21 @@ public class BouncyEffector extends Effector {
 // }
 
 
-// @wrapMethod(QuickHackDescriptionGameController)
-// protected cb func OnQuickHackDataChanged(value: Variant) -> Bool {
-//   wrappedMethod(value);
-//   this.m_selectedData = FromVariant<ref<QuickhackData>>(value);
-//   if IsDefined(this.m_selectedData) {
-//     let title: String = GetLocalizedText(this.m_selectedData.m_title);
-//     if StrLen(title) == 0 {
-//       title = ToString(this.m_selectedData.m_title);
-//     }
-//     inkTextRef.SetText(this.m_subHeader, title);
+@wrapMethod(QuickHackDescriptionGameController)
+protected cb func OnQuickHackDataChanged(value: Variant) -> Bool {
+  wrappedMethod(value);
+  this.m_selectedData = FromVariant<ref<QuickhackData>>(value);
+  if IsDefined(this.m_selectedData) {
+    let title: String = GetLocalizedText(this.m_selectedData.m_title);
+    if StrLen(title) == 0 {
+      title = ToString(this.m_selectedData.m_title);
+    }
+    inkTextRef.SetText(this.m_subHeader, title);
 
-//     let description: String = GetLocalizedText(this.m_selectedData.m_description);
-//     if StrLen(description) == 0 {
-//       description = ToString(this.m_selectedData.m_description);
-//     }
-//     inkTextRef.SetText(this.m_description, description);
-//   }
-// }
+    let description: String = GetLocalizedText(this.m_selectedData.m_description);
+    if StrLen(description) == 0 {
+      description = ToString(this.m_selectedData.m_description);
+    }
+    inkTextRef.SetText(this.m_description, description);
+  }
+}

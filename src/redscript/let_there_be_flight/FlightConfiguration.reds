@@ -24,16 +24,6 @@ public abstract native class IFlightConfiguration extends IScriptable {
 
   public func OnSetup(vehicle: ref<VehicleObject>) {
     let name = NameToString(vehicle.GetCurrentAppearanceName());
-    if StrFindFirst(name, "nomad") > -1 {
-      this.type = FlightVehicleType.Nomad;
-    }
-
-    if StrFindFirst(name, "tyger") > -1 
-    || StrFindFirst(name, "6th_street") > -1 
-    || StrFindFirst(name, "animals") > -1 
-    || StrFindFirst(name, "valentinos") > -1 {
-      this.type = FlightVehicleType.Streetkid;
-    }
     
     if StrFindFirst(name, "poor") > -1 {
       this.type = FlightVehicleType.Poor;
@@ -43,6 +33,17 @@ public abstract native class IFlightConfiguration extends IScriptable {
     }
     if StrFindFirst(name, "suburban") > -1 {
       this.type = FlightVehicleType.Suburban;
+    }
+
+    if StrFindFirst(name, "nomad") > -1 {
+      this.type = FlightVehicleType.Nomad;
+    }
+
+    if StrFindFirst(name, "tyger") > -1 
+    || StrFindFirst(name, "6th_street") > -1 
+    || StrFindFirst(name, "animals") > -1 
+    || StrFindFirst(name, "valentinos") > -1 {
+      this.type = FlightVehicleType.Streetkid;
     }
   }
 }
@@ -92,6 +93,12 @@ public class CarFlightConfiguration extends IFlightConfiguration {
     }
 
     for thruster in this.thrusters {
+      if (Equals(this.type, FlightVehicleType.Corpo)) {
+        ArrayPush(thruster.fxs, new MainFlightThrusterFX().Create(thruster));
+        ArrayPush(thruster.fxs, new SideFlightThrusterFX().Create(thruster));
+      } else {
+        ArrayPush(thruster.fxs, new RegularFlightThrusterFX().Create(thruster));
+      }
       vehicle.AddComponent(thruster.meshComponent);
       thruster.OnSetup(this.component);
     }
@@ -107,9 +114,13 @@ public class SixWheelCarFlightConfiguration extends CarFlightConfiguration {
 
     vehicle.AddComponent(this. thrusters[4].meshComponent);
     this.thrusters[4].OnSetup(this.component);
+    ArrayPush(this.thrusters[4].fxs, new MainFlightThrusterFX().Create(this.thrusters[4]));
+    ArrayPush(this.thrusters[4].fxs, new SideFlightThrusterFX().Create(this.thrusters[4]));
 
     vehicle.AddComponent(this. thrusters[5].meshComponent);
     this.thrusters[5].OnSetup(this.component);
+    ArrayPush(this.thrusters[5].fxs, new MainFlightThrusterFX().Create(this.thrusters[5]));
+    ArrayPush(this.thrusters[5].fxs, new SideFlightThrusterFX().Create(this.thrusters[5]));
   }
 }
 
@@ -140,12 +151,13 @@ public class BikeFlightConfiguration extends IFlightConfiguration {
       mesh.SetLocalOrientation(new Quaternion(0.0, 0.0, -0.707, -0.707));
       mesh.SetParentTransform(this.thrusters[1].meshComponent.name, n"None");
       vehicle.AddComponent(mesh);
-
-      this.thrusters[0].hasRetroThruster = false;
-      this.thrusters[1].hasRetroThruster = false;
     }
+    
+    this.thrusters[0].hasRetroThruster = false;
+    this.thrusters[1].hasRetroThruster = false;
 
     for thruster in this.thrusters {
+      ArrayPush(thruster.fxs, new RegularFlightThrusterFX().Create(thruster));
       vehicle.AddComponent(thruster.meshComponent);
       thruster.OnSetup(this.component);
     }

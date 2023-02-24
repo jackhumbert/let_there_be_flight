@@ -5,6 +5,7 @@
 #include <RED4ext/Scripting/Natives/Generated/ent/Entity.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 #include <RED4ext/Scripting/Natives/vehicleWeapon.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ent/AnimatedComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/HardTransformBinding.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/PlaceholderComponent.hpp>
 
@@ -180,6 +181,23 @@ void GetWeaponPlaceholderOrientation(RED4ext::IScriptable *aContext, RED4ext::CS
       }
     }
     *aOut = {0.0, 0.0, 0.0, 1.0};
+  }
+}
+
+void VehicleGetRig(RED4ext::vehicle::BaseObject* vehicle) {
+  RED4ext::ent::AnimatedComponent *vehicleRig = NULL;
+  auto rtti = RED4ext::CRTTISystem::Get();
+
+  for (auto const &handle : vehicle->componentsStorage.components) {
+    auto component = handle.GetPtr();
+    if (component->GetNativeType() == rtti->GetClass("entAnimatedComponent")) {
+      vehicleRig = reinterpret_cast<RED4ext::ent::AnimatedComponent *>(component);
+      break;
+    }
+  }
+
+  if (vehicleRig != NULL) {
+    //vehicleRig->rig;
   }
 }
 
