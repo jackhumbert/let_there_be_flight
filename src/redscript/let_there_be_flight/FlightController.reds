@@ -86,12 +86,14 @@ public native class FlightController extends IScriptable {
 
     this.linearBrake = InputPID.Create(0.5, 0.5);
     this.angularBrake = InputPID.Create(0.5, 0.5);
+
     this.lift = InputPID.Create(0.1, 1.0);
     this.surge = InputPID.Create(0.1, 1.0);
-    this.roll = InputPID.Create(0.25, 1.0);
-    this.pitch = InputPID.Create(0.25, 1.0);
-    this.yaw = InputPID.Create(0.25, 1.0);
     this.sway = InputPID.Create(0.1, 1.0);
+
+    this.roll = InputPID.Create(0.5, 1.0);
+    this.pitch = InputPID.Create(0.5, 1.0);
+    this.yaw = InputPID.Create(0.5, 1.0);
     
     this.secondCounter = 0.0;
 

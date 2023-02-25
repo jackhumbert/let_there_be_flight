@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2023-02-24 23:38:35.7865404
+// This file was automatically generated on 2023-02-25 01:47:36.6479132
 
 // FlightAudio.reds
 
@@ -1855,12 +1855,14 @@ public native class FlightController extends IScriptable {
 
     this.linearBrake = InputPID.Create(0.5, 0.5);
     this.angularBrake = InputPID.Create(0.5, 0.5);
+
     this.lift = InputPID.Create(0.1, 1.0);
     this.surge = InputPID.Create(0.1, 1.0);
-    this.roll = InputPID.Create(0.25, 1.0);
-    this.pitch = InputPID.Create(0.25, 1.0);
-    this.yaw = InputPID.Create(0.25, 1.0);
     this.sway = InputPID.Create(0.1, 1.0);
+
+    this.roll = InputPID.Create(0.5, 1.0);
+    this.pitch = InputPID.Create(0.5, 1.0);
+    this.yaw = InputPID.Create(0.5, 1.0);
     
     this.secondCounter = 0.0;
 
@@ -3018,23 +3020,27 @@ public abstract class FlightMode {
     angularDamp.Y *= (1.0 - AbsF(this.component.roll));
     angularDamp.Z *= (1.0 - AbsF(this.component.yaw));
 
-    // detect when we hit stuff and delay the damping by a second from an impact
-    this.dampAccVector.X = MinF(MaxF(this.dampAccVector.X, this.component.stats.d_angularAcceleration.X / timeDelta / 5.0), 1.0);
-    this.dampAccVector.Y = MinF(MaxF(this.dampAccVector.Y, this.component.stats.d_angularAcceleration.Y / timeDelta / 5.0), 1.0);
-    this.dampAccVector.Z = MinF(MaxF(this.dampAccVector.Z, this.component.stats.d_angularAcceleration.Z / timeDelta / 5.0), 1.0);
+    // detect when we hit stuff and delay the damping
+    this.dampAccVector.X = MinF(MaxF(this.dampAccVector.X, AbsF(this.component.stats.d_angularAcceleration.X) / timeDelta / 10.0), 1.0);
+    this.dampAccVector.Y = MinF(MaxF(this.dampAccVector.Y, AbsF(this.component.stats.d_angularAcceleration.Y) / timeDelta / 10.0), 1.0);
+    this.dampAccVector.Z = MinF(MaxF(this.dampAccVector.Z, AbsF(this.component.stats.d_angularAcceleration.Z) / timeDelta / 10.0), 1.0);
 
-    // angularDamp.X *= (1.0 - this.dampAccVector.X);
-    // angularDamp.Y *= (1.0 - this.dampAccVector.Y);
-    // angularDamp.Z *= (1.0 - this.dampAccVector.Z);
+    angularDamp.X *= (1.0 - this.dampAccVector.X);
+    angularDamp.Y *= (1.0 - this.dampAccVector.Y);
+    angularDamp.Z *= (1.0 - this.dampAccVector.Z);
 
-    this.dampAccVector.X -= timeDelta;
-    this.dampAccVector.Y -= timeDelta;
-    this.dampAccVector.Z -= timeDelta;
+    // decay over 300 ms
+    this.dampAccVector.X -= timeDelta / 0.300;
+    this.dampAccVector.Y -= timeDelta / 0.300;
+    this.dampAccVector.Z -= timeDelta / 0.300;
 
     // clamp the dampening
-    angularDamp.X = MinF(angularDamp.X, 10.0);
-    angularDamp.Y = MinF(angularDamp.Y, 10.0);
-    angularDamp.Z = MinF(angularDamp.Z, 10.0);
+    let length = SqrtF(PowF(angularDamp.X, 2.0) + PowF(angularDamp.Y, 2.0) + PowF(angularDamp.Z, 2.0));
+    if length > 5.0 {
+      angularDamp.X /= (length / 5.0);
+      angularDamp.Y /= (length / 5.0);
+      angularDamp.Z /= (length / 5.0);
+    }
 
     // this.lastAngularDamp = angularDamp;
 

@@ -43,24 +43,27 @@ public abstract class FlightMode {
     angularDamp.Y *= (1.0 - AbsF(this.component.roll));
     angularDamp.Z *= (1.0 - AbsF(this.component.yaw));
 
-    // detect when we hit stuff and delay the damping by a second from an impact
-    this.dampAccVector.X = MinF(MaxF(this.dampAccVector.X, this.component.stats.d_angularAcceleration.X / timeDelta / 5.0), 1.0);
-    this.dampAccVector.Y = MinF(MaxF(this.dampAccVector.Y, this.component.stats.d_angularAcceleration.Y / timeDelta / 5.0), 1.0);
-    this.dampAccVector.Z = MinF(MaxF(this.dampAccVector.Z, this.component.stats.d_angularAcceleration.Z / timeDelta / 5.0), 1.0);
+    // detect when we hit stuff and delay the damping
+    this.dampAccVector.X = MinF(MaxF(this.dampAccVector.X, AbsF(this.component.stats.d_angularAcceleration.X) / timeDelta / 10.0), 1.0);
+    this.dampAccVector.Y = MinF(MaxF(this.dampAccVector.Y, AbsF(this.component.stats.d_angularAcceleration.Y) / timeDelta / 10.0), 1.0);
+    this.dampAccVector.Z = MinF(MaxF(this.dampAccVector.Z, AbsF(this.component.stats.d_angularAcceleration.Z) / timeDelta / 10.0), 1.0);
 
     angularDamp.X *= (1.0 - this.dampAccVector.X);
     angularDamp.Y *= (1.0 - this.dampAccVector.Y);
     angularDamp.Z *= (1.0 - this.dampAccVector.Z);
 
-    // decay over 100ms
-    this.dampAccVector.X -= timeDelta * 10.0;
-    this.dampAccVector.Y -= timeDelta * 10.0;
-    this.dampAccVector.Z -= timeDelta * 10.0;
+    // decay over 300 ms
+    this.dampAccVector.X -= timeDelta / 0.300;
+    this.dampAccVector.Y -= timeDelta / 0.300;
+    this.dampAccVector.Z -= timeDelta / 0.300;
 
     // clamp the dampening
-    // angularDamp.X = MinF(angularDamp.X, 10.0);
-    // angularDamp.Y = MinF(angularDamp.Y, 10.0);
-    // angularDamp.Z = MinF(angularDamp.Z, 10.0);
+    let length = SqrtF(PowF(angularDamp.X, 2.0) + PowF(angularDamp.Y, 2.0) + PowF(angularDamp.Z, 2.0));
+    if length > 5.0 {
+      angularDamp.X /= (length / 5.0);
+      angularDamp.Y /= (length / 5.0);
+      angularDamp.Z /= (length / 5.0);
+    }
 
     // this.lastAngularDamp = angularDamp;
 
