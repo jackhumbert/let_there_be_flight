@@ -1,3 +1,25 @@
+// relevant in-game effects
+// r"base\\fx\\quest\\q203\\v_av_rayfield_excalibur_thruster_ground.effect"// blue star on ground
+// r"base\\fx\\vehicles\\av\\v_av_trauma_team_thruster.effect" // blinking blue streaks with heat
+// r"base\\fx\\vehicles\\manticore\\v_av_manticore_medium_thrusters.effect"// blue speckles with little smoke
+// r"base\\fx\\vehicles\\av\\av_rayfield_excalibur_thruster.effect"// blinking blue streaks
+// r"base\\fx\\vehicles\\av\\av_luxury_thruster.effect"// large heat with little black smoke
+// r"base\\fx\\vehicles\\av\\av_panzer\\av_panzer_thruster_quest.effect"// blue dome
+// r"base\\fx\\vehicles\\av\\v_av_trauma_team_thruster_start.effect" // short blue streaks
+// r"base\\fx\\quest\\q000\\q000_cargo_av_thruster.effect"// giant red circle with center beams and smoke
+// r"base\\fx\\quest\\q104\\q104_av_thrusters.effect"// long blue streaks
+// r"base\\fx\\vehicles\\manticore\\v_av_manticore_thrusters_idle_land.effect"// blue streaks with heat
+// r"base\\fx\\characters\\common\\retro_thrusters\\ch_retro_thrusters.effect" // grey puff of smoke
+// r"base\\fx\\vehicles\\manticore\\v_av_manticore_thrusters.effect"// rectangle shape with blue streaks
+// r"base\\fx\\quest\\q112\\q112_av_parade_barge_thruster.effect" // large, bright orange block
+// r"base\\fx\\devices\\boot_thrusters\\d_boot_thruster.effect"// too tiny
+// r"base\\fx\\vehicles\\av\\v_av_valgus_thruster.effect"// medium orange circle
+// r"base\\fx\\devices\\boot_thrusters\\d_boot_thruster_burst_rogue_weyland_hack.effect"// too tiny
+// r"base\\fx\\vehicles\\av\\av_panzer\\av_panzer_thruster.effect"// orange & blue, long with tan dust
+// r"base\\fx\\devices\\boot_thrusters\\d_boot_thruster_burst.effect"// too tiny
+// r"base\\fx\\devices\\boot_thrusters\\d_boot_thruster_holo_jump.effect"// too tiny
+// r"base\\fx\\vehicles\\av\\av_rayfield_excalibur_thruster_low_power.effect"// tiny blue with heat
+
 public abstract class IFlightThrusterFX extends IScriptable {
   public let resource: FxResource;
   public let instance: ref<FxInstance>;

@@ -10,8 +10,6 @@ public abstract class FlightMode {
   public let usesRightStickInput: Bool;
   public let collisionPenalty: Float;
 
-  public let timeSinceLastCollision: Float;
-
   public let dampAccVector: Vector3;
   // public let lastAngularDamp: Vector4;
 

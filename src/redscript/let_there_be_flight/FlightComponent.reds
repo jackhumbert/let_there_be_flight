@@ -657,7 +657,6 @@ public native class FlightComponent extends GameComponent {
     };
       // FlightLog.Info("[FlightComponent] OnGridDestruction: " + FloatToStringPrec(biggestImpact, 2));
     if biggestImpact > 0.00 {
-      this.modes[this.mode].timeSinceLastCollision = 0.0;
       this.ProcessImpact(biggestImpact);
       if this.isPlayerMounted {
         this.sys.ctlr.ProcessImpact(biggestImpact);

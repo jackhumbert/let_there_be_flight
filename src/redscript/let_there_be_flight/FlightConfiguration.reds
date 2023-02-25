@@ -152,7 +152,7 @@ public class BikeFlightConfiguration extends IFlightConfiguration {
       mesh.SetParentTransform(this.thrusters[1].meshComponent.name, n"None");
       vehicle.AddComponent(mesh);
     }
-    
+
     this.thrusters[0].hasRetroThruster = false;
     this.thrusters[1].hasRetroThruster = false;
 
