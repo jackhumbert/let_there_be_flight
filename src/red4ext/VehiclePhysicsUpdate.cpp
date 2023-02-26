@@ -14,8 +14,8 @@ decltype(&VehiclePhysicsUpdate) VehiclePhysicsUpdate_Original;
 uintptr_t __fastcall VehicleHelperUpdate(RED4ext::vehicle::WheeledPhysics *, float);
 decltype(&VehicleHelperUpdate) VehicleHelperUpdate_Original;
 
-void __fastcall AirControlProcess(RED4ext::vehicle::AirControl *ac, float deltaTime);
-decltype(&AirControlProcess) AirControlProcess_Original;
+void __fastcall vehiclePhysicsData_ApplyTorqueWithOffset(RED4ext::vehicle::PhysicsData* physicsData, RED4ext::Vector3 * offset, RED4ext::Vector4 * torque);
+decltype(&vehiclePhysicsData_ApplyTorqueWithOffset) vehiclePhysicsData_ApplyTorqueWithOffset_Original;
 
 void __fastcall ProcessAirResistance(RED4ext::vehicle::WheeledPhysics *a1, float deltaTime);
 decltype(&ProcessAirResistance) ProcessAirResistance_Original;
@@ -23,7 +23,8 @@ decltype(&ProcessAirResistance) ProcessAirResistance_Original;
 void __fastcall TorqueUpdate(RED4ext::vehicle::PhysicsData *a1, uintptr_t);
 decltype(&TorqueUpdate) TorqueUpdate_Original;
 
-void __fastcall VehicleUpdateOrientationWithPID(RED4ext::vehicle::CarBaseObject *a1, RED4ext::Transform *, float, float);
+void __fastcall VehicleUpdateOrientationWithPID(RED4ext::vehicle::CarBaseObject *a1, RED4ext::Transform *, float,
+                                                float);
 decltype(&VehicleUpdateOrientationWithPID) VehicleUpdateOrientationWithPID_Original;
 
 uintptr_t __fastcall CarAnimationUpdate(RED4ext::vehicle::CarPhysics *a1, float);
@@ -33,42 +34,50 @@ decltype(&CarAnimationUpdate) CarAnimationUpdate_Original;
 uintptr_t __fastcall BikeAnimationUpdate(RED4ext::vehicle::BikePhysics *a1);
 decltype(&BikeAnimationUpdate) BikeAnimationUpdate_Original;
 
+void __fastcall vehicleWheeledPhysics_SomethingWheelRayTrace(RED4ext::vehicle::WheeledPhysics *physics,
+                                                             unsigned __int8 index);
+decltype(&vehicleWheeledPhysics_SomethingWheelRayTrace) vehicleWheeledPhysics_SomethingWheelRayTrace_Original;
+
+void __fastcall RollFactorTorqueThing(uint64_t *a1, float a2);
+decltype(&RollFactorTorqueThing) RollFactorTorqueThing_Original;
+
 void __fastcall FourWheelTorque(RED4ext::vehicle::WheeledPhysics *physics, unsigned __int8 rearWheelIndex,
                                 unsigned __int8 frontWheelIndex, float a4, RED4ext::Transform *transform);
 decltype(&FourWheelTorque) FourWheelTorque_Original;
 
 // 1.6, 1.62 not found
 /// 48 8B 49 08 E9 47 1D 2D FF
-//constexpr uintptr_t UpdateAnimValueForCNameAddr = 0x1CFD9F0;
-//uint64_t __fastcall UpdateAnimValueForCName(RED4ext::vehicle::BaseObject *vehicle, RED4ext::CName name, float value) {
-//  RED4ext::RelocFunc<uint64_t (__fastcall *)(void *, uint64_t, float)> call(UpdateAnimValueForCNameAddr);
-//  return call(vehicle->unk570, name, value);
-//}
+// constexpr uintptr_t UpdateAnimValueForCNameAddr = 0x1CFD9F0;
+// uint64_t __fastcall UpdateAnimValueForCName(RED4ext::vehicle::BaseObject *vehicle, RED4ext::CName name, float value)
+// {
+//   RED4ext::RelocFunc<uint64_t (__fastcall *)(void *, uint64_t, float)> call(UpdateAnimValueForCNameAddr);
+//   return call(vehicle->unk570, name, value);
+// }
 
 FlightComponent *GetFlightComponent(RED4ext::vehicle::BaseObject *v) {
   auto rtti = RED4ext::CRTTISystem::Get();
-  auto fcc = rtti->GetClass("FlightComponent");
+  auto fcc = FlightComponent::GetRTTIType();
   for (auto const &c : v->componentsStorage.components) {
     if (c.GetPtr()->GetType() == fcc) {
-      return (FlightComponent*)c.GetPtr();
+      return (FlightComponent *)c.GetPtr();
     }
   }
   return NULL;
 }
 
-//#define NUM_FRAMES 0x0180
+// #define NUM_FRAMES 0x0180
 //
-//uint16_t frameIndex = 0;
-//clock_t fullFrame[NUM_FRAMES];
-//clock_t lastBegin = 0;
+// uint16_t frameIndex = 0;
+// clock_t fullFrame[NUM_FRAMES];
+// clock_t lastBegin = 0;
 
 uintptr_t __fastcall VehiclePhysicsUpdate(RED4ext::vehicle::Physics *p, float deltaTime) {
   // spdlog::info(a2->c_str());
-  //auto rtti = RED4ext::CRTTISystem::Get();
-  //auto fcc = rtti->GetClass("FlightComponent");
-  //auto fc = GetFlightComponent(p);
-  //auto activeProp = fcc->GetProperty("hasUpdate");
-  //if (activeProp->GetValue<bool>(fc) && p->parent->physicsData) {
+  // auto rtti = RED4ext::CRTTISystem::Get();
+  // auto fcc = rtti->GetClass("FlightComponent");
+  // auto fc = GetFlightComponent(p);
+  // auto activeProp = fcc->GetProperty("hasUpdate");
+  // if (activeProp->GetValue<bool>(fc) && p->parent->physicsData) {
   //  auto onUpdate = fcc->GetFunction("OnUpdate");
   //  auto args = RED4ext::CStackType(rtti->GetType("Float"), &deltaTime);
   //  auto stack = RED4ext::CStack(fc, &args, 1, nullptr, 0);
@@ -98,19 +107,18 @@ uintptr_t __fastcall VehiclePhysicsUpdate(RED4ext::vehicle::Physics *p, float de
   //  torqueProp->SetValue(fc, torque);
   //}
 
-  //clock_t begin = std::clock();
-  //fullFrame[frameIndex] = begin - lastBegin;
-  //lastBegin = begin;
-  //if (frameIndex == 0) {
-  //  float total = 0.0;
-  //  for (auto i = 0; i < NUM_FRAMES; i++) {
-  //    total += (fullFrame[i] / (double)CLOCKS_PER_SEC);
-  //  }
-  //  spdlog::info("Loop: {:.6f} ms average over {} s", total * 1000.0 / NUM_FRAMES, total);
-  //}
+  // clock_t begin = std::clock();
+  // fullFrame[frameIndex] = begin - lastBegin;
+  // lastBegin = begin;
+  // if (frameIndex == 0) {
+  //   float total = 0.0;
+  //   for (auto i = 0; i < NUM_FRAMES; i++) {
+  //     total += (fullFrame[i] / (double)CLOCKS_PER_SEC);
+  //   }
+  //   spdlog::info("Loop: {:.6f} ms average over {} s", total * 1000.0 / NUM_FRAMES, total);
+  // }
 
-  //frameIndex = (frameIndex + 1) % NUM_FRAMES;
-
+  // frameIndex = (frameIndex + 1) % NUM_FRAMES;
 
   return VehiclePhysicsUpdate_Original(p, deltaTime);
 }
@@ -145,12 +153,14 @@ void __fastcall ProcessAirResistance(RED4ext::vehicle::WheeledPhysics *a1, float
   ProcessAirResistance_Original(a1, deltaTime);
 }
 
-void __fastcall AirControlProcess(RED4ext::vehicle::AirControl *ac, float deltaTime) {
-  auto fc = GetFlightComponent(ac->vehicle);
+void __fastcall vehiclePhysicsData_ApplyTorqueWithOffset(RED4ext::vehicle::PhysicsData *physicsData,
+                                                         RED4ext::Vector3 *offset, RED4ext::Vector4 *torque) {
+  auto fc = GetFlightComponent(physicsData->vehicle);
   if (fc && fc->active) {
     return;
+  } else {
+    vehiclePhysicsData_ApplyTorqueWithOffset_Original(physicsData, offset, torque);
   }
-  AirControlProcess_Original(ac, deltaTime);
 }
 
 uintptr_t __fastcall VehicleHelperUpdate(RED4ext::vehicle::WheeledPhysics *p, float deltaTime) {
@@ -168,15 +178,17 @@ uintptr_t __fastcall VehicleHelperUpdate(RED4ext::vehicle::WheeledPhysics *p, fl
   }
 }
 
-void __fastcall TorqueUpdate(RED4ext::vehicle::PhysicsData* a1, uintptr_t a2) {
+void __fastcall TorqueUpdate(RED4ext::vehicle::PhysicsData *a1, uintptr_t a2) {
   auto fc = GetFlightComponent(a1->vehicle);
   if (fc && fc->active) {
     return;
+  } else {
+    TorqueUpdate_Original(a1, a2);
   }
-  TorqueUpdate_Original(a1, a2);
 }
 
-void __fastcall VehicleUpdateOrientationWithPID(RED4ext::vehicle::CarBaseObject *a1, RED4ext::Transform * a2, float a3, float a4) {
+void __fastcall VehicleUpdateOrientationWithPID(RED4ext::vehicle::CarBaseObject *a1, RED4ext::Transform *a2, float a3,
+                                                float a4) {
   auto fc = GetFlightComponent(a1);
   if (fc && fc->active) {
     return;
@@ -207,13 +219,33 @@ uintptr_t __fastcall BikeAnimationUpdate(RED4ext::vehicle::BikePhysics *a1) {
     a1->tiltControlEnabled = 1;
   }
   auto og = BikeAnimationUpdate_Original(a1);
-  //UpdateAnimValueForCName(a1->parent3, "throttle", 0.0);
+  // UpdateAnimValueForCName(a1->parent3, "throttle", 0.0);
   return og;
 }
 
-void __fastcall FourWheelTorque(RED4ext::vehicle::WheeledPhysics *physics,
-                                                   unsigned __int8 rearWheelIndex, unsigned __int8 frontWheelIndex,
-                                                   float a4, RED4ext::Transform *transform) {
+// prevents wheels from adding torque/etc
+void __fastcall vehicleWheeledPhysics_SomethingWheelRayTrace(RED4ext::vehicle::WheeledPhysics *physics, unsigned __int8 index) {
+  auto fc = GetFlightComponent(physics->parent);
+  if (fc && fc->active) {
+    return;
+  } else {
+    vehicleWheeledPhysics_SomethingWheelRayTrace_Original(physics, index);
+  }
+}
+
+// disables tire torque & friction
+void __fastcall RollFactorTorqueThing(uint64_t *a1, float a2) {
+  auto physics = (RED4ext::vehicle::WheeledPhysics *)a1[2];
+  auto fc = GetFlightComponent(physics->parent);
+  //if (fc && fc->active) {
+  //  return;
+  //} else {
+    RollFactorTorqueThing_Original(a1, a2);
+  //}
+}
+
+void __fastcall FourWheelTorque(RED4ext::vehicle::WheeledPhysics *physics, unsigned __int8 rearWheelIndex,
+                                unsigned __int8 frontWheelIndex, float a4, RED4ext::Transform *transform) {
   auto fc = GetFlightComponent(physics->parent);
   if (!fc->hasUpdate) {
     FourWheelTorque_Original(physics, rearWheelIndex, frontWheelIndex, a4, transform);
@@ -223,23 +255,37 @@ void __fastcall FourWheelTorque(RED4ext::vehicle::WheeledPhysics *physics,
 struct VehiclePhysicsUpdateModule : FlightModule {
   void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehiclePhysicsUpdateAddr), &VehiclePhysicsUpdate,
-                          reinterpret_cast<void **>(&VehiclePhysicsUpdate_Original)));
+                                  reinterpret_cast<void **>(&VehiclePhysicsUpdate_Original)))
+      ;
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(ProcessAirResistanceAddr), &ProcessAirResistance,
-                          reinterpret_cast<void **>(&ProcessAirResistance_Original)));
+                                  reinterpret_cast<void **>(&ProcessAirResistance_Original)))
+      ;
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleHelperUpdateAddr), &VehicleHelperUpdate,
-                          reinterpret_cast<void **>(&VehicleHelperUpdate_Original)));
-    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(AirControlProcessAddr), &AirControlProcess,
-                                  reinterpret_cast<void **>(&AirControlProcess_Original)));
+                                  reinterpret_cast<void **>(&VehicleHelperUpdate_Original)))
+      ;
+    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(vehiclePhysicsData_ApplyTorqueWithOffsetAddr),
+                                  &vehiclePhysicsData_ApplyTorqueWithOffset,
+                                  reinterpret_cast<void **>(&vehiclePhysicsData_ApplyTorqueWithOffset_Original)))
+      ;
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(TorqueUpdateAddr), &TorqueUpdate,
-                                  reinterpret_cast<void **>(&TorqueUpdate_Original)));
+                                  reinterpret_cast<void **>(&TorqueUpdate_Original)))
+      ;
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleUpdateOrientationWithPIDAddr),
                                   &VehicleUpdateOrientationWithPID,
-                                  reinterpret_cast<void **>(&VehicleUpdateOrientationWithPID_Original)));
+                                  reinterpret_cast<void **>(&VehicleUpdateOrientationWithPID_Original)))
+      ;
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(vehicleCarPhysics_AnimationUpdateAddr),
                                   &CarAnimationUpdate, reinterpret_cast<void **>(&CarAnimationUpdate_Original)))
       ;
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(vehicleBikePhysics_AnimationUpdateAddr),
                                   &BikeAnimationUpdate, reinterpret_cast<void **>(&BikeAnimationUpdate_Original)))
+      ;
+    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(vehicleWheeledPhysics_SomethingWheelRayTraceAddr),
+                                  &vehicleWheeledPhysics_SomethingWheelRayTrace,
+                                  reinterpret_cast<void **>(&vehicleWheeledPhysics_SomethingWheelRayTrace_Original)))
+      ;
+    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(RollFactorTorqueThingAddr), &RollFactorTorqueThing,
+                                  reinterpret_cast<void **>(&RollFactorTorqueThing_Original)))
       ;
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(FourWheelTorqueAddr), &FourWheelTorque,
                                   reinterpret_cast<void **>(&FourWheelTorque_Original)))
@@ -249,11 +295,13 @@ struct VehiclePhysicsUpdateModule : FlightModule {
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(ProcessAirResistanceAddr));
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehiclePhysicsUpdateAddr));
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleHelperUpdateAddr));
-    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(AirControlProcessAddr));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(vehiclePhysicsData_ApplyTorqueWithOffsetAddr));
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(TorqueUpdateAddr));
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleUpdateOrientationWithPIDAddr));
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(vehicleCarPhysics_AnimationUpdateAddr));
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(vehicleBikePhysics_AnimationUpdateAddr));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(vehicleWheeledPhysics_SomethingWheelRayTraceAddr));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(RollFactorTorqueThingAddr));
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(FourWheelTorqueAddr));
   }
 };

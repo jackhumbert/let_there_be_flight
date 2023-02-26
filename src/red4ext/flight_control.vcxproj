@@ -133,6 +133,7 @@
     <ClCompile Include="MeshComponent.cpp" />
     <ClCompile Include="RuntimeProperties.cpp" />
     <ClCompile Include="ScriptDefinitions\ScriptDefinitions.hpp" />
+    <ClCompile Include="WheeledObject.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="Utils.cpp" />
     <ClCompile Include="VehicleObject.cpp" />

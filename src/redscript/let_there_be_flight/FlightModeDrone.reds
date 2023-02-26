@@ -21,17 +21,17 @@ public class FlightModeDrone extends FlightMode {
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Pitch-Factor")
-  @runtimeProperty("ModSettings.step", "0.5")
+  @runtimeProperty("ModSettings.step", "0.1")
   @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "100")
+  @runtimeProperty("ModSettings.max", "200")
   public let droneModePitchFactor: Float = 5.0;
   
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Roll-Factor")
-  @runtimeProperty("ModSettings.step", "0.5")
+  @runtimeProperty("ModSettings.step", "0.1")
   @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "100")
+  @runtimeProperty("ModSettings.max", "200")
   public let droneModeRollFactor: Float = 12.0;
   
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
@@ -45,9 +45,9 @@ public class FlightModeDrone extends FlightMode {
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Yaw-Factor")
-  @runtimeProperty("ModSettings.step", "0.5")
+  @runtimeProperty("ModSettings.step", "0.1")
   @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "100")
+  @runtimeProperty("ModSettings.max", "200")
   public let droneModeYawFactor: Float = 5.0;
   
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")

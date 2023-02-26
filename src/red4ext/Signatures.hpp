@@ -59,12 +59,6 @@ using VehiclePhysicsUpdate = uintptr_t __fastcall (RED4ext::vehicle::Physics *, 
 /// @pattern 48 8B C4 48 89 58 08 48 89 70 10 48 89 78 18 41 56 48 81 EC B0 00 00 00 0F 29 70 E8 4C 8B F1 0F
 using VehicleHelperUpdate = uintptr_t __fastcall (RED4ext::vehicle::WheeledPhysics *, float);
 
-// where airControl is processed
-// 1.6  RVA: 0x1D108A0
-// 1.61 RVA: 0x1D10C60
-/// @pattern 48 89 5C 24 20 56 48 83 EC 60 0F 29 74 24 50 48 8B F1 0F 57 F6 44 0F 29 44 24 30 0F 2E 71 08 44
-using AirControlProcess = void __fastcall (RED4ext::vehicle::AirControl *ac, float deltaTime);
-
 // 1.6  RVA: 0x1D3AD50
 // 1.61 RVA: 0x1D3B110
 /// @pattern 48 8B C4 53 48 81 EC A0 00 00 00 0F 29 70 E8 48 8B D9 0F 29 78 D8 44 0F 29 40 C8 44 0F 29 48 B8
@@ -158,3 +152,7 @@ using LookupLocalizedString = RED4ext::CString * __fastcall (__int64, RED4ext::C
 // 1.62 RVA: 0x6FA5B0 / 7316912
 /// @pattern 40 53 48 83 EC 30 F2 41 0F 10 00 48 8B DA 41 8B 40 08 48 8D 54 24 20 F2 0F 11 44 24 20 89 44 24
 using SetLocalizedTextString = RED4ext::CString *__fastcall (__int64, RED4ext::CString *, RED4ext::CString *);
+
+// 1.6 RVA: 0x1D5B9A0 / 30783904
+/// @pattern 40 55 41 54 41 55 41 57 48 8D 6C 24 88 48 81 EC 78 01 00 00 4C 8B F9 44 0F 29 A4 24 00 01 00 00
+using RollFactorTorqueThing = void __fastcall (uint64_t *a1, float a2);

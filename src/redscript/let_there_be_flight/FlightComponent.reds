@@ -79,6 +79,8 @@ public native class FlightComponent extends GameComponent {
   private let linearBrake: Float;
   private let angularBrake: Float;
 
+  public let thrusterTensor: Vector4;
+
   // public let ui: wref<worlduiWidgetComponent>;
   // public let ui_info: wref<worlduiWidgetComponent>;
 
@@ -253,9 +255,10 @@ public native class FlightComponent extends GameComponent {
   protected cb func OnMountingEvent(evt: ref<MountingEvent>) -> Bool {
     // this.helper = this.GetVehicle().AddFlightHelper();
     LTBF_RegisterListener(this);
+    // this.thrusterTensor = Vector4.Normalize(this.configuration.GetThrusterTensor());
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if mountChild.IsPlayer() {
-      FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName());
+      FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName() + " uses tensor: " + this.GetVehicle().UsesInertiaTensor());
       // this.GetVehicle().TurnOffAirControl();
       this.SetupVehicleTPPBBListener();
       // FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName());
@@ -377,7 +380,10 @@ public native class FlightComponent extends GameComponent {
     FlightLog.Info("[FlightComponent] OnVehicleFlightActivationEvent: " + this.GetVehicle().GetDisplayName());
     this.GetVehicle().ScheduleAppearanceChange(this.GetVehicle().GetCurrentAppearanceName());
     if !this.active {
-
+      let wheeled = this.GetVehicle() as WheeledObject;
+      if IsDefined(wheeled) {
+        wheeled.ResetWheels();
+      }
       this.stats = FlightStats.Create(this.GetVehicle());
       // this.sys.ctlr.ui.Setup(this.stats);
 
@@ -568,20 +574,32 @@ public native class FlightComponent extends GameComponent {
     }
 
     force *= timeDelta;
+    // force *= 1.0/60.0;
+
     // factor in mass
     force *= this.stats.s_mass;
     // convet to global
     force = this.stats.d_orientation * force;
 
     torque *= timeDelta;
-    // factor in interia tensor - maybe half?
+    // torque *= 1.0/60.0;
+
+    // factor in inertia tensor - maybe half?
     let it = this.GetVehicle().GetInertiaTensor();
-    torque.X *= it.X.X;
-    // torque.X *= SqrtF(it.X.X) * 20.0;
-    torque.Y *= it.Y.Y;
-    // torque.Y *= SqrtF(it.Y.Y) * 20.0;
-    torque.Z *= it.Z.Z;
-    // torque.Z *= SqrtF(it.Z.Z) * 20.0;
+    // let v = Vector4.Normalize(new Vector4(PowF(it.X.X, 0.5), PowF(it.Y.Y, 0.5), PowF(it.Z.Z, 0.5), 0.0));
+    // torque.X *= v.X;
+    // torque.Y *= v.Y;
+    // torque.Z *= v.Z;
+    torque *= it;
+
+    // torque *= this.stats.s_mass;
+    // torque *= 1500.0;
+
+    // factor in where thrusters are
+    // torque.X *= this.thrusterTensor.X;
+    // torque.Y *= this.thrusterTensor.Y;
+    // torque.Z *= this.thrusterTensor.Z;
+    
     // convert to global
     torque = this.stats.d_orientation * torque;
     

@@ -8,216 +8,70 @@
 #include <RED4ext/Scripting/Natives/Generated/ent/AnimatedComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/HardTransformBinding.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/PlaceholderComponent.hpp>
+#include "Engine/RTTIExpansion.hpp"
 
+class VehicleObject : public Engine::RTTIExpansion<VehicleObject, RED4ext::vehicle::BaseObject> {
+public:
+  inline bool UsesInertiaTensor() { return this->physicsData->usesInertiaTensor; }
+  inline RED4ext::Vector3 GetMomentOfInertiaScale() { return this->physicsData->momentOfInertiaScale; }
+  inline RED4ext::Matrix GetInertiaTensor() { return this->physicsData->localInertiaTensor; }
+  inline RED4ext::Matrix GetGlobalInertiaTensor() { return this->physicsData->worldInertiaTensor; }
+  inline RED4ext::Vector3 GetCenterOfMass() { return this->physicsData->centerOfMass; }
+  inline RED4ext::Vector3 GetAngularVelocity() { return this->physicsData->angularVelocity; }
+  inline void EnableGravity(bool gravity) { this->physicsData->unk1B0 = gravity; }
+  inline bool HasGravity() { return this->physicsData->unk1B0; }
+  inline void EndActions() { this->actionInterface.EndActions(); }
 
+  inline bool TurnOffAirControl() {
+    auto ac = this->airControl;
 
-void VehicleUsesInertiaTensor(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, bool *aOut, int64_t a4) {
-  aFrame->code++; // skip ParamEnd
+    ac->anglePID.X = 0.0;
+    ac->velocityPID.X = 0.0;
+    ac->yaw.multiplier = 0.0;
+    ac->roll.multiplier = 0.0;
+    ac->pitch.multiplier = 0.0;
+    ac->massReference = 0.0;
 
-  auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-  auto ps = v->physicsData;
-
-  if (aOut) {
-    *aOut = ps->usesInertiaTensor;
+    return true;
   }
-}
 
-void VehicleTurnOffAirControl(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, bool *aOut, int64_t a4) {
-  aFrame->code++; // skip ParamEnd
-
-  auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-  auto ac = v->airControl;
-
-  ac->anglePID.X = 0.0;
-  ac->velocityPID.X = 0.0;
-  ac->yaw.multiplier = 0.0;
-  ac->roll.multiplier = 0.0;
-  ac->pitch.multiplier = 0.0;
-  ac->massReference = 0.0;
-
-  if (aOut) {
-    *aOut = true;
-  }
-}
-
-void VehicleGetMomentOfInertiaScale(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,
-                                    RED4ext::Vector3 *aOut, int64_t a4) {
-  aFrame->code++; // skip ParamEnd
-
-  auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-  auto ps = v->physicsData;
-
-  if (aOut) {
-    *aOut = ps->momentOfInertiaScale;
-  }
-}
-
-void VehicleGetInertiaTensor(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Matrix *aOut,
-                             int64_t a4) {
-  aFrame->code++; // skip ParamEnd
-
-  auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-  auto ps = v->physicsData;
-
-  if (aOut) {
-    *aOut = ps->localInertiaTensor;
-  }
-}
-
-void VehicleGetWorldInertiaTensor(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Matrix *aOut,
-                             int64_t a4) {
-  aFrame->code++; // skip ParamEnd
-
-  auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-  auto ps = v->physicsData;
-
-  if (aOut) {
-    *aOut = ps->worldInertiaTensor;
-  }
-}
-
-void VehicleGetCenterOfMass(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Vector3 *aOut,
-                            int64_t a4) {
-  aFrame->code++; // skip ParamEnd
-
-  auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-  auto ps = v->physicsData;
-
-  if (aOut) {
-    *aOut = ps->centerOfMass;
-  }
-}
-
-void VehicleGetAngularVelocity(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Vector3 *aOut,
-                               int64_t a4) {
-  aFrame->code++; // skip ParamEnd
-
-  auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-  auto ps = v->physicsData;
-
-  if (aOut) {
-    *aOut = ps->angularVelocity;
-  }
-}
-
-void VehicleEnableGravity(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Vector3 *aOut,
-                          int64_t a4) {
-
-  bool enable;
-  RED4ext::GetParameter(aFrame, &enable);
-  aFrame->code++; // skip ParamEnd;
-
-  auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-  auto ps = v->physicsData;
-  if (ps) {
-    ps->unk1B0 = enable;
-  }
-}
-
-void VehicleHasGravity(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, bool *aOut,
-                          int64_t a4) {
-
-  aFrame->code++; // skip ParamEnd;
-
-  auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-  auto ps = v->physicsData;
-  if (aOut && ps) {
-    *aOut = ps->unk1B0;
-  }
-}
-
-void VehicleEndActions(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Vector3 *aOut,
-                          int64_t a4) {
-
-  aFrame->code++; // skip ParamEnd;
-
-  auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-  v->actionInterface.EndActions();
-}
-
-void VehicleUnsetPhysicsStates(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Vector3 *aOut,
-                          int64_t a4) {
-
-  aFrame->code++; // skip ParamEnd;
-
-  auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-  v->UnsetPhysicsStates();
-}
-
-void VehicleAddFlightHelper(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,
-                            RED4ext::Handle<vehicle::flight::HelperWrapper> *aOut, int64_t a4) {
-  // RED4ext::ScriptInstance fc;
-  // RED4ext::GetParameter(aFrame, &fc);
-  aFrame->code++; // skip ParamEnd
-
-  auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-  auto p = (RED4ext::vehicle::WheeledPhysics*)v->physics;
-  if (p) {
-    auto helper = vehicle::flight::Helper::AddToDriverHelpers(&p->driveHelpers);
-    if (aOut) {
-      *aOut = helper;
-    }
-  } else {
-    if (aOut) {
-      *aOut = nullptr;
-    }
-  }
-}
-
-void GetWeaponPlaceholderOrientation(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Quaternion *aOut,
-                               int64_t a4) {
-  auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-
-  int index;
-  RED4ext::GetParameter(aFrame, &index);
-  aFrame->code++; // skip ParamEnd;
-
-  if (aOut) {
-    if (vehicle->weapons.size > index && vehicle->weapons[index].weaponObject) {
-      auto ph = (RED4ext::ent::PlaceholderComponent*)vehicle->weapons[index].weaponObject.GetPtr()->placeholder;
+  
+  inline RED4ext::Quaternion GetWeaponPlaceholderOrientation(int index) {
+    if (this->weapons.size > index && this->weapons[index].weaponObject) {
+      auto ph = (RED4ext::ent::PlaceholderComponent *)this->weapons[index].weaponObject.GetPtr()->placeholder;
       if (ph) {
-        *aOut = ph->worldTransform.Orientation;
-        return;
+        return ph->worldTransform.Orientation;
       }
     }
-    *aOut = {0.0, 0.0, 0.0, 1.0};
+    return {0.0, 0.0, 0.0, 1.0};
   }
-}
 
-void VehicleGetRig(RED4ext::vehicle::BaseObject* vehicle) {
-  RED4ext::ent::AnimatedComponent *vehicleRig = NULL;
-  auto rtti = RED4ext::CRTTISystem::Get();
+  // not used yet
+  inline void VehicleGetRig() {
+    RED4ext::ent::AnimatedComponent *vehicleRig = NULL;
+    auto rtti = RED4ext::CRTTISystem::Get();
 
-  for (auto const &handle : vehicle->componentsStorage.components) {
-    auto component = handle.GetPtr();
-    if (component->GetNativeType() == rtti->GetClass("entAnimatedComponent")) {
-      vehicleRig = reinterpret_cast<RED4ext::ent::AnimatedComponent *>(component);
-      break;
+    for (auto const &handle : this->componentsStorage.components) {
+      auto component = handle.GetPtr();
+      if (component->GetNativeType() == rtti->GetClass("entAnimatedComponent")) {
+        vehicleRig = reinterpret_cast<RED4ext::ent::AnimatedComponent *>(component);
+        break;
+      }
+    }
+
+    if (vehicleRig != NULL) {
+      // vehicleRig->rig;
     }
   }
 
-  if (vehicleRig != NULL) {
-    //vehicleRig->rig;
-  }
-}
-
-void VehicleGetComponentsUsingSlot(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,
-                                   RED4ext::DynArray<RED4ext::WeakHandle<RED4ext::ent::IComponent>> *aOut, int64_t a4) {
-  // RED4ext::ScriptInstance fc;
-  // RED4ext::GetParameter(aFrame, &fc);
-  RED4ext::CName slotName;
-  RED4ext::GetParameter(aFrame, &slotName);
-  aFrame->code++; // skip ParamEnd
-
-  if (aOut) {
+  inline RED4ext::DynArray<RED4ext::WeakHandle<RED4ext::ent::IComponent>> GetComponentsUsingSlot(RED4ext::CName slotName) {
     auto rtti = RED4ext::CRTTISystem::Get();
     auto ipct = rtti->GetType("entIPlacedComponent");
     auto htb = rtti->GetType("endHardTransformBinding");
-    *aOut = RED4ext::DynArray<RED4ext::WeakHandle<RED4ext::ent::IComponent>>();
+    auto ra = RED4ext::DynArray<RED4ext::WeakHandle<RED4ext::ent::IComponent>>();
     auto doubleCheck = RED4ext::DynArray<RED4ext::Handle<RED4ext::ent::IComponent>>();
 
-    auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-    for (const auto &h : v->componentsStorage.components) {
+    for (const auto &h : this->componentsStorage.components) {
       auto c = h.GetPtr();
       bool isIPC = false;
       auto ct = c->GetType();
@@ -233,7 +87,7 @@ void VehicleGetComponentsUsingSlot(RED4ext::IScriptable *aContext, RED4ext::CSta
           auto htb = reinterpret_cast<RED4ext::ent::HardTransformBinding *>(ipc->parentTransform.instance);
           if (htb->slotName == slotName) {
             auto wh = RED4ext::WeakHandle<RED4ext::ent::IComponent>(h);
-            aOut->EmplaceBack(wh);
+            ra.EmplaceBack(wh);
           } else if (htb->slotName.hash == 0) {
             doubleCheck.EmplaceBack(h);
           }
@@ -245,104 +99,48 @@ void VehicleGetComponentsUsingSlot(RED4ext::IScriptable *aContext, RED4ext::CSta
       auto c = h.GetPtr();
       auto ipc = reinterpret_cast<RED4ext::ent::IPlacedComponent *>(c);
       auto htb = reinterpret_cast<RED4ext::ent::HardTransformBinding *>(ipc->parentTransform.instance);
-      for (const auto &eh : *aOut) {
+      for (const auto &eh : ra) {
         auto ec = reinterpret_cast<RED4ext::ent::IComponent *>(eh.instance);
         if (htb->bindName == ec->name) {
           auto wh = RED4ext::WeakHandle<RED4ext::ent::IComponent>(h);
-          aOut->EmplaceBack(wh);
+          ra.EmplaceBack(wh);
           break;
         }
       }
     }
+    return ra;
   }
-}
 
-void VehicleGetWeapons(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::DynArray<RED4ext::Handle<RED4ext::game::weapon::Object>> *aOut, int64_t a4) {
-  aFrame->code++; // skip ParamEnd
-
-  auto v = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aContext);
-
-  auto allocator = new RED4ext::Memory::DefaultAllocator();
-  auto weapons = RED4ext::DynArray<RED4ext::Handle<RED4ext::game::weapon::Object>>(allocator);
-  for (const auto &weapon : v->weapons) {
-    if (weapon.weaponObject) {
-      weapon.weaponObject.refCount->IncRef();
-      weapons.EmplaceBack(weapon.weaponObject);
+  inline RED4ext::DynArray < RED4ext::Handle<RED4ext::game::weapon::Object>> GetWeapons() {
+    auto allocator = new RED4ext::Memory::DefaultAllocator();
+    auto weapons = RED4ext::DynArray<RED4ext::Handle<RED4ext::game::weapon::Object>>(allocator);
+    for (const auto &weapon : this->weapons) {
+      if (weapon.weaponObject) {
+        weapon.weaponObject.refCount->IncRef();
+        weapons.EmplaceBack(weapon.weaponObject);
+      }
     }
+    return weapons;
   }
 
-  if (aOut) {
-    *aOut = weapons;
-  }
-}
+private:
+  friend Descriptor;
 
-struct VehicleObjectModule : FlightModule {
-  void PostRegisterTypes() {
-    auto rtti = RED4ext::CRTTISystem::Get();
-    auto vbc = rtti->GetClass("vehicleBaseObject");
-    //vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Bool"), "isOnGround", nullptr, 0x24C));
-    //vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "acceleration", nullptr, 0x254));
-    //vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "deceleration", nullptr, 0x258));
-    //vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "handbrake", nullptr, 0x25C));
-    //vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnX", nullptr, 0x5B0));
-    //vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnX2", nullptr, 0x5B4));
-    //vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnX3", nullptr, 0x5B8));
-    //vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnX4", nullptr, 0x268));
-    //vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "turnInput", nullptr, offsetof(RED4ext::vehicle::BaseObject, turnInput)));
-    //vbc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Vector3"), "tracePosition", nullptr,
-                                                   //offsetof(RED4ext::vehicle::BaseObject, tracePosition)));
-    // vbc->props.PushBack(RED4ext::CProperty::Create(
-    //  rtti->GetType("WorldTransform"), "unkWorldTransform", nullptr, 0x330));
-    // vbc->props.PushBack(RED4ext::CProperty::Create(
-    //  rtti->GetType("handle:entIPlacedComponent"), "chassis", nullptr, 0x2D0));
-    auto getInertiaTensor = RED4ext::CClassFunction::Create(vbc, "GetInertiaTensor", "GetInertiaTensor", &VehicleGetInertiaTensor, {.isNative = true});
-    vbc->RegisterFunction(getInertiaTensor);
+  inline static void OnExpand(Descriptor *aType, RED4ext::CRTTISystem *) {
+    aType->AddFunction<&VehicleObject::UsesInertiaTensor>("UsesInertiaTensor");
+    aType->AddFunction<&VehicleObject::GetMomentOfInertiaScale>("GetMomentOfInertiaScale");
+    aType->AddFunction<&VehicleObject::GetInertiaTensor>("GetInertiaTensor");
+    aType->AddFunction<&VehicleObject::GetGlobalInertiaTensor>("GetGlobalInertiaTensor");
+    aType->AddFunction<&VehicleObject::GetCenterOfMass>("GetCenterOfMass");
+    aType->AddFunction<&VehicleObject::GetAngularVelocity>("GetAngularVelocity");
+    aType->AddFunction<&VehicleObject::EnableGravity>("EnableGravity");
+    aType->AddFunction<&VehicleObject::HasGravity>("HasGravity");
+    aType->AddFunction<&VehicleObject::UnsetPhysicsStates>("UnsetPhysicsStates");
+    aType->AddFunction<&VehicleObject::EndActions>("EndActions");
 
-    auto getWorldInertiaTensor = RED4ext::CClassFunction::Create(vbc, "GetWorldInertiaTensor", "GetWorldInertiaTensor", &VehicleGetWorldInertiaTensor, {.isNative = true});
-    vbc->RegisterFunction(getWorldInertiaTensor);
-
-    auto getMomentOfInertiaScale = RED4ext::CClassFunction::Create(vbc, "GetMomentOfInertiaScale", "GetMomentOfInertiaScale", &VehicleGetMomentOfInertiaScale, {.isNative = true});
-    vbc->RegisterFunction(getMomentOfInertiaScale);
-
-    auto usesInertiaTensor = RED4ext::CClassFunction::Create(vbc, "UsesInertiaTensor", "UsesInertiaTensor", &VehicleUsesInertiaTensor, {.isNative = true});
-    vbc->RegisterFunction(usesInertiaTensor);
-
-    auto getCenterOfMass = RED4ext::CClassFunction::Create(vbc, "GetCenterOfMass", "GetCenterOfMass",  &VehicleGetCenterOfMass, {.isNative = true});
-    vbc->RegisterFunction(getCenterOfMass);
-
-    auto getAngularVelocity = RED4ext::CClassFunction::Create(vbc, "GetAngularVelocity", "GetAngularVelocity", &VehicleGetAngularVelocity, {.isNative = true});
-    vbc->RegisterFunction(getAngularVelocity);
-
-    auto turnOffAirControl = RED4ext::CClassFunction::Create(vbc, "TurnOffAirControl", "TurnOffAirControl",  &VehicleTurnOffAirControl, {.isNative = true});
-    vbc->RegisterFunction(turnOffAirControl);
-    
-    auto addFlightHelper = RED4ext::CClassFunction::Create(vbc, "AddFlightHelper", "AddFlightHelper", &VehicleAddFlightHelper, {.isNative = true});
-    vbc->RegisterFunction(addFlightHelper);
-
-    auto enableGravity = RED4ext::CClassFunction::Create(vbc, "EnableGravity", "EnableGravity", &VehicleEnableGravity, {.isNative = true});
-    vbc->RegisterFunction(enableGravity);
-
-    auto hasGravity = RED4ext::CClassFunction::Create(vbc, "HasGravity", "HasGravity", &VehicleHasGravity, {.isNative = true});
-    vbc->RegisterFunction(hasGravity);
-    
-    auto unsetPhysics = RED4ext::CClassFunction::Create(vbc, "UnsetPhysicsStates", "UnsetPhysicsStates", &VehicleUnsetPhysicsStates, {.isNative = true});
-    vbc->RegisterFunction(unsetPhysics);
-
-    auto endActions = RED4ext::CClassFunction::Create(vbc, "EndActions", "EndActions", &VehicleEndActions, {.isNative = true});
-    vbc->RegisterFunction(endActions);
-
-    auto getComponentsUsingSlot = RED4ext::CClassFunction::Create(
-        vbc, "GetComponentsUsingSlot", "GetComponentsUsingSlot", &VehicleGetComponentsUsingSlot, {.isNative = true});
-    vbc->RegisterFunction(getComponentsUsingSlot);
-
-    auto getWeaponPlaceholderOrientation = RED4ext::CClassFunction::Create(
-        vbc, "GetWeaponPlaceholderOrientation", "GetWeaponPlaceholderOrientation", &GetWeaponPlaceholderOrientation, {.isNative = true});
-    vbc->RegisterFunction(getWeaponPlaceholderOrientation);
-
-    auto getWeapons = RED4ext::CClassFunction::Create(vbc, "GetWeapons", "GetWeapons",
-                                                            &VehicleGetWeapons, {.isNative = true});
-    vbc->RegisterFunction(getWeapons);
+    aType->AddFunction<&VehicleObject::TurnOffAirControl>("TurnOffAirControl");
+    aType->AddFunction<&VehicleObject::GetWeaponPlaceholderOrientation>("GetWeaponPlaceholderOrientation");
+    aType->AddFunction<&VehicleObject::GetComponentsUsingSlot>("GetComponentsUsingSlot");
+    aType->AddFunction<&VehicleObject::GetWeapons>("GetWeapons");
   }
 };
-
-REGISTER_FLIGHT_MODULE(VehicleObjectModule);

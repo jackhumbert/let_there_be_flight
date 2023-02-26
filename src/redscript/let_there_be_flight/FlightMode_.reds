@@ -42,25 +42,22 @@ public abstract class FlightMode {
     angularDamp.Z *= (1.0 - AbsF(this.component.yaw));
 
     // detect when we hit stuff and delay the damping
-    this.dampAccVector.X = MinF(MaxF(this.dampAccVector.X, AbsF(this.component.stats.d_angularAcceleration.X) / timeDelta / 10.0), 1.0);
-    this.dampAccVector.Y = MinF(MaxF(this.dampAccVector.Y, AbsF(this.component.stats.d_angularAcceleration.Y) / timeDelta / 10.0), 1.0);
-    this.dampAccVector.Z = MinF(MaxF(this.dampAccVector.Z, AbsF(this.component.stats.d_angularAcceleration.Z) / timeDelta / 10.0), 1.0);
+    // this.dampAccVector.X = ClampF(MaxF(this.dampAccVector.X, AbsF(this.component.stats.d_angularAcceleration.X) / timeDelta / 10.0), 0.0, 1.0);
+    // this.dampAccVector.Y = ClampF(MaxF(this.dampAccVector.Y, AbsF(this.component.stats.d_angularAcceleration.Y) / timeDelta / 10.0), 0.0, 1.0);
+    // this.dampAccVector.Z = ClampF(MaxF(this.dampAccVector.Z, AbsF(this.component.stats.d_angularAcceleration.Z) / timeDelta / 10.0), 0.0, 1.0);
 
-    angularDamp.X *= (1.0 - this.dampAccVector.X);
-    angularDamp.Y *= (1.0 - this.dampAccVector.Y);
-    angularDamp.Z *= (1.0 - this.dampAccVector.Z);
+    // angularDamp.X *= (1.0 - this.dampAccVector.X);
+    // angularDamp.Y *= (1.0 - this.dampAccVector.Y);
+    // angularDamp.Z *= (1.0 - this.dampAccVector.Z);
 
-    // decay over 300 ms
-    this.dampAccVector.X -= timeDelta / 0.300;
-    this.dampAccVector.Y -= timeDelta / 0.300;
-    this.dampAccVector.Z -= timeDelta / 0.300;
+    // decay over 200 ms
+    // this.dampAccVector.X -= timeDelta / 0.200;
+    // this.dampAccVector.Y -= timeDelta / 0.200;
+    // this.dampAccVector.Z -= timeDelta / 0.200;
 
     // clamp the dampening
-    let length = SqrtF(PowF(angularDamp.X, 2.0) + PowF(angularDamp.Y, 2.0) + PowF(angularDamp.Z, 2.0));
-    if length > 5.0 {
-      angularDamp.X /= (length / 5.0);
-      angularDamp.Y /= (length / 5.0);
-      angularDamp.Z /= (length / 5.0);
+    if Vector4.Length(angularDamp) > 10.0 {
+      angularDamp = Vector4.Normalize(angularDamp) * 10.0;
     }
 
     // this.lastAngularDamp = angularDamp;

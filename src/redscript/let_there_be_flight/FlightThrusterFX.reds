@@ -64,7 +64,7 @@ public abstract class IFlightThrusterFX extends IScriptable {
 public class RegularFlightThrusterFX extends IFlightThrusterFX {
   public func Create(thruster: ref<IFlightThruster>) -> ref<IFlightThrusterFX> {
     super.Create(thruster);
-    this.SetResource(r"user\\jackhumbert\\effects\\ion_thruster.effect");
+    this.SetResource(r"user\\jackhumbert\\effects\\flame.effect");
     return this;
   }
 
@@ -77,7 +77,7 @@ public class RegularFlightThrusterFX extends IFlightThrusterFX {
     amount += x + this.thruster.torque.Y;
 
     this.instance.SetBlackboardValue(n"thruster_amount", ClampF(amount + this.thruster.torque.Z, -1.0, 1.0));
-    return amount;
+    return ClampF(amount, -1.0, 1.0);
   }
 }
 
@@ -98,10 +98,9 @@ public class MainFlightThrusterFX extends IFlightThrusterFX {
     if this.thruster.isRight {
       y *= -1.0;
     }
-    return amount + x + y;
 
-    this.instance.SetBlackboardValue(n"thruster_amount", ClampF(amount, -1.0, 1.0));
-    return amount;
+    this.instance.SetBlackboardValue(n"thruster_amount", ClampF(amount + x + y, -1.0, 1.0));
+    return ClampF(amount, -1.0, 1.0);
   }
 }
 

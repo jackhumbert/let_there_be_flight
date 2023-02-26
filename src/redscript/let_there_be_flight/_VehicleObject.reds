@@ -109,8 +109,8 @@ public native class vehicleFlightHelper extends IScriptable {
     public native let torque: Vector4;
 }
 
-@addMethod(VehicleObject)
-public native func AddFlightHelper() -> ref<vehicleFlightHelper>;
+// @addMethod(VehicleObject)
+// public native func AddFlightHelper() -> ref<vehicleFlightHelper>;
 
 @addMethod(VehicleObject)
 public native func GetComponentsUsingSlot(slotName: CName) -> array<ref<IComponent>>;
@@ -176,3 +176,7 @@ public final func IsOnPavement() -> Bool {
 // public const func IsQuickHacksExposed() -> Bool {
 //   return true;
 // }
+
+
+@addMethod(WheeledObject)
+public native func ResetWheels();

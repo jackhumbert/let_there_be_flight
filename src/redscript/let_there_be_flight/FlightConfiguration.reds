@@ -46,6 +46,18 @@ public abstract native class IFlightConfiguration extends IScriptable {
       this.type = FlightVehicleType.Streetkid;
     }
   }
+  public func GetThrusterTensor() -> Vector4 {
+    let total = new Vector4(0.0, 0.0, 0.0, 0.0);
+    let vt = this.component.GetVehicle().GetWorldTransform();
+    for thruster in this.thrusters {
+      let v = WorldTransform.TransformInvPoint(vt, thruster.meshComponent.GetLocalToWorld() * Vector4.EmptyVector());
+      v -= Vector4.Vector3To4(this.component.GetVehicle().GetCenterOfMass());
+      total.X += SqrtF(PowF(v.Y, 2.0) + PowF(v.Z, 2.0));
+      total.Y += SqrtF(PowF(v.X, 2.0) + PowF(v.Z, 2.0));
+      total.Z += SqrtF(PowF(v.X, 2.0) + PowF(v.Y, 2.0));
+    }
+    return total;
+  }
 }
 
 public func CreateEmptyThruster() -> ref<MeshComponent> {
@@ -102,6 +114,32 @@ public class CarFlightConfiguration extends IFlightConfiguration {
       vehicle.AddComponent(thruster.meshComponent);
       thruster.OnSetup(this.component);
     }
+
+    // this.thrusters[0].fxs[0].SetResource(r"base\\fx\\vehicles\\manticore\\smoke_exhaust.effect"); // black & grey smoke
+    // this.thrusters[1].fxs[0].SetResource(r"base\\fx\\vehicles\\av\\av_panzer\\weapons\\v_panzer_bullet_trail.effect"); // nothing i saw? maybe noise
+    // this.thrusters[2].fxs[0].SetResource(r"base\\fx\\vehicles\\av\\_lights\\v_av_distant_emissives.effect"); // directional smoke
+    // this.thrusters[3].fxs[0].SetResource(r"base\\fx\\vehicles\\drone\\drone_missile_trail.effect"); // cool orange trail actually?
+    // this.thrusters[3].fxs[0].SetResource(r"base\\fx\\vehicles\\stratospheric_plane\\v_stratospheric_plane_takeoff_engines.effect"); // giant flashing rings
+
+    // this.thrusters[0].fxs[0].SetResource(r"base\\fx\\vehicles\\_exhaust\\veh_exhaust_backfire.effect"); // no noticable effect
+    // this.thrusters[1].fxs[0].SetResource(r"base\\fx\\vehicles\\_exhaust\\v_exhaust_smoke_standard_round.effect");  // no noticable effect
+    // this.thrusters[2].fxs[0].SetResource(r"base\\fx\\vehicles\\car\\car_exhaust_smoke.effect");  // no noticable effect
+    // this.thrusters[3].fxs[0].SetResource(r"base\\fx\\vehicles\\_exhaust\\v_exhaust_smoke_standard_rectangular.effect"); // no noticable effect
+
+    // this.thrusters[0].fxs[0].SetResource(r"base\\fx\\vehicles\\av\\av_zetatech\\av_zetatech_turret_trail.effect"); // cool trail
+    // this.thrusters[1].fxs[0].SetResource(r"base\\fx\\vehicles\\_exhaust\\veh_exhaust_start_sport.effect");   // not sure
+    // this.thrusters[2].fxs[0].SetResource(r"base\\fx\\vehicles\\av\\v_av_manticore_vapour_trails.effect");  // not sure
+    // this.thrusters[3].fxs[0].SetResource(r"base\\fx\\vehicles\\_exhaust\\v_exhaust_backfire_sport_rectangular.effect"); // forward smoke thing?
+
+    // this.thrusters[0].fxs[0].SetResource(r"base\\fx\\weapons\\firearms\\special\\vehicle_rocket_launcher\\w_special_vehicle_missile_trail.effect"); // tiny smokey trail, short
+    // this.thrusters[1].fxs[0].SetResource(r"base\\fx\\quest\\q003\\boss_centaur\\forc e_attack\\force_trail.effect");  // idk
+    // this.thrusters[2].fxs[0].SetResource(r"base\\fx\\quest\\q114\\q114_missile_barage_trail.effect"); // smoke with flame - good basis for combustion engine?, short
+    // this.thrusters[3].fxs[0].SetResource(r"base\\fx\\weapons\\trails\\smart\\w_trail_smart_rifle_high_low_class.effect");  // tiny little trail, short
+
+    // this.thrusters[0].fxs[0].SetResource(r"base\\fx\\weapons\\throwables\\granades\\basic\\granade_trail_default.effect"); // idk
+    // this.thrusters[1].fxs[0].SetResource(r"base\\fx\\quest\\q114\\q114_cars_dust_trail.effect");  // long trail of dust
+    // this.thrusters[2].fxs[0].SetResource(r"base\\fx\\weapons\\bullet_trail_green.effect"); // idk
+    // this.thrusters[3].fxs[0].SetResource(r"base\\fx\\weapons\\bullet_trail_simple.effect"); // nice bright orange trail
   }
 }
 

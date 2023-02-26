@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2023-02-25 04:18:00.6575114
+// This file was automatically generated on 2023-02-26 20:31:35.2021385
 
 // FlightAudio.reds
 
@@ -399,6 +399,8 @@ public native class FlightComponent extends GameComponent {
   private let linearBrake: Float;
   private let angularBrake: Float;
 
+  public let thrusterTensor: Vector4;
+
   // public let ui: wref<worlduiWidgetComponent>;
   // public let ui_info: wref<worlduiWidgetComponent>;
 
@@ -573,9 +575,10 @@ public native class FlightComponent extends GameComponent {
   protected cb func OnMountingEvent(evt: ref<MountingEvent>) -> Bool {
     // this.helper = this.GetVehicle().AddFlightHelper();
     LTBF_RegisterListener(this);
+    // this.thrusterTensor = Vector4.Normalize(this.configuration.GetThrusterTensor());
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if mountChild.IsPlayer() {
-      FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName());
+      FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName() + " uses tensor: " + this.GetVehicle().UsesInertiaTensor());
       // this.GetVehicle().TurnOffAirControl();
       this.SetupVehicleTPPBBListener();
       // FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName());
@@ -697,7 +700,10 @@ public native class FlightComponent extends GameComponent {
     FlightLog.Info("[FlightComponent] OnVehicleFlightActivationEvent: " + this.GetVehicle().GetDisplayName());
     this.GetVehicle().ScheduleAppearanceChange(this.GetVehicle().GetCurrentAppearanceName());
     if !this.active {
-
+      let wheeled = this.GetVehicle() as WheeledObject;
+      if IsDefined(wheeled) {
+        wheeled.ResetWheels();
+      }
       this.stats = FlightStats.Create(this.GetVehicle());
       // this.sys.ctlr.ui.Setup(this.stats);
 
@@ -888,20 +894,32 @@ public native class FlightComponent extends GameComponent {
     }
 
     force *= timeDelta;
+    // force *= 1.0/60.0;
+
     // factor in mass
     force *= this.stats.s_mass;
     // convet to global
     force = this.stats.d_orientation * force;
 
     torque *= timeDelta;
-    // factor in interia tensor - maybe half?
+    // torque *= 1.0/60.0;
+
+    // factor in inertia tensor - maybe half?
     let it = this.GetVehicle().GetInertiaTensor();
-    torque.X *= it.X.X;
-    // torque.X *= SqrtF(it.X.X) * 20.0;
-    torque.Y *= it.Y.Y;
-    // torque.Y *= SqrtF(it.Y.Y) * 20.0;
-    torque.Z *= it.Z.Z;
-    // torque.Z *= SqrtF(it.Z.Z) * 20.0;
+    // let v = Vector4.Normalize(new Vector4(PowF(it.X.X, 0.5), PowF(it.Y.Y, 0.5), PowF(it.Z.Z, 0.5), 0.0));
+    // torque.X *= v.X;
+    // torque.Y *= v.Y;
+    // torque.Z *= v.Z;
+    torque *= it;
+
+    // torque *= this.stats.s_mass;
+    // torque *= 1500.0;
+
+    // factor in where thrusters are
+    // torque.X *= this.thrusterTensor.X;
+    // torque.Y *= this.thrusterTensor.Y;
+    // torque.Z *= this.thrusterTensor.Z;
+    
     // convert to global
     torque = this.stats.d_orientation * torque;
     
@@ -1547,6 +1565,18 @@ public abstract native class IFlightConfiguration extends IScriptable {
       this.type = FlightVehicleType.Streetkid;
     }
   }
+  public func GetThrusterTensor() -> Vector4 {
+    let total = new Vector4(0.0, 0.0, 0.0, 0.0);
+    let vt = this.component.GetVehicle().GetWorldTransform();
+    for thruster in this.thrusters {
+      let v = WorldTransform.TransformInvPoint(vt, thruster.meshComponent.GetLocalToWorld() * Vector4.EmptyVector());
+      v -= Vector4.Vector3To4(this.component.GetVehicle().GetCenterOfMass());
+      total.X += SqrtF(PowF(v.Y, 2.0) + PowF(v.Z, 2.0));
+      total.Y += SqrtF(PowF(v.X, 2.0) + PowF(v.Z, 2.0));
+      total.Z += SqrtF(PowF(v.X, 2.0) + PowF(v.Y, 2.0));
+    }
+    return total;
+  }
 }
 
 public func CreateEmptyThruster() -> ref<MeshComponent> {
@@ -1603,6 +1633,32 @@ public class CarFlightConfiguration extends IFlightConfiguration {
       vehicle.AddComponent(thruster.meshComponent);
       thruster.OnSetup(this.component);
     }
+
+    // this.thrusters[0].fxs[0].SetResource(r"base\\fx\\vehicles\\manticore\\smoke_exhaust.effect"); // black & grey smoke
+    // this.thrusters[1].fxs[0].SetResource(r"base\\fx\\vehicles\\av\\av_panzer\\weapons\\v_panzer_bullet_trail.effect"); // nothing i saw? maybe noise
+    // this.thrusters[2].fxs[0].SetResource(r"base\\fx\\vehicles\\av\\_lights\\v_av_distant_emissives.effect"); // directional smoke
+    // this.thrusters[3].fxs[0].SetResource(r"base\\fx\\vehicles\\drone\\drone_missile_trail.effect"); // cool orange trail actually?
+    // this.thrusters[3].fxs[0].SetResource(r"base\\fx\\vehicles\\stratospheric_plane\\v_stratospheric_plane_takeoff_engines.effect"); // giant flashing rings
+
+    // this.thrusters[0].fxs[0].SetResource(r"base\\fx\\vehicles\\_exhaust\\veh_exhaust_backfire.effect"); // no noticable effect
+    // this.thrusters[1].fxs[0].SetResource(r"base\\fx\\vehicles\\_exhaust\\v_exhaust_smoke_standard_round.effect");  // no noticable effect
+    // this.thrusters[2].fxs[0].SetResource(r"base\\fx\\vehicles\\car\\car_exhaust_smoke.effect");  // no noticable effect
+    // this.thrusters[3].fxs[0].SetResource(r"base\\fx\\vehicles\\_exhaust\\v_exhaust_smoke_standard_rectangular.effect"); // no noticable effect
+
+    // this.thrusters[0].fxs[0].SetResource(r"base\\fx\\vehicles\\av\\av_zetatech\\av_zetatech_turret_trail.effect"); // cool trail
+    // this.thrusters[1].fxs[0].SetResource(r"base\\fx\\vehicles\\_exhaust\\veh_exhaust_start_sport.effect");   // not sure
+    // this.thrusters[2].fxs[0].SetResource(r"base\\fx\\vehicles\\av\\v_av_manticore_vapour_trails.effect");  // not sure
+    // this.thrusters[3].fxs[0].SetResource(r"base\\fx\\vehicles\\_exhaust\\v_exhaust_backfire_sport_rectangular.effect"); // forward smoke thing?
+
+    // this.thrusters[0].fxs[0].SetResource(r"base\\fx\\weapons\\firearms\\special\\vehicle_rocket_launcher\\w_special_vehicle_missile_trail.effect"); // tiny smokey trail, short
+    // this.thrusters[1].fxs[0].SetResource(r"base\\fx\\quest\\q003\\boss_centaur\\forc e_attack\\force_trail.effect");  // idk
+    // this.thrusters[2].fxs[0].SetResource(r"base\\fx\\quest\\q114\\q114_missile_barage_trail.effect"); // smoke with flame - good basis for combustion engine?, short
+    // this.thrusters[3].fxs[0].SetResource(r"base\\fx\\weapons\\trails\\smart\\w_trail_smart_rifle_high_low_class.effect");  // tiny little trail, short
+
+    // this.thrusters[0].fxs[0].SetResource(r"base\\fx\\weapons\\throwables\\granades\\basic\\granade_trail_default.effect"); // idk
+    // this.thrusters[1].fxs[0].SetResource(r"base\\fx\\quest\\q114\\q114_cars_dust_trail.effect");  // long trail of dust
+    // this.thrusters[2].fxs[0].SetResource(r"base\\fx\\weapons\\bullet_trail_green.effect"); // idk
+    // this.thrusters[3].fxs[0].SetResource(r"base\\fx\\weapons\\bullet_trail_simple.effect"); // nice bright orange trail
   }
 }
 
@@ -2730,17 +2786,17 @@ public class FlightModeDrone extends FlightMode {
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Pitch-Factor")
-  @runtimeProperty("ModSettings.step", "0.5")
+  @runtimeProperty("ModSettings.step", "0.1")
   @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "100")
+  @runtimeProperty("ModSettings.max", "200")
   public let droneModePitchFactor: Float = 5.0;
   
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Roll-Factor")
-  @runtimeProperty("ModSettings.step", "0.5")
+  @runtimeProperty("ModSettings.step", "0.1")
   @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "100")
+  @runtimeProperty("ModSettings.max", "200")
   public let droneModeRollFactor: Float = 12.0;
   
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
@@ -2754,9 +2810,9 @@ public class FlightModeDrone extends FlightMode {
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Yaw-Factor")
-  @runtimeProperty("ModSettings.step", "0.5")
+  @runtimeProperty("ModSettings.step", "0.1")
   @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "100")
+  @runtimeProperty("ModSettings.max", "200")
   public let droneModeYawFactor: Float = 5.0;
   
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
@@ -3018,25 +3074,22 @@ public abstract class FlightMode {
     angularDamp.Z *= (1.0 - AbsF(this.component.yaw));
 
     // detect when we hit stuff and delay the damping
-    this.dampAccVector.X = MinF(MaxF(this.dampAccVector.X, AbsF(this.component.stats.d_angularAcceleration.X) / timeDelta / 10.0), 1.0);
-    this.dampAccVector.Y = MinF(MaxF(this.dampAccVector.Y, AbsF(this.component.stats.d_angularAcceleration.Y) / timeDelta / 10.0), 1.0);
-    this.dampAccVector.Z = MinF(MaxF(this.dampAccVector.Z, AbsF(this.component.stats.d_angularAcceleration.Z) / timeDelta / 10.0), 1.0);
+    // this.dampAccVector.X = ClampF(MaxF(this.dampAccVector.X, AbsF(this.component.stats.d_angularAcceleration.X) / timeDelta / 10.0), 0.0, 1.0);
+    // this.dampAccVector.Y = ClampF(MaxF(this.dampAccVector.Y, AbsF(this.component.stats.d_angularAcceleration.Y) / timeDelta / 10.0), 0.0, 1.0);
+    // this.dampAccVector.Z = ClampF(MaxF(this.dampAccVector.Z, AbsF(this.component.stats.d_angularAcceleration.Z) / timeDelta / 10.0), 0.0, 1.0);
 
-    angularDamp.X *= (1.0 - this.dampAccVector.X);
-    angularDamp.Y *= (1.0 - this.dampAccVector.Y);
-    angularDamp.Z *= (1.0 - this.dampAccVector.Z);
+    // angularDamp.X *= (1.0 - this.dampAccVector.X);
+    // angularDamp.Y *= (1.0 - this.dampAccVector.Y);
+    // angularDamp.Z *= (1.0 - this.dampAccVector.Z);
 
-    // decay over 300 ms
-    this.dampAccVector.X -= timeDelta / 0.300;
-    this.dampAccVector.Y -= timeDelta / 0.300;
-    this.dampAccVector.Z -= timeDelta / 0.300;
+    // decay over 200 ms
+    // this.dampAccVector.X -= timeDelta / 0.200;
+    // this.dampAccVector.Y -= timeDelta / 0.200;
+    // this.dampAccVector.Z -= timeDelta / 0.200;
 
     // clamp the dampening
-    let length = SqrtF(PowF(angularDamp.X, 2.0) + PowF(angularDamp.Y, 2.0) + PowF(angularDamp.Z, 2.0));
-    if length > 5.0 {
-      angularDamp.X /= (length / 5.0);
-      angularDamp.Y /= (length / 5.0);
-      angularDamp.Z /= (length / 5.0);
+    if Vector4.Length(angularDamp) > 10.0 {
+      angularDamp = Vector4.Normalize(angularDamp) * 10.0;
     }
 
     // this.lastAngularDamp = angularDamp;
@@ -3303,9 +3356,9 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Angular-Damp-Factor")
   @runtimeProperty("ModSettings.description", "UI-Settings-Angular-Damp-Factor-Description")
-  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.step", "0.01")
   @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "5.0")
+  @runtimeProperty("ModSettings.max", "50.0")
   public let generalDampFactorAngular: Float = 1.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
@@ -4325,7 +4378,7 @@ public abstract class IFlightThrusterFX extends IScriptable {
 public class RegularFlightThrusterFX extends IFlightThrusterFX {
   public func Create(thruster: ref<IFlightThruster>) -> ref<IFlightThrusterFX> {
     super.Create(thruster);
-    this.SetResource(r"user\\jackhumbert\\effects\\ion_thruster.effect");
+    this.SetResource(r"user\\jackhumbert\\effects\\flame.effect");
     return this;
   }
 
@@ -4338,7 +4391,7 @@ public class RegularFlightThrusterFX extends IFlightThrusterFX {
     amount += x + this.thruster.torque.Y;
 
     this.instance.SetBlackboardValue(n"thruster_amount", ClampF(amount + this.thruster.torque.Z, -1.0, 1.0));
-    return amount;
+    return ClampF(amount, -1.0, 1.0);
   }
 }
 
@@ -4359,10 +4412,9 @@ public class MainFlightThrusterFX extends IFlightThrusterFX {
     if this.thruster.isRight {
       y *= -1.0;
     }
-    return amount + x + y;
 
-    this.instance.SetBlackboardValue(n"thruster_amount", ClampF(amount, -1.0, 1.0));
-    return amount;
+    this.instance.SetBlackboardValue(n"thruster_amount", ClampF(amount + x + y, -1.0, 1.0));
+    return ClampF(amount, -1.0, 1.0);
   }
 }
 
@@ -6889,8 +6941,8 @@ public native class vehicleFlightHelper extends IScriptable {
     public native let torque: Vector4;
 }
 
-@addMethod(VehicleObject)
-public native func AddFlightHelper() -> ref<vehicleFlightHelper>;
+// @addMethod(VehicleObject)
+// public native func AddFlightHelper() -> ref<vehicleFlightHelper>;
 
 @addMethod(VehicleObject)
 public native func GetComponentsUsingSlot(slotName: CName) -> array<ref<IComponent>>;
@@ -6956,6 +7008,10 @@ public final func IsOnPavement() -> Bool {
 // public const func IsQuickHacksExposed() -> Bool {
 //   return true;
 // }
+
+
+@addMethod(WheeledObject)
+public native func ResetWheels();
 
 // _weaponRoster.reds
 
