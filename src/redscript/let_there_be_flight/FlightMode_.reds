@@ -37,9 +37,9 @@ public abstract class FlightMode {
     // angularDamp += this.component.stats.d_angularAcceleration;
     
     // only damp if no input is being received on that axis
-    angularDamp.X *= (1.0 - AbsF(this.component.pitch));
-    angularDamp.Y *= (1.0 - AbsF(this.component.roll));
-    angularDamp.Z *= (1.0 - AbsF(this.component.yaw));
+    angularDamp.X *= (1.0 - SqrtF(AbsF(this.component.pitch)));
+    angularDamp.Y *= (1.0 - SqrtF(AbsF(this.component.roll)));
+    angularDamp.Z *= (1.0 - SqrtF(AbsF(this.component.yaw)));
 
     // detect when we hit stuff and delay the damping
     // this.dampAccVector.X = ClampF(MaxF(this.dampAccVector.X, AbsF(this.component.stats.d_angularAcceleration.X) / timeDelta / 10.0), 0.0, 1.0);

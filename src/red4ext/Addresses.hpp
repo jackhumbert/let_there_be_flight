@@ -9,7 +9,6 @@
 #define VehiclePhysicsUpdateAddr 0x1D3D090
 #define VehicleHelperUpdateAddr 0x1D3F5D0
 #define ProcessAirResistanceAddr 0x1D3B810
-#define TorqueUpdateAddr 0x1D0DF80
 #define VehicleUpdateOrientationWithPIDAddr 0x1C9B0A0
 #define FourWheelTorqueAddr 0x1D3BAF0
 #define CreateStaticEffectAddr 0x148FAE0
@@ -56,7 +55,9 @@
 #define vehiclePhysicsData_UsesAlternativeChassisMassAddr 0x1D0E830
 #define vehiclePhysicsData_SetUsesNormalChassisMassAddr 0x1D0E200
 #define vehiclePhysicsData_UpdateChassisAddr 0x1D0DEC0
-#define vehiclePhysicsData_ApplyTorqueWithOffsetAddr 0x1D0D7A0
+#define vehiclePhysicsData_ApplyForceAtPositionAddr 0x1D0DDA0
+#define vehiclePhysicsData_ApplyTorqueAtPositionAddr 0x1D0D7A0
+#define vehiclePhysicsData_AddTorqueAddr 0x1D0DF80
 #define physicsVehiclePhysicsInsert2_SetsUnk160Unk15CAddr 0x1D517B0
 #define vehiclePID_UpdatePIDAddr 0x1D36120
 #define vehiclePID_ResetAddr 0x1D36130
@@ -76,7 +77,7 @@
 #define vehicleWheeledPhysics_GetNumberOfWheelsTouchingGroundAddr 0x1D40190
 #define vehicleWheeledPhysics_SomethingWheelsAddr 0x1D45F50
 #define vehicleWheeledPhysics_FourWheelTorqueAddr 0x1D3BAF0
-#define vehicleWheeledPhysics_insert2_mathAddr 0x1D45B90
+#define vehicleWheeledPhysics_UpdateAddr 0x1D45B90
 #define vehicleWheeledPhysics_UpdatePassengerAnimAddr 0x1D3EC70
 #define vehicleWheeledPhysics_SetIsMovingOthersAddr 0x1D19F70
 #define vehicleWheeledPhysics_TurningRollFactorStuffAddr 0x1D45130
@@ -101,6 +102,8 @@
 #define worldRuntimeScene_SetupWithLoggingAddr 0xB868D0
 #define physicsGeometryCache_LoadAlwaysloadedSectorGeometriesSetupAddr 0x443680
 #define physicsGeometryCache_LoadSectorGeometriesSetupAddr 0x4439E0
+#define vehiclePersistentDataPS_UpdateWheelRuntimeAddr 0x1CD2FB0
+#define vehiclePersistentDataPS_ResetQuestEnforceTransformAddr 0x1CD1A10
 #define vehicleUnk580_Update3CAAddr 0x1C67480
 #define vehicleUnk580_GetAudioResourceMetadataAddr 0x1C644A0
 #define vehicleUnk580_UnknownAddr 0x1C69470
@@ -117,6 +120,7 @@
 #define vehicleUnk568_SetLinearVelocityEtcAddr 0x1AE1990
 #define vehicleUnk570_SetupAddr 0x1D28650
 #define vehicleUnk588_UnknownAddr 0x1C6CEF0
+#define vehicleUnk588_UpdateTransformAddr 0x1C6DCE0
 #define vehicleBaseObject_SetPhysicsStateAddr 0x1C8DBB0
 #define vehicleBaseObject_UnsetPhysicsStatesAddr 0x1C798D0
 #define vehicleBaseObject_GetTotalMassAddr 0x1C7A780

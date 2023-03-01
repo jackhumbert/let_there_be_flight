@@ -123,6 +123,14 @@ public:
     return weapons;
   }
 
+  
+  void __fastcall ResetQuestEnforceTransform() {
+    RED4ext::RelocFunc<decltype(&RED4ext::vehicle::PersistentDataPS::ResetQuestEnforceTransform)> call(
+        vehiclePersistentDataPS_ResetQuestEnforceTransformAddr);
+    call(this->PersistentDataPS.instance);
+  }
+
+
 private:
   friend Descriptor;
 
@@ -142,5 +150,6 @@ private:
     aType->AddFunction<&VehicleObject::GetWeaponPlaceholderOrientation>("GetWeaponPlaceholderOrientation");
     aType->AddFunction<&VehicleObject::GetComponentsUsingSlot>("GetComponentsUsingSlot");
     aType->AddFunction<&VehicleObject::GetWeapons>("GetWeapons");
+    aType->AddFunction<&VehicleObject::ResetQuestEnforceTransform>("ResetQuestEnforceTransform");
   }
 };

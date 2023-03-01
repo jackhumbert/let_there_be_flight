@@ -380,10 +380,6 @@ public native class FlightComponent extends GameComponent {
     FlightLog.Info("[FlightComponent] OnVehicleFlightActivationEvent: " + this.GetVehicle().GetDisplayName());
     this.GetVehicle().ScheduleAppearanceChange(this.GetVehicle().GetCurrentAppearanceName());
     if !this.active {
-      let wheeled = this.GetVehicle() as WheeledObject;
-      if IsDefined(wheeled) {
-        wheeled.ResetWheels();
-      }
       this.stats = FlightStats.Create(this.GetVehicle());
       // this.sys.ctlr.ui.Setup(this.stats);
 
@@ -481,6 +477,7 @@ public native class FlightComponent extends GameComponent {
     // }
     if this.active {
       if this.isPlayerMounted {
+        this.GetVehicle().ResetQuestEnforceTransform();
         this.sys.ctlr.OnUpdate(timeDelta);
         let fc = this.sys.ctlr;
         this.yaw = fc.yaw.GetValue();

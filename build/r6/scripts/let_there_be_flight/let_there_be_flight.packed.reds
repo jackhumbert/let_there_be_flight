@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2023-02-26 20:31:35.2021385
+// This file was automatically generated on 2023-03-01 01:46:04.5310791
 
 // FlightAudio.reds
 
@@ -700,10 +700,6 @@ public native class FlightComponent extends GameComponent {
     FlightLog.Info("[FlightComponent] OnVehicleFlightActivationEvent: " + this.GetVehicle().GetDisplayName());
     this.GetVehicle().ScheduleAppearanceChange(this.GetVehicle().GetCurrentAppearanceName());
     if !this.active {
-      let wheeled = this.GetVehicle() as WheeledObject;
-      if IsDefined(wheeled) {
-        wheeled.ResetWheels();
-      }
       this.stats = FlightStats.Create(this.GetVehicle());
       // this.sys.ctlr.ui.Setup(this.stats);
 
@@ -801,6 +797,7 @@ public native class FlightComponent extends GameComponent {
     // }
     if this.active {
       if this.isPlayerMounted {
+        this.GetVehicle().ResetQuestEnforceTransform();
         this.sys.ctlr.OnUpdate(timeDelta);
         let fc = this.sys.ctlr;
         this.yaw = fc.yaw.GetValue();
@@ -3069,9 +3066,9 @@ public abstract class FlightMode {
     // angularDamp += this.component.stats.d_angularAcceleration;
     
     // only damp if no input is being received on that axis
-    angularDamp.X *= (1.0 - AbsF(this.component.pitch));
-    angularDamp.Y *= (1.0 - AbsF(this.component.roll));
-    angularDamp.Z *= (1.0 - AbsF(this.component.yaw));
+    angularDamp.X *= (1.0 - SqrtF(AbsF(this.component.pitch)));
+    angularDamp.Y *= (1.0 - SqrtF(AbsF(this.component.roll)));
+    angularDamp.Z *= (1.0 - SqrtF(AbsF(this.component.yaw)));
 
     // detect when we hit stuff and delay the damping
     // this.dampAccVector.X = ClampF(MaxF(this.dampAccVector.X, AbsF(this.component.stats.d_angularAcceleration.X) / timeDelta / 10.0), 0.0, 1.0);
@@ -7010,8 +7007,8 @@ public final func IsOnPavement() -> Bool {
 // }
 
 
-@addMethod(WheeledObject)
-public native func ResetWheels();
+@addMethod(VehicleObject)
+public native func ResetQuestEnforceTransform() -> Void;
 
 // _weaponRoster.reds
 

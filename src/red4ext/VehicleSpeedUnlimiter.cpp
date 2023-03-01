@@ -5,13 +5,6 @@
 
 namespace vehicle {
 
-struct SpeedUnlimiter : FlightModule {
-  void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle);
-  void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle);
-  static short PhysicsStructUpdate(RED4ext::vehicle::PhysicsData *ps);
-  static short PhysicsUnkStructVelocityUpdate(RED4ext::vehicle::PhysicsData *ps, RED4ext::Vector3 *);
-};
-
 decltype(&SpeedUnlimiter::PhysicsStructUpdate) PhysicsStructUpdate_Original;
 
 short SpeedUnlimiter::PhysicsStructUpdate(RED4ext::vehicle::PhysicsData *ps) {

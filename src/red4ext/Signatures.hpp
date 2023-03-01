@@ -64,12 +64,6 @@ using VehicleHelperUpdate = uintptr_t __fastcall (RED4ext::vehicle::WheeledPhysi
 /// @pattern 48 8B C4 53 48 81 EC A0 00 00 00 0F 29 70 E8 48 8B D9 0F 29 78 D8 44 0F 29 40 C8 44 0F 29 48 B8
 using ProcessAirResistance = void __fastcall (RED4ext::vehicle::WheeledPhysics *a1, float deltaTime);
 
-// add vector to torque
-// 1.6  RVA: 0x1D0D4C0
-// 1.61 RVA: 0x1D0D880
-/// @pattern F3 0F 10 41 0C F3 0F 58 02 F3 0F 11 41 0C F3 0F 10 4A 04 F3 0F 58 49 10 F3 0F 11 49 10 F3 0F 10
-using TorqueUpdate = void __fastcall (RED4ext::vehicle::PhysicsData *a1, uintptr_t);
-
 // update with pid
 // 1.6  RVA: 0x1C9A750
 // 1.61 RVA: 0x1C9A9B0

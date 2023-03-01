@@ -178,5 +178,5 @@ public final func IsOnPavement() -> Bool {
 // }
 
 
-@addMethod(WheeledObject)
-public native func ResetWheels();
+@addMethod(VehicleObject)
+public native func ResetQuestEnforceTransform() -> Void;
