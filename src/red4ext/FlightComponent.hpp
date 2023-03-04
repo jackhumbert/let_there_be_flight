@@ -50,6 +50,17 @@ public:
 
   void ChaseTarget(RED4ext::WeakHandle<RED4ext::game::Object> target);
 
+  inline static FlightComponent *Get(RED4ext::vehicle::BaseObject *v) {
+      auto rtti = RED4ext::CRTTISystem::Get();
+      auto fcc = GetRTTIType();
+      for (auto const &c : v->componentsStorage.components) {
+        if (c.GetPtr()->GetType() == fcc) {
+          return (FlightComponent *)c.GetPtr();
+        }
+      }
+      return NULL;
+  }
+
   //inline virtual void sub_188(void *a1) override {
   //  //spdlog::info("[FlightComponent] sub_188");
   //  //if (this) {

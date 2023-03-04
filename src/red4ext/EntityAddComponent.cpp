@@ -114,7 +114,7 @@ void __fastcall VehicleProcessWeapons_Hook(RED4ext::vehicle::BaseObject *vehicle
 
     auto rtti = RED4ext::CRTTISystem::Get();
     auto fcc = rtti->GetClass("FlightComponent");
-    auto fc = GetFlightComponent(vehicle);
+    auto fc = FlightComponent::Get(vehicle);
     auto onFireWeapon = fcc->GetFunction("OnFireWeapon");
     RED4ext::CStackType args[3];
     args[0] = RED4ext::CStackType(rtti->GetType("Quaternion"), &quat);

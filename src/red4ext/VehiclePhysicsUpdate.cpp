@@ -9,17 +9,6 @@
 #include "Addresses.hpp"
 #include "VehicleSpeedUnlimiter.hpp"
 
-FlightComponent *GetFlightComponent(RED4ext::vehicle::BaseObject *v) {
-  auto rtti = RED4ext::CRTTISystem::Get();
-  auto fcc = FlightComponent::GetRTTIType();
-  for (auto const &c : v->componentsStorage.components) {
-    if (c.GetPtr()->GetType() == fcc) {
-      return (FlightComponent *)c.GetPtr();
-    }
-  }
-  return NULL;
-}
-
 REGISTER_FLIGHT_HOOK(void __fastcall, ProcessAirResistance, 
     RED4ext::vehicle::WheeledPhysics *a1, float deltaTime) {
   auto physicsData = a1->parent->physicsData;
@@ -53,7 +42,7 @@ REGISTER_FLIGHT_HOOK(void __fastcall, ProcessAirResistance,
 
 REGISTER_FLIGHT_HOOK(void __fastcall, vehiclePhysicsData_ApplyTorqueAtPosition,
                      RED4ext::vehicle::PhysicsData *physicsData, RED4ext::Vector3 *offset, RED4ext::Vector3 *torque) {
-  auto fc = GetFlightComponent(physicsData->vehicle);
+  auto fc = FlightComponent::Get(physicsData->vehicle);
   if (fc && fc->active) {
     return;
   } else {
@@ -63,7 +52,7 @@ REGISTER_FLIGHT_HOOK(void __fastcall, vehiclePhysicsData_ApplyTorqueAtPosition,
 
 REGISTER_FLIGHT_HOOK(void __fastcall, vehiclePhysicsData_ApplyForceAtPosition,
                      RED4ext::vehicle::PhysicsData *physicsData, RED4ext::Vector3 *offset, RED4ext::Vector3 *force) {
-  auto fc = GetFlightComponent(physicsData->vehicle);
+  auto fc = FlightComponent::Get(physicsData->vehicle);
   if (fc && fc->active) {
     return;
   } else {
@@ -72,7 +61,7 @@ REGISTER_FLIGHT_HOOK(void __fastcall, vehiclePhysicsData_ApplyForceAtPosition,
 }
 
 REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, VehicleHelperUpdate, RED4ext::vehicle::WheeledPhysics *p, float deltaTime) {
-  auto fc = GetFlightComponent(p->parent);
+  auto fc = FlightComponent::Get(p->parent);
   if (fc) {
     auto size = p->driveHelpers.size;
     if (fc->active) {
@@ -88,7 +77,7 @@ REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, VehicleHelperUpdate, RED4ext::vehicle
 
 REGISTER_FLIGHT_HOOK(void __fastcall, vehiclePhysicsData_AddTorque, 
     RED4ext::vehicle::PhysicsData *a1, RED4ext::Vector3 *torque) {
-  auto fc = GetFlightComponent(a1->vehicle);
+  auto fc = FlightComponent::Get(a1->vehicle);
   if (fc && fc->active) {
     return;
   } else {
@@ -98,7 +87,7 @@ REGISTER_FLIGHT_HOOK(void __fastcall, vehiclePhysicsData_AddTorque,
 
 REGISTER_FLIGHT_HOOK(void __fastcall, VehicleUpdateOrientationWithPID, 
     RED4ext::vehicle::CarBaseObject *a1, RED4ext::Transform *a2, float a3, float a4) {
-  auto fc = GetFlightComponent(a1);
+  auto fc = FlightComponent::Get(a1);
   if (fc && fc->active) {
     return;
   }
@@ -107,7 +96,7 @@ REGISTER_FLIGHT_HOOK(void __fastcall, VehicleUpdateOrientationWithPID,
 
 REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, vehicleCarPhysics_AnimationUpdate, RED4ext::vehicle::CarPhysics *a1,
                      float timeDelta) {
-  auto fc = GetFlightComponent(a1->parent);
+  auto fc = FlightComponent::Get(a1->parent);
   if (fc) {
     auto rtti = RED4ext::CRTTISystem::Get();
     auto fcc = rtti->GetClass("FlightComponent");
@@ -120,7 +109,7 @@ REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, vehicleCarPhysics_AnimationUpdate, RE
 }
 
 REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, vehicleBikePhysics_AnimationUpdate, RED4ext::vehicle::BikePhysics *a1) {
-  auto fc = GetFlightComponent(a1->parent);
+  auto fc = FlightComponent::Get(a1->parent);
   if (fc && fc->active) {
     a1->parent->turnInput = 0.0;
     a1->turnRate = 0.0;
@@ -136,7 +125,7 @@ REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, vehicleBikePhysics_AnimationUpdate, R
 // prevents wheels from adding torque/etc
 //REGISTER_FLIGHT_HOOK(void __fastcall, vehicleWheeledPhysics_SomethingWheelRayTrace,
 //    RED4ext::vehicle::WheeledPhysics *physics, unsigned __int8 index) {
-//  auto fc = GetFlightComponent(physics->parent);
+//  auto fc = FlightComponent::Get(physics->parent);
 //  if (fc && fc->active) {
 //    for (int i = 0; i < physics->unkD10->numWheels; i++) {
 //      auto wheel = physics->unkD10->wheel[i];
@@ -186,7 +175,7 @@ REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, vehicleBikePhysics_AnimationUpdate, R
 
 
 REGISTER_FLIGHT_HOOK(void __fastcall, vehicleWheeledPhysics_Update, RED4ext::vehicle::WheeledPhysics *physics) {
-  auto fc = GetFlightComponent(physics->parent);
+  auto fc = FlightComponent::Get(physics->parent);
   if (fc && fc->active) {
     //physics->isMoving = true;
   }
@@ -203,7 +192,7 @@ REGISTER_FLIGHT_HOOK(void __fastcall, vehicleWheeledPhysics_Update, RED4ext::veh
 REGISTER_FLIGHT_HOOK(void __fastcall, RollFactorTorqueThing, 
     uint64_t *a1, float a2) {
   auto physics = (RED4ext::vehicle::WheeledPhysics *)a1[2];
-  auto fc = GetFlightComponent(physics->parent);
+  auto fc = FlightComponent::Get(physics->parent);
   if (fc && fc->active) {
     return;
   } else {
@@ -213,7 +202,7 @@ REGISTER_FLIGHT_HOOK(void __fastcall, RollFactorTorqueThing,
 
 REGISTER_FLIGHT_HOOK(void __fastcall, FourWheelTorque,
     RED4ext::vehicle::WheeledPhysics *physics, unsigned __int8 rearWheelIndex, unsigned __int8 frontWheelIndex, float a4, RED4ext::Transform *transform) {
-  auto fc = GetFlightComponent(physics->parent);
+  auto fc = FlightComponent::Get(physics->parent);
   if (fc && fc->active) {
     vehicle::SpeedUnlimiter::PhysicsStructUpdate(physics->parent->physicsData);
   } else {

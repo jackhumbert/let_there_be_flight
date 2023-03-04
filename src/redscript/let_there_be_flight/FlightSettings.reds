@@ -135,6 +135,21 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.max", "60.0")
   public let fpvCameraPitchOffset: Float = 0.0;
 
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Camera-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-TPP-Camera-Pitch-Offset")
+  @runtimeProperty("ModSettings.description", "UI-Settings-TPP-Camera-Pitch-Offset-Description")
+  @runtimeProperty("ModSettings.step", "1.0")
+  @runtimeProperty("ModSettings.min", "-60.0")
+  @runtimeProperty("ModSettings.max", "60.0")
+  public let tppCameraPitchOffset: Float = 20.0;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Camera-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Enable-Center-On-Mass")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Enable-Center-On-Mass-Description")
+  public let tppCameraCenterOnMass: Bool = true;
+
   // public cb func OnModSettingsUpdate(variable: CName, value: Variant) {
   //   switch (variable) {
   //     case n"autoActivationHeight":

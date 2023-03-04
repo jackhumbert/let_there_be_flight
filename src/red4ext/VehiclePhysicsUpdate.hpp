@@ -6,5 +6,3 @@
 #include <spdlog/spdlog.h>
 
 struct FlightComponent;
-
-FlightComponent *GetFlightComponent(RED4ext::vehicle::BaseObject *v);
