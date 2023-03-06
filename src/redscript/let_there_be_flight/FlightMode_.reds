@@ -31,9 +31,10 @@ public abstract class FlightMode {
   public func Update(timeDelta: Float) -> Void;
 
   public func ApplyPhysics(timeDelta: Float) -> Void {
+    let fs =  FlightSettings.GetInstance();
     
-    let velocityDamp: Vector4 = this.component.stats.d_speed * this.component.stats.d_localVelocity * FlightSettings.GetInstance().generalDampFactorLinear * this.component.stats.s_airResistanceFactor;
-    let angularDamp: Vector4 = this.component.stats.d_angularVelocity * FlightSettings.GetInstance().generalDampFactorAngular;
+    let velocityDamp: Vector4 = this.component.stats.d_speed * this.component.stats.d_localVelocity * fs.generalDampFactorLinear * this.component.stats.s_airResistanceFactor;
+    let angularDamp: Vector4 = this.component.stats.d_angularVelocity * fs.generalDampFactorAngular;
     // angularDamp += this.component.stats.d_angularAcceleration;
     
     // only damp if no input is being received on that axis
@@ -56,8 +57,8 @@ public abstract class FlightMode {
     // this.dampAccVector.Z -= timeDelta / 0.200;
 
     // clamp the dampening
-    if Vector4.Length(angularDamp) > 10.0 {
-      angularDamp = Vector4.Normalize(angularDamp) * 10.0;
+    if Vector4.Length(angularDamp) > fs.generalDampFactorAngularMax {
+      angularDamp = Vector4.Normalize(angularDamp) * fs.generalDampFactorAngularMax;
     }
 
     // this.lastAngularDamp = angularDamp;
@@ -78,8 +79,8 @@ public abstract class FlightMode {
     let aeroDynamicYaw = yawDirectionAngle * this.component.stats.d_speedRatio;// / 10.0;
     let aeroDynamicPitch = pitchDirectionAngle * this.component.stats.d_speedRatio;// / 10.0;
 
-    let yawDirectionality: Float = this.component.stats.d_speedRatio * FlightSettings.GetInstance().generalYawDirectionalityFactor;
-    let pitchDirectionality: Float = this.component.stats.d_speedRatio * FlightSettings.GetInstance().generalPitchDirectionalityFactor;
+    let yawDirectionality: Float = this.component.stats.d_speedRatio * fs.generalYawDirectionalityFactor;
+    let pitchDirectionality: Float = this.component.stats.d_speedRatio * fs.generalPitchDirectionalityFactor;
     let aeroFactor = Vector4.Dot(this.component.stats.d_forward, this.component.stats.d_direction);
     // yawDirectionality - redirect non-directional velocity to vehicle forward
 
@@ -92,7 +93,7 @@ public abstract class FlightMode {
     this.force += -this.component.stats.d_localDirection * AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_up)) * pitchDirectionality * AbsF(aeroFactor);
 
     this.torque = -angularDamp;
-    this.torque.Z -= aeroDynamicYaw * FlightSettings.GetInstance().generalYawAeroFactor;
-    this.torque.X -= aeroDynamicPitch * FlightSettings.GetInstance().generalPitchAeroFactor;
+    this.torque.Z -= aeroDynamicYaw * fs.generalYawAeroFactor;
+    this.torque.X -= aeroDynamicPitch * fs.generalPitchAeroFactor;
   }
 }

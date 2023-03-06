@@ -131,6 +131,7 @@ public class FlightEvents extends VehicleEventsTransition {
     FlightLog.Info("[FlightEvents] OnExit");
     this.ExitCustomCamera(scriptInterface);
     this.SetIsInFlight(stateContext, false);
+    this.SendAnimFeature(stateContext, scriptInterface);
     // (scriptInterface.owner as VehicleObject).ToggleFlightComponent(false);
     // FlightController.GetInstance().Deactivate(false);
     stateContext.SetPermanentBoolParameter(n"ForceEmptyHands", false, true);
@@ -138,6 +139,7 @@ public class FlightEvents extends VehicleEventsTransition {
     evt.silent = false;
     // evt.vehicle = scriptInterface.owner as VehicleObject;
     (scriptInterface.owner as VehicleObject).QueueEvent(evt);
+    this.ResumeStateMachines(scriptInterface.executionOwner);
   }
 
   public func OnForcedExit(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
@@ -214,7 +216,7 @@ public class FlightEvents extends VehicleEventsTransition {
       let v = (WorldPosition.ToVector4(WorldTransform.GetWorldPosition(roof)) * vwt) - (WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT)) * vwt);
       camera.SetLocalPosition(v + Vector4.Vector3To4(FlightSettings.GetVector3("FPVCameraOffset")));
       camera.SetLocalOrientation(EulerAngles.ToQuat(new EulerAngles(FlightSettings.GetInstance().fpvCameraPitchOffset, 0.0, 0.0)));
-    }
+    } 
 
     // let workspotSystem: ref<WorkspotGameSystem> = scriptInterface.GetWorkspotSystem();
     // workspotSystem.SwitchSeatVehicle(scriptInterface.owner, scriptInterface.executionOwner, n"OccupantSlots", n"CustomFlightCamera");

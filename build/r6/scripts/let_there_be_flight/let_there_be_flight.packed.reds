@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2023-03-04 15:49:16.0692971
+// This file was automatically generated on 2023-03-04 19:42:30.0479778
 
 // FlightAudio.reds
 
@@ -575,7 +575,7 @@ public native class FlightComponent extends GameComponent {
   protected cb func OnMountingEvent(evt: ref<MountingEvent>) -> Bool {
     // this.helper = this.GetVehicle().AddFlightHelper();
     LTBF_RegisterListener(this);
-    // this.thrusterTensor = Vector4.Normalize(this.configuration.GetThrusterTensor());
+    this.thrusterTensor = this.configuration.GetThrusterTensor();
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if mountChild.IsPlayer() {
       FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName() + " uses tensor: " + this.GetVehicle().UsesInertiaTensor());
@@ -902,20 +902,20 @@ public native class FlightComponent extends GameComponent {
     // torque *= 1.0/60.0;
 
     // factor in inertia tensor - maybe half?
-    let it = this.GetVehicle().GetInertiaTensor();
+    // let it = this.GetVehicle().GetInertiaTensor();
     // let v = Vector4.Normalize(new Vector4(PowF(it.X.X, 0.5), PowF(it.Y.Y, 0.5), PowF(it.Z.Z, 0.5), 0.0));
     // torque.X *= v.X;
     // torque.Y *= v.Y;
     // torque.Z *= v.Z;
-    torque *= it;
+    // torque *= it;
 
-    // torque *= this.stats.s_mass;
+    torque *= this.stats.s_mass;
     // torque *= 1500.0;
 
     // factor in where thrusters are
-    // torque.X *= this.thrusterTensor.X;
-    // torque.Y *= this.thrusterTensor.Y;
-    // torque.Z *= this.thrusterTensor.Z;
+    torque.X *= this.thrusterTensor.X;
+    torque.Y *= this.thrusterTensor.Y;
+    torque.Z *= this.thrusterTensor.Z;
     
     // convert to global
     torque = this.stats.d_orientation * torque;
@@ -3060,9 +3060,10 @@ public abstract class FlightMode {
   public func Update(timeDelta: Float) -> Void;
 
   public func ApplyPhysics(timeDelta: Float) -> Void {
+    let fs =  FlightSettings.GetInstance();
     
-    let velocityDamp: Vector4 = this.component.stats.d_speed * this.component.stats.d_localVelocity * FlightSettings.GetInstance().generalDampFactorLinear * this.component.stats.s_airResistanceFactor;
-    let angularDamp: Vector4 = this.component.stats.d_angularVelocity * FlightSettings.GetInstance().generalDampFactorAngular;
+    let velocityDamp: Vector4 = this.component.stats.d_speed * this.component.stats.d_localVelocity * fs.generalDampFactorLinear * this.component.stats.s_airResistanceFactor;
+    let angularDamp: Vector4 = this.component.stats.d_angularVelocity * fs.generalDampFactorAngular;
     // angularDamp += this.component.stats.d_angularAcceleration;
     
     // only damp if no input is being received on that axis
@@ -3085,8 +3086,8 @@ public abstract class FlightMode {
     // this.dampAccVector.Z -= timeDelta / 0.200;
 
     // clamp the dampening
-    if Vector4.Length(angularDamp) > 10.0 {
-      angularDamp = Vector4.Normalize(angularDamp) * 10.0;
+    if Vector4.Length(angularDamp) > fs.generalDampFactorAngularMax {
+      angularDamp = Vector4.Normalize(angularDamp) * fs.generalDampFactorAngularMax;
     }
 
     // this.lastAngularDamp = angularDamp;
@@ -3107,8 +3108,8 @@ public abstract class FlightMode {
     let aeroDynamicYaw = yawDirectionAngle * this.component.stats.d_speedRatio;// / 10.0;
     let aeroDynamicPitch = pitchDirectionAngle * this.component.stats.d_speedRatio;// / 10.0;
 
-    let yawDirectionality: Float = this.component.stats.d_speedRatio * FlightSettings.GetInstance().generalYawDirectionalityFactor;
-    let pitchDirectionality: Float = this.component.stats.d_speedRatio * FlightSettings.GetInstance().generalPitchDirectionalityFactor;
+    let yawDirectionality: Float = this.component.stats.d_speedRatio * fs.generalYawDirectionalityFactor;
+    let pitchDirectionality: Float = this.component.stats.d_speedRatio * fs.generalPitchDirectionalityFactor;
     let aeroFactor = Vector4.Dot(this.component.stats.d_forward, this.component.stats.d_direction);
     // yawDirectionality - redirect non-directional velocity to vehicle forward
 
@@ -3121,8 +3122,8 @@ public abstract class FlightMode {
     this.force += -this.component.stats.d_localDirection * AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_up)) * pitchDirectionality * AbsF(aeroFactor);
 
     this.torque = -angularDamp;
-    this.torque.Z -= aeroDynamicYaw * FlightSettings.GetInstance().generalYawAeroFactor;
-    this.torque.X -= aeroDynamicPitch * FlightSettings.GetInstance().generalPitchAeroFactor;
+    this.torque.Z -= aeroDynamicYaw * fs.generalYawAeroFactor;
+    this.torque.X -= aeroDynamicPitch * fs.generalPitchAeroFactor;
   }
 }
 
@@ -3357,6 +3358,15 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "50.0")
   public let generalDampFactorAngular: Float = 1.0;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Angular-Damp-Max")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Angular-Damp-Max-Description")
+  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "50.0")
+  public let generalDampFactorAngularMax: Float = 5.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
@@ -4589,6 +4599,7 @@ public class FlightEvents extends VehicleEventsTransition {
     FlightLog.Info("[FlightEvents] OnExit");
     this.ExitCustomCamera(scriptInterface);
     this.SetIsInFlight(stateContext, false);
+    this.SendAnimFeature(stateContext, scriptInterface);
     // (scriptInterface.owner as VehicleObject).ToggleFlightComponent(false);
     // FlightController.GetInstance().Deactivate(false);
     stateContext.SetPermanentBoolParameter(n"ForceEmptyHands", false, true);
@@ -4596,6 +4607,7 @@ public class FlightEvents extends VehicleEventsTransition {
     evt.silent = false;
     // evt.vehicle = scriptInterface.owner as VehicleObject;
     (scriptInterface.owner as VehicleObject).QueueEvent(evt);
+    this.ResumeStateMachines(scriptInterface.executionOwner);
   }
 
   public func OnForcedExit(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
@@ -4672,7 +4684,7 @@ public class FlightEvents extends VehicleEventsTransition {
       let v = (WorldPosition.ToVector4(WorldTransform.GetWorldPosition(roof)) * vwt) - (WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotT)) * vwt);
       camera.SetLocalPosition(v + Vector4.Vector3To4(FlightSettings.GetVector3("FPVCameraOffset")));
       camera.SetLocalOrientation(EulerAngles.ToQuat(new EulerAngles(FlightSettings.GetInstance().fpvCameraPitchOffset, 0.0, 0.0)));
-    }
+    } 
 
     // let workspotSystem: ref<WorkspotGameSystem> = scriptInterface.GetWorkspotSystem();
     // workspotSystem.SwitchSeatVehicle(scriptInterface.owner, scriptInterface.executionOwner, n"OccupantSlots", n"CustomFlightCamera");

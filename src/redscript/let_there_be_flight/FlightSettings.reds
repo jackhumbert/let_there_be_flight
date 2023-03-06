@@ -72,6 +72,15 @@ public native class FlightSettings extends IScriptable {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Angular-Damp-Max")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Angular-Damp-Max-Description")
+  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "50.0")
+  public let generalDampFactorAngularMax: Float = 5.0;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Pitch-Aero-Factor")
   @runtimeProperty("ModSettings.description", "UI-Settings-Pitch-Aero-Factor-Description")
   @runtimeProperty("ModSettings.step", "0.05")

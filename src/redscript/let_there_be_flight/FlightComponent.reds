@@ -255,7 +255,7 @@ public native class FlightComponent extends GameComponent {
   protected cb func OnMountingEvent(evt: ref<MountingEvent>) -> Bool {
     // this.helper = this.GetVehicle().AddFlightHelper();
     LTBF_RegisterListener(this);
-    // this.thrusterTensor = Vector4.Normalize(this.configuration.GetThrusterTensor());
+    this.thrusterTensor = this.configuration.GetThrusterTensor();
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if mountChild.IsPlayer() {
       FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName() + " uses tensor: " + this.GetVehicle().UsesInertiaTensor());
@@ -582,20 +582,21 @@ public native class FlightComponent extends GameComponent {
     // torque *= 1.0/60.0;
 
     // factor in inertia tensor - maybe half?
-    let it = this.GetVehicle().GetInertiaTensor();
+    // let it = this.GetVehicle().GetInertiaTensor();
     // let v = Vector4.Normalize(new Vector4(PowF(it.X.X, 0.5), PowF(it.Y.Y, 0.5), PowF(it.Z.Z, 0.5), 0.0));
     // torque.X *= v.X;
     // torque.Y *= v.Y;
     // torque.Z *= v.Z;
-    torque *= it;
+    // torque *= it;
 
-    // torque *= this.stats.s_mass;
+    // assume thrusters combined are capable of holding the weight of the vehicle
+    torque *= this.stats.s_mass;
     // torque *= 1500.0;
 
     // factor in where thrusters are
-    // torque.X *= this.thrusterTensor.X;
-    // torque.Y *= this.thrusterTensor.Y;
-    // torque.Z *= this.thrusterTensor.Z;
+    torque.X *= this.thrusterTensor.X;
+    torque.Y *= this.thrusterTensor.Y;
+    torque.Z *= this.thrusterTensor.Z;
     
     // convert to global
     torque = this.stats.d_orientation * torque;

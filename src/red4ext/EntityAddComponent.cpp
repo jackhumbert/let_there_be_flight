@@ -260,7 +260,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
         }
 
         if (configurationCls) {
-          spdlog::info("Looked for class '{}' using '{}'", className, configurationCls->name.ToString());
+          //spdlog::info("Looked for class '{}' using '{}'", className, configurationCls->name.ToString());
           auto configuration = reinterpret_cast<IFlightConfiguration *>(configurationCls->CreateInstance(true));
           configurationCls->ConstructCls(configuration);
 
@@ -274,7 +274,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
           configuration->AddSlots(vs);
           //configuration->AddMeshes(entity, vcc);
         } else {
-          spdlog::info("Looked for class '{}'", className);
+          //spdlog::info("Looked for class '{}'", className);
         }
       }
     }
