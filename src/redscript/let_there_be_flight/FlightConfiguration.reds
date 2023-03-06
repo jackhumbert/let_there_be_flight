@@ -46,6 +46,15 @@ public abstract native class IFlightConfiguration extends IScriptable {
       this.type = FlightVehicleType.Streetkid;
     }
   }
+
+  public func OnActivation() {
+    
+  }
+
+  public func OnDeactivation() {
+    
+  }
+
   public func GetThrusterTensor() -> Vector4 {
     let total = new Vector4(0.0, 0.0, 0.0, 0.0);
     let vt = this.component.GetVehicle().GetWorldTransform();

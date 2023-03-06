@@ -417,6 +417,8 @@ public native class FlightComponent extends GameComponent {
       // this.sys.audio.StartWithPitch("vehicle" + this.GetUniqueID(), "vehicle3_TPP", this.GetPitch());
       this.active = true;
       this.hasUpdate = true;
+
+      this.configuration.OnActivation();
     }
   }
 
@@ -654,6 +656,8 @@ public native class FlightComponent extends GameComponent {
       // this.sys.audio.Stop("rightRear");
     }
     // this.sys.audio.Stop("vehicle" + this.GetUniqueID());
+    
+    this.configuration.OnDeactivation();
   }
 
   protected cb func OnGridDestruction(evt: ref<VehicleGridDestructionEvent>) -> Bool {
