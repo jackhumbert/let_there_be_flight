@@ -1,7 +1,7 @@
 // Let There Be Flight
 // (C) 2022 Jack Humbert
 // https://github.com/jackhumbert/let_there_be_flight
-// This file was automatically generated on 2023-03-04 19:42:30.0479778
+// This file was automatically generated on 2023-03-08 16:40:34.7799878
 
 // FlightAudio.reds
 
@@ -737,6 +737,8 @@ public native class FlightComponent extends GameComponent {
       // this.sys.audio.StartWithPitch("vehicle" + this.GetUniqueID(), "vehicle3_TPP", this.GetPitch());
       this.active = true;
       this.hasUpdate = true;
+
+      this.configuration.OnActivation();
     }
   }
 
@@ -909,6 +911,7 @@ public native class FlightComponent extends GameComponent {
     // torque.Z *= v.Z;
     // torque *= it;
 
+    // assume thrusters combined are capable of holding the weight of the vehicle
     torque *= this.stats.s_mass;
     // torque *= 1500.0;
 
@@ -973,6 +976,8 @@ public native class FlightComponent extends GameComponent {
       // this.sys.audio.Stop("rightRear");
     }
     // this.sys.audio.Stop("vehicle" + this.GetUniqueID());
+    
+    this.configuration.OnDeactivation();
   }
 
   protected cb func OnGridDestruction(evt: ref<VehicleGridDestructionEvent>) -> Bool {
@@ -1562,6 +1567,15 @@ public abstract native class IFlightConfiguration extends IScriptable {
       this.type = FlightVehicleType.Streetkid;
     }
   }
+
+  public func OnActivation() {
+    
+  }
+
+  public func OnDeactivation() {
+    
+  }
+
   public func GetThrusterTensor() -> Vector4 {
     let total = new Vector4(0.0, 0.0, 0.0, 0.0);
     let vt = this.component.GetVehicle().GetWorldTransform();
@@ -4813,6 +4827,16 @@ public class FlightUIVehicleHealthStatPoolListener extends CustomValueStatPoolsL
   }
 }
 
+@if(!ModuleExists("ImprovedMinimapMain"))
+public func IMZ_Comp_SetBlackboardValue(gameInstance: GameInstance, enabled: Bool) {
+  GameInstance.GetBlackboardSystem(gameInstance).Get(GetAllBlackboardDefs().UI_ActiveVehicleData).SetBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsPlayerMounted, enabled); 
+} 
+
+@if(ModuleExists("ImprovedMinimapMain"))
+public func IMZ_Comp_SetBlackboardValue(gameInstance: GameInstance, enabled: Bool) {
+  GameInstance.GetBlackboardSystem(gameInstance).Get(GetAllBlackboardDefs().UI_System).SetBool(GetAllBlackboardDefs().UI_System.IsMounted_IMZ, enabled);
+} 
+
 public class hudFlightController extends inkHUDGameController {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
@@ -4884,7 +4908,7 @@ public class hudFlightController extends inkHUDGameController {
     if IsDefined(stats) {  
       stats.RequestRegisteringListener(Cast<StatsObjectID>(vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     }
-    GameInstance.GetBlackboardSystem(vehicle.GetGame()).Get(GetAllBlackboardDefs().UI_ActiveVehicleData).SetBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsPlayerMounted, true); 
+    IMZ_Comp_SetBlackboardValue(this.m_gameInstance, true); 
   }
 
   protected cb func OnUninitialize() -> Bool {
@@ -4894,7 +4918,7 @@ public class hudFlightController extends inkHUDGameController {
     if IsDefined(this.m_healthStatPoolListener) {
       GameInstance.GetStatPoolsSystem(this.m_gameInstance).RequestUnregisteringListener(Cast(this.m_healthStatPoolListener.m_vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     }
-    GameInstance.GetBlackboardSystem(this.m_gameInstance).Get(GetAllBlackboardDefs().UI_ActiveVehicleData).SetBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsPlayerMounted, false); 
+    IMZ_Comp_SetBlackboardValue(this.m_gameInstance, false); 
   }
 
   private func UpdateTime() -> Void {
@@ -6463,6 +6487,18 @@ public let VehicleFlight: ref<VehicleFlightDef>;
 //   this.m_flightControllerStatus.SetText("Flight Active: " + fs().playerComponent.GetFlightMode().GetDescription());
 // }
 
+@if(!ModuleExists("ImprovedMinimapMain"))
+@addMethod(hudCarController)
+public func UpdateIMZSpeed(speed: Float, multiplier: Float) { }
+
+@if(ModuleExists("ImprovedMinimapMain"))
+@addMethod(hudCarController)
+public func UpdateIMZSpeed(speed: Float, multiplier: Float) {
+  let value: Float = Cast<Float>(RoundF(speed * 2.0)) / 6.0;
+  let resultingValue: Float = value * multiplier;
+  GameInstance.GetBlackboardSystem(this.m_activeVehicle.GetGame()).Get(GetAllBlackboardDefs().UI_System).SetFloat(GetAllBlackboardDefs().UI_System.CurrentSpeed_IMZ, resultingValue);
+}
+
 @wrapMethod(hudCarController)
 protected cb func OnSpeedValueChanged(speedValue: Float) -> Bool {
   // speedValue = AbsF(speedValue);
@@ -6475,6 +6511,7 @@ protected cb func OnSpeedValueChanged(speedValue: Float) -> Bool {
     let multiplier: Float = GameInstance.GetStatsDataSystem(this.m_activeVehicle.GetGame()).GetValueFromCurve(n"vehicle_ui", speed, n"speed_to_multiplier");
     inkTextRef.SetText(this.m_SpeedValue, IntToString(RoundMath(speed * multiplier)));
     this.drawRPMGaugeFull(AbsF(fc.surge) * 5000.0);
+    this.UpdateIMZSpeed(speed, multiplier);
   } else {
     wrappedMethod(speedValue);
   }

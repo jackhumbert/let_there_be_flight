@@ -61,6 +61,18 @@
 //   this.m_flightControllerStatus.SetText("Flight Active: " + fs().playerComponent.GetFlightMode().GetDescription());
 // }
 
+@if(!ModuleExists("ImprovedMinimapMain"))
+@addMethod(hudCarController)
+public func UpdateIMZSpeed(speed: Float, multiplier: Float) { }
+
+@if(ModuleExists("ImprovedMinimapMain"))
+@addMethod(hudCarController)
+public func UpdateIMZSpeed(speed: Float, multiplier: Float) {
+  let value: Float = Cast<Float>(RoundF(speed * 2.0)) / 6.0;
+  let resultingValue: Float = value * multiplier;
+  GameInstance.GetBlackboardSystem(this.m_activeVehicle.GetGame()).Get(GetAllBlackboardDefs().UI_System).SetFloat(GetAllBlackboardDefs().UI_System.CurrentSpeed_IMZ, resultingValue);
+}
+
 @wrapMethod(hudCarController)
 protected cb func OnSpeedValueChanged(speedValue: Float) -> Bool {
   // speedValue = AbsF(speedValue);
@@ -73,6 +85,7 @@ protected cb func OnSpeedValueChanged(speedValue: Float) -> Bool {
     let multiplier: Float = GameInstance.GetStatsDataSystem(this.m_activeVehicle.GetGame()).GetValueFromCurve(n"vehicle_ui", speed, n"speed_to_multiplier");
     inkTextRef.SetText(this.m_SpeedValue, IntToString(RoundMath(speed * multiplier)));
     this.drawRPMGaugeFull(AbsF(fc.surge) * 5000.0);
+    this.UpdateIMZSpeed(speed, multiplier);
   } else {
     wrappedMethod(speedValue);
   }

@@ -11,6 +11,16 @@ public class FlightUIVehicleHealthStatPoolListener extends CustomValueStatPoolsL
   }
 }
 
+@if(!ModuleExists("ImprovedMinimapMain"))
+public func IMZ_Comp_SetBlackboardValue(gameInstance: GameInstance, enabled: Bool) {
+  GameInstance.GetBlackboardSystem(gameInstance).Get(GetAllBlackboardDefs().UI_ActiveVehicleData).SetBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsPlayerMounted, enabled); 
+} 
+
+@if(ModuleExists("ImprovedMinimapMain"))
+public func IMZ_Comp_SetBlackboardValue(gameInstance: GameInstance, enabled: Bool) {
+  GameInstance.GetBlackboardSystem(gameInstance).Get(GetAllBlackboardDefs().UI_System).SetBool(GetAllBlackboardDefs().UI_System.IsMounted_IMZ, enabled);
+} 
+
 public class hudFlightController extends inkHUDGameController {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
@@ -82,7 +92,7 @@ public class hudFlightController extends inkHUDGameController {
     if IsDefined(stats) {  
       stats.RequestRegisteringListener(Cast<StatsObjectID>(vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     }
-    GameInstance.GetBlackboardSystem(vehicle.GetGame()).Get(GetAllBlackboardDefs().UI_ActiveVehicleData).SetBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsPlayerMounted, true); 
+    IMZ_Comp_SetBlackboardValue(this.m_gameInstance, true); 
   }
 
   protected cb func OnUninitialize() -> Bool {
@@ -92,7 +102,7 @@ public class hudFlightController extends inkHUDGameController {
     if IsDefined(this.m_healthStatPoolListener) {
       GameInstance.GetStatPoolsSystem(this.m_gameInstance).RequestUnregisteringListener(Cast(this.m_healthStatPoolListener.m_vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     }
-    GameInstance.GetBlackboardSystem(this.m_gameInstance).Get(GetAllBlackboardDefs().UI_ActiveVehicleData).SetBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsPlayerMounted, false); 
+    IMZ_Comp_SetBlackboardValue(this.m_gameInstance, false); 
   }
 
   private func UpdateTime() -> Void {
