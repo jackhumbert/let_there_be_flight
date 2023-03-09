@@ -139,7 +139,6 @@ public:
   FlightModuleHook s_##func##_Hook(#func, func##Addr, reinterpret_cast<void*>(&func), reinterpret_cast<void**>(&func##_Original)); \
   retType func(__VA_ARGS__)
 
-
 #define REGISTER_FLIGHT_OVERRIDE(original, retType, func, ...)   \
   retType func(__VA_ARGS__); \
   FlightModuleHook s_##func##_Hook(#func, \
