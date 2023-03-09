@@ -4,6 +4,7 @@
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 #include "Addresses.hpp"
 #include <RED4ext/Scripting/Natives/Generated/game/EffectSystem.hpp>
+#include <RED4ext/Scripting/Natives/vehicleChassisComponent.hpp>
 
 // right before components are processed for entites, and an appropriate time to insert our own
 // can also look for string "Entity/InitializeComponents"

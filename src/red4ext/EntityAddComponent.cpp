@@ -23,6 +23,10 @@
 #include <RED4ext/Scripting/Natives/Generated/ink/HudEntriesResource.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/CameraComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/OccupantSlotComponent.hpp>
+#include <RED4ext/Scripting/Natives/vehicleChassisComponent.hpp>
+#include <RED4ext/Scripting/Natives/Generated/physics/SystemBody.hpp>
+#include <RED4ext/Scripting/Natives/Generated/physics/SystemResource.hpp>
+#include <RED4ext/Scripting/Natives/Generated/physics/ColliderBox.hpp>
 #include "LoadResRef.hpp"
 #include <spdlog/spdlog.h>
 #include "VehiclePhysicsUpdate.hpp"
@@ -45,6 +49,37 @@
 //    SpawnEffect_Original(a1, a2, a3, a4, a5, a6);
 //  }
 //}
+
+REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem, 
+    uint32_t *geoCacheId, RED4ext::vehicle::PhysicalSystemDesc *desc) {
+  if (desc->numHandles && desc->entity) {
+    auto rtti = RED4ext::CRTTISystem::Get();
+
+    auto type = desc->entity->GetNativeType();
+    bool isCar = false;
+    bool isBike = false;
+    auto isVehicle = false;
+    do {
+      isVehicle |= type == rtti->GetClass("vehicleBaseObject");
+      isCar |= type == rtti->GetClass("vehicleCarBaseObject");
+      isBike |= type == rtti->GetClass("vehicleBikeBaseObject");
+    } while (type = type->parent);
+
+    if (isCar) {
+      if (desc->resource) {
+        if (desc->resource->bodies.size) {
+          auto shape = reinterpret_cast<RED4ext::physics::ColliderBox*>(rtti->GetClass("physicsColliderBox")->CreateInstance());
+          shape->halfExtents = RED4ext::Vector3(2.0, 2.0, 2.0);
+          shape->localToBody.position = RED4ext::Vector4(-1.0, 0.0, 0.0, 0.0);
+          desc->resource->bodies[0]->collisionShapes.EmplaceBack(RED4ext::Handle<RED4ext::physics::ColliderBox>(shape));
+        }
+        //auto body = reinterpret_cast<RED4ext::physics::SystemBody*>(rtti->GetClass("physicsSystemBody")->CreateInstance());
+        //desc->resource->bodies.EmplaceBack(RED4ext::Handle<RED4ext::physics::SystemBody>(body));
+      }
+    }
+  }
+  return vehicle_ProcessPhysicalSystem_Original(geoCacheId, desc);
+}
 
 RED4ext::ent::PhysicalMeshComponent *CreateThrusterEngine(RED4ext::CName mesh,
                                                           RED4ext::CName name, RED4ext::CName slot,
@@ -169,113 +204,97 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     //h.refCount->IncRef();
     //entity->componentsStorage.components.EmplaceBack(h);
 
-    // entVisualControllerComponent
     RED4ext::ent::VisualControllerComponent *vcc = NULL;
-    for (auto const &handle : entity->componentsStorage.components) {
-      auto component = handle.GetPtr();
-      if (component->GetNativeType() == rtti->GetClass("entVisualControllerComponent")) {
-        vcc = reinterpret_cast<RED4ext::ent::VisualControllerComponent *>(component);
-        break;
-      }
-    }
-
+    RED4ext::vehicle::ChassisComponent *chassis = NULL;
     RED4ext::game::OccupantSlotComponent *osc = NULL;
+    RED4ext::ent::SlotComponent *vs = NULL;
     for (auto const &handle : entity->componentsStorage.components) {
       auto component = handle.GetPtr();
-      if (component->GetNativeType() == rtti->GetClass("gameOccupantSlotComponent")) {
-        osc = reinterpret_cast<RED4ext::game::OccupantSlotComponent *>(component);
-
-        {
- /*         auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
-          slot->boneName = "roof_border_front";
-          slot->slotName = "CustomFlightCamera";
-          osc->slots.EmplaceBack();
-          osc->slotIndexLookup.Emplace(slot->slotName, osc->slots.size - 1);*/
+      if (vcc == NULL && component->GetNativeType() == rtti->GetClass("entVisualControllerComponent")) {
+        vcc = reinterpret_cast<RED4ext::ent::VisualControllerComponent *>(component);
+      }
+      if (chassis == NULL && component->GetNativeType() == rtti->GetClass("vehicleChassisComponent")) {
+        chassis = reinterpret_cast<RED4ext::vehicle::ChassisComponent *>(component);
+      }
+      if (vs == NULL && component->GetNativeType() == rtti->GetClass("entSlotComponent")) {
+        if (component->name == "vehicle_slots") {
+          vs = reinterpret_cast<RED4ext::ent::SlotComponent *>(component);
         }
-        break;
+      }
+      if (osc == NULL && component->GetNativeType() == rtti->GetClass("gameOccupantSlotComponent")) {
+        osc = reinterpret_cast<RED4ext::game::OccupantSlotComponent *>(component);
       }
     }
 
-    if (vcc != NULL) {
-    
-      RED4ext::ent::SlotComponent *vs = NULL;
+    //if (chassis != NULL) {
+    //
+    //}
+
+    if (vcc != NULL && vs != NULL) {
+      {
+        //auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
+        //slot->boneName = "roof_border_front";
+        //slot->slotName = "roof_border_front";
+        //vs->slots.EmplaceBack(*slot);
+        //vs->slotIndexLookup.Emplace(slot->slotName, vs->slots.size - 1);
+      }
+      //FlightWeapons::AddWeaponSlots(vs);
+
+      bool isSixWheeler = false;
+      //for (auto const &slot : vs->slots) {
+      //  if (slot.slotName == "wheel_front_left_b")
+      //    isSixWheeler = true;
+      //}
 
       for (auto const &handle : entity->componentsStorage.components) {
         auto component = handle.GetPtr();
-        if (component->GetNativeType() == rtti->GetClass("entSlotComponent")) {
-          if (component->name == "vehicle_slots") {
-            vs = reinterpret_cast<RED4ext::ent::SlotComponent *>(component);
-            break;
+        type = component->GetNativeType();
+        bool isPlacedComponent = false;
+        do {
+          isPlacedComponent |= type == rtti->GetClass("entIPlacedComponent");
+        } while (type = type->parent);
+
+        if (isPlacedComponent) {
+          auto pth = ((RED4ext::ent::IPlacedComponent *)component)->parentTransform;
+          if (pth) {
+            auto pt = reinterpret_cast<RED4ext::ent::HardTransformBinding *>(pth.GetPtr());
+            if (pt && pt->slotName == "wheel_front_left_b") {
+              isSixWheeler |= true;
+            }
           }
         }
       }
 
-      if (vs != NULL) {
-        {
-          //auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
-          //slot->boneName = "roof_border_front";
-          //slot->slotName = "roof_border_front";
-          //vs->slots.EmplaceBack(*slot);
-          //vs->slotIndexLookup.Emplace(slot->slotName, vs->slots.size - 1);
+      char className[256];
+      sprintf(className, "FlightConfiguration_%s", entity->currentAppearance.ToString());
+
+      auto configurationCls = rtti->GetClassByScriptName(className);
+      if (!configurationCls) {
+        if (isSixWheeler) {
+          configurationCls = rtti->GetClassByScriptName("SixWheelCarFlightConfiguration");
+        } else if (isCar) {
+          configurationCls = rtti->GetClassByScriptName("CarFlightConfiguration");
+        } else if (isBike) {
+          configurationCls = rtti->GetClassByScriptName("BikeFlightConfiguration");
         }
-        //FlightWeapons::AddWeaponSlots(vs);
+      }
 
-        bool isSixWheeler = false;
-        //for (auto const &slot : vs->slots) {
-        //  if (slot.slotName == "wheel_front_left_b")
-        //    isSixWheeler = true;
-        //}
+      if (configurationCls) {
+        //spdlog::info("Looked for class '{}' using '{}'", className, configurationCls->name.ToString());
+        auto configuration = reinterpret_cast<IFlightConfiguration *>(configurationCls->CreateInstance(true));
+        configurationCls->ConstructCls(configuration);
 
-        for (auto const &handle : entity->componentsStorage.components) {
-          auto component = handle.GetPtr();
-          type = component->GetNativeType();
-          bool isPlacedComponent = false;
-          do {
-            isPlacedComponent |= type == rtti->GetClass("entIPlacedComponent");
-          } while (type = type->parent);
+        auto handle = RED4ext::Handle<IFlightConfiguration>(configuration);
+        configuration->ref = RED4ext::WeakHandle(*reinterpret_cast<RED4ext::Handle<RED4ext::ISerializable> *>(&handle));
+        configuration->unk30 = configurationCls;
+        configuration->component = RED4ext::Handle<FlightComponent>(fc);
+        fc->configuration = handle;
 
-          if (isPlacedComponent) {
-            auto pth = ((RED4ext::ent::IPlacedComponent *)component)->parentTransform;
-            if (pth) {
-              auto pt = reinterpret_cast<RED4ext::ent::HardTransformBinding *>(pth.GetPtr());
-              if (pt && pt->slotName == "wheel_front_left_b") {
-                isSixWheeler |= true;
-              }
-            }
-          }
-        }
-
-        char className[256];
-        sprintf(className, "FlightConfiguration_%s", entity->currentAppearance.ToString());
-
-        auto configurationCls = rtti->GetClassByScriptName(className);
-        if (!configurationCls) {
-          if (isSixWheeler) {
-            configurationCls = rtti->GetClassByScriptName("SixWheelCarFlightConfiguration");
-          } else if (isCar) {
-            configurationCls = rtti->GetClassByScriptName("CarFlightConfiguration");
-          } else if (isBike) {
-            configurationCls = rtti->GetClassByScriptName("BikeFlightConfiguration");
-          }
-        }
-
-        if (configurationCls) {
-          //spdlog::info("Looked for class '{}' using '{}'", className, configurationCls->name.ToString());
-          auto configuration = reinterpret_cast<IFlightConfiguration *>(configurationCls->CreateInstance(true));
-          configurationCls->ConstructCls(configuration);
-
-          auto handle = RED4ext::Handle<IFlightConfiguration>(configuration);
-          configuration->ref = RED4ext::WeakHandle(*reinterpret_cast<RED4ext::Handle<RED4ext::ISerializable> *>(&handle));
-          configuration->unk30 = configurationCls;
-          configuration->component = RED4ext::Handle<FlightComponent>(fc);
-          fc->configuration = handle;
-
-          configuration->Setup(vehicle);
-          configuration->AddSlots(vs);
-          //configuration->AddMeshes(entity, vcc);
-        } else {
-          //spdlog::info("Looked for class '{}'", className);
-        }
+        configuration->Setup(vehicle);
+        configuration->AddSlots(vs);
+        //configuration->AddMeshes(entity, vcc);
+      } else {
+        //spdlog::info("Looked for class '{}'", className);
       }
     }
 
