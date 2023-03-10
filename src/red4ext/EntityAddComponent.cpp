@@ -28,6 +28,7 @@
 #include <RED4ext/Scripting/Natives/Generated/physics/SystemResource.hpp>
 #include <RED4ext/Scripting/Natives/Generated/physics/ColliderBox.hpp>
 #include <RED4ext/Scripting/Natives/Generated/physics/ColliderSphere.hpp>
+#include <RED4ext/Scripting/Natives/Generated/physics/SystemBodyParams.hpp>
 #include "LoadResRef.hpp"
 #include <spdlog/spdlog.h>
 #include "VehiclePhysicsUpdate.hpp"
@@ -84,7 +85,7 @@ REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem,
 
     if (isCar) {
       if (desc->resource) {
-        if (desc->resource->bodies.size) {
+        if (desc->resource->bodies.size && desc->resource->bodies[0]->params.simulationType == RED4ext::physics::SimulationType::Static) {
           RED4ext::ent::SlotComponent * sc = NULL;
           for (auto const &handle : desc->entity->componentsStorage.components) {
             auto component = handle.GetPtr();
@@ -100,111 +101,141 @@ REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem,
 
           RED4ext::WorldTransform *wt;
           int index = 0;
+          auto allocator = reinterpret_cast<RED4ext::Memory::IAllocator *>(desc->resource->bodies[0].instance->params.allocator);
 
-          auto shapeFL = reinterpret_cast<RED4ext::physics::ColliderSphere *>(
-              rtti->GetClass("physicsColliderSphere")->CreateInstance());
+          auto ra = RED4ext::DynArray<RED4ext::Handle<RED4ext::physics::ICollider>>(allocator);
+          auto collisionShapes = desc->resource->bodies[0]->collisionShapes;
+
+          ra.Reserve(collisionShapes.size + 4);
+          for (auto shape : collisionShapes) {
+            ra.EmplaceBack(shape);
+          }
+
+          auto sphereCls = rtti->GetClass("physicsColliderSphere");
+          auto wtCls = rtti->GetClass("WorldTransform");
+
+          // auto shapeFL = reinterpret_cast<RED4ext::physics::ColliderSphere *>(
+          // rtti->GetClass("physicsColliderSphere")->CreateInstance());
+
+          auto shapeFL = reinterpret_cast<RED4ext::physics::ColliderSphere *>(sphereCls->CreateInstance());
+
           shapeFL->radius = 0.8;
-          //shapeFL->filterData = RED4ext::Handle(
-          //    reinterpret_cast<RED4ext::physics::FilterData *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
-          //shapeFL->filterData->preset = "Vehicle Part";
-          //shapeFL->filterData->simulationFilter.mask1 = 98304;
-          //shapeFL->filterData->simulationFilter.mask2 = 9223372036854780414;
+          // shapeFL->filterData = RED4ext::Handle(
+          //     reinterpret_cast<RED4ext::physics::FilterData
+          //     *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
+          // shapeFL->filterData->preset = "Vehicle Part";
+          // shapeFL->filterData->simulationFilter.mask1 = 98304;
+          // shapeFL->filterData->simulationFilter.mask2 = 9223372036854780414;
           shapeFL->material = "metal_car.physmat";
 
-          wt = (RED4ext::WorldTransform *)rtti->GetClass("WorldTransform")->CreateInstance();
+          wt = (RED4ext::WorldTransform *)wtCls->CreateInstance();
           index = sc->GetSlotIndex("thruster_front_left");
           if (index != -1) {
             sc->GetSlotLocalTransform(index, &sc->worldTransform, wt);
             shapeFL->localToBody.position = *wt->Position.ToVector4();
           }
-          const auto handleFL = RED4ext::Handle<RED4ext::physics::ICollider>(shapeFL);
-          desc->resource->bodies[0]->collisionShapes.EmplaceBack(handleFL);
+          const auto &handleFL = RED4ext::Handle<RED4ext::physics::ICollider>(shapeFL);
+          handleFL.refCount->IncRef();
+          handleFL.refCount->IncWeakRef();
+          ra.EmplaceBack(handleFL);
 
-          auto shapeFR = reinterpret_cast<RED4ext::physics::ColliderSphere *>(
-              rtti->GetClass("physicsColliderSphere")->CreateInstance());
+          auto shapeFR = reinterpret_cast<RED4ext::physics::ColliderSphere *>(sphereCls->CreateInstance());
+
           shapeFR->radius = 0.8;
-          //shapeFR->filterData = RED4ext::Handle(
-          //    reinterpret_cast<RED4ext::physics::FilterData *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
-          //shapeFR->filterData->preset = "Vehicle Part";
-          //shapeFR->filterData->simulationFilter.mask1 = 98304;
-          //shapeFR->filterData->simulationFilter.mask2 = 9223372036854780414;
+          // shapeFR->filterData = RED4ext::Handle(
+          //     reinterpret_cast<RED4ext::physics::FilterData
+          //     *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
+          // shapeFR->filterData->preset = "Vehicle Part";
+          // shapeFR->filterData->simulationFilter.mask1 = 98304;
+          // shapeFR->filterData->simulationFilter.mask2 = 9223372036854780414;
           shapeFR->material = "metal_car.physmat";
 
-          wt = (RED4ext::WorldTransform *)rtti->GetClass("WorldTransform")->CreateInstance();
+          wt = (RED4ext::WorldTransform *)wtCls->CreateInstance();
           index = sc->GetSlotIndex("thruster_front_right");
           if (index != -1) {
             sc->GetSlotLocalTransform(index, &sc->worldTransform, wt);
             shapeFR->localToBody.position = *wt->Position.ToVector4();
           }
-          const auto handleFR = RED4ext::Handle<RED4ext::physics::ICollider>(shapeFR);
-          desc->resource->bodies[0]->collisionShapes.EmplaceBack(handleFR);
+          const auto &handleFR = RED4ext::Handle<RED4ext::physics::ICollider>(shapeFR);
+          handleFR.refCount->IncRef();
+          handleFR.refCount->IncWeakRef();
+          ra.EmplaceBack(handleFR);
 
-          auto shapeBL = reinterpret_cast<RED4ext::physics::ColliderSphere *>(
-              rtti->GetClass("physicsColliderSphere")->CreateInstance());
+          auto shapeBL = reinterpret_cast<RED4ext::physics::ColliderSphere *>(sphereCls->CreateInstance());
+
           shapeBL->radius = 0.8;
-          //shapeBL->filterData = RED4ext::Handle(
-          //    reinterpret_cast<RED4ext::physics::FilterData *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
-          //shapeBL->filterData->preset = "Vehicle Part";
-          //shapeBL->filterData->simulationFilter.mask1 = 98304;
-          //shapeBL->filterData->simulationFilter.mask2 = 9223372036854780414;
+          // shapeBL->filterData = RED4ext::Handle(
+          //     reinterpret_cast<RED4ext::physics::FilterData
+          //     *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
+          // shapeBL->filterData->preset = "Vehicle Part";
+          // shapeBL->filterData->simulationFilter.mask1 = 98304;
+          // shapeBL->filterData->simulationFilter.mask2 = 9223372036854780414;
           shapeBL->material = "metal_car.physmat";
 
-          wt = (RED4ext::WorldTransform *)rtti->GetClass("WorldTransform")->CreateInstance();
+          wt = (RED4ext::WorldTransform *)wtCls->CreateInstance();
           index = sc->GetSlotIndex("thruster_back_left");
           if (index != -1) {
             sc->GetSlotLocalTransform(index, &sc->worldTransform, wt);
             shapeBL->localToBody.position = *wt->Position.ToVector4();
           }
 
-          const auto handleBL = RED4ext::Handle<RED4ext::physics::ICollider>(shapeBL);
-          desc->resource->bodies[0]->collisionShapes.EmplaceBack(handleBL);
+          const auto &handleBL = RED4ext::Handle<RED4ext::physics::ICollider>(shapeBL);
+          handleBL.refCount->IncRef();
+          handleBL.refCount->IncWeakRef();
+          ra.EmplaceBack(handleBL);
 
-          auto shapeBR = reinterpret_cast<RED4ext::physics::ColliderSphere *>(
-              rtti->GetClass("physicsColliderSphere")->CreateInstance());
+          auto shapeBR = reinterpret_cast<RED4ext::physics::ColliderSphere *>(sphereCls->CreateInstance());
+
           shapeBR->radius = 0.8;
-          //shapeBR->filterData = RED4ext::Handle(
-          //    reinterpret_cast<RED4ext::physics::FilterData *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
-          //shapeBR->filterData->preset = "Vehicle Part";
-          //shapeBR->filterData->simulationFilter.mask1 = 98304;
-          //shapeBR->filterData->simulationFilter.mask2 = 9223372036854780414;
+          // shapeBR->filterData = RED4ext::Handle(
+          //     reinterpret_cast<RED4ext::physics::FilterData
+          //     *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
+          // shapeBR->filterData->preset = "Vehicle Part";
+          // shapeBR->filterData->simulationFilter.mask1 = 98304;
+          // shapeBR->filterData->simulationFilter.mask2 = 9223372036854780414;
           shapeBR->material = "metal_car.physmat";
 
-          wt = (RED4ext::WorldTransform *)rtti->GetClass("WorldTransform")->CreateInstance();
+          wt = (RED4ext::WorldTransform *)wtCls->CreateInstance();
           index = sc->GetSlotIndex("thruster_back_right");
           if (index != -1) {
             sc->GetSlotLocalTransform(index, &sc->worldTransform, wt);
             shapeBR->localToBody.position = *wt->Position.ToVector4();
           }
 
-          const auto handleBR = RED4ext::Handle<RED4ext::physics::ICollider>(shapeBR);
-          desc->resource->bodies[0]->collisionShapes.EmplaceBack(handleBR);
+          const auto &handleBR = RED4ext::Handle<RED4ext::physics::ICollider>(shapeBR);
+          handleBR.refCount->IncRef();
+          handleBR.refCount->IncWeakRef();
+          ra.EmplaceBack(handleBR);
+
+          desc->resource.instance->bodies[0].instance->collisionShapes = ra;
 
           auto og = vehicle_ProcessPhysicalSystem_Original(geoCacheId, desc);
 
-          desc->resource->bodies[0]->collisionShapes.Remove(handleFL);
-          desc->resource->bodies[0]->collisionShapes.Remove(handleFR);
-          desc->resource->bodies[0]->collisionShapes.Remove(handleBL);
-          desc->resource->bodies[0]->collisionShapes.Remove(handleBR);
+          collisionShapes.Remove(handleFL);
+          collisionShapes.Remove(handleFR);
+          collisionShapes.Remove(handleBL);
+          collisionShapes.Remove(handleBR);
 
           return og;
         }
 
-        //auto body = reinterpret_cast<RED4ext::physics::SystemBody*>(rtti->GetClass("physicsSystemBody")->CreateInstance());
-        //body->name = "Thruster Test";
-        //body->mappedBoneName = "swingarm_front_left";
+        // auto body =
+        // reinterpret_cast<RED4ext::physics::SystemBody*>(rtti->GetClass("physicsSystemBody")->CreateInstance());
+        // body->name = "Thruster Test";
+        // body->mappedBoneName = "swingarm_front_left";
 
-        //body->params.simulationType = RED4ext::physics::SimulationType::Static;
-        //body->params.inertia = RED4ext::Vector3(500.0, 500.0, 500.0);
-        //body->params.mass = 500.0;
-        //body->params.comOffset.orientation = RED4ext::Quaternion();
+        // body->params.simulationType = RED4ext::physics::SimulationType::Static;
+        // body->params.inertia = RED4ext::Vector3(500.0, 500.0, 500.0);
+        // body->params.mass = 500.0;
+        // body->params.comOffset.orientation = RED4ext::Quaternion();
 
         //
-        //auto shape = reinterpret_cast<RED4ext::physics::ColliderSphere *>(
+        // auto shape = reinterpret_cast<RED4ext::physics::ColliderSphere *>(
         //    rtti->GetClass("physicsColliderSphere")->CreateInstance());
-        //shape->radius = 1.0;
-        //shape->localToBody.position = RED4ext::Vector4(0.0, 0.0, 0.0, 0.0);
-        //body->collisionShapes.EmplaceBack(RED4ext::Handle<RED4ext::physics::ColliderSphere>(shape));
-        //desc->resource->bodies.EmplaceBack(RED4ext::Handle<RED4ext::physics::SystemBody>(body));
+        // shape->radius = 1.0;
+        // shape->localToBody.position = RED4ext::Vector4(0.0, 0.0, 0.0, 0.0);
+        // body->collisionShapes.EmplaceBack(RED4ext::Handle<RED4ext::physics::ColliderSphere>(shape));
+        // desc->resource->bodies.EmplaceBack(RED4ext::Handle<RED4ext::physics::SystemBody>(body));
       }
     }
   }
@@ -212,15 +243,14 @@ Original:
   return vehicle_ProcessPhysicalSystem_Original(geoCacheId, desc);
 }
 
-RED4ext::ent::PhysicalMeshComponent *CreateThrusterEngine(RED4ext::CName mesh,
-                                                          RED4ext::CName name, RED4ext::CName slot,
+RED4ext::ent::PhysicalMeshComponent *CreateThrusterEngine(RED4ext::CName mesh, RED4ext::CName name, RED4ext::CName slot,
                                                           RED4ext::CName bindName) {
 
   auto rtti = RED4ext::CRTTISystem::Get();
   auto mc = (RED4ext::ent::PhysicalMeshComponent *)rtti->GetClass("entPhysicalMeshComponent")->CreateInstance();
   mc->mesh.path = mesh;
   // not sure why this doesn't carry through
-  //mc->isEnabled = false;
+  // mc->isEnabled = false;
   mc->visualScale.X = 0.0;
   mc->visualScale.Y = 0.0;
   mc->visualScale.Z = 0.0;
@@ -273,7 +303,7 @@ void __fastcall VehicleProcessWeapons_Hook(RED4ext::vehicle::BaseObject *vehicle
   VehicleProcessWeapons_Original(vehicle, timeDelta, shootIndex);
   if (vehicle->weapons[shootIndex].cycleTimer == 0.0) {
     RED4ext::Quaternion quat = {0.0, 0.0, 0.0, 1.0};
-    auto ph = (RED4ext::ent::PlaceholderComponent*)vehicle->weapons[shootIndex].weaponObject.GetPtr()->placeholder;
+    auto ph = (RED4ext::ent::PlaceholderComponent *)vehicle->weapons[shootIndex].weaponObject.GetPtr()->placeholder;
     if (ph) {
       quat = ph->worldTransform.Orientation;
     }
@@ -291,21 +321,19 @@ void __fastcall VehicleProcessWeapons_Hook(RED4ext::vehicle::BaseObject *vehicle
   }
 }
 
-//#ifndef ZOLTAN
-//#define ZOLTAN(name, returnType, signature) using name = returnType signature; \
-//name name##_Hook;                                                                                                         \
-//  decltype(&name##_Hook) name##_Original;                                                                                   \
-//  returnType name##_Hook signature
-//#endif
-//ZOLTAN(Entity_InitializeComponents, void, (RED4ext::ent::Entity * entity, void *a2, void *a3))
-
+// #ifndef ZOLTAN
+// #d efine ZOLTAN(name, returnType, signature) using name = returnType signature; \
+//name name##_Hook; \
+//  decltype(&name##_Hook) name##_Original; \ returnType name##_Hook signature
+// #endif
+// ZOLTAN(Entity_InitializeComponents, void, (RED4ext::ent::Entity * entity, void *a2, void *a3))
 
 Entity_InitializeComponents Entity_InitializeComponents_Hook;
 decltype(&Entity_InitializeComponents_Hook) Entity_InitializeComponents_Original;
 
 void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, void *a2, void *a3) {
   auto rtti = RED4ext::CRTTISystem::Get();
-  
+
   auto type = entity->GetNativeType();
   bool isCar = false;
   bool isBike = false;
@@ -324,15 +352,16 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     fc->entity = entity;
     auto fch = RED4ext::Handle<FlightComponent>(fc);
     vehicle->componentsStorage.components.EmplaceBack(fch);
-    
-    //vehicle->entityTags.tags;
 
-    //FlightWeapons::AddWeapons(vehicle);
+    // vehicle->entityTags.tags;
 
-    //auto fc = (FlightComponent*)FlightComponent::GetRTTIType()->CreateInstance();
-    //fc->name = "flightComponent";
-    //auto h = RED4ext::Handle<FlightComponent>(fc);
-    //h.refCount->IncRef();
+    // FlightWeapons::AddWeapons(vehicle);
+
+    // auto fc = (FlightComponent*)FlightComponent::GetRTTIType()->CreateInstance();
+    // fc->name = "flightComponent";
+    // auto h = RED4ext::Handle<FlightComponent>(fc);
+    // h.refCount->IncRef();
+    // h.refCount->IncRef();
     //entity->componentsStorage.components.EmplaceBack(h);
 
     RED4ext::ent::VisualControllerComponent *vcc = NULL;

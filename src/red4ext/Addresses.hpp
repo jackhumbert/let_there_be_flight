@@ -143,6 +143,8 @@
 #define vehicleUnk568_SetAccelerationAddr 0x1AE1740
 #define vehicleUnk568_SetLinearVelocityEtcAddr 0x1AE1990
 #define vehicleUnk570_SetupAddr 0x1D28650
+#define vehicleUnk570_ProcessEffectsAddr 0x1D2AE00
+#define vehicleUnk570_UpdateEffectsBlackboardAddr 0x1D27C80
 #define vehicleUnk588_UnknownAddr 0x1C6CEF0
 #define vehicleUnk588_UpdateTransformAddr 0x1C6DCE0
 #define vehicleBaseObject_SetPhysicsStateAddr 0x1C8DBB0
