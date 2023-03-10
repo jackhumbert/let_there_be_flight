@@ -130,7 +130,7 @@
 #define vehiclePersistentDataPS_ResetQuestEnforceTransformAddr 0x1CD1A10
 #define vehicleUnk580_Update3CAAddr 0x1C67480
 #define vehicleUnk580_GetAudioResourceMetadataAddr 0x1C644A0
-#define vehicleUnk580_UnknownAddr 0x1C69470
+#define vehicleUnk580_UpdateAddr 0x1C69470
 #define vehicleUnk580_UpdateWheelEmittersAddr 0x1C690E0
 #define vehicleUnk580_ShouldUseSomeAVListenerAddr 0x1C63EE0
 #define vehicleUnk580_ToggleHornAddr 0x1C65AD0
@@ -172,3 +172,4 @@
 #define vehicleBaseObject_CreateActionAddr 0x1C8AD00
 #define gameIGameSystem_SetGameInstanceAddr 0xAF7040
 #define gameIGameSystem_UnsetAddr 0xAF70D0
+#define physicsColliderSphere_createHandleWithRadiusAddr 0x42DA20

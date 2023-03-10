@@ -66,6 +66,15 @@ bool RED4ext::ent::SlotComponent::GetSlotLocalTransform(int slotIndex, RED4ext::
   return call(this, slotIndex, offset, worldTransform);
 }
 
+
+RED4ext::Handle<RED4ext::physics::ColliderSphere> *
+RED4ext::physics::ColliderSphere::createHandleWithRadius(RED4ext::Handle<RED4ext::physics::ICollider> * handle,
+                                                         float radius) {
+  RelocFunc<decltype(&RED4ext::physics::ColliderSphere::createHandleWithRadius)> call(
+      physicsColliderSphere_createHandleWithRadiusAddr);
+  return call(handle, radius);
+}
+
 REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem, 
     uint32_t *geoCacheId, RED4ext::vehicle::PhysicalSystemDesc *desc) {
   auto collidersAdded = 0;
@@ -101,13 +110,15 @@ REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem,
 
           RED4ext::WorldTransform *wt;
           int index = 0;
-          auto allocator = reinterpret_cast<RED4ext::Memory::IAllocator *>(desc->resource->bodies[0].instance->params.allocator);
+          auto allocator = reinterpret_cast<RED4ext::Memory::IAllocator *>(desc->resource->bodies[0]->params.allocator);
 
           auto ra = RED4ext::DynArray<RED4ext::Handle<RED4ext::physics::ICollider>>(allocator);
-          auto collisionShapes = desc->resource->bodies[0]->collisionShapes;
+          const auto p_collisionShapes = &desc->resource->bodies[0]->collisionShapes;
+          auto originalShapes = *p_collisionShapes;
 
-          ra.Reserve(collisionShapes.size + 4);
-          for (auto shape : collisionShapes) {
+          ra.Reserve(p_collisionShapes->size + 4);
+          for (auto &shape : *p_collisionShapes) {
+            shape.refCount->IncRef();
             ra.EmplaceBack(shape);
           }
 
@@ -117,9 +128,10 @@ REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem,
           // auto shapeFL = reinterpret_cast<RED4ext::physics::ColliderSphere *>(
           // rtti->GetClass("physicsColliderSphere")->CreateInstance());
 
-          auto shapeFL = reinterpret_cast<RED4ext::physics::ColliderSphere *>(sphereCls->CreateInstance());
+          RED4ext::Handle<RED4ext::physics::ICollider> shapeFL;
+          RED4ext::physics::ColliderSphere::createHandleWithRadius(&shapeFL, 0.8);
+          shapeFL.refCount->IncRef();
 
-          shapeFL->radius = 0.8;
           // shapeFL->filterData = RED4ext::Handle(
           //     reinterpret_cast<RED4ext::physics::FilterData
           //     *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
@@ -134,14 +146,14 @@ REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem,
             sc->GetSlotLocalTransform(index, &sc->worldTransform, wt);
             shapeFL->localToBody.position = *wt->Position.ToVector4();
           }
-          const auto &handleFL = RED4ext::Handle<RED4ext::physics::ICollider>(shapeFL);
-          handleFL.refCount->IncRef();
-          handleFL.refCount->IncWeakRef();
-          ra.EmplaceBack(handleFL);
+          //handleFL.refCount->IncRef();
+          //handleFL.refCount->IncWeakRef();
+          ra.EmplaceBack(shapeFL);
 
-          auto shapeFR = reinterpret_cast<RED4ext::physics::ColliderSphere *>(sphereCls->CreateInstance());
+          RED4ext::Handle<RED4ext::physics::ICollider> shapeFR;
+          RED4ext::physics::ColliderSphere::createHandleWithRadius(&shapeFR, 0.8);
+          shapeFR.refCount->IncRef();
 
-          shapeFR->radius = 0.8;
           // shapeFR->filterData = RED4ext::Handle(
           //     reinterpret_cast<RED4ext::physics::FilterData
           //     *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
@@ -156,14 +168,14 @@ REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem,
             sc->GetSlotLocalTransform(index, &sc->worldTransform, wt);
             shapeFR->localToBody.position = *wt->Position.ToVector4();
           }
-          const auto &handleFR = RED4ext::Handle<RED4ext::physics::ICollider>(shapeFR);
-          handleFR.refCount->IncRef();
-          handleFR.refCount->IncWeakRef();
-          ra.EmplaceBack(handleFR);
+          //handleFR.refCount->IncRef();
+          //handleFR.refCount->IncWeakRef();
+          ra.EmplaceBack(shapeFR);
 
-          auto shapeBL = reinterpret_cast<RED4ext::physics::ColliderSphere *>(sphereCls->CreateInstance());
+          RED4ext::Handle<RED4ext::physics::ICollider> shapeBL;
+          RED4ext::physics::ColliderSphere::createHandleWithRadius(&shapeBL, 0.8);
+          shapeBL.refCount->IncRef();
 
-          shapeBL->radius = 0.8;
           // shapeBL->filterData = RED4ext::Handle(
           //     reinterpret_cast<RED4ext::physics::FilterData
           //     *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
@@ -179,14 +191,14 @@ REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem,
             shapeBL->localToBody.position = *wt->Position.ToVector4();
           }
 
-          const auto &handleBL = RED4ext::Handle<RED4ext::physics::ICollider>(shapeBL);
-          handleBL.refCount->IncRef();
-          handleBL.refCount->IncWeakRef();
-          ra.EmplaceBack(handleBL);
+          //handleBL.refCount->IncRef();
+          //handleBL.refCount->IncWeakRef();
+          ra.EmplaceBack(shapeBL);
 
-          auto shapeBR = reinterpret_cast<RED4ext::physics::ColliderSphere *>(sphereCls->CreateInstance());
+          RED4ext::Handle<RED4ext::physics::ICollider> shapeBR;
+          RED4ext::physics::ColliderSphere::createHandleWithRadius(&shapeBR, 0.8);
+          shapeBR.refCount->IncRef();
 
-          shapeBR->radius = 0.8;
           // shapeBR->filterData = RED4ext::Handle(
           //     reinterpret_cast<RED4ext::physics::FilterData
           //     *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
@@ -202,19 +214,26 @@ REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem,
             shapeBR->localToBody.position = *wt->Position.ToVector4();
           }
 
-          const auto &handleBR = RED4ext::Handle<RED4ext::physics::ICollider>(shapeBR);
-          handleBR.refCount->IncRef();
-          handleBR.refCount->IncWeakRef();
-          ra.EmplaceBack(handleBR);
+          //handleBR.refCount->IncRef();
+          //handleBR.refCount->IncWeakRef();
+          ra.EmplaceBack(shapeBR);
 
-          desc->resource.instance->bodies[0].instance->collisionShapes = ra;
+          *p_collisionShapes = ra;
 
           auto og = vehicle_ProcessPhysicalSystem_Original(geoCacheId, desc);
+          
+          *p_collisionShapes = originalShapes;
 
-          collisionShapes.Remove(handleFL);
-          collisionShapes.Remove(handleFR);
-          collisionShapes.Remove(handleBL);
-          collisionShapes.Remove(handleBR);
+          //for (auto &shape : ra) {
+            //ra.Remove(shape);
+            //shape.refCount->DecRef();
+          //}
+          //ra.size = 0;
+          ra.Clear();
+  /*        shapeFL.~Handle<RED4ext::physics::ICollider>();
+          shapeFR.~Handle<RED4ext::physics::ICollider>();
+          shapeBL.~Handle<RED4ext::physics::ICollider>();
+          shapeBR.~Handle<RED4ext::physics::ICollider>();*/
 
           return og;
         }

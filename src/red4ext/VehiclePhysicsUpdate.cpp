@@ -122,27 +122,36 @@ REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, vehicleBikePhysics_AnimationUpdate, R
   return og;
 }
 
-//// hopefully stop wheel effects
-//REGISTER_FLIGHT_HOOK(void __fastcall, vehicleUnk570_ProcessEffects, RED4ext::vehicle::Unk570 *unk570,
-//                     unsigned int wheelIndex, RED4ext::vehicle::Unk570::Unk40 *unk40, float deltaTime) {
-//  auto fc = FlightComponent::Get(unk570->vehicle);
-//  if (fc && fc->active) {
-//
-//  } else {
-//    vehicleUnk570_ProcessEffects_Original(unk570, wheelIndex, unk40, deltaTime);
-//  }
-//}
-//
-//// hopefully stop wheel effects somewhere else
-//REGISTER_FLIGHT_HOOK(void __fastcall, vehicleUnk570_UpdateEffectsBlackboard, RED4ext::vehicle::Unk570 *unk570,
-//                     unsigned int wheelCount) {
-//  auto fc = FlightComponent::Get(unk570->vehicle);
-//  if (fc && fc->active) {
-//
-//  } else {
-//    vehicleUnk570_UpdateEffectsBlackboard_Original(unk570, wheelCount);
-//  }
-//}
+// hopefully stop wheel effects
+REGISTER_FLIGHT_HOOK(void __fastcall, vehicleUnk570_ProcessEffects, RED4ext::vehicle::Unk570 *unk570,
+                     unsigned int wheelIndex, RED4ext::vehicle::Unk570::Unk40 *unk40, float deltaTime) {
+  auto fc = FlightComponent::Get(unk570->vehicle);
+  if (fc && fc->active) {
+
+  } else {
+    vehicleUnk570_ProcessEffects_Original(unk570, wheelIndex, unk40, deltaTime);
+  }
+}
+
+// hopefully stop wheel effects somewhere else
+REGISTER_FLIGHT_HOOK(void __fastcall, vehicleUnk570_UpdateEffectsBlackboard, RED4ext::vehicle::Unk570 *unk570,
+                     unsigned int wheelCount) {
+  auto fc = FlightComponent::Get(unk570->vehicle);
+  if (fc && fc->active) {
+
+  } else {
+    vehicleUnk570_UpdateEffectsBlackboard_Original(unk570, wheelCount);
+  }
+}
+
+// stop updating audio effects
+REGISTER_FLIGHT_HOOK(void __fastcall, vehicleUnk580_Update, RED4ext::vehicle::Unk580* unk580, __int64 a2, float a3, uint64_t *a4) {
+  auto fc = FlightComponent::Get(unk580->vehicle);
+  if (fc && fc->active) {
+  } else {
+    vehicleUnk580_Update_Original(unk580, a2, a3, a4);
+  }
+}
 
 // prevents wheels from adding torque/etc
 //REGISTER_FLIGHT_HOOK(void __fastcall, vehicleWheeledPhysics_SomethingWheelRayTrace,
