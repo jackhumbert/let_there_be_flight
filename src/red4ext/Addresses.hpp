@@ -137,6 +137,8 @@
 #define vehicleUnk580_SetRadioTierAddr 0x1C67CA0
 #define vehicleUnk580_NextRadioReceiverStationAddr 0x1C67B60
 #define vehicleUnk580_IsRadioReceiverActiveAddr 0x1C65250
+#define vehicleUnk580_UpdateEventsAddr 0x1C6B170
+#define vehicleUnk580_UpdateTireParametersAddr 0x1C63440
 #define Unk568Addr 0x1AE07B0
 #define vehicleUnk568_CopyOverCollisionForceAddr 0x1AE1700
 #define vehicleUnk568_SetUnkD0Addr 0x1AE1720
@@ -173,3 +175,4 @@
 #define gameIGameSystem_SetGameInstanceAddr 0xAF7040
 #define gameIGameSystem_UnsetAddr 0xAF70D0
 #define physicsColliderSphere_createHandleWithRadiusAddr 0x42DA20
+#define gameGameAudioSystem_UpdateParameterAddr 0x732D10

@@ -8,6 +8,7 @@
 #include "FlightComponent.hpp"
 #include "Addresses.hpp"
 #include "VehicleSpeedUnlimiter.hpp"
+#include <queue>
 
 REGISTER_FLIGHT_HOOK(void __fastcall, ProcessAirResistance, 
     RED4ext::vehicle::WheeledPhysics *a1, float deltaTime) {
@@ -122,36 +123,93 @@ REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, vehicleBikePhysics_AnimationUpdate, R
   return og;
 }
 
-// hopefully stop wheel effects
-REGISTER_FLIGHT_HOOK(void __fastcall, vehicleUnk570_ProcessEffects, RED4ext::vehicle::Unk570 *unk570,
-                     unsigned int wheelIndex, RED4ext::vehicle::Unk570::Unk40 *unk40, float deltaTime) {
-  auto fc = FlightComponent::Get(unk570->vehicle);
-  if (fc && fc->active) {
+//// hopefully stop wheel effects
+//REGISTER_FLIGHT_HOOK(void __fastcall, vehicleUnk570_ProcessEffects, RED4ext::vehicle::Unk570 *unk570,
+//                     unsigned int wheelIndex, RED4ext::vehicle::Unk570::Unk40 *unk40, float deltaTime) {
+//  auto fc = FlightComponent::Get(unk570->vehicle);
+//  if (fc && fc->active) {
+//
+//  } else {
+//    vehicleUnk570_ProcessEffects_Original(unk570, wheelIndex, unk40, deltaTime);
+//  }
+//}
+//
+//// hopefully stop wheel effects somewhere else
+//REGISTER_FLIGHT_HOOK(void __fastcall, vehicleUnk570_UpdateEffectsBlackboard, RED4ext::vehicle::Unk570 *unk570,
+//                     unsigned int wheelCount) {
+//  auto fc = FlightComponent::Get(unk570->vehicle);
+//  if (fc && fc->active) {
+//
+//  } else {
+//    vehicleUnk570_UpdateEffectsBlackboard_Original(unk570, wheelCount);
+//  }
+//}
 
-  } else {
-    vehicleUnk570_ProcessEffects_Original(unk570, wheelIndex, unk40, deltaTime);
-  }
+#include <RED4ext/Scripting/Natives/Generated/game/GameAudioSystem.hpp>
+
+void RED4ext::game::GameAudioSystem::UpdateParameter(int *audioReference, CName parameterName, float parameterValue) {
+  RelocFunc<decltype(&RED4ext::game::GameAudioSystem::UpdateParameter)> call(gameGameAudioSystem_UpdateParameterAddr);
+  return call(audioReference, parameterName, parameterValue);
 }
 
-// hopefully stop wheel effects somewhere else
-REGISTER_FLIGHT_HOOK(void __fastcall, vehicleUnk570_UpdateEffectsBlackboard, RED4ext::vehicle::Unk570 *unk570,
-                     unsigned int wheelCount) {
-  auto fc = FlightComponent::Get(unk570->vehicle);
+// stop tire sfx
+REGISTER_FLIGHT_HOOK(void __fastcall, vehicleUnk580_UpdateTireParameters, 
+  RED4ext::vehicle::TireParameterUpdate *tpu, RED4ext::vehicle::TireUpdate * tireUpdate) {
+  auto fc = FlightComponent::Get(tpu->unk580->vehicle);
   if (fc && fc->active) {
-
-  } else {
-    vehicleUnk570_UpdateEffectsBlackboard_Original(unk570, wheelCount);
+    tireUpdate->skidValue = 0.0;
+    tireUpdate->skidValue2 = 0.0;
   }
+  vehicleUnk580_UpdateTireParameters_Original(tpu, tireUpdate);
 }
 
-// stop updating audio effects
+
 REGISTER_FLIGHT_HOOK(void __fastcall, vehicleUnk580_Update, RED4ext::vehicle::Unk580* unk580, __int64 a2, float a3, uint64_t *a4) {
   auto fc = FlightComponent::Get(unk580->vehicle);
   if (fc && fc->active) {
+    //unk580->player_audio_resource_metadata->generalData.skid = "v_car_dst_default_scrape_start";
+
+    //unk580->player_audio_resource_metadata->generalData.skid = "ph_metal_barrel_solid_roll";
+    unk580->player_audio_resource_metadata->collisionCooldown = 0.1;
+    //std::queue<RED4ext::CName> starts, stops;
+    //for (auto &event : unk580->player_audio_resource_metadata->wheelData.wheelStartEvents) {
+    //  starts.push(event);
+    //  event = "ph_metal_car";
+    //  //event = "ph_metal_barrel_solid_roll";
+    //}
+    //for (auto &event : unk580->player_audio_resource_metadata->wheelData.wheelStopEvents) {
+    //  stops.push(event);
+    //  event = "ph_metal_car";
+    //  //event = "ph_metal_barrel_solid_roll";
+    //}
+
+    vehicleUnk580_Update_Original(unk580, a2, a3, a4);
+
+    //for (auto &event : unk580->player_audio_resource_metadata->wheelData.wheelStartEvents) {
+    //  event = starts.front();
+    //  starts.pop();
+    //}
+    //for (auto &event : unk580->player_audio_resource_metadata->wheelData.wheelStopEvents) {
+    //  event = stops.front();
+    //  stops.pop();
+    //}
+
+    //unk580->player_audio_resource_metadata->generalData.skid = "veh_wheel_skid";
   } else {
+    unk580->player_audio_resource_metadata->collisionCooldown = 0.5;
     vehicleUnk580_Update_Original(unk580, a2, a3, a4);
   }
 }
+
+
+//REGISTER_FLIGHT_HOOK(void __fastcall, vehicleUnk580_UpdateEvents, 
+//  RED4ext::vehicle::Unk580 *unk580, RED4ext::vehicle::WheelUpdate *update, __int64 a2) {
+//  auto fc = FlightComponent::Get(unk580->vehicle);
+//  if (fc && fc->active) {
+//  } else {
+//    vehicleUnk580_UpdateEvents(unk580, update, a2);
+//  }
+//}
 
 // prevents wheels from adding torque/etc
 //REGISTER_FLIGHT_HOOK(void __fastcall, vehicleWheeledPhysics_SomethingWheelRayTrace,

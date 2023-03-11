@@ -6,6 +6,7 @@
 #include <RED4ext/Scripting/Natives/Generated/game/EffectSystem.hpp>
 #include <RED4ext/Scripting/Natives/vehicleChassisComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/physics/ColliderSphere.hpp>
+#include <RED4ext/Scripting/Natives/Generated/game/GameAudioSystem.hpp>
 
 // right before components are processed for entites, and an appropriate time to insert our own
 // can also look for string "Entity/InitializeComponents"
