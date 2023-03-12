@@ -10,6 +10,7 @@
 #include "FlightThruster.hpp"
 #include "FlightComponent.hpp"
 #include "EntityAddComponent.hpp"
+#include <RED4ext/Scripting/Natives/Generated/red/ResourceReferenceScriptToken.hpp>
 
 struct IFlightThruster;
 
@@ -19,6 +20,8 @@ public:
   RED4ext::DynArray<RED4ext::Handle<IFlightThruster>> thrusters;
   RED4ext::CName flightCameraBone = "roof_border_front";
   RED4ext::Vector3 flightCameraOffset = RED4ext::Vector3(0.0, 0.0, 0.0);
+  RED4ext::red::ResourceReferenceScriptToken particleEffect = {.resource = RED4ext::RaRef<RED4ext::CResource>(R"(base\fx\environment\sparks\sparks_constant.effect)")};
+  RED4ext::red::ResourceReferenceScriptToken decalEffect = {.resource = RED4ext::RaRef<RED4ext::CResource>(R"(base\fx\_library\fire\lib_burnt_mark_01_decal.effect)")};
   
   void Setup(RED4ext::vehicle::BaseObject * vehicle);
   void AddSlots(RED4ext::ent::SlotComponent* slotComponent);
@@ -54,3 +57,5 @@ RED4EXT_ASSERT_OFFSET(IFlightConfiguration, component, 0x40);
 RED4EXT_ASSERT_OFFSET(IFlightConfiguration, thrusters, 0x50);
 RED4EXT_ASSERT_OFFSET(IFlightConfiguration, flightCameraBone, 0x60);
 RED4EXT_ASSERT_OFFSET(IFlightConfiguration, flightCameraOffset, 0x68);
+RED4EXT_ASSERT_OFFSET(IFlightConfiguration, particleEffect, 0x78);
+RED4EXT_ASSERT_OFFSET(IFlightConfiguration, decalEffect, 0x80);

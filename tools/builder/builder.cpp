@@ -17,7 +17,10 @@ void clear_build() {
 
 void build_archive() {
   fs::create_directories("build/archive/pc/mod");
-  fs::copy("wolvenkit/packed/archive/pc/mod/let_there_be_flight.archive",
+  // fs::copy("wolvenkit/packed/archive/pc/mod/let_there_be_flight.archive",
+  //          "build/archive/pc/mod/let_there_be_flight.archive",
+  //          fs::copy_options::update_existing);
+  fs::copy("wolvenkit/packed/mods/let_there_be_flight/archives/let_there_be_flight.archive",
            "build/archive/pc/mod/let_there_be_flight.archive",
            fs::copy_options::update_existing);
   cout << "Copied archive file: let_there_be_flight.archive" << endl;

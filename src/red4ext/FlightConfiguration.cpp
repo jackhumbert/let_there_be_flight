@@ -2,6 +2,7 @@
 #include <RED4ext/Memory/Allocators.hpp>
 
 void IFlightConfiguration::Setup(RED4ext::vehicle::BaseObject * vehicle) {
+
   this->thrusters = RED4ext::DynArray<RED4ext::Handle<IFlightThruster>>(new RED4ext::Memory::DefaultAllocator());
   auto onInit = GetType()->GetFunction("OnSetup");
   if (onInit) {

@@ -1,11 +1,12 @@
 {
 	"folders": [
 		{
-			"name": "src",
-			"path": "src"
+			"name": "flight_control",
+			"path": "."
 		},
 		{
-			"path": "."
+			"name": "src",
+			"path": "src"
 		}
 	],
 	"settings": {

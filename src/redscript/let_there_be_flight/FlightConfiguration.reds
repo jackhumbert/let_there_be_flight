@@ -20,6 +20,12 @@ public abstract native class IFlightConfiguration extends IScriptable {
   @runtimeProperty("offset", "0x68")
   public native let flightCameraOffset: Vector3; // 0, 0, 0
 
+  @runtimeProperty("offset", "0x78")
+  public native let particleEffect: ResRef; // base\fx\environment\sparks\sparks_constant.effect
+
+  @runtimeProperty("offset", "0x80")
+  public native let decalEffect: ResRef; // base\fx\_library\fire\lib_burnt_mark_01_decal.effect
+
   public let type: FlightVehicleType = FlightVehicleType.Corpo;
 
   public func OnSetup(vehicle: ref<VehicleObject>) {
@@ -95,6 +101,25 @@ public func CreateNomadThruster() -> ref<MeshComponent> {
 public class CarFlightConfiguration extends IFlightConfiguration {
   public func OnSetup(vehicle: ref<VehicleObject>) {
     super.OnSetup(vehicle);
+    
+    //#define PARTICLE R"(base\fx\vehicles\_damage\scratches\car_scratches_sparks.effect)"
+    //#define PARTICLE R"(base\fx\_library\sparks\lib_sparks_impact_2-3m.effect)"
+    //#define DECAL R"(base\fx\vehicles\_damage\scratches\car_scratches_sparks.effect)"
+    //#define DECAL R"(base\fx\vehicles\_damage\scratches\car_scratches_concrete.effect)"
+    //#define DECAL R"(base\fx\_library\fire\lib_burnt_mark_01_decal.effect)"
+
+    // base\fx\vehicles\_wheels\tire_tracks\radial\blood\v_tire_track_blood_r_m_01.effect
+
+    // this.particleEffect = r"base\\fx\\_library\\sparks\\lib_sparks_veryfast_constant_01.effect";
+    // this.particleEffect = r"base\\fx\\environment\\sparks\\sparks_constant.effect";
+    // good
+    // this.particleEffect = r"base\\fx\\_library\\sparks\\lib_sparks_welding_big_01.effect";
+    this.particleEffect = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
+    // this.decalEffect = r"base\\fx\\_library\\concrete_breaks\\concrete_breaks_medium.effect";
+    // this.decalEffect = r"base\\fx\\vehicles\\_damage\\scratches\\v_car_scratches_decal.effect";
+    // this.decalEffect = r"base\\fx\\vehicles\\_wheels\\skid_marks\\radial\\v_skid_mark_r_m_01.effect";
+    // this.decalEffect = r"base\\fx\\vehicles\\_wheels\\tire_tracks\\radial\\v_tire_track_r_m_01.effect";
+    this.decalEffect = r"user\\jackhumbert\\effects\\thruster_mark.effect";
 
     if (Equals(this.type, FlightVehicleType.Corpo)) {
       ArrayPush(this.thrusters, new FlightThrusterFL().Create(vehicle, CreateCorpoThruster()));

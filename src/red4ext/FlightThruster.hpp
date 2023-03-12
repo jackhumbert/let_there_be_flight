@@ -18,7 +18,6 @@ public:
   RED4ext::CName meshName = "Thruster";
   RED4ext::Handle<RED4ext::ent::MeshComponent> meshComponent;
   RED4ext::Handle<RED4ext::vehicle::BaseObject> vehicle;
-
 private:
   friend Descriptor;
   static void OnRegister(Descriptor *aType) {

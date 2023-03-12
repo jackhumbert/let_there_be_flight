@@ -111,7 +111,7 @@ void PrePhysics(RED4ext::Unk2 *unk2, float *deltaTime, void *unkStruct) {
   if (!wh.Expired()) {
     RED4ext::Matrix matrix;
     auto h = wh.Lock();
-    auto t = h.GetPtr()->localTransform;
+    auto t = h.GetPtr()->worldTransform;
     GetMatrixFromOrientation(&t.Orientation, &matrix);
     matrix.W.X = t.Position.x.Bits * 0.0000076293945;
     matrix.W.Y = t.Position.y.Bits * 0.0000076293945;
@@ -271,11 +271,11 @@ void FlightSystem::OnGameLoad(void *a1, uint64_t a2, uint64_t a3) {
   LoadResRef<RED4ext::ent::MeshComponent>(&r.path, &r.token, false);
 
   //EnableSmoothWheelContacts.GetAddr()->value = false;
-  PhysXClampHugeImpacts.GetAddr()->value = false;
-  PhysXClampHugeSpeeds.GetAddr()->value = false;
-  AirControlCarRollHelper.GetAddr()->value = false;
-  physicsCCD.GetAddr()->value = true;
-  ForceMoveToMaxLinearSpeed.GetAddr()->value = 100.0;
+  //PhysXClampHugeImpacts.GetAddr()->value = false;
+  //PhysXClampHugeSpeeds.GetAddr()->value = false;
+  //AirControlCarRollHelper.GetAddr()->value = false;
+  //physicsCCD.GetAddr()->value = true;
+  //ForceMoveToMaxLinearSpeed.GetAddr()->value = 100.0;
 
   spdlog::info("[FlightSystem] PhysXClampHugeImpacts: {}", PhysXClampHugeImpacts.GetAddr()->value);
   spdlog::info("[FlightSystem] PhysXClampHugeSpeeds: {}", PhysXClampHugeSpeeds.GetAddr()->value);

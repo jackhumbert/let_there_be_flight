@@ -47,10 +47,7 @@ RED4ext::CRTTIResourceAsyncReferenceType **__fastcall CreateCRTTIRaRefTypeFromCl
   return call(a1, a2);
 }
 
-bool __fastcall ProcessScriptTypes(uint32_t* version, ScriptData* scriptData, void* scriptLogger);
-decltype(&ProcessScriptTypes) ProcessScriptTypes_Original;
-
-bool __fastcall ProcessScriptTypes(uint32_t* version, ScriptData* scriptData, void* scriptLogger) {
+REGISTER_FLIGHT_HOOK(bool __fastcall, ProcessScriptTypes, uint32_t* version, ScriptData* scriptData, void* scriptLogger) {
   for (const auto& scriptClass : scriptData->classes) {
     for (const auto& prop : scriptClass->properties) {
       if (prop->runtimeProperties.size) {
@@ -71,8 +68,12 @@ bool __fastcall ProcessScriptTypes(uint32_t* version, ScriptData* scriptData, vo
               }
               auto rtti = RED4ext::CRTTISystem::Get();
               auto rttiClass = rtti->GetClassByScriptName(scriptClass->name);
-              auto rttiType = rtti->GetType(typeName);
+              RED4ext::CBaseRTTIType *rttiType = rtti->GetClassByScriptName(typeName);
               if (!rttiType) {
+                rttiType = rtti->GetType(typeName);
+              }
+              if (!rttiType) {
+                spdlog::info("  script type not registered - breaking down '{}'", typeName.ToString());
                 std::string typeStr(typeName.ToString());
                 auto del = typeStr.find(":");
                 if (del != -1) {
@@ -149,7 +150,7 @@ bool __fastcall ProcessScriptTypes(uint32_t* version, ScriptData* scriptData, vo
                 rttiClass->props.PushBack(
                     RED4ext::CProperty::Create(rttiType, prop->name.ToString(), nullptr, offsetValue));
               } else {
-                spdlog::warn("could not find type for property: {}", prop->name.ToString());
+                spdlog::warn("could not find type '{}' for property: {}", prop->type->name.ToString(), prop->name.ToString());
               }
             }
             else {
@@ -165,15 +166,3 @@ bool __fastcall ProcessScriptTypes(uint32_t* version, ScriptData* scriptData, vo
 
   return og;
 }
-
-struct RuntimePropertiesModule : FlightModule {
-  void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(ProcessScriptTypesAddr), &ProcessScriptTypes,
-                                  reinterpret_cast<void **>(&ProcessScriptTypes_Original)))
-      ;
-  }
-  void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(ProcessScriptTypesAddr));  }
-};
-
-REGISTER_FLIGHT_MODULE(RuntimePropertiesModule);

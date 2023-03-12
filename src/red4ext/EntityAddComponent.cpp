@@ -95,17 +95,22 @@ REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem,
     if (isCar) {
       if (desc->resource) {
         if (desc->resource->bodies.size && desc->resource->bodies[0]->params.simulationType == RED4ext::physics::SimulationType::Static) {
-          RED4ext::ent::SlotComponent * sc = NULL;
+          RED4ext::ent::SlotComponent *sc = NULL;
+          RED4ext::vehicle::ChassisComponent *cc = NULL;
+          auto scCls = rtti->GetClass("entSlotComponent");
+          auto ccCls = rtti->GetClass("vehicleChassisComponent");
           for (auto const &handle : desc->entity->componentsStorage.components) {
             auto component = handle.GetPtr();
-            if (sc == NULL && component->GetNativeType() == rtti->GetClass("entSlotComponent")) {
+            if (sc == NULL && component->GetNativeType() == scCls) {
               if (component->name == "vehicle_slots") {
                 sc = reinterpret_cast<RED4ext::ent::SlotComponent *>(component);
               }
+            } else if (cc == NULL && component->GetNativeType() == ccCls) {
+              cc = reinterpret_cast<RED4ext::vehicle::ChassisComponent *>(component);
             }
           }
 
-          if (sc == NULL)
+          if (sc == NULL || cc == NULL)
             goto Original;
 
           RED4ext::WorldTransform *wt;
@@ -113,6 +118,8 @@ REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem,
           auto allocator = reinterpret_cast<RED4ext::Memory::IAllocator *>(desc->resource->bodies[0]->params.allocator);
 
           auto ra = RED4ext::DynArray<RED4ext::Handle<RED4ext::physics::ICollider>>(allocator);
+          // doesn't work :/
+          //desc->resource->bodies[0]->params.angularDamping = 10.0;
           const auto p_collisionShapes = &desc->resource->bodies[0]->collisionShapes;
           auto originalShapes = *p_collisionShapes;
 
@@ -129,7 +136,7 @@ REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem,
           // rtti->GetClass("physicsColliderSphere")->CreateInstance());
 
           RED4ext::Handle<RED4ext::physics::ICollider> shapeFL;
-          RED4ext::physics::ColliderSphere::createHandleWithRadius(&shapeFL, 0.8);
+          RED4ext::physics::ColliderSphere::createHandleWithRadius(&shapeFL, 0.45);
           shapeFL.refCount->IncRef();
 
           // shapeFL->filterData = RED4ext::Handle(
@@ -138,20 +145,20 @@ REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem,
           // shapeFL->filterData->preset = "Vehicle Part";
           // shapeFL->filterData->simulationFilter.mask1 = 98304;
           // shapeFL->filterData->simulationFilter.mask2 = 9223372036854780414;
-          shapeFL->material = "metal_car.physmat";
+          shapeFL->material = "vehicle_chassis.physmat";
 
           wt = (RED4ext::WorldTransform *)wtCls->CreateInstance();
           index = sc->GetSlotIndex("thruster_front_left");
           if (index != -1) {
-            sc->GetSlotLocalTransform(index, &sc->worldTransform, wt);
-            shapeFL->localToBody.position = *wt->Position.ToVector4();
+            sc->GetSlotLocalTransform(index, &sc->localTransform, wt);
+            shapeFL->localToBody.position = *wt->Position.ToVector4() - *cc->localTransform.Position.ToVector4();
           }
-          //handleFL.refCount->IncRef();
-          //handleFL.refCount->IncWeakRef();
+          // handleFL.refCount->IncRef();
+          // handleFL.refCount->IncWeakRef();
           ra.EmplaceBack(shapeFL);
 
           RED4ext::Handle<RED4ext::physics::ICollider> shapeFR;
-          RED4ext::physics::ColliderSphere::createHandleWithRadius(&shapeFR, 0.8);
+          RED4ext::physics::ColliderSphere::createHandleWithRadius(&shapeFR, 0.45);
           shapeFR.refCount->IncRef();
 
           // shapeFR->filterData = RED4ext::Handle(
@@ -160,20 +167,20 @@ REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem,
           // shapeFR->filterData->preset = "Vehicle Part";
           // shapeFR->filterData->simulationFilter.mask1 = 98304;
           // shapeFR->filterData->simulationFilter.mask2 = 9223372036854780414;
-          shapeFR->material = "metal_car.physmat";
+          shapeFR->material = "vehicle_chassis.physmat";
 
           wt = (RED4ext::WorldTransform *)wtCls->CreateInstance();
           index = sc->GetSlotIndex("thruster_front_right");
           if (index != -1) {
-            sc->GetSlotLocalTransform(index, &sc->worldTransform, wt);
-            shapeFR->localToBody.position = *wt->Position.ToVector4();
+            sc->GetSlotLocalTransform(index, &sc->localTransform, wt);
+            shapeFR->localToBody.position = *wt->Position.ToVector4() - *cc->localTransform.Position.ToVector4();
           }
-          //handleFR.refCount->IncRef();
-          //handleFR.refCount->IncWeakRef();
+          // handleFR.refCount->IncRef();
+          // handleFR.refCount->IncWeakRef();
           ra.EmplaceBack(shapeFR);
 
           RED4ext::Handle<RED4ext::physics::ICollider> shapeBL;
-          RED4ext::physics::ColliderSphere::createHandleWithRadius(&shapeBL, 0.8);
+          RED4ext::physics::ColliderSphere::createHandleWithRadius(&shapeBL, 0.45);
           shapeBL.refCount->IncRef();
 
           // shapeBL->filterData = RED4ext::Handle(
@@ -182,21 +189,21 @@ REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem,
           // shapeBL->filterData->preset = "Vehicle Part";
           // shapeBL->filterData->simulationFilter.mask1 = 98304;
           // shapeBL->filterData->simulationFilter.mask2 = 9223372036854780414;
-          shapeBL->material = "metal_car.physmat";
+          shapeBL->material = "vehicle_chassis.physmat";
 
           wt = (RED4ext::WorldTransform *)wtCls->CreateInstance();
           index = sc->GetSlotIndex("thruster_back_left");
           if (index != -1) {
-            sc->GetSlotLocalTransform(index, &sc->worldTransform, wt);
-            shapeBL->localToBody.position = *wt->Position.ToVector4();
+            sc->GetSlotLocalTransform(index, &sc->localTransform, wt);
+            shapeBL->localToBody.position = *wt->Position.ToVector4() - *cc->localTransform.Position.ToVector4();
           }
 
-          //handleBL.refCount->IncRef();
-          //handleBL.refCount->IncWeakRef();
+          // handleBL.refCount->IncRef();
+          // handleBL.refCount->IncWeakRef();
           ra.EmplaceBack(shapeBL);
 
           RED4ext::Handle<RED4ext::physics::ICollider> shapeBR;
-          RED4ext::physics::ColliderSphere::createHandleWithRadius(&shapeBR, 0.8);
+          RED4ext::physics::ColliderSphere::createHandleWithRadius(&shapeBR, 0.45);
           shapeBR.refCount->IncRef();
 
           // shapeBR->filterData = RED4ext::Handle(
@@ -205,13 +212,13 @@ REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem,
           // shapeBR->filterData->preset = "Vehicle Part";
           // shapeBR->filterData->simulationFilter.mask1 = 98304;
           // shapeBR->filterData->simulationFilter.mask2 = 9223372036854780414;
-          shapeBR->material = "metal_car.physmat";
+          shapeBR->material = "vehicle_chassis.physmat";
 
           wt = (RED4ext::WorldTransform *)wtCls->CreateInstance();
           index = sc->GetSlotIndex("thruster_back_right");
           if (index != -1) {
-            sc->GetSlotLocalTransform(index, &sc->worldTransform, wt);
-            shapeBR->localToBody.position = *wt->Position.ToVector4();
+            sc->GetSlotLocalTransform(index, &sc->localTransform, wt);
+            shapeBR->localToBody.position = *wt->Position.ToVector4() - *cc->localTransform.Position.ToVector4();
           }
 
           //handleBR.refCount->IncRef();
@@ -467,7 +474,9 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
         configuration->ref = RED4ext::WeakHandle(*reinterpret_cast<RED4ext::Handle<RED4ext::ISerializable> *>(&handle));
         configuration->unk30 = configurationCls;
         configuration->component = RED4ext::Handle<FlightComponent>(fc);
+        configuration->component.refCount->IncRef();
         fc->configuration = handle;
+        handle.refCount->IncRef();
 
         configuration->Setup(vehicle);
         configuration->AddSlots(vs);

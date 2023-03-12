@@ -147,6 +147,13 @@
 #define vehicleUnk570_SetupAddr 0x1D28650
 #define vehicleUnk570_ProcessEffectsAddr 0x1D2AE00
 #define vehicleUnk570_UpdateEffectsBlackboardAddr 0x1D27C80
+#define vehicleUnk570_WheelEffectUpdateAddr 0x1D2AE00
+#define vehicleUnk570_GetCollisionFxForMaterialAddr 0x1D24C60
+#define vehicleUnk570_GetFxForMaterialAddr 0x1D24DE0
+#define vehicleUnk570_GetSmearFxForMaterialAddr 0x1D24D50
+#define vehicleUnk570_ProcessImpactScratchAddr 0x1D26510
+#define vehicleUnk570_TireTrackEffectStartAddr 0x1D2C330
+#define vehicleUnk570_SkidMarkEffectStartAddr 0x1D2B9D0
 #define vehicleUnk588_UnknownAddr 0x1C6CEF0
 #define vehicleUnk588_UpdateTransformAddr 0x1C6DCE0
 #define vehicleBaseObject_SetPhysicsStateAddr 0x1C8DBB0
