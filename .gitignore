@@ -41,7 +41,8 @@ let_there_be_flight*.zip
 wolvenkit/let_there_be_flight.zip
 wolvenkit/install_log.xml
 tools/builder/x64/*
-
+cmake*/
+.idea
 
 Cyberpunk2077.exe*
 REDEngineErrorReporter.exe*
