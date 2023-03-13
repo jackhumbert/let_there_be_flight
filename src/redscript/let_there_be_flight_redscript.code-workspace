@@ -1,16 +1,19 @@
 {
 	"folders": [
 		{
-			"name": "flight_control",
 			"path": "."
-		},
-		{
-			"name": "src",
-			"path": "src"
 		}
 	],
 	"settings": {
 		"files.associations": {
+			"*.reds": "redscript",
+			"*.ws": "redscript",
+			"*.script": "redmod-script",
+			"*.tweak": "redmod-tweak",
+			"*.1sc": "c",
+			"*.bt": "c",
+			"*.xl": "yaml",
+			"*.idc": "cpp",
 			"algorithm": "cpp",
 			"array": "cpp",
 			"atomic": "cpp",
@@ -89,7 +92,8 @@
 			"xstring": "cpp",
 			"xtr1common": "cpp",
 			"xtree": "cpp",
-			"xutility": "cpp"
+			"xutility": "cpp",
+			"*.in": "cpp"
 		},
 		"editor.tabSize": 2,
 		"redscript.scriptCachePath": "C:\\Users\\Jack\\Documents\\cyberpunk\\flight_control\\prereqs.redscripts"

@@ -9,8 +9,7 @@
         "**/.hg": true,
         "**/CVS": true,
         "**/.DS_Store": true,
-        "**/Thumbs.db": true,
-        "build": true
+        "**/Thumbs.db": true
     },
     "terminal.integrated.shellArgs.windows": ["-ExecutionPolicy", "Bypass"]
 }

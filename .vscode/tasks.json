@@ -11,7 +11,8 @@
           "shell": {
             "executable": "cmd.exe",
             "args": [
-              "/d", "/c"
+              "/d",
+              "/c"
             ]
           }
         },
@@ -33,7 +34,8 @@
           "shell": {
             "executable": "cmd.exe",
             "args": [
-              "/d", "/c"
+              "/d",
+              "/c"
             ]
           }
         },
@@ -55,7 +57,8 @@
           "shell": {
             "executable": "cmd.exe",
             "args": [
-              "/d", "/c"
+              "/d",
+              "/c"
             ]
           }
         },
@@ -78,7 +81,8 @@
           "shell": {
             "executable": "cmd.exe",
             "args": [
-              "/d", "/c"
+              "/d",
+              "/c"
             ]
           }
         },
@@ -101,7 +105,8 @@
           "shell": {
             "executable": "cmd.exe",
             "args": [
-              "/d", "/c"
+              "/d",
+              "/c"
             ]
           }
         },
@@ -124,7 +129,8 @@
           "shell": {
             "executable": "cmd.exe",
             "args": [
-              "/d", "/c"
+              "/d",
+              "/c"
             ]
           }
         },
@@ -147,7 +153,8 @@
           "shell": {
             "executable": "cmd.exe",
             "args": [
-              "/d", "/c"
+              "/d",
+              "/c"
             ]
           }
         },
@@ -170,7 +177,8 @@
           "shell": {
             "executable": "cmd.exe",
             "args": [
-              "/d", "/c"
+              "/d",
+              "/c"
             ]
           }
         },
@@ -184,7 +192,9 @@
         },
         "group": "build",
         "problemMatcher": [],
-        "dependsOn": ["Lint"]
+        "dependsOn": [
+          "Lint"
+        ]
       },
       {
         "label": "Install",
@@ -194,7 +204,8 @@
           "shell": {
             "executable": "cmd.exe",
             "args": [
-              "/d", "/c"
+              "/d",
+              "/c"
             ]
           }
         },
@@ -217,7 +228,8 @@
           "shell": {
             "executable": "cmd.exe",
             "args": [
-              "/d", "/c"
+              "/d",
+              "/c"
             ]
           }
         },
@@ -232,7 +244,9 @@
         "group": "build",
         "problemMatcher": [],
         "dependsOrder": "sequence",
-        "dependsOn": ["Lint/Build"]
+        "dependsOn": [
+          "Lint/Build"
+        ]
       },
       {
         "label": "Run",
@@ -242,7 +256,8 @@
           "shell": {
             "executable": "cmd.exe",
             "args": [
-              "/d", "/c"
+              "/d",
+              "/c"
             ]
           }
         },
@@ -265,7 +280,8 @@
           "shell": {
             "executable": "cmd.exe",
             "args": [
-              "/d", "/c"
+              "/d",
+              "/c"
             ]
           }
         },
@@ -279,7 +295,9 @@
         },
         "group": "build",
         "problemMatcher": [],
-        "dependsOn": ["Lint/Build/Install"]
+        "dependsOn": [
+          "Lint/Build/Install"
+        ]
       },
       {
         "label": "Install/Run",
@@ -289,7 +307,8 @@
           "shell": {
             "executable": "cmd.exe",
             "args": [
-              "/d", "/c"
+              "/d",
+              "/c"
             ]
           }
         },
@@ -303,7 +322,20 @@
         },
         "group": "build",
         "problemMatcher": [],
-        "dependsOn": ["Install"]
+        "dependsOn": [
+          "Install"
+        ]
       },
+      {
+        "type": "cmake",
+        "label": "CMake: build",
+        "command": "build",
+        "targets": [
+          "ALL_BUILD"
+        ],
+        "group": "build",
+        "problemMatcher": [],
+        "detail": "CMake template build task"
+      }
     ]
   }
