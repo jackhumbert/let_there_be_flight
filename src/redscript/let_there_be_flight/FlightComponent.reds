@@ -1,4 +1,3 @@
-
 public native class FlightComponentPS extends GameComponentPS {
 
 }

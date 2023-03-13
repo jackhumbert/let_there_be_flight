@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.02.00">
+	<object class="ParameterPreset" id="{b0214a4f-eb5f-4495-8836-a1f98471f439}">
+		<property name="name">
+			<value>yawDiff</value>
+		</property>
+		<relationship name="folder">
+			<destination>{37bcb955-bb46-4db0-96d9-38f1f6d86753}</destination>
+		</relationship>
+		<relationship name="parameter">
+			<destination>{6c3ed88b-b289-4448-991c-afbe0ac4751e}</destination>
+		</relationship>
+	</object>
+	<object class="GameParameter" id="{6c3ed88b-b289-4448-991c-afbe0ac4751e}">
+		<property name="minimum">
+			<value>-180</value>
+		</property>
+		<property name="maximum">
+			<value>180</value>
+		</property>
+		<property name="initialValue">
+			<value>0</value>
+		</property>
+	</object>
+</objects>

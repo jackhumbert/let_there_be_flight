@@ -1,0 +1,512 @@
+{
+  "Header": {
+    "WolvenKitVersion": "8.7.0",
+    "WKitJsonVersion": "0.0.3",
+    "GameVersion": 1600,
+    "ExportedDateTime": "2022-10-15T15:01:07.0411571Z",
+    "DataType": "CR2W",
+    "ArchiveFileName": "C:\\Users\\Jack\\Documents\\cyberpunk\\flight_control\\wolvenkit\\source\\archive\\user\\jackhumbert\\localization\\en-us.json"
+  },
+  "Data": {
+    "Version": 195,
+    "BuildVersion": 0,
+    "RootChunk": {
+      "$type": "JsonResource",
+      "cookingPlatform": "PLATFORM_PC",
+      "root": {
+        "HandleId": "0",
+        "Data": {
+          "$type": "localizationPersistenceOnScreenEntries",
+          "entries": [
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Group-Flight",
+              "femaleVariant": "Flight"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-KeyBindings-FlightToggle",
+              "femaleVariant": "Vehicle Flight Toggle"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Simple-Message-Flight-Control-Engaged",
+              "femaleVariant": "Flight Control Engaged"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Simple-Message-Flight-Control-Disengaged",
+              "femaleVariant": "Flight Control Disengaged"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Simple-Message-Flight-UI-Shown",
+              "femaleVariant": "Flight UI Shown"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Simple-Message-Flight-UI-Hidden",
+              "femaleVariant": "Flight UI Hidden"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Simple-Message-Suffix-Enabled",
+              "femaleVariant": "Enabled"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Enable-Flight",
+              "femaleVariant": "Enable Flight"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Disable-Flight",
+              "femaleVariant": "Disable Flight"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Yaw",
+              "femaleVariant": "Yaw"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Pitch",
+              "femaleVariant": "Pitch"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Roll",
+              "femaleVariant": "Roll"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Lift",
+              "femaleVariant": "Lift"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Linear-Brake",
+              "femaleVariant": "Linear Brake"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Angular-Brake",
+              "femaleVariant": "Angular Brake"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Brake",
+              "femaleVariant": "Brake"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Flight-Options",
+              "femaleVariant": "Flight Options"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Sway",
+              "femaleVariant": "Sway"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Next-Mode",
+              "femaleVariant": "Next Mode"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Prev-Mode",
+              "femaleVariant": "Prev Mode"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Toggle-UI",
+              "femaleVariant": "Toggle UI"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-KeyBindings-FlightYawLeft",
+              "femaleVariant": "Yaw Left"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-KeyBindings-FlightYawRight",
+              "femaleVariant": "Yaw Right"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-KeyBindings-FlightLiftUp",
+              "femaleVariant": "Lift Up"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-KeyBindings-FlightLiftDown",
+              "femaleVariant": "Lift Down"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-UI-Settings",
+              "femaleVariant": "Flight UI Settings"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-Audio-Settings",
+              "femaleVariant": "Flight Audio Settings"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-Mode-Settings",
+              "femaleVariant": "Flight Mode Settings"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Standard-Mode",
+              "femaleVariant": "Standard (Non-Drone) Mode"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Automatic-Mode",
+              "femaleVariant": "Automatic Mode"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Drone-Mode",
+              "femaleVariant": "Drone Mode"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-General-Flight-Settings",
+              "femaleVariant": "General Flight Settings"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-Control-Settings",
+              "femaleVariant": "Flight Control Settings"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-Physics-Settings",
+              "femaleVariant": "Flight Physics Settings"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-Camera-Settings",
+              "femaleVariant": "Flight Camera Settings"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Surge-Factor",
+              "femaleVariant": "Surge Factor"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Yaw-Factor",
+              "femaleVariant": "Yaw Factor"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Sway-Factor",
+              "femaleVariant": "Sway Factor"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Lift-Factor",
+              "femaleVariant": "Lift Factor"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Pitch-Factor",
+              "femaleVariant": "Pitch Factor"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Pitch-Input-Angle",
+              "femaleVariant": "Pitch Input Angle"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Roll-Factor",
+              "femaleVariant": "Roll Factor"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Roll-Input-Angle",
+              "femaleVariant": "Roll Input Angle"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Auto-Braking-Factor",
+              "femaleVariant": "Auto Braking Factor"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Auto-Braking-Factor-Description",
+              "femaleVariant": "How much the vehicle brakes when you let off the gas"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Yaw-Directionality",
+              "femaleVariant": "Yaw Directionality"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Yaw-Directionality-Description",
+              "femaleVariant": "How much your velocity follows your direction"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Apply-Flight-Physics-When-Deactivated",
+              "femaleVariant": "Apply Flight Physics When Deactivated"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Apply-Flight-Physics-When-Deactivated-Description",
+              "femaleVariant": "Useful for continuing to control the vehicle mid-air when deactivating"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Linear-Damp-Factor",
+              "femaleVariant": "Linear Damp Factor"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Linear-Damp-Factor-Description",
+              "femaleVariant": "How much resistance any linear movement is given"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Angular-Damp-Factor",
+              "femaleVariant": "Angular Damp Factor"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Pitch-Aero-Factor",
+              "femaleVariant": "Pitch Aero Factor"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Pitch-Aero-Factor-Description",
+              "femaleVariant": "How much the vehicle is rotated (pitch) towards its velocity"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Yaw-Aero-Factor",
+              "femaleVariant": "Yaw Aero Factor"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Yaw-Aero-Factor-Description",
+              "femaleVariant": "How much the vehicle is rotated (yaw) towards its velocity"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Pitch-Directionality-Factor",
+              "femaleVariant": "Pitch Directionality Factor"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Pitch-Directionality-Factor-Description",
+              "femaleVariant": "How much the vehicle's pitch affects its velocity"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Yaw-Directionality-Factor",
+              "femaleVariant": "Yaw Directionality Factor"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Yaw-Directionality-Factor-Description",
+              "femaleVariant": "How much the vehicle's yaw affects its velocity"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Angular-Damp-Factor",
+              "femaleVariant": "Angular Damp Factor"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Angular-Damp-Factor-Description",
+              "femaleVariant": "How much resistance any angular movement is given"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Driving-Direction-Compensation-Angle-Smoothing",
+              "femaleVariant": "Driving Direction Compensation Angle Smoothing"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Driving-Direction-Compensation-Speed-Coef",
+              "femaleVariant": "Driving Direction Compensation Speed Coef"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-FPV-Camera-Pitch-Offset",
+              "femaleVariant": "FPV Camera Pitch Offset"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-FPV-Camera-Pitch-Offset-Description",
+              "femaleVariant": "Angle in degrees"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Enable-Auto-Activation",
+              "femaleVariant": "Enable Auto Activation"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Enable-Auto-Activation-Description",
+              "femaleVariant": "Automatically enable flight when loading vehicle if it's above the specified height"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Auto-Activation-Height",
+              "femaleVariant": "Auto Activation Height"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Auto-Activation-Height-Description",
+              "femaleVariant": "In-game units for detecting when flight should automatically be activated on spawn"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Linear-Brake-Factor",
+              "femaleVariant": "Linear Brake Factor"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Linear-Brake-Factor-Description",
+              "femaleVariant": "How much the linear brake button slows the vehicle's velocity"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Angular-Brake-Factor",
+              "femaleVariant": "Angular Brake Factor"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Angular-Brake-Factor-Description",
+              "femaleVariant": "How much the angular brake button slows the vehicle's rotation"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Automatic-Mode-Enabled",
+              "femaleVariant": "Automatic Mode Enabled"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Drone-Mode-Enabled",
+              "femaleVariant": "Drone Mode Enabled"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Anti-Gravity-Drone-Mode-Enabled",
+              "femaleVariant": "Anti-Gravity Drone Mode Enabled"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Fly-Mode-Enabled",
+              "femaleVariant": "Fly Mode Enabled"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Hover-Mode-Enabled",
+              "femaleVariant": "Hover Mode Enabled"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Hover-And-Fly-Enabled",
+              "femaleVariant": "Hover & Fly Enabled"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Enabled",
+              "femaleVariant": "Enabled"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Engine-Volume",
+              "femaleVariant": "Engine Volume"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Wind-Volume",
+              "femaleVariant": "Wind Volume"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Warning-Volume",
+              "femaleVariant": "Warning Volume"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-Quickhacks",
+              "femaleVariant": "Flight Quickhacks"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Enable-Flight",
+              "femaleVariant": "Enable Flight"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Enable-Flight-Description",
+              "femaleVariant": "Grant this vehicle clear for take-off and use the default mode"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Disable-Flight",
+              "femaleVariant": "Disable Flight"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Disable-Flight-Description",
+              "femaleVariant": "Turn off flight mode and let the occupants suffer the consequences"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Initiate-Launch",
+              "femaleVariant": "Initiate Launch"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Initiate-Launch-Description",
+              "femaleVariant": "Rip a hole in the sky and throw this particular asshole in it"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Enable-Antigrav",
+              "femaleVariant": "Enable Antigrav"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Enable-Antigrav-Description",
+              "femaleVariant": "Free this vehicle from the prison that is Earth's gravity"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Disable-Antigrav",
+              "femaleVariant": "Disable Antigrav"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Disable-Antigrav-Description",
+              "femaleVariant": "Accept Newton's law and bring this vehicle back to Earth at that lovely 9.8 m/s^2"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Funhouse",
+              "femaleVariant": "Funhouse"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Quickhacks-Funhouse-Description",
+              "femaleVariant": "Charm this vehicle with the folly of youth and make it a little bouncy"
+            }
+          ]
+        }
+      }
+    },
+    "EmbeddedFiles": []
+  }
+}

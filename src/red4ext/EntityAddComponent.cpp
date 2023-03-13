@@ -350,7 +350,8 @@ void __fastcall VehicleProcessWeapons_Hook(RED4ext::vehicle::BaseObject *vehicle
 // #ifndef ZOLTAN
 // #d efine ZOLTAN(name, returnType, signature) using name = returnType signature; \
 //name name##_Hook; \
-//  decltype(&name##_Hook) name##_Original; \ returnType name##_Hook signature
+//  decltype(&name##_Hook) name##_Original; \
+ returnType name##_Hook signature
 // #endif
 // ZOLTAN(Entity_InitializeComponents, void, (RED4ext::ent::Entity * entity, void *a2, void *a3))
 
@@ -452,7 +453,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
       }
 
       char className[256];
-      sprintf(className, "FlightConfiguration_%s", entity->currentAppearance.ToString());
+      sprintf_s(className, "FlightConfiguration_%s", entity->currentAppearance.ToString());
 
       auto configurationCls = rtti->GetClassByScriptName(className);
       if (!configurationCls) {

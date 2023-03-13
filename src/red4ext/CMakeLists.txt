@@ -19,6 +19,12 @@ target_link_libraries(let_there_be_flight.dll
   PUBLIC
     Detours
     FMOD
-    RED4ext::SDK
+    RED4ext.SDK
     spdlog
 )
+
+add_custom_command(
+  TARGET let_there_be_flight.dll POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+  ${PROJECT_BINARY_DIR}/bin/let_there_be_flight.dll
+  ${LTBF_GAME_DIR}/red4ext/plugins/let_there_be_flight/let_there_be_flight.dll)
