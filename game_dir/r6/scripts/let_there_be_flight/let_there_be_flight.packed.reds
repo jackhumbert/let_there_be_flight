@@ -1,4 +1,4 @@
-// Generated on 2023-03-13T17:27:57Z UTC
+// Generated on 2023-03-13T20:08:38Z UTC
 
 // let_there_be_flight/FlightAudio.reds
 
@@ -1588,7 +1588,7 @@ public abstract native class IFlightConfiguration extends IScriptable {
     }
     return total;
   }
-
+/*
   public func GetEffectForMaterial(material: CName, fx: MaterialFx) -> MaterialFx {
     let conditions = new MaterialFx(
       new MaterialCondition(
@@ -1605,6 +1605,7 @@ public abstract native class IFlightConfiguration extends IScriptable {
       ));
     return conditions;
   }
+  */
 }
 
 public func CreateEmptyThruster() -> ref<MeshComponent> {
@@ -4388,7 +4389,7 @@ public class Vector3Wrapper {
 // r"base\\fx\\devices\\boot_thrusters\\d_boot_thruster_burst.effect"// too tiny
 // r"base\\fx\\devices\\boot_thrusters\\d_boot_thruster_holo_jump.effect"// too tiny
 // r"base\\fx\\vehicles\\av\\av_rayfield_excalibur_thruster_low_power.effect"// tiny blue with heat
-
+/*
 public native struct MaterialResource {
   public native let skidMarks: ResRef;
   public native let tireTracks: ResRef;
@@ -4405,7 +4406,7 @@ public native struct MaterialFx {
   public native let wet: MaterialCondition;
   public native let rain: MaterialCondition;
 }
-
+*/
 public abstract class IFlightThrusterFX extends IScriptable {
   public let resource: FxResource;
   public let instance: ref<FxInstance>;

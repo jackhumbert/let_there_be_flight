@@ -1,7 +1,7 @@
 add_custom_command(
   OUTPUT ${PROJECT_BINARY_DIR}/prereqs.redscripts
   COMMAND ${LTBF_TOOLS_DIR}/redscript-cli.exe
-  ARGS compile -s "${REDSCRIPT_PREREQS_DIR}/r6/scripts" -b "${REDSCRIPT_ORIGINAL_REDSCRIPTS_BK}" -o ${PROJECT_BINARY_DIR}/prereqs.redscripts
+  ARGS compile -s "${REDSCRIPT_PREREQS_DIR}/r6/scripts" -b "${CYBERPUNK_2077_BACKUP_REDSCRIPT}" -o ${PROJECT_BINARY_DIR}/prereqs.redscripts
   COMMENT "Compiling redscript prereqs"
   )
 

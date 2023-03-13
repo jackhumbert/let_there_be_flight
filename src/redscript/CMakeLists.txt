@@ -32,7 +32,6 @@ add_custom_command(
 
 add_custom_command(
   OUTPUT ${LTBF_REDSCRIPT_MODULE_FILE}
-  DEPENDS redscript_lint ${REDSCRIPT_FILES}
   COMMAND echo module LetThereBeFlight > ${LTBF_REDSCRIPT_MODULE_FILE}
   COMMENT "Creating LetThereBeFlight redscript module file")
 

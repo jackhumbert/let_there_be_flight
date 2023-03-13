@@ -183,3 +183,14 @@
 #define gameIGameSystem_UnsetAddr 0xAF70D0
 #define physicsColliderSphere_createHandleWithRadiusAddr 0x42DA20
 #define gameGameAudioSystem_UpdateParameterAddr 0x732D10
+#define UpdateManagerUpdateStorage_CopyAddr 0xA902B0
+#define UpdateManagerUpdateStorage_Copy_0Addr 0xA8FB10
+#define UpdateManager_ReleaseUnknownAddr 0xA90030
+#define UpdateManager_RegisterUpdateAddr 0xA90EC0
+#define UpdateManager_IterateUnknownAddr 0xA91480
+#define UpdateManager_PrepareFiringAddr 0xA907C0
+#define UpdateManagerHolder_SomethingAddr 0xA90980
+#define UpdateManagerHolder_UpdateSystemsAddr 0xA903B0
+#define UpdateManagerHolder_RegisterBucketUpdateAddr 0xB21E30
+#define UpdatableSystems_SetRuntimeSceneAddr 0xB9BDC0
+#define GameInstance_SetRuntimeSceneAddr 0x2D605B0
