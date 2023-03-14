@@ -183,5 +183,6 @@
 #define gameIGameSystem_UnsetAddr 0xAF70D0
 #define physicsColliderSphere_createHandleWithRadiusAddr 0x42DA20
 #define gameGameAudioSystem_UpdateParameterAddr 0x732D10
+#define gameGameAudioSystem_SetGlobalParameterAddr 0x72E4F0
 #define UpdatableSystems_SetRuntimeSceneAddr 0xB9BDC0
 #define GameInstance_SetRuntimeSceneAddr 0x2D605B0

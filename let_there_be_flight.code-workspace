@@ -93,7 +93,7 @@
 			"xtr1common": "cpp",
 			"xtree": "cpp",
 			"xutility": "cpp",
-			"*.in": "cpp",
+			"*.in": "plaintext",
 			"cstdarg": "cpp",
 			"ranges": "cpp",
 			"span": "cpp"

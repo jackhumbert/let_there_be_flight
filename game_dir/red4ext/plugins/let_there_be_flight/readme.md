@@ -1,6 +1,6 @@
 # Let There Be Flight
 
-This is a mod (currently in a beta state) for Cyberpunk 2077 that adds a flying mechanism to all cars, with a couple different modes and options.
+This is a mod for Cyberpunk 2077 that adds a flying mechanism to all cars, with a couple different modes and options.
 
 Other features include:
 * Imminent explosion audio indicator
@@ -13,7 +13,7 @@ Other features include:
 
 ## Installation
 
-For an up-to-date version of the mod, you can [download just the `build/` folder](https://downgit.github.io/#/home?url=https://github.com/jackhumbert/let_there_be_flight/tree/main/build), and install that into your game's directory.
+For an up-to-date version of the mod, you can [download just the `game_dir/` folder](https://downgit.github.io/#/home?url=https://github.com/jackhumbert/let_there_be_flight/tree/main/game_dir), and install that into your game's directory.
 
 [Official, numbered releases are available here](https://github.com/jackhumbert/let_there_be_flight/releases) - If you're upgrading, check the release notes for special instructions.
 
@@ -24,13 +24,13 @@ For an up-to-date version of the mod, you can [download just the `build/` folder
 * [ArchiveXL](https://github.com/psiberx/cp2077-archive-xl)
 * [Input Loader](https://github.com/jackhumbert/cyberpunk2077-input-loader)
 * [Redscript](https://github.com/jac3km4/redscript)
-* [Mod Settings](https://github.com/jackhumbert/mod_settings)
+* [Mod Settings](https://github.com/jackhumbert/mod_settings) (optional)
 
 ## Configuration
 
-[`r6/input/let_there_be_flight.xml`](https://github.com/jackhumbert/let_there_be_flight/tree/main/build/r6/input/let_there_be_flight.xml) contains all the keybindings for the keyboard & controller - you can customize these to your liking. See all possibilities here: https://nativedb.red4ext.com/EInputKey
+[`r6/input/let_there_be_flight.xml`](https://github.com/jackhumbert/let_there_be_flight/tree/main/game_dir/r6/input/let_there_be_flight.xml) contains all the keybindings for the keyboard & controller - you can customize these to your liking. See all possibilities here: https://nativedb.red4ext.com/EInputKey
 
-Other settings can be found in [`r6/scripts/let_there_be_flight/let_there_be_flight.packed.reds`](https://github.com/jackhumbert/let_there_be_flight/tree/main/build/r6/scripts/let_there_be_flight/let_there_be_flight.packed.reds) for the time being - search for `FlightSettings.SetFloat` to see all the variables used by the mod.
+Other settings can be found in [`r6/scripts/let_there_be_flight/let_there_be_flight.packed.reds`](https://github.com/jackhumbert/let_there_be_flight/tree/main/game_dir/r6/scripts/let_there_be_flight/let_there_be_flight.packed.reds) for the time being - search for `FlightSettings.SetFloat` to see all the variables used by the mod.
 
 ## Troubleshooting
 

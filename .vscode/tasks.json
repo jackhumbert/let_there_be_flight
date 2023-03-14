@@ -84,7 +84,7 @@
         "type": "cmake",
         "command": "build",
         "targets": [
-          "pack"
+          "release"
         ],
         "detail": "Generate the zip file from ./game_dir for a release",
         "presentation": {
