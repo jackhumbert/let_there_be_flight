@@ -8,7 +8,7 @@ function(add_redscript_file IN_FILE OUT_FILE)
   file(RELATIVE_PATH IN_FILE_RELATIVE ${LTBF_REDSCRIPT_DIR} ${IN_FILE})
   file(APPEND ${OUT_FILE} "// ${IN_FILE_RELATIVE}\n\n")
   message(STATUS "${IN_FILE_RELATIVE}")
-  file(APPEND ${OUT_FILE} "${CONTENTS}\n")
+  file(APPEND ${OUT_FILE} "${CONTENTS}\n\n")
 endfunction()
 
 foreach(REDSCRIPT_FILE ${REDSCRIPT_FILES})

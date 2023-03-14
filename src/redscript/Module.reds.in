@@ -1,0 +1,9 @@
+module LetThereBeFlight
+
+public func GetVersionString() -> String {
+  return "v@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@";
+}
+
+public func GetVersion() -> Int32 {
+  return @PROJECT_VERSION_MAJOR@ * 10000 + @PROJECT_VERSION_MINOR@ * 100 + @PROJECT_VERSION_PATCH@;
+}

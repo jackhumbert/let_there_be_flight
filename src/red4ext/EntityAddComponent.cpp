@@ -1,4 +1,4 @@
-#include "FlightModule.hpp"
+#include "Utils/FlightModule.hpp"
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/Entity.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/EntityTemplate.hpp>
@@ -31,7 +31,7 @@
 #include <RED4ext/Scripting/Natives/Generated/physics/SystemBodyParams.hpp>
 #include "LoadResRef.hpp"
 #include <spdlog/spdlog.h>
-#include "VehiclePhysicsUpdate.hpp"
+#include "Physics/VehiclePhysicsUpdate.hpp"
 #include "FlightWeapons.hpp"
 #include "Signatures.hpp"
 #include <thread>
@@ -346,14 +346,6 @@ void __fastcall VehicleProcessWeapons_Hook(RED4ext::vehicle::BaseObject *vehicle
     onFireWeapon->Execute(&stack);
   }
 }
-
-// #ifndef ZOLTAN
-// #d efine ZOLTAN(name, returnType, signature) using name = returnType signature; \
-//name name##_Hook; \
-//  decltype(&name##_Hook) name##_Original; \
- returnType name##_Hook signature
-// #endif
-// ZOLTAN(Entity_InitializeComponents, void, (RED4ext::ent::Entity * entity, void *a2, void *a3))
 
 Entity_InitializeComponents Entity_InitializeComponents_Hook;
 decltype(&Entity_InitializeComponents_Hook) Entity_InitializeComponents_Original;

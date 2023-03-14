@@ -1,0 +1,4 @@
+Let There Be Flight v0.2.0
+Copyright (c) 2023 Jack Humbert. All rights reserved.
+Licensed under the MIT license. See the license.md in the root project for details.
+https://github.com/jackhumbert/let_there_be_flight

@@ -1,4 +1,4 @@
-#include "FlightModule.hpp"
+#include "Utils/FlightModule.hpp"
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/Entity.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/EntityTemplate.hpp>
@@ -25,7 +25,7 @@
 #include <RED4ext/Scripting/Natives/Generated/game/OccupantSlotComponent.hpp>
 #include "LoadResRef.hpp"
 #include <spdlog/spdlog.h>
-#include "VehiclePhysicsUpdate.hpp"
+#include "Physics/VehiclePhysicsUpdate.hpp"
 #include "FlightWeapons.hpp"
 
 namespace FlightWeapons {

@@ -1,5 +1,5 @@
 #include <RED4ext/RED4ext.hpp>
-#include "FlightModule.hpp"
+#include "Utils/FlightModule.hpp"
 #include "ScriptDefinitions/ScriptDefinitions.hpp"
 #include "ScriptDefinitions/ScriptHost.hpp"
 #include "stdafx.hpp"

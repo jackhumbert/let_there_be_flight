@@ -18,21 +18,18 @@
 #include <RED4ext/Scripting/Natives/Generated/vehicle/TPPCameraComponent.hpp>
 #include <RED4ext/Scripting/Natives/ScriptGameInstance.hpp>
 #include <iostream>
-
+#include "Version.hpp"
 #include "Engine/RTTIClass.hpp"
-#include "FlightAudio.hpp"
-#include "Utils.hpp"
+#include "Audio/FlightAudio.hpp"
+#include "Utils/Utils.hpp"
 #include "stdafx.hpp"
-//#include "FlightHUDGameController.hpp"
-#include "FlightLog.hpp"
-//#include "FlightStats_Record.hpp"
+#include "Utils/FlightLog.hpp"
 #include "FlightSystem.hpp"
-#include "FmodHelper.hpp"
-#include "VehicleSpeedUnlimiter.hpp"
-#include "FlightHelper.hpp"
+#include "Audio/FmodHelper.hpp"
+#include "Physics/VehicleSpeedUnlimiter.hpp"
 #include "FlightController.hpp"
 #include "FlightEvents.hpp"
-#include "FlightCamera.hpp"
+#include "Camera/FlightCamera.hpp"
 
 RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes() {
   auto inputLoaderDLL = Utils::GetRootDir() / L"red4ext" / L"plugins" / L"input_loader" / L"input_loader.dll";
@@ -509,7 +506,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // is not initalized yet.
 
     Utils::CreateLogger();
-    spdlog::info("Starting up Let There Be Flight v0.1.12");
+    spdlog::info("Starting up Let There Be Flight v{}.{}.{}", LTBF_VER_MAJOR, LTBF_VER_MINOR, LTBF_VER_PATCH);
     auto ptr = GetModuleHandle(nullptr);
     spdlog::info("Base address: {}", fmt::ptr(ptr));
     auto modPtr = aHandle;
@@ -558,7 +555,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 RED4EXT_C_EXPORT void RED4EXT_CALL Query(RED4ext::PluginInfo *aInfo) {
   aInfo->name = L"Let There Be Flight";
   aInfo->author = L"Jack Humbert";
-  aInfo->version = RED4EXT_SEMVER(0, 1, 12);
+  aInfo->version = RED4EXT_SEMVER(LTBF_VER_MAJOR, LTBF_VER_MINOR, LTBF_VER_PATCH);
   aInfo->runtime = RED4EXT_RUNTIME_LATEST;
   aInfo->sdk = RED4EXT_SDK_LATEST;
 }

@@ -1,9 +1,9 @@
 #include "FlightSettings.hpp"
-#include "FlightModule.hpp"
-#include "FlightLog.hpp"
+#include "Utils/FlightModule.hpp"
+#include "Utils/FlightLog.hpp"
 #include <RED4ext/Scripting/Natives/Generated/ent/MeshComponent.hpp>
 
-#include "Utils.hpp"
+#include "Utils/Utils.hpp"
 #include "stdafx.hpp"
 
 namespace FlightSettings {

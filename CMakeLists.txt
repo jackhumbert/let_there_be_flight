@@ -4,15 +4,15 @@ include(CMakeDependentOption)
 
 project(
   let_there_be_flight 
-  VERSION 0.1.12 
+  VERSION 0.2.0 
   LANGUAGES CXX
 )
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-include(ConfigureVersionFromGit)
-include(ConfigureDefaultOutputDirectories)
-include(TargetOutputDirectory)
+# include(ConfigureVersionFromGit)
+# include(ConfigureDefaultOutputDirectories)
+# include(TargetOutputDirectory)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -27,10 +27,27 @@ set(LTBF_REDSCRIPT_DIR "${PROJECT_SOURCE_DIR}/src/redscript")
 
 set(REDSCRIPT_PREREQS_DIR "${PROJECT_SOURCE_DIR}/prereqs")
 
+set(LTBF_GAME_DIR_INPUT_FILE "${LTBF_GAME_DIR}/r6/input/${CMAKE_PROJECT_NAME}.xml")
+set(LTBF_SOURCE_INPUT_FILE "${PROJECT_SOURCE_DIR}/src/input_loader/${CMAKE_PROJECT_NAME}.xml")
+
+set(LTBF_GAME_DIR_ARCHIVE "${LTBF_GAME_DIR}/archive/pc/mod/${CMAKE_PROJECT_NAME}.archive")
+set(LTBF_GAME_DIR_ARCHIVE_XL "${LTBF_GAME_DIR}/archive/pc/mod/${CMAKE_PROJECT_NAME}.archive.xl")
+
+set(LTBF_SOURCE_ARCHIVE "${PROJECT_SOURCE_DIR}/src/wolvenkit/packed/mods/${CMAKE_PROJECT_NAME}/archives/${CMAKE_PROJECT_NAME}.archive")
+set(LTBF_OLD_SOURCE_ARCHIVE "${PROJECT_SOURCE_DIR}/src/wolvenkit/packed/archive/pc/mod/${CMAKE_PROJECT_NAME}.archive")
+set(LTBF_SOURCE_ARCHIVE_XL "${PROJECT_SOURCE_DIR}/src/archive_xl/${CMAKE_PROJECT_NAME}.archive.xl")
+
+
+set(LTBF_GAME_DIR_TWEAKS_FILE "${LTBF_GAME_DIR}/r6/tweaks/${CMAKE_PROJECT_NAME}.yaml")
+set(LTBF_SOURCE_TWEAKS_DIR "${PROJECT_SOURCE_DIR}/src/tweaks")
+
+set(LTBF_GAME_DIR_FMOD_FOLDER "${LTBF_GAME_DIR}/red4ext/plugins/${CMAKE_PROJECT_NAME}")
+set(LTBF_SOURCE_FMOD_DIR "${PROJECT_SOURCE_DIR}/src/fmod_studio/Build/Desktop")
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-configure_version_from_git()
-configure_default_output_directories()
+# configure_version_from_git()
+# configure_default_output_directories()
 
 add_compile_definitions(
   # Support Windows 7 and above.
@@ -43,65 +60,9 @@ add_compile_definitions(
   # Use Unicode charset.
   UNICODE
   _UNICODE
-
-#  _DEBUG
-#  _WINDLL
-#  _CRT_SECURE_NO_WARNINGS
 )
 
-# experimenting with VS compile/link flags
-
-# debug
-# /JMC /permissive- /ifcOutput "x64\Debug\" /GS /W3 /Zc:wchar_t /ZI /Gm- /Od /sdl /Fd"x64\Debug\vc143.pdb" /Zc:inline /fp:precise /D "_DEBUG" /D "_CRT_SECURE_NO_WARNINGS" /D "_WINDLL" /D "_UNICODE" /D "UNICODE" /errorReport:prompt /WX- /Zc:forScope /RTC1 /std:c17 /Gd /MDd /std:c++20 /FC /Fa"x64\Debug\" /EHsc /nologo /Fo"x64\Debug\" /Fp"x64\Debug\flight_control.pch" /diagnostics:column
-
-# release
-# /permissive- /ifcOutput "x64\Release\" /GS /GL /W3 /Gy /Zc:wchar_t /Zi /Gm- /O2 /sdl /Fd"x64\Release\vc143.pdb" /Zc:inline /fp:precise /D "NDEBUG" /D "_CRT_SECURE_NO_WARNINGS" /D "_WINDLL" /D "_UNICODE" /D "UNICODE" /errorReport:prompt /WX- /Zc:forScope /std:c17 /Gd /Oi /MD /std:c++20 /FC /Fa"x64\Release\" /EHsc /nologo /Fo"x64\Release\" /Fp"x64\Release\flight_control.pch" /diagnostics:column
-
-#add_compile_options(
-#  # Enable correct reporting of C++ version, see https://docs.microsoft.com/en-us/cpp/build/reference/zc-cplusplus.
-##  $<$<BOOL:MSVC>:/Zc:__cplusplus>
-#  /JMC
-#  /permissive-
-#  /Gs
-#  /W3
-#  /Zc:wchar_t
-#  # auto sets /Gy apparently
-#  #  /ZI
-#  /Gm-
-#  /Od
-#  /sdl
-#  /Zc:inline
-#  /fp:precise
-#  /WX-
-#  /Zc:forScope
-#  /RTC1
-#  /Gd
-#  /MDd
-#  /FC
-#  /nologo
-#  /diagnostics:column
-#  /Gy
-#)
-
-# debug
-# /OUT:"src\red4ext\build\debug\bin\flight_control.dll" /MANIFEST /NXCOMPAT /PDB:"src\red4ext\build\debug\bin\flight_control.pdb" /DYNAMICBASE "kernel32.lib" "user32.lib" "gdi32.lib" "winspool.lib" "comdlg32.lib" "advapi32.lib" "shell32.lib" "ole32.lib" "oleaut32.lib" "uuid.lib" "odbc32.lib" "odbccp32.lib" "deps\fmod\lib\x64\fmodstudioL_vc.lib" "deps\fmod\lib\x64\fmodL_vc.lib" /IMPLIB:"src\red4ext\build\debug\bin\flight_control.lib" /DEBUG /DLL /MACHINE:X64 /INCREMENTAL /PGD:"src\red4ext\build\debug\bin\flight_control.pgd" /SUBSYSTEM:WINDOWS /MANIFESTUAC:NO /ManifestFile:"x64\Debug\flight_control.dll.intermediate.manifest" /LTCGOUT:"x64\Debug\flight_control.iobj" /ERRORREPORT:PROMPT /ILK:"x64\Debug\flight_control.ilk" /NOLOGO /TLBID:1
-
-# release
-# /OUT:"src\red4ext\build\release\bin\flight_control.dll" /MANIFEST /LTCG:incremental /NXCOMPAT /PDB:"src\red4ext\build\release\bin\flight_control.pdb" /DYNAMICBASE "hid.lib" "deps\fmod\lib\x64\fmodstudio_vc.lib" "deps\fmod\lib\x64\fmod_vc.lib" "kernel32.lib" "user32.lib" "gdi32.lib" "winspool.lib" "comdlg32.lib" "advapi32.lib" "shell32.lib" "ole32.lib" "oleaut32.lib" "uuid.lib" "odbc32.lib" "odbccp32.lib" /IMPLIB:"src\red4ext\build\release\bin\flight_control.lib" /DEBUG /DLL /MACHINE:X64 /OPT:REF /INCREMENTAL:NO /PGD:"src\red4ext\build\release\bin\flight_control.pgd" /SUBSYSTEM:WINDOWS /MANIFESTUAC:NO /ManifestFile:"x64\Release\flight_control.dll.intermediate.manifest" /LTCGOUT:"x64\Release\flight_control.iobj" /OPT:ICF /ERRORREPORT:PROMPT /ILK:"x64\Release\flight_control.ilk" /NOLOGO /TLBID:1
-
-#add_link_options(
-#  /MANIFEST
-#  /NXCOMPAT
-##  /DEBUG
-#  /DLL
-##  /MACHINE:X64
-##  /INCREMENTAL
-#  /NOLOGO
-#  /TLBID:1
-#  /OPT:REF
-##  /OPT:ICF
-##  /INCREMENTAL:NO
-#)
+# Dependencies
 
 include(ConfigureAndIncludeDetours)
 include(ConfigureAndIncludeFMOD)
@@ -109,46 +70,242 @@ include(ConfigureAndIncludeRED4extSdk)
 include(ConfigureAndIncludeSpdlog)
 
 add_subdirectory(src/red4ext)
-add_subdirectory(prereqs)
-add_subdirectory(src/redscript)
 
-set(ZOLTAN_ALL_SIGNATURES "${PROJECT_BINARY_DIR}/zoltan/Signatures.hpp")
-set(ZOLTAN_ALL_ADDRESSES "${PROJECT_BINARY_DIR}/zoltan/Addresses.hpp")
-set(ZOLTAN_USER_SIGNATURES "${PROJECT_SOURCE_DIR}/src/red4ext/Signatures.hpp")
-set(ZOLTAN_USER_ADDRESSES "${PROJECT_SOURCE_DIR}/src/red4ext/Addresses.hpp")
+# Header generation
 
-file(GLOB_RECURSE RED4EXT_ZOLTAN_HEADERS ${PROJECT_SOURCE_DIR}/deps/red4ext.sdk/include/RED4ext/*.hpp)
-list(FILTER RED4EXT_ZOLTAN_HEADERS EXCLUDE REGEX ".*-inl.hpp")
+string(TIMESTAMP CURRENT_YEAR "%Y")
+configure_file(${CMAKE_MODULE_PATH}/Header.txt.in ${CMAKE_MODULE_PATH}/Header.txt)
 
-file(WRITE ${ZOLTAN_ALL_SIGNATURES} "")
-foreach(RED4EXT_ZOLTAN_HEADER ${RED4EXT_ZOLTAN_HEADERS})
-  file(RELATIVE_PATH IN_FILE_RELATIVE ${PROJECT_SOURCE_DIR}/deps/red4ext.sdk/include/ ${RED4EXT_ZOLTAN_HEADER})
-  file(APPEND ${ZOLTAN_ALL_SIGNATURES} "#include <${IN_FILE_RELATIVE}>\n")
-endforeach()
+# Redscript
+
+file(GLOB_RECURSE PREREQ_REDSCRIPT_FILES ${REDSCRIPT_PREREQS_DIR}/r6/scripts/*.reds)
 
 add_custom_command(
-  OUTPUT ${ZOLTAN_ALL_ADDRESSES}
-  COMMAND ${LTBF_TOOLS_DIR}/zoltan-clang.exe
-  ARGS "${ZOLTAN_ALL_SIGNATURES}" "${CYBERPUNK_2077_GAME_DIR}/bin/x64/Cyberpunk2077.exe" -f "std=c++20" -f "I${PROJECT_SOURCE_DIR}/deps/red4ext.sdk/include" --c-output "${ZOLTAN_ALL_ADDRESSES}"
-)
+  OUTPUT ${PROJECT_BINARY_DIR}/prereqs.redscripts
+  DEPENDS ${PREREQ_REDSCRIPT_FILES}
+  COMMAND ${LTBF_TOOLS_DIR}/redscript-cli.exe
+  ARGS compile -s "${REDSCRIPT_PREREQS_DIR}/r6/scripts" -b "${CYBERPUNK_2077_BACKUP_REDSCRIPT}" -o ${PROJECT_BINARY_DIR}/prereqs.redscripts
+  COMMENT "Compiling redscript prereqs"
+  )
 
-add_custom_target(RED4ext.SDK.AllAddresses DEPENDS ${ZOLTAN_ALL_ADDRESSES})
+add_custom_target(redscript_prereqs DEPENDS ${PROJECT_BINARY_DIR}/prereqs.redscripts)
+
+set_target_properties(redscript_prereqs PROPERTIES FOLDER "Dependencies")
+
+file(GLOB_RECURSE REDSCRIPT_FILES ${LTBF_REDSCRIPT_DIR}/*.reds)
+
+set(LTBF_LAST_REDSCRIPT_LINT "${CMAKE_BINARY_DIR}/redscript.lint")
+
+add_custom_command(
+  OUTPUT ${LTBF_LAST_REDSCRIPT_LINT}
+  DEPENDS redscript_prereqs ${REDSCRIPT_FILES}
+  COMMAND ${LTBF_TOOLS_DIR}/redscript-cli.exe lint -s ${PROJECT_SOURCE_DIR}/src/redscript -b ${PROJECT_BINARY_DIR}/prereqs.redscripts && echo "1" > ${LTBF_LAST_REDSCRIPT_LINT}
+  COMMENT "Linting redscript against pre-compiled prereqs")
+
+add_custom_target(redscript_lint DEPENDS ${LTBF_LAST_REDSCRIPT_LINT})
+
+set_target_properties(redscript_lint PROPERTIES FOLDER "redscript")
+
+add_custom_target(redscript_lint_game_dir
+  DEPENDS redscript_prereqs
+  COMMAND ${LTBF_TOOLS_DIR}/redscript-cli.exe lint -s ${LTBF_GAME_DIR}/r6/scripts -b ${PROJECT_BINARY_DIR}/prereqs.redscripts
+  COMMENT "Linting game_dir redscript against pre-compiled prereqs")
+
+set_target_properties(redscript_lint_game_dir PROPERTIES FOLDER "redscript")
+
+add_custom_target(redscript_lint_installed
+DEPENDS redscript_prereqs
+COMMAND ${LTBF_TOOLS_DIR}/redscript-cli.exe lint -s ${LTBF_CYBERPUNK_DIR}/r6/scripts -b ${CYBERPUNK_2077_BACKUP_REDSCRIPT}
+COMMENT "Linting installed redscript")
+
+set_target_properties(redscript_lint_installed PROPERTIES FOLDER "redscript")
+
+set(LTBF_REDSCRIPT_PACKED_FILE "${LTBF_GAME_DIR}/r6/scripts/${CMAKE_PROJECT_NAME}/${CMAKE_PROJECT_NAME}.packed.reds")
+set(LTBF_REDSCRIPT_MODULE_FILE "${LTBF_GAME_DIR}/r6/scripts/${CMAKE_PROJECT_NAME}/${CMAKE_PROJECT_NAME}.module.reds")
+set(LTBF_REDSCRIPT_MODULE_TEMP "${PROJECT_BINARY_DIR}/${CMAKE_PROJECT_NAME}.module.reds")
+
+configure_file(${LTBF_REDSCRIPT_DIR}/Module.reds.in "${LTBF_REDSCRIPT_MODULE_TEMP}" @ONLY)
+
+add_custom_command(
+  OUTPUT ${LTBF_REDSCRIPT_PACKED_FILE}
+  DEPENDS redscript_lint ${REDSCRIPT_FILES}
+  COMMAND ${CMAKE_COMMAND} -D COMMENT_SLUG="//" -D GLOB_EXT="reds" -D HEADER_FILE="${CMAKE_MODULE_PATH}/Header.txt" -D PACKED_FILE=${LTBF_REDSCRIPT_PACKED_FILE} -D SEARCH_FOLDER=${LTBF_REDSCRIPT_DIR} -P ${CMAKE_MODULE_PATH}/PackFiles.cmake
+  COMMENT "Packing redscript files into one")
+
+add_custom_command(
+  OUTPUT ${LTBF_REDSCRIPT_MODULE_FILE}
+  DEPENDS ${LTBF_REDSCRIPT_MODULE_TEMP}
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${LTBF_REDSCRIPT_MODULE_TEMP} ${LTBF_REDSCRIPT_MODULE_FILE}
+  COMMENT "Creating redscript module file")
+  
+add_custom_target(redscript DEPENDS ${LTBF_REDSCRIPT_PACKED_FILE} ${LTBF_REDSCRIPT_MODULE_FILE})
+
+# Find Addresses
+
+set(ZOLTAN_USER_SIGNATURES "${PROJECT_SOURCE_DIR}/src/red4ext/Signatures.hpp")
+set(ZOLTAN_USER_ADDRESSES "${PROJECT_SOURCE_DIR}/src/red4ext/Addresses.hpp")
 
 add_custom_command(
   OUTPUT ${ZOLTAN_USER_ADDRESSES}
   DEPENDS ${ZOLTAN_USER_SIGNATURES}
   COMMAND ${LTBF_TOOLS_DIR}/zoltan-clang.exe
   ARGS ${ZOLTAN_USER_SIGNATURES} "${CYBERPUNK_2077_GAME_DIR}/bin/x64/Cyberpunk2077.exe" -f "std=c++20" -f "I${PROJECT_SOURCE_DIR}/deps/red4ext.sdk/include" --c-output "${ZOLTAN_USER_ADDRESSES}"
+  COMMENT "Finding binary addresses of declared functions in Signatures.hpp"
 )
 
-add_custom_target(let_there_be_flight.addresses DEPENDS ${ZOLTAN_USER_ADDRESSES})
+add_custom_target(addresses DEPENDS ${ZOLTAN_USER_ADDRESSES})
 
-add_dependencies(let_there_be_flight.dll let_there_be_flight.addresses)
+add_dependencies(${CMAKE_PROJECT_NAME}.dll addresses)
 
-add_custom_target(let_there_be_flight
-  DEPENDS let_there_be_flight.dll redscript)
+# Archive files
+
+add_custom_command(
+  OUTPUT ${LTBF_GAME_DIR_ARCHIVE}
+  DEPENDS ${LTBF_SOURCE_ARCHIVE}
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+  ${LTBF_SOURCE_ARCHIVE}
+  ${LTBF_GAME_DIR_ARCHIVE}
+)
+
+add_custom_command(
+  OUTPUT ${LTBF_GAME_DIR_ARCHIVE_XL}
+  DEPENDS ${LTBF_SOURCE_ARCHIVE_XL}
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+  ${LTBF_SOURCE_ARCHIVE_XL}
+  ${LTBF_GAME_DIR_ARCHIVE_XL}
+)
+
+add_custom_target(archives
+  DEPENDS ${LTBF_GAME_DIR_ARCHIVE} ${LTBF_GAME_DIR_ARCHIVE_XL}
+)
+
+# Tweaks
+
+file(GLOB_RECURSE LTBF_SOURCE_TWEAKS "${LTBF_SOURCE_TWEAKS_DIR}/*.yaml")
+
+add_custom_command(
+  OUTPUT ${LTBF_GAME_DIR_TWEAKS_FILE}
+  DEPENDS ${LTBF_SOURCE_TWEAKS}
+  COMMAND ${CMAKE_COMMAND} -D COMMENT_SLUG="\#" -D GLOB_EXT="yaml" -D HEADER_FILE="${CMAKE_MODULE_PATH}/Header.txt" -D PACKED_FILE=${LTBF_GAME_DIR_TWEAKS_FILE} -D SEARCH_FOLDER=${LTBF_SOURCE_TWEAKS_DIR} -P ${CMAKE_MODULE_PATH}/PackFiles.cmake
+)
+
+add_custom_target(tweaks
+  DEPENDS ${LTBF_GAME_DIR_TWEAKS_FILE}
+)
+
+# Input Loader
+
+add_custom_command(
+  OUTPUT ${LTBF_GAME_DIR_INPUT_FILE}
+  DEPENDS ${LTBF_SOURCE_INPUT_FILE}
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+  ${LTBF_SOURCE_INPUT_FILE}
+  ${LTBF_GAME_DIR_INPUT_FILE}
+)
+
+add_custom_target(input
+  DEPENDS ${LTBF_GAME_DIR_INPUT_FILE}
+)
+
+# FMOD
+
+file(GLOB LTBF_SOURCE_FMOD_FILES ${LTBF_SOURCE_FMOD_DIR}/*)
+set(LTBF_FMOD_FILES "")
+foreach(_FILE ${LTBF_SOURCE_FMOD_FILES})
+  file(RELATIVE_PATH _TEMPFILE ${LTBF_SOURCE_FMOD_DIR} ${_FILE})
+  list(APPEND LTBF_FMOD_FILES "${LTBF_GAME_DIR_FMOD_FOLDER}/${_TEMPFILE}")
+endforeach()
+
+add_custom_command(
+  OUTPUT ${LTBF_FMOD_FILES}
+  DEPENDS ${LTBF_SOURCE_FMOD_FILES}
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${LTBF_SOURCE_FMOD_FILES} ${LTBF_GAME_DIR_FMOD_FOLDER}
+)
+
+add_custom_target(fmod_files
+  DEPENDS ${LTBF_FMOD_FILES}
+)
+
+# License
+
+set(LTBF_SOURCE_LICENSE_FILE "${PROJECT_SOURCE_DIR}/license.md")
+set(LTBF_GAME_DIR_LICENSE_FILE "${LTBF_GAME_DIR}/red4ext/plugins/${CMAKE_PROJECT_NAME}/license.md")
+
+add_custom_command(
+  OUTPUT ${LTBF_GAME_DIR_LICENSE_FILE}
+  DEPENDS ${LTBF_SOURCE_LICENSE_FILE}
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${LTBF_SOURCE_LICENSE_FILE} ${LTBF_GAME_DIR_LICENSE_FILE}
+)
+
+add_custom_target(license DEPENDS ${LTBF_GAME_DIR_LICENSE_FILE})
+
+# Readme
+
+set(LTBF_SOURCE_README_FILE "${PROJECT_SOURCE_DIR}/readme.md")
+set(LTBF_GAME_DIR_README_FILE "${LTBF_GAME_DIR}/red4ext/plugins/${CMAKE_PROJECT_NAME}/readme.md")
+
+add_custom_command(
+  OUTPUT ${LTBF_GAME_DIR_README_FILE}
+  DEPENDS ${LTBF_SOURCE_README_FILE}
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${LTBF_SOURCE_README_FILE} ${LTBF_GAME_DIR_README_FILE}
+)
+
+add_custom_target(readme DEPENDS ${LTBF_GAME_DIR_README_FILE})
+
+# Uninstall script
+
+set(LTBF_UNINSTALL_BAT_IN "${CMAKE_MODULE_PATH}/uninstall.bat.in")
+set(LTBF_UNINSTALL_SCRIPTS "${LTBF_GAME_DIR}/r6/scripts/${CMAKE_PROJECT_NAME}")
+set(LTBF_UNINSTALL_SCRIPTS_FILE "${LTBF_UNINSTALL_SCRIPTS}/uninstall.bat")
+
+add_custom_command(
+  OUTPUT ${LTBF_UNINSTALL_SCRIPTS_FILE}
+  DEPENDS ${CMAKE_PROJECT_NAME}.dll redscript archives tweaks input fmod_files fmod_dll fmodstudio_dll license readme
+  COMMAND ${CMAKE_COMMAND} 
+    -D LTBF_UNINSTALL_BAT_OUT="${LTBF_UNINSTALL_SCRIPTS_FILE}" 
+    -D LTBF_INSTALL_LOCATION="${LTBF_UNINSTALL_SCRIPTS}" 
+    -D LTBF_GAME_DIR="${LTBF_GAME_DIR}" 
+    -D LTBF_UNINSTALL_BAT_IN="${LTBF_UNINSTALL_BAT_IN}" 
+    -P ${CMAKE_MODULE_PATH}/CreateUninstallScript.cmake
+)
+
+set(LTBF_UNINSTALL_RED4EXT "${LTBF_GAME_DIR}/red4ext/plugins/${CMAKE_PROJECT_NAME}")
+set(LTBF_UNINSTALL_RED4EXT_FILE "${LTBF_UNINSTALL_RED4EXT}/uninstall.bat")
+
+add_custom_command(
+  OUTPUT ${LTBF_UNINSTALL_RED4EXT_FILE}
+  DEPENDS ${CMAKE_PROJECT_NAME}.dll redscript archives tweaks input fmod_files fmod_dll fmodstudio_dll license readme
+  COMMAND ${CMAKE_COMMAND} 
+    -D LTBF_UNINSTALL_BAT_OUT="${LTBF_UNINSTALL_RED4EXT_FILE}" 
+    -D LTBF_INSTALL_LOCATION="${LTBF_UNINSTALL_RED4EXT}" 
+    -D LTBF_GAME_DIR="${LTBF_GAME_DIR}" 
+    -D LTBF_UNINSTALL_BAT_IN="${LTBF_UNINSTALL_BAT_IN}" 
+    -P ${CMAKE_MODULE_PATH}/CreateUninstallScript.cmake
+)
+
+add_custom_target(uninstall_gen 
+  DEPENDS ${LTBF_UNINSTALL_SCRIPTS_FILE} ${LTBF_UNINSTALL_RED4EXT_FILE}
+)
+
+# Full mod
+
+add_custom_target(${CMAKE_PROJECT_NAME}
+  DEPENDS uninstall_gen
+)
+
+# Install
 
 file(GLOB LTBF_GAME_DIR_FILES ${LTBF_GAME_DIR}/*)
 
 install(DIRECTORY ${LTBF_GAME_DIR_FILES}
   DESTINATION ${CYBERPUNK_2077_GAME_DIR})
+
+# Release
+
+set(LTBF_ZIP_FILE ${CMAKE_SOURCE_DIR}/${CMAKE_PROJECT_NAME}_v${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.zip)
+
+add_custom_target(pack
+  COMMAND ${CMAKE_COMMAND} -E tar "cfv" "${LTBF_ZIP_FILE}" --format=zip .
+  WORKING_DIRECTORY ${LTBF_GAME_DIR}
+  DEPENDS ${CMAKE_PROJECT_NAME}
+  COMMENT "Zipping game_dir for v${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")

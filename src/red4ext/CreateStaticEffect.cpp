@@ -3,7 +3,7 @@
 #include <RED4ext/NativeTypes.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/EffectSystem.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/EffectSet.hpp>
-#include "FlightModule.hpp"
+#include "Utils/FlightModule.hpp"
 #include "LoadResRef.hpp"
 #include "Addresses.hpp"
 

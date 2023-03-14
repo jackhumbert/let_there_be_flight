@@ -1,5 +1,5 @@
 #include "Addresses.hpp"
-#include "FlightModule.hpp"
+#include "Utils/FlightModule.hpp"
 
 // No more unlocalized text
 

@@ -44,7 +44,6 @@ DeviceAction.FlightAction:
     - Prereqs.ConnectedToBackdoorActive
   targetPrereqs: [ ]
 
-
 DeviceAction.FlightMalfunction:
   $base: DeviceAction.FlightAction
   actionName: n"FlightMalfunction" 

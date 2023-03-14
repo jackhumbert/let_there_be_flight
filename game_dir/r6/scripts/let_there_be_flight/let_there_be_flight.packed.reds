@@ -1,6 +1,11 @@
-// Generated on 2023-03-13T20:08:38Z UTC
+// Let There Be Flight v0.2.0
+// Copyright (c) 2023 Jack Humbert. All rights reserved.
+// Licensed under the MIT license. See the license.md in the root project for details.
+// https://github.com/jackhumbert/let_there_be_flight
 
-// let_there_be_flight/FlightAudio.reds
+// This file was automatically generated on 2023-03-14 17:25:55 UTC
+
+// Audio/FlightAudio.reds
 
 public class FlightAudioUpdate {
   public let speed: Float;
@@ -312,7 +317,862 @@ public class Vector4Wrapper {
 public class OrientationWrapper {
   public let quaternion: Quaternion;
 }
-// let_there_be_flight/FlightComponent.reds
+
+// Compatibility/ImprovedMinimap.reds
+
+@if(!ModuleExists("ImprovedMinimapMain"))
+public func IMZ_Comp_SetBlackboardValue(gameInstance: GameInstance, enabled: Bool) {
+  GameInstance.GetBlackboardSystem(gameInstance).Get(GetAllBlackboardDefs().UI_ActiveVehicleData).SetBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsPlayerMounted, enabled);
+}
+
+@if(ModuleExists("ImprovedMinimapMain"))
+public func IMZ_Comp_SetBlackboardValue(gameInstance: GameInstance, enabled: Bool) {
+  GameInstance.GetBlackboardSystem(gameInstance).Get(GetAllBlackboardDefs().UI_System).SetBool(GetAllBlackboardDefs().UI_System.IsMounted_IMZ, enabled);
+}
+
+@if(!ModuleExists("ImprovedMinimapMain"))
+@addMethod(hudCarController)
+public func UpdateIMZSpeed(speed: Float, multiplier: Float) { }
+
+@if(ModuleExists("ImprovedMinimapMain"))
+@addMethod(hudCarController)
+public func UpdateIMZSpeed(speed: Float, multiplier: Float) {
+  let value: Float = Cast<Float>(RoundF(speed * 2.0)) / 6.0;
+  let resultingValue: Float = value * multiplier;
+  GameInstance.GetBlackboardSystem(this.m_activeVehicle.GetGame()).Get(GetAllBlackboardDefs().UI_System).SetFloat(GetAllBlackboardDefs().UI_System.CurrentSpeed_IMZ, resultingValue);
+}
+
+
+// Compatibility/ModSettings.reds
+
+@if(ModuleExists("ModSettingsModule")) 
+public func LTBF_RegisterListener(listener: ref<IScriptable>) {
+  ModSettings.RegisterListenerToClass(listener);
+}
+
+@if(!ModuleExists("ModSettingsModule")) 
+public func LTBF_RegisterListener(listener: ref<IScriptable>) { }
+
+@if(ModuleExists("ModSettingsModule")) 
+public func LTBF_UnregisterListener(listener: ref<IScriptable>) {
+  ModSettings.UnregisterListenerToClass(listener);
+}
+
+@if(!ModuleExists("ModSettingsModule")) 
+public func LTBF_UnregisterListener(listener: ref<IScriptable>) { }
+
+// Extensions/MeshComponent.reds
+
+// Entity
+
+// @addField(Entity)
+// @runtimeProperty("offset", "0x50")
+// public native let currentAppearance: CName;
+
+@addField(Entity)
+@runtimeProperty("offset", "0x138")
+public native let entityTags: array<CName>;
+
+@addMethod(Entity)
+public native func AddComponent(component: ref<IComponent>);
+
+@addMethod(Entity)
+public native func AddSlot(boneName: CName, slotName: CName, relativePosition: Vector3, relativeRotation: Quaternion);
+
+// IComponent
+
+@addField(IComponent)
+@runtimeProperty("offset", "0x40")
+public native let name: CName;
+
+@addField(IComponent)
+@runtimeProperty("offset", "0x48")
+public native let appearanceName: CName;
+
+// IPlacedComponent
+
+// bindName is component name - can be SlotComponent like vehicle_slots
+@addMethod(IPlacedComponent)
+public native func SetParentTransform(bindName: CName, slotName: CName);
+
+// MeshComponent
+
+@addMethod(MeshComponent)
+public native func SetMesh(mesh: ResRef);
+
+@addField(MeshComponent)
+@runtimeProperty("offset", "0x178")
+public native let visualScale: Vector3;
+
+enum ERenderObjectType {
+    ROT_Static = 0,
+    ROT_Terrain = 1,
+    ROT_Road = 2,
+    ROT_CustomCharacter1 = 12,
+    ROT_CustomCharacter2 = 13,
+    ROT_CustomCharacter3 = 14,
+    ROT_MainPlayer = 15,
+    ROT_NoAO = 16,
+    ROT_NoLighting = 17,
+    ROT_NoTXAA = 18,
+    ROT_Skinned = 20,
+    ROT_Character = 21,
+    ROT_Foliage = 22,
+    ROT_Grass = 23,
+    ROT_Vehicle = 24,
+    ROT_Weapon = 25,
+    ROT_Particle = 26,
+    ROT_Enemy = 27,
+}
+
+@addField(MeshComponent)
+@runtimeProperty("offset", "0x188")
+public native let objectTypeID: ERenderObjectType;
+
+@addField(MeshComponent)
+@runtimeProperty("offset", "0x190")
+public native let meshApperance: CName;
+
+@addField(MeshComponent)
+@runtimeProperty("offset", "0x198")
+public native let chunkMask: Uint64;
+
+@addField(MeshComponent)
+@runtimeProperty("offset", "0x1A4")
+public native let motionBlurScale: Float;
+
+enum entMeshComponentLODMode {
+    AlwaysVisible = 0,
+    Appearance = 1,
+    AppearanceProxy = 2,
+}
+
+@addField(MeshComponent)
+@runtimeProperty("offset", "0x1A8")
+public native let LODMode: entMeshComponentLODMode;
+
+@addField(MeshComponent)
+@runtimeProperty("offset", "0x1AB")
+public native let order: Uint8;
+
+@addField(MeshComponent)
+@runtimeProperty("offset", "0x1AC")
+public native let castShadows: Bool;
+
+@addField(MeshComponent)
+@runtimeProperty("offset", "0x1AD")
+public native let castLocalShadows: Bool;
+
+// PhysicalMeshComponent
+
+@addField(PhysicalMeshComponent)
+@runtimeProperty("offset", "0x228")
+public native let visibilityAnimationParam: CName;
+
+@addField(PhysicalMeshComponent)
+@runtimeProperty("offset", "0x23A")
+public native let startInactive: Bool;
+
+// Extensions/Transitions.reds
+
+// VehicleTransition
+
+@addMethod(VehicleTransition)
+public final static func CanEnterVehicleFlight() -> Bool {
+  return TweakDBInterface.GetBool(t"player.vehicle.canEnterVehicleFlight", false);
+}
+
+// @addMethod(VehicleTransition)
+// protected final const func IsVehicleFlying(const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
+//   return scriptInterface.IsVehicleFlying();
+// }
+
+@addMethod(VehicleTransition)
+protected final func SetIsInFlight(stateContext: ref<StateContext>, value: Bool) -> Void {
+  stateContext.SetPermanentBoolParameter(n"isInFlight", value, true);
+}
+
+// need to implement some things in order to use this
+@addMethod(VehicleTransition)
+protected final const func IsPlayerAllowedToEnterVehicleFlight(const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
+  if this.IsNoCombatActionsForced(scriptInterface) {
+    return false;
+  };
+  if StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"VehicleFlight") {
+    return true;
+  };
+  return true;
+}
+
+@addMethod(VehicleTransition)
+protected final const func IsPlayerAllowedToExitFlight(const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
+  if StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"VehicleFlightBlockExit") {
+    return false;
+  };
+  return true;
+}
+
+// DriveDecisions
+
+@addMethod(DriveDecisions)
+public final const func ToFlight(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
+  // if this.IsPlayerAllowedToEnterVehicleFlight(scriptInterface) && VehicleTransition.CanEnterVehicleFlight() {
+  // if VehicleTransitiorn.CanEnterVehicleFlight() {
+    if (scriptInterface.IsActionJustPressed(n"Flight_Toggle") || (IsDefined(fs().playerComponent) && fs().playerComponent.active)) &&
+      GameInstance.GetQuestsSystem(scriptInterface.GetGame()).GetFact(n"map_blocked") == 0 &&
+      Equals(this.GetCurrentTier(stateContext), GameplayTier.Tier1_FullGameplay) {
+      FlightLog.Info("[DriveDecisions] ToFlight");
+      return true;
+    };
+  // };
+  return false;
+}
+
+// SceneDecisions
+
+@addMethod(SceneDecisions)
+public final const func ToFlight(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
+  // if this.IsPlayerAllowedToEnterVehicleFlight(scriptInterface) && VehicleTransition.CanEnterVehicleFlight() {
+  if VehicleTransition.CanEnterVehicleFlight() {
+    // if FlightController.GetInstance().IsActive() {
+      FlightLog.Info("[SceneDecisions] ToFlight");
+      return false;
+    // };
+  };
+  return false;
+}
+
+// Extensions/VehicleComponent.reds
+
+@replaceMethod(VehicleComponent)
+protected cb func OnVehicleWaterEvent(evt: ref<VehicleWaterEvent>) -> Bool {
+  if evt.isInWater  && !this.GetPS().GetIsSubmerged() {
+    if !Equals(GetMountedVehicle(FlightController.GetInstance().player), this.GetVehicle()) && FlightController.GetInstance().IsActive() {
+      this.BreakAllDamageStageFX(true);
+      this.DestroyVehicle();
+      this.DestroyRandomWindow();
+      this.ApplyVehicleDOT(n"high");
+    }
+    GameObjectEffectHelper.BreakEffectLoopEvent(this.GetVehicle(), n"fire");
+  }
+  ScriptedPuppet.ReevaluateOxygenConsumption(this.m_mountedPlayer);
+  if FlightController.GetInstance().IsActive() {
+    let playerPuppet = GameInstance.GetPlayerSystem(this.GetVehicle().GetGame()).GetLocalPlayerMainGameObject() as PlayerPuppet;
+    let playerStateMachineBlackboard = GameInstance.GetBlackboardSystem(this.GetVehicle().GetGame()).GetLocalInstanced(playerPuppet.GetEntityID(), GetAllBlackboardDefs().PlayerStateMachine);
+    playerStateMachineBlackboard.SetInt(GetAllBlackboardDefs().PlayerStateMachine.Swimming, EnumInt(gamePSMSwimming.Surface), true);
+  }
+}
+
+@wrapMethod(VehicleComponent)
+private final func ExplodeVehicle(instigator: wref<GameObject>) -> Void {
+  wrappedMethod(instigator);
+  this.GetVehicle().GetFlightComponent().isDestroyed = true;
+  this.GetVehicle().GetFlightComponent().hasExploded = true;
+  this.GetVehicle().GetFlightComponent().hasUpdate = false;
+  this.GetVehicle().GetFlightComponent().Deactivate(true);
+}
+
+// @wrapMethod(VehicleComponent) 
+// protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool {
+//   wrappedMethod(action, consumer);
+//   let actionName: CName = ListenerAction.GetName(action);
+//   let value: Float = ListenerAction.GetValue(action);
+//   if Equals(actionName, n"Choice1") && ListenerAction.IsButtonJustReleased(action) {
+//     FlightLog.Info("Attempting to repair vehicle");
+//     this.RepairVehicle();
+//     let player: ref<PlayerPuppet> = GetPlayer(this.GetVehicle().GetGame());
+//     let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.GetVehicle().GetGame());
+//     player.UnregisterInputListener(this, n"Choice1");
+//     uiSystem.QueueEvent(FlightController.HideHintFromSource(n"RepairVehicle"));
+//   }
+// }
+
+
+// requires vehicle to be off to control? also makes a sound, which is nice
+// @replaceMethod(VehicleComponent)
+// private final func SetupThrusterFX() -> Void {
+//   let toggle: Bool = (this.GetPS() as VehicleComponentPS).GetThrusterState();
+//   if toggle || (Equals(FlightController.GetInstance().GetVehicle(), this.GetVehicle()) && FlightController.GetInstance().GetThrusterState()) {
+//     GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"thrusters", true);
+//   } else {
+//     GameObjectEffectHelper.BreakEffectLoopEvent(this.GetVehicle(), n"thrusters");
+//   };
+// }
+
+// Extensions/VehicleObject.reds
+
+@addField(VehicleObject)
+private let m_flightComponent: ref<FlightComponent>;
+
+@wrapMethod(VehicleObject)
+protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> Bool {
+  EntityRequestComponentsInterface.RequestComponent(ri, n"flightComponent", n"FlightComponent", false);
+  // EntityRequestComponentsInterface.RequestComponent(ri, n"flight_ui", n"worlduiWidgetComponent", true);
+  // EntityRequestComponentsInterface.RequestComponent(ri, n"flight_ui_info", n"worlduiWidgetComponent", true);
+  wrappedMethod(ri);
+}
+
+@wrapMethod(VehicleObject)
+protected cb func OnTakeControl(ri: EntityResolveComponentsInterface) -> Bool {
+  //FlightLog.Info("[VehicleObject] OnTakeControl: " + this.GetDisplayName());
+  this.m_flightComponent = EntityResolveComponentsInterface.GetComponent(ri, n"flightComponent") as FlightComponent;
+  // this.m_flightComponent.ui = EntityResolveComponentsInterface.GetComponent(ri, n"flight_ui") as worlduiWidgetComponent;
+  // this.m_flightComponent.ui_info = EntityResolveComponentsInterface.GetComponent(ri, n"flight_ui_info") as worlduiWidgetComponent;
+  // this.m_flightComponent.Toggle(false);
+  wrappedMethod(ri);
+}
+
+@addMethod(VehicleObject)
+public const func GetFlightComponent() -> ref<FlightComponent> {
+  return this.m_flightComponent;
+}
+
+@addMethod(VehicleObject)
+public func ToggleFlightComponent(state: Bool) -> Void {
+  this.m_flightComponent.Toggle(state);
+}
+
+@addMethod(VehicleObject)
+public func GetLocalToWorld() -> Matrix {
+  return WorldTransform.ToMatrix(this.GetWorldTransform());
+}
+
+@addField(VehicleObject)
+public let chassis: ref<vehicleChassisComponent>;
+
+@addField(VehicleObject)
+@runtimeProperty("offset", "0x24C")
+public native let isOnGround: Bool;
+
+@addField(VehicleObject)
+@runtimeProperty("offset", "0x254")
+public native let acceleration: Float;
+
+@addField(VehicleObject)
+@runtimeProperty("offset", "0x258")
+public native let deceleration: Float;
+
+@addField(VehicleObject)
+@runtimeProperty("offset", "0x25C")
+public native let handbrake: Float;
+
+// @addField(VehicleObject)
+// public native let turnX: Float;
+
+// @addField(VehicleObject)
+// public native let turnX2: Float;
+
+// @addField(VehicleObject)
+// public native let turnX3: Float;
+
+@addField(VehicleObject)
+@runtimeProperty("offset", "0x611")
+public native let ignoreImpulses: Bool;
+
+@addField(VehicleObject)
+@runtimeProperty("offset", "0x268")
+public native let turnX: Float;
+
+@addField(VehicleObject)
+@runtimeProperty("offset", "0x950")
+public native let tracePosition: Vector3;
+
+@addMethod(VehicleObject)
+public native func EndActions() -> Void;
+
+@addMethod(VehicleObject)
+public native func HasGravity() -> Bool;
+
+@addMethod(VehicleObject)
+public native func UsesInertiaTensor() -> Bool;
+
+@addMethod(VehicleObject)
+public native func GetInertiaTensor() -> Matrix;
+
+// @addMethod(VehicleObject)
+// public native func GetWorldInertiaTensor() -> Matrix;
+
+@addMethod(VehicleObject)
+public native func GetMomentOfInertiaScale() -> Vector3;
+
+@addMethod(VehicleObject)
+public native func GetCenterOfMass() -> Vector3;
+
+@addMethod(VehicleObject)
+public native func EnableGravity(enabled: Bool) -> Void;
+
+@addMethod(VehicleObject)
+public native func GetAngularVelocity() -> Vector3;
+
+@addMethod(VehicleObject)
+public native func TurnOffAirControl() -> Bool;
+
+public native class vehicleFlightHelper extends IScriptable {
+    public native let force: Vector4;
+    public native let torque: Vector4;
+}
+
+// @addMethod(VehicleObject)
+// public native func AddFlightHelper() -> ref<vehicleFlightHelper>;
+
+@addMethod(VehicleObject)
+public native func GetComponentsUsingSlot(slotName: CName) -> array<ref<IComponent>>;
+
+@addMethod(VehicleObject)
+public native func GetWeaponPlaceholderOrientation(index: Int32) -> Quaternion;
+
+@addMethod(VehicleObject)
+public native func GetWeapons() -> array<ref<WeaponObject>>;
+
+@addMethod(VehicleObject)
+public native func UnsetPhysicsStates() -> Void;
+
+@addField(VehicleObject)
+public let bouncy: Bool;
+
+// working
+// @addMethod(VehicleObject)
+// protected cb func OnPhysicalCollision(evt: ref<PhysicalCollisionEvent>) -> Bool {
+//   // FlightLog.Info("[VehicleObject] OnPhysicalCollision");
+//   let vehicle = evt.otherEntity as VehicleObject;
+//   if IsDefined(vehicle) {
+//     let gameInstance: GameInstance = this.GetGame();
+//     let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
+//     let isPlayerMounted = VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), vehicle);
+//     if !isPlayerMounted && this.bouncy {
+//       let impulseEvent: ref<PhysicalImpulseEvent> = new PhysicalImpulseEvent();
+//       impulseEvent.radius = 1.0;
+//       impulseEvent.worldPosition = Vector4.Vector4To3(evt.worldPosition);
+//       impulseEvent.worldImpulse = new Vector3(0.0, 0.0, 10000.0);
+//       vehicle.QueueEvent(impulseEvent);
+//     }
+//   }
+// }
+
+@wrapMethod(VehicleObject)
+public final func IsOnPavement() -> Bool {
+  return wrappedMethod() || FlightController.GetInstance().IsActive();
+}
+
+// @wrapMethod(VehicleObject)
+// protected cb func OnLookedAtEvent(evt: ref<LookedAtEvent>) -> Bool {
+//   wrappedMethod(evt);
+//   if this.IsDestroyed() && this.IsCurrentlyScanned() {
+//     let player: ref<PlayerPuppet> = GetPlayer(this.GetGame());
+//     let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.GetGame());
+//     if evt.isLookedAt {
+//         player.RegisterInputListener(this.m_vehicleComponent, n"Choice1");
+//         uiSystem.QueueEvent(FlightController.ShowHintHelper("Repair Vehicle", n"Choice1", n"RepairVehicle"));
+//     } else {
+//         player.UnregisterInputListener(this.m_vehicleComponent, n"Choice1");
+//         uiSystem.QueueEvent(FlightController.HideHintFromSource(n"RepairVehicle"));
+//     }
+//   }
+// } 
+
+// @addMethod(VehicleObject)
+// public const func IsQuickHackAble() -> Bool {
+//   return true;
+// }
+
+// @addMethod(VehicleObject)
+// public const func IsQuickHacksExposed() -> Bool {
+//   return true;
+// }
+
+
+@addMethod(VehicleObject)
+public native func ResetQuestEnforceTransform() -> Void;
+
+// Extensions/blackboardDefinitions.reds
+
+
+public class VehicleFlightDef extends BlackboardDefinition {
+
+  public let IsActive: BlackboardID_Bool;
+  public let Mode: BlackboardID_Int;
+  public let IsUIActive: BlackboardID_Bool;
+  public let Orientation: BlackboardID_Quat;
+  public let Force: BlackboardID_Vector4;
+  public let Torque: BlackboardID_Vector4;
+  public let Position: BlackboardID_Vector4;
+  public let Pitch: BlackboardID_Float;
+  public let Roll: BlackboardID_Float;
+
+  public const func AutoCreateInSystem() -> Bool {
+    return true;
+  }
+}
+
+@addField(AllBlackboardDefinitions)
+public let VehicleFlight: ref<VehicleFlightDef>;
+
+// @addField(VehicleDef)
+// public let IsFlightActive: BlackboardID_Bool;
+
+// @addField(VehicleDef)
+// public let FlightMode: BlackboardID_Int;
+
+// @addField(VehicleDef)
+// public let IsFlightUIActive: BlackboardID_Bool;
+
+// @addField(VehicleDef)
+// public let Orientation: BlackboardID_Quat;
+
+// @addField(VehicleDef)
+// public let Pitch: BlackboardID_Float;
+
+// @addField(VehicleDef)
+// public let Force: BlackboardID_Vector4;
+
+// @addField(VehicleDef)
+// public let Torque: BlackboardID_Vector4;
+
+// @addField(VehicleDef)
+// public let Position: BlackboardID_Vector4;
+
+// Extensions/hudCarController.reds
+
+// @wrapMethod(hudCarController)
+// private final func Reset() -> Void {
+//   wrappedMethod();
+//   this.OnFlightActiveChanged(false);
+// }
+
+// @addField(hudCarController)
+// private let m_flightActiveBBConnectionId: ref<CallbackHandle>;
+
+// @addField(hudCarController)
+// private let m_flightModeBBConnectionId: ref<CallbackHandle>;
+
+// @addField(hudCarController)
+// private let m_flightControllerStatus: wref<inkText>;
+
+// @wrapMethod(hudCarController)
+// private final func RegisterToVehicle(register: Bool) -> Void {
+//   wrappedMethod(register);
+  // let flightControllerBlackboard: wref<IBlackboard>;
+  // let vehicle: ref<VehicleObject> = this.m_activeVehicle;
+  // if vehicle == null {
+  //   return;
+  // };
+  // flightControllerBlackboard = FlightController.GetInstance().GetBlackboard();
+  // if IsDefined(flightControllerBlackboard) {
+  //   if register {
+  //     // GetRootWidget() returns root widget of base type inkWidget
+  //     // GetRootCompoundWidget() returns root widget casted to inkCompoundWidget
+  //     if !IsDefined(this.m_flightControllerStatus) {
+  //       this.m_flightControllerStatus = FlightController.HUDStatusSetup(this.GetRootCompoundWidget());
+  //     }
+  //     this.m_flightActiveBBConnectionId = flightControllerBlackboard.RegisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this, n"OnFlightActiveChanged");
+  //     this.m_flightModeBBConnectionId = flightControllerBlackboard.RegisterListenerInt(GetAllBlackboardDefs().VehicleFlight.Mode, this, n"OnFlightModeChanged");
+  //     this.FlightActiveChanged(FlightController.GetInstance().active);
+  //   } else {
+  //     flightControllerBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this.m_flightActiveBBConnectionId);
+  //     flightControllerBlackboard.UnregisterListenerInt(GetAllBlackboardDefs().VehicleFlight.Mode, this.m_flightModeBBConnectionId);
+  //   };
+  // };
+// }
+
+// @addMethod(hudCarController)
+// protected cb func OnFlightActiveChanged(active: Bool) -> Bool {
+//   if !IsDefined(this.m_flightControllerStatus) {
+//     this.m_flightControllerStatus = FlightController.HUDStatusSetup(this.GetRootCompoundWidget());
+//   }
+//   this.FlightActiveChanged(active);
+// }
+
+// @addMethod(hudCarController)
+// protected func FlightActiveChanged(active: Bool) -> Void {
+//   if active {
+//     this.m_flightControllerStatus.SetText("Flight Active: " + fs().playerComponent.GetFlightMode().GetDescription());
+//   } else {
+//     this.m_flightControllerStatus.SetText("Flight Available");
+//   }
+// }
+
+// @addMethod(hudCarController)
+// protected cb func OnFlightModeChanged(mode: Int32) -> Bool {
+//   this.m_flightControllerStatus.SetText("Flight Active: " + fs().playerComponent.GetFlightMode().GetDescription());
+// }
+
+@wrapMethod(hudCarController)
+protected cb func OnSpeedValueChanged(speedValue: Float) -> Bool {
+  // speedValue = AbsF(speedValue);
+  // let multiplier: Float = GameInstance.GetStatsDataSystem(this.m_activeVehicle.GetGame()).GetValueFromCurve(n"vehicle_ui", speedValue, n"speed_to_multiplier");
+  // inkTextRef.SetText(this.m_SpeedValue, IntToString(RoundMath(speedValue)));
+
+  let fc = fs().playerComponent;
+  if fc.active {
+    let speed = AbsF(fc.stats.d_speed);
+    let multiplier: Float = GameInstance.GetStatsDataSystem(this.m_activeVehicle.GetGame()).GetValueFromCurve(n"vehicle_ui", speed, n"speed_to_multiplier");
+    inkTextRef.SetText(this.m_SpeedValue, IntToString(RoundMath(speed * multiplier)));
+    this.drawRPMGaugeFull(AbsF(fc.surge) * 5000.0);
+    this.UpdateIMZSpeed(speed, multiplier);
+  } else {
+    wrappedMethod(speedValue);
+  }
+}
+@wrapMethod(hudCarController)
+protected cb func OnRpmValueChanged(rpmValue: Float) -> Bool {
+  let fc = fs().playerComponent;
+  if !fc.active {
+    wrappedMethod(rpmValue);
+  }
+}
+
+// Extensions/inkBorder.reds
+
+@addField(inkBorder)
+native let thickness: Float;
+
+@addMethod(inkBorder)
+public func SetThickness(thickness: Float) {
+    this.thickness = thickness;
+}
+@addMethod(inkBorder)
+public func GetThickness() -> Float{
+    return this.thickness;
+}
+
+// Extensions/inkMask.reds
+
+enum inkMaskDataSource {
+    TextureAtlas = 0,
+    DynamicTexture = 1
+}
+
+// public native class inkTextureAtlas {
+
+// }
+
+// @addField(inkMask)
+// native let textureAtlas: inkTextureAtlas;
+// @addField(inkMask)
+// native let texturePart: CName;
+@addField(inkMask)
+native let dynamicTextureMask: CName;
+
+@addMethod(inkMask)
+func SetDynamicTextureMask(value: CName) {
+    this.dynamicTextureMask = value;
+}
+
+@addField(inkMask)
+native let dataSource: inkMaskDataSource;
+
+@addMethod(inkMask)
+func SetDataSource(value: inkMaskDataSource) {
+    this.dataSource = value;
+}
+
+@addField(inkMask)
+let useNineSliceScale: Bool;
+
+@addField(inkMask)
+let nineSliceScale: inkMargin;
+
+@addMethod(inkMask)
+public func UsesNineSliceScale() -> Bool {
+	return this.useNineSliceScale;
+}
+
+@addMethod(inkMask)
+public func SetNineSliceScale(enable: Bool) -> Void {
+	this.useNineSliceScale = enable;
+}
+
+@addMethod(inkMask)
+public func GetNineSliceGrid() -> inkMargin {
+	return this.nineSliceScale;
+}
+
+@addMethod(inkMask)
+public func SetNineSliceGrid(grid: inkMargin) -> Void {
+	this.nineSliceScale = grid;
+}
+
+@addField(inkMask)
+native let invertMask: Bool;
+
+@addMethod(inkMask)
+func SetInvertMask(value: Bool) {
+    this.invertMask = value;
+}
+
+@addField(inkMask)
+native let maskTransparency: Float;
+
+@addMethod(inkMask)
+func SetMaskTransparency(value: Float) {
+    this.maskTransparency = value;
+}
+
+
+// @addMethod(inkMask)
+// func SetAtlasResource(textureAtlas: ResRef) {
+//     this.textureAtlas = textureAtlas;
+// }
+@addMethod(inkMask)
+public native func SetAtlasResource(atlasResourcePath: ResRef) -> Bool;
+
+// Extensions/inkQuadShape.reds
+
+public native class inkQuadShape extends inkBaseShapeWidget {
+    // native let textureAtlas: ResRef;
+    native let texturePart: CName;
+    native let vertexList: array<Vector2>;
+
+    // public func GetTextureAtlas() -> ResRef {
+    //     return this.textureAtlas;
+    // }
+    public func GetTexturePart() -> CName {
+        return this.texturePart;
+    }
+    public func GetVertexList() -> array<Vector2> {
+        return this.vertexList;
+    }
+}
+
+// Extensions/inkWidget.reds
+
+@addMethod(inkWidget)
+public native func CreateEffect(typeName: CName, effectName: CName) -> Void;
+
+enum inkEBlurDimension
+{
+   Horizontal = 0,
+   Vertical = 1
+}
+
+@addMethod(inkWidget)
+public native func SetBlurDimension(effectName: CName, blurDimension : inkEBlurDimension) -> Bool;
+
+// Extensions/vehicleTPPCameraComponent.reds
+
+public native class vehicleChassisComponent extends IPlacedComponent {
+    public native func GetComOffset() -> Transform;
+}
+
+native class vehicleTPPCameraComponent extends CameraComponent {
+    // public native let isInAir: Bool;
+    public native let drivingDirectionCompensationAngleSmooth: Float;
+    public native let drivingDirectionCompensationSpeedCoef: Float;
+    public native let lockedCamera: Bool;
+    public native let worldPosition: WorldPosition;
+    public native let worldTransform2: WorldTransform;
+    public native let pitch: Float;
+    public native let yaw: Float;
+    public native let pitchDelta: Float; // positive moves camera down
+    public native let yawDelta: Float; // positive moves camera right
+    // public native let chassis: ref<vehicleChassisComponent>;
+}
+
+// @addMethod(vehicleChassisComponent)
+// protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> Bool {
+//     super.OnRequestComponents(ri);
+//     EntityRequestComponentsInterface.RequestComponent(ri, n"Chassis", n"vehicleChassisComponent", false);
+// }
+
+
+public native class vehicleDriveToPointEvent extends Event {
+    public native let targetPos: Vector3;
+    public native let useTraffic: Bool;
+    public native let speedInTraffic: Float;
+}
+
+public importonly class EffectSpawnerComponent extends IVisualComponent {
+    public native func AddEffect() -> Void;
+}
+
+
+// @addField(ColliderComponent)
+// public native let mass: Float;
+
+// @addField(ColliderComponent)
+// public native let massOverride: Float;
+
+// @addField(ColliderComponent)
+// public native let inertia: Vector3;
+
+// @addField(ColliderComponent)
+// public native let comOffset: Transform;
+
+// public native class exEntitySpawner {
+//     public native static func Spawn(entityPath: ResRef, worldTransform: WorldTransform, opt appearance: CName, opt recordID: TweakDBID) -> EntityID;
+//     public native static func SpawnRecord(recordID: TweakDBID, worldTransform: WorldTransform, opt appearance: CName) -> EntityID;
+//     public native static func Despawn(entity: ref<Entity>) -> Void;
+// }
+
+// @addField(MappinSystem)
+// public native let worldMappins: Array<Ptr<>>;
+
+// @addField(entCameraComponent)
+// native let fov: Float;
+
+// @addField(entCameraComponent)
+// native let zoom: Float;
+
+// @addField(entCameraComponent)
+// native let nearPlaneOverride: Float;
+
+// @addField(entCameraComponent)
+// native let farPlaneOverride: Float;
+
+// @addField(entCameraComponent)
+// native let motionBlurScale: Float;
+
+//FindVehicleCameraManager
+
+
+// @addMethod(FxSystem)
+// public final native func SpawnEffect(resource: ResRef, transform: WorldTransform, opt ignoreTimeDilation: Bool) -> ref<FxInstance>;
+
+// @addField(FxResource)
+// public native let effect: ResRef;
+
+// @addMethod(Entity)
+// public native func AddComponent(component: ref<IComponent>) -> Bool;
+
+// @addMethod(Entity)
+// public native func AddWorldWidgetComponent() -> Bool;
+
+// @addMethod(IPlacedComponent)
+// public native func UpdateHardTransformBinding(bindName: CName, slotName: CName) -> Bool;
+
+// Extensions/weaponRoster.reds
+
+@addField(weaponRosterGameController)
+let m_FlightStateBlackboardId: ref<CallbackHandle>;
+
+@wrapMethod(weaponRosterGameController)
+private final func RegisterBB() -> Void {
+  wrappedMethod();
+  let flightBB = FlightController.GetInstance().GetBlackboard();
+  if IsDefined(flightBB) {
+    if !IsDefined(this.m_FlightStateBlackboardId) {
+      this.m_FlightStateBlackboardId = flightBB.RegisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this, n"OnFlightActivate");
+    }
+  }
+}
+
+@wrapMethod(weaponRosterGameController)
+private final func UnregisterBB() -> Void {
+  wrappedMethod();
+  let flightBB = FlightController.GetInstance().GetBlackboard();
+  if IsDefined(flightBB) {
+    if IsDefined(this.m_FlightStateBlackboardId) {
+       flightBB.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this.m_FlightStateBlackboardId);
+    }
+  }
+}
+
+@addMethod(weaponRosterGameController)
+private cb func OnFlightActivate() -> Void {
+  this.PlayFold();
+}
+
+// Flight/FlightComponent.reds
 
 public native class FlightComponentPS extends GameComponentPS {
 
@@ -940,7 +1800,7 @@ public native class FlightComponent extends GameComponent {
     }
   }
 
-  public func Deactivate(silent: Bool) -> Void{
+  public func Deactivate(silent: Bool) -> Void {
     this.active = false;
     for thruster in this.configuration.thrusters {
       thruster.Stop();
@@ -1511,7 +2371,8 @@ public native class FlightComponent extends GameComponent {
   }
 */
 }
-// let_there_be_flight/FlightConfiguration.reds
+
+// Flight/FlightConfiguration.reds
 
 enum FlightVehicleType {
   Streetkid = 0,
@@ -1786,7 +2647,8 @@ public class BikeFlightConfiguration extends IFlightConfiguration {
 //     }
 //   }
 // }
-// let_there_be_flight/FlightContextTransitions.reds
+
+// Flight/FlightContextTransitions.reds
 
 @addMethod(InputContextTransitionEvents)
 protected final const func ShowVehicleFlightInputHints(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
@@ -1866,7 +2728,8 @@ public class VehicleFlightContextDecisions extends InputContextTransitionDecisio
     return true;
   }
 }
-// let_there_be_flight/FlightController.reds
+
+// Flight/FlightController.reds
 
 // public class FlightSettingsListener extends ConfigVarListener {
 
@@ -2672,7 +3535,8 @@ protected cb func OnGameAttached() -> Bool {
   //       instanceData.initData = initData;
   //       this.AddStateMachine(n"Vehicle", instanceData, otherObject);
 
-// let_there_be_flight/FlightEvents.reds
+
+// Flight/FlightEvents.reds
 
 public abstract class vehicleFlightEvent extends Event {
   // public native let vehicle: ref<VehicleObject>;
@@ -2702,7 +3566,8 @@ public class FlightFxCleanedUpEvent extends Event {
   public let delay: Float = 0.5;
 }
 
-// let_there_be_flight/FlightLog.reds
+
+// Flight/FlightLog.reds
 
 public native class FlightLog {
   // defined in red4ext part
@@ -2711,7 +3576,110 @@ public native class FlightLog {
   public static native func Error(value: String) -> Void;
   public static native func Probe(image: ref<inkImage>, atlasResourcePath: ResRef) -> Void;
 }
-// let_there_be_flight/FlightModeAutomatic.reds
+
+// Flight/FlightMode.reds
+
+public abstract class FlightMode {
+  protected let sys: ref<FlightSystem>;
+  protected let component: ref<FlightComponent>;
+
+  public let force: Vector4;
+  public let torque: Vector4;
+
+  public static let gravityFactor: Float;
+
+  public let usesRightStickInput: Bool;
+  public let collisionPenalty: Float;
+
+  public let dampAccVector: Vector3;
+  // public let lastAngularDamp: Vector4;
+
+  // public let enabled: Bool;
+
+  public func Initialize(component: ref<FlightComponent>) -> Void {
+    this.component = component;
+    this.sys = component.sys;
+    // this.gravityFactor = 2.885;
+    this.gravityFactor = 1.0;
+  }
+
+  public func Deinitialize() -> Void;
+
+  public func Activate() -> Void;
+  public func Deactivate() -> Void;
+  public func GetDescription() -> String;
+
+  public func Update(timeDelta: Float) -> Void;
+
+  public func ApplyPhysics(timeDelta: Float) -> Void {
+    let fs =  FlightSettings.GetInstance();
+    
+    let velocityDamp: Vector4 = this.component.stats.d_speed * this.component.stats.d_localVelocity * fs.generalDampFactorLinear * this.component.stats.s_airResistanceFactor;
+    let angularDamp: Vector4 = this.component.stats.d_angularVelocity * fs.generalDampFactorAngular;
+    // angularDamp += this.component.stats.d_angularAcceleration;
+    
+    // only damp if no input is being received on that axis
+    angularDamp.X *= (1.0 - SqrtF(AbsF(this.component.pitch)));
+    angularDamp.Y *= (1.0 - SqrtF(AbsF(this.component.roll)));
+    angularDamp.Z *= (1.0 - SqrtF(AbsF(this.component.yaw)));
+
+    // detect when we hit stuff and delay the damping
+    // this.dampAccVector.X = ClampF(MaxF(this.dampAccVector.X, AbsF(this.component.stats.d_angularAcceleration.X) / timeDelta / 10.0), 0.0, 1.0);
+    // this.dampAccVector.Y = ClampF(MaxF(this.dampAccVector.Y, AbsF(this.component.stats.d_angularAcceleration.Y) / timeDelta / 10.0), 0.0, 1.0);
+    // this.dampAccVector.Z = ClampF(MaxF(this.dampAccVector.Z, AbsF(this.component.stats.d_angularAcceleration.Z) / timeDelta / 10.0), 0.0, 1.0);
+
+    // angularDamp.X *= (1.0 - this.dampAccVector.X);
+    // angularDamp.Y *= (1.0 - this.dampAccVector.Y);
+    // angularDamp.Z *= (1.0 - this.dampAccVector.Z);
+
+    // decay over 200 ms
+    // this.dampAccVector.X -= timeDelta / 0.200;
+    // this.dampAccVector.Y -= timeDelta / 0.200;
+    // this.dampAccVector.Z -= timeDelta / 0.200;
+
+    // clamp the dampening
+    if Vector4.Length(angularDamp) > fs.generalDampFactorAngularMax {
+      angularDamp = Vector4.Normalize(angularDamp) * fs.generalDampFactorAngularMax;
+    }
+
+    // this.lastAngularDamp = angularDamp;
+
+    // let the world throw us around on collisions
+    // angularDamp *= this.timeSinceLastCollision;
+    // this.timeSinceLastCollision = MinF(this.timeSinceLastCollision + timeDelta, 1.0);
+
+    let direction = this.component.stats.d_direction;
+    if Vector4.Dot(this.component.stats.d_direction, this.component.stats.d_forward) < 0.0 {
+      direction = -this.component.stats.d_direction;
+    }
+    let yawDirectionAngle: Float = Vector4.GetAngleDegAroundAxis(direction, this.component.stats.d_forward, this.component.stats.d_up);
+    let pitchDirectionAngle: Float = Vector4.GetAngleDegAroundAxis(direction, this.component.stats.d_forward, this.component.stats.d_right);
+
+    // let aeroDynamicYaw = this.component.aeroYawPID.GetCorrectionClamped(yawDirectionAngle, timeDelta, 10.0) * this.component.stats.d_speedRatio;// / 10.0;
+    // let aeroDynamicPitch = this.component.pitchAeroPID.GetCorrectionClamped(pitchDirectionAngle, timeDelta, 10.0) * this.component.stats.d_speedRatio;// / 10.0;
+    let aeroDynamicYaw = yawDirectionAngle * this.component.stats.d_speedRatio;// / 10.0;
+    let aeroDynamicPitch = pitchDirectionAngle * this.component.stats.d_speedRatio;// / 10.0;
+
+    let yawDirectionality: Float = this.component.stats.d_speedRatio * fs.generalYawDirectionalityFactor;
+    let pitchDirectionality: Float = this.component.stats.d_speedRatio * fs.generalPitchDirectionalityFactor;
+    let aeroFactor = Vector4.Dot(this.component.stats.d_forward, this.component.stats.d_direction);
+    // yawDirectionality - redirect non-directional velocity to vehicle forward
+
+    this.force = -velocityDamp;
+    
+    this.force += FlightUtils.Forward() * AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_right)) * yawDirectionality * aeroFactor;
+    this.force += -this.component.stats.d_localDirection * AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_right)) * yawDirectionality * AbsF(aeroFactor);
+
+    this.force += FlightUtils.Forward() * AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_up)) * pitchDirectionality * aeroFactor;
+    this.force += -this.component.stats.d_localDirection * AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_up)) * pitchDirectionality * AbsF(aeroFactor);
+
+    this.torque = -angularDamp;
+    this.torque.Z -= aeroDynamicYaw * fs.generalYawAeroFactor;
+    this.torque.X -= aeroDynamicPitch * fs.generalPitchAeroFactor;
+  }
+}
+
+// Flight/FlightModeAutomatic.reds
 
 public class FlightModeAutomatic extends FlightModeStandard {
 
@@ -2803,7 +3771,8 @@ public class FlightModeAutomatic extends FlightModeStandard {
     }
   }
 }
-// let_there_be_flight/FlightModeDrone.reds
+
+// Flight/FlightModeDrone.reds
 
 public class FlightModeDrone extends FlightMode {
 
@@ -2926,7 +3895,8 @@ public class FlightModeDrone extends FlightMode {
       this.torque.Z = -(this.component.yaw * this.droneModeYawFactor + angularDamp.Z);
   }
 }
-// let_there_be_flight/FlightModeDroneAntiGravity.reds
+
+// Flight/FlightModeDroneAntiGravity.reds
 
 public class FlightModeDroneAntiGravity extends FlightModeDrone {
 
@@ -2948,7 +3918,8 @@ public class FlightModeDroneAntiGravity extends FlightModeDrone {
     this.force += this.component.stats.d_localUp *  (9.81000042) * this.gravityFactor;
   }
 }
-// let_there_be_flight/FlightModeFly.reds
+
+// Flight/FlightModeFly.reds
 
 public class FlightModeFly extends FlightModeStandard {
 
@@ -2971,7 +3942,8 @@ public class FlightModeFly extends FlightModeStandard {
     this.UpdateWithNormalLift(timeDelta, idealNormal, liftForce);
   }
 }
-// let_there_be_flight/FlightModeHover.reds
+
+// Flight/FlightModeHover.reds
 
 public class FlightModeHover extends FlightModeStandard {
 
@@ -3013,7 +3985,8 @@ public class FlightModeHover extends FlightModeStandard {
     this.UpdateWithNormalDistance(timeDelta, idealNormal, heightDifference);
   }
 }
-// let_there_be_flight/FlightModeHoverFly.reds
+
+// Flight/FlightModeHoverFly.reds
 
 public class FlightModeHoverFly extends FlightModeStandard {
   protected let hovering: Float;
@@ -3065,108 +4038,8 @@ public class FlightModeHoverFly extends FlightModeStandard {
     this.UpdateWithNormalLift(timeDelta, idealNormal, liftFactor * FlightSettings.GetFloat("hoverFactor") + (9.81000042) * this.gravityFactor);
   }
 }
-// let_there_be_flight/FlightMode_.reds
 
-public abstract class FlightMode {
-  protected let sys: ref<FlightSystem>;
-  protected let component: ref<FlightComponent>;
-
-  public let force: Vector4;
-  public let torque: Vector4;
-
-  public static let gravityFactor: Float;
-
-  public let usesRightStickInput: Bool;
-  public let collisionPenalty: Float;
-
-  public let dampAccVector: Vector3;
-  // public let lastAngularDamp: Vector4;
-
-  // public let enabled: Bool;
-
-  public func Initialize(component: ref<FlightComponent>) -> Void {
-    this.component = component;
-    this.sys = component.sys;
-    // this.gravityFactor = 2.885;
-    this.gravityFactor = 1.0;
-  }
-
-  public func Deinitialize() -> Void;
-
-  public func Activate() -> Void;
-  public func Deactivate() -> Void;
-  public func GetDescription() -> String;
-
-  public func Update(timeDelta: Float) -> Void;
-
-  public func ApplyPhysics(timeDelta: Float) -> Void {
-    let fs =  FlightSettings.GetInstance();
-    
-    let velocityDamp: Vector4 = this.component.stats.d_speed * this.component.stats.d_localVelocity * fs.generalDampFactorLinear * this.component.stats.s_airResistanceFactor;
-    let angularDamp: Vector4 = this.component.stats.d_angularVelocity * fs.generalDampFactorAngular;
-    // angularDamp += this.component.stats.d_angularAcceleration;
-    
-    // only damp if no input is being received on that axis
-    angularDamp.X *= (1.0 - SqrtF(AbsF(this.component.pitch)));
-    angularDamp.Y *= (1.0 - SqrtF(AbsF(this.component.roll)));
-    angularDamp.Z *= (1.0 - SqrtF(AbsF(this.component.yaw)));
-
-    // detect when we hit stuff and delay the damping
-    // this.dampAccVector.X = ClampF(MaxF(this.dampAccVector.X, AbsF(this.component.stats.d_angularAcceleration.X) / timeDelta / 10.0), 0.0, 1.0);
-    // this.dampAccVector.Y = ClampF(MaxF(this.dampAccVector.Y, AbsF(this.component.stats.d_angularAcceleration.Y) / timeDelta / 10.0), 0.0, 1.0);
-    // this.dampAccVector.Z = ClampF(MaxF(this.dampAccVector.Z, AbsF(this.component.stats.d_angularAcceleration.Z) / timeDelta / 10.0), 0.0, 1.0);
-
-    // angularDamp.X *= (1.0 - this.dampAccVector.X);
-    // angularDamp.Y *= (1.0 - this.dampAccVector.Y);
-    // angularDamp.Z *= (1.0 - this.dampAccVector.Z);
-
-    // decay over 200 ms
-    // this.dampAccVector.X -= timeDelta / 0.200;
-    // this.dampAccVector.Y -= timeDelta / 0.200;
-    // this.dampAccVector.Z -= timeDelta / 0.200;
-
-    // clamp the dampening
-    if Vector4.Length(angularDamp) > fs.generalDampFactorAngularMax {
-      angularDamp = Vector4.Normalize(angularDamp) * fs.generalDampFactorAngularMax;
-    }
-
-    // this.lastAngularDamp = angularDamp;
-
-    // let the world throw us around on collisions
-    // angularDamp *= this.timeSinceLastCollision;
-    // this.timeSinceLastCollision = MinF(this.timeSinceLastCollision + timeDelta, 1.0);
-
-    let direction = this.component.stats.d_direction;
-    if Vector4.Dot(this.component.stats.d_direction, this.component.stats.d_forward) < 0.0 {
-      direction = -this.component.stats.d_direction;
-    }
-    let yawDirectionAngle: Float = Vector4.GetAngleDegAroundAxis(direction, this.component.stats.d_forward, this.component.stats.d_up);
-    let pitchDirectionAngle: Float = Vector4.GetAngleDegAroundAxis(direction, this.component.stats.d_forward, this.component.stats.d_right);
-
-    // let aeroDynamicYaw = this.component.aeroYawPID.GetCorrectionClamped(yawDirectionAngle, timeDelta, 10.0) * this.component.stats.d_speedRatio;// / 10.0;
-    // let aeroDynamicPitch = this.component.pitchAeroPID.GetCorrectionClamped(pitchDirectionAngle, timeDelta, 10.0) * this.component.stats.d_speedRatio;// / 10.0;
-    let aeroDynamicYaw = yawDirectionAngle * this.component.stats.d_speedRatio;// / 10.0;
-    let aeroDynamicPitch = pitchDirectionAngle * this.component.stats.d_speedRatio;// / 10.0;
-
-    let yawDirectionality: Float = this.component.stats.d_speedRatio * fs.generalYawDirectionalityFactor;
-    let pitchDirectionality: Float = this.component.stats.d_speedRatio * fs.generalPitchDirectionalityFactor;
-    let aeroFactor = Vector4.Dot(this.component.stats.d_forward, this.component.stats.d_direction);
-    // yawDirectionality - redirect non-directional velocity to vehicle forward
-
-    this.force = -velocityDamp;
-    
-    this.force += FlightUtils.Forward() * AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_right)) * yawDirectionality * aeroFactor;
-    this.force += -this.component.stats.d_localDirection * AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_right)) * yawDirectionality * AbsF(aeroFactor);
-
-    this.force += FlightUtils.Forward() * AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_up)) * pitchDirectionality * aeroFactor;
-    this.force += -this.component.stats.d_localDirection * AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_up)) * pitchDirectionality * AbsF(aeroFactor);
-
-    this.torque = -angularDamp;
-    this.torque.Z -= aeroDynamicYaw * fs.generalYawAeroFactor;
-    this.torque.X -= aeroDynamicPitch * fs.generalPitchAeroFactor;
-  }
-}
-// let_there_be_flight/FlightMode_Standard.reds
+// Flight/FlightMode_Standard.reds
 
 public abstract class FlightModeStandard extends FlightMode {
 
@@ -3323,7 +4196,8 @@ public abstract class FlightModeStandard extends FlightMode {
     // }
   }
 }
-// let_there_be_flight/FlightSettings.reds
+
+// Flight/FlightSettings.reds
 
 public static func FlightSettings() -> ref<FlightSettings> {
   return FlightSettings.GetInstance();
@@ -3542,7 +4416,8 @@ public native class FlightSettings extends IScriptable {
     FlightSettings.SetFloat("yawD", 3.0);
   }
 }
-// let_there_be_flight/FlightStats.reds
+
+// Flight/FlightStats.reds
 
 public class FlightStats {
   public let vehicle: wref<VehicleObject>;
@@ -3770,7 +4645,8 @@ public class FlightStats {
     // this.d_visualPosition = this.d_position - this.d_velocity * timeDelta;
   }
 }
-// let_there_be_flight/FlightSystem.reds
+
+// Flight/FlightSystem.reds
 
 public native abstract importonly class IFlightSystem extends IGameSystem {
 }
@@ -3840,7 +4716,8 @@ public native class FlightSystem extends IGameSystem {
 }
 
 
-// let_there_be_flight/FlightThruster.reds
+
+// Flight/FlightThruster.reds
 
 public abstract native class IFlightThruster extends IScriptable {
 
@@ -4366,7 +5243,8 @@ public class Vector3Wrapper {
     return vw;
   }
 }
-// let_there_be_flight/FlightThrusterFX.reds
+
+// Flight/FlightThrusterFX.reds
 
 // relevant in-game effects
 // r"base\\fx\\quest\\q203\\v_av_rayfield_excalibur_thruster_ground.effect"// blue star on ground
@@ -4514,7 +5392,8 @@ public class SideFlightThrusterFX extends IFlightThrusterFX {
     return 0.0;
   }
 }
-// let_there_be_flight/FlightTransition.reds
+
+// Flight/FlightTransition.reds
 
 // public class FlightTransition extends VehicleTransition {
 
@@ -4772,7 +5651,8 @@ public class FlightEvents extends VehicleEventsTransition {
     }
   }
 }
-// let_there_be_flight/FlightTricks.reds
+
+// Flight/FlightTricks.reds
 
 public abstract class FlightTrick
 {
@@ -4812,338 +5692,8 @@ public class FlightTrickAileronRoll extends FlightTrick {
     }
   }
 }
-// let_there_be_flight/FlightUtils.reds
 
-public class FlightUtils {
-    public static func SqrtCurve(input: Float) -> Float {
-        if input != 0.0 {
-            return SqrtF(AbsF(input)) * AbsF(input) / input;
-        } else {
-            return 0.0;
-        }
-    }
-    public static func IdentCurve(input: Float) -> Float {
-        return input;
-    }
-
-    public static func Right() -> Vector4 = new Vector4(1.0, 0.0, 0.0, 0.0);
-    public static func Left() -> Vector4 = new Vector4(-1.0, 0.0, 0.0, 0.0);
-    public static func Forward() -> Vector4 = new Vector4(0.0, 1.0, 0.0, 0.0);
-    public static func Backward() -> Vector4 = new Vector4(0.0, -1.0, 0.0, 0.0);
-    public static func Up() -> Vector4 = new Vector4(0.0, 0.0, 1.0, 0.0);
-    public static func Down() -> Vector4 = new Vector4(0.0, 0.0, -1.0, 0.0);
-    
-	public static func ElectricBlue() -> HDRColor = new HDRColor(0.368627, 0.964706, 1.0, 1.0)
-	public static func Bittersweet() -> HDRColor = new HDRColor(1.1761, 0.3809, 0.3476, 1.0)
-	public static func Dandelion() -> HDRColor = new HDRColor(1.1192, 0.8441, 0.2565, 1.0)
-	public static func LightGreen() -> HDRColor = new HDRColor(0.113725, 0.929412, 0.513726, 1.0)
-	public static func BlackPearl() -> HDRColor = new HDRColor(0.054902, 0.054902, 0.090196, 1.0)
-
-	public static func RedOxide() -> HDRColor = new HDRColor(0.411765, 0.086275, 0.090196, 1.0)
-	public static func Bordeaux() -> HDRColor = new HDRColor(0.262745, 0.086275, 0.094118, 1.0)
-
-	public static func PureBlack() -> HDRColor = new HDRColor(0.0, 0.0, 0.0, 1.0)
-	public static func PureWhite() -> HDRColor = new HDRColor(1.0, 1.0, 1.0, 1.0)
-}
-// let_there_be_flight/ModSettings.reds
-
-@if(ModuleExists("ModSettingsModule")) 
-public func LTBF_RegisterListener(listener: ref<IScriptable>) {
-  ModSettings.RegisterListenerToClass(listener);
-}
-
-@if(!ModuleExists("ModSettingsModule")) 
-public func LTBF_RegisterListener(listener: ref<IScriptable>) { }
-
-@if(ModuleExists("ModSettingsModule")) 
-public func LTBF_UnregisterListener(listener: ref<IScriptable>) {
-  ModSettings.UnregisterListenerToClass(listener);
-}
-
-@if(!ModuleExists("ModSettingsModule")) 
-public func LTBF_UnregisterListener(listener: ref<IScriptable>) { }
-// let_there_be_flight/OperatorHelpers.reds
-
-// Matrix
-
-public static func OperatorMultiply(m: Matrix, v: Vector4) -> Vector4 {
-  return Vector4.Transform(m, v);
-}
-public static func OperatorMultiply(v: Vector4, m: Matrix) -> Vector4 {
-  return m * v;
-}
-
-public static func OperatorAssignMultiply(out v: Vector4, m: Matrix) -> Vector4 {
-  v = m * v;
-  return v;
-}
-
-// Quaternion
-
-public static func OperatorXor(q: Quaternion, n: Int32) -> Quaternion {
-  let out = q;
-  while (n > 0) {
-    Quaternion.SetInverse(out);
-    n -= 1;
-  }
-  return out;
-}
-
-// EulerAngles
-
-public static func Cast(a: EulerAngles) -> Vector4 {
-  let v = Vector4.EmptyVector();
-  v.X = a.Pitch;
-  v.Y = a.Roll;
-  v.Z = a.Yaw;
-  return v;
-}
-
-public static func Cast(a: EulerAngles) -> WorldTransform {
-  let wt = new WorldTransform();
-  WorldTransform.SetOrientation(wt, EulerAngles.ToQuat(a));
-  return wt;
-}
-
-public static func OperatorMultiply(e: EulerAngles, f: Float) -> EulerAngles {
-  let out = e;
-  e.Roll *= f;
-  e.Yaw *= f;
-  e.Pitch += f;
-  return out;
-}
-
-public static func OperatorAssignMultiply(out e: EulerAngles, f: Float) -> EulerAngles {
-  e = e * f;
-  return e;
-}
-
-public static func OperatorDivide(e: EulerAngles, f: Float) -> EulerAngles {
-  let out = e;
-  e.Roll /= f;
-  e.Yaw /= f;
-  e.Pitch /= f;
-  return out;
-}
-
-public static func OperatorAdd(e: EulerAngles, v: Vector4) -> Vector4 {
-  let out = v;
-  v.X += e.Pitch;
-  v.Y += e.Roll;
-  v.Z += e.Yaw;
-  return out;
-}
-
-public static func OperatorAdd(v: Vector4, e: EulerAngles) -> Vector4 {
-  return e + v;
-}
-
-public static func OperatorAssignAdd(out v: Vector4, e: EulerAngles) -> Vector4 {
-  v = e + v;
-  return v;
-}
-
-// Vector3
-
-public static func OperatorAdd(a: Vector4, b: Vector3) -> Vector4 {
-  return a + Vector4.Vector3To4(b);
-}
-
-// FxResource
-
-public static native func Cast(a: ResRef) -> FxResource;
-
-
-public static func OperatorEqual(a: Vector3, b: Vector3) -> Bool {
-  return a.X == b.X && a.Y == b.Y && a.Z == b.Z;
-}
-
-public static func OperatorEqual(a: Vector4, b: Vector4) -> Bool {
-  return a.X == b.X && a.Y == b.Y && a.Z == b.Z && a.W == b.W;
-}
-
-public static func OperatorNotEqual(a: Vector3, b: Vector3) -> Bool {
-  return !OperatorEqual(a, b);
-}
-
-public static func OperatorNotEqual(a: Vector4, b: Vector4) -> Bool {
-  return !OperatorEqual(a, b);
-}
-// let_there_be_flight/PID.reds
-
-public class PID {
-  private let valueFloat: Float;
-  // private let valueVector: Vector4;
-  private let inputFloat: Float;
-  // private let inputVector: Vector4;
-  private let P: Float;
-  private let I: Float;
-  private let D: Float;
-  public let integralFloat: Float;
-  // private let integralVector: Vector4;
-  private let lastErrorFloat: Float;
-  // private let lastErrorVector: Vector4;
-  public static func Create(P: Float, I: Float, D: Float) -> ref<PID> {
-    let instance: ref<PID> = new PID();
-    instance.P = P;
-    instance.I = I;
-    instance.D = D;
-    instance.Reset();
-    return instance;
-  }
-  public static func Create(v: Vector3) -> ref<PID> {
-    return PID.Create(v.X, v.Y, v.Z);
-  }
-  public static func Create(P: Float, I: Float, D: Float, initialValue: Float) -> ref<PID> {
-    let instance: ref<PID> = PID.Create(P, I, D);
-    instance.valueFloat = initialValue;
-    return instance;
-  }
-  // public static func Create(P: Float, I: Float, D: Float, initialValue: Vector4) -> ref<PID> {
-  //   let instance: ref<PID> = PID.Create(P, I, D);
-  //   instance.valueVector = initialValue;
-  //   return instance;
-  // }
-  public func Update(P: Float, I: Float, D: Float) -> Void {
-    this.P = P;
-    this.I = I;
-    this.D = D;
-  }
-  
-  public func UpdateP(P: Float) -> Void {
-    this.P = P;
-  }
-  
-  public func UpdateI(I: Float) -> Void {
-    this.I = I;
-  }
-
-  public func UpdateD(D: Float) -> Void {
-    this.D = D;
-  }
-
-  public func SetInput(input: Float) {
-    this.inputFloat = input;
-  }
-  // public func SetInput(input: Vector4) {
-  //   this.inputVector = input;
-  // }
-  public func GetValue(timeDelta: Float) -> Float {
-    let error: Float = this.inputFloat - this.valueFloat;
-    this.valueFloat += this.GetCorrection(error, timeDelta);
-    return this.valueFloat;
-  } 
-  public func GetValue() -> Float {
-    return this.valueFloat;
-  } 
-  public func GetInput() -> Float {
-    return this.inputFloat;
-  }
-  // public func GetValue(timeDelta: Float) -> Vector4 {
-  //   let error: Vector4 = this.inputVector - this.valueVector;
-  //   this.valueVector += this.GetCorrection(error)
-  //   return this.valueVector;
-  // }
-  public func GetValue(input: Float, timeDelta: Float) -> Float {
-    this.SetInput(input);
-    return this.GetValue(timeDelta);
-  }
-  // public func GetValue(input: Vector4, timeDelta: Float) -> Vector4 {
-  //   this.SetInput(input);
-  //   return GetValue(timeDelta);
-  // }
-  public func GetCorrection(error: Float, timeDelta: Float) -> Float { 
-    let derivative: Float = (error - this.lastErrorFloat) / timeDelta;
-    // if error < 0.01 || error * this.lastErrorFloat < 0.0 {
-    //   this.integralFloat = 0.0;
-    // } else {
-    this.integralFloat = ClampF(error * timeDelta + this.integralFloat, -100.0, 100.0);
-    // }
-    this.lastErrorFloat = error;
-    return this.P * error + this.I * this.integralFloat + this.D * derivative;
-  }
-  // public func GetCorrection(error: Vector4, timeDelta: Float) -> Vector4 { 
-  //   let derivative: Vector4 = (error - this.lastErrorVector) / timeDelta;
-  //   this.integralVector = Vector4.ClampLength(error * timeDelta + this.integralVector, -100.0, 100.0);
-  //   this.lastErrorVector = error;
-  //   return this.P * error + this.I * this.integralFloat + this.D * derivative;
-  // }
-  public func GetCorrectionClamped(error: Float, timeDelta: Float, clamp: Float) -> Float {
-    return ClampF(this.GetCorrection(error, timeDelta), -clamp, clamp);
-  }
-  public func Reset(opt input: Float) -> Void {
-    this.inputFloat = input;
-    this.integralFloat = 0.0;
-    this.lastErrorFloat = 0.0;
-  }
-}
-
-public class InputPID extends PID {
-  private let P_dec: Float;
-  public static func Create(P: Float, P_dec: Float) -> ref<InputPID> {
-    let instance: ref<InputPID> = new InputPID();
-    instance.P = P;
-    instance.P_dec = P_dec;
-    instance.Reset();
-    return instance;
-  }
-
-  public func UpdatePd(Pd: Float) -> Void {
-    this.P_dec = Pd;
-  }
-
-  public func GetCorrection(error: Float, timeDelta: Float) -> Float { 
-    if AbsF(this.inputFloat) > AbsF(this.valueFloat) || this.inputFloat * this.valueFloat < 0.0 {
-      return this.P * error;
-    } else {
-      return this.P_dec * error;
-    }
-  }
-}
-
-public class DualPID extends PID {
-  private let P_aux: Float;
-  private let I_aux: Float;
-  private let D_aux: Float;
-  private let ratio: Float;
-  public static func Create(P: Float, I: Float, D: Float, P_aux: Float, I_aux: Float, D_aux: Float) -> ref<DualPID> {
-    let instance: ref<DualPID> = new DualPID();
-    instance.P = P;
-    instance.I = I;
-    instance.D = D;
-    instance.P_aux = P_aux;
-    instance.I_aux = I_aux;
-    instance.D_aux = D_aux;
-    instance.Reset();
-    return instance;
-  }
-  public static func Create(P: Float, I: Float, D: Float, P_aux: Float, I_aux: Float, D_aux: Float, initialValue: Float) -> ref<DualPID> {
-    let instance: ref<DualPID> = DualPID.Create(P, I, D, P_aux, I_aux, D_aux);
-    instance.valueFloat = initialValue;
-    return instance;
-  }
-  public func SetRatio(ratio: Float) {
-    this.ratio = ratio;
-  }
-  public func GetCorrection(error: Float, timeDelta: Float) -> Float { 
-    let derivative: Float = (error - this.lastErrorFloat) / timeDelta;
-    // if error < 0.01 || error * this.lastErrorFloat < 0.0 {
-    //   this.integralFloat = 0.0;
-    // } else {
-    this.integralFloat = ClampF(error * timeDelta + this.integralFloat, -100.0, 100.0) * 0.95;
-    // }
-    this.lastErrorFloat = error;
-    let pri = this.P * error + this.I * this.integralFloat + this.D * derivative;
-    let aux = this.P_aux * error + this.I_aux * this.integralFloat + this.D_aux * derivative;
-    return pri * (1.0 - this.ratio) + aux * (this.ratio);
-  }
-  public func UpdateAux(P_aux: Float, I_aux: Float, D_aux: Float) -> Void {
-    this.P_aux = P_aux;
-    this.I_aux = I_aux;
-    this.D_aux = D_aux;
-  }
-}
-// let_there_be_flight/Quickhacks.reds
+// Quickhacks/Quickhacks.reds
 
 @wrapMethod(QuickhackModule)
 protected func Process(out task: HUDJob, mode: ActiveMode) -> Void {
@@ -5916,727 +6466,8 @@ protected cb func OnQuickHackDataChanged(value: Variant) -> Bool {
     inkTextRef.SetText(this.m_description, description);
   }
 }
-// let_there_be_flight/_MeshComponent.reds
 
-// Entity
-
-// @addField(Entity)
-// @runtimeProperty("offset", "0x50")
-// public native let currentAppearance: CName;
-
-@addField(Entity)
-@runtimeProperty("offset", "0x138")
-public native let entityTags: array<CName>;
-
-@addMethod(Entity)
-public native func AddComponent(component: ref<IComponent>);
-
-@addMethod(Entity)
-public native func AddSlot(boneName: CName, slotName: CName, relativePosition: Vector3, relativeRotation: Quaternion);
-
-// IComponent
-
-@addField(IComponent)
-@runtimeProperty("offset", "0x40")
-public native let name: CName;
-
-@addField(IComponent)
-@runtimeProperty("offset", "0x48")
-public native let appearanceName: CName;
-
-// IPlacedComponent
-
-// bindName is component name - can be SlotComponent like vehicle_slots
-@addMethod(IPlacedComponent)
-public native func SetParentTransform(bindName: CName, slotName: CName);
-
-// MeshComponent
-
-@addMethod(MeshComponent)
-public native func SetMesh(mesh: ResRef);
-
-@addField(MeshComponent)
-@runtimeProperty("offset", "0x178")
-public native let visualScale: Vector3;
-
-enum ERenderObjectType {
-    ROT_Static = 0,
-    ROT_Terrain = 1,
-    ROT_Road = 2,
-    ROT_CustomCharacter1 = 12,
-    ROT_CustomCharacter2 = 13,
-    ROT_CustomCharacter3 = 14,
-    ROT_MainPlayer = 15,
-    ROT_NoAO = 16,
-    ROT_NoLighting = 17,
-    ROT_NoTXAA = 18,
-    ROT_Skinned = 20,
-    ROT_Character = 21,
-    ROT_Foliage = 22,
-    ROT_Grass = 23,
-    ROT_Vehicle = 24,
-    ROT_Weapon = 25,
-    ROT_Particle = 26,
-    ROT_Enemy = 27,
-}
-
-@addField(MeshComponent)
-@runtimeProperty("offset", "0x188")
-public native let objectTypeID: ERenderObjectType;
-
-@addField(MeshComponent)
-@runtimeProperty("offset", "0x190")
-public native let meshApperance: CName;
-
-@addField(MeshComponent)
-@runtimeProperty("offset", "0x198")
-public native let chunkMask: Uint64;
-
-@addField(MeshComponent)
-@runtimeProperty("offset", "0x1A4")
-public native let motionBlurScale: Float;
-
-enum entMeshComponentLODMode {
-    AlwaysVisible = 0,
-    Appearance = 1,
-    AppearanceProxy = 2,
-}
-
-@addField(MeshComponent)
-@runtimeProperty("offset", "0x1A8")
-public native let LODMode: entMeshComponentLODMode;
-
-@addField(MeshComponent)
-@runtimeProperty("offset", "0x1AB")
-public native let order: Uint8;
-
-@addField(MeshComponent)
-@runtimeProperty("offset", "0x1AC")
-public native let castShadows: Bool;
-
-@addField(MeshComponent)
-@runtimeProperty("offset", "0x1AD")
-public native let castLocalShadows: Bool;
-
-// PhysicalMeshComponent
-
-@addField(PhysicalMeshComponent)
-@runtimeProperty("offset", "0x228")
-public native let visibilityAnimationParam: CName;
-
-@addField(PhysicalMeshComponent)
-@runtimeProperty("offset", "0x23A")
-public native let startInactive: Bool;
-// let_there_be_flight/_Transitions.reds
-
-// VehicleTransition
-
-@addMethod(VehicleTransition)
-public final static func CanEnterVehicleFlight() -> Bool {
-  return TweakDBInterface.GetBool(t"player.vehicle.canEnterVehicleFlight", false);
-}
-
-// @addMethod(VehicleTransition)
-// protected final const func IsVehicleFlying(const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-//   return scriptInterface.IsVehicleFlying();
-// }
-
-@addMethod(VehicleTransition)
-protected final func SetIsInFlight(stateContext: ref<StateContext>, value: Bool) -> Void {
-  stateContext.SetPermanentBoolParameter(n"isInFlight", value, true);
-}
-
-// need to implement some things in order to use this
-@addMethod(VehicleTransition)
-protected final const func IsPlayerAllowedToEnterVehicleFlight(const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-  if this.IsNoCombatActionsForced(scriptInterface) {
-    return false;
-  };
-  if StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"VehicleFlight") {
-    return true;
-  };
-  return true;
-}
-
-@addMethod(VehicleTransition)
-protected final const func IsPlayerAllowedToExitFlight(const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-  if StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"VehicleFlightBlockExit") {
-    return false;
-  };
-  return true;
-}
-
-// DriveDecisions
-
-@addMethod(DriveDecisions)
-public final const func ToFlight(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-  // if this.IsPlayerAllowedToEnterVehicleFlight(scriptInterface) && VehicleTransition.CanEnterVehicleFlight() {
-  // if VehicleTransitiorn.CanEnterVehicleFlight() {
-    if (scriptInterface.IsActionJustPressed(n"Flight_Toggle") || (IsDefined(fs().playerComponent) && fs().playerComponent.active)) &&
-      GameInstance.GetQuestsSystem(scriptInterface.GetGame()).GetFact(n"map_blocked") == 0 &&
-      Equals(this.GetCurrentTier(stateContext), GameplayTier.Tier1_FullGameplay) {
-      FlightLog.Info("[DriveDecisions] ToFlight");
-      return true;
-    };
-  // };
-  return false;
-}
-
-// SceneDecisions
-
-@addMethod(SceneDecisions)
-public final const func ToFlight(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-  // if this.IsPlayerAllowedToEnterVehicleFlight(scriptInterface) && VehicleTransition.CanEnterVehicleFlight() {
-  if VehicleTransition.CanEnterVehicleFlight() {
-    // if FlightController.GetInstance().IsActive() {
-      FlightLog.Info("[SceneDecisions] ToFlight");
-      return false;
-    // };
-  };
-  return false;
-}
-// let_there_be_flight/_VehicleComponent.reds
-
-@replaceMethod(VehicleComponent)
-protected cb func OnVehicleWaterEvent(evt: ref<VehicleWaterEvent>) -> Bool {
-  if evt.isInWater  && !this.GetPS().GetIsSubmerged() {
-    if !Equals(GetMountedVehicle(FlightController.GetInstance().player), this.GetVehicle()) && FlightController.GetInstance().IsActive() {
-      this.BreakAllDamageStageFX(true);
-      this.DestroyVehicle();
-      this.DestroyRandomWindow();
-      this.ApplyVehicleDOT(n"high");
-    }
-    GameObjectEffectHelper.BreakEffectLoopEvent(this.GetVehicle(), n"fire");
-  }
-  ScriptedPuppet.ReevaluateOxygenConsumption(this.m_mountedPlayer);
-  if FlightController.GetInstance().IsActive() {
-    let playerPuppet = GameInstance.GetPlayerSystem(this.GetVehicle().GetGame()).GetLocalPlayerMainGameObject() as PlayerPuppet;
-    let playerStateMachineBlackboard = GameInstance.GetBlackboardSystem(this.GetVehicle().GetGame()).GetLocalInstanced(playerPuppet.GetEntityID(), GetAllBlackboardDefs().PlayerStateMachine);
-    playerStateMachineBlackboard.SetInt(GetAllBlackboardDefs().PlayerStateMachine.Swimming, EnumInt(gamePSMSwimming.Surface), true);
-  }
-}
-
-@wrapMethod(VehicleComponent)
-private final func ExplodeVehicle(instigator: wref<GameObject>) -> Void {
-  wrappedMethod(instigator);
-  this.GetVehicle().GetFlightComponent().isDestroyed = true;
-  this.GetVehicle().GetFlightComponent().hasExploded = true;
-  this.GetVehicle().GetFlightComponent().hasUpdate = false;
-  this.GetVehicle().GetFlightComponent().Deactivate(true);
-}
-
-// @wrapMethod(VehicleComponent) 
-// protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool {
-//   wrappedMethod(action, consumer);
-//   let actionName: CName = ListenerAction.GetName(action);
-//   let value: Float = ListenerAction.GetValue(action);
-//   if Equals(actionName, n"Choice1") && ListenerAction.IsButtonJustReleased(action) {
-//     FlightLog.Info("Attempting to repair vehicle");
-//     this.RepairVehicle();
-//     let player: ref<PlayerPuppet> = GetPlayer(this.GetVehicle().GetGame());
-//     let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.GetVehicle().GetGame());
-//     player.UnregisterInputListener(this, n"Choice1");
-//     uiSystem.QueueEvent(FlightController.HideHintFromSource(n"RepairVehicle"));
-//   }
-// }
-
-
-// requires vehicle to be off to control? also makes a sound, which is nice
-// @replaceMethod(VehicleComponent)
-// private final func SetupThrusterFX() -> Void {
-//   let toggle: Bool = (this.GetPS() as VehicleComponentPS).GetThrusterState();
-//   if toggle || (Equals(FlightController.GetInstance().GetVehicle(), this.GetVehicle()) && FlightController.GetInstance().GetThrusterState()) {
-//     GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"thrusters", true);
-//   } else {
-//     GameObjectEffectHelper.BreakEffectLoopEvent(this.GetVehicle(), n"thrusters");
-//   };
-// }
-// let_there_be_flight/_VehicleObject.reds
-
-@addField(VehicleObject)
-private let m_flightComponent: ref<FlightComponent>;
-
-@wrapMethod(VehicleObject)
-protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> Bool {
-  EntityRequestComponentsInterface.RequestComponent(ri, n"flightComponent", n"FlightComponent", false);
-  // EntityRequestComponentsInterface.RequestComponent(ri, n"flight_ui", n"worlduiWidgetComponent", true);
-  // EntityRequestComponentsInterface.RequestComponent(ri, n"flight_ui_info", n"worlduiWidgetComponent", true);
-  wrappedMethod(ri);
-}
-
-@wrapMethod(VehicleObject)
-protected cb func OnTakeControl(ri: EntityResolveComponentsInterface) -> Bool {
-  //FlightLog.Info("[VehicleObject] OnTakeControl: " + this.GetDisplayName());
-  this.m_flightComponent = EntityResolveComponentsInterface.GetComponent(ri, n"flightComponent") as FlightComponent;
-  // this.m_flightComponent.ui = EntityResolveComponentsInterface.GetComponent(ri, n"flight_ui") as worlduiWidgetComponent;
-  // this.m_flightComponent.ui_info = EntityResolveComponentsInterface.GetComponent(ri, n"flight_ui_info") as worlduiWidgetComponent;
-  // this.m_flightComponent.Toggle(false);
-  wrappedMethod(ri);
-}
-
-@addMethod(VehicleObject)
-public const func GetFlightComponent() -> ref<FlightComponent> {
-  return this.m_flightComponent;
-}
-
-@addMethod(VehicleObject)
-public func ToggleFlightComponent(state: Bool) -> Void {
-  this.m_flightComponent.Toggle(state);
-}
-
-@addMethod(VehicleObject)
-public func GetLocalToWorld() -> Matrix {
-  return WorldTransform.ToMatrix(this.GetWorldTransform());
-}
-
-@addField(VehicleObject)
-public let chassis: ref<vehicleChassisComponent>;
-
-@addField(VehicleObject)
-@runtimeProperty("offset", "0x24C")
-public native let isOnGround: Bool;
-
-@addField(VehicleObject)
-@runtimeProperty("offset", "0x254")
-public native let acceleration: Float;
-
-@addField(VehicleObject)
-@runtimeProperty("offset", "0x258")
-public native let deceleration: Float;
-
-@addField(VehicleObject)
-@runtimeProperty("offset", "0x25C")
-public native let handbrake: Float;
-
-// @addField(VehicleObject)
-// public native let turnX: Float;
-
-// @addField(VehicleObject)
-// public native let turnX2: Float;
-
-// @addField(VehicleObject)
-// public native let turnX3: Float;
-
-@addField(VehicleObject)
-@runtimeProperty("offset", "0x611")
-public native let ignoreImpulses: Bool;
-
-@addField(VehicleObject)
-@runtimeProperty("offset", "0x268")
-public native let turnX: Float;
-
-@addField(VehicleObject)
-@runtimeProperty("offset", "0x950")
-public native let tracePosition: Vector3;
-
-@addMethod(VehicleObject)
-public native func EndActions() -> Void;
-
-@addMethod(VehicleObject)
-public native func HasGravity() -> Bool;
-
-@addMethod(VehicleObject)
-public native func UsesInertiaTensor() -> Bool;
-
-@addMethod(VehicleObject)
-public native func GetInertiaTensor() -> Matrix;
-
-// @addMethod(VehicleObject)
-// public native func GetWorldInertiaTensor() -> Matrix;
-
-@addMethod(VehicleObject)
-public native func GetMomentOfInertiaScale() -> Vector3;
-
-@addMethod(VehicleObject)
-public native func GetCenterOfMass() -> Vector3;
-
-@addMethod(VehicleObject)
-public native func EnableGravity(enabled: Bool) -> Void;
-
-@addMethod(VehicleObject)
-public native func GetAngularVelocity() -> Vector3;
-
-@addMethod(VehicleObject)
-public native func TurnOffAirControl() -> Bool;
-
-public native class vehicleFlightHelper extends IScriptable {
-    public native let force: Vector4;
-    public native let torque: Vector4;
-}
-
-// @addMethod(VehicleObject)
-// public native func AddFlightHelper() -> ref<vehicleFlightHelper>;
-
-@addMethod(VehicleObject)
-public native func GetComponentsUsingSlot(slotName: CName) -> array<ref<IComponent>>;
-
-@addMethod(VehicleObject)
-public native func GetWeaponPlaceholderOrientation(index: Int32) -> Quaternion;
-
-@addMethod(VehicleObject)
-public native func GetWeapons() -> array<ref<WeaponObject>>;
-
-@addMethod(VehicleObject)
-public native func UnsetPhysicsStates() -> Void;
-
-@addField(VehicleObject)
-public let bouncy: Bool;
-
-// working
-// @addMethod(VehicleObject)
-// protected cb func OnPhysicalCollision(evt: ref<PhysicalCollisionEvent>) -> Bool {
-//   // FlightLog.Info("[VehicleObject] OnPhysicalCollision");
-//   let vehicle = evt.otherEntity as VehicleObject;
-//   if IsDefined(vehicle) {
-//     let gameInstance: GameInstance = this.GetGame();
-//     let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
-//     let isPlayerMounted = VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), vehicle);
-//     if !isPlayerMounted && this.bouncy {
-//       let impulseEvent: ref<PhysicalImpulseEvent> = new PhysicalImpulseEvent();
-//       impulseEvent.radius = 1.0;
-//       impulseEvent.worldPosition = Vector4.Vector4To3(evt.worldPosition);
-//       impulseEvent.worldImpulse = new Vector3(0.0, 0.0, 10000.0);
-//       vehicle.QueueEvent(impulseEvent);
-//     }
-//   }
-// }
-
-@wrapMethod(VehicleObject)
-public final func IsOnPavement() -> Bool {
-  return wrappedMethod() || FlightController.GetInstance().IsActive();
-}
-
-// @wrapMethod(VehicleObject)
-// protected cb func OnLookedAtEvent(evt: ref<LookedAtEvent>) -> Bool {
-//   wrappedMethod(evt);
-//   if this.IsDestroyed() && this.IsCurrentlyScanned() {
-//     let player: ref<PlayerPuppet> = GetPlayer(this.GetGame());
-//     let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.GetGame());
-//     if evt.isLookedAt {
-//         player.RegisterInputListener(this.m_vehicleComponent, n"Choice1");
-//         uiSystem.QueueEvent(FlightController.ShowHintHelper("Repair Vehicle", n"Choice1", n"RepairVehicle"));
-//     } else {
-//         player.UnregisterInputListener(this.m_vehicleComponent, n"Choice1");
-//         uiSystem.QueueEvent(FlightController.HideHintFromSource(n"RepairVehicle"));
-//     }
-//   }
-// } 
-
-// @addMethod(VehicleObject)
-// public const func IsQuickHackAble() -> Bool {
-//   return true;
-// }
-
-// @addMethod(VehicleObject)
-// public const func IsQuickHacksExposed() -> Bool {
-//   return true;
-// }
-
-
-@addMethod(VehicleObject)
-public native func ResetQuestEnforceTransform() -> Void;
-// let_there_be_flight/_blackboardDefinitions.reds
-
-
-public class VehicleFlightDef extends BlackboardDefinition {
-
-  public let IsActive: BlackboardID_Bool;
-  public let Mode: BlackboardID_Int;
-  public let IsUIActive: BlackboardID_Bool;
-  public let Orientation: BlackboardID_Quat;
-  public let Force: BlackboardID_Vector4;
-  public let Torque: BlackboardID_Vector4;
-  public let Position: BlackboardID_Vector4;
-  public let Pitch: BlackboardID_Float;
-  public let Roll: BlackboardID_Float;
-
-  public const func AutoCreateInSystem() -> Bool {
-    return true;
-  }
-}
-
-@addField(AllBlackboardDefinitions)
-public let VehicleFlight: ref<VehicleFlightDef>;
-
-// @addField(VehicleDef)
-// public let IsFlightActive: BlackboardID_Bool;
-
-// @addField(VehicleDef)
-// public let FlightMode: BlackboardID_Int;
-
-// @addField(VehicleDef)
-// public let IsFlightUIActive: BlackboardID_Bool;
-
-// @addField(VehicleDef)
-// public let Orientation: BlackboardID_Quat;
-
-// @addField(VehicleDef)
-// public let Pitch: BlackboardID_Float;
-
-// @addField(VehicleDef)
-// public let Force: BlackboardID_Vector4;
-
-// @addField(VehicleDef)
-// public let Torque: BlackboardID_Vector4;
-
-// @addField(VehicleDef)
-// public let Position: BlackboardID_Vector4;
-// let_there_be_flight/_hudCarController.reds
-
-// @wrapMethod(hudCarController)
-// private final func Reset() -> Void {
-//   wrappedMethod();
-//   this.OnFlightActiveChanged(false);
-// }
-
-// @addField(hudCarController)
-// private let m_flightActiveBBConnectionId: ref<CallbackHandle>;
-
-// @addField(hudCarController)
-// private let m_flightModeBBConnectionId: ref<CallbackHandle>;
-
-// @addField(hudCarController)
-// private let m_flightControllerStatus: wref<inkText>;
-
-// @wrapMethod(hudCarController)
-// private final func RegisterToVehicle(register: Bool) -> Void {
-//   wrappedMethod(register);
-  // let flightControllerBlackboard: wref<IBlackboard>;
-  // let vehicle: ref<VehicleObject> = this.m_activeVehicle;
-  // if vehicle == null {
-  //   return;
-  // };
-  // flightControllerBlackboard = FlightController.GetInstance().GetBlackboard();
-  // if IsDefined(flightControllerBlackboard) {
-  //   if register {
-  //     // GetRootWidget() returns root widget of base type inkWidget
-  //     // GetRootCompoundWidget() returns root widget casted to inkCompoundWidget
-  //     if !IsDefined(this.m_flightControllerStatus) {
-  //       this.m_flightControllerStatus = FlightController.HUDStatusSetup(this.GetRootCompoundWidget());
-  //     }
-  //     this.m_flightActiveBBConnectionId = flightControllerBlackboard.RegisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this, n"OnFlightActiveChanged");
-  //     this.m_flightModeBBConnectionId = flightControllerBlackboard.RegisterListenerInt(GetAllBlackboardDefs().VehicleFlight.Mode, this, n"OnFlightModeChanged");
-  //     this.FlightActiveChanged(FlightController.GetInstance().active);
-  //   } else {
-  //     flightControllerBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this.m_flightActiveBBConnectionId);
-  //     flightControllerBlackboard.UnregisterListenerInt(GetAllBlackboardDefs().VehicleFlight.Mode, this.m_flightModeBBConnectionId);
-  //   };
-  // };
-// }
-
-// @addMethod(hudCarController)
-// protected cb func OnFlightActiveChanged(active: Bool) -> Bool {
-//   if !IsDefined(this.m_flightControllerStatus) {
-//     this.m_flightControllerStatus = FlightController.HUDStatusSetup(this.GetRootCompoundWidget());
-//   }
-//   this.FlightActiveChanged(active);
-// }
-
-// @addMethod(hudCarController)
-// protected func FlightActiveChanged(active: Bool) -> Void {
-//   if active {
-//     this.m_flightControllerStatus.SetText("Flight Active: " + fs().playerComponent.GetFlightMode().GetDescription());
-//   } else {
-//     this.m_flightControllerStatus.SetText("Flight Available");
-//   }
-// }
-
-// @addMethod(hudCarController)
-// protected cb func OnFlightModeChanged(mode: Int32) -> Bool {
-//   this.m_flightControllerStatus.SetText("Flight Active: " + fs().playerComponent.GetFlightMode().GetDescription());
-// }
-
-@if(!ModuleExists("ImprovedMinimapMain"))
-@addMethod(hudCarController)
-public func UpdateIMZSpeed(speed: Float, multiplier: Float) { }
-
-@if(ModuleExists("ImprovedMinimapMain"))
-@addMethod(hudCarController)
-public func UpdateIMZSpeed(speed: Float, multiplier: Float) {
-  let value: Float = Cast<Float>(RoundF(speed * 2.0)) / 6.0;
-  let resultingValue: Float = value * multiplier;
-  GameInstance.GetBlackboardSystem(this.m_activeVehicle.GetGame()).Get(GetAllBlackboardDefs().UI_System).SetFloat(GetAllBlackboardDefs().UI_System.CurrentSpeed_IMZ, resultingValue);
-}
-
-@wrapMethod(hudCarController)
-protected cb func OnSpeedValueChanged(speedValue: Float) -> Bool {
-  // speedValue = AbsF(speedValue);
-  // let multiplier: Float = GameInstance.GetStatsDataSystem(this.m_activeVehicle.GetGame()).GetValueFromCurve(n"vehicle_ui", speedValue, n"speed_to_multiplier");
-  // inkTextRef.SetText(this.m_SpeedValue, IntToString(RoundMath(speedValue)));
-
-  let fc = fs().playerComponent;
-  if fc.active {
-    let speed = AbsF(fc.stats.d_speed);
-    let multiplier: Float = GameInstance.GetStatsDataSystem(this.m_activeVehicle.GetGame()).GetValueFromCurve(n"vehicle_ui", speed, n"speed_to_multiplier");
-    inkTextRef.SetText(this.m_SpeedValue, IntToString(RoundMath(speed * multiplier)));
-    this.drawRPMGaugeFull(AbsF(fc.surge) * 5000.0);
-    this.UpdateIMZSpeed(speed, multiplier);
-  } else {
-    wrappedMethod(speedValue);
-  }
-}
-@wrapMethod(hudCarController)
-protected cb func OnRpmValueChanged(rpmValue: Float) -> Bool {
-  let fc = fs().playerComponent;
-  if !fc.active {
-    wrappedMethod(rpmValue);
-  }
-}
-// let_there_be_flight/_inkBorder.reds
-
-@addField(inkBorder)
-native let thickness: Float;
-
-@addMethod(inkBorder)
-public func SetThickness(thickness: Float) {
-    this.thickness = thickness;
-}
-@addMethod(inkBorder)
-public func GetThickness() -> Float{
-    return this.thickness;
-}
-// let_there_be_flight/_inkMask.reds
-
-enum inkMaskDataSource {
-    TextureAtlas = 0,
-    DynamicTexture = 1
-}
-
-// public native class inkTextureAtlas {
-
-// }
-
-// @addField(inkMask)
-// native let textureAtlas: inkTextureAtlas;
-// @addField(inkMask)
-// native let texturePart: CName;
-@addField(inkMask)
-native let dynamicTextureMask: CName;
-
-@addMethod(inkMask)
-func SetDynamicTextureMask(value: CName) {
-    this.dynamicTextureMask = value;
-}
-
-@addField(inkMask)
-native let dataSource: inkMaskDataSource;
-
-@addMethod(inkMask)
-func SetDataSource(value: inkMaskDataSource) {
-    this.dataSource = value;
-}
-
-@addField(inkMask)
-let useNineSliceScale: Bool;
-
-@addField(inkMask)
-let nineSliceScale: inkMargin;
-
-@addMethod(inkMask)
-public func UsesNineSliceScale() -> Bool {
-	return this.useNineSliceScale;
-}
-
-@addMethod(inkMask)
-public func SetNineSliceScale(enable: Bool) -> Void {
-	this.useNineSliceScale = enable;
-}
-
-@addMethod(inkMask)
-public func GetNineSliceGrid() -> inkMargin {
-	return this.nineSliceScale;
-}
-
-@addMethod(inkMask)
-public func SetNineSliceGrid(grid: inkMargin) -> Void {
-	this.nineSliceScale = grid;
-}
-
-@addField(inkMask)
-native let invertMask: Bool;
-
-@addMethod(inkMask)
-func SetInvertMask(value: Bool) {
-    this.invertMask = value;
-}
-
-@addField(inkMask)
-native let maskTransparency: Float;
-
-@addMethod(inkMask)
-func SetMaskTransparency(value: Float) {
-    this.maskTransparency = value;
-}
-
-
-// @addMethod(inkMask)
-// func SetAtlasResource(textureAtlas: ResRef) {
-//     this.textureAtlas = textureAtlas;
-// }
-@addMethod(inkMask)
-public native func SetAtlasResource(atlasResourcePath: ResRef) -> Bool;
-// let_there_be_flight/_inkQuadShape.reds
-
-public native class inkQuadShape extends inkBaseShapeWidget {
-    // native let textureAtlas: ResRef;
-    native let texturePart: CName;
-    native let vertexList: array<Vector2>;
-
-    // public func GetTextureAtlas() -> ResRef {
-    //     return this.textureAtlas;
-    // }
-    public func GetTexturePart() -> CName {
-        return this.texturePart;
-    }
-    public func GetVertexList() -> array<Vector2> {
-        return this.vertexList;
-    }
-}
-// let_there_be_flight/_inkWidget.reds
-
-@addMethod(inkWidget)
-public native func CreateEffect(typeName: CName, effectName: CName) -> Void;
-
-enum inkEBlurDimension
-{
-   Horizontal = 0,
-   Vertical = 1
-}
-
-@addMethod(inkWidget)
-public native func SetBlurDimension(effectName: CName, blurDimension : inkEBlurDimension) -> Bool;
-// let_there_be_flight/_weaponRoster.reds
-
-@addField(weaponRosterGameController)
-let m_FlightStateBlackboardId: ref<CallbackHandle>;
-
-@wrapMethod(weaponRosterGameController)
-private final func RegisterBB() -> Void {
-  wrappedMethod();
-  let flightBB = FlightController.GetInstance().GetBlackboard();
-  if IsDefined(flightBB) {
-    if !IsDefined(this.m_FlightStateBlackboardId) {
-      this.m_FlightStateBlackboardId = flightBB.RegisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this, n"OnFlightActivate");
-    }
-  }
-}
-
-@wrapMethod(weaponRosterGameController)
-private final func UnregisterBB() -> Void {
-  wrappedMethod();
-  let flightBB = FlightController.GetInstance().GetBlackboard();
-  if IsDefined(flightBB) {
-    if IsDefined(this.m_FlightStateBlackboardId) {
-       flightBB.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsActive, this.m_FlightStateBlackboardId);
-    }
-  }
-}
-
-@addMethod(weaponRosterGameController)
-private cb func OnFlightActivate() -> Void {
-  this.PlayFold();
-}
-// let_there_be_flight/hudFlightController.reds
+// UI/hudFlightController.reds
 
 
 public class FlightUIVehicleHealthStatPoolListener extends CustomValueStatPoolsListener {
@@ -6650,16 +6481,6 @@ public class FlightUIVehicleHealthStatPoolListener extends CustomValueStatPoolsL
     };
   }
 }
-
-@if(!ModuleExists("ImprovedMinimapMain"))
-public func IMZ_Comp_SetBlackboardValue(gameInstance: GameInstance, enabled: Bool) {
-  GameInstance.GetBlackboardSystem(gameInstance).Get(GetAllBlackboardDefs().UI_ActiveVehicleData).SetBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsPlayerMounted, enabled); 
-} 
-
-@if(ModuleExists("ImprovedMinimapMain"))
-public func IMZ_Comp_SetBlackboardValue(gameInstance: GameInstance, enabled: Bool) {
-  GameInstance.GetBlackboardSystem(gameInstance).Get(GetAllBlackboardDefs().UI_System).SetBool(GetAllBlackboardDefs().UI_System.IsMounted_IMZ, enabled);
-} 
 
 public class hudFlightController extends inkHUDGameController {
 
@@ -7031,94 +6852,321 @@ public class hudFlightController extends inkHUDGameController {
   }
 }
 
-// let_there_be_flight/vehicleTPPCameraComponent.reds
 
-public native class vehicleChassisComponent extends IPlacedComponent {
-    public native func GetComOffset() -> Transform;
+// Utils/FlightUtils.reds
+
+public class FlightUtils {
+    public static func SqrtCurve(input: Float) -> Float {
+        if input != 0.0 {
+            return SqrtF(AbsF(input)) * AbsF(input) / input;
+        } else {
+            return 0.0;
+        }
+    }
+    public static func IdentCurve(input: Float) -> Float {
+        return input;
+    }
+
+    public static func Right() -> Vector4 = new Vector4(1.0, 0.0, 0.0, 0.0);
+    public static func Left() -> Vector4 = new Vector4(-1.0, 0.0, 0.0, 0.0);
+    public static func Forward() -> Vector4 = new Vector4(0.0, 1.0, 0.0, 0.0);
+    public static func Backward() -> Vector4 = new Vector4(0.0, -1.0, 0.0, 0.0);
+    public static func Up() -> Vector4 = new Vector4(0.0, 0.0, 1.0, 0.0);
+    public static func Down() -> Vector4 = new Vector4(0.0, 0.0, -1.0, 0.0);
+    
+	public static func ElectricBlue() -> HDRColor = new HDRColor(0.368627, 0.964706, 1.0, 1.0)
+	public static func Bittersweet() -> HDRColor = new HDRColor(1.1761, 0.3809, 0.3476, 1.0)
+	public static func Dandelion() -> HDRColor = new HDRColor(1.1192, 0.8441, 0.2565, 1.0)
+	public static func LightGreen() -> HDRColor = new HDRColor(0.113725, 0.929412, 0.513726, 1.0)
+	public static func BlackPearl() -> HDRColor = new HDRColor(0.054902, 0.054902, 0.090196, 1.0)
+
+	public static func RedOxide() -> HDRColor = new HDRColor(0.411765, 0.086275, 0.090196, 1.0)
+	public static func Bordeaux() -> HDRColor = new HDRColor(0.262745, 0.086275, 0.094118, 1.0)
+
+	public static func PureBlack() -> HDRColor = new HDRColor(0.0, 0.0, 0.0, 1.0)
+	public static func PureWhite() -> HDRColor = new HDRColor(1.0, 1.0, 1.0, 1.0)
 }
 
-native class vehicleTPPCameraComponent extends CameraComponent {
-    // public native let isInAir: Bool;
-    public native let drivingDirectionCompensationAngleSmooth: Float;
-    public native let drivingDirectionCompensationSpeedCoef: Float;
-    public native let lockedCamera: Bool;
-    public native let worldPosition: WorldPosition;
-    public native let worldTransform2: WorldTransform;
-    public native let pitch: Float;
-    public native let yaw: Float;
-    public native let pitchDelta: Float; // positive moves camera down
-    public native let yawDelta: Float; // positive moves camera right
-    // public native let chassis: ref<vehicleChassisComponent>;
+// Utils/OperatorHelpers.reds
+
+// Matrix
+
+public static func OperatorMultiply(m: Matrix, v: Vector4) -> Vector4 {
+  return Vector4.Transform(m, v);
+}
+public static func OperatorMultiply(v: Vector4, m: Matrix) -> Vector4 {
+  return m * v;
 }
 
-// @addMethod(vehicleChassisComponent)
-// protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> Bool {
-//     super.OnRequestComponents(ri);
-//     EntityRequestComponentsInterface.RequestComponent(ri, n"Chassis", n"vehicleChassisComponent", false);
-// }
-
-
-public native class vehicleDriveToPointEvent extends Event {
-    public native let targetPos: Vector3;
-    public native let useTraffic: Bool;
-    public native let speedInTraffic: Float;
+public static func OperatorAssignMultiply(out v: Vector4, m: Matrix) -> Vector4 {
+  v = m * v;
+  return v;
 }
 
-public importonly class EffectSpawnerComponent extends IVisualComponent {
-    public native func AddEffect() -> Void;
+// Quaternion
+
+public static func OperatorXor(q: Quaternion, n: Int32) -> Quaternion {
+  let out = q;
+  while (n > 0) {
+    Quaternion.SetInverse(out);
+    n -= 1;
+  }
+  return out;
 }
 
+// EulerAngles
 
-// @addField(ColliderComponent)
-// public native let mass: Float;
+public static func Cast(a: EulerAngles) -> Vector4 {
+  let v = Vector4.EmptyVector();
+  v.X = a.Pitch;
+  v.Y = a.Roll;
+  v.Z = a.Yaw;
+  return v;
+}
 
-// @addField(ColliderComponent)
-// public native let massOverride: Float;
+public static func Cast(a: EulerAngles) -> WorldTransform {
+  let wt = new WorldTransform();
+  WorldTransform.SetOrientation(wt, EulerAngles.ToQuat(a));
+  return wt;
+}
 
-// @addField(ColliderComponent)
-// public native let inertia: Vector3;
+public static func OperatorMultiply(e: EulerAngles, f: Float) -> EulerAngles {
+  let out = e;
+  e.Roll *= f;
+  e.Yaw *= f;
+  e.Pitch += f;
+  return out;
+}
 
-// @addField(ColliderComponent)
-// public native let comOffset: Transform;
+public static func OperatorAssignMultiply(out e: EulerAngles, f: Float) -> EulerAngles {
+  e = e * f;
+  return e;
+}
 
-// public native class exEntitySpawner {
-//     public native static func Spawn(entityPath: ResRef, worldTransform: WorldTransform, opt appearance: CName, opt recordID: TweakDBID) -> EntityID;
-//     public native static func SpawnRecord(recordID: TweakDBID, worldTransform: WorldTransform, opt appearance: CName) -> EntityID;
-//     public native static func Despawn(entity: ref<Entity>) -> Void;
-// }
+public static func OperatorDivide(e: EulerAngles, f: Float) -> EulerAngles {
+  let out = e;
+  e.Roll /= f;
+  e.Yaw /= f;
+  e.Pitch /= f;
+  return out;
+}
 
-// @addField(MappinSystem)
-// public native let worldMappins: Array<Ptr<>>;
+public static func OperatorAdd(e: EulerAngles, v: Vector4) -> Vector4 {
+  let out = v;
+  v.X += e.Pitch;
+  v.Y += e.Roll;
+  v.Z += e.Yaw;
+  return out;
+}
 
-// @addField(entCameraComponent)
-// native let fov: Float;
+public static func OperatorAdd(v: Vector4, e: EulerAngles) -> Vector4 {
+  return e + v;
+}
 
-// @addField(entCameraComponent)
-// native let zoom: Float;
+public static func OperatorAssignAdd(out v: Vector4, e: EulerAngles) -> Vector4 {
+  v = e + v;
+  return v;
+}
 
-// @addField(entCameraComponent)
-// native let nearPlaneOverride: Float;
+// Vector3
 
-// @addField(entCameraComponent)
-// native let farPlaneOverride: Float;
+public static func OperatorAdd(a: Vector4, b: Vector3) -> Vector4 {
+  return a + Vector4.Vector3To4(b);
+}
 
-// @addField(entCameraComponent)
-// native let motionBlurScale: Float;
+// FxResource
 
-//FindVehicleCameraManager
+public static native func Cast(a: ResRef) -> FxResource;
 
 
-// @addMethod(FxSystem)
-// public final native func SpawnEffect(resource: ResRef, transform: WorldTransform, opt ignoreTimeDilation: Bool) -> ref<FxInstance>;
+public static func OperatorEqual(a: Vector3, b: Vector3) -> Bool {
+  return a.X == b.X && a.Y == b.Y && a.Z == b.Z;
+}
 
-// @addField(FxResource)
-// public native let effect: ResRef;
+public static func OperatorEqual(a: Vector4, b: Vector4) -> Bool {
+  return a.X == b.X && a.Y == b.Y && a.Z == b.Z && a.W == b.W;
+}
 
-// @addMethod(Entity)
-// public native func AddComponent(component: ref<IComponent>) -> Bool;
+public static func OperatorNotEqual(a: Vector3, b: Vector3) -> Bool {
+  return !OperatorEqual(a, b);
+}
 
-// @addMethod(Entity)
-// public native func AddWorldWidgetComponent() -> Bool;
+public static func OperatorNotEqual(a: Vector4, b: Vector4) -> Bool {
+  return !OperatorEqual(a, b);
+}
 
-// @addMethod(IPlacedComponent)
-// public native func UpdateHardTransformBinding(bindName: CName, slotName: CName) -> Bool;
+// Utils/PID.reds
+
+public class PID {
+  private let valueFloat: Float;
+  // private let valueVector: Vector4;
+  private let inputFloat: Float;
+  // private let inputVector: Vector4;
+  private let P: Float;
+  private let I: Float;
+  private let D: Float;
+  public let integralFloat: Float;
+  // private let integralVector: Vector4;
+  private let lastErrorFloat: Float;
+  // private let lastErrorVector: Vector4;
+  public static func Create(P: Float, I: Float, D: Float) -> ref<PID> {
+    let instance: ref<PID> = new PID();
+    instance.P = P;
+    instance.I = I;
+    instance.D = D;
+    instance.Reset();
+    return instance;
+  }
+  public static func Create(v: Vector3) -> ref<PID> {
+    return PID.Create(v.X, v.Y, v.Z);
+  }
+  public static func Create(P: Float, I: Float, D: Float, initialValue: Float) -> ref<PID> {
+    let instance: ref<PID> = PID.Create(P, I, D);
+    instance.valueFloat = initialValue;
+    return instance;
+  }
+  // public static func Create(P: Float, I: Float, D: Float, initialValue: Vector4) -> ref<PID> {
+  //   let instance: ref<PID> = PID.Create(P, I, D);
+  //   instance.valueVector = initialValue;
+  //   return instance;
+  // }
+  public func Update(P: Float, I: Float, D: Float) -> Void {
+    this.P = P;
+    this.I = I;
+    this.D = D;
+  }
+  
+  public func UpdateP(P: Float) -> Void {
+    this.P = P;
+  }
+  
+  public func UpdateI(I: Float) -> Void {
+    this.I = I;
+  }
+
+  public func UpdateD(D: Float) -> Void {
+    this.D = D;
+  }
+
+  public func SetInput(input: Float) {
+    this.inputFloat = input;
+  }
+  // public func SetInput(input: Vector4) {
+  //   this.inputVector = input;
+  // }
+  public func GetValue(timeDelta: Float) -> Float {
+    let error: Float = this.inputFloat - this.valueFloat;
+    this.valueFloat += this.GetCorrection(error, timeDelta);
+    return this.valueFloat;
+  } 
+  public func GetValue() -> Float {
+    return this.valueFloat;
+  } 
+  public func GetInput() -> Float {
+    return this.inputFloat;
+  }
+  // public func GetValue(timeDelta: Float) -> Vector4 {
+  //   let error: Vector4 = this.inputVector - this.valueVector;
+  //   this.valueVector += this.GetCorrection(error)
+  //   return this.valueVector;
+  // }
+  public func GetValue(input: Float, timeDelta: Float) -> Float {
+    this.SetInput(input);
+    return this.GetValue(timeDelta);
+  }
+  // public func GetValue(input: Vector4, timeDelta: Float) -> Vector4 {
+  //   this.SetInput(input);
+  //   return GetValue(timeDelta);
+  // }
+  public func GetCorrection(error: Float, timeDelta: Float) -> Float { 
+    let derivative: Float = (error - this.lastErrorFloat) / timeDelta;
+    // if error < 0.01 || error * this.lastErrorFloat < 0.0 {
+    //   this.integralFloat = 0.0;
+    // } else {
+    this.integralFloat = ClampF(error * timeDelta + this.integralFloat, -100.0, 100.0);
+    // }
+    this.lastErrorFloat = error;
+    return this.P * error + this.I * this.integralFloat + this.D * derivative;
+  }
+  // public func GetCorrection(error: Vector4, timeDelta: Float) -> Vector4 { 
+  //   let derivative: Vector4 = (error - this.lastErrorVector) / timeDelta;
+  //   this.integralVector = Vector4.ClampLength(error * timeDelta + this.integralVector, -100.0, 100.0);
+  //   this.lastErrorVector = error;
+  //   return this.P * error + this.I * this.integralFloat + this.D * derivative;
+  // }
+  public func GetCorrectionClamped(error: Float, timeDelta: Float, clamp: Float) -> Float {
+    return ClampF(this.GetCorrection(error, timeDelta), -clamp, clamp);
+  }
+  public func Reset(opt input: Float) -> Void {
+    this.inputFloat = input;
+    this.integralFloat = 0.0;
+    this.lastErrorFloat = 0.0;
+  }
+}
+
+public class InputPID extends PID {
+  private let P_dec: Float;
+  public static func Create(P: Float, P_dec: Float) -> ref<InputPID> {
+    let instance: ref<InputPID> = new InputPID();
+    instance.P = P;
+    instance.P_dec = P_dec;
+    instance.Reset();
+    return instance;
+  }
+
+  public func UpdatePd(Pd: Float) -> Void {
+    this.P_dec = Pd;
+  }
+
+  public func GetCorrection(error: Float, timeDelta: Float) -> Float { 
+    if AbsF(this.inputFloat) > AbsF(this.valueFloat) || this.inputFloat * this.valueFloat < 0.0 {
+      return this.P * error;
+    } else {
+      return this.P_dec * error;
+    }
+  }
+}
+
+public class DualPID extends PID {
+  private let P_aux: Float;
+  private let I_aux: Float;
+  private let D_aux: Float;
+  private let ratio: Float;
+  public static func Create(P: Float, I: Float, D: Float, P_aux: Float, I_aux: Float, D_aux: Float) -> ref<DualPID> {
+    let instance: ref<DualPID> = new DualPID();
+    instance.P = P;
+    instance.I = I;
+    instance.D = D;
+    instance.P_aux = P_aux;
+    instance.I_aux = I_aux;
+    instance.D_aux = D_aux;
+    instance.Reset();
+    return instance;
+  }
+  public static func Create(P: Float, I: Float, D: Float, P_aux: Float, I_aux: Float, D_aux: Float, initialValue: Float) -> ref<DualPID> {
+    let instance: ref<DualPID> = DualPID.Create(P, I, D, P_aux, I_aux, D_aux);
+    instance.valueFloat = initialValue;
+    return instance;
+  }
+  public func SetRatio(ratio: Float) {
+    this.ratio = ratio;
+  }
+  public func GetCorrection(error: Float, timeDelta: Float) -> Float { 
+    let derivative: Float = (error - this.lastErrorFloat) / timeDelta;
+    // if error < 0.01 || error * this.lastErrorFloat < 0.0 {
+    //   this.integralFloat = 0.0;
+    // } else {
+    this.integralFloat = ClampF(error * timeDelta + this.integralFloat, -100.0, 100.0) * 0.95;
+    // }
+    this.lastErrorFloat = error;
+    let pri = this.P * error + this.I * this.integralFloat + this.D * derivative;
+    let aux = this.P_aux * error + this.I_aux * this.integralFloat + this.D_aux * derivative;
+    return pri * (1.0 - this.ratio) + aux * (this.ratio);
+  }
+  public func UpdateAux(P_aux: Float, I_aux: Float, D_aux: Float) -> Void {
+    this.P_aux = P_aux;
+    this.I_aux = I_aux;
+    this.D_aux = D_aux;
+  }
+}
+

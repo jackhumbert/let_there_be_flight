@@ -14,14 +14,15 @@
 #include <RED4ext/GameOptions.hpp>
 
 #include "Addresses.hpp"
-#include "FlightLog.hpp"
-#include "Utils.hpp"
+#include "Utils/FlightLog.hpp"
+#include "Utils/Utils.hpp"
 #include "stdafx.hpp"
 #include "LoadResRef.hpp"
 #include <RED4ext/Scripting/Natives/Generated/Matrix.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 #include "FlightComponent.hpp"
 #include <RED4ext/Scripting/Natives/Generated/ent/MeshComponent.hpp>
+#include <RED4ext/Scripting/Natives/UpdateManager.hpp>
 
 // These can be found in strings via their variable names
 // 1.52 RVA: 0x4782878

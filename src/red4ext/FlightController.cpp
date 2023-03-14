@@ -1,7 +1,7 @@
 #include "FlightController.hpp"
-#include "FlightModule.hpp"
+#include "Utils/FlightModule.hpp"
 
-#include "Utils.hpp"
+#include "Utils/Utils.hpp"
 #include "stdafx.hpp"
 
 namespace FlightController {

@@ -25,6 +25,8 @@ target_link_libraries(let_there_be_flight.dll
 
 add_custom_command(
   TARGET let_there_be_flight.dll POST_BUILD
+  DEPENDS let_there_be_flight.dll
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
-  ${PROJECT_BINARY_DIR}/bin/let_there_be_flight.dll
-  ${LTBF_GAME_DIR}/red4ext/plugins/let_there_be_flight/let_there_be_flight.dll)
+  ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/let_there_be_flight.dll
+  ${LTBF_GAME_DIR}/red4ext/plugins/let_there_be_flight/let_there_be_flight.dll
+  COMMENT "let_there_be_flight.dll -> ${LTBF_GAME_DIR}/red4ext/plugins/let_there_be_flight/let_there_be_flight.dll")

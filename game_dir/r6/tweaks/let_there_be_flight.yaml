@@ -1,7 +1,9 @@
-# Let There Be Flight
-# (C) 2022 Jack Humbert
+# Let There Be Flight v0.2.0
+# Copyright (c) 2023 Jack Humbert. All rights reserved.
+# Licensed under the MIT license. See the license.md in the root project for details.
 # https://github.com/jackhumbert/let_there_be_flight
-# This file was automatically generated on 2023-03-12 15:09:00.8086585
+
+# This file was automatically generated on 2023-03-14 17:25:55 UTC
 
 # quickhacks.yaml
 
@@ -50,7 +52,6 @@ DeviceAction.FlightAction:
   targetActivePrereqs:
     - Prereqs.ConnectedToBackdoorActive
   targetPrereqs: [ ]
-
 
 DeviceAction.FlightMalfunction:
   $base: DeviceAction.FlightAction
