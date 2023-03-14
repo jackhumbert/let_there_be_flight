@@ -33,7 +33,7 @@ public native class FlightComponent extends GameComponent {
   public native func ChaseTarget(target: wref<GameObject>) -> Void;
   // public native func ChaseTarget() -> Void;
 
-  private let helper: ref<vehicleFlightHelper>;
+  // private let helper: ref<vehicleFlightHelper>;
   private let stats: ref<FlightStats>;
 
   public let m_interaction: ref<InteractionComponent>;

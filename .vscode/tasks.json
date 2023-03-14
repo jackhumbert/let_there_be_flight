@@ -166,7 +166,7 @@
         "label": "Build Redscript",
         "command": "build",
         "targets": [
-          "let_there_be_flight.dll"
+          "redscript"
         ],
         "group": "build",
         "problemMatcher": [],

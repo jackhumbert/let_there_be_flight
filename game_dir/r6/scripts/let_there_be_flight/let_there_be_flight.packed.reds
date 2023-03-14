@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See the license.md in the root project for details.
 // https://github.com/jackhumbert/let_there_be_flight
 
-// This file was automatically generated on 2023-03-14 17:32:08 UTC
+// This file was automatically generated on 2023-03-14 21:22:46 UTC
 
 // Audio/FlightAudio.reds
 
@@ -707,10 +707,10 @@ public native func GetAngularVelocity() -> Vector3;
 @addMethod(VehicleObject)
 public native func TurnOffAirControl() -> Bool;
 
-public native class vehicleFlightHelper extends IScriptable {
-    public native let force: Vector4;
-    public native let torque: Vector4;
-}
+// public native class vehicleFlightHelper extends IScriptable {
+//     public native let force: Vector4;
+//     public native let torque: Vector4;
+// }
 
 // @addMethod(VehicleObject)
 // public native func AddFlightHelper() -> ref<vehicleFlightHelper>;
@@ -1209,7 +1209,7 @@ public native class FlightComponent extends GameComponent {
   public native func ChaseTarget(target: wref<GameObject>) -> Void;
   // public native func ChaseTarget() -> Void;
 
-  private let helper: ref<vehicleFlightHelper>;
+  // private let helper: ref<vehicleFlightHelper>;
   private let stats: ref<FlightStats>;
 
   public let m_interaction: ref<InteractionComponent>;

@@ -104,10 +104,10 @@ public native func GetAngularVelocity() -> Vector3;
 @addMethod(VehicleObject)
 public native func TurnOffAirControl() -> Bool;
 
-public native class vehicleFlightHelper extends IScriptable {
-    public native let force: Vector4;
-    public native let torque: Vector4;
-}
+// public native class vehicleFlightHelper extends IScriptable {
+//     public native let force: Vector4;
+//     public native let torque: Vector4;
+// }
 
 // @addMethod(VehicleObject)
 // public native func AddFlightHelper() -> ref<vehicleFlightHelper>;

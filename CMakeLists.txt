@@ -60,7 +60,53 @@ add_compile_definitions(
   # Use Unicode charset.
   UNICODE
   _UNICODE
+
+  # https://github.com/microsoft/STL/issues/1934
+  _ITERATOR_DEBUG_LEVEL=0
+
+  #  _DEBUG
+#  _WINDLL
+#  _CRT_SECURE_NO_WARNINGS
 )
+
+#add_compile_options(
+#  $<$<BOOL:MSVC>:/Zc:__cplusplus>
+#  /JMC
+#  /permissive-
+#  /Gs
+#  /W3
+#  /Zc:wchar_t
+#  # auto sets /Gy apparently
+#  #  /ZI
+#  /Gm-
+#  /Od
+#  /sdl
+#  /Zc:inline
+#  /fp:precise
+#  /WX-
+#  /Zc:forScope
+#  /RTC1
+#  /Gd
+#  /MDd
+#  /FC
+#  /nologo
+#  /diagnostics:column
+#  /Gy
+#)
+#
+#add_link_options(
+#  /MANIFEST
+#  /NXCOMPAT
+##  /DEBUG
+#  /DLL
+##  /MACHINE:X64
+##  /INCREMENTAL
+#  /NOLOGO
+#  /TLBID:1
+#  /OPT:REF
+##  /OPT:ICF
+##  /INCREMENTAL:NO
+#)
 
 # Dependencies
 
@@ -92,7 +138,7 @@ add_custom_target(redscript_prereqs DEPENDS ${PROJECT_BINARY_DIR}/prereqs.redscr
 
 set_target_properties(redscript_prereqs PROPERTIES FOLDER "Dependencies")
 
-file(GLOB_RECURSE REDSCRIPT_FILES ${LTBF_REDSCRIPT_DIR}/*.reds)
+file(GLOB_RECURSE REDSCRIPT_FILES ${LTBF_REDSCRIPT_DIR}/*.reds LIST_DIRECTORIES false)
 
 set(LTBF_LAST_REDSCRIPT_LINT "${CMAKE_BINARY_DIR}/redscript.lint")
 
