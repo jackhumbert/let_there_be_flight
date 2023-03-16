@@ -30,6 +30,10 @@
 #include "FlightController.hpp"
 #include "FlightEvents.hpp"
 #include "Camera/FlightCamera.hpp"
+#include <Red/Alias.hpp>
+#include <Red/Stl.hpp>
+#include <Red/Rtti/Definition.hpp>
+#include <Red/Rtti/Resolving.hpp>
 
 RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes() {
   auto inputLoaderDLL = Utils::GetRootDir() / L"red4ext" / L"plugins" / L"input_loader" / L"input_loader.dll";
@@ -514,6 +518,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 
     RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
     Engine::RTTIRegistrar::RegisterPending();
+    Red::RTTIRegistrar::RegisterPending();
 
     RED4ext::GameState initState;
     initState.OnEnter = nullptr;

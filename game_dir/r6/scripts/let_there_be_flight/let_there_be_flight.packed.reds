@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See the license.md in the root project for details.
 // https://github.com/jackhumbert/let_there_be_flight
 
-// This file was automatically generated on 2023-03-16 02:09:58 UTC
+// This file was automatically generated on 2023-03-16 15:05:26 UTC
 
 // Audio/FlightAudio.reds
 
@@ -2472,24 +2472,36 @@ public abstract native class IFlightConfiguration extends IScriptable {
     }
     return total;
   }
-/*
-  public func GetEffectForMaterial(material: CName, fx: MaterialFx) -> MaterialFx {
-    let conditions = new MaterialFx(
-      new MaterialCondition(
-        new MaterialResource(r"None", r"None", true),
-        new MaterialResource(r"None", r"None", true)
-      ), 
-      new MaterialCondition(
-        new MaterialResource(r"None", r"None", true),
-        new MaterialResource(r"None", r"None", true)
-      ), 
-      new MaterialCondition(
-        new MaterialResource(r"None", r"None", true),
-        new MaterialResource(r"None", r"None", true)
-      ));
-    return conditions;
+
+  public func GetEffectForMaterial(material: CName, originalFx: MaterialFx) -> MaterialFx {
+		switch material {
+      case n"Materials.Asphalt":
+      case n"Materials.Concrete":
+      case n"Materials.Stone":
+      case n"Materials.Sand":
+      case n"Materials.Dirt":
+      case n"Materials.Grass":
+      case n"Materials.Default":
+      default:
+        break;
+    }
+
+    originalFx.normal.particle.skidMarks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
+    originalFx.wet.particle.skidMarks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
+    originalFx.rain.particle.skidMarks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
+    originalFx.normal.particle.tireTracks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
+    originalFx.wet.particle.tireTracks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
+    originalFx.rain.particle.tireTracks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
+    
+    originalFx.normal.decal.skidMarks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
+    originalFx.wet.decal.skidMarks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
+    originalFx.rain.decal.skidMarks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
+    originalFx.normal.decal.tireTracks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
+    originalFx.wet.decal.tireTracks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
+    originalFx.rain.decal.tireTracks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
+
+    return originalFx;
   }
-  */
 }
 
 public func CreateEmptyThruster() -> ref<MeshComponent> {
@@ -2531,12 +2543,12 @@ public class CarFlightConfiguration extends IFlightConfiguration {
     // this.particleEffect = r"base\\fx\\environment\\sparks\\sparks_constant.effect";
     // good
     // this.particleEffect = r"base\\fx\\_library\\sparks\\lib_sparks_welding_big_01.effect";
-    this.particleEffect = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
+    // this.particleEffect = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
     // this.decalEffect = r"base\\fx\\_library\\concrete_breaks\\concrete_breaks_medium.effect";
     // this.decalEffect = r"base\\fx\\vehicles\\_damage\\scratches\\v_car_scratches_decal.effect";
     // this.decalEffect = r"base\\fx\\vehicles\\_wheels\\skid_marks\\radial\\v_skid_mark_r_m_01.effect";
     // this.decalEffect = r"base\\fx\\vehicles\\_wheels\\tire_tracks\\radial\\v_tire_track_r_m_01.effect";
-    this.decalEffect = r"user\\jackhumbert\\effects\\thruster_mark.effect";
+    // this.decalEffect = r"user\\jackhumbert\\effects\\thruster_mark.effect";
 
     if (Equals(this.type, FlightVehicleType.Corpo)) {
       ArrayPush(this.thrusters, new FlightThrusterFL().Create(vehicle, CreateCorpoThruster()));

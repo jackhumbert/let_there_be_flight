@@ -3,37 +3,50 @@
 #include "stdafx.hpp"
 #include <RED4ext/NativeTypes.hpp>
 #include <RED4ext/RED4ext.hpp>
-#include "Engine/RTTIClass.hpp"
+//#include "Engine/RTTIClass.hpp"
+#include <Red/Alias.hpp>
+#include <Red/Stl.hpp>
+#include <Red/Rtti/Definition.hpp>
+#include <Red/Rtti/Resolving.hpp>
+#include <nameof.hpp>
 #include <RED4ext\Scripting\Natives\Generated\red\ResourceReferenceScriptToken.hpp>
+#include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 
-class MaterialResource : Engine::RTTIStruct<MaterialResource> {
-public:
-  RED4ext::ResRef skidMarks;
-  RED4ext::ResRef tireTracks;
-  bool loaded;
-private:
-  friend Descriptor;
-  static void OnRegister(Descriptor *aType);
-  static void OnDescribe(Descriptor *aType, RED4ext::CRTTISystem * rtti);
-};
+using namespace RED4ext::vehicle;
 
-class MaterialCondition : Engine::RTTIStruct<MaterialCondition> {
-public:
-  MaterialResource particle;
-  MaterialResource decal;
-private:
-  friend Descriptor;
-  static void OnRegister(Descriptor *aType);
-  static void OnDescribe(Descriptor *aType, RED4ext::CRTTISystem * rtti);
-};
+//struct MaterialResource {
+//  Red::ResRef skidMarks;
+//  Red::ResRef tireTracks;
+//  bool loaded;
+//};
+//
+//struct MaterialCondition {
+//  MaterialResource particle;
+//  MaterialResource decal;
+//};
+//
+//struct MaterialFx {
+//  MaterialCondition normal;
+//  MaterialCondition wet;
+//  MaterialCondition rain;
+//};
 
-class MaterialFx : Engine::RTTIStruct<MaterialFx> {
-public:
-  MaterialCondition normal;
-  MaterialCondition wet;
-  MaterialCondition rain;
-private:
-  friend Descriptor;
-  static void OnRegister(Descriptor *aType);
-  static void OnDescribe(Descriptor *aType, RED4ext::CRTTISystem * rtti);
-};
+RTTI_DEFINE_CLASS(MaterialResource, {
+  RTTI_PROPERTY(skidMarks);
+  RTTI_PROPERTY(tireTracks);
+  RTTI_PROPERTY(loaded);
+  type->flags.hasNoDefaultObjectSerialization = true;
+});
+
+RTTI_DEFINE_CLASS(MaterialCondition, {
+  RTTI_PROPERTY(particle);
+  RTTI_PROPERTY(decal);
+  type->flags.hasNoDefaultObjectSerialization = true;
+});
+
+RTTI_DEFINE_CLASS(MaterialFx, {
+  RTTI_PROPERTY(normal);
+  RTTI_PROPERTY(wet);
+  RTTI_PROPERTY(rain);
+  type->flags.hasNoDefaultObjectSerialization = true;
+});

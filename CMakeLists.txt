@@ -64,6 +64,8 @@ add_compile_definitions(
   # https://github.com/microsoft/STL/issues/1934
   _ITERATOR_DEBUG_LEVEL=0
 
+  # for Codeware
+  NOMINMAX
   #  _DEBUG
 #  _WINDLL
 #  _CRT_SECURE_NO_WARNINGS
@@ -114,7 +116,7 @@ include(ConfigureAndIncludeDetours)
 include(ConfigureAndIncludeFMOD)
 include(ConfigureAndIncludeRED4extSdk)
 include(ConfigureAndIncludeSpdlog)
-#include(ConfigureAndIncludeCodeware)
+include(ConfigureAndIncludeCodeware)
 
 add_subdirectory(src/red4ext)
 

@@ -23,7 +23,7 @@ target_link_libraries(let_there_be_flight.dll
     FMOD
     RED4ext.SDK
     spdlog
-#    Codeware
+    Codeware
 )
 
 add_custom_command(
