@@ -157,6 +157,12 @@ REGISTER_FLIGHT_HOOK(void __fastcall, vehicleUnk580_UpdateTireParameters,
   RED4ext::vehicle::TireParameterUpdate *tpu, RED4ext::vehicle::TireUpdate * tireUpdate) {
   auto fc = FlightComponent::Get(tpu->unk580->vehicle);
   if (fc && fc->active) {
+    float skidValue = tireUpdate->skidValue2;
+    if (tpu->unk580->unk3D0) {
+      skidValue = tireUpdate->skidValue;
+    }
+    fc->ExecuteFunction("HandleScraping", skidValue, tpu->variables->wheelIndex, tpu->variables->emitterName);
+
     tireUpdate->skidValue = 0.0;
     tireUpdate->skidValue2 = 0.0;
   }

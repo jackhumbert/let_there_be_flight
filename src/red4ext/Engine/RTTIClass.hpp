@@ -8,6 +8,120 @@
 
 namespace Engine
 {
+
+template<class T>
+class RTTIStructDescriptor : public RED4ext::TTypedClass<T>, public detail::TypeDescriptor<T>
+{
+public:
+  RTTIStructDescriptor() : RED4ext::TTypedClass<T>(0ull) {}
+
+  void SetName(const char* aName)
+  {
+    RED4ext::CClass::name = RED4ext::CNamePool::Add(aName);
+  }
+
+  void SetFlags(const RED4ext::CClass::Flags& aFlags)
+  {
+    RED4ext::CClass::flags = aFlags;
+  }
+
+  template<typename R, typename TR>
+  RED4ext::CClassStaticFunction* AddFunction(RTTIStaticFunction<R, TR> aFunc, const char* aName,
+                                             RED4ext::CBaseFunction::Flags aFlags = {})
+  {
+    const auto* ptr = reinterpret_cast<RED4ext::ScriptingFunction_t<R*>>(aFunc);
+    auto* func = RED4ext::CClassStaticFunction::Create(this, aName, aName, ptr, aFlags);
+
+    RED4ext::CClass::RegisterFunction(func);
+
+    return func;
+  }
+
+  template<class C, typename R, typename TR>
+    requires std::is_same_v<C, T>
+  RED4ext::CClassStaticFunction* AddFunction(RTTIMemberFunction<C, R, TR> aFunc, const char* aName,
+                                             RED4ext::CBaseFunction::Flags aFlags = {})
+  {
+    const auto* ptr = reinterpret_cast<RED4ext::ScriptingFunction_t<R*>>(aFunc);
+    auto* func = RED4ext::CClassFunction::Create(this, aName, aName, ptr, aFlags);
+
+    RED4ext::CClass::RegisterFunction(func);
+
+    return func;
+  }
+
+  template<auto AFunc>
+    requires detail::IsFunctionPtr<decltype(AFunc)>
+  RED4ext::CClassFunction* AddFunction(const char* aName, RED4ext::CBaseFunction::Flags aFlags = {})
+  {
+    const auto* ptr = WrapScriptableFunction<AFunc>();
+
+    RED4ext::CClassFunction* func;
+    if constexpr (detail::IsMemberFunctionPtr<decltype(AFunc)>)
+      func = RED4ext::CClassFunction::Create(this, aName, aName, ptr, aFlags);
+    else
+      func = RED4ext::CClassStaticFunction::Create(this, aName, aName, ptr, aFlags);
+
+    DescribeScriptableFunction(func, AFunc);
+
+    RED4ext::CClass::RegisterFunction(func);
+
+    return func;
+  }
+
+  inline static void RegisterRTTI()
+  {
+    s_registrar.Register();
+  }
+
+  inline static RED4ext::CClass* Get()
+  {
+    return s_class;
+  }
+
+private:
+  static void OnRegisterRTTI()
+  {
+    using FinalDescriptor = typename T::Descriptor;
+
+    auto* desc = new FinalDescriptor();
+
+//     if constexpr (detail::HasTypeNameConst<T>)
+//         desc->SetName(T::RTTIName);
+//
+//     if constexpr (detail::HasTypeFlagsConst<T>)
+//         desc->SetFlags(T::RTTIFlags);
+
+    T::OnRegister(desc);
+
+    if (desc->name.IsNone())
+      desc->SetName(detail::ExtractShortTypeName<T>());
+
+    auto* rtti = RED4ext::CRTTISystem::Get();
+    rtti->RegisterType(desc);
+
+    s_class = desc;
+    detail::TypeDescriptor<T>::s_type = desc;
+  }
+
+  static void OnPostRegisterRTTI()
+  {
+    using FinalDescriptor = typename T::Descriptor;
+
+    auto* rtti = RED4ext::CRTTISystem::Get();
+
+    auto* desc = reinterpret_cast<FinalDescriptor*>(s_class);
+
+    T::OnDescribe(desc, rtti);
+
+    // Force native flag
+    s_class->flags.isNative = true;
+  }
+
+  inline static RED4ext::CClass* s_class;
+  inline static RTTIRegistrar s_registrar{ &OnRegisterRTTI, &OnPostRegisterRTTI }; // NOLINT(cert-err58-cpp)
+};
+
 template<class T>
 class RTTIClassDescriptor : public RED4ext::TTypedClass<T>, public detail::TypeDescriptor<T>
 {
@@ -204,4 +318,56 @@ private:
     static void OnRegister(Descriptor* aType) {}
     static void OnDescribe(Descriptor* aType, RED4ext::CRTTISystem* aRtti) {}
 };
+
+template<class T>
+class RTTIStruct
+{
+  public:
+    using Descriptor = RTTIStructDescriptor<T>;
+    using Flags = RED4ext::CClass::Flags;
+
+    RTTIStruct() = default;
+
+    inline static T* NewInstance(RED4ext::CClass* aDerived = nullptr)
+    {
+        // Resolve the type
+        auto type = Descriptor::Get();
+
+        if (aDerived && aDerived->IsA(type))
+            type = aDerived;
+
+        // Allocate and construct the instance
+        auto instance = type->AllocInstance();
+        type->ConstructCls(instance);
+
+        // Construct the handle
+        auto pointer = reinterpret_cast<T*>(instance);
+
+        return std::move(pointer);
+    }
+
+    inline static RED4ext::CClass* GetRTTIType()
+    {
+        return Descriptor::Get();
+    }
+
+    inline static RED4ext::CName GetRTTIName()
+    {
+        return Descriptor::Get()->GetName();
+    }
+
+    inline static void RegisterRTTI()
+    {
+        Descriptor::RegisterRTTI();
+    }
+
+  private:
+    friend Descriptor;
+
+    static void OnRegister(Descriptor* aType) {}
+    static void OnDescribe(Descriptor* aType, RED4ext::CRTTISystem* aRtti) {}
+};
 }
+
+#define DESCRIBE_PROPERTY(cls, type, name) \
+  aType->props.PushBack(RED4ext::CProperty::Create(rtti->GetType(#type ), #name , nullptr, offsetof(cls, name)))
