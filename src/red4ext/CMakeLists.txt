@@ -1,6 +1,8 @@
 add_library(let_there_be_flight.dll SHARED)
 
 set_target_properties(let_there_be_flight.dll PROPERTIES OUTPUT_NAME let_there_be_flight)
+set_target_properties(let_there_be_flight.dll PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+set_target_properties(let_there_be_flight.dll PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 
 configure_file(Version.hpp.in "${CMAKE_CURRENT_SOURCE_DIR}/Version.hpp" @ONLY)
 
@@ -21,6 +23,7 @@ target_link_libraries(let_there_be_flight.dll
     FMOD
     RED4ext.SDK
     spdlog
+#    Codeware
 )
 
 add_custom_command(

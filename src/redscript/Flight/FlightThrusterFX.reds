@@ -19,7 +19,7 @@
 // r"base\\fx\\devices\\boot_thrusters\\d_boot_thruster_burst.effect"// too tiny
 // r"base\\fx\\devices\\boot_thrusters\\d_boot_thruster_holo_jump.effect"// too tiny
 // r"base\\fx\\vehicles\\av\\av_rayfield_excalibur_thruster_low_power.effect"// tiny blue with heat
-/*
+
 public native struct MaterialResource {
   public native let skidMarks: ResRef;
   public native let tireTracks: ResRef;
@@ -36,7 +36,7 @@ public native struct MaterialFx {
   public native let wet: MaterialCondition;
   public native let rain: MaterialCondition;
 }
-*/
+
 public abstract class IFlightThrusterFX extends IScriptable {
   public let resource: FxResource;
   public let instance: ref<FxInstance>;

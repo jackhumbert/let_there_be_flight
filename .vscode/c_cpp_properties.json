@@ -1,0 +1,32 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/src/red4ext",
+                "${workspaceFolder}/deps/red4ext.sdk/include",
+                "${workspaceFolder}/deps/fmod/include",
+                "${workspaceFolder}/deps/spdlog/include"
+            ],
+            "defines": [
+                "WINVER=0x0601",
+                "_WIN32_WINNT=0x0601",
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE",
+                "WIN32_LEAN_AND_MEAN",
+                "_ITERATOR_DEBUG_LEVEL=0"
+            ],
+            "windowsSdkVersion": "10.0.22000.0",
+            "compilerPath": "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.34.31933\\bin\\Hostx64\\x64\\cl.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++20",
+            "intelliSenseMode": "windows-msvc-x64",
+            "configurationProvider": "ms-vscode.cmake-tools",
+            "browse": {
+                "databaseFilename": ""
+            }
+        }
+    ],
+    "version": 4
+}

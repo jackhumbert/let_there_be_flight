@@ -114,6 +114,7 @@ include(ConfigureAndIncludeDetours)
 include(ConfigureAndIncludeFMOD)
 include(ConfigureAndIncludeRED4extSdk)
 include(ConfigureAndIncludeSpdlog)
+#include(ConfigureAndIncludeCodeware)
 
 add_subdirectory(src/red4ext)
 
