@@ -75,32 +75,37 @@ public abstract native class IFlightConfiguration extends IScriptable {
   }
 
   public func GetEffectForMaterial(material: CName, originalFx: MaterialFx) -> MaterialFx {
-		switch material {
-      case n"Materials.Asphalt":
-      case n"Materials.Concrete":
-      case n"Materials.Stone":
-      case n"Materials.Sand":
-      case n"Materials.Dirt":
-      case n"Materials.Grass":
-      case n"Materials.Default":
-      default:
-        break;
+    if Equals(material, n"concrete.physmat") ||
+       Equals(material, n"asphalt.physmat") ||
+       Equals(material, n"metal.physmat") ||
+       Equals(material, n"metal_painted.physmat")||
+       Equals(material, n"default_material.physmat") {
+        originalFx.normal.particle.skidMarks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
+        originalFx.normal.particle.tireTracks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
+        originalFx.normal.particle.loaded = true;
+        originalFx.wet.particle.skidMarks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
+        originalFx.wet.particle.tireTracks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
+        originalFx.wet.particle.loaded = true;
+        originalFx.rain.particle.skidMarks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
+        originalFx.rain.particle.tireTracks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
+        originalFx.rain.particle.loaded = true;
+        
+        originalFx.normal.decal.skidMarks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
+        originalFx.normal.decal.tireTracks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
+        originalFx.normal.decal.loaded = true;
+        originalFx.wet.decal.skidMarks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
+        originalFx.wet.decal.tireTracks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
+        originalFx.wet.decal.loaded = true;
+        originalFx.rain.decal.skidMarks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
+        originalFx.rain.decal.tireTracks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
+        originalFx.rain.decal.loaded = true;
     }
 
-    originalFx.normal.particle.skidMarks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
-    originalFx.wet.particle.skidMarks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
-    originalFx.rain.particle.skidMarks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
-    originalFx.normal.particle.tireTracks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
-    originalFx.wet.particle.tireTracks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
-    originalFx.rain.particle.tireTracks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
-    
-    originalFx.normal.decal.skidMarks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
-    originalFx.wet.decal.skidMarks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
-    originalFx.rain.decal.skidMarks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
-    originalFx.normal.decal.tireTracks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
-    originalFx.wet.decal.tireTracks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
-    originalFx.rain.decal.tireTracks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
-
+    //   case n"dirt.physmat":
+    //   case n"grass.physmat":
+    //   case n"sand.physmat":
+    //   case n"mud.physmat":
+ 
     return originalFx;
   }
 }
@@ -167,6 +172,11 @@ public class CarFlightConfiguration extends IFlightConfiguration {
       this.thrusters[2].hasRetroThruster = false;
       this.thrusters[3].hasRetroThruster = false;
     }
+
+    this.thrusters[0].wheelIndex = 0;
+    this.thrusters[1].wheelIndex = 1;
+    this.thrusters[2].wheelIndex = 2;
+    this.thrusters[3].wheelIndex = 3;
 
     for thruster in this.thrusters {
       if (Equals(this.type, FlightVehicleType.Corpo)) {

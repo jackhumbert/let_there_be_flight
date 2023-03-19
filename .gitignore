@@ -20,6 +20,9 @@ mono_crash.*
 build 
 bin
 
+deps/PhysX_3.4
+deps/PxShared
+
 # Build results
 # [Dd]ebug/
 # [Dd]ebugPublic/

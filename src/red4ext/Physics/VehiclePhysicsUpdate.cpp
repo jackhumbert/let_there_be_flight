@@ -148,7 +148,7 @@ REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, vehicleBikePhysics_AnimationUpdate, R
 #include <RED4ext/Scripting/Natives/Generated/game/GameAudioSystem.hpp>
 
 void RED4ext::game::GameAudioSystem::UpdateParameter(int *audioReference, CName parameterName, float parameterValue) {
-  RelocFunc<decltype(&RED4ext::game::GameAudioSystem::UpdateParameter)> call(gameGameAudioSystem_UpdateParameterAddr);
+  RelocFunc<decltype(&RED4ext::game::GameAudioSystem::UpdateParameter)> call(gameGameAudioSystem_UpdateParameter_Addr);
   return call(audioReference, parameterName, parameterValue);
 }
 

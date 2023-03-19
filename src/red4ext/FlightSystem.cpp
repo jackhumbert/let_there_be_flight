@@ -8,6 +8,7 @@
 #include <RED4ext/Addresses.hpp>
 #include <RED4ext/Scripting/Natives/ScriptGameInstance.hpp>
 #include <RED4ext/Scripting/Natives/GameInstance.hpp>
+#include <RED4ext/Scripting/Natives/vehiclePhysicsData.hpp>
 #include <fmod.hpp>
 #include <fmod_studio.hpp>
 #include <iostream>
@@ -75,7 +76,7 @@ RED4ext::Handle<FlightSystem> FlightSystem::GetInstance() {
 }
 
 RED4ext::Matrix* __fastcall GetMatrixFromOrientation(RED4ext::Quaternion* q, RED4ext::Matrix* m) {
-  RED4ext::RelocFunc<decltype(&GetMatrixFromOrientation)> call(GetMatrixFromOrientationAddr);
+  RED4ext::RelocFunc<decltype(&GetMatrixFromOrientation)> call(GetMatrixFromOrientation_Addr);
   return call(q, m);
 }
 
@@ -348,13 +349,13 @@ RED4ext::DynArray<RED4ext::GameSystemData>* __fastcall GetGameSystemsData(
 
 struct FlightSystemModule : FlightModule {
   void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-  while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(GetGameSystemsDataAddr), &GetGameSystemsData,
+  while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(GetGameSystemsData_Addr), &GetGameSystemsData,
                                 reinterpret_cast<void **>(&GetGameSystemsData_Original)))
     ;
   }
 
   void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(GetGameSystemsDataAddr));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(GetGameSystemsData_Addr));
   }
 };
 

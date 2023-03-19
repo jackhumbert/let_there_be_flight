@@ -11,6 +11,7 @@ public class FlightAudioUpdate {
   public let roll: Float;
   public let pitch: Float;
   public let sway: Float;
+  public let scrape: Float;
 }
 
 

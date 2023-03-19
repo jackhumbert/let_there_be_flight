@@ -96,6 +96,7 @@
 			"*.in": "cpp"
 		},
 		"editor.tabSize": 2,
-		"redscript.scriptCachePath": "C:\\Users\\Jack\\Documents\\cyberpunk\\flight_control\\prereqs.redscripts"
+		"redscript.scriptCachePath": "C:\\Users\\Jack\\Documents\\cyberpunk\\flight_control\\prereqs.redscripts",
+		"git.ignoreLimitWarning": true
 	}
 }

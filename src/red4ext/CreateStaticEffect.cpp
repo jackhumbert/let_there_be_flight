@@ -33,11 +33,11 @@ uintptr_t CreateStaticEffect(RED4ext::game::EffectSystem *es, uintptr_t effectRe
 
 struct CreateStaticEffectModule : FlightModule {
   void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(CreateStaticEffectAddr), &CreateStaticEffect,
+    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(CreateStaticEffect_Addr), &CreateStaticEffect,
                           reinterpret_cast<void **>(&CreateStaticEffect_Original)));
   }
   void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(CreateStaticEffectAddr));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(CreateStaticEffect_Addr));
   }
 };
 

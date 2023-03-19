@@ -38,13 +38,13 @@
 #include "FlightSystem.hpp"
 #include "FlightComponent.hpp"
 #include "EntityAddComponent.hpp"
-#include <RED4ext/VFTEnum.hpp>
+#include <RED4ext/Enum-VFT.hpp>
 
 // weird bug fix
 
 // 48 89 5C 24 08 48 89 74 24 10 48 89 7C 24 18 4C 89 64 24 20 55 41 56 41 57 48 8D 6C 24 C9 48 81
 //void __fastcall SpawnEffect(uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t);
-//constexpr uintptr_t SpawnEffectAddr = 0x00007FF73F0D86B0 - 0x7ff73dfe0000;
+//constexpr uintptr_t SpawnEffect_Addr = 0x00007FF73F0D86B0 - 0x7ff73dfe0000;
 //decltype(&SpawnEffect) SpawnEffect_Original;
 //
 //void __fastcall SpawnEffect(uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6) {
@@ -55,14 +55,14 @@
 
 
 int64_t RED4ext::ent::SlotComponent::GetSlotIndex(RED4ext::CName slotName) {
-  RelocFunc<decltype(&RED4ext::ent::SlotComponent::GetSlotIndex)> call(entSlotComponent_GetSlotIndexAddr);
+  RelocFunc<decltype(&RED4ext::ent::SlotComponent::GetSlotIndex)> call(entSlotComponent_GetSlotIndex_Addr);
   return call(this, slotName);
 }
 
 bool RED4ext::ent::SlotComponent::GetSlotLocalTransform(int slotIndex, RED4ext::WorldTransform *offset,
                                                         RED4ext::WorldTransform *worldTransform) {
   RelocFunc<decltype(&RED4ext::ent::SlotComponent::GetSlotLocalTransform)> call(
-      entSlotComponent_GetSlotLocalTransformAddr);
+      entSlotComponent_GetSlotLocalTransform_Addr);
   return call(this, slotIndex, offset, worldTransform);
 }
 
@@ -71,7 +71,7 @@ RED4ext::Handle<RED4ext::physics::ColliderSphere> *
 RED4ext::physics::ColliderSphere::createHandleWithRadius(RED4ext::Handle<RED4ext::physics::ICollider> * handle,
                                                          float radius) {
   RelocFunc<decltype(&RED4ext::physics::ColliderSphere::createHandleWithRadius)> call(
-      physicsColliderSphere_createHandleWithRadiusAddr);
+      physicsColliderSphere_createHandleWithRadius_Addr);
   return call(handle, radius);
 }
 
@@ -143,8 +143,9 @@ REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem,
           //     reinterpret_cast<RED4ext::physics::FilterData
           //     *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
           // shapeFL->filterData->preset = "Vehicle Part";
-          // shapeFL->filterData->simulationFilter.mask1 = 98304;
-          // shapeFL->filterData->simulationFilter.mask2 = 9223372036854780414;
+         shapeFL->filterData->simulationFilter.mask1 = 0x0080010000000000;
+         shapeFL->filterData->simulationFilter.mask2 = 0xFE11000000000080;
+         shapeFL->filterData->queryFilter.mask2 =      0x1000480400000000;
           shapeFL->material = "vehicle_chassis.physmat";
 
           wt = (RED4ext::WorldTransform *)wtCls->CreateInstance();
@@ -689,22 +690,22 @@ void IPlacedComponentUpdateHardTransformBinding(RED4ext::IScriptable *aContext, 
 
 struct EntityAddComponentModule : FlightModule {
   void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(Entity_InitializeComponentsAddr),
+    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(Entity_InitializeComponents_Addr),
                                   &Entity_InitializeComponents_Hook,
                                   reinterpret_cast<void **>(&Entity_InitializeComponents_Original)))
       ;
-    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleProcessWeaponsAddr),
+    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleProcessWeapons_Addr),
                                   &VehicleProcessWeapons_Hook,
                                   reinterpret_cast<void **>(&VehicleProcessWeapons_Original)))
       ;
-    //while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(SpawnEffectAddr), &SpawnEffect,
+    //while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(SpawnEffect_Addr), &SpawnEffect,
     //                              reinterpret_cast<void **>(&SpawnEffect_Original)))
     //  ;
   }
   void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(Entity_InitializeComponentsAddr));
-    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleProcessWeaponsAddr));
-    //aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(SpawnEffectAddr));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(Entity_InitializeComponents_Addr));
+    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleProcessWeapons_Addr));
+    //aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(SpawnEffect_Addr));
   }
   void PostRegisterTypes() {
     auto rtti = RED4ext::CRTTISystem::Get();

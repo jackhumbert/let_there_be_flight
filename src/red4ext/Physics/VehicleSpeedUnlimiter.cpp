@@ -39,18 +39,18 @@ short SpeedUnlimiter::PhysicsUnkStructVelocityUpdate(RED4ext::vehicle::PhysicsDa
 }
 
 void SpeedUnlimiter::Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-  while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(PhysicsStructUpdateAddr), &PhysicsStructUpdate,
+  while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(PhysicsStructUpdate_Addr), &PhysicsStructUpdate,
                                 reinterpret_cast<void **>(&PhysicsStructUpdate_Original)))
     ;
-  while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(PhysicsUnkStructVelocityUpdateAddr),
+  while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(PhysicsUnkStructVelocityUpdate_Addr),
                                 &PhysicsUnkStructVelocityUpdate,
                                 reinterpret_cast<void **>(&PhysicsUnkStructVelocityUpdate_Original)))
     ;
 }
 
 void SpeedUnlimiter::Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-  aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(PhysicsStructUpdateAddr));
-  aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(PhysicsUnkStructVelocityUpdateAddr));
+  aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(PhysicsStructUpdate_Addr));
+  aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(PhysicsUnkStructVelocityUpdate_Addr));
 }
 
 REGISTER_FLIGHT_MODULE(SpeedUnlimiter);

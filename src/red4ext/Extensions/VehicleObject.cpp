@@ -3,6 +3,8 @@
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/Entity.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
+#include <RED4ext/Scripting/Natives/vehiclePhysics.hpp>
+#include <RED4ext/Scripting/Natives/vehiclePhysicsData.hpp>
 #include <RED4ext/Scripting/Natives/vehicleWeapon.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/AnimatedComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/HardTransformBinding.hpp>
@@ -125,7 +127,7 @@ public:
   
   void __fastcall ResetQuestEnforceTransform() {
     RED4ext::RelocFunc<decltype(&RED4ext::vehicle::PersistentDataPS::ResetQuestEnforceTransform)> call(
-        vehiclePersistentDataPS_ResetQuestEnforceTransformAddr);
+        vehiclePersistentDataPS_ResetQuestEnforceTransform_Addr);
     call(this->PersistentDataPS.instance);
   }
 

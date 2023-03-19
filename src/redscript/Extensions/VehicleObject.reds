@@ -124,6 +124,9 @@ public native func GetWeapons() -> array<ref<WeaponObject>>;
 @addMethod(VehicleObject)
 public native func UnsetPhysicsStates() -> Void;
 
+@addMethod(WheeledObject)
+public native func GetDampedSpringForce(wheelIndex: Int32) -> Float;
+
 @addField(VehicleObject)
 public let bouncy: Bool;
 

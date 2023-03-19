@@ -93,30 +93,32 @@ public native class FlightComponent extends GameComponent {
     return this.GetPS() as FlightComponentPS;
   }
 
-  public let playingScraping: array<Bool>;
+  // public let playingScraping: array<Bool>;
 
-  public func HandleScraping(skidValue: Float, wheelIndex: Int32, emitterName: CName) {
-    // this.GetVehicle();
-    if (skidValue >= 0.2 && !this.playingScraping[wheelIndex]) {
-      GameObject.PlaySound(this.GetVehicle(), n"v_car_damage_scrape_sparks", emitterName);
-      this.playingScraping[wheelIndex] = true;
-    } 
-    // GameObject.AudioParameter(this.GetVehicle(), n"veh_speed", skidValue, emitterName);
-    // GameObject.AudioParameter(this.GetVehicle(), n"veh_tire_long_slip_ratio", skidValue, emitterName);
-    // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_tire_long_slip_ratio", skidValue);
-    // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_tire_lat_slip_ratio", skidValue);
-    // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_wheel_skid", skidValue);
-    // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_collision_velocity", skidValue);
-    // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_ground_pressure", skidValue);
+  // public func HandleScraping(skidValue: Float, wheelIndex: Int32, emitterName: CName) {
+  //   // this.GetVehicle();
+  //   //v_car_damage_scrape_sparks
+  //   let sound = n"nme_boss_smasher_anim_stomp_scrape";
+  //   if (skidValue >= 0.2 && !this.playingScraping[wheelIndex]) {
+  //     GameObject.PlaySound(this.GetVehicle(), sound, emitterName);
+  //     this.playingScraping[wheelIndex] = true;
+  //   } 
+  //   // GameObject.AudioParameter(this.GetVehicle(), n"veh_speed", skidValue, emitterName);
+  //   // GameObject.AudioParameter(this.GetVehicle(), n"veh_tire_long_slip_ratio", skidValue, emitterName);
+  //   // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_tire_long_slip_ratio", skidValue);
+  //   // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_tire_lat_slip_ratio", skidValue);
+  //   // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_wheel_skid", skidValue);
+  //   // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_collision_velocity", skidValue);
+  //   // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_ground_pressure", skidValue);
     
-    if (skidValue < 0.2 && this.playingScraping[wheelIndex]) {
-      GameObject.StopSound(this.GetVehicle(), n"v_car_damage_scrape_sparks", emitterName);
-      this.playingScraping[wheelIndex] = false;
-    }
-  }
+  //   if (skidValue < 0.2 && this.playingScraping[wheelIndex]) {
+  //     GameObject.StopSound(this.GetVehicle(), sound, emitterName);
+  //     this.playingScraping[wheelIndex] = false;
+  //   }
+  // }
 
   private final func OnGameAttach() -> Void {
-    ArrayResize(this.playingScraping, 4);
+    // ArrayResize(this.playingScraping, 4);
     LTBF_RegisterListener(this);
     //FlightLog.Info("[FlightComponent] OnGameAttach: " + this.GetVehicle().GetDisplayName());
     this.m_interaction = this.FindComponentByName(n"interaction") as InteractionComponent;

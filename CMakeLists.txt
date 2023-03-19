@@ -118,6 +118,8 @@ include(ConfigureAndIncludeRED4extSdk)
 include(ConfigureAndIncludeSpdlog)
 include(ConfigureAndIncludeCodeware)
 
+
+
 add_subdirectory(src/red4ext)
 
 # Header generation
@@ -205,6 +207,13 @@ add_custom_command(
 add_custom_target(addresses DEPENDS ${ZOLTAN_USER_ADDRESSES})
 
 add_dependencies(${CMAKE_PROJECT_NAME}.dll addresses)
+
+# Find All Addresses
+
+add_custom_target(all_addresses
+  COMMAND ${CMAKE_COMMAND} -D LTBF_TOOLS_DIR="${LTBF_TOOLS_DIR}" -D PROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR} -D PROJECT_BINARY_DIR="${PROJECT_BINARY_DIR}" -D CYBERPUNK_2077_GAME_DIR="${CYBERPUNK_2077_GAME_DIR}" -P ${CMAKE_MODULE_PATH}/FindAllRED4extAddresses.cmake
+  USES_TERMINAL
+)
 
 # Archive files
 

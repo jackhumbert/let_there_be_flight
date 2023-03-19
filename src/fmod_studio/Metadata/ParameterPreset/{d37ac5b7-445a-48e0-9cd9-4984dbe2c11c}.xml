@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.02.00">
+	<object class="ParameterPreset" id="{d37ac5b7-445a-48e0-9cd9-4984dbe2c11c}">
+		<property name="name">
+			<value>scrape</value>
+		</property>
+		<relationship name="folder">
+			<destination>{37bcb955-bb46-4db0-96d9-38f1f6d86753}</destination>
+		</relationship>
+		<relationship name="parameter">
+			<destination>{82b2804a-4319-432d-bef6-c7e7bd10a334}</destination>
+		</relationship>
+	</object>
+	<object class="GameParameter" id="{82b2804a-4319-432d-bef6-c7e7bd10a334}">
+		<property name="initialValue">
+			<value>0</value>
+		</property>
+		<property name="seekSpeedDescending">
+			<value>4.5999999046325684</value>
+		</property>
+		<property name="seekSpeedAsymmetric">
+			<value>true</value>
+		</property>
+	</object>
+</objects>

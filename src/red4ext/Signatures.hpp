@@ -10,7 +10,7 @@
 #include <RED4ext/Scripting/Natives/GameInstance.hpp>
 //#include <RED4ext/Scripting/Natives/UpdateManager.hpp>
 
-// right before components are processed for entites, and an appropriate time to insert our own
+// right before components are processed for entities, and an appropriate time to insert our own
 // can also look for string "Entity/InitializeComponents"
 /// @pattern 48 89 54 24 10 55 53 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 ? FB FF FF 48 81 EC ? 05 00 00
 /// @nth 0/2
@@ -34,7 +34,6 @@ using VehicleProcessWeapons = void (RED4ext::vehicle::BaseObject *vehicle, float
 /// @pattern 40 53 48 83 EC 20 48 8B D9 48 8D 4C 24 30 E8 ?  ?  ?  FD 48 8B D0 48 8B CB E8 ?  ?  ?  FD 48 8D
 /// @nth 6/7
 using GetGameSystemsData = RED4ext::DynArray<RED4ext::GameSystemData> *(RED4ext::DynArray<RED4ext::GameSystemData> *gameSystemsData);
-
 
 // 1.52 RVA: 0x1C58B0 / 1857712
 // 1.6 RVA: 0x1C9A30 / 1874480

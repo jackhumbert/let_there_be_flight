@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.02.00">
+	<object class="AudioFile" id="{4519b459-3373-454c-830c-721cc520e9cb}">
+		<property name="assetPath">
+			<value>383794__deleted_user_7146007__metal-scraping-on-concrete.wav</value>
+		</property>
+		<property name="isStreaming">
+			<value>true</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>48</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>15.666666666666666</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{0d578fee-7aad-4a8f-9570-e624d548a13b}</destination>
+		</relationship>
+	</object>
+</objects>

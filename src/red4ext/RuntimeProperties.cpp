@@ -28,22 +28,22 @@ void* unk138;
 };
 
 RED4ext::CRTTIHandleType **__fastcall CreateCRTTIArrayTypeFromClass(RED4ext::CRTTIArrayType **a1, RED4ext::CBaseRTTIType *a2) {
-  RED4ext::RelocFunc<decltype(&CreateCRTTIArrayTypeFromClass)> call(CreateCRTTIArrayTypeFromClassAddr);
+  RED4ext::RelocFunc<decltype(&CreateCRTTIArrayTypeFromClass)> call(CreateCRTTIArrayTypeFromClass_Addr);
   return call(a1, a2);
 }
 
 RED4ext::CRTTIWeakHandleType ** __fastcall CreateCRTTIWeakHandleTypeFromClass(RED4ext::CRTTIWeakHandleType **a1, RED4ext::CBaseRTTIType *a2) {
-RED4ext::RelocFunc<decltype(&CreateCRTTIWeakHandleTypeFromClass)> call(CreateCRTTIWeakHandleTypeFromClassAddr);
+RED4ext::RelocFunc<decltype(&CreateCRTTIWeakHandleTypeFromClass)> call(CreateCRTTIWeakHandleTypeFromClass_Addr);
   return call(a1, a2);
 }
 
 RED4ext::CRTTIHandleType **__fastcall CreateCRTTIHandleTypeFromClass(RED4ext::CRTTIHandleType **a1, RED4ext::CBaseRTTIType *a2) {
-  RED4ext::RelocFunc<decltype(&CreateCRTTIHandleTypeFromClass)> call(CreateCRTTIHandleTypeFromClassAddr);
+  RED4ext::RelocFunc<decltype(&CreateCRTTIHandleTypeFromClass)> call(CreateCRTTIHandleTypeFromClass_Addr);
   return call(a1, a2);
 }
 
 RED4ext::CRTTIResourceAsyncReferenceType **__fastcall CreateCRTTIRaRefTypeFromClass(RED4ext::CRTTIResourceAsyncReferenceType **a1, RED4ext::CBaseRTTIType *a2) {
-  RED4ext::RelocFunc<decltype(&CreateCRTTIRaRefTypeFromClass)> call(CreateCRTTIRaRefTypeFromClassAddr);
+  RED4ext::RelocFunc<decltype(&CreateCRTTIRaRefTypeFromClass)> call(CreateCRTTIRaRefTypeFromClass_Addr);
   return call(a1, a2);
 }
 

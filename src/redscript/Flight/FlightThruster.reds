@@ -44,6 +44,7 @@ public abstract native class IFlightThruster extends IScriptable {
   public let audioUpdate: ref<FlightAudioUpdate>;
   public let audioPitch: Float;
   public let audioPitchSeparation: Float = 0.001;
+  public let wheelIndex: Int32;
 
   public func OnSetup(fc : ref<FlightComponent>) {
     this.flightComponent = fc;
@@ -227,6 +228,7 @@ public abstract native class IFlightThruster extends IScriptable {
     // this.audioUpdate.sway *= retroAmount;
     // this.audioUpdate.lift *= amount;
     // this.audioUpdate.roll *= amount;
+    this.audioUpdate.scrape = ClampF((this.vehicle as WheeledObject).GetDampedSpringForce(this.wheelIndex) / this.vehicle.GetTotalMass(), 0.0, 1.0);
     let volume = 1.0;
     if !this.isFront {
       volume = ClampF(this.flightComponent.stats.d_speed / 100.0, 0.0, 1.0);

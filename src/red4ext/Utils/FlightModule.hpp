@@ -136,7 +136,7 @@ public:
 #define REGISTER_FLIGHT_HOOK(retType, func, ...) \
   retType func(__VA_ARGS__); \
   decltype(&func) func##_Original; \
-  FlightModuleHook s_##func##_Hook(#func, func##Addr, reinterpret_cast<void*>(&func), reinterpret_cast<void**>(&func##_Original)); \
+  FlightModuleHook s_##func##_Hook(#func, func##_Addr, reinterpret_cast<void*>(&func), reinterpret_cast<void**>(&func##_Original)); \
   retType func(__VA_ARGS__)
 
 #define REGISTER_FLIGHT_OVERRIDE(original, retType, func, ...)   \

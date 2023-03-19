@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See the license.md in the root project for details.
 // https://github.com/jackhumbert/let_there_be_flight
 
-// This file was automatically generated on 2023-03-16 15:05:26 UTC
+// This file was automatically generated on 2023-03-18 00:04:40 UTC
 
 // Audio/FlightAudio.reds
 
@@ -20,6 +20,7 @@ public class FlightAudioUpdate {
   public let roll: Float;
   public let pitch: Float;
   public let sway: Float;
+  public let scrape: Float;
 }
 
 
@@ -727,6 +728,9 @@ public native func GetWeapons() -> array<ref<WeaponObject>>;
 @addMethod(VehicleObject)
 public native func UnsetPhysicsStates() -> Void;
 
+@addMethod(WheeledObject)
+public native func GetDampedSpringForce(wheelIndex: Int32) -> Float;
+
 @addField(VehicleObject)
 public let bouncy: Bool;
 
@@ -1269,30 +1273,32 @@ public native class FlightComponent extends GameComponent {
     return this.GetPS() as FlightComponentPS;
   }
 
-  public let playingScraping: array<Bool>;
+  // public let playingScraping: array<Bool>;
 
-  public func HandleScraping(skidValue: Float, wheelIndex: Int32, emitterName: CName) {
-    // this.GetVehicle();
-    if (skidValue >= 0.2 && !this.playingScraping[wheelIndex]) {
-      GameObject.PlaySound(this.GetVehicle(), n"v_car_damage_scrape_sparks", emitterName);
-      this.playingScraping[wheelIndex] = true;
-    } 
-    // GameObject.AudioParameter(this.GetVehicle(), n"veh_speed", skidValue, emitterName);
-    // GameObject.AudioParameter(this.GetVehicle(), n"veh_tire_long_slip_ratio", skidValue, emitterName);
-    // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_tire_long_slip_ratio", skidValue);
-    // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_tire_lat_slip_ratio", skidValue);
-    // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_wheel_skid", skidValue);
-    // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_collision_velocity", skidValue);
-    // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_ground_pressure", skidValue);
+  // public func HandleScraping(skidValue: Float, wheelIndex: Int32, emitterName: CName) {
+  //   // this.GetVehicle();
+  //   //v_car_damage_scrape_sparks
+  //   let sound = n"nme_boss_smasher_anim_stomp_scrape";
+  //   if (skidValue >= 0.2 && !this.playingScraping[wheelIndex]) {
+  //     GameObject.PlaySound(this.GetVehicle(), sound, emitterName);
+  //     this.playingScraping[wheelIndex] = true;
+  //   } 
+  //   // GameObject.AudioParameter(this.GetVehicle(), n"veh_speed", skidValue, emitterName);
+  //   // GameObject.AudioParameter(this.GetVehicle(), n"veh_tire_long_slip_ratio", skidValue, emitterName);
+  //   // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_tire_long_slip_ratio", skidValue);
+  //   // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_tire_lat_slip_ratio", skidValue);
+  //   // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_wheel_skid", skidValue);
+  //   // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_collision_velocity", skidValue);
+  //   // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_ground_pressure", skidValue);
     
-    if (skidValue < 0.2 && this.playingScraping[wheelIndex]) {
-      GameObject.StopSound(this.GetVehicle(), n"v_car_damage_scrape_sparks", emitterName);
-      this.playingScraping[wheelIndex] = false;
-    }
-  }
+  //   if (skidValue < 0.2 && this.playingScraping[wheelIndex]) {
+  //     GameObject.StopSound(this.GetVehicle(), sound, emitterName);
+  //     this.playingScraping[wheelIndex] = false;
+  //   }
+  // }
 
   private final func OnGameAttach() -> Void {
-    ArrayResize(this.playingScraping, 4);
+    // ArrayResize(this.playingScraping, 4);
     LTBF_RegisterListener(this);
     //FlightLog.Info("[FlightComponent] OnGameAttach: " + this.GetVehicle().GetDisplayName());
     this.m_interaction = this.FindComponentByName(n"interaction") as InteractionComponent;
@@ -2474,32 +2480,37 @@ public abstract native class IFlightConfiguration extends IScriptable {
   }
 
   public func GetEffectForMaterial(material: CName, originalFx: MaterialFx) -> MaterialFx {
-		switch material {
-      case n"Materials.Asphalt":
-      case n"Materials.Concrete":
-      case n"Materials.Stone":
-      case n"Materials.Sand":
-      case n"Materials.Dirt":
-      case n"Materials.Grass":
-      case n"Materials.Default":
-      default:
-        break;
+    if Equals(material, n"concrete.physmat") ||
+       Equals(material, n"asphalt.physmat") ||
+       Equals(material, n"metal.physmat") ||
+       Equals(material, n"metal_painted.physmat")||
+       Equals(material, n"default_material.physmat") {
+        originalFx.normal.particle.skidMarks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
+        originalFx.normal.particle.tireTracks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
+        originalFx.normal.particle.loaded = true;
+        originalFx.wet.particle.skidMarks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
+        originalFx.wet.particle.tireTracks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
+        originalFx.wet.particle.loaded = true;
+        originalFx.rain.particle.skidMarks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
+        originalFx.rain.particle.tireTracks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
+        originalFx.rain.particle.loaded = true;
+        
+        originalFx.normal.decal.skidMarks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
+        originalFx.normal.decal.tireTracks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
+        originalFx.normal.decal.loaded = true;
+        originalFx.wet.decal.skidMarks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
+        originalFx.wet.decal.tireTracks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
+        originalFx.wet.decal.loaded = true;
+        originalFx.rain.decal.skidMarks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
+        originalFx.rain.decal.tireTracks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
+        originalFx.rain.decal.loaded = true;
     }
 
-    originalFx.normal.particle.skidMarks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
-    originalFx.wet.particle.skidMarks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
-    originalFx.rain.particle.skidMarks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
-    originalFx.normal.particle.tireTracks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
-    originalFx.wet.particle.tireTracks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
-    originalFx.rain.particle.tireTracks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
-    
-    originalFx.normal.decal.skidMarks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
-    originalFx.wet.decal.skidMarks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
-    originalFx.rain.decal.skidMarks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
-    originalFx.normal.decal.tireTracks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
-    originalFx.wet.decal.tireTracks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
-    originalFx.rain.decal.tireTracks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
-
+    //   case n"dirt.physmat":
+    //   case n"grass.physmat":
+    //   case n"sand.physmat":
+    //   case n"mud.physmat":
+ 
     return originalFx;
   }
 }
@@ -2566,6 +2577,11 @@ public class CarFlightConfiguration extends IFlightConfiguration {
       this.thrusters[2].hasRetroThruster = false;
       this.thrusters[3].hasRetroThruster = false;
     }
+
+    this.thrusters[0].wheelIndex = 0;
+    this.thrusters[1].wheelIndex = 1;
+    this.thrusters[2].wheelIndex = 2;
+    this.thrusters[3].wheelIndex = 3;
 
     for thruster in this.thrusters {
       if (Equals(this.type, FlightVehicleType.Corpo)) {
@@ -4800,6 +4816,7 @@ public abstract native class IFlightThruster extends IScriptable {
   public let audioUpdate: ref<FlightAudioUpdate>;
   public let audioPitch: Float;
   public let audioPitchSeparation: Float = 0.001;
+  public let wheelIndex: Int32;
 
   public func OnSetup(fc : ref<FlightComponent>) {
     this.flightComponent = fc;
@@ -4983,6 +5000,7 @@ public abstract native class IFlightThruster extends IScriptable {
     // this.audioUpdate.sway *= retroAmount;
     // this.audioUpdate.lift *= amount;
     // this.audioUpdate.roll *= amount;
+    this.audioUpdate.scrape = ClampF((this.vehicle as WheeledObject).GetDampedSpringForce(this.wheelIndex) / this.vehicle.GetTotalMass(), 0.0, 1.0);
     let volume = 1.0;
     if !this.isFront {
       volume = ClampF(this.flightComponent.stats.d_speed / 100.0, 0.0, 1.0);
