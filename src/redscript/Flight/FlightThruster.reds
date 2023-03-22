@@ -3,6 +3,9 @@ public abstract native class IFlightThruster extends IScriptable {
   @runtimeProperty("offset", "0x40")
   public native let flightComponent: ref<FlightComponent>;
 
+  @runtimeProperty("offset", "0x58")
+  public native let slotName: CName;
+
   @runtimeProperty("offset", "0x90")
   public native let meshComponent: ref<MeshComponent>;
 
@@ -279,11 +282,12 @@ public abstract native class IFlightThruster extends IScriptable {
 public class FlightThrusterFront extends IFlightThruster {
   public func Create(vehicle: ref<VehicleObject>, meshComponent: ref<MeshComponent>) -> ref<IFlightThruster> {
     this.vehicle = vehicle;
-    this.vehicle.AddSlot(n"suspension_front_offset", n"thruster_front", new Vector3(0.0, 0.0, -0.5), new Quaternion(0.22627002, 0.0, 0.0, -0.974064708));
+    this.slotName = n"thruster_front";
+    this.vehicle.AddSlot(n"suspension_front_offset", this.slotName, new Vector3(0.0, 0.0, -0.5), new Quaternion(0.22627002, 0.0, 0.0, -0.974064708));
 
     this.meshComponent = meshComponent;
     this.meshComponent.name = n"ThrusterF"; 
-    this.meshComponent.SetParentTransform(n"vehicle_slots", n"thruster_front");
+    this.meshComponent.SetParentTransform(n"vehicle_slots", this.slotName);
 
     this.isFront = true;
     this.parentSlotName = n"wheel_front_spring";
@@ -345,11 +349,12 @@ public class FlightThrusterFront extends IFlightThruster {
 public class FlightThrusterBack extends IFlightThruster {
   public func Create(vehicle: ref<VehicleObject>, meshComponent: ref<MeshComponent>) -> ref<IFlightThruster> {
     this.vehicle = vehicle;
-    this.vehicle.AddSlot(n"suspension_back", n"thruster_back", new Vector3(0.0, 0.0, -0.5), new Quaternion(0.0, 0.0, 0.0, 1.0));
+    this.slotName = n"thruster_back";
+    this.vehicle.AddSlot(n"suspension_back", this.slotName, new Vector3(0.0, 0.0, -0.5), new Quaternion(0.0, 0.0, 0.0, 1.0));
 
     this.meshComponent = meshComponent;
     this.meshComponent.name = n"ThrusterB"; 
-    this.meshComponent.SetParentTransform(n"vehicle_slots", n"thruster_back");
+    this.meshComponent.SetParentTransform(n"vehicle_slots", this.slotName);
 
     this.parentSlotName = n"axel_back";
     this.radiusName = n"None";
@@ -406,11 +411,12 @@ public class FlightThrusterBack extends IFlightThruster {
 public class FlightThrusterFL extends IFlightThruster {
   public func Create(vehicle: ref<VehicleObject>, meshComponent: ref<MeshComponent>) -> ref<IFlightThruster> {
     this.vehicle = vehicle;
-    this.vehicle.AddSlot(n"swingarm_front_left", n"thruster_front_left", new Vector3(0.0, 0.0, 0.0), new Quaternion(0.0, 0.0, 0.0, 1.0));
+    this.slotName = n"thruster_front_left";
+    this.vehicle.AddSlot(n"swingarm_front_left", this.slotName, new Vector3(0.0, 0.0, 0.0), new Quaternion(0.0, 0.0, 0.0, 1.0));
 
     this.meshComponent = meshComponent;
     this.meshComponent.name = n"ThrusterFL"; 
-    this.meshComponent.SetParentTransform(n"vehicle_slots", n"thruster_front_left");
+    this.meshComponent.SetParentTransform(n"vehicle_slots", this.slotName);
 
     this.isFront = true;
     this.parentSlotName = n"wheel_front_left";
@@ -423,11 +429,12 @@ public class FlightThrusterFL extends IFlightThruster {
 public class FlightThrusterFR extends IFlightThruster {
   public func Create(vehicle: ref<VehicleObject>, meshComponent: ref<MeshComponent>) -> ref<IFlightThruster> {
     this.vehicle = vehicle;
-    this.vehicle.AddSlot(n"swingarm_front_right", n"thruster_front_right", new Vector3(0.0, 0.0, 0.0), new Quaternion(0.0, 0.0, 0.0, 1.0));
+    this.slotName = n"thruster_front_right";
+    this.vehicle.AddSlot(n"swingarm_front_right", this.slotName, new Vector3(0.0, 0.0, 0.0), new Quaternion(0.0, 0.0, 0.0, 1.0));
 
     this.meshComponent = meshComponent;
     this.meshComponent.name = n"ThrusterFR"; 
-    this.meshComponent.SetParentTransform(n"vehicle_slots", n"thruster_front_right");
+    this.meshComponent.SetParentTransform(n"vehicle_slots", this.slotName);
 
     this.isFront = true;
     this.isRight = true;
@@ -443,11 +450,12 @@ public class FlightThrusterFR extends IFlightThruster {
 public class FlightThrusterBR extends IFlightThruster {
   public func Create(vehicle: ref<VehicleObject>, meshComponent: ref<MeshComponent>) -> ref<IFlightThruster> {
     this.vehicle = vehicle;
-    this.vehicle.AddSlot(n"swingarm_back_right", n"thruster_back_right", new Vector3(0.0, 0.0, 0.0), new Quaternion(0.0, 0.0, 0.0, 1.0));
+    this.slotName = n"thruster_back_right";
+    this.vehicle.AddSlot(n"swingarm_back_right", this.slotName, new Vector3(0.0, 0.0, 0.0), new Quaternion(0.0, 0.0, 0.0, 1.0));
 
     this.meshComponent = meshComponent;
     this.meshComponent.name = n"ThrusterBR"; 
-    this.meshComponent.SetParentTransform(n"vehicle_slots", n"thruster_back_right");
+    this.meshComponent.SetParentTransform(n"vehicle_slots", this.slotName);
 
     this.isRight = true;
     this.parentSlotName = n"wheel_back_right";
@@ -462,11 +470,12 @@ public class FlightThrusterBR extends IFlightThruster {
 public class FlightThrusterBL extends IFlightThruster {
   public func Create(vehicle: ref<VehicleObject>, meshComponent: ref<MeshComponent>) -> ref<IFlightThruster> {
     this.vehicle = vehicle;
-    this.vehicle.AddSlot(n"swingarm_back_left", n"thruster_back_left", new Vector3(0.0, 0.0, 0.0), new Quaternion(0.0, 0.0, 0.0, 1.0));
+    this.slotName = n"thruster_back_left";
+    this.vehicle.AddSlot(n"swingarm_back_left", this.slotName, new Vector3(0.0, 0.0, 0.0), new Quaternion(0.0, 0.0, 0.0, 1.0));
 
     this.meshComponent = meshComponent;
     this.meshComponent.name = n"ThrusterBL"; 
-    this.meshComponent.SetParentTransform(n"vehicle_slots", n"thruster_back_left");
+    this.meshComponent.SetParentTransform(n"vehicle_slots", this.slotName);
 
     this.parentSlotName = n"wheel_back_left";
     this.radiusName = n"veh_rad_w_b_l";
@@ -480,11 +489,12 @@ public class FlightThrusterBL extends IFlightThruster {
 public class FlightThrusterFLB extends IFlightThruster {
   public func Create(vehicle: ref<VehicleObject>, meshComponent: ref<MeshComponent>) -> ref<IFlightThruster> {
     this.vehicle = vehicle;
-    this.vehicle.AddSlot(n"swingarm_front_left_b", n"thruster_front_left_b", new Vector3(0.0, 0.0, 0.0), new Quaternion(0.0, 0.0, 0.0, 1.0));
+    this.slotName = n"thruster_front_left_b";
+    this.vehicle.AddSlot(n"swingarm_front_left_b", this.slotName, new Vector3(0.0, 0.0, 0.0), new Quaternion(0.0, 0.0, 0.0, 1.0));
 
     this.meshComponent = meshComponent;
     this.meshComponent.name = n"ThrusterFLB"; 
-    this.meshComponent.SetParentTransform(n"vehicle_slots", n"thruster_front_left_b");
+    this.meshComponent.SetParentTransform(n"vehicle_slots", this.slotName);
 
     this.isFront = true;
     this.isB = true;
@@ -500,11 +510,12 @@ public class FlightThrusterFLB extends IFlightThruster {
 public class FlightThrusterFRB extends IFlightThruster {
   public func Create(vehicle: ref<VehicleObject>, meshComponent: ref<MeshComponent>) -> ref<IFlightThruster> {
     this.vehicle = vehicle;
-    this.vehicle.AddSlot(n"swingarm_front_right_b", n"thruster_front_right_b", new Vector3(0.0, 0.0, 0.0), new Quaternion(0.0, 0.0, 0.0, 1.0));
+    this.slotName = n"thruster_front_right_b";
+    this.vehicle.AddSlot(n"swingarm_front_right_b", this.slotName, new Vector3(0.0, 0.0, 0.0), new Quaternion(0.0, 0.0, 0.0, 1.0));
 
     this.meshComponent = meshComponent;
     this.meshComponent.name = n"ThrusterFRB"; 
-    this.meshComponent.SetParentTransform(n"vehicle_slots", n"thruster_front_right_b");
+    this.meshComponent.SetParentTransform(n"vehicle_slots", this.slotName);
 
     this.isFront = true;
     this.isRight = true;

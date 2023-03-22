@@ -1,9 +1,11 @@
 #pragma once
 
 #include "Engine/RTTIExpansion.hpp"
-#include <RED4ext/Scripting/Natives/Generated/ent/MeshComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/IPlacedComponent.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ent/MeshComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/red/ResourceReferenceScriptToken.hpp>
+#include <RED4ext/Scripting/Natives/vehicleChassisComponent.hpp>
+//#include "FlightConfiguration.hpp"
 
 class MeshComponent : public Engine::RTTIExpansion<MeshComponent, RED4ext::ent::MeshComponent> {
 public:

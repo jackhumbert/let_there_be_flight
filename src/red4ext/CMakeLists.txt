@@ -24,6 +24,7 @@ target_link_libraries(let_there_be_flight.dll
     RED4ext.SDK
     spdlog
     Codeware
+    PhysX3
 )
 
 add_custom_command(

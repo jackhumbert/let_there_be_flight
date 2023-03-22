@@ -20,11 +20,8 @@ public abstract native class IFlightConfiguration extends IScriptable {
   @runtimeProperty("offset", "0x68")
   public native let flightCameraOffset: Vector3; // 0, 0, 0
 
-  @runtimeProperty("offset", "0x78")
-  public native let particleEffect: ResRef; // base\fx\environment\sparks\sparks_constant.effect
-
-  @runtimeProperty("offset", "0x80")
-  public native let decalEffect: ResRef; // base\fx\_library\fire\lib_burnt_mark_01_decal.effect
+  public native func OnActivationCore();
+  public native func OnDeactivationCore();
 
   public let type: FlightVehicleType = FlightVehicleType.Corpo;
 

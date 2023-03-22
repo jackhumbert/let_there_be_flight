@@ -442,7 +442,7 @@ public native class FlightComponent extends GameComponent {
       this.active = true;
       this.hasUpdate = true;
 
-      this.configuration.OnActivation();
+      this.configuration.OnActivationCore();
     }
   }
 
@@ -681,7 +681,7 @@ public native class FlightComponent extends GameComponent {
     }
     // this.sys.audio.Stop("vehicle" + this.GetUniqueID());
     
-    this.configuration.OnDeactivation();
+    this.configuration.OnDeactivationCore();
   }
 
   protected cb func OnGridDestruction(evt: ref<VehicleGridDestructionEvent>) -> Bool {

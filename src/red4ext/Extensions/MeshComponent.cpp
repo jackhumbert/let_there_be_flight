@@ -1,7 +1,12 @@
 #include "MeshComponent.hpp"
+#include <PhysX3.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/HardTransformBinding.hpp>
-#include <RED4ext/Scripting/Natives/Generated/ent/VisualControllerComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/SlotComponent.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ent/VisualControllerComponent.hpp>
+#include <RED4ext/Scripting/Natives/Generated/physics/ColliderSphere.hpp>
+#include <RED4ext/Scripting/Natives/Generated/physics/QueryFilter.hpp>
+#include <RED4ext/Scripting/Natives/Generated/physics/SimulationFilter.hpp>
+#include "FlightConfiguration.hpp"
 
 void MeshComponent::SetMesh(RED4ext::ResRef mesh) {
 	this->mesh.path = mesh.resource.path;
@@ -18,10 +23,11 @@ void IPlacedComponent::SetParentTransform(RED4ext::CName bindName, RED4ext::CNam
 void Entity::AddComponent(RED4ext::Handle<RED4ext::ent::IComponent> componentToAdd) {
   RED4ext::ent::VisualControllerComponent *vcc = NULL;
   auto rtti = RED4ext::CRTTISystem::Get();
+  auto vccClass =  rtti->GetClass("entVisualControllerComponent");
 
   for (auto const &handle : this->componentsStorage.components) {
     auto component = handle.GetPtr();
-    if (component->GetNativeType() == rtti->GetClass("entVisualControllerComponent")) {
+    if (component->GetNativeType() == vccClass) {
       vcc = reinterpret_cast<RED4ext::ent::VisualControllerComponent *>(component);
       break;
     }
@@ -53,6 +59,13 @@ void Entity::AddComponent(RED4ext::Handle<RED4ext::ent::IComponent> componentToA
     }
   }
 }
+
+//RED4ext::Handle<RED4ext::physics::ColliderSphere> * createSphereColliderHandleWithRadius(RED4ext::Handle<RED4ext::physics::ICollider> *handle,
+//                                                         float radius) {
+//  RED4ext::RelocFunc<decltype(&RED4ext::physics::ColliderSphere::createHandleWithRadius)> call(
+//      physicsColliderSphere_createHandleWithRadius_Addr);
+//  return call(handle, radius);
+//}
 
 void Entity::AddSlot(RED4ext::CName boneName, RED4ext::CName slotName, RED4ext::Vector3 relativePosition, RED4ext::Quaternion relativeRotation) {
   RED4ext::ent::SlotComponent *slotComponent = NULL;

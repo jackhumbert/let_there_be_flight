@@ -117,8 +117,7 @@ include(ConfigureAndIncludeFMOD)
 include(ConfigureAndIncludeRED4extSdk)
 include(ConfigureAndIncludeSpdlog)
 include(ConfigureAndIncludeCodeware)
-
-
+include(ConfigureAndIncludePhysX3)
 
 add_subdirectory(src/red4ext)
 

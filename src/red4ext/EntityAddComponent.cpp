@@ -1,58 +1,57 @@
+#include "EntityAddComponent.hpp"
+#include "FlightComponent.hpp"
+#include "FlightSystem.hpp"
+#include "FlightWeapons.hpp"
+#include "LoadResRef.hpp"
+#include "Physics/VehiclePhysicsUpdate.hpp"
+#include "Signatures.hpp"
 #include "Utils/FlightModule.hpp"
+#include <RED4ext/Enum-VFT.hpp>
 #include <RED4ext/RED4ext.hpp>
+#include <RED4ext/Scripting/Natives/Generated/WidgetHudComponent.hpp>
+#include <RED4ext/Scripting/Natives/Generated/WorldWidgetComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/Entity.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/EntityTemplate.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ent/HardTransformBinding.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/IComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/IPlacedComponent.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ent/ITransformBinding.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/MeshComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/PhysicalMeshComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/PlaceholderComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/SlotComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/VisualControllerComponent.hpp>
-#include <RED4ext/Scripting/Natives/Generated/ent/ITransformBinding.hpp>
-#include <RED4ext/Scripting/Natives/Generated/WorldWidgetComponent.hpp>
-#include <RED4ext/Scripting/Natives/Generated/ent/HardTransformBinding.hpp>
-#include <RED4ext/Scripting/Natives/Generated/world/ui/MeshTargetBinding.hpp>
-#include <RED4ext/Scripting/Natives/Generated/physics/FilterData.hpp>
-#include <RED4ext/Scripting/Natives/Generated/game/projectile/SpawnComponent.hpp>
-#include <RED4ext/Scripting/Natives/Generated/game/AttachmentSlots.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/AnimParamSlotsOption.hpp>
-#include <RED4ext/Scripting/Natives/Generated/WidgetHudComponent.hpp>
-#include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
-#include <RED4ext/Scripting/Natives/vehicleWeapon.hpp>
-#include <RED4ext/Scripting/Natives/Generated/ink/HudEntriesResource.hpp>
+#include <RED4ext/Scripting/Natives/Generated/game/AttachmentSlots.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/CameraComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/OccupantSlotComponent.hpp>
-#include <RED4ext/Scripting/Natives/vehicleChassisComponent.hpp>
-#include <RED4ext/Scripting/Natives/Generated/physics/SystemBody.hpp>
-#include <RED4ext/Scripting/Natives/Generated/physics/SystemResource.hpp>
+#include <RED4ext/Scripting/Natives/Generated/game/projectile/SpawnComponent.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ink/HudEntriesResource.hpp>
 #include <RED4ext/Scripting/Natives/Generated/physics/ColliderBox.hpp>
 #include <RED4ext/Scripting/Natives/Generated/physics/ColliderSphere.hpp>
+#include <RED4ext/Scripting/Natives/Generated/physics/FilterData.hpp>
+#include <RED4ext/Scripting/Natives/Generated/physics/SystemBody.hpp>
 #include <RED4ext/Scripting/Natives/Generated/physics/SystemBodyParams.hpp>
-#include "LoadResRef.hpp"
+#include <RED4ext/Scripting/Natives/Generated/physics/SystemResource.hpp>
+#include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
+#include <RED4ext/Scripting/Natives/Generated/world/ui/MeshTargetBinding.hpp>
+#include <RED4ext/Scripting/Natives/vehicleChassisComponent.hpp>
+#include <RED4ext/Scripting/Natives/vehicleWeapon.hpp>
 #include <spdlog/spdlog.h>
-#include "Physics/VehiclePhysicsUpdate.hpp"
-#include "FlightWeapons.hpp"
-#include "Signatures.hpp"
 #include <thread>
-#include "FlightSystem.hpp"
-#include "FlightComponent.hpp"
-#include "EntityAddComponent.hpp"
-#include <RED4ext/Enum-VFT.hpp>
 
 // weird bug fix
 
 // 48 89 5C 24 08 48 89 74 24 10 48 89 7C 24 18 4C 89 64 24 20 55 41 56 41 57 48 8D 6C 24 C9 48 81
-//void __fastcall SpawnEffect(uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t);
-//constexpr uintptr_t SpawnEffect_Addr = 0x00007FF73F0D86B0 - 0x7ff73dfe0000;
-//decltype(&SpawnEffect) SpawnEffect_Original;
+// void __fastcall SpawnEffect(uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t, uintptr_t);
+// constexpr uintptr_t SpawnEffect_Addr = 0x00007FF73F0D86B0 - 0x7ff73dfe0000;
+// decltype(&SpawnEffect) SpawnEffect_Original;
 //
-//void __fastcall SpawnEffect(uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6) {
+// void __fastcall SpawnEffect(uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6) {
 //  if (a1) {
 //    SpawnEffect_Original(a1, a2, a3, a4, a5, a6);
 //  }
 //}
-
 
 int64_t RED4ext::ent::SlotComponent::GetSlotIndex(RED4ext::CName slotName) {
   RelocFunc<decltype(&RED4ext::ent::SlotComponent::GetSlotIndex)> call(entSlotComponent_GetSlotIndex_Addr);
@@ -66,39 +65,52 @@ bool RED4ext::ent::SlotComponent::GetSlotLocalTransform(int slotIndex, RED4ext::
   return call(this, slotIndex, offset, worldTransform);
 }
 
-
 RED4ext::Handle<RED4ext::physics::ColliderSphere> *
-RED4ext::physics::ColliderSphere::createHandleWithRadius(RED4ext::Handle<RED4ext::physics::ICollider> * handle,
+RED4ext::physics::ColliderSphere::createHandleWithRadius(RED4ext::Handle<RED4ext::physics::ICollider> *handle,
                                                          float radius) {
   RelocFunc<decltype(&RED4ext::physics::ColliderSphere::createHandleWithRadius)> call(
       physicsColliderSphere_createHandleWithRadius_Addr);
   return call(handle, radius);
 }
 
-REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem, 
-    uint32_t *geoCacheId, RED4ext::vehicle::PhysicalSystemDesc *desc) {
+
+bool __fastcall RED4ext::ent::SlotComponent::GetLocalSlotTransformFromIndex(int slotIndex, RED4ext::Transform *transform) {
+  RelocFunc<decltype(&RED4ext::ent::SlotComponent::GetLocalSlotTransformFromIndex)> call(
+      entSlotComponent_GetLocalSlotTransformFromIndex_Addr);
+  return call(this, slotIndex, transform);
+}
+
+REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem, uint32_t *geoCacheId,
+                     RED4ext::vehicle::PhysicalSystemDesc *desc) {
   auto collidersAdded = 0;
   if (desc->type == RED4ext::vehicle::SystemType::PhysicalSystemDesc && desc->numHandles && desc->entity) {
     auto rtti = RED4ext::CRTTISystem::Get();
-
 
     auto type = desc->entity->GetNativeType();
     bool isCar = false;
     bool isBike = false;
     auto isVehicle = false;
+    auto vehicleClass = rtti->GetClass("vehicleBaseObject");
+    auto carClass = rtti->GetClass("vehicleCarBaseObject");
+    auto bikeClass = rtti->GetClass("vehicleBikeBaseObject");
     do {
-      isVehicle |= type == rtti->GetClass("vehicleBaseObject");
-      isCar |= type == rtti->GetClass("vehicleCarBaseObject");
-      isBike |= type == rtti->GetClass("vehicleBikeBaseObject");
+      isVehicle |= type == vehicleClass;
+      isCar |= type == carClass;
+      isBike |= type == bikeClass;
     } while (type = type->parent);
 
-    if (isCar) {
+    if (isCar && false) {
       if (desc->resource) {
-        if (desc->resource->bodies.size && desc->resource->bodies[0]->params.simulationType == RED4ext::physics::SimulationType::Static) {
+        if (desc->resource->bodies.size &&
+            desc->resource->bodies[0]->params.simulationType == RED4ext::physics::SimulationType::Static) {
+          auto radius = 0.45;
+
           RED4ext::ent::SlotComponent *sc = NULL;
           RED4ext::vehicle::ChassisComponent *cc = NULL;
+
           auto scCls = rtti->GetClass("entSlotComponent");
           auto ccCls = rtti->GetClass("vehicleChassisComponent");
+
           for (auto const &handle : desc->entity->componentsStorage.components) {
             auto component = handle.GetPtr();
             if (sc == NULL && component->GetNativeType() == scCls) {
@@ -119,7 +131,7 @@ REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem,
 
           auto ra = RED4ext::DynArray<RED4ext::Handle<RED4ext::physics::ICollider>>(allocator);
           // doesn't work :/
-          //desc->resource->bodies[0]->params.angularDamping = 10.0;
+          // desc->resource->bodies[0]->params.angularDamping = 10.0;
           const auto p_collisionShapes = &desc->resource->bodies[0]->collisionShapes;
           auto originalShapes = *p_collisionShapes;
 
@@ -136,16 +148,16 @@ REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem,
           // rtti->GetClass("physicsColliderSphere")->CreateInstance());
 
           RED4ext::Handle<RED4ext::physics::ICollider> shapeFL;
-          RED4ext::physics::ColliderSphere::createHandleWithRadius(&shapeFL, 0.45);
+          RED4ext::physics::ColliderSphere::createHandleWithRadius(&shapeFL, radius);
           shapeFL.refCount->IncRef();
 
-          // shapeFL->filterData = RED4ext::Handle(
-          //     reinterpret_cast<RED4ext::physics::FilterData
-          //     *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
-          // shapeFL->filterData->preset = "Vehicle Part";
-         shapeFL->filterData->simulationFilter.mask1 = 0x0080010000000000;
-         shapeFL->filterData->simulationFilter.mask2 = 0xFE11000000000080;
-         shapeFL->filterData->queryFilter.mask2 =      0x1000480400000000;
+           shapeFL->filterData = RED4ext::Handle(
+               reinterpret_cast<RED4ext::physics::FilterData
+               *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
+           shapeFL->filterData->preset = "Vehicle Part";
+          shapeFL->filterData->simulationFilter.mask1 = 0x0080010000000000;
+          shapeFL->filterData->simulationFilter.mask2 = 0xFE11000000000080;
+          shapeFL->filterData->queryFilter.mask2 = 0x1000480400000000;
           shapeFL->material = "vehicle_chassis.physmat";
 
           wt = (RED4ext::WorldTransform *)wtCls->CreateInstance();
@@ -159,15 +171,16 @@ REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem,
           ra.EmplaceBack(shapeFL);
 
           RED4ext::Handle<RED4ext::physics::ICollider> shapeFR;
-          RED4ext::physics::ColliderSphere::createHandleWithRadius(&shapeFR, 0.45);
+          RED4ext::physics::ColliderSphere::createHandleWithRadius(&shapeFR, radius);
           shapeFR.refCount->IncRef();
 
-          // shapeFR->filterData = RED4ext::Handle(
-          //     reinterpret_cast<RED4ext::physics::FilterData
-          //     *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
-          // shapeFR->filterData->preset = "Vehicle Part";
-          // shapeFR->filterData->simulationFilter.mask1 = 98304;
-          // shapeFR->filterData->simulationFilter.mask2 = 9223372036854780414;
+          shapeFR->filterData = RED4ext::Handle(
+              reinterpret_cast<RED4ext::physics::FilterData
+                                   *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
+          shapeFR->filterData->preset = "Vehicle Part";
+          shapeFR->filterData->simulationFilter.mask1 = 0x0080010000000000;
+          shapeFR->filterData->simulationFilter.mask2 = 0xFE11000000000080;
+          shapeFR->filterData->queryFilter.mask2 = 0x1000480400000000;
           shapeFR->material = "vehicle_chassis.physmat";
 
           wt = (RED4ext::WorldTransform *)wtCls->CreateInstance();
@@ -181,15 +194,16 @@ REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem,
           ra.EmplaceBack(shapeFR);
 
           RED4ext::Handle<RED4ext::physics::ICollider> shapeBL;
-          RED4ext::physics::ColliderSphere::createHandleWithRadius(&shapeBL, 0.45);
+          RED4ext::physics::ColliderSphere::createHandleWithRadius(&shapeBL, radius);
           shapeBL.refCount->IncRef();
 
-          // shapeBL->filterData = RED4ext::Handle(
-          //     reinterpret_cast<RED4ext::physics::FilterData
-          //     *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
-          // shapeBL->filterData->preset = "Vehicle Part";
-          // shapeBL->filterData->simulationFilter.mask1 = 98304;
-          // shapeBL->filterData->simulationFilter.mask2 = 9223372036854780414;
+          shapeBL->filterData = RED4ext::Handle(
+              reinterpret_cast<RED4ext::physics::FilterData
+                                   *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
+          shapeBL->filterData->preset = "Vehicle Part";
+          shapeBL->filterData->simulationFilter.mask1 = 0x0080010000000000;
+          shapeBL->filterData->simulationFilter.mask2 = 0xFE11000000000080;
+          shapeBL->filterData->queryFilter.mask2 = 0x1000480400000000;
           shapeBL->material = "vehicle_chassis.physmat";
 
           wt = (RED4ext::WorldTransform *)wtCls->CreateInstance();
@@ -204,15 +218,16 @@ REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem,
           ra.EmplaceBack(shapeBL);
 
           RED4ext::Handle<RED4ext::physics::ICollider> shapeBR;
-          RED4ext::physics::ColliderSphere::createHandleWithRadius(&shapeBR, 0.45);
+          RED4ext::physics::ColliderSphere::createHandleWithRadius(&shapeBR, radius);
           shapeBR.refCount->IncRef();
 
-          // shapeBR->filterData = RED4ext::Handle(
-          //     reinterpret_cast<RED4ext::physics::FilterData
-          //     *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
-          // shapeBR->filterData->preset = "Vehicle Part";
-          // shapeBR->filterData->simulationFilter.mask1 = 98304;
-          // shapeBR->filterData->simulationFilter.mask2 = 9223372036854780414;
+          shapeBR->filterData = RED4ext::Handle(
+              reinterpret_cast<RED4ext::physics::FilterData
+                                   *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
+          shapeBR->filterData->preset = "Vehicle Part";
+          shapeBR->filterData->simulationFilter.mask1 = 0x0080010000000000;
+          shapeBR->filterData->simulationFilter.mask2 = 0xFE11000000000080;
+          shapeBR->filterData->queryFilter.mask2 = 0x1000480400000000;
           shapeBR->material = "vehicle_chassis.physmat";
 
           wt = (RED4ext::WorldTransform *)wtCls->CreateInstance();
@@ -222,26 +237,26 @@ REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem,
             shapeBR->localToBody.position = *wt->Position.ToVector4() - *cc->localTransform.Position.ToVector4();
           }
 
-          //handleBR.refCount->IncRef();
-          //handleBR.refCount->IncWeakRef();
+          // handleBR.refCount->IncRef();
+          // handleBR.refCount->IncWeakRef();
           ra.EmplaceBack(shapeBR);
 
           *p_collisionShapes = ra;
 
           auto og = vehicle_ProcessPhysicalSystem_Original(geoCacheId, desc);
-          
+
           *p_collisionShapes = originalShapes;
 
-          //for (auto &shape : ra) {
-            //ra.Remove(shape);
-            //shape.refCount->DecRef();
+          // for (auto &shape : ra) {
+          // ra.Remove(shape);
+          // shape.refCount->DecRef();
           //}
-          //ra.size = 0;
+          // ra.size = 0;
           ra.Clear();
-  /*        shapeFL.~Handle<RED4ext::physics::ICollider>();
-          shapeFR.~Handle<RED4ext::physics::ICollider>();
-          shapeBL.~Handle<RED4ext::physics::ICollider>();
-          shapeBR.~Handle<RED4ext::physics::ICollider>();*/
+          /*        shapeFL.~Handle<RED4ext::physics::ICollider>();
+                  shapeFR.~Handle<RED4ext::physics::ICollider>();
+                  shapeBL.~Handle<RED4ext::physics::ICollider>();
+                  shapeBR.~Handle<RED4ext::physics::ICollider>();*/
 
           return og;
         }
@@ -358,10 +373,13 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
   bool isCar = false;
   bool isBike = false;
   auto isVehicle = false;
+  auto vehicleClass = rtti->GetClass("vehicleBaseObject");
+  auto carClass = rtti->GetClass("vehicleCarBaseObject");
+  auto bikeClass = rtti->GetClass("vehicleBikeBaseObject");
   do {
-    isVehicle |= type == rtti->GetClass("vehicleBaseObject");
-    isCar |= type == rtti->GetClass("vehicleCarBaseObject");
-    isBike |= type == rtti->GetClass("vehicleBikeBaseObject");
+    isVehicle |= type == vehicleClass;
+    isCar |= type == carClass;
+    isBike |= type == bikeClass;
   } while (type = type->parent);
 
   if (isVehicle) {
@@ -382,7 +400,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     // auto h = RED4ext::Handle<FlightComponent>(fc);
     // h.refCount->IncRef();
     // h.refCount->IncRef();
-    //entity->componentsStorage.components.EmplaceBack(h);
+    // entity->componentsStorage.components.EmplaceBack(h);
 
     RED4ext::ent::VisualControllerComponent *vcc = NULL;
     RED4ext::vehicle::ChassisComponent *chassis = NULL;
@@ -406,25 +424,25 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
       }
     }
 
-    //if (chassis != NULL) {
+    // if (chassis != NULL) {
     //
-    //}
+    // }
 
     if (vcc != NULL && vs != NULL) {
       {
-        //auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
-        //slot->boneName = "roof_border_front";
-        //slot->slotName = "roof_border_front";
-        //vs->slots.EmplaceBack(*slot);
-        //vs->slotIndexLookup.Emplace(slot->slotName, vs->slots.size - 1);
+        // auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
+        // slot->boneName = "roof_border_front";
+        // slot->slotName = "roof_border_front";
+        // vs->slots.EmplaceBack(*slot);
+        // vs->slotIndexLookup.Emplace(slot->slotName, vs->slots.size - 1);
       }
-      //FlightWeapons::AddWeaponSlots(vs);
+      // FlightWeapons::AddWeaponSlots(vs);
 
       bool isSixWheeler = false;
-      //for (auto const &slot : vs->slots) {
-      //  if (slot.slotName == "wheel_front_left_b")
-      //    isSixWheeler = true;
-      //}
+      // for (auto const &slot : vs->slots) {
+      //   if (slot.slotName == "wheel_front_left_b")
+      //     isSixWheeler = true;
+      // }
 
       for (auto const &handle : entity->componentsStorage.components) {
         auto component = handle.GetPtr();
@@ -460,7 +478,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
       }
 
       if (configurationCls) {
-        //spdlog::info("Looked for class '{}' using '{}'", className, configurationCls->name.ToString());
+        // spdlog::info("Looked for class '{}' using '{}'", className, configurationCls->name.ToString());
         auto configuration = reinterpret_cast<IFlightConfiguration *>(configurationCls->CreateInstance(true));
         configurationCls->ConstructCls(configuration);
 
@@ -474,9 +492,9 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
 
         configuration->Setup(vehicle);
         configuration->AddSlots(vs);
-        //configuration->AddMeshes(entity, vcc);
+        // configuration->AddMeshes(entity, vcc);
       } else {
-        //spdlog::info("Looked for class '{}'", className);
+        // spdlog::info("Looked for class '{}'", className);
       }
     }
 
@@ -534,15 +552,16 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     //  wwc->widgetResource.ref = fc;
     //  wwc->spawnDistanceOverride = 20.0;
     //  wwc->sceneWidgetProperties.renderingPlane = RED4ext::ERenderingPlane::RPl_Weapon;
-    //  auto mtb = (RED4ext::world::ui::MeshTargetBinding *)rtti->GetClass("worlduiMeshTargetBinding")->CreateInstance();
-    //  mtb->bindName = "flight_screen_info";
+    //  auto mtb = (RED4ext::world::ui::MeshTargetBinding
+    //  *)rtti->GetClass("worlduiMeshTargetBinding")->CreateInstance(); mtb->bindName = "flight_screen_info";
     //  wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
 
     //  entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc));
     //}
     //{
     //  auto gpsp =
-    //      (RED4ext::game::projectile::SpawnComponent *)rtti->GetClass("gameprojectileSpawnComponent")->CreateInstance();
+    //      (RED4ext::game::projectile::SpawnComponent
+    //      *)rtti->GetClass("gameprojectileSpawnComponent")->CreateInstance();
     //  gpsp->name = "projectileSpawn8722";
     //  gpsp->projectileTemplates.EmplaceBack("exploding_bullet");
     //  auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->CreateInstance();
@@ -555,10 +574,10 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
     {
       auto whc = (RED4ext::WidgetHudComponent *)rtti->GetClass("WidgetHudComponent")->CreateInstance();
       whc->name = "FlightHUD";
-      //auto resource =
-          //RED4ext::Ref<RED4ext::ink::HudEntriesResource>("user\\jackhumbert\\widgets\\hud_flight.inkhud", true);
+      // auto resource =
+      // RED4ext::Ref<RED4ext::ink::HudEntriesResource>("user\\jackhumbert\\widgets\\hud_flight.inkhud", true);
       whc->hudEntriesResource.path = "user\\jackhumbert\\widgets\\hud_flight.inkhud";
-      //whc->hudEntriesResource.token = resource.token;
+      // whc->hudEntriesResource.token = resource.token;
       LoadResRef<RED4ext::ink::HudEntriesResource>(&whc->hudEntriesResource.path, &whc->hudEntriesResource.token,
                                                    false);
       entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::WidgetHudComponent>(whc));
@@ -635,34 +654,35 @@ void EntityAddWorldWidgetComponent(RED4ext::IScriptable *aContext, RED4ext::CSta
   }
 }
 
-//base\vehicles\common\gameplay\flight_components.ent
+// base\vehicles\common\gameplay\flight_components.ent
 
-//void EntityAddFlightComponent(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, bool *aOut, int64_t a4) {
-//  auto ent = reinterpret_cast<RED4ext::ent::Entity *>(aContext);
+// void EntityAddFlightComponent(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, bool *aOut, int64_t a4) {
+//   auto ent = reinterpret_cast<RED4ext::ent::Entity *>(aContext);
 //
 //
-//  RED4ext::CName *name;
-//  RED4ext::GetParameter(aFrame, &name);
-//  aFrame->code++; // skip ParamEnd
+//   RED4ext::CName *name;
+//   RED4ext::GetParameter(aFrame, &name);
+//   aFrame->code++; // skip ParamEnd
 //
-//  if (name != 0) {
-//    auto resHandle = new RED4ext::ResourceHandle<RED4ext::ent::EntityTemplate>();
-//    RED4ext::CName fc = "base\\vehicles\\common\\gameplay\\flight_components.ent";
-//    LoadResRef<RED4ext::ent::EntityTemplate>((uint64_t *)&fc, resHandle, true);
+//   if (name != 0) {
+//     auto resHandle = new RED4ext::ResourceHandle<RED4ext::ent::EntityTemplate>();
+//     RED4ext::CName fc = "base\\vehicles\\common\\gameplay\\flight_components.ent";
+//     LoadResRef<RED4ext::ent::EntityTemplate>((uint64_t *)&fc, resHandle, true);
 //
-//    auto et = resHandle->wrapper->resource.GetPtr();
-//    et->sub_28(true);
+//     auto et = resHandle->wrapper->resource.GetPtr();
+//     et->sub_28(true);
 //
-//    auto handle = RED4ext::Handle<RED4ext::ent::IComponent>(value);
-//    ent->componentsStorage.components.EmplaceBack(handle);
+//     auto handle = RED4ext::Handle<RED4ext::ent::IComponent>(value);
+//     ent->componentsStorage.components.EmplaceBack(handle);
 //
-//    if (aOut) {
-//      *aOut = true;
-//    }
-//  }
-//}
+//     if (aOut) {
+//       *aOut = true;
+//     }
+//   }
+// }
 
-void IPlacedComponentUpdateHardTransformBinding(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, bool *aOut, int64_t a4) {
+void IPlacedComponentUpdateHardTransformBinding(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,
+                                                bool *aOut, int64_t a4) {
   auto ipc = reinterpret_cast<RED4ext::ent::IPlacedComponent *>(aContext);
 
   RED4ext::CName bindName;
@@ -685,7 +705,6 @@ void IPlacedComponentUpdateHardTransformBinding(RED4ext::IScriptable *aContext, 
       *aOut = false;
     }
   }
-
 }
 
 struct EntityAddComponentModule : FlightModule {
@@ -698,30 +717,30 @@ struct EntityAddComponentModule : FlightModule {
                                   &VehicleProcessWeapons_Hook,
                                   reinterpret_cast<void **>(&VehicleProcessWeapons_Original)))
       ;
-    //while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(SpawnEffect_Addr), &SpawnEffect,
-    //                              reinterpret_cast<void **>(&SpawnEffect_Original)))
-    //  ;
+    // while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(SpawnEffect_Addr), &SpawnEffect,
+    //                               reinterpret_cast<void **>(&SpawnEffect_Original)))
+    //   ;
   }
   void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(Entity_InitializeComponents_Addr));
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(VehicleProcessWeapons_Addr));
-    //aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(SpawnEffect_Addr));
+    // aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(SpawnEffect_Addr));
   }
   void PostRegisterTypes() {
     auto rtti = RED4ext::CRTTISystem::Get();
     auto ent = rtti->GetClass("entEntity");
     ent->RegisterFunction(
         RED4ext::CClassFunction::Create(ent, "AddComponent", "AddComponent", &EntityAddComponent, {.isNative = true}));
-    ent->RegisterFunction(
-        RED4ext::CClassFunction::Create(ent, "AddWorldWidgetComponent", "AddWorldWidgetComponent", &EntityAddWorldWidgetComponent, {.isNative = true}));
+    ent->RegisterFunction(RED4ext::CClassFunction::Create(ent, "AddWorldWidgetComponent", "AddWorldWidgetComponent",
+                                                          &EntityAddWorldWidgetComponent, {.isNative = true}));
 
     auto ipc = rtti->GetClass("entIPlacedComponent");
-    ipc->RegisterFunction(RED4ext::CClassFunction::Create(ipc, "UpdateHardTransformBinding", "UpdateHardTransformBinding",
-                                                          &IPlacedComponentUpdateHardTransformBinding, {.isNative = true}));
+    ipc->RegisterFunction(
+        RED4ext::CClassFunction::Create(ipc, "UpdateHardTransformBinding", "UpdateHardTransformBinding",
+                                        &IPlacedComponentUpdateHardTransformBinding, {.isNative = true}));
 
-    
-    //auto mc = rtti->GetClass("entMeshComponent");
-    //mc->props.EmplaceBack(RED4ext::CProperty::Create(rtti->GetType("Vector3"), "visualScale", nullptr, 0x178));
+    // auto mc = rtti->GetClass("entMeshComponent");
+    // mc->props.EmplaceBack(RED4ext::CProperty::Create(rtti->GetType("Vector3"), "visualScale", nullptr, 0x178));
   }
 };
 

@@ -2,11 +2,13 @@
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/Entity.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
+#include <RED4ext/Scripting/Natives/vehiclePhysics.hpp>
 #include "Addresses.hpp"
 #include <RED4ext/Scripting/Natives/Generated/game/EffectSystem.hpp>
 #include <RED4ext/Scripting/Natives/vehicleChassisComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/physics/ColliderSphere.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/GameAudioSystem.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ent/SlotComponent.hpp>
 #include <RED4ext/Scripting/Natives/GameInstance.hpp>
 //#include <RED4ext/Scripting/Natives/UpdateManager.hpp>
 
@@ -61,12 +63,12 @@ using VehiclePhysicsUpdate = uintptr_t __fastcall (RED4ext::vehicle::Physics *, 
 // 1.6  RVA: 0x1D3EB10
 // 1.61 RVA: 0x1D3EED0
 /// @pattern 48 8B C4 48 89 58 08 48 89 70 10 48 89 78 18 41 56 48 81 EC B0 00 00 00 0F 29 70 E8 4C 8B F1 0F
-using VehicleHelperUpdate = uintptr_t __fastcall (RED4ext::vehicle::WheeledPhysics *, float);
+uintptr_t __fastcall VehicleHelperUpdate(RED4ext::vehicle::WheeledPhysics *, float);
 
 // 1.6  RVA: 0x1D3AD50
 // 1.61 RVA: 0x1D3B110
 /// @pattern 48 8B C4 53 48 81 EC A0 00 00 00 0F 29 70 E8 48 8B D9 0F 29 78 D8 44 0F 29 40 C8 44 0F 29 48 B8
-using ProcessAirResistance = void __fastcall (RED4ext::vehicle::WheeledPhysics *a1, float deltaTime);
+void __fastcall ProcessAirResistance(RED4ext::vehicle::WheeledPhysics *a1, float deltaTime);
 
 // update with pid
 // 1.6  RVA: 0x1C9A750
