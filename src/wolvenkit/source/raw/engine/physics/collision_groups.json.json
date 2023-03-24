@@ -1,0 +1,79 @@
+{
+  "Header": {
+    "WolvenKitVersion": "8.7.0",
+    "WKitJsonVersion": "0.0.3",
+    "GameVersion": 1600,
+    "ExportedDateTime": "2023-03-24T00:38:13.3142287Z",
+    "DataType": "CR2W",
+    "ArchiveFileName": "C:\\Users\\Jack\\Documents\\cyberpunk\\flight_control\\src\\wolvenkit\\source\\archive\\engine\\physics\\collision_groups.json"
+  },
+  "Data": {
+    "Version": 195,
+    "BuildVersion": 0,
+    "RootChunk": {
+      "$type": "JsonResource",
+      "cookingPlatform": "PLATFORM_PC",
+      "root": {
+        "HandleId": "0",
+        "Data": {
+          "$type": "physicsCollisionFilterResource",
+          "collisionGroups": {
+            "Size": 19,
+            "MaxSize": 64,
+            "Elements": [
+              "Player",
+              "AI",
+              "Static",
+              "Dynamic",
+              "Vehicle",
+              "Tank",
+              "Destructible",
+              "Terrain",
+              "Collider",
+              "Particle",
+              "Ragdoll",
+              "Ragdoll Inner",
+              "Debris",
+              "Cloth",
+              "PlayerBlocker",
+              "VehicleBlocker",
+              "TankBlocker",
+              "DestructibleCluster",
+              "NPCBlocker"
+            ]
+          },
+          "collisionPresetJson": {
+            "DepotPath": "engine\\physics\\collision_presets.json",
+            "Flags": "Default"
+          },
+          "overridesJson": {
+            "DepotPath": "engine\\physics\\collision_overrides.json",
+            "Flags": "Default"
+          },
+          "queryGroups": {
+            "Size": 11,
+            "MaxSize": 64,
+            "Elements": [
+              "Visibility",
+              "Audible",
+              "Interaction",
+              "Shooting",
+              "Water",
+              "NetworkDevice",
+              "NPCTraceObstacle",
+              "PhotoModeCamera",
+              "FoliageDestructible",
+              "NPCNameplate",
+              "NPCCollision"
+            ]
+          },
+          "queryPresetJson": {
+            "DepotPath": "engine\\physics\\query_presets.json",
+            "Flags": "Default"
+          }
+        }
+      }
+    },
+    "EmbeddedFiles": []
+  }
+}

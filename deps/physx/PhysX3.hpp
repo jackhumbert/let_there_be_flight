@@ -50,16 +50,17 @@ public:
   virtual void setSimulationFilterData(void *data); // A0
   virtual void getSimulationFilterData(); // A8
   virtual void setQueryFilterData(void *data); // B0
-  virtual void getQueryFilterData();
-  virtual void setMaterials(void **materials, uint16_t materialCount);
-  virtual uint16_t getNbMaterials();
-  virtual uint32_t getMaterials(void **userBuffer, uint32_t bufferSize, uint32_t startIndex);
-  virtual void  getMaterialFromInternalFaceIndex(uint32_t faceIndex);
-  virtual void setContactOffset(float contactOffset);
-  virtual float getContactOffset();
-  virtual void setRestOffset();
-  virtual float getRestOffset();
-  virtual void setFlag(uint8_t flag, bool value);
+  virtual void getQueryFilterData(); // B8
+  virtual void setMaterials(void **materials, uint16_t materialCount); // C0
+  virtual uint16_t getNbMaterials(); // C8
+  virtual uint32_t getMaterials(void **userBuffer, uint32_t bufferSize, uint32_t startIndex); // D0
+  virtual void  getMaterialFromInternalFaceIndex(uint32_t faceIndex); // D8
+  virtual void setContactOffset(float contactOffset); // E0
+  virtual float getContactOffset(); // E8
+  virtual void setRestOffset(); // F0
+  virtual float getRestOffset(); // F8
+  virtual void setFlag(uint8_t flag, bool value); // 100
+  virtual bool isExclusive(); // 108
 };
 
 class PxActor : public PxBase {

@@ -156,13 +156,13 @@ public class CarFlightConfiguration extends IFlightConfiguration {
     if (Equals(this.type, FlightVehicleType.Corpo)) {
       ArrayPush(this.thrusters, new FlightThrusterFL().Create(vehicle, CreateCorpoThruster()));
       ArrayPush(this.thrusters, new FlightThrusterFR().Create(vehicle, CreateCorpoThruster()));
-      ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, CreateCorpoThruster()));
       ArrayPush(this.thrusters, new FlightThrusterBR().Create(vehicle, CreateCorpoThruster()));
+      ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, CreateCorpoThruster()));
     } else {
       ArrayPush(this.thrusters, new FlightThrusterFL().Create(vehicle, CreateNomadThruster()));
       ArrayPush(this.thrusters, new FlightThrusterFR().Create(vehicle, CreateNomadThruster()));
-      ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, CreateNomadThruster()));
       ArrayPush(this.thrusters, new FlightThrusterBR().Create(vehicle, CreateNomadThruster()));
+      ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, CreateNomadThruster()));
       
       this.thrusters[0].hasRetroThruster = false;
       this.thrusters[1].hasRetroThruster = false;

@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See the license.md in the root project for details.
 // https://github.com/jackhumbert/let_there_be_flight
 
-// This file was automatically generated on 2023-03-21 19:47:11 UTC
+// This file was automatically generated on 2023-03-23 23:39:49 UTC
 
 // Audio/FlightAudio.reds
 
@@ -2561,13 +2561,13 @@ public class CarFlightConfiguration extends IFlightConfiguration {
     if (Equals(this.type, FlightVehicleType.Corpo)) {
       ArrayPush(this.thrusters, new FlightThrusterFL().Create(vehicle, CreateCorpoThruster()));
       ArrayPush(this.thrusters, new FlightThrusterFR().Create(vehicle, CreateCorpoThruster()));
-      ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, CreateCorpoThruster()));
       ArrayPush(this.thrusters, new FlightThrusterBR().Create(vehicle, CreateCorpoThruster()));
+      ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, CreateCorpoThruster()));
     } else {
       ArrayPush(this.thrusters, new FlightThrusterFL().Create(vehicle, CreateNomadThruster()));
       ArrayPush(this.thrusters, new FlightThrusterFR().Create(vehicle, CreateNomadThruster()));
-      ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, CreateNomadThruster()));
       ArrayPush(this.thrusters, new FlightThrusterBR().Create(vehicle, CreateNomadThruster()));
+      ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, CreateNomadThruster()));
       
       this.thrusters[0].hasRetroThruster = false;
       this.thrusters[1].hasRetroThruster = false;

@@ -21,6 +21,7 @@ public:
   RED4ext::DynArray<RED4ext::Handle<IFlightThruster>> thrusters;
   RED4ext::CName flightCameraBone = "roof_border_front";
   RED4ext::Vector3 flightCameraOffset = RED4ext::Vector3(0.0, 0.0, 0.0);
+  uint32_t originalShapeCount;
 
   void Setup(RED4ext::vehicle::BaseObject * vehicle);
   void AddSlots(RED4ext::ent::SlotComponent* slotComponent);
@@ -44,7 +45,6 @@ public:
   void OnDeactivationCore();
 
 private:
-  uint32_t originalShapeCount;
   friend Descriptor;
   static void OnRegister(Descriptor *aType) {
     aType->flags.isAbstract = true;

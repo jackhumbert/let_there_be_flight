@@ -5,6 +5,7 @@
 #include <RED4ext/Scripting/Natives/Generated/physics/SimulationFilter.hpp>
 #include <RED4ext/Scripting/Natives/Generated/physics/QueryFilter.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/SlotComponent.hpp>
+#include <RED4ext/Scripting/Natives/Generated/physics/FilterData.hpp>
 
 void IFlightConfiguration::Setup(RED4ext::vehicle::BaseObject * vehicle) {
 
@@ -73,43 +74,60 @@ void IFlightConfiguration::OnActivationCore() {
     }
   }
 
-  auto key = (RED4ext::vehicle::PhysicalSystemKey*)cc->geoCacheID.GetSystemKey();
-  auto body = (physx::PxRigidDynamic*)key->bodies.entries[0];
+  if (cc != NULL && sc != NULL) {
+    RED4ext::physics::GeoThing geoThing;
+    cc->GetGeoThingAndLock(&geoThing);
 
-  this->originalShapeCount = body->getNbShapes();
+    // could also update cc->unk174 shape mask?
 
-  RED4ext::physics::SimulationFilter simulationFilter;
-  simulationFilter.mask1 = 0x0080010000000000;
-  simulationFilter.mask2 = 0xFE11000000000080;
+    auto key = (RED4ext::vehicle::PhysicalSystemKey *) cc->geoCacheID.GetSystemKey();
+    auto body = (physx::PxRigidDynamic *) key->bodies.entries[0];
 
-  RED4ext::physics::QueryFilter queryFilter;
-  queryFilter.mask2 = 0x1000480400000000;
-  RED4ext::Vector3 unk140(1.0, 1.0, 1.0);
-  RED4ext::Transform transform;
-  int index = 0;
+    this->originalShapeCount = body->getNbShapes();
 
-  for(auto const &thruster : this->thrusters) {
-    RED4ext::Handle<RED4ext::physics::ICollider> collider;
-    RED4ext::physics::ColliderSphere::createHandleWithRadius(&collider, 0.45);
-    collider.refCount->IncRef();
+    auto filterData = (RED4ext::physics::FilterData*)filterDataCls->CreateInstance();
+    filterData->LoadPreset("Vehicle Chassis");
+    RED4ext::Vector3 unk140(1.0, 1.0, 1.0);
+    RED4ext::Transform transform;
+    int index = 0;
 
-    collider->material = "vehicle_chassis.physmat";
+    for (auto const &thruster: this->thrusters) {
+      RED4ext::Handle<RED4ext::physics::ICollider> collider;
+      RED4ext::physics::ColliderSphere::createHandleWithRadius(&collider, 0.4);
+      collider.refCount->IncRef();
 
-    auto wtCls = rtti->GetClass("WorldTransform");
+      collider->material = "vehicle_chassis.physmat";
 
-    index = sc->GetSlotIndex(thruster->slotName);
-    if (index != -1) {
-      sc->GetLocalSlotTransformFromIndex(index, &transform);
-      collider->localToBody.position = transform.position - *cc->localTransform.Position.ToVector4();
-      collider->localToBody.orientation = RED4ext::Quaternion(0.0, 0.0, 0.0, 1.0);
+      auto wtCls = rtti->GetClass("WorldTransform");
+
+      index = sc->GetSlotIndex(thruster->slotName);
+      if (index != -1) {
+        sc->GetLocalSlotTransformFromIndex(index, &transform);
+        collider->localToBody.position = transform.position - *cc->localTransform.Position.ToVector4();
+        collider->localToBody.orientation = RED4ext::Quaternion(0.0, 0.0, 0.0, 1.0);
+      }
+      auto shape = (physx::PxShape *) collider->CreatePxShape(&unk140, nullptr, 1, nullptr);
+      shape->setSimulationFilterData(&filterData->simulationFilter);
+      shape->setQueryFilterData(&filterData->queryFilter);
+
+      body->attachShape(*shape);
+
+      shape->release2();
     }
-    auto shape = (physx::PxShape *) collider->CreatePxShape(&unk140, nullptr, 1, nullptr);
-    shape->setSimulationFilterData(&simulationFilter);
-    shape->setQueryFilterData(&queryFilter);
 
-    body->attachShape(*shape);
+    auto newCount = body->getNbShapes();
 
-    shape->release2();
+    // add indices to bottom mask
+    for (int i = this->originalShapeCount; i < newCount; i++) {
+//      cc->unk174 |= (1 << i);
+      geoThing.SetSimulationShape(true, 0, i);
+      geoThing.SetIsQueryable(true, 0, i);
+    }
+
+//    float damping = 2.0;
+//    geoThing.SetAngularDamping(&damping, 0);
+    geoThing.CleanUp();
+    geoThing.Unlock();
   }
 
 //  // add a dummy shape & remove it to trigger an update
@@ -141,40 +159,51 @@ void IFlightConfiguration::OnActivationCore() {
 //key->sub_58();
 //  cc->UpdatePhysicsState(0x20, 0);
 //  body->setActorFlag(1<<0, true);
+//  this->component->entity->ExecuteFunction("ScheduleAppearanceChange", this->component->entity->currentAppearance);
   this->ExecuteFunction("OnActivation");
 }
 
 void IFlightConfiguration::OnDeactivationCore() {
   auto rtti = RED4ext::CRTTISystem::Get();
 
-  RED4ext::ent::SlotComponent *sc = NULL;
   RED4ext::vehicle::ChassisComponent *cc = NULL;
 
-  auto scCls = rtti->GetClass("entSlotComponent");
   auto ccCls = rtti->GetClass("vehicleChassisComponent");
-  auto filterDataCls = rtti->GetClass("physicsFilterData");
 
   for (auto const &handle : this->component->entity->componentsStorage.components) {
     auto component = handle.GetPtr();
-    if (sc == NULL && component->GetNativeType() == scCls) {
-      if (component->name == "vehicle_slots") {
-        sc = reinterpret_cast<RED4ext::ent::SlotComponent *>(component);
-      }
-    } else if (cc == NULL && component->GetNativeType() == ccCls) {
+    if (cc == NULL && component->GetNativeType() == ccCls) {
       cc = reinterpret_cast<RED4ext::vehicle::ChassisComponent *>(component);
     }
   }
 
-  auto key = (RED4ext::vehicle::PhysicalSystemKey*)cc->geoCacheID.GetSystemKey();
-  auto body = (physx::PxRigidDynamic*)key->bodies.entries[0];
+  if (cc != NULL) {
+    RED4ext::physics::GeoThing geoThing;
+    cc->GetGeoThingAndLock(&geoThing);
 
-  auto nbShapes = body->getNbShapes();
-  physx::PxShape * shapes[16];
-  body->getShapes(shapes, 16, this->originalShapeCount);
-  for (int i = 0; i < fmin(nbShapes - this->originalShapeCount, 16); i++) {
-    body->detachShape(*shapes[i], true);
+    auto key = (RED4ext::vehicle::PhysicalSystemKey *) cc->geoCacheID.GetSystemKey();
+    auto body = (physx::PxRigidDynamic *) key->bodies.entries[0];
+
+    auto nbShapes = body->getNbShapes();
+
+    // remove indexes from bottom mask
+//    for (int i = this->originalShapeCount; i < nbShapes; i++) {
+//      cc->unk174 &= ~(1 << i);
+//      geoThing.SetSimulationShape(false, 0, i);
+//      geoThing.SetIsQueryable(false, 0, i);
+//    }
+
+    physx::PxShape *shapes[16];
+    body->getShapes(shapes, 16, this->originalShapeCount);
+    for (int i = 0; i < fmin(nbShapes - this->originalShapeCount, 16); i++) {
+      body->detachShape(*shapes[i], true);
+    }
+
+//    float damping = 0.0;
+//    geoThing.SetAngularDamping(&damping, 0);
+    geoThing.CleanUp();
+    geoThing.Unlock();
   }
-//  body->setAngularDamping(0.0);
 
   this->ExecuteFunction("OnDeactivation");
 }
