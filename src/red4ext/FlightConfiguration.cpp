@@ -78,8 +78,6 @@ void IFlightConfiguration::OnActivationCore() {
     RED4ext::physics::GeoThing geoThing;
     cc->GetGeoThingAndLock(&geoThing);
 
-    // could also update cc->unk174 shape mask?
-
     auto key = (RED4ext::vehicle::PhysicalSystemKey *) cc->geoCacheID.GetSystemKey();
     auto body = (physx::PxRigidDynamic *) key->bodies.entries[0];
 
