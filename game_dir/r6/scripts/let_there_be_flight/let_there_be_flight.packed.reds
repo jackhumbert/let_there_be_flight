@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See the license.md in the root project for details.
 // https://github.com/jackhumbert/let_there_be_flight
 
-// This file was automatically generated on 2023-03-23 23:39:49 UTC
+// This file was automatically generated on 2023-03-28 03:36:06 UTC
 
 // Audio/FlightAudio.reds
 
@@ -1204,6 +1204,11 @@ public native class FlightComponent extends GameComponent {
   @runtimeProperty("offset", "0xE0")
   public native let configuration: ref<IFlightConfiguration>;
 
+  @runtimeProperty("offset", "0xF8")
+  public native let linearDamp: Float;
+
+  @runtimeProperty("offset", "0xFC")
+  public native let angularDamp: Float;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Quickhacks")
@@ -1774,6 +1779,8 @@ public native class FlightComponent extends GameComponent {
       this.modes[this.mode].ApplyPhysics(timeDelta);
       force += this.modes[this.mode].force;
       torque += this.modes[this.mode].torque;
+      this.angularDamp = this.modes[this.mode].angularDamp;
+      this.linearDamp = this.modes[this.mode].linearDamp;
     }
 
     force *= timeDelta;
@@ -3633,6 +3640,8 @@ public abstract class FlightMode {
 
   public let force: Vector4;
   public let torque: Vector4;
+  public let linearDamp: Float;
+  public let angularDamp: Float;
 
   public static let gravityFactor: Float;
 
@@ -3662,14 +3671,20 @@ public abstract class FlightMode {
   public func ApplyPhysics(timeDelta: Float) -> Void {
     let fs =  FlightSettings.GetInstance();
     
-    let velocityDamp: Vector4 = this.component.stats.d_speed * this.component.stats.d_localVelocity * fs.generalDampFactorLinear * this.component.stats.s_airResistanceFactor;
-    let angularDamp: Vector4 = this.component.stats.d_angularVelocity * fs.generalDampFactorAngular;
+    let velocityDamp: Vector4; // = this.component.stats.d_speed * this.component.stats.d_localVelocity * fs.generalDampFactorLinear * this.component.stats.s_airResistanceFactor;
+    // let angularDamp: Vector4 = this.component.stats.d_angularVelocity * fs.generalDampFactorAngular;
     // angularDamp += this.component.stats.d_angularAcceleration;
     
+    let angularDamp = 0.0;
+
     // only damp if no input is being received on that axis
-    angularDamp.X *= (1.0 - SqrtF(AbsF(this.component.pitch)));
-    angularDamp.Y *= (1.0 - SqrtF(AbsF(this.component.roll)));
-    angularDamp.Z *= (1.0 - SqrtF(AbsF(this.component.yaw)));
+    // angularDamp += (1.0 - SqrtF(AbsF(this.component.pitch)));
+    // angularDamp += (1.0 - SqrtF(AbsF(this.component.roll)));
+    // angularDamp += (1.0 - SqrtF(AbsF(this.component.yaw)));
+    angularDamp += (1.0 - AbsF(this.component.pitch));
+    angularDamp += (1.0 - AbsF(this.component.roll));
+    angularDamp += (1.0 - AbsF(this.component.yaw));
+
 
     // detect when we hit stuff and delay the damping
     // this.dampAccVector.X = ClampF(MaxF(this.dampAccVector.X, AbsF(this.component.stats.d_angularAcceleration.X) / timeDelta / 10.0), 0.0, 1.0);
@@ -3686,9 +3701,12 @@ public abstract class FlightMode {
     // this.dampAccVector.Z -= timeDelta / 0.200;
 
     // clamp the dampening
-    if Vector4.Length(angularDamp) > fs.generalDampFactorAngularMax {
-      angularDamp = Vector4.Normalize(angularDamp) * fs.generalDampFactorAngularMax;
-    }
+    // if Vector4.Length(angularDamp) > fs.generalDampFactorAngularMax {
+    //   angularDamp = Vector4.Normalize(angularDamp) * fs.generalDampFactorAngularMax;
+    // }
+
+    this.angularDamp = fs.generalDampFactorAngular * ClampF(angularDamp, 0.0, 1.0) + this.component.angularBrake;
+    this.linearDamp = fs.generalDampFactorLinear + this.component.linearBrake;
 
     // this.lastAngularDamp = angularDamp;
 
@@ -3721,7 +3739,7 @@ public abstract class FlightMode {
     this.force += FlightUtils.Forward() * AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_up)) * pitchDirectionality * aeroFactor;
     this.force += -this.component.stats.d_localDirection * AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_up)) * pitchDirectionality * AbsF(aeroFactor);
 
-    this.torque = -angularDamp;
+    // this.torque = -angularDamp;
     this.torque.Z -= aeroDynamicYaw * fs.generalYawAeroFactor;
     this.torque.X -= aeroDynamicPitch * fs.generalPitchAeroFactor;
   }
@@ -3921,8 +3939,10 @@ public class FlightModeDrone extends FlightMode {
   public func GetDescription() -> String = "Drone";
 
   public func Update(timeDelta: Float) -> Void {
-      let velocityDamp: Vector4 = this.component.stats.d_localVelocity * this.component.linearBrake * FlightSettings.GetInstance().brakeFactorLinear * this.component.stats.s_brakingFrictionFactor;   
-      let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetInstance().brakeFactorAngular * this.component.stats.s_brakingFrictionFactor;
+      // let velocityDamp: Vector4 = this.component.stats.d_localVelocity * this.component.linearBrake * FlightSettings.GetInstance().brakeFactorLinear * this.component.stats.s_brakingFrictionFactor;   
+      let velocityDamp: Vector4;
+      // let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetInstance().brakeFactorAngular * this.component.stats.s_brakingFrictionFactor;
+      let angularDamp: Vector4;
 
       this.force = new Vector4(0.0, 0.0, 0.0, 0.0);
       // lift
@@ -4203,9 +4223,11 @@ public abstract class FlightModeStandard extends FlightMode {
     // }
     // yawCorrection += FlightSettings.GetFloat("yawD") * changeAngle / timeDelta;
 
-    let velocityDamp: Vector4 = this.component.linearBrake * FlightSettings.GetInstance().brakeFactorLinear * this.component.stats.s_brakingFrictionFactor * this.component.stats.d_localVelocity;
-    let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetInstance().brakeFactorAngular * this.component.stats.s_brakingFrictionFactor;
-
+    // let velocityDamp: Vector4 = this.component.linearBrake * FlightSettings.GetInstance().brakeFactorLinear * this.component.stats.s_brakingFrictionFactor * this.component.stats.d_localVelocity;
+    // let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetInstance().brakeFactorAngular * this.component.stats.s_brakingFrictionFactor;
+    let velocityDamp: Vector4; 
+    let angularDamp: Vector4;
+    
     // let yawDirectionality: Float = (this.component.stats.d_speedRatio + AbsF(this.yaw.GetValue()) * this.swayWithYaw) * this.yawDirectionalityFactor;
     // actual in-game mass (i think)
     // this.averageMass = this.averageMass * 0.99 + (liftForce / 9.8) * 0.01;
@@ -4305,18 +4327,18 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Linear-Damp-Factor")
   @runtimeProperty("ModSettings.description", "UI-Settings-Linear-Damp-Factor-Description")
-  @runtimeProperty("ModSettings.step", "0.0001")
+  @runtimeProperty("ModSettings.step", "0.05")
   @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "0.01")
+  @runtimeProperty("ModSettings.max", "20.0")
   public let generalDampFactorLinear: Float = 0.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Angular-Damp-Factor")
   @runtimeProperty("ModSettings.description", "UI-Settings-Angular-Damp-Factor-Description")
-  @runtimeProperty("ModSettings.step", "0.01")
+  @runtimeProperty("ModSettings.step", "0.05")
   @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "50.0")
+  @runtimeProperty("ModSettings.max", "20.0")
   public let generalDampFactorAngular: Float = 1.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")

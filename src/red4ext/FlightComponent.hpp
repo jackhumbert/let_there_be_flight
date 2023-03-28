@@ -61,6 +61,8 @@ public:
       return NULL;
   }
 
+  void OnUpdate(float deltaTime);
+
   //inline virtual void sub_188(void *a1) override {
   //  //spdlog::info("[FlightComponent] sub_188");
   //  //if (this) {
@@ -88,6 +90,9 @@ public:
   RED4ext::Vector4 torque;
   //RED4ext::DynArray<RED4ext::Handle<IFlightThruster>> thrusters;
   RED4ext::Handle<IFlightConfiguration> configuration;
+  RED4ext::vehicle::ChassisComponent * chassis = NULL;
+  float linearDamp = 0;
+  float angularDamp = 0;
 
 private:
   friend Descriptor;
@@ -103,4 +108,6 @@ RED4EXT_ASSERT_OFFSET(FlightComponent, force, 0xC0);
 RED4EXT_ASSERT_OFFSET(FlightComponent, torque, 0xD0);
 //RED4EXT_ASSERT_OFFSET(FlightComponent, thrusters, 0xE0);
 RED4EXT_ASSERT_OFFSET(FlightComponent, configuration, 0xE0);
+RED4EXT_ASSERT_OFFSET(FlightComponent, linearDamp, 0xF8);
+RED4EXT_ASSERT_OFFSET(FlightComponent, angularDamp, 0xFC);
 //char (*__kaboom)[offsetof(FlightComponent, sys] = 1;

@@ -6,6 +6,8 @@
 #include <RED4ext/Scripting/Natives/Generated/physics/QueryFilter.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/SlotComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/physics/FilterData.hpp>
+#include <RED4ext/Scripting/Natives/physicsProxyHelper.hpp>
+#include <RED4ext/Scripting/Natives/physicsPhysicalSystemProxy.hpp>
 
 void IFlightConfiguration::Setup(RED4ext::vehicle::BaseObject * vehicle) {
 
@@ -75,10 +77,11 @@ void IFlightConfiguration::OnActivationCore() {
   }
 
   if (cc != NULL && sc != NULL) {
-    RED4ext::physics::GeoThing geoThing;
-    cc->GetGeoThingAndLock(&geoThing);
+    FlightComponent::Get((RED4ext::vehicle::BaseObject*)this->component->entity)->chassis = cc;
+    RED4ext::physics::ProxyHelper proxyHelper;
+    cc->GetProxyHelperAndLock(&proxyHelper);
 
-    auto key = (RED4ext::vehicle::PhysicalSystemKey *) cc->geoCacheID.GetSystemKey();
+    auto key = (RED4ext::physics::PhysicalSystemProxy *)cc->proxyID.GetProxy();
     auto body = (physx::PxRigidDynamic *) key->bodies.entries[0];
 
     this->originalShapeCount = body->getNbShapes();
@@ -118,46 +121,14 @@ void IFlightConfiguration::OnActivationCore() {
     // add indices to bottom mask
     for (int i = this->originalShapeCount; i < newCount; i++) {
 //      cc->unk174 |= (1 << i);
-      geoThing.SetSimulationShape(true, 0, i);
-      geoThing.SetIsQueryable(true, 0, i);
+      proxyHelper.SetSimulationShape(true, 0, i);
+      proxyHelper.SetIsQueryable(true, 0, i);
     }
 
-//    float damping = 2.0;
-//    geoThing.SetAngularDamping(&damping, 0);
-    geoThing.CleanUp();
-    geoThing.Unlock();
+    proxyHelper.UpdateProxyCache();
+    proxyHelper.Unlock();
   }
 
-//  // add a dummy shape & remove it to trigger an update
-//  auto newCount = body->getNbShapes();
-//
-//  RED4ext::Handle<RED4ext::physics::ICollider> collider;
-//  RED4ext::physics::ColliderSphere::createHandleWithRadius(&collider, 0.45);
-//
-//  auto shape = (physx::PxShape *) collider->CreatePxShape(&unk140, nullptr, 1, nullptr);
-//  shape->setSimulationFilterData(&simulationFilter);
-//  shape->setQueryFilterData(&queryFilter);
-//
-//  body->attachShape(*shape);
-//  shape->release2();
-//
-//  physx::PxShape * shapes[1];
-//  body->getShapes(shapes, 1, newCount);
-//  body->detachShape(*shapes[0], true);
-//
-//  cc->sub_1E8(false);
-//  cc->sub_1E8(true);
-//cc->sub_148();
-//  body->setAngularDamping(10.0);
-//  body->putToSleep();
-//  body->wakeUp();
-//  auto vehicle = (RED4ext::vehicle::BaseObject*)this->component->entity;
-//  vehicle->SetPhysicsState(RED4ext::vehicle::PhysicsState::Asleep, 1);
-//  vehicle->SetPhysicsState(RED4ext::vehicle::PhysicsState::Asleep, 0);
-//key->sub_58();
-//  cc->UpdatePhysicsState(0x20, 0);
-//  body->setActorFlag(1<<0, true);
-//  this->component->entity->ExecuteFunction("ScheduleAppearanceChange", this->component->entity->currentAppearance);
   this->ExecuteFunction("OnActivation");
 }
 
@@ -176,10 +147,10 @@ void IFlightConfiguration::OnDeactivationCore() {
   }
 
   if (cc != NULL) {
-    RED4ext::physics::GeoThing geoThing;
-    cc->GetGeoThingAndLock(&geoThing);
+    RED4ext::physics::ProxyHelper proxyHelper;
+    cc->GetProxyHelperAndLock(&proxyHelper);
 
-    auto key = (RED4ext::vehicle::PhysicalSystemKey *) cc->geoCacheID.GetSystemKey();
+    auto key = (RED4ext::physics::PhysicalSystemProxy *) cc->proxyID.GetProxy();
     auto body = (physx::PxRigidDynamic *) key->bodies.entries[0];
 
     auto nbShapes = body->getNbShapes();
@@ -187,8 +158,8 @@ void IFlightConfiguration::OnDeactivationCore() {
     // remove indexes from bottom mask
 //    for (int i = this->originalShapeCount; i < nbShapes; i++) {
 //      cc->unk174 &= ~(1 << i);
-//      geoThing.SetSimulationShape(false, 0, i);
-//      geoThing.SetIsQueryable(false, 0, i);
+//      proxyHelper.SetSimulationShape(false, 0, i);
+//      proxyHelper.SetIsQueryable(false, 0, i);
 //    }
 
     physx::PxShape *shapes[16];
@@ -197,10 +168,8 @@ void IFlightConfiguration::OnDeactivationCore() {
       body->detachShape(*shapes[i], true);
     }
 
-//    float damping = 0.0;
-//    geoThing.SetAngularDamping(&damping, 0);
-    geoThing.CleanUp();
-    geoThing.Unlock();
+    proxyHelper.UpdateProxyCache();
+    proxyHelper.Unlock();
   }
 
   this->ExecuteFunction("OnDeactivation");

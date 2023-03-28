@@ -4,6 +4,8 @@ public abstract class FlightMode {
 
   public let force: Vector4;
   public let torque: Vector4;
+  public let linearDamp: Float;
+  public let angularDamp: Float;
 
   public static let gravityFactor: Float;
 
@@ -33,14 +35,20 @@ public abstract class FlightMode {
   public func ApplyPhysics(timeDelta: Float) -> Void {
     let fs =  FlightSettings.GetInstance();
     
-    let velocityDamp: Vector4 = this.component.stats.d_speed * this.component.stats.d_localVelocity * fs.generalDampFactorLinear * this.component.stats.s_airResistanceFactor;
-    let angularDamp: Vector4 = this.component.stats.d_angularVelocity * fs.generalDampFactorAngular;
+    let velocityDamp: Vector4; // = this.component.stats.d_speed * this.component.stats.d_localVelocity * fs.generalDampFactorLinear * this.component.stats.s_airResistanceFactor;
+    // let angularDamp: Vector4 = this.component.stats.d_angularVelocity * fs.generalDampFactorAngular;
     // angularDamp += this.component.stats.d_angularAcceleration;
     
+    let angularDamp = 0.0;
+
     // only damp if no input is being received on that axis
-    angularDamp.X *= (1.0 - SqrtF(AbsF(this.component.pitch)));
-    angularDamp.Y *= (1.0 - SqrtF(AbsF(this.component.roll)));
-    angularDamp.Z *= (1.0 - SqrtF(AbsF(this.component.yaw)));
+    // angularDamp += (1.0 - SqrtF(AbsF(this.component.pitch)));
+    // angularDamp += (1.0 - SqrtF(AbsF(this.component.roll)));
+    // angularDamp += (1.0 - SqrtF(AbsF(this.component.yaw)));
+    angularDamp += (1.0 - AbsF(this.component.pitch));
+    angularDamp += (1.0 - AbsF(this.component.roll));
+    angularDamp += (1.0 - AbsF(this.component.yaw));
+
 
     // detect when we hit stuff and delay the damping
     // this.dampAccVector.X = ClampF(MaxF(this.dampAccVector.X, AbsF(this.component.stats.d_angularAcceleration.X) / timeDelta / 10.0), 0.0, 1.0);
@@ -57,9 +65,12 @@ public abstract class FlightMode {
     // this.dampAccVector.Z -= timeDelta / 0.200;
 
     // clamp the dampening
-    if Vector4.Length(angularDamp) > fs.generalDampFactorAngularMax {
-      angularDamp = Vector4.Normalize(angularDamp) * fs.generalDampFactorAngularMax;
-    }
+    // if Vector4.Length(angularDamp) > fs.generalDampFactorAngularMax {
+    //   angularDamp = Vector4.Normalize(angularDamp) * fs.generalDampFactorAngularMax;
+    // }
+
+    this.angularDamp = fs.generalDampFactorAngular * ClampF(angularDamp, 0.0, 1.0) + this.component.angularBrake;
+    this.linearDamp = fs.generalDampFactorLinear + this.component.linearBrake;
 
     // this.lastAngularDamp = angularDamp;
 
@@ -92,7 +103,7 @@ public abstract class FlightMode {
     this.force += FlightUtils.Forward() * AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_up)) * pitchDirectionality * aeroFactor;
     this.force += -this.component.stats.d_localDirection * AbsF(Vector4.Dot(this.component.stats.d_forward - this.component.stats.d_direction, this.component.stats.d_up)) * pitchDirectionality * AbsF(aeroFactor);
 
-    this.torque = -angularDamp;
+    // this.torque = -angularDamp;
     this.torque.Z -= aeroDynamicYaw * fs.generalYawAeroFactor;
     this.torque.X -= aeroDynamicPitch * fs.generalPitchAeroFactor;
   }

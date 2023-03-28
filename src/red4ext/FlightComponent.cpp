@@ -1,4 +1,5 @@
 #include "FlightComponent.hpp"
+#include <RED4ext/Scripting/Natives/vehiclePhysicsData.hpp>
 
 void FlightComponent::ChaseTarget(RED4ext::WeakHandle<RED4ext::game::Object> target) {
   ////spdlog::info("[FlightComponent] ChaseTarget");
@@ -26,4 +27,24 @@ void FlightComponent::ChaseTarget(RED4ext::WeakHandle<RED4ext::game::Object> tar
   //  chaseTarget->sub_88(vehicle->unk368->moveComponent, autonomousData);
   //  chaseTarget->Unlock();
   //}
+}
+
+void FlightComponent::OnUpdate(float deltaTime) {
+  auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(this->entity);
+  if (this->hasUpdate) {
+    if (this->chassis) {
+      RED4ext::physics::ProxyHelper helper;
+      this->chassis->GetProxyHelperAndLock(&helper);
+      helper.SetLinearDamping(&this->linearDamp, 0);
+      helper.SetAngularDamping(&this->angularDamp, 0);
+      helper.UpdateProxyCache();
+      helper.Unlock();
+    }
+//    vehicle->UnsetPhysicsStates();
+    this->ExecuteFunction("OnUpdate", deltaTime);
+    vehicle->physicsData->force += this->force;
+    vehicle->physicsData->torque += this->torque;
+    this->force = RED4ext::Vector4();
+    this->torque = RED4ext::Vector4();
+  }
 }

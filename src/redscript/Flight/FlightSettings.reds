@@ -56,18 +56,18 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Linear-Damp-Factor")
   @runtimeProperty("ModSettings.description", "UI-Settings-Linear-Damp-Factor-Description")
-  @runtimeProperty("ModSettings.step", "0.0001")
+  @runtimeProperty("ModSettings.step", "0.05")
   @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "0.01")
+  @runtimeProperty("ModSettings.max", "20.0")
   public let generalDampFactorLinear: Float = 0.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Angular-Damp-Factor")
   @runtimeProperty("ModSettings.description", "UI-Settings-Angular-Damp-Factor-Description")
-  @runtimeProperty("ModSettings.step", "0.01")
+  @runtimeProperty("ModSettings.step", "0.05")
   @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "50.0")
+  @runtimeProperty("ModSettings.max", "20.0")
   public let generalDampFactorAngular: Float = 1.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")

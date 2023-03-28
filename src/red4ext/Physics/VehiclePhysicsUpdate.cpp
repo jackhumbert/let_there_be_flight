@@ -76,15 +76,16 @@ REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, VehicleHelperUpdate, RED4ext::vehicle
   }
 }
 
-REGISTER_FLIGHT_HOOK(void __fastcall, vehiclePhysicsData_AddTorque, 
-    RED4ext::vehicle::PhysicsData *a1, RED4ext::Vector3 *torque) {
-  auto fc = FlightComponent::Get(a1->vehicle);
-  if (fc && fc->active) {
-    return;
-  } else {
-    vehiclePhysicsData_AddTorque_Original(a1, torque);
-  }
-}
+// disables angular dampin
+//REGISTER_FLIGHT_HOOK(void __fastcall, vehiclePhysicsData_AddTorque,
+//    RED4ext::vehicle::PhysicsData *a1, RED4ext::Vector3 *torque) {
+//  auto fc = FlightComponent::Get(a1->vehicle);
+//  if (fc && fc->active) {
+//    return;
+//  } else {
+//    vehiclePhysicsData_AddTorque_Original(a1, torque);
+//  }
+//}
 
 REGISTER_FLIGHT_HOOK(void __fastcall, VehicleUpdateOrientationWithPID, 
     RED4ext::vehicle::CarBaseObject *a1, RED4ext::Transform *a2, float a3, float a4) {
@@ -300,22 +301,22 @@ void RED4ext::game::GameAudioSystem::UpdateParameter(int *audioReference, CName 
 //}
 
 
-REGISTER_FLIGHT_HOOK(void __fastcall, vehicleWheeledPhysics_Update, RED4ext::vehicle::WheeledPhysics *physics) {
-  auto fc = FlightComponent::Get(physics->parent);
-  if (fc && fc->active) {
-    //physics->isMoving = true;
-  }
-  vehicleWheeledPhysics_Update_Original(physics);
-  //if (fc && fc->active) {
-  //  physics->isMoving = 1;
-  //  physics->unkAC = -1;
-  //  physics->unkB0 = 0.0;
-  //  physics->unkA4 = -INFINITY;
-  //}
-}
+//REGISTER_FLIGHT_HOOK(void __fastcall, vehicleWheeledPhysics_Update, RED4ext::vehicle::WheeledPhysics *physics) {
+//  auto fc = FlightComponent::Get(physics->parent);
+//  if (fc && fc->active) {
+//    //physics->isMoving = true;
+//  }
+//  vehicleWheeledPhysics_Update_Original(physics);
+//  //if (fc && fc->active) {
+//  //  physics->isMoving = 1;
+//  //  physics->unkAC = -1;
+//  //  physics->unkB0 = 0.0;
+//  //  physics->unkA4 = -INFINITY;
+//  //}
+//}
 
- //disables tire torque & friction
-REGISTER_FLIGHT_HOOK(void __fastcall, RollFactorTorqueThing, 
+// disables tire torque & friction
+REGISTER_FLIGHT_HOOK(void __fastcall, RollFactorTorqueThing,
     uint64_t *a1, float a2) {
   auto physics = (RED4ext::vehicle::WheeledPhysics *)a1[2];
   auto fc = FlightComponent::Get(physics->parent);
@@ -326,6 +327,7 @@ REGISTER_FLIGHT_HOOK(void __fastcall, RollFactorTorqueThing,
   }
 }
 
+// disables tire friction
 REGISTER_FLIGHT_HOOK(void __fastcall, FourWheelTorque,
     RED4ext::vehicle::WheeledPhysics *physics, unsigned __int8 rearWheelIndex, unsigned __int8 frontWheelIndex, float a4, RED4ext::Transform *transform) {
   auto fc = FlightComponent::Get(physics->parent);

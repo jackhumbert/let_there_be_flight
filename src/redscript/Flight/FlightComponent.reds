@@ -24,6 +24,11 @@ public native class FlightComponent extends GameComponent {
   @runtimeProperty("offset", "0xE0")
   public native let configuration: ref<IFlightConfiguration>;
 
+  @runtimeProperty("offset", "0xF8")
+  public native let linearDamp: Float;
+
+  @runtimeProperty("offset", "0xFC")
+  public native let angularDamp: Float;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Quickhacks")
@@ -594,6 +599,8 @@ public native class FlightComponent extends GameComponent {
       this.modes[this.mode].ApplyPhysics(timeDelta);
       force += this.modes[this.mode].force;
       torque += this.modes[this.mode].torque;
+      this.angularDamp = this.modes[this.mode].angularDamp;
+      this.linearDamp = this.modes[this.mode].linearDamp;
     }
 
     force *= timeDelta;

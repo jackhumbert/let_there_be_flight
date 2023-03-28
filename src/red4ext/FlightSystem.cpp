@@ -106,7 +106,7 @@ void FlightSystem::UnregisterComponent(RED4ext::WeakHandle<FlightComponent> fc) 
   }
 }
 
-void PrePhysics(RED4ext::Unk2 *unk2, float *deltaTime, void *unkStruct) {
+void PrePhysics(RED4ext::Unk2 *unk2, float deltaTime, void *unkStruct) {
   // spdlog::info("[FlightSystem] PrePhysics!");
   auto fs = FlightSystem::GetInstance();
   auto wh = fs->soundListener;
@@ -124,7 +124,7 @@ void PrePhysics(RED4ext::Unk2 *unk2, float *deltaTime, void *unkStruct) {
   }
 }
 
-void UpdateComponents(RED4ext::Unk2 *unk2, float *deltaTime, void *unkStruct) {
+void UpdateComponents(RED4ext::Unk2 *unk2, float deltaTime, void *unkStruct) {
   auto rtti = RED4ext::CRTTISystem::Get();
   auto fcc = FlightComponent::GetRTTIType();
   for (auto const &wh : FlightSystem::GetInstance()->flightComponents) {
@@ -132,38 +132,7 @@ void UpdateComponents(RED4ext::Unk2 *unk2, float *deltaTime, void *unkStruct) {
       continue;
     auto fc = wh.Lock().GetPtr();
     if (fc) {
-      auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(fc->entity);
-      //auto activeProp = fcc->GetProperty("hasUpdate");
-      if (vehicle && fc->hasUpdate && vehicle->physicsData) {
-        // removes Asleep/0x10
-        //vehicle->SetPhysicsState(RED4ext::vehicle::PhysicsState::Asleep, 1u);
-        vehicle->UnsetPhysicsStates();
-        // just locks the brakes
-        //vehicle->PersistentDataPS->ToggleQuestForceBraking(true);
-        // auto onUpdate = fcc->GetFunction("OnUpdate");
-        // auto args = RED4ext::CStackType(rtti->GetType("Float"), &deltaTime);
-        // auto stack = RED4ext::CStack(fc, &args, 1, nullptr, 0);
-        // onUpdate->Execute(&stack);
-        fc->ExecuteFunction("OnUpdate", deltaTime);
-
-        vehicle->physicsData->force.X += fc->force.X;
-        vehicle->physicsData->force.Y += fc->force.Y;
-        vehicle->physicsData->force.Z += fc->force.Z;
-
-        vehicle->physicsData->torque.X += fc->torque.X;
-        vehicle->physicsData->torque.Y += fc->torque.Y;
-        vehicle->physicsData->torque.Z += fc->torque.Z;
-
-        fc->force.X = 0.0;
-        fc->force.Y = 0.0;
-        fc->force.Z = 0.0;
-        fc->force.W = 0.0;
-
-        fc->torque.X = 0.0;
-        fc->torque.Y = 0.0;
-        fc->torque.Z = 0.0;
-        fc->torque.W = 0.0;
-      }
+      fc->OnUpdate(deltaTime);
     }
   }
 }
@@ -276,7 +245,7 @@ void FlightSystem::OnGameLoad(void *a1, uint64_t a2, uint64_t a3) {
   //PhysXClampHugeImpacts.GetAddr()->value = false;
   //PhysXClampHugeSpeeds.GetAddr()->value = false;
   //AirControlCarRollHelper.GetAddr()->value = false;
-  //physicsCCD.GetAddr()->value = true;
+  physicsCCD.GetAddr()->value = true;
   //ForceMoveToMaxLinearSpeed.GetAddr()->value = 100.0;
 
   spdlog::info("[FlightSystem] PhysXClampHugeImpacts: {}", PhysXClampHugeImpacts.GetAddr()->value);
