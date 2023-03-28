@@ -69,8 +69,8 @@ public abstract class FlightMode {
     //   angularDamp = Vector4.Normalize(angularDamp) * fs.generalDampFactorAngularMax;
     // }
 
-    this.angularDamp = fs.generalDampFactorAngular * ClampF(angularDamp, 0.0, 1.0) + this.component.angularBrake;
-    this.linearDamp = fs.generalDampFactorLinear + this.component.linearBrake;
+    this.angularDamp = fs.generalDampFactorAngular * ClampF(angularDamp, 0.0, 1.0) + this.component.angularBrake * fs.brakeFactorAngular;
+    this.linearDamp = fs.generalDampFactorLinear + this.component.linearBrake * fs.brakeFactorLinear;
 
     // this.lastAngularDamp = angularDamp;
 

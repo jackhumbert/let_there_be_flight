@@ -93,7 +93,7 @@ void FlightSystem::UnregisterComponent(RED4ext::WeakHandle<FlightComponent> fc) 
   if (fc.Expired())
     return;
   for (auto i = 0; i < this->flightComponents.size; i++) {
-    if (!this->flightComponents[i].Expired()) {
+    if (this->flightComponents[i].refCount && !this->flightComponents[i].Expired()) {
       auto efc = this->flightComponents[i].Lock().GetPtr();
       if (efc == fc.Lock().GetPtr()) {
         this->flightComponentsMutex.Lock();

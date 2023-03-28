@@ -53,32 +53,32 @@
 //  }
 //}
 
-int64_t RED4ext::ent::SlotComponent::GetSlotIndex(RED4ext::CName slotName) {
-  RelocFunc<decltype(&RED4ext::ent::SlotComponent::GetSlotIndex)> call(entSlotComponent_GetSlotIndex_Addr);
-  return call(this, slotName);
-}
-
-bool RED4ext::ent::SlotComponent::GetSlotLocalTransform(int slotIndex, RED4ext::WorldTransform *offset,
-                                                        RED4ext::WorldTransform *worldTransform) {
-  RelocFunc<decltype(&RED4ext::ent::SlotComponent::GetSlotLocalTransform)> call(
-      entSlotComponent_GetSlotLocalTransform_Addr);
-  return call(this, slotIndex, offset, worldTransform);
-}
-
-RED4ext::Handle<RED4ext::physics::ColliderSphere> *
-RED4ext::physics::ColliderSphere::createHandleWithRadius(RED4ext::Handle<RED4ext::physics::ICollider> *handle,
-                                                         float radius) {
-  RelocFunc<decltype(&RED4ext::physics::ColliderSphere::createHandleWithRadius)> call(
-      physicsColliderSphere_createHandleWithRadius_Addr);
-  return call(handle, radius);
-}
-
-
-bool __fastcall RED4ext::ent::SlotComponent::GetLocalSlotTransformFromIndex(int slotIndex, RED4ext::Transform *transform) {
-  RelocFunc<decltype(&RED4ext::ent::SlotComponent::GetLocalSlotTransformFromIndex)> call(
-      entSlotComponent_GetLocalSlotTransformFromIndex_Addr);
-  return call(this, slotIndex, transform);
-}
+//int64_t RED4ext::ent::SlotComponent::GetSlotIndex(RED4ext::CName slotName) {
+//  RelocFunc<decltype(&RED4ext::ent::SlotComponent::GetSlotIndex)> call(entSlotComponent_GetSlotIndex_Addr);
+//  return call(this, slotName);
+//}
+//
+//bool RED4ext::ent::SlotComponent::GetSlotLocalTransform(int slotIndex, RED4ext::WorldTransform *offset,
+//                                                        RED4ext::WorldTransform *worldTransform) {
+//  RelocFunc<decltype(&RED4ext::ent::SlotComponent::GetSlotLocalTransform)> call(
+//      entSlotComponent_GetSlotLocalTransform_Addr);
+//  return call(this, slotIndex, offset, worldTransform);
+//}
+//
+//RED4ext::Handle<RED4ext::physics::ColliderSphere> *
+//RED4ext::physics::ColliderSphere::createHandleWithRadius(RED4ext::Handle<RED4ext::physics::ICollider> *handle,
+//                                                         float radius) {
+//  RelocFunc<decltype(&RED4ext::physics::ColliderSphere::createHandleWithRadius)> call(
+//      physicsColliderSphere_createHandleWithRadius_Addr);
+//  return call(handle, radius);
+//}
+//
+//
+//bool __fastcall RED4ext::ent::SlotComponent::GetLocalSlotTransformFromIndex(int slotIndex, RED4ext::Transform *transform) {
+//  RelocFunc<decltype(&RED4ext::ent::SlotComponent::GetLocalSlotTransformFromIndex)> call(
+//      entSlotComponent_GetLocalSlotTransformFromIndex_Addr);
+//  return call(this, slotIndex, transform);
+//}
 
 //REGISTER_FLIGHT_HOOK(uint32_t *, vehicle_ProcessPhysicalSystem, uint32_t *geoCacheId,
 //                     RED4ext::vehicle::PhysicalSystemDesc *desc) {

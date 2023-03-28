@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See the license.md in the root project for details.
 // https://github.com/jackhumbert/let_there_be_flight
 
-// This file was automatically generated on 2023-03-28 03:36:06 UTC
+// This file was automatically generated on 2023-03-28 20:03:16 UTC
 
 // Audio/FlightAudio.reds
 
@@ -3705,8 +3705,8 @@ public abstract class FlightMode {
     //   angularDamp = Vector4.Normalize(angularDamp) * fs.generalDampFactorAngularMax;
     // }
 
-    this.angularDamp = fs.generalDampFactorAngular * ClampF(angularDamp, 0.0, 1.0) + this.component.angularBrake;
-    this.linearDamp = fs.generalDampFactorLinear + this.component.linearBrake;
+    this.angularDamp = fs.generalDampFactorAngular * ClampF(angularDamp, 0.0, 1.0) + this.component.angularBrake * fs.brakeFactorAngular;
+    this.linearDamp = fs.generalDampFactorLinear + this.component.linearBrake * fs.brakeFactorLinear;
 
     // this.lastAngularDamp = angularDamp;
 
