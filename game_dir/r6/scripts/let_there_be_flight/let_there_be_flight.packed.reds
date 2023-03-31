@@ -3,7 +3,7 @@
 // Licensed under the MIT license. See the license.md in the root project for details.
 // https://github.com/jackhumbert/let_there_be_flight
 
-// This file was automatically generated on 2023-03-28 20:03:16 UTC
+// This file was automatically generated on 2023-03-29 14:48:23 UTC
 
 // Audio/FlightAudio.reds
 
@@ -3684,7 +3684,6 @@ public abstract class FlightMode {
     angularDamp += (1.0 - AbsF(this.component.pitch));
     angularDamp += (1.0 - AbsF(this.component.roll));
     angularDamp += (1.0 - AbsF(this.component.yaw));
-
 
     // detect when we hit stuff and delay the damping
     // this.dampAccVector.X = ClampF(MaxF(this.dampAccVector.X, AbsF(this.component.stats.d_angularAcceleration.X) / timeDelta / 10.0), 0.0, 1.0);

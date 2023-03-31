@@ -243,9 +243,6 @@ no matches for GameInstance
 #ifndef entSlotComponent_GetSlotLocalTransform_Addr
 #define entSlotComponent_GetSlotLocalTransform_Addr 0x115D8A0
 #endif
-#ifndef ent_SetupEntityAndComponents_Addr
-#define ent_SetupEntityAndComponents_Addr 0x1046F30
-#endif
 #ifndef gameGameAudioSystem_SetGlobalParameter_Addr
 #define gameGameAudioSystem_SetGlobalParameter_Addr 0x72E4F0
 #endif

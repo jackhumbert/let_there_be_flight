@@ -76,7 +76,7 @@ REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, VehicleHelperUpdate, RED4ext::vehicle
   }
 }
 
-// disables angular dampin
+// disables angular damping
 //REGISTER_FLIGHT_HOOK(void __fastcall, vehiclePhysicsData_AddTorque,
 //    RED4ext::vehicle::PhysicsData *a1, RED4ext::Vector3 *torque) {
 //  auto fc = FlightComponent::Get(a1->vehicle);

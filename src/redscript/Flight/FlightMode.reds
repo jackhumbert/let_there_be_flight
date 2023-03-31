@@ -49,7 +49,6 @@ public abstract class FlightMode {
     angularDamp += (1.0 - AbsF(this.component.roll));
     angularDamp += (1.0 - AbsF(this.component.yaw));
 
-
     // detect when we hit stuff and delay the damping
     // this.dampAccVector.X = ClampF(MaxF(this.dampAccVector.X, AbsF(this.component.stats.d_angularAcceleration.X) / timeDelta / 10.0), 0.0, 1.0);
     // this.dampAccVector.Y = ClampF(MaxF(this.dampAccVector.Y, AbsF(this.component.stats.d_angularAcceleration.Y) / timeDelta / 10.0), 0.0, 1.0);
