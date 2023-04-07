@@ -72,7 +72,7 @@ There's an installation script at `red4ext/plugins/let_there_be_flight/uninstall
 These are some of the steps I take to update the mod for new versions of the game - it involves some manual address looking-up using IDA, a custom version of Zoltan, and my fork of RED4ext.SDK:
 
 1. Merge deps/red4ext.sdk from upstream
-1. Update all addresses with "1.62 RVA:" (that matches latest game version) in RED4ext.SDK
+1. Update all addresses with "1.61hf1 RVA:" (that matches latest game version) in RED4ext.SDK
   1. Patterns & hints for each addresss should be in each file
   1. Addresses that don't have the current version likely aren't used by LTBF
 1. Run "Generate Addresses" in the VS Code project

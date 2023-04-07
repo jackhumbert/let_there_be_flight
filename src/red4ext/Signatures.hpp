@@ -101,7 +101,7 @@ using PhysicsStructUpdate = short (RED4ext::vehicle::PhysicsData *ps);
 /// @pattern 48 89 5C 24 08 57 48 83 EC 30 0F 29 74 24 20 48 8B DA 0F 10 32 48 8B F9 66 0F 3A 40 F6 7F 0F 28
 using PhysicsUnkStructVelocityUpdate = short (RED4ext::vehicle::PhysicsData *ps, RED4ext::Vector3 *);
 
-// 1.62 RVA: 0x200660 / 2098784
+// 1.61hf1 RVA: 0x200660 / 2098784
 /// @pattern 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 30 48 8B FA 48 8B F1 BA 20 00 00 00 48 8D 4C 24 20 E8
 /// @nth 0/2
 using CreateCRTTIArrayTypeFromClass = RED4ext::CRTTIArrayType **__fastcall(RED4ext::CRTTIArrayType **a1, RED4ext::CBaseRTTIType *a2);
@@ -122,7 +122,7 @@ using CreateCRTTIHandleTypeFromClass = RED4ext::CRTTIHandleType **__fastcall(RED
 using CreateCRTTIWeakHandleTypeFromClass = RED4ext::CRTTIWeakHandleType **__fastcall (RED4ext::CRTTIWeakHandleType **a1,
                                                                              RED4ext::CBaseRTTIType *a2);
 
-// 1.62 RVA: 0x200920 / 2099488
+// 1.61hf1 RVA: 0x200920 / 2099488
 /// @pattern 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 30 48 8B FA 48 8B F1 BA 28 00 00 00 48 8D 4C 24 20 E8
 /// @nth 2/7
 using CreateCRTTIRaRefTypeFromClass = RED4ext::CRTTIResourceAsyncReferenceType **__fastcall (RED4ext::CRTTIResourceAsyncReferenceType **a1,
@@ -142,15 +142,15 @@ using ProcessScriptTypes = bool __fastcall (uint32_t *version, ScriptData *scrip
 using LoadResRefT = void * (void *, void*, bool);
 
 // 1.52 RVA: 0x9A4290 / 10109584
-// 1.62 RVA: 0x9AE2D0 / 10150608
+// 1.61hf1 RVA: 0x9AE2D0 / 10150608
 /// @pattern 48 89 5C 24 08 48 89 74 24 10 57 48 81 EC A0 00 00 00 48 8D 4C 24 30 49 8B F0 48 8B FA E8
 //using GetLocalizedTextScripts = void __fastcall (void *, RED4ext::CStackFrame *, RED4ext::CString *);
 
-// 1.62 RVA: 0x6FA540 / 7316800
+// 1.61hf1 RVA: 0x6FA540 / 7316800
 /// @pattern 40 53 48 83 EC 30 F2 41 0F 10 00 48 8B DA 41 8B 40 08 4C 8D 44 24 20 44 0F B6 89 39 04 00 00 F2
 using LookupLocalizedString = RED4ext::CString * __fastcall (__int64, RED4ext::CString * result, char * locKey);
 
-// 1.62 RVA: 0x6FA5B0 / 7316912
+// 1.61hf1 RVA: 0x6FA5B0 / 7316912
 /// @pattern 40 53 48 83 EC 30 F2 41 0F 10 00 48 8B DA 41 8B 40 08 48 8D 54 24 20 F2 0F 11 44 24 20 89 44 24
 using SetLocalizedTextString = RED4ext::CString *__fastcall (__int64, RED4ext::CString *, RED4ext::CString *);
 
