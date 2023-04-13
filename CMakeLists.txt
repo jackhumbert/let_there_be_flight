@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 include(CMakeDependentOption)
 
 project(
@@ -198,7 +200,8 @@ set(ZOLTAN_USER_ADDRESSES "${PROJECT_SOURCE_DIR}/src/red4ext/Addresses.hpp")
 add_custom_command(
   OUTPUT ${ZOLTAN_USER_ADDRESSES}
   DEPENDS ${ZOLTAN_USER_SIGNATURES}
-  COMMAND ${LTBF_TOOLS_DIR}/zoltan-clang.exe
+  # COMMAND ${LTBF_TOOLS_DIR}/zoltan-clang.exe
+  COMMAND "C:/Users/Jack/Documents/cyberpunk/zoltan/target/debug/zoltan-clang.exe"
   ARGS ${ZOLTAN_USER_SIGNATURES} "${CYBERPUNK_2077_GAME_DIR}/bin/x64/Cyberpunk2077.exe" -f "std=c++20" -f "I${PROJECT_SOURCE_DIR}/deps/red4ext.sdk/include" --c-output "${ZOLTAN_USER_ADDRESSES}"
   COMMENT "Finding binary addresses of declared functions in Signatures.hpp"
 )
@@ -206,6 +209,33 @@ add_custom_command(
 add_custom_target(addresses DEPENDS ${ZOLTAN_USER_ADDRESSES})
 
 add_dependencies(${CMAKE_PROJECT_NAME}.dll addresses)
+
+# Find All Addresses
+
+set(ZOLTAN_ALL_SIGNATURES "${PROJECT_BINARY_DIR}/zoltan/Signatures.hpp")
+
+add_custom_command(
+  OUTPUT ${ZOLTAN_ALL_SIGNATURES}
+  COMMAND ${CMAKE_COMMAND} -D LTBF_TOOLS_DIR="${LTBF_TOOLS_DIR}" -D PROJECT_SOURCE_DIR=${PROJECT_SOURCE_DIR} -D PROJECT_BINARY_DIR="${PROJECT_BINARY_DIR}" -D CYBERPUNK_2077_GAME_DIR="${CYBERPUNK_2077_GAME_DIR}" -P ${CMAKE_MODULE_PATH}/CreateRED4extSignatures.cmake
+  USES_TERMINAL
+)
+
+# Create Implementations
+
+set(ZOLTAN_ALL_DEFINITIONS "${PROJECT_SOURCE_DIR}/src/red4ext/Definitions.hpp")
+
+add_custom_command(
+  OUTPUT ${ZOLTAN_ALL_DEFINITIONS}
+  DEPENDS ${ZOLTAN_ALL_SIGNATURES}
+  # COMMAND ${LTBF_TOOLS_DIR}/zoltan-clang.exe
+  COMMAND "C:/Users/Jack/Documents/cyberpunk/zoltan/target/debug/zoltan-clang.exe"
+  ARGS ${ZOLTAN_ALL_SIGNATURES} "${CYBERPUNK_2077_GAME_DIR}/bin/x64/Cyberpunk2077.exe" -f "std=c++20" -f "I${PROJECT_SOURCE_DIR}/deps/red4ext.sdk/include" --r4e-output "${ZOLTAN_ALL_DEFINITIONS}"
+  COMMENT "Implementing all declarations of functions in RED4ext"
+)
+
+add_custom_target(implementations DEPENDS ${ZOLTAN_ALL_DEFINITIONS})
+
+add_dependencies(${CMAKE_PROJECT_NAME}.dll implementations)
 
 # Find All Addresses
 

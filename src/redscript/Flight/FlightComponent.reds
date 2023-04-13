@@ -599,8 +599,8 @@ public native class FlightComponent extends GameComponent {
       this.modes[this.mode].ApplyPhysics(timeDelta);
       force += this.modes[this.mode].force;
       torque += this.modes[this.mode].torque;
-      this.angularDamp = this.modes[this.mode].angularDamp;
-      this.linearDamp = this.modes[this.mode].linearDamp;
+      // this.angularDamp = this.modes[this.mode].angularDamp;
+      // this.linearDamp = this.modes[this.mode].linearDamp;
     }
 
     force *= timeDelta;

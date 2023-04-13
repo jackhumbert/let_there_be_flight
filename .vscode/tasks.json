@@ -102,15 +102,6 @@
         "label": "Run Cyberpunk 2077",
         "type": "shell",
         "command": "\"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\bin\\x64\\Cyberpunk2077.exe\"",
-        "options": {
-          "shell": {
-            "executable": "cmd.exe",
-            "args": [
-              "/d",
-              "/c"
-            ]
-          }
-        },
         "presentation": {
           "echo": true,
           "reveal": "always",
@@ -126,15 +117,6 @@
         "label": "Install & Run",
         "type": "shell",
         "command": "\"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Cyberpunk 2077\\bin\\x64\\Cyberpunk2077.exe\"",
-        "options": {
-          "shell": {
-            "executable": "cmd.exe",
-            "args": [
-              "/d",
-              "/c"
-            ]
-          }
-        },
         "presentation": {
           "echo": true,
           "reveal": "always",

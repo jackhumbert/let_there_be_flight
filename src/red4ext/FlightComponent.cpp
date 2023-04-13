@@ -32,14 +32,14 @@ void FlightComponent::ChaseTarget(RED4ext::WeakHandle<RED4ext::game::Object> tar
 void FlightComponent::OnUpdate(float deltaTime) {
   auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(this->entity);
   if (this->hasUpdate) {
-    if (this->chassis) {
+    /*if (this->chassis) {
       RED4ext::physics::ProxyHelper helper;
       this->chassis->GetProxyHelperAndLock(&helper);
       helper.SetLinearDamping(&this->linearDamp, 0);
       helper.SetAngularDamping(&this->angularDamp, 0);
       helper.UpdateProxyCache();
       helper.Unlock();
-    }
+    }*/
 //    vehicle->UnsetPhysicsStates();
     this->ExecuteFunction("OnUpdate", deltaTime);
     vehicle->physicsData->force += this->force;

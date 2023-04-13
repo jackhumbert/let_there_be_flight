@@ -71,7 +71,7 @@ RED4ext::RelocPtr<RED4ext::GameOptionBool> EnableSmoothWheelContacts(0x484EC18);
 //}
 
 RED4ext::Handle<FlightSystem> FlightSystem::GetInstance() {
-  auto fs = (FlightSystem *)RED4ext::CGameEngine::Get()->framework->gameInstance->GetInstance(FlightSystem::GetRTTIType());
+  auto fs = (FlightSystem *)RED4ext::CGameEngine::Get()->framework->gameInstance->GetSystem(FlightSystem::GetRTTIType());
   return RED4ext::Handle<FlightSystem>(fs);
 }
 
@@ -106,7 +106,7 @@ void FlightSystem::UnregisterComponent(RED4ext::WeakHandle<FlightComponent> fc) 
   }
 }
 
-void PrePhysics(RED4ext::Unk2 *unk2, float deltaTime, void *unkStruct) {
+void PrePhysics(RED4ext::UpdateBucketEnum bucket, RED4ext::FrameInfo& frame, RED4ext::JobQueue& job) {
   // spdlog::info("[FlightSystem] PrePhysics!");
   auto fs = FlightSystem::GetInstance();
   auto wh = fs->soundListener;
@@ -124,7 +124,7 @@ void PrePhysics(RED4ext::Unk2 *unk2, float deltaTime, void *unkStruct) {
   }
 }
 
-void UpdateComponents(RED4ext::Unk2 *unk2, float deltaTime, void *unkStruct) {
+void UpdateComponents(RED4ext::UpdateBucketEnum bucket, RED4ext::FrameInfo& frame, RED4ext::JobQueue& job) {
   auto rtti = RED4ext::CRTTISystem::Get();
   auto fcc = FlightComponent::GetRTTIType();
   for (auto const &wh : FlightSystem::GetInstance()->flightComponents) {
@@ -132,7 +132,7 @@ void UpdateComponents(RED4ext::Unk2 *unk2, float deltaTime, void *unkStruct) {
       continue;
     auto fc = wh.Lock().GetPtr();
     if (fc) {
-      fc->OnUpdate(deltaTime);
+      fc->OnUpdate(frame.deltaTime);
     }
   }
 }
@@ -148,17 +148,17 @@ void UpdateComponents(RED4ext::Unk2 *unk2, float deltaTime, void *unkStruct) {
   //return new RED4ext::Memory::DefaultAllocator();
 //}
 
-void FlightSystem::RegisterUpdates(RED4ext::UpdateManagerHolder *holder) {
-  spdlog::info("[FlightSystem] sub_110/RegisterUpdates!");
+void FlightSystem::OnRegisterUpdates(RED4ext::UpdateRegistrar *aRegistrar) {
+  spdlog::info("[FlightSystem] OnRegisterUpdates!");
 
-  holder->RegisterBucketUpdate(RED4ext::Unk2::OnPreWorldTick, RED4ext::Unk1::PrePhysicsTick, this,
+  aRegistrar->RegisterUpdate(RED4ext::UpdateBucketMask::Vehicle, RED4ext::UpdateBucketStage::PrePhysicsTick, this,
                                "FlightSystem/PrePhysics", &PrePhysics);
-  holder->RegisterBucketUpdate(RED4ext::Unk2::OnPreWorldTick, RED4ext::Unk1::PhysicsExecuteAsyncQueries, this,
+  aRegistrar->RegisterUpdate(RED4ext::UpdateBucketMask::Vehicle, RED4ext::UpdateBucketStage::PhysicsExecuteAsyncQueries, this,
                                "FlightSystem/UpdateComponents", &UpdateComponents);
  }
 
- bool FlightSystem::WorldAttached(RED4ext::world::RuntimeScene *runtimeScene) {
-  spdlog::info("[FlightSystem] WorldAttached!");
+ void FlightSystem::OnWorldAttached(RED4ext::world::RuntimeScene *runtimeScene) {
+  spdlog::info("[FlightSystem] OnWorldAttached");
   this->audio->ExecuteFunction("OnWorldAttached");
 
   // VFT Finder
@@ -201,38 +201,35 @@ void FlightSystem::RegisterUpdates(RED4ext::UpdateManagerHolder *holder) {
   //  }
   //}
   //DebugBreak();
-
-
-  return true;
 }
 
-void FlightSystem::WorldPendingDetach(RED4ext::world::RuntimeScene *runtimeScene) {
-  spdlog::info("[FlightSystem] WorldPendingDetach!");
+void FlightSystem::OnBeforeWorldDetach(RED4ext::world::RuntimeScene *runtimeScene) {
+  spdlog::info("[FlightSystem] OnBeforeWorldDetach!");
   this->audio->ExecuteFunction("OnWorldPendingDetach");
 }
 
-void FlightSystem::WorldDetached(RED4ext::world::RuntimeScene *runtimeScene) {
-	spdlog::info("[FlightSystem] WorldDetached!");
+void FlightSystem::OnWorldDetached(RED4ext::world::RuntimeScene *runtimeScene) {
+	spdlog::info("[FlightSystem] OnWorldDetached!");
 }
 
-void FlightSystem::sub_130() {
-	spdlog::info("[FlightSystem] sub_130!");
+void FlightSystem::OnAfterWorldDetach() {
+	spdlog::info("[FlightSystem] OnAfterWorldDetach!");
 }
 
-uint32_t FlightSystem::sub_138(uint64_t a1, uint64_t a2) {
-	spdlog::info("[FlightSystem] sub_138!");
+uint32_t FlightSystem::OnBeforeGameSave(const RED4ext::JobGroup& aJobGroup, void* a2) {
+	spdlog::info("[FlightSystem] OnBeforeGameSave!");
   return 0;
 }
 
-void FlightSystem::sub_140(uint64_t a1) {
-	spdlog::info("[FlightSystem] sub_140!");
+void FlightSystem::OnGameSave(void* aStream) {
+	spdlog::info("[FlightSystem] OnGameSave!");
 }
 
-void FlightSystem::sub_148() {
-	spdlog::info("[FlightSystem] sub_148!");
+void FlightSystem::OnAfterGameSave() {
+	spdlog::info("[FlightSystem] OnAfterGameSave!");
 }
 
-void FlightSystem::OnGameLoad(void *a1, uint64_t a2, uint64_t a3) {
+void FlightSystem::OnGameLoad(const RED4ext::JobGroup& aJobGroup, bool& aSuccess, void* aStream) {
   RED4ext::CNamePool::Add("FlightMalfunctionEffector");
   RED4ext::CNamePool::Add("DisableGravityEffector");
   spdlog::info("[FlightSystem] OnGameLoad!");
@@ -255,8 +252,8 @@ void FlightSystem::OnGameLoad(void *a1, uint64_t a2, uint64_t a3) {
   spdlog::info("[FlightSystem] physicsCCD: {}", physicsCCD.GetAddr()->value);
 }
 
-bool FlightSystem::sub_158() {
-  spdlog::info("[FlightSystem] sub_158!");
+bool FlightSystem::OnGameRestored() {
+  spdlog::info("[FlightSystem] OnGameRestored!");
   return true;
 }
 
@@ -264,22 +261,22 @@ void FlightSystem::OnGamePrepared() {
   spdlog::info("[FlightSystem] OnGamePrepared!");
 }
 
-void FlightSystem::sub_168() {
-  spdlog::info("[FlightSystem] sub_168!");
+void FlightSystem::OnGamePaused() {
+  spdlog::info("[FlightSystem] OnGamePaused!");
   this->audio->Pause();
 }
 
-void FlightSystem::sub_170() {
-  spdlog::info("[FlightSystem] sub_170!");
+void FlightSystem::OnGameResumed() {
+  spdlog::info("[FlightSystem] OnGameResumed!");
   this->audio->Resume();
 }
 
-void FlightSystem::sub_178(uintptr_t a1, bool a2) {
-  spdlog::info("[FlightSystem] sub_178!");
-  RED4ext::game::IGameSystem::sub_178(a1, a2);
+void* FlightSystem::IsSavingLocked(RED4ext::game::SaveLock* aLock, bool a2) {
+  spdlog::info("[FlightSystem] IsSavingLocked!");
+  return RED4ext::game::IGameSystem::IsSavingLocked(aLock, a2);
 }
 
-void FlightSystem::OnStreamingWorldLoaded(uint64_t, bool isGameLoaded, uint64_t) {
+void FlightSystem::OnStreamingWorldLoaded(RED4ext::world::RuntimeScene* aScene, uint64_t a2, const RED4ext::JobGroup& aJobGroup) {
   spdlog::info("[FlightSystem] OnStreamingWorldLoaded!");
 }
 
@@ -287,18 +284,18 @@ void FlightSystem::sub_188() {
   spdlog::info("[FlightSystem] sub_188!");
 }
 
-void FlightSystem::sub_190(HighLow *) {
+void FlightSystem::sub_190(RED4ext::IGameSystem::HighLow *) {
   spdlog::info("[FlightSystem] sub_190!");
 }
 
-void FlightSystem::Initialize(void **unkThing) {
-  spdlog::info("[FlightSystem] Initialize!");
+void FlightSystem::OnInitialize(const RED4ext::JobHandle& aJob) {
+  spdlog::info("[FlightSystem] OnInitialize!");
   this->audio = RED4ext::Handle<FlightAudio>((FlightAudio *)FlightAudio::GetRTTIType()->CreateInstance());
   this->audio->ExecuteFunction("Initialize");
 }
 
-void FlightSystem::sub_1A0() {
-  spdlog::info("[FlightSystem] sub_1A0!");
+void FlightSystem::OnUninitialize() {
+  spdlog::info("[FlightSystem] OnUninitialize!");
 }
 
 // add FlightSystem to the game systems list to load on start

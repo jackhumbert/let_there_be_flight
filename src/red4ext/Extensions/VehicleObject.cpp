@@ -126,9 +126,9 @@ public:
 
   
   void __fastcall ResetQuestEnforceTransform() {
-    RED4ext::RelocFunc<decltype(&RED4ext::vehicle::PersistentDataPS::ResetQuestEnforceTransform)> call(
-        vehiclePersistentDataPS_ResetQuestEnforceTransform_Addr);
-    call(this->PersistentDataPS.instance);
+    // RED4ext::RelocFunc<decltype(&RED4ext::vehicle::PersistentDataPS::ResetQuestEnforceTransform)> call(
+    //     vehiclePersistentDataPS_ResetQuestEnforceTransform_Addr);
+    // call(this->PersistentDataPS.instance);
   }
 
 

@@ -12,7 +12,6 @@
 #include <RED4ext/Scripting/Natives/GameInstance.hpp>
 //#include <RED4ext/Scripting/Natives/UpdateManager.hpp>
 
-
 // right before components are processed for entities, and an appropriate time to insert our own
 // can also look for string "Entity/InitializeComponents"
 /// @pattern 48 89 54 24 10 55 53 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 ? FB FF FF 48 81 EC ? 05 00 00

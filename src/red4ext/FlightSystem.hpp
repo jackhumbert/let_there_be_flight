@@ -12,25 +12,25 @@
 class FlightSystem : public Engine::RTTIClass<FlightSystem, IFlightSystem> {
 public:
   //virtual RED4ext::Memory::IAllocator* GetAllocator() override;
-  virtual void RegisterUpdates(RED4ext::UpdateManagerHolder *holder) override;
-  virtual bool WorldAttached(RED4ext::world::RuntimeScene *runtimeScene) override;
-  virtual void WorldPendingDetach(RED4ext::world::RuntimeScene *runtimeScene) override;
-  virtual void WorldDetached(RED4ext::world::RuntimeScene *runtimeScene) override;
-  virtual void sub_130() override;
-  virtual uint32_t sub_138(uint64_t, uint64_t) override;
-  virtual void sub_140(uint64_t) override;
-  virtual void sub_148() override;
-  virtual void OnGameLoad(void *, uint64_t, uint64_t) override;
-  virtual bool sub_158() override;
+  virtual void OnRegisterUpdates(RED4ext::UpdateRegistrar *aRegistrar) override;
+  virtual void OnWorldAttached(RED4ext::world::RuntimeScene *runtimeScene) override;
+  virtual void OnBeforeWorldDetach(RED4ext::world::RuntimeScene *runtimeScene) override;
+  virtual void OnWorldDetached(RED4ext::world::RuntimeScene *runtimeScene) override;
+  virtual void OnAfterWorldDetach() override;
+  virtual uint32_t OnBeforeGameSave(const RED4ext::JobGroup& aJobGroup, void* a2) override;
+  virtual void OnGameSave(void* aStream) override;
+  virtual void OnAfterGameSave() override;
+  virtual void OnGameLoad(const RED4ext::JobGroup& aJobGroup, bool& aSuccess, void* aStream) override;
+  virtual bool OnGameRestored() override;
   virtual void OnGamePrepared() override;
-  virtual void sub_168() override;
-  virtual void sub_170() override;
-  virtual void sub_178(uintptr_t a1, bool a2) override;
-  virtual void OnStreamingWorldLoaded(uint64_t, bool isGameLoaded, uint64_t) override;
+  virtual void OnGamePaused() override;
+  virtual void OnGameResumed() override;
+  virtual void* IsSavingLocked(RED4ext::game::SaveLock* aLock, bool a2) override;
+  virtual void OnStreamingWorldLoaded(RED4ext::world::RuntimeScene* aScene, uint64_t a2, const RED4ext::JobGroup& aJobGroup) override;
   virtual void sub_188() override;
-  virtual void sub_190(HighLow *) override;
-  virtual void Initialize(void **unkThing) override;
-  virtual void sub_1A0() override;
+  virtual void sub_190(RED4ext::IGameSystem::HighLow*) override;
+  virtual void OnInitialize(const RED4ext::JobHandle& aJob) override;
+  virtual void OnUninitialize() override;
 
   //static FlightSystem *GetInstance();
   static RED4ext::Handle<FlightSystem> GetInstance();

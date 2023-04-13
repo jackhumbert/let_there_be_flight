@@ -37,43 +37,43 @@ void __fastcall AddWeapons(RED4ext::vehicle::BaseObject *vehicle) {
     gas->name = "AttachmentSlots";
     {
       auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->CreateInstance();
-      gapso->slotID = "AttachmentSlots.PanzerCannon";
+      gapso->slotID = RED4ext::TweakDBID("AttachmentSlots.PanzerCannon");
       gapso->paramName = "renderPlane";
       gas->animParams.EmplaceBack(*gapso);
     }
     {
       auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->CreateInstance();
-      gapso->slotID = "AttachmentSlots.WeaponLeft";
+      gapso->slotID = RED4ext::TweakDBID("AttachmentSlots.WeaponLeft");
       gapso->paramName = "renderPlane";
       gas->animParams.EmplaceBack(*gapso);
     }
     {
       auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->CreateInstance();
-      gapso->slotID = "AttachmentSlots.WeaponRight";
+      gapso->slotID = RED4ext::TweakDBID("AttachmentSlots.WeaponRight");
       gapso->paramName = "renderPlane";
       gas->animParams.EmplaceBack(*gapso);
     }
     {
       auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->CreateInstance();
-      gapso->slotID = "AttachmentSlots.PanamVehicleTurret";
+      gapso->slotID = RED4ext::TweakDBID("AttachmentSlots.PanamVehicleTurret");
       gapso->paramName = "renderPlane";
       gas->animParams.EmplaceBack(*gapso);
     }
     {
       auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->CreateInstance();
-      gapso->slotID = "AttachmentSlots.PanzerHomingMissiles";
+      gapso->slotID = RED4ext::TweakDBID("AttachmentSlots.PanzerHomingMissiles");
       gapso->paramName = "renderPlane";
       gas->animParams.EmplaceBack(*gapso);
     }
     {
       auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->CreateInstance();
-      gapso->slotID = "AttachmentSlots.PanzerCounterMeasuresLeft";
+      gapso->slotID = RED4ext::TweakDBID("AttachmentSlots.PanzerCounterMeasuresLeft");
       gapso->paramName = "renderPlane";
       gas->animParams.EmplaceBack(*gapso);
     }
     {
       auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->CreateInstance();
-      gapso->slotID = "AttachmentSlots.PanzerCounterMeasuresRight";
+      gapso->slotID = RED4ext::TweakDBID("AttachmentSlots.PanzerCounterMeasuresRight");
       gapso->paramName = "renderPlane";
       gas->animParams.EmplaceBack(*gapso);
     }

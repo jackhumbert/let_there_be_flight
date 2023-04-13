@@ -31,7 +31,8 @@ add_custom_command(
   TARGET let_there_be_flight.dll POST_BUILD
   DEPENDS let_there_be_flight.dll
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
+  $<TARGET_FILE:let_there_be_flight.dll>
 #  ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/let_there_be_flight.dll
-  ${CMAKE_CURRENT_BINARY_DIR}/let_there_be_flight.dll
+  # ${CMAKE_CURRENT_BINARY_DIR}/let_there_be_flight.dll
   ${LTBF_GAME_DIR}/red4ext/plugins/let_there_be_flight/let_there_be_flight.dll
   COMMENT "let_there_be_flight.dll -> ${LTBF_GAME_DIR}/red4ext/plugins/let_there_be_flight/let_there_be_flight.dll")
