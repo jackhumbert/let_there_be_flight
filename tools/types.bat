@@ -1,1 +1,0 @@
-..\zoltan\target\debug\zoltan-clang.exe ".\src\red4ext\Signatures.hpp" "C:\Program Files (x86)\Steam\steamapps\common\Cyberpunk 2077\bin\x64\Cyberpunk2077.exe" -f "std=c++20" -f "I.\deps\red4ext.sdk\include" --dwarf-output ".\dbg-symbols"

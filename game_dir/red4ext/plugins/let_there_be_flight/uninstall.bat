@@ -1,2 +1,0 @@
-DEL /S /Q ..\..\..\archive\pc\mod\let_there_be_flight.archive ..\..\..\archive\pc\mod\let_there_be_flight.archive.xl ..\..\..\r6\input\let_there_be_flight.xml ..\..\..\r6\scripts\let_there_be_flight\let_there_be_flight.module.reds ..\..\..\r6\scripts\let_there_be_flight\let_there_be_flight.packed.reds ..\..\..\r6\scripts\let_there_be_flight\uninstall.bat ..\..\..\r6\tweaks\let_there_be_flight.yaml base_sounds.bank base_sounds.strings.bank fmod.dll fmodstudio.dll let_there_be_flight.dll license.md readme.md uninstall.bat
-@RD /S /Q ..\..\..\r6\scripts\let_there_be_flight

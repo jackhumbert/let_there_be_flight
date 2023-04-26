@@ -6,5 +6,6 @@ set(ZOLTAN_ALL_ADDRESSES "${PROJECT_SOURCE_DIR}/deps/red4ext.sdk/include/RED4ext
 
 execute_process(
   # ${LTBF_TOOLS_DIR}/zoltan-clang.exe 
-  # "C:/Users/Jack/Documents/cyberpunk/zoltan/target/debug/zoltan-clang.exe"
-  COMMAND ${LTBF_TOOLS_DIR}/zoltan-clang.exe  "${ZOLTAN_ALL_SIGNATURES}" "${CYBERPUNK_2077_GAME_DIR}/bin/x64/Cyberpunk2077.exe" -f "std=c++20" -f "I${PROJECT_SOURCE_DIR}/deps/red4ext.sdk/include" --c-output "${ZOLTAN_ALL_ADDRESSES}")
+  COMMAND "C:/Users/Jack/Documents/cyberpunk/zoltan/target/debug/zoltan-clang.exe"
+  # COMMAND ${LTBF_TOOLS_DIR}/zoltan-clang.exe 
+  "${ZOLTAN_ALL_SIGNATURES}" "${CYBERPUNK_2077_GAME_DIR}/bin/x64/Cyberpunk2077.exe" -f "std=c++20" -f "I${PROJECT_SOURCE_DIR}/deps/red4ext.sdk/include" --c-output "${ZOLTAN_ALL_ADDRESSES}")

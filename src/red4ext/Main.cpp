@@ -35,6 +35,7 @@
 #include <Red/Rtti/Definition.hpp>
 #include <Red/Rtti/Resolving.hpp>
 
+#include <libloaderapi.h>
 #include <string>
 #include <iostream>
 #include <filesystem>
@@ -477,6 +478,16 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
   // 0x14342E6C0
 }
 
+#include <InputLoader/MergeModDocument.hpp>
+
+bool LoadInputs(RED4ext::CGameApplication * aApp) {
+  spdlog::info("Loading input.xml");
+  auto input_loader = ::LoadLibraryEx(L"input_loader.dll", nullptr, 0);
+  auto merge = reinterpret_cast<decltype(&InputLoader::MergeModDocument)>(GetProcAddress(input_loader, "MergeModDocument"));
+  merge(Utils::GetRootDir() / "red4ext/let_there_be_flight/inputs.xml");
+  return true;
+}
+
 RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::EMainReason aReason,
                                         const RED4ext::Sdk *aSdk) {
   switch (aReason) {
@@ -495,6 +506,13 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
     Engine::RTTIRegistrar::RegisterPending();
     Red::RTTIRegistrar::RegisterPending();
+
+    RED4ext::GameState baseInitState;
+    baseInitState.OnEnter = &LoadInputs;
+    baseInitState.OnUpdate = nullptr;
+    baseInitState.OnExit = nullptr;
+
+    aSdk->gameStates->Add(aHandle, RED4ext::EGameStateType::BaseInitialization, &baseInitState);
 
     RED4ext::GameState initState;
     initState.OnEnter = nullptr;

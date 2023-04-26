@@ -13,3 +13,12 @@
 [submodule "deps/codeware"]
 	path = deps/codeware
 	url = git@github.com:jackhumbert/cp2077-codeware.git
+[submodule "deps/cyberpunk_cmake"]
+	path = deps/cyberpunk_cmake
+	url = git@github.com:jackhumbert/cyberpunk_cmake.git
+[submodule "deps/mod_settings"]
+	path = deps/mod_settings
+	url = git@github.com:jackhumbert/mod_settings.git
+[submodule "deps/input_loader"]
+	path = deps/input_loader
+	url = git@github.com:jackhumbert/cyberpunk2077-input-loader.git

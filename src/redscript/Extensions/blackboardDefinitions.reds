@@ -1,4 +1,3 @@
-
 public class VehicleFlightDef extends BlackboardDefinition {
 
   public let IsActive: BlackboardID_Bool;
