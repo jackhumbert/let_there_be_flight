@@ -482,9 +482,7 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
 
 bool LoadInputs(RED4ext::CGameApplication * aApp) {
   spdlog::info("Loading input.xml");
-  auto input_loader = ::LoadLibraryEx(L"input_loader.dll", nullptr, 0);
-  auto merge = reinterpret_cast<decltype(&InputLoader::MergeModDocument)>(GetProcAddress(input_loader, "MergeModDocument"));
-  merge(Utils::GetRootDir() / "red4ext/let_there_be_flight/inputs.xml");
+  InputLoader::MergeModDocument(Utils::GetRootDir() / "red4ext/plugins/let_there_be_flight/inputs.xml");
   return true;
 }
 

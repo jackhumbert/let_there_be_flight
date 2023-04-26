@@ -66,7 +66,7 @@ target_link_libraries(let_there_be_flight.dll
 
 configure_tweaks(src/tweaks)
 # configure_inputs(src/input_loader/let_there_be_flight.xml)
-configure_mod_file(src/input_loader/${MOD_SLUG}.xml red4ext/${MOD_SLUG}/inputs.xml)
+configure_mod_file(src/input_loader/${MOD_SLUG}.xml red4ext/plugins/${MOD_SLUG}/inputs.xml)
 configure_redscript(src/redscript)
 configure_archives(src/wolvenkit/packed/archive/pc/mod/let_there_be_flight.archive src/archive_xl/let_there_be_flight.archive.xl)
 configure_folder_file(readme.md)
