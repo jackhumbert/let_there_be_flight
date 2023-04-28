@@ -19,7 +19,9 @@ struct ScriptHost {
 
   void sub_00(); // empty
   void sub_08(); // load
-  void sub_10();
+  
+  // something with compiling scripts
+  bool sub_10(RED4ext::CString*);
   void sub_18();
   void sub_20();
 

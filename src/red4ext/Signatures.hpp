@@ -12,6 +12,16 @@
 #include <RED4ext/Scripting/Natives/GameInstance.hpp>
 //#include <RED4ext/Scripting/Natives/UpdateManager.hpp>
 
+// 1.6  RVA: 0x2BE7400 / 46035968
+// 1.62h1  RVA: 0x2C23B90 / 46283664
+/// @pattern 40 55 56 57 41 56 B8 68 20 00 00 E8 ?  ?  E7 FF 48 2B E0 49 8B E9 49 8B F0 8B FA 4C 8B F1 F6 C2
+// void __fastcall ExecuteCompileCommand(__int64 a1, char a2, RED4ext::CString *a3, RED4ext::CString *command);
+
+// 1.6  RVA: 0x2BE75E0 / 46036448
+// 1.62hf1  RVA: 0x2C23D70 / 46284144
+/// @pattern 48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 40 48 8B FA 48 8B F1 48 8D 54 24 30 49 8B C9 49 8B D8
+__int64 __fastcall ExecuteCommand(void *scriptCompilation, RED4ext::CString *, RED4ext::CString *, __int64 currentDirectoryThing, char);
+
 // right before components are processed for entities, and an appropriate time to insert our own
 // can also look for string "Entity/InitializeComponents"
 /// @pattern 48 89 54 24 10 55 53 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 ? FB FF FF 48 81 EC ? 05 00 00

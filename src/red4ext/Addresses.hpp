@@ -22,6 +22,9 @@
 #ifndef Entity_InitializeComponents_Addr
 #define Entity_InitializeComponents_Addr 0x105DFD0
 #endif
+#ifndef ExecuteCommand_Addr
+#define ExecuteCommand_Addr 0x2C23D70
+#endif
 #ifndef FPPCameraUpdate_Addr
 #define FPPCameraUpdate_Addr 0x172BD30
 #endif

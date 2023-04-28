@@ -1,0 +1,4 @@
+-std=c++20
+-Ideps/red4ext.sdk/include
+-Ideps/detours/include
+-Ideps/spdlog/include
