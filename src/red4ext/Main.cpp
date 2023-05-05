@@ -501,6 +501,9 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     auto modPtr = aHandle;
     spdlog::info("Mod address: {}", fmt::ptr(modPtr));
 
+    aSdk->scripts->Add(aHandle, L"packed.reds");
+    aSdk->scripts->Add(aHandle, L"module.reds");
+
     RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
     Engine::RTTIRegistrar::RegisterPending();
     Red::RTTIRegistrar::RegisterPending();
