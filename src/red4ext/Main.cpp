@@ -478,13 +478,13 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
   // 0x14342E6C0
 }
 
-#include <InputLoader/MergeModDocument.hpp>
+#include <InputLoader.hpp>
 
-bool LoadInputs(RED4ext::CGameApplication * aApp) {
-  spdlog::info("Loading input.xml");
-  InputLoader::MergeModDocument(Utils::GetRootDir() / "red4ext/plugins/let_there_be_flight/inputs.xml");
-  return true;
-}
+// bool LoadInputs(RED4ext::CGameApplication * aApp) {
+//   spdlog::info("Loading input.xml");
+//   InputLoader::MergeModDocument(Utils::GetRootDir() / "red4ext/plugins/let_there_be_flight/inputs.xml");
+//   return true;
+// }
 
 RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::EMainReason aReason,
                                         const RED4ext::Sdk *aSdk) {
@@ -495,7 +495,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // is not initalized yet.
 
     Utils::CreateLogger();
-    spdlog::info("Starting up Let There Be Flight v{}.{}.{}", LTBF_VER_MAJOR, LTBF_VER_MINOR, LTBF_VER_PATCH);
+    spdlog::info("Starting up Let There Be Flight {}", MOD_VERSION_STR);
     auto ptr = GetModuleHandle(nullptr);
     spdlog::info("Base address: {}", fmt::ptr(ptr));
     auto modPtr = aHandle;
@@ -503,17 +503,18 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 
     aSdk->scripts->Add(aHandle, L"packed.reds");
     aSdk->scripts->Add(aHandle, L"module.reds");
+    InputLoader::Add(aHandle, "inputs.xml");
 
     RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
     Engine::RTTIRegistrar::RegisterPending();
     Red::RTTIRegistrar::RegisterPending();
 
-    RED4ext::GameState baseInitState;
-    baseInitState.OnEnter = &LoadInputs;
-    baseInitState.OnUpdate = nullptr;
-    baseInitState.OnExit = nullptr;
+    // RED4ext::GameState baseInitState;
+    // baseInitState.OnEnter = &LoadInputs;
+    // baseInitState.OnUpdate = nullptr;
+    // baseInitState.OnExit = nullptr;
 
-    aSdk->gameStates->Add(aHandle, RED4ext::EGameStateType::BaseInitialization, &baseInitState);
+    // aSdk->gameStates->Add(aHandle, RED4ext::EGameStateType::BaseInitialization, &baseInitState);
 
     RED4ext::GameState initState;
     initState.OnEnter = nullptr;
@@ -550,7 +551,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 RED4EXT_C_EXPORT void RED4EXT_CALL Query(RED4ext::PluginInfo *aInfo) {
   aInfo->name = L"Let There Be Flight";
   aInfo->author = L"Jack Humbert";
-  aInfo->version = RED4EXT_SEMVER(LTBF_VER_MAJOR, LTBF_VER_MINOR, LTBF_VER_PATCH);
+  aInfo->version = RED4EXT_SEMVER(MOD_VERSION_MAJOR, MOD_VERSION_MINOR, MOD_VERSION_PATCH);
   aInfo->runtime = RED4EXT_RUNTIME_LATEST;
   aInfo->sdk = RED4EXT_SDK_LATEST;
 }

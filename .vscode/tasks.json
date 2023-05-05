@@ -29,7 +29,7 @@
         "targets": [
           "let_there_be_flight.addresses"
         ],
-        "detail": "Generate addreses used by Let There Be Flight via Zoltan",
+        "detail": "Generate addreses used by Mod via Zoltan",
         "presentation": {
           "echo": true,
           "reveal": "always",
@@ -128,9 +128,9 @@
         "group": "build",
         "problemMatcher": [],
         "dependsOn": [
-          "Install Let There Be Flight"
+          "Install Mod"
         ],
-        "detail": "Install Let There Be Flight and start the game"
+        "detail": "Install Mod and start the game"
       },
       {
         "type": "cmake",
@@ -155,19 +155,14 @@
         "detail": "Pack redscript files"
       },
       {
-        "type": "cmake",
-        "label": "Build Let There Be Flight",
-        "command": "build",
-        "targets": [
-          "let_there_be_flight"
-        ],
-        "group": "build",
+        "label": "Build Mod",
+        "command": "${command:cmake.build}",
         "problemMatcher": [],
         "detail": "Compile .dll & packed redscript files"
       },
       {
         "type": "cmake",
-        "label": "Install Let There Be Flight",
+        "label": "Install Mod",
         "command": "install",
         "problemMatcher": [],
         "detail": "Install files into the game's installation directory"
