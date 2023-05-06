@@ -1,0 +1,49 @@
+name: Build Workflow
+on: [ push, pull_request ]
+
+jobs:
+  build:
+    name: Build (${{ matrix.config }})
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        config: [ Debug, RelWithDebInfo ]
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Configure CMake
+      run: cmake -B ${{ github.workspace }}/build -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CI_BUILD=ON -DGITHUB_ENV="$env:GITHUB_ENV"
+
+    - name: Build
+      run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.config }}
+
+    - name: Get short SHA
+      run: echo "SHORT_SHA=$("${{ github.sha }}".SubString(0, 7))" >> $env:GITHUB_ENV
+
+    - name: Create environment variables
+      run: |
+        $config = "${{ matrix.config }}"
+        if ($config -eq "RelWithDebInfo") {
+          $config = "release"
+        }
+        else {
+          $config = $config.ToLower()
+        }
+
+        echo "PRETTY_CONFIG=${config}" | Out-File -FilePath $env:GITHUB_ENV -Encoding UTF8 -Append
+
+    - name: Upload game_dir with zip file name
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.MOD_ZIP_FILENAME }}_${{ env.PRETTY_CONFIG }}_${{ env.SHORT_SHA }}
+        path: ${{ github.workspace }}/game_dir/**
+
+    - name: Upload game_dir_prereqs with zip file name
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.MOD_ZIP_FILENAME }}_${{ env.PRETTY_CONFIG }}_${{ env.SHORT_SHA }}_prereqs
+        path: ${{ github.workspace }}/game_dir_prereqs/**

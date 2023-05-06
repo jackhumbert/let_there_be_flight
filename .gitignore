@@ -47,6 +47,7 @@ wolvenkit/let_there_be_flight.zip
 wolvenkit/install_log.xml
 src/wolvenkit/source/
 game_dir/
+game_dir_prereqs/
 
 tools/builder/x64/*
 cmake-*/
