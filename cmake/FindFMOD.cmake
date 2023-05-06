@@ -19,23 +19,23 @@ set_property(TARGET FMODStudio PROPERTY IMPORTED_LOCATION "${FMOD_LIB_DIR}/x64/f
 set_property(TARGET FMODStudio PROPERTY IMPORTED_IMPLIB "${FMOD_LIB_DIR}/x64/fmodstudio_vc.lib")
 # set_property(TARGET FMODStudio PROPERTY IMPORTED_IMPLIB_DEBUG "${FMOD_LIB_DIR}/x64/fmodstudioL_vc.lib")
 
-add_custom_command(
-  OUTPUT ${FMOD_GAME_DIR_DLL}
-  DEPENDS ${FMOD_LIB_DIR}/x64/fmod.dll
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${FMOD_LIB_DIR}/x64/fmod.dll ${MOD_GAME_DIR_FMOD_FOLDER}
-)
+# add_custom_command(
+#   OUTPUT ${FMOD_GAME_DIR_DLL}
+#   DEPENDS ${FMOD_LIB_DIR}/x64/fmod.dll
+#   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${FMOD_LIB_DIR}/x64/fmod.dll ${MOD_GAME_DIR_FMOD_FOLDER}
+# )
 configure_mod_file(deps/fmod/lib/x64/fmod.dll red4ext/plugins/${MOD_SLUG}/fmod.dll)
 configure_mod_file(deps/fmod/lib/x64/fmodstudio.dll red4ext/plugins/${MOD_SLUG}/fmodstudio.dll)
 
-add_custom_target(fmod_dll DEPENDS ${FMOD_GAME_DIR_DLL})
+# add_custom_target(fmod_dll DEPENDS ${FMOD_GAME_DIR_DLL})
 
-add_custom_command(
-  OUTPUT ${FMOD_STUDIO_GAME_DIR_DLL}
-  DEPENDS ${FMOD_LIB_DIR}/x64/fmodstudio.dll
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${FMOD_LIB_DIR}/x64/fmodstudio.dll ${FMOD_STUDIO_GAME_DIR_DLL}
-)
+# add_custom_command(
+#   OUTPUT ${FMOD_STUDIO_GAME_DIR_DLL}
+#   DEPENDS ${FMOD_LIB_DIR}/x64/fmodstudio.dll
+#   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${FMOD_LIB_DIR}/x64/fmodstudio.dll ${FMOD_STUDIO_GAME_DIR_DLL}
+# )
 
-add_custom_target(fmodstudio_dll DEPENDS ${FMOD_STUDIO_GAME_DIR_DLL})
+# add_custom_target(fmodstudio_dll DEPENDS ${FMOD_STUDIO_GAME_DIR_DLL})
 
 target_link_libraries(FMOD INTERFACE FMODStudio)
 

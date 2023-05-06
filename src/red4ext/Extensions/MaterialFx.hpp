@@ -4,11 +4,7 @@
 #include <RED4ext/NativeTypes.hpp>
 #include <RED4ext/RED4ext.hpp>
 //#include "Engine/RTTIClass.hpp"
-#include <Red/Alias.hpp>
-#include <Red/Stl.hpp>
-#include <Red/Rtti/Definition.hpp>
-#include <Red/Rtti/Resolving.hpp>
-#include <nameof.hpp>
+#include <RedLib.hpp>
 #include <RED4ext\Scripting\Natives\Generated\red\ResourceReferenceScriptToken.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 

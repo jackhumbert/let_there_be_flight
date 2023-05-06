@@ -2,3 +2,4 @@
 -Ideps/red4ext.sdk/include
 -Ideps/detours/include
 -Ideps/spdlog/include
+-Ideps/red_lib/include

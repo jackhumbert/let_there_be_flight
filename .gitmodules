@@ -10,9 +10,7 @@
 [submodule "deps/red4ext.sdk"]
 	path = deps/red4ext.sdk
 	url = git@github.com:jackhumbert/RED4ext.SDK.git
-[submodule "deps/codeware"]
-	path = deps/codeware
-	url = git@github.com:jackhumbert/cp2077-codeware.git
+	branch = new-types
 [submodule "deps/cyberpunk_cmake"]
 	path = deps/cyberpunk_cmake
 	url = git@github.com:jackhumbert/cyberpunk_cmake.git
@@ -22,3 +20,7 @@
 [submodule "deps/input_loader"]
 	path = deps/input_loader
 	url = git@github.com:jackhumbert/cyberpunk2077-input-loader.git
+[submodule "deps/red_lib"]
+	path = deps/red_lib
+	url = https://github.com/jackhumbert/cp2077-red-lib.git
+	branch = jack

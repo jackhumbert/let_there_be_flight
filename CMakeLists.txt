@@ -52,7 +52,7 @@ configure_red4ext_addresses(Signatures.hpp Addresses.hpp)
 find_package(Detours)
 find_package(FMOD)
 find_package(Spdlog)
-find_package(Codeware)
+find_package(RedLib)
 find_package(PhysX3)
 find_package(ModSettings)
 find_package(InputLoader)
@@ -62,7 +62,7 @@ target_link_libraries(let_there_be_flight.dll
     Detours
     FMOD
     spdlog
-    Codeware
+    RedLib
     PhysX3
     input_loader.dll
 )
