@@ -24,6 +24,8 @@ find_program(CYBERPUNK_2077_EXE NAMES Cyberpunk2077.exe PATHS "${CYBERPUNK_2077_
 set(MOD_GAME_DIR_FMOD_FOLDER "${MOD_GAME_DIR}/red4ext/plugins/${MOD_SLUG}")
 set(LTBF_SOURCE_FMOD_DIR "${PROJECT_SOURCE_DIR}/src/fmod_studio/Build/Desktop")
 
+set(MOD_RED4EXT_DOWNLOAD_URL "https://github.com/jackhumbert/RED4ext/releases/download/v1.12.0_script_system/red4ext_1.12.0_script_system.zip")
+set(MOD_REDSCRIPT_DOWNLOAD_URL "https://github.com/jackhumbert/redscript/releases/download/v0.5.13_script_system/redscript-v0.5.13_script_system.zip")
 
 # FMOD
 
