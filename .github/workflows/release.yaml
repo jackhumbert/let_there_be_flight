@@ -1,0 +1,55 @@
+name: Release Workflow
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+
+jobs:
+  release:
+    name: Build & Release
+    runs-on: windows-latest
+    env:
+      GIT_CLIFF_VERSION: 0.10.0
+      CHANGELOG_FILE: ${{ github.workspace }}-CHANGES.md
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Configure CMake
+        run: cmake -B ${{ github.workspace }}/build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CI_BUILD=ON -DGITHUB_ENV="$env:GITHUB_ENV"
+  
+      - name: Build
+        run: cmake --build ${{ github.workspace }}/build --config RelWithDebInfo --target
+
+      - name: Install git-cliff
+        uses: Alex079/setup-custom-tool@v1
+        with:
+          archiveUrl: https://github.com/orhun/git-cliff/releases/download/v${{ env.GIT_CLIFF_VERSION }}/git-cliff-${{ env.GIT_CLIFF_VERSION }}-x86_64-pc-windows-msvc.zip
+          archiveGlob: '*'
+          toolName: git-cliff
+          toolVersion: ${{ env.GIT_CLIFF_VERSION }}
+
+      - name: Generate a changelog
+        run: git cliff --current --strip header -o ${{ env.CHANGELOG_FILE }}
+
+      - name: Zipping game_dir
+        run: tar "cfv" "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}.zip" --format=zip .
+          working-directory:  game_dir
+
+      - name: Zipping game_dir_prereqs
+        run: tar "cfv" "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}_prereqs.zip" --format=zip .
+          working-directory:  game_dir_prereqs
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: ${{ env.CHANGELOG_FILE }}
+          files: |
+            ${{ env.MOD_SLUG }}_${{ github.ref_name }}.zip
+            ${{ env.MOD_SLUG }}_${{ github.ref_name }}_prereqs.zip
+          prerelease: ${{ contains(github.ref_name, '-') || contains(github.ref_name, '_') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
