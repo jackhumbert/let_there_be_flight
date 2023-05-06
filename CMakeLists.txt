@@ -30,23 +30,10 @@ set(MOD_REDSCRIPT_DOWNLOAD_URL "https://github.com/jackhumbert/redscript/release
 # FMOD
 
 file(GLOB LTBF_SOURCE_FMOD_FILES ${LTBF_SOURCE_FMOD_DIR}/*)
-# set(LTBF_FMOD_FILES "")
 foreach(_FILE ${LTBF_SOURCE_FMOD_FILES})
   file(RELATIVE_PATH _TEMPFILE ${LTBF_SOURCE_FMOD_DIR} ${_FILE})
   configure_mod_file(/src/fmod_studio/Build/Desktop/${_TEMPFILE} red4ext/plugins/${MOD_SLUG}/${_TEMPFILE})
-  # list(APPEND LTBF_FMOD_FILES "${MOD_GAME_DIR_FMOD_FOLDER}/${_TEMPFILE}")
 endforeach()
-
-# add_custom_command(
-#   OUTPUT ${LTBF_FMOD_FILES}
-#   DEPENDS ${LTBF_SOURCE_FMOD_FILES}
-#   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${LTBF_SOURCE_FMOD_FILES} ${MOD_GAME_DIR_FMOD_FOLDER}
-# )
-
-# add_custom_target(fmod_files
-#   DEPENDS ${LTBF_FMOD_FILES}
-# )
-# add_dependencies(${MOD_SLUG} fmod_files fmodstudio_dll fmod_dll)
 
 configure_red4ext(src/red4ext)
 configure_red4ext_addresses(Signatures.hpp Addresses.hpp)
