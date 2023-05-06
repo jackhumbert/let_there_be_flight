@@ -17,7 +17,7 @@
 mono_crash.*
 
 .build
-build 
+build/ 
 bin
 
 deps/PhysX_3.4
