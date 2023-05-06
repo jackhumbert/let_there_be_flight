@@ -32,8 +32,8 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.description", "UI-Settings-Linear-Brake-Factor-Description")
   @runtimeProperty("ModSettings.step", "0.1")
   @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "10.0")
-  public let brakeFactorLinear: Float = 1.2;
+  @runtimeProperty("ModSettings.max", "5.0")
+  public let brakeFactorLinear: Float = 1.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Control-Settings")
@@ -41,8 +41,8 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.description", "UI-Settings-Angular-Brake-Factor-Description")
   @runtimeProperty("ModSettings.step", "0.1")
   @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "50.0")
-  public let brakeFactorAngular: Float = 5.0;
+  @runtimeProperty("ModSettings.max", "5.0")
+  public let brakeFactorAngular: Float = 1.0;
   
   // Flight Physics Settings
 
@@ -68,7 +68,7 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.step", "0.05")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "20.0")
-  public let generalDampFactorAngular: Float = 1.0;
+  public let generalDampFactorAngular: Float = 2.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
@@ -77,7 +77,7 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.step", "0.1")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "50.0")
-  public let generalDampFactorAngularMax: Float = 5.0;
+  public let generalDampFactorAngularMax: Float = 3.5;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
@@ -96,7 +96,7 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.step", "0.05")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "1.0")
-  public let generalYawAeroFactor: Float = 0.1;
+  public let generalYawAeroFactor: Float = 0.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
@@ -171,8 +171,8 @@ public native class FlightSettings extends IScriptable {
     FlightLog.Info("[FlightSettings] OnAttach");
     LTBF_RegisterListener(this);
     
-    FlightSettings.SetVector3("inputPitchPID", 1.0, 0.5, 0.5);
-    FlightSettings.SetVector3("inputRollPID", 1.0, 0.5, 0.5);
+    FlightSettings.SetVector3("inputPitchPID", 1.0, 0.2, 0.05);
+    FlightSettings.SetVector3("inputRollPID", 1.0, 0.5, 0.0);
     
     FlightSettings.SetVector3("aeroYawPID", 1.0, 0.01, 1.0);
     FlightSettings.SetVector3("aeroPitchPID", 1.0, 0.01, 1.0);

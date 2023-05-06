@@ -1,1 +1,2 @@
 redscript_dir = "src/redscript"
+script_cache_path = "build/dependencies.redscripts"

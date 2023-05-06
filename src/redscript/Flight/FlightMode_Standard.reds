@@ -46,7 +46,7 @@ public abstract class FlightModeStandard extends FlightMode {
   @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "20.0")
-  public let standardModeRollFactor: Float = 15.0;
+  public let standardModeRollFactor: Float = 3.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Standard-Mode")
@@ -112,10 +112,10 @@ public abstract class FlightModeStandard extends FlightMode {
     // }
     // yawCorrection += FlightSettings.GetFloat("yawD") * changeAngle / timeDelta;
 
-    // let velocityDamp: Vector4 = this.component.linearBrake * FlightSettings.GetInstance().brakeFactorLinear * this.component.stats.s_brakingFrictionFactor * this.component.stats.d_localVelocity;
-    // let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetInstance().brakeFactorAngular * this.component.stats.s_brakingFrictionFactor;
-    let velocityDamp: Vector4; 
-    let angularDamp: Vector4;
+    let velocityDamp: Vector4 = this.component.linearBrake * FlightSettings.GetInstance().brakeFactorLinear * this.component.stats.s_brakingFrictionFactor * this.component.stats.d_localVelocity;
+    let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetInstance().brakeFactorAngular * this.component.stats.s_brakingFrictionFactor;
+    // let velocityDamp: Vector4; 
+    // let angularDamp: Vector4;
     
     // let yawDirectionality: Float = (this.component.stats.d_speedRatio + AbsF(this.yaw.GetValue()) * this.swayWithYaw) * this.yawDirectionalityFactor;
     // actual in-game mass (i think)

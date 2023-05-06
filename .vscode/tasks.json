@@ -156,14 +156,13 @@
       },
       {
         "label": "Build Mod",
-        "command": "${command:cmake.build}",
+        "command": "echo ${command:cmake.build}",
         "problemMatcher": [],
         "detail": "Compile .dll & packed redscript files"
       },
       {
-        "type": "cmake",
         "label": "Install Mod",
-        "command": "install",
+        "command": "echo ${command:cmake.install}",
         "problemMatcher": [],
         "detail": "Install files into the game's installation directory"
       }

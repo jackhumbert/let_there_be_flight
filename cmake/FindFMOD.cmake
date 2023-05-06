@@ -24,6 +24,8 @@ add_custom_command(
   DEPENDS ${FMOD_LIB_DIR}/x64/fmod.dll
   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${FMOD_LIB_DIR}/x64/fmod.dll ${MOD_GAME_DIR_FMOD_FOLDER}
 )
+configure_mod_file(deps/fmod/lib/x64/fmod.dll red4ext/plugins/${MOD_SLUG}/fmod.dll)
+configure_mod_file(deps/fmod/lib/x64/fmodstudio.dll red4ext/plugins/${MOD_SLUG}/fmodstudio.dll)
 
 add_custom_target(fmod_dll DEPENDS ${FMOD_GAME_DIR_DLL})
 

@@ -28,21 +28,23 @@ set(LTBF_SOURCE_FMOD_DIR "${PROJECT_SOURCE_DIR}/src/fmod_studio/Build/Desktop")
 # FMOD
 
 file(GLOB LTBF_SOURCE_FMOD_FILES ${LTBF_SOURCE_FMOD_DIR}/*)
-set(LTBF_FMOD_FILES "")
+# set(LTBF_FMOD_FILES "")
 foreach(_FILE ${LTBF_SOURCE_FMOD_FILES})
   file(RELATIVE_PATH _TEMPFILE ${LTBF_SOURCE_FMOD_DIR} ${_FILE})
-  list(APPEND LTBF_FMOD_FILES "${MOD_GAME_DIR_FMOD_FOLDER}/${_TEMPFILE}")
+  configure_mod_file(/src/fmod_studio/Build/Desktop/${_TEMPFILE} red4ext/plugins/${MOD_SLUG}/${_TEMPFILE})
+  # list(APPEND LTBF_FMOD_FILES "${MOD_GAME_DIR_FMOD_FOLDER}/${_TEMPFILE}")
 endforeach()
 
-add_custom_command(
-  OUTPUT ${LTBF_FMOD_FILES}
-  DEPENDS ${LTBF_SOURCE_FMOD_FILES}
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${LTBF_SOURCE_FMOD_FILES} ${MOD_GAME_DIR_FMOD_FOLDER}
-)
+# add_custom_command(
+#   OUTPUT ${LTBF_FMOD_FILES}
+#   DEPENDS ${LTBF_SOURCE_FMOD_FILES}
+#   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${LTBF_SOURCE_FMOD_FILES} ${MOD_GAME_DIR_FMOD_FOLDER}
+# )
 
-add_custom_target(fmod_files
-  DEPENDS ${LTBF_FMOD_FILES}
-)
+# add_custom_target(fmod_files
+#   DEPENDS ${LTBF_FMOD_FILES}
+# )
+# add_dependencies(${MOD_SLUG} fmod_files fmodstudio_dll fmod_dll)
 
 configure_red4ext(src/red4ext)
 configure_red4ext_addresses(Signatures.hpp Addresses.hpp)
@@ -70,7 +72,7 @@ configure_tweaks(src/tweaks)
 configure_mod_file(src/input_loader/${MOD_SLUG}.xml red4ext/plugins/${MOD_SLUG}/inputs.xml)
 set(REDSCRIPT_PACK_INTO_RED4EXT ON)
 configure_redscript(src/redscript)
-configure_archives(src/wolvenkit/packed/archive/pc/mod/let_there_be_flight.archive src/archive_xl/let_there_be_flight.archive.xl)
+configure_archives(src/wolvenkit/packed/mods/let_there_be_flight/archives/let_there_be_flight.archive src/archive_xl/let_there_be_flight.archive.xl)
 configure_folder_file(readme.md)
 configure_folder_file(license.md)
 configure_uninstall()

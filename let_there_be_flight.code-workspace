@@ -99,7 +99,7 @@
 			"span": "cpp"
 		},
 		"editor.tabSize": 2,
-		"redscript.scriptCachePath": ""
+		"redscript.scriptCachePath": "${workspaceFolder}/build/dependencies.redscripts"
 	},
 	"launch": {
 		"version": "0.2.0",

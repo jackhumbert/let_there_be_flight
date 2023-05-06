@@ -32,7 +32,7 @@ public class FlightModeDrone extends FlightMode {
   @runtimeProperty("ModSettings.step", "0.1")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "200")
-  public let droneModeRollFactor: Float = 12.0;
+  public let droneModeRollFactor: Float = 8.0;
   
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
@@ -97,10 +97,10 @@ public class FlightModeDrone extends FlightMode {
   public func GetDescription() -> String = "Drone";
 
   public func Update(timeDelta: Float) -> Void {
-      // let velocityDamp: Vector4 = this.component.stats.d_localVelocity * this.component.linearBrake * FlightSettings.GetInstance().brakeFactorLinear * this.component.stats.s_brakingFrictionFactor;   
-      let velocityDamp: Vector4;
-      // let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetInstance().brakeFactorAngular * this.component.stats.s_brakingFrictionFactor;
-      let angularDamp: Vector4;
+      let velocityDamp: Vector4 = this.component.stats.d_localVelocity * this.component.linearBrake * FlightSettings.GetInstance().brakeFactorLinear * this.component.stats.s_brakingFrictionFactor;   
+      // let velocityDamp: Vector4;
+      let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetInstance().brakeFactorAngular * this.component.stats.s_brakingFrictionFactor;
+      // let angularDamp: Vector4;
 
       this.force = new Vector4(0.0, 0.0, 0.0, 0.0);
       // lift
