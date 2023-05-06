@@ -22,7 +22,7 @@ jobs:
         run: cmake -B ${{ github.workspace }}/build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CI_BUILD=ON -DGITHUB_ENV="$env:GITHUB_ENV"
   
       - name: Build
-        run: cmake --build ${{ github.workspace }}/build --config RelWithDebInfo --target
+        run: cmake --build ${{ github.workspace }}/build --config RelWithDebInfo
 
       - name: Install git-cliff
         uses: Alex079/setup-custom-tool@v1
