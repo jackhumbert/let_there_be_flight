@@ -36,11 +36,11 @@ jobs:
         run: git cliff --current --strip header -o ${{ env.CHANGELOG_FILE }}
 
       - name: Zipping game_dir
-        run: tar -cvf "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}.zip" --format=zip .
+        run: tar -cvf "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}.zip" --format=zip *
         working-directory:  game_dir
 
       - name: Zipping game_dir_prereqs
-        run: tar -cvf "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}_prereqs.zip" --format=zip .
+        run: tar -cvf "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}_prereqs.zip" --format=zip *
         working-directory:  game_dir_prereqs
 
       - name: Release
