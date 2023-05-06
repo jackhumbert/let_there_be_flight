@@ -77,6 +77,7 @@ configure_redscript(src/redscript)
 configure_archives(src/wolvenkit/packed/mods/let_there_be_flight/archives/let_there_be_flight.archive src/archive_xl/let_there_be_flight.archive.xl)
 configure_folder_file(readme.md)
 configure_folder_file(license.md)
+
 configure_uninstall()
 configure_release(${MOD_SLUG}_${MOD_VERSION_STR}.zip)
 configure_install()
