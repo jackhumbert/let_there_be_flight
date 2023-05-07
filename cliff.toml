@@ -14,7 +14,7 @@ body = """
     ### {{ group | upper_first }}
     {% for commit in commits %}\
         - {% if commit.breaking %}[**breaking**] {% endif %}\
-            {{ commit.message | upper_first }} ({{ commit.id }})
+            {{ commit.message | upper_first }} [{{ commit.scope }}] ({{ commit.id }})
     {% endfor %}\
 {% endfor %}
 ### Contributors
@@ -37,5 +37,6 @@ commit_parsers = [
     { message = "^test", group = "Testing" },
     { message = "^chore", group = "Miscellaneous", skip = true },
     { message = "^ci", group = "CI", skip = true },
-    { body = ".*security", group = "Security" },
+    { body = ".*security", group = "Security" }
 ]
+tag_pattern = "v[0-9]+.[0-9]+.[0-9]+"
