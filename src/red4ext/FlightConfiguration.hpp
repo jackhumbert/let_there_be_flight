@@ -44,6 +44,8 @@ public:
   void OnActivationCore();
   void OnDeactivationCore();
 
+  static RED4ext::CClass* GetConfigurationClass(RED4ext::ent::Entity* entity);
+
 private:
   friend Descriptor;
   static void OnRegister(Descriptor *aType) {

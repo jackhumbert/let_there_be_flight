@@ -376,16 +376,10 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
   auto rtti = RED4ext::CRTTISystem::Get();
 
   auto type = entity->GetNativeType();
-  bool isCar = false;
-  bool isBike = false;
   auto isVehicle = false;
   auto vehicleClass = rtti->GetClass("vehicleBaseObject");
-  auto carClass = rtti->GetClass("vehicleCarBaseObject");
-  auto bikeClass = rtti->GetClass("vehicleBikeBaseObject");
   do {
     isVehicle |= type == vehicleClass;
-    isCar |= type == carClass;
-    isBike |= type == bikeClass;
   } while (type = type->parent);
 
   if (isVehicle) {
@@ -444,44 +438,7 @@ void __fastcall Entity_InitializeComponents_Hook(RED4ext::ent::Entity *entity, v
       }
       // FlightWeapons::AddWeaponSlots(vs);
 
-      bool isSixWheeler = false;
-      // for (auto const &slot : vs->slots) {
-      //   if (slot.slotName == "wheel_front_left_b")
-      //     isSixWheeler = true;
-      // }
-
-      for (auto const &handle : entity->componentsStorage.components) {
-        auto component = handle.GetPtr();
-        type = component->GetNativeType();
-        bool isPlacedComponent = false;
-        do {
-          isPlacedComponent |= type == rtti->GetClass("entIPlacedComponent");
-        } while (type = type->parent);
-
-        if (isPlacedComponent) {
-          auto pth = ((RED4ext::ent::IPlacedComponent *)component)->parentTransform;
-          if (pth) {
-            auto pt = reinterpret_cast<RED4ext::ent::HardTransformBinding *>(pth.GetPtr());
-            if (pt && pt->slotName == "wheel_front_left_b") {
-              isSixWheeler |= true;
-            }
-          }
-        }
-      }
-
-      char className[256];
-      sprintf_s(className, "FlightConfiguration_%s", entity->currentAppearance.ToString());
-
-      auto configurationCls = rtti->GetClassByScriptName(className);
-      if (!configurationCls) {
-        if (isSixWheeler) {
-          configurationCls = rtti->GetClassByScriptName("SixWheelCarFlightConfiguration");
-        } else if (isCar) {
-          configurationCls = rtti->GetClassByScriptName("CarFlightConfiguration");
-        } else if (isBike) {
-          configurationCls = rtti->GetClassByScriptName("BikeFlightConfiguration");
-        }
-      }
+      auto configurationCls = IFlightConfiguration::GetConfigurationClass(entity);
 
       if (configurationCls) {
         // spdlog::info("Looked for class '{}' using '{}'", className, configurationCls->name.ToString());

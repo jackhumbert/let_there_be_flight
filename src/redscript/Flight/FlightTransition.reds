@@ -85,7 +85,9 @@ public class FlightDecisions extends VehicleTransition {
   public final const func EnterCondition(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
     // FlightLog.Info("[FlightDecisions] EnterCondition");
     // return scriptInterface.IsActionJustPressed(n"Flight_Toggle");
-    return true;
+    let fc = scriptInterface.owner.FindComponentByName(n"flightComponent") as FlightComponent;
+    return IsDefined(fc) && fc.configuration.CanActivate();
+    // return true;
   }
 
   public final const func ToDrive(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {

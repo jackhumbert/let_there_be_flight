@@ -23,6 +23,8 @@ public abstract native class IFlightConfiguration extends IScriptable {
   public native func OnActivationCore();
   public native func OnDeactivationCore();
 
+  public func CanActivate() -> Bool = true;
+
   public let type: FlightVehicleType = FlightVehicleType.Corpo;
 
   public func OnSetup(vehicle: ref<VehicleObject>) {

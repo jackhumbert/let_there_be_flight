@@ -8,6 +8,66 @@
 #include <RED4ext/Scripting/Natives/Generated/physics/FilterData.hpp>
 #include <RED4ext/Scripting/Natives/physicsProxyHelper.hpp>
 #include <RED4ext/Scripting/Natives/physicsPhysicalSystemProxy.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ent/HardTransformBinding.hpp>
+
+RED4ext::CClass* IFlightConfiguration::GetConfigurationClass(RED4ext::ent::Entity* entity) {
+  auto rtti = RED4ext::CRTTISystem::Get();
+
+  auto type = entity->GetNativeType();
+  bool isCar = false;
+  bool isBike = false;
+  auto carClass = rtti->GetClass("vehicleCarBaseObject");
+  auto bikeClass = rtti->GetClass("vehicleBikeBaseObject");
+  do {
+    isCar |= type == carClass;
+    isBike |= type == bikeClass;
+  } while (type = type->parent);
+
+  bool isSixWheeler = false;
+
+  for (auto const &handle : entity->componentsStorage.components) {
+    auto component = handle.GetPtr();
+    type = component->GetNativeType();
+    bool isPlacedComponent = false;
+    do {
+      isPlacedComponent |= type == rtti->GetClass("entIPlacedComponent");
+    } while (type = type->parent);
+
+    if (isPlacedComponent) {
+      auto pth = ((RED4ext::ent::IPlacedComponent *)component)->parentTransform;
+      if (pth) {
+        auto pt = reinterpret_cast<RED4ext::ent::HardTransformBinding *>(pth.GetPtr());
+        if (pt && pt->slotName == "wheel_front_left_b") {
+          isSixWheeler |= true;
+        }
+      }
+    }
+  }
+
+  char className[256];
+  sprintf_s(className, "FlightConfiguration_%s", entity->currentAppearance.ToString());
+
+  auto configurationCls = rtti->GetClassByScriptName(className);
+  if (!configurationCls) {
+    if (isSixWheeler) {
+      configurationCls = rtti->GetClassByScriptName("CustomSixWheelCarFlightConfiguration");
+      if (!configurationCls) {
+        configurationCls = rtti->GetClassByScriptName("SixWheelCarFlightConfiguration");
+      }
+    } else if (isCar) {
+      configurationCls = rtti->GetClassByScriptName("CustomCarFlightConfiguration");
+      if (!configurationCls) {
+        configurationCls = rtti->GetClassByScriptName("CarFlightConfiguration");
+      }
+    } else if (isBike) {
+      configurationCls = rtti->GetClassByScriptName("CustomBikeFlightConfiguration");
+      if (!configurationCls) {
+        configurationCls = rtti->GetClassByScriptName("BikeFlightConfiguration");
+      }
+    }
+  }
+  return configurationCls;
+}
 
 void IFlightConfiguration::Setup(RED4ext::vehicle::BaseObject * vehicle) {
 

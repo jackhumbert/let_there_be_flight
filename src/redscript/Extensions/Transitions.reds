@@ -41,9 +41,12 @@ protected final const func IsPlayerAllowedToExitFlight(const scriptInterface: re
 public final const func ToFlight(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
   // if this.IsPlayerAllowedToEnterVehicleFlight(scriptInterface) && VehicleTransition.CanEnterVehicleFlight() {
   // if VehicleTransitiorn.CanEnterVehicleFlight() {
+    let fc = scriptInterface.owner.FindComponentByName(n"flightComponent") as FlightComponent;
+    let enabledForVehicle = IsDefined(fc) && fc.configuration.CanActivate();
     if (scriptInterface.IsActionJustPressed(n"Flight_Toggle") || (IsDefined(fs().playerComponent) && fs().playerComponent.active)) &&
-      GameInstance.GetQuestsSystem(scriptInterface.GetGame()).GetFact(n"map_blocked") == 0 &&
-      Equals(this.GetCurrentTier(stateContext), GameplayTier.Tier1_FullGameplay) {
+        GameInstance.GetQuestsSystem(scriptInterface.GetGame()).GetFact(n"map_blocked") == 0 &&
+        Equals(this.GetCurrentTier(stateContext), GameplayTier.Tier1_FullGameplay) &&
+        enabledForVehicle {
       FlightLog.Info("[DriveDecisions] ToFlight");
       return true;
     };
@@ -56,7 +59,9 @@ public final const func ToFlight(const stateContext: ref<StateContext>, const sc
 @addMethod(SceneDecisions)
 public final const func ToFlight(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
   // if this.IsPlayerAllowedToEnterVehicleFlight(scriptInterface) && VehicleTransition.CanEnterVehicleFlight() {
-  if VehicleTransition.CanEnterVehicleFlight() {
+  let fc = scriptInterface.owner.FindComponentByName(n"flightComponent") as FlightComponent;
+  let enabledForVehicle = IsDefined(fc) && fc.configuration.CanActivate();
+  if VehicleTransition.CanEnterVehicleFlight() && enabledForVehicle {
     // if FlightController.GetInstance().IsActive() {
       FlightLog.Info("[SceneDecisions] ToFlight");
       return false;
