@@ -37,8 +37,8 @@ jobs:
 
       - name: Generate a changelog
         run: |
-          git cliff --current --strip header
-          git cliff --current --strip header -o ${{ env.CHANGELOG_FILE }}
+          git-cliff --current --strip header
+          git-cliff --current --strip header -o ${{ env.CHANGELOG_FILE }}
 
       - name: Zipping game_dir
         run: tar -cvf "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}.zip" --format=zip *
