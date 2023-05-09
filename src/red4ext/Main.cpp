@@ -1,3 +1,4 @@
+#include <RED4ext/Api/Sdk.hpp>
 #include <RED4ext/InstanceType.hpp>
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/RTTITypes.hpp>
@@ -17,6 +18,7 @@
 #include <RED4ext/Scripting/Natives/Generated/vehicle/ChassisComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/TPPCameraComponent.hpp>
 #include <RED4ext/Scripting/Natives/ScriptGameInstance.hpp>
+#include <RED4ext/Version.hpp>
 #include <iostream>
 #include "Version.hpp"
 #include "Engine/RTTIClass.hpp"
@@ -38,51 +40,53 @@
 #include <iostream>
 #include <filesystem>
 #include <fstream>
+#include <winbase.h>
+#include <TweakXL.hpp>
+#include <ArchiveXL.hpp>
+
+using Query_t = void (*)(RED4ext::PluginInfo*);
+
+bool HasDependency(const wchar_t * name, RED4ext::SemVer minVersion) {
+  Query_t query;
+  RED4ext::PluginInfo pluginInfo;
+  auto handle = GetModuleHandle(name);
+  if (!handle) {
+    SetDllDirectory((Utils::GetRootDir() / "red4ext" / "plugins" / name).c_str());
+    handle = LoadLibrary(name);
+  }
+  if (handle) {
+    if (minVersion > RED4EXT_SEMVER(0, 0, 0)) {
+      query = reinterpret_cast<Query_t>(GetProcAddress(handle, "Query"));
+      if (query) {
+        query(&pluginInfo);
+        if (pluginInfo.version >= minVersion) {
+          spdlog::info(L"{} found with version: {}", name, std::to_wstring(pluginInfo.version));
+        } else {
+          spdlog::error(L"{} found, but wrong version: {}", name, std::to_wstring(pluginInfo.version));
+          handle = nullptr;
+        }
+      } else {
+        spdlog::error(L"{} found, but could not be queried for version", name);
+        handle = nullptr;
+      }
+    } else {
+      spdlog::info(L"{} found", name);
+    }
+  } else {
+    spdlog::error(L"{} is not installed/installed properly - aborting", name);
+  }
+  return handle;
+}
+
+bool HasDependencies() {
+  auto inputLoader = HasDependency(L"input_loader", RED4EXT_SEMVER(0, 2, 0));
+  auto archiveXL = HasDependency(L"ArchiveXL", RED4EXT_SEMVER(1, 4, 5));
+  auto tweakXL = HasDependency(L"TweakXL", RED4EXT_SEMVER(1, 1, 5));
+
+  return inputLoader && tweakXL && archiveXL;
+}
 
 RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes() {
-  auto inputLoaderDLL = Utils::GetRootDir() / L"red4ext" / L"plugins" / L"input_loader" / L"input_loader.dll";
-  auto tweakXLDLL = Utils::GetRootDir() / L"red4ext" / L"plugins" / L"TweakXL" / L"TweakXL.dll";
-  auto archiveXLDLL = Utils::GetRootDir() / L"red4ext" / L"plugins" / L"ArchiveXL" / L"ArchiveXL.dll";
-
-  std::ifstream inputLoaderFile;
-  inputLoaderFile.open(inputLoaderDLL);
-  if (!inputLoaderFile) {
-    spdlog::error("Input Loader is not installed/installed properly - aborting");
-    MessageBoxW(0,
-                L"Input Loader is not installed or not installed properly. Please ensure you've installed it correctly. The game will now close.",
-                L"Input Loader could not be found", MB_SYSTEMMODAL | MB_ICONERROR);
-  } else {
-    spdlog::info("Input Loader installation found");
-  }
-
-  std::ifstream tweakXLFile;
-  tweakXLFile.open(tweakXLDLL);
-  if (!tweakXLFile) {
-    spdlog::error("TweakXL is not installed/installed properly - aborting");
-    MessageBoxW(0,
-                L"TweakXL is not installed or not installed properly. Please ensure you've installed it correctly. The "
-                L"game will now close.",
-                L"TweakXL could not be found", MB_SYSTEMMODAL | MB_ICONERROR);
-  } else {
-    spdlog::info("TweakXL installation found");
-  }
-
-  std::ifstream archiveXLFile;
-  archiveXLFile.open(archiveXLDLL);
-  if (!archiveXLFile) {
-    spdlog::error("ArchiveXL is not installed/installed properly - aborting");
-    MessageBoxW(0,
-                L"ArchiveXL is not installed or not installed properly. Please ensure you've installed it correctly. The "
-                L"game will now close.",
-                L"ArchiveXL could not be found", MB_SYSTEMMODAL | MB_ICONERROR);
-  } else {
-    spdlog::info("ArchiveXL installation found");
-  }
-
-  if (!inputLoaderFile || !tweakXLFile || !archiveXLFile) {
-    __debugbreak();
-  }
-
   spdlog::info("Registering classes & types");
   FlightModuleFactory::GetInstance().RegisterTypes();
 }
@@ -476,6 +480,8 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
   // 0x14342E6C0
 }
 
+bool loaded = false;
+
 RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::EMainReason aReason,
                                         const RED4ext::Sdk *aSdk) {
   switch (aReason) {
@@ -491,9 +497,16 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     auto modPtr = aHandle;
     spdlog::info("Mod address: {}", fmt::ptr(modPtr));
 
+    if (!HasDependencies()) {
+      spdlog::error("Dependencies not met - game will load without Let There Be Flight");
+      return false;
+    }
+
     aSdk->scripts->Add(aHandle, L"packed.reds");
     aSdk->scripts->Add(aHandle, L"module.reds");
     InputLoader::Add(aHandle, "inputs.xml");
+    TweakXL::RegisterTweak(aHandle, MOD_PACKED_TWEAKS_FILENAME);
+    ArchiveXL::RegisterArchive(aHandle, "let_there_be_flight.archive");
 
     RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
     Engine::RTTIRegistrar::RegisterPending();
@@ -515,14 +528,17 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 
     FlightModuleFactory::GetInstance().Load(aSdk, aHandle);
 
+    loaded = true;
+
     break;
   }
   case RED4ext::EMainReason::Unload: {
     // Free memory, detach hooks.
     // The game's memory is already freed, to not try to do anything with it.
-
     spdlog::info("Shutting down");
-    FlightModuleFactory::GetInstance().Unload(aSdk, aHandle);
+    if (loaded) {
+      FlightModuleFactory::GetInstance().Unload(aSdk, aHandle);
+    }
     spdlog::shutdown();
     break;
   }

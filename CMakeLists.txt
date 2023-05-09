@@ -37,6 +37,11 @@ endforeach()
 configure_red4ext(src/red4ext)
 configure_red4ext_addresses(Signatures.hpp Addresses.hpp)
 
+set(LOAD_TWEAKS_FROM_RED4EXT ON)
+configure_tweaks(src/tweaks)
+set(LOAD_ARCHIVES_FROM_RED4EXT ON)
+configure_archives(src/wolvenkit/packed/mods/let_there_be_flight/archives/let_there_be_flight.archive src/archive_xl/let_there_be_flight.archive.xl)
+
 find_package(Detours)
 find_package(FMOD)
 find_package(Spdlog)
@@ -44,6 +49,8 @@ find_package(RedLib)
 find_package(PhysX3)
 find_package(ModSettings)
 find_package(InputLoader)
+find_package(ArchiveXL)
+find_package(TweakXL)
 
 target_link_libraries(let_there_be_flight.dll
   PUBLIC
@@ -53,17 +60,18 @@ target_link_libraries(let_there_be_flight.dll
     RedLib
     PhysX3
     input_loader.dll
+    ArchiveXL
+    TweakXL
 )
 
-configure_tweaks(src/tweaks)
+set(LOAD_INPUTS_FROM_RED4EXT ON)
 # configure_inputs(src/input_loader/let_there_be_flight.xml)
 configure_mod_file(src/input_loader/${MOD_SLUG}.xml red4ext/plugins/${MOD_SLUG}/inputs.xml)
-set(REDSCRIPT_PACK_INTO_RED4EXT ON)
+set(LOAD_REDSCRIPT_FROM_RED4EXT ON)
 configure_redscript(src/redscript)
 
 target_link_libraries(${MOD_SLUG}.packed.reds PUBLIC mod_settings.packed.reds)
 
-configure_archives(src/wolvenkit/packed/mods/let_there_be_flight/archives/let_there_be_flight.archive src/archive_xl/let_there_be_flight.archive.xl)
 configure_folder_file(readme.md)
 configure_folder_file(license.md)
 
