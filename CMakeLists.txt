@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.24)
 
-project(let_there_be_flight VERSION 0.2.0)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/deps/cyberpunk_cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/deps/red4ext.sdk/cmake")
 
-list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
-list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/deps/cyberpunk_cmake")
-list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/deps/red4ext.sdk/cmake")
+project(let_there_be_flight VERSION 0.2.0 LANGUAGES NONE)
 
 include(CyberpunkMod)
 
@@ -25,7 +25,6 @@ set(MOD_GAME_DIR_FMOD_FOLDER "${MOD_GAME_DIR}/red4ext/plugins/${MOD_SLUG}")
 set(LTBF_SOURCE_FMOD_DIR "${PROJECT_SOURCE_DIR}/src/fmod_studio/Build/Desktop")
 
 set(MOD_RED4EXT_DOWNLOAD_URL "https://github.com/jackhumbert/RED4ext/releases/download/v1.12.0_script_system/red4ext_1.12.0_script_system.zip")
-set(MOD_REDSCRIPT_DOWNLOAD_URL "https://github.com/jackhumbert/redscript/releases/download/v0.5.13_script_system/redscript-v0.5.13_script_system.zip")
 
 # FMOD
 
@@ -61,6 +60,9 @@ configure_tweaks(src/tweaks)
 configure_mod_file(src/input_loader/${MOD_SLUG}.xml red4ext/plugins/${MOD_SLUG}/inputs.xml)
 set(REDSCRIPT_PACK_INTO_RED4EXT ON)
 configure_redscript(src/redscript)
+
+target_link_libraries(${MOD_SLUG}.packed.reds PUBLIC mod_settings.packed.reds)
+
 configure_archives(src/wolvenkit/packed/mods/let_there_be_flight/archives/let_there_be_flight.archive src/archive_xl/let_there_be_flight.archive.xl)
 configure_folder_file(readme.md)
 configure_folder_file(license.md)

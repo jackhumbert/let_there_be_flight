@@ -1,2 +1,4 @@
-redscript_dir = "src/redscript"
-script_cache_path = "build/dependencies.redscripts"
+redscript_dirs = [ 
+  "src/redscript",
+  "deps/mod_settings/redscript"
+]

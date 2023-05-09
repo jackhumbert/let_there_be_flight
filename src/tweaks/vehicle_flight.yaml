@@ -34,11 +34,11 @@ player.vehicle.canEnterVehicleFlight: true
 playerStateMachineVehicle.drive.transitionTo:
   - !append "flight"
 playerStateMachineVehicle.drive.transitionCondition:
-  - !append "="
+  - !append "ToFlight"
 playerStateMachineVehicle.scene.transitionTo:
   - !append "flight"
 playerStateMachineVehicle.scene.transitionCondition:
-  - !append "="
+  - !append "ToFlight"
 photo_mode.general.onlyFPPPhotoModeInPlayerStates:
   - !append Vehicle:flight
 playerStateMachineVehicle.flight.affinity: n"None" 

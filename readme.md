@@ -28,9 +28,29 @@ For an up-to-date version of the mod, you can [download just the `game_dir/` fol
 
 ## Configuration
 
-[`r6/input/let_there_be_flight.xml`](https://github.com/jackhumbert/let_there_be_flight/tree/main/game_dir/r6/input/let_there_be_flight.xml) contains all the keybindings for the keyboard & controller - you can customize these to your liking. See all possibilities here: https://nativedb.red4ext.com/EInputKey
+[`red4ext/let_there_be_flight/inputs.xml`](https://github.com/jackhumbert/let_there_be_flight/tree/main/game_dir/r6/input/let_there_be_flight.xml) contains all the keybindings for the keyboard & controller - you can customize these to your liking. See all possibilities here: https://nativedb.red4ext.com/EInputKey
 
-Other settings can be found in [`r6/scripts/let_there_be_flight/let_there_be_flight.packed.reds`](https://github.com/jackhumbert/let_there_be_flight/tree/main/game_dir/r6/scripts/let_there_be_flight/let_there_be_flight.packed.reds) for the time being - search for `FlightSettings.SetFloat` to see all the variables used by the mod.
+Other settings can be found in `red4ext/plugins/let_there_be_flight/packed.reds` for the time being - search for `FlightSettings.SetFloat` to see all the variables used by the mod.
+
+Vehicles can be customized via extending the `IFlightConfiguration` class (should not be extended directly if you don't know what you're doing - use `CarFlightConfiguration`, `SixWheelCarFlightConfiguration`, or `BikeFlightConfiguration`). As an example, the below disables flight for all vehicles except the Jen Rowley Type 66:
+
+```swift
+public class CustomCarFlightConfiguration extends CarFlightConfiguration {
+  public func CanActivate() -> Bool = false;
+}
+
+public class CustomSixWheelCarFlightConfiguration extends SixWheelCarFlightConfiguration {
+  public func CanActivate() -> Bool = false;
+}
+
+public class CustomBikeFlightConfiguration extends BikeFlightConfiguration {
+  public func CanActivate() -> Bool = false;
+}
+
+public class FlightConfiguration_quadra_type66__basic_jen_rowley extends CarFlightConfiguration {
+  public func CanActivate() -> Bool = true;
+}
+```
 
 ## Troubleshooting
 

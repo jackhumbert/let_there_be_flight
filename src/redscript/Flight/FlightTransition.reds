@@ -82,15 +82,16 @@
 
 public class FlightDecisions extends VehicleTransition {
 
-  public final const func EnterCondition(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
+  public final func EnterCondition(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
     // FlightLog.Info("[FlightDecisions] EnterCondition");
     // return scriptInterface.IsActionJustPressed(n"Flight_Toggle");
-    let fc = scriptInterface.owner.FindComponentByName(n"flightComponent") as FlightComponent;
-    return IsDefined(fc) && fc.configuration.CanActivate();
-    // return true;
+    // let fc = scriptInterface.owner.FindComponentByName(n"flightComponent") as FlightComponent;
+    // return IsDefined(fc) && fc.configuration.CanActivate();
+    return true;
+    // return scriptInterface.IsActionJustPressed(n"Flight_Toggle");
   }
 
-  public final const func ToDrive(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
+  public final func ToDrive(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
     // FlightLog.Info("[FlightDecisions] ToDrive");
     return scriptInterface.IsActionJustPressed(n"Flight_Toggle");
   }
@@ -122,7 +123,7 @@ public class FlightEvents extends VehicleEventsTransition {
     
     if !VehicleTransition.CanEnterDriverCombat() {
       stateContext.SetPermanentBoolParameter(n"ForceEmptyHands", true, true);
-    };    
+    };
     // FlightController.GetInstance().Activate();
     let evt = new VehicleFlightActivationEvent();
     // evt.vehicle = scriptInterface.owner as VehicleObject;
