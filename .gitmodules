@@ -24,3 +24,9 @@
 [submodule "deps/detours"]
 	path = deps/detours
 	url = https://github.com/microsoft/Detours.git
+[submodule "deps/archive_xl"]
+	path = deps/archive_xl
+	url = https://github.com/psiberx/cp2077-archive-xl
+[submodule "deps/tweak_xl"]
+	path = deps/tweak_xl
+	url = https://github.com/psiberx/cp2077-tweak-xl.git
