@@ -16,6 +16,10 @@ configure_mod(
   URL "https://github.com/jackhumbert/let_there_be_flight"
   LICENSE "Licensed under the MIT license. See the license.md in the root project for details."
 )
+set(LOAD_TWEAKS_FROM_RED4EXT ON)
+set(LOAD_ARCHIVES_FROM_RED4EXT ON)
+set(LOAD_INPUTS_FROM_RED4EXT ON)
+set(LOAD_REDSCRIPT_FROM_RED4EXT ON)
 
 find_program(ZOLTAN_CLANG_EXE NAMES zoltan-clang.exe PATHS "${MOD_TOOLS_DIR}" CACHE)
 find_program(REDSCRIPT_CLI_EXE NAMES redscript-cli.exe PATHS "${MOD_TOOLS_DIR}" CACHE)
@@ -37,9 +41,7 @@ endforeach()
 configure_red4ext(src/red4ext)
 configure_red4ext_addresses(Signatures.hpp Addresses.hpp)
 
-set(LOAD_TWEAKS_FROM_RED4EXT ON)
 configure_tweaks(src/tweaks)
-set(LOAD_ARCHIVES_FROM_RED4EXT ON)
 configure_archives(src/wolvenkit/packed/mods/let_there_be_flight/archives/let_there_be_flight.archive src/archive_xl/let_there_be_flight.archive.xl)
 
 find_package(Detours)
@@ -64,10 +66,8 @@ target_link_libraries(let_there_be_flight.dll
     TweakXL
 )
 
-set(LOAD_INPUTS_FROM_RED4EXT ON)
 # configure_inputs(src/input_loader/let_there_be_flight.xml)
 configure_mod_file(src/input_loader/${MOD_SLUG}.xml red4ext/plugins/${MOD_SLUG}/inputs.xml)
-set(LOAD_REDSCRIPT_FROM_RED4EXT ON)
 configure_redscript(src/redscript)
 
 target_link_libraries(${MOD_SLUG}.packed.reds PUBLIC mod_settings.packed.reds)

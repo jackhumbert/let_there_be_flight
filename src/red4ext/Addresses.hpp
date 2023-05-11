@@ -203,6 +203,11 @@
 #ifndef entEntity_SomethingListeners_Addr
 #define entEntity_SomethingListeners_Addr 0x105F400
 #endif
+#ifndef entIAttachment_IAttachment_Addr
+#define entIAttachment_IAttachment_Addr                                                                                \
+    0 _Pragma("message(__FILE__ \"(\" __LINE_STR__ \") : Warning: entIAttachment_IAttachment_Addr"                     \
+              "is 0 - Zoltan found no matches for RED4ext::ent::IAttachment::IAttachment\")")
+#endif
 #ifndef entIComponent_SetEntity_Addr
 #define entIComponent_SetEntity_Addr 0x1065910
 #endif

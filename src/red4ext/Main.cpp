@@ -167,7 +167,7 @@ void SetBlurDimension(RED4ext::IScriptable *apContext, RED4ext::CStackFrame *apF
 
   for (int i = 0; i < pEffectsArraySize; i++) {
     auto pEffect = (RED4ext::Handle<RED4ext::ISerializable> *)pEffectsType->GetElement(pEffectsArray, i);
-    RED4ext::CName pEffectName =
+    auto pEffectName =
         pGenericEffectClass->GetProperty("effectName")->GetValue<RED4ext::CName>(pEffect->instance);
     if (pEffectName == effectName) {
       pEffectClass->GetProperty("blurDimension")->SetValue(pEffect->instance, blurDimension);
