@@ -79,7 +79,7 @@ bool HasDependency(const wchar_t * name, RED4ext::SemVer minVersion) {
 }
 
 bool HasDependencies() {
-  auto inputLoader = HasDependency(L"input_loader", RED4EXT_SEMVER(0, 2, 0));
+  auto inputLoader = HasDependency(L"input_loader", RED4EXT_SEMVER(0, 1, 1));
   auto archiveXL = HasDependency(L"ArchiveXL", RED4EXT_SEMVER(1, 4, 5));
   auto tweakXL = HasDependency(L"TweakXL", RED4EXT_SEMVER(1, 1, 5));
 
@@ -496,6 +496,30 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     spdlog::info("Base address: {}", fmt::ptr(ptr));
     auto modPtr = aHandle;
     spdlog::info("Mod address: {}", fmt::ptr(modPtr));
+
+
+    auto scriptsFolder = Utils::GetRootDir() / "r6" / "scripts" / "let_there_be_flight";
+    if (std::filesystem::exists(scriptsFolder)) {
+      spdlog::info("Deleting old scripts folder");
+      std::filesystem::remove_all(scriptsFolder);
+    }
+    auto archive = Utils::GetRootDir() / "archive" / "pc" / "mod" / "let_there_be_flight.archive";
+    if (std::filesystem::exists(archive)) {
+      spdlog::info("Deleting old archive");
+      std::filesystem::remove_all(archive);
+    }
+    auto archiveXL = Utils::GetRootDir() / "archive" / "pc" / "mod" / "let_there_be_flight.archive.xl";
+    if (std::filesystem::exists(archiveXL)) {
+      spdlog::info("Deleting old archive.xl");
+      std::filesystem::remove_all(archiveXL);
+    }
+    auto inputXML = Utils::GetRootDir() / "r6" / "input" / "let_there_be_flight.xml";
+    if (std::filesystem::exists(inputXML)) {
+      spdlog::info("Deleting old xml");
+      std::filesystem::remove_all(inputXML);
+    }
+
+
 
     if (!HasDependencies()) {
       spdlog::error("Dependencies not met - game will load without Let There Be Flight");
