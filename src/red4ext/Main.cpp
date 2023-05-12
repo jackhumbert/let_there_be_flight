@@ -503,6 +503,11 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
       spdlog::info("Deleting old scripts folder");
       std::filesystem::remove_all(scriptsFolder);
     }
+    auto tweaks = Utils::GetRootDir() / "r6" / "tweaks" / "let_there_be_flight.yaml";
+    if (std::filesystem::exists(tweaks)) {
+      spdlog::info("Deleting old tweaks");
+      std::filesystem::remove_all(tweaks);
+    }
     auto archive = Utils::GetRootDir() / "archive" / "pc" / "mod" / "let_there_be_flight.archive";
     if (std::filesystem::exists(archive)) {
       spdlog::info("Deleting old archive");

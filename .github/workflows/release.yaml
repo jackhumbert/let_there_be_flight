@@ -39,22 +39,48 @@ jobs:
         run: |
           git-cliff --current --strip header
           git-cliff --current --strip header -o ${{ env.CHANGELOG_FILE }}
+          cat requirements.md >> ${{ env.CHANGELOG_FILE }}
 
       - name: Zipping game_dir
         run: tar -cvf "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}.zip" --format=zip *
         working-directory:  game_dir
 
-      - name: Zipping game_dir_prereqs
-        run: tar -cvf "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}_prereqs.zip" --format=zip *
-        working-directory:  game_dir_prereqs
+      - name: Zipping game_dir_debug
+        run: tar -cvf "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}_pdb.zip" --format=zip *
+        working-directory:  game_dir_debug
+
+      - name: Check file existence
+        id: requirements_folder_exists
+        uses: andstor/file-existence-action@v1
+        with:
+          files: "game_dir_requirements"
+
+      - name: Check file existence
+        id: requirements_debug_folder_exists
+        uses: andstor/file-existence-action@v1
+        with:
+          files: "game_dir_requirements_debug"
+
+      - name: Zipping game_dir_requirements
+        if: steps.requirements_folder_exists.outputs.files_exists == 'true'
+        run: tar -cvf "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}_requirements.zip" --format=zip *
+        working-directory:  game_dir_requirements
+
+      - name: Zipping game_dir_requirements_debug
+        if: steps.requirements_debug_folder_exists.outputs.files_exists == 'true'
+        run: tar -cvf "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}_requirements_pdb.zip" --format=zip *
+        working-directory:  game_dir_requirements_debug
 
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           body_path: ${{ env.CHANGELOG_FILE }}
+          append_body: true
           files: |
             ${{ env.MOD_SLUG }}_${{ github.ref_name }}.zip
-            ${{ env.MOD_SLUG }}_${{ github.ref_name }}_prereqs.zip
+            ${{ env.MOD_SLUG }}_${{ github.ref_name }}_requirements.zip
+            ${{ env.MOD_SLUG }}_${{ github.ref_name }}_pdb.zip
+            ${{ env.MOD_SLUG }}_${{ github.ref_name }}_requirements_pdb.zip
           prerelease: ${{ contains(github.ref_name, '-') || contains(github.ref_name, '_') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
