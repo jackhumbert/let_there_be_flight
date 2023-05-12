@@ -53,7 +53,7 @@ public abstract native class IFlightConfiguration extends IScriptable {
   }
 
   public func OnActivation() {
-    
+    FlightLog.Info(NameToString(this.component.GetVehicle().GetCurrentAppearanceName()));
   }
 
   public func OnDeactivation() {
@@ -289,20 +289,29 @@ public class BikeFlightConfiguration extends IFlightConfiguration {
   }
 }
 
-// public class FlightConfiguration_quadra_type66__basic_jen_rowley extends IFlightConfiguration {
-//   public func OnSetup() {
-//     ArrayPush(this.thrusters, new FlightThrusterFL().Create());
-//     ArrayPush(this.thrusters, new FlightThrusterFR().Create());
-//     ArrayPush(this.thrusters, new FlightThrusterBL().Create());
-//     ArrayPush(this.thrusters, new FlightThrusterBR().Create());
+public class FlightConfiguration_br_spinner__basic_black extends IFlightConfiguration {
+  public func OnSetup(vehicle: ref<VehicleObject>) {
+    super.OnSetup(vehicle);
 
-//     // this.thrusters[0].relativePosition = new Vector3(0.0, 0.0, 1.0);
+    ArrayPush(this.thrusters, new FlightThrusterFL().Create(vehicle, CreateEmptyThruster()));
+    ArrayPush(this.thrusters, new FlightThrusterFR().Create(vehicle, CreateEmptyThruster()));
+    ArrayPush(this.thrusters, new FlightThrusterBR().Create(vehicle, CreateEmptyThruster()));
+    ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, CreateEmptyThruster()));
+    
+    this.thrusters[0].hasRetroThruster = false;
+    this.thrusters[1].hasRetroThruster = false;
+    this.thrusters[2].hasRetroThruster = false;
+    this.thrusters[3].hasRetroThruster = false;
 
-//     this.thrusters[2].meshPath = n"user\\jackhumbert\\meshes\\engine_nomad.mesh";
-//     this.thrusters[3].meshPath = n"user\\jackhumbert\\meshes\\engine_nomad.mesh";
+    this.thrusters[0].wheelIndex = 0;
+    this.thrusters[1].wheelIndex = 1;
+    this.thrusters[2].wheelIndex = 2;
+    this.thrusters[3].wheelIndex = 3;
 
-//     for thruster in this.thrusters {
-//       thruster.OnSetup(this.component);
-//     }
-//   }
-// }
+    for thruster in this.thrusters {
+      ArrayPush(thruster.fxs, new MainFlightThrusterFX().Create(thruster));
+      vehicle.AddComponent(thruster.meshComponent);
+      thruster.OnSetup(this.component);
+    }
+  }
+}
