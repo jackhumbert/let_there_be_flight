@@ -84,27 +84,29 @@ RED4ext::Matrix* __fastcall GetMatrixFromOrientation(RED4ext::Quaternion* q, RED
 void FlightSystem::RegisterComponent(RED4ext::WeakHandle<FlightComponent> fc) {
   if (fc.instance && !fc.Expired()) {
     this->flightComponentsMutex.Lock();
+    fc.refCount->IncWeakRef();
     this->flightComponents.EmplaceBack(fc);
     this->flightComponentsMutex.Unlock();
   }
   //spdlog::info("[FlightSystem] Component added");
+  __debugbreak();
 }
 
 void FlightSystem::UnregisterComponent(RED4ext::WeakHandle<FlightComponent> fc) {
   if (fc.Expired())
     return;
+  this->flightComponentsMutex.Lock();
   for (auto i = 0; i < this->flightComponents.size; i++) {
     if (this->flightComponents[i].refCount && !this->flightComponents[i].Expired()) {
       auto efc = this->flightComponents[i].Lock().GetPtr();
       if (efc == fc.Lock().GetPtr()) {
-        this->flightComponentsMutex.Lock();
         this->flightComponents.RemoveAt(i);
-        this->flightComponentsMutex.Unlock();
         //spdlog::info("[FlightSystem] Component removed");
         break;
       }
     }
   }
+  this->flightComponentsMutex.Unlock();
 }
 
 void PrePhysics(RED4ext::UpdateBucketEnum bucket, RED4ext::FrameInfo& frame, RED4ext::JobQueue& job) {
@@ -234,9 +236,9 @@ void FlightSystem::OnGameLoad(const RED4ext::JobGroup& aJobGroup, bool& aSuccess
   RED4ext::CNamePool::Add("FlightMalfunctionEffector");
   RED4ext::CNamePool::Add("DisableGravityEffector");
   spdlog::info("[FlightSystem] OnGameLoad!");
-  auto r = RED4ext::ResourceReference<RED4ext::ent::MeshComponent>("user\\jackhumbert\\meshes\\engine_corpo.mesh");
+  auto r = RED4ext::ResourceReference<RED4ext::ent::MeshComponent>(R"(user\jackhumbert\meshes\engine_corpo.mesh)");
   LoadResRef<RED4ext::ent::MeshComponent>(&r.path, &r.token, false);
-  r = RED4ext::ResourceReference<RED4ext::ent::MeshComponent>("user\\jackhumbert\\meshes\\engine_nomad.mesh");
+  r = RED4ext::ResourceReference<RED4ext::ent::MeshComponent>(R"(user\jackhumbert\meshes\engine_nomad.mesh)");
   LoadResRef<RED4ext::ent::MeshComponent>(&r.path, &r.token, false);
 
   //EnableSmoothWheelContacts.GetAddr()->value = false;
@@ -315,13 +317,13 @@ RED4ext::DynArray<RED4ext::GameSystemData>* __fastcall GetGameSystemsData(
 }
 
 struct FlightSystemModule : FlightModule {
-  void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-  while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(GetGameSystemsData_Addr), &GetGameSystemsData,
+  void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) override {
+  while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(GetGameSystemsData_Addr), (void*)&GetGameSystemsData,
                                 reinterpret_cast<void **>(&GetGameSystemsData_Original)))
     ;
   }
 
-  void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
+  void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) override {
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(GetGameSystemsData_Addr));
   }
 };
