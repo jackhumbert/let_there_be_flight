@@ -2,8 +2,7 @@
 
 #include "stdafx.hpp"
 #include <RED4ext/NativeTypes.hpp>
-#include <RED4ext/RED4ext.hpp>
-//#include "Engine/RTTIClass.hpp"
+#include <RED4ext/Common.hpp>
 #include <RedLib.hpp>
 #include <RED4ext\Scripting\Natives\Generated\red\ResourceReferenceScriptToken.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>

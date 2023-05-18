@@ -1,4 +1,4 @@
-#include <RED4ext/RED4ext.hpp>
+#include <RED4ext/Common.hpp>
 
 struct ScriptFile {
   RED4ext::CName name;

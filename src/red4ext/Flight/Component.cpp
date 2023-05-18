@@ -1,4 +1,4 @@
-#include "FlightComponent.hpp"
+#include "Flight/Component.hpp"
 #include <RED4ext/Scripting/Natives/vehiclePhysicsData.hpp>
 
 void FlightComponent::ChaseTarget(RED4ext::WeakHandle<RED4ext::game::Object> target) {

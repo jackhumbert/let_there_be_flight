@@ -1,5 +1,5 @@
 #include "Utils/FlightModule.hpp"
-#include <RED4ext/RED4ext.hpp>
+#include <RED4ext/Common.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/FxResource.hpp>
 #include <RED4ext/Scripting/Natives/Generated/red/ResourceReferenceScriptToken.hpp>
 #include "LoadResRef.hpp"

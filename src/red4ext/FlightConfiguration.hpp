@@ -1,6 +1,6 @@
 #pragma once
 
-#include <RED4ext/RED4ext.hpp>
+#include <RED4ext/Common.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/Entity.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/MeshComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/PhysicalMeshComponent.hpp>
@@ -8,7 +8,7 @@
 #include <RED4ext/Scripting/Natives/Generated/ent/VisualControllerComponent.hpp>
 #include "Engine/RTTIClass.hpp"
 #include "FlightThruster.hpp"
-#include "FlightComponent.hpp"
+#include "Flight/Component.hpp"
 #include "EntityAddComponent.hpp"
 #include "Extensions/MeshComponent.hpp"
 #include <RED4ext/Scripting/Natives/Generated/red/ResourceReferenceScriptToken.hpp>

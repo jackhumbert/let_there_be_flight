@@ -4,7 +4,10 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/deps/cyberpunk_cmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/deps/red4ext.sdk/cmake")
 
-project(let_there_be_flight VERSION 0.2.0 LANGUAGES NONE)
+include(ConfigureVersionFromGit)
+configure_version_from_git()
+
+project(let_there_be_flight VERSION ${GIT_VERSION_MAJOR}.${GIT_VERSION_MINOR}.${GIT_VERSION_PATCH} LANGUAGES NONE)
 
 include(CyberpunkMod)
 
@@ -73,6 +76,6 @@ target_link_libraries(${MOD_SLUG}.packed.reds PUBLIC mod_settings.packed.reds)
 configure_folder_file(readme.md)
 configure_folder_file(license.md)
 
-configure_uninstall()
+# configure_uninstall()
 configure_release(${MOD_SLUG}_${MOD_VERSION_STR}.zip)
 configure_install()

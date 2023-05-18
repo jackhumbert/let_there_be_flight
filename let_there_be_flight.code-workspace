@@ -5,6 +5,7 @@
 		}
 	],
 	"settings": {
+    "window.title": "Let There Be Flight",
 		"files.associations": {
 			"*.reds": "redscript",
 			"*.ws": "redscript",

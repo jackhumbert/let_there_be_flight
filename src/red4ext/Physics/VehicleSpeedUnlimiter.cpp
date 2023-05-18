@@ -1,14 +1,10 @@
 #include "VehicleSpeedUnlimiter.hpp"
-#include "Addresses.hpp"
 
 // Vehicle Speed Unlimiter
 
 namespace vehicle {
 
-decltype(&SpeedUnlimiter::PhysicsStructUpdate) PhysicsStructUpdate_Original;
-
-short SpeedUnlimiter::PhysicsStructUpdate(RED4ext::vehicle::PhysicsData *ps) {
-
+REGISTER_FLIGHT_HOOK(short, PhysicsStructUpdate, RED4ext::vehicle::PhysicsData *ps) {
   // apply force to linear velocity
   RED4ext::Vector3 unlimitedVelocity;
   unlimitedVelocity.X = ps->velocity.X + ps->force.X * ps->inverseMass;
@@ -25,10 +21,15 @@ short SpeedUnlimiter::PhysicsStructUpdate(RED4ext::vehicle::PhysicsData *ps) {
   return result;
 }
 
-decltype(&SpeedUnlimiter::PhysicsUnkStructVelocityUpdate) PhysicsUnkStructVelocityUpdate_Original;
+} // namespace vehicle
 
-short SpeedUnlimiter::PhysicsUnkStructVelocityUpdate(RED4ext::vehicle::PhysicsData *vps,
-                                                     RED4ext::Vector3 *velocity) {
+// 1.52 RVA: 0x1CE0FC0 / 30281664
+// 1.6  RVA: 0x1D0D770 / 30463856
+// 1.61 RVA: 0x1D0DB30
+/// @pattern 48 89 5C 24 08 57 48 83 EC 30 0F 29 74 24 20 48 8B DA 0F 10 32 48 8B F9 66 0F 3A 40 F6 7F 0F 28
+short PhysicsUnkStructVelocityUpdate(RED4ext::vehicle::PhysicsData *, RED4ext::Vector3 *);
+
+REGISTER_FLIGHT_HOOK(short, PhysicsUnkStructVelocityUpdate, RED4ext::vehicle::PhysicsData *vps, RED4ext::Vector3 *velocity) {
   auto result = PhysicsUnkStructVelocityUpdate_Original(vps, velocity);
 
   if (result != FP_INFINITE) {
@@ -37,22 +38,3 @@ short SpeedUnlimiter::PhysicsUnkStructVelocityUpdate(RED4ext::vehicle::PhysicsDa
 
   return result;
 }
-
-void SpeedUnlimiter::Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-  while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(PhysicsStructUpdate_Addr), &PhysicsStructUpdate,
-                                reinterpret_cast<void **>(&PhysicsStructUpdate_Original)))
-    ;
-  while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(PhysicsUnkStructVelocityUpdate_Addr),
-                                &PhysicsUnkStructVelocityUpdate,
-                                reinterpret_cast<void **>(&PhysicsUnkStructVelocityUpdate_Original)))
-    ;
-}
-
-void SpeedUnlimiter::Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-  aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(PhysicsStructUpdate_Addr));
-  aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(PhysicsUnkStructVelocityUpdate_Addr));
-}
-
-REGISTER_FLIGHT_MODULE(SpeedUnlimiter);
-
-} // namespace vehicle

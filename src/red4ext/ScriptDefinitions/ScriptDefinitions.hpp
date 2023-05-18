@@ -1,5 +1,5 @@
 #pragma once
-#include <RED4ext/RED4ext.hpp>
+#include <RED4ext/Common.hpp>
 
 enum class EDefinitionType : char {
  Type = 0x0,

@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "FlightAudio.hpp"
-#include <RED4ext/RED4ext.hpp>
+#include <RED4ext/Common.hpp>
 #include <RED4ext/RTTITypes.hpp>
 #include <RED4ext/Scripting/IScriptable.hpp>
 #include <RED4ext/Scripting/Natives/Generated/Vector4.hpp>

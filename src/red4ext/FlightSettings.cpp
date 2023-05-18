@@ -1,27 +1,22 @@
 #include "FlightSettings.hpp"
 #include "Utils/FlightModule.hpp"
-#include "Utils/FlightLog.hpp"
+#include "Flight/Log.hpp"
+#include <RED4ext/RTTISystem.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/MeshComponent.hpp>
 
 #include "Utils/Utils.hpp"
 #include "stdafx.hpp"
 
-namespace FlightSettings {
-
-RED4ext::TTypedClass<FlightSettings> cls("FlightSettings");
-
-RED4ext::CClass *FlightSettings::GetNativeType() { return &cls; }
-
 RED4ext::Handle<FlightSettings> handle;
 
-FlightSettings *FlightSettings::GetInstance() {
+RED4ext::Handle<FlightSettings> FlightSettings::GetInstance() {
   if (!handle.instance) {
     spdlog::info("[RED4ext] New FlightSettings Instance");
-    auto instance = reinterpret_cast<FlightSettings *>(cls.CreateInstance());
+    auto instance = reinterpret_cast<FlightSettings *>(RED4ext::CRTTISystem::Get()->GetClass("FlightSettings")->CreateInstance());
     handle = RED4ext::Handle<FlightSettings>(instance);
   }
   handle.refCount->IncRef();
-  return (FlightSettings *)handle.instance;
+  return handle;
 }
 
 void GetInstanceScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame,
@@ -38,7 +33,7 @@ void GetInstanceScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aF
 RED4ext::HashMap<RED4ext::CName, float> floats;
 RED4ext::HashMap<RED4ext::CName, RED4ext::Vector3> vector3s;
 
-float GetFloat(RED4ext::CString name) {
+float FlightSettings::GetFloat(RED4ext::CString name) {
   if (floats.allocator) {
     auto fl = floats.Get(RED4ext::CName(name.c_str()));
     if (fl) {
@@ -49,33 +44,11 @@ float GetFloat(RED4ext::CString name) {
   return 0.0;
 }
 
-void GetFloat(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, float *aOut, int64_t a4) {
-  RED4ext::CString name;
-  RED4ext::GetParameter(aFrame, &name);
-
-  aFrame->code++;
-
-  if (aOut) {
-    *aOut = GetFloat(name);
-  }
-}
-
-void SetFloat(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, float *aOut, int64_t a4) {
-  RED4ext::CString name;
-  float value;
-  RED4ext::GetParameter(aFrame, &name);
-  RED4ext::GetParameter(aFrame, &value);
-
-  aFrame->code++;
-
-  if (aOut) {
-    *aOut = GetFloat(name);
-  }
-
+void FlightSettings::SetFloat(RED4ext::CString name, float value) {
   floats.InsertOrAssign(RED4ext::CName(name.c_str()), value);
 }
 
-RED4ext::Vector3 GetVector3(RED4ext::CString name) {
+RED4ext::Vector3 FlightSettings::GetVector3(RED4ext::CString name) {
   if (vector3s.allocator) {
     auto vector3 = vector3s.Get(RED4ext::CName(name.c_str()));
     if (vector3) {
@@ -83,41 +56,15 @@ RED4ext::Vector3 GetVector3(RED4ext::CString name) {
     }
   }
   spdlog::warn("Could not find Vector3: {0}", name.c_str());
-  return RED4ext::Vector3(0.0, 0.0, 0.0);
+  return {0.0, 0.0, 0.0};
 }
 
-void GetVector3(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Vector3 *aOut, int64_t a4) {
-  RED4ext::CString name;
-  RED4ext::GetParameter(aFrame, &name);
 
-  aFrame->code++;
-
-  if (aOut) {
-    *aOut = GetVector3(name);
-  }
-}
-
-void SetVector3(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Vector3 *aOut, int64_t a4) {
-  RED4ext::CString name;
-  float x;
-  float y;
-  float z;
-  RED4ext::GetParameter(aFrame, &name);
-  RED4ext::GetParameter(aFrame, &x);
-  RED4ext::GetParameter(aFrame, &y);
-  RED4ext::GetParameter(aFrame, &z);
-
-  aFrame->code++;
-
-  if (aOut) {
-    *aOut = GetVector3(name);
-  }
-
+void FlightSettings::SetVector3(RED4ext::CString name, float x, float y, float z) {
   vector3s.InsertOrAssign(RED4ext::CName(name.c_str()), RED4ext::Vector3(x, y, z));
 }
 
-void DebugBreak(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Vector3 *aOut, int64_t a4) {
-  aFrame->code++;
+void FlightSettings::DebugBreak() {
   __debugbreak();
 }
 
@@ -148,7 +95,7 @@ bool Setup(RED4ext::CGameApplication *aApp) {
 }
 
 struct FlightSettingsModule : FlightModule {
-  void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
+  void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) override {
     RED4ext::GameState runningState;
     runningState.OnEnter = &Setup;
     runningState.OnUpdate = nullptr;
@@ -156,44 +103,6 @@ struct FlightSettingsModule : FlightModule {
 
     aSdk->gameStates->Add(aHandle, RED4ext::EGameStateType::Running, &runningState);
   }
-
-  void RegisterTypes() {
-    cls.flags = {.isNative = true};
-    RED4ext::CRTTISystem::Get()->RegisterType(&cls);
-  }
-
-  void PostRegisterTypes() {
-    auto rtti = RED4ext::CRTTISystem::Get();
-    auto scriptable = rtti->GetClassByScriptName("IScriptable");
-    cls.parent = scriptable;
-
-    auto getInstance = RED4ext::CClassStaticFunction::Create(&cls, "GetInstance", "GetInstance", &GetInstanceScripts,
-                                                             {.isNative = true, .isStatic = true});
-    cls.RegisterFunction(getInstance);
-
-    auto getFloat = RED4ext::CClassStaticFunction::Create(&cls, "GetFloat", "GetFloat", &GetFloat,
-                                                          {.isNative = true, .isStatic = true});
-    cls.RegisterFunction(getFloat);
-
-    auto setFloat = RED4ext::CClassStaticFunction::Create(&cls, "SetFloat", "SetFloat", &SetFloat,
-                                                          {.isNative = true, .isStatic = true});
-    cls.RegisterFunction(setFloat);
-
-    auto getVector3 = RED4ext::CClassStaticFunction::Create(&cls, "GetVector3", "GetVector3", &GetVector3,
-                                                          {.isNative = true, .isStatic = true});
-    cls.RegisterFunction(getVector3);
-
-    auto setVector3 = RED4ext::CClassStaticFunction::Create(&cls, "SetVector3", "SetVector3", &SetVector3,
-                                                            {.isNative = true, .isStatic = true});
-    cls.RegisterFunction(setVector3);
-
-    auto debugBreak = RED4ext::CClassStaticFunction::Create(&cls, "DebugBreak", "DebugBreak", &DebugBreak,
-                                                            {.isNative = true, .isStatic = true});
-    cls.RegisterFunction(debugBreak);
-
-  }
 };
 
 REGISTER_FLIGHT_MODULE(FlightSettingsModule);
-
-} // namespace FlightSettings

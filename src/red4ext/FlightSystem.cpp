@@ -2,7 +2,7 @@
 
 #include "FlightSystem.hpp"
 
-#include <RED4ext/RED4ext.hpp>
+#include <RED4ext/Common.hpp>
 #include <RED4ext/RTTITypes.hpp>
 #include <RED4ext/Scripting/Natives/Generated/Vector4.hpp>
 #include <RED4ext/Addresses.hpp>
@@ -15,15 +15,16 @@
 #include <RED4ext/GameOptions.hpp>
 
 #include "Addresses.hpp"
-#include "Utils/FlightLog.hpp"
+#include "Flight/Log.hpp"
 #include "Utils/Utils.hpp"
 #include "stdafx.hpp"
 #include "LoadResRef.hpp"
 #include <RED4ext/Scripting/Natives/Generated/Matrix.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
-#include "FlightComponent.hpp"
+#include "Flight/Component.hpp"
 #include <RED4ext/Scripting/Natives/Generated/ent/MeshComponent.hpp>
 #include <RED4ext/Scripting/Natives/UpdateManager.hpp>
+#include "Hooks/GetMatrixFromOrientation.hpp"
 
 // These can be found in strings via their variable names
 // 1.52 RVA: 0x4782878
@@ -74,11 +75,6 @@ RED4ext::RelocPtr<RED4ext::GameOptionBool> physicsCCD(0x4891050);
 RED4ext::Handle<FlightSystem> FlightSystem::GetInstance() {
   auto fs = (FlightSystem *)RED4ext::CGameEngine::Get()->framework->gameInstance->GetSystem(FlightSystem::GetRTTIType());
   return RED4ext::Handle<FlightSystem>(fs);
-}
-
-RED4ext::Matrix* __fastcall GetMatrixFromOrientation(RED4ext::Quaternion* q, RED4ext::Matrix* m) {
-  RED4ext::RelocFunc<decltype(&GetMatrixFromOrientation)> call(GetMatrixFromOrientation_Addr);
-  return call(q, m);
 }
 
 void FlightSystem::RegisterComponent(RED4ext::WeakHandle<FlightComponent> fc) {

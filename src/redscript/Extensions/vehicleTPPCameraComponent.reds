@@ -7,12 +7,11 @@ native class vehicleTPPCameraComponent extends CameraComponent {
     public native let drivingDirectionCompensationAngleSmooth: Float;
     public native let drivingDirectionCompensationSpeedCoef: Float;
     public native let lockedCamera: Bool;
-    public native let worldPosition: WorldPosition;
-    public native let worldTransform2: WorldTransform;
+    public native let initialTransform: WorldTransform;
     public native let pitch: Float;
     public native let yaw: Float;
-    public native let pitchDelta: Float; // positive moves camera down
-    public native let yawDelta: Float; // positive moves camera right
+    // public native let pitchDelta: Float; // positive moves camera down
+    // public native let yawDelta: Float; // positive moves camera right
     // public native let chassis: ref<vehicleChassisComponent>;
 }
 
@@ -29,9 +28,9 @@ public native class vehicleDriveToPointEvent extends Event {
     public native let speedInTraffic: Float;
 }
 
-public importonly class EffectSpawnerComponent extends IVisualComponent {
-    public native func AddEffect() -> Void;
-}
+// public importonly class EffectSpawnerComponent extends IVisualComponent {
+//     public native func AddEffect() -> Void;
+// }
 
 
 // @addField(ColliderComponent)

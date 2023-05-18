@@ -1,6 +1,6 @@
 #pragma once
 
-#include <RED4ext/RED4ext.hpp>
+#include <RED4ext/Common.hpp>
 
 namespace FlightWeapons {
 void AddWeapons(RED4ext::vehicle::BaseObject *vehicle);

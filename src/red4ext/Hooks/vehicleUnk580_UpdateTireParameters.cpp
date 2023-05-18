@@ -1,12 +1,12 @@
 #include "Utils/FlightModule.hpp"
-#include <RED4ext/RED4ext.hpp>
+#include <RED4ext/Common.hpp>
 #include <RED4ext/Scripting/Natives/vehiclePhysics.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 #include <RED4ext/GameEngine.hpp>
 #include <RED4ext/Scripting/Natives/audioThing.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/CarBaseObject.hpp>
 #include <spdlog/spdlog.h>
-#include "FlightComponent.hpp"
+#include "Flight/Component.hpp"
 #include "Addresses.hpp"
 #include <queue>
 

@@ -1,12 +1,12 @@
 #pragma once
 
-#include <RED4ext/RED4ext.hpp>
+#include <RED4ext/Common.hpp>
 #include "Engine/RTTIClass.hpp"
 #include <RED4ext/Scripting/Natives/gameIGameSystem.hpp>
 #include "IFlightSystem.hpp"
 #include <RED4ext/Scripting/Natives/Generated/ent/IPlacedComponent.hpp>
 #include "Audio/FlightAudio.hpp"
-#include "FlightComponent.hpp"
+#include "Flight/Component.hpp"
 
 /// FlightSystem
 class FlightSystem : public Engine::RTTIClass<FlightSystem, IFlightSystem> {

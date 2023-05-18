@@ -1,52 +1,29 @@
+#include "Audio/FlightAudio.hpp"
+#include "Audio/FmodHelper.hpp"
+#include "Utils/Utils.hpp"
+#include "Utils/FlightModule.hpp"
+#include "stdafx.hpp"
+#include <InputLoader.hpp>
 #include <RED4ext/Api/Sdk.hpp>
 #include <RED4ext/InstanceType.hpp>
-#include <RED4ext/RED4ext.hpp>
+#include <RED4ext/Common.hpp>
 #include <RED4ext/RTTITypes.hpp>
-#include <RED4ext/Scripting/Natives/Generated/Vector4.hpp>
-#include <RED4ext/Scripting/Natives/Generated/ent/EffectDesc.hpp>
-#include <RED4ext/Scripting/Natives/Generated/ent/EffectSpawnerComponent.hpp>
-#include <RED4ext/Scripting/Natives/Generated/game/data/VehicleTPPCameraParams_Record.hpp>
-#include <RED4ext/Scripting/Natives/Generated/ink/BoxBlurEffect.hpp>
-#include <RED4ext/Scripting/Natives/Generated/ink/EBlurDimension.hpp>
-#include <RED4ext/Scripting/Natives/Generated/ink/IEffect.hpp>
-#include <RED4ext/Scripting/Natives/Generated/ink/ImageWidget.hpp>
-#include <RED4ext/Scripting/Natives/Generated/ink/TextureAtlas.hpp>
-#include <RED4ext/Scripting/Natives/Generated/physics/SystemBody.hpp>
-#include <RED4ext/Scripting/Natives/Generated/physics/SystemResource.hpp>
-#include <RED4ext/Scripting/Natives/Generated/red/ResourceReferenceScriptToken.hpp>
-#include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
-#include <RED4ext/Scripting/Natives/Generated/vehicle/ChassisComponent.hpp>
-#include <RED4ext/Scripting/Natives/Generated/vehicle/TPPCameraComponent.hpp>
-#include <RED4ext/Scripting/Natives/ScriptGameInstance.hpp>
 #include <RED4ext/Version.hpp>
-#include <iostream>
-#include "Version.hpp"
-#include "Engine/RTTIClass.hpp"
-#include "Audio/FlightAudio.hpp"
-#include "Utils/Utils.hpp"
-#include "stdafx.hpp"
-#include "Utils/FlightLog.hpp"
-#include "FlightSystem.hpp"
-#include "Audio/FmodHelper.hpp"
-#include "Physics/VehicleSpeedUnlimiter.hpp"
-#include "FlightController.hpp"
-#include "FlightEvents.hpp"
-#include "Camera/FlightCamera.hpp"
 #include <RedLib.hpp>
-#include <InputLoader.hpp>
-
-#include <libloaderapi.h>
-#include <string>
 #include <iostream>
+
+#include <ArchiveXL.hpp>
+#include <TweakXL.hpp>
 #include <filesystem>
 #include <fstream>
+#include <iostream>
+#include <libloaderapi.h>
+#include <string>
 #include <winbase.h>
-#include <TweakXL.hpp>
-#include <ArchiveXL.hpp>
 
-using Query_t = void (*)(RED4ext::PluginInfo*);
+using Query_t = void (*)(RED4ext::PluginInfo *);
 
-bool HasDependency(const wchar_t * name, RED4ext::SemVer minVersion) {
+bool HasDependency(const wchar_t *name, RED4ext::SemVer minVersion) {
   Query_t query;
   RED4ext::PluginInfo pluginInfo;
   auto handle = GetModuleHandle(name);
@@ -78,292 +55,9 @@ bool HasDependency(const wchar_t * name, RED4ext::SemVer minVersion) {
   return handle;
 }
 
-bool HasDependencies() {
-  auto inputLoader = HasDependency(L"input_loader", RED4EXT_SEMVER(0, 1, 1));
-  auto archiveXL = HasDependency(L"ArchiveXL", RED4EXT_SEMVER(1, 4, 5));
-  auto tweakXL = HasDependency(L"TweakXL", RED4EXT_SEMVER(1, 1, 5));
-
-  return inputLoader && tweakXL && archiveXL;
-}
-
 RED4EXT_C_EXPORT void RED4EXT_CALL RegisterTypes() {
   spdlog::info("Registering classes & types");
   FlightModuleFactory::GetInstance().RegisterTypes();
-}
-
-void SetAtlasResource(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, bool *aOut, int64_t a4) {
-  RED4ext::red::ResourceReferenceScriptToken value;
-  RED4ext::GetParameter(aFrame, &value);
-  aFrame->code++; // skip ParamEnd
-  auto rtti = RED4ext::CRTTISystem::Get();
-
-  auto redResourceReferenceScriptToken = rtti->GetClass("redResourceReferenceScriptToken");
-  auto IsValid = redResourceReferenceScriptToken->GetFunction("IsValid");
-  bool valid;
-  RED4ext::ExecuteFunction(redResourceReferenceScriptToken, IsValid, &valid, &value);
-  if (valid) {
-    auto inkMaskWidget = rtti->GetClass("inkMaskWidget");
-    inkMaskWidget->GetProperty("textureAtlas")->SetValue(aContext, value.resource);
-    if (aOut != nullptr) {
-      *aOut = true;
-    }
-  } else {
-    if (aOut != nullptr) {
-      *aOut = false;
-    }
-  }
-}
-
-void CreateEffect(RED4ext::IScriptable *apContext, RED4ext::CStackFrame *apFrame, void *apOut, int64_t a4) {
-  RED4ext::CName typeName;
-  RED4ext::CName effectName;
-
-  RED4ext::GetParameter(apFrame, &typeName);
-  RED4ext::GetParameter(apFrame, &effectName);
-  apFrame->code++; // skip ParamEnd
-
-  auto pRtti = RED4ext::CRTTISystem::Get();
-
-  auto pEffectClass = pRtti->GetClass(typeName);
-  auto pEffectInstance = reinterpret_cast<RED4ext::ISerializable *>(pEffectClass->CreateInstance());
-  auto pEffectHandle = RED4ext::Handle<RED4ext::ISerializable>(pEffectInstance);
-
-  pEffectClass->GetProperty("effectName")->SetValue(pEffectInstance, effectName);
-
-  auto pWidgetClass = pRtti->GetClass("inkWidget");
-  auto pEffectsProp = pWidgetClass->GetProperty("effects");
-  auto pEffectsType = reinterpret_cast<RED4ext::CRTTIArrayType *>(pEffectsProp->type);
-  auto pEffectsArray = pEffectsProp->GetValue<RED4ext::DynArray<void *> *>(apContext);
-
-  auto lastIndex = pEffectsType->GetLength(pEffectsArray);
-
-  pEffectsType->InsertAt(pEffectsArray, lastIndex);
-
-  auto pLastElement = pEffectsType->GetElement(pEffectsArray, lastIndex);
-
-  pEffectsType->GetInnerType()->Assign(pLastElement, &pEffectHandle);
-}
-
-void SetBlurDimension(RED4ext::IScriptable *apContext, RED4ext::CStackFrame *apFrame, bool *apOut, int64_t a4) {
-  RED4ext::CName effectName;
-  RED4ext::ink::EBlurDimension blurDimension;
-  RED4ext::GetParameter(apFrame, &effectName);
-  RED4ext::GetParameter(apFrame, &blurDimension);
-  apFrame->code++; // skip ParamEnd
-
-  auto pRtti = RED4ext::CRTTISystem::Get();
-
-  auto pEffectClass = pRtti->GetClass("inkBoxBlurEffect");
-  auto pGenericEffectClass = pRtti->GetClass("inkIEffect");
-
-  auto pWidgetClass = pRtti->GetClass("inkWidget");
-  auto pEffectsProp = pWidgetClass->GetProperty("effects");
-  auto pEffectsType = reinterpret_cast<RED4ext::CRTTIArrayType *>(pEffectsProp->type);
-  auto pEffectsArray = pEffectsProp->GetValue<RED4ext::DynArray<void *> *>(apContext);
-
-  auto pEffectsArraySize = pEffectsType->GetLength(pEffectsArray);
-
-  bool found = false;
-
-  for (int i = 0; i < pEffectsArraySize; i++) {
-    auto pEffect = (RED4ext::Handle<RED4ext::ISerializable> *)pEffectsType->GetElement(pEffectsArray, i);
-    auto pEffectName =
-        pGenericEffectClass->GetProperty("effectName")->GetValue<RED4ext::CName>(pEffect->instance);
-    if (pEffectName == effectName) {
-      pEffectClass->GetProperty("blurDimension")->SetValue(pEffect->instance, blurDimension);
-      found = true;
-      break;
-    }
-  }
-
-  if (apOut) {
-    *apOut = found;
-  }
-}
-
-void SetShapeResource(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, void *aOut, int64_t a4) {
-  RED4ext::red::ResourceReferenceScriptToken value;
-  RED4ext::GetParameter(aFrame, &value);
-  aFrame->code++; // skip ParamEnd
-  auto rtti = RED4ext::CRTTISystem::Get();
-
-  // auto inkImageWidget = rtti->GetClass("inkImageWidget");
-  // auto setAtlasResource = inkImageWidget->GetFunction("SetAtlasResource");
-  // RED4ext::StackArgs_t args;
-  // args.emplace_back(nullptr, &value); // or value, I don't remember how it
-  // should be passed. RED4ext::ExecuteFunction(aContext, setAtlasResource,
-  // aOut, args);
-
-  auto inkShapeWidget = rtti->GetClass("inkShapeWidget");
-  // uint64_t resource =
-  // RED4ext::FNV1a64("base\\gameplay\\gui\\common\\shapes\\atlas_shapes_sync.inkatlas");
-  inkShapeWidget->GetProperty("shapeResource")->SetValue(aContext, value.resource);
-}
-
-void ChassisGetComOffset(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, RED4ext::Transform *aOut,
-                         int64_t a4) {
-  aFrame->code++; // skip ParamEnd
-
-  auto rtti = RED4ext::CRTTISystem::Get();
-  auto vccClass = rtti->GetClass("vehicleChassisComponent");
-  auto crProp = vccClass->GetProperty("collisionResource");
-  auto cr = crProp->GetValue<RED4ext::Ref<RED4ext::physics::SystemResource>>(aContext);
-  RED4ext::Handle<RED4ext::physics::SystemBody> hpsb = cr.Fetch().GetPtr()->bodies[0];
-  auto params = hpsb->params;
-
-  if (aOut) {
-    *aOut = params.comOffset;
-  }
-}
-
-#include "LoadResRef.hpp"
-#include <RED4ext/Scripting/Natives/Generated/world/Effect.hpp>
-
-void EffectSpawnerAddEffect(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, void *aOut, int64_t a4) {
-  // RED4ext::red::ResourceReferenceScriptToken value;
-  // RED4ext::CName name;
-  // bool valid;
-  // RED4ext::GetParameter(aFrame, &value);
-  // RED4ext::GetParameter(aFrame, &name);
-  aFrame->code++; // skip ParamEnd
-
-  spdlog::info("[EffectSpawnerComponent] Adding New Effect");
-
-  auto rtti = RED4ext::CRTTISystem::Get();
-
-  // auto rrst = rtti->GetClass("redResourceReferenceScriptToken");
-  // auto IsValid = rrst->GetFunction("IsValid");
-  // RED4ext::ExecuteFunction(rrst, IsValid, &valid, &value);
-
-  // if (valid) {
-  auto esc = reinterpret_cast<RED4ext::ent::EffectSpawnerComponent *>(aContext);
-
-  auto effectDescCls = rtti->GetClass("entEffectDesc");
-  auto ceei = rtti->GetClass("worldCompiledEffectEventInfo");
-  auto cepi = rtti->GetClass("worldCompiledEffectPlacementInfo");
-  auto v3 = rtti->GetClass("Vector3");
-  auto q = rtti->GetClass("Quaternion");
-  auto ed = reinterpret_cast<RED4ext::ent::EffectDesc *>(effectDescCls->CreateInstance());
-
-  ed->effectName = "test_effect";
-  ed->id.unk00 = 2738936757675336192; // 2738936757675335680 changed a bit
-  // auto existingEffect = (RED4ext::ent::EffectDesc *)esc->effectDescs[0].instance;
-  // ed->effect.ref = existingEffect->effect.ref;
-
-  // auto wrapper = new RED4ext::ResourceWrapper<RED4ext::world::Effect>();
-  // uint64_t hash = 2413621465439885870;
-  // LoadResRef<RED4ext::world::Effect>(&hash, wrapper, true);
-  // ed->effect.ref = wrapper->self->resource;
-
-  // ed->effect.ref = 3990659875028156682;
-  ed->effect.path = 2413621465439885870; // base\fx\vehicles\flight.effect
-
-  {
-    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->CreateInstance());
-    eventInfo->eventRUID.unk00 = 2738876334750015488;
-    eventInfo->placementIndexMask = 15;
-    eventInfo->flags = 1;
-    ed->compiledEffectInfo.eventsSortedByRUID.EmplaceBack(*eventInfo);
-  }
-
-  {
-    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->CreateInstance());
-    eventInfo->eventRUID.unk00 = 2738876938696237056;
-    eventInfo->placementIndexMask = 15;
-    eventInfo->flags = 1;
-    ed->compiledEffectInfo.eventsSortedByRUID.EmplaceBack(*eventInfo);
-  }
-
-  {
-    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->CreateInstance());
-    eventInfo->eventRUID.unk00 = 2738888051890561024;
-    eventInfo->placementIndexMask = 15;
-    eventInfo->flags = 1;
-    ed->compiledEffectInfo.eventsSortedByRUID.EmplaceBack(*eventInfo);
-  }
-
-  {
-    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->CreateInstance());
-    eventInfo->eventRUID.unk00 = 2738893332334747648;
-    eventInfo->placementIndexMask = 15;
-    eventInfo->flags = 1;
-    ed->compiledEffectInfo.eventsSortedByRUID.EmplaceBack(*eventInfo);
-  }
-
-  {
-    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->CreateInstance());
-    eventInfo->eventRUID.unk00 = 2738893580167782400;
-    eventInfo->placementIndexMask = 15;
-    eventInfo->flags = 1;
-    ed->compiledEffectInfo.eventsSortedByRUID.EmplaceBack(*eventInfo);
-  }
-
-  {
-    auto eventInfo = reinterpret_cast<RED4ext::world::CompiledEffectEventInfo *>(ceei->CreateInstance());
-    eventInfo->eventRUID.unk00 = 2738893796308656128;
-    eventInfo->placementIndexMask = 15;
-    eventInfo->flags = 1;
-    ed->compiledEffectInfo.eventsSortedByRUID.EmplaceBack(*eventInfo);
-  }
-
-  {
-    auto placementInfo = reinterpret_cast<RED4ext::world::CompiledEffectPlacementInfo *>(cepi->CreateInstance());
-    placementInfo->flags = 5;
-    placementInfo->placementTagIndex = 0;
-    placementInfo->relativePositionIndex = 0;
-    placementInfo->relativeRotationIndex = 0;
-    ed->compiledEffectInfo.placementInfos.EmplaceBack(*placementInfo);
-  }
-
-  {
-    auto placementInfo = reinterpret_cast<RED4ext::world::CompiledEffectPlacementInfo *>(cepi->CreateInstance());
-    placementInfo->flags = 5;
-    placementInfo->placementTagIndex = 1;
-    placementInfo->relativePositionIndex = 0;
-    placementInfo->relativeRotationIndex = 0;
-    ed->compiledEffectInfo.placementInfos.EmplaceBack(*placementInfo);
-  }
-
-  {
-    auto placementInfo = reinterpret_cast<RED4ext::world::CompiledEffectPlacementInfo *>(cepi->CreateInstance());
-    placementInfo->flags = 5;
-    placementInfo->placementTagIndex = 2;
-    placementInfo->relativePositionIndex = 0;
-    placementInfo->relativeRotationIndex = 0;
-    ed->compiledEffectInfo.placementInfos.EmplaceBack(*placementInfo);
-  }
-
-  {
-    auto placementInfo = reinterpret_cast<RED4ext::world::CompiledEffectPlacementInfo *>(cepi->CreateInstance());
-    placementInfo->flags = 5;
-    placementInfo->placementTagIndex = 3;
-    placementInfo->relativePositionIndex = 0;
-    placementInfo->relativeRotationIndex = 0;
-    ed->compiledEffectInfo.placementInfos.EmplaceBack(*placementInfo);
-  }
-
-  ed->compiledEffectInfo.placementTags.EmplaceBack("fx_holo_corner_fl");
-  ed->compiledEffectInfo.placementTags.EmplaceBack("fx_holo_corner_fr");
-  ed->compiledEffectInfo.placementTags.EmplaceBack("fx_holo_corner_bl");
-  ed->compiledEffectInfo.placementTags.EmplaceBack("fx_holo_corner_br");
-
-  auto vector = reinterpret_cast<RED4ext::Vector3 *>(v3->CreateInstance());
-  ed->compiledEffectInfo.relativePositions.EmplaceBack(*vector);
-
-  auto quaternion = reinterpret_cast<RED4ext::Quaternion *>(q->CreateInstance());
-  quaternion->r = 1.0;
-  ed->compiledEffectInfo.relativeRotations.EmplaceBack(*quaternion);
-
-  auto edHandle = RED4ext::Handle<RED4ext::ent::EffectDesc>(ed);
-
-  esc->effectDescs.EmplaceBack(edHandle);
-
-  spdlog::info("[EffectSpawnerComponent] New Effect Added");
-  //}
-
-  // if (aOut) {
-  //  *aOut = valid;
-  //}
 }
 
 RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
@@ -372,123 +66,22 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
   FlightModuleFactory::GetInstance().PostRegisterTypes();
 
   RED4ext::CRTTISystem::Get()->RegisterScriptName("entBaseCameraComponent", "BaseCameraComponent");
-  // RED4ext::CRTTISystem::Get()->RegisterScriptName("entColliderComponent",
-  // "ColliderComponent"); FlightStats_Record::RegisterFunctions();
 
   auto rtti = RED4ext::CRTTISystem::Get();
-
-  // this works, but a dll check might be better
-  //auto sTweak = rtti->GetClassByScriptName("ScriptableTweak");
-  //if (sTweak == NULL) {
-  //  spdlog::error("TweakXL is not installed/installed properly - aborting");
-  //  MessageBoxW(
-  //      0, L"TweakXL is not installed or not installed properly. Please ensure you've installed it correctly. The game will now close.",
-  //      L"TweakXL could not be found", MB_SYSTEMMODAL | MB_ICONERROR);
-  //  __debugbreak();
-  //}
-
-  auto inkMaskWidget = rtti->GetClass("inkMaskWidget");
-  auto setAtlasTextureFunc = RED4ext::CClassFunction::Create(inkMaskWidget, "SetAtlasResource", "SetAtlasResource",
-                                                             &SetAtlasResource, {.isNative = true});
-  inkMaskWidget->RegisterFunction(setAtlasTextureFunc);
-
-  auto inkShapeWidget = rtti->GetClass("inkShapeWidget");
-  auto setShapeResourceFunc = RED4ext::CClassFunction::Create(inkShapeWidget, "SetShapeResource", "SetShapeResource",
-                                                              &SetShapeResource, {.isNative = true});
-  inkShapeWidget->RegisterFunction(setShapeResourceFunc);
-
-  auto inkWidget = rtti->GetClass("inkWidget");
-
-  auto createEffectFunc =
-      RED4ext::CClassFunction::Create(inkWidget, "CreateEffect", "CreateEffect", &CreateEffect, {.isNative = true});
-  inkWidget->RegisterFunction(createEffectFunc);
-
-  auto setBlurDimensionFunc = RED4ext::CClassFunction::Create(inkWidget, "SetBlurDimension", "SetBlurDimension",
-                                                              &SetBlurDimension, {.isNative = true});
-  inkWidget->RegisterFunction(setBlurDimensionFunc);
-
-  // auto getEffectFunc = RED4ext::CClassFunction::Create(inkWidget,
-  // "GetEffect", "GetEffect", &GetEffect, { .isNative = true });
-  // getEffectFunc->AddParam("CName", "effectName");
-  // getEffectFunc->SetReturnType("inkIEffect");
-  // inkWidget->RegisterFunction(getEffectFunc);
 
   auto gamePSMVehicleEnum = rtti->GetEnum("gamePSMVehicle");
   gamePSMVehicleEnum->hashList.PushBack("Flight");
   gamePSMVehicleEnum->valueList.PushBack(8);
-
-  //auto UIGameContextEnum = rtti->GetEnum("UIGameContext");
-  //UIGameContextEnum->hashList.PushBack("VehicleFlight");
-  //UIGameContextEnum->valueList.PushBack(10);
-
-  //auto NavGenAgentSizeEnum = rtti->GetEnum("NavGenAgentSize");
-  //NavGenAgentSizeEnum->hashList.PushBack("Vehicle");
-  //NavGenAgentSizeEnum->valueList.PushBack(1);
-
-  // auto UIGameContextEnum = rtti->GetEnum("HUDActorType");
-  // UIGameContextEnum->hashList.PushBack("FLIGHT");
-  // UIGameContextEnum->valueList.PushBack(7);
-
-  // RED4ext::CEnum::Flags flags = {};
-  // RED4ext::CEnum gamePSMVehicleEnum = RED4ext::CEnum::CEnum("gamePSMVehicle",
-  // 10, flags);
-
-  // rtti->CreateScriptedEnum("gamePSMVehicle", 10, &gamePSMVehicleEnum);
-
-  /*   auto cc = rtti->GetClass("vehicleTPPCameraComponent");
-     cc->props.PushBack(RED4ext::CProperty::Create(
-          rtti->GetType("Bool"), "isInAir", nullptr, 0x2E0));*/
-  auto cc = rtti->GetClass("vehicleTPPCameraComponent");
-  cc->props.PushBack(
-      RED4ext::CProperty::Create(rtti->GetType("Float"), "drivingDirectionCompensationSpeedCoef", nullptr, 0x4E0));
-  cc->props.PushBack(
-      RED4ext::CProperty::Create(rtti->GetType("Float"), "drivingDirectionCompensationAngleSmooth", nullptr, 0x4E8));
-  cc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Bool"), "lockedCamera", nullptr, 0x48A));
-  cc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("WorldPosition"), "worldPosition", nullptr, 0x320));
-  cc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("WorldTransform"), "worldTransform2", nullptr, 0x2B0));
-  cc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "pitch", nullptr, 0x380));
-  cc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "yaw", nullptr, 0x384));
-  cc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "yawDelta", nullptr, 0x2D0));
-  cc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "pitchDelta", nullptr, 0x2D4));
-
-  auto vcc = rtti->GetClass("vehicleChassisComponent");
-  auto getComOffsetFunc =
-      RED4ext::CClassFunction::Create(vcc, "GetComOffset", "GetComOffset", &ChassisGetComOffset, {.isNative = true});
-  vcc->RegisterFunction(getComOffsetFunc);
-
-  auto vdtpe = rtti->GetClass("vehicleDriveToPointEvent");
-  vdtpe->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Vector3"), "targetPos", nullptr, 0x40));
-  vdtpe->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Bool"), "useTraffic", nullptr, 0x50));
-  vdtpe->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "speedInTraffic", nullptr, 0x54));
-
-  RED4ext::CRTTISystem::Get()->RegisterScriptName("entEffectSpawnerComponent", "EffectSpawnerComponent");
-  auto eesc = rtti->GetClass("entEffectSpawnerComponent");
-  auto eescAddEffect =
-      RED4ext::CClassFunction::Create(eesc, "AddEffect", "AddEffect", &EffectSpawnerAddEffect, {.isNative = true});
-  eesc->RegisterFunction(eescAddEffect);
-
-  auto ecc = rtti->GetClass("entColliderComponent");
-  ecc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "mass", nullptr, 0x150));
-  ecc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Float"), "massOverride", nullptr, 0x14C));
-  ecc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Vector3"), "inertia", nullptr, 0x158));
-  ecc->props.PushBack(RED4ext::CProperty::Create(rtti->GetType("Transform"), "comOffset", nullptr, 0x170));
-
-  // using func_t = bool (*)(RED4ext::CBaseRTTIType*, int64_t,
-  // RED4ext::ScriptInstance); RED4ext::RelocFunc<func_t> func(0x1400000);
-
-  // 0x120 + 0x40 (ptr120, float*);
-  // 0x14342E6C0
 }
 
 bool loaded = false;
+RED4ext::PluginHandle pluginHandle;
 
 RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::EMainReason aReason,
                                         const RED4ext::Sdk *aSdk) {
   switch (aReason) {
   case RED4ext::EMainReason::Load: {
-    // Attach hooks, register RTTI types, add custom states or initalize your
-    // application. DO NOT try to access the game's memory at this point, it
-    // is not initalized yet.
+    pluginHandle = aHandle;
 
     Utils::CreateLogger();
     spdlog::info("Starting up Let There Be Flight {}", MOD_VERSION_STR);
@@ -496,7 +89,6 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     spdlog::info("Base address: {}", fmt::ptr(ptr));
     auto modPtr = aHandle;
     spdlog::info("Mod address: {}", fmt::ptr(modPtr));
-
 
     auto scriptsFolder = Utils::GetRootDir() / "r6" / "scripts" / "let_there_be_flight";
     if (std::filesystem::exists(scriptsFolder)) {
@@ -524,10 +116,19 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
       std::filesystem::remove_all(inputXML);
     }
 
-
-
-    if (!HasDependencies()) {
+    auto has_inputLoader = HasDependency(L"input_loader", RED4EXT_SEMVER(0, 1, 1));
+    auto has_archiveXL = HasDependency(L"ArchiveXL", RED4EXT_SEMVER(1, 4, 5));
+    auto has_tweakXL = HasDependency(L"TweakXL", RED4EXT_SEMVER(1, 1, 5));
+    if (!has_inputLoader || !has_archiveXL || !has_tweakXL) {
       spdlog::error("Dependencies not met - game will load without Let There Be Flight");
+      auto message =
+          fmt::format(L"The following Let There Be Flight requirements were not met:\n\n{}{}{}\nPlease ensure the mods "
+                      L"above are installed/up-to-date.",
+                      has_inputLoader ? L"" : L"* Input Loader v0.1.1+\n",
+                      has_archiveXL ? L"" : L"* ArchiveXL v1.4.5+\n", 
+                      has_tweakXL ? L"" : L"* TweakXL v0.1.5+\n");
+      MessageBoxW(nullptr, message.c_str(), L"Let There Be Flight requirements could not be found",
+                  MB_SYSTEMMODAL | MB_ICONERROR);
       return false;
     }
 

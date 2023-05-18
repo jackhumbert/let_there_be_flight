@@ -1,4 +1,4 @@
-#include <RED4ext/RED4ext.hpp>
+#include <RED4ext/Common.hpp>
 #include "Utils/FlightModule.hpp"
 #include "ScriptDefinitions/ScriptDefinitions.hpp"
 #include "ScriptDefinitions/ScriptHost.hpp"

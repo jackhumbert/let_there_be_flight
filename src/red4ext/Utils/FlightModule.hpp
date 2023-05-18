@@ -1,6 +1,8 @@
 #pragma once
 
-#include <RED4ext/RED4ext.hpp>
+#include <RED4ext/Common.hpp>
+#include <RED4ext/Api/PluginHandle.hpp>
+#include <RED4ext/Api/Sdk.hpp>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -82,11 +84,11 @@ public:
   }
 
   void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
-    for (const auto &unload : s_unloads) {
-      unload(aSdk, aHandle);
-    }
     for (const auto &hook : s_hooks) {
       hook->Unload(aSdk, aHandle);
+    }
+    for (const auto &unload : s_unloads) {
+      unload(aSdk, aHandle);
     }
   }
 
@@ -138,6 +140,17 @@ public:
   decltype(&func) func##_Original; \
   FlightModuleHook s_##func##_Hook(#func, func##_Addr, reinterpret_cast<void*>(&func), reinterpret_cast<void**>(&func##_Original)); \
   retType func(__VA_ARGS__)
+
+
+// #define REGISTER_HOOK(retType, func, ...) \
+//   retType func##_Hook(__VA_ARGS__); \
+//   decltype(&func) func##_Original; \
+//   FlightModuleHook s_##func##_Hook(#func, func##_Addr, reinterpret_cast<void*>(&func), reinterpret_cast<void**>(&func##_Original)); \
+//   retType func(__VA_ARGS__) { \
+//     RED4ext::RelocFunc<decltype(&func)> call(func##_Addr); \
+//     return call(__VA_ARGS__); \
+//   } \
+//   retType func##_Hook(__VA_ARGS__)
 
 #define REGISTER_FLIGHT_OVERRIDE(original, retType, func, ...)   \
   retType func(__VA_ARGS__); \

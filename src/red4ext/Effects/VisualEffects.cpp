@@ -1,10 +1,10 @@
 #include "Utils/FlightModule.hpp"
-#include <RED4ext/RED4ext.hpp>
+#include <RED4ext/Common.hpp>
 #include <RED4ext/Scripting/Natives/vehiclePhysics.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/CarBaseObject.hpp>
 #include <spdlog/spdlog.h>
-#include "FlightComponent.hpp"
+#include "Flight/Component.hpp"
 #include "Addresses.hpp"
 #include <queue>
 
@@ -14,16 +14,6 @@ struct FlightStatus {
   uint8_t isActive : 1;
   uint8_t hasChanged : 1;
 };
-
-// make tire always skidding
-REGISTER_FLIGHT_HOOK(void __fastcall, vehicleUnk570_WheelEffectUpdate, vehicle::Unk570 *unk570,
-                     unsigned int wheelIndex, vehicle::Unk570::Unk40 *unk40, float deltaTime) {
-  auto fc = FlightComponent::Get(unk570->vehicle);
-  if (fc && fc->active) {
-    unk40->wheelLongSlip = 2.0;
-  }
-  vehicleUnk570_WheelEffectUpdate_Original(unk570, wheelIndex, unk40, deltaTime);
-}
 
 // replace tire tracks & skid marks with our own effects
 REGISTER_FLIGHT_HOOK(vehicle::MaterialFx * __fastcall, vehicleUnk570_GetFxForMaterial, vehicle::Unk570 *unk570,

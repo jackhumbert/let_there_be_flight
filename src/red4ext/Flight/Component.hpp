@@ -2,7 +2,7 @@
 
 #include "stdafx.hpp"
 #include "Engine/RTTIClass.hpp"
-#include <RED4ext/RED4ext.hpp>
+#include <RED4ext/Common.hpp>
 #include <RED4ext/NativeTypes.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/Component.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/ComponentPS.hpp>

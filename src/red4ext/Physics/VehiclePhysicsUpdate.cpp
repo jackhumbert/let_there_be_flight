@@ -2,13 +2,24 @@
 #include <RED4ext/Scripting/Natives/vehiclePhysics.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/CarBaseObject.hpp>
-#include <RED4ext/RED4ext.hpp>
+#include <RED4ext/Common.hpp>
 #include <spdlog/spdlog.h>
 #include "VehiclePhysicsUpdate.hpp"
-#include "FlightComponent.hpp"
+#include "Flight/Component.hpp"
 #include "Addresses.hpp"
 #include "VehicleSpeedUnlimiter.hpp"
 #include <queue>
+
+// main vehicle physics update
+// 1.6  RVA: 0x1D3C5D0
+// 1.61 RVA: 0x1D3C990
+/// @pattern F3 0F 11 4C 24 10 55 53 57 41 54 41 55 41 56 48 8D AC 24 98 FD FF FF 48 81 EC 68 03 00 00 48 8B
+// uintptr_t __fastcall VehiclePhysicsUpdate(RED4ext::vehicle::Physics *, float);
+
+// 1.6  RVA: 0x1D3AD50
+// 1.61 RVA: 0x1D3B110
+/// @pattern 48 8B C4 53 48 81 EC A0 00 00 00 0F 29 70 E8 48 8B D9 0F 29 78 D8 44 0F 29 40 C8 44 0F 29 48 B8
+void __fastcall ProcessAirResistance(RED4ext::vehicle::WheeledPhysics *a1, float deltaTime);
 
 REGISTER_FLIGHT_HOOK(void __fastcall, ProcessAirResistance, 
     RED4ext::vehicle::WheeledPhysics *a1, float deltaTime) {
@@ -60,6 +71,13 @@ REGISTER_FLIGHT_HOOK(void __fastcall, vehiclePhysicsData_ApplyForceAtPosition,
     vehiclePhysicsData_ApplyForceAtPosition_Original(physicsData, offset, force);
   }
 }
+
+// where driverHelpers are processed
+// vehicleWheeledPhysics::sub_58
+// 1.6  RVA: 0x1D3EB10
+// 1.61 RVA: 0x1D3EED0
+/// @pattern 48 8B C4 48 89 58 08 48 89 70 10 48 89 78 18 41 56 48 81 EC B0 00 00 00 0F 29 70 E8 4C 8B F1 0F
+uintptr_t __fastcall VehicleHelperUpdate(RED4ext::vehicle::WheeledPhysics *, float);
 
 REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, VehicleHelperUpdate, RED4ext::vehicle::WheeledPhysics *p, float deltaTime) {
   auto fc = FlightComponent::Get(p->parent);
@@ -332,7 +350,7 @@ REGISTER_FLIGHT_HOOK(void __fastcall, FourWheelTorque,
     RED4ext::vehicle::WheeledPhysics *physics, unsigned __int8 rearWheelIndex, unsigned __int8 frontWheelIndex, float a4, RED4ext::Transform *transform) {
   auto fc = FlightComponent::Get(physics->parent);
   if (fc && fc->active) {
-    vehicle::SpeedUnlimiter::PhysicsStructUpdate(physics->parent->physicsData);
+    vehicle::PhysicsStructUpdate(physics->parent->physicsData);
   } else {
     FourWheelTorque_Original(physics, rearWheelIndex, frontWheelIndex, a4, transform);
   }

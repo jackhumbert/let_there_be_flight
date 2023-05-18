@@ -1,4 +1,4 @@
-#include <RED4ext/RED4ext.hpp>
+#include <RED4ext/Common.hpp>
 #include <RED4ext/RTTITypes.hpp>
 
 template <typename T> T *CreateWithVFT() {
