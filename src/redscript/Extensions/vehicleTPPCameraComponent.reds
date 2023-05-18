@@ -1,19 +1,19 @@
-public native class vehicleChassisComponent extends IPlacedComponent {
-    public native func GetComOffset() -> Transform;
-}
+// public native class vehicleChassisComponent extends IPlacedComponent {
+//     public native func GetComOffset() -> Transform;
+// }
 
-native class vehicleTPPCameraComponent extends CameraComponent {
-    // public native let isInAir: Bool;
-    public native let drivingDirectionCompensationAngleSmooth: Float;
-    public native let drivingDirectionCompensationSpeedCoef: Float;
-    public native let lockedCamera: Bool;
-    public native let initialTransform: WorldTransform;
-    public native let pitch: Float;
-    public native let yaw: Float;
-    // public native let pitchDelta: Float; // positive moves camera down
-    // public native let yawDelta: Float; // positive moves camera right
-    // public native let chassis: ref<vehicleChassisComponent>;
-}
+// native class vehicleTPPCameraComponent extends CameraComponent {
+//     // public native let isInAir: Bool;
+//     public native let drivingDirectionCompensationAngleSmooth: Float;
+//     public native let drivingDirectionCompensationSpeedCoef: Float;
+//     public native let lockedCamera: Bool;
+//     public native let initialTransform: WorldTransform;
+//     public native let pitch: Float;
+//     public native let yaw: Float;
+//     // public native let pitchDelta: Float; // positive moves camera down
+//     // public native let yawDelta: Float; // positive moves camera right
+//     // public native let chassis: ref<vehicleChassisComponent>;
+// }
 
 // @addMethod(vehicleChassisComponent)
 // protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> Bool {
@@ -22,11 +22,11 @@ native class vehicleTPPCameraComponent extends CameraComponent {
 // }
 
 
-public native class vehicleDriveToPointEvent extends Event {
-    public native let targetPos: Vector3;
-    public native let useTraffic: Bool;
-    public native let speedInTraffic: Float;
-}
+// public native class vehicleDriveToPointEvent extends Event {
+//     public native let targetPos: Vector3;
+//     public native let useTraffic: Bool;
+//     public native let speedInTraffic: Float;
+// }
 
 // public importonly class EffectSpawnerComponent extends IVisualComponent {
 //     public native func AddEffect() -> Void;

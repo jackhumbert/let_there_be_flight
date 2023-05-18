@@ -44,7 +44,7 @@ public class FlightStats {
   public static func Create(vehicle: wref<VehicleObject>) -> ref<FlightStats> {
     let self: ref<FlightStats> = new FlightStats();
     self.vehicle = vehicle;
-    self.vehicle.chassis = self.vehicle.FindComponentByName(n"Chassis") as vehicleChassisComponent;
+    // self.vehicle.chassis = self.vehicle.FindComponentByName(n"Chassis") as vehicleChassisComponent;
     self.reset = false;
     self.UpdateStatic();
     // self.d_position = self.vehicle.GetWorldPosition() + self.s_centerOfMass;

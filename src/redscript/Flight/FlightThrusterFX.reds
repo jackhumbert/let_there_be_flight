@@ -81,7 +81,9 @@ public abstract class IFlightThrusterFX extends IScriptable {
 public class RegularFlightThrusterFX extends IFlightThrusterFX {
   public func Create(thruster: ref<IFlightThruster>) -> ref<IFlightThrusterFX> {
     super.Create(thruster);
-    this.SetResource(r"user\\jackhumbert\\effects\\flame.effect");
+    // needs work still
+    // this.SetResource(r"user\\jackhumbert\\effects\\flame.effect");
+    this.SetResource(r"user\\jackhumbert\\effects\\ion_thruster.effect");
     return this;
   }
 

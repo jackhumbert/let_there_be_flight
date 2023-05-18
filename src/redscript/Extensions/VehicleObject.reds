@@ -34,8 +34,8 @@ public func GetLocalToWorld() -> Matrix {
   return WorldTransform.ToMatrix(this.GetWorldTransform());
 }
 
-@addField(VehicleObject)
-public let chassis: ref<vehicleChassisComponent>;
+// @addField(VehicleObject)
+// public let chassis: ref<vehicleChassisComponent>;
 
 @addField(VehicleObject)
 @runtimeProperty("offset", "0x24C")

@@ -23,7 +23,7 @@ public native class FlightSystem extends IGameSystem {
   public let ctlr: ref<FlightController>;
   public let stats: ref<FlightStats>;
   // public let fx: ref<FlightFx>;
-  public let tppCamera: wref<vehicleTPPCameraComponent>;
+  // public let tppCamera: wref<vehicleTPPCameraComponent>;
   public let playerComponent: wref<FlightComponent>;
 
   public func Setup(player: ref<PlayerPuppet>) -> Void {
@@ -36,7 +36,7 @@ public native class FlightSystem extends IGameSystem {
     //   FlightLog.Info("[FlightSystem] FlightAudio Created");
     // }
     this.ctlr = FlightController.GetInstance();
-    this.tppCamera = player.FindComponentByName(n"vehicleTPPCamera") as vehicleTPPCameraComponent;
+    // this.tppCamera = player.FindComponentByName(n"vehicleTPPCamera") as vehicleTPPCameraComponent;
     // this.soundListener = this.tppCamera;
   }
 
