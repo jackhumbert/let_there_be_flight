@@ -32,7 +32,7 @@ public native class FlightController extends IScriptable {
   // redscript-only
   private let sys: ref<FlightSystem>;
   private let gameInstance: GameInstance;
-  private let player: ref<PlayerPuppet>;
+  private let player: wref<PlayerPuppet>;
   private let m_callbackID: ref<CallbackHandle>;
   private let m_vehicleCollisionBBStateID: ref<CallbackHandle>;
   // private let ui: ref<FlightControllerUI>;
