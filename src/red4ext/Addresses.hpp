@@ -5,65 +5,65 @@
 #define __LINE_STR__ ZOLTAN_EXPAND_THEN_STRINGISE(__LINE__)
 
 #ifndef CreateCRTTIArrayTypeFromClass_Addr
-#define CreateCRTTIArrayTypeFromClass_Addr 0x20A490
+#define CreateCRTTIArrayTypeFromClass_Addr 0x20A6B0
 #endif
 #ifndef CreateCRTTIHandleTypeFromClass_Addr
-#define CreateCRTTIHandleTypeFromClass_Addr 0x20A580
+#define CreateCRTTIHandleTypeFromClass_Addr 0x20A7A0
 #endif
 #ifndef CreateCRTTIRaRefTypeFromClass_Addr
-#define CreateCRTTIRaRefTypeFromClass_Addr 0x20A750
+#define CreateCRTTIRaRefTypeFromClass_Addr 0x20A970
 #endif
 #ifndef CreateCRTTIWeakHandleTypeFromClass_Addr
-#define CreateCRTTIWeakHandleTypeFromClass_Addr 0x20A920
+#define CreateCRTTIWeakHandleTypeFromClass_Addr 0x20AB40
 #endif
 #ifndef CreateStaticEffect_Addr
-#define CreateStaticEffect_Addr 0x14A19A0
+#define CreateStaticEffect_Addr 0x14A30B0
 #endif
 #ifndef Entity_InitializeComponents_Addr
-#define Entity_InitializeComponents_Addr 0x105DFD0
+#define Entity_InitializeComponents_Addr 0x105F6E0
 #endif
 #ifndef FPPCameraUpdate_Addr
-#define FPPCameraUpdate_Addr 0x172BD30
+#define FPPCameraUpdate_Addr 0x172EC40
 #endif
 #ifndef FourWheelTorque_Addr
-#define FourWheelTorque_Addr 0x1D4DA20
+#define FourWheelTorque_Addr 0x1D509F0
 #endif
 #ifndef GetMatrixFromOrientation_Addr
-#define GetMatrixFromOrientation_Addr 0x1D3F60
+#define GetMatrixFromOrientation_Addr 0x1D4180
 #endif
 #ifndef LoadResRefT_Addr
-#define LoadResRefT_Addr 0x20E8C0
+#define LoadResRefT_Addr 0x20EAE0
 #endif
 #ifndef LookupLocalizedString_Addr
-#define LookupLocalizedString_Addr 0x7093F0
+#define LookupLocalizedString_Addr 0x7096C0
 #endif
 #ifndef PhysicsUnkStructVelocityUpdate_Addr
-#define PhysicsUnkStructVelocityUpdate_Addr 0x1D20160
+#define PhysicsUnkStructVelocityUpdate_Addr 0x1D23130
 #endif
 #ifndef ProcessAirResistance_Addr
-#define ProcessAirResistance_Addr 0x1D4D740
+#define ProcessAirResistance_Addr 0x1D50710
 #endif
 #ifndef ProcessScriptTypes_Addr
-#define ProcessScriptTypes_Addr 0x281390
+#define ProcessScriptTypes_Addr 0x2815B0
 #endif
 #ifndef RollFactorTorqueThing_Addr
-#define RollFactorTorqueThing_Addr 0x1D6E3E0
+#define RollFactorTorqueThing_Addr 0x1D713B0
 #endif
 #ifndef SetLocalizedTextString_Addr
-#define SetLocalizedTextString_Addr 0x709460
+#define SetLocalizedTextString_Addr 0x709730
 #endif
 #ifndef TPPCameraStats_Update_Addr
-#define TPPCameraStats_Update_Addr 0x1D06600
+#define TPPCameraStats_Update_Addr 0x1D095D0
 #endif
 #ifndef VehicleHelperUpdate_Addr
-#define VehicleHelperUpdate_Addr 0x1D51500
+#define VehicleHelperUpdate_Addr 0x1D544D0
 #endif
 #ifndef VehicleObject_ProcessWeapons_Addr
-#define VehicleObject_ProcessWeapons_Addr 0x1C9F220
+#define VehicleObject_ProcessWeapons_Addr 0x1CA21F0
 #endif
 #ifndef VehicleUpdateOrientationWithPID_Addr
-#define VehicleUpdateOrientationWithPID_Addr 0x1CACFD0
+#define VehicleUpdateOrientationWithPID_Addr 0x1CAFFA0
 #endif
 #ifndef vehicle_PhysicsStructUpdate_Addr
-#define vehicle_PhysicsStructUpdate_Addr 0x1D20B70
+#define vehicle_PhysicsStructUpdate_Addr 0x1D23B40
 #endif

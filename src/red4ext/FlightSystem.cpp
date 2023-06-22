@@ -5,7 +5,7 @@
 #include <RED4ext/Common.hpp>
 #include <RED4ext/RTTITypes.hpp>
 #include <RED4ext/Scripting/Natives/Generated/Vector4.hpp>
-#include <RED4ext/Addresses.hpp>
+#include <RED4ext/Addresses-Zoltan.hpp>
 #include <RED4ext/Scripting/Natives/ScriptGameInstance.hpp>
 #include <RED4ext/Scripting/Natives/GameInstance.hpp>
 #include <RED4ext/Scripting/Natives/vehiclePhysicsData.hpp>
@@ -52,7 +52,8 @@
 // 1.61 RVA: 0x484B3A0
 // 1.61hf1 RVA: 0x484D590
 // 1.62hf1 RVA: 0x4891050
-RED4ext::RelocPtr<RED4ext::GameOptionBool> physicsCCD(0x4891050);
+// 1.63 RVA: 0x489C060
+RED4ext::RelocPtr<RED4ext::GameOptionBool> physicsCCD(0x489C060);
 // 1.52 RVA: 0x4781FE8
 // 1.6  RVA: 0x4846388
 // 1.61 RVA: 0x484CA28

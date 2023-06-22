@@ -65,6 +65,8 @@ RED4ext::CClass* IFlightConfiguration::GetConfigurationClass(RED4ext::ent::Entit
         configurationCls = rtti->GetClassByScriptName("BikeFlightConfiguration");
       }
     }
+  } else {
+    spdlog::info("Found custom flight configuration class: {}", className);
   }
   return configurationCls;
 }
