@@ -7,6 +7,17 @@
 #include <RED4ext/Scripting/Natives/Generated/ent/IPlacedComponent.hpp>
 #include "Audio/FlightAudio.hpp"
 #include "Flight/Component.hpp"
+#include "Addresses.hpp"
+
+// these still need to be updated manually - need to add a rel define to zoltan
+namespace GameSetting {
+/// @pattern 48 83 EC 28 41 B9 02 00 00 00 4C 8D 05 77 C5 3D 03 48 8D 15 58 92 07 03 48 8D 0D (obj:rel) E8
+/// @eval obj
+const uintptr_t physicsCCD = GameSetting_physicsCCD_Addr;
+/// @pattern 48 83 EC 28 41 B9 02 00 00 00 4C 8D 05 87 AE 3D 03 48 8D 15 98 6E 07 03 48 8D 0D (obj:rel) E8
+/// @eval obj
+const uintptr_t EnableSmoothWheelContacts = GameSetting_EnableSmoothWheelContacts_Addr;
+}
 
 /// FlightSystem
 class FlightSystem : public Engine::RTTIClass<FlightSystem, IFlightSystem> {

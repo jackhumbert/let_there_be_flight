@@ -27,36 +27,15 @@
 #include "Hooks/GetMatrixFromOrientation.hpp"
 
 // These can be found in strings via their variable names
-// 1.52 RVA: 0x4782878
-// 1.6  RVA: 0x4846C18
-// 1.61 RVA: 0x484D2B8
-// 1.61hf1 RVA: 0x484F4A8 diff 0x21F0
+// 1.61hf1 RVA: 0x484F4A8
 // RED4ext::RelocPtr<RED4ext::GameOptionBool> PhysXClampHugeImpacts(0x484F4A8);
-// 1.52 RVA: 0x47827F8
-// 1.6  RVA: 0x4846B98
-// 1.61 RVA: 0x484D238
 // 1.61hf1 RVA: 0x484F428
 // RED4ext::RelocPtr<RED4ext::GameOptionBool> PhysXClampHugeSpeeds(0x484F428);
-// 1.52 RVA: 0x47818C8
-// 1.6  RVA: 0x4845C68
-// 1.61 RVA: 0x484C308
 // 1.61hf1 RVA: 0x484E4F8
 // RED4ext::RelocPtr<RED4ext::GameOptionBool> AirControlCarRollHelper(0x484E4F8);
-// 1.52 RVA: 0x4781A40
-// 1.6  RVA: 0x4845DE0
-// 1.61 RVA: 0x484C480
 // 1.61hf1 RVA: 0x484E670
 // RED4ext::RelocPtr<RED4ext::GameOptionFloat> ForceMoveToMaxLinearSpeed(0x484E670);
-// 1.52 RVA: 0x4780960
-// 1.6  RVA: 0x4844D00
-// 1.61 RVA: 0x484B3A0
-// 1.61hf1 RVA: 0x484D590
-// 1.62hf1 RVA: 0x4891050
-// 1.63 RVA: 0x489C060
-RED4ext::RelocPtr<RED4ext::GameOptionBool> physicsCCD(0x489C060);
-// 1.52 RVA: 0x4781FE8
-// 1.6  RVA: 0x4846388
-// 1.61 RVA: 0x484CA28
+RED4ext::RelocPtr<RED4ext::GameOptionBool> physicsCCD(GameSetting_physicsCCD_Addr);
 // 1.61hf1 RVA: 0x484EC18
 // RED4ext::RelocPtr<RED4ext::GameOptionBool> EnableSmoothWheelContacts(0x484EC18);
 

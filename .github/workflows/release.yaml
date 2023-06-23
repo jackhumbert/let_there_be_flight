@@ -74,6 +74,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
+          name: ${{ github.ref_name }}${{ env.CYBERPUNK_2077_GAME_VERSION_STR }}
           body_path: ${{ env.CHANGELOG_FILE }}
           append_body: true
           files: |

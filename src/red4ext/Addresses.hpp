@@ -23,10 +23,16 @@
 #define Entity_InitializeComponents_Addr 0x105F6E0
 #endif
 #ifndef FPPCameraUpdate_Addr
-#define FPPCameraUpdate_Addr 0x172EC40
+#define FPPCameraUpdate_Addr 0x172ED80
 #endif
 #ifndef FourWheelTorque_Addr
-#define FourWheelTorque_Addr 0x1D509F0
+#define FourWheelTorque_Addr 0x1D50B20
+#endif
+#ifndef GameSetting_EnableSmoothWheelContacts_Addr
+#define GameSetting_EnableSmoothWheelContacts_Addr 0x489D6A8
+#endif
+#ifndef GameSetting_physicsCCD_Addr
+#define GameSetting_physicsCCD_Addr 0x489C020
 #endif
 #ifndef GetMatrixFromOrientation_Addr
 #define GetMatrixFromOrientation_Addr 0x1D4180
@@ -38,32 +44,32 @@
 #define LookupLocalizedString_Addr 0x7096C0
 #endif
 #ifndef PhysicsUnkStructVelocityUpdate_Addr
-#define PhysicsUnkStructVelocityUpdate_Addr 0x1D23130
+#define PhysicsUnkStructVelocityUpdate_Addr 0x1D23260
 #endif
 #ifndef ProcessAirResistance_Addr
-#define ProcessAirResistance_Addr 0x1D50710
+#define ProcessAirResistance_Addr 0x1D50840
 #endif
 #ifndef ProcessScriptTypes_Addr
 #define ProcessScriptTypes_Addr 0x2815B0
 #endif
 #ifndef RollFactorTorqueThing_Addr
-#define RollFactorTorqueThing_Addr 0x1D713B0
+#define RollFactorTorqueThing_Addr 0x1D714E0
 #endif
 #ifndef SetLocalizedTextString_Addr
 #define SetLocalizedTextString_Addr 0x709730
 #endif
 #ifndef TPPCameraStats_Update_Addr
-#define TPPCameraStats_Update_Addr 0x1D095D0
+#define TPPCameraStats_Update_Addr 0x1D09700
 #endif
 #ifndef VehicleHelperUpdate_Addr
-#define VehicleHelperUpdate_Addr 0x1D544D0
+#define VehicleHelperUpdate_Addr 0x1D54600
 #endif
 #ifndef VehicleObject_ProcessWeapons_Addr
-#define VehicleObject_ProcessWeapons_Addr 0x1CA21F0
+#define VehicleObject_ProcessWeapons_Addr 0x1CA2330
 #endif
 #ifndef VehicleUpdateOrientationWithPID_Addr
-#define VehicleUpdateOrientationWithPID_Addr 0x1CAFFA0
+#define VehicleUpdateOrientationWithPID_Addr 0x1CB00E0
 #endif
 #ifndef vehicle_PhysicsStructUpdate_Addr
-#define vehicle_PhysicsStructUpdate_Addr 0x1D23B40
+#define vehicle_PhysicsStructUpdate_Addr 0x1D23C70
 #endif

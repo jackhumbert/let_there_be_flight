@@ -1,5 +1,7 @@
 # Let There Be Flight
 
+[![](https://byob.yarr.is/jackhumbert/let_there_be_flight/cp_version)](https://github.com/jackhumbert/let_there_be_flight/actions/workflows/build.yaml)
+
 This is a mod for Cyberpunk 2077 that adds a flying mechanism to all cars, with a couple different modes and options.
 
 Other features include:
