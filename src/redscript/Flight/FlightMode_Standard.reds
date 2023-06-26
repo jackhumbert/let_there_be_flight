@@ -11,10 +11,10 @@ public abstract class FlightModeStandard extends FlightMode {
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Standard-Mode")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Yaw-Factor")
-  @runtimeProperty("ModSettings.step", "1.0")
+  @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "50.0")
-  public let standardModeYawFactor: Float = 3.0;
+  public let standardModeYawFactor: Float = 2.5;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Standard-Mode")
