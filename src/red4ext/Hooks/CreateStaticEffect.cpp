@@ -12,8 +12,13 @@
 /// @pattern 48 89 5C 24 10 48 89 74 24 18 48 89 7C 24 20 48 89 4C 24 08 55 41 54 41 55 41 56 41 57 48 8D 6C 24 D0 48 81 EC 30 01 00 00 4C 8B AD 80 00 00 00
 // using CreateStaticEffect = uintptr_t (RED4ext::game::EffectSystem *, uintptr_t, uint64_t, uint64_t, uintptr_t, uintptr_t);
 
+// pre-2.0
 /// @pattern 48 89 5C 24 10 48 89 74 24 18 48 89 7C 24 20 48 89 4C 24 08 55 41 54 41 55 41 56 41 57 48 8D 6C 24 D0 48 81
 /// EC 30 01 00 00 4C 8B AD 80 00 00 00
+
+// 2.0
+/// @pattern 48 8B C4 48 89 58 08 48 89 70 10 48 89 78 18 4C 89 70 20 55 48 8D 68 B1 48 81 EC 90 00 00 00 48
+/// @nth 0/2
 uintptr_t CreateStaticEffect(RED4ext::game::EffectSystem *, uintptr_t, uint64_t, uint64_t, uintptr_t, uintptr_t);
 
 REGISTER_FLIGHT_HOOK(uintptr_t, CreateStaticEffect, RED4ext::game::EffectSystem *es, uintptr_t effectRef,

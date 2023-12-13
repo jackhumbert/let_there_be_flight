@@ -8,8 +8,13 @@
 
 // right before components are processed for entities, and an appropriate time to insert our own
 // can also look for string "Entity/InitializeComponents"
+
+// pre-2.0
 /// @pattern 48 89 54 24 10 55 53 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 ? FB FF FF 48 81 EC ? 05 00 00
 /// @nth 0/2
+
+// 2.0+
+/// @pattern 48 89 5C 24 18 55 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 E0 FD FF FF 48 81 EC 20 03 00 00 8A
 void Entity_InitializeComponents(RED4ext::ent::Entity *entity, void *a2, void *a3);
 
 REGISTER_FLIGHT_HOOK(void __fastcall, Entity_InitializeComponents, RED4ext::ent::Entity *entity, void *a2, void *a3) {
@@ -42,24 +47,24 @@ REGISTER_FLIGHT_HOOK(void __fastcall, Entity_InitializeComponents, RED4ext::ent:
     // h.refCount->IncRef();
     // entity->componentsStorage.components.EmplaceBack(h);
 
-    RED4ext::ent::VisualControllerComponent *vcc = NULL;
-    RED4ext::vehicle::ChassisComponent *chassis = NULL;
-    RED4ext::game::OccupantSlotComponent *osc = NULL;
-    RED4ext::ent::SlotComponent *vs = NULL;
+    RED4ext::ent::VisualControllerComponent *vcc = nullptr;
+    RED4ext::vehicle::ChassisComponent *chassis = nullptr;
+    RED4ext::game::OccupantSlotComponent *osc = nullptr;
+    RED4ext::ent::SlotComponent *vs = nullptr;
     for (auto const &handle : entity->componentsStorage.components) {
       auto component = handle.GetPtr();
-      if (vcc == NULL && component->GetNativeType() == rtti->GetClass("entVisualControllerComponent")) {
+      if (vcc == nullptr && component->GetNativeType() == rtti->GetClass("entVisualControllerComponent")) {
         vcc = reinterpret_cast<RED4ext::ent::VisualControllerComponent *>(component);
       }
-      if (chassis == NULL && component->GetNativeType() == rtti->GetClass("vehicleChassisComponent")) {
+      if (chassis == nullptr && component->GetNativeType() == rtti->GetClass("vehicleChassisComponent")) {
         chassis = reinterpret_cast<RED4ext::vehicle::ChassisComponent *>(component);
       }
-      if (vs == NULL && component->GetNativeType() == rtti->GetClass("entSlotComponent")) {
+      if (vs == nullptr && component->GetNativeType() == rtti->GetClass("entSlotComponent")) {
         if (component->name == "vehicle_slots") {
           vs = reinterpret_cast<RED4ext::ent::SlotComponent *>(component);
         }
       }
-      if (osc == NULL && component->GetNativeType() == rtti->GetClass("gameOccupantSlotComponent")) {
+      if (osc == nullptr && component->GetNativeType() == rtti->GetClass("gameOccupantSlotComponent")) {
         osc = reinterpret_cast<RED4ext::game::OccupantSlotComponent *>(component);
       }
     }
@@ -68,7 +73,7 @@ REGISTER_FLIGHT_HOOK(void __fastcall, Entity_InitializeComponents, RED4ext::ent:
     //
     // }
 
-    if (vcc != NULL && vs != NULL) {
+    if (vcc != nullptr && vs != nullptr) {
       {
         // auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
         // slot->boneName = "roof_border_front";
