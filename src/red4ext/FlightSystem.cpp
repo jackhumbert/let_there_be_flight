@@ -138,7 +138,7 @@ void FlightSystem::OnRegisterUpdates(RED4ext::UpdateRegistrar *aRegistrar) {
 
  void FlightSystem::OnWorldAttached(RED4ext::world::RuntimeScene *runtimeScene) {
   spdlog::info("[FlightSystem] OnWorldAttached");
-  this->audio->ExecuteFunction("OnWorldAttached");
+  RED4ext::ExecuteFunction(this->audio, FlightAudio::GetRTTIType()->GetFunction("OnWorldAttached"), nullptr);
 
   // VFT Finder
   //auto rtti = RED4ext::CRTTISystem::Get();
@@ -184,7 +184,8 @@ void FlightSystem::OnRegisterUpdates(RED4ext::UpdateRegistrar *aRegistrar) {
 
 void FlightSystem::OnBeforeWorldDetach(RED4ext::world::RuntimeScene *runtimeScene) {
   spdlog::info("[FlightSystem] OnBeforeWorldDetach!");
-  this->audio->ExecuteFunction("OnWorldPendingDetach");
+  auto audioCls = FlightAudio::GetRTTIType();
+  RED4ext::ExecuteFunction(this->audio, audioCls->GetFunction("OnWorldPendingDetach"), nullptr);
 }
 
 void FlightSystem::OnWorldDetached(RED4ext::world::RuntimeScene *runtimeScene) {
@@ -263,14 +264,14 @@ void FlightSystem::sub_188() {
   spdlog::info("[FlightSystem] sub_188!");
 }
 
-void FlightSystem::sub_190(RED4ext::IGameSystem::HighLow *) {
+void FlightSystem::sub_190(void *) {
   spdlog::info("[FlightSystem] sub_190!");
 }
 
 void FlightSystem::OnInitialize(const RED4ext::JobHandle& aJob) {
   spdlog::info("[FlightSystem] OnInitialize!");
   this->audio = RED4ext::Handle<FlightAudio>((FlightAudio *)FlightAudio::GetRTTIType()->CreateInstance());
-  this->audio->ExecuteFunction("Initialize");
+  RED4ext::ExecuteFunction(this->audio, FlightAudio::GetRTTIType()->GetFunction("Initialize"), nullptr);
 }
 
 void FlightSystem::OnUninitialize() {

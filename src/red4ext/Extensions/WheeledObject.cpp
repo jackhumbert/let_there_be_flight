@@ -8,8 +8,8 @@ class WheeledObject : public Engine::RTTIExpansion<WheeledObject, RED4ext::vehic
 public:
   inline void ResetWheels() { 
     auto physics = (RED4ext::vehicle::WheeledPhysics*)this->physics;
-    RED4ext::RelocFunc<decltype(&RED4ext::vehicle::UnkD10::Reset)> call(vehicleUnkD10_Reset_Addr);
-    call(physics->unkD10, physics->unkD10->numWheels);
+    // RED4ext::RelocFunc<decltype(&RED4ext::vehicle::UnkD10::Reset)> call(vehicleUnkD10_Reset_Addr);
+    // call(physics->unkD10, physics->unkD10->numWheels);
   }
   inline float GetDampedSpringForce(int32_t wheelIndex) {
     return ((RED4ext::vehicle::WheeledPhysics*)this->physics)->insert2[wheelIndex].dampedSpringForce;

@@ -92,7 +92,7 @@ REGISTER_FLIGHT_HOOK(void __fastcall, Entity_InitializeComponents, RED4ext::ent:
 
         auto handle = RED4ext::Handle<IFlightConfiguration>(configuration);
         configuration->ref = RED4ext::WeakHandle(*reinterpret_cast<RED4ext::Handle<RED4ext::ISerializable> *>(&handle));
-        configuration->unk30 = configurationCls;
+        configuration->nativeType = configurationCls;
         configuration->component = RED4ext::Handle<FlightComponent>(fc);
         configuration->component.refCount->IncRef();
         fc->configuration = handle;

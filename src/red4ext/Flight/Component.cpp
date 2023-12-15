@@ -41,7 +41,9 @@ void FlightComponent::OnUpdate(float deltaTime) {
       helper.Unlock();
     }*/
 //    vehicle->UnsetPhysicsStates();
-    this->ExecuteFunction("OnUpdate", deltaTime);
+    RED4ext::StackArgs_t args;
+    args.emplace_back(RED4ext::CRTTISystem::Get()->GetType("Float"), &deltaTime);
+    RED4ext::ExecuteFunction(this, this->nativeType->GetFunction("OnUpdate"), &args);
     vehicle->physicsData->force += this->force;
     vehicle->physicsData->torque += this->torque;
     this->force = RED4ext::Vector4();

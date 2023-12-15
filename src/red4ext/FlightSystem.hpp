@@ -11,11 +11,9 @@
 
 // these still need to be updated manually - need to add a rel define to zoltan
 namespace GameSetting {
-/// @pattern 48 83 EC 28 41 B9 02 00 00 00 4C 8D 05 77 C5 3D 03 48 8D 15 58 92 07 03 48 8D 0D (obj:rel) E8
-/// @eval obj
+/// @pattern ? ? ? ? ? 00 00 00 18 B8 03 43 01 00 00 00 48 C4 A1 42 01
 const uintptr_t physicsCCD = GameSetting_physicsCCD_Addr;
-/// @pattern 48 83 EC 28 41 B9 02 00 00 00 4C 8D 05 87 AE 3D 03 48 8D 15 98 6E 07 03 48 8D 0D (obj:rel) E8
-/// @eval obj
+/// @pattern ? ? ? ? ? 00 00 00 70 BA 03 43 01 00 00 00 48 C4 A1 42 01
 const uintptr_t EnableSmoothWheelContacts = GameSetting_EnableSmoothWheelContacts_Addr;
 }
 
@@ -39,7 +37,7 @@ public:
   virtual void* IsSavingLocked(RED4ext::game::SaveLock* aLock, bool a2) override;
   virtual void OnStreamingWorldLoaded(RED4ext::world::RuntimeScene* aScene, uint64_t a2, const RED4ext::JobGroup& aJobGroup) override;
   virtual void sub_188() override;
-  virtual void sub_190(RED4ext::IGameSystem::HighLow*) override;
+  virtual void sub_190(void*) override;
   virtual void OnInitialize(const RED4ext::JobHandle& aJob) override;
   virtual void OnUninitialize() override;
 

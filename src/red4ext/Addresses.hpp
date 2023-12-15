@@ -4,25 +4,23 @@
 #define ZOLTAN_EXPAND_THEN_STRINGISE(N) ZOLTAN_STRINGISE(N)
 #define __LINE_STR__ ZOLTAN_EXPAND_THEN_STRINGISE(__LINE__)
 
+#ifndef CBaseEngine_LoadScripts_Addr
+#define CBaseEngine_LoadScripts_Addr 0x95355C
+#endif
+#ifndef CProcessRunner_Run_Addr
+#define CProcessRunner_Run_Addr 0x82E260
+#endif
 #ifndef CreateCRTTIArrayTypeFromClass_Addr
-#define CreateCRTTIArrayTypeFromClass_Addr                                                                             \
-    0 _Pragma("message(__FILE__ \"(\" __LINE_STR__ \") : Warning: CreateCRTTIArrayTypeFromClass_Addr"                  \
-              "is 0 - Zoltan found count mismatch for CreateCRTTIArrayTypeFromClass (8)\")")
+#define CreateCRTTIArrayTypeFromClass_Addr 0x60D4FC
 #endif
 #ifndef CreateCRTTIHandleTypeFromClass_Addr
-#define CreateCRTTIHandleTypeFromClass_Addr                                                                            \
-    0 _Pragma("message(__FILE__ \"(\" __LINE_STR__ \") : Warning: CreateCRTTIHandleTypeFromClass_Addr"                 \
-              "is 0 - Zoltan found count mismatch for CreateCRTTIHandleTypeFromClass (6)\")")
+#define CreateCRTTIHandleTypeFromClass_Addr 0x60CED4
 #endif
 #ifndef CreateCRTTIRaRefTypeFromClass_Addr
-#define CreateCRTTIRaRefTypeFromClass_Addr                                                                             \
-    0 _Pragma("message(__FILE__ \"(\" __LINE_STR__ \") : Warning: CreateCRTTIRaRefTypeFromClass_Addr"                  \
-              "is 0 - Zoltan found count mismatch for CreateCRTTIRaRefTypeFromClass (6)\")")
+#define CreateCRTTIRaRefTypeFromClass_Addr 0xAC2188
 #endif
 #ifndef CreateCRTTIWeakHandleTypeFromClass_Addr
-#define CreateCRTTIWeakHandleTypeFromClass_Addr                                                                        \
-    0 _Pragma("message(__FILE__ \"(\" __LINE_STR__ \") : Warning: CreateCRTTIWeakHandleTypeFromClass_Addr"             \
-              "is 0 - Zoltan found count mismatch for CreateCRTTIWeakHandleTypeFromClass (6)\")")
+#define CreateCRTTIWeakHandleTypeFromClass_Addr 0xC5F5B0
 #endif
 #ifndef CreateStaticEffect_Addr
 #define CreateStaticEffect_Addr 0x3B2630
@@ -34,19 +32,16 @@
 #define FPPCameraUpdate_Addr 0x535EBC
 #endif
 #ifndef FourWheelTorque_Addr
-#define FourWheelTorque_Addr                                                                                           \
-    0 _Pragma("message(__FILE__ \"(\" __LINE_STR__ \") : Warning: FourWheelTorque_Addr"                                \
-              "is 0 - Zoltan found no matches for FourWheelTorque\")")
+#define FourWheelTorque_Addr 0x2068D0
 #endif
 #ifndef GameSetting_EnableSmoothWheelContacts_Addr
-#define GameSetting_EnableSmoothWheelContacts_Addr                                                                     \
-    0 _Pragma("message(__FILE__ \"(\" __LINE_STR__ \") : Warning: GameSetting_EnableSmoothWheelContacts_Addr"          \
-              "is 0 - Zoltan found no matches for GameSetting::EnableSmoothWheelContacts\")")
+#define GameSetting_EnableSmoothWheelContacts_Addr 0x3238FB8
 #endif
 #ifndef GameSetting_physicsCCD_Addr
-#define GameSetting_physicsCCD_Addr                                                                                    \
-    0 _Pragma("message(__FILE__ \"(\" __LINE_STR__ \") : Warning: GameSetting_physicsCCD_Addr"                         \
-              "is 0 - Zoltan found no matches for GameSetting::physicsCCD\")")
+#define GameSetting_physicsCCD_Addr 0x3238DC0
+#endif
+#ifndef GetFxForMaterial_Addr
+#define GetFxForMaterial_Addr 0xB7E600
 #endif
 #ifndef GetLocationFromOffset_Addr
 #define GetLocationFromOffset_Addr 0x598A14
@@ -57,57 +52,177 @@
 #ifndef GetYaw_Addr
 #define GetYaw_Addr 0xEEABC4
 #endif
+#ifndef GpuApi_Present_Addr
+#define GpuApi_Present_Addr 0x47C06C
+#endif
+#ifndef HandleSharedStorage_AddRefWeak_Addr
+#define HandleSharedStorage_AddRefWeak_Addr 0x133C64
+#endif
+#ifndef HandleSharedStorage_HandleSharedStorage_Addr
+#define HandleSharedStorage_HandleSharedStorage_Addr 0x157480
+#endif
+#ifndef ISerializable_OnSerialize_Addr
+#define ISerializable_OnSerialize_Addr 0x15A234
+#endif
+#ifndef ISerializable_OnSerializeFromText_Addr
+#define ISerializable_OnSerializeFromText_Addr 0x1FDE454
+#endif
+#ifndef ISerializable_OnSerializeToText_Addr
+#define ISerializable_OnSerializeToText_Addr 0x1FDE48C
+#endif
 #ifndef LoadResRefT_Addr
-#define LoadResRefT_Addr                                                                                               \
-    0 _Pragma("message(__FILE__ \"(\" __LINE_STR__ \") : Warning: LoadResRefT_Addr"                                    \
-              "is 0 - Zoltan found no matches for LoadResRefT\")")
+#define LoadResRefT_Addr 0x44FF00
 #endif
 #ifndef LookupLocalizedString_Addr
-#define LookupLocalizedString_Addr                                                                                     \
-    0 _Pragma("message(__FILE__ \"(\" __LINE_STR__ \") : Warning: LookupLocalizedString_Addr"                          \
-              "is 0 - Zoltan found no matches for LookupLocalizedString\")")
+#define LookupLocalizedString_Addr 0x5161A8
 #endif
 #ifndef PhysicsUnkStructVelocityUpdate_Addr
 #define PhysicsUnkStructVelocityUpdate_Addr 0x17ADC4
 #endif
 #ifndef ProcessAirResistance_Addr
-#define ProcessAirResistance_Addr                                                                                      \
-    0 _Pragma("message(__FILE__ \"(\" __LINE_STR__ \") : Warning: ProcessAirResistance_Addr"                           \
-              "is 0 - Zoltan found no matches for ProcessAirResistance\")")
+#define ProcessAirResistance_Addr 0x20F634
 #endif
 #ifndef ProcessScriptTypes_Addr
-#define ProcessScriptTypes_Addr                                                                                        \
-    0 _Pragma("message(__FILE__ \"(\" __LINE_STR__ \") : Warning: ProcessScriptTypes_Addr"                             \
-              "is 0 - Zoltan found no matches for ProcessScriptTypes\")")
+#define ProcessScriptTypes_Addr 0x60FC3C
 #endif
 #ifndef RollFactorTorqueThing_Addr
-#define RollFactorTorqueThing_Addr                                                                                     \
-    0 _Pragma("message(__FILE__ \"(\" __LINE_STR__ \") : Warning: RollFactorTorqueThing_Addr"                          \
-              "is 0 - Zoltan found no matches for RollFactorTorqueThing\")")
+#define RollFactorTorqueThing_Addr 0x209DBC
 #endif
 #ifndef SetLocalizedTextString_Addr
-#define SetLocalizedTextString_Addr                                                                                    \
-    0 _Pragma("message(__FILE__ \"(\" __LINE_STR__ \") : Warning: SetLocalizedTextString_Addr"                         \
-              "is 0 - Zoltan found no matches for SetLocalizedTextString\")")
+#define SetLocalizedTextString_Addr 0x5147E4
+#endif
+#ifndef SkidMarkEffectStart_Addr
+#define SkidMarkEffectStart_Addr 0x7C18D8
 #endif
 #ifndef TPPCameraStats_Update_Addr
 #define TPPCameraStats_Update_Addr 0x1FD5720
 #endif
+#ifndef TireTrackEffectStart_Addr
+#define TireTrackEffectStart_Addr 0x45063C
+#endif
 #ifndef UpdatePitch_Addr
 #define UpdatePitch_Addr 0x598F3C
 #endif
+#ifndef UpdateTireParameters_Addr
+#define UpdateTireParameters_Addr 0xC063A8
+#endif
 #ifndef VehicleHelperUpdate_Addr
-#define VehicleHelperUpdate_Addr                                                                                       \
-    0 _Pragma("message(__FILE__ \"(\" __LINE_STR__ \") : Warning: VehicleHelperUpdate_Addr"                            \
-              "is 0 - Zoltan found no matches for VehicleHelperUpdate\")")
+#define VehicleHelperUpdate_Addr 0x20BE10
 #endif
 #ifndef VehicleUpdateOrientationWithPID_Addr
-#define VehicleUpdateOrientationWithPID_Addr                                                                           \
-    0 _Pragma("message(__FILE__ \"(\" __LINE_STR__ \") : Warning: VehicleUpdateOrientationWithPID_Addr"                \
-              "is 0 - Zoltan found no matches for VehicleUpdateOrientationWithPID\")")
+#define VehicleUpdateOrientationWithPID_Addr 0x2583D34
+#endif
+#ifndef WheelEffectUpdate_Addr
+#define WheelEffectUpdate_Addr 0x450C44
+#endif
+#ifndef redGameAppBaseInitializationState_OnTick_Addr
+#define redGameAppBaseInitializationState_OnTick_Addr 0x826B2C
+#endif
+#ifndef redGameAppInitializationState_OnTick_Addr
+#define redGameAppInitializationState_OnTick_Addr 0x826BE8
+#endif
+#ifndef redGameAppInstance_RegisterState_Addr
+#define redGameAppInstance_RegisterState_Addr 0x8271FC
+#endif
+#ifndef redGameAppRunningState_OnTick_Addr
+#define redGameAppRunningState_OnTick_Addr 0x826B84
+#endif
+#ifndef redGameAppShutdownState_OnTick_Addr
+#define redGameAppShutdownState_OnTick_Addr 0x952B9C
+#endif
+#ifndef rttiBitFieldType_FromString_Addr
+#define rttiBitFieldType_FromString_Addr 0x2002700
+#endif
+#ifndef rttiBitFieldType_Serialize_Addr
+#define rttiBitFieldType_Serialize_Addr 0x2C8D6C
+#endif
+#ifndef rttiBitFieldType_ToString_Addr
+#define rttiBitFieldType_ToString_Addr 0x2002818
+#endif
+#ifndef rttiClassType_ClearScriptData_Addr
+#define rttiClassType_ClearScriptData_Addr 0x612800
+#endif
+#ifndef rttiClassType_CreateObject_Addr
+#define rttiClassType_CreateObject_Addr 0x158C50
+#endif
+#ifndef rttiClassType_FindFunctionByHash_Addr
+#define rttiClassType_FindFunctionByHash_Addr 0x50743C
+#endif
+#ifndef rttiClassType_FindProperty_Addr
+#define rttiClassType_FindProperty_Addr 0x159BD8
+#endif
+#ifndef rttiClassType_GetAlignment_Addr
+#define rttiClassType_GetAlignment_Addr 0x17B7330
+#endif
+#ifndef rttiClassType_GetProperties_Addr
+#define rttiClassType_GetProperties_Addr 0x611790
+#endif
+#ifndef rttiClassType_InitializeScriptDefaultValues_Addr
+#define rttiClassType_InitializeScriptDefaultValues_Addr 0x158DE8
+#endif
+#ifndef rttiClassType_InitializeScriptedProperties_Addr
+#define rttiClassType_InitializeScriptedProperties_Addr 0x159514
+#endif
+#ifndef rttiClassType_Serialize_Addr
+#define rttiClassType_Serialize_Addr 0x1592D4
+#endif
+#ifndef rttiClassType_ToString_Addr
+#define rttiClassType_ToString_Addr 0x6656CC
+#endif
+#ifndef rttiEnumType_FromString_Addr
+#define rttiEnumType_FromString_Addr 0x70AC74
+#endif
+#ifndef rttiEnumType_Serialize_Addr
+#define rttiEnumType_Serialize_Addr 0x159FC4
+#endif
+#ifndef rttiEnumType_ToString_Addr
+#define rttiEnumType_ToString_Addr 0x70A5D4
+#endif
+#ifndef rttiFunction_CallFunction_Addr
+#define rttiFunction_CallFunction_Addr 0x1FD3C9C
+#endif
+#ifndef rttiFunction_CallNative_Addr
+#define rttiFunction_CallNative_Addr 0x1FF21D8
+#endif
+#ifndef rttiFunction_InternalCall_Addr
+#define rttiFunction_InternalCall_Addr 0x50949C
+#endif
+#ifndef rttiFunction_InternalCallNative_Addr
+#define rttiFunction_InternalCallNative_Addr 0x157F40
+#endif
+#ifndef rttiIScriptable_FindFunction_Addr
+#define rttiIScriptable_FindFunction_Addr 0x183DD0
+#endif
+#ifndef rttiIType_GetERTTITypeString_Addr
+#define rttiIType_GetERTTITypeString_Addr 0x1FF1B4C
+#endif
+#ifndef rttiIType_GetRefName_Addr
+#define rttiIType_GetRefName_Addr 0x1856D8
+#endif
+#ifndef rttiIType_ReadValue_Addr
+#define rttiIType_ReadValue_Addr 0x1FF1CA4
+#endif
+#ifndef rttiIType_SerializeFromText_Addr
+#define rttiIType_SerializeFromText_Addr 0x1FF1DC8
+#endif
+#ifndef rttiIType_SerializeToText_Addr
+#define rttiIType_SerializeToText_Addr 0x1FF1E68
+#endif
+#ifndef rttiIType_WriteValue_Addr
+#define rttiIType_WriteValue_Addr 0x1FF1EF4
+#endif
+#ifndef rttiNativeGlobalFunction_NativeGlobalFunction_Addr
+#define rttiNativeGlobalFunction_NativeGlobalFunction_Addr 0x9B0094
+#endif
+#ifndef rttiNativeMemberFunction_NativeMemberFunction_Addr
+#define rttiNativeMemberFunction_NativeMemberFunction_Addr 0x60F5AC
+#endif
+#ifndef rttiNativeMemberFunction_NativeMemberFunction_0_Addr
+#define rttiNativeMemberFunction_NativeMemberFunction_0_Addr 0x9B00E0
 #endif
 #ifndef vehicle_PhysicsStructUpdate_Addr
-#define vehicle_PhysicsStructUpdate_Addr                                                                               \
-    0 _Pragma("message(__FILE__ \"(\" __LINE_STR__ \") : Warning: vehicle_PhysicsStructUpdate_Addr"                    \
-              "is 0 - Zoltan found no matches for vehicle::PhysicsStructUpdate\")")
+#define vehicle_PhysicsStructUpdate_Addr 0x172CD8
+#endif
+#ifndef wWinMain_Addr
+#define wWinMain_Addr 0x988610
 #endif

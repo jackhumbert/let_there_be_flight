@@ -242,7 +242,7 @@ public class FlightEvents extends VehicleEventsTransition {
     if isTeleportExiting.value || isScheduledExit.value || isSwitchingSeats.value {
       return;
     };
-    if this.IsPlayerAllowedToExitVehicle(scriptInterface) {
+    if !this.IsExitVehicleBlocked(scriptInterface) {
       let stateTime = this.GetInStateTime();      
       let exitActionPressCount = scriptInterface.GetActionPressCount(n"Exit");
       let exitPressCountResult = stateContext.GetPermanentIntParameter(n"exitPressCountOnEnter");

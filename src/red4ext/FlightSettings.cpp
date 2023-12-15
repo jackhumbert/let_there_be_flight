@@ -75,7 +75,7 @@ bool Setup(RED4ext::CGameApplication *aApp) {
 
   auto fs = FlightSettings::GetInstance();
   if (fs) {
-    fs->ExecuteFunction("OnAttach");
+    RED4ext::ExecuteFunction(fs, fs->nativeType->GetFunction("OnAttach"), nullptr);
   } else {
     spdlog::error("[FlightSettings] Could not initialize");
   }

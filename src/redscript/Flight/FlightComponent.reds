@@ -419,7 +419,7 @@ public native class FlightComponent extends GameComponent {
       // these stop engine noises if they were already playing?
       this.GetVehicle().TurnEngineOn(false);
       // this.GetVehicle().TurnOn(true);
-      this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetLightMode(vehicleELightMode.HighBeams);
+      // this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetLightMode(vehicleELightMode.HighBeams);
       this.GetVehicle().GetVehicleComponent().GetVehicleController().ToggleLights(true);
 
       this.hoverGroundPID.Reset();

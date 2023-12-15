@@ -37,7 +37,7 @@ REGISTER_FLIGHT_HOOK(uintptr_t, TPPCameraStats_Update, RED4ext::vehicle::TPPCame
     RED4ext::Handle<RED4ext::IScriptable> mode;
     auto flightModeCls = rtti->GetClass("FlightMode");
     auto result = RED4ext::CStackType(flightModeCls, &mode);
-    auto stack = RED4ext::CStack(fcomp, nullptr, 0, &result, 0);
+    auto stack = RED4ext::CStack(fcomp, nullptr, 0, &result);
     fcompc->GetFunction("GetFlightMode")->Execute(&stack);
     auto usesRightStickInput = flightModeCls->GetProperty("usesRightStickInput")->GetValue<bool>(mode);
 

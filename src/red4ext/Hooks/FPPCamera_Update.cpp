@@ -35,7 +35,7 @@ REGISTER_FLIGHT_HOOK(char __fastcall, FPPCameraUpdate, RED4ext::game::FPPCameraC
     RED4ext::Handle<RED4ext::IScriptable> mode;
     auto flightModeCls = rtti->GetClass("FlightMode");
     auto result = RED4ext::CStackType(flightModeCls, &mode);
-    auto stack = RED4ext::CStack(fcomp, nullptr, 0, &result, 0);
+    auto stack = RED4ext::CStack(fcomp, nullptr, 0, &result);
     fcompc->GetFunction("GetFlightMode")->Execute(&stack);
     lockCamera |= flightModeCls->GetProperty("usesRightStickInput")->GetValue<bool>(mode);
   }

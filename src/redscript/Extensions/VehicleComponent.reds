@@ -3,7 +3,7 @@ protected cb func OnVehicleWaterEvent(evt: ref<VehicleWaterEvent>) -> Bool {
   if evt.isInWater  && !this.GetPS().GetIsSubmerged() {
     if !Equals(GetMountedVehicle(FlightController.GetInstance().player), this.GetVehicle()) && FlightController.GetInstance().IsActive() {
       this.BreakAllDamageStageFX(true);
-      this.DestroyVehicle();
+      // this.DestroyVehicle();
       this.DestroyRandomWindow();
       this.ApplyVehicleDOT(n"high");
     }

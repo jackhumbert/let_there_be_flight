@@ -80,7 +80,7 @@ void IFlightConfiguration::Setup(RED4ext::vehicle::BaseObject * vehicle) {
     RED4ext::CStackType args[1];
     auto handle = RED4ext::Handle<RED4ext::vehicle::BaseObject>(vehicle);
     args[0] = RED4ext::CStackType(rtti->GetType("handle:vehicleBaseObject"), &handle);
-    auto stack = RED4ext::CStack(this, args, 1, nullptr, 0);
+    auto stack = RED4ext::CStack(this, args, 1, nullptr);
     onInit->Execute(&stack);
   }
 }
@@ -191,7 +191,7 @@ void IFlightConfiguration::OnActivationCore() {
     proxyHelper.Unlock();
   }
 
-  this->ExecuteFunction("OnActivation");
+  RED4ext::ExecuteFunction(this, this->nativeType->GetFunction("OnActivation"), nullptr);
 }
 
 void IFlightConfiguration::OnDeactivationCore() {
@@ -234,5 +234,5 @@ void IFlightConfiguration::OnDeactivationCore() {
     proxyHelper.Unlock();
   }
 
-  this->ExecuteFunction("OnDeactivation");
+  RED4ext::ExecuteFunction(this, this->nativeType->GetFunction("OnDeactivation"), nullptr);
 }
