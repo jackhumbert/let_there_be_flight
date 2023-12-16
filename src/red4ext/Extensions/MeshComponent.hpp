@@ -5,6 +5,7 @@
 #include <RED4ext/Scripting/Natives/Generated/ent/MeshComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/red/ResourceReferenceScriptToken.hpp>
 #include <RED4ext/Scripting/Natives/vehicleChassisComponent.hpp>
+#include <RED4ext/Scripting/Natives/entEntity.hpp>
 //#include "FlightConfiguration.hpp"
 
 class MeshComponent : public Engine::RTTIExpansion<MeshComponent, RED4ext::ent::MeshComponent> {
@@ -40,7 +41,7 @@ public:
   /// AddSlot
   void AddSlot(RED4ext::CName boneName, RED4ext::CName slotName, RED4ext::Vector3 relativePosition,
                        RED4ext::Quaternion relativeRotation);
-  private:
+private:
   friend Descriptor;
 
   inline static void OnExpand(Descriptor *aType, RED4ext::CRTTISystem *) {

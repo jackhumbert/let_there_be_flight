@@ -21,7 +21,7 @@ void IPlacedComponent::SetParentTransform(RED4ext::CName bindName, RED4ext::CNam
 }
 
 void Entity::AddComponent(RED4ext::Handle<RED4ext::ent::IComponent> componentToAdd) {
-  RED4ext::ent::VisualControllerComponent *vcc = NULL;
+  RED4ext::ent::VisualControllerComponent *vcc = nullptr;
   auto rtti = RED4ext::CRTTISystem::Get();
   auto vccClass =  rtti->GetClass("entVisualControllerComponent");
 
@@ -68,7 +68,7 @@ void Entity::AddComponent(RED4ext::Handle<RED4ext::ent::IComponent> componentToA
 //}
 
 void Entity::AddSlot(RED4ext::CName boneName, RED4ext::CName slotName, RED4ext::Vector3 relativePosition, RED4ext::Quaternion relativeRotation) {
-  RED4ext::ent::SlotComponent *slotComponent = NULL;
+  RED4ext::ent::SlotComponent *slotComponent = nullptr;
   auto rtti = RED4ext::CRTTISystem::Get();
 
   for (auto const &handle : this->componentsStorage.components) {
@@ -81,7 +81,7 @@ void Entity::AddSlot(RED4ext::CName boneName, RED4ext::CName slotName, RED4ext::
     }
   }
 
-  if (slotComponent != NULL) {
+  if (slotComponent != nullptr) {
     auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
     slot->boneName = boneName;
     slot->slotName = slotName;

@@ -1,5 +1,6 @@
 #pragma once
 #include "Utils/FlightModule.hpp"
+#include <RED4ext/Scripting/Natives/Generated/red/ResourceReferenceScriptToken.hpp>
 #include <RedLib.hpp>
 
 struct FlightLog : RED4ext::IScriptable {

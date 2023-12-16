@@ -4,6 +4,7 @@
 #include "FlightSettings.hpp"
 #include <RED4ext/Common.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/TPPCameraComponent.hpp>
+#include <RED4ext/Scripting/Natives/vehiclePhysics.hpp>
 
 // gets the location for the camera to look at
 

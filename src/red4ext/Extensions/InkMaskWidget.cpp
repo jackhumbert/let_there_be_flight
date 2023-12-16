@@ -3,6 +3,7 @@
 #include <RED4ext/Common.hpp>
 #include <RED4ext/RTTISystem.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/MaskWidget.hpp>
+#include <RED4ext/Scripting/Natives/Generated/red/ResourceReferenceScriptToken.hpp>
 #include <RED4ext/Scripting/Utils.hpp>
 #include <RedLib.hpp>
 
