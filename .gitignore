@@ -41,7 +41,7 @@ deps/PxShared
 
 src/red4ext/x64/*
 src/red4ext/build/*
-packed/
+packed/*
 let_there_be_flight*.zip
 wolvenkit/let_there_be_flight.zip
 wolvenkit/install_log.xml
