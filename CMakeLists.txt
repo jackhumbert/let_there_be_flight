@@ -44,7 +44,7 @@ configure_red4ext(src/red4ext)
 configure_red4ext_addresses(Addresses.hpp)
 
 configure_tweaks(src/tweaks)
-configure_archives(src/wolvenkit/packed/mods/let_there_be_flight/archives/let_there_be_flight.archive src/archive_xl/let_there_be_flight.archive.xl)
+configure_archives(src/wolvenkit/packed/archive/pc/mod/let_there_be_flight.archive src/archive_xl/let_there_be_flight.archive.xl)
 
 find_package(Detours)
 find_package(FMOD)

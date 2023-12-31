@@ -224,7 +224,7 @@ void FlightSystem::OnGameLoad(const RED4ext::JobGroup& aJobGroup, bool& aSuccess
   //PhysXClampHugeSpeeds.GetAddr()->value = false;
   //AirControlCarRollHelper.GetAddr()->value = false;
   physicsCCD.GetAddr()->value = true;
-  VehicleTeleportationIfFallsUnderWorld.GetAddr()->value = false;
+  // VehicleTeleportationIfFallsUnderWorld.GetAddr()->value = false;
   //ForceMoveToMaxLinearSpeed.GetAddr()->value = 100.0;
 
   // spdlog::info("[FlightSystem] PhysXClampHugeImpacts: {}", PhysXClampHugeImpacts.GetAddr()->value);

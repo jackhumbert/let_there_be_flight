@@ -122,19 +122,19 @@ REGISTER_FLIGHT_HOOK(void __fastcall, VehicleUpdateOrientationWithPID,
   VehicleUpdateOrientationWithPID_Original(a1, a2, a3, a4);
 }
 
-// REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, vehicleCarPhysics_AnimationUpdate, RED4ext::vehicle::CarPhysics *a1,
-//                      float timeDelta) {
-//   auto fc = FlightComponent::Get(a1->parent);
-//   if (fc) {
-//     auto rtti = RED4ext::CRTTISystem::Get();
-//     auto fcc = rtti->GetClass("FlightComponent");
-//     auto rollProp = fcc->GetProperty("roll");
-//     if (fc->active) {
-//       a1->parent->turnInput = rollProp->GetValue<float>(fc);
-//     }
-//   }
-//   return vehicleCarPhysics_AnimationUpdate_Original(a1, timeDelta);
-// }
+REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, vehicleCarPhysics_AnimationUpdate, RED4ext::vehicle::CarPhysics *a1,
+                     float timeDelta) {
+  auto fc = FlightComponent::Get(a1->parent);
+  if (fc) {
+    auto rtti = RED4ext::CRTTISystem::Get();
+    auto fcc = rtti->GetClass("FlightComponent");
+    auto rollProp = fcc->GetProperty("roll");
+    if (fc->active) {
+      a1->parent->turnInput = rollProp->GetValue<float>(fc);
+    }
+  }
+  return vehicleCarPhysics_AnimationUpdate_Original(a1, timeDelta);
+}
 
 REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, vehicleBikePhysics_AnimationUpdate, RED4ext::vehicle::BikePhysics *a1) {
   auto fc = FlightComponent::Get(a1->parent);

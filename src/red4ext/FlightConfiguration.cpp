@@ -155,26 +155,28 @@ void IFlightConfiguration::OnActivationCore() {
 
     for (auto const &thruster: this->thrusters) {
       RED4ext::Handle<RED4ext::physics::ICollider> collider;
-      RED4ext::physics::ColliderSphere::createHandleWithRadius(&collider, 0.4);
+      float radius = 0.4;
+      RED4ext::physics::ColliderSphere::createHandleWithRadius(&collider, &radius);
       collider.refCount->IncRef();
 
       collider->material = "vehicle_chassis.physmat";
 
-      auto wtCls = rtti->GetClass("WorldTransform");
+      // auto wtCls = rtti->GetClass("WorldTransform");
 
       index = sc->GetSlotIndex(thruster->slotName);
       if (index != -1) {
         sc->GetLocalSlotTransformFromIndex(index, &transform);
         collider->localToBody.position = transform.position - *cc->localTransform.Position.ToVector4();
         collider->localToBody.orientation = RED4ext::Quaternion(0.0, 0.0, 0.0, 1.0);
+          
+        auto shape = (physx::PxShape *) collider->CreatePxShape(&unk140, nullptr, 1, nullptr);
+        shape->setSimulationFilterData(&filterData->simulationFilter);
+        shape->setQueryFilterData(&filterData->queryFilter);
+
+        body->attachShape(*shape);
+
+        shape->release2();
       }
-      auto shape = (physx::PxShape *) collider->CreatePxShape(&unk140, nullptr, 1, nullptr);
-      shape->setSimulationFilterData(&filterData->simulationFilter);
-      shape->setQueryFilterData(&filterData->queryFilter);
-
-      body->attachShape(*shape);
-
-      shape->release2();
     }
 
     auto newCount = body->getNbShapes();
