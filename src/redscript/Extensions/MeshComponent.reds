@@ -90,13 +90,13 @@ public native let LODMode: entMeshComponentLODMode;
 @runtimeProperty("offset", "0x1AB")
 public native let order: Uint8;
 
-@addField(MeshComponent)
-@runtimeProperty("offset", "0x1AC")
-public native let castShadows: Bool;
+// @addField(MeshComponent)
+// @runtimeProperty("offset", "0x1AC")
+// public native let castShadows: Bool;
 
-@addField(MeshComponent)
-@runtimeProperty("offset", "0x1AD")
-public native let castLocalShadows: Bool;
+// @addField(MeshComponent)
+// @runtimeProperty("offset", "0x1AD")
+// public native let castLocalShadows: Bool;
 
 // PhysicalMeshComponent
 

@@ -117,8 +117,8 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     }
 
     auto has_inputLoader = HasDependency(L"input_loader", RED4EXT_SEMVER(0, 1, 1));
-    auto has_archiveXL = HasDependency(L"ArchiveXL", RED4EXT_SEMVER(1, 4, 5));
-    auto has_tweakXL = HasDependency(L"TweakXL", RED4EXT_SEMVER(1, 1, 5));
+    auto has_archiveXL = HasDependency(L"ArchiveXL", RED4EXT_SEMVER(1, 10, 0));
+    auto has_tweakXL = HasDependency(L"TweakXL", RED4EXT_SEMVER(1, 6, 0));
     if (!has_inputLoader || !has_archiveXL || !has_tweakXL) {
       spdlog::error("Dependencies not met - game will load without Let There Be Flight");
       auto message =

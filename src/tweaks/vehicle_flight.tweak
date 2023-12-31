@@ -1,0 +1,51 @@
+playerStateMachineInputContext.vehicleFlightContext : playerStateMachineInputContext.abstractVehicleContext
+{
+	CName forceInputContext = "VehicleFlight";
+}
+
+playerStateMachineDefinitions.InputContext {
+  states += [ "vehicleFlightContext" ];
+}
+
+player.vehicle
+{
+	bool canEnterVehicleFlight = true;
+}
+
+playerStateMachineVehicle.drive {
+  transitionTo += [ "flight" ];
+  transitionToCondition += [ "ToFlight" ];
+}
+
+playerStateMachineVehicle.scene {
+  transitionTo += [ "flight" ];
+  transitionToCondition += [ "ToFlight" ];
+}
+
+photo_mode.general {
+  onlyFPPPhotoModeInPlayerStates += [ "Vehicle.flight" ];
+}
+
+playerStateMachineVehicle.drive : playerStateMachineVehicle.abstractSlotState
+{
+	string stateBodyClassName = "VehicleFlight";
+	bool hasOnEnter = true;
+	bool hasOnExit = true;
+	bool hasEnterCondition = true;
+	bool hasOnUpdate = true;
+	CName onEnterCameraParamsName = "Vehicle";
+	CName onEnterCameraParamsNameSecondary = "Bike";
+	string[] transitionTo = 
+	[
+		"scene", "switchSeats", "driverCombatFirearms", "driverCombatMountedWeapons", "deathExiting", "collisionExiting", "coolExiting", "slideExiting", "speedExiting", "combatExiting", "exiting"
+	];
+	string[] transitionCondition = 
+	[
+		"", "=", "=", "=", "", "", "", "", "", "", ""
+	];
+}
+
+playerStateMachineDefinitions.Vehicle
+{
+  states += [ "flight"];
+}

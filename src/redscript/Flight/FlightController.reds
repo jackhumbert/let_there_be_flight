@@ -179,17 +179,18 @@ public native class FlightController extends IScriptable {
   
   public func Enable() -> Void {
     this.enabled = true;
-    this.SetupActions();
     FlightLog.Info("[FlightController] Enable");
+    this.SetupActions();
   }
 
   public func Disable() -> Void {
     this.enabled = false;
-    this.SetupActions();   
     FlightLog.Info("[FlightController] Disable");
+    this.SetupActions();   
   }
   
   private func Activate(silent: Bool) -> Void {
+    FlightLog.Info("[FlightController] Activate");
     this.enabled = true;
     this.active = true;
     this.SetupActions();
@@ -236,7 +237,6 @@ public native class FlightController extends IScriptable {
       this.ShowSimpleMessage(n"Simple-Message-Flight-Control-Engaged");
     }
     
-    FlightLog.Info("[FlightController] Activate");
     this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsActive, true, true);
     // this.GetBlackboard().SignalBool(GetAllBlackboardDefs().VehicleFlight.IsActive);
   }
@@ -275,7 +275,8 @@ public native class FlightController extends IScriptable {
     GameInstance.GetUISystem(this.gameInstance).QueueEvent(shardUIevent);
   }
 
-  private func SetupActions() -> Void {
+  private func SetupActions() -> Void {     
+    // FlightLog.Info("[FlightController] SetupActions");
     this.usingKB = this.player.PlayerLastUsedKBM();
     let evt = new UpdateInputHintMultipleEvent();
     evt.targetHintContainer = n"GameplayInputHelper";
@@ -685,6 +686,9 @@ public native class FlightController extends IScriptable {
     let data: InputHintData;
     data.source = n"FlightController";
     data.action = action;
+    data.holdIndicationType = inkInputHintHoldIndicationType.FromInputConfig;
+    data.sortingPriority = 0;
+    data.enableHoldAnimation = false;
     data.localizedLabel = GetLocalizedTextByKey(label);
     if StrLen( data.localizedLabel) == 0 {
          data.localizedLabel = ToString(label);

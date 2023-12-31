@@ -123,9 +123,9 @@ public native class FlightComponent extends GameComponent {
   // }
 
   private final func OnGameAttach() -> Void {
-    // ArrayResize(this.playingScraping, 4);
     LTBF_RegisterListener(this);
-    //FlightLog.Info("[FlightComponent] OnGameAttach: " + this.GetVehicle().GetDisplayName());
+    // ArrayResize(this.playingScraping, 4);
+    // FlightLog.Info("[FlightComponent] OnGameAttach: " + this.GetVehicle().GetDisplayName());
     this.m_interaction = this.FindComponentByName(n"interaction") as InteractionComponent;
     this.m_healthStatPoolListener = new VehicleHealthStatPoolListener();
     this.m_healthStatPoolListener.m_owner = this.GetVehicle();
@@ -141,8 +141,8 @@ public native class FlightComponent extends GameComponent {
     this.aeroYawPID = PID.Create(FlightSettings.GetVector3("aeroYawPID"));
     this.pitchAeroPID = PID.Create(FlightSettings.GetVector3("aeroPitchPID"));
 
-    this.sys = FlightSystem.GetInstance();
-    this.sys.RegisterComponent(this);
+    // this.sys = FlightSystem.GetInstance();
+    // this.sys.RegisterComponent(this);
     this.sqs = GameInstance.GetSpatialQueriesSystem(this.GetVehicle().GetGame());
     // this.fx = FlightFx.Create(this);
     // this.thrusters = FlightThruster.CreateThrusters(this);
@@ -283,19 +283,19 @@ public native class FlightComponent extends GameComponent {
   
   protected cb func OnMountingEvent(evt: ref<MountingEvent>) -> Bool {
     // this.helper = this.GetVehicle().AddFlightHelper();
-    LTBF_RegisterListener(this);
+    // LTBF_RegisterListener(this);
     this.thrusterTensor = this.configuration.GetThrusterTensor();
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if mountChild.IsPlayer() {
       FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName() + " uses tensor: " + this.GetVehicle().UsesInertiaTensor());
       // this.GetVehicle().TurnOffAirControl();
-      this.SetupVehicleTPPBBListener();
       // FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName());
+      // (this.GetVehicle().FindComponentByName(n"cars_sport_fx") as EffectSpawnerComponent).AddEffect();
+      this.sys.SetPlayerComponent(this);
+      this.isPlayerMounted = true;
+      this.SetupVehicleTPPBBListener();
       FlightAudio.Get().Start("windLeft", "wind_TPP");
       FlightAudio.Get().Start("windRight", "wind_TPP");
-      // (this.GetVehicle().FindComponentByName(n"cars_sport_fx") as EffectSpawnerComponent).AddEffect();
-      this.sys.playerComponent = this;
-      this.isPlayerMounted = true;
       // this.uiControl = FlightControllerUI.Create(this.ui_info.GetGameController(), this.ui_info.GetGameController().GetRootCompoundWidget());
       // this.uiControl.Setup(this.stats);
     } else {
@@ -304,8 +304,8 @@ public native class FlightComponent extends GameComponent {
   }
   
   protected cb func OnVehicleFinishedMountingEvent(evt: ref<VehicleFinishedMountingEvent>) -> Bool {
-    // FlightLog.Info("[FlightComponent] OnVehicleFinishedMountingEvent: " + this.GetVehicle().GetDisplayName());
-    if this.isPlayerMounted {
+    if evt.character.IsPlayer() && evt.isMounting {    
+      FlightLog.Info("[FlightComponent] OnVehicleFinishedMountingEvent: " + this.GetVehicle().GetDisplayName());
       this.sys.ctlr.Enable();
       if this.active {
         this.sys.ctlr.Activate(true);
@@ -317,14 +317,13 @@ public native class FlightComponent extends GameComponent {
     let normal: Vector4;
     this.SetupTires();
     let wheeled = this.GetVehicle() as WheeledObject;
-    if (this.isPlayerMounted && !this.FindGround(normal) || this.distance > FlightSettings.GetInstance().autoActivationHeight) && IsDefined(wheeled) && FlightSettings.GetInstance().autoActivationEnabled {
+    if ( evt.character.IsPlayer() && evt.isMounting && !this.FindGround(normal) || this.distance > FlightSettings.GetInstance().autoActivationHeight) && IsDefined(wheeled) && FlightSettings.GetInstance().autoActivationEnabled {
       this.Activate(true);
     }
   }
 
   protected cb func OnUnmountingEvent(evt: ref<UnmountingEvent>) -> Bool {
-    
-    LTBF_UnregisterListener(this);
+    // LTBF_UnregisterListener(this);
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if IsDefined(mountChild) && mountChild.IsPlayer() {
       this.UnregisterVehicleTPPBBListener();

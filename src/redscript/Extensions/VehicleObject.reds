@@ -3,7 +3,7 @@ private let m_flightComponent: ref<FlightComponent>;
 
 @wrapMethod(VehicleObject)
 protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> Bool {
-  EntityRequestComponentsInterface.RequestComponent(ri, n"flightComponent", n"FlightComponent", false);
+  EntityRequestComponentsInterface.RequestComponent(ri, n"flightComponent", n"FlightComponent", true);
   // EntityRequestComponentsInterface.RequestComponent(ri, n"flight_ui", n"worlduiWidgetComponent", true);
   // EntityRequestComponentsInterface.RequestComponent(ri, n"flight_ui_info", n"worlduiWidgetComponent", true);
   wrappedMethod(ri);
@@ -38,19 +38,19 @@ public func GetLocalToWorld() -> Matrix {
 // public let chassis: ref<vehicleChassisComponent>;
 
 @addField(VehicleObject)
-@runtimeProperty("offset", "0x24C")
+@runtimeProperty("offset", "0x25C")
 public native let isOnGround: Bool;
 
 @addField(VehicleObject)
-@runtimeProperty("offset", "0x254")
+@runtimeProperty("offset", "0x268")
 public native let acceleration: Float;
 
 @addField(VehicleObject)
-@runtimeProperty("offset", "0x258")
+@runtimeProperty("offset", "0x26C")
 public native let deceleration: Float;
 
 @addField(VehicleObject)
-@runtimeProperty("offset", "0x25C")
+@runtimeProperty("offset", "0x270")
 public native let handbrake: Float;
 
 // @addField(VehicleObject)
@@ -63,15 +63,15 @@ public native let handbrake: Float;
 // public native let turnX3: Float;
 
 @addField(VehicleObject)
-@runtimeProperty("offset", "0x611")
+@runtimeProperty("offset", "0x699")
 public native let ignoreImpulses: Bool;
 
 @addField(VehicleObject)
-@runtimeProperty("offset", "0x268")
+@runtimeProperty("offset", "0x27C")
 public native let turnX: Float;
 
 @addField(VehicleObject)
-@runtimeProperty("offset", "0x950")
+@runtimeProperty("offset", "0xB04")
 public native let tracePosition: Vector3;
 
 @addMethod(VehicleObject)

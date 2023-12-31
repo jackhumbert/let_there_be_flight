@@ -14,9 +14,11 @@
 #include <RED4ext/Scripting/Natives/actionDriveChaseTarget.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/AutonomousData.hpp>
 #include "FlightConfiguration.hpp"
+#include "IFlightSystem.hpp"
 //#include "FlightThruster.hpp"
 
 struct IFlightConfiguration;
+// struct FlightSystem;
 
 class FlightComponentPS : public Engine::RTTIClass<FlightComponentPS, RED4ext::game::ComponentPS> {
 public:
@@ -36,6 +38,8 @@ public:
     return call(this);
   }*/
 
+  // virtual bool CanBeDestructed() override { return false; };
+
   //virtual ~FlightComponent() override = default;
   //virtual ~PSInterface() override = default;
   inline virtual RED4ext::CClass* GetPSClass() override {
@@ -44,7 +48,7 @@ public:
   }
 
   // has scripted callbacks?
-  inline virtual bool sub_240() override {
+  inline virtual bool sub_238(RED4ext::Handle<RED4ext::game::Object>*) override {
     return true;
   }
 
@@ -60,6 +64,8 @@ public:
       }
       return NULL;
   }
+
+  virtual void OnGameAttach(RED4ext::IGameInstance* a1) override;
 
   void OnUpdate(float deltaTime);
 
@@ -83,7 +89,7 @@ public:
   //  return 0;
   //}
 
-  RED4ext::Handle<RED4ext::game::IGameSystem> sys;
+  RED4ext::Handle<IFlightSystem> sys;
   bool active;
   bool hasUpdate;
   alignas(0x10) RED4ext::Vector4 force;

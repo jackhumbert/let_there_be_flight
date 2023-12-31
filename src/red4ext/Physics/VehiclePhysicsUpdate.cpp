@@ -1,5 +1,6 @@
 #include "Utils/FlightModule.hpp"
 #include <RED4ext/Scripting/Natives/vehiclePhysics.hpp>
+#include <RED4ext/Scripting/Natives/vehicleCollisions.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/CarBaseObject.hpp>
 #include <RED4ext/Common.hpp>
@@ -32,8 +33,9 @@ REGISTER_FLIGHT_HOOK(void __fastcall, ProcessAirResistance,
   auto Y = velocity.Y;
   auto Z = velocity.Z;
   auto speedSquared = (float)((float)(X * X) + (float)(Y * Y)) + (float)(Z * Z);
+  // only need to apply air resistance when speed is >= 100.0
   if (_fdclass(speedSquared) != 1 && speedSquared >= 10000.0) {
-    auto unk568 = a1->parent->unk568;
+    auto unk568 = a1->parent->collisions;
     if (speedSquared > 0.0099999998) {
       auto speed = sqrt(speedSquared);
       if (speed != 0.0) {
@@ -49,7 +51,7 @@ REGISTER_FLIGHT_HOOK(void __fastcall, ProcessAirResistance,
       airResistanceForce.Y = yankY * deltaTime;
       airResistanceForce.Z = yankZ * deltaTime;
       physicsData->force += airResistanceForce;
-      unk568->unk108 = sqrt((float)((float)(yankX * yankX) + (float)(yankY * yankY)) + (float)(yankZ * yankZ));
+      unk568->unkEC = sqrt((float)((float)(yankX * yankX) + (float)(yankY * yankY)) + (float)(yankZ * yankZ));
     }
   }
   ProcessAirResistance_Original(a1, deltaTime);
@@ -120,19 +122,19 @@ REGISTER_FLIGHT_HOOK(void __fastcall, VehicleUpdateOrientationWithPID,
   VehicleUpdateOrientationWithPID_Original(a1, a2, a3, a4);
 }
 
-REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, vehicleCarPhysics_AnimationUpdate, RED4ext::vehicle::CarPhysics *a1,
-                     float timeDelta) {
-  auto fc = FlightComponent::Get(a1->parent);
-  if (fc) {
-    auto rtti = RED4ext::CRTTISystem::Get();
-    auto fcc = rtti->GetClass("FlightComponent");
-    auto rollProp = fcc->GetProperty("roll");
-    if (fc->active) {
-      a1->parent->turnInput = rollProp->GetValue<float>(fc);
-    }
-  }
-  return vehicleCarPhysics_AnimationUpdate_Original(a1, timeDelta);
-}
+// REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, vehicleCarPhysics_AnimationUpdate, RED4ext::vehicle::CarPhysics *a1,
+//                      float timeDelta) {
+//   auto fc = FlightComponent::Get(a1->parent);
+//   if (fc) {
+//     auto rtti = RED4ext::CRTTISystem::Get();
+//     auto fcc = rtti->GetClass("FlightComponent");
+//     auto rollProp = fcc->GetProperty("roll");
+//     if (fc->active) {
+//       a1->parent->turnInput = rollProp->GetValue<float>(fc);
+//     }
+//   }
+//   return vehicleCarPhysics_AnimationUpdate_Original(a1, timeDelta);
+// }
 
 REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, vehicleBikePhysics_AnimationUpdate, RED4ext::vehicle::BikePhysics *a1) {
   auto fc = FlightComponent::Get(a1->parent);
@@ -343,23 +345,26 @@ REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, vehicleBikePhysics_AnimationUpdate, R
 REGISTER_FLIGHT_HOOK(void __fastcall, RollFactorTorqueThing,
     uint64_t *a1, float a2) {
   auto physics = (RED4ext::vehicle::WheeledPhysics *)a1[2];
-  auto fc = FlightComponent::Get(physics->parent);
-  if (fc && fc->active) {
-    return;
-  } else {
-    RollFactorTorqueThing_Original(a1, a2);
+  if (physics->parent) {
+    auto fc = FlightComponent::Get(physics->parent);
+    if (fc && fc->active) {
+      return;
+    }
   }
+  RollFactorTorqueThing_Original(a1, a2);
 }
 
 // disables tire friction
 REGISTER_FLIGHT_HOOK(void __fastcall, FourWheelTorque,
     RED4ext::vehicle::WheeledPhysics *physics, unsigned __int8 rearWheelIndex, unsigned __int8 frontWheelIndex, float a4, RED4ext::Transform *transform) {
-  auto fc = FlightComponent::Get(physics->parent);
-  if (fc && fc->active) {
-    vehicle::PhysicsStructUpdate(physics->parent->physicsData);
-  } else {
-    FourWheelTorque_Original(physics, rearWheelIndex, frontWheelIndex, a4, transform);
+  if (physics->parent) {
+    auto fc = FlightComponent::Get(physics->parent);
+    if (fc && fc->active) {
+      vehicle::PhysicsStructUpdate(physics->parent->physicsData);
+      return;
+    }
   }
+  FourWheelTorque_Original(physics, rearWheelIndex, frontWheelIndex, a4, transform);
 }
 
 //REGISTER_FLIGHT_HOOK(void __fastcall, vehicleUnk588_UpdateTransform, RED4ext::vehicle::Unk588 * unk588, RED4ext::Transform * transform) {

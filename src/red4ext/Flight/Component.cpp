@@ -1,4 +1,5 @@
 #include "Flight/Component.hpp"
+#include "FlightSystem.hpp"
 #include <RED4ext/Scripting/Natives/vehiclePhysicsData.hpp>
 
 void FlightComponent::ChaseTarget(RED4ext::WeakHandle<RED4ext::game::Object> target) {
@@ -29,6 +30,11 @@ void FlightComponent::ChaseTarget(RED4ext::WeakHandle<RED4ext::game::Object> tar
   //}
 }
 
+void FlightComponent::OnGameAttach(RED4ext::IGameInstance* a1) {
+  this->sys = RED4ext::Handle<FlightSystem>((FlightSystem*)a1->GetSystem(FlightSystem::GetRTTIType()));
+  this->sys->RegisterComponent(RED4ext::Handle<FlightComponent>(this));
+}
+
 void FlightComponent::OnUpdate(float deltaTime) {
   auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(this->entity);
   if (this->hasUpdate) {
@@ -40,10 +46,11 @@ void FlightComponent::OnUpdate(float deltaTime) {
       helper.UpdateProxyCache();
       helper.Unlock();
     }*/
-//    vehicle->UnsetPhysicsStates();
+    vehicle->UnsetPhysicsStates();
     RED4ext::StackArgs_t args;
-    args.emplace_back(RED4ext::CRTTISystem::Get()->GetType("Float"), &deltaTime);
-    RED4ext::ExecuteFunction(this, this->nativeType->GetFunction("OnUpdate"), &args);
+    float delta = deltaTime;
+    args.emplace_back(RED4ext::CRTTISystem::Get()->GetType("Float"), &delta);
+    RED4ext::ExecuteFunction(this, this->nativeType->GetFunction("OnUpdate"), nullptr, args);
     vehicle->physicsData->force += this->force;
     vehicle->physicsData->torque += this->torque;
     this->force = RED4ext::Vector4();

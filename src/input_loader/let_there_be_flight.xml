@@ -2,21 +2,21 @@
 <bindings>
 	<!-- VEHICLE DRIVE - used when player is mounted as driver and can control vehicle -->
 	
-	<context name="VehicleDrive" append="true">
+	<context name="VehicleDriveBase" append="true">
 		<include name="VehicleFlightToggle" />
 	</context>
 	
 	<!-- VEHICLE DRIVER COMBAT - used when player is mounted as driver and has weapon equipped -->
 	
-	<context name="VehicleDriverCombat" append="true">
+	<context name="BaseVehicleDriverCombat" append="true">
 		<include name="VehicleFlightToggle" />
 	</context>
 
 	<!-- VEHICLE COMBAT - used when player is mounted as passenger and has weapon equipped -->
 	
-	<context name="VehicleCombat" append="true">
+	<!-- <context name="VehicleCombat" append="true">
 		<include name="VehicleFlightToggle" />
-	</context>
+	</context> -->
 
 	<context name="VehicleFlight">
 		<include name="CameraMovement" />

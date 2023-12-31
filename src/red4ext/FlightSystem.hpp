@@ -15,6 +15,8 @@ namespace GameSetting {
 const uintptr_t physicsCCD = GameSetting_physicsCCD_Addr;
 /// @pattern ? ? ? ? ? 00 00 00 70 BA 03 43 01 00 00 00 48 C4 A1 42 01
 const uintptr_t EnableSmoothWheelContacts = GameSetting_EnableSmoothWheelContacts_Addr;
+/// @pattern ? ? ? ? ? 00 00 00 88 BD 03 43 01 00 00 00
+const uintptr_t VehicleTeleportationIfFallsUnderWorld = GameSetting_VehicleTeleportationIfFallsUnderWorld_Addr;
 }
 
 /// FlightSystem
@@ -36,16 +38,18 @@ public:
   virtual void OnGameResumed() override;
   virtual void* IsSavingLocked(RED4ext::game::SaveLock* aLock, bool a2) override;
   virtual void OnStreamingWorldLoaded(RED4ext::world::RuntimeScene* aScene, uint64_t a2, const RED4ext::JobGroup& aJobGroup) override;
+  virtual void sub_180() override;
   virtual void sub_188() override;
   virtual void sub_190(void*) override;
+  virtual void sub_198() override;
   virtual void OnInitialize(const RED4ext::JobHandle& aJob) override;
   virtual void OnUninitialize() override;
 
   //static FlightSystem *GetInstance();
   static RED4ext::Handle<FlightSystem> GetInstance();
 
-  void RegisterComponent(RED4ext::WeakHandle<FlightComponent>);
-  void UnregisterComponent(RED4ext::WeakHandle<FlightComponent>);
+  virtual void RegisterComponent(RED4ext::WeakHandle<FlightComponent>) override;
+  virtual void UnregisterComponent(RED4ext::WeakHandle<FlightComponent>) override;
 
   int32_t cameraIndex = 0;
   RED4ext::WeakHandle<RED4ext::ent::IPlacedComponent> soundListener;
@@ -53,6 +57,7 @@ public:
   RED4ext::Handle<FlightAudio> audio;
   RED4ext::DynArray<RED4ext::WeakHandle<FlightComponent>> flightComponents;
   RED4ext::SharedMutex flightComponentsMutex;
+  RED4ext::WeakHandle<FlightComponent> playerComponent;
 
 private:
   friend Descriptor;
@@ -71,3 +76,4 @@ RED4EXT_ASSERT_OFFSET(FlightSystem, cameraIndex, 0x48);
 RED4EXT_ASSERT_OFFSET(FlightSystem, soundListener, 0x50);
 RED4EXT_ASSERT_OFFSET(FlightSystem, audio, 0x70);
 RED4EXT_ASSERT_OFFSET(FlightSystem, flightComponents, 0x80);
+RED4EXT_ASSERT_OFFSET(FlightSystem, playerComponent, 0x98);

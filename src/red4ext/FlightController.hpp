@@ -11,6 +11,8 @@ struct FlightController : RED4ext::IScriptable {
   bool enabled;
   bool active;
   int32_t mode;
+
+  // virtual bool CanBeDestructed() override { return false; };
   
   RTTI_IMPL_TYPEINFO(FlightController);
   RTTI_IMPL_ALLOCATOR();

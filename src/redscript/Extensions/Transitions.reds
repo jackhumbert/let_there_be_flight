@@ -41,10 +41,29 @@ public final func ToFlight(const stateContext: ref<StateContext>, const scriptIn
   if this.IsPlayerAllowedToEnterVehicleFlight(scriptInterface) && VehicleTransition.CanEnterVehicleFlight() {
   // if VehicleTransitiorn.CanEnterVehicleFlight() {
     // let fc = scriptInterface.owner.FindComponentByName(n"flightComponent") as FlightComponent;
-    if (scriptInterface.IsActionJustPressed(n"Flight_Toggle") || (IsDefined(fs().playerComponent) && fs().playerComponent.active)) &&
-        GameInstance.GetQuestsSystem(scriptInterface.GetGame()).GetFact(n"map_blocked") == 0 &&
-        Equals(this.GetCurrentTier(stateContext), GameplayTier.Tier1_FullGameplay) {
+    // if (scriptInterface.IsActionJustPressed(n"Flight_Toggle") || (IsDefined(fs().playerComponent) && fs().playerComponent.active)) &&
+    //     GameInstance.GetQuestsSystem(scriptInterface.GetGame()).GetFact(n"map_blocked") == 0 &&
+    //     Equals(this.GetCurrentTier(stateContext), GameplayTier.Tier1_FullGameplay) {
+    if (scriptInterface.IsActionJustPressed(n"Flight_Toggle") || (IsDefined(fs().playerComponent) && fs().playerComponent.active)) {
       FlightLog.Info("[DriveDecisions] ToFlight");
+      return true;
+    };
+  };
+  return false;
+}
+
+// DriverCombatDecisions
+
+@addMethod(DriverCombatDecisions)
+public final func ToFlight(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
+  if this.IsPlayerAllowedToEnterVehicleFlight(scriptInterface) && VehicleTransition.CanEnterVehicleFlight() {
+  // if VehicleTransitiorn.CanEnterVehicleFlight() {
+    // let fc = scriptInterface.owner.FindComponentByName(n"flightComponent") as FlightComponent;
+    // if (scriptInterface.IsActionJustPressed(n"Flight_Toggle") || (IsDefined(fs().playerComponent) && fs().playerComponent.active)) &&
+    //     GameInstance.GetQuestsSystem(scriptInterface.GetGame()).GetFact(n"map_blocked") == 0 &&
+    //     Equals(this.GetCurrentTier(stateContext), GameplayTier.Tier1_FullGameplay) {
+    if (scriptInterface.IsActionJustPressed(n"Flight_Toggle") || (IsDefined(fs().playerComponent) && fs().playerComponent.active)) {
+      FlightLog.Info("[DriverCombatDecisions] ToFlight");
       return true;
     };
   };

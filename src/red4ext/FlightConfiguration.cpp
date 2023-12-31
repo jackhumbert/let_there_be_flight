@@ -140,8 +140,7 @@ void IFlightConfiguration::OnActivationCore() {
 
   if (cc != NULL && sc != NULL) {
     FlightComponent::Get((RED4ext::vehicle::BaseObject*)this->component->entity)->chassis = cc;
-    RED4ext::physics::ProxyHelper proxyHelper;
-    cc->GetProxyHelperAndLock(&proxyHelper);
+    RED4ext::physics::ProxyHelper proxyHelper(cc->proxyID, &cc->sharedMutex);
 
     auto key = (RED4ext::physics::PhysicalSystemProxy *)cc->proxyID.GetProxy();
     auto body = (physx::PxRigidDynamic *) key->bodies.entries[0];
@@ -179,7 +178,8 @@ void IFlightConfiguration::OnActivationCore() {
     }
 
     auto newCount = body->getNbShapes();
-
+    
+    proxyHelper.mutex->Lock();
     // add indices to bottom mask
     for (int i = this->originalShapeCount; i < newCount; i++) {
 //      cc->unk174 |= (1 << i);
@@ -209,8 +209,7 @@ void IFlightConfiguration::OnDeactivationCore() {
   }
 
   if (cc != NULL) {
-    RED4ext::physics::ProxyHelper proxyHelper;
-    cc->GetProxyHelperAndLock(&proxyHelper);
+    RED4ext::physics::ProxyHelper proxyHelper(cc->proxyID, &cc->sharedMutex);
 
     auto key = (RED4ext::physics::PhysicalSystemProxy *) cc->proxyID.GetProxy();
     auto body = (physx::PxRigidDynamic *) key->bodies.entries[0];
@@ -223,6 +222,7 @@ void IFlightConfiguration::OnDeactivationCore() {
 //      proxyHelper.SetSimulationShape(false, 0, i);
 //      proxyHelper.SetIsQueryable(false, 0, i);
 //    }
+    proxyHelper.mutex->Lock();
 
     physx::PxShape *shapes[16];
     body->getShapes(shapes, 16, this->originalShapeCount);

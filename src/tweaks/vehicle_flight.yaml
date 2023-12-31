@@ -5,7 +5,7 @@ playerStateMachineInputContext.vehicleFlightContext.hasEnterCondition: true
 playerStateMachineInputContext.vehicleFlightContext.hasExitCondition: false 
 playerStateMachineInputContext.vehicleFlightContext.hasOnEnter: true 
 playerStateMachineInputContext.vehicleFlightContext.hasOnExit: true 
-playerStateMachineInputContext.vehicleFlightContext.hasOnUpdate: false 
+playerStateMachineInputContext.vehicleFlightContext.hasOnUpdate: true 
 playerStateMachineInputContext.vehicleFlightContext.stateBodyClassName: "" 
 playerStateMachineInputContext.vehicleFlightContext.transitionCondition: [ "", "", "ExitCondition" ]
 playerStateMachineInputContext.vehicleFlightContext.transitionConditionOverridesEnterCondition:
@@ -34,6 +34,10 @@ player.vehicle.canEnterVehicleFlight: true
 playerStateMachineVehicle.drive.transitionTo:
   - !append "flight"
 playerStateMachineVehicle.drive.transitionCondition:
+  - !append "ToFlight"
+playerStateMachineVehicle.driverCombat.transitionTo:
+  - !append "flight"
+playerStateMachineVehicle.driverCombat.transitionCondition:
   - !append "ToFlight"
 playerStateMachineVehicle.scene.transitionTo:
   - !append "flight"

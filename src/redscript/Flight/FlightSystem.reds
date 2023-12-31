@@ -24,7 +24,9 @@ public native class FlightSystem extends IGameSystem {
   public let stats: ref<FlightStats>;
   // public let fx: ref<FlightFx>;
   // public let tppCamera: wref<vehicleTPPCameraComponent>;
-  public let playerComponent: wref<FlightComponent>;
+
+  @runtimeProperty("offset", "0x98")
+  public native let playerComponent: wref<FlightComponent>;
 
   public func Setup(player: ref<PlayerPuppet>) -> Void {
     FlightLog.Info("[FlightSystem] Player updated");
@@ -38,6 +40,11 @@ public native class FlightSystem extends IGameSystem {
     this.ctlr = FlightController.GetInstance();
     // this.tppCamera = player.FindComponentByName(n"vehicleTPPCamera") as vehicleTPPCameraComponent;
     // this.soundListener = this.tppCamera;
+  }
+
+  public func SetPlayerComponent(component: wref<FlightComponent>) -> Void {
+    FlightLog.Info("[FlightSystem] Player component set");
+    this.playerComponent = component;
   }
 
 //   public static func Get(gameInstance: GameInstance) -> ref<FlightSystem> {

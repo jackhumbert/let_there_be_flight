@@ -38,6 +38,7 @@
 RED4ext::RelocPtr<RED4ext::GameOptionBool> physicsCCD(GameSetting_physicsCCD_Addr);
 // 1.61hf1 RVA: 0x484EC18
 // RED4ext::RelocPtr<RED4ext::GameOptionBool> EnableSmoothWheelContacts(0x484EC18);
+RED4ext::RelocPtr<RED4ext::GameOptionBool> VehicleTeleportationIfFallsUnderWorld(GameSetting_VehicleTeleportationIfFallsUnderWorld_Addr);
 
 //RED4ext::TTypedClass<FlightSystem> icls("IFlightSystem");
 //RED4ext::TTypedClass<FlightSystem> cls("FlightSystem");
@@ -64,7 +65,7 @@ void FlightSystem::RegisterComponent(RED4ext::WeakHandle<FlightComponent> fc) {
     this->flightComponents.EmplaceBack(fc);
     this->flightComponentsMutex.Unlock();
   }
-  //spdlog::info("[FlightSystem] Component added");
+  // spdlog::info("[FlightSystem] Component added");
   // __debugbreak();
 }
 
@@ -223,13 +224,14 @@ void FlightSystem::OnGameLoad(const RED4ext::JobGroup& aJobGroup, bool& aSuccess
   //PhysXClampHugeSpeeds.GetAddr()->value = false;
   //AirControlCarRollHelper.GetAddr()->value = false;
   physicsCCD.GetAddr()->value = true;
+  VehicleTeleportationIfFallsUnderWorld.GetAddr()->value = false;
   //ForceMoveToMaxLinearSpeed.GetAddr()->value = 100.0;
 
   // spdlog::info("[FlightSystem] PhysXClampHugeImpacts: {}", PhysXClampHugeImpacts.GetAddr()->value);
   // spdlog::info("[FlightSystem] PhysXClampHugeSpeeds: {}", PhysXClampHugeSpeeds.GetAddr()->value);
   // spdlog::info("[FlightSystem] AirControlCarRollHelper: {}", AirControlCarRollHelper.GetAddr()->value);
   // spdlog::info("[FlightSystem] ForceMoveToMaxLinearSpeed: {}", ForceMoveToMaxLinearSpeed.GetAddr()->value);
-  spdlog::info("[FlightSystem] physicsCCD: {}", physicsCCD.GetAddr()->value);
+  // spdlog::info("[FlightSystem] physicsCCD: {}", physicsCCD.GetAddr()->value);
 }
 
 bool FlightSystem::OnGameRestored() {
@@ -260,12 +262,20 @@ void FlightSystem::OnStreamingWorldLoaded(RED4ext::world::RuntimeScene* aScene, 
   spdlog::info("[FlightSystem] OnStreamingWorldLoaded!");
 }
 
+void FlightSystem::sub_180() {
+  spdlog::info("[FlightSystem] sub_180!");
+}
+
 void FlightSystem::sub_188() {
   spdlog::info("[FlightSystem] sub_188!");
 }
 
 void FlightSystem::sub_190(void *) {
   spdlog::info("[FlightSystem] sub_190!");
+}
+
+void FlightSystem::sub_198() {
+  spdlog::info("[FlightSystem] sub_198!");
 }
 
 void FlightSystem::OnInitialize(const RED4ext::JobHandle& aJob) {
