@@ -121,9 +121,9 @@ public class FlightEvents extends VehicleEventsTransition {
 
     this.PauseStateMachines(stateContext, scriptInterface.executionOwner);
     
-    if !VehicleTransition.CanEnterDriverCombat() {
-      stateContext.SetPermanentBoolParameter(n"ForceEmptyHands", true, true);
-    };
+    // if !VehicleTransition.CanEnterDriverCombat() {
+    //   stateContext.SetPermanentBoolParameter(n"ForceEmptyHands", true, true);
+    // };
     // FlightController.GetInstance().Activate();
     let evt = new VehicleFlightActivationEvent();
     // evt.vehicle = scriptInterface.owner as VehicleObject;
@@ -137,7 +137,7 @@ public class FlightEvents extends VehicleEventsTransition {
     this.SendAnimFeature(stateContext, scriptInterface);
     // (scriptInterface.owner as VehicleObject).ToggleFlightComponent(false);
     // FlightController.GetInstance().Deactivate(false);
-    stateContext.SetPermanentBoolParameter(n"ForceEmptyHands", false, true);
+    // stateContext.SetPermanentBoolParameter(n"ForceEmptyHands", false, true);
     let evt = new VehicleFlightDeactivationEvent();
     evt.silent = false;
     // evt.vehicle = scriptInterface.owner as VehicleObject;
@@ -151,7 +151,7 @@ public class FlightEvents extends VehicleEventsTransition {
     this.SetIsInFlight(stateContext, false);
     // (scriptInterface.owner as VehicleObject).ToggleFlightComponent(false);
     //FlightController.GetInstance().Deactivate(true);
-    stateContext.SetPermanentBoolParameter(n"ForceEmptyHands", false, true);
+    // stateContext.SetPermanentBoolParameter(n"ForceEmptyHands", false, true);
     super.OnForcedExit(stateContext, scriptInterface);
     this.ResumeStateMachines(scriptInterface.executionOwner);
   }

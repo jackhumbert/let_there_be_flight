@@ -42,7 +42,7 @@ endforeach()
 
 configure_red4ext(src/red4ext)
 configure_red4ext_addresses(Addresses.hpp)
-
+set(MOD_NATIVE_TWEAKS ON)
 configure_tweaks(src/tweaks)
 configure_archives(src/wolvenkit/packed/archive/pc/mod/let_there_be_flight.archive src/archive_xl/let_there_be_flight.archive.xl)
 

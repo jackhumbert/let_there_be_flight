@@ -7,12 +7,7 @@
 #include <RED4ext/Scripting/Natives/Generated/game/FPPCameraComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/anim/AnimFeature_FPPCamera.hpp>
 
-// pre-2.0
-// 1.6 RVA: 0x17190A0
-/// @pattern 48 8B C4 F3 0F 11 48 10 53 48 81 EC 30 01 00 00 80 B9 A0 04 00 00 00 48 8B D9 0F 29 70 D8 0F 28
-
-// 2.0+
-/// @pattern 48 8B C4 48 89 58 08 48 89 78 10 55 48 8D 68 D8 48 81 EC 20 01 00 00 80 B9 D8 04 00 00 00 48 8B
+/// @hash 2531201123
 char __fastcall FPPCameraUpdate(RED4ext::game::FPPCameraComponent *fpp, float deltaTime, float deltaYaw,
                                 float deltaPitch, float deltaYawExternal, float deltaPitchExternal, char a7);
 

@@ -7,13 +7,7 @@
 #include <RED4ext/Scripting/Natives/Generated/vehicle/TPPCameraComponent.hpp>
 
 // adjusts TPP camera based on flight mode
-
-// pre 2.0
-// 1.6 RVA: 0x1CF3C10
-/// @pattern F3 0F 10 42 04 8B 02 F3 0F 10 4A 08 F3 0F 11 81 B4 02 00 00 F3 0F 11 89 B8 02 00 00 89 81 B0 02
-
-// post 2.0
-/// @pattern F3 0F 10 42 04 8B 02 F3 0F 10 4A 08 F3 0F 11 81 34 03 00 00 F3 0F 11 89 38 03 00 00 89 81 30 03
+/// @hash 4125170300
 uintptr_t TPPCameraStats_Update(RED4ext::vehicle::TPPCameraComponent *camera, uintptr_t data);
 
 REGISTER_FLIGHT_HOOK(uintptr_t, TPPCameraStats_Update, RED4ext::vehicle::TPPCameraComponent *camera, uintptr_t data) {

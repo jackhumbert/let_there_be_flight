@@ -26,10 +26,14 @@
 		<include name="QuickLoadAndSave" />
 		<include name="Items" />
 		<include name="VehicleFlightToggle" />
-		<include name="Combat" />
+		<!-- <include name="Combat" /> -->
 		
-		<action name="ShootPrimary"			map="Flight_Fire1" />
-		<action name="ShootSecondary"		map="Flight_Fire2" />
+		<action name="MountedWeapons_WeaponSlot1"			map="Vehicle_MountedWeapons_WeaponSlot1_Button" />
+		<action name="MountedWeapons_WeaponSlot2"			map="Vehicle_MountedWeapons_WeaponSlot2_Button" />
+		<action name="MountedWeapons_SwitchWeapons"			map="Vehicle_MountedWeapons_SwitchWeapons_Button" />
+		<action name="MountedWeapons_HolsterWeapon"			map="Vehicle_MountedWeapons_HolsterWeapon_Button" />
+		<action name="MountedWeapons_NextWeapon"			map="Vehicle_MountedWeapons_NextWeapon_Button" />
+		<action name="MountedWeapons_PreviousWeapon"		map="Vehicle_MountedWeapons_PreviousWeapon_Button" />
 		<!-- <action name="ShootTertiary"		map="Flight_Fire3" /> -->
 
 		<!-- <action name="Flight_Trick" 		map="Flight_Trick" /> -->

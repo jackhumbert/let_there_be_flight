@@ -6,15 +6,7 @@
 #include <RED4ext/Scripting/Natives/Generated/WidgetHudComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/HudEntriesResource.hpp>
 
-// right before components are processed for entities, and an appropriate time to insert our own
-// can also look for string "Entity/InitializeComponents"
-
-// pre-2.0
-/// @pattern 48 89 54 24 10 55 53 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 ? FB FF FF 48 81 EC ? 05 00 00
-/// @nth 0/2
-
-// 2.0+
-/// @pattern 48 89 5C 24 18 55 56 57 41 54 41 55 41 56 41 57 48 8D AC 24 E0 FD FF FF 48 81 EC 20 03 00 00 8A
+/// @hash 3490519617
 void Entity_InitializeComponents(RED4ext::ent::Entity *entity, void *a2, void *a3);
 
 REGISTER_FLIGHT_HOOK(void __fastcall, Entity_InitializeComponents, RED4ext::ent::Entity *entity, void *a2, void *a3) {

@@ -6,13 +6,7 @@
 #include <RED4ext/Scripting/Natives/Generated/vehicle/CarBaseObject.hpp>
 #include <RED4ext/Scripting/Natives/vehiclePhysics.hpp>
 
-// pre 2.0
-// 1.6  RVA: 0x1D2A340 / 30581568
-/// @pattern 48 8B C4 89 50 10 55 48 8D A8 78 FE FF FF 48 81 EC 80 02 00 00 41 80 78 7C 00 48 89 58 20 48 89
-
-// post 2.0
-/// @pattern 48 8B C4 48 89 58 20 55 56 57 41 54 41 55 41 56 41 57 48 8D A8 28 FF FF FF 48 81 EC A0 01 00 00
-/// @nth 1/2
+/// @hash 2932936864
 void __fastcall WheelEffectUpdate(RED4ext::vehicle::Effects *effects, unsigned int wheelIndex, RED4ext::vehicle::Effects::Unk40 *unk40, float deltaTime);
 
 // make tire always skidding

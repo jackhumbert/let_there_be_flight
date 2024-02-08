@@ -23,10 +23,7 @@ REGISTER_FLIGHT_HOOK(short, PhysicsStructUpdate, RED4ext::vehicle::PhysicsData *
 
 } // namespace vehicle
 
-// 1.52 RVA: 0x1CE0FC0 / 30281664
-// 1.6  RVA: 0x1D0D770 / 30463856
-// 1.61 RVA: 0x1D0DB30
-/// @pattern 48 89 5C 24 08 57 48 83 EC 30 0F 29 74 24 20 48 8B DA 0F 10 32 48 8B F9 66 0F 3A 40 F6 7F 0F 28
+/// @hash 4067628720
 short PhysicsUnkStructVelocityUpdate(RED4ext::vehicle::PhysicsData *, RED4ext::Vector3 *);
 
 REGISTER_FLIGHT_HOOK(short, PhysicsUnkStructVelocityUpdate, RED4ext::vehicle::PhysicsData *vps, RED4ext::Vector3 *velocity) {

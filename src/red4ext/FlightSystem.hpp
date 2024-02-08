@@ -9,13 +9,12 @@
 #include "Flight/Component.hpp"
 #include "Addresses.hpp"
 
-// these still need to be updated manually - need to add a rel define to zoltan
 namespace GameSetting {
-/// @pattern ? ? ? ? ? 00 00 00 18 B8 03 43 01 00 00 00 48 C4 A1 42 01
+/// @hash 3415871802:data
 const uintptr_t physicsCCD = GameSetting_physicsCCD_Addr;
-/// @pattern ? ? ? ? ? 00 00 00 70 BA 03 43 01 00 00 00 48 C4 A1 42 01
+/// @hash 726996866:data
 const uintptr_t EnableSmoothWheelContacts = GameSetting_EnableSmoothWheelContacts_Addr;
-/// @pattern ? ? ? ? ? 00 00 00 88 BD 03 43 01 00 00 00
+/// @hash 3118668190:data
 const uintptr_t VehicleTeleportationIfFallsUnderWorld = GameSetting_VehicleTeleportationIfFallsUnderWorld_Addr;
 }
 

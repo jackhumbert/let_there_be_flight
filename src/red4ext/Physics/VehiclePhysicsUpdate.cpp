@@ -17,12 +17,7 @@
 /// @pattern F3 0F 11 4C 24 10 55 53 57 41 54 41 55 41 56 48 8D AC 24 98 FD FF FF 48 81 EC 68 03 00 00 48 8B
 // uintptr_t __fastcall VehiclePhysicsUpdate(RED4ext::vehicle::Physics *, float);
 
-// 1.6  RVA: 0x1D3AD50
-// 1.61 RVA: 0x1D3B110
-/// @pattern 48 8B C4 53 48 81 EC A0 00 00 00 0F 29 70 E8 48 8B D9 0F 29 78 D8 44 0F 29 40 C8 44 0F 29 48 B8
-
-// post 2.0 re-arrange
-/// @pattern 40 53 48 83 EC 50 48 8B 41 60 48 8B D9 0F 29 74 24 40 0F 29 7C 24 30 0F 28 F9 48 8B 90 D0 02 00
+/// @hash 2526549425
 void __fastcall ProcessAirResistance(RED4ext::vehicle::WheeledPhysics *a1, float deltaTime);
 
 REGISTER_FLIGHT_HOOK(void __fastcall, ProcessAirResistance, 
@@ -79,12 +74,7 @@ REGISTER_FLIGHT_HOOK(void __fastcall, vehiclePhysicsData_ApplyForceAtPosition,
 
 // where driverHelpers are processed
 // vehicleWheeledPhysics::sub_58
-// 1.6  RVA: 0x1D3EB10
-// 1.61 RVA: 0x1D3EED0
-/// @pattern 48 8B C4 48 89 58 08 48 89 70 10 48 89 78 18 41 56 48 81 EC B0 00 00 00 0F 29 70 E8 4C 8B F1 0F
-
-// post 2.0
-/// @pattern 40 53 48 83 EC 50 0F 29 74 24 40 48 8B D9 0F 28 F1 E8 86 40 00 00 0F 28 CE 48 8B CB E8 F7 0D 00
+/// @hash 3281786499
 uintptr_t __fastcall VehicleHelperUpdate(RED4ext::vehicle::WheeledPhysics *, float);
 
 REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, VehicleHelperUpdate, RED4ext::vehicle::WheeledPhysics *p, float deltaTime) {

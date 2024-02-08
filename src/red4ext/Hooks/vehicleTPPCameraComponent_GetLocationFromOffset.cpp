@@ -7,12 +7,7 @@
 #include <RED4ext/Scripting/Natives/vehiclePhysics.hpp>
 
 // gets the location for the camera to look at
-
-// pre 2.0
-/// @pattern 48 8B C4 48 89 58 18 48 89 78 20 55 48 8D 68 D8 48 81 EC 20 01 00 00 0F 28 05 ? ? ? 01 0F 57
-
-// post 2.0
-/// @pattern 48 8B C4 48 89 58 08 48 89 78 10 55 48 8D A8 58 FF FF FF 48 81 EC A0 01 00 00 0F 28 05 EB 6A B9
+/// @hash 283779224
 RED4ext::Vector4 *__fastcall GetLocationFromOffset(RED4ext::vehicle::TPPCameraComponent *camera, RED4ext::Vector4 *location, RED4ext::Vector3 *lookAtOffset);
 
 REGISTER_FLIGHT_HOOK(RED4ext::Vector4 *__fastcall, GetLocationFromOffset,

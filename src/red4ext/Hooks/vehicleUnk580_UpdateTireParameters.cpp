@@ -13,12 +13,7 @@
 
 using namespace RED4ext;
 
-// pre 2.0
-// 1.6 RVA: 0x1C62AE0 / 29764320
-/// @pattern 48 89 5C 24 10 48 89 6C 24 18 56 57 41 56 48 83 EC 70 48 8B 69 08 49 8B D8 4C 8B 01 48 8B F2 0F
-
-// post 2.0
-/// @pattern 48 8B C4 48 89 58 10 48 89 70 18 48 89 78 20 55 48 8B EC 48 83 EC 70 0F 29 70 E8 49 8B D8 4C 8B
+/// @hash 1554324956
 void __fastcall UpdateTireParameters(vehicle::TireParameterUpdate * tpu, vehicle::TireUpdate *tireUpdate, CName emitter);
 
 // stop tire skid sfx
