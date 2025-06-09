@@ -15,9 +15,7 @@ Other features include:
 
 ## Installation
 
-For an up-to-date version of the mod, you can [download just the `game_dir/` folder](https://downgit.github.io/#/home?url=https://github.com/jackhumbert/let_there_be_flight/tree/main/game_dir), and install that into your game's directory.
-
-[Official, numbered releases are available here](https://github.com/jackhumbert/let_there_be_flight/releases) - If you're upgrading, check the release notes for special instructions.
+[Releases are available here](https://github.com/jackhumbert/let_there_be_flight/releases) - If you're upgrading, check the release notes for special instructions.
 
 ## Dependencies
 
@@ -30,7 +28,7 @@ For an up-to-date version of the mod, you can [download just the `game_dir/` fol
 
 ## Configuration
 
-[`red4ext/let_there_be_flight/inputs.xml`](https://github.com/jackhumbert/let_there_be_flight/tree/main/game_dir/r6/input/let_there_be_flight.xml) contains all the keybindings for the keyboard & controller - you can customize these to your liking. See all possibilities here: https://nativedb.red4ext.com/EInputKey
+[`red4ext/let_there_be_flight/inputs.xml`](https://github.com/jackhumbert/let_there_be_flight/tree/main/src/input_loader/let_there_be_flight.xml) contains all the keybindings for the keyboard & controller - you can customize these to your liking. See all possibilities here: https://nativedb.red4ext.com/EInputKey
 
 Other settings can be found in `red4ext/plugins/let_there_be_flight/packed.reds` for the time being - search for `FlightSettings.SetFloat` to see all the variables used by the mod.
 
