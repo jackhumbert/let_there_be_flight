@@ -23,6 +23,7 @@ REGISTER_FLIGHT_HOOK(short, PhysicsStructUpdate, RED4ext::vehicle::PhysicsData *
 
 } // namespace vehicle
 
+// vehicle::RigidBody::ForceSetLinearVelocity(Vector4 const &)
 /// @hash 4067628720
 short PhysicsUnkStructVelocityUpdate(RED4ext::vehicle::PhysicsData *, RED4ext::Vector3 *);
 

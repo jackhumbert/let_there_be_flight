@@ -17,6 +17,7 @@
 /// @pattern F3 0F 11 4C 24 10 55 53 57 41 54 41 55 41 56 48 8D AC 24 98 FD FF FF 48 81 EC 68 03 00 00 48 8B
 // uintptr_t __fastcall VehiclePhysicsUpdate(RED4ext::vehicle::Physics *, float);
 
+// void vehicle::WheelSuspensionBase::ApplyAllResistances(float)
 /// @hash 2526549425
 void __fastcall ProcessAirResistance(RED4ext::vehicle::WheeledPhysics *a1, float deltaTime);
 
@@ -73,6 +74,7 @@ REGISTER_FLIGHT_HOOK(void __fastcall, vehiclePhysicsData_ApplyForceAtPosition,
 }
 
 // where driverHelpers are processed
+// void vehicle::WheelSuspensionBase::FixedUpdate_PostSolve(float)
 // vehicleWheeledPhysics::sub_58
 /// @hash 3281786499
 uintptr_t __fastcall VehicleHelperUpdate(RED4ext::vehicle::WheeledPhysics *, float);
@@ -126,7 +128,9 @@ REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, vehicleCarPhysics_AnimationUpdate, RE
   return vehicleCarPhysics_AnimationUpdate_Original(a1, timeDelta);
 }
 
-REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, vehicleBikePhysics_AnimationUpdate, RED4ext::vehicle::BikePhysics *a1) {
+// REGISTER_FLIGHT_HOOK_HASH(uintptr_t __fastcall, 3191280029, Bike_AnimationUpdate, RED4ext::vehicle::BikePhysics *a1, float timeDelta) {
+
+REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, vehicleBikePhysics_AnimationUpdate, RED4ext::vehicle::BikePhysics *a1, float timeDelta) {
   auto fc = FlightComponent::Get(a1->parent);
   if (fc && fc->active) {
     a1->parent->turnInput = 0.0;
@@ -135,7 +139,7 @@ REGISTER_FLIGHT_HOOK(uintptr_t __fastcall, vehicleBikePhysics_AnimationUpdate, R
   } else {
     a1->tiltControlEnabled = 1;
   }
-  auto og = vehicleBikePhysics_AnimationUpdate_Original(a1);
+  auto og = vehicleBikePhysics_AnimationUpdate_Original(a1, timeDelta);
   // UpdateAnimValueForCName(a1->parent3, "throttle", 0.0);
   return og;
 }

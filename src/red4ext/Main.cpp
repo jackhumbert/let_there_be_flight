@@ -117,16 +117,16 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     }
 
     auto has_inputLoader = HasDependency(L"input_loader", RED4EXT_SEMVER(0, 1, 1));
-    auto has_archiveXL = HasDependency(L"ArchiveXL", RED4EXT_SEMVER(1, 10, 0));
-    auto has_tweakXL = HasDependency(L"TweakXL", RED4EXT_SEMVER(1, 6, 0));
+    auto has_archiveXL = HasDependency(L"ArchiveXL", RED4EXT_SEMVER(1, 23, 0));
+    auto has_tweakXL = HasDependency(L"TweakXL", RED4EXT_SEMVER(1,10, 0));
     if (!has_inputLoader || !has_archiveXL || !has_tweakXL) {
       spdlog::error("Dependencies not met - game will load without Let There Be Flight");
       auto message =
           fmt::format(L"The following Let There Be Flight requirements were not met:\n\n{}{}{}\nPlease ensure the mods "
                       L"above are installed/up-to-date.",
                       has_inputLoader ? L"" : L"* Input Loader v0.1.1+\n",
-                      has_archiveXL ? L"" : L"* ArchiveXL v1.4.5+\n", 
-                      has_tweakXL ? L"" : L"* TweakXL v0.1.5+\n");
+                      has_archiveXL ? L"" : L"* ArchiveXL v1.23.0+\n", 
+                      has_tweakXL ? L"" : L"* TweakXL v0.10.0+\n");
       MessageBoxW(nullptr, message.c_str(), L"Let There Be Flight requirements could not be found",
                   MB_SYSTEMMODAL | MB_ICONERROR);
       return false;
@@ -134,7 +134,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 
     aSdk->scripts->Add(aHandle, L"packed.reds");
     aSdk->scripts->Add(aHandle, L"module.reds");
-    InputLoader::Add(aHandle, "inputs.xml");
+    InputLoader::Add(aHandle, L"inputs.xml");
     TweakXL::RegisterTweak(aHandle, MOD_PACKED_TWEAKS_FILENAME);
     ArchiveXL::RegisterArchive(aHandle, "let_there_be_flight.archive");
 

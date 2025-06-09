@@ -142,7 +142,7 @@ void IFlightConfiguration::OnActivationCore() {
     FlightComponent::Get((RED4ext::vehicle::BaseObject*)this->component->entity)->chassis = cc;
     RED4ext::physics::ProxyHelper proxyHelper(cc->proxyID, &cc->sharedMutex);
 
-    auto key = (RED4ext::physics::PhysicalSystemProxy *)cc->proxyID.GetProxy();
+    auto key = (RED4ext::physics::PhysicalSystemProxy *) RED4ext::physics::ProxyID::GetProxy(cc->proxyID);
     auto body = (physx::PxRigidDynamic *) key->bodies.entries[0];
 
     this->originalShapeCount = body->getNbShapes();
@@ -166,7 +166,7 @@ void IFlightConfiguration::OnActivationCore() {
       index = sc->GetSlotIndex(thruster->slotName);
       if (index != -1) {
         sc->GetLocalSlotTransformFromIndex(index, &transform);
-        collider->localToBody.position = transform.position - *cc->localTransform.Position.ToVector4();
+        collider->localToBody.position = transform.position - cc->localTransform.Position.AsVector4();
         collider->localToBody.orientation = RED4ext::Quaternion(0.0, 0.0, 0.0, 1.0);
           
         auto shape = (physx::PxShape *) collider->CreatePxShape(&unk140, nullptr, 1, nullptr);
@@ -213,7 +213,7 @@ void IFlightConfiguration::OnDeactivationCore() {
   if (cc != NULL) {
     RED4ext::physics::ProxyHelper proxyHelper(cc->proxyID, &cc->sharedMutex);
 
-    auto key = (RED4ext::physics::PhysicalSystemProxy *) cc->proxyID.GetProxy();
+    auto key = (RED4ext::physics::PhysicalSystemProxy *) RED4ext::physics::ProxyID::GetProxy(cc->proxyID);
     auto body = (physx::PxRigidDynamic *) key->bodies.entries[0];
 
     auto nbShapes = body->getNbShapes();

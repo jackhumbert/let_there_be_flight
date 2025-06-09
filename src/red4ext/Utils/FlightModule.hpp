@@ -126,6 +126,17 @@ public:
   }
 };
 
+class FlightModuleHookHash : IFlightModuleHook {
+public: 
+  explicit FlightModuleHookHash(std::string name, uint32_t hash, void * hook, void ** original) {
+    this->m_name = name;
+    this->m_address = RED4ext::UniversalRelocBase::Resolve(hash) - reinterpret_cast<uintptr_t>(GetModuleHandle(nullptr));
+    this->m_hook = hook;
+    this->m_original = original;
+    FlightModuleFactory::GetInstance().registerHook(this);
+  }
+};
+
 //#define BasicFuncAddr 0x1
 //
 //inline void BasicFunc(void * a1) {
@@ -141,6 +152,12 @@ public:
   FlightModuleHook s_##func##_Hook(#func, func##_Addr, reinterpret_cast<void*>(&func), reinterpret_cast<void**>(&func##_Original)); \
   retType func(__VA_ARGS__)
 
+  
+#define REGISTER_FLIGHT_HOOK_HASH(retType, hash, func, ...) \
+  retType func(__VA_ARGS__); \
+  decltype(&func) func##_Original; \
+  FlightModuleHookHash s_##func##_Hook(#func, hash, reinterpret_cast<void*>(&func), reinterpret_cast<void**>(&func##_Original)); \
+  retType func(__VA_ARGS__)
 
 // #define REGISTER_HOOK(retType, func, ...) \
 //   retType func##_Hook(__VA_ARGS__); \

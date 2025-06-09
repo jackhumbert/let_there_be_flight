@@ -21,7 +21,7 @@ REGISTER_FLIGHT_HOOK(RED4ext::Vector4 *__fastcall, GetLocationFromOffset,
     // camera->pitch = camera->cameraPitch;
     camera->data.isInAir = false;
     if (FlightSettings::GetProperty<bool>("tppCameraCenterOnMass")) {
-      *v = *vehicle->worldTransform.Position.ToVector4() +
+      *v = vehicle->worldTransform.Position.AsVector4() +
              (vehicle->worldTransform.Orientation * vehicle->physicsData->centerOfMass);
     } else {
       *v = *GetLocationFromOffset_Original(camera, location, offset);

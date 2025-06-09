@@ -17,7 +17,7 @@ REGISTER_FLIGHT_HOOK(void __fastcall, UpdatePitch,
   auto vehicle = camera->vehicle;
   auto fc = FlightComponent::Get(vehicle);
   if (fc && fc->active) {
-    camera->cameraDirection = update->locationFromOffset;
+    camera->cameraDirection = update->locationFromOffset.AsVector3();
     camera->cameraPitch = FlightSettings::GetProperty<float>("tppCameraPitchOffset");
   } else {
     UpdatePitch_Original(camera, localPosition, cameraPosition, update);
