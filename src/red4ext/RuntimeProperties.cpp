@@ -28,26 +28,27 @@ void* unk138;
 };
 
 RED4ext::CRTTIHandleType **__fastcall CreateCRTTIArrayTypeFromClass(RED4ext::CRTTIArrayType **a1, RED4ext::CBaseRTTIType *a2) {
-  RED4ext::RelocFunc<decltype(&CreateCRTTIArrayTypeFromClass)> call(CreateCRTTIArrayTypeFromClass_Addr);
+  RED4ext::UniversalRelocFunc<decltype(&CreateCRTTIArrayTypeFromClass)> call(1404578149);
   return call(a1, a2);
 }
 
 RED4ext::CRTTIWeakHandleType ** __fastcall CreateCRTTIWeakHandleTypeFromClass(RED4ext::CRTTIWeakHandleType **a1, RED4ext::CBaseRTTIType *a2) {
-RED4ext::RelocFunc<decltype(&CreateCRTTIWeakHandleTypeFromClass)> call(CreateCRTTIWeakHandleTypeFromClass_Addr);
+RED4ext::UniversalRelocFunc<decltype(&CreateCRTTIWeakHandleTypeFromClass)> call(682896186);
   return call(a1, a2);
 }
 
 RED4ext::CRTTIHandleType **__fastcall CreateCRTTIHandleTypeFromClass(RED4ext::CRTTIHandleType **a1, RED4ext::CBaseRTTIType *a2) {
-  RED4ext::RelocFunc<decltype(&CreateCRTTIHandleTypeFromClass)> call(CreateCRTTIHandleTypeFromClass_Addr);
+  RED4ext::UniversalRelocFunc<decltype(&CreateCRTTIHandleTypeFromClass)> call(1992632754);
   return call(a1, a2);
 }
 
 RED4ext::CRTTIResourceAsyncReferenceType **__fastcall CreateCRTTIRaRefTypeFromClass(RED4ext::CRTTIResourceAsyncReferenceType **a1, RED4ext::CBaseRTTIType *a2) {
-  RED4ext::RelocFunc<decltype(&CreateCRTTIRaRefTypeFromClass)> call(CreateCRTTIRaRefTypeFromClass_Addr);
+  RED4ext::UniversalRelocFunc<decltype(&CreateCRTTIRaRefTypeFromClass)> call(2481073725);
   return call(a1, a2);
 }
 
-REGISTER_FLIGHT_HOOK(bool __fastcall, ProcessScriptTypes, uint32_t* version, ScriptData* scriptData, void* scriptLogger) {
+// bool CScriptDataValidator::Validate(CScriptedDataEnvironment const &, IScriptDataErrorReporter &) const
+REGISTER_FLIGHT_HOOK_HASH(bool __fastcall, 898639042, ProcessScriptTypes, uint32_t* version, ScriptData* scriptData, void* scriptLogger) {
   for (const auto& scriptClass : scriptData->classes) {
     for (const auto& prop : scriptClass->properties) {
       if (prop->runtimeProperties.size) {

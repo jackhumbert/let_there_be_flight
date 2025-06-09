@@ -7,9 +7,10 @@
 #include <RED4ext/Scripting/Natives/Generated/ink/HudEntriesResource.hpp>
 
 /// @hash 3490519617
-void Entity_InitializeComponents(RED4ext::ent::Entity *entity, void *a2, void *a3);
+// void Entity_InitializeComponents(RED4ext::ent::Entity *entity, void *a2, void *a3);
 
-REGISTER_FLIGHT_HOOK(void __fastcall, Entity_InitializeComponents, RED4ext::ent::Entity *entity, void *a2, void *a3) {
+// void ent::Entity::Initialize(job::Builder &, ent::EntitySetupContext const &)
+REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3490519617, Entity_InitializeComponents, RED4ext::ent::Entity *entity, void *a2, void *a3) {
   auto rtti = RED4ext::CRTTISystem::Get();
 
   auto type = entity->GetNativeType();

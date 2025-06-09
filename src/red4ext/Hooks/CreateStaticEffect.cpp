@@ -7,11 +7,9 @@
 // #include "LoadResRef.hpp"
 
 /// @hash 247932756
-uintptr_t CreateStaticEffect(RED4ext::game::EffectSystem *, uintptr_t, uint64_t, uint64_t, uintptr_t, uintptr_t);
+// uintptr_t CreateStaticEffect(RED4ext::game::EffectSystem *, uintptr_t, uint64_t, uint64_t, uintptr_t, uintptr_t);
 
-// REGISTER_FLIGHT_HOOK_HASH(uintptr_t, 247932756, CreateStaticEffect, RED4ext::game::EffectSystem *es, uintptr_t effectRef,
-
-REGISTER_FLIGHT_HOOK(uintptr_t, CreateStaticEffect, RED4ext::game::EffectSystem *es, uintptr_t effectRef,
+REGISTER_FLIGHT_HOOK_HASH(uintptr_t, 247932756, CreateStaticEffect, RED4ext::game::EffectSystem *es, uintptr_t effectRef,
                      uint64_t effectNameHash, uint64_t effectTagHash, uintptr_t instigator, uintptr_t weapon) {
   bool exists = false;
   for (const auto hash : es->effectNameHashes) {

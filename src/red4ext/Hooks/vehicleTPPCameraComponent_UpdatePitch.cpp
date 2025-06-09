@@ -9,9 +9,10 @@
 // updates cameraDirection
 // updates cameraPitch from slopeAdjustment
 /// @hash 2719293980
-void __fastcall UpdatePitch(RED4ext::vehicle::TPPCameraComponent *camera, RED4ext::Vector4 *localPosition, RED4ext::Vector3 *cameraPosition, RED4ext::vehicle::TPPCameraUpdate *update);
+// void __fastcall UpdatePitch(RED4ext::vehicle::TPPCameraComponent *camera, RED4ext::Vector4 *localPosition, RED4ext::Vector3 *cameraPosition, RED4ext::vehicle::TPPCameraUpdate *update);
 
-REGISTER_FLIGHT_HOOK(void __fastcall, UpdatePitch,
+// void vehicle::TPPCameraComponent::UpdateSlopeCompensation(Vector4 const &, Vector4 const &, vehicle::TPPCameraComponent::UpdateContext const &)
+REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 2719293980, UpdatePitch,
                      RED4ext::vehicle::TPPCameraComponent *camera, RED4ext::Vector4 *localPosition,
                      RED4ext::Vector3 *cameraPosition, RED4ext::vehicle::TPPCameraUpdate *update) {
   auto vehicle = camera->vehicle;

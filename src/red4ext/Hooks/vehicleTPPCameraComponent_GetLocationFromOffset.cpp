@@ -8,9 +8,10 @@
 
 // gets the location for the camera to look at
 /// @hash 283779224
-RED4ext::Vector4 *__fastcall GetLocationFromOffset(RED4ext::vehicle::TPPCameraComponent *camera, RED4ext::Vector4 *location, RED4ext::Vector3 *lookAtOffset);
+// RED4ext::Vector4 *__fastcall GetLocationFromOffset(RED4ext::vehicle::TPPCameraComponent *camera, RED4ext::Vector4 *location, RED4ext::Vector3 *lookAtOffset);
 
-REGISTER_FLIGHT_HOOK(RED4ext::Vector4 *__fastcall, GetLocationFromOffset,
+// Vector4 vehicle::TPPCameraComponent::CalculateLookAtPosition(vehicle::TPPCameraComponent::CameraPreset const &) const
+REGISTER_FLIGHT_HOOK_HASH(RED4ext::Vector4 *__fastcall, 283779224, GetLocationFromOffset,
                      RED4ext::vehicle::TPPCameraComponent *camera, RED4ext::Vector4 *location,
                      RED4ext::Vector3 *offset) {
   auto v = new RED4ext::Vector4();

@@ -15,31 +15,31 @@
 // update with pid
 // vehicle->sub_2A8
 /// @hash 1414536155
-void __fastcall VehicleUpdateOrientationWithPID(RED4ext::vehicle::CarBaseObject *a1, RED4ext::Transform *, float, float);
+// void __fastcall VehicleUpdateOrientationWithPID(RED4ext::vehicle::CarBaseObject *a1, RED4ext::Transform *, float, float);
 
 /// @hash 2268865059
-void __fastcall FourWheelTorque(RED4ext::vehicle::WheeledPhysics *physics, unsigned __int8 rearWheelIndex,
-                                unsigned __int8 frontWheelIndex, float a4, RED4ext::Transform *transform);
+// void __fastcall FourWheelTorque(RED4ext::vehicle::WheeledPhysics *physics, unsigned __int8 rearWheelIndex,
+                                // unsigned __int8 frontWheelIndex, float a4, RED4ext::Transform *transform);
 
 /// @hash 1404578149
-RED4ext::CRTTIArrayType **__fastcall CreateCRTTIArrayTypeFromClass(RED4ext::CRTTIArrayType **a1, RED4ext::CBaseRTTIType *a2);
+// RED4ext::CRTTIArrayType **__fastcall CreateCRTTIArrayTypeFromClass(RED4ext::CRTTIArrayType **a1, RED4ext::CBaseRTTIType *a2);
 
 /// @hash 1992632754
-RED4ext::CRTTIHandleType **__fastcall CreateCRTTIHandleTypeFromClass(RED4ext::CRTTIHandleType **a1,
-                                                                     RED4ext::CBaseRTTIType *a2);
+// RED4ext::CRTTIHandleType **__fastcall CreateCRTTIHandleTypeFromClass(RED4ext::CRTTIHandleType **a1,
+                                                                    //  RED4ext::CBaseRTTIType *a2);
 
 /// @hash 682896186
-RED4ext::CRTTIWeakHandleType **__fastcall CreateCRTTIWeakHandleTypeFromClass(RED4ext::CRTTIWeakHandleType **a1,
-                                                                             RED4ext::CBaseRTTIType *a2);
+// RED4ext::CRTTIWeakHandleType **__fastcall CreateCRTTIWeakHandleTypeFromClass(RED4ext::CRTTIWeakHandleType **a1,
+                                                                            //  RED4ext::CBaseRTTIType *a2);
 
 /// @hash 2481073725
-RED4ext::CRTTIResourceAsyncReferenceType **__fastcall CreateCRTTIRaRefTypeFromClass(RED4ext::CRTTIResourceAsyncReferenceType **a1,
-                                                                               RED4ext::CBaseRTTIType *a2);
+// RED4ext::CRTTIResourceAsyncReferenceType **__fastcall CreateCRTTIRaRefTypeFromClass(RED4ext::CRTTIResourceAsyncReferenceType **a1,
+                                                                              //  RED4ext::CBaseRTTIType *a2);
 
-struct ScriptData;
+// struct ScriptData;
 
 /// @hash 898639042
-bool __fastcall ProcessScriptTypes(uint32_t *version, ScriptData *scriptData, void *scriptLogger);
+// bool __fastcall ProcessScriptTypes(uint32_t *version, ScriptData *scriptData, void *scriptLogger);
 
 // 1.6  RVA: 0x204390
 // 1.61 RVA: 0x204940
@@ -52,10 +52,10 @@ bool __fastcall ProcessScriptTypes(uint32_t *version, ScriptData *scriptData, vo
 //using GetLocalizedTextScripts = void __fastcall (void *, RED4ext::CStackFrame *, RED4ext::CString *);
 
 /// @hash 2680167661
-RED4ext::CString * __fastcall LookupLocalizedString(__int64, RED4ext::CString * result, char * locKey);
+// RED4ext::CString * __fastcall LookupLocalizedString(__int64, RED4ext::CString * result, char * locKey);
 
 /// @hash 2229148842
-RED4ext::CString *__fastcall SetLocalizedTextString(__int64, RED4ext::CString *, RED4ext::CString *);
+// RED4ext::CString *__fastcall SetLocalizedTextString(__int64, RED4ext::CString *, RED4ext::CString *);
 
 /// @hash 1989218322
-void __fastcall RollFactorTorqueThing(uint64_t *a1, float a2);
+// void __fastcall RollFactorTorqueThing(uint64_t *a1, float a2);

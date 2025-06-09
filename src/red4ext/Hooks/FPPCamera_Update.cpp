@@ -8,11 +8,12 @@
 #include <RED4ext/Scripting/Natives/Generated/anim/AnimFeature_FPPCamera.hpp>
 
 /// @hash 2531201123
-char __fastcall FPPCameraUpdate(RED4ext::game::FPPCameraComponent *fpp, float deltaTime, float deltaYaw,
-                                float deltaPitch, float deltaYawExternal, float deltaPitchExternal, char a7);
+// char __fastcall FPPCameraUpdate(RED4ext::game::FPPCameraComponent *fpp, float deltaTime, float deltaYaw,
+                                // float deltaPitch, float deltaYawExternal, float deltaPitchExternal, char a7);
 
 // adjusts FPP camera based on flight mode
-REGISTER_FLIGHT_HOOK(char __fastcall, FPPCameraUpdate, RED4ext::game::FPPCameraComponent *fpp, float deltaTime,
+// void game::FPPCameraComponent::Rotate(float, float, float, float, float, bool)
+REGISTER_FLIGHT_HOOK_HASH(char __fastcall, 2531201123, FPPCameraUpdate, RED4ext::game::FPPCameraComponent *fpp, float deltaTime,
                      float deltaYaw, float deltaPitch, float deltaYawExternal, float deltaPitchExternal, char a7) {
   // a1 is a shifted pointer - this gets the whole struct
   // auto fpp = reinterpret_cast<RED4ext::game::FPPCameraComponent *>(a1 - 0x120);

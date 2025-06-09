@@ -12,13 +12,13 @@
 // using namespace RED4ext;
 
 /// @hash 2081691750
-RED4ext::vehicle::MaterialFx * __fastcall GetFxForMaterial(RED4ext::vehicle::Effects *effects, RED4ext::CName material, bool isBackWheel);
+// RED4ext::vehicle::MaterialFx * __fastcall GetFxForMaterial(RED4ext::vehicle::Effects *effects, RED4ext::CName material, bool isBackWheel);
 
 /// @hash 3590925758
-bool __fastcall TireTrackEffectStart(RED4ext::vehicle::Effects *effects, RED4ext::vehicle::Effects::Unk30 *a2, RED4ext::vehicle::MaterialFx *fxLookup, RED4ext::Transform *a4, RED4ext::Transform *a5, bool physicalMaterialChange, bool conditionChange, bool condition);
+// bool __fastcall TireTrackEffectStart(RED4ext::vehicle::Effects *effects, RED4ext::vehicle::Effects::Unk30 *a2, RED4ext::vehicle::MaterialFx *fxLookup, RED4ext::Transform *a4, RED4ext::Transform *a5, bool physicalMaterialChange, bool conditionChange, bool condition);
 
 /// @hash 2693082452
-bool __fastcall SkidMarkEffectStart(RED4ext::vehicle::Effects *effects, RED4ext::vehicle::Effects::Unk30 *unk30, RED4ext::vehicle::MaterialFx *fxLookup, RED4ext::Transform *a4, RED4ext::Transform *a5, bool physicalMaterialChange, bool conditionChange, bool condition);
+// bool __fastcall SkidMarkEffectStart(RED4ext::vehicle::Effects *effects, RED4ext::vehicle::Effects::Unk30 *unk30, RED4ext::vehicle::MaterialFx *fxLookup, RED4ext::Transform *a4, RED4ext::Transform *a5, bool physicalMaterialChange, bool conditionChange, bool condition);
 
 struct FlightStatus {
   uint8_t isActive : 1;
@@ -26,7 +26,7 @@ struct FlightStatus {
 };
 
 // replace tire tracks & skid marks with our own effects
-REGISTER_FLIGHT_HOOK(RED4ext::vehicle::MaterialFx * __fastcall, GetFxForMaterial, RED4ext::vehicle::Effects *effects,
+REGISTER_FLIGHT_HOOK_HASH(RED4ext::vehicle::MaterialFx * __fastcall, 2081691750, GetFxForMaterial, RED4ext::vehicle::Effects *effects,
                      RED4ext::CName material, bool isBackWheel) {
   auto og = GetFxForMaterial_Original(effects, material, isBackWheel);
   RED4ext::vehicle::MaterialFx * fx = og;
@@ -52,7 +52,7 @@ REGISTER_FLIGHT_HOOK(RED4ext::vehicle::MaterialFx * __fastcall, GetFxForMaterial
 }
 
 // trigger resource change when flight is changed
-REGISTER_FLIGHT_HOOK(bool __fastcall, TireTrackEffectStart, RED4ext::vehicle::Effects *effects,
+REGISTER_FLIGHT_HOOK_HASH(bool __fastcall, 3590925758, TireTrackEffectStart, RED4ext::vehicle::Effects *effects,
                      RED4ext::vehicle::Effects::Unk30 *unk30, RED4ext::vehicle::MaterialFx *fxLookup,
                      RED4ext::Transform *a4, RED4ext::Transform *a5, bool physicalMaterialChange, bool conditionChange,
                      bool condition) {
@@ -62,7 +62,7 @@ REGISTER_FLIGHT_HOOK(bool __fastcall, TireTrackEffectStart, RED4ext::vehicle::Ef
 }
 
 // trigger resource change when flight is changed
-REGISTER_FLIGHT_HOOK(bool __fastcall, SkidMarkEffectStart, RED4ext::vehicle::Effects *effects,
+REGISTER_FLIGHT_HOOK_HASH(bool __fastcall, 2693082452, SkidMarkEffectStart, RED4ext::vehicle::Effects *effects,
                      RED4ext::vehicle::Effects::Unk30 *unk30, RED4ext::vehicle::MaterialFx *fxLookup,
                      RED4ext::Transform *a4, RED4ext::Transform *a5, bool physicalMaterialChange, bool conditionChange,
                      bool condition) {

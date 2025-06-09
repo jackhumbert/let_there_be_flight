@@ -8,9 +8,10 @@
 
 // adjusts TPP camera based on flight mode
 /// @hash 4125170300
-uintptr_t TPPCameraStats_Update(RED4ext::vehicle::TPPCameraComponent *camera, uintptr_t data);
+// uintptr_t TPPCameraStats_Update(RED4ext::vehicle::TPPCameraComponent *camera, uintptr_t data);
 
-REGISTER_FLIGHT_HOOK(uintptr_t, TPPCameraStats_Update, RED4ext::vehicle::TPPCameraComponent *camera, uintptr_t data) {
+// void vehicle::TPPCameraComponent::SetVehicleData(vehicle::CameraParentData const &)
+REGISTER_FLIGHT_HOOK_HASH(uintptr_t, 4125170300, TPPCameraStats_Update, RED4ext::vehicle::TPPCameraComponent *camera, uintptr_t data) {
   uintptr_t result = TPPCameraStats_Update_Original(camera, data);
   
   auto fc = FlightController::FlightController::GetInstance();

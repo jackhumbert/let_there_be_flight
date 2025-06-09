@@ -14,10 +14,10 @@
 using namespace RED4ext;
 
 /// @hash 1554324956
-void __fastcall UpdateTireParameters(vehicle::TireParameterUpdate * tpu, vehicle::TireUpdate *tireUpdate, CName emitter);
+// void __fastcall UpdateTireParameters(vehicle::TireParameterUpdate * tpu, vehicle::TireUpdate *tireUpdate, CName emitter);
 
 // stop tire skid sfx
-REGISTER_FLIGHT_HOOK(void __fastcall, UpdateTireParameters,
+REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1554324956, UpdateTireParameters,
                      vehicle::TireParameterUpdate *tpu, vehicle::TireUpdate * tireUpdate, CName emitter) {
   auto fc = FlightComponent::Get(tpu->acoustics->vehicle);
   if (fc && fc->active) {

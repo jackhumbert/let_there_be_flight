@@ -4,7 +4,8 @@
 
 namespace vehicle {
 
-REGISTER_FLIGHT_HOOK(short, PhysicsStructUpdate, RED4ext::vehicle::PhysicsData *ps) {
+// void vehicle::RigidBody::Recalculate(void)
+REGISTER_FLIGHT_HOOK_HASH(short, 593628708, PhysicsStructUpdate, RED4ext::vehicle::PhysicsData *ps) {
   // apply force to linear velocity
   RED4ext::Vector3 unlimitedVelocity;
   unlimitedVelocity.X = ps->velocity.X + ps->force.X * ps->inverseMass;
@@ -25,9 +26,9 @@ REGISTER_FLIGHT_HOOK(short, PhysicsStructUpdate, RED4ext::vehicle::PhysicsData *
 
 // vehicle::RigidBody::ForceSetLinearVelocity(Vector4 const &)
 /// @hash 4067628720
-short PhysicsUnkStructVelocityUpdate(RED4ext::vehicle::PhysicsData *, RED4ext::Vector3 *);
+// short PhysicsUnkStructVelocityUpdate(RED4ext::vehicle::PhysicsData *, RED4ext::Vector3 *);
 
-REGISTER_FLIGHT_HOOK(short, PhysicsUnkStructVelocityUpdate, RED4ext::vehicle::PhysicsData *vps, RED4ext::Vector3 *velocity) {
+REGISTER_FLIGHT_HOOK_HASH(short, 4067628720, PhysicsUnkStructVelocityUpdate, RED4ext::vehicle::PhysicsData *vps, RED4ext::Vector3 *velocity) {
   auto result = PhysicsUnkStructVelocityUpdate_Original(vps, velocity);
 
   if (result != FP_INFINITE) {

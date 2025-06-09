@@ -7,10 +7,10 @@
 #include <RED4ext/Scripting/Natives/vehiclePhysics.hpp>
 
 /// @hash 2932936864
-void __fastcall WheelEffectUpdate(RED4ext::vehicle::Effects *effects, unsigned int wheelIndex, RED4ext::vehicle::Effects::Unk40 *unk40, float deltaTime);
+// void __fastcall WheelEffectUpdate(RED4ext::vehicle::Effects *effects, unsigned int wheelIndex, RED4ext::vehicle::Effects::Unk40 *unk40, float deltaTime);
 
 // make tire always skidding
-REGISTER_FLIGHT_HOOK(void __fastcall, WheelEffectUpdate, RED4ext::vehicle::Effects *effects, unsigned int wheelIndex,
+REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 2932936864, WheelEffectUpdate, RED4ext::vehicle::Effects *effects, unsigned int wheelIndex,
                      RED4ext::vehicle::Effects::Unk40 *unk40, float deltaTime) {
   auto fc = FlightComponent::Get(effects->vehicle);
   if (fc && fc->active) {

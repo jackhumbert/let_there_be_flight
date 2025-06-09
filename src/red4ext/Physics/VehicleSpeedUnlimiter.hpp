@@ -13,6 +13,6 @@ namespace vehicle {
 // void vehicle::RigidBody::Recalculate(void)
 /// @hash 593628708
 short PhysicsStructUpdate(RED4ext::vehicle::PhysicsData *ps);
-constexpr const uintptr_t PhysicsStructUpdate_Addr = vehicle_PhysicsStructUpdate_Addr;
+// constexpr const uintptr_t PhysicsStructUpdate_Addr = vehicle_PhysicsStructUpdate_Addr;
 
 }
