@@ -43,25 +43,25 @@ jobs:
         echo "PRETTY_CONFIG=${config}" | Out-File -FilePath $env:GITHUB_ENV -Encoding UTF8 -Append
 
     - name: Upload game_dir with zip file name
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ env.MOD_ZIP_FILENAME }}_${{ env.PRETTY_CONFIG }}_${{ env.SHORT_SHA }}
         path: ${{ github.workspace }}/game_dir/**
 
     - name: Upload game_dir_debug with zip file name
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ env.MOD_ZIP_FILENAME }}_${{ env.PRETTY_CONFIG }}_${{ env.SHORT_SHA }}_pdb
         path: ${{ github.workspace }}/game_dir_debug/**
 
     - name: Upload game_dir_requirements with zip file name
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ env.MOD_ZIP_FILENAME }}_${{ env.PRETTY_CONFIG }}_${{ env.SHORT_SHA }}_requirements
         path: ${{ github.workspace }}/game_dir_requirements/**
 
     - name: Upload game_dir_requirements_debug with zip file name
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ env.MOD_ZIP_FILENAME }}_${{ env.PRETTY_CONFIG }}_${{ env.SHORT_SHA }}_requirements_pdb
         path: ${{ github.workspace }}/game_dir_requirements_debug/**
