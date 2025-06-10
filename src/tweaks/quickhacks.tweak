@@ -5,26 +5,6 @@ DeviceAction.FlightAction : DeviceAction.VehicleQuickHack
 	actionName = "FlightAction";
 }
 
-BaseStatusEffect.FlightAction : BaseStatusEffect.BaseQuickHackStatusEffect
-{
-	gameplayTags += 
-	[
-		"ControlQuickhacked"
-	];	
-  packages = 
-	[
-		{
-			effectors = 
-			[
-				{
-          effectorClassName = "FlightActionEffector";
-					prereqRecord = "Prereqs.AlwaysTruePrereq";
-				} : Effector
-			];
-		} : GameplayLogicPackage
-	];
-}
-
 // Flight Malfunction
 
 DeviceAction.FlightMalfunction : DeviceAction.FlightAction
@@ -42,53 +22,27 @@ DeviceAction.FlightMalfunction : DeviceAction.FlightAction
 			costMods += 
 			[
 				{
-					value = 6;
+					value = 10;
 				} : QuickHack.MemoryMod
 			];
 		} : QuickHack.DeviceMemoryCost
 	];
-	durationTime = 
-	[
-		{
-			value = 5.0f;
-		} : BaseStatusEffect.BaseDurationMod
-	];
 	gameplayCategory = "ActionCategories.OverrideAttitude";
   objectActionUI = {
     action = "Choice1";
-    caption = "LocKey#368";
-    captionIcon = "ChoiceCaptionParts.ToggleStateIcon";
-    description = "LocKey#6983";
+    caption = "LocKey#Quickhacks-Initiate-Launch";
+    captionIcon = "ChoiceIcons.SabotageIcon";
+    description = "LocKey#Quickhacks-Initiate-Launch-Description";
     name = "FlightMalfunction";
-  };
+  } : Interactions.InteractionChoice;
 	hackTier = "DeviceHacks.Tier2DeviceHack";
-  startEffects += 
+  completionEffects += 
   [
     {
       statusEffect = "BaseStatusEffect.FlightMalfunction";
       recipient = "ObjectActionReference.Target";
     }
   ];
-}
-
-BaseStatusEffect.FlightMalfunction : BaseStatusEffect.FlightAction
-{
-	gameplayTags += 
-	[
-		"FlightMalfunction"
-	];
-  packages = 
-	[
-		{
-			effectors = 
-			[
-				{
-          effectorClassName = "FlightMalfunctionEffector";
-					prereqRecord = "Prereqs.AlwaysTruePrereq";
-				} : Effector
-			];
-		} : GameplayLogicPackage
-	];
 }
 
 Items.BaseDeckTier2
@@ -104,6 +58,102 @@ Items.BaseDeckTier2
 DeviceAction.DisableGravity : DeviceAction.FlightAction
 {
   actionName = "DisableGravity";
+  	activationTime += 
+	[
+		{
+			value = 1.0;
+		} : QuickHack.UploadTimeModifier
+	];
+	costs = 
+	[
+		{
+			costMods += 
+			[
+				{
+					value = 6;
+				} : QuickHack.MemoryMod
+			];
+		} : QuickHack.DeviceMemoryCost
+	];
+	gameplayCategory = "ActionCategories.OverrideAttitude";
+  objectActionUI = {
+    action = "Choice1";
+    caption = "LocKey#Quickhacks-Enable-Antigrav";
+    captionIcon = "ChoiceCaptionParts.ToggleStateIcon";
+    description = "LocKey#Quickhacks-Enable-Antigrav-Description";
+    name = "DisableGravity";
+  } : Interactions.InteractionChoice;
+	hackTier = "DeviceHacks.Tier3DeviceHack";
+  // startEffects += 
+  // [
+  //   {
+  //     statusEffect = "BaseStatusEffect.DisableGravity";
+  //     recipient = "ObjectActionReference.Target";
+  //   }
+  // ];
+}
+
+Items.BaseDeckTier3
+{
+	objectActions += 
+	[
+		"DeviceAction.DisableGravity"
+	];
+}
+
+// Enable Gravity
+
+DeviceAction.EnableGravity : DeviceAction.FlightAction
+{
+  actionName = "EnableGravity";
+  	activationTime += 
+	[
+		{
+			value = 1.0;
+		} : QuickHack.UploadTimeModifier
+	];
+	costs = 
+	[
+		{
+			costMods += 
+			[
+				{
+					value = 6;
+				} : QuickHack.MemoryMod
+			];
+		} : QuickHack.DeviceMemoryCost
+	];
+	gameplayCategory = "ActionCategories.OverrideAttitude";
+  objectActionUI = {
+    action = "Choice1";
+    caption = "LocKey#Quickhacks-Disable-Antigrav";
+    captionIcon = "ChoiceCaptionParts.ToggleStateIcon";
+    description = "LocKey#Quickhacks-Disable-Antigrav-Description";
+    name = "EnableGravity";
+  } : Interactions.InteractionChoice;
+	hackTier = "DeviceHacks.Tier3DeviceHack";
+  // startEffects += 
+  // [
+  //   {
+  //     statusEffect = "BaseStatusEffect.EnableGravity";
+  //     recipient = "ObjectActionReference.Target";
+  //   }
+  // ];
+}
+
+Items.BaseDeckTier3
+{
+	objectActions += 
+	[
+		"DeviceAction.EnableGravity"
+	];
+}
+
+// Funhouse
+
+DeviceAction.Funhouse : DeviceAction.FlightAction
+{
+  actionName = "Funhouse";
   	activationTime += 
 	[
 		{
@@ -124,45 +174,128 @@ DeviceAction.DisableGravity : DeviceAction.FlightAction
 	gameplayCategory = "ActionCategories.OverrideAttitude";
   objectActionUI = {
     action = "Choice1";
-    caption = "LocKey#367";
+    caption = "LocKey#Quickhacks-Funhouse";
     captionIcon = "ChoiceCaptionParts.ToggleStateIcon";
-    description = "LocKey#6982";
-    name = "DisableGravity";
-  };
+    description = "LocKey#Quickhacks-Funhouse-Description";
+    name = "Funhouse";
+  } : Interactions.InteractionChoice;
 	hackTier = "DeviceHacks.Tier3DeviceHack";
-  startEffects += 
+	// startEffects += 
+	// [
+	// 	{
+	// 		statusEffect = "BaseStatusEffect.ContagionCooldown";
+	// 		recipient = "ObjectActionReference.Instigator";
+	// 	}, 
+	// ];
+  completionEffects += 
   [
     {
-      statusEffect = "BaseStatusEffect.DisableGravity";
+      statusEffect = "BaseStatusEffect.Funhouse";
       recipient = "ObjectActionReference.Target";
     }
   ];
-}
-
-BaseStatusEffect.DisableGravity : BaseStatusEffect.FlightAction
-{
-	gameplayTags += 
-	[
-		"DisableGravity"
-	];
-  packages = 
-	[
-		{
-			effectors = 
-			[
-				{
-          effectorClassName = "DisableGravityEffector";
-					prereqRecord = "Prereqs.AlwaysTruePrereq";
-				} : Effector
-			];
-		} : GameplayLogicPackage
-	];
 }
 
 Items.BaseDeckTier3
 {
 	objectActions += 
 	[
-		"DeviceAction.DisableGravity"
+		"DeviceAction.Funhouse"
+	];
+}
+
+// FlightEnable
+
+DeviceAction.FlightEnable : DeviceAction.FlightAction
+{
+  actionName = "FlightEnable";
+  	activationTime += 
+	[
+		{
+			value = 0.5;
+		} : QuickHack.UploadTimeModifier
+	];
+	costs = 
+	[
+		{
+			costMods += 
+			[
+				{
+					value = 3;
+				} : QuickHack.MemoryMod
+			];
+		} : QuickHack.DeviceMemoryCost
+	];
+	gameplayCategory = "ActionCategories.OverrideAttitude";
+  objectActionUI = {
+    action = "Choice1";
+    caption = "LocKey#Quickhacks-Enable-Flight";
+    captionIcon = "ChoiceCaptionParts.ToggleStateIcon";
+    description = "LocKey#Quickhacks-Enable-Flight-Description";
+    name = "FlightEnable";
+  } : Interactions.InteractionChoice;
+	hackTier = "DeviceHacks.Tier3DeviceHack";
+  // startEffects += 
+  // [
+  //   {
+  //     statusEffect = "BaseStatusEffect.FlightEnable";
+  //     recipient = "ObjectActionReference.Target";
+  //   }
+  // ];
+}
+
+Items.BaseDeckTier3
+{
+	objectActions += 
+	[
+		"DeviceAction.FlightEnable"
+	];
+}
+
+// FlightDisable
+
+DeviceAction.FlightDisable : DeviceAction.FlightAction
+{
+  actionName = "FlightDisable";
+  	activationTime += 
+	[
+		{
+			value = 0.5;
+		} : QuickHack.UploadTimeModifier
+	];
+	costs = 
+	[
+		{
+			costMods += 
+			[
+				{
+					value = 3;
+				} : QuickHack.MemoryMod
+			];
+		} : QuickHack.DeviceMemoryCost
+	];
+	gameplayCategory = "ActionCategories.OverrideAttitude";
+  objectActionUI = {
+    action = "Choice1";
+    caption = "LocKey#Quickhacks-Disable-Flight";
+    captionIcon = "ChoiceCaptionParts.ToggleStateIcon";
+    description = "LocKey#Quickhacks-Disable-Flight-Description";
+    name = "FlightDisable";
+  } : Interactions.InteractionChoice;
+	hackTier = "DeviceHacks.Tier3DeviceHack";
+  // startEffects += 
+  // [
+  //   {
+  //     statusEffect = "BaseStatusEffect.FlightDisable";
+  //     recipient = "ObjectActionReference.Target";
+  //   }
+  // ];
+}
+
+Items.BaseDeckTier3
+{
+	objectActions += 
+	[
+		"DeviceAction.FlightDisable"
 	];
 }

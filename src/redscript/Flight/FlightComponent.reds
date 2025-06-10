@@ -824,7 +824,8 @@ public native class FlightComponent extends GameComponent {
     }
     // FlightLog.Info("[FlightComponent] FireVerticalImpulse: " + gridID);
     impulseEvent.worldPosition = Vector4.Vector4To3(this.GetVehicle().GetLocalToWorld() * offset);
-    impulseEvent.worldImpulse = new Vector3(0.0, 0.0, 10.0 * impulse * this.GetVehicle().GetTotalMass());
+    // impulseEvent.worldImpulse = new Vector3(0.0, 0.0, 10.0 * impulse * this.GetVehicle().GetTotalMass());
+    impulseEvent.worldImpulse = new Vector3(0.0, 0.0, 10000.0 * impulse);
     this.GetVehicle().QueueEvent(impulseEvent);
   }
 

@@ -75,6 +75,25 @@ DeviceAction.FlightMalfunction:
       statusEffect: BaseStatusEffect.FlightMalfunction
 DeviceAction.FlightMalfunction.isQuickHack: true
 
+DeviceAction.EnableGravity:
+  $base: DeviceAction.FlightAction
+  actionName: n"EnableGravity" 
+  costs: [ DeviceAction.DeviceQuickHack_inline1 ]
+  objectActionUI:
+    action: "Choice1" 
+    caption: 367 
+    captionIcon: ChoiceCaptionParts.ToggleStateIcon
+    description: 6982 
+    name: "EnableGravity" 
+    prereqID: "" 
+  startEffects: 
+    - QuickHack.QuickHack_inline12
+    - QuickHack.QuickHack_inline13
+    - $type: ObjectActionEffect
+      effectorToTrigger: t""
+      recipient: ObjectActionReference.Target
+      statusEffect: BaseStatusEffect.EnableGravity
+DeviceAction.EnableGravity.isQuickHack: true
 
 DeviceAction.DisableGravity:
   $base: DeviceAction.FlightAction
@@ -191,6 +210,25 @@ BaseStatusEffect.FlightMalfunction:
       effectors: 
         - $type: Effector
           effectorClassName: n"FlightMalfunctionEffector" 
+          prereqRecord: Prereqs.AlwaysTruePrereq
+          removeAfterActionCall: false 
+          statModifierGroups: [ ]
+          statPoolUpdates: [ ]
+      items: [ ]
+      prereq: n"None" 
+      stackable: false 
+      statPools: [ ]
+      stats: [ ]
+
+BaseStatusEffect.EnableGravity:
+  $base: BaseStatusEffect.FlightAction
+  packages:
+    - $type: GameplayLogicPackage
+      UIData: t""
+      animationWrapperOverrides: [ ]
+      effectors: 
+        - $type: Effector
+          effectorClassName: n"EnableGravityEffector" 
           prereqRecord: Prereqs.AlwaysTruePrereq
           removeAfterActionCall: false 
           statModifierGroups: [ ]
