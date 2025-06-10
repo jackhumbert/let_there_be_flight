@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <CP77Mod xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Name>let_there_be_flight</Name>
+  <ModName>let_there_be_flight</ModName>
   <Author>Jack Humbert</Author>
   <Email />
-  <Name>let_there_be_flight</Name>
   <Version />
-  <IsRedMod>false</IsRedMod>
-  <ExecuteDeploy>false</ExecuteDeploy>
+  <OpenProjectFiles>base\worlds\03_night_city\_compiled\default\exterior_-6_-11_0_2.streamingsector</OpenProjectFiles>
 </CP77Mod>

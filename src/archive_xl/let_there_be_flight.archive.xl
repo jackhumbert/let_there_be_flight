@@ -2,3 +2,32 @@ localization:
   onscreens:
     en-us: user\jackhumbert\localization\let_there_be_flight.en-us.json
     es-es: user\jackhumbert\localization\let_there_be_flight.es-es.json
+streaming:
+  sectors:
+    - path: base\worlds\03_night_city\_compiled\default\exterior_-6_-11_0_2.streamingsector
+      expectedNodes: 227
+      nodeDeletions:
+        - type: worldCollisionNode
+          index: 195
+    - path: base\worlds\03_night_city\_compiled\default\exterior_-6_-12_0_2.streamingsector
+      expectedNodes: 640
+      nodeDeletions:
+        - type: worldCollisionNode
+          index: 612
+        - type: worldCollisionNode
+          index: 638
+    - path: base\worlds\03_night_city\_compiled\default\exterior_-11_-23_0_1.streamingsector
+      expectedNodes: 190
+      nodeDeletions:
+        - type: worldCollisionNode
+          index: 172
+    - path: base\worlds\03_night_city\_compiled\default\exterior_-10_-26_0_1.streamingsector
+      expectedNodes: 165
+      nodeDeletions:
+        - type: worldCollisionNode
+          index: 138
+    - path: base\worlds\03_night_city\_compiled\default\exterior_-10_-25_0_1.streamingsector
+      expectedNodes: 246
+      nodeDeletions:
+        - type: worldCollisionNode
+          index: 236
