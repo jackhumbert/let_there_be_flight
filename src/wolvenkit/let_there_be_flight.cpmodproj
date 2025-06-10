@@ -5,11 +5,8 @@
   <Author>Jack Humbert</Author>
   <Email />
   <Version />
-  <OpenProjectFiles>base\worlds\03_night_city\_compiled\default\exterior_-6_-11_0_2.streamingsector</OpenProjectFiles>
-  <OpenProjectFiles>base\worlds\03_night_city\_compiled\default\exterior_-6_-12_0_2.streamingsector</OpenProjectFiles>
-  <OpenProjectFiles>base\worlds\03_night_city\_compiled\default\exterior_-11_-23_0_1.streamingsector</OpenProjectFiles>
-  <OpenProjectFiles>base\worlds\03_night_city\_compiled\default\exterior_-10_-26_0_1.streamingsector</OpenProjectFiles>
-  <OpenProjectFiles>base\worlds\03_night_city\_compiled\default\exterior_-10_-25_0_1.streamingsector</OpenProjectFiles>
-  <OpenProjectFiles>base\worlds\03_night_city\_compiled\default\exterior_-3_-4_0_4.streamingsector</OpenProjectFiles>
   <OpenProjectFiles>user\jackhumbert\localization\let_there_be_flight.en-us.json</OpenProjectFiles>
+  <OpenProjectFiles>user\jackhumbert\widgets\hud_flight.inkhud</OpenProjectFiles>
+  <OpenProjectFiles>base\gameplay\gui\hud_drone.inkhud</OpenProjectFiles>
+  <OpenProjectFiles>base\gameplay\gui\prototype_hud.inkhud</OpenProjectFiles>
 </CP77Mod>
