@@ -131,11 +131,16 @@ public class hudFlightController extends inkHUDGameController {
   protected cb func OnCameraModeChanged(tpp: Bool) -> Bool {
     let hp_gauge = this.GetRootCompoundWidget().GetWidget(n"hp_gauge");
     if IsDefined(hp_gauge) {
-      if tpp {
-        hp_gauge.SetMargin(new inkMargin(1555.0, -120.0, 0.0, 0.0));
-      } else {
-        hp_gauge.SetMargin(new inkMargin(1555.0, -120.0 - 100.0, 0.0, 0.0));
-      }
+      // doesn't seem to work
+      // if tpp {
+      // } else {
+      //   hp_gauge.SetMargin(new inkMargin(2150.0, 32.0 - 100.0, 0.0, 0.0));
+      // }
+
+      // right of LB hud stuff
+      // hp_gauge.SetMargin(new inkMargin(2150.0, 32.0, 0.0, 0.0));
+      // above of LB hud stuff
+      hp_gauge.SetMargin(new inkMargin(1520.0, -290.0, 0.0, 0.0));
     }
   }
 
@@ -188,7 +193,14 @@ public class hudFlightController extends inkHUDGameController {
         }
         inkTextRef.SetText(this.m_CameraID, FlightSystem.GetInstance().playerComponent.GetFlightMode().GetDescription());
 
-
+        let hp_gauge = this.GetRootCompoundWidget().GetWidget(n"hp_gauge");
+        if IsDefined(hp_gauge) {
+          // right of LB hud stuff
+          // hp_gauge.SetMargin(new inkMargin(2150.0, 32.0, 0.0, 0.0));
+          // above of LB hud stuff
+          hp_gauge.SetMargin(new inkMargin(1520.0, -290.0, 0.0, 0.0));
+        }
+        
         this.GetRootWidget().SetVisible(true);
         let options: inkAnimOptions;
         options.executionDelay = 0.50;
