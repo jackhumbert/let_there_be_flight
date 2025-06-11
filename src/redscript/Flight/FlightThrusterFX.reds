@@ -127,7 +127,7 @@ public class SideFlightThrusterFX extends IFlightThrusterFX {
   public func Create(thruster: ref<IFlightThruster>) -> ref<IFlightThrusterFX> {
     super.Create(thruster);
     this.SetResource(r"user\\jackhumbert\\effects\\retro_thruster.effect");
-    this.rotation = EulerAngles.ToQuat(new EulerAngles(0.0, 0.0, -90.0));
+    this.rotation = EulerAngles.ToQuat(MakeEulerAngles(0.0, 0.0, -90.0));
     return this;
   }
 

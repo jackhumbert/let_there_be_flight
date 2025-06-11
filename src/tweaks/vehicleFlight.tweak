@@ -1,0 +1,4 @@
+player.vehicle
+{
+	bool canEnterVehicleFlight = true;
+}

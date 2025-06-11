@@ -92,7 +92,7 @@ public abstract native class IFlightThruster extends IScriptable {
   }
 
   public func GetEulerAngles() -> EulerAngles {
-    return new EulerAngles(this.GetPitch(), this.GetRoll(), this.GetYaw());
+    return MakeEulerAngles(this.GetPitch(), this.GetRoll(), this.GetYaw());
   }
 
   public func GetPitch() -> Float {

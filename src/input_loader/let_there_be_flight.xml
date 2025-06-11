@@ -17,23 +17,10 @@
 	<!-- <context name="VehicleCombat" append="true">
 		<include name="VehicleFlightToggle" />
 	</context> -->
-
-	<context name="VehicleFlight">
-		<include name="CameraMovement" />
-		<include name="VisionActions" />
-		<include name="UIExploration" />
-		<include name="PhotoMode" />
-		<include name="QuickLoadAndSave" />
-		<include name="Items" />
+	<context name="BaseVehicleFlight">
 		<include name="VehicleFlightToggle" />
 		<!-- <include name="Combat" /> -->
 		
-		<action name="MountedWeapons_WeaponSlot1"			map="Vehicle_MountedWeapons_WeaponSlot1_Button" />
-		<action name="MountedWeapons_WeaponSlot2"			map="Vehicle_MountedWeapons_WeaponSlot2_Button" />
-		<action name="MountedWeapons_SwitchWeapons"			map="Vehicle_MountedWeapons_SwitchWeapons_Button" />
-		<action name="MountedWeapons_HolsterWeapon"			map="Vehicle_MountedWeapons_HolsterWeapon_Button" />
-		<action name="MountedWeapons_NextWeapon"			map="Vehicle_MountedWeapons_NextWeapon_Button" />
-		<action name="MountedWeapons_PreviousWeapon"		map="Vehicle_MountedWeapons_PreviousWeapon_Button" />
 		<!-- <action name="ShootTertiary"		map="Flight_Fire3" /> -->
 
 		<!-- <action name="Flight_Trick" 		map="Flight_Trick" /> -->
@@ -65,6 +52,90 @@
 		<action name="Flight_AngularBrake" map="Flight_AngularBrake" />
 		<action name="ZoomIn"						map="ZoomIn_Button"/>
 		<action name="ZoomOut"					map="ZoomOut_Button"/>
+
+		<action name="EnterCombatMode"		map="SwitchItem_Button" />
+	</context>
+
+	<context name="VehicleFlight">
+		<include name="BaseVehicleFlight" />
+
+		<include name="VisionActions" />
+		<include name="CameraMovement" />
+		<include name="UIExploration" />
+		<include name="PhotoMode" />
+		<include name="QuickLoadAndSave" />
+		<include name="Items" />
+		<include name="VehicleAuxillary" />
+	</context>
+
+	<context name="BaseVehicleFlightDriverCombat">
+		<include name="BaseVehicleFlight" />
+
+		<include name="QuickLoadAndSave" />
+		<include name="CameraMovement" /> 
+		<include name="UIExploration" />
+		<include name="PhotoMode" />
+		<include name="DriverCombatVisionActions" />
+		
+		<action name="IconicCyberware"	  	map="IconicCyberware_Button" />
+		<action name="ExitCombatMode"		map="ExitVehicle_Button" />
+		<action name="Reload"				map="Reload_Button" />
+		<action name="VehicleSiren" 		map="Vehicle_Siren" />
+		<action name="MeleeAttack"			map="VehicleDriverCombatRangedAttack_Button" />
+		<action name="MeleeBlock"			map="VehicleDriverCombatRangedADS_Button" />
+		
+		<action name="CameraAim"			map="VehicleDriverCombatRangedADS_Button" />
+	</context>
+	
+	<!-- VEHICLE DRIVER COMBAT - used when player is mounted as driver and has weapon equipped in FPP -->
+	<context name="VehicleFlightDriverCombat">
+		<include name="BaseVehicleFlightDriverCombat" />
+		<include name="Items" />
+		
+		<action name="RangedAttack"			map="VehicleDriverCombatRangedAttack_Button" />
+		<action name="UI_FakeRangedAttack"	map="VehicleDriverCombatRangedAttack_Button" />
+		<action name="UI_FakeCameraAim"		map="VehicleDriverCombatRangedADS_Button" />
+	</context>
+
+	<!-- VEHICLE DRIVER COMBAT - used when player is mounted as driver and has weapon equipped in TPP -->	
+	<context name="VehicleFlightDriverCombatTPP" >
+		<include name="BaseVehicleFlightDriverCombat" />
+		<include name="Items" />
+
+		<action name="RangedAttack"			map="VehicleDriverCombatRangedAttack_Button" />
+		<action name="UI_FakeRangedAttack"	map="VehicleDriverCombatRangedAttack_Button" />
+
+	</context>
+
+	<!-- VEHICLE DRIVER COMBAT - used when player is mounted as driver and is aiming with their weapon -->	
+	<context name="VehicleFlightDriverCombatAim" >
+		<include name="BaseVehicleFlightDriverCombat" /> 
+		<include name="Items" />
+		
+		<action name="ZoomIn"				map="ZoomIn_Button"/>
+		<action name="ZoomOut"				map="ZoomOut_Button"/>
+
+		<action name="RangedAttack"			map="VehicleDriverCombatRangedAttack_Button" />
+		<action name="UI_FakeRangedAttack"	map="VehicleDriverCombatRangedAttack_Button" />
+		
+		<exclude name="UI_DPad" />
+		<exclude name="KeyboardExclusiveWeaponSwitching" />
+	
+		<action name="TagButton"			map="Tag_Button" />
+	</context>
+
+	<!-- VEHICLE DRIVER COMBAT - used when player is mounted as driver and entered combat with a vehicle that has mounted weapons -->	
+
+	<context name="VehicleFlightDriverCombatMountedWeapons">
+		<include name="BaseVehicleFlightDriverCombat" />
+
+		<action name="ShootPrimary"			map="Vehicle_DriverCombat_Shoot_Primary" />
+		<action name="MountedWeapons_WeaponSlot1"			map="Vehicle_MountedWeapons_WeaponSlot1_Button" />
+		<action name="MountedWeapons_WeaponSlot2"			map="Vehicle_MountedWeapons_WeaponSlot2_Button" />
+		<action name="MountedWeapons_SwitchWeapons"			map="Vehicle_MountedWeapons_SwitchWeapons_Button" />
+		<action name="MountedWeapons_HolsterWeapon"			map="Vehicle_MountedWeapons_HolsterWeapon_Button" />
+		<action name="MountedWeapons_NextWeapon"			map="Vehicle_MountedWeapons_NextWeapon_Button" />
+		<action name="MountedWeapons_PreviousWeapon"		map="Vehicle_MountedWeapons_PreviousWeapon_Button" />
 	</context>
 
 	<context name="VehicleFlightToggle">

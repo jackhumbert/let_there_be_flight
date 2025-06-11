@@ -11,6 +11,7 @@
 /// @pattern 48 8B C4 55 56 41 54 41 55 41 56 41 57 48 8D A8
 // void VehicleObject_ProcessWeapons(RED4ext::vehicle::BaseObject *vehicle, float timeDelta, unsigned int shootIndex);
 
+/// @hash 528618336
 // REGISTER_FLIGHT_HOOK(void __fastcall, VehicleObject_ProcessWeapons, RED4ext::vehicle::BaseObject *vehicle,
 //                      float timeDelta, unsigned int shootIndex) {
 //   VehicleObject_ProcessWeapons_Original(vehicle, timeDelta, shootIndex);

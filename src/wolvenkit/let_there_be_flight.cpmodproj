@@ -6,7 +6,4 @@
   <Email />
   <Version />
   <OpenProjectFiles>user\jackhumbert\localization\let_there_be_flight.en-us.json</OpenProjectFiles>
-  <OpenProjectFiles>user\jackhumbert\widgets\hud_flight.inkhud</OpenProjectFiles>
-  <OpenProjectFiles>base\gameplay\gui\hud_drone.inkhud</OpenProjectFiles>
-  <OpenProjectFiles>base\gameplay\gui\prototype_hud.inkhud</OpenProjectFiles>
 </CP77Mod>

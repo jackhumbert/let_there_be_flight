@@ -8,6 +8,7 @@
 /// @hash 4124321726
 // void __fastcall GetYaw(RED4ext::vehicle::TPPCameraComponent *camera, float *yaw, RED4ext::Vector4 *a3, float isInAir);
 
+// called from vehicle::TPPCameraComponent::UpdateCameraState(vehicle::TPPCameraComponent::UpdateContext const &)
 // ignores driving direction correction
 REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 4124321726, GetYaw, RED4ext::vehicle::TPPCameraComponent *camera,
                      float *yaw, RED4ext::Vector4 *position, float isInAir) {

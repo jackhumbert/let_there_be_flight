@@ -1,0 +1,102 @@
+
+playerStateMachineVehicle.drive {
+  transitionTo += [ "flight" ];
+  transitionCondition += [ "ToFlight" ];
+}
+
+playerStateMachineVehicle.driverCombat {
+  transitionTo += [ "flightDriverCombat" ];
+  transitionCondition += [ "ToFlight" ];
+}
+
+playerStateMachineVehicle.driverCombatFirearms {
+  transitionTo += [ "flightDriverCombatFireArms" ];
+  transitionCondition += [ "ToFlight" ];
+}
+
+playerStateMachineVehicle.driverCombatMountedWeapons {
+  transitionTo += [ "flightDriverCombatMountedWeapons" ];
+  transitionCondition += [ "ToFlight" ];
+}
+
+playerStateMachineVehicle.scene {
+  transitionTo += [ "flight" ];
+  transitionCondition += [ "ToFlight" ];
+}
+
+photo_mode.general {
+  onlyFPPPhotoModeInPlayerStates += [ "Vehicle:flight" ];
+}
+
+// playerStateMachineVehicle items need Decisions & Events classes
+
+playerStateMachineVehicle.flight
+{
+	CName affinity = "None";
+	CName[] alias = 
+	[
+		"allSlotStates"
+	];
+	// CName forceInputContext = "VehicleFlight";
+	bool hasEnterCondition = true;
+	bool hasExitCondition = false;
+	bool hasOnEnter = true;
+	bool hasOnExit = true;
+	bool hasOnUpdate = true;
+	CName onEnterCameraParamsName = "Vehicle";
+	CName onEnterCameraParamsNameSecondary = "Bike";
+	string stateBodyClassName = "";
+	string[] transitionCondition = 
+	[
+		"", "=", "ToFlightDriverCombat", "", "", ""
+	];
+	bool[] transitionConditionOverridesEnterCondition = [];
+	bool[] transitionSkipInternalCondition = [];
+	string[] transitionTo = 
+	[
+		"scene", "drive", "flightDriverCombat", "deathExiting", "collisionExiting", "exiting"
+	];
+}
+
+// playerStateMachineVehicle.flightDriverCombat : playerStateMachineVehicle.baseVehicleState
+
+playerStateMachineVehicle.flightDriverCombat
+{
+	CName affinity = "None";
+	CName[] alias = 
+	[
+		"allSlotStates"
+	];
+	// CName forceInputContext = "VehicleFlightDriverCombat";
+	bool hasEnterCondition = true;
+	bool hasExitCondition = false;
+	bool hasOnEnter = true;
+	bool hasOnExit = true;
+	bool hasOnUpdate = true;
+	CName onEnterCameraParamsName = "Vehicle";
+	CName onEnterCameraParamsNameSecondary = "Bike";
+	string stateBodyClassName = "";
+	string[] transitionCondition = 
+	[
+		"", "ToFlight", "ToDriverCombat", "", "", ""
+	];
+	bool[] transitionConditionOverridesEnterCondition = [];
+	bool[] transitionSkipInternalCondition = [];
+	string[] transitionTo = 
+	[
+		"scene", "flight", "driverCombat", "deathExiting", "collisionExiting", "exiting"
+	];
+}
+
+playerStateMachineVehicle.flightDriverCombatFirearms : playerStateMachineVehicle.flightDriverCombat
+{
+}
+
+playerStateMachineVehicle.flightDriverCombatMountedWeapons : playerStateMachineVehicle.flightDriverCombat
+{
+}
+
+playerStateMachineDefinitions.Vehicle
+{
+  states += [ "flight", "flightDriverCombat", "flightDriverCombatFirearms", "flightDriverCombatMountedWeapons"];
+}

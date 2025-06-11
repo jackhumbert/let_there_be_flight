@@ -72,6 +72,8 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
   auto gamePSMVehicleEnum = rtti->GetEnum("gamePSMVehicle");
   gamePSMVehicleEnum->hashList.PushBack("Flight");
   gamePSMVehicleEnum->valueList.PushBack(8);
+  gamePSMVehicleEnum->hashList.PushBack("FlightDriverCombat");
+  gamePSMVehicleEnum->valueList.PushBack(9);
 }
 
 bool loaded = false;
