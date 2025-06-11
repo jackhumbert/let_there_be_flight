@@ -59,3 +59,27 @@ streaming:
           index: 652
         - type: worldCollisionNode
           index: 654
+    - path: base\worlds\03_night_city\_compiled\default\exterior_-10_-12_0_2.streamingsector
+      expectedNodes: 609
+      nodeDeletions:
+        - type: worldCollisionNode
+          index: 552
+        - type: worldCollisionNode
+          index: 562
+    - path: base\worlds\03_night_city\_compiled\default\exterior_-7_-12_0_2.streamingsector
+      expectedNodes: 598
+      nodeDeletions:
+        - type: worldCollisionNode
+          index: 540
+        - type: worldCollisionNode
+          index: 554
+    - path: base\worlds\03_night_city\_compiled\default\exterior_-13_-25_0_2.streamingsector
+      expectedNodes: 431
+      nodeDeletions:
+        - type: worldCollisionNode
+          index: 423
+    - path: base\worlds\03_night_city\_compiled\default\exterior_-12_-25_0_2.streamingsector
+      expectedNodes: 376
+      nodeDeletions:
+        - type: worldCollisionNode
+          index: 366
