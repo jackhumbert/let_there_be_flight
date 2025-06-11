@@ -375,8 +375,8 @@ private final const func GetICELevel() -> Float {
     let actionCompletionEffects: array<wref<ObjectActionEffect_Record>>;
     let actionRecord: wref<ObjectAction_Record>;
     let actionStartEffects: array<wref<ObjectActionEffect_Record>>;
-    let choice: InteractionChoice;
-    let emptyChoice: InteractionChoice;
+    // let choice: InteractionChoice;
+    // let emptyChoice: InteractionChoice;
     let i: Int32;
     let i1: Int32;
     let newCommand: ref<QuickhackData>;    
@@ -461,8 +461,8 @@ private final const func GetICELevel() -> Float {
             sAction.SetInactiveWithReason(false, "LocKey#7019");
           } else {
             newCommand.m_uploadTime = sAction.GetActivationTime();
-            let interactionChoice = sAction.GetInteractionChoice();
-            let i2 = 0;
+            // let interactionChoice = sAction.GetInteractionChoice();
+            // let i2 = 0;
             // while i2 < ArraySize(interactionChoice.captionParts.parts) {
             //   if IsDefined(interactionChoice.captionParts.parts[i2] as InteractionChoiceCaptionStringPart) {
             //     newCommand.m_title = GetLocalizedText(interactionChoice.captionParts.parts[i2] as InteractionChoiceCaptionStringPart.content);
