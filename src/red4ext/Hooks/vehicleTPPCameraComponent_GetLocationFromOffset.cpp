@@ -17,7 +17,7 @@ REGISTER_FLIGHT_HOOK_HASH(RED4ext::Vector4 *__fastcall, 283779224, GetLocationFr
   auto v = new RED4ext::Vector4();
   auto vehicle = camera->vehicle;
   auto fc = FlightComponent::Get(vehicle);
-  if (fc && fc->active && false) {
+  if (fc && fc->active) {
     // ignore pitch adjustments
     // camera->pitch = camera->cameraPitch;
     camera->data.isInAir = false;

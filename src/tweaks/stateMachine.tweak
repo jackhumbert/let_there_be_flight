@@ -1,27 +1,27 @@
 
 playerStateMachineVehicle.drive {
   transitionTo += [ "flight" ];
-  transitionCondition += [ "ToFlight" ];
+  transitionCondition += [ "=" ];
 }
 
 playerStateMachineVehicle.driverCombat {
   transitionTo += [ "flightDriverCombat" ];
-  transitionCondition += [ "ToFlight" ];
+  transitionCondition += [ "" ];
 }
 
 playerStateMachineVehicle.driverCombatFirearms {
-  transitionTo += [ "flightDriverCombatFireArms" ];
-  transitionCondition += [ "ToFlight" ];
+  transitionTo += [ "flightDriverCombatFirearms" ];
+  transitionCondition += [ "=" ];
 }
 
 playerStateMachineVehicle.driverCombatMountedWeapons {
   transitionTo += [ "flightDriverCombatMountedWeapons" ];
-  transitionCondition += [ "ToFlight" ];
+  transitionCondition += [ "=" ];
 }
 
 playerStateMachineVehicle.scene {
-  transitionTo += [ "flight" ];
-  transitionCondition += [ "ToFlight" ];
+  transitionTo += [ "flightDriveCombatFirearms", "flightDriverCombatMountedWeapons" ];
+  transitionCondition += [ "", "" ];
 }
 
 photo_mode.general {
@@ -30,14 +30,13 @@ photo_mode.general {
 
 // playerStateMachineVehicle items need Decisions & Events classes
 
-playerStateMachineVehicle.flight
+playerStateMachineVehicle.flight : playerStateMachineVehicle.drive
 {
 	CName affinity = "None";
 	CName[] alias = 
 	[
 		"allSlotStates"
 	];
-	// CName forceInputContext = "VehicleFlight";
 	bool hasEnterCondition = true;
 	bool hasExitCondition = false;
 	bool hasOnEnter = true;
@@ -45,55 +44,107 @@ playerStateMachineVehicle.flight
 	bool hasOnUpdate = true;
 	CName onEnterCameraParamsName = "Vehicle";
 	CName onEnterCameraParamsNameSecondary = "Bike";
-	string stateBodyClassName = "";
+	string stateBodyClassName = "VehicleDrive";
 	string[] transitionCondition = 
 	[
-		"", "=", "ToFlightDriverCombat", "", "", ""
+		"", "=", "=", "=", "", "", "", "", "", "", ""
 	];
 	bool[] transitionConditionOverridesEnterCondition = [];
 	bool[] transitionSkipInternalCondition = [];
 	string[] transitionTo = 
 	[
-		"scene", "drive", "flightDriverCombat", "deathExiting", "collisionExiting", "exiting"
+		"scene", "drive", "flightDriverCombatFirearms", "flightDriverCombatMountedWeapons", "deathExiting", "collisionExiting", "coolExiting", "slideExiting", "speedExiting", "combatExiting", "exiting"
 	];
 }
 
-// playerStateMachineVehicle.flightDriverCombat : playerStateMachineVehicle.baseVehicleState
-
-playerStateMachineVehicle.flightDriverCombat
+playerStateMachineVehicle.flightDriverCombat : playerStateMachineVehicle.drive
 {
+	float wheelieMinCenterOfMassOffset = 0.25f;
+	float wheelieMinPitch = 30.0f;
+
 	CName affinity = "None";
 	CName[] alias = 
 	[
 		"allSlotStates"
 	];
-	// CName forceInputContext = "VehicleFlightDriverCombat";
+	bool hasEnterCondition = false;
+	bool hasExitCondition = false;
+	bool hasOnEnter = true;
+	bool hasOnExit = true;
+	bool hasOnUpdate = true;
+	CName onEnterCameraParamsName = "DriverCombat";
+	CName onEnterCameraParamsNameSecondary = "Bike";
+	string stateBodyClassName = "";
+	bool[] transitionConditionOverridesEnterCondition = [];
+	bool[] transitionSkipInternalCondition = [];
+	string[] transitionCondition = 
+	[
+		"=", "=", "", "", "", "", "", "", ""
+	];
+	string[] transitionTo = 
+	[
+		"flight", "driverCombat", "deathExiting", "collisionExiting", "coolExiting", "slideExiting", "speedExiting", "combatExiting", "exiting"
+	];
+}
+
+playerStateMachineVehicle.flightDriverCombatFirearms : playerStateMachineVehicle.drive
+{
+	float wheelieMinCenterOfMassOffset = 0.25f;
+	float wheelieMinPitch = 30.0f;
+
+	CName affinity = "None";
+	CName[] alias = 
+	[
+		"allSlotStates"
+	];
 	bool hasEnterCondition = true;
 	bool hasExitCondition = false;
 	bool hasOnEnter = true;
 	bool hasOnExit = true;
 	bool hasOnUpdate = true;
-	CName onEnterCameraParamsName = "Vehicle";
+	CName onEnterCameraParamsName = "DriverCombat";
 	CName onEnterCameraParamsNameSecondary = "Bike";
 	string stateBodyClassName = "";
-	string[] transitionCondition = 
-	[
-		"", "ToFlight", "ToDriverCombat", "", "", ""
-	];
 	bool[] transitionConditionOverridesEnterCondition = [];
 	bool[] transitionSkipInternalCondition = [];
+	string[] transitionCondition = 
+	[
+		"=", "=", "", "", "", "", "", "", ""
+	];
 	string[] transitionTo = 
 	[
-		"scene", "flight", "driverCombat", "deathExiting", "collisionExiting", "exiting"
+		"flight", "driverCombatFirearms", "deathExiting", "collisionExiting", "coolExiting", "slideExiting", "speedExiting", "combatExiting", "exiting"
 	];
 }
 
-playerStateMachineVehicle.flightDriverCombatFirearms : playerStateMachineVehicle.flightDriverCombat
+playerStateMachineVehicle.flightDriverCombatMountedWeapons : playerStateMachineVehicle.drive
 {
-}
+	float wheelieMinCenterOfMassOffset = 0.25f;
+	float wheelieMinPitch = 30.0f;
 
-playerStateMachineVehicle.flightDriverCombatMountedWeapons : playerStateMachineVehicle.flightDriverCombat
-{
+	CName affinity = "None";
+	CName[] alias = 
+	[
+		"allSlotStates"
+	];
+	bool hasEnterCondition = true;
+	bool hasExitCondition = false;
+	bool hasOnEnter = true;
+	bool hasOnExit = true;
+	bool hasOnUpdate = true;
+	CName onEnterCameraParamsName = "DriverCombat";
+	CName onEnterCameraParamsNameSecondary = "Bike";
+	string stateBodyClassName = "";
+	bool[] transitionConditionOverridesEnterCondition = [];
+	bool[] transitionSkipInternalCondition = [];
+	string[] transitionCondition = 
+	[
+		"=", "=", "", "", "", "", "", "", ""
+	];
+	string[] transitionTo = 
+	[
+		"flight", "driverCombatMountedWeapons", "deathExiting", "collisionExiting", "coolExiting", "slideExiting", "speedExiting", "combatExiting", "exiting"
+	];
 }
 
 playerStateMachineDefinitions.Vehicle

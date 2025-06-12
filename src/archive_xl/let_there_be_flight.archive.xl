@@ -78,8 +78,13 @@ streaming:
       nodeDeletions:
         - type: worldCollisionNode
           index: 423
-    - path: base\worlds\03_night_city\_compiled\default\exterior_-12_-25_0_2.streamingsector
-      expectedNodes: 376
+    - path: base\worlds\03_night_city\_compiled\default\exterior_-5_-6_0_3.streamingsector
+      expectedNodes: 313
       nodeDeletions:
         - type: worldCollisionNode
-          index: 366
+          index: 215
+    # - path: base\worlds\03_night_city\_compiled\default\exterior_-12_-25_0_2.streamingsector
+    #   expectedNodes: 376
+    #   nodeDeletions:
+    #     - type: worldCollisionNode
+    #       index: 366

@@ -15,6 +15,13 @@ protected final func SetIsInFlight(stateContext: ref<StateContext>, value: Bool)
   stateContext.SetPermanentBoolParameter(n"isInFlight", value, true);
 }
 
+@addMethod(VehicleTransition)
+protected final func IsInFlight(stateContext: ref<StateContext>) -> Bool {
+  let state = stateContext.GetPermanentBoolParameter(n"isInFlight");
+  return state.value;
+}
+
+
 // need to implement some things in order to use this
 @addMethod(VehicleTransition)
 protected final func IsPlayerAllowedToEnterVehicleFlight(const scriptInterface: ref<StateGameScriptInterface>) -> Bool {

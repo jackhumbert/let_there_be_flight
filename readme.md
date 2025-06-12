@@ -102,6 +102,8 @@ These are some of the steps I take to update the mod for new versions of the gam
   1. Run the game until it crashes (expected)
   1. Copy the `#define`s from red4ext/logs/let_there_be_flight.log to deps/red4ext.sdk/include/RED4ext/Addresses_VFT.hpp
 
+Helpful state machine viewer: https://cyberpunk.ldlework.com/
+
 Special thanks to @psiberx for [Codeware Lib](https://github.com/psiberx/cp2077-codeware/), [InkPlayground Demo](https://github.com/psiberx/cp2077-playground), and Redscript & CET examples on Discord, @WopsS for [RED4ext](https://github.com/WopsS/RED4ext), @jac3km4 for [Redscript toolkit](https://github.com/jac3km4/redscript), @yamashi for [CET](https://github.com/yamashi/CyberEngineTweaks) and the [E-mode mod](https://www.nexusmods.com/cyberpunk2077/mods/3207?tab=description) (very helpful in figuring out how to work with FMOD), @rfuzzo & team (especially @seberoth!) for [WolvenKit](https://github.com/WolvenKit/WolvenKit), and all of them for being helpful on Discord.
 
 Interested in adding flying vehicles or a similar mechanic to an existing game? Let me know!
