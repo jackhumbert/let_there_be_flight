@@ -25,11 +25,11 @@ public static func OperatorXor(q: Quaternion, n: Int32) -> Quaternion {
 
 // EulerAngles
 
-public static func MakeEulerAngles(Roll: Float, Yaw: Float, Pitch: Float) -> EulerAngles {
+public static func MakeEulerAngles(Pitch: Float, Yaw: Float, Roll: Float) -> EulerAngles {
   let ea = new EulerAngles();
   ea.Roll = Roll;
-  ea.Yaw = Yaw;
   ea.Pitch = Pitch;
+  ea.Yaw = Yaw;
   return ea;
 }
 
