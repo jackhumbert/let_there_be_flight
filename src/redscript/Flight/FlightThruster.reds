@@ -203,7 +203,10 @@ public abstract native class IFlightThruster extends IScriptable {
 
     // -4, 4 / -10, 10
     let animDeviationCenter = 0.0;
-    let animDeviationScale = 0.1;
+
+    // how much thrusters move opposite of the force effect
+    let animDeviationScale = 0.025;
+
     // 0, 16
     // let animRadiusCenter = 1.0;
     // let animRadiusScale = -1.0;
