@@ -1,8 +1,8 @@
 public class FlightDecisions extends VehicleTransition {
 
-  public func EnterCondition(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-    return true;
-  }
+  // public func EnterCondition(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
+  //   return true;
+  // }
 
   public final func ToDrive(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
     let value = scriptInterface.IsActionJustPressed(n"Flight_Toggle");
@@ -12,22 +12,22 @@ public class FlightDecisions extends VehicleTransition {
     }
     return value;
   }
-
+  
   public final const func ToFlightDriverCombatFirearms(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
     let drawnWeapon: StateResultBool;
     let equipWeaponActionTapped: Bool;
-    // let notificationEvent: ref<UIInGameNotificationEvent>;
+    let notificationEvent: ref<UIInGameNotificationEvent>;
     let questForceEnableCombat: StateResultBool;
     let value: Bool = false;
     if this.DoesVehicleSupportFireArms(scriptInterface.owner as VehicleObject) {
       equipWeaponActionTapped = (scriptInterface.IsActionJustTapped(n"SwitchItem") || scriptInterface.IsActionJustTapped(n"HolsterWeapon") || scriptInterface.IsActionJustTapped(n"NextWeapon") || scriptInterface.IsActionJustTapped(n"PreviousWeapon")) && EquipmentSystem.GetData(scriptInterface.executionOwner).GetLastUsedOrFirstAvailableDriverCombatWeapon(this.GetDriverCombatWeaponTag(scriptInterface.owner as VehicleObject)) == ItemID.None() && scriptInterface.localBlackboard.GetInt(GetAllBlackboardDefs().PlayerStateMachine.Vision) != EnumInt(gamePSMVision.Focus);
-      // if !this.IsPlayerAllowedToEnterDriverCombat(stateContext, scriptInterface) {
-      //   if equipWeaponActionTapped {
-      //     notificationEvent = new UIInGameNotificationEvent();
-      //     notificationEvent.m_notificationType = UIInGameNotificationType.ActionRestriction;
-      //     scriptInterface.GetUISystem().QueueEvent(notificationEvent);
-      //   };
-      // } else {
+      if !this.IsPlayerAllowedToEnterDriverCombat(stateContext, scriptInterface) {
+        if equipWeaponActionTapped {
+          notificationEvent = new UIInGameNotificationEvent();
+          notificationEvent.m_notificationType = UIInGameNotificationType.ActionRestriction;
+          scriptInterface.GetUISystem().QueueEvent(notificationEvent);
+        };
+      } else {
         if equipWeaponActionTapped || UpperBodyTransition.HasAnyWeaponEquipped(scriptInterface) {
           value = true;
         };
@@ -42,7 +42,7 @@ public class FlightDecisions extends VehicleTransition {
         if questForceEnableCombat.value {
           value = true;
         };
-      // };
+      };
     };
     if value {
       FlightLog.Info("[FlightDecisions] ToFlightDriverCombatFirearms");
@@ -54,18 +54,18 @@ public class FlightDecisions extends VehicleTransition {
   public final const func ToFlightDriverCombatMountedWeapons(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
     let drawnWeapon: StateResultBool;
     let equipWeaponActionTapped: Bool;
-    // let notificationEvent: ref<UIInGameNotificationEvent>;
+    let notificationEvent: ref<UIInGameNotificationEvent>;
     let questForceEnableCombat: StateResultBool;
     let value: Bool = false;
     if Equals(this.GetVehicleDriverCombatType(scriptInterface.owner as VehicleObject), gamedataDriverCombatType.MountedWeapons) {
       equipWeaponActionTapped = (scriptInterface.IsActionJustTapped(n"MountedWeapons_SwitchWeapons") || scriptInterface.IsActionJustTapped(n"MountedWeapons_HolsterWeapon") || scriptInterface.IsActionJustTapped(n"MountedWeapons_NextWeapon") || scriptInterface.IsActionJustTapped(n"MountedWeapons_PreviousWeapon") || scriptInterface.IsActionJustTapped(n"MountedWeapons_WeaponSlot1") || scriptInterface.IsActionJustTapped(n"MountedWeapons_WeaponSlot2") && (scriptInterface.owner as VehicleObject).CanSwitchWeapons()) && scriptInterface.localBlackboard.GetInt(GetAllBlackboardDefs().PlayerStateMachine.Vision) != EnumInt(gamePSMVision.Focus);
-      // if !this.IsPlayerAllowedToEnterDriverCombat(stateContext, scriptInterface) || (scriptInterface.owner as VehicleObject).GetVehicleComponent().IsVehicleInDecay() {
-      //   if equipWeaponActionTapped {
-      //     notificationEvent = new UIInGameNotificationEvent();
-      //     notificationEvent.m_notificationType = UIInGameNotificationType.ActionRestriction;
-      //     scriptInterface.GetUISystem().QueueEvent(notificationEvent);
-      //   };
-      // } else {
+      if !this.IsPlayerAllowedToEnterDriverCombat(stateContext, scriptInterface) || (scriptInterface.owner as VehicleObject).GetVehicleComponent().IsVehicleInDecay() {
+        if equipWeaponActionTapped {
+          notificationEvent = new UIInGameNotificationEvent();
+          notificationEvent.m_notificationType = UIInGameNotificationType.ActionRestriction;
+          scriptInterface.GetUISystem().QueueEvent(notificationEvent);
+        };
+      } else {
         if equipWeaponActionTapped {
           value = true;
         };
@@ -80,7 +80,7 @@ public class FlightDecisions extends VehicleTransition {
         if questForceEnableCombat.value {
           value = true;
         };
-      // };
+      };
     };
     if value {
       FlightLog.Info("[FlightDecisions] ToFlightDriverCombatMountedWeapons");

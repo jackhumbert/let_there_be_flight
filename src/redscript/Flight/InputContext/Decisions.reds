@@ -1,13 +1,16 @@
 public class VehicleFlightContextDecisions extends InputContextTransitionDecisions {
 
-  private let m_stateCallbackID: ref<CallbackHandle>;
-  private let m_flightCallbackID: ref<CallbackHandle>;
+  protected let m_stateCallbackID: ref<CallbackHandle>;
+  protected let m_flightCallbackID: ref<CallbackHandle>;
 
   protected let m_psmVehicle: Int32;
   protected let m_isFlying: Bool;
 
+  protected let m_context: ref<StateContext>;
+
   protected func OnAttach(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Void {
     FlightLog.Info("[VehicleFlightContextDecisions] OnAttach");
+    this.m_context = stateContext;
     let allBlackboardDef = GetAllBlackboardDefs();
       
     if IsDefined(scriptInterface.localBlackboard) {
@@ -52,8 +55,12 @@ public class VehicleFlightContextDecisions extends InputContextTransitionDecisio
 
   protected func UpdateEnterConditionForFlight() -> Void {
     let value = this.m_psmVehicle == EnumInt(gamePSMVehicle.Driving) && this.m_isFlying;
+    // let value = this.m_isFlying;
     this.EnableOnEnterCondition(value);
-    FlightLog.Info("[InputContext] " + this.GetContextName() + " EnterCondition: " + ToString(value));
+    // FlightLog.Info("[InputContext] " + this.GetContextName() + " EnterCondition: " + ToString(value));
+    
+    // let inputState = this.m_context.GetStateMachineCurrentState(n"InputContext");
+    // FlightLog.Info("[InputContext] Current: " + NameToString(inputState));
   }
 
   protected cb func OnVehicleStateChanged(value: Int32) -> Bool {
@@ -72,21 +79,35 @@ public class VehicleFlightContextDecisions extends InputContextTransitionDecisio
   }
 
   protected const func EnterCondition(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
+    if !this.DriverCombatTypeEnterCondition(stateContext) {
+      return false;
+    };
     if StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"VehicleOnlyForward") {
       return false;
     };
     if StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"NoDriving") {
       return false;
     };
-    // FlightLog.Info("[InputContext] " + this.GetContextName() + " Entering");
     return true;
+  }
+}
+
+public class VehicleFlightDriverMountedWeaponsContextDecisions extends VehicleFlightContextDecisions {
+
+  protected const func GetContextName() -> String {
+    return "VehicleFlightDriverMountedWeapons";
+  }
+
+  protected const func DriverCombatTypeEnterCondition(const stateContext: ref<StateContext>) -> Bool {
+    let driverCombatType: gamedataDriverCombatType = this.GetDriverCombatType(stateContext);
+    return Equals(driverCombatType, gamedataDriverCombatType.MountedWeapons);
   }
 }
 
 public class VehicleFlightDriverCombatContextDecisions extends VehicleFlightContextDecisions {
 
-  private let m_tppCallbackID: ref<CallbackHandle>;
-  private let m_upperBodyCallbackID: ref<CallbackHandle>;
+  protected let m_tppCallbackID: ref<CallbackHandle>;
+  protected let m_upperBodyCallbackID: ref<CallbackHandle>;
 
   protected let m_inTpp: Bool;
   protected let m_isAiming: Bool;
@@ -125,8 +146,9 @@ public class VehicleFlightDriverCombatContextDecisions extends VehicleFlightCont
 
   protected func UpdateEnterConditionForFlight() -> Void {
     let value = this.m_psmVehicle == EnumInt(gamePSMVehicle.DriverCombat) && this.m_isFlying;
+    // let value = this.m_isFlying;
     this.EnableOnEnterCondition(value);
-    FlightLog.Info("[InputContext] " + this.GetContextName() + " EnterCondition: " + ToString(value));
+    // FlightLog.Info("[InputContext] " + this.GetContextName() + " EnterCondition: " + ToString(value));
   }
 
   protected cb func OnVehiclePerspectiveChanged(value: Bool) -> Bool {
@@ -171,7 +193,7 @@ public class VehicleFlightDriverCombatTPPContextDecisions extends VehicleFlightD
     return "VehicleFlightDriverCombatTPP";
   }
 
-  private const func CameraPerspectiveEnterCondition() -> Bool {
+  protected const func CameraPerspectiveEnterCondition() -> Bool {
     return this.m_inTpp;
   }
 }

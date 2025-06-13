@@ -1,4 +1,3 @@
-
 playerStateMachineVehicle.drive {
   transitionTo += [ "flight" ];
   transitionCondition += [ "=" ];
@@ -6,7 +5,7 @@ playerStateMachineVehicle.drive {
 
 playerStateMachineVehicle.driverCombat {
   transitionTo += [ "flightDriverCombat" ];
-  transitionCondition += [ "" ];
+  transitionCondition += [ "=" ];
 }
 
 playerStateMachineVehicle.driverCombatFirearms {
@@ -28,16 +27,11 @@ photo_mode.general {
   onlyFPPPhotoModeInPlayerStates += [ "Vehicle:flight" ];
 }
 
-// playerStateMachineVehicle items need Decisions & Events classes
-
-playerStateMachineVehicle.flight : playerStateMachineVehicle.drive
+playerStateMachineVehicle.flight
 {
 	CName affinity = "None";
-	CName[] alias = 
-	[
-		"allSlotStates"
-	];
-	bool hasEnterCondition = true;
+	CName[] alias = [];
+	bool hasEnterCondition = false;
 	bool hasExitCondition = false;
 	bool hasOnEnter = true;
 	bool hasOnExit = true;
@@ -45,6 +39,7 @@ playerStateMachineVehicle.flight : playerStateMachineVehicle.drive
 	CName onEnterCameraParamsName = "Vehicle";
 	CName onEnterCameraParamsNameSecondary = "Bike";
 	string stateBodyClassName = "VehicleDrive";
+	// CName forceInputContext = "VehicleFlight";
 	string[] transitionCondition = 
 	[
 		"", "=", "=", "=", "", "", "", "", "", "", ""
@@ -57,16 +52,13 @@ playerStateMachineVehicle.flight : playerStateMachineVehicle.drive
 	];
 }
 
-playerStateMachineVehicle.flightDriverCombat : playerStateMachineVehicle.drive
+playerStateMachineVehicle.flightDriverCombat
 {
 	float wheelieMinCenterOfMassOffset = 0.25f;
 	float wheelieMinPitch = 30.0f;
 
 	CName affinity = "None";
-	CName[] alias = 
-	[
-		"allSlotStates"
-	];
+	CName[] alias = [];
 	bool hasEnterCondition = false;
 	bool hasExitCondition = false;
 	bool hasOnEnter = true;
@@ -87,17 +79,14 @@ playerStateMachineVehicle.flightDriverCombat : playerStateMachineVehicle.drive
 	];
 }
 
-playerStateMachineVehicle.flightDriverCombatFirearms : playerStateMachineVehicle.drive
+playerStateMachineVehicle.flightDriverCombatFirearms
 {
 	float wheelieMinCenterOfMassOffset = 0.25f;
 	float wheelieMinPitch = 30.0f;
 
 	CName affinity = "None";
-	CName[] alias = 
-	[
-		"allSlotStates"
-	];
-	bool hasEnterCondition = true;
+	CName[] alias = [];
+	bool hasEnterCondition = false;
 	bool hasExitCondition = false;
 	bool hasOnEnter = true;
 	bool hasOnExit = true;
@@ -117,17 +106,14 @@ playerStateMachineVehicle.flightDriverCombatFirearms : playerStateMachineVehicle
 	];
 }
 
-playerStateMachineVehicle.flightDriverCombatMountedWeapons : playerStateMachineVehicle.drive
+playerStateMachineVehicle.flightDriverCombatMountedWeapons
 {
 	float wheelieMinCenterOfMassOffset = 0.25f;
 	float wheelieMinPitch = 30.0f;
 
 	CName affinity = "None";
-	CName[] alias = 
-	[
-		"allSlotStates"
-	];
-	bool hasEnterCondition = true;
+	CName[] alias = [];
+	bool hasEnterCondition = false;
 	bool hasExitCondition = false;
 	bool hasOnEnter = true;
 	bool hasOnExit = true;

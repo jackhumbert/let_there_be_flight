@@ -10,10 +10,11 @@
 /// @hash 283779224
 // RED4ext::Vector4 *__fastcall GetLocationFromOffset(RED4ext::vehicle::TPPCameraComponent *camera, RED4ext::Vector4 *location, RED4ext::Vector3 *lookAtOffset);
 
+// uses preset->linearVelocity
 // Vector4 vehicle::TPPCameraComponent::CalculateLookAtPosition(vehicle::TPPCameraComponent::CameraPreset const &) const
 REGISTER_FLIGHT_HOOK_HASH(RED4ext::Vector4 *__fastcall, 283779224, GetLocationFromOffset,
-                     RED4ext::vehicle::TPPCameraComponent *camera, RED4ext::Vector4 *location,
-                     RED4ext::Vector3 *offset) {
+                     RED4ext::vehicle::TPPCameraComponent *camera, RED4ext::Vector4 *offset,
+                     RED4ext::vehicle::TPPCameraComponent::CameraPreset *preset) {
   auto v = new RED4ext::Vector4();
   auto vehicle = camera->vehicle;
   auto fc = FlightComponent::Get(vehicle);
@@ -21,14 +22,14 @@ REGISTER_FLIGHT_HOOK_HASH(RED4ext::Vector4 *__fastcall, 283779224, GetLocationFr
     // ignore pitch adjustments
     // camera->pitch = camera->cameraPitch;
     camera->data.isInAir = false;
-    if (FlightSettings::GetProperty<bool>("tppCameraCenterOnMass")) {
+    if (FlightSettings::GetProperty<bool>("tppCameraCenterOnMass") && !FlightSettings::GetBool("inTPPDriverCombat")) {
       *v = vehicle->worldTransform.Position.AsVector4() +
              (vehicle->worldTransform.Orientation * vehicle->physicsData->centerOfMass);
     } else {
-      *v = *GetLocationFromOffset_Original(camera, location, offset);
+      *v = *GetLocationFromOffset_Original(camera, offset, preset);
     }
     return v;
   } else {
-    return GetLocationFromOffset_Original(camera, location, offset);
+    return GetLocationFromOffset_Original(camera, offset, preset);
   }
 }

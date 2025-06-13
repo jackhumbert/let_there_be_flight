@@ -47,6 +47,7 @@
 		<action name="ToggleVehCamera"	map="VehicleCameraToggle" />
 		<action name="VehicleCameraInverse"	map="VehicleCameraInverse_Button"/>
 		<action name="Exit"							map="ExitVehicle_Button" />
+		<action name="QuickExit"			map="QuickExit_Button"  />
 		<!-- <action name="CycleLights"			map="Vehicle_CycleLights" /> -->
 		<action name="Flight_LinearBrake" map="Flight_LinearBrake" />
 		<action name="Flight_AngularBrake" map="Flight_AngularBrake" />
@@ -130,6 +131,17 @@
 		<include name="BaseVehicleFlightDriverCombat" />
 
 		<action name="ShootPrimary"			map="Vehicle_DriverCombat_Shoot_Primary" />
+		<action name="MountedWeapons_WeaponSlot1"			map="Vehicle_MountedWeapons_WeaponSlot1_Button" />
+		<action name="MountedWeapons_WeaponSlot2"			map="Vehicle_MountedWeapons_WeaponSlot2_Button" />
+		<action name="MountedWeapons_SwitchWeapons"			map="Vehicle_MountedWeapons_SwitchWeapons_Button" />
+		<action name="MountedWeapons_HolsterWeapon"			map="Vehicle_MountedWeapons_HolsterWeapon_Button" />
+		<action name="MountedWeapons_NextWeapon"			map="Vehicle_MountedWeapons_NextWeapon_Button" />
+		<action name="MountedWeapons_PreviousWeapon"		map="Vehicle_MountedWeapons_PreviousWeapon_Button" />
+	</context>
+	
+	<context name="VehicleFlightDriverMountedWeapons" >
+		<include name="VehicleFlight" />
+		
 		<action name="MountedWeapons_WeaponSlot1"			map="Vehicle_MountedWeapons_WeaponSlot1_Button" />
 		<action name="MountedWeapons_WeaponSlot2"			map="Vehicle_MountedWeapons_WeaponSlot2_Button" />
 		<action name="MountedWeapons_SwitchWeapons"			map="Vehicle_MountedWeapons_SwitchWeapons_Button" />
@@ -226,34 +238,34 @@
 
 	<mapping name="Flight_Yaw" type="Axis" >
 		<button id="IK_Pad_LeftAxisX" />
-		<button id="IK_JoyZ" />
+		<!-- <button id="IK_JoyZ" val="0.0" /> -->
 		<button id="IK_D" val="1.0" overridableUI="vehicleFlightYawRight"/>
 		<button id="IK_A" val="-1.0" overridableUI="vehicleFlightYawLeft"/>
 	</mapping>
 
 	<mapping name="Flight_Pitch" type="Axis" >
 		<button id="IK_Pad_RightAxisY" />
-		<button id="IK_JoyY" />
+		<!-- <button id="IK_JoyY" val="0.0" /> -->
 		<button id="IK_L" val="1.0" overridableUI="vehicleFlightPitchForward" />
 		<button id="IK_Period" val="-1.0" overridableUI="vehicleFlightPitchBackward" />
 	</mapping>
 
 	<mapping name="Flight_Roll" type="Axis" >
 		<button id="IK_Pad_RightAxisX" />
-		<button id="IK_JoyX" />
+		<!-- <button id="IK_JoyX" val="0.0" /> -->
 		<button id="IK_Slash" val="1.0" overridableUI="vehicleFlightRollRight"/>
 		<button id="IK_Comma" val="-1.0" overridableUI="vehicleFlightRollLeft"/>
 	</mapping>
 	
 	<mapping name="Flight_Lift" type="Axis" >
 		<button id="IK_Pad_LeftAxisY" />
-		<button id="IK_JoyV" />
+		<!-- <button id="IK_JoyV" val="0.0" /> -->
 		<button id="IK_Space" val="1.0" overridableUI="vehicleFlightLiftUp" />
 		<button id="IK_LControl" val="-1.0" overridableUI="vehicleFlightLiftDown" />
 	</mapping>
 
 	<mapping name="Flight_Sway" type="Axis" >
-		<button id="IK_JoyU" />
+		<!-- <button id="IK_JoyU" val="0.0" /> -->
 		<button id="IK_Right" val="1.0" overridableUI="vehicleFlightSwayRight"/>
 		<button id="IK_Left" val="-1.0" overridableUI="vehicleFlightSwayLeft"/>
 	</mapping>

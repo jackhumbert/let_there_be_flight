@@ -15,6 +15,7 @@
 			"*.bt": "c",
 			"*.xl": "yaml",
 			"*.idc": "cpp",
+			".redscript-ide": "toml",
 			"algorithm": "cpp",
 			"array": "cpp",
 			"atomic": "cpp",
@@ -97,7 +98,8 @@
 			"*.in": "plaintext",
 			"cstdarg": "cpp",
 			"ranges": "cpp",
-			"span": "cpp"
+			"span": "cpp",
+			"random": "cpp"
 		},
 		"editor.tabSize": 2,
 		"cmake.generator": "Ninja"

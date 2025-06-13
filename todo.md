@@ -6,4 +6,6 @@
 2025
 * disable crosshair in UI when using mounted weapons
 * move camera center to crosshair during driver combat
-* animation flight camera moves
+* animate flight camera moves
+* use input contexts for flight options?
+* move input hints to inputContext classes

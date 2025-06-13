@@ -17,10 +17,10 @@ public func ToFlight(const stateContext: ref<StateContext>, const scriptInterfac
 @wrapMethod(VehicleEventsTransition)
 protected func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
   wrappedMethod(stateContext, scriptInterface);
-  let vehicleState = stateContext.GetStateMachineCurrentState(n"Vehicle");
-  FlightLog.Info("[PSMVehicle] Just left: " + NameToString(vehicleState));
-  let inputState = stateContext.GetStateMachineCurrentState(n"InputContext");
-  FlightLog.Info("[PSMInputContext] Just left: " + NameToString(inputState));
+  // let vehicleState = stateContext.GetStateMachineCurrentState(n"Vehicle");
+  // FlightLog.Info("[PSMVehicle] Just left: " + NameToString(vehicleState));
+  // let inputState = stateContext.GetStateMachineCurrentState(n"InputContext");
+  // FlightLog.Info("[InputContext] Current: " + NameToString(inputState));
 }
 
 // @addMethod(DriverCombatDecisions)
@@ -58,12 +58,13 @@ public func ToFlightDriverCombatMountedWeapons(const stateContext: ref<StateCont
 
 @addMethod(VehicleEventsTransition)
 protected func OnEnterFlight(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-  if (!this.IsInFlight(stateContext)) {
-    FlightLog.Info("[VehicleEventsTransition] OnEnterFlight, starting");
-    this.SetIsInFlight(stateContext, true);
+  this.SetIsInFlight(stateContext, true);
+  if (!(scriptInterface.owner as VehicleObject).GetFlightComponent().active) {
+    // FlightLog.Info("[VehicleEventsTransition] OnEnterFlight, starting");
     stateContext.SetTemporaryBoolParameter(n"stopVehicleFlight", false, true);
-    // this.SetIsVehicleDriver(stateContext, true);
-    // this.PlayerStateChange(scriptInterface, 1);
+    this.SetSide(stateContext, scriptInterface);
+    this.SetIsVehicleDriver(stateContext, true);
+    this.PlayerStateChange(scriptInterface, 1);
     // this.SetBlackboardIntVariable(scriptInterface, GetAllBlackboardDefs().PlayerStateMachine.Vehicle, 8);
     this.SendAnimFeature(stateContext, scriptInterface);
     this.SetVehFppCameraParams(stateContext, scriptInterface, false);
@@ -78,7 +79,7 @@ protected func OnEnterFlight(stateContext: ref<StateContext>, scriptInterface: r
         FlightSystem.GetInstance().cameraIndex = 3;
     };
 
-    // this.PauseStateMachines(stateContext, scriptInterface.executionOwner);
+    this.PauseStateMachines(stateContext, scriptInterface.executionOwner);
     
     // if !VehicleTransition.CanEnterDriverCombat() {
     //   stateContext.SetPermanentBoolParameter(n"ForceEmptyHands", true, true);
@@ -88,7 +89,7 @@ protected func OnEnterFlight(stateContext: ref<StateContext>, scriptInterface: r
     // evt.vehicle = scriptInterface.owner as VehicleObject;
     (scriptInterface.owner as VehicleObject).QueueEvent(evt);
   } else {
-    FlightLog.Info("[VehicleEventsTransition] OnEnterFlight");
+    // FlightLog.Info("[VehicleEventsTransition] OnEnterFlight");
   }
 }
 
@@ -97,9 +98,9 @@ public final func OnExitFlight(stateContext: ref<StateContext>, scriptInterface:
   // FlightLog.Info("[VehicleEventsTransition] OnExitFlight");
   let stopFlight = stateContext.GetTemporaryBoolParameter(n"stopVehicleFlight");
   if stopFlight.value {
-    FlightLog.Info("[VehicleEventsTransition] OnExitFlight, stopping");
+    // FlightLog.Info("[VehicleEventsTransition] OnExitFlight, stopping");
     this.ExitCustomCamera(scriptInterface);
-    this.SetIsInFlight(stateContext, false);
+    this.SetIsVehicleDriver(stateContext, false);
     this.SendAnimFeature(stateContext, scriptInterface);
     // (scriptInterface.owner as VehicleObject).ToggleFlightComponent(false);
     // FlightController.GetInstance().Deactivate(false);
@@ -108,10 +109,11 @@ public final func OnExitFlight(stateContext: ref<StateContext>, scriptInterface:
     evt.silent = false;
     // evt.vehicle = scriptInterface.owner as VehicleObject;
     (scriptInterface.owner as VehicleObject).QueueEvent(evt);
-    // this.ResumeStateMachines(scriptInterface.executionOwner);
+    this.ResumeStateMachines(scriptInterface.executionOwner);
   } else {
-    FlightLog.Info("[VehicleEventsTransition] OnExitFlight");
+    // FlightLog.Info("[VehicleEventsTransition] OnExitFlight");
   }
+  this.SetIsInFlight(stateContext, false);
 }
 
 @addMethod(VehicleEventsTransition)

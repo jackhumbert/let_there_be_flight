@@ -65,8 +65,8 @@ public class FlightDriverCombatFirearmsEvents extends DriverCombatFirearmsEvents
 
   public func OnForcedExit(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
     FlightLog.Info("[VehicleStateMachine] FlightDriverCombatFirearmsEvents ForcedExit");
-    this.OnForcedExitFlight(stateContext, scriptInterface);
     super.OnForcedExit(stateContext, scriptInterface);
+    this.OnForcedExitFlight(stateContext, scriptInterface);
   }
 
   public func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {

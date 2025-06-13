@@ -6,6 +6,8 @@ public native class FlightSettings extends IScriptable {
   public native static func GetInstance() -> ref<FlightSettings>;
   public native static func GetFloat(name: String) -> Float;
   public native static func SetFloat(name: String, value: Float) -> Float;
+  public native static func GetBool(name: String) -> Bool;
+  public native static func SetBool(name: String, value: Bool) -> Bool;
   public native static func GetVector3(name: String) -> Vector3;
   public native static func SetVector3(name: String, x: Float, y: Float, z: Float) -> Vector3;
   public native static func DebugBreak() -> Void;
@@ -213,5 +215,7 @@ public native class FlightSettings extends IScriptable {
     FlightSettings.SetFloat("pitchWithSurge", 0.0);
 
     FlightSettings.SetFloat("yawD", 3.0);
+    
+    FlightSettings.SetBool("inTPPDriverCombat", false);
   }
 }

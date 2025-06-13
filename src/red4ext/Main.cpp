@@ -67,13 +67,13 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostRegisterTypes() {
 
   RED4ext::CRTTISystem::Get()->RegisterScriptName("entBaseCameraComponent", "BaseCameraComponent");
 
-  auto rtti = RED4ext::CRTTISystem::Get();
+  // auto rtti = RED4ext::CRTTISystem::Get();
 
-  auto gamePSMVehicleEnum = rtti->GetEnum("gamePSMVehicle");
-  gamePSMVehicleEnum->hashList.PushBack("Flight");
-  gamePSMVehicleEnum->valueList.PushBack(8);
-  gamePSMVehicleEnum->hashList.PushBack("FlightDriverCombat");
-  gamePSMVehicleEnum->valueList.PushBack(9);
+  // auto gamePSMVehicleEnum = rtti->GetEnum("gamePSMVehicle");
+  // gamePSMVehicleEnum->hashList.PushBack("Flight");
+  // gamePSMVehicleEnum->valueList.PushBack(8);
+  // gamePSMVehicleEnum->hashList.PushBack("FlightDriverCombat");
+  // gamePSMVehicleEnum->valueList.PushBack(9);
 }
 
 bool loaded = false;

@@ -32,6 +32,7 @@ void GetInstanceScripts(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aF
 
 RED4ext::HashMap<RED4ext::CName, float> floats;
 RED4ext::HashMap<RED4ext::CName, RED4ext::Vector3> vector3s;
+RED4ext::HashMap<RED4ext::CName, bool> bools;
 
 float FlightSettings::GetFloat(RED4ext::CString name) {
   if (floats.allocator) {
@@ -59,9 +60,21 @@ RED4ext::Vector3 FlightSettings::GetVector3(RED4ext::CString name) {
   return {0.0, 0.0, 0.0};
 }
 
-
 void FlightSettings::SetVector3(RED4ext::CString name, float x, float y, float z) {
   vector3s.InsertOrAssign(RED4ext::CName(name.c_str()), RED4ext::Vector3(x, y, z));
+}
+
+bool FlightSettings::GetBool(RED4ext::CString name) {
+  if (bools.allocator) {
+    auto value = bools.Get(RED4ext::CName(name.c_str()));
+    return *value;
+  }
+  spdlog::warn("Could not find bool: {0}", name.c_str());
+  return false;
+}
+
+void FlightSettings::SetBool(RED4ext::CString name, bool value) {
+  bools.InsertOrAssign(RED4ext::CName(name.c_str()), value);
 }
 
 void FlightSettings::DebugBreak() {
@@ -72,6 +85,7 @@ bool Setup(RED4ext::CGameApplication *aApp) {
   auto allocator = new RED4ext::Memory::DefaultAllocator();
   floats = RED4ext::HashMap<RED4ext::CName, float>(allocator);
   vector3s = RED4ext::HashMap<RED4ext::CName, RED4ext::Vector3>(allocator);
+  bools = RED4ext::HashMap<RED4ext::CName, bool>(allocator);
 
   auto fs = FlightSettings::GetInstance();
   if (fs) {

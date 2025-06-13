@@ -13,6 +13,8 @@ struct FlightSettings : RED4ext::IScriptable {
   static void SetFloat(RED4ext::CString, float);
   static RED4ext::Vector3 GetVector3(RED4ext::CString);
   static void SetVector3(RED4ext::CString, float, float, float);
+  static bool GetBool(RED4ext::CString);
+  static void SetBool(RED4ext::CString, bool);
   static void DebugBreak();
 
   template <typename T>
@@ -32,5 +34,7 @@ RTTI_DEFINE_CLASS(FlightSettings, {
   RTTI_METHOD(SetFloat);
   RTTI_METHOD(GetVector3);
   RTTI_METHOD(SetVector3);
+  RTTI_METHOD(GetBool);
+  RTTI_METHOD(SetBool);
   RTTI_METHOD(DebugBreak);
 });
