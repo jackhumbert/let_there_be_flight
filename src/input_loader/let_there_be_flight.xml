@@ -168,7 +168,7 @@
 	<!-- MAPPINGS -->
 	<mapping name="Flight_Toggle" type="Button">
 		<button id="IK_Pad_LeftThumb" />
-		<button id="IK_E" overridableUI="vehicleFlight"/>
+		<button id="IK_L" overridableUI="vehicleFlight"/>
   </mapping>
 
 	<mapping name="Flight_RightStickToggle" type="Button">
