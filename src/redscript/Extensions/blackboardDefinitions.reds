@@ -18,6 +18,9 @@ public class VehicleFlightDef extends BlackboardDefinition {
 @addField(AllBlackboardDefinitions)
 public let VehicleFlight: ref<VehicleFlightDef>;
 
+@addField(PlayerStateMachineDef)
+public let VehicleFlight: BlackboardID_Int;
+
 // @addField(VehicleDef)
 // public let IsFlightActive: BlackboardID_Bool;
 

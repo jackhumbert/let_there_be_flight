@@ -1,35 +1,5 @@
-// playerStateMachineInputContext.vehicleDriverContext {
-//   transitionTo += [ "vehicleFlightContext" ];
-//   transitionCondition += [ "" ];
-// }
-
-// playerStateMachineInputContext.vehicleDriverMountedWeaponsContext {
-//   transitionTo += [ "vehicleFlightDriverMountedWeaponsContext" ];
-//   transitionCondition += [ "" ];
-// }
-
-// playerStateMachineInputContext.vehicleDriverCombatContext {
-//   transitionTo += [ "vehicleFlightDriverCombatContext" ];
-//   transitionCondition += [ "" ];
-// }
-
-// playerStateMachineInputContext.vehicleDriverCombatTPPContext {
-//   transitionTo += [ "vehicleFlightDriverCombatTPPContext" ];
-//   transitionCondition += [ "" ];
-// }
-
-// playerStateMachineInputContext.vehicleDriverCombatAimContext {
-//   transitionTo += [ "vehicleFlightDriverCombatAimContext" ];
-//   transitionCondition += [ "" ];
-// }
-
-// playerStateMachineInputContext.vehicleDriverCombatMountedWeaponsContext {
-//   transitionTo += [ "vehicleFlightDriverCombatMountedWeaponsContext" ];
-//   transitionCondition += [ "" ];
-// }
-
 playerStateMachineDefinitions.InputContext {
-  states += [ "vehicleFlightContext", "vehicleFlightDriverMountedWeaponsContext", "vehicleFlightDriverCombatContext", "vehicleFlightDriverCombatTPPContext", "vehicleFlightDriverCombatAimContext", "vehicleFlightDriverCombatMountedWeaponsContext" ];
+  states += [ "vehicleFlightContext", "vehicleFlightCombatContext", "vehicleFlightDriverMountedWeaponsContext", "vehicleFlightDriverCombatContext", "vehicleFlightDriverCombatTPPContext", "vehicleFlightDriverCombatAimContext", "vehicleFlightDriverCombatMountedWeaponsContext" ];
 }
 
 // additional properties {
@@ -53,6 +23,34 @@ playerStateMachineInputContext.vehicleFlightContext
 	CName affinity = "None";
 
 	CName forceInputContext = "VehicleFlight";
+	CName[] alias = 
+	[
+		"allVehicleContexts"
+	];
+	bool[] transitionConditionOverridesEnterCondition = [];
+	bool[] transitionSkipInternalCondition = [];
+	string[] transitionTo = 
+	[
+		"allForcedContexts", "allUIContexts", "gameplayContext"
+	];
+	string[] transitionCondition = 
+	[
+		"", "", "ExitCondition"
+	];
+	bool forceInputContextDirectBlend = false;
+}
+
+playerStateMachineInputContext.vehicleFlightCombatContext
+{	
+	string stateBodyClassName = ""; // type of gamestateMachineplayeractions___
+	bool hasEnterCondition = true;
+	bool hasOnEnter = true;
+	bool hasExitCondition = false;
+	bool hasOnExit = true;
+	bool hasOnUpdate = true;
+	CName affinity = "None";
+
+	CName forceInputContext = "VehicleFlightCombat";
 	CName[] alias = 
 	[
 		"allVehicleContexts"

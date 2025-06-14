@@ -133,6 +133,18 @@ public native class FlightComponent extends GameComponent {
     this.m_vehicleBlackboard = this.GetVehicle().GetBlackboard();
     // QuickhackModule.RequestRefreshQuickhackMenu(this.GetVehicle().GetGame(), this.GetVehicle().GetEntityID());
 
+
+    // let vehicleFlight = new PSMAddOnDemandStateMachine();
+    // vehicleFlight.stateMachineName = n"VehicleFlight";
+    // vehicleFlight.owner = this.GetVehicle();
+    // // vehicleFlight.instanceData = instanceData;
+    // // needs to be player?
+    // // mountChild.QueueEvent(vehicleFlight);
+    // // let vehicle: ref<VehicleObject> = this.GetVehicle();
+    // // let gameInstance: GameInstance = vehicle.GetGame();
+    // // let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
+    // GameInstance.GetPlayerSystem(this.GetVehicle().GetGame()).GetLocalPlayerControlledGameObject().QueueEvent(vehicleFlight);
+
     // this.hoverGroundPID = PID.Create(1.0, 0.01, 0.1);
     this.hoverGroundPID = PID.Create(FlightSettings.GetVector3("hoverModePID"));
     // this.hoverPID = PID.Create(1.0, 0.01, 0.1);
@@ -203,6 +215,11 @@ public native class FlightComponent extends GameComponent {
     //FlightLog.Info("[FlightComponent] OnGameDetach: " + this.GetVehicle().GetDisplayName());
     GameInstance.GetStatPoolsSystem(this.GetVehicle().GetGame()).RequestUnregisteringListener(Cast(this.GetVehicle().GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     this.UnregisterVehicleTPPBBListener();
+
+    // let vehicleFlight = new PSMRemoveOnDemandStateMachine();
+    // vehicleFlight.stateMachineIdentifier.definitionName = n"VehicleFlight";
+    // GameInstance.GetPlayerSystem(this.GetVehicle().GetGame()).GetLocalPlayerControlledGameObject().QueueEvent(vehicleFlight);
+
     this.isDestroyed = true;
     this.hasExploded = true;
     if this.active {
@@ -282,11 +299,31 @@ public native class FlightComponent extends GameComponent {
   // public let uiControl: ref<FlightControllerUI>;
   
   protected cb func OnMountingEvent(evt: ref<MountingEvent>) -> Bool {
+
+
     // this.helper = this.GetVehicle().AddFlightHelper();
     // LTBF_RegisterListener(this);
     this.thrusterTensor = this.configuration.GetThrusterTensor();
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if mountChild.IsPlayer() {
+      
+      // let instanceData: StateMachineInstanceData;
+      // let initData = new VehicleFlightInitData();
+      // initData.vehicle = this.GetVehicle();
+      // initData.driver = mountChild;
+      // instanceData.initData = initData;
+      
+      let vehicleFlight = new PSMAddOnDemandStateMachine();
+      vehicleFlight.stateMachineName = n"VehicleFlight";
+      vehicleFlight.owner = this.GetVehicle();
+      // vehicleFlight.instanceData = instanceData;
+      // needs to be player?
+      mountChild.QueueEvent(vehicleFlight);
+      // let vehicle: ref<VehicleObject> = this.GetVehicle();
+      // let gameInstance: GameInstance = vehicle.GetGame();
+      // let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
+      // GameInstance.GetPlayerSystem(this.GetVehicle().GetGame()).GetLocalPlayerControlledGameObject().QueueEvent(vehicleFlight);
+
       FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName() + " uses tensor: " + this.GetVehicle().UsesInertiaTensor());
       // this.GetVehicle().TurnOffAirControl();
       // FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName());
@@ -326,6 +363,11 @@ public native class FlightComponent extends GameComponent {
     // LTBF_UnregisterListener(this);
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if IsDefined(mountChild) && mountChild.IsPlayer() {
+
+      let vehicleFlight = new PSMRemoveOnDemandStateMachine();
+      vehicleFlight.stateMachineIdentifier.definitionName = n"VehicleFlight";
+      mountChild.QueueEvent(vehicleFlight);
+
       this.UnregisterVehicleTPPBBListener();
       FlightAudio.Get().Stop("windLeft");
       FlightAudio.Get().Stop("windRight");

@@ -10,13 +10,15 @@ public final static func CanEnterVehicleFlight() -> Bool {
 
 @addMethod(DefaultTransition)
 protected final func SetIsInFlight(stateContext: ref<StateContext>, value: Bool) -> Void {
-  stateContext.SetPermanentBoolParameter(n"isInFlight", value, true);
+  // stateContext.SetPermanentBoolParameter(n"isInFlight", value, true);
+  FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsActive, value, true);
 }
 
 @addMethod(DefaultTransition)
 protected final func IsInFlight(stateContext: ref<StateContext>) -> Bool {
-  let state = stateContext.GetPermanentBoolParameter(n"isInFlight");
-  return state.value;
+  // let state = stateContext.GetPermanentBoolParameter(n"isInFlight");
+  // return state.value;
+  return FlightController.GetInstance().GetBlackboard().GetBool(GetAllBlackboardDefs().VehicleFlight.IsActive);
 }
 
 // need to implement some things in order to use this

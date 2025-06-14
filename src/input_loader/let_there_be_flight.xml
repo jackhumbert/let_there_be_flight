@@ -69,6 +69,18 @@
 		<include name="VehicleAuxillary" />
 	</context>
 
+	<context name="VehicleFlightCombat">
+		<include name="BaseVehicleFlight" />
+
+		<include name="VisionActions" />
+		<include name="CameraMovement" />
+		<include name="UIExploration" />
+		<include name="PhotoMode" />
+		<include name="QuickLoadAndSave" />
+		<include name="Items" />
+		<include name="VehicleAuxillary" />
+	</context>
+
 	<context name="BaseVehicleFlightDriverCombat">
 		<include name="BaseVehicleFlight" />
 
