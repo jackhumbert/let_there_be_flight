@@ -72,6 +72,11 @@ public class FlightStats {
     // this.s_fc_record = TweakDBInterface.GetFlightRecord(this.vehicle.GetRecordID());
     this.s_driveModelData = this.s_record.VehDriveModelData();  
     this.s_brakingFrictionFactor = this.s_driveModelData.BrakingFrictionFactor();
+    // bikes are 0.0
+    if (this.s_brakingFrictionFactor < 0.001) {
+      this.s_brakingFrictionFactor = 1.4;
+    }
+    // FlightLog.Info("BrakingFrictionFactor: " + ToString(this.s_brakingFrictionFactor));
     this.s_airResistanceFactor = this.s_driveModelData.AirResistanceFactor();
     // RollingResistanceFactor() -> Float;
     // HandbrakeBrakingTorque() -> Float;
