@@ -13,13 +13,23 @@ protected final func SetIsInFlight(stateContext: ref<StateContext>, value: Bool)
   // stateContext.SetPermanentBoolParameter(n"isInFlight", value, true);
   FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsActive, value, true);
 }
-
 @addMethod(DefaultTransition)
 protected final func IsInFlight(stateContext: ref<StateContext>) -> Bool {
   // let state = stateContext.GetPermanentBoolParameter(n"isInFlight");
   // return state.value;
   return FlightController.GetInstance().GetBlackboard().GetBool(GetAllBlackboardDefs().VehicleFlight.IsActive);
 }
+
+@addMethod(DefaultTransition)
+protected final func SetInMountedVehicleCombat(value: Bool) -> Void {
+  FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.InMountedVehicleCombat, value, true);
+}
+
+@addMethod(DefaultTransition)
+protected final func IsInMountedVehicleCombat() -> Bool {
+  return FlightController.GetInstance().GetBlackboard().GetBool(GetAllBlackboardDefs().VehicleFlight.InMountedVehicleCombat);
+}
+
 
 // need to implement some things in order to use this
 @addMethod(DefaultTransition)

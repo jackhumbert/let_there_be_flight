@@ -16,4 +16,13 @@ public class VehicleFlightDriverCombatMountedWeaponsContextDecisions extends Veh
 
 public class VehicleFlightDriverCombatMountedWeaponsContextEvents extends VehicleFlightDriverCombatContextEvents {
 
+  protected func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
+    super.OnEnter(stateContext, scriptInterface);
+    this.SetInMountedVehicleCombat(true);
+  }
+
+  protected func OnExit(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
+    super.OnExit(stateContext, scriptInterface);
+    this.SetInMountedVehicleCombat(false);
+  }
 }

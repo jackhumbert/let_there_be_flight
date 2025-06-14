@@ -55,7 +55,10 @@ public class hudFlightController extends inkHUDGameController {
   private let m_vehicleBBModeId: ref<CallbackHandle>;
   private let m_vehicleRollID: ref<CallbackHandle>;
   private let m_vehiclePitchID: ref<CallbackHandle>;
+  private let m_mountedCombatID: ref<CallbackHandle>;
+  private let m_isMountedCombat: Bool;
   private let m_tppBBConnectionId: ref<CallbackHandle>;
+  private let m_isTPP: Bool;
 
   public let m_healthStatPoolListener: ref<FlightUIVehicleHealthStatPoolListener>;
   private let m_hp_mask: inkWidgetRef;
@@ -129,6 +132,8 @@ public class hudFlightController extends inkHUDGameController {
   }
 
   protected cb func OnCameraModeChanged(tpp: Bool) -> Bool {
+    this.m_isTPP = tpp;
+    this.UpdateCrosshairVisibility();
     let hp_gauge = this.GetRootCompoundWidget().GetWidget(n"hp_gauge");
     if IsDefined(hp_gauge) {
       // doesn't seem to work
@@ -142,6 +147,10 @@ public class hudFlightController extends inkHUDGameController {
       // above of LB hud stuff
       hp_gauge.SetMargin(new inkMargin(1520.0, -290.0, 0.0, 0.0));
     }
+  }
+
+  protected func UpdateCrosshairVisibility() -> Void {
+    this.GetRootCompoundWidget().GetWidget(n"crosshairContainer").SetVisible(!this.m_isMountedCombat || !this.m_isTPP);
   }
 
   protected cb func OnVehicleRollChanged(roll: Float) -> Bool {
@@ -175,6 +184,11 @@ public class hudFlightController extends inkHUDGameController {
 
   protected cb func OnVehiclePitchChanged(pitch: Float) -> Bool {
     this.GetRootCompoundWidget().GetWidget(n"crosshairContainer/pitch/rotation/translation").SetTranslation(new Vector2(0.0, pitch/90.0 * 900.0));
+  }
+
+  protected cb func OnMountedCombatChanged(value: Bool) -> Bool {
+    this.m_isMountedCombat = value;
+    this.UpdateCrosshairVisibility();
   }
 
   private let m_introAnimationProxy: ref<inkAnimProxy>;
@@ -266,10 +280,11 @@ public class hudFlightController extends inkHUDGameController {
       if !IsDefined(this.m_vehiclePitchID) {
         this.m_vehiclePitchID = this.m_vehicleFlightBlackboard.RegisterListenerFloat(GetAllBlackboardDefs().VehicleFlight.Pitch, this, n"OnVehiclePitchChanged");
       };
+      if !IsDefined(this.m_mountedCombatID) {
+        this.m_mountedCombatID = this.m_vehicleFlightBlackboard.RegisterListenerBool(GetAllBlackboardDefs().VehicleFlight.InMountedVehicleCombat, this, n"OnMountedCombatChanged");
+      };
     };
-    if IsDefined(this.m_vehicleBlackboard) {
-      this.m_tppBBConnectionId = this.m_vehicleBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this, n"OnCameraModeChanged");
-    }
+    this.m_tppBBConnectionId = GameInstance.GetBlackboardSystem(this.m_gameInstance).Get(GetAllBlackboardDefs().UI_ActiveVehicleData).RegisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this, n"OnCameraModeChanged");
     if IsDefined(this.m_scannerBlackboard) && !IsDefined(this.m_uiScannerVisibleCallbackID) {
       this.m_uiScannerVisibleCallbackID = this.m_scannerBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UI_Scanner.UIVisible, this, n"OnScannerUIVisibleChanged");
     };
@@ -299,10 +314,8 @@ public class hudFlightController extends inkHUDGameController {
         this.m_vehicleFlightBlackboard.UnregisterListenerFloat(GetAllBlackboardDefs().VehicleFlight.Pitch, this.m_vehiclePitchID);
       };
     }
-    if IsDefined(this.m_vehicleBlackboard) {
-      if IsDefined(this.m_tppBBConnectionId) {
-        this.m_vehicleBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this.m_tppBBConnectionId);
-      }
+    if IsDefined(this.m_tppBBConnectionId) {
+      GameInstance.GetBlackboardSystem(this.m_gameInstance).Get(GetAllBlackboardDefs().UI_ActiveVehicleData).UnregisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this.m_tppBBConnectionId);
     }
     if IsDefined(this.m_scannerBlackboard) {
       if IsDefined(this.m_uiScannerVisibleCallbackID) {
