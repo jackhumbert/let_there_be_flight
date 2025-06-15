@@ -150,7 +150,20 @@ public class hudFlightController extends inkHUDGameController {
   }
 
   protected func UpdateCrosshairVisibility() -> Void {
-    this.GetRootCompoundWidget().GetWidget(n"crosshairContainer").SetVisible(!this.m_isMountedCombat || !this.m_isTPP);
+    let widget = this.GetRootCompoundWidget().GetWidget(n"crosshairContainer");
+
+    let opacityInterpolator = new inkAnimTransparency();
+    opacityInterpolator.SetDuration(0.3);
+    opacityInterpolator.SetStartTransparency(widget.GetOpacity());
+    opacityInterpolator.SetEndTransparency((this.m_isMountedCombat && !this.m_isTPP) ? 1.0 : 0.0);
+    opacityInterpolator.SetType(inkanimInterpolationType.Quintic);
+    opacityInterpolator.SetMode(inkanimInterpolationMode.EasyInOut);
+    let animation = new inkAnimDef();
+    animation.AddInterpolator(opacityInterpolator);
+    // options.executionDelay = delay;
+    widget.PlayAnimation(animation);
+
+    // .SetVisible(!this.m_isMountedCombat || !this.m_isTPP);
   }
 
   protected cb func OnVehicleRollChanged(roll: Float) -> Bool {
@@ -253,6 +266,7 @@ public class hudFlightController extends inkHUDGameController {
     this.m_vehicleFlightBlackboard = FlightController.GetInstance().GetBlackboard();
     this.m_scannerBlackboard = GameInstance.GetBlackboardSystem(this.m_gameInstance).Get(GetAllBlackboardDefs().UI_Scanner);
     this.RegisterBB();
+    this.UpdateCrosshairVisibility();
     this.ActivateUI(this.IsUIactive() && this.IsActive());
   }
 
