@@ -22,9 +22,10 @@ protected final func HandleCameraInput(scriptInterface: ref<StateGameScriptInter
 //   };
 // }
 
-@replaceMethod(VehicleTransition)
-protected final func ResetVehicleCamera(scriptInterface: ref<StateGameScriptInterface>) -> Void {
-  // let camEvent: ref<vehicleCameraResetEvent> = new vehicleCameraResetEvent();
-  // scriptInterface.executionOwner.QueueEvent(camEvent);
-  return;
-}
+// not the right place
+// @replaceMethod(VehicleTransition)
+// protected final func ResetVehicleCamera(scriptInterface: ref<StateGameScriptInterface>) -> Void {
+//   // let camEvent: ref<vehicleCameraResetEvent> = new vehicleCameraResetEvent();
+//   // scriptInterface.executionOwner.QueueEvent(camEvent);
+//   return;
+// }
