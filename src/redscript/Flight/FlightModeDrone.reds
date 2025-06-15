@@ -7,11 +7,6 @@ public class FlightModeDrone extends FlightMode {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
-  @runtimeProperty("ModSettings.displayName", "Drone Mode Name")
-  public let droneModeName: CName = n"Drone Mode";
-
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Lift-Factor")
   @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0")
