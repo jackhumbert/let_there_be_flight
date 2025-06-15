@@ -149,21 +149,36 @@ public class hudFlightController extends inkHUDGameController {
     }
   }
 
+  
+  private let m_crosshairAnimationProxy: ref<inkAnimProxy>;
+
+  protected func ShouldShowCrosshair() -> Bool {
+    return (this.m_isMountedCombat && !this.m_isTPP);
+  }
+
   protected func UpdateCrosshairVisibility() -> Void {
     let widget = this.GetRootCompoundWidget().GetWidget(n"crosshairContainer");
 
     let opacityInterpolator = new inkAnimTransparency();
     opacityInterpolator.SetDuration(0.3);
     opacityInterpolator.SetStartTransparency(widget.GetOpacity());
-    opacityInterpolator.SetEndTransparency((this.m_isMountedCombat && !this.m_isTPP) ? 1.0 : 0.0);
+    opacityInterpolator.SetEndTransparency(this.ShouldShowCrosshair() ? 1.0 : 0.0);
     opacityInterpolator.SetType(inkanimInterpolationType.Quintic);
     opacityInterpolator.SetMode(inkanimInterpolationMode.EasyInOut);
     let animation = new inkAnimDef();
     animation.AddInterpolator(opacityInterpolator);
-    // options.executionDelay = delay;
-    widget.PlayAnimation(animation);
+    // let options: inkAnimOptions;
 
-    // .SetVisible(!this.m_isMountedCombat || !this.m_isTPP);
+    if IsDefined(this.m_crosshairAnimationProxy) && this.m_crosshairAnimationProxy.IsPlaying() {
+      this.m_crosshairAnimationProxy.Stop(true);
+    };
+    widget.SetVisible(true);
+    this.m_crosshairAnimationProxy = widget.PlayAnimation(animation);
+    this.m_crosshairAnimationProxy.RegisterToCallback(inkanimEventType.OnFinish, this, n"OnCrosshairAnimationFinished");
+  }
+
+  protected cb func OnCrosshairAnimationFinished(anim: ref<inkAnimProxy>) -> Bool {
+    this.GetRootCompoundWidget().GetWidget(n"crosshairContainer").SetVisible(this.ShouldShowCrosshair());
   }
 
   protected cb func OnVehicleRollChanged(roll: Float) -> Bool {
