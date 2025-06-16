@@ -85,7 +85,6 @@ public class hudFlightController extends inkHUDGameController {
     if IsDefined(stats) {  
       stats.RequestRegisteringListener(Cast<StatsObjectID>(vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     }
-    IMZ_Comp_SetBlackboardValue(this.m_gameInstance, true); 
   }
 
   protected cb func OnUninitialize() -> Bool {
@@ -95,7 +94,6 @@ public class hudFlightController extends inkHUDGameController {
     if IsDefined(this.m_healthStatPoolListener) {
       GameInstance.GetStatPoolsSystem(this.m_gameInstance).RequestUnregisteringListener(Cast(this.m_healthStatPoolListener.m_vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     }
-    IMZ_Comp_SetBlackboardValue(this.m_gameInstance, false); 
   }
 
   private func UpdateTime() -> Void {
