@@ -35,6 +35,15 @@ public native class FlightComponent extends GameComponent {
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Enabled")
   public let isQuickHackable: Bool = true;
 
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Explosion-Threshold")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Explosion-Threshold-Description")
+  @runtimeProperty("ModSettings.step", "0.05")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "100.0")
+  public let explosionThreshold: Float = 0.5;
+
   public native func ChaseTarget(target: wref<GameObject>) -> Void;
   // public native func ChaseTarget() -> Void;
 
@@ -768,7 +777,7 @@ public native class FlightComponent extends GameComponent {
         if !this.active && this.GetVehicle().bouncy {
           this.FireVerticalImpulse(gridID);
         }
-        if biggestImpact > 0.20 {
+        if biggestImpact > this.explosionThreshold {
           GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"explosion");
         }
         // let event = new vehicleDriveToPointEvent();
