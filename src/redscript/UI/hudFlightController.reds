@@ -85,9 +85,12 @@ public class hudFlightController extends inkHUDGameController {
     if IsDefined(stats) {  
       stats.RequestRegisteringListener(Cast<StatsObjectID>(vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     }
+    
+    LTBF_RegisterListener(this);
   }
 
   protected cb func OnUninitialize() -> Bool {
+    LTBF_UnregisterListener(this);
     FlightLog.Info("[hudFlightController] OnUninitialize");
     // TakeOverControlSystem.CreateInputHint(this.GetPlayerControlledObject().GetGame(), false);
     // SecurityTurret.CreateInputHint(this.GetPlayerControlledObject().GetGame(), false);
@@ -132,9 +135,8 @@ public class hudFlightController extends inkHUDGameController {
   protected cb func OnCameraModeChanged(tpp: Bool) -> Bool {
     this.m_isTPP = tpp;
     this.UpdateCrosshairVisibility();
-    let hp_gauge = this.GetRootCompoundWidget().GetWidget(n"hp_gauge");
-    if IsDefined(hp_gauge) {
-      // doesn't seem to work
+    // let hp_gauge = this.GetRootCompoundWidget().GetWidget(n"hp_gauge");
+    // if IsDefined(hp_gauge) {
       // if tpp {
       // } else {
       //   hp_gauge.SetMargin(new inkMargin(2150.0, 32.0 - 100.0, 0.0, 0.0));
@@ -143,8 +145,8 @@ public class hudFlightController extends inkHUDGameController {
       // right of LB hud stuff
       // hp_gauge.SetMargin(new inkMargin(2150.0, 32.0, 0.0, 0.0));
       // above of LB hud stuff
-      hp_gauge.SetMargin(new inkMargin(1520.0, -290.0, 0.0, 0.0));
-    }
+      // hp_gauge.SetMargin(new inkMargin(1520.0, -290.0, 0.0, 0.0));
+    // }
   }
 
   
@@ -312,6 +314,7 @@ public class hudFlightController extends inkHUDGameController {
       };
     };
     this.m_tppBBConnectionId = GameInstance.GetBlackboardSystem(this.m_gameInstance).Get(GetAllBlackboardDefs().UI_ActiveVehicleData).RegisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this, n"OnCameraModeChanged");
+    this.OnCameraModeChanged(GameInstance.GetBlackboardSystem(this.m_gameInstance).Get(GetAllBlackboardDefs().UI_ActiveVehicleData).GetBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn));
     if IsDefined(this.m_scannerBlackboard) && !IsDefined(this.m_uiScannerVisibleCallbackID) {
       this.m_uiScannerVisibleCallbackID = this.m_scannerBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UI_Scanner.UIVisible, this, n"OnScannerUIVisibleChanged");
     };
