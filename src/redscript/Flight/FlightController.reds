@@ -365,6 +365,17 @@ public native class FlightController extends IScriptable {
     this.SetupActions();
   }
 
+  protected func ResetInputs() {
+      this.lift.SetInput(0.0);
+      this.surge.SetInput(0.0);
+      this.yaw.SetInput(0.0);
+      this.sway.SetInput(0.0);
+      this.pitch.SetInput(0.0);
+      this.roll.SetInput(0.0);
+      this.linearBrake.SetInput(0.0);
+      this.angularBrake.SetInput(0.0);
+  }
+
   protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool {
     if ListenerAction.IsAction(action, n"__DEVICE_CHANGED__") {
       if this.player.PlayerLastUsedKBM() {
@@ -390,6 +401,7 @@ public native class FlightController extends IScriptable {
         if ListenerAction.IsButtonJustPressed(action) {
           // FlightLog.Info("Options button pressed");
           this.showOptions = true;
+          this.ResetInputs();
           // GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"summon_hologram", true);
           // if (this.showUI) {
           //   this.ui.ShowInfo();
@@ -399,6 +411,7 @@ public native class FlightController extends IScriptable {
         if ListenerAction.IsButtonJustReleased(action) {
           // FlightLog.Info("Options button released");
           this.showOptions = false; 
+          this.ResetInputs();
           // GameObjectEffectHelper.BreakEffectLoopEvent(this.GetVehicle(), n"summon_hologram");
           this.SetupActions();
         }
