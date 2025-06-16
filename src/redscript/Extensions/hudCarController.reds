@@ -73,7 +73,6 @@ protected cb func OnSpeedValueChanged(speedValue: Float) -> Bool {
     let multiplier: Float = GameInstance.GetStatsDataSystem(this.m_activeVehicle.GetGame()).GetValueFromCurve(n"vehicle_ui", speed, n"speed_to_multiplier");
     inkTextRef.SetText(this.m_SpeedValue, IntToString(RoundMath(speed * multiplier)));
     this.drawRPMGaugeFull(AbsF(fc.surge) * 5000.0);
-    this.UpdateIMZSpeed(speed, multiplier);
   } else {
     wrappedMethod(speedValue);
   }
