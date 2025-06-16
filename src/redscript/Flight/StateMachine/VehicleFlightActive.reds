@@ -15,6 +15,10 @@ public class VehicleFlightActiveDecisions extends VehicleFlightTransition {
 
 public class VehicleFlightActiveEvents extends VehicleFlightEventsTransition {
 
+  protected func OnDetach(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Void {
+    this.SetIsInFlight(stateContext, false);
+  }
+
   protected func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
     super.OnEnter(stateContext, scriptInterface);
     this.SetIsInFlight(stateContext, true);
