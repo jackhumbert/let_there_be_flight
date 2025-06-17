@@ -1,4 +1,4 @@
-GameplayRestriction.VehicleBlockFlight : RTDB.GameplayRestrictionStatusEffect
+GameplayRestriction.VehicleBlockFlight : GameplayRestrictionStatusEffect
 {
 	gameplayTags += 
 	[
@@ -6,7 +6,7 @@ GameplayRestriction.VehicleBlockFlight : RTDB.GameplayRestrictionStatusEffect
 	];
 }
 
-GameplayRestriction.VehicleBlockFlightExit : RTDB.GameplayRestrictionStatusEffect
+GameplayRestriction.VehicleBlockFlightExit : GameplayRestrictionStatusEffect
 {
 	gameplayTags += 
 	[

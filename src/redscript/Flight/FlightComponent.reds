@@ -789,6 +789,13 @@ public native class FlightComponent extends GameComponent {
     }
   }
 
+  public func HandleExplosion() -> Void {
+    this.isDestroyed = true;
+    this.hasExploded = true;
+    this.hasUpdate = false;
+    this.Deactivate(true);
+  }
+
   // protected cb func OnHit(evt: ref<gameHitEvent>) -> Bool {
   //   let vehicle: ref<VehicleObject> = this.GetVehicle();
   //   let gameInstance: GameInstance = vehicle.GetGame();

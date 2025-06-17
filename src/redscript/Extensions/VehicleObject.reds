@@ -25,6 +25,19 @@ public const func GetFlightComponent() -> ref<FlightComponent> {
 }
 
 @addMethod(VehicleObject)
+public const func CanEnterFlight() -> Bool {
+  let allVehiclesEnabled = TweakDBInterface.GetBool(t"player.vehicle.canEnterFlight", true);
+
+  let tweakID = this.GetRecordID();
+  TDBID.Append(tweakID, TDBID.Create(".canEnterFlight"));
+
+  let thisVehicleEnabled = TweakDBInterface.GetBool(tweakID, false);
+  let thisVehicleDisabled = !TweakDBInterface.GetBool(tweakID, true);
+
+  return (allVehiclesEnabled || thisVehicleEnabled) && !thisVehicleDisabled;
+}
+
+@addMethod(VehicleObject)
 public func ToggleFlightComponent(state: Bool) -> Void {
   this.m_flightComponent.Toggle(state);
 }

@@ -1,12 +1,6 @@
 @addMethod(DefaultTransition)
 public final func CanVehicleEnterFlight(const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-  let allVehicles = TweakDBInterface.GetBool(t"player.vehicle.canEnterFlight", true);
-
-  let tweakID = (scriptInterface.owner as VehicleObject).GetRecordID();
-  TDBID.Append(tweakID, TDBID.Create(".canEnterFlight"));
-  let flightEnabled = TweakDBInterface.GetBool(tweakID, false);
-
-  return allVehicles || flightEnabled;
+  return (scriptInterface.owner as VehicleObject).CanEnterFlight();
 }
 
 // @addMethod(DefaultTransition)
