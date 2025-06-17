@@ -7,16 +7,6 @@
 #include <RED4ext/Scripting/Natives/Generated/ent/IPlacedComponent.hpp>
 #include "Audio/FlightAudio.hpp"
 #include "Flight/Component.hpp"
-#include "Addresses.hpp"
-
-namespace GameSetting {
-/// @hash 3415871802:data
-const uintptr_t physicsCCD = GameSetting_physicsCCD_Addr;
-/// @hash 726996866:data
-const uintptr_t EnableSmoothWheelContacts = GameSetting_EnableSmoothWheelContacts_Addr;
-/// @hash 3118668190:data
-const uintptr_t VehicleTeleportationIfFallsUnderWorld = GameSetting_VehicleTeleportationIfFallsUnderWorld_Addr;
-}
 
 /// FlightSystem
 class FlightSystem : public Engine::RTTIClass<FlightSystem, IFlightSystem> {

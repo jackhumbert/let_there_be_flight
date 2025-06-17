@@ -14,7 +14,7 @@
 #include <iostream>
 #include <RED4ext/GameOptions.hpp>
 
-#include "Addresses.hpp"
+
 #include "Flight/Log.hpp"
 #include "Utils/Utils.hpp"
 #include "stdafx.hpp"
@@ -35,10 +35,9 @@
 // RED4ext::RelocPtr<RED4ext::GameOptionBool> AirControlCarRollHelper(0x484E4F8);
 // 1.61hf1 RVA: 0x484E670
 // RED4ext::RelocPtr<RED4ext::GameOptionFloat> ForceMoveToMaxLinearSpeed(0x484E670);
-RED4ext::RelocPtr<RED4ext::GameOptionBool> physicsCCD(GameSetting_physicsCCD_Addr);
-// 1.61hf1 RVA: 0x484EC18
-// RED4ext::RelocPtr<RED4ext::GameOptionBool> EnableSmoothWheelContacts(0x484EC18);
-RED4ext::RelocPtr<RED4ext::GameOptionBool> VehicleTeleportationIfFallsUnderWorld(GameSetting_VehicleTeleportationIfFallsUnderWorld_Addr);
+RED4ext::UniversalRelocPtr<RED4ext::GameOptionBool> physicsCCD(3415871802);
+// RED4ext::UniversalRelocPtr<RED4ext::GameOptionBool> EnableSmoothWheelContacts(726996866);
+RED4ext::UniversalRelocPtr<RED4ext::GameOptionBool> VehicleTeleportationIfFallsUnderWorld(3118668190);
 
 //RED4ext::TTypedClass<FlightSystem> icls("IFlightSystem");
 //RED4ext::TTypedClass<FlightSystem> cls("FlightSystem");

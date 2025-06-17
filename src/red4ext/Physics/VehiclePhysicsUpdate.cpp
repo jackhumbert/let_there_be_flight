@@ -7,19 +7,9 @@
 #include <spdlog/spdlog.h>
 #include "VehiclePhysicsUpdate.hpp"
 #include "Flight/Component.hpp"
-#include "Addresses.hpp"
+
 #include "VehicleSpeedUnlimiter.hpp"
 #include <queue>
-
-// main vehicle physics update
-// 1.6  RVA: 0x1D3C5D0
-// 1.61 RVA: 0x1D3C990
-/// @pattern F3 0F 11 4C 24 10 55 53 57 41 54 41 55 41 56 48 8D AC 24 98 FD FF FF 48 81 EC 68 03 00 00 48 8B
-// uintptr_t __fastcall VehiclePhysicsUpdate(RED4ext::vehicle::Physics *, float);
-
-// void vehicle::WheelSuspensionBase::ApplyAllResistances(float)
-/// @hash 2526549425
-// void __fastcall ProcessAirResistance(RED4ext::vehicle::WheeledPhysics *a1, float deltaTime);
 
 // void vehicle::WheelSuspensionBase::ApplyAllResistances(float)
 REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 2526549425, ProcessAirResistance, 

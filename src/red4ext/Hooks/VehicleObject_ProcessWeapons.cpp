@@ -1,18 +1,12 @@
-#include "Addresses.hpp"
+
 #include "Flight/Component.hpp"
 #include "Utils/FlightModule.hpp"
 #include <RED4ext/Common.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/PlaceholderComponent.hpp>
 #include <RED4ext/Scripting/Natives/vehicleWeapon.hpp>
 
-
-// processes weapon firing for vehicles - we can check the cycleTimer value after to see if something was fired
-// 1.5 added a byte in the middle of this pattern, which makes it hard to match with ?
-/// @pattern 48 8B C4 55 56 41 54 41 55 41 56 41 57 48 8D A8
 // void VehicleObject_ProcessWeapons(RED4ext::vehicle::BaseObject *vehicle, float timeDelta, unsigned int shootIndex);
-
-/// @hash 528618336
-// REGISTER_FLIGHT_HOOK(void __fastcall, VehicleObject_ProcessWeapons, RED4ext::vehicle::BaseObject *vehicle,
+// REGISTER_FLIGHT_HASH_HOOK(void __fastcall, 528618336, VehicleObject_ProcessWeapons, RED4ext::vehicle::BaseObject *vehicle,
 //                      float timeDelta, unsigned int shootIndex) {
 //   VehicleObject_ProcessWeapons_Original(vehicle, timeDelta, shootIndex);
 //   if (vehicle->weapons[shootIndex].cycleTimer == 0.0) {

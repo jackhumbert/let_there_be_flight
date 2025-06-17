@@ -3,7 +3,7 @@
 #include "ScriptDefinitions/ScriptDefinitions.hpp"
 #include "ScriptDefinitions/ScriptHost.hpp"
 #include "stdafx.hpp"
-#include "Addresses.hpp"
+
 
 struct ScriptRTTIContainer {
   RED4ext::CRTTISystem *rtti;
