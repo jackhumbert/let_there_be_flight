@@ -1,4 +1,4 @@
-player.vehicle
-{
-	bool canEnterVehicleFlight = true;
-}
+// player.vehicle
+// {
+// 	bool canEnterFlight = true;
+// }

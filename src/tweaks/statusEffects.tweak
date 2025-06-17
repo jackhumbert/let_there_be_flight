@@ -1,4 +1,18 @@
+GameplayRestriction.VehicleBlockFlight : RTDB.GameplayRestrictionStatusEffect
+{
+	gameplayTags += 
+	[
+		"VehicleBlockFlight"
+	];
+}
 
+GameplayRestriction.VehicleBlockFlightExit : RTDB.GameplayRestrictionStatusEffect
+{
+	gameplayTags += 
+	[
+		"VehicleBlockFlightExit"
+	];
+}
 
 BaseStatusEffect.FlightAction : BaseStatusEffect.BaseQuickHackStatusEffect
 {

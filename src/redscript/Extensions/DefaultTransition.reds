@@ -1,6 +1,12 @@
 @addMethod(DefaultTransition)
-public final static func CanEnterVehicleFlight() -> Bool {
-  return TweakDBInterface.GetBool(t"player.vehicle.canEnterVehicleFlight", false);
+public final func CanVehicleEnterFlight(const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
+  let allVehicles = TweakDBInterface.GetBool(t"player.vehicle.canEnterFlight", true);
+
+  let tweakID = (scriptInterface.owner as VehicleObject).GetRecordID();
+  TDBID.Append(tweakID, TDBID.Create(".canEnterFlight"));
+  let flightEnabled = TweakDBInterface.GetBool(tweakID, false);
+
+  return allVehicles || flightEnabled;
 }
 
 // @addMethod(DefaultTransition)
@@ -30,21 +36,23 @@ protected final func IsInMountedVehicleCombat() -> Bool {
   return FlightController.GetInstance().GetBlackboard().GetBool(GetAllBlackboardDefs().VehicleFlight.InMountedVehicleCombat);
 }
 
-
-// need to implement some things in order to use this
 @addMethod(DefaultTransition)
-protected final func IsPlayerAllowedToEnterVehicleFlight(const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-  // if this.IsNoCombatActionsForced(scriptInterface) {
-    // return false;
-  // };
+protected final func IsPlayerAllowedToEnterFlight(const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
   let fc = fs().playerComponent;
   let canActivate = IsDefined(fc) && fc.configuration.CanActivate();
-  return canActivate; // && StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"VehicleFlight");
+
+  let tweakID = (scriptInterface.owner as VehicleObject).GetRecordID();
+  TDBID.Append(tweakID, TDBID.Create(".canEnterFlight"));
+  let flightEnabled = TweakDBInterface.GetBool(tweakID, true);
+  
+  let blockFlight = StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"VehicleBlockFlight");
+  
+  return canActivate && flightEnabled && !blockFlight; 
 }
 
 @addMethod(DefaultTransition)
 protected final const func IsPlayerAllowedToExitFlight(const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-  if StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"VehicleFlightBlockExit") {
+  if StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"VehicleBlockFlightExit") {
     return false;
   };
   return true;

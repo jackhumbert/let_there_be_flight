@@ -333,7 +333,8 @@ public native class FlightComponent extends GameComponent {
       // let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
       // GameInstance.GetPlayerSystem(this.GetVehicle().GetGame()).GetLocalPlayerControlledGameObject().QueueEvent(vehicleFlight);
 
-      FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName() + " uses tensor: " + this.GetVehicle().UsesInertiaTensor());
+      FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName() + ": " + NameToString(this.GetVehicle().GetCurrentAppearanceName()));
+      FlightLog.Info("[FlightComponent] TDBID: " + TDBID.ToStringDEBUG(this.GetVehicle().GetRecordID()));
       // this.GetVehicle().TurnOffAirControl();
       // FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName());
       // (this.GetVehicle().FindComponentByName(n"cars_sport_fx") as EffectSpawnerComponent).AddEffect();
@@ -456,8 +457,9 @@ public native class FlightComponent extends GameComponent {
 
   public func Activate(opt silent: Bool) -> Void {
     // this.helper = this.GetVehicle().AddFlightHelper();
-    FlightLog.Info("[FlightComponent] OnVehicleFlightActivationEvent: " + this.GetVehicle().GetDisplayName());
-    this.GetVehicle().ScheduleAppearanceChange(this.GetVehicle().GetCurrentAppearanceName());
+    FlightLog.Info("[FlightComponent] Activating Flight: " + this.GetVehicle().GetDisplayName());
+    FlightLog.Info("[FlightComponent] AppearanceName: " + NameToString(this.GetVehicle().GetCurrentAppearanceName()));
+    // this.GetVehicle().ScheduleAppearanceChange(this.GetVehicle().GetCurrentAppearanceName());
     if !this.active {
       this.stats = FlightStats.Create(this.GetVehicle());
       // this.sys.ctlr.ui.Setup(this.stats);
