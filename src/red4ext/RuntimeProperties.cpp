@@ -48,7 +48,7 @@ RED4ext::CRTTIResourceAsyncReferenceType **__fastcall CreateCRTTIRaRefTypeFromCl
 }
 
 // bool CScriptDataValidator::Validate(CScriptedDataEnvironment const &, IScriptDataErrorReporter &) const
-REGISTER_FLIGHT_HOOK_HASH(bool __fastcall, 898639042, ProcessScriptTypes, uint32_t* version, ScriptData* scriptData, void* scriptLogger) {
+REGISTER_FLIGHT_HOOK_HASH(bool __fastcall, 898639042, ProcessScriptTypes, uint32_t* version, const ScriptData* scriptData, void* scriptLogger) {
   for (const auto& scriptClass : scriptData->classes) {
     for (const auto& prop : scriptClass->properties) {
       if (prop->runtimeProperties.size) {
