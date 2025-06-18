@@ -10,6 +10,7 @@
 * use input contexts for flight options?
 * move input hints to inputContext classes
 * prevent thrusters from moving during photo mode
+* parachutte
 
 -15_-16_0_1 1450 - CriticalCollisionNode_017: Uk12 == 1
 related to safe areas? how are those defined

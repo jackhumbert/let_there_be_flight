@@ -26,6 +26,7 @@ user\jackhumbert\meshes\thruster_trail_round.mesh
 user\jackhumbert\particles\aim.particle
 user\jackhumbert\particles\ion_thruster_engine.particle
 user\jackhumbert\particles\ion_thruster_flame.particle
+user\jackhumbert\sectors\helipad_vehicles.streamingsector
 user\jackhumbert\textures\engine_corpo_pattern_d.xbm
 user\jackhumbert\textures\engine_corpo_pattern_n.xbm
 user\jackhumbert\textures\flight_pitch_major.inkatlas

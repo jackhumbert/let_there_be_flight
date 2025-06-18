@@ -3,6 +3,8 @@ localization:
     en-us: user\jackhumbert\localization\let_there_be_flight.en-us.json
     es-es: user\jackhumbert\localization\let_there_be_flight.es-es.json
 streaming:
+  blocks:
+    - "user/jackhumbert/all.streamingblock"
   sectors:
     - path: base\worlds\03_night_city\_compiled\default\exterior_-6_-11_0_2.streamingsector
       expectedNodes: 227
