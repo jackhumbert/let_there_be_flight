@@ -34,20 +34,24 @@ REGISTER_FLIGHT_HOOK_HASH(uintptr_t, 4125170300, TPPCameraStats_Update, RED4ext:
     auto result = RED4ext::CStackType(flightModeCls, &mode);
     auto stack = RED4ext::CStack(fcomp, nullptr, 0, &result);
     fcompc->GetFunction("GetFlightMode")->Execute(&stack);
-    auto usesRightStickInput = flightModeCls->GetProperty("usesRightStickInput")->GetValue<bool>(mode);
 
-    if (usesRightStickInput && !camera->data.isUsingMouse) {
-      camera->data.pitchDelta = 0.0;
-      camera->data.yawDelta = 0.0;
-      //camera->lockedCamera = true;
-      //camera->pitch = 30.0;
-      //camera->yaw = 0.0;
-      //if (camera->slopeCorrectionOnGroundStrength != 0.0) {
-      //  defaultSlopeCorrectionOnGroundStrength = camera->slopeCorrectionOnGroundStrength;
-      //}
-      //camera->slopeCorrectionOnGroundStrength = 0.0;
-    } else {
-      //resetSlope = true;
+    // in case a mode is removed
+    if (mode) {
+      auto usesRightStickInput = flightModeCls->GetProperty("usesRightStickInput")->GetValue<bool>(mode);
+
+      if (usesRightStickInput && !camera->data.isUsingMouse) {
+        camera->data.pitchDelta = 0.0;
+        camera->data.yawDelta = 0.0;
+        //camera->lockedCamera = true;
+        //camera->pitch = 30.0;
+        //camera->yaw = 0.0;
+        //if (camera->slopeCorrectionOnGroundStrength != 0.0) {
+        //  defaultSlopeCorrectionOnGroundStrength = camera->slopeCorrectionOnGroundStrength;
+        //}
+        //camera->slopeCorrectionOnGroundStrength = 0.0;
+      } else {
+        //resetSlope = true;
+      }
     }
     //camera->slopeCorrectionOnGroundPitchMax = 90.0;
     //camera->slopeCorrectionOnGroundPitchMin = -90.0;
