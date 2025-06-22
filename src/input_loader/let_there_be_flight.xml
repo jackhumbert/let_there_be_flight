@@ -189,7 +189,7 @@
 
 	<mapping name="Flight_Options" type="Button">
 		<button id="IK_Pad_X_SQUARE" />
-		<button id="IK_R" />
+		<button id="IK_R" overridableUI="vehicleFlightOptions" />
 	</mapping>
 
 	<mapping name="Flight_Trick" type="Button">
@@ -198,12 +198,12 @@
 	</mapping>
 
 	<mapping name="Flight_ModeSwitchBackward" type="Button">
-		<button id="IK_Pad_DigitLeft" />
+		<button id="IK_Pad_DigitLeft" overridableUI="vehicleFlightModeSwitchBackward" />
 	</mapping>
 
 	<mapping name="Flight_ModeSwitchForward" type="Button">
 		<button id="IK_Pad_DigitRight" />
-		<button id="IK_G" />
+		<button id="IK_G" overridableUI="vehicleFlightModeSwitchForward" />
 	</mapping>
 
 	<mapping name="Flight_HoodDetach" type="Button">
@@ -212,7 +212,7 @@
 
 	<mapping name="Flight_UIToggle" type="Button">
 		<button id="IK_Pad_DigitUp" />
-		<button id="IK_Y" />
+		<button id="IK_Y" overridableUI="vehicleFlightUIToggle" />
 	</mapping>
 
 	<mapping name="Flight_Fire1" type="Button">
@@ -229,12 +229,12 @@
 
 	<mapping name="Flight_LinearBrake" type="Button">
 		<button id="IK_Pad_A_CROSS" />
-		<button id="IK_C" />
+		<button id="IK_C" overridableUI="vehicleFlightLinearBrake" />
 	</mapping>
 
 	<mapping name="Flight_AngularBrake" type="Button">
 		<button id="IK_Pad_A_CROSS" />
-		<button id="IK_C" />
+		<button id="IK_C" overridableUI="vehicleFlightAngularBrake"  />
 	</mapping>
 
 	<mapping name="Flight_SurgePos" type="Axis" >
