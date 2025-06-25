@@ -9,7 +9,7 @@ public class FlightMalfunctionEffector extends Effector {
   protected func ActionOn(owner: ref<GameObject>) -> Void {
     FlightLog.Info("[FlightMalfunctionEffector] ActionOn");
     this.m_owner = owner as VehicleObject;
-    if IsDefined(this.m_owner) {
+    if IsDefined(this.m_owner) && this.m_owner.CanEnterFlight() {
       this.m_owner.UnsetPhysicsStates();
       this.m_owner.EndActions();
       this.m_owner.m_flightComponent.Activate(true);
@@ -19,7 +19,7 @@ public class FlightMalfunctionEffector extends Effector {
 
   protected func ActionOff(owner: ref<GameObject>) -> Void {
     FlightLog.Info("[FlightMalfunctionEffector] ActionOff");
-    if IsDefined(this.m_owner) {
+    if IsDefined(this.m_owner) && this.m_owner.CanEnterFlight() {
       this.m_owner.m_flightComponent.Deactivate(true);
     }
   }
@@ -49,7 +49,7 @@ public class FunhouseEffector extends Effector {
     FlightLog.Info("[FunhouseEffector] ActionOn");
     this.m_owner = owner;
     let vehicle = owner as VehicleObject;
-    if IsDefined(vehicle) {
+    if IsDefined(vehicle) && vehicle.CanEnterFlight() {
       vehicle.bouncy = true;
       vehicle.ignoreImpulses = false;
       vehicle.UnsetPhysicsStates();

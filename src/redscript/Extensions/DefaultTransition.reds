@@ -9,12 +9,12 @@ public final func CanVehicleEnterFlight(const scriptInterface: ref<StateGameScri
 // }
 
 @addMethod(DefaultTransition)
-protected final func SetIsInFlight(stateContext: ref<StateContext>, value: Bool) -> Void {
+protected final func SetIsInFlight(value: Bool) -> Void {
   // stateContext.SetPermanentBoolParameter(n"isInFlight", value, true);
   FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsActive, value, true);
 }
 @addMethod(DefaultTransition)
-protected final func IsInFlight(stateContext: ref<StateContext>) -> Bool {
+protected final func IsInFlight() -> Bool {
   // let state = stateContext.GetPermanentBoolParameter(n"isInFlight");
   // return state.value;
   return FlightController.GetInstance().GetBlackboard().GetBool(GetAllBlackboardDefs().VehicleFlight.IsActive);

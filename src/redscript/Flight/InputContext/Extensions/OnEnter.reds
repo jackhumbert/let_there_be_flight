@@ -5,18 +5,18 @@
 //   // let currentState: Int32 = scriptInterface.localBlackboard.GetInt(GetAllBlackboardDefs().PlayerStateMachine.Vehicle);
 //   // let inFlight: StateResultBool = stateContext.GetPermanentBoolParameter(n"isInFlight");
 //   // return old && currentState < 8;
-//   return old && !this.IsInFlight(stateContext);
+//   return old && !this.IsInFlight();
 //   // return old && !(scriptInterface.owner as VehicleObject).GetFlightComponent().active;
 // }
 
 @wrapMethod(VehiclePassengerContextDecisions)
 protected const func EnterCondition(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-  return wrappedMethod(stateContext, scriptInterface) && !this.IsInFlight(stateContext);
+  return wrappedMethod(stateContext, scriptInterface) && !this.IsInFlight();
 }
 
 @wrapMethod(VehicleDriverCombatContextDecisions)
 protected const func EnterCondition(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-  return wrappedMethod(stateContext, scriptInterface) && !this.IsInFlight(stateContext);
+  return wrappedMethod(stateContext, scriptInterface) && !this.IsInFlight();
 }
 
 @wrapMethod(VehiclePassengerContextEvents)

@@ -3,19 +3,23 @@ private let m_flightComponent: ref<FlightComponent>;
 
 @wrapMethod(VehicleObject)
 protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> Bool {
-  EntityRequestComponentsInterface.RequestComponent(ri, n"flightComponent", n"FlightComponent", true);
-  // EntityRequestComponentsInterface.RequestComponent(ri, n"flight_ui", n"worlduiWidgetComponent", true);
-  // EntityRequestComponentsInterface.RequestComponent(ri, n"flight_ui_info", n"worlduiWidgetComponent", true);
+  if this.CanEnterFlight() {
+    EntityRequestComponentsInterface.RequestComponent(ri, n"flightComponent", n"FlightComponent", true);
+    // EntityRequestComponentsInterface.RequestComponent(ri, n"flight_ui", n"worlduiWidgetComponent", true);
+    // EntityRequestComponentsInterface.RequestComponent(ri, n"flight_ui_info", n"worlduiWidgetComponent", true);
+  }
   wrappedMethod(ri);
 }
 
 @wrapMethod(VehicleObject)
 protected cb func OnTakeControl(ri: EntityResolveComponentsInterface) -> Bool {
-  //FlightLog.Info("[VehicleObject] OnTakeControl: " + this.GetDisplayName());
-  this.m_flightComponent = EntityResolveComponentsInterface.GetComponent(ri, n"flightComponent") as FlightComponent;
-  // this.m_flightComponent.ui = EntityResolveComponentsInterface.GetComponent(ri, n"flight_ui") as worlduiWidgetComponent;
-  // this.m_flightComponent.ui_info = EntityResolveComponentsInterface.GetComponent(ri, n"flight_ui_info") as worlduiWidgetComponent;
-  // this.m_flightComponent.Toggle(false);
+  if this.CanEnterFlight() {
+    //FlightLog.Info("[VehicleObject] OnTakeControl: " + this.GetDisplayName());
+    this.m_flightComponent = EntityResolveComponentsInterface.GetComponent(ri, n"flightComponent") as FlightComponent;
+    // this.m_flightComponent.ui = EntityResolveComponentsInterface.GetComponent(ri, n"flight_ui") as worlduiWidgetComponent;
+    // this.m_flightComponent.ui_info = EntityResolveComponentsInterface.GetComponent(ri, n"flight_ui_info") as worlduiWidgetComponent;
+    // this.m_flightComponent.Toggle(false);
+  }
   wrappedMethod(ri);
 }
 
@@ -39,7 +43,9 @@ public const func CanEnterFlight() -> Bool {
 
 @addMethod(VehicleObject)
 public func ToggleFlightComponent(state: Bool) -> Void {
-  this.m_flightComponent.Toggle(state);
+  if IsDefined(this.m_flightComponent) {
+    this.m_flightComponent.Toggle(state);
+  }
 }
 
 @addMethod(VehicleObject)

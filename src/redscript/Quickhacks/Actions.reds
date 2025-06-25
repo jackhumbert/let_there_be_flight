@@ -12,7 +12,7 @@ public class FlightEnable extends FlightAction {
 
   public func IsPossible(target: wref<GameObject>, opt actionRecord: wref<ObjectAction_Record>, opt objectActionsCallbackController: wref<gameObjectActionsCallbackController>) -> Bool {
     let v = target as VehicleObject;
-    return super.IsPossible(target, actionRecord, objectActionsCallbackController) && !v.m_flightComponent.active;
+    return super.IsPossible(target, actionRecord, objectActionsCallbackController) && v.CanEnterFlight() && !v.m_flightComponent.active;
   }
 
   public func CompleteAction(gameInstance: GameInstance) -> Void {
@@ -33,7 +33,7 @@ public class FlightDisable extends FlightAction {
 
   public func IsPossible(target: wref<GameObject>, opt actionRecord: wref<ObjectAction_Record>, opt objectActionsCallbackController: wref<gameObjectActionsCallbackController>) -> Bool {
     let v = target as VehicleObject;
-    return super.IsPossible(target, actionRecord, objectActionsCallbackController) && v.m_flightComponent.active;
+    return super.IsPossible(target, actionRecord, objectActionsCallbackController) && v.CanEnterFlight() && v.m_flightComponent.active;
   }
 
   public func CompleteAction(gameInstance: GameInstance) -> Void {

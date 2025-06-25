@@ -16,17 +16,19 @@ public class VehicleFlightActiveDecisions extends VehicleFlightTransition {
 public class VehicleFlightActiveEvents extends VehicleFlightEventsTransition {
 
   protected func OnDetach(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Void {
-    this.SetIsInFlight(stateContext, false);
+    if this.IsInFlight() {
+      FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.ExitedWhileActive, true, true);
+      this.SetIsInFlight(false);
+    }
   }
 
   protected func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
     super.OnEnter(stateContext, scriptInterface);
-    this.SetIsInFlight(stateContext, true);
-
+    this.SetIsInFlight(true);
   }
 
   protected func OnExit(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-    this.SetIsInFlight(stateContext, false);
+    this.SetIsInFlight(false);
   }
   
   public final func OnUpdateFlight(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {

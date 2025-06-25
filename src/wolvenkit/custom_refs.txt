@@ -3,6 +3,7 @@ base\gameplay\gui\fullscreen\menu_old.inkmenu
 base\gameplay\gui\fullscreen\settings\mod_settings_main.inkwidget
 base\gameplay\gui\fullscreen\storage\storage.inkwidget
 base\localization\en-us\onscreens\mod_settings.json
+user\jackhumbert\all.streamingblock
 user\jackhumbert\effects\aim.effect
 user\jackhumbert\effects\engine.effect
 user\jackhumbert\effects\flame.effect

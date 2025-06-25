@@ -10,6 +10,7 @@ public class VehicleFlightDef extends BlackboardDefinition {
   public let Pitch: BlackboardID_Float;
   public let Roll: BlackboardID_Float;
   public let InMountedVehicleCombat: BlackboardID_Bool;
+  public let ExitedWhileActive: BlackboardID_Bool;
 
   public const func AutoCreateInSystem() -> Bool {
     return true;

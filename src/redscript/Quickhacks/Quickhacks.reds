@@ -191,7 +191,7 @@ protected func SendQuickhackCommands(shouldOpen: Bool) {
     this.GetVehiclePS().GetRemoteActions(actions, context);
     
     // action.SetInactiveWithReason(false, "LocKey#49279");
-    if this.m_flightComponent.isQuickHackable && this.CanEnterFlight() {
+    if this.CanEnterFlight() && this.m_flightComponent.isQuickHackable {
       ArrayPush(ltbf_actions, ActionFlightEnable(this));
       ArrayPush(ltbf_actions, ActionFlightDisable(this));
       ArrayPush(ltbf_actions, ActionFlightMalfunction(this));
