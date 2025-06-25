@@ -33,7 +33,10 @@ REGISTER_FLIGHT_HOOK_HASH(char __fastcall, 2531201123, FPPCameraUpdate, RED4ext:
     auto result = RED4ext::CStackType(flightModeCls, &mode);
     auto stack = RED4ext::CStack(fcomp, nullptr, 0, &result);
     fcompc->GetFunction("GetFlightMode")->Execute(&stack);
-    lockCamera |= flightModeCls->GetProperty("usesRightStickInput")->GetValue<bool>(mode);
+    
+    if (mode) {
+      lockCamera |= flightModeCls->GetProperty("usesRightStickInput")->GetValue<bool>(mode);
+    }
   }
   // once we find it
   // if (usesRightStickInput && !fpp->isUsingMouse) {
