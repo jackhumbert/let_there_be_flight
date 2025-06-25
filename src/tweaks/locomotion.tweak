@@ -1,0 +1,22 @@
+// playerStateMachineLocomotion.fall {
+// 	transitionTo += [ "paraglide" ];
+// 	transitionCondition += [ "" ];
+// }
+
+// playerStateMachineDefinitions.Locomotion {
+//   states += [ "paraglide" ];
+// }
+
+// playerStateMachineLocomotion.paraglide {
+// 	CName[] alias = 
+// 	[
+// 		"toAir"
+// 	];
+// 	bool hasEnterCondition = true;
+// 	bool hasExitCondition = false;
+// 	bool hasOnEnter = true;
+// 	bool hasOnExit = true;
+// 	bool hasOnUpdate = false;
+// 	string[] transitionTo += [ "fall" ];
+// 	string[] transitionCondition += [ "=" ];
+// }

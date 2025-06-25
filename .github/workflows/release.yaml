@@ -78,10 +78,7 @@ jobs:
           body_path: ${{ env.CHANGELOG_FILE }}
           append_body: true
           files: |
-            ${{ env.MOD_SLUG }}_${{ github.ref_name }}.zip
-            ${{ env.MOD_SLUG }}_${{ github.ref_name }}_requirements.zip
-            ${{ env.MOD_SLUG }}_${{ github.ref_name }}_pdb.zip
-            ${{ env.MOD_SLUG }}_${{ github.ref_name }}_requirements_pdb.zip
+            ${{ env.MOD_SLUG }}_${{ github.ref_name }}*.zip
           prerelease: ${{ contains(github.ref_name, '-') || contains(github.ref_name, '_') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

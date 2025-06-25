@@ -166,6 +166,15 @@
 		<action name="Flight_Toggle" 		map="Flight_Toggle" />
 	</context>
 
+	<context name="Paraglider">
+		<action name="DeployGlider" map="DeployGlider" />
+		<action name="PackGlider" map="PackGlider" />
+	</context>
+	
+	<context name="Locomotion" append="true">
+		<include name="Paraglider" />
+	</context>
+
 	<!-- EVENTS -->
 	<acceptedEvents action="Flight_Options">
 		<event name="BUTTON_PRESSED" />
@@ -280,6 +289,16 @@
 		<!-- <button id="IK_JoyU" val="0.0" /> -->
 		<button id="IK_Right" val="1.0" overridableUI="vehicleFlightSwayRight"/>
 		<button id="IK_Left" val="-1.0" overridableUI="vehicleFlightSwayLeft"/>
+	</mapping>
+
+	<mapping name="DeployGlider" type="Button">
+		<button id="IK_Pad_X_SQUARE" />
+		<button id="IK_X" />
+	</mapping>
+
+	<mapping name="PackGlider" type="Button">
+		<button id="IK_Pad_B_CIRCLE" />
+		<button id="IK_X" />
 	</mapping>
 
 	<!-- PAIRED AXES -->
