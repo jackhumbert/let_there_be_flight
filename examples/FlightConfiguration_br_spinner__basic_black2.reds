@@ -1,5 +1,5 @@
 @if(ModuleExists("LetThereBeFlight")) 
-public class FlightConfiguration_br_spinner__basic_black extends IFlightConfiguration {
+public class FlightConfiguration_br_spinner__basic_black2 extends IFlightConfiguration {
   public func OnSetup(vehicle: ref<VehicleObject>) {
     super.OnSetup(vehicle);
 
