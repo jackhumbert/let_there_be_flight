@@ -19,3 +19,6 @@ related to safe areas? how are those defined
 
 for vehicle?
 scriptInterface.GetTargetingSystem().SetIsMovingFast(scriptInterface.owner, true);
+
+Audio/Ambience/Zones
+audio::AmbientSoundSystem

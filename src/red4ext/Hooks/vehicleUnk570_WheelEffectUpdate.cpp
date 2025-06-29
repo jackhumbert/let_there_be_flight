@@ -9,6 +9,7 @@
 /// @hash 2932936864
 // void __fastcall WheelEffectUpdate(RED4ext::vehicle::Effects *effects, unsigned int wheelIndex, RED4ext::vehicle::Effects::Unk40 *unk40, float deltaTime);
 
+// doesn't affect audio bug
 // make tire always skidding
 REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 2932936864, WheelEffectUpdate, RED4ext::vehicle::Effects *effects, unsigned int wheelIndex,
                      RED4ext::vehicle::Effects::Unk40 *unk40, float deltaTime) {

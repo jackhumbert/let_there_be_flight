@@ -11,6 +11,7 @@
 #include <RED4ext/Version.hpp>
 #include <RedLib.hpp>
 #include <iostream>
+#include <CyberpunkMod.hpp>
 
 #include <ArchiveXL.hpp>
 #include <TweakXL.hpp>

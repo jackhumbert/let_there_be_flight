@@ -99,7 +99,9 @@
 			"cstdarg": "cpp",
 			"ranges": "cpp",
 			"span": "cpp",
-			"random": "cpp"
+			"random": "cpp",
+			"queue": "cpp",
+			"source_location": "cpp"
 		},
 		"editor.tabSize": 2,
 		"cmake.generator": "Ninja"

@@ -247,25 +247,27 @@
 	</mapping>
 
 	<mapping name="Flight_SurgePos" type="Axis" >
-		<button id="IK_JoySlider2" />
+		<button id="IK_JoySlider1" />
 		<!-- <button id="IK_Joy1" val="0.5" /> -->
 		<!-- <button id="IK_Joy2" val="2.0" /> -->
 	</mapping>
 
-	<!-- <mapping name="Flight_SurgeNeg" type="Axis" >
-		<button id="IK_Joy4" val="0.5" />
-		<button id="IK_Joy5" val="2.0" />
-	</mapping> -->
+	<mapping name="Flight_SurgeNeg" type="Axis" >
+		<button id="IK_JoySlider2" />
+		<!-- <button id="IK_Joy4" val="0.5" /> -->
+		<!-- <button id="IK_Joy5" val="2.0" /> -->
+	</mapping>
 
 	<mapping name="Flight_Yaw" type="Axis" >
 		<button id="IK_Pad_LeftAxisX" />
-		<!-- <button id="IK_JoyZ" val="0.0" /> -->
+		<button id="IK_JoyZ" />
 		<button id="IK_D" val="1.0" overridableUI="vehicleFlightYawRight"/>
 		<button id="IK_A" val="-1.0" overridableUI="vehicleFlightYawLeft"/>
 	</mapping>
 
 	<mapping name="Flight_Pitch" type="Axis" >
 		<button id="IK_Pad_RightAxisY" />
+		<button id="IK_JoyZ" />
 		<!-- <button id="IK_JoyY" val="0.0" /> -->
 		<button id="IK_L" val="1.0" overridableUI="vehicleFlightPitchForward" />
 		<button id="IK_Period" val="-1.0" overridableUI="vehicleFlightPitchBackward" />

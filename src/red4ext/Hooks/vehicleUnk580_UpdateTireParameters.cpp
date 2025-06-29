@@ -16,6 +16,7 @@ using namespace RED4ext;
 /// @hash 1554324956
 // void __fastcall UpdateTireParameters(vehicle::TireParameterUpdate * tpu, vehicle::TireUpdate *tireUpdate, CName emitter);
 
+// doesn't affect audio bug
 // stop tire skid sfx
 REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1554324956, UpdateTireParameters,
                      vehicle::TireParameterUpdate *tpu, vehicle::TireUpdate * tireUpdate, CName emitter) {
