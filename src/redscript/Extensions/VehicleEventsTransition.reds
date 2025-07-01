@@ -1,6 +1,6 @@
 @replaceMethod(VehicleEventsTransition)
 protected final func HandleCameraInput(scriptInterface: ref<StateGameScriptInterface>) -> Void {
-  if scriptInterface.IsActionJustPressed(n"ToggleVehCamera") && !this.IsVehicleCameraChangeBlocked(scriptInterface) && !FlightController.GetInstance().showOptions {
+  if scriptInterface.IsActionJustPressed(n"ToggleVehCamera") && !this.IsVehicleCameraChangeBlocked(scriptInterface) && !FlightController.GetInstance().active {
     this.RequestToggleVehicleCamera(scriptInterface);
   };
 }

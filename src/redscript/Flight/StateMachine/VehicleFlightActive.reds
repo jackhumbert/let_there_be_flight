@@ -31,7 +31,7 @@ public class VehicleFlightActiveEvents extends VehicleFlightEventsTransition {
     this.SetIsInFlight(false);
   }
   
-  public final func OnUpdateFlight(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
+  public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
     // let fc = FlightController.GetInstance();
     // fc.OnUpdate(timeDelta, stateContext, scriptInterface);
     // fc.sys.OnUpdate(timeDelta);

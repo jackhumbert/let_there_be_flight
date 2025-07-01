@@ -42,8 +42,8 @@ public class VehicleFlightEventsTransition extends VehicleFlightTransition {
     switch (scriptInterface.owner as VehicleObject).GetCameraManager().GetActivePerspective() {
       case vehicleCameraPerspective.FPP:
         if FlightSystem.GetInstance().cameraIndex == 1 {
-          camEvent.cameraPerspective = vehicleCameraPerspective.TPPFar;
-          FlightSystem.GetInstance().cameraIndex = 2;
+          camEvent.cameraPerspective = vehicleCameraPerspective.TPPClose;
+          FlightSystem.GetInstance().cameraIndex = 0;
         } else {
           this.EnterCustomCamera(scriptInterface);
           FlightSystem.GetInstance().cameraIndex = 1;
@@ -51,11 +51,31 @@ public class VehicleFlightEventsTransition extends VehicleFlightTransition {
         break;
       case vehicleCameraPerspective.TPPClose:
         this.ExitCustomCamera(scriptInterface);
-        camEvent.cameraPerspective = vehicleCameraPerspective.FPP;
-        FlightSystem.GetInstance().cameraIndex = 3;
+        camEvent.cameraPerspective = vehicleCameraPerspective.TPPMedium;
+        FlightSystem.GetInstance().cameraIndex = 0;
+        break;
+      case vehicleCameraPerspective.TPPMedium:
+        camEvent.cameraPerspective = vehicleCameraPerspective.TPPFar;
+        FlightSystem.GetInstance().cameraIndex = 0;
         break;
       case vehicleCameraPerspective.TPPFar:
+        if !scriptInterface.localBlackboard.GetBool(GetAllBlackboardDefs().PlayerStateMachine.IsDriverCombatInTPP) {
+          camEvent.cameraPerspective = vehicleCameraPerspective.TPPClose;
+        } else {
+          camEvent.cameraPerspective = vehicleCameraPerspective.FPP;
+        };
+        FlightSystem.GetInstance().cameraIndex = 0;
+        break;
+      case vehicleCameraPerspective.DriverCombatClose:
         camEvent.cameraPerspective = vehicleCameraPerspective.TPPClose;
+        FlightSystem.GetInstance().cameraIndex = 0;
+        break;
+      case vehicleCameraPerspective.DriverCombatMedium:
+        camEvent.cameraPerspective = vehicleCameraPerspective.TPPMedium;
+        FlightSystem.GetInstance().cameraIndex = 0;
+        break;
+      case vehicleCameraPerspective.DriverCombatFar:
+        camEvent.cameraPerspective = vehicleCameraPerspective.TPPFar;
         FlightSystem.GetInstance().cameraIndex = 0;
     };
     scriptInterface.executionOwner.QueueEvent(camEvent);

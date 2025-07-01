@@ -1,11 +1,11 @@
 @addMethod(InputContextTransitionEvents)
-protected final const func ShowVehicleFlightInputHints(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
+protected final func ShowVehicleFlightInputHints(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
   this.ShowInputHint(scriptInterface, n"Flight_Toggle", n"VehicleFlight", LocKeyToString(n"Input-Hint-Disable-Flight"), inkInputHintHoldIndicationType.FromInputConfig, true, 2);
   stateContext.SetPermanentBoolParameter(n"isFlightInputHintDisplayed", true, true);
 }
 
 @addMethod(InputContextTransitionEvents)
-protected final const func RemoveVehicleFlightInputHints(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
+protected final func RemoveVehicleFlightInputHints(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
   if this.m_isGameplayInputHintManagerInitialized {
     this.RemoveInputHint(scriptInterface, n"Flight_Toggle", n"VehicleFlight");
     this.RemoveInputHintsBySource(scriptInterface, n"VehicleFlight");
@@ -22,7 +22,13 @@ protected final func RemoveAllInputHints(stateContext: ref<StateContext>, script
 @wrapMethod(InputContextTransitionEvents)
 protected final const func ShowVehicleDriverInputHints(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
   wrappedMethod(stateContext, scriptInterface);
-  this.ShowInputHint(scriptInterface, n"Flight_Toggle", n"VehicleDriver", LocKeyToString(n"Input-Hint-Enable-Flight"), inkInputHintHoldIndicationType.FromInputConfig, true, 2);
+  
+  let object: wref<GameObject>;
+  VehicleComponent.GetVehicle(scriptInterface.owner.GetGame(), scriptInterface.executionOwner, object);
+  let vehicle = object as VehicleObject;
+  if IsDefined(vehicle) && vehicle.CanEnterFlight() {
+    this.ShowInputHint(scriptInterface, n"Flight_Toggle", n"VehicleDriver", LocKeyToString(n"Input-Hint-Enable-Flight"), inkInputHintHoldIndicationType.FromInputConfig, true, 2);
+  }
 }
 
 @addMethod(InputContextTransitionEvents)
@@ -33,16 +39,21 @@ protected final func UpdateVehicleFlightInputHints(stateContext: ref<StateContex
     this.RemoveVehicleFlightInputHints(stateContext, scriptInterface);
     this.m_isGameplayInputHintRefreshRequired = false;
   };
-  if stateContext.GetBoolParameter(n"isFlightInputHintDisplayed", true) {
-    // isVehicleCombatModeBlocked = this.IsVehicleBlockingCombat(scriptInterface) || this.IsEmptyHandsForced(stateContext, scriptInterface);
-    // isExitVehicleBlocked = this.IsExitVehicleBlocked(scriptInterface);
-    // if NotEquals(isVehicleCombatModeBlocked, stateContext.GetBoolParameter(n"IsVehicleCombatModeBlocked", true)) {
-    //   this.ShowVehicleDrawWeaponInputHint(stateContext, scriptInterface);
-    // };
-    // if NotEquals(isExitVehicleBlocked, stateContext.GetBoolParameter(n"IsExitVehicleBlocked", true)) {
-    //   this.ShowVehicleExitInputHint(stateContext, scriptInterface, n"VehicleFlight");
-    // };
-  } else {
-    this.ShowVehicleFlightInputHints(stateContext, scriptInterface);
-  };
+  let object: wref<GameObject>;
+  VehicleComponent.GetVehicle(scriptInterface.owner.GetGame(), scriptInterface.executionOwner, object);
+  let vehicle = object as VehicleObject;
+  if IsDefined(vehicle) && vehicle.CanEnterFlight() {
+    if stateContext.GetBoolParameter(n"isFlightInputHintDisplayed", true) {
+      // isVehicleCombatModeBlocked = this.IsVehicleBlockingCombat(scriptInterface) || this.IsEmptyHandsForced(stateContext, scriptInterface);
+      // isExitVehicleBlocked = this.IsExitVehicleBlocked(scriptInterface);
+      // if NotEquals(isVehicleCombatModeBlocked, stateContext.GetBoolParameter(n"IsVehicleCombatModeBlocked", true)) {
+      //   this.ShowVehicleDrawWeaponInputHint(stateContext, scriptInterface);
+      // };
+      // if NotEquals(isExitVehicleBlocked, stateContext.GetBoolParameter(n"IsExitVehicleBlocked", true)) {
+      //   this.ShowVehicleExitInputHint(stateContext, scriptInterface, n"VehicleFlight");
+      // };
+    } else {
+      this.ShowVehicleFlightInputHints(stateContext, scriptInterface);
+    }
+  }
 }

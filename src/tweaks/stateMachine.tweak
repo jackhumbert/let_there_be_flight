@@ -69,7 +69,7 @@ playerStateMachineVehicleFlight.vehicleFlightActive
 	CName[] alias = [];
 	bool hasOnEnter = true;
 	bool hasOnExit = true;
-	bool hasOnUpdate = false;
+	bool hasOnUpdate = true;
 	string[] transitionCondition = [ "=", "="	];
 	string[] transitionTo = [ "vehicleFlightDeactivating", "vehicleFlightDisabled"	];
 }

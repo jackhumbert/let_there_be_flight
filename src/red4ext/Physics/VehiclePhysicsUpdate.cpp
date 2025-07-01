@@ -118,7 +118,7 @@ REGISTER_FLIGHT_HOOK_HASH(uintptr_t __fastcall, 2879787320, CarSuspension_Animat
     auto fcc = rtti->GetClass("FlightComponent");
     auto rollProp = fcc->GetProperty("roll");
     if (fc->active) {
-      a1->parent->turnInput = rollProp->GetValue<float>(fc);
+      a1->parent->input.turnInput = rollProp->GetValue<float>(fc);
     }
   }
   return CarSuspension_AnimationUpdate_Original(a1, timeDelta);
@@ -127,7 +127,7 @@ REGISTER_FLIGHT_HOOK_HASH(uintptr_t __fastcall, 2879787320, CarSuspension_Animat
 REGISTER_FLIGHT_HOOK_HASH(uintptr_t __fastcall, 3191280029, BikeSuspension_AnimationUpdate, RED4ext::vehicle::BikePhysics *a1, float timeDelta) {
   auto fc = FlightComponent::Get(a1->parent);
   if (fc && fc->active) {
-    a1->parent->turnInput = 0.0;
+    a1->parent->input.turnInput = 0.0;
     a1->turnRate = 0.0;
     a1->tiltControlEnabled = 0;
   } else {
