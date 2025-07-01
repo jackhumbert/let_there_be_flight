@@ -236,14 +236,16 @@
 		<button id="IK_Joy6" />
 	</mapping>
 
-	<mapping name="Flight_LinearBrake" type="Button">
-		<button id="IK_Pad_A_CROSS" />
-		<button id="IK_C" overridableUI="vehicleFlightLinearBrake" />
+	<mapping name="Flight_LinearBrake" type="Axis">
+		<button id="IK_Pad_A_CROSS" val="1.0" />
+		<button id="IK_JoyY" />
+		<button id="IK_C" val="1.0" overridableUI="vehicleFlightLinearBrake" />
 	</mapping>
 
-	<mapping name="Flight_AngularBrake" type="Button">
-		<button id="IK_Pad_A_CROSS" />
-		<button id="IK_C" overridableUI="vehicleFlightAngularBrake"  />
+	<mapping name="Flight_AngularBrake" type="Axis">
+		<button id="IK_Pad_A_CROSS" val="1.0" />
+		<button id="IK_JoyY" />
+		<button id="IK_C" val="1.0" overridableUI="vehicleFlightAngularBrake"  />
 	</mapping>
 
 	<mapping name="Flight_SurgePos" type="Axis" >
@@ -267,7 +269,7 @@
 
 	<mapping name="Flight_Pitch" type="Axis" >
 		<button id="IK_Pad_RightAxisY" />
-		<button id="IK_JoyZ" />
+		<button id="IK_JoyX" />
 		<!-- <button id="IK_JoyY" val="0.0" /> -->
 		<button id="IK_L" val="1.0" overridableUI="vehicleFlightPitchForward" />
 		<button id="IK_Period" val="-1.0" overridableUI="vehicleFlightPitchBackward" />
@@ -275,6 +277,7 @@
 
 	<mapping name="Flight_Roll" type="Axis" >
 		<button id="IK_Pad_RightAxisX" />
+		<button id="IK_JoyZ" />
 		<!-- <button id="IK_JoyX" val="0.0" /> -->
 		<button id="IK_Slash" val="1.0" overridableUI="vehicleFlightRollRight"/>
 		<button id="IK_Comma" val="-1.0" overridableUI="vehicleFlightRollLeft"/>

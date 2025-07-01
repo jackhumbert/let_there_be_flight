@@ -648,26 +648,32 @@ public native class FlightController extends IScriptable {
           case n"SurgeNeg":
             this.surge.SetInput(-value);
             break;
+          case n"Flight_LinearBrake":
+            this.linearBrake.SetInput(value);
+            break;
+          case n"Flight_AngularBrake":
+            this.angularBrake.SetInput(value);
+            break;
           default:
             // return false;
             break;
         }
       }
         // ListenerActionConsumer.ConsumeSingleAction(consumer);
-      if Equals(actionName, n"Flight_LinearBrake") {
-        if Equals(actionType, gameinputActionType.BUTTON_PRESSED) {
-          this.linearBrake.SetInput(1.0);
-        } else {
-          this.linearBrake.SetInput(0.0);
-        }
-      }
-      if Equals(actionName, n"Flight_AngularBrake") {
-        if Equals(actionType, gameinputActionType.BUTTON_PRESSED) {
-          this.angularBrake.SetInput(1.0);
-        } else {
-          this.angularBrake.SetInput(0.0);
-        }
-      }
+      // if Equals(actionName, n"Flight_LinearBrake") {
+      //   if Equals(actionType, gameinputActionType.BUTTON_PRESSED) {
+      //     this.linearBrake.SetInput(1.0);
+      //   } else {
+      //     this.linearBrake.SetInput(0.0);
+      //   }
+      // }
+      // if Equals(actionName, n"Flight_AngularBrake") {
+      //   if Equals(actionType, gameinputActionType.BUTTON_PRESSED) {
+      //     this.angularBrake.SetInput(1.0);
+      //   } else {
+      //     this.angularBrake.SetInput(0.0);
+      //   }
+      // }
     } else {
       this.lift.SetInput(0.0);
       this.surge.SetInput(0.0);
