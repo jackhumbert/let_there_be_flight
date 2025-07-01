@@ -207,7 +207,8 @@
 	</mapping>
 
 	<mapping name="Flight_ModeSwitchBackward" type="Button">
-		<button id="IK_Pad_DigitLeft" overridableUI="vehicleFlightModeSwitchBackward" />
+		<button id="IK_Pad_DigitLeft" />
+		<button id="IK_J" overridableUI="vehicleFlightModeSwitchBackward" />
 	</mapping>
 
 	<mapping name="Flight_ModeSwitchForward" type="Button">
