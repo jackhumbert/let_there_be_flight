@@ -533,9 +533,19 @@ public native class FlightComponent extends GameComponent {
         return;
       } 
     }
+    
+    let vehicle: ref<VehicleObject> = this.GetVehicle();
+    let gameInstance: GameInstance = vehicle.GetGame();
+    
+    let photoModeSys: ref<PhotoModeSystem> = GameInstance.GetPhotoModeSystem(gameInstance);
+    if photoModeSys.IsPhotoModeActive() {
+      return;
+    }
+
     if timeDelta <= 0.0 {
       this.stats.UpdateDynamic();
       this.UpdateAudioParams(1.0/60.0);
+      
       for thruster in this.configuration.thrusters {
         thruster.Update(this.smoothForce, this.smoothTorque);
       }
@@ -1098,10 +1108,19 @@ public native class FlightComponent extends GameComponent {
     // all in engine\physics\collision_presets.json
     // VehicleBlocker? RagdollVehicle?
     let lookDown = new Vector4(0.0, 0.0, -FlightSettings.GetFloat("hoverModeMaxHoverHeight") - 10.0, 0.0);
-    this.sqs.SyncRaycastByCollisionGroup(fl_tire, fl_tire + lookDown, n"VehicleBlocker", findGround1, false, false);
-    this.sqs.SyncRaycastByCollisionGroup(fr_tire, fr_tire + lookDown, n"VehicleBlocker", findGround2, false, false);
-    this.sqs.SyncRaycastByCollisionGroup(bl_tire, bl_tire + lookDown, n"VehicleBlocker", findGround3, false, false);
-    this.sqs.SyncRaycastByCollisionGroup(br_tire, br_tire + lookDown, n"VehicleBlocker", findGround4, false, false);
+    // this.sqs.SyncRaycastByCollisionGroup(fl_tire, fl_tire + lookDown, n"VehicleBlocker", findGround1, false, false);
+    // this.sqs.SyncRaycastByCollisionGroup(fr_tire, fr_tire + lookDown, n"VehicleBlocker", findGround2, false, false);
+    // this.sqs.SyncRaycastByCollisionGroup(bl_tire, bl_tire + lookDown, n"VehicleBlocker", findGround3, false, false);
+    // this.sqs.SyncRaycastByCollisionGroup(br_tire, br_tire + lookDown, n"VehicleBlocker", findGround4, false, false);
+
+    let queryFilter: QueryFilter;
+    QueryFilter.AddGroup(queryFilter, n"VehicleBlocker");
+    QueryFilter.AddGroup(queryFilter, n"Water");
+    
+    this.sqs.SyncRaycastByQueryFilter(fl_tire, fl_tire + lookDown, queryFilter, findGround1, false, false);
+    this.sqs.SyncRaycastByQueryFilter(fr_tire, fr_tire + lookDown, queryFilter, findGround2, false, false);
+    this.sqs.SyncRaycastByQueryFilter(bl_tire, bl_tire + lookDown, queryFilter, findGround3, false, false);
+    this.sqs.SyncRaycastByQueryFilter(br_tire, br_tire + lookDown, queryFilter, findGround4, false, false);
     
     let groundPoint1: Vector4;
     let groundPoint2: Vector4;
