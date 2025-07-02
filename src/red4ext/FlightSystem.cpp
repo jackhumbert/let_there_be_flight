@@ -87,20 +87,20 @@ void FlightSystem::UnregisterComponent(RED4ext::WeakHandle<FlightComponent> fc) 
 
 void PrePhysics(RED4ext::UpdateBucketEnum bucket, RED4ext::FrameInfo& frame, RED4ext::JobQueue& job) {
   // spdlog::info("[FlightSystem] PrePhysics!");
-  auto fs = FlightSystem::GetInstance();
-  auto wh = fs->soundListener;
-  if (!wh.Expired()) {
-    RED4ext::Matrix matrix;
-    auto h = wh.Lock();
-    auto t = h.GetPtr()->worldTransform;
-    GetMatrixFromOrientation(&t.Orientation, &matrix);
-    matrix.W.X = t.Position.x.Bits * 0.0000076293945;
-    matrix.W.Y = t.Position.y.Bits * 0.0000076293945;
-    matrix.W.Z = t.Position.z.Bits * 0.0000076293945;
-    matrix.W.W = 1.0;
-    fs->audio->UpdateListenerMatrix(matrix);
-    fs->audio->UpdateVolume();
-  }
+  // auto fs = FlightSystem::GetInstance();
+  // auto wh = fs->soundListener;
+  // if (!wh.Expired()) {
+  //   RED4ext::Matrix matrix;
+  //   auto h = wh.Lock();
+  //   auto t = h.GetPtr()->worldTransform;
+  //   GetMatrixFromOrientation(&t.Orientation, &matrix);
+  //   matrix.W.X = t.Position.x.Bits * 0.0000076293945;
+  //   matrix.W.Y = t.Position.y.Bits * 0.0000076293945;
+  //   matrix.W.Z = t.Position.z.Bits * 0.0000076293945;
+  //   matrix.W.W = 1.0;
+  //   fs->audio->UpdateListenerMatrix(matrix);
+  //   fs->audio->UpdateVolume();
+  // }
 }
 
 void UpdateComponents(RED4ext::UpdateBucketEnum bucket, RED4ext::FrameInfo& frame, RED4ext::JobQueue& job) {

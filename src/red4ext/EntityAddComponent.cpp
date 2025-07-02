@@ -455,15 +455,14 @@ struct EntityAddComponentModule : FlightModule {
   void PostRegisterTypes() {
     auto rtti = RED4ext::CRTTISystem::Get();
     auto ent = rtti->GetClass("entEntity");
-    ent->RegisterFunction(
-        RED4ext::CClassFunction::Create(ent, "AddComponent", "AddComponent", &EntityAddComponent, {.isNative = true}));
-    ent->RegisterFunction(RED4ext::CClassFunction::Create(ent, "AddWorldWidgetComponent", "AddWorldWidgetComponent",
-                                                          &EntityAddWorldWidgetComponent, {.isNative = true}));
+    ent->RegisterFunction(RED4ext::CClassFunction::Create(ent, "AddComponent", "AddComponent", 
+      &EntityAddComponent, {.isNative = true}));
+    ent->RegisterFunction(RED4ext::CClassFunction::Create(ent, "AddWorldWidgetComponent", "AddWorldWidgetComponent", 
+      &EntityAddWorldWidgetComponent, {.isNative = true}));
 
     auto ipc = rtti->GetClass("entIPlacedComponent");
-    ipc->RegisterFunction(
-        RED4ext::CClassFunction::Create(ipc, "UpdateHardTransformBinding", "UpdateHardTransformBinding",
-                                        &IPlacedComponentUpdateHardTransformBinding, {.isNative = true}));
+    ipc->RegisterFunction(RED4ext::CClassFunction::Create(ipc, "UpdateHardTransformBinding", "UpdateHardTransformBinding", 
+      &IPlacedComponentUpdateHardTransformBinding, {.isNative = true}));
 
     // auto mc = rtti->GetClass("entMeshComponent");
     // mc->props.EmplaceBack(RED4ext::CProperty::Create(rtti->GetType("Vector3"), "visualScale", nullptr, 0x178));

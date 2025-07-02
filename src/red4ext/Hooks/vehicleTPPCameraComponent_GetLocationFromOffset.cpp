@@ -6,10 +6,12 @@
 #include <RED4ext/Scripting/Natives/Generated/vehicle/TPPCameraComponent.hpp>
 #include <RED4ext/Scripting/Natives/vehiclePhysics.hpp>
 
+using namespace RED4ext;
+
 static bool custom_mode = false;
 static bool has_changed_mode = false;
-static RED4ext::Vector4 og;
-static RED4ext::Vector4 last;
+static Vector4 og;
+static Vector4 last;
 static LARGE_INTEGER start;
 static LARGE_INTEGER now;
 
@@ -18,14 +20,13 @@ static LARGE_INTEGER now;
 
 // gets the location for the camera to look at
 /// @hash 283779224
-// RED4ext::Vector4 *__fastcall GetLocationFromOffset(RED4ext::vehicle::TPPCameraComponent *camera, RED4ext::Vector4 *location, RED4ext::Vector3 *lookAtOffset);
+// Vector4 *__fastcall GetLocationFromOffset(vehicle::TPPCameraComponent *camera, Vector4 *location, Vector3 *lookAtOffset);
 
 // uses preset->linearVelocity
 // Vector4 vehicle::TPPCameraComponent::CalculateLookAtPosition(vehicle::TPPCameraComponent::CameraPreset const &) const
-REGISTER_FLIGHT_HOOK_HASH(RED4ext::Vector4 *__fastcall, 283779224, GetLocationFromOffset,
-                     RED4ext::vehicle::TPPCameraComponent *camera, RED4ext::Vector4 *offset,
-                     RED4ext::vehicle::TPPCameraComponent::CameraPreset *preset) {
-  auto v = new RED4ext::Vector4();
+REGISTER_FLIGHT_HOOK_HASH(Vector4 *__fastcall, 283779224, GetLocationFromOffset,
+                     vehicle::TPPCameraComponent *camera, Vector4 *offset,
+                     vehicle::TPPCameraComponent::CameraPreset *preset) {
   auto vehicle = camera->vehicle;
   auto fc = FlightComponent::Get(vehicle);
   if (fc && fc->active) {
@@ -35,17 +36,17 @@ REGISTER_FLIGHT_HOOK_HASH(RED4ext::Vector4 *__fastcall, 283779224, GetLocationFr
     if (FlightSettings::GetProperty<bool>("tppCameraCenterOnMass") && !FlightSettings::GetBool("inTPPDriverCombat")) {
       has_changed_mode = !custom_mode;
       custom_mode = true;
-      *v = vehicle->worldTransform.Position.AsVector4() +
+      *offset = vehicle->worldTransform.Position.AsVector4() +
              (vehicle->worldTransform.Orientation * vehicle->physicsData->centerOfMass);
     } else {
       has_changed_mode = custom_mode;
       custom_mode = false;
-      *v = *GetLocationFromOffset_Original(camera, offset, preset);
+      *offset = *GetLocationFromOffset_Original(camera, offset, preset);
     }
   } else {
     has_changed_mode = custom_mode;
     custom_mode = false;
-    *v = *GetLocationFromOffset_Original(camera, offset, preset);
+    *offset = *GetLocationFromOffset_Original(camera, offset, preset);
   }
 
   
@@ -62,12 +63,12 @@ REGISTER_FLIGHT_HOOK_HASH(RED4ext::Vector4 *__fastcall, 283779224, GetLocationFr
     auto ratio = (double)diff / FADE_DURATION;
     // basic easing
     auto remaining = pow(1.0 - ratio, 2);
-    v->X = (v->X * (1.0 - remaining)) + (og.X * remaining);
-    v->Y = (v->Y * (1.0 - remaining)) + (og.Y * remaining);
-    v->Z = (v->Z * (1.0 - remaining)) + (og.Z * remaining);
+    offset->X = (offset->X * (1.0 - remaining)) + (og.X * remaining);
+    offset->Y = (offset->Y * (1.0 - remaining)) + (og.Y * remaining);
+    offset->Z = (offset->Z * (1.0 - remaining)) + (og.Z * remaining);
   }
 
-  last = *v;
+  last = *offset;
 
-  return v;
+  return offset;
 }

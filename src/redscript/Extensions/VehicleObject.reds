@@ -168,10 +168,10 @@ public let bouncy: Bool;
 //   }
 // }
 
-@wrapMethod(VehicleObject)
-public final func IsOnPavement() -> Bool {
-  return wrappedMethod() || FlightController.GetInstance().IsActive();
-}
+// @wrapMethod(VehicleObject)
+// public final func IsOnPavement() -> Bool {
+//   return wrappedMethod() || FlightController.GetInstance().IsActive();
+// }
 
 // @wrapMethod(VehicleObject)
 // protected cb func OnLookedAtEvent(evt: ref<LookedAtEvent>) -> Bool {

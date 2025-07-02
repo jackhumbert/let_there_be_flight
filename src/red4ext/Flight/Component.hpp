@@ -47,7 +47,7 @@ public:
     return nullptr;
   }
 
-  // has scripted callbacks?
+  // has scripted OnGame* callbacks
   inline virtual bool sub_238(RED4ext::Handle<RED4ext::game::Object>*) override {
     return true;
   }
@@ -64,8 +64,6 @@ public:
       }
       return NULL;
   }
-
-  virtual void OnGameAttach(RED4ext::IGameInstance* a1) override;
 
   void OnUpdate(float deltaTime);
 

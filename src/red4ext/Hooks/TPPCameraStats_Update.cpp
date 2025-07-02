@@ -6,12 +6,11 @@
 #include <RED4ext/Common.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/TPPCameraComponent.hpp>
 
-// adjusts TPP camera based on flight mode
-/// @hash 4125170300
-// uintptr_t TPPCameraStats_Update(RED4ext::vehicle::TPPCameraComponent *camera, uintptr_t data);
+using namespace RED4ext;
 
+// adjusts TPP camera based on flight mode
 // void vehicle::TPPCameraComponent::SetVehicleData(vehicle::CameraParentData const &)
-REGISTER_FLIGHT_HOOK_HASH(uintptr_t, 4125170300, TPPCameraStats_Update, RED4ext::vehicle::TPPCameraComponent *camera, uintptr_t data) {
+REGISTER_FLIGHT_HOOK_HASH(uintptr_t, 4125170300, TPPCameraStats_Update, vehicle::TPPCameraComponent *camera, uintptr_t data) {
   uintptr_t result = TPPCameraStats_Update_Original(camera, data);
   
   auto fc = FlightController::FlightController::GetInstance();
@@ -23,16 +22,16 @@ REGISTER_FLIGHT_HOOK_HASH(uintptr_t, 4125170300, TPPCameraStats_Update, RED4ext:
     camera->drivingDirectionCompensationSpeedCoef =
         FlightSettings::GetProperty<float>("drivingDirectionCompensationSpeedCoef");
 
-    auto rtti = RED4ext::CRTTISystem::Get();
+    auto rtti = CRTTISystem::Get();
     auto fcc = rtti->GetClass("FlightSystem");
     auto fs = FlightSystem::FlightSystem::GetInstance();
     auto pcp = fcc->GetProperty("playerComponent");
-    auto fcomp = pcp->GetValue<RED4ext::Handle<RED4ext::IScriptable>>(fs);
+    auto fcomp = pcp->GetValue<Handle<IScriptable>>(fs);
     auto fcompc = rtti->GetClass("FlightComponent");
-    RED4ext::Handle<RED4ext::IScriptable> mode;
+    Handle<IScriptable> mode;
     auto flightModeCls = rtti->GetClass("FlightMode");
-    auto result = RED4ext::CStackType(flightModeCls, &mode);
-    auto stack = RED4ext::CStack(fcomp, nullptr, 0, &result);
+    auto result = CStackType(flightModeCls, &mode);
+    auto stack = CStack(fcomp, nullptr, 0, &result);
     fcompc->GetFunction("GetFlightMode")->Execute(&stack);
 
     // in case a mode is removed

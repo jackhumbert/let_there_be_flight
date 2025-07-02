@@ -217,6 +217,7 @@ public native class FlightComponent extends GameComponent {
     // if ArraySize(this.configuration.thrusters) == 0 {
     //   this.configuration.thrusters = IFlightThruster.CreateThrusters(this);
     // }
+    this.sys.RegisterComponent(this);
   }
 
   private final func OnGameDetach() -> Void {
