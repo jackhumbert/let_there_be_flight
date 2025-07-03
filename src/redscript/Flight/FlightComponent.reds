@@ -162,7 +162,7 @@ public native class FlightComponent extends GameComponent {
     this.aeroYawPID = PID.Create(FlightSettings.GetVector3("aeroYawPID"));
     this.pitchAeroPID = PID.Create(FlightSettings.GetVector3("aeroPitchPID"));
 
-    // this.sys = FlightSystem.GetInstance();
+    this.sys = FlightSystem.GetInstance();
     // this.sys.RegisterComponent(this);
     this.sqs = GameInstance.GetSpatialQueriesSystem(this.GetVehicle().GetGame());
     // this.fx = FlightFx.Create(this);

@@ -24,16 +24,16 @@ protected cb func OnTakeControl(ri: EntityResolveComponentsInterface) -> Bool {
 }
 
 @addMethod(VehicleObject)
-public const func GetFlightComponent() -> ref<FlightComponent> {
+public func GetFlightComponent() -> ref<FlightComponent> {
   return this.m_flightComponent;
 }
 
 @addMethod(VehicleObject)
-public const func CanEnterFlight() -> Bool {
+public func CanEnterFlight() -> Bool {
   let allVehiclesEnabled = TweakDBInterface.GetBool(t"player.vehicle.canEnterFlight", true);
 
   let tweakID = this.GetRecordID();
-  TDBID.Append(tweakID, TDBID.Create(".canEnterFlight"));
+  TDBID.Append(tweakID, t".canEnterFlight");
 
   let thisVehicleEnabled = TweakDBInterface.GetBool(tweakID, false);
   let thisVehicleDisabled = !TweakDBInterface.GetBool(tweakID, true);
@@ -141,7 +141,7 @@ public native func GetWeaponPlaceholderOrientation(index: Int32) -> Quaternion;
 public native func GetWeapons() -> array<ref<WeaponObject>>;
 
 @addMethod(VehicleObject)
-public native func UnsetPhysicsStates() -> Void;
+public native func ForceEnablePhysics() -> Void;
 
 @addMethod(WheeledObject)
 public native func GetDampedSpringForce(wheelIndex: Int32) -> Float;

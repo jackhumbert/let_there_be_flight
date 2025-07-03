@@ -19,7 +19,7 @@ public class FlightEnable extends FlightAction {
     FlightLog.Info("[FlightEnable] CompleteAction");
     super.CompleteAction(gameInstance);
     if !this.m_owner.m_flightComponent.active {
-      this.m_owner.UnsetPhysicsStates();
+      this.m_owner.ForceEnablePhysics();
       this.m_owner.EndActions();
       this.m_owner.m_flightComponent.Activate(true);
     }
@@ -40,7 +40,7 @@ public class FlightDisable extends FlightAction {
     FlightLog.Info("[FlightDisable] CompleteAction");
     super.CompleteAction(gameInstance);
     if this.m_owner.m_flightComponent.active {
-      this.m_owner.UnsetPhysicsStates();
+      this.m_owner.ForceEnablePhysics();
       this.m_owner.EndActions();
       this.m_owner.m_flightComponent.Deactivate(true);
     }
@@ -66,7 +66,7 @@ public class DisableGravity extends FlightAction {
   public func CompleteAction(gameInstance: GameInstance) -> Void {
     FlightLog.Info("[DisableGravity] CompleteAction");
     super.CompleteAction(gameInstance);
-    this.m_owner.UnsetPhysicsStates();
+    this.m_owner.ForceEnablePhysics();
     this.m_owner.EndActions();
     this.m_owner.EnableGravity(false);
   }

@@ -10,7 +10,7 @@ public class FlightMalfunctionEffector extends Effector {
     FlightLog.Info("[FlightMalfunctionEffector] ActionOn");
     this.m_owner = owner as VehicleObject;
     if IsDefined(this.m_owner) && this.m_owner.CanEnterFlight() {
-      this.m_owner.UnsetPhysicsStates();
+      this.m_owner.ForceEnablePhysics();
       this.m_owner.EndActions();
       this.m_owner.m_flightComponent.Activate(true);
       this.m_owner.m_flightComponent.lift = 5.0;
@@ -52,7 +52,7 @@ public class FunhouseEffector extends Effector {
     if IsDefined(vehicle) && vehicle.CanEnterFlight() {
       vehicle.bouncy = true;
       vehicle.ignoreImpulses = false;
-      vehicle.UnsetPhysicsStates();
+      vehicle.ForceEnablePhysics();
       vehicle.EndActions();
       vehicle.m_flightComponent.FireVerticalImpulse(0);
     }

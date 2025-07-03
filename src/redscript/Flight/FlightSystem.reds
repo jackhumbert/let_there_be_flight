@@ -6,8 +6,8 @@ public func fs() -> ref<FlightSystem> = FlightSystem.GetInstance();
 // public native class FlightSystem extends IFlightSystem {
 public native class FlightSystem extends IGameSystem {
   public static native func GetInstance() -> ref<FlightSystem>;
-  public native func RegisterComponent(component: wref<FlightComponent>) -> Void;
-  public native func UnregisterComponent(component: wref<FlightComponent>) -> Void;
+  public native func RegisterComponent(component: ref<FlightComponent>) -> Void;
+  public native func UnregisterComponent(component: ref<FlightComponent>) -> Void;
 
   @runtimeProperty("offset", "0x48")
   public native let cameraIndex: Int32;
@@ -31,7 +31,7 @@ public native class FlightSystem extends IGameSystem {
   public func Setup(player: ref<PlayerPuppet>) -> Void {
     FlightLog.Info("[FlightSystem] Player updated");
     this.player = player;
-    // this.soundListener = player.FindComponentByName(n"soundListener") as IPlacedComponent;
+    this.soundListener = player.FindComponentByName(n"soundListener") as IPlacedComponent;
     this.gameInstance = player.GetGame();
     // if !IsDefined(this.audio) {
     //   this.audio = FlightAudio.Create();

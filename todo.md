@@ -22,3 +22,32 @@ scriptInterface.GetTargetingSystem().SetIsMovingFast(scriptInterface.owner, true
 
 Audio/Ambience/Zones
 audio::AmbientSoundSystem
+
+
+
+  public final static func GetDistanceToGround(const scriptInterface: ref<StateGameScriptInterface>) -> Float {
+    let distanceToGround: Float;
+    let geometryDescription: ref<GeometryDescriptionQuery>;
+    let geometryDescriptionResult: ref<GeometryDescriptionResult>;
+    let queryFilter: QueryFilter;
+    let currentPosition: Vector4 = DefaultTransition.GetPlayerPosition(scriptInterface);
+    QueryFilter.AddGroup(queryFilter, n"Static");
+    QueryFilter.AddGroup(queryFilter, n"Terrain");
+    QueryFilter.AddGroup(queryFilter, n"PlayerBlocker");
+    geometryDescription = new GeometryDescriptionQuery();
+    geometryDescription.AddFlag(worldgeometryDescriptionQueryFlags.DistanceVector);
+    geometryDescription.filter = queryFilter;
+    geometryDescription.refPosition = currentPosition;
+    geometryDescription.refDirection = new Vector4(0.00, 0.00, -1.00, 0.00);
+    geometryDescription.primitiveDimension = new Vector4(0.50, 0.10, 0.10, 0.00);
+    geometryDescription.maxDistance = 100.00;
+    geometryDescription.maxExtent = 100.00;
+    geometryDescription.probingPrecision = 10.00;
+    geometryDescription.probingMaxDistanceDiff = 100.00;
+    geometryDescriptionResult = scriptInterface.GetSpatialQueriesSystem().GetGeometryDescriptionSystem().QueryExtents(geometryDescription);
+    if Equals(geometryDescriptionResult.queryStatus, worldgeometryDescriptionQueryStatus.NoGeometry) || NotEquals(geometryDescriptionResult.queryStatus, worldgeometryDescriptionQueryStatus.OK) {
+      return -1.00;
+    };
+    distanceToGround = AbsF(geometryDescriptionResult.distanceVector.Z);
+    return distanceToGround;
+  }
