@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<objects serializationModel="Studio.02.02.00">
+<objects serializationModel="Studio.02.03.00">
 	<object class="ParameterPreset" id="{7e7ec633-4bbb-4708-acf2-429f2874845c}">
 		<property name="name">
 			<value>yaw</value>
@@ -18,8 +18,19 @@
 		<property name="initialValue">
 			<value>0</value>
 		</property>
-		<property name="seekSpeed">
-			<value>1.7400000095367432</value>
+		<relationship name="modulators">
+			<destination>{4800d301-4d2f-4dff-af2b-3be717e271dc}</destination>
+		</relationship>
+	</object>
+	<object class="SeekModulator" id="{4800d301-4d2f-4dff-af2b-3be717e271dc}">
+		<property name="nameOfPropertyBeingModulated">
+			<value>cursorPosition</value>
+		</property>
+		<property name="clockSource">
+			<value>1</value>
+		</property>
+		<property name="speedAscending">
+			<value>0.87000000476837158</value>
 		</property>
 	</object>
 </objects>

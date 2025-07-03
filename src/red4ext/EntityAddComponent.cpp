@@ -144,7 +144,7 @@
 //          auto wtCls = rtti->GetClass("WorldTransform");
 //
 //          // auto shapeFL = reinterpret_cast<RED4ext::physics::ColliderSphere *>(
-//          // rtti->GetClass("physicsColliderSphere")->CreateInstance());
+//          // rtti->GetClass("physicsColliderSphere")->CreateInstance(true));
 //
 //          RED4ext::Handle<RED4ext::physics::ICollider> shapeFL;
 //          RED4ext::physics::ColliderSphere::createHandleWithRadius(&shapeFL, radius);
@@ -152,7 +152,7 @@
 //
 //           shapeFL->filterData = RED4ext::Handle(
 //               reinterpret_cast<RED4ext::physics::FilterData
-//               *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
+//               *>(rtti->GetClass("physicsFilterData")->CreateInstance(true)));
 //           shapeFL->filterData->preset = "Vehicle Part";
 //          shapeFL->filterData->simulationFilter.mask1 = 0x0080010000000000;
 //          shapeFL->filterData->simulationFilter.mask2 = 0xFE11000000000080;
@@ -160,7 +160,7 @@
 //          shapeFL->material = "vehicle_chassis.physmat";
 //          shapeFL->isQueryShapeOnly = true;
 //
-//          wt = (RED4ext::WorldTransform *)wtCls->CreateInstance();
+//          wt = (RED4ext::WorldTransform *)wtCls->CreateInstance(true);
 //          index = sc->GetSlotIndex("thruster_front_left");
 //          if (index != -1) {
 //            sc->GetSlotLocalTransform(index, &sc->localTransform, wt);
@@ -176,7 +176,7 @@
 //
 //          shapeFR->filterData = RED4ext::Handle(
 //              reinterpret_cast<RED4ext::physics::FilterData
-//                                   *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
+//                                   *>(rtti->GetClass("physicsFilterData")->CreateInstance(true)));
 //          shapeFR->filterData->preset = "Vehicle Part";
 //          shapeFR->filterData->simulationFilter.mask1 = 0x0080010000000000;
 //          shapeFR->filterData->simulationFilter.mask2 = 0xFE11000000000080;
@@ -184,7 +184,7 @@
 //          shapeFR->material = "vehicle_chassis.physmat";
 //          shapeFR->isQueryShapeOnly = true;
 //
-//          wt = (RED4ext::WorldTransform *)wtCls->CreateInstance();
+//          wt = (RED4ext::WorldTransform *)wtCls->CreateInstance(true);
 //          index = sc->GetSlotIndex("thruster_front_right");
 //          if (index != -1) {
 //            sc->GetSlotLocalTransform(index, &sc->localTransform, wt);
@@ -200,7 +200,7 @@
 //
 //          shapeBL->filterData = RED4ext::Handle(
 //              reinterpret_cast<RED4ext::physics::FilterData
-//                                   *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
+//                                   *>(rtti->GetClass("physicsFilterData")->CreateInstance(true)));
 //          shapeBL->filterData->preset = "Vehicle Part";
 //          shapeBL->filterData->simulationFilter.mask1 = 0x0080010000000000;
 //          shapeBL->filterData->simulationFilter.mask2 = 0xFE11000000000080;
@@ -208,7 +208,7 @@
 //          shapeBL->material = "vehicle_chassis.physmat";
 //          shapeBL->isQueryShapeOnly = true;
 //
-//          wt = (RED4ext::WorldTransform *)wtCls->CreateInstance();
+//          wt = (RED4ext::WorldTransform *)wtCls->CreateInstance(true);
 //          index = sc->GetSlotIndex("thruster_back_left");
 //          if (index != -1) {
 //            sc->GetSlotLocalTransform(index, &sc->localTransform, wt);
@@ -225,7 +225,7 @@
 //
 //          shapeBR->filterData = RED4ext::Handle(
 //              reinterpret_cast<RED4ext::physics::FilterData
-//                                   *>(rtti->GetClass("physicsFilterData")->CreateInstance()));
+//                                   *>(rtti->GetClass("physicsFilterData")->CreateInstance(true)));
 //          shapeBR->filterData->preset = "Vehicle Part";
 //          shapeBR->filterData->simulationFilter.mask1 = 0x0080010000000000;
 //          shapeBR->filterData->simulationFilter.mask2 = 0xFE11000000000080;
@@ -233,7 +233,7 @@
 //          shapeBR->material = "vehicle_chassis.physmat";
 //          shapeBR->isQueryShapeOnly = true;
 //
-//          wt = (RED4ext::WorldTransform *)wtCls->CreateInstance();
+//          wt = (RED4ext::WorldTransform *)wtCls->CreateInstance(true);
 //          index = sc->GetSlotIndex("thruster_back_right");
 //          if (index != -1) {
 //            sc->GetSlotLocalTransform(index, &sc->localTransform, wt);
@@ -265,7 +265,7 @@
 //        }
 //
 //        // auto body =
-//        // reinterpret_cast<RED4ext::physics::SystemBody*>(rtti->GetClass("physicsSystemBody")->CreateInstance());
+//        // reinterpret_cast<RED4ext::physics::SystemBody*>(rtti->GetClass("physicsSystemBody")->CreateInstance(true));
 //        // body->name = "Thruster Test";
 //        // body->mappedBoneName = "swingarm_front_left";
 //
@@ -276,7 +276,7 @@
 //
 //        //
 //        // auto shape = reinterpret_cast<RED4ext::physics::ColliderSphere *>(
-//        //    rtti->GetClass("physicsColliderSphere")->CreateInstance());
+//        //    rtti->GetClass("physicsColliderSphere")->CreateInstance(true));
 //        // shape->radius = 1.0;
 //        // shape->localToBody.position = RED4ext::Vector4(0.0, 0.0, 0.0, 0.0);
 //        // body->collisionShapes.EmplaceBack(RED4ext::Handle<RED4ext::physics::ColliderSphere>(shape));
@@ -292,7 +292,7 @@ RED4ext::ent::PhysicalMeshComponent *CreateThrusterEngine(RED4ext::CName mesh, R
                                                           RED4ext::CName bindName) {
 
   auto rtti = RED4ext::CRTTISystem::Get();
-  auto mc = (RED4ext::ent::PhysicalMeshComponent *)rtti->GetClass("entPhysicalMeshComponent")->CreateInstance();
+  auto mc = (RED4ext::ent::PhysicalMeshComponent *)rtti->GetClass("entPhysicalMeshComponent")->CreateInstance(true);
   mc->mesh.path = mesh;
   // not sure why this doesn't carry through
   // mc->isEnabled = false;
@@ -300,14 +300,14 @@ RED4ext::ent::PhysicalMeshComponent *CreateThrusterEngine(RED4ext::CName mesh, R
   mc->visualScale.Y = 0.0;
   mc->visualScale.Z = 0.0;
   mc->filterDataSource = RED4ext::physics::FilterDataSource::Collider;
-  auto filterData = (RED4ext::physics::FilterData *)rtti->GetClass("physicsFilterData")->CreateInstance();
+  auto filterData = (RED4ext::physics::FilterData *)rtti->GetClass("physicsFilterData")->CreateInstance(true);
   mc->filterData = RED4ext::Handle<RED4ext::physics::FilterData>(filterData);
   mc->name = name;
   mc->motionBlurScale = 0.1;
   mc->meshAppearance = "default";
   mc->objectTypeID = RED4ext::ERenderObjectType::ROT_Vehicle;
   mc->LODMode = RED4ext::ent::MeshComponentLODMode::Appearance;
-  auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->CreateInstance();
+  auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->CreateInstance(true);
   htb->bindName = bindName;
   htb->slotName = slot;
   mc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
@@ -332,7 +332,7 @@ void AddResourceToController(RED4ext::ent::VisualControllerComponent *vcc, RED4e
 void AddToController(RED4ext::ent::VisualControllerComponent *vcc, RED4ext::ent::MeshComponent *mc) {
   auto rtti = RED4ext::CRTTISystem::Get();
   auto vcd = reinterpret_cast<RED4ext::ent::VisualControllerDependency *>(
-      rtti->GetClass("entVisualControllerDependency")->CreateInstance());
+      rtti->GetClass("entVisualControllerDependency")->CreateInstance(true));
   vcd->appearanceName = mc->meshAppearance;
   vcd->componentName = mc->name;
   vcd->mesh.path = mc->mesh.path;
@@ -366,7 +366,7 @@ void EntityAddWorldWidgetComponent(RED4ext::IScriptable *aContext, RED4ext::CSta
   auto rtti = RED4ext::CRTTISystem::Get();
 
   // MeshComponent
-  auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->CreateInstance();
+  auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->CreateInstance(true);
 
   mc->mesh.path =
       "base\\environment\\decoration\\advertising\\holograms\\common\\common_holograms_transparent_a_w500_h150.mesh";
@@ -381,12 +381,12 @@ void EntityAddWorldWidgetComponent(RED4ext::IScriptable *aContext, RED4ext::CSta
   ent->componentsStorage.components.EmplaceBack(mcHandle);
 
   // WorldWidgetComponent
-  auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->CreateInstance();
+  auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->CreateInstance(true);
 
   wwc->name = "radio_ui";
   wwc->widgetResource.path = "base\\gameplay\\gui\\world\\radio\\radio_ui.inkwidget";
 
-  auto mtb = (RED4ext::world::ui::MeshTargetBinding *)rtti->GetClass("worlduiMeshTargetBinding")->CreateInstance();
+  auto mtb = (RED4ext::world::ui::MeshTargetBinding *)rtti->GetClass("worlduiMeshTargetBinding")->CreateInstance(true);
   mtb->bindName = "radio_screen";
   wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
 

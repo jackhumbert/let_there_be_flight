@@ -144,7 +144,7 @@ private:
     aType->AddFunction<&VehicleObject::GetAngularVelocity>("GetAngularVelocity");
     aType->AddFunction<&VehicleObject::EnableGravity>("EnableGravity");
     aType->AddFunction<&VehicleObject::HasGravity>("HasGravity");
-    aType->AddFunction<&VehicleObject::UnsetPhysicsStates>("UnsetPhysicsStates");
+    aType->AddFunction<&VehicleObject::ForceEnablePhysics>("ForceEnablePhysics");
     aType->AddFunction<&VehicleObject::EndActions>("EndActions");
 
     aType->AddFunction<&VehicleObject::TurnOffAirControl>("TurnOffAirControl");

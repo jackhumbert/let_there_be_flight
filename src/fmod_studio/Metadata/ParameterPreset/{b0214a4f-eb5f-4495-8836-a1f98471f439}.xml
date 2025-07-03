@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<objects serializationModel="Studio.02.02.00">
+<objects serializationModel="Studio.02.03.00">
 	<object class="ParameterPreset" id="{b0214a4f-eb5f-4495-8836-a1f98471f439}">
 		<property name="name">
 			<value>yawDiff</value>

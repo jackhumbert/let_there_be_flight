@@ -5,13 +5,14 @@
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/CarBaseObject.hpp>
 #include <RED4ext/Scripting/Natives/vehiclePhysics.hpp>
+#include <RED4ext/Scripting/Natives/vehicleEffects.hpp>
 
 /// @hash 2932936864
 // void __fastcall WheelEffectUpdate(RED4ext::vehicle::Effects *effects, unsigned int wheelIndex, RED4ext::vehicle::Effects::Unk40 *unk40, float deltaTime);
 
 // doesn't affect audio bug
 // make tire always skidding
-REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 2932936864, WheelEffectUpdate, RED4ext::vehicle::Effects *effects, unsigned int wheelIndex,
+REGISTER_FLIGHT_HOOK_HASH(void, 2932936864, WheelEffectUpdate, RED4ext::vehicle::Effects *effects, unsigned int wheelIndex,
                      RED4ext::vehicle::Effects::Unk40 *unk40, float deltaTime) {
   auto fc = FlightComponent::Get(effects->vehicle);
   if (fc && fc->active) {

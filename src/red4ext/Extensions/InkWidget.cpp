@@ -11,7 +11,7 @@
 struct InkWidget : RED4ext::ink::Widget {
   void CreateEffect(RED4ext::CName typeName, RED4ext::CName effectName) {
     // could be script class instead
-    auto effect = reinterpret_cast<RED4ext::ink::IEffect*>(RED4ext::CRTTISystem::Get()->GetClass(typeName)->CreateInstance());
+    auto effect = reinterpret_cast<RED4ext::ink::IEffect*>(RED4ext::CRTTISystem::Get()->GetClass(typeName)->CreateInstance(true));
     effect->effectName = effectName;
     this->effects.EmplaceBack(RED4ext::Handle<RED4ext::ink::IEffect>(effect));
   }

@@ -33,46 +33,46 @@ namespace FlightWeapons {
 void __fastcall AddWeapons(RED4ext::vehicle::BaseObject *vehicle) {
   auto rtti = RED4ext::CRTTISystem::Get();
   {
-    auto gas = (RED4ext::game::AttachmentSlots *)rtti->GetClass("gameAttachmentSlots")->CreateInstance();
+    auto gas = (RED4ext::game::AttachmentSlots *)rtti->GetClass("gameAttachmentSlots")->CreateInstance(true);
     gas->name = "AttachmentSlots";
     {
-      auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->CreateInstance();
+      auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->CreateInstance(true);
       gapso->slotID = RED4ext::TweakDBID("AttachmentSlots.PanzerCannon");
       gapso->paramName = "renderPlane";
       gas->animParams.EmplaceBack(*gapso);
     }
     {
-      auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->CreateInstance();
+      auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->CreateInstance(true);
       gapso->slotID = RED4ext::TweakDBID("AttachmentSlots.WeaponLeft");
       gapso->paramName = "renderPlane";
       gas->animParams.EmplaceBack(*gapso);
     }
     {
-      auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->CreateInstance();
+      auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->CreateInstance(true);
       gapso->slotID = RED4ext::TweakDBID("AttachmentSlots.WeaponRight");
       gapso->paramName = "renderPlane";
       gas->animParams.EmplaceBack(*gapso);
     }
     {
-      auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->CreateInstance();
+      auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->CreateInstance(true);
       gapso->slotID = RED4ext::TweakDBID("AttachmentSlots.PanamVehicleTurret");
       gapso->paramName = "renderPlane";
       gas->animParams.EmplaceBack(*gapso);
     }
     {
-      auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->CreateInstance();
+      auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->CreateInstance(true);
       gapso->slotID = RED4ext::TweakDBID("AttachmentSlots.PanzerHomingMissiles");
       gapso->paramName = "renderPlane";
       gas->animParams.EmplaceBack(*gapso);
     }
     {
-      auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->CreateInstance();
+      auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->CreateInstance(true);
       gapso->slotID = RED4ext::TweakDBID("AttachmentSlots.PanzerCounterMeasuresLeft");
       gapso->paramName = "renderPlane";
       gas->animParams.EmplaceBack(*gapso);
     }
     {
-      auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->CreateInstance();
+      auto gapso = (RED4ext::game::AnimParamSlotsOption *)rtti->GetClass("gameAnimParamSlotsOption")->CreateInstance(true);
       gapso->slotID = RED4ext::TweakDBID("AttachmentSlots.PanzerCounterMeasuresRight");
       gapso->paramName = "renderPlane";
       gas->animParams.EmplaceBack(*gapso);
@@ -142,7 +142,7 @@ void __fastcall AddWeapons(RED4ext::vehicle::BaseObject *vehicle) {
 void __fastcall AddWeaponSlots(RED4ext::ent::SlotComponent *sc) {
   auto rtti = RED4ext::CRTTISystem::Get();
   {
-    auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
+    auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
     slot->boneName = "swingarm_front_left";
     slot->relativePosition.X -= 0.25;
     slot->relativePosition.Y += 0.75;
@@ -151,7 +151,7 @@ void __fastcall AddWeaponSlots(RED4ext::ent::SlotComponent *sc) {
     sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
   }
   {
-    auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
+    auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
     slot->boneName = "swingarm_front_right";
     slot->relativePosition.X += 0.25;
     slot->relativePosition.Y += 0.75;
@@ -160,7 +160,7 @@ void __fastcall AddWeaponSlots(RED4ext::ent::SlotComponent *sc) {
     sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
   }
   {
-    auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
+    auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
     slot->boneName = "swingarm_front_right";
     slot->relativePosition.X += 0.25;
     slot->relativePosition.Y += 0.75;
@@ -169,7 +169,7 @@ void __fastcall AddWeaponSlots(RED4ext::ent::SlotComponent *sc) {
     sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
   }
   {
-    auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
+    auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
     slot->boneName = "swingarm_front_left";
     slot->relativePosition.X -= 0.25;
     // slot->relativePosition.Y += 0.75;
@@ -178,7 +178,7 @@ void __fastcall AddWeaponSlots(RED4ext::ent::SlotComponent *sc) {
     sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
   }
   {
-    auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
+    auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
     slot->boneName = "swingarm_front_left";
     slot->relativePosition.X -= 0.25;
     // slot->relativePosition.Y += 0.75;
@@ -187,7 +187,7 @@ void __fastcall AddWeaponSlots(RED4ext::ent::SlotComponent *sc) {
     sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
   }
   {
-    auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
+    auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
     slot->boneName = "swingarm_front_right";
     slot->relativePosition.X += 0.25;
     // slot->relativePosition.Y += 0.75;
@@ -196,7 +196,7 @@ void __fastcall AddWeaponSlots(RED4ext::ent::SlotComponent *sc) {
     sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
   }
   {
-    auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
+    auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
     slot->boneName = "swingarm_front_right";
     slot->relativePosition.X += 0.25;
     // slot->relativePosition.Y += 0.75;

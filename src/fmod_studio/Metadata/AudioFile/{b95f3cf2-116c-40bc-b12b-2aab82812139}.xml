@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<objects serializationModel="Studio.02.02.00">
+<objects serializationModel="Studio.02.03.00">
 	<object class="AudioFile" id="{b95f3cf2-116c-40bc-b12b-2aab82812139}">
 		<property name="assetPath">
 			<value>turntable-slow.wav</value>

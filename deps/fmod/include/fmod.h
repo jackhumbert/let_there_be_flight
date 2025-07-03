@@ -1,12 +1,12 @@
 /* ======================================================================================== */
 /* FMOD Core API - C header file.                                                           */
-/* Copyright (c), Firelight Technologies Pty, Ltd. 2004-2021.                               */
+/* Copyright (c), Firelight Technologies Pty, Ltd. 2004-2025.                               */
 /*                                                                                          */
 /* Use this header in conjunction with fmod_common.h (which contains all the constants /    */
 /* callbacks) to develop using the C interface                                              */
 /*                                                                                          */
 /* For more detail visit:                                                                   */
-/* https://fmod.com/resources/documentation-api?version=2.0&page=core-api.html              */
+/* https://fmod.com/docs/2.03/api/core-api.html                                             */
 /* ======================================================================================== */
 
 #ifndef _FMOD_H
@@ -98,7 +98,7 @@ FMOD_RESULT F_API FMOD_System_GetDefaultMixMatrix       (FMOD_SYSTEM *system, FM
 FMOD_RESULT F_API FMOD_System_GetSpeakerModeChannels    (FMOD_SYSTEM *system, FMOD_SPEAKERMODE mode, int *channels);
 
 /* System information functions. */
-FMOD_RESULT F_API FMOD_System_GetVersion                (FMOD_SYSTEM *system, unsigned int *version);
+FMOD_RESULT F_API FMOD_System_GetVersion                (FMOD_SYSTEM *system, unsigned int *version, unsigned int *buildnumber);
 FMOD_RESULT F_API FMOD_System_GetOutputHandle           (FMOD_SYSTEM *system, void **handle);
 FMOD_RESULT F_API FMOD_System_GetChannelsPlaying        (FMOD_SYSTEM *system, int *channels, int *realchannels);
 FMOD_RESULT F_API FMOD_System_GetCPUUsage               (FMOD_SYSTEM *system, FMOD_CPU_USAGE *usage);
@@ -535,6 +535,7 @@ FMOD_RESULT F_API FMOD_DSP_SetChannelFormat             (FMOD_DSP *dsp, FMOD_CHA
 FMOD_RESULT F_API FMOD_DSP_GetChannelFormat             (FMOD_DSP *dsp, FMOD_CHANNELMASK *channelmask, int *numchannels, FMOD_SPEAKERMODE *source_speakermode);
 FMOD_RESULT F_API FMOD_DSP_GetOutputChannelFormat       (FMOD_DSP *dsp, FMOD_CHANNELMASK inmask, int inchannels, FMOD_SPEAKERMODE inspeakermode, FMOD_CHANNELMASK *outmask, int *outchannels, FMOD_SPEAKERMODE *outspeakermode);
 FMOD_RESULT F_API FMOD_DSP_Reset                        (FMOD_DSP *dsp);
+FMOD_RESULT F_API FMOD_DSP_SetCallback                  (FMOD_DSP *dsp, FMOD_DSP_CALLBACK callback);
 
 /*
      DSP parameter control.

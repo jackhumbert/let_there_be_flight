@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<objects serializationModel="Studio.02.02.00">
+<objects serializationModel="Studio.02.03.00">
 	<object class="DataFile" id="{76e37d96-2043-4493-b502-f364d1e4b977}">
 		<property name="assetPath">
 			<value>audiogaming_audiomotors_demo_engine.agp</value>

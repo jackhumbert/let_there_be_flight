@@ -1,13 +1,13 @@
 /* ======================================================================================== */
 /* FMOD Core API - DSP header file.                                                         */
-/* Copyright (c), Firelight Technologies Pty, Ltd. 2004-2021.                               */
+/* Copyright (c), Firelight Technologies Pty, Ltd. 2004-2025.                               */
 /*                                                                                          */
 /* Use this header if you are wanting to develop your own DSP plugin to use with FMODs      */
 /* dsp system.  With this header you can make your own DSP plugin that FMOD can             */
 /* register and use.  See the documentation and examples on how to make a working plugin.   */
 /*                                                                                          */
 /* For more detail visit:                                                                   */
-/* https://fmod.com/resources/documentation-api?version=2.0&page=plugin-api-dsp.html        */
+/* https://fmod.com/docs/2.03/api/plugin-api-dsp.html                                       */
 /* =========================================================================================*/
 
 using System;
@@ -20,10 +20,46 @@ namespace FMOD
     public struct DSP_BUFFER_ARRAY
     {
         public int              numbuffers;
-        public int[]            buffernumchannels;
-        public CHANNELMASK[]    bufferchannelmask;
-        public IntPtr[]         buffers;
+        public IntPtr           buffernumchannels;
+        public IntPtr           bufferchannelmask;
+        public IntPtr           buffers;
         public SPEAKERMODE      speakermode;
+
+        /*
+            These properties take advantage of the fact that numbuffers is always zero or one
+        */
+
+        public int numchannels
+        {
+            get 
+            {
+                if (buffernumchannels != IntPtr.Zero && numbuffers != 0)
+                    return Marshal.ReadInt32(buffernumchannels);
+
+                return 0;
+            }
+            set
+            {
+                if (buffernumchannels != IntPtr.Zero && numbuffers != 0)
+                    Marshal.WriteInt32(buffernumchannels, value);
+            }
+        }
+
+        public IntPtr buffer
+        {
+            get
+            {
+                if (buffers != IntPtr.Zero && numbuffers != 0)
+                    return Marshal.ReadIntPtr(buffers);
+
+                return IntPtr.Zero;
+            }
+            set
+            {
+                if (buffers != IntPtr.Zero && numbuffers != 0)
+                    Marshal.WriteIntPtr(buffers, value);
+            }
+        }
     }
 
     public enum DSP_PROCESS_OPERATION
@@ -49,11 +85,11 @@ namespace FMOD
     /*
         DSP callbacks
     */
-    public delegate RESULT DSP_CREATECALLBACK                   (ref DSP_STATE dsp_state);
-    public delegate RESULT DSP_RELEASECALLBACK                  (ref DSP_STATE dsp_state);
-    public delegate RESULT DSP_RESETCALLBACK                    (ref DSP_STATE dsp_state);
-    public delegate RESULT DSP_SETPOSITIONCALLBACK              (ref DSP_STATE dsp_state, uint pos);
-    public delegate RESULT DSP_READCALLBACK                     (ref DSP_STATE dsp_state, IntPtr inbuffer, IntPtr outbuffer, uint length, int inchannels, ref int outchannels);
+    public delegate RESULT DSP_CREATE_CALLBACK                  (ref DSP_STATE dsp_state);
+    public delegate RESULT DSP_RELEASE_CALLBACK                 (ref DSP_STATE dsp_state);
+    public delegate RESULT DSP_RESET_CALLBACK                   (ref DSP_STATE dsp_state);
+    public delegate RESULT DSP_SETPOSITION_CALLBACK             (ref DSP_STATE dsp_state, uint pos);
+    public delegate RESULT DSP_READ_CALLBACK                    (ref DSP_STATE dsp_state, IntPtr inbuffer, IntPtr outbuffer, uint length, int inchannels, ref int outchannels);
     public delegate RESULT DSP_SHOULDIPROCESS_CALLBACK          (ref DSP_STATE dsp_state, bool inputsidle, uint length, CHANNELMASK inmask, int inchannels, SPEAKERMODE speakermode);
     public delegate RESULT DSP_PROCESS_CALLBACK                 (ref DSP_STATE dsp_state, uint length, ref DSP_BUFFER_ARRAY inbufferarray, ref DSP_BUFFER_ARRAY outbufferarray, bool inputsidle, DSP_PROCESS_OPERATION op);
     public delegate RESULT DSP_SETPARAM_FLOAT_CALLBACK          (ref DSP_STATE dsp_state, int index, float value);
@@ -75,7 +111,7 @@ namespace FMOD
     public delegate IntPtr DSP_ALLOC_FUNC                         (uint size, MEMORY_TYPE type, IntPtr sourcestr);
     public delegate IntPtr DSP_REALLOC_FUNC                       (IntPtr ptr, uint size, MEMORY_TYPE type, IntPtr sourcestr);
     public delegate void   DSP_FREE_FUNC                          (IntPtr ptr, MEMORY_TYPE type, IntPtr sourcestr);
-    public delegate void   DSP_LOG_FUNC                           (DEBUG_FLAGS level, IntPtr file, int line, IntPtr function, IntPtr format);
+    public delegate void   DSP_LOG_FUNC                           (DEBUG_FLAGS level, IntPtr file, int line, IntPtr function, IntPtr str);
     public delegate RESULT DSP_GETSAMPLERATE_FUNC                 (ref DSP_STATE dsp_state, ref int rate);
     public delegate RESULT DSP_GETBLOCKSIZE_FUNC                  (ref DSP_STATE dsp_state, ref uint blocksize);
     public delegate RESULT DSP_GETSPEAKERMODE_FUNC                (ref DSP_STATE dsp_state, ref int speakermode_mixer, ref int speakermode_output);
@@ -109,15 +145,12 @@ namespace FMOD
         PARAMEQ,
         PITCHSHIFT,
         CHORUS,
-        VSTPLUGIN,
-        WINAMPPLUGIN,
         ITECHO,
         COMPRESSOR,
         SFXREVERB,
         LOWPASS_SIMPLE,
         DELAY,
         TREMOLO,
-        LADSPAPLUGIN,
         SEND,
         RETURN,
         HIGHPASS_SIMPLE,
@@ -125,12 +158,12 @@ namespace FMOD
         THREE_EQ,
         FFT,
         LOUDNESS_METER,
-        ENVELOPEFOLLOWER,
         CONVOLUTIONREVERB,
         CHANNELMIX,
         TRANSCEIVER,
         OBJECTPAN,
         MULTIBAND_EQ,
+        MULTIBAND_DYNAMICS,
         MAX
     }
 
@@ -232,7 +265,8 @@ namespace FMOD
         DSP_PARAMETER_DATA_TYPE_SIDECHAIN =                 -3,
         DSP_PARAMETER_DATA_TYPE_FFT =                       -4,
         DSP_PARAMETER_DATA_TYPE_3DATTRIBUTES_MULTI =        -5,
-        DSP_PARAMETER_DATA_TYPE_ATTENUATION_RANGE =         -6
+        DSP_PARAMETER_DATA_TYPE_ATTENUATION_RANGE =         -6,
+        DSP_PARAMETER_DATA_TYPE_DYNAMIC_RESPONSE =          -7
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -308,6 +342,14 @@ namespace FMOD
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public struct DSP_PARAMETER_DYNAMIC_RESPONSE
+    {
+        public int numchannels;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
+        public float[] rms;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public struct DSP_LOUDNESS_METER_INFO_TYPE
     {
         public float momentaryloudness;
@@ -344,12 +386,12 @@ namespace FMOD
         public uint                           version;
         public int                            numinputbuffers;
         public int                            numoutputbuffers;
-        public DSP_CREATECALLBACK             create;
-        public DSP_RELEASECALLBACK            release;
-        public DSP_RESETCALLBACK              reset;
-        public DSP_READCALLBACK               read;
+        public DSP_CREATE_CALLBACK            create;
+        public DSP_RELEASE_CALLBACK           release;
+        public DSP_RESET_CALLBACK             reset;
+        public DSP_READ_CALLBACK              read;
         public DSP_PROCESS_CALLBACK           process;
-        public DSP_SETPOSITIONCALLBACK        setposition;
+        public DSP_SETPOSITION_CALLBACK       setposition;
 
         public int                            numparameters;
         public IntPtr                         paramdesc;
@@ -395,13 +437,21 @@ namespace FMOD
         public DSP_FREE_FUNC                   free;
         public DSP_GETSAMPLERATE_FUNC          getsamplerate;
         public DSP_GETBLOCKSIZE_FUNC           getblocksize;
-        public IntPtr                          dft;
-        public IntPtr                          pan;
+        public IntPtr                          dft_internal;
+        public IntPtr                          pan_internal;
         public DSP_GETSPEAKERMODE_FUNC         getspeakermode;
         public DSP_GETCLOCK_FUNC               getclock;
         public DSP_GETLISTENERATTRIBUTES_FUNC  getlistenerattributes;
         public DSP_LOG_FUNC                    log;
         public DSP_GETUSERDATA_FUNC            getuserdata;
+        public DSP_STATE_DFT_FUNCTIONS dft
+        {
+            get { return Marshal.PtrToStructure<FMOD.DSP_STATE_DFT_FUNCTIONS>(dft_internal); }
+        }
+        public DSP_STATE_PAN_FUNCTIONS pan
+        {
+            get { return Marshal.PtrToStructure<FMOD.DSP_STATE_PAN_FUNCTIONS>(pan_internal); }
+        }
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -413,8 +463,13 @@ namespace FMOD
         public int        source_speakermode;
         public IntPtr     sidechaindata;
         public int        sidechainchannels;
-        public IntPtr     functions;
+        private IntPtr    functions_internal;
         public int        systemobject;
+
+        public DSP_STATE_FUNCTIONS functions
+        {
+            get { return Marshal.PtrToStructure<FMOD.DSP_STATE_FUNCTIONS>(functions_internal); }
+        }
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -466,7 +521,15 @@ namespace FMOD
         DELAY,
         FEEDBACK,
         DRYLEVEL,
-        WETLEVEL
+        WETLEVEL,
+        DELAYCHANGEMODE
+    }
+
+    public enum DSP_ECHO_DELAYCHANGEMODE_TYPE : int
+    {
+        FADE,
+        LERP,
+        NONE
     }
 
     public enum DSP_FADER : int
@@ -581,6 +644,49 @@ namespace FMOD
         BANDPASS,
         NOTCH,
         ALLPASS,
+        LOWPASS_6DB,
+        HIGHPASS_6DB,
+    }
+
+    public enum DSP_MULTIBAND_DYNAMICS : int
+    {
+        LOWER_FREQUENCY,
+        UPPER_FREQUENCY,
+        LINKED,
+        USE_SIDECHAIN,
+        A_MODE,
+        A_GAIN,
+        A_THRESHOLD,
+        A_RATIO,
+        A_ATTACK,
+        A_RELEASE,
+        A_GAIN_MAKEUP,
+        A_RESPONSE_DATA,
+        B_MODE,
+        B_GAIN,
+        B_THRESHOLD,
+        B_RATIO,
+        B_ATTACK,
+        B_RELEASE,
+        B_GAIN_MAKEUP,
+        B_RESPONSE_DATA,
+        C_MODE,
+        C_GAIN,
+        C_THRESHOLD,
+        C_RATIO,
+        C_ATTACK,
+        C_RELEASE,
+        C_GAIN_MAKEUP,
+        C_RESPONSE_DATA,
+    }
+
+    public enum DSP_MULTIBAND_DYNAMICS_MODE_TYPE : int
+    {
+        DISABLED,
+        COMPRESS_UP,
+        COMPRESS_DOWN,
+        EXPAND_UP,
+        EXPAND_DOWN
     }
 
     public enum DSP_PITCHSHIFT : int
@@ -731,7 +837,7 @@ namespace FMOD
         CROSSOVERSLOPE
     }
 
-    public enum DSP_FFT_WINDOW : int
+    public enum DSP_FFT_WINDOW_TYPE : int
     {
         RECT,
         TRIANGLE,
@@ -741,12 +847,24 @@ namespace FMOD
         BLACKMANHARRIS
     }
 
+    public enum DSP_FFT_DOWNMIX_TYPE : int
+    {
+        NONE,
+        MONO
+    }
+
     public enum DSP_FFT : int
     {
         WINDOWSIZE,
-        WINDOWTYPE,
+        WINDOW,
+        BAND_START_FREQ,
+        BAND_STOP_FREQ,
         SPECTRUMDATA,
-        DOMINANT_FREQ
+        RMS,
+        SPECTRAL_CENTROID,
+        IMMEDIATE_MODE,
+        DOWNMIX,
+        CHANNEL
     }
 
 
@@ -765,14 +883,6 @@ namespace FMOD
         RESET_ALL = -1,
         PAUSED = 0,
         ANALYZING = 1
-    }
-
-    public enum DSP_ENVELOPEFOLLOWER : int
-    {
-        ATTACK,
-        RELEASE,
-        ENVELOPE,
-        USESIDECHAIN
     }
 
     public enum DSP_CONVOLUTION_REVERB : int

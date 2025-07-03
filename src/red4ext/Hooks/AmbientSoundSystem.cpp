@@ -1,23 +1,9 @@
 #include "Utils/FlightModule.hpp"
 #include <RED4ext/RED4ext.hpp>
+#include <RED4ext/Relocation.hpp>
 #include <RED4ext/Scripting/Natives/Generated/FixedPoint.hpp>
 
 using namespace RED4ext;
-
-class IHookable {
-public:
-  template<typename R, uint32_t Hash, typename... Args>
-  inline R Hook(Args... args) {
-    static auto func = UniversalRelocFunc<R (*)(IHookable *, Args...)>(Hash);
-    return func(this, std::forward<Args>(args)...);
-  }
-
-  template<typename R, uint32_t Hash, typename... Args>
-  inline R Hook(Args... args) const {
-    static auto func = UniversalRelocFunc<R (*)(IHookable const *, Args...)>(Hash);
-    return func(this, std::forward<Args>(args)...);
-  }
-};
 
 // template<typename R, uint32_t Hash, typename... Args>
 // class HookBase : UniversalRelocBase {
@@ -92,7 +78,7 @@ struct AmbientPaletteBrush : IHookable {
   //   return Hook<void, 2200966535>(this);
   // }
   void ComputeMaxAttenuation() const { 
-    return Hook<void, 2200966535>(this);
+    return StaticHook<void, 2200966535>(this);
   }
 };
 
@@ -161,7 +147,7 @@ struct AmbientPalette : IHookable {
   DynArray<AmbientPaletteBrushCategory const *> * brushCategories;
 
   AmbientPaletteBrush * GetBrush(CName name) const {
-    auto result = Hook<AmbientPaletteBrush *, 3218282947>(name);
+    auto result = StaticHook<AmbientPaletteBrush *, 3218282947>(this, name);
     return result;
   }
 
@@ -194,11 +180,11 @@ struct AmbientPaletteBucket : IHookable {
   DynArray<void *> unk28;
 
   bool Update(double a1, Vector4 const & a2, float a3, DynArray<AmbientPaletteTag> const & a4) {
-    return Hook<bool, 4016842136>(a1, a2, a3, a4);
+    return StaticHook<bool, 4016842136>(this, a1, a2, a3, a4);
   }
   
   void CleanUpInvalidTags(DynArray<AmbientPaletteTag> const & tags) {
-    return Hook<void, 2373657855>(tags);
+    return StaticHook<void, 2373657855>(this, tags);
   }
 };
 
@@ -216,7 +202,7 @@ struct AmbientPaletteSpace : IHookable {
   uint64_t unk60;
 
   void HandleBucketSoundEmission(AmbientPaletteBucket & bucket, AmbientPaletteBrush const * brush, CName brushName, DynArray<AmbientPaletteTag> const & tags) {
-    Hook<void, 2926132544>(bucket, brush, brushName, tags);
+    StaticHook<void, 2926132544>(this, bucket, brush, brushName, tags);
   }
 };
 

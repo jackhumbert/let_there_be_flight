@@ -6,13 +6,17 @@
 #include <RedLib.hpp>
 
 struct FlightController : RED4ext::IScriptable {
-  static FlightController *GetInstance();
+  static RED4ext::Handle<FlightController> GetInstance();
 
   bool enabled;
   bool active;
   int32_t mode;
 
   // virtual bool CanBeDestructed() override { return false; };
+  
+  virtual ~FlightController() override {
+    return;
+  }
   
   RTTI_IMPL_TYPEINFO(FlightController);
   RTTI_IMPL_ALLOCATOR();

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<objects serializationModel="Studio.02.02.00">
+<objects serializationModel="Studio.02.03.00">
 	<object class="ParameterPreset" id="{3652cd09-28a6-4bdd-8507-97c92f5e2d96}">
 		<property name="name">
 			<value>pitchDiff</value>

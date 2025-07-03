@@ -1,12 +1,12 @@
 /* ======================================================================================== */
 /* FMOD Studio API - Common C/C++ header file.                                              */
-/* Copyright (c), Firelight Technologies Pty, Ltd. 2004-2021.                               */
+/* Copyright (c), Firelight Technologies Pty, Ltd. 2004-2025.                               */
 /*                                                                                          */
 /* This header defines common enumerations, structs and callbacks that are shared between   */
 /* the C and C++ interfaces.                                                                */
 /*                                                                                          */
 /* For more detail visit:                                                                   */
-/* https://fmod.com/resources/documentation-api?version=2.0&page=page=studio-api.html       */
+/* https://fmod.com/docs/2.03/api/studio-api.html                                           */
 /* ======================================================================================== */
 #ifndef FMOD_STUDIO_COMMON_H
 #define FMOD_STUDIO_COMMON_H
@@ -327,10 +327,10 @@ typedef struct FMOD_STUDIO_MEMORY_USAGE
 /*
     FMOD Studio callbacks.
 */
-typedef FMOD_RESULT (F_CALLBACK *FMOD_STUDIO_SYSTEM_CALLBACK)                           (FMOD_STUDIO_SYSTEM *system, FMOD_STUDIO_SYSTEM_CALLBACK_TYPE type, void *commanddata, void *userdata);
-typedef FMOD_RESULT (F_CALLBACK *FMOD_STUDIO_EVENT_CALLBACK)                            (FMOD_STUDIO_EVENT_CALLBACK_TYPE type, FMOD_STUDIO_EVENTINSTANCE *event, void *parameters);
-typedef FMOD_RESULT (F_CALLBACK *FMOD_STUDIO_COMMANDREPLAY_FRAME_CALLBACK)              (FMOD_STUDIO_COMMANDREPLAY *replay, int commandindex, float currenttime, void *userdata);
-typedef FMOD_RESULT (F_CALLBACK *FMOD_STUDIO_COMMANDREPLAY_LOAD_BANK_CALLBACK)          (FMOD_STUDIO_COMMANDREPLAY *replay, int commandindex, const FMOD_GUID *bankguid, const char *bankfilename, FMOD_STUDIO_LOAD_BANK_FLAGS flags, FMOD_STUDIO_BANK **bank, void *userdata);
-typedef FMOD_RESULT (F_CALLBACK *FMOD_STUDIO_COMMANDREPLAY_CREATE_INSTANCE_CALLBACK)    (FMOD_STUDIO_COMMANDREPLAY *replay, int commandindex, FMOD_STUDIO_EVENTDESCRIPTION *eventdescription, FMOD_STUDIO_EVENTINSTANCE **instance, void *userdata);
+typedef FMOD_RESULT (F_CALL *FMOD_STUDIO_SYSTEM_CALLBACK)                           (FMOD_STUDIO_SYSTEM *system, FMOD_STUDIO_SYSTEM_CALLBACK_TYPE type, void *commanddata, void *userdata);
+typedef FMOD_RESULT (F_CALL *FMOD_STUDIO_EVENT_CALLBACK)                            (FMOD_STUDIO_EVENT_CALLBACK_TYPE type, FMOD_STUDIO_EVENTINSTANCE *event, void *parameters);
+typedef FMOD_RESULT (F_CALL *FMOD_STUDIO_COMMANDREPLAY_FRAME_CALLBACK)              (FMOD_STUDIO_COMMANDREPLAY *replay, int commandindex, float currenttime, void *userdata);
+typedef FMOD_RESULT (F_CALL *FMOD_STUDIO_COMMANDREPLAY_LOAD_BANK_CALLBACK)          (FMOD_STUDIO_COMMANDREPLAY *replay, int commandindex, const FMOD_GUID *bankguid, const char *bankfilename, FMOD_STUDIO_LOAD_BANK_FLAGS flags, FMOD_STUDIO_BANK **bank, void *userdata);
+typedef FMOD_RESULT (F_CALL *FMOD_STUDIO_COMMANDREPLAY_CREATE_INSTANCE_CALLBACK)    (FMOD_STUDIO_COMMANDREPLAY *replay, int commandindex, FMOD_STUDIO_EVENTDESCRIPTION *eventdescription, FMOD_STUDIO_EVENTINSTANCE **instance, void *userdata);
 
 #endif // FMOD_STUDIO_COMMON_H

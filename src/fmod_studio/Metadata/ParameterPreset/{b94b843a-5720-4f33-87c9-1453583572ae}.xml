@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<objects serializationModel="Studio.02.02.00">
+<objects serializationModel="Studio.02.03.00">
 	<object class="ParameterPreset" id="{b94b843a-5720-4f33-87c9-1453583572ae}">
 		<property name="name">
 			<value>water</value>
@@ -18,11 +18,22 @@
 		<property name="initialValue">
 			<value>0</value>
 		</property>
-		<property name="seekSpeed">
-			<value>3.4000000953674316</value>
-		</property>
 		<property name="isExposedRecursively">
 			<value>false</value>
+		</property>
+		<relationship name="modulators">
+			<destination>{37ad5b68-97ec-46df-8cb6-b8aa4274dea7}</destination>
+		</relationship>
+	</object>
+	<object class="SeekModulator" id="{37ad5b68-97ec-46df-8cb6-b8aa4274dea7}">
+		<property name="nameOfPropertyBeingModulated">
+			<value>cursorPosition</value>
+		</property>
+		<property name="clockSource">
+			<value>1</value>
+		</property>
+		<property name="speedAscending">
+			<value>3.4000000953674316</value>
 		</property>
 	</object>
 </objects>

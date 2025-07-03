@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<objects serializationModel="Studio.02.02.00">
+<objects serializationModel="Studio.02.03.00">
 	<object class="ParameterPreset" id="{56041d85-f2d7-4b92-8e05-aca5923a6798}">
 		<property name="name">
 			<value>brake</value>

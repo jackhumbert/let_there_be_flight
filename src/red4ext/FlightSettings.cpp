@@ -12,7 +12,7 @@ RED4ext::Handle<FlightSettings> handle;
 RED4ext::Handle<FlightSettings> FlightSettings::GetInstance() {
   if (!handle.instance) {
     spdlog::info("[RED4ext] New FlightSettings Instance");
-    auto instance = reinterpret_cast<FlightSettings *>(RED4ext::CRTTISystem::Get()->GetClass("FlightSettings")->CreateInstance());
+    auto instance = reinterpret_cast<FlightSettings *>(RED4ext::CRTTISystem::Get()->GetClass("FlightSettings")->CreateInstance(true));
     handle = RED4ext::Handle<FlightSettings>(instance);
   }
   handle.refCount->IncRef();

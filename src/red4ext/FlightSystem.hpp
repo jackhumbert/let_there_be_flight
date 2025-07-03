@@ -5,6 +5,7 @@
 #include <RED4ext/Scripting/Natives/gameIGameSystem.hpp>
 #include "IFlightSystem.hpp"
 #include <RED4ext/Scripting/Natives/Generated/ent/IPlacedComponent.hpp>
+#include <RED4ext/SharedSpinLock.hpp>
 #include "Audio/FlightAudio.hpp"
 #include "Flight/Component.hpp"
 
@@ -37,15 +38,15 @@ public:
   //static FlightSystem *GetInstance();
   static RED4ext::Handle<FlightSystem> GetInstance();
 
-  virtual void RegisterComponent(RED4ext::WeakHandle<FlightComponent>) override;
-  virtual void UnregisterComponent(RED4ext::WeakHandle<FlightComponent>) override;
+  virtual void RegisterComponent(const RED4ext::Handle<FlightComponent>) override;
+  virtual void UnregisterComponent(const RED4ext::Handle<FlightComponent>) override;
 
   int32_t cameraIndex = 0;
   RED4ext::WeakHandle<RED4ext::ent::IPlacedComponent> soundListener;
   RED4ext::DynArray<RED4ext::WeakHandle<RED4ext::IScriptable>> components;
   RED4ext::Handle<FlightAudio> audio;
   RED4ext::DynArray<RED4ext::WeakHandle<FlightComponent>> flightComponents;
-  RED4ext::SharedMutex flightComponentsMutex;
+  RED4ext::SharedSpinLock flightComponentsMutex;
   RED4ext::WeakHandle<FlightComponent> playerComponent;
 
 private:

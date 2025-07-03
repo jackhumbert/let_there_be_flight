@@ -8,7 +8,7 @@ void FlightComponent::ChaseTarget(WeakHandle<game::Object> target) {
   ////spdlog::info("[FlightComponent] ChaseTarget");
   //action::ActionBase * action;
   //auto vehicle = (vehicle::BaseObject *)this->entity;
-  //vehicle->UnsetPhysicsStates();
+  //vehicle->ForceEnablePhysics();
   //vehicle->SetPhysicsState(vehicle::PhysicsState::Chase, false);
   //vehicle->CreateAction(&action, action::Type::DriveFollowTarget);
   //vehicle->unk615 = true;
@@ -43,7 +43,7 @@ void FlightComponent::OnUpdate(float deltaTime) {
       helper.UpdateProxyCache();
       helper.Unlock();
     }*/
-    vehicle->UnsetPhysicsStates();
+    vehicle->ForceEnablePhysics();
     StackArgs_t args;
     float delta = deltaTime;
     args.emplace_back(CRTTISystem::Get()->GetType("Float"), &delta);

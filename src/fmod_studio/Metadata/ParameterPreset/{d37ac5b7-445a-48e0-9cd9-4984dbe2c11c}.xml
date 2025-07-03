@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<objects serializationModel="Studio.02.02.00">
+<objects serializationModel="Studio.02.03.00">
 	<object class="ParameterPreset" id="{d37ac5b7-445a-48e0-9cd9-4984dbe2c11c}">
 		<property name="name">
 			<value>scrape</value>
@@ -15,10 +15,21 @@
 		<property name="initialValue">
 			<value>0</value>
 		</property>
-		<property name="seekSpeedDescending">
+		<relationship name="modulators">
+			<destination>{87f7d805-189b-4768-98ca-6183bcf947f8}</destination>
+		</relationship>
+	</object>
+	<object class="SeekModulator" id="{87f7d805-189b-4768-98ca-6183bcf947f8}">
+		<property name="nameOfPropertyBeingModulated">
+			<value>cursorPosition</value>
+		</property>
+		<property name="clockSource">
+			<value>1</value>
+		</property>
+		<property name="speedDescending">
 			<value>4.5999999046325684</value>
 		</property>
-		<property name="seekSpeedAsymmetric">
+		<property name="asymmetric">
 			<value>true</value>
 		</property>
 	</object>

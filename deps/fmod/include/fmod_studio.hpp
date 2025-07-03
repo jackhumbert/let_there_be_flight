@@ -1,12 +1,12 @@
 /* ======================================================================================== */
 /* FMOD Studio API - C++ header file.                                                       */
-/* Copyright (c), Firelight Technologies Pty, Ltd. 2004-2021.                               */
+/* Copyright (c), Firelight Technologies Pty, Ltd. 2004-2025.                               */
 /*                                                                                          */
 /* Use this header in conjunction with fmod_studio_common.h (which contains all the         */
 /* constants / callbacks) to develop using the C++ language.                                */
 /*                                                                                          */
 /* For more detail visit:                                                                   */
-/* https://fmod.com/resources/documentation-api?version=2.0&page=page=studio-api.html       */
+/* https://fmod.com/docs/2.03/api/studio-api.html                                           */
 /* ======================================================================================== */
 #ifndef FMOD_STUDIO_HPP
 #define FMOD_STUDIO_HPP
@@ -194,6 +194,7 @@ namespace Studio
 
         // Property access
         FMOD_RESULT F_API getDescription(EventDescription **description) const;
+        FMOD_RESULT F_API getSystem(System **system) const;
 
         // Playback control
         FMOD_RESULT F_API getVolume(float *volume, float *finalvolume = 0) const;

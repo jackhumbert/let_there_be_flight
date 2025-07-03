@@ -1,12 +1,12 @@
 /* ==============================================================================================  */
 /* FMOD Core / Studio API - Error string header file.                                              */
-/* Copyright (c), Firelight Technologies Pty, Ltd. 2004-2021.                                      */
+/* Copyright (c), Firelight Technologies Pty, Ltd. 2004-2025.                                      */
 /*                                                                                                 */
 /* Use this header if you want to store or display a string version / english explanation          */
 /* of the FMOD error codes.                                                                        */
 /*                                                                                                 */
 /* For more detail visit:                                                                          */
-/* https://fmod.com/resources/documentation-api?version=2.0&page=core-api-common.html#fmod_result  */
+/* https://fmod.com/docs/2.03/api/core-api-common.html#fmod_result                                 */
 /* =============================================================================================== */
 
 namespace FMOD
@@ -45,7 +45,7 @@ namespace FMOD
                 case FMOD.RESULT.ERR_HTTP_TIMEOUT:              return "The HTTP request timed out.";
                 case FMOD.RESULT.ERR_INITIALIZATION:            return "FMOD was not initialized correctly to support this function.";
                 case FMOD.RESULT.ERR_INITIALIZED:               return "Cannot call this command after System::init.";
-                case FMOD.RESULT.ERR_INTERNAL:                  return "An error occurred that wasn't supposed to.  Contact support.";
+                case FMOD.RESULT.ERR_INTERNAL:                  return "An error occured in the FMOD system. Use the logging version of FMOD for more information.";
                 case FMOD.RESULT.ERR_INVALID_FLOAT:             return "Value passed in was a NaN, Inf or denormalized float.";
                 case FMOD.RESULT.ERR_INVALID_HANDLE:            return "An invalid object handle was used.";
                 case FMOD.RESULT.ERR_INVALID_PARAM:             return "An invalid parameter was passed to this function.";
@@ -72,7 +72,7 @@ namespace FMOD
                 case FMOD.RESULT.ERR_OUTPUT_NODRIVERS:          return "The output device has no drivers installed.  If pre-init, FMOD_OUTPUT_NOSOUND is selected as the output mode.  If post-init, the function just fails.";
                 case FMOD.RESULT.ERR_PLUGIN:                    return "An unspecified error has been returned from a plugin.";
                 case FMOD.RESULT.ERR_PLUGIN_MISSING:            return "A requested output, dsp unit type or codec was not available.";
-                case FMOD.RESULT.ERR_PLUGIN_RESOURCE:           return "A resource that the plugin requires cannot be found. (ie the DLS file for MIDI playback)";
+                case FMOD.RESULT.ERR_PLUGIN_RESOURCE:           return "A resource that the plugin requires cannot be allocated or found. (ie the DLS file for MIDI playback)";
                 case FMOD.RESULT.ERR_PLUGIN_VERSION:            return "A plugin was built with an unsupported SDK version.";
                 case FMOD.RESULT.ERR_RECORD:                    return "An error occurred trying to initialize the recording device.";
                 case FMOD.RESULT.ERR_REVERB_CHANNELGROUP:       return "Reverb properties cannot be set on this channel because a parent channelgroup owns the reverb connection.";
@@ -83,7 +83,7 @@ namespace FMOD
                 case FMOD.RESULT.ERR_TAGNOTFOUND:               return "The specified tag could not be found or there are no tags.";
                 case FMOD.RESULT.ERR_TOOMANYCHANNELS:           return "The sound created exceeds the allowable input channel count.  This can be increased using the 'maxinputchannels' parameter in System::setSoftwareFormat.";
                 case FMOD.RESULT.ERR_TRUNCATED:                 return "The retrieved string is too long to fit in the supplied buffer and has been truncated.";
-                case FMOD.RESULT.ERR_UNIMPLEMENTED:             return "Something in FMOD hasn't been implemented when it should be! contact support!";
+                case FMOD.RESULT.ERR_UNIMPLEMENTED:             return "Something in FMOD hasn't been implemented when it should be. Contact support.";
                 case FMOD.RESULT.ERR_UNINITIALIZED:             return "This command failed because System::init or System::setDriver was not called.";
                 case FMOD.RESULT.ERR_UNSUPPORTED:               return "A command issued was not supported by this object.  Possibly a plugin without certain callbacks specified.";
                 case FMOD.RESULT.ERR_VERSION:                   return "The version number of this file format is not supported.";
@@ -97,8 +97,8 @@ namespace FMOD
                 case FMOD.RESULT.ERR_INVALID_STRING:            return "An invalid string was passed to this function.";
                 case FMOD.RESULT.ERR_ALREADY_LOCKED:            return "The specified resource is already locked.";
                 case FMOD.RESULT.ERR_NOT_LOCKED:                return "The specified resource is not locked, so it can't be unlocked.";
-				case FMOD.RESULT.ERR_RECORD_DISCONNECTED:       return "The specified recording driver has been disconnected.";
-				case FMOD.RESULT.ERR_TOOMANYSAMPLES:            return "The length provided exceed the allowable limit.";
+                case FMOD.RESULT.ERR_RECORD_DISCONNECTED:       return "The specified recording driver has been disconnected.";
+                case FMOD.RESULT.ERR_TOOMANYSAMPLES:            return "The length provided exceed the allowable limit.";
                 default:                                        return "Unknown error.";
             }
         }

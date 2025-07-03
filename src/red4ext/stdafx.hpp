@@ -12,4 +12,3 @@
 
 #include <RED4ext/Common.hpp>
 #include <spdlog/spdlog.h>
-#include <RED4ext/Definitions.hpp>

@@ -14,7 +14,7 @@ void MeshComponent::SetMesh(RED4ext::ResRef mesh) {
 
 void IPlacedComponent::SetParentTransform(RED4ext::CName bindName, RED4ext::CName slotName) {
   auto rtti = RED4ext::CRTTISystem::Get();
-  auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->CreateInstance();
+  auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->CreateInstance(true);
   htb->bindName = bindName;
   htb->slotName = slotName;
   this->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
@@ -38,7 +38,7 @@ void Entity::AddComponent(RED4ext::Handle<RED4ext::ent::IComponent> componentToA
       auto meshComponent = (RED4ext::ent::MeshComponent *)componentToAdd.instance;
       this->componentsStorage.components.EmplaceBack(componentToAdd);
       auto vcd = reinterpret_cast<RED4ext::ent::VisualControllerDependency *>(
-          rtti->GetClass("entVisualControllerDependency")->CreateInstance());
+          rtti->GetClass("entVisualControllerDependency")->CreateInstance(true));
       vcd->appearanceName = meshComponent->meshAppearance;
       vcd->componentName = meshComponent->name;
       vcd->mesh.path = meshComponent->mesh.path;
@@ -82,7 +82,7 @@ void Entity::AddSlot(RED4ext::CName boneName, RED4ext::CName slotName, RED4ext::
   }
 
   if (slotComponent != nullptr) {
-    auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
+    auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
     slot->boneName = boneName;
     slot->slotName = slotName;
     slot->relativePosition = relativePosition;

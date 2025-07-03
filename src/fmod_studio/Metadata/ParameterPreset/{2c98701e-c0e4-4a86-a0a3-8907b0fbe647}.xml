@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<objects serializationModel="Studio.02.02.00">
+<objects serializationModel="Studio.02.03.00">
 	<object class="ParameterPreset" id="{2c98701e-c0e4-4a86-a0a3-8907b0fbe647}">
 		<property name="name">
 			<value>Event Cone Angle</value>

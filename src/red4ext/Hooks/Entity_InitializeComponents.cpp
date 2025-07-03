@@ -20,8 +20,15 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3490519617, Entity_InitializeComponen
     isVehicle |= type == vehicleClass;
   } while (type = type->parent);
 
-  if (isVehicle) {
-    auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(entity);
+  auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(entity);
+
+  auto canEnterFlight_func = vehicleClass->GetFunction("CanEnterFlight");
+  bool canEnterFlight = false;
+  if (isVehicle && canEnterFlight_func) {
+    RED4ext::ExecuteFunction(vehicle, canEnterFlight_func, &canEnterFlight);
+  }
+
+  if (isVehicle && canEnterFlight) {
 
     auto fc = (FlightComponent *)FlightComponent::GetRTTIType()->CreateInstance(true);
     fc->name = "flightComponent";
@@ -33,7 +40,7 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3490519617, Entity_InitializeComponen
 
     // FlightWeapons::AddWeapons(vehicle);
 
-    // auto fc = (FlightComponent*)FlightComponent::GetRTTIType()->CreateInstance();
+    // auto fc = (FlightComponent*)FlightComponent::GetRTTIType()->CreateInstance(true);
     // fc->name = "flightComponent";
     // auto h = RED4ext::Handle<FlightComponent>(fc);
     // h.refCount->IncRef();
@@ -68,7 +75,7 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3490519617, Entity_InitializeComponen
 
     if (vcc != nullptr && vs != nullptr) {
       {
-        // auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
+        // auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
         // slot->boneName = "roof_border_front";
         // slot->slotName = "roof_border_front";
         // vs->slots.EmplaceBack(*slot);
@@ -102,7 +109,7 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3490519617, Entity_InitializeComponen
     // UI
     //{
     //  // MeshComponent
-    //  auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->CreateInstance();
+    //  auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->CreateInstance(true);
 
     //  RED4ext::CName mesh = "user\\jackhumbert\\meshes\\flight_ui.mesh";
     //  mc->mesh.ref = mesh;
@@ -114,7 +121,7 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3490519617, Entity_InitializeComponen
     //}
     //{
     //  // WorldWidgetComponent
-    //  auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->CreateInstance();
+    //  auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->CreateInstance(true);
 
     //  wwc->name = "flight_ui";
 
@@ -122,7 +129,7 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3490519617, Entity_InitializeComponen
     //  wwc->widgetResource.ref = fc;
 
     //  auto mtb = (RED4ext::world::ui::MeshTargetBinding
-    //  *)rtti->GetClass("worlduiMeshTargetBinding")->CreateInstance(); mtb->bindName = "flight_screen";
+    //  *)rtti->GetClass("worlduiMeshTargetBinding")->CreateInstance(true); mtb->bindName = "flight_screen";
     //  wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
 
     //  auto wwcHandle = RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc);
@@ -132,7 +139,7 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3490519617, Entity_InitializeComponen
     // UI Info Panel
     //{
     //  // MeshComponent
-    //  auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->CreateInstance();
+    //  auto mc = (RED4ext::ent::MeshComponent *)rtti->GetClass("entMeshComponent")->CreateInstance(true);
 
     //  RED4ext::CName mesh = "user\\jackhumbert\\meshes\\flight_ui_info.mesh";
     //  mc->mesh.ref = mesh;
@@ -145,7 +152,7 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3490519617, Entity_InitializeComponen
     //}
     //{
     //  // WorldWidgetComponent
-    //  auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->CreateInstance();
+    //  auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->CreateInstance(true);
 
     //  wwc->name = "flight_ui_info";
 
@@ -154,7 +161,7 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3490519617, Entity_InitializeComponen
     //  wwc->spawnDistanceOverride = 20.0;
     //  wwc->sceneWidgetProperties.renderingPlane = RED4ext::ERenderingPlane::RPl_Weapon;
     //  auto mtb = (RED4ext::world::ui::MeshTargetBinding
-    //  *)rtti->GetClass("worlduiMeshTargetBinding")->CreateInstance(); mtb->bindName = "flight_screen_info";
+    //  *)rtti->GetClass("worlduiMeshTargetBinding")->CreateInstance(true); mtb->bindName = "flight_screen_info";
     //  wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
 
     //  entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc));
@@ -162,10 +169,10 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3490519617, Entity_InitializeComponen
     //{
     //  auto gpsp =
     //      (RED4ext::game::projectile::SpawnComponent
-    //      *)rtti->GetClass("gameprojectileSpawnComponent")->CreateInstance();
+    //      *)rtti->GetClass("gameprojectileSpawnComponent")->CreateInstance(true);
     //  gpsp->name = "projectileSpawn8722";
     //  gpsp->projectileTemplates.EmplaceBack("exploding_bullet");
-    //  auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->CreateInstance();
+    //  auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->CreateInstance(true);
     //  htb->bindName = "vehicle_slots";
     //  htb->slotName = "ThrusterFL";
     //  gpsp->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
@@ -173,7 +180,7 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3490519617, Entity_InitializeComponen
     //}
 
     {
-      auto whc = (RED4ext::WidgetHudComponent *)rtti->GetClass("WidgetHudComponent")->CreateInstance();
+      auto whc = (RED4ext::WidgetHudComponent *)rtti->GetClass("WidgetHudComponent")->CreateInstance(true);
       whc->name = "FlightHUD";
       // auto resource =
       // RED4ext::Ref<RED4ext::ink::HudEntriesResource>("user\\jackhumbert\\widgets\\hud_flight.inkhud", true);
@@ -185,9 +192,9 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3490519617, Entity_InitializeComponen
     }
 
     //{
-    //  auto gcc = (RED4ext::game::CameraComponent *)rtti->GetClass("gameCameraComponent")->CreateInstance();
+    //  auto gcc = (RED4ext::game::CameraComponent *)rtti->GetClass("gameCameraComponent")->CreateInstance(true);
     //  gcc->name = "frontCamera";
-    //  auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->CreateInstance();
+    //  auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->CreateInstance(true);
     //  htb->bindName = "vehicle_slots";
     //  htb->slotName = "roof_border_front";
     //  gcc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);

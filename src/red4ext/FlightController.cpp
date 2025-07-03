@@ -7,12 +7,12 @@
 
 RED4ext::Handle<FlightController> handle;
 
-FlightController* FlightController::GetInstance() { 
+RED4ext::Handle<FlightController> FlightController::GetInstance() { 
   if (!handle.instance) {
     spdlog::info("[RED4ext] New FlightController Instance");
-    auto instance = reinterpret_cast<FlightController *>(RED4ext::CRTTISystem::Get()->GetClass("FlightController")->CreateInstance());
+    auto instance = reinterpret_cast<FlightController *>(RED4ext::CRTTISystem::Get()->GetClass("FlightController")->CreateInstance(true));
     handle = RED4ext::Handle<FlightController>(instance);
   }
   
-  return (FlightController*)handle.instance;
+  return handle;
 }

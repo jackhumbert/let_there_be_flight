@@ -1,5 +1,4 @@
-#ifndef _FSBANK_ERRORS_H
-#define _FSBANK_ERRORS_H
+#pragma once
 
 #include "fsbank.h"
 
@@ -29,8 +28,8 @@ static const char *FSBank_ErrorString(FSBANK_RESULT result)
         case FSBANK_WARN_FORCED_DONTWRITENAMES:         return "FSBANK_BUILD_FSB5_DONTWRITENAMES flag forced: cannot write names when source is from memory.";
         case FSBANK_ERR_ENCODER_FILE_NOTFOUND:          return "External encoder dynamic library not found.";
         case FSBANK_ERR_ENCODER_FILE_BAD:               return "External encoder dynamic library could not be loaded, possibly incorrect binary format, incorrect architecture, or file corruption.";
+        case FSBANK_WARN_IGNORED_ALIGN4K:               return "FSBANK_BUILD_ALIGN4K flag ignored: feature only supported by Opus, Vorbis, and FADPCM formats.";
         default:                                        return "Unknown error.";
     }
 }
 
-#endif // _FSBANK_ERRORS_H

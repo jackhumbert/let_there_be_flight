@@ -88,7 +88,7 @@ void IFlightConfiguration::Setup(RED4ext::vehicle::BaseObject * vehicle) {
 void IFlightConfiguration::AddSlots(RED4ext::ent::SlotComponent *slotComponent) {
   auto rtti = RED4ext::CRTTISystem::Get();
 
-  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
+  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
   slot->boneName = this->flightCameraBone;
   slot->slotName = "CustomFlightCamera";
   slot->relativePosition = this->flightCameraOffset;
@@ -96,7 +96,7 @@ void IFlightConfiguration::AddSlots(RED4ext::ent::SlotComponent *slotComponent) 
   slotComponent->slotIndexLookup.Emplace(slot->slotName, slotComponent->slots.size - 1);
 
   //for (auto thruster : thrusters) {
-  //  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance());
+  //  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
   //  slot->boneName = thruster->boneName;
   //  slot->slotName = thruster->slotName;
   //  slot->relativePosition = thruster->relativePosition;
@@ -147,7 +147,10 @@ void IFlightConfiguration::OnActivationCore() {
 
     this->originalShapeCount = body->getNbShapes();
 
-    auto filterData = (RED4ext::physics::FilterData*)filterDataCls->CreateInstance();
+    auto filterData = (RED4ext::physics::FilterData*)malloc(sizeof(RED4ext::physics::FilterData));
+    RED4ext::physics::FilterData::Init(filterData);
+    
+    // filterData.preset = "Vehicle Chassis";
     filterData->LoadPreset("Vehicle Chassis");
     RED4ext::Vector3 unk140(1.0, 1.0, 1.0);
     RED4ext::Transform transform;
@@ -178,6 +181,8 @@ void IFlightConfiguration::OnActivationCore() {
         shape->release2();
       }
     }
+
+    free(filterData);
 
     auto newCount = body->getNbShapes();
     

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<objects serializationModel="Studio.02.02.00">
+<objects serializationModel="Studio.02.03.00">
 	<object class="EffectPreset" id="{a20974f7-afa8-4979-a735-a14030e174de}">
 		<property name="name">
 			<value>Effect Chain 2</value>
