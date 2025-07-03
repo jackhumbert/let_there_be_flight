@@ -11,8 +11,8 @@ struct FlightComponent;
 
 class IFlightSystem : public Engine::RTTIClass<IFlightSystem, RED4ext::game::IGameSystem> {
 public:
-  virtual void RegisterComponent(const RED4ext::Handle<FlightComponent>) { };
-  virtual void UnregisterComponent(const RED4ext::Handle<FlightComponent>) { };
+  virtual void RegisterComponent(const RED4ext::Handle<FlightComponent> &) { };
+  virtual void UnregisterComponent(const RED4ext::Handle<FlightComponent> &) { };
 private:
   friend Descriptor;
   static void OnRegister(Descriptor *aType) {

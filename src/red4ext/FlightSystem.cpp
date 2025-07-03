@@ -58,44 +58,25 @@ Handle<FlightSystem> FlightSystem::GetInstance() {
   return Handle<FlightSystem>(fs);
 }
 
-void FlightSystem::RegisterComponent(const Handle<FlightComponent> fc) {
-  // if (fc.instance && fc.refCount && !fc.Expired()) {
-    this->flightComponentsMutex.Lock();
-    // fc.refCount->IncWeakRef();
-    this->flightComponents.EmplaceBack(fc);
-    this->flightComponentsMutex.Unlock();
-  // }
-  // spdlog::info("[FlightSystem] Component added");
-  // __debugbreak();
+void FlightSystem::RegisterComponent(const Handle<FlightComponent> &fc) {
+  this->flightComponentsMutex.Lock();
+  this->flightComponents[fc->entity->entityID.hash] = fc;
+  this->flightComponentsMutex.Unlock();
 }
 
-void FlightSystem::UnregisterComponent(const Handle<FlightComponent> fc) {
-  // if (fc.Expired())
-    // return;
+void FlightSystem::UnregisterComponent(const Handle<FlightComponent> &fc) {
   this->flightComponentsMutex.Lock();
-  for (auto i = this->flightComponents.size - 1; i >= 0; i--) {
-    if (this->flightComponents[i].refCount && !this->flightComponents[i].Expired()) {
-      auto efc = this->flightComponents[i].Lock().GetPtr();
-      if (efc == fc.GetPtr()) {
-        this->flightComponents.RemoveAt(i);
-        //spdlog::info("[FlightSystem] Component removed");
-        break;
-      }
-    } else {
-      this->flightComponents.RemoveAt(i);
-    }
-  }
+  this->flightComponents.erase(fc->entity->entityID.hash);
   this->flightComponentsMutex.Unlock();
 }
 
 void PrePhysics(UpdateBucketEnum bucket, FrameInfo& frame, JobQueue& job) {
   // spdlog::info("[FlightSystem] PrePhysics!");
   auto fs = FlightSystem::GetInstance();
-  auto wh = fs->soundListener;
-  if (!wh.Expired()) {
+  auto handle = fs->soundListener.Lock();
+  if (handle) {
     Matrix matrix;
-    auto h = wh.Lock();
-    auto t = h.GetPtr()->worldTransform;
+    auto t = handle->worldTransform;
     GetMatrixFromOrientation(&t.Orientation, &matrix);
     matrix.W.X = t.Position.x.Bits * 0.0000076293945;
     matrix.W.Y = t.Position.y.Bits * 0.0000076293945;
@@ -112,12 +93,12 @@ void UpdateComponents(UpdateBucketEnum bucket, FrameInfo& frame, JobQueue& job) 
   auto fs = FlightSystem::GetInstance();
   
   fs->flightComponentsMutex.LockShared();
-  for (auto const &wh : fs->flightComponents) {
+  for (auto& [_, wh] : fs->flightComponents) {
     if (wh.Expired())
       continue;
-    auto fc = wh.Lock().GetPtr();
-    if (fc) {
-      fc->OnUpdate(frame.deltaTime);
+    auto handle = wh.Lock();
+    if (handle) {
+      handle->OnUpdate(frame.deltaTime);
     }
   }
   fs->flightComponentsMutex.UnlockShared();
@@ -139,7 +120,9 @@ void FlightSystem::OnRegisterUpdates(UpdateRegistrar *aRegistrar) {
 
   aRegistrar->RegisterUpdate(UpdateBucketMask::Vehicle, UpdateBucketStage::PrePhysicsTick, this,
     "FlightSystem/PrePhysics", &PrePhysics);
-  aRegistrar->RegisterUpdate(UpdateBucketMask::Vehicle, UpdateBucketStage::PhysicsExecuteAsyncQueries, this, // PhysicsExecuteAsyncQueries, UpdateTransformPostPhysics instead?
+    
+  // UpdateTransformPostPhysics is too late
+  aRegistrar->RegisterUpdate(UpdateBucketMask::Vehicle, UpdateBucketStage::PhysicsExecuteAsyncQueries, this, 
     "FlightSystem/UpdateComponents", &UpdateComponents);
  }
 
@@ -224,6 +207,8 @@ void FlightSystem::OnGameLoad(const JobGroup& aJobGroup, bool& aSuccess, void* a
   LoadResRef<ent::MeshComponent>(&r.path, &r.token, false);
   r = ResourceReference<ent::MeshComponent>(R"(user\jackhumbert\meshes\engine_nomad.mesh)");
   LoadResRef<ent::MeshComponent>(&r.path, &r.token, false);
+
+  this->flightComponents.reserve(256);
 
   //EnableSmoothWheelContacts.GetAddr()->value = false;
   //PhysXClampHugeImpacts.GetAddr()->value = false;

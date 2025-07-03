@@ -14,7 +14,7 @@
 // could watch this
 // this.m_callbackID = scriptInterface.localBlackboard.RegisterListenerInt(allBlackboardDef.PlayerStateMachine.Vehicle, this, n"OnVehicleStateChanged");
 
-public static func fc() -> wref<FlightController> {
+public func fc() -> wref<FlightController> {
   return FlightController.GetInstance();
 }
 
@@ -39,10 +39,10 @@ public native class FlightController extends IScriptable {
   // public final func SetUI(ui: ref<FlightControllerUI>) {
   //   this.ui = ui;
   // }
-  public final const func IsEnabled() -> Bool {
+  public final func IsEnabled() -> Bool {
     return this.enabled;
   }
-  public final const func IsActive() -> Bool {
+  public final func IsActive() -> Bool {
     return this.active;
   }
 
@@ -209,7 +209,7 @@ public native class FlightController extends IScriptable {
     this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, FlightSettings.GetFloat("isFlightUIActive") > 0.5);
   }
 
-  public const func GetBlackboard() -> ref<IBlackboard> {
+  public func GetBlackboard() -> ref<IBlackboard> {
     return GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().VehicleFlight);
   }
   

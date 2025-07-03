@@ -1,4 +1,4 @@
-public native abstract importonly class IFlightSystem extends IGameSystem {
+public abstract importonly class IFlightSystem extends IGameSystem {
 }
 
 public func fs() -> ref<FlightSystem> = FlightSystem.GetInstance();
@@ -15,7 +15,7 @@ public native class FlightSystem extends IGameSystem {
   @runtimeProperty("offset", "0x50")
   public native let soundListener: wref<IPlacedComponent>;
 
-  @runtimeProperty("offset", "0x70")
+  @runtimeProperty("offset", "0x60")
   public native let audio: ref<FlightAudio>;
 
   public let gameInstance: GameInstance;
@@ -25,7 +25,7 @@ public native class FlightSystem extends IGameSystem {
   // public let fx: ref<FlightFx>;
   // public let tppCamera: wref<vehicleTPPCameraComponent>;
 
-  @runtimeProperty("offset", "0x98")
+  @runtimeProperty("offset", "0xB8")
   public native let playerComponent: wref<FlightComponent>;
 
   public func Setup(player: ref<PlayerPuppet>) -> Void {
