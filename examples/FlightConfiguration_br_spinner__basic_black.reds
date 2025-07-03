@@ -8,6 +8,9 @@ public class FlightConfiguration_br_spinner__basic_black extends IFlightConfigur
     ArrayPush(this.thrusters, new FlightThrusterBR().Create(vehicle, CreateEmptyThruster()));
     ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, CreateEmptyThruster()));
     
+    this.thrusters[2].meshComponent.SetLocalPosition(new Vector4(0.120, 0.110, 0.110, 0.0));
+    this.thrusters[3].meshComponent.SetLocalPosition(new Vector4(-0.120, 0.110, 0.110, 0.0));
+
     this.thrusters[0].hasRetroThruster = false;
     this.thrusters[1].hasRetroThruster = false;
     this.thrusters[2].hasRetroThruster = false;
