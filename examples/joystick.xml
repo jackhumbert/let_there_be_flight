@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<bindings>
+
+	<mapping name="Flight_LinearBrake" append="true">
+		<button id="IK_JoyY" />
+  </mapping>
+
+	<mapping name="Flight_AngularBrake" append="true">
+		<button id="IK_JoyY" />
+  </mapping>
+
+	<mapping name="Flight_Yaw" append="true">
+		<button id="IK_JoyZ" />
+  </mapping>
+
+	<mapping name="Flight_Pitch" append="true">
+		<button id="IK_JoyX" />
+  </mapping>
+
+	<mapping name="Flight_Roll" append="true">
+		<button id="IK_JoyR" />
+  </mapping>
+
+	<mapping name="Flight_Lift" append="true">
+		<button id="IK_JoyV" />
+  </mapping>
+
+	<mapping name="Flight_Sway" append="true">
+		<button id="IK_JoyU" />
+  </mapping>
+
+</bindings>
