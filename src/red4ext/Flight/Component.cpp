@@ -4,6 +4,23 @@
 
 using namespace RED4ext;
 
+FlightComponent::~FlightComponent() {
+  if (this->configuration) {
+    this->configuration->~IFlightConfiguration();
+  }
+}
+
+void FlightComponent::OnAttach(void* a1) {
+  game::Component::OnAttach(a1);
+  this->sys = FlightSystem::GetInstance();
+  this->sys->RegisterComponent(Handle<FlightComponent>(this));
+}
+
+void FlightComponent::OnDetach(void* a1) {
+  this->sys->UnregisterComponent(Handle<FlightComponent>(this));
+  game::Component::OnDetach(a1);
+}
+
 void FlightComponent::ChaseTarget(WeakHandle<game::Object> target) {
   ////spdlog::info("[FlightComponent] ChaseTarget");
   //action::ActionBase * action;
@@ -44,10 +61,10 @@ void FlightComponent::OnUpdate(float deltaTime) {
       helper.Unlock();
     }*/
     vehicle->ForceEnablePhysics();
-    StackArgs_t args;
-    float delta = deltaTime;
-    args.emplace_back(CRTTISystem::Get()->GetType("Float"), &delta);
-    ExecuteFunction(this, this->nativeType->GetFunction("OnUpdate"), nullptr, args);
+    // StackArgs_t args;
+    // float delta = deltaTime;
+    // args.emplace_back(CRTTISystem::Get()->GetType("Float"), &delta);
+    ExecuteFunction(this, this->nativeType->GetFunction("OnUpdate"), nullptr, deltaTime);
     vehicle->physicsData->force += this->force.AsVector3();
     vehicle->physicsData->torque += this->torque.AsVector3();
     this->force = Vector4();

@@ -38,6 +38,8 @@ public:
     return call(this);
   }*/
 
+  virtual ~FlightComponent() override;
+
   // virtual bool CanBeDestructed() override { return false; };
 
   //virtual ~FlightComponent() override = default;
@@ -46,6 +48,12 @@ public:
     //return FlightComponentPS::GetRTTIType();
     return nullptr;
   }
+  
+  // only one instance per entity
+  inline virtual bool sub_128() override { return true; };
+
+  virtual void OnAttach(void* a1) override;
+  virtual void OnDetach(void* a1) override;
 
   // has scripted OnGame* callbacks
   inline virtual bool sub_238(RED4ext::Handle<RED4ext::game::Object>*) override {

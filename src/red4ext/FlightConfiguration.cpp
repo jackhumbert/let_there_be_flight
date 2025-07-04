@@ -10,6 +10,14 @@
 #include <RED4ext/Scripting/Natives/physicsPhysicalSystemProxy.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/HardTransformBinding.hpp>
 
+
+IFlightConfiguration::~IFlightConfiguration() {
+  component.~Handle();
+  for (auto& thruster : this->thrusters) {
+    thruster.~Handle();
+  }
+}
+
 RED4ext::CClass* IFlightConfiguration::GetConfigurationClass(RED4ext::ent::Entity* entity) {
   auto rtti = RED4ext::CRTTISystem::Get();
 
@@ -160,7 +168,7 @@ void IFlightConfiguration::OnActivationCore() {
       RED4ext::Handle<RED4ext::physics::ICollider> collider;
       float radius = 0.4;
       RED4ext::physics::ColliderSphere::createHandleWithRadius(&collider, &radius);
-      collider.refCount->IncRef();
+      // collider.refCount->IncRef();
 
       collider->material = "vehicle_chassis.physmat";
 

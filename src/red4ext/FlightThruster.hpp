@@ -9,7 +9,8 @@ struct FlightComponent;
 
 class IFlightThruster : public Engine::RTTIClass<IFlightThruster, RED4ext::IScriptable> {
 public:
-  RED4ext::Handle<FlightComponent> flightComponent;
+  virtual ~IFlightThruster() override;
+  RED4ext::WeakHandle<FlightComponent> flightComponent;
   RED4ext::CName boneName;
   RED4ext::CName slotName;
   RED4ext::Vector3 relativePosition = RED4ext::Vector3(0.0, 0.0, 0.0);
@@ -17,7 +18,7 @@ public:
   RED4ext::CName meshPath = "user\\jackhumbert\\meshes\\engine_corpo.mesh";
   RED4ext::CName meshName = "Thruster";
   RED4ext::Handle<RED4ext::ent::MeshComponent> meshComponent;
-  RED4ext::Handle<RED4ext::vehicle::BaseObject> vehicle;
+  RED4ext::WeakHandle<RED4ext::vehicle::BaseObject> vehicle;
 private:
   friend Descriptor;
   static void OnRegister(Descriptor *aType) {

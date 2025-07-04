@@ -246,21 +246,21 @@ public native class FlightController extends IScriptable {
   //   };
   // }
 
-  public func SetupMountedToCallback(psmBB: ref<IBlackboard>) -> Void {
-    this.m_callbackID = psmBB.RegisterListenerBool(GetAllBlackboardDefs().PlayerStateMachine.MountedToVehicle, this, n"OnMountedToVehicleChange");
-    if psmBB.GetBool(GetAllBlackboardDefs().PlayerStateMachine.MountedToVehicle) {
-      this.Enable();
-    } 
-  }
+  // public func SetupMountedToCallback(psmBB: ref<IBlackboard>) -> Void {
+  //   this.m_callbackID = psmBB.RegisterListenerBool(GetAllBlackboardDefs().PlayerStateMachine.MountedToVehicle, this, n"OnMountedToVehicleChange");
+  //   if psmBB.GetBool(GetAllBlackboardDefs().PlayerStateMachine.MountedToVehicle) {
+  //     this.Enable();
+  //   } 
+  // }
   
-  public cb func OnMountedToVehicleChange(mounted: Bool) -> Bool {
+  // public cb func OnMountedToVehicleChange(mounted: Bool) -> Bool {
     // FlightLog.Info("[FlightController] OnMountedToVehicleChange");
     // if (mounted) {
     //   this.Enable();
     // } else {
     //   this.Disable();
     // }
-  }
+  // }
   
   public func Enable() -> Void {
     this.enabled = true;

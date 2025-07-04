@@ -45,7 +45,7 @@ bool FlightAudio::Load(RED4ext::CGameApplication *aApp) {
 
   // The example Studio project is authored for 5.1 sound, so set up the system output mode to match
   ERRCHECK(fmod_system->getCoreSystem(&coreSystem));
-  ERRCHECK(coreSystem->setSoftwareFormat(0, FMOD_SPEAKERMODE_5POINT1, 0));
+  ERRCHECK(coreSystem->setSoftwareFormat(0, FMOD_SPEAKERMODE_STEREO, 0));
 
   // Due to a bug in WinSonic on Windows, FMOD initialization may fail on some machines.
   // If you get the error "FMOD error 51 - Error initializing output device", try using

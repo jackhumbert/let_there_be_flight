@@ -17,7 +17,7 @@ public class VehicleFlightContextDecisions extends InputContextTransitionDecisio
       this.m_stateCallbackID = scriptInterface.localBlackboard.RegisterListenerInt(allBlackboardDef.PlayerStateMachine.Vehicle, this, n"OnVehicleStateChanged");
       this.OnVehicleStateChanged(scriptInterface.localBlackboard.GetInt(allBlackboardDef.PlayerStateMachine.Vehicle));
       
-      FlightController.GetInstance().SetupMountedToCallback(scriptInterface.localBlackboard);
+      // FlightController.GetInstance().SetupMountedToCallback(scriptInterface.localBlackboard);
     }
       
     let bb = FlightController.GetInstance().GetBlackboard();

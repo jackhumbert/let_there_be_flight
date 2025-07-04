@@ -36,9 +36,9 @@ using namespace RED4ext;
 // RelocPtr<GameOptionBool> AirControlCarRollHelper(0x484E4F8);
 // 1.61hf1 RVA: 0x484E670
 // RelocPtr<GameOptionFloat> ForceMoveToMaxLinearSpeed(0x484E670);
-UniversalRelocPtr<GameOptionBool> physicsCCD(3415871802);
+// UniversalRelocPtr<GameOptionBool> physicsCCD(3415871802);
 // UniversalRelocPtr<GameOptionBool> EnableSmoothWheelContacts(726996866);
-UniversalRelocPtr<GameOptionBool> VehicleTeleportationIfFallsUnderWorld(3118668190);
+// UniversalRelocPtr<GameOptionBool> VehicleTeleportationIfFallsUnderWorld(3118668190);
 
 //TTypedClass<FlightSystem> icls("IFlightSystem");
 //TTypedClass<FlightSystem> cls("FlightSystem");

@@ -94,9 +94,9 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3490519617, Entity_InitializeComponen
         configuration->ref = RED4ext::WeakHandle(*reinterpret_cast<RED4ext::Handle<RED4ext::ISerializable> *>(&handle));
         configuration->nativeType = configurationCls;
         configuration->component = RED4ext::Handle<FlightComponent>(fc);
-        configuration->component.refCount->IncRef();
+        // configuration->component.refCount->IncRef();
         fc->configuration = handle;
-        handle.refCount->IncRef();
+        // handle.refCount->IncRef();
 
         configuration->Setup(vehicle);
         configuration->AddSlots(vs);

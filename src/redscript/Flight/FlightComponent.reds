@@ -99,37 +99,65 @@ public native class FlightComponent extends GameComponent {
 
   public let alarmIsPlaying: Bool;
 
-  protected final const func GetVehicle() -> wref<VehicleObject> {
+  protected final func GetVehicle() -> wref<VehicleObject> {
     return this.GetEntity() as VehicleObject;
   }
   
-  private final const func GetMyPS() -> ref<FlightComponentPS> {
+  private final func GetMyPS() -> ref<FlightComponentPS> {
     return this.GetPS() as FlightComponentPS;
   }
 
-  // public let playingScraping: array<Bool>;
+  // interaction layer stuff to add eventually
 
-  // public func HandleScraping(skidValue: Float, wheelIndex: Int32, emitterName: CName) {
-  //   // this.GetVehicle();
-  //   //v_car_damage_scrape_sparks
-  //   let sound = n"nme_boss_smasher_anim_stomp_scrape";
-  //   if (skidValue >= 0.2 && !this.playingScraping[wheelIndex]) {
-  //     GameObject.PlaySound(this.GetVehicle(), sound, emitterName);
-  //     this.playingScraping[wheelIndex] = true;
-  //   } 
-  //   // GameObject.AudioParameter(this.GetVehicle(), n"veh_speed", skidValue, emitterName);
-  //   // GameObject.AudioParameter(this.GetVehicle(), n"veh_tire_long_slip_ratio", skidValue, emitterName);
-  //   // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_tire_long_slip_ratio", skidValue);
-  //   // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_tire_lat_slip_ratio", skidValue);
-  //   // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_wheel_skid", skidValue);
-  //   // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_collision_velocity", skidValue);
-  //   // GameObject.SetAudioParameter(this.GetVehicle(), n"veh_ground_pressure", skidValue);
-    
-  //   if (skidValue < 0.2 && this.playingScraping[wheelIndex]) {
-  //     GameObject.StopSound(this.GetVehicle(), sound, emitterName);
-  //     this.playingScraping[wheelIndex] = false;
-  //   }
-  // }
+/*
+  private final func CreateObjectActionsCallbackController(instigator: wref<Entity>) -> Void {
+    this.m_objectActionsCallbackCtrl = gameObjectActionsCallbackController.Create(this.GetEntity(), instigator, this.GetVehicle().GetGame());
+    this.m_objectActionsCallbackCtrl.RegisterSkillCheckCallbacks();
+  }
+
+  private final func DestroyObjectActionsCallbackController() -> Void {
+    this.m_objectActionsCallbackCtrl.UnregisterSkillCheckCallbacks();
+    this.m_objectActionsCallbackCtrl = null;
+  }
+
+  protected cb func OnObjectActionRefreshEvent(evt: ref<gameObjectActionRefreshEvent>) -> Bool {
+    if IsDefined(this.m_objectActionsCallbackCtrl) {
+      this.m_objectActionsCallbackCtrl.UnlockNotifications();
+      this.DetermineInteractionState();
+    };
+  }
+  
+  protected cb func OnInteractionActivated(evt: ref<InteractionActivationEvent>) -> Bool {
+    let context: VehicleActionsContext;
+    if this.GetVehicle().IsCrowdVehicle() && StatusEffectSystem.ObjectHasStatusEffectWithTag(evt.activator, n"BlockTrafficInteractions") {
+      return false;
+    };
+    if Equals(evt.eventType, gameinteractionsEInteractionEventType.EIET_activate) {
+      if evt.IsInputLayerEvent() {
+        this.CreateObjectActionsCallbackController(evt.activator);
+      };
+    } else {
+      if Equals(evt.eventType, gameinteractionsEInteractionEventType.EIET_deactivate) {
+        if evt.IsInputLayerEvent() {
+          this.DestroyObjectActionsCallbackController();
+        };
+      };
+    };
+    context.requestorID = this.GetVehicle().GetEntityID();
+    context.processInitiatorObject = evt.activator;
+    context.interactionLayerTag = evt.layerData.tag;
+    context.eventType = evt.eventType;
+    this.GetPS().DetermineActionsToPush(this.m_interaction, context, this.m_objectActionsCallbackCtrl, false);
+    if this.GetVehicle() == (this.GetVehicle() as TankObject) {
+      this.EvaluatePanzerInteractions();
+    };
+  }
+
+  protected cb func OnInteractionUsed(evt: ref<InteractionChoiceEvent>) -> Bool {
+    this.ExecuteAction(evt.choice, evt.activator);
+    this.m_interaction.ResetChoices();
+  }
+*/
 
   private final func OnGameAttach() -> Void {
     LTBF_RegisterListener(this);
@@ -162,7 +190,7 @@ public native class FlightComponent extends GameComponent {
     this.aeroYawPID = PID.Create(FlightSettings.GetVector3("aeroYawPID"));
     this.pitchAeroPID = PID.Create(FlightSettings.GetVector3("aeroPitchPID"));
 
-    this.sys = FlightSystem.GetInstance();
+    // this.sys = FlightSystem.GetInstance();
     // this.sys.RegisterComponent(this);
     this.sqs = GameInstance.GetSpatialQueriesSystem(this.GetVehicle().GetGame());
     // this.fx = FlightFx.Create(this);
@@ -217,7 +245,7 @@ public native class FlightComponent extends GameComponent {
     // if ArraySize(this.configuration.thrusters) == 0 {
     //   this.configuration.thrusters = IFlightThruster.CreateThrusters(this);
     // }
-    this.sys.RegisterComponent(this);
+    // this.sys.RegisterComponent(this);
   }
 
   private final func OnGameDetach() -> Void {
@@ -239,7 +267,6 @@ public native class FlightComponent extends GameComponent {
     for mode in this.modes {
       mode.Deinitialize();
     }
-    this.sys.UnregisterComponent(this);
   }
   
   // private final func RegisterInputListener() -> Void {
@@ -342,8 +369,9 @@ public native class FlightComponent extends GameComponent {
       this.sys.SetPlayerComponent(this);
       this.isPlayerMounted = true;
       this.SetupVehicleTPPBBListener();
-      FlightAudio.Get().Start("windLeft", "wind_TPP");
-      FlightAudio.Get().Start("windRight", "wind_TPP");
+      // try without wind
+      // FlightAudio.Get().Start("windLeft", "wind_TPP");
+      // FlightAudio.Get().Start("windRight", "wind_TPP");
       // this.uiControl = FlightControllerUI.Create(this.ui_info.GetGameController(), this.ui_info.GetGameController().GetRootCompoundWidget());
       // this.uiControl.Setup(this.stats);
     } else {
@@ -380,8 +408,9 @@ public native class FlightComponent extends GameComponent {
       mountChild.QueueEvent(vehicleFlight);
 
       this.UnregisterVehicleTPPBBListener();
-      FlightAudio.Get().Stop("windLeft");
-      FlightAudio.Get().Stop("windRight");
+      // try without wind
+      // FlightAudio.Get().Stop("windLeft");
+      // FlightAudio.Get().Stop("windRight");
       this.sys.playerComponent = null;
       this.isPlayerMounted = false;
       if this.active {
@@ -824,26 +853,27 @@ public native class FlightComponent extends GameComponent {
   //   }
   // }
 
-  
-  protected cb func OnInteractionActivated(evt: ref<InteractionActivationEvent>) -> Bool {
-    let radialRequest: ref<ResolveQuickHackRadialRequest>;
-    if !IsDefined(evt.activator as PlayerPuppet) && !IsDefined(evt.activator as Muppet) {
-      return false;
-    };
-    radialRequest = new ResolveQuickHackRadialRequest();
-    this.GetVehicle().GetHudManager().QueueRequest(radialRequest);
-  }
+  // idk if this is needed still
+  // protected cb func OnInteractionActivated(evt: ref<InteractionActivationEvent>) -> Bool {
+  //   let radialRequest: ref<ResolveQuickHackRadialRequest>;
+  //   if !IsDefined(evt.activator as PlayerPuppet) && !IsDefined(evt.activator as Muppet) {
+  //     return false;
+  //   };
+  //   radialRequest = new ResolveQuickHackRadialRequest();
+  //   this.GetVehicle().GetHudManager().QueueRequest(radialRequest);
+  // }
 
-  protected cb func OnSetExposeQuickHacks(evt: ref<SetExposeQuickHacks>) -> Bool {
-    let request: ref<RefreshActorRequest> = new RefreshActorRequest();
-    request.ownerID = this.GetVehicle().GetEntityID();
-    this.GetVehicle().GetHudManager().QueueRequest(request);
-  }
+  // idk if this is needed still
+  // protected cb func OnSetExposeQuickHacks(evt: ref<SetExposeQuickHacks>) -> Bool {
+  //   let request: ref<RefreshActorRequest> = new RefreshActorRequest();
+  //   request.ownerID = this.GetVehicle().GetEntityID();
+  //   this.GetVehicle().GetHudManager().QueueRequest(request);
+  // }
   
-  protected cb func OnActionEngineering(evt: ref<ActionEngineering>) -> Bool {
-    FlightLog.Info("[FlightComponent] OnActionEngineering");
-    // this.FireVerticalImpulse();
-  }
+  // protected cb func OnActionEngineering(evt: ref<ActionEngineering>) -> Bool {
+  //   FlightLog.Info("[FlightComponent] OnActionEngineering");
+  //   // this.FireVerticalImpulse();
+  // }
 
   // public func OnQuickHackFlightMalfunction(evt: ref<QuickHackFlightMalfunction>) -> EntityNotificationType {
   //   FlightLog.Info("[FlightComponent] OnQuickHackFlightMalfunction");
@@ -1032,8 +1062,9 @@ public native class FlightComponent extends GameComponent {
     // let leftRearPosition = this.sys.audio.GetPosition(n"wheel_back_left") - (this.stats.d_velocity * timeDelta);
     // let rightRearPosition = this.sys.audio.GetPosition(n"wheel_back_right") - (this.stats.d_velocity * timeDelta);
 
-    let windLeftPosition = this.sys.audio.GetPosition(n"window_front_left_a"); // - (this.stats.d_velocity * timeDelta);
-    let windRightPosition = this.sys.audio.GetPosition(n"window_front_right_a"); //- (this.stats.d_velocity * timeDelta);
+    // try without wind
+    // let windLeftPosition = this.sys.audio.GetPosition(n"window_front_left_a"); // - (this.stats.d_velocity * timeDelta);
+    // let windRightPosition = this.sys.audio.GetPosition(n"window_front_right_a"); //- (this.stats.d_velocity * timeDelta);
 
     // let listenerMatrix = (this.sys.player.FindComponentByName(n"soundListener") as IPlacedComponent).GetLocalToWorld();
     // let listenerMatrix = this.sys.tppCamera.GetLocalToWorld();
@@ -1052,8 +1083,9 @@ public native class FlightComponent extends GameComponent {
     // this.sys.audio.Update("rightRear", rightRearPosition, engineVolume);
     if this.isPlayerMounted {
       this.audioUpdate.inside = this.sys.ctlr.isTPP ? MaxF(0.0, this.audioUpdate.inside - timeDelta * 4.0) : MinF(1.0, this.audioUpdate.inside + timeDelta * 4.0);
-      FlightAudio.Get().UpdateEvent("windLeft", Matrix.BuiltTranslation(windLeftPosition), 1.0, this.audioUpdate);
-      FlightAudio.Get().UpdateEvent("windRight",  Matrix.BuiltTranslation(windRightPosition), 1.0, this.audioUpdate);
+      // try without wind
+      // FlightAudio.Get().UpdateEvent("windLeft", Matrix.BuiltTranslation(windLeftPosition), 1.0, this.audioUpdate);
+      // FlightAudio.Get().UpdateEvent("windRight",  Matrix.BuiltTranslation(windRightPosition), 1.0, this.audioUpdate);
     } else {
       this.audioUpdate.inside = 0.0;
     }
@@ -1181,15 +1213,16 @@ public native class FlightComponent extends GameComponent {
     }   
   } 
 
-  protected cb func OnHUDInstruction(evt: ref<HUDInstruction>) -> Bool {
-    // working
-    // FlightLog.Info("[FlightComponent] OnHUDInstruction");
-    if evt.quickhackInstruction.ShouldProcess() {
-      // FlightLog.Info("[FlightComponent] quickhackInstructions.ShouldProcess");
-      // this.GetVehicle().TryOpenQuickhackMenu(true);
-      this.GetVehicle().TryOpenQuickhackMenu(evt.quickhackInstruction.ShouldOpen());
-    };
-  }
+  // idk if this is needed still
+  // protected cb func OnHUDInstruction(evt: ref<HUDInstruction>) -> Bool {
+  //   // working
+  //   // FlightLog.Info("[FlightComponent] OnHUDInstruction");
+  //   if evt.quickhackInstruction.ShouldProcess() {
+  //     // FlightLog.Info("[FlightComponent] quickhackInstructions.ShouldProcess");
+  //     // this.GetVehicle().TryOpenQuickhackMenu(true);
+  //     this.GetVehicle().TryOpenQuickhackMenu(evt.quickhackInstruction.ShouldOpen());
+  //   };
+  // }
 
   
 	// protected cb func OnFlightMalfunction(evt : ref<FlightMalfunction>) -> Bool {
