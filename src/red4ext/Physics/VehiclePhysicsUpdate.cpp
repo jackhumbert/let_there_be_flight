@@ -13,8 +13,8 @@
 
 // void vehicle::WheelSuspensionBase::ApplyAllResistances(float)
 REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 2526549425, ProcessAirResistance, 
-    RED4ext::vehicle::WheeledPhysics *a1, float deltaTime) {
-  auto physicsData = a1->parent->physicsData;
+    RED4ext::vehicle::WheeledPhysics *self, float deltaTime) {
+  auto physicsData = self->parent->physicsData;
   auto velocity = physicsData->velocity;
   auto X = velocity.X;
   auto Y = velocity.Y;
@@ -22,26 +22,10 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 2526549425, ProcessAirResistance,
   auto speedSquared = (float)((float)(X * X) + (float)(Y * Y)) + (float)(Z * Z);
   // only need to apply air resistance when speed is >= 100.0
   if (_fdclass(speedSquared) != 1 && speedSquared >= 10000.0) {
-    auto unk568 = a1->parent->collisions;
-    if (speedSquared > 0.0099999998) {
-      auto speed = sqrt(speedSquared);
-      if (speed != 0.0) {
-        X = X / speed;
-        Y = Y / speed;
-        Z = Z / speed;
-      }
-      RED4ext::Vector3 airResistanceForce;
-      auto yankX = (float)((float)(X * -1.2) * a1->airResistanceFactor) * speedSquared;
-      auto yankY = (float)((float)(Y * -1.2) * a1->airResistanceFactor) * speedSquared;
-      auto yankZ = (float)((float)(Z * -1.2) * a1->airResistanceFactor) * speedSquared;
-      airResistanceForce.X = yankX * deltaTime;
-      airResistanceForce.Y = yankY * deltaTime;
-      airResistanceForce.Z = yankZ * deltaTime;
-      physicsData->force += airResistanceForce;
-      unk568->unkEC = sqrt((float)((float)(yankX * yankX) + (float)(yankY * yankY)) + (float)(yankZ * yankZ));
-    }
+    self->ApplyAirResistance(velocity, deltaTime);
+    self->ApplyLowSpeedResistances(velocity, deltaTime);
   }
-  ProcessAirResistance_Original(a1, deltaTime);
+  ProcessAirResistance_Original(self, deltaTime);
 }
 
   // void vehicle::RigidBody::ApplyAngularImpulse(Vector3 const &, Vector3 const &)

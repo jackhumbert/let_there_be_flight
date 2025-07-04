@@ -391,3 +391,4 @@ FodyWeavers.xsd
 red4ext/deps/*
 *.zip
 prereqs.redscripts
+crash_stack.hpp
