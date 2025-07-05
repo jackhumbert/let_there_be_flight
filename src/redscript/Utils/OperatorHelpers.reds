@@ -1,3 +1,14 @@
+// Vector3 Wrapper (IScriptable-derived)
+
+public class Vector3Wrapper {
+  public let vector: Vector3;
+  public static func Create(v: Vector3) -> ref<Vector3Wrapper> {
+    let vw = new Vector3Wrapper();
+    vw.vector = v;
+    return vw;
+  }
+}
+
 // Matrix
 
 public static func OperatorMultiply(m: Matrix, v: Vector4) -> Vector4 {

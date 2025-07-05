@@ -288,74 +288,73 @@
 //  return vehicle_ProcessPhysicalSystem_Original(geoCacheId, desc);
 //}
 
-RED4ext::ent::PhysicalMeshComponent *CreateThrusterEngine(RED4ext::CName mesh, RED4ext::CName name, RED4ext::CName slot,
-                                                          RED4ext::CName bindName) {
+// RED4ext::ent::PhysicalMeshComponent *CreateThrusterEngine(RED4ext::CName mesh, RED4ext::CName name, RED4ext::CName slot,
+//                                                           RED4ext::CName bindName) {
 
-  auto rtti = RED4ext::CRTTISystem::Get();
-  auto mc = (RED4ext::ent::PhysicalMeshComponent *)rtti->GetClass("entPhysicalMeshComponent")->CreateInstance(true);
-  mc->mesh.path = mesh;
-  // not sure why this doesn't carry through
-  // mc->isEnabled = false;
-  mc->visualScale.X = 0.0;
-  mc->visualScale.Y = 0.0;
-  mc->visualScale.Z = 0.0;
-  mc->filterDataSource = RED4ext::physics::FilterDataSource::Collider;
-  auto filterData = (RED4ext::physics::FilterData *)rtti->GetClass("physicsFilterData")->CreateInstance(true);
-  mc->filterData = RED4ext::Handle<RED4ext::physics::FilterData>(filterData);
-  mc->name = name;
-  mc->motionBlurScale = 0.1;
-  mc->meshAppearance = "default";
-  mc->objectTypeID = RED4ext::ERenderObjectType::ROT_Vehicle;
-  mc->LODMode = RED4ext::ent::MeshComponentLODMode::Appearance;
-  auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->CreateInstance(true);
-  htb->bindName = bindName;
-  htb->slotName = slot;
-  mc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
-  return mc;
-}
+//   auto rtti = RED4ext::CRTTISystem::Get();
+//   auto mc = (RED4ext::ent::PhysicalMeshComponent *)rtti->GetClass("entPhysicalMeshComponent")->CreateInstance(true);
+//   mc->mesh.path = mesh;
+//   // not sure why this doesn't carry through
+//   // mc->isEnabled = false;
+//   mc->visualScale.X = 0.0;
+//   mc->visualScale.Y = 0.0;
+//   mc->visualScale.Z = 0.0;
+//   mc->filterDataSource = RED4ext::physics::FilterDataSource::Collider;
+//   auto filterData = (RED4ext::physics::FilterData *)rtti->GetClass("physicsFilterData")->CreateInstance(true);
+//   mc->filterData = RED4ext::Handle<RED4ext::physics::FilterData>(filterData);
+//   mc->name = name;
+//   mc->motionBlurScale = 0.1;
+//   mc->meshAppearance = "default";
+//   mc->objectTypeID = RED4ext::ERenderObjectType::ROT_Vehicle;
+//   mc->LODMode = RED4ext::ent::MeshComponentLODMode::Appearance;
+//   auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->CreateInstance(true);
+//   htb->bindName = bindName;
+//   htb->slotName = slot;
+//   mc->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
+//   return mc;
+// }
 
-void AddResourceToController(RED4ext::ent::VisualControllerComponent *vcc, RED4ext::ResourcePath resourcePath) {
-  if (vcc->resourcePaths.size) {
-    for (int i = 0; i < vcc->resourcePaths.size; i++) {
-      if (vcc->resourcePaths[i] == resourcePath) {
-        break;
-      } else if (vcc->resourcePaths[i] > resourcePath) {
-        vcc->resourcePaths.Emplace(&vcc->resourcePaths[i], resourcePath);
-        break;
-      }
-    }
-  } else {
-    vcc->resourcePaths.EmplaceBack(resourcePath);
-  }
-}
+// void AddResourceToController(RED4ext::ent::VisualControllerComponent *vcc, RED4ext::ResourcePath resourcePath) {
+//   if (vcc->resourcePaths.size) {
+//     for (int i = 0; i < vcc->resourcePaths.size; i++) {
+//       if (vcc->resourcePaths[i] == resourcePath) {
+//         break;
+//       } else if (vcc->resourcePaths[i] > resourcePath) {
+//         vcc->resourcePaths.Emplace(&vcc->resourcePaths[i], resourcePath);
+//         break;
+//       }
+//     }
+//   } else {
+//     vcc->resourcePaths.EmplaceBack(resourcePath);
+//   }
+// }
 
-void AddToController(RED4ext::ent::VisualControllerComponent *vcc, RED4ext::ent::MeshComponent *mc) {
-  auto rtti = RED4ext::CRTTISystem::Get();
-  auto vcd = reinterpret_cast<RED4ext::ent::VisualControllerDependency *>(
-      rtti->GetClass("entVisualControllerDependency")->CreateInstance(true));
-  vcd->appearanceName = mc->meshAppearance;
-  vcd->componentName = mc->name;
-  vcd->mesh.path = mc->mesh.path;
-  vcc->appearanceDependency.EmplaceBack(*vcd);
-  AddResourceToController(vcc, mc->mesh.path);
-}
+// void AddToController(RED4ext::ent::VisualControllerComponent *vcc, RED4ext::ent::MeshComponent *mc) {
+//   auto rtti = RED4ext::CRTTISystem::Get();
+//   auto vcd = reinterpret_cast<RED4ext::ent::VisualControllerDependency *>(
+//       rtti->GetClass("entVisualControllerDependency")->CreateInstance(true));
+//   vcd->appearanceName = mc->meshAppearance;
+//   vcd->componentName = mc->name;
+//   vcd->mesh.path = mc->mesh.path;
+//   vcc->appearanceDependency.EmplaceBack(*vcd);
+//   AddResourceToController(vcc, mc->mesh.path);
+// }
 
+// void EntityAddComponent(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, bool *aOut, int64_t a4) {
+//   auto ent = reinterpret_cast<RED4ext::ent::Entity *>(aContext);
 
-void EntityAddComponent(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, bool *aOut, int64_t a4) {
-  auto ent = reinterpret_cast<RED4ext::ent::Entity *>(aContext);
+//   RED4ext::Handle<RED4ext::ent::IComponent> value;
+//   RED4ext::GetParameter(aFrame, &value);
+//   aFrame->code++; // skip ParamEnd
+//   // auto handle = RED4ext::Handle<RED4ext::ent::IComponent>(value);
+//   // auto handle = *(RED4ext::Handle<RED4ext::ent::IComponent> *)&value;
+//   // ent->componentsStorage.components.EmplaceBack(handle);
+//   ent->componentsStorage.components.EmplaceBack(value);
 
-  RED4ext::Handle<RED4ext::ent::IComponent> value;
-  RED4ext::GetParameter(aFrame, &value);
-  aFrame->code++; // skip ParamEnd
-  // auto handle = RED4ext::Handle<RED4ext::ent::IComponent>(value);
-  // auto handle = *(RED4ext::Handle<RED4ext::ent::IComponent> *)&value;
-  // ent->componentsStorage.components.EmplaceBack(handle);
-  ent->componentsStorage.components.EmplaceBack(value);
-
-  if (aOut) {
-    *aOut = true;
-  }
-}
+//   if (aOut) {
+//     *aOut = true;
+//   }
+// }
 
 void EntityAddWorldWidgetComponent(RED4ext::IScriptable *aContext, RED4ext::CStackFrame *aFrame, bool *aOut,
                                    int64_t a4) {
@@ -455,8 +454,8 @@ struct EntityAddComponentModule : FlightModule {
   void PostRegisterTypes() {
     auto rtti = RED4ext::CRTTISystem::Get();
     auto ent = rtti->GetClass("entEntity");
-    ent->RegisterFunction(RED4ext::CClassFunction::Create(ent, "AddComponent", "AddComponent", 
-      &EntityAddComponent, {.isNative = true}));
+    // ent->RegisterFunction(RED4ext::CClassFunction::Create(ent, "AddComponent", "AddComponent", 
+      // &EntityAddComponent, {.isNative = true}));
     ent->RegisterFunction(RED4ext::CClassFunction::Create(ent, "AddWorldWidgetComponent", "AddWorldWidgetComponent", 
       &EntityAddWorldWidgetComponent, {.isNative = true}));
 

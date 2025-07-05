@@ -3,6 +3,8 @@
 #include <RED4ext/Scripting/Natives/Generated/ent/HardTransformBinding.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/SlotComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/VisualControllerComponent.hpp>
+#include <RED4ext/Scripting/Natives/entEffectSpawnerComponent.hpp>
+#include <RED4ext/Scripting/Natives/Generated/ent/EffectDesc.hpp>
 #include <RED4ext/Scripting/Natives/Generated/physics/ColliderSphere.hpp>
 #include <RED4ext/Scripting/Natives/Generated/physics/QueryFilter.hpp>
 #include <RED4ext/Scripting/Natives/Generated/physics/SimulationFilter.hpp>
@@ -20,15 +22,25 @@ void IPlacedComponent::SetParentTransform(RED4ext::CName bindName, RED4ext::CNam
   this->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
 }
 
-void Entity::AddComponent(RED4ext::Handle<RED4ext::ent::IComponent> componentToAdd) {
+void Entity::AddComponent(RED4ext::Handle<RED4ext::ent::IComponent> const & componentToAdd) {
   RED4ext::ent::VisualControllerComponent *vcc = nullptr;
+  RED4ext::ent::EffectSpawnerComponent *customization = nullptr;
   auto rtti = RED4ext::CRTTISystem::Get();
-  auto vccClass =  rtti->GetClass("entVisualControllerComponent");
+  auto vccClass = rtti->GetClass("entVisualControllerComponent");
+  auto effectSpawnerClass = rtti->GetClass("entEffectSpawnerComponent");
 
-  for (auto const &handle : this->componentsStorage.components) {
-    auto component = handle.GetPtr();
+  for (auto const &component : this->componentsStorage.components) {
+    // auto component = handle.GetPtr();
     if (component->GetNativeType() == vccClass) {
-      vcc = reinterpret_cast<RED4ext::ent::VisualControllerComponent *>(component);
+      vcc = reinterpret_cast<RED4ext::ent::VisualControllerComponent *>(component.instance);
+      break;
+    }
+  }
+
+  for (auto const &component : this->componentsStorage.components) {
+    // auto component = handle.GetPtr();
+    if (component->GetNativeType() == effectSpawnerClass && component->name == "vehicleVisualCustomization") {
+      customization = reinterpret_cast<RED4ext::ent::EffectSpawnerComponent *>(component.instance);
       break;
     }
   }
@@ -36,7 +48,7 @@ void Entity::AddComponent(RED4ext::Handle<RED4ext::ent::IComponent> componentToA
   if (vcc != NULL) {
     if (componentToAdd->GetNativeType() == rtti->GetClass("entMeshComponent")) {
       auto meshComponent = (RED4ext::ent::MeshComponent *)componentToAdd.instance;
-      this->componentsStorage.components.EmplaceBack(componentToAdd);
+      meshComponent->appearanceName = meshComponent->meshAppearance;
       auto vcd = reinterpret_cast<RED4ext::ent::VisualControllerDependency *>(
           rtti->GetClass("entVisualControllerDependency")->CreateInstance(true));
       vcd->appearanceName = meshComponent->meshAppearance;
@@ -58,6 +70,27 @@ void Entity::AddComponent(RED4ext::Handle<RED4ext::ent::IComponent> componentToA
       }
     }
   }
+
+  if (customization != NULL) {
+    for (auto const & desc : customization->effectDescs) {
+      if (desc->effectName == "vvc_color_instant") {
+        desc->compiledEffectInfo.componentNames.PushBack(componentToAdd->name);
+        for (auto & event : desc->compiledEffectInfo.eventsSortedByRUID) {
+          if (event.componentIndexMask & 0x2)
+            event.componentIndexMask |= (1ULL << (desc->compiledEffectInfo.componentNames.size - 1));
+        }
+      }
+      if (desc->effectName == "vvc_color") {
+        desc->compiledEffectInfo.componentNames.PushBack(componentToAdd->name);
+        for (auto & event : desc->compiledEffectInfo.eventsSortedByRUID) {
+          if (event.componentIndexMask & 0x2)
+            event.componentIndexMask |= (1ULL << (desc->compiledEffectInfo.componentNames.size - 1));
+        }
+      }
+    }
+  }
+
+  this->componentsStorage.components.PushBack(componentToAdd);
 }
 
 //RED4ext::Handle<RED4ext::physics::ColliderSphere> * createSphereColliderHandleWithRadius(RED4ext::Handle<RED4ext::physics::ICollider> *handle,
@@ -90,4 +123,9 @@ void Entity::AddSlot(RED4ext::CName boneName, RED4ext::CName slotName, RED4ext::
     slotComponent->slots.EmplaceBack(*slot);
     slotComponent->slotIndexLookup.Emplace(slot->slotName, slotComponent->slots.size - 1);
   }
+}
+
+void Entity::OnExpand(Descriptor *aType, RED4ext::CRTTISystem * _) {
+  aType->AddFunction<&Entity::AddComponent>("AddComponent");
+  aType->AddFunction<&Entity::AddSlot>("AddSlot");
 }

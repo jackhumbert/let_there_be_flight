@@ -7,13 +7,10 @@ public class BikeFlightConfiguration extends IFlightConfiguration {
 
     this.flightCameraOffset = new Vector3(0.0, 1.0, 0.5);
 
-    if (Equals(this.type, FlightVehicleType.Corpo)) {
-      ArrayPush(this.thrusters, new FlightThrusterFront().Create(vehicle, CreateCorpoThruster()));
-      ArrayPush(this.thrusters, new FlightThrusterBack().Create(vehicle, CreateCorpoThruster()));
-    } else {
-      ArrayPush(this.thrusters, new FlightThrusterFront().Create(vehicle, CreateEmptyThruster()));
-      ArrayPush(this.thrusters, new FlightThrusterBack().Create(vehicle, CreateEmptyThruster()));
+    ArrayPush(this.thrusters, new FlightThrusterFront().Create(vehicle, this.CreateMesh(vehicle)));
+    ArrayPush(this.thrusters, new FlightThrusterBack().Create(vehicle, this.CreateMesh(vehicle)));
 
+    if (!Equals(this.type, FlightVehicleType.Corpo)) {
       this.frontChild = CreateNomadThruster();
       this.frontChild.name = n"FrontThrusterChild";
       this.frontChild.visualScale = new Vector3(0.0, 0.0, 0.0);
@@ -36,7 +33,7 @@ public class BikeFlightConfiguration extends IFlightConfiguration {
 
     for thruster in this.thrusters {
       ArrayPush(thruster.fxs, new RegularFlightThrusterFX().Create(thruster));
-      vehicle.AddComponent(thruster.meshComponent);
+      // vehicle.AddComponent(thruster.meshComponent);
       thruster.OnSetup(this.component);
     }
   }

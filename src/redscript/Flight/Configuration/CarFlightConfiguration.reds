@@ -22,17 +22,12 @@ public class CarFlightConfiguration extends IFlightConfiguration {
     // this.decalEffect = r"base\\fx\\vehicles\\_wheels\\tire_tracks\\radial\\v_tire_track_r_m_01.effect";
     // this.decalEffect = r"user\\jackhumbert\\effects\\thruster_mark.effect";
 
-    if (Equals(this.type, FlightVehicleType.Corpo)) {
-      ArrayPush(this.thrusters, new FlightThrusterFL().Create(vehicle, CreateCorpoThruster()));
-      ArrayPush(this.thrusters, new FlightThrusterFR().Create(vehicle, CreateCorpoThruster()));
-      ArrayPush(this.thrusters, new FlightThrusterBR().Create(vehicle, CreateCorpoThruster()));
-      ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, CreateCorpoThruster()));
-    } else {
-      ArrayPush(this.thrusters, new FlightThrusterFL().Create(vehicle, CreateNomadThruster()));
-      ArrayPush(this.thrusters, new FlightThrusterFR().Create(vehicle, CreateNomadThruster()));
-      ArrayPush(this.thrusters, new FlightThrusterBR().Create(vehicle, CreateNomadThruster()));
-      ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, CreateNomadThruster()));
+    ArrayPush(this.thrusters, new FlightThrusterFL().Create(vehicle, this.CreateMesh(vehicle)));
+    ArrayPush(this.thrusters, new FlightThrusterFR().Create(vehicle, this.CreateMesh(vehicle)));
+    ArrayPush(this.thrusters, new FlightThrusterBR().Create(vehicle, this.CreateMesh(vehicle)));
+    ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, this.CreateMesh(vehicle)));
       
+    if (!Equals(this.type, FlightVehicleType.Corpo)) {
       this.thrusters[0].hasRetroThruster = false;
       this.thrusters[1].hasRetroThruster = false;
       this.thrusters[2].hasRetroThruster = false;
@@ -51,7 +46,7 @@ public class CarFlightConfiguration extends IFlightConfiguration {
       } else {
         ArrayPush(thruster.fxs, new RegularFlightThrusterFX().Create(thruster));
       }
-      vehicle.AddComponent(thruster.meshComponent);
+      // vehicle.AddComponent(thruster.meshComponent);
       thruster.OnSetup(this.component);
     }
 

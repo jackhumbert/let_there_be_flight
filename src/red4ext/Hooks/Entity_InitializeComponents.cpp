@@ -5,12 +5,13 @@
 #include <RED4ext/Common.hpp>
 #include <RED4ext/Scripting/Natives/Generated/WidgetHudComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/HudEntriesResource.hpp>
+#include <Extensions/MeshComponent.hpp>
 
 /// @hash 3490519617
 // void Entity_InitializeComponents(RED4ext::ent::Entity *entity, void *a2, void *a3);
 
 // void ent::Entity::Initialize(job::Builder &, ent::EntitySetupContext const &)
-REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3490519617, Entity_InitializeComponents, RED4ext::ent::Entity *entity, void *a2, void *a3) {
+REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3490519617, Entity_InitializeComponents, Entity *entity, void *a2, void *a3) {
   auto rtti = RED4ext::CRTTISystem::Get();
 
   auto type = entity->GetNativeType();
@@ -99,8 +100,13 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3490519617, Entity_InitializeComponen
         // handle.refCount->IncRef();
 
         configuration->Setup(vehicle);
-        configuration->AddSlots(vs);
         // configuration->AddMeshes(entity, vcc);
+        for (auto const & thruster : configuration->thrusters) {
+          if (thruster->meshComponent) {
+            entity->AddComponent(thruster->meshComponent);
+          }
+        }
+        configuration->AddSlots(vs);
       } else {
         // spdlog::info("Looked for class '{}'", className);
       }

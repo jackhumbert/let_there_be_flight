@@ -38,7 +38,7 @@ public class FlightConfiguration_yaiba_kusanagi_basic_player_01 extends IFlightC
 
     for thruster in this.thrusters {
       ArrayPush(thruster.fxs, new RegularFlightThrusterFX().Create(thruster));
-      vehicle.AddComponent(thruster.meshComponent);
+      // vehicle.AddComponent(thruster.meshComponent);
       thruster.OnSetup(this.component);
     }
   }

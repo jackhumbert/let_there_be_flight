@@ -28,7 +28,7 @@ public:
 
   void Setup(RED4ext::vehicle::BaseObject * vehicle);
   void AddSlots(RED4ext::ent::SlotComponent* slotComponent);
-  void AddMeshes(RED4ext::ent::Entity * entity, RED4ext::ent::VisualControllerComponent * vcc);
+  // void AddMeshes(RED4ext::ent::Entity * entity, RED4ext::ent::VisualControllerComponent * vcc);
 
   //void AddMesh() {
   //  int index = 0;

@@ -29,6 +29,8 @@ public abstract native class IFlightConfiguration extends IScriptable {
 
   public func OnSetup(vehicle: ref<VehicleObject>) {
     let name = NameToString(vehicle.GetCurrentAppearanceName());
+
+    // if (VehicleComponent.CheckVehicleDesiredTag(vehicle, n"Sport"))
     
     if StrFindFirst(name, "poor") > -1 {
       this.type = FlightVehicleType.Poor;
@@ -50,6 +52,30 @@ public abstract native class IFlightConfiguration extends IScriptable {
     || StrFindFirst(name, "valentinos") > -1 {
       this.type = FlightVehicleType.Streetkid;
     }
+  }
+
+  public func CreateMesh(vehicle: ref<VehicleObject>) -> ref<MeshComponent> {
+
+    let defaultMesh = r"user\\jackhumbert\\meshes\\engine_nomad.mesh";
+    
+    if (Equals(this.type, FlightVehicleType.Corpo)) {
+      defaultMesh = r"user\\jackhumbert\\meshes\\engine_corpo.mesh";
+    }
+
+    let appearanceTweak = vehicle.GetRecordID();
+    TDBID.Append(appearanceTweak, t".thrusterAppearance");
+    let thrusterAppearance = TweakDBInterface.GetCName(appearanceTweak, n"default");
+    
+    let meshTweak = vehicle.GetRecordID();
+    TDBID.Append(meshTweak, t".thrusterMesh");
+    let thrusterMesh = TweakDBInterface.GetResRef(meshTweak, defaultMesh);
+
+    let mc = new MeshComponent();
+    mc.SetMesh(thrusterMesh);
+    mc.meshApperance = thrusterAppearance;
+    mc.motionBlurScale = 0.1;
+    mc.LODMode = entMeshComponentLODMode.Appearance;
+    return mc;
   }
 
   public func OnActivation() {
@@ -107,27 +133,4 @@ public abstract native class IFlightConfiguration extends IScriptable {
  
     return originalFx;
   }
-}
-
-public func CreateEmptyThruster() -> ref<MeshComponent> {
-  let mc = new MeshComponent();
-  return mc;
-}
-
-public func CreateCorpoThruster() -> ref<MeshComponent> {
-  let mc = new PhysicalMeshComponent();
-  mc.SetMesh(r"user\\jackhumbert\\meshes\\engine_corpo.mesh");
-  mc.meshApperance = n"default";
-  mc.motionBlurScale = 0.1;
-  mc.LODMode = entMeshComponentLODMode.Appearance;
-  return mc;
-}
-
-public func CreateNomadThruster() -> ref<MeshComponent> {
-  let mc = new PhysicalMeshComponent();
-  mc.SetMesh(r"user\\jackhumbert\\meshes\\engine_nomad.mesh");
-  mc.meshApperance = n"default";
-  mc.motionBlurScale = 0.1;
-  mc.LODMode = entMeshComponentLODMode.Appearance;
-  return mc;
 }

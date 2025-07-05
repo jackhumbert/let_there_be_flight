@@ -1,0 +1,26 @@
+Vehicle.v_sport2_porsche_911turbo_player {
+  ResRef thrusterMesh = "user\jackhumbert\meshes\engine_corpo.mesh";
+  CName thrusterAppearance = "blackout";
+}
+
+Vehicle.v_sport1_quadra_sport_r7_netrunner {
+  ResRef thrusterMesh = "user\jackhumbert\meshes\engine_corpo.mesh";
+  CName thrusterAppearance = "blackout";
+}
+
+Vehicle.v_sport1_quadra_turbo_player {
+  ResRef thrusterMesh = "base\vehicles\sport\v_sport1_quadra_turbo\entities\meshes\v_sport1_quadra_turbo__ext01_hood_02.mesh";
+  CName thrusterAppearance = "urban_02";
+}
+
+// Vehicle.VehicleQuadraSportR7AppearancesToColorTemplate {
+//   colorTemplates[0].customMultilayers += [ 
+//     {
+//       affectedComponents = [ "ThrusterFL" ];
+//       customMlSetup = "ep1\vehicles\sport\v_sport1_quadra_sport_r7\entities\meshes\textures\ext_suburban_09.mlsetup";
+//       customMlMask = "ep1\vehicles\sport\v_sport1_quadra_sport_r7\entities\meshes\textures\ext_01_masksset.mlmask";
+//       coatLayerMin = -1.0f;
+//       coatLayerMax = 21.0f;
+//     } : VehicleCustomMultilayer
+//   ];
+// }

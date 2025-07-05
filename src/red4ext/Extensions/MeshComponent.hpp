@@ -33,19 +33,12 @@ private:
   }
 };
 
-/// Entity
 class Entity : public Engine::RTTIExpansion<Entity, RED4ext::ent::Entity> {
 public:
-  /// AddComponent
-  void AddComponent(RED4ext::Handle<RED4ext::ent::IComponent> component);
-  /// AddSlot
-  void AddSlot(RED4ext::CName boneName, RED4ext::CName slotName, RED4ext::Vector3 relativePosition,
-                       RED4ext::Quaternion relativeRotation);
+  void AddComponent(RED4ext::Handle<RED4ext::ent::IComponent> const & component);
+  void AddSlot(RED4ext::CName boneName, RED4ext::CName slotName, RED4ext::Vector3 relativePosition, RED4ext::Quaternion relativeRotation);
 private:
   friend Descriptor;
 
-  inline static void OnExpand(Descriptor *aType, RED4ext::CRTTISystem *) {
-    aType->AddFunction<&Entity::AddComponent>("AddComponent");
-    aType->AddFunction<&Entity::AddSlot>("AddSlot");
-  }
+  static void OnExpand(Descriptor *aType, RED4ext::CRTTISystem *);
 };

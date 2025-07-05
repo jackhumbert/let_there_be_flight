@@ -115,14 +115,14 @@ void IFlightConfiguration::AddSlots(RED4ext::ent::SlotComponent *slotComponent) 
   //}
 }
 
-void IFlightConfiguration::AddMeshes(RED4ext::ent::Entity *entity, RED4ext::ent::VisualControllerComponent *vcc) {
-  for (auto thruster : thrusters) {
-    auto mesh = CreateThrusterEngine(thruster->meshPath, thruster->meshName, thruster->slotName);
-    thruster->meshComponent = RED4ext::Handle<RED4ext::ent::MeshComponent>(mesh);
-    entity->componentsStorage.components.EmplaceBack(thruster->meshComponent);
-    AddToController(vcc, mesh);
-  }
-}
+// void IFlightConfiguration::AddMeshes(RED4ext::ent::Entity *entity, RED4ext::ent::VisualControllerComponent *vcc) {
+//   for (auto thruster : thrusters) {
+//     auto mesh = CreateThrusterEngine(thruster->meshPath, thruster->meshName, thruster->slotName);
+//     thruster->meshComponent = RED4ext::Handle<RED4ext::ent::MeshComponent>(mesh);
+//     entity->componentsStorage.components.EmplaceBack(thruster->meshComponent);
+//     AddToController(vcc, mesh);
+//   }
+// }
 
 
 void IFlightConfiguration::OnActivationCore() {

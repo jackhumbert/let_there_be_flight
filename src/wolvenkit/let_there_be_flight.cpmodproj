@@ -5,4 +5,19 @@
   <Author>Jack Humbert</Author>
   <Email />
   <Version />
+  <OpenProjectFiles>ep1\quest\main_quests\q304\entities\q304_charon.ent</OpenProjectFiles>
+  <OpenProjectFiles>ep1\vehicles\appearances\sport\quadra_sport_r7_basic.app</OpenProjectFiles>
+  <OpenProjectFiles>ep1\vehicles\sport\v_sport1_quadra_sport_r7\entities\meshes\textures\ext_01.mlsetup</OpenProjectFiles>
+  <OpenProjectFiles>ep1\vehicles\sport\v_sport1_quadra_sport_r7\entities\meshes\v_sport1_quadra_sport_r7_ext01_hood_01.mesh</OpenProjectFiles>
+  <OpenProjectFiles>ep1\vehicles\sport\v_sport1_quadra_sport_r7\entities\meshes\textures\ext_netrunner_01.mlsetup</OpenProjectFiles>
+  <OpenProjectFiles>ep1\vehicles\sport\v_sport1_quadra_sport_r7\entities\meshes\v_sport1_quadra_sport_r7_ext01_body_01.mesh</OpenProjectFiles>
+  <OpenProjectFiles>user\jackhumbert\meshes\engine_corpo.mesh</OpenProjectFiles>
+  <OpenProjectFiles>base\gameplay\vehicles\visual_customization\car_masks\vcc_turbo_color_mask.xbm</OpenProjectFiles>
+  <OpenProjectFiles>ep1\vehicles\sport\v_sport1_quadra_sport_r7\entities\meshes\v_sport1_quadra_sport_r7_ext01_fuelcap_01.mesh</OpenProjectFiles>
+  <OpenProjectFiles>base\vehicles\sport\v_sport1_quadra_turbo__basic_01.ent</OpenProjectFiles>
+  <OpenProjectFiles>base\vehicles\appearances\sport\quadra_turbo_basic.app</OpenProjectFiles>
+  <OpenProjectFiles>base\vehicles\sport\v_sport1_quadra_turbo\entities\meshes\v_sport1_quadra_turbo__ext01_hood_02.mesh</OpenProjectFiles>
+  <OpenProjectFiles>base\vehicles\sport\v_sport1_quadra_turbo\entities\meshes\textures\quadra_turbo_poor_ext01.mlsetup</OpenProjectFiles>
+  <OpenProjectFiles>base\vehicles\sport\v_sport1_quadra_turbo\entities\meshes\textures\quadra_turbo_poor_ext03.mlsetup</OpenProjectFiles>
+  <OpenProjectFiles>base\vehicles\sport\v_sport1_quadra_turbo\entities\meshes\textures\quadra_turbo_ext_base_masksset.mlmask</OpenProjectFiles>
 </CP77Mod>
