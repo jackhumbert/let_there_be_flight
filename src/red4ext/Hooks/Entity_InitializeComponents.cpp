@@ -92,9 +92,9 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3490519617, Entity_InitializeComponen
         configurationCls->ConstructCls(configuration);
 
         auto handle = RED4ext::Handle<IFlightConfiguration>(configuration);
-        configuration->ref = RED4ext::WeakHandle(*reinterpret_cast<RED4ext::Handle<RED4ext::ISerializable> *>(&handle));
+        // configuration->ref = RED4ext::WeakHandle(*reinterpret_cast<RED4ext::Handle<RED4ext::ISerializable> *>(&handle));
         configuration->nativeType = configurationCls;
-        configuration->component = RED4ext::Handle<FlightComponent>(fc);
+        configuration->component = RED4ext::WeakHandle<FlightComponent>(fch);
         // configuration->component.refCount->IncRef();
         fc->configuration = handle;
         // handle.refCount->IncRef();

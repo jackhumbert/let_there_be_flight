@@ -9,7 +9,7 @@ enum FlightVehicleType {
 
 public abstract native class IFlightConfiguration extends IScriptable {
   @runtimeProperty("offset", "0x40")
-  public native let component: ref<FlightComponent>;
+  public native let component: wref<FlightComponent>;
 
   @runtimeProperty("offset", "0x50")
   public native let thrusters: array<ref<IFlightThruster>>;
@@ -70,7 +70,7 @@ public abstract native class IFlightConfiguration extends IScriptable {
     TDBID.Append(meshTweak, t".thrusterMesh");
     let thrusterMesh = TweakDBInterface.GetResRef(meshTweak, defaultMesh);
 
-    let mc = new MeshComponent();
+    let mc = new PhysicalMeshComponent();
     mc.SetMesh(thrusterMesh);
     mc.meshApperance = thrusterAppearance;
     mc.motionBlurScale = 0.1;

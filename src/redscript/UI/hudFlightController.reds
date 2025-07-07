@@ -67,10 +67,10 @@ public class hudFlightController extends inkHUDGameController {
 
   protected cb func OnInitialize() -> Bool {
     FlightLog.Info("[hudFlightController] OnInitialize");
-    let delayInitialize: ref<DelayedHUDInitializeEvent>;
+    // let delayInitialize: ref<DelayedHUDInitializeEvent>;
     // inkTextRef.SetText(this.m_Date, "XX-XX-XXXX");
-    delayInitialize = new DelayedHUDInitializeEvent();
-    GameInstance.GetDelaySystem(this.GetPlayerControlledObject().GetGame()).DelayEvent(this.GetPlayerControlledObject(), delayInitialize, 0.10);
+    // delayInitialize = new DelayedHUDInitializeEvent();
+    // GameInstance.GetDelaySystem(this.GetPlayerControlledObject().GetGame()).DelayEvent(this.GetPlayerControlledObject(), delayInitialize, 0.10);
     // this.GetPlayerControlledObject().RegisterInputListener(this);
     this.offsetLeft = -838.0;
     this.offsetRight = 1495.0;

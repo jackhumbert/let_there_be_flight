@@ -12,7 +12,7 @@
 
 
 IFlightConfiguration::~IFlightConfiguration() {
-  component.~Handle();
+  component.~WeakHandle();
   for (auto& thruster : this->thrusters) {
     thruster.~Handle();
   }
@@ -135,7 +135,13 @@ void IFlightConfiguration::OnActivationCore() {
   auto ccCls = rtti->GetClass("vehicleChassisComponent");
   auto filterDataCls = rtti->GetClass("physicsFilterData");
 
-  for (auto const &handle : this->component->entity->componentsStorage.components) {
+
+  auto flightComponent = this->component.Lock();
+
+  if (!flightComponent->entity->IsOfClass(rtti->GetClass("vehicleBaseObject")))
+    return;
+
+  for (auto const &handle : flightComponent->entity->componentsStorage.components) {
     auto component = handle.GetPtr();
     if (sc == NULL && component->GetNativeType() == scCls) {
       if (component->name == "vehicle_slots") {
@@ -147,7 +153,7 @@ void IFlightConfiguration::OnActivationCore() {
   }
 
   if (cc != NULL && sc != NULL) {
-    FlightComponent::Get((RED4ext::vehicle::BaseObject*)this->component->entity)->chassis = cc;
+    FlightComponent::Get((RED4ext::vehicle::BaseObject*)flightComponent->entity)->chassis = cc;
     RED4ext::physics::ProxyHelper proxyHelper(cc->proxyID, &cc->sharedMutex);
 
     auto key = (RED4ext::physics::PhysicalSystemProxy *) RED4ext::physics::ProxyID::GetProxy(cc->proxyID);
@@ -216,7 +222,12 @@ void IFlightConfiguration::OnDeactivationCore() {
 
   auto ccCls = rtti->GetClass("vehicleChassisComponent");
 
-  for (auto const &handle : this->component->entity->componentsStorage.components) {
+  auto flightComponent = this->component.Lock();
+
+  if (!flightComponent->entity->IsOfClass(rtti->GetClass("vehicleBaseObject")))
+    return;
+
+  for (auto const &handle : flightComponent->entity->componentsStorage.components) {
     auto component = handle.GetPtr();
     if (cc == NULL && component->GetNativeType() == ccCls) {
       cc = reinterpret_cast<RED4ext::vehicle::ChassisComponent *>(component);
@@ -242,6 +253,9 @@ void IFlightConfiguration::OnDeactivationCore() {
     physx::PxShape *shapes[16];
     body->getShapes(shapes, 16, this->originalShapeCount);
     for (int i = 0; i < fmin(nbShapes - this->originalShapeCount, 16); i++) {
+      // this might cause a crash when the game exits with:
+      // * vehicle flight active?
+      // * more than one vehicle flight active?
       body->detachShape(*shapes[i], true);
     }
 

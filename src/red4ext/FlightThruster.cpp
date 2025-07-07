@@ -1,5 +1,5 @@
 #include "FlightThruster.hpp"
 
 IFlightThruster::~IFlightThruster() {
-  meshComponent.~Handle();
+  // meshComponent.~Handle();
 }

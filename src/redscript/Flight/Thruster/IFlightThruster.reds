@@ -7,7 +7,7 @@ public abstract native class IFlightThruster extends IScriptable {
   public native let slotName: CName;
 
   @runtimeProperty("offset", "0x90")
-  public native let meshComponent: ref<MeshComponent>;
+  public native let meshComponent: wref<MeshComponent>;
 
   @runtimeProperty("offset", "0xA0")
   public native let vehicle: wref<VehicleObject>;

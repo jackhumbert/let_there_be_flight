@@ -38,6 +38,7 @@ user\jackhumbert\textures\flight_pitch_minor.inkatlas
 user\jackhumbert\textures\flight_pitch_minor.xbm
 user\jackhumbert\textures\flight_pitch.inkatlas
 user\jackhumbert\textures\flight_pitch.xbm
+user\jackhumbert\textures\thrusters\quadra_turbo.mlmask
 user\jackhumbert\widgets\flight_hud_animations.inkanim
 user\jackhumbert\widgets\flight_hud.inkwidget
 user\jackhumbert\widgets\flight_ui.bk.inkwidget

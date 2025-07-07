@@ -1,18 +1,54 @@
 Vehicle.v_sport2_porsche_911turbo_player {
   ResRef thrusterMesh = "user\jackhumbert\meshes\engine_corpo.mesh";
   CName thrusterAppearance = "blackout";
+  bool hasRetroThruster = true;
 }
 
 Vehicle.v_sport1_quadra_sport_r7_netrunner {
   ResRef thrusterMesh = "user\jackhumbert\meshes\engine_corpo.mesh";
   CName thrusterAppearance = "blackout";
+  bool hasRetroThruster = true;
 }
 
 Vehicle.v_sport1_quadra_turbo_player {
-  ResRef thrusterMesh = "base\vehicles\sport\v_sport1_quadra_turbo\entities\meshes\v_sport1_quadra_turbo__ext01_hood_02.mesh";
-  CName thrusterAppearance = "urban_02";
+  ResRef thrusterMesh = "user\jackhumbert\meshes\thrusters\quadra_turbo.mesh";
+  CName thrusterAppearance = "default";
 }
 
+Vehicle.v_sport1_quadra_turbo_r_player {
+  ResRef thrusterMesh = "user\jackhumbert\meshes\thrusters\quadra_turbo.mesh";
+  CName thrusterAppearance = "type_r";
+}
+
+Vehicle.v_sport2_quadra_type66_02_player {
+  ResRef thrusterMesh = "user\jackhumbert\meshes\thrusters\quadra_type66.mesh";
+  CName thrusterAppearance = "special_02";
+}
+
+Vehicle.v_sport2_quadra_type66_player {
+  ResRef thrusterMesh = "user\jackhumbert\meshes\thrusters\quadra_type66.mesh";
+  CName thrusterAppearance = "special_01";
+}
+
+Vehicle.v_sport2_quadra_type66_gt_player {
+  ResRef thrusterMesh = "user\jackhumbert\meshes\thrusters\quadra_type66.mesh";
+  CName thrusterAppearance = "urban_03";
+}
+
+Vehicle.v_sport2_quadra_type66_base_player {
+  ResRef thrusterMesh = "user\jackhumbert\meshes\thrusters\quadra_type66.mesh";
+  CName thrusterAppearance = "suburban_06";
+}
+
+Vehicle.v_sport2_quadra_type66_nomad_player {
+  ResRef thrusterMesh = "user\jackhumbert\meshes\thrusters\quadra_type66.mesh";
+  CName thrusterAppearance = "player_01";
+}
+
+Vehicle.v_sport2_quadra_type66_nomad_ncu_player {
+  ResRef thrusterMesh = "user\jackhumbert\meshes\thrusters\quadra_type66.mesh";
+  CName thrusterAppearance = "sampson";
+}
 // Vehicle.VehicleQuadraSportR7AppearancesToColorTemplate {
 //   colorTemplates[0].customMultilayers += [ 
 //     {

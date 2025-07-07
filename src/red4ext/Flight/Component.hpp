@@ -60,6 +60,8 @@ public:
     return true;
   }
 
+  virtual void OnEnabled(bool enabled) override;
+
   void ChaseTarget(RED4ext::WeakHandle<RED4ext::game::Object> target);
 
   inline static FlightComponent *Get(RED4ext::vehicle::BaseObject *v) {

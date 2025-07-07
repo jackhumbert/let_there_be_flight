@@ -45,49 +45,58 @@ void Entity::AddComponent(RED4ext::Handle<RED4ext::ent::IComponent> const & comp
     }
   }
 
-  if (vcc != NULL) {
-    if (componentToAdd->GetNativeType() == rtti->GetClass("entMeshComponent")) {
-      auto meshComponent = (RED4ext::ent::MeshComponent *)componentToAdd.instance;
-      meshComponent->appearanceName = meshComponent->meshAppearance;
-      auto vcd = reinterpret_cast<RED4ext::ent::VisualControllerDependency *>(
-          rtti->GetClass("entVisualControllerDependency")->CreateInstance(true));
-      vcd->appearanceName = meshComponent->meshAppearance;
-      vcd->componentName = meshComponent->name;
-      vcd->mesh.path = meshComponent->mesh.path;
-      vcc->appearanceDependency.EmplaceBack(*vcd);
+  if (componentToAdd->GetNativeType() == rtti->GetClass("entMeshComponent") || componentToAdd->GetNativeType() == rtti->GetClass("entPhysicalMeshComponent")) {
+    if (vcc != NULL) {
+        auto meshComponent = (RED4ext::ent::MeshComponent *)componentToAdd.instance;
+        meshComponent->appearanceName = meshComponent->meshAppearance;
+        auto vcd = reinterpret_cast<RED4ext::ent::VisualControllerDependency *>(
+            rtti->GetClass("entVisualControllerDependency")->CreateInstance(true));
+        vcd->appearanceName = meshComponent->meshAppearance;
+        vcd->componentName = meshComponent->name;
+        vcd->mesh.path = meshComponent->mesh.path;
+        vcc->appearanceDependency.EmplaceBack(*vcd);
 
-      if (vcc->resourcePaths.size) {
-        for (int i = 0; i < vcc->resourcePaths.size; i++) {
-          if (vcc->resourcePaths[i] == meshComponent->mesh.path) {
-            break;
-          } else if (vcc->resourcePaths[i] > meshComponent->mesh.path) {
-            vcc->resourcePaths.Emplace(&vcc->resourcePaths[i], meshComponent->mesh.path);
-            break;
+        if (vcc->resourcePaths.size) {
+          for (int i = 0; i < vcc->resourcePaths.size; i++) {
+            if (vcc->resourcePaths[i] == meshComponent->mesh.path) {
+              break;
+            } else if (vcc->resourcePaths[i] > meshComponent->mesh.path) {
+              vcc->resourcePaths.Emplace(&vcc->resourcePaths[i], meshComponent->mesh.path);
+              break;
+            }
+          }
+        } else {
+          vcc->resourcePaths.EmplaceBack(meshComponent->mesh.path);
+        }
+      }
+    if (customization != NULL) {
+      for (auto const & desc : customization->effectDescs) {
+        if (desc->effectName == "vvc_color_instant") {
+          desc->compiledEffectInfo.componentNames.PushBack(componentToAdd->name);
+          for (auto & event : desc->compiledEffectInfo.eventsSortedByRUID) {
+            if (event.componentIndexMask & 0x2)
+              event.componentIndexMask |= (1ULL << (desc->compiledEffectInfo.componentNames.size - 1));
           }
         }
-      } else {
-        vcc->resourcePaths.EmplaceBack(meshComponent->mesh.path);
+        if (desc->effectName == "vvc_color") {
+          desc->compiledEffectInfo.componentNames.PushBack(componentToAdd->name);
+          for (auto & event : desc->compiledEffectInfo.eventsSortedByRUID) {
+            if (event.componentIndexMask & 0x2)
+              event.componentIndexMask |= (1ULL << (desc->compiledEffectInfo.componentNames.size - 1));
+          }
+        }
       }
     }
   }
 
-  if (customization != NULL) {
-    for (auto const & desc : customization->effectDescs) {
-      if (desc->effectName == "vvc_color_instant") {
-        desc->compiledEffectInfo.componentNames.PushBack(componentToAdd->name);
-        for (auto & event : desc->compiledEffectInfo.eventsSortedByRUID) {
-          if (event.componentIndexMask & 0x2)
-            event.componentIndexMask |= (1ULL << (desc->compiledEffectInfo.componentNames.size - 1));
-        }
-      }
-      if (desc->effectName == "vvc_color") {
-        desc->compiledEffectInfo.componentNames.PushBack(componentToAdd->name);
-        for (auto & event : desc->compiledEffectInfo.eventsSortedByRUID) {
-          if (event.componentIndexMask & 0x2)
-            event.componentIndexMask |= (1ULL << (desc->compiledEffectInfo.componentNames.size - 1));
-        }
-      }
-    }
+  if (componentToAdd->GetNativeType() == rtti->GetClass("entPhysicalMeshComponent")) {
+    auto pmComponent = (RED4ext::ent::PhysicalMeshComponent *)componentToAdd.instance;
+    
+    auto filterData = (RED4ext::physics::FilterData*)malloc(sizeof(RED4ext::physics::FilterData));
+    RED4ext::physics::FilterData::Init(filterData);
+
+    pmComponent->filterData = RED4ext::Handle<RED4ext::physics::FilterData>(filterData);
+    pmComponent->filterDataSource = FilterDataSource::Collider;
   }
 
   this->componentsStorage.components.PushBack(componentToAdd);

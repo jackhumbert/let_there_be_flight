@@ -26,13 +26,15 @@ public class CarFlightConfiguration extends IFlightConfiguration {
     ArrayPush(this.thrusters, new FlightThrusterFR().Create(vehicle, this.CreateMesh(vehicle)));
     ArrayPush(this.thrusters, new FlightThrusterBR().Create(vehicle, this.CreateMesh(vehicle)));
     ArrayPush(this.thrusters, new FlightThrusterBL().Create(vehicle, this.CreateMesh(vehicle)));
+
+    let retroThrusterTweak = vehicle.GetRecordID();
+    TDBID.Append(retroThrusterTweak, t".hasRetroThruster");
+    let hasRetroThruster = TweakDBInterface.GetBool(retroThrusterTweak, false);
       
-    if (!Equals(this.type, FlightVehicleType.Corpo)) {
-      this.thrusters[0].hasRetroThruster = false;
-      this.thrusters[1].hasRetroThruster = false;
-      this.thrusters[2].hasRetroThruster = false;
-      this.thrusters[3].hasRetroThruster = false;
-    }
+    this.thrusters[0].hasRetroThruster = hasRetroThruster;
+    this.thrusters[1].hasRetroThruster = hasRetroThruster;
+    this.thrusters[2].hasRetroThruster = hasRetroThruster;
+    this.thrusters[3].hasRetroThruster = hasRetroThruster;
 
     this.thrusters[0].wheelIndex = 0;
     this.thrusters[1].wheelIndex = 1;
@@ -40,7 +42,7 @@ public class CarFlightConfiguration extends IFlightConfiguration {
     this.thrusters[3].wheelIndex = 3;
 
     for thruster in this.thrusters {
-      if (Equals(this.type, FlightVehicleType.Corpo)) {
+      if thruster.hasRetroThruster {
         ArrayPush(thruster.fxs, new MainFlightThrusterFX().Create(thruster));
         ArrayPush(thruster.fxs, new SideFlightThrusterFX().Create(thruster));
       } else {

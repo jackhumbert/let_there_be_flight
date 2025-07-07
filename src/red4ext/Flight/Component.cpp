@@ -49,7 +49,15 @@ void FlightComponent::ChaseTarget(WeakHandle<game::Object> target) {
   //}
 }
 
-void FlightComponent::OnUpdate(float deltaTime) {
+void FlightComponent::OnEnabled(bool enabled) { 
+  spdlog::info("FlightComponent {}", enabled);
+};
+
+void FlightComponent::OnUpdate(float deltaTime) { 
+  auto rtti = RED4ext::CRTTISystem::Get();
+  if (!this->entity->IsOfClass(rtti->GetClass("vehicleBaseObject")))
+    return;
+
   auto vehicle = reinterpret_cast<vehicle::BaseObject *>(this->entity);
   if (this->hasUpdate) {
     /*if (this->chassis) {

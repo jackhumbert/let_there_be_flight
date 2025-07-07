@@ -20,7 +20,7 @@ public:
 
   virtual ~IFlightConfiguration() override;
 
-  RED4ext::Handle<FlightComponent> component;
+  RED4ext::WeakHandle<FlightComponent> component;
   RED4ext::DynArray<RED4ext::Handle<IFlightThruster>> thrusters;
   RED4ext::CName flightCameraBone = "roof_border_front";
   RED4ext::Vector3 flightCameraOffset = RED4ext::Vector3(0.0, 0.0, 0.0);
