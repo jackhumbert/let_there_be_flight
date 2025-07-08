@@ -17,7 +17,7 @@ public:
   alignas(0x10) RED4ext::Quaternion relativeRotation = RED4ext::Quaternion(0.0, 0.0, 0.0, 1.0);
   RED4ext::CName meshPath = "user\\jackhumbert\\meshes\\engine_corpo.mesh";
   RED4ext::CName meshName = "Thruster";
-  RED4ext::WeakHandle<RED4ext::ent::MeshComponent> meshComponent;
+  RED4ext::Handle<RED4ext::ent::MeshComponent> meshComponent;
   RED4ext::WeakHandle<RED4ext::vehicle::BaseObject> vehicle;
 private:
   friend Descriptor;

@@ -53,6 +53,24 @@ public func GetLocalToWorld() -> Matrix {
   return WorldTransform.ToMatrix(this.GetWorldTransform());
 }
 
+@addMethod(VehicleObject)
+public func GetCName(const varName: script_ref<String>, opt defaultValue: CName) -> CName {
+  let globalValue = TweakDBInterface.GetCName(TDBID.Create("player.vehicle." + varName), defaultValue);
+
+  let tweak = this.GetRecordID();
+  TDBID.Append(tweak, TDBID.Create("." + varName));
+  return TweakDBInterface.GetCName(tweak, globalValue);
+}
+
+@addMethod(VehicleObject)
+public func GetResRef(const varName: script_ref<String>, opt defaultValue: ResRef) -> ResRef {
+  let globalValue = TweakDBInterface.GetResRef(TDBID.Create("player.vehicle." + varName), defaultValue);
+
+  let tweak = this.GetRecordID();
+  TDBID.Append(tweak, TDBID.Create("." + varName));
+  return TweakDBInterface.GetResRef(tweak, globalValue);
+}
+
 // @addField(VehicleObject)
 // public let chassis: ref<vehicleChassisComponent>;
 

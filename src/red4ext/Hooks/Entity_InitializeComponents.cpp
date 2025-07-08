@@ -33,7 +33,8 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3490519617, Entity_InitializeComponen
 
     auto fc = (FlightComponent *)FlightComponent::GetRTTIType()->CreateInstance(true);
     fc->name = "flightComponent";
-    fc->entity = entity;
+    fc->id = RED4ext::CRUID::Next();
+    // fc->entity = entity;
     auto fch = RED4ext::Handle<FlightComponent>(fc);
     vehicle->componentsStorage.components.EmplaceBack(fch);
 
@@ -91,18 +92,19 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3490519617, Entity_InitializeComponen
         auto configuration = reinterpret_cast<IFlightConfiguration *>(configurationCls->CreateInstance(true));
         configurationCls->ConstructCls(configuration);
 
-        auto handle = RED4ext::Handle<IFlightConfiguration>(configuration);
+        // auto handle = RED4ext::Handle<IFlightConfiguration>(configuration);
         // configuration->ref = RED4ext::WeakHandle(*reinterpret_cast<RED4ext::Handle<RED4ext::ISerializable> *>(&handle));
         configuration->nativeType = configurationCls;
         configuration->component = RED4ext::WeakHandle<FlightComponent>(fch);
-        // configuration->component.refCount->IncRef();
-        fc->configuration = handle;
-        // handle.refCount->IncRef();
+        configuration->component.refCount->IncRef();
+        fc->configuration = RED4ext::Handle<IFlightConfiguration>(configuration);
+        // fc->configuration.refCount->IncRef();
 
         configuration->Setup(vehicle);
         // configuration->AddMeshes(entity, vcc);
         for (auto const & thruster : configuration->thrusters) {
           if (thruster->meshComponent) {
+            thruster->meshComponent.refCount->IncRef();
             entity->AddComponent(thruster->meshComponent);
           }
         }
@@ -188,6 +190,7 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3490519617, Entity_InitializeComponen
     {
       auto whc = (RED4ext::WidgetHudComponent *)rtti->GetClass("WidgetHudComponent")->CreateInstance(true);
       whc->name = "FlightHUD";
+      whc->id = RED4ext::CRUID::Next();
       // auto resource =
       // RED4ext::Ref<RED4ext::ink::HudEntriesResource>("user\\jackhumbert\\widgets\\hud_flight.inkhud", true);
       whc->hudEntriesResource.path = "user\\jackhumbert\\widgets\\hud_flight.inkhud";

@@ -62,17 +62,18 @@ public abstract native class IFlightConfiguration extends IScriptable {
       defaultMesh = r"user\\jackhumbert\\meshes\\engine_corpo.mesh";
     }
 
-    let appearanceTweak = vehicle.GetRecordID();
-    TDBID.Append(appearanceTweak, t".thrusterAppearance");
-    let thrusterAppearance = TweakDBInterface.GetCName(appearanceTweak, n"default");
+    // let appearanceTweak = vehicle.GetRecordID();
+    // TDBID.Append(appearanceTweak, t".thrusterAppearance");
+    // let thrusterAppearance = TweakDBInterface.GetCName(appearanceTweak, n"default");
     
-    let meshTweak = vehicle.GetRecordID();
-    TDBID.Append(meshTweak, t".thrusterMesh");
-    let thrusterMesh = TweakDBInterface.GetResRef(meshTweak, defaultMesh);
+    // let meshTweak = vehicle.GetRecordID();
+    // TDBID.Append(meshTweak, t".thrusterMesh");
+    // let thrusterMesh = TweakDBInterface.GetResRef(meshTweak, defaultMesh);
+
 
     let mc = new PhysicalMeshComponent();
-    mc.SetMesh(thrusterMesh);
-    mc.meshApperance = thrusterAppearance;
+    mc.SetMesh(vehicle.GetResRef("thrusterMesh", defaultMesh));
+    mc.meshApperance = vehicle.GetCName("thrusterAppearance");
     mc.motionBlurScale = 0.1;
     mc.LODMode = entMeshComponentLODMode.Appearance;
     return mc;

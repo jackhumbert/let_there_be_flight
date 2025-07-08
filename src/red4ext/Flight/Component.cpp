@@ -1,6 +1,7 @@
 #include "Flight/Component.hpp"
 #include "FlightSystem.hpp"
 #include <RED4ext/Scripting/Natives/vehiclePhysicsData.hpp>
+#include <RED4ext/Scripting/Natives/vehicleDestruction.hpp>
 
 using namespace RED4ext;
 
@@ -55,10 +56,12 @@ void FlightComponent::OnEnabled(bool enabled) {
 
 void FlightComponent::OnUpdate(float deltaTime) { 
   auto rtti = RED4ext::CRTTISystem::Get();
-  if (!this->entity->IsOfClass(rtti->GetClass("vehicleBaseObject")))
+  vehicle::BaseObject * vehicle;
+  if (!this->entity->IsOfClass(rtti->GetClass("vehicleBaseObject"))) {
     return;
-
-  auto vehicle = reinterpret_cast<vehicle::BaseObject *>(this->entity);
+  } else {
+    vehicle = reinterpret_cast<vehicle::BaseObject *>(this->entity);
+  }
   if (this->hasUpdate) {
     /*if (this->chassis) {
       physics::ProxyHelper helper;

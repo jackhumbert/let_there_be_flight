@@ -8,8 +8,8 @@
 @runtimeProperty("offset", "0x138")
 public native let entityTags: array<CName>;
 
-@addMethod(Entity)
-public native func AddComponent(component: ref<IComponent>);
+// @addMethod(Entity)
+// public native func AddComponent(component: ref<IComponent>);
 
 @addMethod(Entity)
 public native func AddSlot(boneName: CName, slotName: CName, relativePosition: Vector3, relativeRotation: Quaternion);

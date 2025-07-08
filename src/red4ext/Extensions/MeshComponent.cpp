@@ -23,6 +23,8 @@ void IPlacedComponent::SetParentTransform(RED4ext::CName bindName, RED4ext::CNam
 }
 
 void Entity::AddComponent(RED4ext::Handle<RED4ext::ent::IComponent> const & componentToAdd) {
+  componentToAdd->id = RED4ext::CRUID::Next();
+
   RED4ext::ent::VisualControllerComponent *vcc = nullptr;
   RED4ext::ent::EffectSpawnerComponent *customization = nullptr;
   auto rtti = RED4ext::CRTTISystem::Get();
@@ -46,9 +48,11 @@ void Entity::AddComponent(RED4ext::Handle<RED4ext::ent::IComponent> const & comp
   }
 
   if (componentToAdd->GetNativeType() == rtti->GetClass("entMeshComponent") || componentToAdd->GetNativeType() == rtti->GetClass("entPhysicalMeshComponent")) {
+
     if (vcc != NULL) {
         auto meshComponent = (RED4ext::ent::MeshComponent *)componentToAdd.instance;
         meshComponent->appearanceName = meshComponent->meshAppearance;
+
         auto vcd = reinterpret_cast<RED4ext::ent::VisualControllerDependency *>(
             rtti->GetClass("entVisualControllerDependency")->CreateInstance(true));
         vcd->appearanceName = meshComponent->meshAppearance;
@@ -92,8 +96,7 @@ void Entity::AddComponent(RED4ext::Handle<RED4ext::ent::IComponent> const & comp
   if (componentToAdd->GetNativeType() == rtti->GetClass("entPhysicalMeshComponent")) {
     auto pmComponent = (RED4ext::ent::PhysicalMeshComponent *)componentToAdd.instance;
     
-    auto filterData = (RED4ext::physics::FilterData*)malloc(sizeof(RED4ext::physics::FilterData));
-    RED4ext::physics::FilterData::Init(filterData);
+    auto filterData = (RED4ext::physics::FilterData*)rtti->GetClass("physicsFilterData")->CreateInstance(true);
 
     pmComponent->filterData = RED4ext::Handle<RED4ext::physics::FilterData>(filterData);
     pmComponent->filterDataSource = FilterDataSource::Collider;

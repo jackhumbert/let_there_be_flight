@@ -49,14 +49,56 @@ Vehicle.v_sport2_quadra_type66_nomad_ncu_player {
   ResRef thrusterMesh = "user\jackhumbert\meshes\thrusters\quadra_type66.mesh";
   CName thrusterAppearance = "sampson";
 }
-// Vehicle.VehicleQuadraSportR7AppearancesToColorTemplate {
-//   colorTemplates[0].customMultilayers += [ 
-//     {
-//       affectedComponents = [ "ThrusterFL" ];
-//       customMlSetup = "ep1\vehicles\sport\v_sport1_quadra_sport_r7\entities\meshes\textures\ext_suburban_09.mlsetup";
-//       customMlMask = "ep1\vehicles\sport\v_sport1_quadra_sport_r7\entities\meshes\textures\ext_01_masksset.mlmask";
-//       coatLayerMin = -1.0f;
-//       coatLayerMax = 21.0f;
-//     } : VehicleCustomMultilayer
-//   ];
-// }
+
+Vehicle.VehicleDestructionParamsQuadraType66Nomad {
+  detachableParts += [
+  {
+    name = "ThrusterFL";
+    gridCells = 
+    [
+      6, 7
+    ];
+    threshold = 0.1;
+    components = 
+    [
+      "ThrusterFL"
+    ];
+  },
+  {
+    name = "ThrusterFR";
+    gridCells = 
+    [
+      2, 3
+    ];
+    threshold = 0.1;
+    components = 
+    [
+      "ThrusterFR"
+    ];
+  },
+  {
+    name = "ThrusterBR";
+    gridCells = 
+    [
+      4, 5
+    ];
+    threshold = 0.1;
+    components = 
+    [
+      "ThrusterBR"
+    ];
+  },
+  {
+    name = "ThrusterBL";
+    gridCells = 
+    [
+      4, 5
+    ];
+    threshold = 0.1;
+    components = 
+    [
+      "ThrusterBL"
+    ];
+  }
+  ];
+}

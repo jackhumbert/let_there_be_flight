@@ -17,7 +17,7 @@ public class BikeFlightConfiguration extends IFlightConfiguration {
       // this.frontChild.SetLocalPosition(new Vector4(0.0, 0.0, -0.2, 1.0));
       this.frontChild.SetLocalOrientation(new Quaternion(0.0, 0.0, 0.707, -0.707));
       this.frontChild.SetParentTransform(this.thrusters[0].meshComponent.name, n"None");
-      vehicle.AddComponent(this.frontChild);
+      // vehicle.AddComponent(this.frontChild);
 
       this.backChild = CreateNomadThruster();
       this.backChild.name = n"BackThrusterChild";
@@ -25,7 +25,7 @@ public class BikeFlightConfiguration extends IFlightConfiguration {
       // this.backChild.SetLocalPosition(new Vector4(0.0, 0.0, -0.2, 1.0));
       this.backChild.SetLocalOrientation(new Quaternion(0.0, 0.0, -0.707, -0.707));
       this.backChild.SetParentTransform(this.thrusters[1].meshComponent.name, n"None");
-      vehicle.AddComponent(this.backChild);
+      // vehicle.AddComponent(this.backChild);
     }
 
     this.thrusters[0].hasRetroThruster = false;

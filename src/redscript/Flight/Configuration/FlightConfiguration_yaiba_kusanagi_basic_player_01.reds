@@ -21,7 +21,7 @@ public class FlightConfiguration_yaiba_kusanagi_basic_player_01 extends IFlightC
       // this.frontChild.SetLocalOrientation(new Quaternion(0.0, 0.0, 0.707, -0.707));
       this.frontChild.SetLocalOrientation(EulerAngles.ToQuat(MakeEulerAngles(0, 0, 0)));
       this.frontChild.SetParentTransform(this.thrusters[0].meshComponent.name, n"None");
-      vehicle.AddComponent(this.frontChild);
+      // vehicle.AddComponent(this.frontChild);
 
       this.backChild = CreateNomadThruster();
       this.backChild.name = n"BackThrusterChild";
@@ -30,7 +30,7 @@ public class FlightConfiguration_yaiba_kusanagi_basic_player_01 extends IFlightC
       // this.backChild.SetLocalOrientation(new Quaternion(0.0, 0.0, -0.707, -0.707));
       this.backChild.SetLocalOrientation(EulerAngles.ToQuat(MakeEulerAngles(0, 0, 0)));
       this.backChild.SetParentTransform(this.thrusters[1].meshComponent.name, n"None");
-      vehicle.AddComponent(this.backChild);
+      // vehicle.AddComponent(this.backChild);
     }
 
     this.thrusters[0].hasRetroThruster = false;

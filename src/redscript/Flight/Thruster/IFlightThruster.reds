@@ -7,7 +7,7 @@ public abstract native class IFlightThruster extends IScriptable {
   public native let slotName: CName;
 
   @runtimeProperty("offset", "0x90")
-  public native let meshComponent: wref<MeshComponent>;
+  public native let meshComponent: ref<MeshComponent>;
 
   @runtimeProperty("offset", "0xA0")
   public native let vehicle: wref<VehicleObject>;
@@ -48,6 +48,7 @@ public abstract native class IFlightThruster extends IScriptable {
   public let audioPitch: Float;
   public let audioPitchSeparation: Float = 0.001;
   public let wheelIndex: Int32;
+  public let initialOrientation: Quaternion;
 
   public func OnSetup(fc : ref<FlightComponent>) {
     this.flightComponent = fc;
@@ -60,6 +61,8 @@ public abstract native class IFlightThruster extends IScriptable {
 
     this.meshComponent.visualScale = new Vector3(0.0, 0.0, 0.0);
     this.meshComponent.Toggle(false);
+    this.initialOrientation = this.meshComponent.GetLocalOrientation();
+    // this.meshComponent.SetLocalOrientation(this.initialOrientation + EulerAngles.ToQuat(this.GetEulerAngles()));
     this.meshComponent.SetLocalOrientation(EulerAngles.ToQuat(this.GetEulerAngles()));
 
     this.id = "vehicle";
@@ -191,8 +194,13 @@ public abstract native class IFlightThruster extends IScriptable {
     if !this.flightComponent.active {
       vec = Vector4.EmptyVector();
     }
-    this.meshComponent.visualScale = Vector4.Vector4To3(Vector4.Interpolate(Vector4.Vector3To4(this.meshComponent.visualScale), vec, 0.1));
 
+    if !IsDefined(this.meshComponent) {
+      return;
+    }
+
+    this.meshComponent.visualScale = Vector4.Vector4To3(Vector4.Interpolate(Vector4.Vector3To4(this.meshComponent.visualScale), vec, 0.1));
+    // this.meshComponent.SetLocalOrientation(Quaternion.Slerp(this.meshComponent.GetLocalOrientation(), this.initialOrientation + EulerAngles.ToQuat(this.GetEulerAngles()), 0.1));
     this.meshComponent.SetLocalOrientation(Quaternion.Slerp(this.meshComponent.GetLocalOrientation(), EulerAngles.ToQuat(this.GetEulerAngles()), 0.1));
 
     let amount = Vector4.Dot(Quaternion.GetUp(this.meshComponent.GetLocalOrientation()), this.force);

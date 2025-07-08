@@ -50,7 +50,7 @@ public:
   }
   
   // only one instance per entity
-  inline virtual bool sub_128() override { return true; };
+  // inline virtual bool sub_128() override { return true; };
 
   virtual void OnAttach(void* a1) override;
   virtual void OnDetach(void* a1) override;
