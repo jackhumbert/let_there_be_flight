@@ -20,6 +20,59 @@ Vehicle.v_sport1_quadra_turbo_r_player {
   CName thrusterAppearance = "type_r";
 }
 
+// Vehicle.VehicleDestructionParamsQuadraTurbo {
+//   detachableParts += [
+//   {
+//     name = "ThrusterFL";
+//     gridCells = 
+//     [
+//       4
+//     ];
+//     threshold = 0.01;
+//     components = 
+//     [
+//       "ThrusterFL"
+//     ];
+//   },
+//   {
+//     name = "ThrusterFR";
+//     gridCells = 
+//     [
+//       5
+//     ];
+//     threshold = 0.01;
+//     components = 
+//     [
+//       "ThrusterFR"
+//     ];
+//   },
+//   {
+//     name = "ThrusterBR";
+//     gridCells = 
+//     [
+//       0
+//     ];
+//     threshold = 0.01;
+//     components = 
+//     [
+//       "ThrusterBR"
+//     ];
+//   },
+//   {
+//     name = "ThrusterBL";
+//     gridCells = 
+//     [
+//       1
+//     ];
+//     threshold = 0.01;
+//     components = 
+//     [
+//       "ThrusterBL"
+//     ];
+//   }
+//   ];
+// }
+
 Vehicle.v_sport2_quadra_type66_02_player {
   ResRef thrusterMesh = "user\jackhumbert\meshes\thrusters\quadra_type66.mesh";
   CName thrusterAppearance = "special_02";
@@ -56,9 +109,9 @@ Vehicle.VehicleDestructionParamsQuadraType66Nomad {
     name = "ThrusterFL";
     gridCells = 
     [
-      6, 7
+      4
     ];
-    threshold = 0.1;
+    threshold = 0.01;
     components = 
     [
       "ThrusterFL"
@@ -68,9 +121,9 @@ Vehicle.VehicleDestructionParamsQuadraType66Nomad {
     name = "ThrusterFR";
     gridCells = 
     [
-      2, 3
+      5
     ];
-    threshold = 0.1;
+    threshold = 0.01;
     components = 
     [
       "ThrusterFR"
@@ -80,9 +133,9 @@ Vehicle.VehicleDestructionParamsQuadraType66Nomad {
     name = "ThrusterBR";
     gridCells = 
     [
-      4, 5
+      0
     ];
-    threshold = 0.1;
+    threshold = 0.01;
     components = 
     [
       "ThrusterBR"
@@ -92,9 +145,9 @@ Vehicle.VehicleDestructionParamsQuadraType66Nomad {
     name = "ThrusterBL";
     gridCells = 
     [
-      4, 5
+      1
     ];
-    threshold = 0.1;
+    threshold = 0.01;
     components = 
     [
       "ThrusterBL"

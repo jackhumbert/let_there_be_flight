@@ -8,7 +8,7 @@
 #include <RED4ext/Scripting/Natives/entEntity.hpp>
 //#include "FlightConfiguration.hpp"
 
-class MeshComponent : public Engine::RTTIExpansion<MeshComponent, RED4ext::ent::MeshComponent> {
+class MeshComponentExt : public Engine::RTTIExpansion<MeshComponentExt, RED4ext::ent::MeshComponent> {
 public:
   void SetMesh(RED4ext::ResRef mesh);
 
@@ -16,12 +16,12 @@ private:
 	friend Descriptor;
 
   inline static void OnExpand(Descriptor *aType, RED4ext::CRTTISystem *) {
-    aType->AddFunction<&MeshComponent::SetMesh>("SetMesh");
+    aType->AddFunction<&MeshComponentExt::SetMesh>("SetMesh");
   }
 };
 
 
-class IPlacedComponent : public Engine::RTTIExpansion<IPlacedComponent, RED4ext::ent::IPlacedComponent> {
+class IPlacedComponentExt : public Engine::RTTIExpansion<IPlacedComponentExt, RED4ext::ent::IPlacedComponent> {
 public:
   void SetParentTransform(RED4ext::CName bindName, RED4ext::CName slotName);
 
@@ -29,11 +29,11 @@ private:
   friend Descriptor;
 
   inline static void OnExpand(Descriptor *aType, RED4ext::CRTTISystem *) {
-    aType->AddFunction<&IPlacedComponent::SetParentTransform>("SetParentTransform");
+    aType->AddFunction<&IPlacedComponentExt::SetParentTransform>("SetParentTransform");
   }
 };
 
-class Entity : public Engine::RTTIExpansion<Entity, RED4ext::ent::Entity> {
+class EntityExt : public Engine::RTTIExpansion<EntityExt, RED4ext::ent::Entity> {
 public:
   void AddComponent(RED4ext::Handle<RED4ext::ent::IComponent> const & component);
   void AddSlot(RED4ext::CName boneName, RED4ext::CName slotName, RED4ext::Vector3 relativePosition, RED4ext::Quaternion relativeRotation);

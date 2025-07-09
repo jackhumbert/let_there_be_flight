@@ -1,0 +1,31 @@
+
+Vehicle.$(v).destruction:
+  $instances:
+    - { v: v_sport1_quadra_turbo_player }
+    - { v: v_sport1_quadra_turbo_r_player }
+    - { v: v_sport2_porsche_911turbo_player }
+  detachableParts:
+    - !append
+      $type: VehicleDetachablePart
+      name: "ThrusterFL"
+      gridCells: [ 4 ]
+      threshold: 0.01
+      components: [ "ThrusterFL" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: "ThrusterFR"
+      gridCells: [ 5 ]
+      threshold: 0.01
+      components: [ "ThrusterFR" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: "ThrusterBR"
+      gridCells: [ 0 ]
+      threshold: 0.01
+      components: [ "ThrusterBR" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: "ThrusterBL"
+      gridCells: [ 1 ]
+      threshold: 0.01
+      components: [ "ThrusterBL" ]

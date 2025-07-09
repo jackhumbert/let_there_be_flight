@@ -8,52 +8,49 @@
 #include <RED4ext/Scripting/Natives/Generated/physics/ColliderSphere.hpp>
 #include <RED4ext/Scripting/Natives/Generated/physics/QueryFilter.hpp>
 #include <RED4ext/Scripting/Natives/Generated/physics/SimulationFilter.hpp>
+#include <RED4ext/Scripting/Natives/Generated/game/data/VehicleDestruction_Record.hpp>
+#include <RED4ext/Scripting/Natives/Generated/game/data/VehicleDetachablePart_Record.hpp>
 #include "FlightConfiguration.hpp"
 
-void MeshComponent::SetMesh(RED4ext::ResRef mesh) {
+using namespace RED4ext;
+
+void MeshComponentExt::SetMesh(ResRef mesh) {
 	this->mesh.path = mesh.resource.path;
 }
 
-void IPlacedComponent::SetParentTransform(RED4ext::CName bindName, RED4ext::CName slotName) {
-  auto rtti = RED4ext::CRTTISystem::Get();
-  auto htb = (RED4ext::ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->CreateInstance(true);
+void IPlacedComponentExt::SetParentTransform(CName bindName, CName slotName) {
+  auto rtti = CRTTISystem::Get();
+  auto htb = (ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->CreateInstance(true);
   htb->bindName = bindName;
   htb->slotName = slotName;
-  this->parentTransform = RED4ext::Handle<RED4ext::ent::ITransformBinding>(htb);
+  this->parentTransform = Handle<ent::ITransformBinding>(htb);
 }
 
-void Entity::AddComponent(RED4ext::Handle<RED4ext::ent::IComponent> const & componentToAdd) {
-  componentToAdd->id = RED4ext::CRUID::Next();
+void EntityExt::AddComponent(Handle<ent::IComponent> const & componentToAdd) {
+  componentToAdd->id = CRUID::Next();
 
-  RED4ext::ent::VisualControllerComponent *vcc = nullptr;
-  RED4ext::ent::EffectSpawnerComponent *customization = nullptr;
-  auto rtti = RED4ext::CRTTISystem::Get();
+  ent::VisualControllerComponent *vcc = nullptr;
+  ent::EffectSpawnerComponent *customization = nullptr;
+  auto rtti = CRTTISystem::Get();
   auto vccClass = rtti->GetClass("entVisualControllerComponent");
   auto effectSpawnerClass = rtti->GetClass("entEffectSpawnerComponent");
 
   for (auto const &component : this->componentsStorage.components) {
-    // auto component = handle.GetPtr();
     if (component->GetNativeType() == vccClass) {
-      vcc = reinterpret_cast<RED4ext::ent::VisualControllerComponent *>(component.instance);
-      break;
+      vcc = reinterpret_cast<ent::VisualControllerComponent *>(component.instance);
     }
-  }
-
-  for (auto const &component : this->componentsStorage.components) {
-    // auto component = handle.GetPtr();
     if (component->GetNativeType() == effectSpawnerClass && component->name == "vehicleVisualCustomization") {
-      customization = reinterpret_cast<RED4ext::ent::EffectSpawnerComponent *>(component.instance);
-      break;
+      customization = reinterpret_cast<ent::EffectSpawnerComponent *>(component.instance);
     }
   }
-
-  if (componentToAdd->GetNativeType() == rtti->GetClass("entMeshComponent") || componentToAdd->GetNativeType() == rtti->GetClass("entPhysicalMeshComponent")) {
+  
+  if (componentToAdd->IsOfClass(rtti->GetClass("entMeshComponent"))) {
 
     if (vcc != NULL) {
-        auto meshComponent = (RED4ext::ent::MeshComponent *)componentToAdd.instance;
+        auto meshComponent = (ent::MeshComponent *)componentToAdd.instance;
         meshComponent->appearanceName = meshComponent->meshAppearance;
 
-        auto vcd = reinterpret_cast<RED4ext::ent::VisualControllerDependency *>(
+        auto vcd = reinterpret_cast<ent::VisualControllerDependency *>(
             rtti->GetClass("entVisualControllerDependency")->CreateInstance(true));
         vcd->appearanceName = meshComponent->meshAppearance;
         vcd->componentName = meshComponent->name;
@@ -94,40 +91,52 @@ void Entity::AddComponent(RED4ext::Handle<RED4ext::ent::IComponent> const & comp
   }
 
   if (componentToAdd->GetNativeType() == rtti->GetClass("entPhysicalMeshComponent")) {
-    auto pmComponent = (RED4ext::ent::PhysicalMeshComponent *)componentToAdd.instance;
+    auto pmComponent = (ent::PhysicalMeshComponent *)componentToAdd.instance;
     
-    auto filterData = (RED4ext::physics::FilterData*)rtti->GetClass("physicsFilterData")->CreateInstance(true);
+    auto filterData = (physics::FilterData*)rtti->GetClass("physicsFilterData")->CreateInstance(true);
 
-    pmComponent->filterData = RED4ext::Handle<RED4ext::physics::FilterData>(filterData);
+    pmComponent->filterData = Handle<physics::FilterData>(filterData);
     pmComponent->filterDataSource = FilterDataSource::Collider;
   }
+
+  // if (this->IsOfClass(rtti->GetClass("vehicleBaseObject"))) {
+  //   auto vehicle = reinterpret_cast<vehicle::BaseObject*>(this);
+  //   auto tweakDB = TweakDB::Get();
+  //   auto vehicleRecord = reinterpret_cast<game::data::Vehicle_Record*>(vehicle->GetRecord());
+  //   auto destructionRecord = reinterpret_cast<game::data::VehicleDestruction_Record*>(tweakDB->GetRecord(TweakDBID(vehicleRecord->recordID, ".destruction")).instance);
+  //   auto detachableParts = tweakDB->GetValue<DynArray<WeakHandle<game::data::VehicleDetachablePart_Record>>>(TweakDBID(destructionRecord->recordID, ".detachableParts"));
+  //   // TweakDBID()
+  //   auto stack = CStackType(rtti->GetClass("components"), );
+  //   tweakDB->AddFlat();
+  // }
+  
 
   this->componentsStorage.components.PushBack(componentToAdd);
 }
 
-//RED4ext::Handle<RED4ext::physics::ColliderSphere> * createSphereColliderHandleWithRadius(RED4ext::Handle<RED4ext::physics::ICollider> *handle,
+//Handle<physics::ColliderSphere> * createSphereColliderHandleWithRadius(Handle<physics::ICollider> *handle,
 //                                                         float radius) {
-//  RED4ext::RelocFunc<decltype(&RED4ext::physics::ColliderSphere::createHandleWithRadius)> call(
+//  RelocFunc<decltype(&physics::ColliderSphere::createHandleWithRadius)> call(
 //      physicsColliderSphere_createHandleWithRadius_Addr);
 //  return call(handle, radius);
 //}
 
-void Entity::AddSlot(RED4ext::CName boneName, RED4ext::CName slotName, RED4ext::Vector3 relativePosition, RED4ext::Quaternion relativeRotation) {
-  RED4ext::ent::SlotComponent *slotComponent = nullptr;
-  auto rtti = RED4ext::CRTTISystem::Get();
+void EntityExt::AddSlot(CName boneName, CName slotName, Vector3 relativePosition, Quaternion relativeRotation) {
+  ent::SlotComponent *slotComponent = nullptr;
+  auto rtti = CRTTISystem::Get();
 
   for (auto const &handle : this->componentsStorage.components) {
     auto component = handle.GetPtr();
     if (component->GetNativeType() == rtti->GetClass("entSlotComponent")) {
       if (component->name == "vehicle_slots") {
-        slotComponent = reinterpret_cast<RED4ext::ent::SlotComponent *>(component);
+        slotComponent = reinterpret_cast<ent::SlotComponent *>(component);
         break;
       }
     }
   }
 
   if (slotComponent != nullptr) {
-    auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
+    auto slot = reinterpret_cast<ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
     slot->boneName = boneName;
     slot->slotName = slotName;
     slot->relativePosition = relativePosition;
@@ -137,7 +146,7 @@ void Entity::AddSlot(RED4ext::CName boneName, RED4ext::CName slotName, RED4ext::
   }
 }
 
-void Entity::OnExpand(Descriptor *aType, RED4ext::CRTTISystem * _) {
-  aType->AddFunction<&Entity::AddComponent>("AddComponent");
-  aType->AddFunction<&Entity::AddSlot>("AddSlot");
+void EntityExt::OnExpand(Descriptor *aType, CRTTISystem * _) {
+  // aType->AddFunction<&EntityExt::AddComponent>("AddComponent");
+  aType->AddFunction<&EntityExt::AddSlot>("AddSlot");
 }

@@ -11,7 +11,7 @@
 // void Entity_InitializeComponents(RED4ext::ent::Entity *entity, void *a2, void *a3);
 
 // void ent::Entity::Initialize(job::Builder &, ent::EntitySetupContext const &)
-REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3490519617, Entity_InitializeComponents, Entity *entity, void *a2, void *a3) {
+REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityExt *entity, void *a2, void *a3) {
   auto rtti = RED4ext::CRTTISystem::Get();
 
   auto type = entity->GetNativeType();

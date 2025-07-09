@@ -156,7 +156,8 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     aSdk->scripts->Add(aHandle, L"packed.reds");
     aSdk->scripts->Add(aHandle, L"module.reds");
     InputLoader::Add(aHandle, L"inputs.xml");
-    TweakXL::RegisterTweak(aHandle, MOD_PACKED_TWEAKS_FILENAME);
+    TweakXL::RegisterTweak(aHandle, MOD_PACKED_NATIVE_TWEAKS_FILENAME);
+    TweakXL::RegisterTweak(aHandle, MOD_PACKED_YAML_TWEAKS_FILENAME);
     ArchiveXL::RegisterArchive(aHandle, "let_there_be_flight.archive");
 
     RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
