@@ -1,31 +1,49 @@
+# Vehicle.$(v):
+#   $instances:
+#     - { v: v_sport2_quadra_type66_02_player }
+#     - { v: v_sport2_quadra_type66_player }
+#     - { v: v_sport2_porsche_911turbo_player }
+#     - { v: v_sport2_quadra_type66_gt_player }
+#     - { v: v_sport2_quadra_type66_base_player }
+#     - { v: v_sport2_quadra_type66_nomad_player }
+#     - { v: v_sport2_quadra_type66_nomad_ncu_player }
+#   thrusterMesh: r"user\jackhumbert\meshes\thrusters\quadra_type66.mesh"
+#   thrusterAppearance: n"default"
 
-Vehicle.$(v).destruction:
+Vehicle.$(v):
   $instances:
+    - { v: v_sport2_quadra_type66_02_player }
+    - { v: v_sport2_quadra_type66_player }
     - { v: v_sport1_quadra_turbo_player }
     - { v: v_sport1_quadra_turbo_r_player }
     - { v: v_sport2_porsche_911turbo_player }
-  detachableParts:
-    - !append
-      $type: VehicleDetachablePart
-      name: "ThrusterFL"
-      gridCells: [ 4 ]
-      threshold: 0.01
-      components: [ "ThrusterFL" ]
-    - !append
-      $type: VehicleDetachablePart
-      name: "ThrusterFR"
-      gridCells: [ 5 ]
-      threshold: 0.01
-      components: [ "ThrusterFR" ]
-    - !append
-      $type: VehicleDetachablePart
-      name: "ThrusterBR"
-      gridCells: [ 0 ]
-      threshold: 0.01
-      components: [ "ThrusterBR" ]
-    - !append
-      $type: VehicleDetachablePart
-      name: "ThrusterBL"
-      gridCells: [ 1 ]
-      threshold: 0.01
-      components: [ "ThrusterBL" ]
+    - { v: v_sport2_quadra_type66_gt_player }
+    - { v: v_sport2_quadra_type66_base_player }
+    - { v: v_sport2_quadra_type66_nomad_player }
+    - { v: v_sport2_quadra_type66_nomad_ncu_player }
+  destruction:
+    detachableParts:
+      - !append
+        $type: VehicleDetachablePart
+        name: n"ThrusterFL"
+        gridCells: [ 4 ]
+        threshold: 0.01
+        components: [ n"ThrusterFL" ]
+      - !append
+        $type: VehicleDetachablePart
+        name: n"ThrusterFR"
+        gridCells: [ 5 ]
+        threshold: 0.01
+        components: [ n"ThrusterFR" ]
+      - !append
+        $type: VehicleDetachablePart
+        name: n"ThrusterBR"
+        gridCells: [ 0 ]
+        threshold: 0.01
+        components: [ n"ThrusterBR" ]
+      - !append
+        $type: VehicleDetachablePart
+        name: n"ThrusterBL"
+        gridCells: [ 1 ]
+        threshold: 0.01
+        components: [ n"ThrusterBL" ]

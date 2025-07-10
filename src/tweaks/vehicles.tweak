@@ -20,59 +20,6 @@ Vehicle.v_sport1_quadra_turbo_r_player {
   CName thrusterAppearance = "type_r";
 }
 
-// Vehicle.VehicleDestructionParamsQuadraTurbo {
-//   detachableParts += [
-//   {
-//     name = "ThrusterFL";
-//     gridCells = 
-//     [
-//       4
-//     ];
-//     threshold = 0.01;
-//     components = 
-//     [
-//       "ThrusterFL"
-//     ];
-//   },
-//   {
-//     name = "ThrusterFR";
-//     gridCells = 
-//     [
-//       5
-//     ];
-//     threshold = 0.01;
-//     components = 
-//     [
-//       "ThrusterFR"
-//     ];
-//   },
-//   {
-//     name = "ThrusterBR";
-//     gridCells = 
-//     [
-//       0
-//     ];
-//     threshold = 0.01;
-//     components = 
-//     [
-//       "ThrusterBR"
-//     ];
-//   },
-//   {
-//     name = "ThrusterBL";
-//     gridCells = 
-//     [
-//       1
-//     ];
-//     threshold = 0.01;
-//     components = 
-//     [
-//       "ThrusterBL"
-//     ];
-//   }
-//   ];
-// }
-
 Vehicle.v_sport2_quadra_type66_02_player {
   ResRef thrusterMesh = "user\jackhumbert\meshes\thrusters\quadra_type66.mesh";
   CName thrusterAppearance = "special_02";
@@ -101,57 +48,4 @@ Vehicle.v_sport2_quadra_type66_nomad_player {
 Vehicle.v_sport2_quadra_type66_nomad_ncu_player {
   ResRef thrusterMesh = "user\jackhumbert\meshes\thrusters\quadra_type66.mesh";
   CName thrusterAppearance = "sampson";
-}
-
-Vehicle.VehicleDestructionParamsQuadraType66Nomad {
-  detachableParts += [
-  {
-    name = "ThrusterFL";
-    gridCells = 
-    [
-      4
-    ];
-    threshold = 0.01;
-    components = 
-    [
-      "ThrusterFL"
-    ];
-  },
-  {
-    name = "ThrusterFR";
-    gridCells = 
-    [
-      5
-    ];
-    threshold = 0.01;
-    components = 
-    [
-      "ThrusterFR"
-    ];
-  },
-  {
-    name = "ThrusterBR";
-    gridCells = 
-    [
-      0
-    ];
-    threshold = 0.01;
-    components = 
-    [
-      "ThrusterBR"
-    ];
-  },
-  {
-    name = "ThrusterBL";
-    gridCells = 
-    [
-      1
-    ];
-    threshold = 0.01;
-    components = 
-    [
-      "ThrusterBL"
-    ];
-  }
-  ];
 }
