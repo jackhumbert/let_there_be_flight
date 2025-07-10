@@ -14,33 +14,24 @@
 REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityExt *entity, void *a2, void *a3) {
   auto rtti = RED4ext::CRTTISystem::Get();
 
-  auto type = entity->GetNativeType();
-  auto isVehicle = false;
-  auto vehicleClass = rtti->GetClass("vehicleBaseObject");
-  do {
-    isVehicle |= type == vehicleClass;
-  } while (type = type->parent);
+  auto isVehicle = entity->IsOfClass(rtti->GetClass("vehicleBaseObject"));
 
   auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(entity);
 
-  auto canEnterFlight_func = vehicleClass->GetFunction("CanEnterFlight");
+  auto canEnterFlight_func = rtti->GetClass("vehicleBaseObject")->GetFunction("CanEnterFlight");
   bool canEnterFlight = false;
   if (isVehicle && canEnterFlight_func) {
     RED4ext::ExecuteFunction(vehicle, canEnterFlight_func, &canEnterFlight);
   }
 
   if (isVehicle && canEnterFlight) {
-
     auto fc = (FlightComponent *)FlightComponent::GetRTTIType()->CreateInstance(true);
     fc->name = "flightComponent";
     fc->id = RED4ext::CRUID::Next();
     // fc->entity = entity;
+
     auto fch = RED4ext::Handle<FlightComponent>(fc);
     vehicle->componentsStorage.components.EmplaceBack(fch);
-
-    // vehicle->entityTags.tags;
-
-    // FlightWeapons::AddWeapons(vehicle);
 
     // auto fc = (FlightComponent*)FlightComponent::GetRTTIType()->CreateInstance(true);
     // fc->name = "flightComponent";
@@ -49,31 +40,10 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityE
     // h.refCount->IncRef();
     // entity->componentsStorage.components.EmplaceBack(h);
 
-    RED4ext::ent::VisualControllerComponent *vcc = nullptr;
-    RED4ext::vehicle::ChassisComponent *chassis = nullptr;
-    RED4ext::game::OccupantSlotComponent *osc = nullptr;
-    RED4ext::ent::SlotComponent *vs = nullptr;
-    for (auto const &handle : entity->componentsStorage.components) {
-      auto component = handle.GetPtr();
-      if (vcc == nullptr && component->GetNativeType() == rtti->GetClass("entVisualControllerComponent")) {
-        vcc = reinterpret_cast<RED4ext::ent::VisualControllerComponent *>(component);
-      }
-      if (chassis == nullptr && component->GetNativeType() == rtti->GetClass("vehicleChassisComponent")) {
-        chassis = reinterpret_cast<RED4ext::vehicle::ChassisComponent *>(component);
-      }
-      if (vs == nullptr && component->GetNativeType() == rtti->GetClass("entSlotComponent")) {
-        if (component->name == "vehicle_slots") {
-          vs = reinterpret_cast<RED4ext::ent::SlotComponent *>(component);
-        }
-      }
-      if (osc == nullptr && component->GetNativeType() == rtti->GetClass("gameOccupantSlotComponent")) {
-        osc = reinterpret_cast<RED4ext::game::OccupantSlotComponent *>(component);
-      }
-    }
-
-    // if (chassis != NULL) {
-    //
-    // }
+    auto vcc = entity->GetComponent<RED4ext::ent::VisualControllerComponent>();
+    auto chassis = entity->GetComponent<RED4ext::vehicle::ChassisComponent>();
+    auto vs = entity->GetComponent<RED4ext::ent::SlotComponent>("vehicle_slots");
+    auto osc = entity->GetComponent<RED4ext::game::OccupantSlotComponent>();
 
     if (vcc != nullptr && vs != nullptr) {
       {

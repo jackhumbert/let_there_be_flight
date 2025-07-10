@@ -10,6 +10,7 @@
 #include <RED4ext/Scripting/Natives/physicsPhysicalSystemProxy.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/HardTransformBinding.hpp>
 
+using namespace RED4ext;
 
 IFlightConfiguration::~IFlightConfiguration() {
   component.~WeakHandle();
@@ -18,8 +19,8 @@ IFlightConfiguration::~IFlightConfiguration() {
   }
 }
 
-RED4ext::CClass* IFlightConfiguration::GetConfigurationClass(RED4ext::ent::Entity* entity) {
-  auto rtti = RED4ext::CRTTISystem::Get();
+CClass* IFlightConfiguration::GetConfigurationClass(ent::Entity* entity) {
+  auto rtti = CRTTISystem::Get();
 
   auto type = entity->GetNativeType();
   bool isCar = false;
@@ -42,9 +43,9 @@ RED4ext::CClass* IFlightConfiguration::GetConfigurationClass(RED4ext::ent::Entit
     } while (type = type->parent);
 
     if (isPlacedComponent) {
-      auto pth = ((RED4ext::ent::IPlacedComponent *)component)->parentTransform;
+      auto pth = ((ent::IPlacedComponent *)component)->parentTransform;
       if (pth) {
-        auto pt = reinterpret_cast<RED4ext::ent::HardTransformBinding *>(pth.GetPtr());
+        auto pt = reinterpret_cast<ent::HardTransformBinding *>(pth.GetPtr());
         if (pt && pt->slotName == "wheel_front_left_b") {
           isSixWheeler |= true;
         }
@@ -79,24 +80,24 @@ RED4ext::CClass* IFlightConfiguration::GetConfigurationClass(RED4ext::ent::Entit
   return configurationCls;
 }
 
-void IFlightConfiguration::Setup(RED4ext::vehicle::BaseObject * vehicle) {
+void IFlightConfiguration::Setup(vehicle::BaseObject * vehicle) {
 
-  this->thrusters = RED4ext::DynArray<RED4ext::Handle<IFlightThruster>>(new RED4ext::Memory::DefaultAllocator());
+  this->thrusters = DynArray<Handle<IFlightThruster>>(new Memory::DefaultAllocator());
   auto onInit = GetType()->GetFunction("OnSetup");
   if (onInit) {
-    auto rtti = RED4ext::CRTTISystem::Get();
-    RED4ext::CStackType args[1];
-    auto handle = RED4ext::Handle<RED4ext::vehicle::BaseObject>(vehicle);
-    args[0] = RED4ext::CStackType(rtti->GetType("handle:vehicleBaseObject"), &handle);
-    auto stack = RED4ext::CStack(this, args, 1, nullptr);
+    auto rtti = CRTTISystem::Get();
+    CStackType args[1];
+    auto handle = Handle<vehicle::BaseObject>(vehicle);
+    args[0] = CStackType(rtti->GetType("handle:vehicleBaseObject"), &handle);
+    auto stack = CStack(this, args, 1, nullptr);
     onInit->Execute(&stack);
   }
 }
 
-void IFlightConfiguration::AddSlots(RED4ext::ent::SlotComponent *slotComponent) {
-  auto rtti = RED4ext::CRTTISystem::Get();
+void IFlightConfiguration::AddSlots(ent::SlotComponent *slotComponent) {
+  auto rtti = CRTTISystem::Get();
 
-  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
+  auto slot = reinterpret_cast<ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
   slot->boneName = this->flightCameraBone;
   slot->slotName = "CustomFlightCamera";
   slot->relativePosition = this->flightCameraOffset;
@@ -104,95 +105,81 @@ void IFlightConfiguration::AddSlots(RED4ext::ent::SlotComponent *slotComponent) 
   slotComponent->slotIndexLookup.Emplace(slot->slotName, slotComponent->slots.size - 1);
 
   //for (auto thruster : thrusters) {
-  //  auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
+  //  auto slot = reinterpret_cast<ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
   //  slot->boneName = thruster->boneName;
   //  slot->slotName = thruster->slotName;
   //  slot->relativePosition = thruster->relativePosition;
   //  slot->relativeRotation = thruster->relativeRotation;
-  //  //slot->relativeRotation = RED4ext::Quaternion(0.0, 0.0, 0.0, 1.0);
+  //  //slot->relativeRotation = Quaternion(0.0, 0.0, 0.0, 1.0);
   //  slotComponent->slots.EmplaceBack(*slot);
   //  slotComponent->slotIndexLookup.Emplace(slot->slotName, slotComponent->slots.size - 1);
   //}
 }
 
-// void IFlightConfiguration::AddMeshes(RED4ext::ent::Entity *entity, RED4ext::ent::VisualControllerComponent *vcc) {
+// void IFlightConfiguration::AddMeshes(ent::Entity *entity, ent::VisualControllerComponent *vcc) {
 //   for (auto thruster : thrusters) {
 //     auto mesh = CreateThrusterEngine(thruster->meshPath, thruster->meshName, thruster->slotName);
-//     thruster->meshComponent = RED4ext::Handle<RED4ext::ent::MeshComponent>(mesh);
+//     thruster->meshComponent = Handle<ent::MeshComponent>(mesh);
 //     entity->componentsStorage.components.EmplaceBack(thruster->meshComponent);
 //     AddToController(vcc, mesh);
 //   }
 // }
 
+void IFlightConfiguration::AddColliders() {
+  auto rtti = CRTTISystem::Get();
 
-void IFlightConfiguration::OnActivationCore() {
-  auto rtti = RED4ext::CRTTISystem::Get();
-
-  RED4ext::ent::SlotComponent *sc = NULL;
-  RED4ext::vehicle::ChassisComponent *cc = NULL;
-
-  auto scCls = rtti->GetClass("entSlotComponent");
-  auto ccCls = rtti->GetClass("vehicleChassisComponent");
   auto filterDataCls = rtti->GetClass("physicsFilterData");
-
 
   auto flightComponent = this->component.Lock();
 
   if (!flightComponent->entity->IsOfClass(rtti->GetClass("vehicleBaseObject")))
     return;
+    
+  auto chassis = flightComponent->entity->GetComponent<vehicle::ChassisComponent>();
+  auto slot = flightComponent->entity->GetComponent<ent::SlotComponent>("vehicle_slots");
 
-  for (auto const &handle : flightComponent->entity->componentsStorage.components) {
-    auto component = handle.GetPtr();
-    if (sc == NULL && component->GetNativeType() == scCls) {
-      if (component->name == "vehicle_slots") {
-        sc = reinterpret_cast<RED4ext::ent::SlotComponent *>(component);
-      }
-    } else if (cc == NULL && component->GetNativeType() == ccCls) {
-      cc = reinterpret_cast<RED4ext::vehicle::ChassisComponent *>(component);
-    }
-  }
+  if (chassis != NULL && slot != NULL) {
+    // FlightComponent::Get((vehicle::BaseObject*)flightComponent->entity)->chassis = chassis;
+    flightComponent->chassis = chassis;
+    physics::ProxyHelper proxyHelper(chassis->proxyID, &chassis->sharedMutex);
 
-  if (cc != NULL && sc != NULL) {
-    FlightComponent::Get((RED4ext::vehicle::BaseObject*)flightComponent->entity)->chassis = cc;
-    RED4ext::physics::ProxyHelper proxyHelper(cc->proxyID, &cc->sharedMutex);
-
-    auto key = (RED4ext::physics::PhysicalSystemProxy *) RED4ext::physics::ProxyID::GetProxy(cc->proxyID);
+    auto key = (physics::PhysicalSystemProxy *) physics::ProxyID::GetProxy(chassis->proxyID);
     auto body = (physx::PxRigidDynamic *) key->bodies.entries[0];
 
-    this->originalShapeCount = body->getNbShapes();
+    if (this->originalShapeCount == -1)
+      this->originalShapeCount = body->getNbShapes();
 
-    auto filterData = (RED4ext::physics::FilterData*)malloc(sizeof(RED4ext::physics::FilterData));
-    RED4ext::physics::FilterData::Init(filterData);
+    auto filterData = (physics::FilterData*)malloc(sizeof(physics::FilterData));
+    physics::FilterData::Init(filterData);
     
-    // filterData.preset = "Vehicle Chassis";
     filterData->LoadPreset("Vehicle Chassis");
-    RED4ext::Vector3 unk140(1.0, 1.0, 1.0);
-    RED4ext::Transform transform;
+    Vector3 unk140(1.0, 1.0, 1.0);
+    Transform transform;
     int index = 0;
 
     for (auto const &thruster: this->thrusters) {
-      RED4ext::Handle<RED4ext::physics::ICollider> collider;
-      float radius = 0.4;
-      RED4ext::physics::ColliderSphere::createHandleWithRadius(&collider, &radius);
-      // collider.refCount->IncRef();
+      if (thruster->attached) {
+        Handle<physics::ICollider> collider;
+        float radius = 0.4;
+        physics::ColliderSphere::createHandleWithRadius(&collider, &radius);
+        // collider.refCount->IncRef();
 
-      collider->material = "vehicle_chassis.physmat";
+        collider->material = "vehicle_chassis.physmat";
 
-      // auto wtCls = rtti->GetClass("WorldTransform");
+        index = slot->GetSlotIndex(thruster->slotName);
+        if (index != -1) {
+          slot->GetLocalSlotTransformFromIndex(index, &transform);
+          collider->localToBody.position = transform.position - chassis->localTransform.Position.AsVector4();
+          collider->localToBody.orientation = Quaternion(0.0, 0.0, 0.0, 1.0);
+            
+          auto shape = (physx::PxShape *) collider->CreatePxShape(&unk140, nullptr, 1, nullptr);
+          shape->setSimulationFilterData(&filterData->simulationFilter);
+          shape->setQueryFilterData(&filterData->queryFilter);
 
-      index = sc->GetSlotIndex(thruster->slotName);
-      if (index != -1) {
-        sc->GetLocalSlotTransformFromIndex(index, &transform);
-        collider->localToBody.position = transform.position - cc->localTransform.Position.AsVector4();
-        collider->localToBody.orientation = RED4ext::Quaternion(0.0, 0.0, 0.0, 1.0);
-          
-        auto shape = (physx::PxShape *) collider->CreatePxShape(&unk140, nullptr, 1, nullptr);
-        shape->setSimulationFilterData(&filterData->simulationFilter);
-        shape->setQueryFilterData(&filterData->queryFilter);
+          body->attachShape(*shape);
 
-        body->attachShape(*shape);
-
-        shape->release2();
+          shape->release2();
+        }
       }
     }
 
@@ -203,7 +190,7 @@ void IFlightConfiguration::OnActivationCore() {
     proxyHelper.mutex->Lock();
     // add indices to bottom mask
     for (int i = this->originalShapeCount; i < newCount; i++) {
-//      cc->unk174 |= (1 << i);
+//      chassis->unk174 |= (1 << i);
       proxyHelper.SetSimulationShape(true, 0, i);
       proxyHelper.SetIsQueryable(true, 0, i);
     }
@@ -211,40 +198,34 @@ void IFlightConfiguration::OnActivationCore() {
     proxyHelper.UpdateProxyCache();
     proxyHelper.Unlock();
   }
-
-  RED4ext::ExecuteFunction(this, this->nativeType->GetFunction("OnActivation"), nullptr);
 }
 
-void IFlightConfiguration::OnDeactivationCore() {
-  auto rtti = RED4ext::CRTTISystem::Get();
+void IFlightConfiguration::OnActivationCore() {
+  this->AddColliders();
+  ExecuteFunction(this, this->nativeType->GetFunction("OnActivation"), nullptr);
+}
 
-  RED4ext::vehicle::ChassisComponent *cc = NULL;
-
-  auto ccCls = rtti->GetClass("vehicleChassisComponent");
+void IFlightConfiguration::RemoveColliders() {
+  auto rtti = CRTTISystem::Get();
 
   auto flightComponent = this->component.Lock();
 
   if (!flightComponent->entity->IsOfClass(rtti->GetClass("vehicleBaseObject")))
     return;
 
-  for (auto const &handle : flightComponent->entity->componentsStorage.components) {
-    auto component = handle.GetPtr();
-    if (cc == NULL && component->GetNativeType() == ccCls) {
-      cc = reinterpret_cast<RED4ext::vehicle::ChassisComponent *>(component);
-    }
-  }
+  auto chassis = flightComponent->entity->GetComponent<vehicle::ChassisComponent>();
 
-  if (cc != NULL) {
-    RED4ext::physics::ProxyHelper proxyHelper(cc->proxyID, &cc->sharedMutex);
+  if (chassis != NULL) {
+    physics::ProxyHelper proxyHelper(chassis->proxyID, &chassis->sharedMutex);
 
-    auto key = (RED4ext::physics::PhysicalSystemProxy *) RED4ext::physics::ProxyID::GetProxy(cc->proxyID);
+    auto key = (physics::PhysicalSystemProxy *) physics::ProxyID::GetProxy(chassis->proxyID);
     auto body = (physx::PxRigidDynamic *) key->bodies.entries[0];
 
     auto nbShapes = body->getNbShapes();
 
     // remove indexes from bottom mask
 //    for (int i = this->originalShapeCount; i < nbShapes; i++) {
-//      cc->unk174 &= ~(1 << i);
+//      chassis->unk174 &= ~(1 << i);
 //      proxyHelper.SetSimulationShape(false, 0, i);
 //      proxyHelper.SetIsQueryable(false, 0, i);
 //    }
@@ -262,6 +243,9 @@ void IFlightConfiguration::OnDeactivationCore() {
     proxyHelper.UpdateProxyCache();
     proxyHelper.Unlock();
   }
+}
 
-  RED4ext::ExecuteFunction(this, this->nativeType->GetFunction("OnDeactivation"), nullptr);
+void IFlightConfiguration::OnDeactivationCore() {
+  this->RemoveColliders();
+  ExecuteFunction(this, this->nativeType->GetFunction("OnDeactivation"), nullptr);
 }

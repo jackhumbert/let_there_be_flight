@@ -106,6 +106,28 @@ public native class FlightComponent extends GameComponent {
   private final func GetMyPS() -> ref<FlightComponentPS> {
     return this.GetPS() as FlightComponentPS;
   }
+  
+  protected cb func OnVehicleOnPartDetached(evt: ref<VehicleOnPartDetachedEvent>) -> Bool {
+    FlightLog.Info("[FlightComponent] Part detached: " + NameToString(evt.partName));
+    let oneOfOurs = false;
+    for thruster in this.configuration.thrusters {
+      if IsDefined(thruster.meshComponent) {
+        if Equals(thruster.meshComponent.name, evt.partName) {
+          thruster.Detach();
+          oneOfOurs = true;
+        }
+      } else {
+        thruster.Detach();
+        oneOfOurs = true;
+      }
+    }
+  
+    if oneOfOurs {
+      this.thrusterTensor = this.configuration.GetThrusterTensor();
+      this.configuration.RemoveColliders();
+      this.configuration.AddColliders();
+    }
+  }
 
   // interaction layer stuff to add eventually
 
@@ -700,8 +722,13 @@ public native class FlightComponent extends GameComponent {
 
     // factor in mass
     force *= this.stats.s_mass;
-    // convet to global
+    // convert to global
     force = this.stats.d_orientation * force;
+    
+    // need something similar that affects force
+    // force.X *= this.thrusterTensor.X;
+    // force.Y *= this.thrusterTensor.Y;
+    // force.Z *= this.thrusterTensor.Z;
 
     torque *= timeDelta;
     // torque *= 1.0/60.0;

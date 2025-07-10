@@ -29,21 +29,11 @@ void IPlacedComponentExt::SetParentTransform(CName bindName, CName slotName) {
 void EntityExt::AddComponent(Handle<ent::IComponent> const & componentToAdd) {
   componentToAdd->id = CRUID::Next();
 
-  ent::VisualControllerComponent *vcc = nullptr;
-  ent::EffectSpawnerComponent *customization = nullptr;
   auto rtti = CRTTISystem::Get();
-  auto vccClass = rtti->GetClass("entVisualControllerComponent");
-  auto effectSpawnerClass = rtti->GetClass("entEffectSpawnerComponent");
-
-  for (auto const &component : this->componentsStorage.components) {
-    if (component->GetNativeType() == vccClass) {
-      vcc = reinterpret_cast<ent::VisualControllerComponent *>(component.instance);
-    }
-    if (component->GetNativeType() == effectSpawnerClass && component->name == "vehicleVisualCustomization") {
-      customization = reinterpret_cast<ent::EffectSpawnerComponent *>(component.instance);
-    }
-  }
   
+  auto vcc = this->GetComponent<ent::VisualControllerComponent>();
+  auto customization = this->GetComponent<ent::EffectSpawnerComponent>("vehicleVisualCustomization");
+
   if (componentToAdd->IsOfClass(rtti->GetClass("entMeshComponent"))) {
 
     if (vcc != NULL) {
@@ -90,7 +80,7 @@ void EntityExt::AddComponent(Handle<ent::IComponent> const & componentToAdd) {
     }
   }
 
-  if (componentToAdd->GetNativeType() == rtti->GetClass("entPhysicalMeshComponent")) {
+  if (componentToAdd->IsOfClass(rtti->GetClass("entPhysicalMeshComponent"))) {
     auto pmComponent = (ent::PhysicalMeshComponent *)componentToAdd.instance;
     
     auto filterData = (physics::FilterData*)rtti->GetClass("physicsFilterData")->CreateInstance(true);

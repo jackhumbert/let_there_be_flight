@@ -10,6 +10,7 @@ struct FlightComponent;
 class IFlightThruster : public Engine::RTTIClass<IFlightThruster, RED4ext::IScriptable> {
 public:
   virtual ~IFlightThruster() override;
+
   RED4ext::WeakHandle<FlightComponent> flightComponent;
   RED4ext::CName boneName;
   RED4ext::CName slotName;
@@ -19,6 +20,7 @@ public:
   RED4ext::CName meshName = "Thruster";
   RED4ext::Handle<RED4ext::ent::MeshComponent> meshComponent;
   RED4ext::WeakHandle<RED4ext::vehicle::BaseObject> vehicle;
+  bool attached = true;
 private:
   friend Descriptor;
   static void OnRegister(Descriptor *aType) {
@@ -38,3 +40,4 @@ RED4EXT_ASSERT_OFFSET(IFlightThruster, meshPath, 0x80);
 RED4EXT_ASSERT_OFFSET(IFlightThruster, meshName, 0x88);
 RED4EXT_ASSERT_OFFSET(IFlightThruster, meshComponent, 0x90);
 RED4EXT_ASSERT_OFFSET(IFlightThruster, vehicle, 0xA0);
+RED4EXT_ASSERT_OFFSET(IFlightThruster, attached, 0xB0);

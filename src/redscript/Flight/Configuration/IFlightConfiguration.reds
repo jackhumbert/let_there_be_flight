@@ -20,6 +20,8 @@ public abstract native class IFlightConfiguration extends IScriptable {
   @runtimeProperty("offset", "0x68")
   public native let flightCameraOffset: Vector3; // 0, 0, 0
 
+  public native func AddColliders();
+  public native func RemoveColliders();
   public native func OnActivationCore();
   public native func OnDeactivationCore();
 
@@ -91,11 +93,13 @@ public abstract native class IFlightConfiguration extends IScriptable {
     let total = new Vector4(0.0, 0.0, 0.0, 0.0);
     let vt = this.component.GetVehicle().GetWorldTransform();
     for thruster in this.thrusters {
-      let v = WorldTransform.TransformInvPoint(vt, thruster.meshComponent.GetLocalToWorld() * Vector4.EmptyVector());
-      v -= Vector4.Vector3To4(this.component.GetVehicle().GetCenterOfMass());
-      total.X += SqrtF(PowF(v.Y, 2.0) + PowF(v.Z, 2.0));
-      total.Y += SqrtF(PowF(v.X, 2.0) + PowF(v.Z, 2.0));
-      total.Z += SqrtF(PowF(v.X, 2.0) + PowF(v.Y, 2.0));
+      if thruster.attached {
+        let v = WorldTransform.TransformInvPoint(vt, thruster.GetLocalToWorld() * Vector4.EmptyVector());
+        v -= Vector4.Vector3To4(this.component.GetVehicle().GetCenterOfMass());
+        total.X += SqrtF(PowF(v.Y, 2.0) + PowF(v.Z, 2.0));
+        total.Y += SqrtF(PowF(v.X, 2.0) + PowF(v.Z, 2.0));
+        total.Z += SqrtF(PowF(v.X, 2.0) + PowF(v.Y, 2.0));
+      }
     }
     return total;
   }

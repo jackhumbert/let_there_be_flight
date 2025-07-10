@@ -24,7 +24,7 @@ public:
   RED4ext::DynArray<RED4ext::Handle<IFlightThruster>> thrusters;
   RED4ext::CName flightCameraBone = "roof_border_front";
   RED4ext::Vector3 flightCameraOffset = RED4ext::Vector3(0.0, 0.0, 0.0);
-  uint32_t originalShapeCount;
+  int32_t originalShapeCount = -1;
 
   void Setup(RED4ext::vehicle::BaseObject * vehicle);
   void AddSlots(RED4ext::ent::SlotComponent* slotComponent);
@@ -44,6 +44,8 @@ public:
   //  }
   //}
 
+  void AddColliders();
+  void RemoveColliders();
   void OnActivationCore();
   void OnDeactivationCore();
 
@@ -59,6 +61,8 @@ private:
 
   static void OnDescribe(Descriptor *aType, RED4ext::CRTTISystem *) {
     //aType->AddFunction<&IFlightConfiguration::AddMesh>("AddMesh");
+    aType->AddFunction<&IFlightConfiguration::AddColliders>("AddColliders");
+    aType->AddFunction<&IFlightConfiguration::RemoveColliders>("RemoveColliders");
     aType->AddFunction<&IFlightConfiguration::OnActivationCore>("OnActivationCore");
     aType->AddFunction<&IFlightConfiguration::OnDeactivationCore>("OnDeactivationCore");
   }

@@ -88,7 +88,7 @@ public class RegularFlightThrusterFX extends IFlightThrusterFX {
   }
 
   public func UpdateGetDisplacement() -> Float {    
-    let amount = Vector4.Dot(Quaternion.GetUp(this.thruster.meshComponent.GetLocalOrientation()), this.thruster.force);
+    let amount = Vector4.Dot(Quaternion.GetUp(this.thruster.GetLocalOrientation()), this.thruster.force);
     let x = this.thruster.torque.X;
     if !this.thruster.isFront {
       x *= -1.0;
@@ -108,7 +108,7 @@ public class MainFlightThrusterFX extends IFlightThrusterFX {
   }
 
   public func UpdateGetDisplacement() -> Float {
-    let amount = Vector4.Dot(Quaternion.GetUp(this.thruster.meshComponent.GetLocalOrientation()), this.thruster.force);
+    let amount = Vector4.Dot(Quaternion.GetUp(this.thruster.GetLocalOrientation()), this.thruster.force);
     let x = this.thruster.torque.X;
     let y = this.thruster.torque.Y;
     if !this.thruster.isFront {

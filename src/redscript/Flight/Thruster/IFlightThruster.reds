@@ -12,6 +12,9 @@ public abstract native class IFlightThruster extends IScriptable {
   @runtimeProperty("offset", "0xA0")
   public native let vehicle: wref<VehicleObject>;
 
+  @runtimeProperty("offset", "0xB0")
+  public native let attached: Bool;
+
   public let parentSlotName: CName;
   public let radiusName: CName;
   public let deviationName: CName;
@@ -52,6 +55,7 @@ public abstract native class IFlightThruster extends IScriptable {
 
   public func OnSetup(fc : ref<FlightComponent>) {
     this.flightComponent = fc;
+    this.attached = true;
     
     if !this.hasRetroThruster {
       this.mainThrusterYawFactor = 30.0;
@@ -61,8 +65,8 @@ public abstract native class IFlightThruster extends IScriptable {
 
     this.meshComponent.visualScale = new Vector3(0.0, 0.0, 0.0);
     this.meshComponent.Toggle(false);
-    this.initialOrientation = this.meshComponent.GetLocalOrientation();
-    // this.meshComponent.SetLocalOrientation(this.initialOrientation + EulerAngles.ToQuat(this.GetEulerAngles()));
+    // this.initialOrientation = this.meshComponent.GetLocalOrientation();
+    this.meshComponent.SetLocalOrientation(this.initialOrientation * EulerAngles.ToQuat(this.GetEulerAngles()));
     this.meshComponent.SetLocalOrientation(EulerAngles.ToQuat(this.GetEulerAngles()));
 
     this.id = "vehicle";
@@ -92,6 +96,22 @@ public abstract native class IFlightThruster extends IScriptable {
     this.id += FloatToString(RandRangeF(0.0, 1.0));
     this.audioUpdate = new FlightAudioUpdate();
   
+  }
+
+  public func GetLocalToWorld() -> Matrix {
+    if IsDefined(this.meshComponent) {
+      return this.meshComponent.GetLocalToWorld();
+    } else {
+      return Matrix.Identity();
+    }
+  }
+
+  public func GetLocalOrientation() -> Quaternion {
+    if IsDefined(this.meshComponent) {
+      return this.meshComponent.GetLocalOrientation();
+    } else {
+      return new Quaternion(0.0, 0.0, 0.0, 1.0);
+    }
   }
 
   public func GetEulerAngles() -> EulerAngles {
@@ -160,15 +180,17 @@ public abstract native class IFlightThruster extends IScriptable {
     this.SetOGComponents();
     this.HideOGComponents();
 
-    for fx in this.fxs {
-      fx.Start();
-    }
-
-    this.meshComponent.Toggle(true);
+    if this.attached {
+      if IsDefined(this.meshComponent) {
+        for fx in this.fxs {
+          fx.Start();
+        }
+        this.meshComponent.Toggle(true);
+      }
 
     // FlightAudio.Get().StartWithPitch(this.id, "vehicle3_TPP", this.audioPitch);
-    FlightAudio.Get().StartWithPitch(this.id, "vehicle3_TPP", this.flightComponent.GetPitch());
-
+      FlightAudio.Get().StartWithPitch(this.id, "vehicle3_TPP", this.flightComponent.GetPitch());
+    }
   }
 
   let forceThreshold: Float = 10.0;
@@ -177,8 +199,21 @@ public abstract native class IFlightThruster extends IScriptable {
   let animDeviation: Float = 0.3;
   let animRadius: Float = 0.0;
 
+  public func Detach() {
+    this.attached = false;
+    
+    FlightAudio.Get().Stop(this.id);
+    
+    for fx in this.fxs {
+      fx.Stop();
+    }
+  }
 
   public func Update(force: Vector4, torque: Vector4) {
+    if !this.attached {
+      return;
+    }
+
     if Vector4.Length(force) > this.forceThreshold {
       this.force = Vector4.Normalize(force);
     } else {
@@ -194,73 +229,81 @@ public abstract native class IFlightThruster extends IScriptable {
     if !this.flightComponent.active {
       vec = Vector4.EmptyVector();
     }
-
-    if !IsDefined(this.meshComponent) {
-      return;
-    }
-
-    this.meshComponent.visualScale = Vector4.Vector4To3(Vector4.Interpolate(Vector4.Vector3To4(this.meshComponent.visualScale), vec, 0.1));
-    // this.meshComponent.SetLocalOrientation(Quaternion.Slerp(this.meshComponent.GetLocalOrientation(), this.initialOrientation + EulerAngles.ToQuat(this.GetEulerAngles()), 0.1));
-    this.meshComponent.SetLocalOrientation(Quaternion.Slerp(this.meshComponent.GetLocalOrientation(), EulerAngles.ToQuat(this.GetEulerAngles()), 0.1));
-
-    let amount = Vector4.Dot(Quaternion.GetUp(this.meshComponent.GetLocalOrientation()), this.force);
-
-    for fx in this.fxs {
-      amount += fx.UpdateGetDisplacement();
-    }
-
-    // -4, 4 / -10, 10
-    let animDeviationCenter = 0.0;
-
-    // how much thrusters move opposite of the force effect
-    let animDeviationScale = 0.025;
-
-    // 0, 16
-    // let animRadiusCenter = 1.0;
-    // let animRadiusScale = -1.0;
-
-    // this.bone = LerpF(this.boneLerpAmount, this.bone, -animScale + ClampF(amount, -1.0, 1.0) * animScale);
-    this.animDeviation = LerpF(this.boneLerpAmount, this.animDeviation, animDeviationCenter + amount * animDeviationScale);
-    // this.animDeviation = animDeviationCenter + amount * animDeviationScale;
-    // this.animRadius = animRadiusCenter + amount * animRadiusScale;
-    // AnimationControllerComponent.SetInputFloatToReplicate(this.vehicle, this.deviationName, this.animDeviation);
-    // AnimationControllerComponent.SetInputFloatToReplicate(this.vehicle, this.GetRadiusName(), this.animRadius);
-
-    let acc = this.flightComponent.FindComponentByName(n"AnimationController") as AnimationControllerComponent;
-    if IsDefined(acc) {
-      acc.SetInputFloat(this.deviationName, this.animDeviation);
-    }
-    // AnimationControllerComponent.SetInputFloat(this.vehicle, this.deviationName, this.animDeviation);
-
-    // acc.SetInputFloat(this.GetRadiusName(), this.animRadius);
     
-    this.audioUpdate = this.flightComponent.audioUpdate;
-    // amount *= 0.5;
-    // this.audioUpdate.surge *= amount;
-    // this.audioUpdate.pitch *= amount;
-    // this.audioUpdate.yaw *= retroAmount;
-    // this.audioUpdate.sway *= retroAmount;
-    // this.audioUpdate.lift *= amount;
-    // this.audioUpdate.roll *= amount;
-    this.audioUpdate.scrape = ClampF((this.vehicle as WheeledObject).GetDampedSpringForce(this.wheelIndex) / this.vehicle.GetTotalMass(), 0.0, 1.0);
+    let rotatedMatrix: Matrix;
     let volume = 1.0;
-    if !this.isFront {
-      volume = ClampF(this.flightComponent.stats.d_speed / 100.0, 0.0, 1.0);
+    this.audioUpdate = this.flightComponent.audioUpdate;
+    this.audioUpdate.scrape = ClampF((this.vehicle as WheeledObject).GetDampedSpringForce(this.wheelIndex) / this.vehicle.GetTotalMass(), 0.0, 1.0);
+
+    if IsDefined(this.meshComponent) {
+
+      let vec_og = Vector4.Vector3To4(this.meshComponent.visualScale);
+
+      this.meshComponent.visualScale = Vector4.Vector4To3(Vector4.Interpolate(vec_og, vec, 0.1));
+      this.meshComponent.SetLocalOrientation(Quaternion.Slerp(this.meshComponent.GetLocalOrientation(), this.initialOrientation * EulerAngles.ToQuat(this.GetEulerAngles()), 0.1));
+      // this.meshComponent.SetLocalOrientation(Quaternion.Slerp(this.meshComponent.GetLocalOrientation(), EulerAngles.ToQuat(this.GetEulerAngles()), 0.1));
+
+      // scale FX to how much "work" the thruster is actually doing
+      let amount = Vector4.Dot(Quaternion.GetUp(this.meshComponent.GetLocalOrientation()), this.force);
+
+      for fx in this.fxs {
+        amount += fx.UpdateGetDisplacement();
+      }
+
+      // -4, 4 / -10, 10
+      let animDeviationCenter = 0.0;
+
+      // how much thrusters move opposite of the force effect
+      let animDeviationScale = 0.025;
+
+      // 0, 16
+      // let animRadiusCenter = 1.0;
+      // let animRadiusScale = -1.0;
+
+      // this.bone = LerpF(this.boneLerpAmount, this.bone, -animScale + ClampF(amount, -1.0, 1.0) * animScale);
+      this.animDeviation = LerpF(this.boneLerpAmount, this.animDeviation, animDeviationCenter + amount * animDeviationScale);
+      // this.animDeviation = animDeviationCenter + amount * animDeviationScale;
+      // this.animRadius = animRadiusCenter + amount * animRadiusScale;
+      // AnimationControllerComponent.SetInputFloatToReplicate(this.vehicle, this.deviationName, this.animDeviation);
+      // AnimationControllerComponent.SetInputFloatToReplicate(this.vehicle, this.GetRadiusName(), this.animRadius);
+
+      let acc = this.flightComponent.FindComponentByName(n"AnimationController") as AnimationControllerComponent;
+      if IsDefined(acc) {
+        acc.SetInputFloat(this.deviationName, this.animDeviation);
+      }
+      // AnimationControllerComponent.SetInputFloat(this.vehicle, this.deviationName, this.animDeviation);
+
+      // acc.SetInputFloat(this.GetRadiusName(), this.animRadius);
+      
+      // amount *= 0.5;
+      // this.audioUpdate.surge *= amount;
+      // this.audioUpdate.pitch *= amount;
+      // this.audioUpdate.yaw *= retroAmount;
+      // this.audioUpdate.sway *= retroAmount;
+      // this.audioUpdate.lift *= amount;
+      // this.audioUpdate.roll *= amount;
+
+      if !this.isFront {
+        volume = ClampF(this.flightComponent.stats.d_speed / 100.0, 0.0, 1.0);
+      }
+      // this.audioUpdate.pitch = retroAmount;
+      
+      let matrix = this.meshComponent.GetLocalToWorld();
+      // rotates the event cone down
+      let quat = Matrix.ToQuat(matrix) * new Quaternion(-0.707, 0.0, 0.0, 0.707);
+      rotatedMatrix = Quaternion.ToMatrix(quat);
+      rotatedMatrix.W = matrix.W;
     }
-    // this.audioUpdate.pitch = retroAmount;
-    
-    let matrix = this.meshComponent.GetLocalToWorld();
-    // rotates the event cone down
-    let quat = Matrix.ToQuat(matrix) * new Quaternion(-0.707, 0.0, 0.0, 0.707);
-    let rotatedMatrix = Quaternion.ToMatrix(quat);
-    rotatedMatrix.W = matrix.W;
+
     FlightAudio.Get().UpdateEvent(this.id, rotatedMatrix, volume, this.audioUpdate);
   }
 
   public func Stop() {
-    FlightAudio.Get().Stop(this.id);
-    for fx in this.fxs {
-      fx.Stop();
+    if this.attached {
+      FlightAudio.Get().Stop(this.id);
+      for fx in this.fxs {
+        fx.Stop();
+      }
     }
     this.ShowOGComponents();
   }
