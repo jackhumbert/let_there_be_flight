@@ -43,20 +43,16 @@ public class VehicleFlightEventsTransition extends VehicleFlightTransition {
       case vehicleCameraPerspective.FPP:
         if FlightSystem.GetInstance().cameraIndex == 1 {
           camEvent.cameraPerspective = vehicleCameraPerspective.TPPClose;
-          FlightSystem.GetInstance().cameraIndex = 0;
+          this.ExitCustomCamera(scriptInterface);
         } else {
           this.EnterCustomCamera(scriptInterface);
-          FlightSystem.GetInstance().cameraIndex = 1;
         }
         break;
       case vehicleCameraPerspective.TPPClose:
-        this.ExitCustomCamera(scriptInterface);
         camEvent.cameraPerspective = vehicleCameraPerspective.TPPMedium;
-        FlightSystem.GetInstance().cameraIndex = 0;
         break;
       case vehicleCameraPerspective.TPPMedium:
         camEvent.cameraPerspective = vehicleCameraPerspective.TPPFar;
-        FlightSystem.GetInstance().cameraIndex = 0;
         break;
       case vehicleCameraPerspective.TPPFar:
         if !scriptInterface.localBlackboard.GetBool(GetAllBlackboardDefs().PlayerStateMachine.IsDriverCombatInTPP) {
@@ -64,24 +60,21 @@ public class VehicleFlightEventsTransition extends VehicleFlightTransition {
         } else {
           camEvent.cameraPerspective = vehicleCameraPerspective.FPP;
         };
-        FlightSystem.GetInstance().cameraIndex = 0;
         break;
       case vehicleCameraPerspective.DriverCombatClose:
         camEvent.cameraPerspective = vehicleCameraPerspective.TPPClose;
-        FlightSystem.GetInstance().cameraIndex = 0;
         break;
       case vehicleCameraPerspective.DriverCombatMedium:
         camEvent.cameraPerspective = vehicleCameraPerspective.TPPMedium;
-        FlightSystem.GetInstance().cameraIndex = 0;
         break;
       case vehicleCameraPerspective.DriverCombatFar:
         camEvent.cameraPerspective = vehicleCameraPerspective.TPPFar;
-        FlightSystem.GetInstance().cameraIndex = 0;
     };
     scriptInterface.executionOwner.QueueEvent(camEvent);
   }
 
   public func EnterCustomCamera(scriptInterface: ref<StateGameScriptInterface>) {
+    FlightSystem.GetInstance().cameraIndex = 1;
     let camera = (scriptInterface.executionOwner as PlayerPuppet).GetFPPCameraComponent();
     if IsDefined(camera) {
       let slotT: WorldTransform;
@@ -101,6 +94,7 @@ public class VehicleFlightEventsTransition extends VehicleFlightTransition {
   }
 
   public func ExitCustomCamera(scriptInterface: ref<StateGameScriptInterface>) {
+    FlightSystem.GetInstance().cameraIndex = 0;
     let camera = (scriptInterface.executionOwner as PlayerPuppet).GetFPPCameraComponent();
     if IsDefined(camera) {
       camera.SetLocalPosition(new Vector4(0.0, 0.0, 0.0, 0.0));
