@@ -3,53 +3,43 @@ Vehicle.v_sport2_porsche_911turbo_player {
   CName thrusterAppearance = "blackout";
   bool hasRetroThruster = true;
 }
-
 Vehicle.v_sport1_quadra_sport_r7_netrunner {
   ResRef thrusterMesh = "user\jackhumbert\meshes\engine_corpo.mesh";
   CName thrusterAppearance = "blackout";
   bool hasRetroThruster = true;
 }
-
 Vehicle.v_sport1_quadra_turbo_player {
   ResRef thrusterMesh = "user\jackhumbert\meshes\thrusters\quadra_turbo.mesh";
   CName thrusterAppearance = "default";
 }
-
 Vehicle.v_sport1_quadra_turbo_r_player {
   ResRef thrusterMesh = "user\jackhumbert\meshes\thrusters\quadra_turbo.mesh";
   CName thrusterAppearance = "type_r";
 }
-
 Vehicle.v_sport2_quadra_type66_02_player {
   ResRef thrusterMesh = "user\jackhumbert\meshes\thrusters\quadra_type66.mesh";
   CName thrusterAppearance = "special_02";
 }
-
 Vehicle.v_sport2_quadra_type66_player {
   ResRef thrusterMesh = "user\jackhumbert\meshes\thrusters\quadra_type66.mesh";
   CName thrusterAppearance = "special_01";
 }
-
 Vehicle.v_sport2_quadra_type66_gt_player {
   ResRef thrusterMesh = "user\jackhumbert\meshes\thrusters\quadra_type66.mesh";
   CName thrusterAppearance = "urban_03";
 }
-
 Vehicle.v_sport2_quadra_type66_base_player {
   ResRef thrusterMesh = "user\jackhumbert\meshes\thrusters\quadra_type66.mesh";
   CName thrusterAppearance = "suburban_06";
 }
-
 Vehicle.v_sport2_quadra_type66_nomad_player {
   ResRef thrusterMesh = "user\jackhumbert\meshes\thrusters\quadra_type66.mesh";
   CName thrusterAppearance = "player_01";
 }
-
 Vehicle.v_sport2_quadra_type66_nomad_ncu_player {
   ResRef thrusterMesh = "user\jackhumbert\meshes\thrusters\quadra_type66.mesh";
   CName thrusterAppearance = "sampson";
 }
-
 Vehicle.v_sport1_herrera_outlaw_player {}
 Vehicle.v_sport1_rayfield_aerondight_player {}
 Vehicle.v_sport1_rayfield_caliburn_player {}
@@ -85,10 +75,22 @@ Vehicle.v_standard2_thorton_galena_gt_player {}
 Vehicle.v_standard2_villefort_cortes_player {}
 Vehicle.v_standard2_villefort_cortes_delamain_player {}
 Vehicle.v_standard3_chevalier_emperor_player {}
-Vehicle.v_standard3_thorton_mackinaw_player {}
-Vehicle.v_standard3_thorton_mackinaw_ncu_player {}
-Vehicle.v_standard3_thorton_mackinaw_02_player {}
-Vehicle.v_utility4_thorton_mackinaw_bmf_player {}
+Vehicle.v_standard3_thorton_mackinaw_player {
+  ResRef thrusterMesh = "user\jackhumbert\meshes\engine_nomad.mesh";
+  CName thrusterAppearance = "default";
+}
+Vehicle.v_standard3_thorton_mackinaw_ncu_player {
+  ResRef thrusterMesh = "user\jackhumbert\meshes\engine_nomad.mesh";
+  CName thrusterAppearance = "default";
+}
+Vehicle.v_standard3_thorton_mackinaw_02_player {
+  ResRef thrusterMesh = "user\jackhumbert\meshes\engine_nomad.mesh";
+  CName thrusterAppearance = "default";
+}
+Vehicle.v_utility4_thorton_mackinaw_bmf_player {
+  ResRef thrusterMesh = "user\jackhumbert\meshes\engine_nomad.mesh";
+  CName thrusterAppearance = "default";
+}
 Vehicle.v_sportbike3_brennan_apollo_player {}
 Vehicle.v_sportbike3_brennan_apollo_nomad_player {}
 Vehicle.v_sportbike2_arch_player {}
@@ -106,8 +108,14 @@ Vehicle.v_standard25_thorton_merrimac_player {}
 Vehicle.v_sport1_herrera_outlaw_heist_player {}
 Vehicle.v_sport2_villefort_deleon_player {}
 Vehicle.v_sport2_villefort_deleon_sport_player {}
-Vehicle.v_standard3_militech_hellhound_player {}
+Vehicle.v_standard3_militech_hellhound_player {
+  ResRef thrusterMesh = "user\jackhumbert\meshes\engine_nomad.mesh";
+  CName thrusterAppearance = "default";
+}
 Vehicle.v_standard3_makigai_tanishi_player {}
 Vehicle.v_standard3_mahir_supron_kurtz_player {}
-Vehicle.v_standard25_thorton_colby_pickup_kurtz_player {}
+Vehicle.v_standard25_thorton_colby_pickup_kurtz_player {
+  ResRef thrusterMesh = "user\jackhumbert\meshes\engine_nomad.mesh";
+  CName thrusterAppearance = "default";
+}
 Vehicle.v_sportbike2_arch_linas_player {}

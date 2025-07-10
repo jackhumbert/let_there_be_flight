@@ -65,9 +65,9 @@ public abstract native class IFlightThruster extends IScriptable {
 
     this.meshComponent.visualScale = new Vector3(0.0, 0.0, 0.0);
     this.meshComponent.Toggle(false);
-    // this.initialOrientation = this.meshComponent.GetLocalOrientation();
+    this.initialOrientation = this.meshComponent.GetLocalOrientation();
     this.meshComponent.SetLocalOrientation(this.initialOrientation * EulerAngles.ToQuat(this.GetEulerAngles()));
-    this.meshComponent.SetLocalOrientation(EulerAngles.ToQuat(this.GetEulerAngles()));
+    // this.meshComponent.SetLocalOrientation(EulerAngles.ToQuat(this.GetEulerAngles()));
 
     this.id = "vehicle";
     // doesn't seem to have the data to get this here

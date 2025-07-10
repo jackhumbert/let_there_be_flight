@@ -23,14 +23,8 @@ CClass* IFlightConfiguration::GetConfigurationClass(ent::Entity* entity) {
   auto rtti = CRTTISystem::Get();
 
   auto type = entity->GetNativeType();
-  bool isCar = false;
-  bool isBike = false;
-  auto carClass = rtti->GetClass("vehicleCarBaseObject");
-  auto bikeClass = rtti->GetClass("vehicleBikeBaseObject");
-  do {
-    isCar |= type == carClass;
-    isBike |= type == bikeClass;
-  } while (type = type->parent);
+  bool isCar = entity->IsOfClass(rtti->GetClass("vehicleCarBaseObject"));
+  bool isBike = entity->IsOfClass(rtti->GetClass("vehicleBikeBaseObject"));
 
   bool isSixWheeler = false;
 
