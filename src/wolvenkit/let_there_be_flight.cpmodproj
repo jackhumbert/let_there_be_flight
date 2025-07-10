@@ -5,4 +5,8 @@
   <Author>Jack Humbert</Author>
   <Email />
   <Version />
+  <OpenProjectFiles>base\vehicles\sportbike\v_sportbike1_yaiba_kusanagi_basic_01.ent</OpenProjectFiles>
+  <OpenProjectFiles>base\vehicles\appearances\sportbike\yaiba_kusanagi_basic.app</OpenProjectFiles>
+  <OpenProjectFiles>base\vehicles\sportbike\v_sportbike1_yaiba_kusanagi\entities\meshes\v_sportbike1_yaiba_kusanagi__ext01_body_01.mesh</OpenProjectFiles>
+  <OpenProjectFiles>user\jackhumbert\meshes\thrusters\yaiba_kusanagi.mesh</OpenProjectFiles>
 </CP77Mod>

@@ -99,6 +99,10 @@ public class FlightThrusterBack extends IFlightThruster {
     for c in comps {
       ArrayPush(this.ogComponents, c);
     }
+    comps = this.vehicle.GetComponentsUsingSlot(n"wheel_back");
+    for c in comps {
+      ArrayPush(this.ogComponents, c);
+    }
   }
 
   public func GetPitch() -> Float {

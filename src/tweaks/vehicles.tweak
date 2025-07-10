@@ -97,7 +97,10 @@ Vehicle.v_sportbike2_arch_player {}
 Vehicle.v_sportbike2_arch_jackie_player {}
 Vehicle.v_sportbike2_arch_jackie_tuned_player {}
 Vehicle.v_sportbike2_arch_tyger_player {}
-Vehicle.v_sportbike1_yaiba_kusanagi_player {}
+Vehicle.v_sportbike1_yaiba_kusanagi_player {
+  ResRef thrusterMesh = "user\jackhumbert\meshes\thrusters\yaiba_kusanagi.mesh";
+  CName thrusterAppearance = "player_01";
+}
 Vehicle.v_sportbike1_yaiba_kusanagi_tyger_player {}
 Vehicle.v_sport1_quadra_sport_r7_player {}
 Vehicle.v_sport1_herrera_riptide_player {}

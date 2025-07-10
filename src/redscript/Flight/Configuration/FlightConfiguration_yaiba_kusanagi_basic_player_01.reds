@@ -12,7 +12,7 @@ public class FlightConfiguration_yaiba_kusanagi_basic_player_01 extends IFlightC
     //   ArrayPush(this.thrusters, new FlightThrusterBack().Create(vehicle, CreateCorpoThruster()));
     // } else {
 
-    this.frontChild = CreateCorpoThruster();
+    this.frontChild = this.CreateMesh(vehicle);
     this.frontChild.name = n"FrontThrusterChild";
     this.frontChild.visualScale = new Vector3(0.0, 0.0, 0.0);
     // this.frontChild.SetLocalPosition(new Vector4(0.0, 0.0, -0.2, 1.0));
@@ -21,7 +21,7 @@ public class FlightConfiguration_yaiba_kusanagi_basic_player_01 extends IFlightC
     // this.frontChild.SetParentTransform(this.thrusters[0].meshComponent.name, n"None");
     // vehicle.AddComponent(this.frontChild);
 
-    this.backChild = CreateCorpoThruster();
+    this.backChild = this.CreateMesh(vehicle);
     this.backChild.name = n"BackThrusterChild";
     this.backChild.visualScale = new Vector3(0.0, 0.0, 0.0);
     // this.backChild.SetLocalPosition(new Vector4(0.0, 0.0, -0.2, 1.0));
