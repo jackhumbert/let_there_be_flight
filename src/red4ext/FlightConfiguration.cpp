@@ -26,7 +26,7 @@ CClass* IFlightConfiguration::GetConfigurationClass(ent::Entity* entity) {
   bool isCar = entity->IsOfClass(rtti->GetClass("vehicleCarBaseObject"));
   bool isBike = entity->IsOfClass(rtti->GetClass("vehicleBikeBaseObject"));
 
-  bool isSixWheeler = false;
+  uint8_t isSixWheeler = 0;
 
   for (auto const &handle : entity->componentsStorage.components) {
     auto component = handle.GetPtr();
@@ -41,7 +41,10 @@ CClass* IFlightConfiguration::GetConfigurationClass(ent::Entity* entity) {
       if (pth) {
         auto pt = reinterpret_cast<ent::HardTransformBinding *>(pth.GetPtr());
         if (pt && pt->slotName == "wheel_front_left_b") {
-          isSixWheeler |= true;
+          isSixWheeler |= 1;
+        }
+        if (pt && pt->slotName == "wheel_back_left_b") {
+          isSixWheeler |= 2;
         }
       }
     }
@@ -52,10 +55,15 @@ CClass* IFlightConfiguration::GetConfigurationClass(ent::Entity* entity) {
 
   auto configurationCls = rtti->GetClassByScriptName(className);
   if (!configurationCls) {
-    if (isSixWheeler) {
+    if (isSixWheeler & 1) {
       configurationCls = rtti->GetClassByScriptName("CustomSixWheelCarFlightConfiguration");
       if (!configurationCls) {
         configurationCls = rtti->GetClassByScriptName("SixWheelCarFlightConfiguration");
+      }
+    } else if (isSixWheeler & 2) {
+      configurationCls = rtti->GetClassByScriptName("CustomSixWheelRearCarFlightConfiguration");
+      if (!configurationCls) {
+        configurationCls = rtti->GetClassByScriptName("SixWheelRearCarFlightConfiguration");
       }
     } else if (isCar) {
       configurationCls = rtti->GetClassByScriptName("CustomCarFlightConfiguration");
