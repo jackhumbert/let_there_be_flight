@@ -389,6 +389,7 @@ public native class FlightComponent extends GameComponent {
       // FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName());
       // (this.GetVehicle().FindComponentByName(n"cars_sport_fx") as EffectSpawnerComponent).AddEffect();
       this.sys.SetPlayerComponent(this);
+      this.sys.ctlr.ResetInputs();
       this.isPlayerMounted = true;
       this.SetupVehicleTPPBBListener();
       // try without wind
@@ -440,6 +441,7 @@ public native class FlightComponent extends GameComponent {
         // this.sys.audio.Stop("playerVehicle");
         // this.sys.audio.StartWithPitch("otherVehicle" + ToString(EntityID.GetHash(this.GetVehicle().GetEntityID())), "vehicle3_TPP", this.GetPitch());
       }
+      this.sys.ctlr.ResetInputs();
       this.sys.ctlr.Disable();
     }
   }
