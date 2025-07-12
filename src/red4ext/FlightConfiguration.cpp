@@ -208,6 +208,9 @@ void IFlightConfiguration::OnActivationCore() {
 }
 
 void IFlightConfiguration::RemoveColliders() {
+  if (this->originalShapeCount == -1)
+    return;
+
   auto rtti = CRTTISystem::Get();
 
   auto flightComponent = this->component.Lock();
