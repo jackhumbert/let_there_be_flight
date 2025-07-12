@@ -49,11 +49,11 @@ EDependencyStatus HasDependency(const wchar_t *name, RED4ext::SemVer minVersion)
           spdlog::info(L"{} found with version: {}", name, std::to_wstring(pluginInfo.version));
           return FoundWithCorrectVersion;
         } else {
-          spdlog::error(L"{} found, but wrong version: {}", name, std::to_wstring(pluginInfo.version));
+          spdlog::warn(L"{} found, but wrong version: {}", name, std::to_wstring(pluginInfo.version));
           return FoundWithIncorrectVersion;
         }
       } else {
-        spdlog::error(L"{} found, but could not be queried for version", name);
+        spdlog::warn(L"{} found, but could not be queried for version", name);
         return FoundCouldNotBeQueried;
       }
     } else {
@@ -61,7 +61,7 @@ EDependencyStatus HasDependency(const wchar_t *name, RED4ext::SemVer minVersion)
       return FoundNoVersion;
     }
   } else {
-    spdlog::error(L"{} is not installed/installed properly - aborting", name);
+    spdlog::warn(L"{} not found", name);
     return NotFound;
   }
 }
