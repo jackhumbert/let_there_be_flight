@@ -1,48 +1,187 @@
-# Vehicle.$(v):
-#   $instances:
-#     - { v: v_sport2_quadra_type66_02_player }
-#     - { v: v_sport2_quadra_type66_player }
-#     - { v: v_sport2_quadra_type66_gt_player }
-#     - { v: v_sport2_quadra_type66_base_player }
-#     - { v: v_sport2_quadra_type66_nomad_player }
-#     - { v: v_sport2_quadra_type66_nomad_ncu_player }
-#   thrusterMesh: r"user\jackhumbert\meshes\thrusters\quadra_type66.mesh"
-#   thrusterAppearance: n"default"
+Vehicle.$(v):
+  $instances:
+    - { v: VehicleDestructionParamsDefault_4w }
+    - { v: VehicleDestructionParamsArcher }
+    - { v: VehicleDestructionParamsArcherBandit }
+    - { v: VehicleDestructionParamsCaliburn }
+    - { v: VehicleDestructionParamsCenturion }
+    - { v: VehicleDestructionParamsColby }
+    - { v: VehicleDestructionParamsColbyKurtz }
+    - { v: VehicleDestructionParamsColbyNomad }
+    - { v: VehicleDestructionParamsColumbus }
+    - { v: VehicleDestructionParamsCortes }
+    - { v: VehicleDestructionParamsDeleon }
+    - { v: VehicleDestructionParamsEmperor }
+    - { v: VehicleDestructionParamsGalena }
+    - { v: VehicleDestructionParamsHella }
+    - { v: VehicleDestructionParamsHozuki }
+    - { v: VehicleDestructionParamsMackinawBMF }
+    - { v: VehicleDestructionParamsMackinawLarimore }
+    - { v: VehicleDestructionParamsMaiMai }
+    - { v: VehicleDestructionParamsOutlawHeist }
+    - { v: VehicleDestructionParamsQuadraR7 }
+    - { v: VehicleDestructionParamsQuadraTurbo }
+    - { v: VehicleDestructionParamsQuadraType66 }
+    - { v: VehicleDestructionParamsQuadraType66Nomad }
+    - { v: VehicleDestructionParamsRayfieldAerondight }
+    - { v: VehicleDestructionParamsRiptide }
+    - { v: VehicleDestructionParamsShion }
+    - { v: VehicleDestructionParamsShionNomad }
+    - { v: VehicleDestructionParamsShionTakemura }
+    - { v: VehicleDestructionParamsSupron }
+    - { v: VehicleDestructionParamsSupronKurtz }
+    - { v: VehicleDestructionParamsTanishi }
+    - { v: VehicleDestructionParamsThortonMackinawNomad }
+    - { v: VehicleDestructionParamsThrax }
+    - { v: VehicleDestructionParamsZeya }
+    - { v: v_sport2_porsche_911turbo_inline8 }
+    - { v: v_sport2_quadra_type66_sampson_inline4 }
+    - { v: v_standard2_thorton_galena_nomad_inline7 }
+    - { v: v_mahir_mt28_coach_inline5 }
+    - { v: v_sport1_quadra_turbo_r_inline0 }
+    - { v: v_sport2_mizutani_shion_nomad_technical_inline0 }
+    - { v: v_sport2_mizutani_shion_sport_inline0 }
+    - { v: v_standard2_archer_hella_getto_inline6 }
+    - { v: v_standard2_archer_hella_police_inline2 }
+    - { v: v_standard2_archer_quartz_nomad_inline2 }
+    - { v: v_standard2_thorton_galena_bobas_inline9 }
+    - { v: v_standard2_villefort_cortes_poor_inline0 }
+    - { v: v_standard2_villefort_cortes_police_inline0 }
+    - { v: q000_v_nomad_car_inline1 }
+    - { v: q000_v_nomad_car_chase_inline1 }
+    - { v: sq004_transmission_van_inline1 }
+    - { v: v_standard3_thorton_mackinaw_cargo_courier_inline1 }
+    - { v: q304_get_away_car_inline0 }
+  detachableParts:
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterFL"
+      gridCells: [ 4 ]
+      threshold: 0.999
+      components: [ n"ThrusterFL" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterFR"
+      gridCells: [ 5 ]
+      threshold: 0.999
+      components: [ n"ThrusterFR" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterBR"
+      gridCells: [ 0 ]
+      threshold: 0.999
+      components: [ n"ThrusterBR" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterBL"
+      gridCells: [ 1 ]
+      threshold: 0.999
+      components: [ n"ThrusterBL" ]
 
 Vehicle.$(v):
   $instances:
-    - { v: v_sport2_quadra_type66_02_player }
-    - { v: v_sport2_quadra_type66_player }
-    - { v: v_sport1_quadra_turbo_player }
-    - { v: v_sport1_quadra_turbo_r_player }
-    - { v: v_sport2_porsche_911turbo_player }
-    - { v: v_sport2_quadra_type66_gt_player }
-    - { v: v_sport2_quadra_type66_base_player }
-    - { v: v_sport2_quadra_type66_nomad_player }
-    - { v: v_sport2_quadra_type66_nomad_ncu_player }
-  destruction:
-    detachableParts:
-      - !append
-        $type: VehicleDetachablePart
-        name: n"ThrusterFL"
-        gridCells: [ 4 ]
-        threshold: 0.999
-        components: [ n"ThrusterFL" ]
-      - !append
-        $type: VehicleDetachablePart
-        name: n"ThrusterFR"
-        gridCells: [ 5 ]
-        threshold: 0.999
-        components: [ n"ThrusterFR" ]
-      - !append
-        $type: VehicleDetachablePart
-        name: n"ThrusterBR"
-        gridCells: [ 0 ]
-        threshold: 0.999
-        components: [ n"ThrusterBR" ]
-      - !append
-        $type: VehicleDetachablePart
-        name: n"ThrusterBL"
-        gridCells: [ 1 ]
-        threshold: 0.999
-        components: [ n"ThrusterBL" ]
+    - { v: VehicleDestructionParamsAlvarado }
+    - { v: VehicleDestructionParamsAlvaradoHearse }
+    - { v: VehicleDestructionParamsBratsk }
+    - { v: VehicleDestructionParamsHellhound }
+  detachableParts:
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterFL"
+      gridCells: [ 4 ]
+      threshold: 0.999
+      components: [ n"ThrusterFL" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterFR"
+      gridCells: [ 5 ]
+      threshold: 0.999
+      components: [ n"ThrusterFR" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterBR"
+      gridCells: [ 0 ]
+      threshold: 0.999
+      components: [ n"ThrusterBR" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterBL"
+      gridCells: [ 1 ]
+      threshold: 0.999
+      components: [ n"ThrusterBL" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterFLB"
+      gridCells: [ 3 ]
+      threshold: 0.999
+      components: [ n"ThrusterFLB" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterFRB"
+      gridCells: [ 6 ]
+      threshold: 0.999
+      components: [ n"ThrusterFRB" ]
+
+Vehicle.$(v):
+  $instances:
+    - { v: VehicleDestructionParamsMerrimac }
+    - { v: VehicleDestructionParamsBehemoth }
+  detachableParts:
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterFL"
+      gridCells: [ 4 ]
+      threshold: 0.999
+      components: [ n"ThrusterFL" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterFR"
+      gridCells: [ 5 ]
+      threshold: 0.999
+      components: [ n"ThrusterFR" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterBR"
+      gridCells: [ 0 ]
+      threshold: 0.999
+      components: [ n"ThrusterBR" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterBL"
+      gridCells: [ 1 ]
+      threshold: 0.999
+      components: [ n"ThrusterBL" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterBLB"
+      gridCells: [ 2 ]
+      threshold: 0.999
+      components: [ n"ThrusterBLB" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterBRB"
+      gridCells: [ 7 ]
+      threshold: 0.999
+      components: [ n"ThrusterBRB" ]
+
+Vehicle.$(v):
+  $instances:
+    - { v: VehicleDestructionParamsDefault_2w }
+    - { v: VehicleDestructionParamsApollo }
+    - { v: v_sportbike2_arch_inline1 }
+    - { v: v_sportbike1_yaiba_kusanagi_inline0 }
+    - { v: v_sportbike3_brennan_apollo_police_inline1 }
+    - { v: v_sportbike3_brennan_apollo_kurtz_inline1 }
+  detachableParts:
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterF"
+      gridCells: [ 4, 5 ]
+      threshold: 0.999
+      components: [ n"ThrusterF" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterB"
+      gridCells: [ 0, 1 ]
+      threshold: 0.999
+      components: [ n"ThrusterB" ]
