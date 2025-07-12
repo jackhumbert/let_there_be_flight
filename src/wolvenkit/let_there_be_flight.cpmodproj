@@ -5,8 +5,7 @@
   <Author>Jack Humbert</Author>
   <Email />
   <Version />
-  <OpenProjectFiles>base\vehicles\sportbike\v_sportbike1_yaiba_kusanagi_basic_01.ent</OpenProjectFiles>
-  <OpenProjectFiles>base\vehicles\appearances\sportbike\yaiba_kusanagi_basic.app</OpenProjectFiles>
-  <OpenProjectFiles>base\vehicles\sportbike\v_sportbike1_yaiba_kusanagi\entities\meshes\v_sportbike1_yaiba_kusanagi__ext01_body_01.mesh</OpenProjectFiles>
-  <OpenProjectFiles>user\jackhumbert\meshes\thrusters\yaiba_kusanagi.mesh</OpenProjectFiles>
+  <OpenProjectFiles>ep1\vehicles\standard\v_standard25_thorton_merrimac_01_basic_01.ent</OpenProjectFiles>
+  <OpenProjectFiles>ep1\vehicles\appearances\standard\thorton_merrimac_basic.app</OpenProjectFiles>
+  <OpenProjectFiles>user\jackhumbert\localization\let_there_be_flight.en-us.json</OpenProjectFiles>
 </CP77Mod>

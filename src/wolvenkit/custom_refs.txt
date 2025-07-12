@@ -27,6 +27,7 @@ user\jackhumbert\meshes\thruster_trail_round.mesh
 user\jackhumbert\meshes\thrusters\quadra_turbo.mesh
 user\jackhumbert\meshes\thrusters\quadra_type66_nomad.mesh
 user\jackhumbert\meshes\thrusters\quadra_type66.mesh
+user\jackhumbert\meshes\thrusters\yaiba_kusanagi.mesh
 user\jackhumbert\particles\aim.particle
 user\jackhumbert\particles\ion_thruster_engine.particle
 user\jackhumbert\particles\ion_thruster_flame.particle
