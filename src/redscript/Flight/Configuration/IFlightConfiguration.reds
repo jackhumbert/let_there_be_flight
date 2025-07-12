@@ -29,6 +29,15 @@ public abstract native class IFlightConfiguration extends IScriptable {
 
   public let type: FlightVehicleType = FlightVehicleType.Corpo;
 
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Detachable-Thrusters")
+  public let areThrustersDetachable: Bool = true;
+
+  public func AreThrustersDetachable() -> Bool {
+    return this.areThrustersDetachable;
+  }
+
   public func OnSetup(vehicle: ref<VehicleObject>) {
     let name = NameToString(vehicle.GetCurrentAppearanceName());
 

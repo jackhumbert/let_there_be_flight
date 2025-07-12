@@ -28,6 +28,10 @@ private:
 
 class FlightComponent : public Engine::RTTIClass<FlightComponent, RED4ext::game::Component> {
 public:
+
+  static constexpr const char* NAME = "FlightComponent";
+  static constexpr const char* ALIAS = NAME;
+
   // 1.6  RVA: 0x1CA0980 / 30017920
   // 1.61 RVA: 0x1CA0BE0
   // 1.61hf1 RVA: 0x1CA12D0
