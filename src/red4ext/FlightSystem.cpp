@@ -120,8 +120,12 @@ void FlightSystem::OnRegisterUpdates(UpdateRegistrar *aRegistrar) {
 
   aRegistrar->RegisterUpdate(UpdateBucketMask::Vehicle, UpdateBucketStage::PrePhysicsTick, this,
     "FlightSystem/PrePhysics", &PrePhysics);
-    
+  
+  // UpdateTransformPrePhysics is too early
+  // PhysicsExecuteAsyncQueries is ok
+  // PhysicsFlushBufferedState is ok, but crash?
   // UpdateTransformPostPhysics is too late
+  // PostPhysicsTick is ok, but no animation transforms?
   aRegistrar->RegisterUpdate(UpdateBucketMask::Vehicle, UpdateBucketStage::PhysicsExecuteAsyncQueries, this, 
     "FlightSystem/UpdateComponents", &UpdateComponents);
  }

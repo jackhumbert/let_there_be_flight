@@ -8,4 +8,8 @@
   <OpenProjectFiles>ep1\vehicles\standard\v_standard25_thorton_merrimac_01_basic_01.ent</OpenProjectFiles>
   <OpenProjectFiles>ep1\vehicles\appearances\standard\thorton_merrimac_basic.app</OpenProjectFiles>
   <OpenProjectFiles>user\jackhumbert\localization\let_there_be_flight.en-us.json</OpenProjectFiles>
+  <OpenProjectFiles>base\vehicles\sport\v_sport2_villefort_alvarado__basic_01.ent</OpenProjectFiles>
+  <OpenProjectFiles>base\vehicles\appearances\sport\villefort_alvarado__basic.app</OpenProjectFiles>
+  <OpenProjectFiles>base\vehicles\base_rig\v_base_x6_444_180_44\v_base_x6_444_180_44.rig</OpenProjectFiles>
+  <OpenProjectFiles>base\vehicles\base_rig\v_base_x6_444_180_44\v_base_x6_444_180_44.animgraph</OpenProjectFiles>
 </CP77Mod>

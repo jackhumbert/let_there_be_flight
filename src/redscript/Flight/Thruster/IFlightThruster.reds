@@ -269,10 +269,12 @@ public abstract native class IFlightThruster extends IScriptable {
 
       let acc = this.flightComponent.FindComponentByName(n"AnimationController") as AnimationControllerComponent;
       if IsDefined(acc) {
+        // between -4.0 & 4.0
         acc.SetInputFloat(this.deviationName, this.animDeviation);
       }
       // AnimationControllerComponent.SetInputFloat(this.vehicle, this.deviationName, this.animDeviation);
 
+      // between 0.0 & 16.0, default to 0.4
       // acc.SetInputFloat(this.GetRadiusName(), this.animRadius);
       
       // amount *= 0.5;
