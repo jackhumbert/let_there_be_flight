@@ -363,6 +363,7 @@ public native class FlightComponent extends GameComponent {
     // this.helper = this.GetVehicle().AddFlightHelper();
     // LTBF_RegisterListener(this);
     this.thrusterTensor = this.configuration.GetThrusterTensor();
+    FlightLog.Info("[FlightComponent] thrusterTensor: " + this.thrusterTensor.X + ", " + this.thrusterTensor.Y + ", " + this.thrusterTensor.Z + ", " + this.thrusterTensor.W);
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if mountChild.IsPlayer() {
       
@@ -749,7 +750,7 @@ public native class FlightComponent extends GameComponent {
 
     // factor in where thrusters are
     torque.X *= this.thrusterTensor.X;
-    torque.Y *= this.thrusterTensor.Y;
+    torque.Y *= MaxF(this.thrusterTensor.Y, 1.0); // prevents bikes from rolling excessively
     torque.Z *= this.thrusterTensor.Z;
     
     // convert to global
