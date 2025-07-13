@@ -27,15 +27,21 @@ public class FlightThrusterFront extends IFlightThruster {
     }
     let comps = this.vehicle.GetComponentsUsingSlot(n"wheel_front_rot_set");
     for c in comps {
-      ArrayPush(this.ogComponents, c);
+      if !ArrayContains(this.ogComponents, c) {
+        ArrayPush(this.ogComponents, c);
+      }
     }
     comp = this.flightComponent.FindComponentByName(n"wheel_f_01");
     if IsDefined(comp) {
-      ArrayPush(this.ogComponents, comp);
+      if !ArrayContains(this.ogComponents, comp) {
+        ArrayPush(this.ogComponents, comp);
+      }
     }
     comp = this.flightComponent.FindComponentByName(n"tire_f_01");
     if IsDefined(comp) {
-      ArrayPush(this.ogComponents, comp);
+      if !ArrayContains(this.ogComponents, comp) {
+        ArrayPush(this.ogComponents, comp);
+      }
     }
   }
 
@@ -93,15 +99,21 @@ public class FlightThrusterBack extends IFlightThruster {
     }
     comp = this.flightComponent.FindComponentByName(n"tire_b_01");
     if IsDefined(comp) {
-      ArrayPush(this.ogComponents, comp);
+      if !ArrayContains(this.ogComponents, comp) {
+        ArrayPush(this.ogComponents, comp);
+      }
     }
     let comps = this.vehicle.GetComponentsUsingSlot(n"axel_back_wheel");
     for c in comps {
-      ArrayPush(this.ogComponents, c);
+      if !ArrayContains(this.ogComponents, c) {
+        ArrayPush(this.ogComponents, c);
+      }
     }
     comps = this.vehicle.GetComponentsUsingSlot(n"wheel_back");
     for c in comps {
-      ArrayPush(this.ogComponents, c);
+      if !ArrayContains(this.ogComponents, c) {
+        ArrayPush(this.ogComponents, c);
+      }
     }
   }
 
