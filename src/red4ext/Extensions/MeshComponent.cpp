@@ -112,21 +112,23 @@ void EntityExt::AddComponent(Handle<ent::IComponent> const & componentToAdd) {
 //}
 
 void EntityExt::AddSlot(CName boneName, CName slotName, Vector3 relativePosition, Quaternion relativeRotation) {
-  ent::SlotComponent *slotComponent = nullptr;
+  // ent::SlotComponent *slotComponent = nullptr;
   auto rtti = CRTTISystem::Get();
 
-  for (auto const &handle : this->componentsStorage.components) {
-    auto component = handle.GetPtr();
-    if (component->GetNativeType() == rtti->GetClass("entSlotComponent")) {
-      if (component->name == "vehicle_slots") {
-        slotComponent = reinterpret_cast<ent::SlotComponent *>(component);
-        break;
-      }
-    }
-  }
+  // for (auto const &handle : this->componentsStorage.components) {
+  //   auto component = handle.GetPtr();
+  //   if (component->GetNativeType() == rtti->GetClass("entSlotComponent")) {
+  //     if (component->name == "vehicle_slots") {
+  //       slotComponent = reinterpret_cast<ent::SlotComponent *>(component);
+  //       break;
+  //     }
+  //   }
+  // }
+
+  auto slotComponent = this->GetComponent<ent::SlotComponent>("vehicle_slots");
 
   if (slotComponent != nullptr) {
-    auto slot = reinterpret_cast<ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
+    auto slot = rtti->GetClass("entSlot")->CreateInstance<ent::Slot *>(true);
     slot->boneName = boneName;
     slot->slotName = slotName;
     slot->relativePosition = relativePosition;

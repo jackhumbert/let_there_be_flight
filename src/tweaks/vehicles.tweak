@@ -1,3 +1,41 @@
+// Thruster slot orientation is configured via additional
+// flats in the vehicle's VehWheelDimensionsSetup record's 
+// FrontPreset & BackPreset: thrusterSlotOrientation.
+
+// This should be used to configure the slot, on which
+// animations are based, so it needs to point forward & up, etc.
+
+// For rotating the mesh, use the thrusterMeshOrientation
+// mentioned later in this file (TODO currently).
+
+// Front
+
+Vehicle.VehicleWheelDimensionsDefaultYaibaKusanagi_inline0 {
+  EulerAngles thrusterSlotOrientation = (0.0, -70.2727625, 0.0);
+}
+
+Vehicle.v_sportbike3_brennan_apollo_inline2 {
+  EulerAngles thrusterSlotOrientation = (0.0, -26.1551403, 0.0);
+}
+
+Vehicle.v_sportbike2_arch_inline5 {
+  EulerAngles thrusterSlotOrientation = (0.0, -26.1551403, 0.0);
+}
+
+// Back
+
+Vehicle.VehicleWheelDimensionsDefaultYaibaKusanagi_inline1 {
+  EulerAngles thrusterSlotOrientation = (0.0, 0.0, 0.0);
+}
+
+Vehicle.v_sportbike3_brennan_apollo_inline3 {
+  EulerAngles thrusterSlotOrientation = (0.0, 0.0, 0.0);
+}
+
+Vehicle.v_sportbike2_arch_inline6 {
+  EulerAngles thrusterSlotOrientation = (0.0, 0.0, 0.0);
+}
+
 Vehicle.v_sport2_porsche_911turbo_player {
   ResRef thrusterMesh = "user\jackhumbert\meshes\engine_corpo.mesh";
   CName thrusterAppearance = "blackout";

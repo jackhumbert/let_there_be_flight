@@ -4,7 +4,15 @@ public class FlightThrusterFront extends IFlightThruster {
   public func Create(vehicle: ref<VehicleObject>, meshComponent: ref<MeshComponent>) -> ref<IFlightThruster> {
     this.vehicle = vehicle;
     this.slotName = n"thruster_front";
-    this.vehicle.AddSlot(n"suspension_front_offset", this.slotName, new Vector3(0.0, 0.0, -0.5), new Quaternion(0.22627002, 0.0, 0.0, -0.974064708));
+
+    let frontPreset = TweakDBInterface.GetVehicleRecord(vehicle.GetRecordID()).VehWheelDimensionsSetup().FrontPreset().GetID();
+    FlightLog.Info("Looking for front preset " + TDBID.ToStringDEBUG(frontPreset));
+    TDBID.Append(frontPreset, t".thrusterSlotOrientation");
+    FlightLog.Info("Looking for thrusterSlotOrientation " + TDBID.ToStringDEBUG(frontPreset));
+    let orientation = TweakDBInterface.GetEulerAngles(frontPreset, new EulerAngles());
+
+    // orientation needs to be inverse of suspension_front_offset
+    this.vehicle.AddSlot(n"suspension_front_offset", this.slotName, new Vector3(0.0, 0.0, -0.5), EulerAngles.ToQuat(orientation));
 
     this.meshComponent = meshComponent;
     this.meshComponent.name = n"ThrusterF"; 
@@ -77,7 +85,14 @@ public class FlightThrusterBack extends IFlightThruster {
   public func Create(vehicle: ref<VehicleObject>, meshComponent: ref<MeshComponent>) -> ref<IFlightThruster> {
     this.vehicle = vehicle;
     this.slotName = n"thruster_back";
-    this.vehicle.AddSlot(n"suspension_back", this.slotName, new Vector3(0.0, 0.0, -0.5), new Quaternion(0.0, 0.0, 0.0, 1.0));
+
+    let backPreset = TweakDBInterface.GetVehicleRecord(vehicle.GetRecordID()).VehWheelDimensionsSetup().BackPreset().GetID();
+    FlightLog.Info("Looking for front preset " + TDBID.ToStringDEBUG(backPreset));
+    TDBID.Append(backPreset, t".thrusterSlotOrientation");
+    FlightLog.Info("Looking for thrusterSlotOrientation " + TDBID.ToStringDEBUG(backPreset));
+    let orientation = TweakDBInterface.GetEulerAngles(backPreset, new EulerAngles());
+
+    this.vehicle.AddSlot(n"suspension_back", this.slotName, new Vector3(0.0, 0.0, -0.5), EulerAngles.ToQuat(orientation));
 
     this.meshComponent = meshComponent;
     this.meshComponent.name = n"ThrusterB"; 
