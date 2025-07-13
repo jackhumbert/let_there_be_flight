@@ -13,7 +13,6 @@ public class FlightConfiguration_methodd_oni_oni_black extends IFlightConfigurat
 
     for thruster in this.thrusters {
       // ArrayPush(thruster.fxs, new RegularFlightThrusterFX().Create(thruster));
-      vehicle.AddComponent(thruster.meshComponent);
       thruster.OnSetup(this.component);
     }
   }

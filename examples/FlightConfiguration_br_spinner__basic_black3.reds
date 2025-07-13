@@ -20,7 +20,6 @@ public class FlightConfiguration_br_spinner__basic_black3 extends IFlightConfigu
 
     for thruster in this.thrusters {
       ArrayPush(thruster.fxs, new MainFlightThrusterFX().Create(thruster));
-      vehicle.AddComponent(thruster.meshComponent);
       thruster.OnSetup(this.component);
     }
   }
