@@ -188,14 +188,14 @@ public native class FlightSettings extends IScriptable {
     FlightSettings.SetFloat("distance", 0.0);
     FlightSettings.SetFloat("distanceEase", 0.1);
 
-    FlightSettings.SetFloat("flyModeLiftFactor", 20.0);
+    // FlightSettings.SetFloat("flyModeLiftFactor", 20.0);
 
     FlightSettings.SetVector3("FPVCameraOffset", 0.0, 0.0, -0.5);
 
     FlightSettings.SetFloat("fwtfCorrection", 0.0);
     FlightSettings.SetFloat("hoverClamp", 10.0);
     FlightSettings.SetFloat("hoverFactor", 40.0);
-    FlightSettings.SetFloat("hoverModeLiftFactor", 8.0);
+    // FlightSettings.SetFloat("hoverModeLiftFactor", 8.0);
     FlightSettings.SetFloat("isFlightUIActive", 1.0);
     FlightSettings.SetFloat("liftFactor", 8.0);
     FlightSettings.SetFloat("lockFPPCameraForDrone", 1.0);

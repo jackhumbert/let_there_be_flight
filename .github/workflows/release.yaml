@@ -49,27 +49,27 @@ jobs:
         run: tar -cvf "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}_pdb.zip" --format=zip *
         working-directory:  game_dir_debug
 
-      - name: Check file existence
-        id: requirements_folder_exists
-        uses: andstor/file-existence-action@v1
-        with:
-          files: "game_dir_requirements"
+      # - name: Check file existence
+      #   id: requirements_folder_exists
+      #   uses: andstor/file-existence-action@v1
+      #   with:
+      #     files: "game_dir_requirements"
 
-      - name: Check file existence
-        id: requirements_debug_folder_exists
-        uses: andstor/file-existence-action@v1
-        with:
-          files: "game_dir_requirements_debug"
+      # - name: Check file existence
+      #   id: requirements_debug_folder_exists
+      #   uses: andstor/file-existence-action@v1
+      #   with:
+      #     files: "game_dir_requirements_debug"
 
-      - name: Zipping game_dir_requirements
-        if: steps.requirements_folder_exists.outputs.files_exists == 'true'
-        run: tar -cvf "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}_requirements.zip" --format=zip *
-        working-directory:  game_dir_requirements
+      # - name: Zipping game_dir_requirements
+      #   if: steps.requirements_folder_exists.outputs.files_exists == 'true'
+      #   run: tar -cvf "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}_requirements.zip" --format=zip *
+      #   working-directory:  game_dir_requirements
 
-      - name: Zipping game_dir_requirements_debug
-        if: steps.requirements_debug_folder_exists.outputs.files_exists == 'true'
-        run: tar -cvf "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}_requirements_pdb.zip" --format=zip *
-        working-directory:  game_dir_requirements_debug
+      # - name: Zipping game_dir_requirements_debug
+      #   if: steps.requirements_debug_folder_exists.outputs.files_exists == 'true'
+      #   run: tar -cvf "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}_requirements_pdb.zip" --format=zip *
+      #   working-directory:  game_dir_requirements_debug
 
       - name: Release
         uses: softprops/action-gh-release@v1

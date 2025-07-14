@@ -7,6 +7,22 @@ public class FlightModeHoverFly extends FlightModeStandard {
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Hover-And-Fly-Enabled")
   public let enabled: Bool = true;
 
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Standard-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Hover-And-Fly-Height-Dampening")
+  @runtimeProperty("ModSettings.step", "0.25")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "100.0")
+  public let heightDampening: Float = 1.0;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Standard-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Hover-And-Fly-Height-Correction")
+  @runtimeProperty("ModSettings.step", "0.01")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "5.0")
+  public let heightCorrectionFactor: Float = 0.5;
+
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeHoverFly> {
     let self = new FlightModeHoverFly();
     self.Initialize(component);
@@ -34,17 +50,22 @@ public class FlightModeHoverFly extends FlightModeStandard {
     }
 
     if lastHovering == 0.0 && this.hovering > 0.0 {
-      this.component.hoverHeight = MaxF(this.component.distance + this.component.lift * timeDelta * FlightSettings.GetFloat("hoverModeLiftFactor"), FlightSettings.GetFloat("hoverModeMinHoverHeight"));
-    } else {
-      this.component.hoverHeight = MaxF(this.component.hoverHeight + this.component.lift * timeDelta * FlightSettings.GetFloat("hoverModeLiftFactor"), FlightSettings.GetFloat("hoverModeMinHoverHeight"));
+      this.component.hoverHeight = this.component.distance;
     }
+
+    // this.component.hoverHeight = MaxF(this.component.hoverHeight + this.component.lift * timeDelta * this.standardModeHoverFactor, FlightSettings.GetFloat("hoverModeMinHoverHeight"));
+    this.component.hoverHeight = MaxF(this.component.hoverHeight + this.component.lift * this.heightCorrectionFactor, FlightSettings.GetFloat("hoverModeMinHoverHeight"));
+    // this.component.hoverHeight = MaxF(this.component.hoverHeight + this.component.lift, FlightSettings.GetFloat("hoverModeMinHoverHeight"));
 
     let heightDifference = this.component.hoverHeight - this.component.distance;
     let idealNormal = Vector4.Interpolate(FlightUtils.Up(), normal, this.hovering);
 
     let hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, FlightSettings.GetFloat("hoverClamp"));// / FlightSettings.GetFloat("hoverClamp");
-    let liftFactor = LerpF(this.hovering, this.component.lift - this.component.stats.d_velocity.Z * 0.1, hoverCorrection);
+    let flyCorrection = this.component.lift;// * timeDelta;
+    let liftFactor = LerpF(this.hovering, flyCorrection * this.standardModeLiftFactor - this.component.stats.d_velocity.Z * this.heightDampening, hoverCorrection * this.standardModeHoverFactor);
+    // liftFactor -= this.component.stats.d_velocity.Z * this.heightDampening;
+    liftFactor *= (1.0 - this.component.linearBrake);
 
-    this.UpdateWithNormalLift(timeDelta, idealNormal, liftFactor * FlightSettings.GetFloat("hoverFactor") + (9.81000042) * this.gravityFactor);
+    this.UpdateWithNormalLift(timeDelta, idealNormal, liftFactor + (9.81000042) * this.gravityFactor);
   }
 }

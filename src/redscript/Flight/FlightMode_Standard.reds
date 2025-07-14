@@ -34,6 +34,22 @@ public abstract class FlightModeStandard extends FlightMode {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Standard-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Lift-Factor")
+  @runtimeProperty("ModSettings.step", "1.0")
+  @runtimeProperty("ModSettings.min", "1.0")
+  @runtimeProperty("ModSettings.max", "500.0")
+  public let standardModeLiftFactor: Float = 25.0;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Standard-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Hover-Factor")
+  @runtimeProperty("ModSettings.step", "1.0")
+  @runtimeProperty("ModSettings.min", "1.0")
+  @runtimeProperty("ModSettings.max", "500.0")
+  public let standardModeHoverFactor: Float = 10.0;
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Standard-Mode")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Pitch-Input-Angle")
   @runtimeProperty("ModSettings.step", "5.0")
   @runtimeProperty("ModSettings.min", "0.0")
@@ -68,7 +84,7 @@ public abstract class FlightModeStandard extends FlightMode {
 
   protected func UpdateWithNormalDistance(timeDelta: Float, normal: Vector4, heightDifference: Float) -> Void {
     let hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, FlightSettings.GetFloat("hoverClamp"));// / FlightSettings.GetFloat("hoverClamp");
-    let liftForce: Float = hoverCorrection * FlightSettings.GetFloat("hoverFactor") + (9.81000042) * this.gravityFactor;
+    let liftForce: Float = hoverCorrection * this.standardModeLiftFactor + (9.81000042) * this.gravityFactor;
     this.UpdateWithNormalLift(timeDelta, normal, liftForce);
   }
 
@@ -141,9 +157,9 @@ public abstract class FlightModeStandard extends FlightMode {
     this.force -= velocityDamp;
 
     // pitch correction
-    this.torque.X = -(pitchCorrection + angularDamp.X);
+    this.torque.X = -(pitchCorrection * (1.0 - this.component.angularBrake) + angularDamp.X);
     // roll correction
-    this.torque.Y = (rollCorrection - angularDamp.Y);
+    this.torque.Y = (rollCorrection * (1.0 - this.component.angularBrake) - angularDamp.Y);
     // yaw correction
     this.torque.Z = -((this.component.yaw - (rollDegOffInput * pitchDegOffInput / 1800.0)) * this.standardModeYawFactor + angularDamp.Z );
     // rotational brake

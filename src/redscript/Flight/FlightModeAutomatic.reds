@@ -58,9 +58,9 @@ public class FlightModeAutomatic extends FlightModeStandard {
     }
 
     if lastHovering == 0.0 && this.hovering > 0.0 {
-      this.component.hoverHeight = MaxF(this.component.distance + this.component.lift * timeDelta * FlightSettings.GetFloat("hoverModeLiftFactor"), FlightSettings.GetFloat("hoverModeMinHoverHeight"));
+      this.component.hoverHeight = MaxF(this.component.distance + this.component.lift * timeDelta * this.standardModeLiftFactor, FlightSettings.GetFloat("hoverModeMinHoverHeight"));
     } else {
-      this.component.hoverHeight = MaxF(this.component.hoverHeight + this.component.lift * timeDelta * FlightSettings.GetFloat("hoverModeLiftFactor"), FlightSettings.GetFloat("hoverModeMinHoverHeight"));
+      this.component.hoverHeight = MaxF(this.component.hoverHeight + this.component.lift * timeDelta * this.standardModeLiftFactor, FlightSettings.GetFloat("hoverModeMinHoverHeight"));
     }
 
     let heightDifference = this.component.hoverHeight - this.component.distance;

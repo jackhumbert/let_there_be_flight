@@ -54,17 +54,17 @@ jobs:
         name: ${{ env.MOD_ZIP_FILENAME }}_${{ env.PRETTY_CONFIG }}_${{ env.SHORT_SHA }}_pdb
         path: ${{ github.workspace }}/game_dir_debug/**
 
-    - name: Upload game_dir_requirements with zip file name
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ env.MOD_ZIP_FILENAME }}_${{ env.PRETTY_CONFIG }}_${{ env.SHORT_SHA }}_requirements
-        path: ${{ github.workspace }}/game_dir_requirements/**
+    # - name: Upload game_dir_requirements with zip file name
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: ${{ env.MOD_ZIP_FILENAME }}_${{ env.PRETTY_CONFIG }}_${{ env.SHORT_SHA }}_requirements
+    #     path: ${{ github.workspace }}/game_dir_requirements/**
 
-    - name: Upload game_dir_requirements_debug with zip file name
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ env.MOD_ZIP_FILENAME }}_${{ env.PRETTY_CONFIG }}_${{ env.SHORT_SHA }}_requirements_pdb
-        path: ${{ github.workspace }}/game_dir_requirements_debug/**
+    # - name: Upload game_dir_requirements_debug with zip file name
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: ${{ env.MOD_ZIP_FILENAME }}_${{ env.PRETTY_CONFIG }}_${{ env.SHORT_SHA }}_requirements_pdb
+    #     path: ${{ github.workspace }}/game_dir_requirements_debug/**
 
     - name: 'Version Badge'
       if: always()

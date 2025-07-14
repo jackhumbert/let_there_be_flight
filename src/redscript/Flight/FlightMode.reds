@@ -7,7 +7,7 @@ public abstract class FlightMode {
   public let linearDamp: Float;
   public let angularDamp: Float;
 
-  public static let gravityFactor: Float;
+  public let gravityFactor: Float;
 
   public let usesRightStickInput: Bool;
   public let collisionPenalty: Float;
