@@ -177,11 +177,11 @@ Vehicle.$(v):
       $type: VehicleDetachablePart
       name: n"ThrusterF"
       gridCells: [ 4, 5 ]
-      threshold: 0.999
+      threshold: 0.5
       components: [ n"ThrusterF" ]
     - !append
       $type: VehicleDetachablePart
       name: n"ThrusterB"
       gridCells: [ 0, 1 ]
-      threshold: 0.999
+      threshold: 0.5
       components: [ n"ThrusterB" ]
