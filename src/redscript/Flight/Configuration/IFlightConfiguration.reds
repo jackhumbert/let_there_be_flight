@@ -34,6 +34,8 @@ public abstract native class IFlightConfiguration extends IScriptable {
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Detachable-Thrusters")
   public let areThrustersDetachable: Bool = true;
 
+  public let percentageAttached: Float = 1.0;
+
   public func AreThrustersDetachable() -> Bool {
     return this.areThrustersDetachable;
   }
@@ -101,15 +103,20 @@ public abstract native class IFlightConfiguration extends IScriptable {
   public func GetThrusterTensor() -> Vector4 {
     let total = new Vector4(0.0, 0.0, 0.0, 0.0);
     let vt = this.component.GetVehicle().GetWorldTransform();
+    let totalThrusters = 0.0;
+    let attachedThrusters = 0.0;
     for thruster in this.thrusters {
       if thruster.attached {
+        attachedThrusters += 1.0;
         let v = WorldTransform.TransformInvPoint(vt, thruster.GetLocalToWorld() * Vector4.EmptyVector());
         v -= Vector4.Vector3To4(this.component.GetVehicle().GetCenterOfMass());
         total.X += SqrtF(PowF(v.Y, 2.0) + PowF(v.Z, 2.0));
         total.Y += SqrtF(PowF(v.X, 2.0) + PowF(v.Z, 2.0));
         total.Z += SqrtF(PowF(v.X, 2.0) + PowF(v.Y, 2.0));
       }
+      totalThrusters += 1.0;
     }
+    this.percentageAttached = attachedThrusters / totalThrusters;
     return total;
   }
 

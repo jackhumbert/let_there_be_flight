@@ -686,7 +686,7 @@ public native class FlightComponent extends GameComponent {
     if this.mode < ArraySize(this.modes) {
       if shouldModeUpdate {
         this.modes[this.mode].Update(timeDelta);
-        force += this.modes[this.mode].force;
+        force += this.modes[this.mode].force * this.configuration.percentageAttached;
         torque += this.modes[this.mode].torque;
       }
     }
