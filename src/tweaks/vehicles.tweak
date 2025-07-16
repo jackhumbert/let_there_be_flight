@@ -86,7 +86,11 @@ Vehicle.v_sport2_mizutani_shion_player {}
 Vehicle.v_sport2_mizutani_shion_nomad_player {}
 Vehicle.v_sport2_mizutani_shion_nomad_02_player {}
 Vehicle.v_sport2_mizutani_shion_targa_player {}
-Vehicle.v_sport2_mizutani_shion_base_player {}
+Vehicle.v_sport2_mizutani_shion_base_player {
+  ResRef thrusterMesh = "user\jackhumbert\meshes\engine_corpo.mesh";
+  CName thrusterAppearance = "blackout";
+  bool hasRetroThruster = true;
+}
 Vehicle.v_sport2_porsche_911turbo_cabrio_player {}
 Vehicle.v_sport2_quadra_type66_avenger_player {}
 Vehicle.v_sport2_villefort_alvarado_player {}

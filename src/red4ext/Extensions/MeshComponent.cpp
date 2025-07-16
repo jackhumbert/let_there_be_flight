@@ -20,7 +20,7 @@ void MeshComponentExt::SetMesh(ResRef mesh) {
 
 void IPlacedComponentExt::SetParentTransform(CName bindName, CName slotName) {
   auto rtti = CRTTISystem::Get();
-  auto htb = (ent::HardTransformBinding *)rtti->GetClass("entHardTransformBinding")->CreateInstance(true);
+  auto htb = rtti->GetClass("entHardTransformBinding")->CreateInstance<ent::HardTransformBinding *>(true);
   htb->bindName = bindName;
   htb->slotName = slotName;
   this->parentTransform = Handle<ent::ITransformBinding>(htb);
@@ -29,61 +29,83 @@ void IPlacedComponentExt::SetParentTransform(CName bindName, CName slotName) {
 void EntityExt::AddComponent(Handle<ent::IComponent> const & componentToAdd) {
   componentToAdd->id = CRUID::Next();
 
+  this->componentsStorage.components.PushBack(componentToAdd);
+
   auto rtti = CRTTISystem::Get();
   
-  auto vcc = this->GetComponent<ent::VisualControllerComponent>();
-  auto customization = this->GetComponent<ent::EffectSpawnerComponent>("vehicleVisualCustomization");
+  auto const vcc = this->GetComponent<ent::VisualControllerComponent>();
+  auto const customization = this->GetComponent<ent::EffectSpawnerComponent>("vehicleVisualCustomization");
 
   if (componentToAdd->IsOfClass(rtti->GetClass("entMeshComponent"))) {
 
-    if (vcc != NULL) {
-        auto meshComponent = (ent::MeshComponent *)componentToAdd.instance;
-        meshComponent->appearanceName = meshComponent->meshAppearance;
+    if (vcc) {
+      auto meshComponent = (ent::MeshComponent *)componentToAdd.instance;
+      meshComponent->appearanceName = meshComponent->meshAppearance;
 
-        auto vcd = reinterpret_cast<ent::VisualControllerDependency *>(
-            rtti->GetClass("entVisualControllerDependency")->CreateInstance(true));
-        vcd->appearanceName = meshComponent->meshAppearance;
-        vcd->componentName = meshComponent->name;
-        vcd->mesh.path = meshComponent->mesh.path;
-        vcc->appearanceDependency.EmplaceBack(*vcd);
+      auto vcd = rtti->GetClass("entVisualControllerDependency")->CreateInstance<ent::VisualControllerDependency *>(true);
+      vcd->appearanceName = meshComponent->meshAppearance;
+      vcd->componentName = meshComponent->name;
+      vcd->mesh.path = meshComponent->mesh.path;
+      vcc->appearanceDependency.EmplaceBack(*vcd);
 
-        if (vcc->resourcePaths.size) {
-          for (int i = 0; i < vcc->resourcePaths.size; i++) {
-            if (vcc->resourcePaths[i] == meshComponent->mesh.path) {
-              break;
-            } else if (vcc->resourcePaths[i] > meshComponent->mesh.path) {
-              vcc->resourcePaths.Emplace(&vcc->resourcePaths[i], meshComponent->mesh.path);
-              break;
-            }
-          }
-        } else {
-          vcc->resourcePaths.EmplaceBack(meshComponent->mesh.path);
-        }
-      }
-    if (customization != NULL) {
-      for (auto const & desc : customization->effectDescs) {
-        if (desc->effectName == "vvc_color_instant") {
-          desc->compiledEffectInfo.componentNames.PushBack(componentToAdd->name);
-          for (auto & event : desc->compiledEffectInfo.eventsSortedByRUID) {
-            if (event.componentIndexMask & 0x2)
-              event.componentIndexMask |= (1ULL << (desc->compiledEffectInfo.componentNames.size - 1));
+      if (vcc->resourcePaths.size) {
+        for (int i = 0; i < vcc->resourcePaths.size; i++) {
+          if (vcc->resourcePaths[i] == meshComponent->mesh.path) {
+            break;
+          } else if (vcc->resourcePaths[i] > meshComponent->mesh.path) {
+            vcc->resourcePaths.Emplace(&vcc->resourcePaths[i], meshComponent->mesh.path);
+            break;
           }
         }
-        if (desc->effectName == "vvc_color") {
-          desc->compiledEffectInfo.componentNames.PushBack(componentToAdd->name);
-          for (auto & event : desc->compiledEffectInfo.eventsSortedByRUID) {
-            if (event.componentIndexMask & 0x2)
-              event.componentIndexMask |= (1ULL << (desc->compiledEffectInfo.componentNames.size - 1));
-          }
-        }
+      } else {
+        vcc->resourcePaths.EmplaceBack(meshComponent->mesh.path);
       }
     }
-  }
+
+    // if (componentToAdd->IsOfClass(rtti->GetClass("entIVisualComponent"))) {
+      if (customization) {
+        // customization->StopAllEffects(1);
+        for (auto const & desc : customization->effectDescs) {
+          if (desc->compiledEffectInfo.componentNames.size == 16)
+            continue;
+          if (desc->effectName == "vvc_color" || desc->effectName == "vvc_color_instant" || desc->effectName == "vvc_damage_glitch") {
+          // if (desc->effectName == "vcc_color_rims" || desc->effectName == "vvc_color_rims_instant") {
+            uint32_t body_index = 0;
+            for (auto name : desc->compiledEffectInfo.componentNames) {
+              auto str = std::string(name.ToString());
+              if (str.find("body") == std::string::npos) {
+                body_index++;
+              } else {
+                break;
+              }
+            }
+            if (body_index != desc->compiledEffectInfo.componentNames.size) {
+              uint64_t bitToCopy = (1ULL << body_index);
+              uint64_t bitToAdd = (1ULL << desc->compiledEffectInfo.componentNames.size);
+              desc->compiledEffectInfo.componentNames.PushBack(componentToAdd->name);
+              for (auto & event : desc->compiledEffectInfo.eventsSortedByRUID) {
+                if ((event.flags & 1) != 1)
+                  continue;
+                if ((event.componentIndexMask & bitToCopy) == bitToCopy)
+                  event.componentIndexMask |= bitToAdd;
+              }
+            }
+          }
+        }
+        // componentToAdd.refCount->IncWeakRef();
+        // WeakHandle<ent::IVisualComponent> weakHandle;
+        // weakHandle.instance = reinterpret_cast<ent::IVisualComponent*>(componentToAdd.instance);
+        // weakHandle.refCount = componentToAdd.refCount;
+        // weakHandle.refCount->IncWeakRef();
+        // customization->components.Emplace(componentToAdd->name, weakHandle);
+      }
+    }
+  // }
 
   if (componentToAdd->IsOfClass(rtti->GetClass("entPhysicalMeshComponent"))) {
     auto pmComponent = (ent::PhysicalMeshComponent *)componentToAdd.instance;
     
-    auto filterData = (physics::FilterData*)rtti->GetClass("physicsFilterData")->CreateInstance(true);
+    auto filterData = rtti->GetClass("physicsFilterData")->CreateInstance<physics::FilterData *>(true);
 
     pmComponent->filterData = Handle<physics::FilterData>(filterData);
     pmComponent->filterDataSource = FilterDataSource::Collider;
@@ -100,8 +122,6 @@ void EntityExt::AddComponent(Handle<ent::IComponent> const & componentToAdd) {
   //   tweakDB->AddFlat();
   // }
   
-
-  this->componentsStorage.components.PushBack(componentToAdd);
 }
 
 //Handle<physics::ColliderSphere> * createSphereColliderHandleWithRadius(Handle<physics::ICollider> *handle,
@@ -127,7 +147,7 @@ void EntityExt::AddSlot(CName boneName, CName slotName, Vector3 relativePosition
 
   auto slotComponent = this->GetComponent<ent::SlotComponent>("vehicle_slots");
 
-  if (slotComponent != nullptr) {
+  if (slotComponent) {
     auto slot = rtti->GetClass("entSlot")->CreateInstance<ent::Slot *>(true);
     slot->boneName = boneName;
     slot->slotName = slotName;

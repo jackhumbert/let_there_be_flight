@@ -40,26 +40,26 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityE
     // h.refCount->IncRef();
     // entity->componentsStorage.components.EmplaceBack(h);
 
-    auto vcc = entity->GetComponent<RED4ext::ent::VisualControllerComponent>();
-    auto chassis = entity->GetComponent<RED4ext::vehicle::ChassisComponent>();
-    auto vs = entity->GetComponent<RED4ext::ent::SlotComponent>("vehicle_slots");
-    auto osc = entity->GetComponent<RED4ext::game::OccupantSlotComponent>();
+    // auto const vcc = entity->GetComponent<RED4ext::ent::VisualControllerComponent>();
+    // auto chassis = entity->GetComponent<RED4ext::vehicle::ChassisComponent>();
+    auto const vs = entity->GetComponent<RED4ext::ent::SlotComponent>("vehicle_slots");
+    // auto osc = entity->GetComponent<RED4ext::game::OccupantSlotComponent>();
 
-    if (vcc != nullptr && vs != nullptr) {
-      {
+    if (vs) {
+      // {
         // auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
         // slot->boneName = "roof_border_front";
         // slot->slotName = "roof_border_front";
         // vs->slots.EmplaceBack(*slot);
         // vs->slotIndexLookup.Emplace(slot->slotName, vs->slots.size - 1);
-      }
+      // }
       // FlightWeapons::AddWeaponSlots(vs);
 
       auto configurationCls = IFlightConfiguration::GetConfigurationClass(entity);
 
       if (configurationCls) {
         // spdlog::info("Looked for class '{}' using '{}'", className, configurationCls->name.ToString());
-        auto configuration = reinterpret_cast<IFlightConfiguration *>(configurationCls->CreateInstance(true));
+        auto configuration = configurationCls->CreateInstance<IFlightConfiguration *>(true);
         configurationCls->ConstructCls(configuration);
 
         // auto handle = RED4ext::Handle<IFlightConfiguration>(configuration);
@@ -158,15 +158,14 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityE
     //}
 
     {
-      auto whc = (RED4ext::WidgetHudComponent *)rtti->GetClass("WidgetHudComponent")->CreateInstance(true);
+      auto whc = rtti->GetClass("WidgetHudComponent")->CreateInstance<RED4ext::WidgetHudComponent *>(true);
       whc->name = "FlightHUD";
       whc->id = RED4ext::CRUID::Next();
       // auto resource =
       // RED4ext::Ref<RED4ext::ink::HudEntriesResource>("user\\jackhumbert\\widgets\\hud_flight.inkhud", true);
       whc->hudEntriesResource.path = "user\\jackhumbert\\widgets\\hud_flight.inkhud";
       // whc->hudEntriesResource.token = resource.token;
-      LoadResRef<RED4ext::ink::HudEntriesResource>(&whc->hudEntriesResource.path, &whc->hudEntriesResource.token,
-                                                   false);
+      LoadResRef<RED4ext::ink::HudEntriesResource>(&whc->hudEntriesResource.path, &whc->hudEntriesResource.token, false);
       entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::WidgetHudComponent>(whc));
     }
 
