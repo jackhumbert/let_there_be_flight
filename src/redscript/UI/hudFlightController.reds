@@ -240,7 +240,7 @@ public class hudFlightController extends inkHUDGameController {
           // right of LB hud stuff
           // hp_gauge.SetMargin(new inkMargin(2150.0, 32.0, 0.0, 0.0));
           // above of LB hud stuff
-          hp_gauge.SetMargin(new inkMargin(1520.0, -290.0, 0.0, 0.0));
+          hp_gauge.SetMargin(new inkMargin(1520.0, -370.0, 0.0, 0.0));
         }
         
         this.GetRootWidget().SetVisible(true);

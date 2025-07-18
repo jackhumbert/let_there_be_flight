@@ -5,7 +5,5 @@
   <Author>Jack Humbert</Author>
   <Email />
   <Version />
-  <OpenProjectFiles>user\jackhumbert\particles\ion_thruster_engine.particle</OpenProjectFiles>
-  <OpenProjectFiles>user\jackhumbert\particles\ion_thruster_flame.particle</OpenProjectFiles>
-  <OpenProjectFiles>ep1\fx\quest\q305\blackwall\path_of_destruction\q305_blackwall_smoke_01.particle</OpenProjectFiles>
+  <OpenProjectFiles>user\jackhumbert\widgets\hud_flight.inkhud</OpenProjectFiles>
 </CP77Mod>
