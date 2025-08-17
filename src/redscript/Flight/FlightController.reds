@@ -28,7 +28,7 @@ public native class FlightController extends IScriptable {
   private native let active: Bool;
   public native let mode: Int32;
   public static native func GetInstance() -> ref<FlightController>;
-  
+
   // redscript-only
   private let sys: ref<FlightSystem>;
   private let gameInstance: GameInstance;
@@ -62,7 +62,7 @@ public native class FlightController extends IScriptable {
   public let isInAnyMenu: Bool;
   public let audioEnabled: Bool;
 
-  public let isTPP: Bool;  
+  public let isTPP: Bool;
 
   private let uiBlackboard: ref<IBlackboard>;
   private let uiSystemBB: ref<UI_SystemDef>;
@@ -179,7 +179,7 @@ public native class FlightController extends IScriptable {
     this.roll = InputPID.Create(0.5, 1.0);
     this.pitch = InputPID.Create(0.5, 1.0);
     this.yaw = InputPID.Create(0.5, 1.0);
-    
+
     this.secondCounter = 0.0;
 
     this.audioEnabled = true;
@@ -212,26 +212,26 @@ public native class FlightController extends IScriptable {
   public func GetBlackboard() -> ref<IBlackboard> {
     return GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().VehicleFlight);
   }
-  
+
   public static func CreateInstance(player: ref<PlayerPuppet>) {
     // FlightLog.Info("[FlightController] CreateInstance Started");
     // let self: ref<FlightController> = new FlightController();
     let self = FlightController.GetInstance();
     if !self.initialized {
-      self.Initialize();  
+      self.Initialize();
     }
     self.SetPlayer(player);
 
-    // This strong reference will tie the lifetime of the singleton 
+    // This strong reference will tie the lifetime of the singleton
     // to the lifetime of the player entity
     // player.flightController = self;
 
-    // This weak reference is used as a global variable 
+    // This weak reference is used as a global variable
     // to access the mod instance anywhere
     // GetAllBlackboardDefs().flightController = self;
     // FlightLog.Info("[FlightController] CreateInstance Finished");
   }
-  
+
   // public static func GetInstance() -> wref<FlightController> {
   //   return GetAllBlackboardDefs().flightController;
   // }
@@ -250,9 +250,9 @@ public native class FlightController extends IScriptable {
   //   this.m_callbackID = psmBB.RegisterListenerBool(GetAllBlackboardDefs().PlayerStateMachine.MountedToVehicle, this, n"OnMountedToVehicleChange");
   //   if psmBB.GetBool(GetAllBlackboardDefs().PlayerStateMachine.MountedToVehicle) {
   //     this.Enable();
-  //   } 
+  //   }
   // }
-  
+
   // public cb func OnMountedToVehicleChange(mounted: Bool) -> Bool {
     // FlightLog.Info("[FlightController] OnMountedToVehicleChange");
     // if (mounted) {
@@ -261,7 +261,7 @@ public native class FlightController extends IScriptable {
     //   this.Disable();
     // }
   // }
-  
+
   public func Enable() -> Void {
     this.enabled = true;
     FlightLog.Info("[FlightController] Enable");
@@ -271,9 +271,9 @@ public native class FlightController extends IScriptable {
   public func Disable() -> Void {
     this.enabled = false;
     FlightLog.Info("[FlightController] Disable");
-    this.SetupActions();   
+    this.SetupActions();
   }
-  
+
   private func Activate(silent: Bool) -> Void {
     FlightLog.Info("[FlightController] Activate");
     this.enabled = true;
@@ -304,7 +304,7 @@ public native class FlightController extends IScriptable {
     //   wheel.UpdateHardTransformBinding(n"vehicle_slots", n"wheel_back_left");
     //   this.GetVehicle().AddComponent(wheel);
     // }
-    
+
     this.SetupPositionProviders();
 
     // this.sys.tppCamera = GetPlayer(this.gameInstance).FindComponentByName(n"vehicleTPPCamera") as vehicleTPPCameraComponent;
@@ -317,11 +317,11 @@ public native class FlightController extends IScriptable {
       // this.ui.Show();
       // FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, true);
     // }
-  
+
     if !silent {
       this.ShowSimpleMessage(n"Simple-Message-Flight-Control-Engaged");
     }
-    
+
     // this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsActive, true, true);
     // this.GetBlackboard().SignalBool(GetAllBlackboardDefs().VehicleFlight.IsActive);
   }
@@ -345,12 +345,12 @@ public native class FlightController extends IScriptable {
     // this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsActive, false, true);
     // this.GetBlackboard().SignalBool(GetAllBlackboardDefs().VehicleFlight.IsActive);
 
-    
+
     // let evt: ref<DeleteInputGroupEvent> = new DeleteInputGroupEvent();
     // evt.groupId = n"FlightControl";
     // evt.targetHintContainer = n"GameplayInputHelper";
     // GameInstance.GetUISystem(this.gameInstance).QueueEvent(evt);
-  }  
+  }
 
   private func ShowMoreInfo() -> Void {
     // very intrusive - need a prompt/confirmation that they want this popup, eg Detailed Info / About
@@ -360,14 +360,14 @@ public native class FlightController extends IScriptable {
     GameInstance.GetUISystem(this.gameInstance).QueueEvent(shardUIevent);
   }
 
-  private func SetupActions() -> Void {     
+  private func SetupActions() -> Void {
     // FlightLog.Info("[FlightController] SetupActions");
     this.usingKB = this.player.PlayerLastUsedKBM();
     let evt = new UpdateInputHintMultipleEvent();
     evt.targetHintContainer = n"GameplayInputHelper";
 
     let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
-    this.player.UnregisterInputListener(this);    
+    this.player.UnregisterInputListener(this);
     // this.player.RegisterInputListener(this, n"OpenPauseMenu");
     // uiSystem.QueueEvent(FlightController.HideHintFromSource(n"FlightController"));
     if this.enabled {
@@ -439,7 +439,7 @@ public native class FlightController extends IScriptable {
     this.mode = this.mode + direction;
     if this.mode < 0 {
       this.mode += ArraySize(this.sys.playerComponent.modes);
-    } 
+    }
     this.mode = this.mode % ArraySize(this.sys.playerComponent.modes);
     this.GetBlackboard().SetInt(GetAllBlackboardDefs().VehicleFlight.Mode, this.mode);
     let evt = new VehicleFlightModeChangeEvent();
@@ -467,7 +467,7 @@ public native class FlightController extends IScriptable {
         this.usingKB = true;
       } else {
         this.usingKB = false;
-      } 
+      }
       this.SetupActions();
     }
     let actionType: gameinputActionType = ListenerAction.GetType(action);
@@ -495,7 +495,7 @@ public native class FlightController extends IScriptable {
         }
         if ListenerAction.IsButtonJustReleased(action) {
           // FlightLog.Info("Options button released");
-          this.showOptions = false; 
+          this.showOptions = false;
           this.ResetInputs();
           // GameObjectEffectHelper.BreakEffectLoopEvent(this.GetVehicle(), n"summon_hologram");
           this.SetupActions();
@@ -511,7 +511,7 @@ public native class FlightController extends IScriptable {
           // let attack: ref<Attack_GameEffect>;
           // let attackContext: AttackInitContext;
           // let effect: ref<EffectInstance>;
-          // let statMods: array<ref<gameStatModifierData>>;    
+          // let statMods: array<ref<gameStatModifierData>>;
           // let position: Vector4;
           // let forward: Vector4;
           // attackContext.source = this.sys.playerComponent.GetVehicle();
@@ -529,12 +529,12 @@ public native class FlightController extends IScriptable {
           // EffectData.SetVariant(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.attack, ToVariant(attack));
           // EffectData.SetVariant(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.attackStatModList, ToVariant(statMods));
           // attack.StartAttack();
-          
+
           // let wt: WorldTransform;
           // WorldTransform.SetPosition(wt, position);
           // WorldTransform.SetOrientation(wt, this.sys.playerComponent.stats.d_orientation);
 
-          // let effect = Cast<FxResource>(r"base\\fx\\vehicles\\av\\av_panzer\\weapons\\v_panzer_muzzle_flash.effect");
+          // let effect = ResRefToFxResource(r"base\\fx\\vehicles\\av\\av_panzer\\weapons\\v_panzer_muzzle_flash.effect");
           // GameInstance.GetFxSystem(this.sys.playerComponent.GetVehicle().GetGame()).SpawnEffect(effect, wt);
       //   }
       // }
@@ -555,7 +555,7 @@ public native class FlightController extends IScriptable {
         // }
         // if ListenerAction.IsButtonJustReleased(action) {
         //   FlightLog.Info("Options button released");
-        //   this.trick = false; 
+        //   this.trick = false;
         //   this.SetupActions();
         // }
       // }
@@ -598,7 +598,7 @@ public native class FlightController extends IScriptable {
           }
           GameInstance.GetAudioSystem(this.gameInstance).Play(n"ui_menu_onpress");
       }
-      
+
       if Equals(actionType, gameinputActionType.AXIS_CHANGE) {
         switch(actionName) {
           case n"Roll":
@@ -723,9 +723,9 @@ public native class FlightController extends IScriptable {
     // }
 
     // this.isInAnyMenu = this.uiBlackboard.GetBool(this.uiSystemBB.IsInMenu);
-    
+
     // if !this.active {
-    //   if (this.showUI) { 
+    //   if (this.showUI) {
     //     this.ui.ClearMarks();
     //   }
     //   return;
@@ -734,31 +734,31 @@ public native class FlightController extends IScriptable {
     // if GameInstance.GetTimeSystem(this.gameInstance).IsTimeDilationActive(n"radial") {
     //   // this might happpen?
     //   timeDelta *= TimeDilationHelper.GetFloatFromTimeSystemTweak("radialMenu", "timeDilation");
-    //   //FlightLog.Info("Radial menu dilation"); 
+    //   //FlightLog.Info("Radial menu dilation");
     // } else {
     //   if GameInstance.GetTimeSystem(this.gameInstance).IsTimeDilationActive() {
     //     // i think this is what this is called
     //     timeDelta *= TimeDilationHelper.GetFloatFromTimeSystemTweak("focusModeTimeDilation", "timeDilation");
-    //     //FlightLog.Info("Other time dilation"); 
+    //     //FlightLog.Info("Other time dilation");
     //   }
     // }
 
     // let player: ref<PlayerPuppet> = GetPlayer(this.gameInstance);
-    // if !IsDefined(this.GetVehicle()) { 
+    // if !IsDefined(this.GetVehicle()) {
     //   // if IsDefined(scriptInterface.owner as VehicleObject) {
     //   //   this.stats = FlightStats.Create(scriptInterface.owner as VehicleObject);
-    //   //   FlightLog.Warn("Vehicle undefined. Redefined to " + this.GetVehicle().GetDisplayName()); 
+    //   //   FlightLog.Warn("Vehicle undefined. Redefined to " + this.GetVehicle().GetDisplayName());
     //   // } else {
-    //     FlightLog.Error("Owner not defined"); 
+    //     FlightLog.Error("Owner not defined");
     //     return;
     //   // }
     // }
-    // if !this.GetVehicle().IsPlayerMounted() { 
-    //   FlightLog.Error("Vehicle is not player mounted"); 
-    //   return; 
+    // if !this.GetVehicle().IsPlayerMounted() {
+    //   FlightLog.Error("Vehicle is not player mounted");
+    //   return;
     // }
 
-    // if (this.showUI) { 
+    // if (this.showUI) {
     //   // this.navPath.Update();
     //   this.ui.ClearMarks();
     // }

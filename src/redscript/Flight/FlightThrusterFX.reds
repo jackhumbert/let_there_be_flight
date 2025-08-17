@@ -45,7 +45,7 @@ public abstract class IFlightThrusterFX extends IScriptable {
   public let rotation: Quaternion;
 
   public func SetResource(resource: ResRef) {
-    this.resource = Cast<FxResource>(resource);
+    this.resource = ResRefToFxResource(resource);
   }
 
   public func Create(thruster: ref<IFlightThruster>) -> ref<IFlightThrusterFX> {
@@ -53,7 +53,7 @@ public abstract class IFlightThrusterFX extends IScriptable {
     return this;
   }
 
-  public func Start() {    
+  public func Start() {
     let effectTransform: WorldTransform;
     let wt = new WorldTransform();
 
@@ -87,7 +87,7 @@ public class RegularFlightThrusterFX extends IFlightThrusterFX {
     return this;
   }
 
-  public func UpdateGetDisplacement() -> Float {    
+  public func UpdateGetDisplacement() -> Float {
     let amount = Vector4.Dot(Quaternion.GetUp(this.thruster.GetLocalOrientation()), this.thruster.force);
     let x = this.thruster.torque.X;
     if !this.thruster.isFront {

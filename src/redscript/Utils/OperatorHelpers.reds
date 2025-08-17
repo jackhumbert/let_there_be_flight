@@ -104,7 +104,7 @@ public static func OperatorAdd(a: Vector4, b: Vector3) -> Vector4 {
 
 // FxResource
 
-public static native func Cast(a: ResRef) -> FxResource;
+public static native func ResRefToFxResource(a: ResRef) -> FxResource;
 
 
 public static func OperatorEqual(a: Vector3, b: Vector3) -> Bool {

@@ -1,3 +1,4 @@
+@if(!ModuleExists("Codeware"))
 enum inkMaskDataSource {
     TextureAtlas = 0,
     DynamicTexture = 1
@@ -22,6 +23,7 @@ func SetDynamicTextureMask(value: CName) {
 @addField(inkMask)
 native let dataSource: inkMaskDataSource;
 
+@if(!ModuleExists("Codeware"))
 @addMethod(inkMask)
 func SetDataSource(value: inkMaskDataSource) {
     this.dataSource = value;

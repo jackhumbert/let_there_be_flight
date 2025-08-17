@@ -44,7 +44,9 @@ public class FlightModeAutomatic extends FlightModeStandard {
     this.component.FindGround(normal);
     this.component.hoverHeight = MaxF(this.component.distance, FlightSettings.GetFloat("hoverModeMinHoverHeight"));
   }
-  
+
+  public func Deactivate() {}
+
   public func GetDescription() -> String = "Automatic";
 
   public func Update(timeDelta: Float) -> Void {
@@ -79,7 +81,7 @@ public class FlightModeAutomatic extends FlightModeStandard {
     this.force += FlightUtils.Forward() * directionFactor * yawDirectionality * aeroFactor;
     this.force += -this.component.stats.d_localDirection * directionFactor * yawDirectionality * AbsF(aeroFactor);
 
-    if AbsF(this.component.surge) < 1.0 {    
+    if AbsF(this.component.surge) < 1.0 {
       // let velocityDamp: Vector4 = (1.0 - AbsF(this.component.surge)) * this.automaticModeAutoBrakingFactor * this.component.stats.d_localDirection2D * (this.component.stats.d_speed2D / 100.0);
       // this.force -= velocityDamp;
       let velocityDamp: Vector4 = (1.0 - AbsF(this.component.surge)) * this.automaticModeAutoBrakingFactor * this.component.stats.s_brakingFrictionFactor * this.component.stats.d_localVelocity;

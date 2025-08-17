@@ -5,7 +5,7 @@ public native class FlightComponentPS extends GameComponentPS {
 public native class FlightComponent extends GameComponent {
   @runtimeProperty("offset", "0xA8")
   public native let sys: ref<FlightSystem>;
-  
+
   @runtimeProperty("offset", "0xB8")
   public native let active: Bool;
 
@@ -74,9 +74,9 @@ public native class FlightComponent extends GameComponent {
   public let fr_tire: ref<IPlacedComponent>;
   public let hood: ref<IPlacedComponent>;
   public let trunk: ref<IPlacedComponent>;
-  
+
   public let collisionTimer: Float;
-  
+
   public let distance: Float;
   public let hoverHeight: Float;
 
@@ -102,11 +102,11 @@ public native class FlightComponent extends GameComponent {
   protected final func GetVehicle() -> wref<VehicleObject> {
     return this.GetEntity() as VehicleObject;
   }
-  
+
   private final func GetMyPS() -> ref<FlightComponentPS> {
     return this.GetPS() as FlightComponentPS;
   }
-  
+
   protected cb func OnVehicleOnPartDetached(evt: ref<VehicleOnPartDetachedEvent>) -> Bool {
     FlightLog.Info("[FlightComponent] Part detached: " + NameToString(evt.partName));
     let oneOfOurs = false;
@@ -121,7 +121,7 @@ public native class FlightComponent extends GameComponent {
         oneOfOurs = true;
       }
     }
-  
+
     if oneOfOurs {
       this.thrusterTensor = this.configuration.GetThrusterTensor();
       this.configuration.RemoveColliders();
@@ -148,7 +148,7 @@ public native class FlightComponent extends GameComponent {
       this.DetermineInteractionState();
     };
   }
-  
+
   protected cb func OnInteractionActivated(evt: ref<InteractionActivationEvent>) -> Bool {
     let context: VehicleActionsContext;
     if this.GetVehicle().IsCrowdVehicle() && StatusEffectSystem.ObjectHasStatusEffectWithTag(evt.activator, n"BlockTrafficInteractions") {
@@ -217,14 +217,14 @@ public native class FlightComponent extends GameComponent {
     this.sqs = GameInstance.GetSpatialQueriesSystem(this.GetVehicle().GetGame());
     // this.fx = FlightFx.Create(this);
     // this.thrusters = FlightThruster.CreateThrusters(this);
-    
+
     // this.helper = this.GetVehicle().AddFlightHelper();
     // this.stats = FlightStats.Create(this.GetVehicle());
 
     this.collisionTimer = FlightSettings.GetFloat("collisionRecoveryDelay");
     this.distance = 0.0;
     this.hoverHeight = FlightSettings.GetFloat("defaultHoverHeight");
-    
+
     let hoverFlyMode = FlightModeHoverFly.Create(this);
     if hoverFlyMode.enabled {
       ArrayPush(this.modes, hoverFlyMode);
@@ -263,7 +263,7 @@ public native class FlightComponent extends GameComponent {
     }
 
     this.audioUpdate = new FlightAudioUpdate();
-    
+
     // if ArraySize(this.configuration.thrusters) == 0 {
     //   this.configuration.thrusters = IFlightThruster.CreateThrusters(this);
     // }
@@ -290,7 +290,7 @@ public native class FlightComponent extends GameComponent {
       mode.Deinitialize();
     }
   }
-  
+
   // private final func RegisterInputListener() -> Void {
   //   let playerPuppet: ref<PlayerPuppet> = GameInstance.GetPlayerSystem(this.GetVehicle().GetGame()).GetLocalPlayerMainGameObject() as PlayerPuppet;
   //   playerPuppet.RegisterInputListener(this, n"VehicleInsideWheel");
@@ -313,7 +313,7 @@ public native class FlightComponent extends GameComponent {
       this.m_vehicleTPPCallbackID = activeVehicleUIBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UI_ActiveVehicleData.IsTPPCameraOn, this, n"OnVehicleCameraChange");
     };
   }
-  
+
   protected final func UnregisterVehicleTPPBBListener() -> Void {
     let activeVehicleUIBlackboard: wref<IBlackboard>;
     let bbSys: ref<BlackboardSystem>;
@@ -340,7 +340,7 @@ public native class FlightComponent extends GameComponent {
     let mode = this.mode + direction;
     if mode < 0 {
       mode += ArraySize(this.sys.playerComponent.modes);
-    } 
+    }
     mode = mode % ArraySize(this.sys.playerComponent.modes);
     return this.modes[mode];
   }
@@ -356,7 +356,7 @@ public native class FlightComponent extends GameComponent {
   // callbacks
 
   // public let uiControl: ref<FlightControllerUI>;
-  
+
   protected cb func OnMountingEvent(evt: ref<MountingEvent>) -> Bool {
 
 
@@ -366,13 +366,13 @@ public native class FlightComponent extends GameComponent {
     FlightLog.Info("[FlightComponent] thrusterTensor: " + this.thrusterTensor.X + ", " + this.thrusterTensor.Y + ", " + this.thrusterTensor.Z + ", " + this.thrusterTensor.W);
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if mountChild.IsPlayer() {
-      
+
       // let instanceData: StateMachineInstanceData;
       // let initData = new VehicleFlightInitData();
       // initData.vehicle = this.GetVehicle();
       // initData.driver = mountChild;
       // instanceData.initData = initData;
-      
+
       let vehicleFlight = new PSMAddOnDemandStateMachine();
       vehicleFlight.stateMachineName = n"VehicleFlight";
       vehicleFlight.owner = this.GetVehicle();
@@ -402,9 +402,9 @@ public native class FlightComponent extends GameComponent {
       // FlightLog.Info("[FlightComponent] OnMountingEvent for other vehicle: " + this.GetVehicle().GetDisplayName());
     }
   }
-  
+
   protected cb func OnVehicleFinishedMountingEvent(evt: ref<VehicleFinishedMountingEvent>) -> Bool {
-    if evt.character.IsPlayer() && evt.isMounting {    
+    if evt.character.IsPlayer() && evt.isMounting {
       FlightLog.Info("[FlightComponent] OnVehicleFinishedMountingEvent: " + this.GetVehicle().GetDisplayName());
       this.sys.ctlr.Enable();
       if this.active {
@@ -491,7 +491,7 @@ public native class FlightComponent extends GameComponent {
     this.Activate();
   }
 
-  // Toggles flight on summon button press  
+  // Toggles flight on summon button press
   // protected cb func OnSummonStartedEvent(evt: ref<SummonStartedEvent>) -> Bool {
   //   if Equals(evt.state, vehicleSummonState.EnRoute) || Equals(evt.state, vehicleSummonState.AlreadySummoned) {
   //     // this.CreateMappin();
@@ -586,12 +586,12 @@ public native class FlightComponent extends GameComponent {
       if this.hasExploded {
         this.Deactivate(true);
         return;
-      } 
+      }
     }
-    
+
     let vehicle: ref<VehicleObject> = this.GetVehicle();
     let gameInstance: GameInstance = vehicle.GetGame();
-    
+
     let photoModeSys: ref<PhotoModeSystem> = GameInstance.GetPhotoModeSystem(gameInstance);
     if photoModeSys.IsPhotoModeActive() {
       return;
@@ -600,7 +600,7 @@ public native class FlightComponent extends GameComponent {
     if timeDelta <= 0.0 {
       this.stats.UpdateDynamic();
       this.UpdateAudioParams(1.0/60.0);
-      
+
       for thruster in this.configuration.thrusters {
         thruster.Update(this.smoothForce, this.smoothTorque);
       }
@@ -613,7 +613,7 @@ public native class FlightComponent extends GameComponent {
     // this.lastVelocity = velocity;
     // if Vector4.Length(acceleration) > this.accThreshold {
     //   // if !IsDefined(this.accelerationFx) {
-    //     let fx = Cast<FxResource>(r"base\\fx\\player\\p_damage\\p_health_low.effect");
+    //     let fx = ResRefToFxResource(r"base\\fx\\player\\p_damage\\p_health_low.effect");
     //     this.accelerationFx = GameInstance.GetFxSystem(this.GetVehicle().GetGame()).SpawnEffect(fx, new WorldTransform());
     //   // }
     //   this.smoothFx = LerpF(0.1, this.smoothFx, Vector4.Length(acceleration));
@@ -700,7 +700,7 @@ public native class FlightComponent extends GameComponent {
     for thruster in this.configuration.thrusters {
       thruster.Update(force, torque);
     }
-    
+
     if this.isPlayerMounted {
       // this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Force, force);
       // this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Torque, torque);
@@ -710,7 +710,7 @@ public native class FlightComponent extends GameComponent {
       // this.sys.ctlr.GetBlackboard().SetVector4(GetAllBlackboardDefs().VehicleFlight.Position, this.stats.d_position);
       // this.sys.ctlr.GetBlackboard().SignalVector4(GetAllBlackboardDefs().VehicleFlight.Position);
     }
-    
+
     // apply physics helpers
     if this.mode < ArraySize(this.modes) {
       this.modes[this.mode].ApplyPhysics(timeDelta);
@@ -727,7 +727,7 @@ public native class FlightComponent extends GameComponent {
     force *= this.stats.s_mass;
     // convert to global
     force = this.stats.d_orientation * force;
-    
+
     // need something similar that affects force
     // force.X *= this.thrusterTensor.X;
     // force.Y *= this.thrusterTensor.Y;
@@ -752,10 +752,10 @@ public native class FlightComponent extends GameComponent {
     torque.X *= this.thrusterTensor.X;
     torque.Y *= MaxF(this.thrusterTensor.Y, 1.0); // prevents bikes from rolling excessively
     torque.Z *= this.thrusterTensor.Z;
-    
+
     // convert to global
     torque = this.stats.d_orientation * torque;
-    
+
     if this.collisionTimer < FlightSettings.GetFloat("collisionRecoveryDelay") + FlightSettings.GetFloat("collisionRecoveryDuration") {
       let collisionDampener = MinF(MaxF(0.0, (this.collisionTimer - FlightSettings.GetFloat("collisionRecoveryDelay")) / FlightSettings.GetFloat("collisionRecoveryDuration")), 1.0);
       torque *= collisionDampener;
@@ -809,7 +809,7 @@ public native class FlightComponent extends GameComponent {
       // this.sys.audio.Stop("rightRear");
     }
     // this.sys.audio.Stop("vehicle" + this.GetUniqueID());
-    
+
     this.configuration.OnDeactivationCore();
   }
 
@@ -899,7 +899,7 @@ public native class FlightComponent extends GameComponent {
   //   request.ownerID = this.GetVehicle().GetEntityID();
   //   this.GetVehicle().GetHudManager().QueueRequest(request);
   // }
-  
+
   // protected cb func OnActionEngineering(evt: ref<ActionEngineering>) -> Bool {
   //   FlightLog.Info("[FlightComponent] OnActionEngineering");
   //   // this.FireVerticalImpulse();
@@ -1025,7 +1025,7 @@ public native class FlightComponent extends GameComponent {
   //     };
   //   };
   // }
-  
+
   protected final func OnVehicleCameraChange(state: Bool) -> Void {
     this.sys.ctlr.isTPP = state;
   }
@@ -1042,7 +1042,7 @@ public native class FlightComponent extends GameComponent {
     if this.collisionTimer < FlightSettings.GetFloat("collisionRecoveryDelay") + FlightSettings.GetFloat("collisionRecoveryDuration") {
       ratio = MaxF(0.0, (this.collisionTimer - FlightSettings.GetFloat("collisionRecoveryDelay")) / FlightSettings.GetFloat("collisionRecoveryDuration"));
     }
-    
+
     let vehicleID = Cast<StatsObjectID>(this.GetVehicle().GetEntityID());
     let vehHealthPercent = GameInstance.GetStatPoolsSystem(this.GetVehicle().GetGame()).GetStatPoolValue(vehicleID, gamedataStatPoolType.Health);
     // this.audioUpdate.damage = 1.0 - MaxF(GameInstance.GetStatPoolsSystem(this.GetVehicle().GetGame()).GetStatPoolValue(Cast<StatsObjectID>(this.GetVehicle().GetEntityID()), gamedataStatPoolType.Health, false) + ratio, 1.0);
@@ -1130,7 +1130,7 @@ public native class FlightComponent extends GameComponent {
   private func GetUniqueID() -> String {
     return ToString(EntityID.GetHash(this.GetVehicle().GetEntityID()));
   }
-  
+
   public func SetupTires() -> Void {
     if this.GetVehicle() == (this.GetVehicle() as CarObject) {
       // this.fl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_left_tire") as IPlacedComponent;
@@ -1163,9 +1163,9 @@ public native class FlightComponent extends GameComponent {
     let br_tire: Vector4 = Matrix.GetTranslation(this.br_tire.GetLocalToWorld());
 
 
-    let findGround1: TraceResult; 
-    let findGround2: TraceResult; 
-    let findGround3: TraceResult; 
+    let findGround1: TraceResult;
+    let findGround2: TraceResult;
+    let findGround3: TraceResult;
     let findGround4: TraceResult;
 
     // all in engine\physics\collision_presets.json
@@ -1179,12 +1179,12 @@ public native class FlightComponent extends GameComponent {
     let queryFilter: QueryFilter;
     QueryFilter.AddGroup(queryFilter, n"VehicleBlocker");
     QueryFilter.AddGroup(queryFilter, n"Water");
-    
+
     this.sqs.SyncRaycastByQueryFilter(fl_tire, fl_tire + lookDown, queryFilter, findGround1, false, false);
     this.sqs.SyncRaycastByQueryFilter(fr_tire, fr_tire + lookDown, queryFilter, findGround2, false, false);
     this.sqs.SyncRaycastByQueryFilter(bl_tire, bl_tire + lookDown, queryFilter, findGround3, false, false);
     this.sqs.SyncRaycastByQueryFilter(br_tire, br_tire + lookDown, queryFilter, findGround4, false, false);
-    
+
     let groundPoint1: Vector4;
     let groundPoint2: Vector4;
     let groundPoint3: Vector4;
@@ -1224,14 +1224,14 @@ public native class FlightComponent extends GameComponent {
       //   MinF(Vector4.Distance(fl_tire, Cast(findGround1.position)),
       //   Vector4.Distance(fr_tire, Cast(findGround2.position))),
       //   MinF(Vector4.Distance(bl_tire, Cast(findGround3.position)),
-      //   Vector4.Distance(br_tire, Cast(findGround4.position))));        
+      //   Vector4.Distance(br_tire, Cast(findGround4.position))));
       let distance = (Vector4.Distance(fl_tire, Vector4.Vector3To4(findGround1.position)) +
         Vector4.Distance(fr_tire, Vector4.Vector3To4(findGround2.position)) +
         Vector4.Distance(bl_tire, Vector4.Vector3To4(findGround3.position)) +
         Vector4.Distance(br_tire, Vector4.Vector3To4(findGround4.position))) / 4.0;
       // this.distance = distance * (1.0 - this.distanceEase) + this.distance * (this.distanceEase);
       this.distance = distance;
-      
+
       // FromVariant(scriptInterface.GetStateVectorParameter(physicsStateValue.Radius)) maybe?
       let n = (Vector4.Normalize(Cast(findGround1.normal)) + Vector4.Normalize(Cast(findGround2.normal)) + Vector4.Normalize(Cast(findGround3.normal)) + Vector4.Normalize(Cast(findGround4.normal))) / 4.0;
       // this.normal = Vector4.Interpolate(this.normal, normal, this.normalEase);
@@ -1240,8 +1240,8 @@ public native class FlightComponent extends GameComponent {
       return true;
     } else {
       return false;
-    }   
-  } 
+    }
+  }
 
   // idk if this is needed still
   // protected cb func OnHUDInstruction(evt: ref<HUDInstruction>) -> Bool {
@@ -1254,7 +1254,7 @@ public native class FlightComponent extends GameComponent {
   //   };
   // }
 
-  
+
 	// protected cb func OnFlightMalfunction(evt : ref<FlightMalfunction>) -> Bool {
   //     FlightLog.Info("[FlightComponent] OnFlightMalfunction");
 	// 	if evt.IsCompleted() {
@@ -1292,7 +1292,7 @@ public native class FlightComponent extends GameComponent {
 
   protected let m_attacksSpawned: array<ref<EffectInstance>>;
 
-  public func OnFireWeapon(placeholderQuat: Quaternion, weaponItem:TweakDBID, attachmentSlot: TweakDBID) -> Void {    
+  public func OnFireWeapon(placeholderQuat: Quaternion, weaponItem:TweakDBID, attachmentSlot: TweakDBID) -> Void {
     // let weapon = TweakDBInterface.GetWeaponItemRecord(weaponItem);
     let wt: WorldTransform;
     let vehicleSlots = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"vehicle_slots") as SlotComponent;
@@ -1303,14 +1303,14 @@ public native class FlightComponent extends GameComponent {
     // WorldTransform.SetPosition(wt, start)
     WorldTransform.SetOrientation(wt, quat * placeholderQuat);
 
-    let effect = Cast<FxResource>(r"base\\fx\\vehicles\\av\\av_panzer\\weapons\\v_panzer_muzzle_flash.effect");
-    // let effect = Cast<FxResource>(r"base\\fx\\weapons\\firearms\\_muzzle_lights\\smart\\w_s_rifles_mq_muzzle_lights_tpp.effect");
+    let effect = ResRefToFxResource(r"base\\fx\\vehicles\\av\\av_panzer\\weapons\\v_panzer_muzzle_flash.effect");
+    // let effect = ResRefToFxResource(r"base\\fx\\weapons\\firearms\\_muzzle_lights\\smart\\w_s_rifles_mq_muzzle_lights_tpp.effect");
     let fxSystem = GameInstance.GetFxSystem(this.GetVehicle().GetGame());
     if IsDefined(fxSystem) {
       fxSystem.SpawnEffect(effect, wt);
     }
 
-    
+
     // let attack: ref<Attack_GameEffect>;
     // let attackContext: AttackInitContext;
     // let effect: ref<EffectInstance>;
@@ -1336,9 +1336,9 @@ public native class FlightComponent extends GameComponent {
     // EffectData.SetVariant(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.attack, ToVariant(attack));
     // EffectData.SetVariant(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.attackStatModList, ToVariant(statMods));
     // attack.StartAttack();
-    
+
     // effect.AttachToSlot(this.GetVehicle(), slotName, GetAllBlackboardDefs().EffectSharedData.position, GetAllBlackboardDefs().EffectSharedData.forward);
-    
+
     // ArrayPush(this.m_attacksSpawned, effect);
 
     let broadcaster = this.sys.player.GetStimBroadcasterComponent();
@@ -1349,7 +1349,7 @@ public native class FlightComponent extends GameComponent {
       data.attackInstigator = this.sys.player;
       broadcaster.TriggerSingleBroadcast(this.sys.player, gamedataStimType.Gunshot, 100.0, data, true);
     };
-    
+
     // let tp: WorldPosition;
     // WorldPosition.SetVector4(tp, Vector4.Vector3To4(tracePosition));
     // fxi.UpdateTargetPosition(tp);
