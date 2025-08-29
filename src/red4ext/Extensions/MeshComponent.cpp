@@ -63,11 +63,13 @@ void EntityExt::AddComponent(Handle<ent::IComponent> const & componentToAdd) {
     }
 
     // if (componentToAdd->IsOfClass(rtti->GetClass("entIVisualComponent"))) {
-      if (customization) {
+    // disable customization for now
+      if (customization && false) {
         // customization->StopAllEffects(1);
-        for (auto const & desc : customization->effectDescs) {
-          if (desc->compiledEffectInfo.componentNames.size == 16)
-            continue;
+        for (auto & desc : customization->effectDescs) {
+          // desc->compiledEffectInfo.componentNames.Reserve(desc->compiledEffectInfo.componentNames.size + 1);
+          // if (desc->compiledEffectInfo.componentNames.size == 16)
+            // continue;
           if (desc->effectName == "vvc_color" || desc->effectName == "vvc_color_instant" || desc->effectName == "vvc_damage_glitch") {
           // if (desc->effectName == "vcc_color_rims" || desc->effectName == "vvc_color_rims_instant") {
             uint32_t body_index = 0;
