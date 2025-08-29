@@ -276,7 +276,12 @@ void FlightSystem::sub_198() {
 void FlightSystem::OnInitialize(const JobHandle& aJob) {
   spdlog::info("[FlightSystem] OnInitialize!");
   this->audio = Handle<FlightAudio>((FlightAudio *)FlightAudio::GetRTTIType()->CreateInstance(true));
-  ExecuteFunction(this->audio, FlightAudio::GetRTTIType()->GetFunction("Initialize"), nullptr);
+  auto func = FlightAudio::GetRTTIType()->GetFunction("Initialize");
+  if (func) {
+    ExecuteFunction(this->audio, func, nullptr);
+  } else {
+    MessageBoxW(nullptr, L"The scripts needed for Let There Be Flight could not be loaded - was Redscript compilation successful?", L"Let There Be Flight Redscript Error", MB_SYSTEMMODAL | MB_ICONERROR);
+  }
 }
 
 void FlightSystem::OnUninitialize() {
