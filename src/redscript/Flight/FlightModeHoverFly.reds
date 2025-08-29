@@ -36,7 +36,9 @@ public class FlightModeHoverFly extends FlightModeStandard {
     this.component.FindGround(normal);
     this.component.hoverHeight = MaxF(this.component.distance, FlightSettings.GetFloat("hoverModeMinHoverHeight"));
   }
-  
+
+  public func Deactivate() {}
+
   public func GetDescription() -> String = "Hover & Fly";
 
   public func Update(timeDelta: Float) -> Void {

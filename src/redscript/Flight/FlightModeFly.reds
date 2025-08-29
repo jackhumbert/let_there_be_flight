@@ -5,6 +5,9 @@ public class FlightModeFly extends FlightModeStandard {
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Fly-Mode-Enabled")
   public let enabled: Bool = false;
 
+  public func Activate() {}
+  public func Deactivate() {}
+
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeFly> {
     let self = new FlightModeFly();
     self.Initialize(component);
@@ -14,7 +17,7 @@ public class FlightModeFly extends FlightModeStandard {
   public func GetDescription() -> String = "Fly";
 
   public func Update(timeDelta: Float) -> Void {
-    let idealNormal = FlightUtils.Up();  
+    let idealNormal = FlightUtils.Up();
     // let liftForce: Float = FlightSettings.GetFloat("flyModeLiftFactor") * this.component.lift + (9.81000042) * this.gravityFactor;
     let liftForce: Float = this.standardModeLiftFactor * this.component.lift * timeDelta + (9.81000042) * this.gravityFactor;
     this.UpdateWithNormalLift(timeDelta, idealNormal, liftForce);

@@ -39,6 +39,7 @@ public native func SetMesh(mesh: ResRef);
 @runtimeProperty("offset", "0x178")
 public native let visualScale: Vector3;
 
+@if(!ModuleExists("Codeware"))
 enum ERenderObjectType {
     ROT_Static = 0,
     ROT_Terrain = 1,
@@ -76,6 +77,7 @@ public native let chunkMask: Uint64;
 @runtimeProperty("offset", "0x1A4")
 public native let motionBlurScale: Float;
 
+@if(!ModuleExists("Codeware"))
 enum entMeshComponentLODMode {
     AlwaysVisible = 0,
     Appearance = 1,

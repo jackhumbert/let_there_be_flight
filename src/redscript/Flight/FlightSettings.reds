@@ -1,4 +1,4 @@
-public static func FlightSettings() -> ref<FlightSettings> {
+public static func GetFlightSettings() -> ref<FlightSettings> {
   return FlightSettings.GetInstance();
 }
 
@@ -45,7 +45,7 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "5.0")
   public let brakeFactorAngular: Float = 1.0;
-  
+
   // Flight Physics Settings
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
@@ -172,10 +172,10 @@ public native class FlightSettings extends IScriptable {
   private func OnAttach() -> Void {
     FlightLog.Info("[FlightSettings] OnAttach");
     LTBF_RegisterListener(this);
-    
+
     FlightSettings.SetVector3("inputPitchPID", 1.0, 0.2, 0.05);
     FlightSettings.SetVector3("inputRollPID", 1.0, 0.5, 0.0);
-    
+
     FlightSettings.SetVector3("aeroYawPID", 1.0, 0.01, 1.0);
     FlightSettings.SetVector3("aeroPitchPID", 1.0, 0.01, 1.0);
 
@@ -206,7 +206,7 @@ public native class FlightSettings extends IScriptable {
     FlightSettings.SetFloat("normalEase", 0.3);
     FlightSettings.SetFloat("referenceZ", 0.0);
     FlightSettings.SetFloat("secondCounter", 0.0);
-    
+
     FlightSettings.SetFloat("surgeOffset", 0.5);
 
     FlightSettings.SetFloat("swayWithYaw", 0.5);
@@ -215,7 +215,7 @@ public native class FlightSettings extends IScriptable {
     FlightSettings.SetFloat("pitchWithSurge", 0.0);
 
     FlightSettings.SetFloat("yawD", 3.0);
-    
+
     FlightSettings.SetBool("inTPPDriverCombat", false);
   }
 }

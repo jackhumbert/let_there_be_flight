@@ -1,6 +1,7 @@
 @addMethod(inkWidget)
 public native func CreateEffect(typeName: CName, effectName: CName) -> Void;
 
+@if(!ModuleExists("Codeware"))
 enum inkEBlurDimension
 {
    Horizontal = 0,

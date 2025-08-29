@@ -1,4 +1,4 @@
-@if(!ModuleExists("Codeware")) 
+@if(!ModuleExists("Codeware"))
 public native class inkHudEntryInfo extends inkUserData {
   public native let size: Vector2;
   public native let offset: Vector2;
@@ -19,9 +19,9 @@ protected cb func OnInitialize() -> Bool {
   this.LTBF_ResizeHudEntry();
 }
 
-@if(ModuleExists("LimitedHudConfig"))
-@wrapMethod(InputHintManagerGameController)
-protected cb func OnInitialize() -> Bool {
-  this.LTBF_ResizeHudEntry();
-  return wrappedMethod();
-}
+// @if(ModuleExists("LimitedHudConfig"))
+// @wrapMethod(InputHintManagerGameController)
+// protected cb func OnInitialize() -> Bool {
+//  this.LTBF_ResizeHudEntry();
+//  return wrappedMethod();
+// }
