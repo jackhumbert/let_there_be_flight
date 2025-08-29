@@ -26,7 +26,7 @@ void CastResRefToFxResource(RED4ext::IScriptable *aContext, RED4ext::CStackFrame
 struct FxResourceModule : FlightModule {
   void PostRegisterTypes() {
     auto rtti = RED4ext::CRTTISystem::Get();
-    auto f = RED4ext::CGlobalFunction::Create("ResRefToFxResource;ResRef", "ResRefToFxResource", &CastResRefToFxResource);
+    auto f = RED4ext::CGlobalFunction::Create("ResRefToFxResource", "ResRefToFxResource", &CastResRefToFxResource);
     rtti->RegisterFunction(f);
   }
 };
