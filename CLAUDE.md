@@ -99,6 +99,8 @@ Manual API use (key in the `NEXUSMODS_API_KEY` user environment variable; read i
 - `GET /mod-files/2617843/versions` lists uploaded versions; `POST /mods/14315126002776/changelogs` with `{version, changelog}` appends notes (additive, cannot edit); `PUT /mod-files/2617843` with `{name}` renames the persistent file entry.
 - 2026-09-13: the 0.3.18 changelog was posted this way after the action's changelog step failed on the wrong mod id.
 
+Reading Nexus comments: the Posts tab and forums are Cloudflare-gated (plain HTTP, reader proxies, and the v2 GraphQL `searchComments` all fail), so `python tools/nexus_comments.py --mod 5208 --since 2025-07-01` drives a real Chrome over the DevTools protocol (needs `pip install websocket-client`): it opens the Posts tab, reads the thread id, and pages the comment endpoint with in-page XHR into a JSON file (author, date, text, replies). Thread ids: LTBF 12009388, Mod Settings 11748838, In-World Navigation 11517568, Input Loader 11989233. Roughly 10 top-level comments per page; LTBF had 4,833 comments total on 2026-09-13.
+
 ## Current state (2026-09-13)
 
 Game is 2.31 (2025-09-11, still the latest PC patch). Last release v0.3.17 (2025-08-29) targets 2.30, so it predates 2.31. The Steam install has game 2.31 but RED4ext 1.28.0 / ArchiveXL 1.24 / TweakXL 1.11.0 / Codeware 1.17 from July 2025, so mods do not currently load locally; install the current ones before testing.
