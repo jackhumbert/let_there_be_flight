@@ -177,7 +177,11 @@ public native class FlightAudio extends IScriptable {
 
   public func GetGameVolume() -> Float {
     let gameInstance = FlightSystem.GetInstance().gameInstance;
-    if this.isInMenu || GameInstance.GetTimeSystem(gameInstance).IsPausedState() ||
+    // Do not check TimeSystem.IsPausedState() here: that flag is the in-game clock pause that
+    // quests and races set (Chipping In, act 2 transitions, race starts) and sometimes never clear,
+    // which left flight audio silent for the rest of the session. The real pause menu is covered by
+    // isInMenu and by FlightSystem::OnGamePaused/OnGameResumed on the native side.
+    if this.isInMenu ||
       GameInstance.GetTimeSystem(gameInstance).IsTimeDilationActive(n"HubMenu") || 
       GameInstance.GetTimeSystem(gameInstance).IsTimeDilationActive(n"WorldMap")
     {
