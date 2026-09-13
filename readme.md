@@ -85,7 +85,30 @@ You'll need to replace all `fr-fr` instances with your language code.
 
 ## Uninstallation
 
-There's an installation script at `red4ext/plugins/let_there_be_flight/uninstall.bat` - if you run this, all LTBF mod files will be deleted, but its dependencies will remain.
+Run `red4ext/plugins/let_there_be_flight_uninstall.bat` (it ships in the zip, next to the plugin folder). It deletes every LTBF file and the plugin folder, then itself; the dependencies (RED4ext, ArchiveXL, TweakXL, redscript, Input Loader, Mod Settings) are left alone.
+
+To uninstall by hand instead, delete these from the game folder, which is everything the mod installs:
+
+```
+red4ext/plugins/let_there_be_flight/            (the whole folder)
+    let_there_be_flight.dll
+    let_there_be_flight.archive
+    let_there_be_flight.archive.xl
+    let_there_be_flight.tweak
+    let_there_be_flight.yaml
+    packed.reds
+    module.reds
+    inputs.xml
+    base_sounds.bank
+    base_sounds.strings.bank
+    fmod.dll
+    fmodstudio.dll
+    readme.md
+    license.md
+red4ext/plugins/let_there_be_flight_uninstall.bat
+```
+
+Mod settings values saved by Mod Settings live in its own files, not in the LTBF folder.
 
 ## Development
 

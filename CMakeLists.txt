@@ -83,6 +83,6 @@ configure_folder_file(license.md)
 list(APPEND MOD_REQUIREMENTS "Input Loader v0.2.3+")
 list(APPEND MOD_REQUIREMENTS "Mod Settings v0.2.21+ (optional)")
 
-# configure_uninstall()
+configure_uninstall()
 configure_release(${MOD_SLUG}_${MOD_VERSION_STR}.zip)
 configure_install()
