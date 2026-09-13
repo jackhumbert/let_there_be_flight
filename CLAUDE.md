@@ -2,6 +2,8 @@
 
 Cyberpunk 2077 mod: flight for all vehicles. RED4ext C++ plugin + redscript + TweakXL tweaks + ArchiveXL archive + FMOD audio banks. Everything ships under `red4ext/plugins/let_there_be_flight/` (scripts, tweaks, archive, inputs are all loaded from the plugin folder, not r6/archive dirs).
 
+Sibling repos with the same build/release shape and their own CLAUDE.md: `../mod_settings` (Nexus 4885), `../in_world_navigation` (Nexus 4583), `../input_loader` (Nexus 4575). SDK/cyberpunk_cmake updates are done here first and the commits reused there.
+
 ## Layout
 
 - `src/red4ext/` - the plugin. `Main.cpp` = entry, dependency version checks, registers scripts/tweaks/archive/inputs with the other plugins. `Hooks/` = one game-function hook per file. `Utils/FlightModule.hpp` = hook registry macros.
