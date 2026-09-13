@@ -95,7 +95,7 @@ jobs:
           "version=$('${{ github.ref_name }}'.TrimStart('v'))" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding UTF8 -Append
 
       # Requires repo secret NEXUSMODS_API_KEY (https://www.nexusmods.com/settings/api-keys)
-      # and repo variable NEXUSMODS_FILE_ID (the v3 file chain id: mod page -> Files -> Advanced / API Info).
+      # file_id is the v3 file chain id for the main LTBF file (mod page -> Files -> Advanced / API Info); public, not a secret.
       # Skipped for prerelease tags and when the secret is not set.
       - name: Upload to Nexus Mods
         if: ${{ !(contains(github.ref_name, '-') || contains(github.ref_name, '_')) && env.NEXUSMODS_API_KEY != '' }}
@@ -103,7 +103,7 @@ jobs:
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
           mod_id: 5208
-          file_id: ${{ vars.NEXUSMODS_FILE_ID }}
+          file_id: 2617843
           filename: ${{ env.MOD_SLUG }}_${{ github.ref_name }}.zip
           version: ${{ steps.nexus_changelog.outputs.version }}
           display_name: Let There Be Flight ${{ github.ref_name }}${{ env.CYBERPUNK_2077_GAME_VERSION_STR }}

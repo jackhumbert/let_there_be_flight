@@ -89,7 +89,7 @@ Nexus now has an official Upload API (REST v3, open beta since 2026-03; personal
 - GitHub Action `Nexus-Mods/upload-action` (pin a tag, currently `v1.0.0-beta.10`). Inputs: `api_key`, `file_id` (the v3 mod-file chain id from the Files tab "Advanced/API Info"), `filename`, `version`, optional `mod_id` + `changelog`, `update_mod_version`, `archive_existing_version`. Reference workflow: https://github.com/Nexus-Mods/API-Example.
 - CLI for local use: `dotnet tool install -g BUTR.NexusUploader` then `unex upload 5208 <zip> -v <ver> --file-id <id>` (v4 uses the official API).
 
-Plan: add a `nexus` job to `release.yaml` after the GitHub release step, gated on a `NEXUS_API_KEY` repo secret, uploading the same `let_there_be_flight_vX.Y.Z.zip` with the git-cliff changelog. Get the key at https://www.nexusmods.com/settings/api-keys. Creating a new mod page is still manual; only new files/versions on the existing page are supported.
+Implemented in `release.yaml`: after the GitHub release step, `Nexus-Mods/upload-action` uploads `let_there_be_flight_vX.Y.Z.zip` as a new version of file id 2617843 (the main LTBF file; public id, hardcoded) on mod 5208 with the git-cliff changelog, and bumps the mod version. It runs only for non-prerelease tags and only when the repo secret `NEXUSMODS_API_KEY` is set (https://www.nexusmods.com/settings/api-keys). Creating a new mod page is still manual.
 
 ## Current state (2026-09-13)
 
