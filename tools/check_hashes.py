@@ -2,8 +2,9 @@
 dependency plugins) against the game's shipped cyberpunk2077_addresses.json.
 
 Usage:
-  python tools/check_hashes.py [--game-dir "C:/.../Cyberpunk 2077"] [--deps]
+  python tools/check_hashes.py [--game-dir "C:/.../Cyberpunk 2077"] [--deps] [--roots src ...]
 
+Scans `src/` by default; --deps adds the in-tree dependency plugins when present.
 Exit code 1 if any hash is missing. Commented-out lines are ignored.
 """
 import argparse
@@ -43,13 +44,14 @@ def collect(roots):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--game-dir", default=DEFAULT_GAME_DIR)
-    ap.add_argument("--deps", action="store_true", help="also scan deps/input_loader, deps/mod_settings, deps/red_lib")
+    ap.add_argument("--deps", action="store_true", help="also scan deps/input_loader, deps/mod_settings, deps/red_lib when present")
+    ap.add_argument("--roots", nargs="*", default=["src"], help="source roots to scan (default: src)")
     args = ap.parse_args()
     here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     os.chdir(here)
-    roots = ["src/red4ext"]
+    roots = list(args.roots)
     if args.deps:
-        roots += ["deps/input_loader/src", "deps/mod_settings/src", "deps/red_lib"]
+        roots += [d for d in ("deps/input_loader/src", "deps/mod_settings/src", "deps/red_lib") if os.path.isdir(d)]
     hashes = collect(roots)
     with open(os.path.join(args.game_dir, "bin/x64/cyberpunk2077_addresses.json")) as fh:
         data = json.load(fh)
