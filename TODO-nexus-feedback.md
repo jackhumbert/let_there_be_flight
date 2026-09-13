@@ -53,3 +53,22 @@ Conventions for agents: conventional commit prefixes (`feat:`/`fix:` reach the c
 - [ ] **LTBF-10 Cleanup**: `@addField ... already defined` redscript warnings (5 reports; also seen in today's smoke test log), 3 missing localization strings (8LOMU8), archive.xl "target sector has 243 node(s), but the mod expects 242" (battleyurika). Done when: none appear in the logs.
 - [ ] **LTBF-11 Compat notes**: Dark Future (`HandleCameraInput` collision in DFVehicleSleepSystem.reds), Project E3 HUD layout, Night City Allies, VNS, Car Modification Shop. Investigate the Dark Future one (a named function collision) and document the rest. Done when: readme has a compatibility section.
 - [ ] **LTBF-12 Stage 2 SDK sync** (from CLAUDE.md): merge upstream RED4ext.SDK master into the fork, migrate to API v1, update red_lib, input_loader, mod_settings. Not user-facing; schedule after the items above.
+
+### GitHub issues cross-reference (jackhumbert/flight_control, checked 2026-09-13)
+
+30 open issues. Still applicable, mapped to queue items or added:
+
+- #96 Caliburn colour crash (Aug 2025) -> LTBF-2 (guards in 3413474; close after the in-game Caliburn check).
+- #99 Never Fade Away crash, `Vehicle.johnny_car`, access violation at +0x10 in the part-detach path (Dec 2025, v0.3.17) -> LTBF-2 covers `VehicleDetachPart` bounds guards; needs a replay of q108 `protect_car` to confirm. Add `Vehicle.johnny_car` to the documented `flightDisabled` examples.
+- #101 turning degraded after flight until re-summon, with video (Feb 2026) -> LTBF-9 (undrivable after landing). Best repro we have for that item.
+- #93 cinematic camera cannot be activated (Jul 2025) -> LTBF-7.
+- #94 crash on startup with a large load order (Jul 2025) -> LTBF-1 sticky (no repro, likely stale requirements).
+- #95 (author) hide the flight input hint when the `VehicleBlockFlight` status effect is active; `DefaultTransition.reds` already gates activation on it, the hint does not check it -> new LTBF-13.
+- #89 destroyed vehicles fall through the map (v0.3.5, still open) -> new LTBF-14; likely `RemoveColliders()` in `FlightComponent.reds` leaving the wreck without collision.
+- #21 footsteps and crosswalk SFX missing (2022; author noted 2025-07 it may be fixed with #88 / 0.3.10) -> ask on the issue, close if no reply.
+- #41 photo mode camera and simulation (2022, touched 2025-07) -> LTBF-9 adjacent; verify on 2.31 with the Codeware `IsPhotoModeActive` gate.
+
+Stale or out of scope, close with a note: #92 Blade Runner Spinner proxy mesh (third-party vehicle mod), #98 flying NPC traffic (feature, matches Nexus request; keep open as enhancement), #74 (2024 preview bug list, mostly fixed), #68 camera-follow mechanic (LTBF-5 mouse-aimed request), #67 crash on new save (2023), #5/#6/#8/#14/#15/#20/#27/#28/#32/#39 (2022 enhancements and compat), author's 2022 bug notes #49/#50/#52/#54/#55/#56 (re-verify each in one session, close what no longer reproduces).
+
+- [ ] **LTBF-13 Hide flight input hint under VehicleBlockFlight** (#95). The hint in `DefaultTransition.reds` should be suppressed when `StatusEffectSystem.ObjectHasStatusEffectWithTag(owner, n"VehicleBlockFlight")`. Done when: no flight hint shows in blocked vehicles (quest cars, Delamain).
+- [ ] **LTBF-14 Destroyed vehicle wreck falls through the map** (#89, since v0.3.4). Check whether flight cleanup (`RemoveColliders()` and physics state restore in `FlightComponent.reds`) runs on vehicles that get destroyed while flight was ever active or on NPC vehicles; the detached parts keep collision, the body does not. Done when: a destroyed vehicle stays on the ground with LTBF installed.
