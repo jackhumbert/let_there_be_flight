@@ -129,10 +129,10 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
       std::filesystem::remove_all(inputXML);
     }
 
-    auto inputLoader_version = RED4EXT_SEMVER(0, 1, 1);
-    auto archiveXL_version = RED4EXT_SEMVER(1, 23, 0);
-    auto tweakXL_version = RED4EXT_SEMVER(1, 10, 0);
-    auto modSettings_version = RED4EXT_SEMVER(0, 2, 14);
+    auto inputLoader_version = RED4EXT_SEMVER(0, 2, 3);
+    auto archiveXL_version = RED4EXT_SEMVER(1, 27, 0);
+    auto tweakXL_version = RED4EXT_SEMVER(1, 11, 0);
+    auto modSettings_version = RED4EXT_SEMVER(0, 2, 21);
 
     auto has_inputLoader = HasDependency(L"input_loader", inputLoader_version) == FoundWithCorrectVersion;
     auto has_archiveXL = HasDependency(L"ArchiveXL", archiveXL_version) == FoundWithCorrectVersion;

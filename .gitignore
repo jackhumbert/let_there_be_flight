@@ -392,3 +392,4 @@ red4ext/deps/*
 *.zip
 prereqs.redscripts
 crash_stack.hpp
+.mcp.json

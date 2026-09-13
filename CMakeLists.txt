@@ -1,4 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
+# third-party submodules (pugixml, detours, spdlog) still declare <3.5 minimums; CMake 4 refuses those without this
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/deps/cyberpunk_cmake")
@@ -78,8 +80,8 @@ target_link_libraries(${MOD_SLUG}.packed.reds PUBLIC mod_settings.packed.reds)
 configure_folder_file(readme.md)
 configure_folder_file(license.md)
 
-list(APPEND MOD_REQUIREMENTS "Input Loader v0.1.1+")
-list(APPEND MOD_REQUIREMENTS "Mod Settings v0.2.11+ (optional)")
+list(APPEND MOD_REQUIREMENTS "Input Loader v0.2.3+")
+list(APPEND MOD_REQUIREMENTS "Mod Settings v0.2.21+ (optional)")
 
 # configure_uninstall()
 configure_release(${MOD_SLUG}_${MOD_VERSION_STR}.zip)
