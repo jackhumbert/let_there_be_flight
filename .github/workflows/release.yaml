@@ -12,6 +12,7 @@ jobs:
     env:
       GIT_CLIFF_VERSION: 0.10.0
       CHANGELOG_FILE: ${{ github.workspace }}-CHANGES.md
+      NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
 
     steps:
       - uses: actions/checkout@v3
@@ -82,3 +83,32 @@ jobs:
           prerelease: ${{ contains(github.ref_name, '-') || contains(github.ref_name, '_') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Read changelog for Nexus
+        id: nexus_changelog
+        shell: pwsh
+        run: |
+          $body = Get-Content -Raw "${{ env.CHANGELOG_FILE }}"
+          "changelog<<NEXUS_EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding UTF8 -Append
+          $body | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding UTF8 -Append
+          "NEXUS_EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding UTF8 -Append
+          "version=$('${{ github.ref_name }}'.TrimStart('v'))" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding UTF8 -Append
+
+      # Requires repo secret NEXUSMODS_API_KEY (https://www.nexusmods.com/settings/api-keys)
+      # and repo variable NEXUSMODS_FILE_ID (the v3 file chain id: mod page -> Files -> Advanced / API Info).
+      # Skipped for prerelease tags and when the secret is not set.
+      - name: Upload to Nexus Mods
+        if: ${{ !(contains(github.ref_name, '-') || contains(github.ref_name, '_')) && env.NEXUSMODS_API_KEY != '' }}
+        uses: Nexus-Mods/upload-action@v1.0.0-beta.10
+        with:
+          api_key: ${{ env.NEXUSMODS_API_KEY }}
+          mod_id: 5208
+          file_id: ${{ vars.NEXUSMODS_FILE_ID }}
+          filename: ${{ env.MOD_SLUG }}_${{ github.ref_name }}.zip
+          version: ${{ steps.nexus_changelog.outputs.version }}
+          display_name: Let There Be Flight ${{ github.ref_name }}${{ env.CYBERPUNK_2077_GAME_VERSION_STR }}
+          category: main
+          changelog: ${{ steps.nexus_changelog.outputs.changelog }}
+          update_mod_version: true
+          archive_existing_version: true
+          primary_mod_manager_download: true
