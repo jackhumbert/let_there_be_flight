@@ -35,13 +35,18 @@ protected final func IsPlayerAllowedToEnterFlight(const scriptInterface: ref<Sta
   let fc = fs().playerComponent;
   let canActivate = IsDefined(fc) && fc.configuration.CanActivate();
 
-  let tweakID = (scriptInterface.owner as VehicleObject).GetRecordID();
+  let vehicle = scriptInterface.owner as VehicleObject;
+  if !IsDefined(vehicle) || vehicle.IsFlightDisabledByTweak() {
+    return false;
+  }
+
+  let tweakID = vehicle.GetRecordID();
   TDBID.Append(tweakID, TDBID.Create(".canEnterFlight"));
   let flightEnabled = TweakDBInterface.GetBool(tweakID, true);
-  
+
   let blockFlight = StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"VehicleBlockFlight");
-  
-  return canActivate && flightEnabled && !blockFlight; 
+
+  return canActivate && flightEnabled && !blockFlight;
 }
 
 @addMethod(DefaultTransition)

@@ -14,6 +14,11 @@
 REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityExt *entity, void *a2, void *a3) {
   auto rtti = RED4ext::CRTTISystem::Get();
 
+  if (!entity) {
+    Entity_InitializeComponents_Original(entity, a2, a3);
+    return;
+  }
+
   auto isVehicle = entity->IsOfClass(rtti->GetClass("vehicleBaseObject"));
 
   auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(entity);
@@ -22,6 +27,12 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityE
   bool canEnterFlight = false;
   if (isVehicle && canEnterFlight_func) {
     RED4ext::ExecuteFunction(vehicle, canEnterFlight_func, &canEnterFlight);
+  }
+
+  if (isVehicle && canEnterFlight && !Utils::LooksLikeDynArray(vehicle->componentsStorage.components)) {
+    LTBF_WARN_ONCE("[Entity_InitializeComponents] componentsStorage.components header looks corrupt (size {} capacity {}); flight component not added",
+                   vehicle->componentsStorage.components.size, vehicle->componentsStorage.components.capacity);
+    canEnterFlight = false;
   }
 
   if (isVehicle && canEnterFlight) {
@@ -42,7 +53,7 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityE
 
     // auto const vcc = entity->GetComponent<RED4ext::ent::VisualControllerComponent>();
     // auto chassis = entity->GetComponent<RED4ext::vehicle::ChassisComponent>();
-    auto const vs = entity->GetComponent<RED4ext::ent::SlotComponent>("vehicle_slots");
+    auto const vs = entity->FindComponent<RED4ext::ent::SlotComponent>("vehicle_slots");
     // auto osc = entity->GetComponent<RED4ext::game::OccupantSlotComponent>();
 
     if (vs) {
@@ -60,6 +71,11 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityE
       if (configurationCls) {
         // spdlog::info("Looked for class '{}' using '{}'", className, configurationCls->name.ToString());
         auto configuration = configurationCls->CreateInstance<IFlightConfiguration *>(true);
+        if (!configuration) {
+          LTBF_WARN_ONCE("[Entity_InitializeComponents] could not instantiate flight configuration class '{}'", configurationCls->name.ToString());
+          Entity_InitializeComponents_Original(entity, a2, a3);
+          return;
+        }
         configurationCls->ConstructCls(configuration);
 
         // auto handle = RED4ext::Handle<IFlightConfiguration>(configuration);
@@ -72,11 +88,16 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityE
 
         configuration->Setup(vehicle);
         // configuration->AddMeshes(entity, vcc);
-        for (auto const & thruster : configuration->thrusters) {
-          if (thruster->meshComponent) {
-            thruster->meshComponent.refCount->IncRef();
-            entity->AddComponent(thruster->meshComponent);
+        if (Utils::LooksLikeDynArray(configuration->thrusters, 64)) {
+          for (auto const & thruster : configuration->thrusters) {
+            if (thruster && thruster->meshComponent) {
+              thruster->meshComponent.refCount->IncRef();
+              entity->AddComponent(thruster->meshComponent);
+            }
           }
+        } else {
+          LTBF_WARN_ONCE("[Entity_InitializeComponents] configuration->thrusters header looks corrupt (size {} capacity {}); thruster meshes not added",
+                         configuration->thrusters.size, configuration->thrusters.capacity);
         }
         configuration->AddSlots(vs);
       } else {

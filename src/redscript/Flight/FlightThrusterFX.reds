@@ -57,10 +57,19 @@ public abstract class IFlightThrusterFX extends IScriptable {
     let effectTransform: WorldTransform;
     let wt = new WorldTransform();
 
+    if !IsDefined(this.thruster) || !IsDefined(this.thruster.vehicle) || !IsDefined(this.thruster.meshComponent) {
+      FlightLog.Warn("[FlightThrusterFX] Start: thruster, vehicle or mesh component missing; effect not spawned");
+      return;
+    }
+
     WorldTransform.SetPosition(effectTransform, this.thruster.flightComponent.stats.d_position);
     WorldTransform.SetPosition(wt, Vector4.Vector3To4(this.position));
     WorldTransform.SetOrientation(wt, this.rotation);
     this.instance = GameInstance.GetFxSystem(this.thruster.vehicle.GetGame()).SpawnEffect(this.resource, effectTransform);
+    if !IsDefined(this.instance) {
+      FlightLog.Warn("[FlightThrusterFX] Start: SpawnEffect returned null");
+      return;
+    }
     this.instance.SetBlackboardValue(n"thruster_amount", 0.0);
     this.instance.AttachToComponent(this.thruster.vehicle, entAttachmentTarget.Transform, this.thruster.meshComponent.name, wt);
   }
@@ -73,7 +82,9 @@ public abstract class IFlightThrusterFX extends IScriptable {
 
   // returns how much the bone should be affected
   public func UpdateGetDisplacement() -> Float{
-    this.instance.SetBlackboardValue(n"thruster_amount", ClampF(0.0, -1.0, 1.0));
+    if IsDefined(this.instance) {
+      this.instance.SetBlackboardValue(n"thruster_amount", ClampF(0.0, -1.0, 1.0));
+    }
     return 0.0;
   }
 }
@@ -95,7 +106,9 @@ public class RegularFlightThrusterFX extends IFlightThrusterFX {
     }
     amount += x + this.thruster.torque.Y;
 
-    this.instance.SetBlackboardValue(n"thruster_amount", ClampF(amount + this.thruster.torque.Z, -1.0, 1.0));
+    if IsDefined(this.instance) {
+      this.instance.SetBlackboardValue(n"thruster_amount", ClampF(amount + this.thruster.torque.Z, -1.0, 1.0));
+    }
     return ClampF(amount, -1.0, 1.0);
   }
 }
@@ -118,7 +131,9 @@ public class MainFlightThrusterFX extends IFlightThrusterFX {
       y *= -1.0;
     }
 
-    this.instance.SetBlackboardValue(n"thruster_amount", ClampF(amount + x + y, -1.0, 1.0));
+    if IsDefined(this.instance) {
+      this.instance.SetBlackboardValue(n"thruster_amount", ClampF(amount + x + y, -1.0, 1.0));
+    }
     return ClampF(amount, -1.0, 1.0);
   }
 }
@@ -142,7 +157,9 @@ public class SideFlightThrusterFX extends IFlightThrusterFX {
       vec *= -1.0;
     }
     let amount = (Vector4.Dot(vec, this.thruster.force) + tor) * 0.1;
-    this.instance.SetBlackboardValue(n"thruster_amount", ClampF(amount, -1.0, 1.0));
+    if IsDefined(this.instance) {
+      this.instance.SetBlackboardValue(n"thruster_amount", ClampF(amount, -1.0, 1.0));
+    }
     return 0.0;
   }
 }

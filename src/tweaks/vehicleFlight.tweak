@@ -2,3 +2,31 @@
 // {
 // 	bool canEnterFlight = true;
 // }
+
+// Per-vehicle blacklist.
+//
+// Setting `flightDisabled = true` on a vehicle record keeps Let There Be Flight from
+// attaching anything to that vehicle (no flight component, no thruster meshes, no extra
+// slots or colliders, no flight HUD). Use it for vehicles that crash on enter or when a
+// CrystalCoat color is applied (see docs/crystalcoat-crash-analysis.md).
+//
+// Nothing is disabled by default. To disable a vehicle without editing this file, drop
+// a yaml into r6/tweaks/, e.g. r6/tweaks/ltbf_blacklist.yaml:
+//
+//   Vehicle.v_sport1_rayfield_caliburn_player:
+//     flightDisabled: true
+//
+// or the same in native tweak syntax (r6/tweaks/ltbf_blacklist.tweak):
+//
+//   Vehicle.v_sport1_rayfield_caliburn_player { bool flightDisabled = true; }
+//
+// Record names: the vehicle's TweakDB record (Vehicle.<name>), the same name used for the
+// thrusterMesh / thrusterAppearance overrides in vehicles.tweak. `canEnterFlight = false`
+// on a record has the same effect and is kept for older configs.
+//
+// Vehicles reported crashing with CrystalCoat on 2.3 / 2.31 (uncomment to disable):
+//
+// Vehicle.v_sport1_rayfield_caliburn_player { bool flightDisabled = true; }
+// Vehicle.v_sport1_rayfield_aerondight_player { bool flightDisabled = true; }
+// Vehicle.v_sport2_porsche_911turbo_player { bool flightDisabled = true; }
+// Vehicle.v_sport2_quadra_type66_02_player { bool flightDisabled = true; }

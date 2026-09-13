@@ -63,11 +63,16 @@ public abstract native class IFlightThruster extends IScriptable {
       this.mainThrusterYawFactor = 5.0;
     }
 
-    this.meshComponent.visualScale = new Vector3(0.0, 0.0, 0.0);
-    this.meshComponent.Toggle(false);
-    this.initialOrientation = this.meshComponent.GetLocalOrientation();
-    this.meshComponent.SetLocalOrientation(this.initialOrientation * EulerAngles.ToQuat(this.GetEulerAngles()));
-    // this.meshComponent.SetLocalOrientation(EulerAngles.ToQuat(this.GetEulerAngles()));
+    if IsDefined(this.meshComponent) {
+      this.meshComponent.visualScale = new Vector3(0.0, 0.0, 0.0);
+      this.meshComponent.Toggle(false);
+      this.initialOrientation = this.meshComponent.GetLocalOrientation();
+      this.meshComponent.SetLocalOrientation(this.initialOrientation * EulerAngles.ToQuat(this.GetEulerAngles()));
+      // this.meshComponent.SetLocalOrientation(EulerAngles.ToQuat(this.GetEulerAngles()));
+    } else {
+      FlightLog.Warn("[IFlightThruster] OnSetup: thruster " + NameToString(this.slotName) + " has no mesh component");
+      this.initialOrientation = new Quaternion(0.0, 0.0, 0.0, 1.0);
+    }
 
     this.id = "vehicle";
     // doesn't seem to have the data to get this here

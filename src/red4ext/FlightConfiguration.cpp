@@ -22,36 +22,54 @@ IFlightConfiguration::~IFlightConfiguration() {
 CClass* IFlightConfiguration::GetConfigurationClass(ent::Entity* entity) {
   auto rtti = CRTTISystem::Get();
 
-  auto type = entity->GetNativeType();
+  if (!entity) {
+    return nullptr;
+  }
+
   bool isCar = entity->IsOfClass(rtti->GetClass("vehicleCarBaseObject"));
   bool isBike = entity->IsOfClass(rtti->GetClass("vehicleBikeBaseObject"));
 
   uint8_t isSixWheeler = 0;
 
+  auto placedCls = rtti->GetClass("entIPlacedComponent");
+  auto hardBindingCls = rtti->GetClass("entHardTransformBinding");
+
+  if (!Utils::LooksLikeDynArray(entity->componentsStorage.components)) {
+    LTBF_WARN_ONCE("[FlightConfiguration] componentsStorage.components header looks corrupt (size {} capacity {}); no flight configuration",
+                   entity->componentsStorage.components.size, entity->componentsStorage.components.capacity);
+    return nullptr;
+  }
+
   for (auto const &handle : entity->componentsStorage.components) {
     auto component = handle.GetPtr();
-    type = component->GetNativeType();
-    bool isPlacedComponent = false;
-    do {
-      isPlacedComponent |= type == rtti->GetClass("entIPlacedComponent");
-    } while (type = type->parent);
+    if (!component) {
+      LTBF_WARN_ONCE("[FlightConfiguration] null component handle in componentsStorage while looking for a configuration class");
+      continue;
+    }
+    auto type = component->GetNativeType();
+    bool isPlacedComponent = type && placedCls && type->IsA(placedCls);
 
     if (isPlacedComponent) {
       auto pth = ((ent::IPlacedComponent *)component)->parentTransform;
       if (pth) {
-        auto pt = reinterpret_cast<ent::HardTransformBinding *>(pth.GetPtr());
-        if (pt && pt->slotName == "wheel_front_left_b") {
-          isSixWheeler |= 1;
-        }
-        if (pt && pt->slotName == "wheel_back_left_b") {
-          isSixWheeler |= 2;
+        // only entHardTransformBinding has slotName; other ITransformBinding subclasses do not
+        auto ptType = pth->GetNativeType();
+        if (ptType && hardBindingCls && ptType->IsA(hardBindingCls)) {
+          auto pt = reinterpret_cast<ent::HardTransformBinding *>(pth.GetPtr());
+          if (pt->slotName == "wheel_front_left_b") {
+            isSixWheeler |= 1;
+          }
+          if (pt->slotName == "wheel_back_left_b") {
+            isSixWheeler |= 2;
+          }
         }
       }
     }
   }
 
   char className[256];
-  sprintf_s(className, "FlightConfiguration_%s", entity->currentAppearance.ToString());
+  auto appearance = entity->currentAppearance.ToString();
+  sprintf_s(className, "FlightConfiguration_%s", appearance ? appearance : "None");
 
   auto configurationCls = rtti->GetClassByScriptName(className);
   if (!configurationCls) {
@@ -99,6 +117,11 @@ void IFlightConfiguration::Setup(vehicle::BaseObject * vehicle) {
 void IFlightConfiguration::AddSlots(ent::SlotComponent *slotComponent) {
   auto rtti = CRTTISystem::Get();
 
+  if (!slotComponent || !Utils::LooksLikeDynArray(slotComponent->slots)) {
+    LTBF_WARN_ONCE("[FlightConfiguration] vehicle_slots component missing or its slots header looks corrupt; flight camera slot not added");
+    return;
+  }
+
   auto slot = reinterpret_cast<ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
   slot->boneName = this->flightCameraBone;
   slot->slotName = "CustomFlightCamera";
@@ -134,11 +157,16 @@ void IFlightConfiguration::AddColliders() {
 
   auto flightComponent = this->component.Lock();
 
+  if (!flightComponent || !flightComponent->entity) {
+    LTBF_WARN_ONCE("[FlightConfiguration] AddColliders: flight component or its entity is gone");
+    return;
+  }
+
   if (!flightComponent->entity->IsOfClass(rtti->GetClass("vehicleBaseObject")))
     return;
-    
-  auto chassis = flightComponent->entity->GetComponent<vehicle::ChassisComponent>();
-  auto slot = flightComponent->entity->GetComponent<ent::SlotComponent>("vehicle_slots");
+
+  auto chassis = EntityExt::From(flightComponent->entity)->FindComponent<vehicle::ChassisComponent>();
+  auto slot = EntityExt::From(flightComponent->entity)->FindComponent<ent::SlotComponent>("vehicle_slots");
 
   if (chassis != NULL && slot != NULL) {
     // FlightComponent::Get((vehicle::BaseObject*)flightComponent->entity)->chassis = chassis;
@@ -146,6 +174,10 @@ void IFlightConfiguration::AddColliders() {
     physics::ProxyHelper proxyHelper(chassis->proxyID, &chassis->sharedMutex);
 
     auto key = (physics::PhysicalSystemProxy *) physics::ProxyID::GetProxy(chassis->proxyID);
+    if (!key || !Utils::LooksLikeDynArray(key->bodies) || key->bodies.size == 0 || !key->bodies.entries[0]) {
+      LTBF_WARN_ONCE("[FlightConfiguration] AddColliders: chassis physics proxy has no body; thruster colliders not added");
+      return;
+    }
     auto body = (physx::PxRigidDynamic *) key->bodies.entries[0];
 
     if (this->originalShapeCount == -1)
@@ -160,7 +192,7 @@ void IFlightConfiguration::AddColliders() {
     int index = 0;
 
     for (auto const &thruster: this->thrusters) {
-      if (thruster->attached) {
+      if (thruster && thruster->attached) {
         Handle<physics::ICollider> collider;
         float radius = 0.4;
         physics::ColliderSphere::createHandleWithRadius(&collider, &radius);
@@ -215,15 +247,24 @@ void IFlightConfiguration::RemoveColliders() {
 
   auto flightComponent = this->component.Lock();
 
+  if (!flightComponent || !flightComponent->entity) {
+    LTBF_WARN_ONCE("[FlightConfiguration] RemoveColliders: flight component or its entity is gone");
+    return;
+  }
+
   if (!flightComponent->entity->IsOfClass(rtti->GetClass("vehicleBaseObject")))
     return;
 
-  auto chassis = flightComponent->entity->GetComponent<vehicle::ChassisComponent>();
+  auto chassis = EntityExt::From(flightComponent->entity)->FindComponent<vehicle::ChassisComponent>();
 
   if (chassis != NULL) {
     physics::ProxyHelper proxyHelper(chassis->proxyID, &chassis->sharedMutex);
 
     auto key = (physics::PhysicalSystemProxy *) physics::ProxyID::GetProxy(chassis->proxyID);
+    if (!key || !Utils::LooksLikeDynArray(key->bodies) || key->bodies.size == 0 || !key->bodies.entries[0]) {
+      LTBF_WARN_ONCE("[FlightConfiguration] RemoveColliders: chassis physics proxy has no body");
+      return;
+    }
     auto body = (physx::PxRigidDynamic *) key->bodies.entries[0];
 
     auto nbShapes = body->getNbShapes();

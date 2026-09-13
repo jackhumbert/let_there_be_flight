@@ -109,6 +109,9 @@ public native class FlightComponent extends GameComponent {
 
   protected cb func OnVehicleOnPartDetached(evt: ref<VehicleOnPartDetachedEvent>) -> Bool {
     FlightLog.Info("[FlightComponent] Part detached: " + NameToString(evt.partName));
+    if !IsDefined(this.configuration) {
+      return false;
+    }
     let oneOfOurs = false;
     for thruster in this.configuration.thrusters {
       if IsDefined(thruster.meshComponent) {

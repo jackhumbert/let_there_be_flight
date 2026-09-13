@@ -4,6 +4,8 @@
 #include "FlightSettings.hpp"
 #include <RED4ext/Common.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/DetachPartEvent.hpp>
+#include "Extensions/MeshComponent.hpp"
+#include "Utils/Utils.hpp"
 
 using namespace RED4ext;
 
@@ -38,17 +40,32 @@ struct Manager {
   uint32_t unkCC;
 };
 
-REGISTER_FLIGHT_HOOK_HASH(void, 2150896908, VehicleDetachPart, const Manager & self, uint32_t index, bool a3) {  
+REGISTER_FLIGHT_HOOK_HASH(void, 2150896908, VehicleDetachPart, const Manager & self, uint32_t index, bool a3) {
+  // `Manager` is a hand-written layout; if it drifted, or the index is out of range,
+  // just let the game do what it was going to do.
+  if (!Utils::LooksLikeDynArray(self.parts, 256) || index >= self.parts.size) {
+    LTBF_WARN_ONCE("[VehicleDetachPart] parts header looks wrong or index out of range (index {} size {} capacity {}); not filtering",
+                   index, self.parts.size, self.parts.capacity);
+    VehicleDetachPart_Original(self, index, a3);
+    return;
+  }
+  if (!self.vehicle) {
+    VehicleDetachPart_Original(self, index, a3);
+    return;
+  }
+
   const auto * part = &self.parts[index];
-  auto fc = self.vehicle->GetComponent<FlightComponent>();
+  auto fc = EntityExt::From(self.vehicle)->FindComponent<FlightComponent>();
   bool shouldDetach = true;
   if (fc && fc->configuration) {
     auto func = fc->configuration->GetType()->GetFunction("AreThrustersDetachable");
     bool detachable = true;
-    ExecuteFunction(fc->configuration, func, &detachable);
-    if (!detachable) {
+    if (func) {
+      ExecuteFunction(fc->configuration, func, &detachable);
+    }
+    if (!detachable && Utils::LooksLikeDynArray(fc->configuration->thrusters, 64)) {
       for (auto const & thruster : fc->configuration->thrusters) {
-        if (thruster->meshComponent && (part->name == thruster->meshComponent->name))
+        if (thruster && thruster->meshComponent && (part->name == thruster->meshComponent->name))
           shouldDetach = false;
       }
     }

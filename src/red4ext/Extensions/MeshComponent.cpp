@@ -27,14 +27,24 @@ void IPlacedComponentExt::SetParentTransform(CName bindName, CName slotName) {
 }
 
 void EntityExt::AddComponent(Handle<ent::IComponent> const & componentToAdd) {
+  if (!componentToAdd) {
+    LTBF_WARN_ONCE("[EntityExt] AddComponent called with a null component");
+    return;
+  }
+  if (!Utils::LooksLikeDynArray(this->componentsStorage.components)) {
+    LTBF_WARN_ONCE("[EntityExt] componentsStorage.components header looks corrupt (size {} capacity {}); not adding '{}'",
+                   this->componentsStorage.components.size, this->componentsStorage.components.capacity,
+                   componentToAdd->name.ToString());
+    return;
+  }
+
   componentToAdd->id = CRUID::Next();
 
   this->componentsStorage.components.PushBack(componentToAdd);
 
   auto rtti = CRTTISystem::Get();
-  
-  auto const vcc = this->GetComponent<ent::VisualControllerComponent>();
-  auto const customization = this->GetComponent<ent::EffectSpawnerComponent>("vehicleVisualCustomization");
+
+  auto const vcc = this->FindComponent<ent::VisualControllerComponent>();
 
   if (componentToAdd->IsOfClass(rtti->GetClass("entMeshComponent"))) {
 
@@ -42,29 +52,49 @@ void EntityExt::AddComponent(Handle<ent::IComponent> const & componentToAdd) {
       auto meshComponent = (ent::MeshComponent *)componentToAdd.instance;
       meshComponent->appearanceName = meshComponent->meshAppearance;
 
-      auto vcd = rtti->GetClass("entVisualControllerDependency")->CreateInstance<ent::VisualControllerDependency *>(true);
-      vcd->appearanceName = meshComponent->meshAppearance;
-      vcd->componentName = meshComponent->name;
-      vcd->mesh.path = meshComponent->mesh.path;
-      vcc->appearanceDependency.EmplaceBack(*vcd);
+      // entVisualControllerComponent is a hand-written layout (last regenerated for 1.62);
+      // make sure the two arrays we append to still look like arrays before touching them.
+      if (Utils::LooksLikeDynArray(vcc->appearanceDependency) && Utils::LooksLikeDynArray(vcc->resourcePaths)) {
+        auto vcd = rtti->GetClass("entVisualControllerDependency")->CreateInstance<ent::VisualControllerDependency *>(true);
+        vcd->appearanceName = meshComponent->meshAppearance;
+        vcd->componentName = meshComponent->name;
+        vcd->mesh.path = meshComponent->mesh.path;
+        vcc->appearanceDependency.EmplaceBack(*vcd);
 
-      if (vcc->resourcePaths.size) {
-        for (int i = 0; i < vcc->resourcePaths.size; i++) {
-          if (vcc->resourcePaths[i] == meshComponent->mesh.path) {
-            break;
-          } else if (vcc->resourcePaths[i] > meshComponent->mesh.path) {
-            vcc->resourcePaths.Emplace(&vcc->resourcePaths[i], meshComponent->mesh.path);
-            break;
+        if (vcc->resourcePaths.size) {
+          for (int i = 0; i < vcc->resourcePaths.size; i++) {
+            if (vcc->resourcePaths[i] == meshComponent->mesh.path) {
+              break;
+            } else if (vcc->resourcePaths[i] > meshComponent->mesh.path) {
+              vcc->resourcePaths.Emplace(&vcc->resourcePaths[i], meshComponent->mesh.path);
+              break;
+            }
           }
+        } else {
+          vcc->resourcePaths.EmplaceBack(meshComponent->mesh.path);
         }
       } else {
-        vcc->resourcePaths.EmplaceBack(meshComponent->mesh.path);
+        LTBF_WARN_ONCE("[EntityExt] entVisualControllerComponent arrays look corrupt (appearanceDependency {}/{}, resourcePaths {}/{}); "
+                       "thruster mesh '{}' not registered with the visual controller",
+                       vcc->appearanceDependency.size, vcc->appearanceDependency.capacity,
+                       vcc->resourcePaths.size, vcc->resourcePaths.capacity, meshComponent->name.ToString());
       }
     }
 
-    // if (componentToAdd->IsOfClass(rtti->GetClass("entIVisualComponent"))) {
-    // disable customization for now
-      if (customization && false) {
+    // CrystalCoat (patch 2.1+ vehicle recolor) lives in an entEffectSpawnerComponent named
+    // "vehicleVisualCustomization". Patching its effect descriptors so the thruster meshes
+    // get recolored was disabled in v0.3.16 (commit 7a1a51d) because it crashed on every
+    // CrystalCoat-capable car; the old code is kept below under #if 0 for reference.
+    // We only log now, so a user report can tell us whether the vehicle had the component.
+    auto const customization = this->FindComponent<ent::EffectSpawnerComponent>("vehicleVisualCustomization");
+    if (customization) {
+      LTBF_WARN_ONCE("[EntityExt] vehicle has a vehicleVisualCustomization (CrystalCoat) component; thruster meshes are not "
+                     "registered with it. If this vehicle crashes, set 'bool flightDisabled = true;' on its Vehicle record "
+                     "in a tweak (see docs/crystalcoat-crash-analysis.md)");
+    }
+
+#if 0 // disabled since v0.3.16 (7a1a51d): CrystalCoat crash
+      if (customization) {
         // customization->StopAllEffects(1);
         for (auto & desc : customization->effectDescs) {
           // desc->compiledEffectInfo.componentNames.Reserve(desc->compiledEffectInfo.componentNames.size + 1);
@@ -101,8 +131,8 @@ void EntityExt::AddComponent(Handle<ent::IComponent> const & componentToAdd) {
         // weakHandle.refCount->IncWeakRef();
         // customization->components.Emplace(componentToAdd->name, weakHandle);
       }
-    }
-  // }
+#endif
+  }
 
   if (componentToAdd->IsOfClass(rtti->GetClass("entPhysicalMeshComponent"))) {
     auto pmComponent = (ent::PhysicalMeshComponent *)componentToAdd.instance;
@@ -147,7 +177,13 @@ void EntityExt::AddSlot(CName boneName, CName slotName, Vector3 relativePosition
   //   }
   // }
 
-  auto slotComponent = this->GetComponent<ent::SlotComponent>("vehicle_slots");
+  auto slotComponent = this->FindComponent<ent::SlotComponent>("vehicle_slots");
+
+  if (slotComponent && !Utils::LooksLikeDynArray(slotComponent->slots)) {
+    LTBF_WARN_ONCE("[EntityExt] entSlotComponent.slots header looks corrupt (size {} capacity {}); not adding slot '{}'",
+                   slotComponent->slots.size, slotComponent->slots.capacity, slotName.ToString());
+    return;
+  }
 
   if (slotComponent) {
     auto slot = rtti->GetClass("entSlot")->CreateInstance<ent::Slot *>(true);
