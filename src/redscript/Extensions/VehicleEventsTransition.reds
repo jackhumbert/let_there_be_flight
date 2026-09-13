@@ -1,7 +1,14 @@
-@replaceMethod(VehicleEventsTransition)
+// Vanilla (2.3+) HandleCameraInput cycles the camera on ToggleVehCamera *release* and
+// toggles the cinematic (autodrive) camera on a *hold* of HoldCinematicCamera, both bound
+// to the same key. This used to be an @replaceMethod carrying the pre-2.3 body
+// (IsActionJustPressed + RequestToggleVehicleCamera only), which is why the cinematic
+// camera stopped working with LTBF installed (GitHub #93). Wrap instead: outside of flight
+// the vanilla handler runs untouched; while flight is active the VehicleFlight state
+// machine owns the camera toggle (VehicleFlightEventsTransition.HandleFlightCameraInput).
+@wrapMethod(VehicleEventsTransition)
 protected final func HandleCameraInput(scriptInterface: ref<StateGameScriptInterface>) -> Void {
-  if scriptInterface.IsActionJustPressed(n"ToggleVehCamera") && !this.IsVehicleCameraChangeBlocked(scriptInterface) && !FlightController.GetInstance().active {
-    this.RequestToggleVehicleCamera(scriptInterface);
+  if !FlightController.GetInstance().IsActive() {
+    wrappedMethod(scriptInterface);
   };
 }
 
