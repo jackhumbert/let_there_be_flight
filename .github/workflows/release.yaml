@@ -15,9 +15,10 @@ jobs:
       NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
+          fetch-depth: 0   # git-cliff needs the full history and all tags to build the changelog
       - uses: ilammy/msvc-dev-cmd@v1.12.1
         with:
           arch: amd64
@@ -97,12 +98,22 @@ jobs:
       # Requires repo secret NEXUSMODS_API_KEY (https://www.nexusmods.com/settings/api-keys)
       # file_id is the v3 file chain id for the main LTBF file (mod page -> Files -> Advanced / API Info); public, not a secret.
       # Skipped for prerelease tags and when the secret is not set.
+      # The v3 API keys mods by a global id, not the game-scoped 5208 from the site URL; resolve it first.
+      - name: Resolve Nexus Mods v3 mod id
+        id: nexus_mod
+        if: ${{ !(contains(github.ref_name, '-') || contains(github.ref_name, '_')) && env.NEXUSMODS_API_KEY != '' }}
+        shell: pwsh
+        run: |
+          $r = Invoke-RestMethod -Uri "https://api.nexusmods.com/v3/games/cyberpunk2077/mods/5208" -Headers @{ apikey = $env:NEXUSMODS_API_KEY; "User-Agent" = "let_there_be_flight-release" }
+          "mod_id=$($r.data.id)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding UTF8 -Append
+          "resolved mod 5208 -> v3 id $($r.data.id)"
+
       - name: Upload to Nexus Mods
         if: ${{ !(contains(github.ref_name, '-') || contains(github.ref_name, '_')) && env.NEXUSMODS_API_KEY != '' }}
         uses: Nexus-Mods/upload-action@v1.0.0-beta.10
         with:
           api_key: ${{ env.NEXUSMODS_API_KEY }}
-          mod_id: 5208
+          mod_id: ${{ steps.nexus_mod.outputs.mod_id }}
           file_id: 2617843
           filename: ${{ env.MOD_SLUG }}_${{ github.ref_name }}.zip
           version: ${{ steps.nexus_changelog.outputs.version }}

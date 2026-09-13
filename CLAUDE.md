@@ -76,6 +76,7 @@ git tag vX.Y.Z && git push origin main vX.Y.Z
 ```
 
 - Before tagging: submodule pins committed and pushed to their own repos (CI clones with `submodules: true` over HTTPS; every `.gitmodules` URL must be publicly clonable). `build.yaml` on the push must be green.
+- Checkout uses `fetch-depth: 0`; with a shallow clone git-cliff sees no history and the release body has no Changes section (every release through v0.3.18 was hand-edited for that reason).
 - Commit messages feed git-cliff (`cliff.toml`): use `feat:` / `fix:` prefixes for anything that should appear in the changelog. `chore:` and `ci:` are skipped.
 - Release-note history: v0.3.17 (2025-08-29) "for 2.30+" - disabled thruster customizations (crystal coat crash), redscript 1.0 update, Limited HUD incompatibility.
 - Nexus Mods: manual upload of the same zip today. See "Nexus" below.
@@ -89,7 +90,7 @@ Nexus now has an official Upload API (REST v3, open beta since 2026-03; personal
 - GitHub Action `Nexus-Mods/upload-action` (pin a tag, currently `v1.0.0-beta.10`). Inputs: `api_key`, `file_id` (the v3 mod-file chain id from the Files tab "Advanced/API Info"), `filename`, `version`, optional `mod_id` + `changelog`, `update_mod_version`, `archive_existing_version`. Reference workflow: https://github.com/Nexus-Mods/API-Example.
 - CLI for local use: `dotnet tool install -g BUTR.NexusUploader` then `unex upload 5208 <zip> -v <ver> --file-id <id>` (v4 uses the official API).
 
-Implemented in `release.yaml`: after the GitHub release step, `Nexus-Mods/upload-action` uploads `let_there_be_flight_vX.Y.Z.zip` as a new version of file id 2617843 (the main LTBF file; public id, hardcoded) on mod 5208 with the git-cliff changelog, and bumps the mod version. It runs only for non-prerelease tags and only when the repo secret `NEXUSMODS_API_KEY` is set (https://www.nexusmods.com/settings/api-keys). Creating a new mod page is still manual.
+Implemented in `release.yaml`: after the GitHub release step, `Nexus-Mods/upload-action` uploads `let_there_be_flight_vX.Y.Z.zip` as a new version of file id 2617843 (the main LTBF file; public id, hardcoded) with the git-cliff changelog, and bumps the mod version. The changelog call needs the v3 global mod id, not the site's game-scoped 5208, so a step resolves it via `GET /v3/games/cyberpunk2077/mods/5208` first. The action creates the file version before posting the changelog, so a changelog failure still leaves the file uploaded (happened on v0.3.18). It runs only for non-prerelease tags and only when the repo secret `NEXUSMODS_API_KEY` is set (https://www.nexusmods.com/settings/api-keys). Creating a new mod page is still manual.
 
 ## Current state (2026-09-13)
 
