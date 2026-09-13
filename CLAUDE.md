@@ -94,6 +94,11 @@ Nexus now has an official Upload API (REST v3, open beta since 2026-03; personal
 
 Implemented in `release.yaml`: after the GitHub release step, `Nexus-Mods/upload-action` uploads `let_there_be_flight_vX.Y.Z.zip` as a new version of file id 2617843 (the main LTBF file; public id, hardcoded) with the git-cliff changelog, and bumps the mod version. The changelog call needs the v3 global mod id, not the site's game-scoped 5208, so a step resolves it via `GET /v3/games/cyberpunk2077/mods/5208` first. The action creates the file version before posting the changelog, so a changelog failure still leaves the file uploaded (happened on v0.3.18). It runs only for non-prerelease tags and only when the repo secret `NEXUSMODS_API_KEY` is set (https://www.nexusmods.com/settings/api-keys). Creating a new mod page is still manual.
 
+Manual API use (key in the `NEXUSMODS_API_KEY` user environment variable; read it with `[Environment]::GetEnvironmentVariable('NEXUSMODS_API_KEY','User')`, send as an `apikey` header, base `https://api.nexusmods.com/v3`; schema in `openapi.yaml` at the repo root, untracked):
+- v3 mod id for 5208 is `14315126002776` (`GET /games/cyberpunk2077/mods/5208`).
+- `GET /mod-files/2617843/versions` lists uploaded versions; `POST /mods/14315126002776/changelogs` with `{version, changelog}` appends notes (additive, cannot edit); `PUT /mod-files/2617843` with `{name}` renames the persistent file entry.
+- 2026-09-13: the 0.3.18 changelog was posted this way after the action's changelog step failed on the wrong mod id.
+
 ## Current state (2026-09-13)
 
 Game is 2.31 (2025-09-11, still the latest PC patch). Last release v0.3.17 (2025-08-29) targets 2.30, so it predates 2.31. The Steam install has game 2.31 but RED4ext 1.28.0 / ArchiveXL 1.24 / TweakXL 1.11.0 / Codeware 1.17 from July 2025, so mods do not currently load locally; install the current ones before testing.
