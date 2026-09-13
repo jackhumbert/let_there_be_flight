@@ -396,6 +396,8 @@ public native class FlightComponent extends GameComponent {
       this.sys.ctlr.ResetInputs();
       this.isPlayerMounted = true;
       this.SetupVehicleTPPBBListener();
+      // timing marker, see docs/mount-stutter-analysis.md
+      FlightLog.Info("[FlightComponent] OnMountingEvent done");
       // try without wind
       // FlightAudio.Get().Start("windLeft", "wind_TPP");
       // FlightAudio.Get().Start("windRight", "wind_TPP");
@@ -420,8 +422,15 @@ public native class FlightComponent extends GameComponent {
     let normal: Vector4;
     this.SetupTires();
     let wheeled = this.GetVehicle() as WheeledObject;
-    if ( evt.character.IsPlayer() && evt.isMounting && !this.FindGround(normal) || this.distance > FlightSettings.GetInstance().autoActivationHeight) && IsDefined(wheeled) && FlightSettings.GetInstance().autoActivationEnabled {
-      this.Activate(true);
+    // FindGround runs four synchronous raycasts; only pay for them when auto activation
+    // (off by default) can actually use the result.
+    if FlightSettings.GetInstance().autoActivationEnabled && evt.character.IsPlayer() && evt.isMounting && IsDefined(wheeled) {
+      if !this.FindGround(normal) || this.distance > FlightSettings.GetInstance().autoActivationHeight {
+        this.Activate(true);
+      }
+    }
+    if evt.character.IsPlayer() && evt.isMounting {
+      FlightLog.Info("[FlightComponent] OnVehicleFinishedMountingEvent done");
     }
   }
 
@@ -429,6 +438,7 @@ public native class FlightComponent extends GameComponent {
     // LTBF_UnregisterListener(this);
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if IsDefined(mountChild) && mountChild.IsPlayer() {
+      FlightLog.Info("[FlightComponent] OnUnmountingEvent: " + this.GetVehicle().GetDisplayName());
 
       let vehicleFlight = new PSMRemoveOnDemandStateMachine();
       vehicleFlight.stateMachineIdentifier.definitionName = n"VehicleFlight";
@@ -447,6 +457,7 @@ public native class FlightComponent extends GameComponent {
       }
       this.sys.ctlr.ResetInputs();
       this.sys.ctlr.Disable();
+      FlightLog.Info("[FlightComponent] OnUnmountingEvent done");
     }
   }
 

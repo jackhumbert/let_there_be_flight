@@ -7,6 +7,27 @@
 #include <RED4ext/Scripting/Natives/Generated/ink/HudEntriesResource.hpp>
 #include <Extensions/MeshComponent.hpp>
 
+// Reads the class default of hudFlightController.enabled ("Flight UI Settings > Enabled" in
+// Mod Settings). Mod Settings writes the user's choice into CClass::defaults
+// (mod_settings ModClass::SetDefaultValue), so this is the current setting without needing
+// a HUD controller instance. Unknown class/property/type means "enabled".
+static bool IsFlightHudEnabled(RED4ext::CRTTISystem *rtti) {
+  auto cls = rtti->GetClass("hudFlightController");
+  if (!cls) {
+    return true;
+  }
+  auto variant = cls->defaults.Get("enabled");
+  if (!variant || !*variant) {
+    return true;
+  }
+  auto type = (*variant)->GetType();
+  if (!type || type->GetName() != RED4ext::CName("Bool")) {
+    return true;
+  }
+  auto data = (*variant)->GetDataPtr();
+  return data ? *reinterpret_cast<bool *>(data) : true;
+}
+
 /// @hash 3490519617
 // void Entity_InitializeComponents(RED4ext::ent::Entity *entity, void *a2, void *a3);
 
@@ -178,7 +199,11 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityE
     //  entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::game::projectile::SpawnComponent>(gpsp));
     //}
 
-    {
+    // The FlightHUD WidgetHudComponent makes the engine spawn hud_flight.inkhud
+    // (hudFlightController, ~380 widgets) every time the player mounts this vehicle and
+    // tear it down on every unmount (see docs/mount-stutter-analysis.md). Skip it entirely
+    // when the flight UI is disabled in Mod Settings; the controller would only hide itself.
+    if (IsFlightHudEnabled(rtti)) {
       auto whc = rtti->GetClass("WidgetHudComponent")->CreateInstance<RED4ext::WidgetHudComponent *>(true);
       whc->name = "FlightHUD";
       whc->id = RED4ext::CRUID::Next();
@@ -188,6 +213,8 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityE
       // whc->hudEntriesResource.token = resource.token;
       LoadResRef<RED4ext::ink::HudEntriesResource>(&whc->hudEntriesResource.path, &whc->hudEntriesResource.token, false);
       entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::WidgetHudComponent>(whc));
+    } else {
+      LTBF_WARN_ONCE("[Entity_InitializeComponents] flight UI disabled in Mod Settings; FlightHUD component not added to vehicles");
     }
 
     //{
