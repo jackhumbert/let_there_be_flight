@@ -502,6 +502,136 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "Quickhacks-Funhouse-Description",
               "femaleVariant": "Charm this vehicle with the folly of youth and make it a little bouncy"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Key-Bindings",
+              "femaleVariant": "Key Bindings"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Flight-Toggle",
+              "femaleVariant": "Toggle Flight"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Yaw-Left",
+              "femaleVariant": "Yaw Left"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Yaw-Right",
+              "femaleVariant": "Yaw Right"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Pitch-Forward",
+              "femaleVariant": "Pitch Forward"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Pitch-Backward",
+              "femaleVariant": "Pitch Backward"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Roll-Left",
+              "femaleVariant": "Roll Left"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Roll-Right",
+              "femaleVariant": "Roll Right"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Lift-Up",
+              "femaleVariant": "Lift Up"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Lift-Down",
+              "femaleVariant": "Lift Down"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Sway-Left",
+              "femaleVariant": "Sway Left"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Sway-Right",
+              "femaleVariant": "Sway Right"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Deploy-Glider",
+              "femaleVariant": "Deploy Glider"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Pack-Glider",
+              "femaleVariant": "Pack Glider"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Hover-Factor",
+              "femaleVariant": "Hover Factor"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Hover-And-Fly-Height-Dampening",
+              "femaleVariant": "Hover And Fly Height Dampening"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Hover-And-Fly-Height-Correction",
+              "femaleVariant": "Hover And Fly Height Correction"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Angular-Damp-Max",
+              "femaleVariant": "Angular Damp Max"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Angular-Damp-Max-Description",
+              "femaleVariant": "Upper limit on the angular damping applied while flying. Higher values settle rotation faster."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Detachable-Thrusters",
+              "femaleVariant": "Detachable Thrusters"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Explosion-Threshold",
+              "femaleVariant": "Explosion Threshold"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Explosion-Threshold-Description",
+              "femaleVariant": "How hard a flying vehicle has to hit something before it explodes. Higher values take more punishment."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-TPP-Camera-Pitch-Offset",
+              "femaleVariant": "TPP Camera Pitch Offset"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-TPP-Camera-Pitch-Offset-Description",
+              "femaleVariant": "Pitch offset in degrees applied to the third person camera while flying."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Enable-Center-On-Mass",
+              "femaleVariant": "Center Camera On Mass"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Enable-Center-On-Mass-Description",
+              "femaleVariant": "Point the third person camera at the vehicle's center of mass instead of its origin."
             }
           ]
         }
