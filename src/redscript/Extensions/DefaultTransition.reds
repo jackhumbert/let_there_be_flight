@@ -30,6 +30,13 @@ protected final func IsInMountedVehicleCombat() -> Bool {
   return FlightController.GetInstance().GetBlackboard().GetBool(GetAllBlackboardDefs().VehicleFlight.InMountedVehicleCombat);
 }
 
+// Shared by activation (IsPlayerAllowedToEnterFlight) and the "activate flight" input hint
+// (InputContextTransitionEvents.ShowVehicleDriverInputHints) so both agree on when a quest
+// vehicle (e.g. Delamain) has flight blocked.
+public func IsVehicleFlightBlockedByStatusEffect(const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
+  return StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"VehicleBlockFlight");
+}
+
 @addMethod(DefaultTransition)
 protected final func IsPlayerAllowedToEnterFlight(const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
   let fc = fs().playerComponent;
@@ -44,7 +51,7 @@ protected final func IsPlayerAllowedToEnterFlight(const scriptInterface: ref<Sta
   TDBID.Append(tweakID, TDBID.Create(".canEnterFlight"));
   let flightEnabled = TweakDBInterface.GetBool(tweakID, true);
 
-  let blockFlight = StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"VehicleBlockFlight");
+  let blockFlight = IsVehicleFlightBlockedByStatusEffect(scriptInterface);
 
   return canActivate && flightEnabled && !blockFlight;
 }
