@@ -632,6 +632,66 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Enable-Center-On-Mass-Description",
               "femaleVariant": "Point the third person camera at the vehicle's center of mass instead of its origin."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Invert-Lift",
+              "femaleVariant": "Invert Lift"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Invert-Lift-Description",
+              "femaleVariant": "Flip the lift axis so pulling down climbs and pushing up descends. Applies to the gamepad stick and the keyboard lift keys."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Yaw-Damp-Factor",
+              "femaleVariant": "Yaw Damp Factor"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Yaw-Damp-Factor-Description",
+              "femaleVariant": "Extra resistance on yaw only. Raise it so the vehicle stops turning sooner after you let go of the stick, without stiffening pitch and roll."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Sway-With-Yaw",
+              "femaleVariant": "Sway With Yaw"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Sway-With-Yaw-Description",
+              "femaleVariant": "How much turning redirects your existing velocity into the new heading. Raise it if turning feels slippery and the vehicle keeps sliding sideways."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Roll-With-Yaw",
+              "femaleVariant": "Roll With Yaw"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Roll-With-Yaw-Description",
+              "femaleVariant": "How much the vehicle banks into a turn. Affects Hover & Fly, Fly, Hover and Automatic modes."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Automatic-Lift-Factor",
+              "femaleVariant": "Lift Factor"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Automatic-Lift-Factor-Description",
+              "femaleVariant": "How fast the lift input raises and lowers the held hover height in Automatic mode."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Automatic-Hover-Factor",
+              "femaleVariant": "Hover Factor"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Automatic-Hover-Factor-Description",
+              "femaleVariant": "Gain on Automatic mode's lift force. Lower it for a softer, slower hover; raise it for a stiffer one that holds height harder."
             }
           ]
         }

@@ -51,6 +51,9 @@ public abstract class FlightMode {
     angularDamp.Y *= (1.0 - AbsF(this.component.roll));
     angularDamp.Z *= (1.0 - AbsF(this.component.yaw));
 
+    // extra resistance on yaw only, so turning can be settled without making pitch/roll stiff
+    angularDamp.Z *= fs.generalYawDampFactor;
+
     // detect when we hit stuff and delay the damping
     // this.dampAccVector.X = ClampF(MaxF(this.dampAccVector.X, AbsF(this.component.stats.d_angularAcceleration.X) / timeDelta / 10.0), 0.0, 1.0);
     // this.dampAccVector.Y = ClampF(MaxF(this.dampAccVector.Y, AbsF(this.component.stats.d_angularAcceleration.Y) / timeDelta / 10.0), 0.0, 1.0);
@@ -91,7 +94,7 @@ public abstract class FlightMode {
     let aeroDynamicYaw = yawDirectionAngle * this.component.stats.d_speedRatio;// / 10.0;
     let aeroDynamicPitch = pitchDirectionAngle * this.component.stats.d_speedRatio;// / 10.0;
 
-    let yawDirectionality: Float = this.component.stats.d_speedRatio * fs.generalYawDirectionalityFactor;
+    let yawDirectionality: Float = (this.component.stats.d_speedRatio + AbsF(this.component.yaw) * fs.generalSwayWithYaw) * fs.generalYawDirectionalityFactor;
     let pitchDirectionality: Float = this.component.stats.d_speedRatio * fs.generalPitchDirectionalityFactor;
     let aeroFactor = Vector4.Dot(this.component.stats.d_forward, this.component.stats.d_direction);
     // yawDirectionality - redirect non-directional velocity to vehicle forward

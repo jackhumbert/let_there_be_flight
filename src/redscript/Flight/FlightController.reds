@@ -642,7 +642,13 @@ public native class FlightController extends IScriptable {
             if this.trick {
               this.lift.SetInput(0.0);
             } else {
-              this.lift.SetInput(value);
+              // single choke point for the lift axis, so the invert option covers the
+              // gamepad stick and the keyboard up/down buttons alike
+              if FlightSettings.GetInstance().invertLift {
+                this.lift.SetInput(-value);
+              } else {
+                this.lift.SetInput(value);
+              }
             }
             break;
           case n"SurgeNeg":

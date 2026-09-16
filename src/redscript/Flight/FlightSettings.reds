@@ -46,6 +46,14 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.max", "5.0")
   public let brakeFactorAngular: Float = 1.0;
 
+  // Flips the sign of the Flight_Lift axis for every device, so it covers the gamepad
+  // stick and the keyboard up/down buttons without editing the input xml.
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Control-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Invert-Lift")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Invert-Lift-Description")
+  public let invertLift: Bool = false;
+
   // Flight Physics Settings
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
@@ -118,6 +126,39 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "100.0")
   public let generalYawDirectionalityFactor: Float = 5.0;
+
+  // Extra multiplier on the yaw (Z) part of the angular damping, applied after the
+  // "no damping while the stick is deflected" term and before the Angular Damp Max clamp.
+  // 1.0 is the shipped behaviour.
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Yaw-Damp-Factor")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Yaw-Damp-Factor-Description")
+  @runtimeProperty("ModSettings.step", "0.05")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "5.0")
+  public let generalYawDampFactor: Float = 1.0;
+
+  // Adds yaw input to the yaw directionality term, so turning redirects more of the
+  // existing velocity into the new heading. 0.0 is the shipped behaviour.
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Sway-With-Yaw")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Sway-With-Yaw-Description")
+  @runtimeProperty("ModSettings.step", "0.05")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "2.0")
+  public let generalSwayWithYaw: Float = 0.0;
+
+  // How much yaw input banks the vehicle into the turn (Standard and Automatic modes).
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Roll-With-Yaw")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Roll-With-Yaw-Description")
+  @runtimeProperty("ModSettings.step", "0.01")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "1.0")
+  public let generalRollWithYaw: Float = 0.15;
 
   // Flight Camera Settings
 
@@ -194,10 +235,8 @@ public native class FlightSettings extends IScriptable {
 
     FlightSettings.SetFloat("fwtfCorrection", 0.0);
     FlightSettings.SetFloat("hoverClamp", 10.0);
-    FlightSettings.SetFloat("hoverFactor", 40.0);
     // FlightSettings.SetFloat("hoverModeLiftFactor", 8.0);
     FlightSettings.SetFloat("isFlightUIActive", 1.0);
-    FlightSettings.SetFloat("liftFactor", 8.0);
     FlightSettings.SetFloat("lockFPPCameraForDrone", 1.0);
     FlightSettings.SetFloat("lookAheadMax", 10.0);
     FlightSettings.SetFloat("lookAheadMin", 1.0);
@@ -209,8 +248,6 @@ public native class FlightSettings extends IScriptable {
 
     FlightSettings.SetFloat("surgeOffset", 0.5);
 
-    FlightSettings.SetFloat("swayWithYaw", 0.5);
-    FlightSettings.SetFloat("rollWithYaw", 0.15);
     FlightSettings.SetFloat("pitchWithLift", 0.0);
     FlightSettings.SetFloat("pitchWithSurge", 0.0);
 

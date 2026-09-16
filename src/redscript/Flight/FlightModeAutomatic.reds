@@ -23,6 +23,28 @@ public class FlightModeAutomatic extends FlightModeStandard {
   @runtimeProperty("ModSettings.max", "1000")
   public let automaticModeYawDirectionality: Float = 300.0;
 
+  // How fast the lift input moves the held hover height. Automatic mode used to borrow
+  // Standard mode's Lift Factor for this; it now has its own.
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Automatic-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Automatic-Lift-Factor")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Automatic-Lift-Factor-Description")
+  @runtimeProperty("ModSettings.step", "0.5")
+  @runtimeProperty("ModSettings.min", "0.5")
+  @runtimeProperty("ModSettings.max", "20.0")
+  public let automaticModeLiftFactor: Float = 8.0;
+
+  // Gain on the whole lift force in Automatic mode. It cannot go to zero: at zero the
+  // vehicle gets no lift at all and simply falls.
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Automatic-Mode")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Automatic-Hover-Factor")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Automatic-Hover-Factor-Description")
+  @runtimeProperty("ModSettings.step", "1.0")
+  @runtimeProperty("ModSettings.min", "5.0")
+  @runtimeProperty("ModSettings.max", "100.0")
+  public let automaticModeHoverFactor: Float = 40.0;
+
   protected let hovering: Float;
   protected let referenceZ: Float;
 
@@ -60,9 +82,9 @@ public class FlightModeAutomatic extends FlightModeStandard {
     }
 
     if lastHovering == 0.0 && this.hovering > 0.0 {
-      this.component.hoverHeight = MaxF(this.component.distance + this.component.lift * timeDelta * this.standardModeLiftFactor, FlightSettings.GetFloat("hoverModeMinHoverHeight"));
+      this.component.hoverHeight = MaxF(this.component.distance + this.component.lift * timeDelta * this.automaticModeLiftFactor, FlightSettings.GetFloat("hoverModeMinHoverHeight"));
     } else {
-      this.component.hoverHeight = MaxF(this.component.hoverHeight + this.component.lift * timeDelta * this.standardModeLiftFactor, FlightSettings.GetFloat("hoverModeMinHoverHeight"));
+      this.component.hoverHeight = MaxF(this.component.hoverHeight + this.component.lift * timeDelta * this.automaticModeLiftFactor, FlightSettings.GetFloat("hoverModeMinHoverHeight"));
     }
 
     let heightDifference = this.component.hoverHeight - this.component.distance;
@@ -71,7 +93,7 @@ public class FlightModeAutomatic extends FlightModeStandard {
     let hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, FlightSettings.GetFloat("hoverClamp"));// / FlightSettings.GetFloat("hoverClamp");
     let liftFactor = LerpF(this.hovering, this.component.lift - this.component.stats.d_velocity.Z * 0.1, hoverCorrection);
 
-    this.UpdateWithNormalLift(timeDelta, idealNormal, liftFactor * FlightSettings.GetFloat("hoverFactor") + (9.81000042) * this.gravityFactor);
+    this.UpdateWithNormalLift(timeDelta, idealNormal, liftFactor * this.automaticModeHoverFactor + (9.81000042) * this.gravityFactor);
 
     let aeroFactor = Vector4.Dot(this.component.stats.d_forward, this.component.stats.d_direction);
     let yawDirectionality: Float = this.component.stats.d_speedRatio * this.automaticModeYawDirectionality;
