@@ -19,12 +19,12 @@ Other features include:
 
 ## Dependencies
 
-* [RED4ext](https://github.com/WopsS/RED4ext)
-* [TweakXL](https://github.com/psiberx/cp2077-tweak-xl)
-* [ArchiveXL](https://github.com/psiberx/cp2077-archive-xl)
-* [Input Loader](https://github.com/jackhumbert/cyberpunk2077-input-loader)
-* [Redscript](https://github.com/jac3km4/redscript)
-* [Mod Settings](https://github.com/jackhumbert/mod_settings) (optional)
+* [RED4ext](https://github.com/WopsS/RED4ext) 1.29.0+
+* [TweakXL](https://github.com/psiberx/cp2077-tweak-xl) 1.11.0+
+* [ArchiveXL](https://github.com/psiberx/cp2077-archive-xl) 1.27.0+
+* [Input Loader](https://github.com/jackhumbert/cyberpunk2077-input-loader) v0.2.3+
+* [Redscript](https://github.com/jac3km4/redscript) 0.5.31+
+* [Mod Settings](https://github.com/jackhumbert/mod_settings) v0.2.21+ (optional)
 
 ## Configuration
 
