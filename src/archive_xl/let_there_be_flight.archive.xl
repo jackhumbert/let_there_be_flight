@@ -49,8 +49,11 @@ streaming:
           index: 236
         - type: worldCollisionNode
           index: 227
+    # 2.31 grew this sector from 242 to 243 nodes; ArchiveXL 1.27.3 logged
+    # "The target sector has 243 node(s), but the mod expects 242" and skipped
+    # every patch for it. Count re-read from the ArchiveXL log on game 2.31.
     - path: base\worlds\03_night_city\_compiled\default\exterior_-3_-4_0_4.streamingsector
-      expectedNodes: 242
+      expectedNodes: 243
       nodeDeletions:
         - type: worldCollisionNode
           index: 238
