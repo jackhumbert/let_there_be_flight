@@ -32,6 +32,36 @@ Other features include:
 
 Other settings can be found in `red4ext/plugins/let_there_be_flight/packed.reds` for the time being - search for `FlightSettings.SetFloat` to see all the variables used by the mod.
 
+### Restricting flight to certain vehicles
+
+**Mod Settings > Let There Be Flight > General Flight Settings > Flight Availability** decides which vehicles you are allowed to fly. No redscript needed.
+
+| Mode | What can fly |
+|---|---|
+| All Vehicles | Everything, the default and the behaviour of every earlier version. |
+| Owned Vehicles | Your summoned vehicle, plus any vehicle whose record is unlocked in your garage (bought, quest rewards, gifts). Note this goes by record, so an identical model spawned by traffic also counts. |
+| Player Vehicle Only | Only the vehicle the game marks as yours, i.e. the one you summon. |
+| Whitelist Only | Only the vehicle records you list yourself, see below. |
+
+The setting applies live, and it only gates what you can fly: every vehicle still gets its flight component, so nothing about how other vehicles look or drive changes. In a restricted mode the flight toggle does nothing on a vehicle that is not allowed, its input hint is not shown, and the flight quickhacks are not offered for it.
+
+For **Whitelist Only**, create a file called `r6/tweaks/my_flight_whitelist.yaml` (any name works, it just has to be in `r6/tweaks` and end in `.yaml`) and list one record per vehicle:
+
+```yaml
+Vehicle.v_sport2_quadra_type66_player:
+  canEnterFlight: true
+
+Vehicle.v_sport1_rayfield_caliburn_player:
+  canEnterFlight: true
+
+Vehicle.v_sportbike2_arch_jackie_player:
+  canEnterFlight: true
+```
+
+The record names are the same `Vehicle.<name>` ids used elsewhere in TweakDB; [`src/tweaks/vehicles.tweak`](https://github.com/jackhumbert/let_there_be_flight/tree/main/src/tweaks/vehicles.tweak) lists most of the player-ownable ones. The opposite flag, `flightDisabled: true`, blacklists a vehicle in every mode and is documented in [`src/tweaks/vehicleFlight.tweak`](https://github.com/jackhumbert/let_there_be_flight/tree/main/src/tweaks/vehicleFlight.tweak).
+
+### Per-vehicle configuration classes
+
 Vehicles can be customized via extending the `IFlightConfiguration` class (should not be extended directly if you don't know what you're doing - use `CarFlightConfiguration`, `SixWheelCarFlightConfiguration`, or `BikeFlightConfiguration`). As an example, the below disables flight for all vehicles except the Jen Rowley Type 66:
 
 ```swift

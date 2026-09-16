@@ -19,6 +19,7 @@ Keybindings are a separate system, covered in "Controls" below.
 
 | Setting | Default | Range | What it does | When to change it |
 |---|---|---|---|---|
+| Flight Availability | All Vehicles | All Vehicles / Owned Vehicles / Player Vehicle Only / Whitelist Only | Which vehicles you are allowed to fly. **Owned Vehicles** means your summoned vehicle plus anything unlocked in your garage (it matches by record, so an identical traffic car counts too). **Player Vehicle Only** means just the vehicle you summon. **Whitelist Only** means the vehicle records you tag yourself with `canEnterFlight: true` in an `r6/tweaks/*.yaml`, see the readme's Configuration section. Every vehicle keeps its flight component in all four modes; only the flight toggle, its input hint and the flight quickhacks are gated. Applies live. | Set it to Owned Vehicles or Whitelist Only if you want flight to be a property of your own cars instead of every car in Night City, which is the most-requested LTBF feature. |
 | Enable Auto Activation | Off | Bool | Automatically turns flight on when you get into a vehicle, if the vehicle is already above the height set below. | Turn on if you want flight to kick in automatically after a fall or a scripted drop, instead of pressing the flight toggle every time. |
 | Auto Activation Height | 3.0 | 0 to 10, step 0.5 | In-game units above the ground that triggers the auto-activation above. | Raise it if flight activates too eagerly on normal ramps or curbs; lower it if it should catch you sooner after a jump. |
 
