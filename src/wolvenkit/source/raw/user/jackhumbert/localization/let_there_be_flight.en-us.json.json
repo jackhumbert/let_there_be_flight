@@ -425,6 +425,16 @@
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Hud-Attached-To-Player",
+              "femaleVariant": "HUD attached to player (experimental)"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Hud-Attached-To-Player-Description",
+              "femaleVariant": "Spawn the flight HUD once with the rest of your HUD instead of once per vehicle. Off rebuilds the whole HUD every time you get in or out of a car, which is the enter/exit stutter and the HUD flicker. Reload a save after changing this."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Engine-Volume",
               "femaleVariant": "Engine Volume"
             },

@@ -28,6 +28,11 @@ public native class FlightSystem extends IGameSystem {
   @runtimeProperty("offset", "0xB8")
   public native let playerComponent: wref<FlightComponent>;
 
+  // Set by hudFlightController when its hud entry is spawned. With the HUD attached to the
+  // player that happens once per session instead of once per mount, so the controller has
+  // to be told which vehicle it is describing.
+  public let hud: wref<hudFlightController>;
+
   public func Setup(player: ref<PlayerPuppet>) -> Void {
     FlightLog.Info("[FlightSystem] Player updated");
     this.player = player;
@@ -45,6 +50,23 @@ public native class FlightSystem extends IGameSystem {
   public func SetPlayerComponent(component: wref<FlightComponent>) -> Void {
     FlightLog.Info("[FlightSystem] Player component set");
     this.playerComponent = component;
+  }
+
+  public func SetHud(hud: wref<hudFlightController>) -> Void {
+    this.hud = hud;
+    if IsDefined(hud) {
+      FlightLog.Info("[FlightSystem] Flight HUD controller registered");
+    } else {
+      FlightLog.Info("[FlightSystem] Flight HUD controller cleared");
+    }
+  }
+
+  // Called on every player mount and unmount so the flight HUD can follow the vehicle
+  // without being destroyed and rebuilt with it. Passing null means "no vehicle".
+  public func NotifyHudVehicleChanged(vehicle: wref<VehicleObject>) -> Void {
+    if IsDefined(this.hud) {
+      this.hud.OnFlightVehicleChanged(vehicle);
+    }
   }
 
 //   public static func Get(gameInstance: GameInstance) -> ref<FlightSystem> {

@@ -398,6 +398,7 @@ public native class FlightComponent extends GameComponent {
       // FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName());
       // (this.GetVehicle().FindComponentByName(n"cars_sport_fx") as EffectSpawnerComponent).AddEffect();
       this.sys.SetPlayerComponent(this);
+      this.sys.NotifyHudVehicleChanged(this.GetVehicle());
       this.sys.ctlr.ResetInputs();
       this.isPlayerMounted = true;
       this.SetupVehicleTPPBBListener();
@@ -463,6 +464,8 @@ public native class FlightComponent extends GameComponent {
       }
       this.sys.ctlr.ResetInputs();
       this.sys.ctlr.Disable();
+      // After the deactivation above, so a flight exit still plays its outro first.
+      this.sys.NotifyHudVehicleChanged(null);
       FlightLog.Info("[FlightComponent] OnUnmountingEvent done");
     }
   }
