@@ -52,6 +52,17 @@ public class FlightConfiguration_quadra_type66__basic_jen_rowley extends CarFlig
 }
 ```
 
+## Compatibility
+
+Known interactions with other mods, checked against the mod sources where they are public. "Reported" means Nexus user reports only, not verified here.
+
+- Dark Future: works with LTBF 0.3.18 and later. Older LTBF versions replaced `VehicleEventsTransition.HandleCameraInput` with `@replaceMethod`, which collided with the same replacement in Dark Future's `DFVehicleSleepSystem.reds` and failed redscript compilation. LTBF now wraps that method instead. If you still see a compile error naming `HandleCameraInput`, update LTBF.
+- Limited HUD: reported to work again with current versions of both mods. The Nexus description that lists it as incompatible is out of date.
+- Project E3 HUD: reported layout overlap with the flight HUD. Not verified; turn off the flight UI in Mod Settings if the two collide.
+- Night City Alive, Night City Allies, Car Modification Shop, Vehicle Navigation System, Enhanced Vehicle System, Need More Smoke FX: no public source to check and no specific conflicting function named in reports. Not verified either way.
+
+LTBF replaces these base game methods, so any other mod that also replaces one of them will fail to compile: `VehicleComponent.OnVehicleWaterEvent`, `VehicleObject.SendQuickhackCommands`, and `OnVehicleStateChanged` on `VehicleCombatContextDecisions`, `VehicleDriverCombatContextDecisions` and `VehicleDriverContextDecisions`.
+
 ## Troubleshooting
 
 To better report crashes, click on "What does this report contain?" in the crash handler window:
