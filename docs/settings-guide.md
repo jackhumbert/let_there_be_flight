@@ -28,6 +28,8 @@ Keybindings are a separate system, covered in "Controls" below.
 |---|---|---|---|---|
 | Linear Brake Factor | 1.0 | 0 to 5, step 0.1 | How much the linear brake button slows the vehicle's straight-line velocity. | Raise for a snappier stop; this is the "brake" input, not general drag (see Linear Damp Factor below). |
 | Angular Brake Factor | 1.0 | 0 to 5, step 0.1 | How much the angular brake button slows the vehicle's rotation. | Raise if the vehicle keeps spinning after you let go of the brake button. |
+| Invert Lift | Off | Bool | Flips the lift axis, so pulling the stick down (or pressing the lift-down key) climbs and pushing up descends. Applied where the controller reads the `Lift` action, so it covers the gamepad stick and the keyboard lift keys together. | Turn on if you fly with an inverted vertical axis. This replaces the `preset="invertAxis"` XML edit that used to be the only way. |
+| Gamepad Toggle Requires Hold | Off | Bool | Makes the gamepad flight toggle need a half-second hold instead of a tap. The keyboard toggle stays a tap either way. | Turn on if L3 (or whatever you rebound it to) keeps activating flight by accident while you steer. |
 
 ## Flight Physics Settings
 
@@ -41,6 +43,9 @@ Keybindings are a separate system, covered in "Controls" below.
 | Yaw Aero Factor | 0.0 | 0 to 1, step 0.05 | Same as Pitch Aero Factor, but for yaw: rotates the vehicle to face its direction of travel. Off by default. | Raise if you want the car to weathervane into the direction it is actually moving, e.g. after a sideways drift. |
 | Pitch Directionality Factor | 15.0 | 0 to 100, step 1 | How much the vehicle's pitch angle redirects its existing velocity (i.e. how much pitching up bends your current momentum upward, rather than just changing where the nose points). | Raise for flight-sim-like momentum carry-through on pitch; lower for a more hover-car feel where pitch is mostly cosmetic. |
 | Yaw Directionality Factor | 5.0 | 0 to 100, step 1 | Same idea as Pitch Directionality Factor, for yaw: how much the vehicle's yaw bends its existing velocity. | This is the "turning resistance" / "too slippery" knob multiple reporters asked about (Kaleb99, DenassaG). Raise it so turning the nose actually redirects your travel instead of sliding sideways. |
+| Yaw Damp Factor | 1.0 | 0 to 5, step 0.05 | Extra resistance on yaw alone. Angular damping is normally cut to zero while the stick is deflected and comes back when you let go; this multiplies just the yaw part of it, before Angular Damp Max clamps the result. 1.0 is the shipped behaviour. | Raise it if the vehicle keeps swinging round after you let go of yaw. Use this instead of Angular Damp Factor when pitch and roll already feel right. |
+| Sway With Yaw | 0.0 | 0 to 2, step 0.05 | Feeds yaw input into the Yaw Directionality Factor term above, so while you are actually turning, more of your existing velocity gets redirected into the new heading. 0.0 is the shipped behaviour. | The second half of the "too slippery" fix: raise it (with Yaw Directionality Factor) if the car turns its nose but keeps drifting the old way. |
+| Roll With Yaw | 0.15 | 0 to 1, step 0.01 | How far the vehicle banks into a turn. Applies to Hover & Fly, Fly, Hover and Automatic (everything that auto-levels to a target normal). | Raise for a more plane-like banked turn; set to 0 for a flat, helicopter-style turn. |
 | Detachable Thrusters | On | Bool | Whether the visual thruster attachments can detach from the vehicle (e.g. under hard impact). Declared on `IFlightConfiguration`, so a per-vehicle config can still override it in code. | Turn off if you don't want thrusters ever popping off, regardless of impact. |
 | Explosion Threshold | 0.5 | 0 to 100, step 0.05 | How hard a flying vehicle has to hit something before it explodes. Higher values take more punishment before exploding. | Raise if vehicles are exploding from minor bumps; lower for a more fragile, high-stakes flight feel. |
 
@@ -98,11 +103,12 @@ Two more only apply to Hover & Fly specifically:
 |---|---|---|---|
 | Auto Braking Factor | 3.0 | 0 to 10, step 0.1 | How much the vehicle brakes when you let off the gas. |
 | Yaw Directionality | 300.0 | 0 to 1000, step 1 | How much your velocity follows your direction (Automatic mode's own, much larger-range version of the Yaw Directionality Factor concept above). |
+| Lift Factor | 8.0 | 0.5 to 20, step 0.5 | How fast the lift input raises and lowers the hover height Automatic mode holds. Automatic used to borrow Standard mode's Lift Factor (25.0) for this; it now has its own, which is why climb is more deliberate than it used to be. |
+| Hover Factor | 40.0 | 5 to 100, step 1 | Gain on Automatic mode's whole lift force: how hard it pushes to reach and hold the target height. The minimum is above zero because at zero the vehicle gets no lift at all and simply falls. |
 
-Automatic Mode has no exposed lift factor. It hovers using the same internal
-`hoverFactor` (40.0) that Fly/Hover pull `standardModeHoverFactor` from, but that
-particular value is not wired to a `FlightModeAutomatic` field, so it cannot be
-tuned from Mod Settings today (see "Known limits").
+Raise Lift Factor if Automatic mode climbs and descends too slowly for you;
+raise Hover Factor if it sags on the way up or feels mushy holding a height, and
+lower it if it snaps to height too hard and bobs.
 
 ## Drone Mode
 
@@ -140,14 +146,18 @@ former and reuses all of these).
 
 ## Key Bindings (in Mod Settings)
 
-Mod Settings also exposes a "Key Bindings" category, but it only covers the
-**keyboard** side of the controls below; it works by pointing named,
-`overridableUI`-tagged bindings in the input XML at a different key. There is no
-equivalent for gamepad sticks or buttons (see "Known limits").
+Mod Settings also exposes a "Key Bindings" category. It works by pointing named,
+`overridableUI`-tagged bindings in the input XML at a different key. It covers
+the keyboard bindings below plus the gamepad flight toggle; the gamepad sticks
+and the other pad buttons are still XML-only (see "Known limits").
+
+Clearing a binding (unbind it in the Mod Settings key-binding row) disables that
+action, which is how you turn the gamepad flight toggle off entirely.
 
 | Setting | Default key |
 |---|---|
 | Toggle Flight | O |
+| Toggle Flight (Gamepad) | L3 (left stick click) |
 | Yaw Left / Yaw Right | A / D |
 | Pitch Forward / Pitch Backward | L / . (period) |
 | Roll Left / Roll Right | , (comma) / / (slash) |
@@ -187,7 +197,7 @@ active, except Toggle Flight itself, which works while driving normally).
 
 | Action | Input |
 |---|---|
-| Toggle Flight | **L3 (left stick click)** |
+| Toggle Flight | **L3 (left stick click)**, rebindable in Mod Settings > Key Bindings > Toggle Flight (Gamepad) |
 | Right Stick Toggle | R3 (right stick click) |
 | Flight Options | Square/X (face button) |
 | Toggle Flight UI | D-pad Up |
@@ -202,26 +212,33 @@ active, except Toggle Flight itself, which works while driving normally).
 
 Everything above is defined in
 `src/input_loader/let_there_be_flight.xml` (installed as `inputs.xml` next to the
-plugin). Keyboard bindings that are also exposed in Mod Settings' "Key Bindings"
-category can be changed there without touching the file. Everything else,
-including every gamepad stick and button, requires hand-editing the XML and
-reinstalling / restarting the game.
+plugin). Bindings exposed in Mod Settings' "Key Bindings" category can be changed
+there without touching the file: every keyboard binding in the table above, plus
+the gamepad flight toggle. The remaining gamepad buttons and both sticks still
+require hand-editing the XML and reinstalling / restarting the game.
 
-The fix multiple Nexus users have found for inverting the lift axis (aseyabal,
-and requested separately by others) is to add `preset="invertAxis"` to the
-`Flight_Lift` mapping:
+Two things that used to need an XML edit are now settings:
 
-```xml
-<mapping name="Flight_Lift" type="Axis" preset="invertAxis">
-  <button id="IK_Pad_LeftAxisY" />
-  <button id="IK_Space" val="1.0" overridableUI="vehicleFlightLiftUp" />
-  <button id="IK_LControl" val="-1.0" overridableUI="vehicleFlightLiftDown" />
-</mapping>
-```
+- **Inverting lift.** Use **Flight Control Settings > Invert Lift**. It flips the
+  lift axis where the flight controller reads it, so gamepad and keyboard invert
+  together. The old workaround, still valid if you would rather do it in the
+  file, is `preset="invertAxis"` on the `Flight_Lift` mapping (aseyabal):
 
-`invertAxis` is a base-game input preset (defined in the game's own
-`inputUserMappings.xml`) that flips both the real and "fake" (keyboard-button)
-axis directions, so this inverts lift for gamepad and keyboard/mouse together.
+  ```xml
+  <mapping name="Flight_Lift" type="Axis" preset="invertAxis">
+    <button id="IK_Pad_LeftAxisY" />
+    <button id="IK_Space" val="1.0" overridableUI="vehicleFlightLiftUp" />
+    <button id="IK_LControl" val="-1.0" overridableUI="vehicleFlightLiftDown" />
+  </mapping>
+  ```
+
+  `invertAxis` is a base-game input preset (defined in the game's own
+  `inputUserMappings.xml`) that flips both the real and "fake" (keyboard-button)
+  axis directions. The shipped XML does not use it.
+- **Moving, disabling or hold-gating the L3 flight toggle.** Rebind or clear
+  **Key Bindings > Toggle Flight (Gamepad)**, and/or turn on **Flight Control
+  Settings > Gamepad Toggle Requires Hold** so a stray stick click cannot
+  activate flight.
 
 ## Presets
 
@@ -241,6 +258,8 @@ reports.
 - Flight Physics Settings > Pitch Directionality Factor: 15.0 -> 30.0
 - Flight Control Settings > Linear Brake Factor: 1.0 -> 2.0
 - Flight Control Settings > Angular Brake Factor: 1.0 -> 2.0
+- Flight Physics Settings > Yaw Damp Factor: 1.0 -> 2.0
+- Flight Physics Settings > Sway With Yaw: 0.0 -> 0.5
 - Standard (Non-Drone) Mode > Yaw Factor: 2.5 -> 4.0
 
 ### Gamepad, less floaty
@@ -251,6 +270,8 @@ sticks feel stiff to hold.
 - Flight Physics Settings > Angular Damp Factor: 2.0 -> 3.0
 - Flight Physics Settings > Angular Damp Max: 3.5 -> 5.0
 - Flight Physics Settings > Yaw Directionality Factor: 5.0 -> 15.0
+- Flight Physics Settings > Yaw Damp Factor: 1.0 -> 1.5
+- Flight Physics Settings > Sway With Yaw: 0.0 -> 0.5
 - Standard (Non-Drone) Mode > Hover And Fly Height Dampening: 1.0 -> 2.0
 - Drone Mode > Pitch Factor: 5.0 -> 4.0
 - Drone Mode > Roll Factor: 8.0 -> 6.0
@@ -258,51 +279,42 @@ sticks feel stiff to hold.
 ## Known limits
 
 These are gaps between what users have asked for and what the settings system
-exposes today; the code half of LTBF-5 should pick these up.
+exposes today.
 
-- **L3 (gamepad flight toggle) is not rebindable or disableable in-game.** The
-  keyboard Toggle Flight binding (O) is tied to an `overridableUI="vehicleFlight"`
-  attribute that Mod Settings' Key Bindings category can repoint, but the gamepad
-  `IK_Pad_LeftThumb` binding on the same `Flight_Toggle` mapping in
-  `src/input_loader/let_there_be_flight.xml` has no `overridableUI` attribute, so
-  nothing in `FlightController.reds` can change it. Same story for R3
-  (`Flight_RightStickToggle`): no `overridableUI`, no Mod Settings entry.
-- **No gamepad stick rebinding or inversion is exposed.** Yaw/Lift (left stick)
-  and Pitch/Roll (right stick) are hardcoded to `IK_Pad_LeftAxisX/Y` and
-  `IK_Pad_RightAxisX/Y` in the input XML with no `overridableUI`. Inverting lift
-  today means hand-editing the XML with `preset="invertAxis"` (see "Controls"
-  above); there is no in-game toggle for it, matching the author's 2025-07-14
-  promise ("I'll have this exposed as an option in the next update") that has not
-  shipped yet.
-- **Automatic Mode has no exposed lift factor.** It reads an internal
-  `hoverFactor` value (`FlightSettings.SetFloat("hoverFactor", 40.0)` in
-  `src/redscript/Flight/FlightSettings.reds`) that has no `@runtimeProperty` and
-  no Mod Settings entry, unlike the near-identical Hover Factor exposed for
-  Standard mode. This is the "Automatic lift factor" the author said would be
-  exposed.
+- **R3 (right stick toggle) is still not rebindable.** The gamepad flight toggle
+  now carries `overridableUI="vehicleFlightPad"` and shows up in Mod Settings'
+  Key Bindings category, but `Flight_RightStickToggle` still has no
+  `overridableUI` and no Mod Settings entry, so R3 can only be changed in the XML.
+- **No gamepad stick rebinding is exposed.** Yaw/Lift (left stick) and
+  Pitch/Roll (right stick) are hardcoded to `IK_Pad_LeftAxisX/Y` and
+  `IK_Pad_RightAxisX/Y` in the input XML with no `overridableUI`, so they cannot
+  be moved to other axes or triggers from the menu. Inverting *lift* no longer
+  needs an XML edit (Flight Control Settings > Invert Lift); inverting pitch,
+  roll or yaw still does.
 - **Driving Direction Compensation Angle Smoothing / Speed Coef may be inert.**
   Both are declared as Mod Settings entries in `FlightSettings.reds`, but the only
   other reference to them, in `src/redscript/Extensions/vehicleTPPCameraComponent.reds`,
   is commented out. Whether they currently do anything to the TPP camera needs
   verification in code, not just documentation.
-- **A number of physics-tuning values used every frame are not exposed at all**
-  and can currently only be changed by editing `FlightSettings.reds` and
-  rebuilding: `liftFactor` (8.0, an unused-looking leftover distinct from the
-  per-mode Lift Factors above), `hoverFactor` (40.0, see Automatic Mode above),
+- **A number of physics-tuning values used every frame are still not exposed**
+  and can only be changed by editing `FlightSettings.reds` and rebuilding:
   `hoverClamp` (10.0), `collisionRecoveryDelay` / `collisionRecoveryDuration`
   (0.8 / 0.8), `defaultHoverHeight` (3.5), `hoverModeMinHoverHeight` /
   `hoverModeMaxHoverHeight` (1.0 / 7.0), `brakeOffset` (0.0), `distanceEase`
   (0.1), `normalEase` (0.3), `lookAheadMin` / `lookAheadMax` (1.0 / 10.0),
-  `fwtfCorrection` (0.0), `surgeOffset` (0.5), `swayWithYaw` (0.5), `rollWithYaw`
-  (0.15), `pitchWithLift` (0.0), `pitchWithSurge` (0.0), `yawD` (3.0, and appears
-  unused: its only read is commented out in `FlightMode_Standard.reds`), and the
-  PID tuning vectors `inputPitchPID`, `inputRollPID`, `aeroYawPID`,
-  `aeroPitchPID`, `hoverModePID`. This list is what would need
-  `@runtimeProperty` tags (and probably category/range choices) to become real
-  Mod Settings entries; it is not part of the "turning resistance" or "invert
-  lift" asks specifically, but a couple of these (`hoverClamp`, the PID vectors)
-  are plausible contributors to the general "floaty" feedback and are worth
-  considering for exposure alongside the two items above.
-- **No settings guide existed before this file.** Eight Nexus reporters asked for
-  one or for keyboard-and-mouse presets; this document and the two presets above
-  are the first pass at that.
+  `fwtfCorrection` (0.0), `surgeOffset` (0.5), `gamepadToggleHoldTime` (0.5, the
+  hold length used by Gamepad Toggle Requires Hold), `pitchWithLift` (0.0),
+  `pitchWithSurge` (0.0), `yawD` (3.0, and appears unused: its only read is
+  commented out in `FlightMode_Standard.reds`), and the PID tuning vectors
+  `inputPitchPID`, `inputRollPID`, `aeroYawPID`, `aeroPitchPID`, `hoverModePID`.
+  A couple of these (`hoverClamp`, the PID vectors) are plausible contributors to
+  the general "floaty" feedback and are worth considering next.
+- **The new options are built but unverified in game.** Invert Lift, Yaw Damp
+  Factor, Sway With Yaw, Roll With Yaw, the two Automatic Mode factors, the
+  rebindable gamepad toggle and the hold option all compile and lint, but nobody
+  has flown with them yet, and the ranges above are first guesses.
+- **The new strings need a Wolvenkit repack.** Their `UI-Settings-*` entries are
+  in `src/wolvenkit/source/raw/.../let_there_be_flight.en-us.json.json`, but the
+  built `.archive` is committed separately; until it is re-imported and repacked,
+  the new rows show raw keys in the Mod Settings menu. es-es has no entries for
+  them at all.
