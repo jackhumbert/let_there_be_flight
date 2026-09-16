@@ -89,14 +89,17 @@ public func GetResRef(const varName: script_ref<String>, opt defaultValue: ResRe
 // @addField(VehicleObject)
 // public let chassis: ref<vehicleChassisComponent>;
 
+@if(!ModuleExists("Codeware"))
 @addField(VehicleObject)
 @runtimeProperty("offset", "0x25C")
 public native let isOnGround: Bool;
 
+@if(!ModuleExists("Codeware"))
 @addField(VehicleObject)
 @runtimeProperty("offset", "0x268")
 public native let acceleration: Float;
 
+@if(!ModuleExists("Codeware"))
 @addField(VehicleObject)
 @runtimeProperty("offset", "0x26C")
 public native let deceleration: Float;

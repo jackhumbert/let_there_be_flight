@@ -1,5 +1,6 @@
+@if(!ModuleExists("Codeware"))
 @addField(inkBorder)
-native let thickness: Float;
+public native let thickness: Float;
 
 @addMethod(inkBorder)
 public func GetThickness() -> Float{

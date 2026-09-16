@@ -12,16 +12,18 @@ enum inkMaskDataSource {
 // native let textureAtlas: inkTextureAtlas;
 // @addField(inkMask)
 // native let texturePart: CName;
+@if(!ModuleExists("Codeware"))
 @addField(inkMask)
-native let dynamicTextureMask: CName;
+public native let dynamicTextureMask: CName;
 
 @addMethod(inkMask)
 func SetDynamicTextureMask(value: CName) {
     this.dynamicTextureMask = value;
 }
 
+@if(!ModuleExists("Codeware"))
 @addField(inkMask)
-native let dataSource: inkMaskDataSource;
+public native let dataSource: inkMaskDataSource;
 
 @if(!ModuleExists("Codeware"))
 @addMethod(inkMask)
@@ -55,16 +57,18 @@ public func SetNineSliceGrid(grid: inkMargin) -> Void {
 	this.nineSliceScale = grid;
 }
 
+@if(!ModuleExists("Codeware"))
 @addField(inkMask)
-native let invertMask: Bool;
+public native let invertMask: Bool;
 
 @addMethod(inkMask)
 func SetInvertMask(value: Bool) {
     this.invertMask = value;
 }
 
+@if(!ModuleExists("Codeware"))
 @addField(inkMask)
-native let maskTransparency: Float;
+public native let maskTransparency: Float;
 
 @addMethod(inkMask)
 func SetMaskTransparency(value: Float) {
