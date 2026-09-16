@@ -102,6 +102,10 @@ CClass* IFlightConfiguration::GetConfigurationClass(ent::Entity* entity) {
 
 void IFlightConfiguration::Setup(vehicle::BaseObject * vehicle) {
 
+  // do not rely on the C++ constructor running for script-derived configuration
+  // classes: an unarmed -1 is what keeps RemoveColliders off the chassis shapes
+  this->originalShapeCount = -1;
+
   this->thrusters = DynArray<Handle<IFlightThruster>>(new Memory::DefaultAllocator());
   auto onInit = GetType()->GetFunction("OnSetup");
   if (onInit) {

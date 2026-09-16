@@ -127,8 +127,13 @@ public native class FlightComponent extends GameComponent {
 
     if oneOfOurs {
       this.thrusterTensor = this.configuration.GetThrusterTensor();
-      this.configuration.RemoveColliders();
-      this.configuration.AddColliders();
+      // only rebuild the thruster colliders while we are actually flying; a
+      // parked or traffic vehicle sheds its thrusters when it is destroyed and
+      // arming the collider bookkeeping there strips the wreck's own shapes
+      if this.active {
+        this.configuration.RemoveColliders();
+        this.configuration.AddColliders();
+      }
     }
   }
 
@@ -792,14 +797,25 @@ public native class FlightComponent extends GameComponent {
     }
   }
 
+  private final func StopDestroyedAlarm() -> Void {
+    if this.isDestroyed && this.hasExploded && this.alarmIsPlaying {
+      FlightAudio.Get().Stop("vehicleDestroyed" + this.GetUniqueID());
+      this.alarmIsPlaying = false;
+    }
+  }
+
   public func Deactivate(silent: Bool) -> Void {
+    // the destroyed-vehicle alarm can be playing on a component that is not
+    // active, so it has to be stopped before the early return below
+    this.StopDestroyedAlarm();
+
+    if !this.active {
+      return;
+    }
+
     this.active = false;
     for thruster in this.configuration.thrusters {
       thruster.Stop();
-    }
-
-    if this.isDestroyed && this.hasExploded && this.alarmIsPlaying {
-        FlightAudio.Get().Stop("vehicleDestroyed" + this.GetUniqueID());
     }
 
     if !silent {
@@ -877,7 +893,10 @@ public native class FlightComponent extends GameComponent {
     this.isDestroyed = true;
     this.hasExploded = true;
     this.hasUpdate = false;
-    this.Deactivate(true);
+    this.StopDestroyedAlarm();
+    if this.active {
+      this.Deactivate(true);
+    }
   }
 
   // protected cb func OnHit(evt: ref<gameHitEvent>) -> Bool {
