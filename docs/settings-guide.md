@@ -103,7 +103,7 @@ Two more only apply to Hover & Fly specifically:
 |---|---|---|---|
 | Auto Braking Factor | 3.0 | 0 to 10, step 0.1 | How much the vehicle brakes when you let off the gas. |
 | Yaw Directionality | 300.0 | 0 to 1000, step 1 | How much your velocity follows your direction (Automatic mode's own, much larger-range version of the Yaw Directionality Factor concept above). |
-| Lift Factor | 8.0 | 0.5 to 20, step 0.5 | How fast the lift input raises and lowers the hover height Automatic mode holds. Automatic used to borrow Standard mode's Lift Factor (25.0) for this; it now has its own, which is why climb is more deliberate than it used to be. |
+| Lift Factor | 25.0 | 0.5 to 50, step 0.5 | How fast the lift input raises and lowers the hover height Automatic mode holds. Automatic used to borrow Standard mode's Lift Factor for this; it now has its own with the same default, so lower it if climbing feels too fast. |
 | Hover Factor | 40.0 | 5 to 100, step 1 | Gain on Automatic mode's whole lift force: how hard it pushes to reach and hold the target height. The minimum is above zero because at zero the vehicle gets no lift at all and simply falls. |
 
 Raise Lift Factor if Automatic mode climbs and descends too slowly for you;

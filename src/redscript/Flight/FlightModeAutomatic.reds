@@ -31,8 +31,8 @@ public class FlightModeAutomatic extends FlightModeStandard {
   @runtimeProperty("ModSettings.description", "UI-Settings-Automatic-Lift-Factor-Description")
   @runtimeProperty("ModSettings.step", "0.5")
   @runtimeProperty("ModSettings.min", "0.5")
-  @runtimeProperty("ModSettings.max", "20.0")
-  public let automaticModeLiftFactor: Float = 8.0;
+  @runtimeProperty("ModSettings.max", "50.0")
+  public let automaticModeLiftFactor: Float = 25.0;
 
   // Gain on the whole lift force in Automatic mode. It cannot go to zero: at zero the
   // vehicle gets no lift at all and simply falls.
