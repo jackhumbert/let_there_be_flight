@@ -428,8 +428,9 @@ public native class FlightComponent extends GameComponent {
     this.SetupTires();
     let wheeled = this.GetVehicle() as WheeledObject;
     // FindGround runs four synchronous raycasts; only pay for them when auto activation
-    // (off by default) can actually use the result.
-    if FlightSettings.GetInstance().autoActivationEnabled && evt.character.IsPlayer() && evt.isMounting && IsDefined(wheeled) {
+    // (off by default) can actually use the result. IsFlightAvailable() keeps auto
+    // activation on the same Flight Availability gate as the toggle and the input hint.
+    if FlightSettings.GetInstance().autoActivationEnabled && evt.character.IsPlayer() && evt.isMounting && IsDefined(wheeled) && this.GetVehicle().IsFlightAvailable() {
       if !this.FindGround(normal) || this.distance > FlightSettings.GetInstance().autoActivationHeight {
         this.Activate(true);
       }

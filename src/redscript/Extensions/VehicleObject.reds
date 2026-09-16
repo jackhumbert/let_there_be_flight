@@ -39,6 +39,21 @@ public func IsFlightDisabledByTweak() -> Bool {
   return TweakDBInterface.GetBool(tweakID, false);
 }
 
+// Per-vehicle whitelist entry: `Vehicle.<record>.canEnterFlight = true`, set by any
+// TweakXL tweak or yaml. In the default "All Vehicles" availability mode it is only an
+// opt-in for a record something else turned off; in "Whitelist Only" mode it is the whole
+// list of vehicles the player may fly.
+@addMethod(VehicleObject)
+public func IsFlightWhitelistedByTweak() -> Bool {
+  let tweakID = this.GetRecordID();
+  TDBID.Append(tweakID, t".canEnterFlight");
+  return TweakDBInterface.GetBool(tweakID, false);
+}
+
+// Whether LTBF attaches itself to this vehicle at all. The native Entity_InitializeComponents
+// hook calls this by name to decide whether to build a FlightComponent, so it must stay
+// independent of the Flight Availability setting: every vehicle, NPC and traffic included,
+// keeps its component and the setting only gates what the player can fly.
 @addMethod(VehicleObject)
 public func CanEnterFlight() -> Bool {
   if this.IsFlightDisabledByTweak() {
@@ -50,10 +65,45 @@ public func CanEnterFlight() -> Bool {
   let tweakID = this.GetRecordID();
   TDBID.Append(tweakID, t".canEnterFlight");
 
-  let thisVehicleEnabled = TweakDBInterface.GetBool(tweakID, false);
   let thisVehicleDisabled = !TweakDBInterface.GetBool(tweakID, true);
 
-  return (allVehiclesEnabled || thisVehicleEnabled) && !thisVehicleDisabled;
+  return (allVehiclesEnabled || this.IsFlightWhitelistedByTweak()) && !thisVehicleDisabled;
+}
+
+// The single gate for every player-facing flight decision: the VehicleFlight state machine
+// transition (DefaultTransition), the "activate flight" input hint
+// (InputContextTransitionEvents), auto activation on mount (FlightComponent) and the flight
+// quickhacks all go through here, so there is exactly one place that decides.
+//
+// The mode is read from Mod Settings on every call and nothing is cached, so changing it in
+// the menu takes effect immediately.
+@addMethod(VehicleObject)
+public func IsFlightAvailable() -> Bool {
+  if !this.CanEnterFlight() {
+    return false;
+  }
+
+  let availability = FlightSettings.GetInstance().flightAvailability;
+
+  // Only the vehicle the player summoned or is otherwise flagged as theirs.
+  if Equals(availability, FlightAvailability.PlayerVehicleOnly) {
+    return this.IsPlayerVehicle();
+  }
+
+  // Anything the player bought or was given, i.e. unlocked in the garage.
+  if Equals(availability, FlightAvailability.OwnedVehicles) {
+    if this.IsPlayerVehicle() {
+      return true;
+    }
+    return GameInstance.GetVehicleSystem(this.GetGame()).IsVehiclePlayerUnlocked(this.GetRecordID());
+  }
+
+  // Only records a tweak opted in with `canEnterFlight = true`.
+  if Equals(availability, FlightAvailability.WhitelistOnly) {
+    return this.IsFlightWhitelistedByTweak();
+  }
+
+  return true;
 }
 
 @addMethod(VehicleObject)

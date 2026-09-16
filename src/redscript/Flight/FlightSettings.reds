@@ -2,6 +2,17 @@ public static func GetFlightSettings() -> ref<FlightSettings> {
   return FlightSettings.GetInstance();
 }
 
+// Which vehicles the player is allowed to fly. Read live by VehicleObject.IsFlightAvailable(),
+// which is the single gate for activation, input hints, auto activation and the flight
+// quickhacks. It never changes which vehicles get a FlightComponent, so NPC and traffic
+// vehicles keep theirs in every mode.
+enum FlightAvailability {
+  AllVehicles = 0,
+  OwnedVehicles = 1,
+  PlayerVehicleOnly = 2,
+  WhitelistOnly = 3
+}
+
 public native class FlightSettings extends IScriptable {
   public native static func GetInstance() -> ref<FlightSettings>;
   public native static func GetFloat(name: String) -> Float;
@@ -11,6 +22,18 @@ public native class FlightSettings extends IScriptable {
   public native static func GetVector3(name: String) -> Vector3;
   public native static func SetVector3(name: String, x: Float, y: Float, z: Float) -> Vector3;
   public native static func DebugBreak() -> Void;
+
+  // Restricts flight to a subset of vehicles without any redscript. See the readme's
+  // Configuration section for the Whitelist Only yaml.
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Flight-Availability")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Flight-Availability-Description")
+  @runtimeProperty("ModSettings.displayValues.AllVehicles", "UI-Settings-Flight-Availability-All-Vehicles")
+  @runtimeProperty("ModSettings.displayValues.OwnedVehicles", "UI-Settings-Flight-Availability-Owned-Vehicles")
+  @runtimeProperty("ModSettings.displayValues.PlayerVehicleOnly", "UI-Settings-Flight-Availability-Player-Vehicle-Only")
+  @runtimeProperty("ModSettings.displayValues.WhitelistOnly", "UI-Settings-Flight-Availability-Whitelist-Only")
+  public let flightAvailability: FlightAvailability = FlightAvailability.AllVehicles;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")

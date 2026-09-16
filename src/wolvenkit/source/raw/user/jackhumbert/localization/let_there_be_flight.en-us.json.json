@@ -707,6 +707,36 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "Input-Hint-Flight-Toggle-Pad",
               "femaleVariant": "Toggle Flight (Gamepad)"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-Availability",
+              "femaleVariant": "Flight Availability"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-Availability-Description",
+              "femaleVariant": "Which vehicles you are allowed to fly. Restricting this does not change how vehicles look or drive, it only decides where the flight toggle, its input hint and the flight quickhacks are offered."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-Availability-All-Vehicles",
+              "femaleVariant": "All Vehicles"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-Availability-Owned-Vehicles",
+              "femaleVariant": "Owned Vehicles"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-Availability-Player-Vehicle-Only",
+              "femaleVariant": "Player Vehicle Only"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-Availability-Whitelist-Only",
+              "femaleVariant": "Whitelist Only"
             }
           ]
         }

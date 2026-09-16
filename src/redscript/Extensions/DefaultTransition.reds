@@ -1,6 +1,7 @@
 @addMethod(DefaultTransition)
 public final func CanVehicleEnterFlight(const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-  return (scriptInterface.owner as VehicleObject).CanEnterFlight();
+  let vehicle = scriptInterface.owner as VehicleObject;
+  return IsDefined(vehicle) && vehicle.IsFlightAvailable();
 }
 
 // @addMethod(DefaultTransition)
@@ -42,18 +43,16 @@ protected final func IsPlayerAllowedToEnterFlight(const scriptInterface: ref<Sta
   let fc = fs().playerComponent;
   let canActivate = IsDefined(fc) && fc.configuration.CanActivate();
 
+  // VehicleObject.IsFlightAvailable() is the single gate: it folds in the per-record
+  // flightDisabled / canEnterFlight tweaks and the Flight Availability mode.
   let vehicle = scriptInterface.owner as VehicleObject;
-  if !IsDefined(vehicle) || vehicle.IsFlightDisabledByTweak() {
+  if !IsDefined(vehicle) || !vehicle.IsFlightAvailable() {
     return false;
   }
 
-  let tweakID = vehicle.GetRecordID();
-  TDBID.Append(tweakID, TDBID.Create(".canEnterFlight"));
-  let flightEnabled = TweakDBInterface.GetBool(tweakID, true);
-
   let blockFlight = IsVehicleFlightBlockedByStatusEffect(scriptInterface);
 
-  return canActivate && flightEnabled && !blockFlight;
+  return canActivate && !blockFlight;
 }
 
 @addMethod(DefaultTransition)

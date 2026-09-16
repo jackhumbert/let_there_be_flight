@@ -6,6 +6,10 @@ public class FlightMalfunctionEffector extends Effector {
     // this.m_quickhackLevel = TweakDBInterface.GetFloat(record + t".level", 1.00);
   }
 
+  // The effectors keep using CanEnterFlight(), i.e. "does this vehicle have a flight
+  // component", not IsFlightAvailable(). Whether the quickhack is offered at all is gated on
+  // IsFlightAvailable() in Quickhacks.reds and Actions.reds; once it is running, ActionOff
+  // has to be able to shut flight down even if the availability mode changed meanwhile.
   protected func ActionOn(owner: ref<GameObject>) -> Void {
     FlightLog.Info("[FlightMalfunctionEffector] ActionOn");
     this.m_owner = owner as VehicleObject;
