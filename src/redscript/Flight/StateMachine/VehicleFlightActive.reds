@@ -1,7 +1,7 @@
 public class VehicleFlightActiveDecisions extends VehicleFlightTransition {
 
   public const func ToVehicleFlightDeactivating(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-    return scriptInterface.IsActionJustTapped(n"Flight_Toggle");
+    return this.IsFlightToggleRequested(scriptInterface);
   }
 
   public const func ToVehicleFlightDisabled(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {

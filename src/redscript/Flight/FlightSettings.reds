@@ -54,6 +54,14 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.description", "UI-Settings-Invert-Lift-Description")
   public let invertLift: Bool = false;
 
+  // When on, the gamepad flight toggle has to be held for gamepadToggleHoldTime seconds
+  // instead of tapped. The keyboard toggle stays a tap either way.
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Control-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Gamepad-Toggle-Requires-Hold")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Gamepad-Toggle-Requires-Hold-Description")
+  public let gamepadToggleRequiresHold: Bool = false;
+
   // Flight Physics Settings
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
@@ -247,6 +255,8 @@ public native class FlightSettings extends IScriptable {
     FlightSettings.SetFloat("secondCounter", 0.0);
 
     FlightSettings.SetFloat("surgeOffset", 0.5);
+
+    FlightSettings.SetFloat("gamepadToggleHoldTime", 0.5);
 
     FlightSettings.SetFloat("pitchWithLift", 0.0);
     FlightSettings.SetFloat("pitchWithSurge", 0.0);

@@ -692,6 +692,21 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Automatic-Hover-Factor-Description",
               "femaleVariant": "Gain on Automatic mode's lift force. Lower it for a softer, slower hover; raise it for a stiffer one that holds height harder."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Gamepad-Toggle-Requires-Hold",
+              "femaleVariant": "Gamepad Toggle Requires Hold"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Gamepad-Toggle-Requires-Hold-Description",
+              "femaleVariant": "Require the gamepad flight toggle to be held for half a second instead of tapped, so a stray stick click does not activate flight. The keyboard toggle stays a tap."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Flight-Toggle-Pad",
+              "femaleVariant": "Toggle Flight (Gamepad)"
             }
           ]
         }

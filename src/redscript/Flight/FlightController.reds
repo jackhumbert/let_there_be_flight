@@ -75,6 +75,14 @@ public native class FlightController extends IScriptable {
   @runtimeProperty("ModSettings.displayName", "Input-Hint-Flight-Toggle")
   public let vehicleFlight: EInputKey = EInputKey.IK_O;
 
+  // Mod Settings rewrites the mapping tagged overridableUI="vehicleFlightPad" in
+  // let_there_be_flight.xml, which is the gamepad half of Flight_Toggle. Clearing this
+  // binding is how you turn the L3 flight toggle off.
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Key-Bindings")
+  @runtimeProperty("ModSettings.displayName", "Input-Hint-Flight-Toggle-Pad")
+  public let vehicleFlightPad: EInputKey = EInputKey.IK_Pad_LeftThumb;
+
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Key-Bindings")
   @runtimeProperty("ModSettings.displayName", "Input-Hint-Yaw-Left")

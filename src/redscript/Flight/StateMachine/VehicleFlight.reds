@@ -15,6 +15,33 @@ public class VehicleFlightTransition extends DefaultTransition {
   protected func OnDetach(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Void {
   }
 
+  // Single entry point for "the player asked to toggle flight", used by both the
+  // activate and the deactivate decision.
+  //
+  // With "Gamepad Toggle Requires Hold" off, or whenever the last input came from the
+  // keyboard, this is the plain tap the mod has always used. With it on and a gamepad in
+  // hand, the button has to be held for gamepadToggleHoldTime seconds instead, which is
+  // what the L3 reporters asked for (L3 is easy to hit by accident while steering).
+  //
+  // The hold is edge-detected without any stored state: a press that started before we
+  // entered the current state always has a longer action-state time than the state time,
+  // so the press that turned flight on can never immediately turn it off again while it
+  // is still held down.
+  protected final const func IsFlightToggleRequested(const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
+    if !FlightSettings.GetInstance().gamepadToggleRequiresHold {
+      return scriptInterface.IsActionJustTapped(n"Flight_Toggle");
+    }
+    let player = scriptInterface.executionOwner as PlayerPuppet;
+    if !IsDefined(player) || player.PlayerLastUsedKBM() {
+      return scriptInterface.IsActionJustTapped(n"Flight_Toggle");
+    }
+    if scriptInterface.GetActionValue(n"Flight_Toggle") <= 0.0 {
+      return false;
+    }
+    let heldFor = scriptInterface.GetActionStateTime(n"Flight_Toggle");
+    return heldFor >= FlightSettings.GetFloat("gamepadToggleHoldTime") && heldFor < this.GetInStateTime();
+  }
+
 }
 
 public class VehicleFlightEventsTransition extends VehicleFlightTransition {
