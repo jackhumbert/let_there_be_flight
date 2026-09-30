@@ -106,9 +106,14 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityE
     return;
   }
 
+  // PlayerPuppet is a script class, so ISerializable::IsOfClass (which walks the native
+  // type chain, gamePuppet and up) never matches it; walk GetType(), the script class.
   auto playerPuppetCls = rtti->GetClass("PlayerPuppet");
-  if (playerPuppetCls && entity->IsOfClass(playerPuppetCls) && IsFlightHudEnabled(rtti) &&
-      IsFlightHudAttachedToPlayer(rtti)) {
+  bool isPlayer = false;
+  for (auto type = entity->GetType(); playerPuppetCls && type && !isPlayer; type = type->parent) {
+    isPlayer = type == playerPuppetCls;
+  }
+  if (isPlayer && IsFlightHudEnabled(rtti) && IsFlightHudAttachedToPlayer(rtti)) {
     AttachFlightHudToPlayer(rtti, entity);
   }
 
