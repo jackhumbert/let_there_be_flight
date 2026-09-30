@@ -9,7 +9,7 @@ Sibling repos with the same build/release shape and their own CLAUDE.md: `../mod
 - `src/red4ext/` - the plugin. `Main.cpp` = entry, dependency version checks, registers scripts/tweaks/archive/inputs with the other plugins. `Hooks/` = one game-function hook per file. `Utils/FlightModule.hpp` = hook registry macros.
 - `src/redscript/` - 71 `.reds` files, packed by CMake into `packed.reds` + `module.reds`.
 - `src/tweaks/` - `.tweak` (native) + `.yaml` tweaks, packed into one file each.
-- `src/wolvenkit/` - Wolvenkit project. The built `packed/archive/pc/mod/let_there_be_flight.archive` is committed; CMake just copies it. Rebuild only when the archive content changes: `python tools/pack_archive.py` imports any changed localization json (`source/raw/user/jackhumbert/localization/*.json.json`) into `source/archive/`, packs `source/archive/` with WolvenKit CLI 9.0.1 (auto-downloaded to `%LOCALAPPDATA%\Programs\WolvenKit.Console\9.0.1`, or set `WOLVENKIT_CLI`), and verifies the archive contents; `--check` only reports stale localization. For everything else the CR2W files in `source/archive/` are the source of truth (the other raw jsons are stale exports, e.g. `flight_hud.inkwidget.json` from 2022), so edit meshes/widgets in the Wolvenkit GUI and then run the script. The NuGet `wolvenkit.cli` dotnet tool is dead past 8.x; use the GitHub `WolvenKit.Console` zip.
+- `src/wolvenkit/` - Wolvenkit project. The built `packed/archive/pc/mod/let_there_be_flight.archive` is committed; CMake just copies it. Rebuild it with `python tools/pack_archive.py` (see "Rebuilding the archive").
 - `src/fmod_studio/` - FMOD project. Built banks `Build/Desktop/*.bank` are committed; CMake copies them plus `fmod.dll`/`fmodstudio.dll`.
 - `src/input_loader/let_there_be_flight.xml` - keybinds, installed as `inputs.xml`.
 - `deps/` - git submodules (see below). `deps/fmod`, `deps/PhysX_3.4`, `deps/PxShared` are NOT submodules (gitignored local SDK drops) - do not delete.
@@ -35,6 +35,23 @@ cmake --build build --target let_there_be_flight_release   # zips game_dir -> le
 - Redscript is compiled/linted against `deps/mod_settings/redscript` too (`.redscript-ide`).
 - Dead config, safe to ignore: `src/red4ext/CMakeLists.txt` and `cmake/FindCodeware.cmake` are never included (the plugin target is built by `configure_red4ext` globbing the dir); the `src/redscript/codeware` submodule in `.gitmodules` is not checked out and not needed. Nothing in the plugin includes Codeware headers.
 - `ZOLTAN_CLANG_EXE` is hardcoded in root `CMakeLists.txt` to a local zoltan build; `configure_red4ext_addresses` is commented out, so zoltan does not run in the normal build.
+
+## Rebuilding the archive (WolvenKit CLI)
+
+Agents can rebuild the archive without the Wolvenkit GUI:
+
+```
+python tools/pack_archive.py           # import changed localization, pack, verify, write packed/.../let_there_be_flight.archive
+python tools/pack_archive.py --check   # exit 1 if a localization json has not been packed yet
+```
+
+- CLI: WolvenKit.Console 9.0.1 (GitHub release zip), installed at `%LOCALAPPDATA%\Programs\WolvenKit.Console\9.0.1\WolvenKit.CLI.exe`; the script downloads it if missing, `WOLVENKIT_CLI` overrides the path. Do not use the NuGet `wolvenkit.cli` dotnet tool (`cp77tools`, stuck at 1.6.1; 8.x+ packages are not valid tools) or `%LOCALAPPDATA%\Programs\WolvenKit` (GUI, no working CLI).
+- Source of truth: the CR2W files in `src/wolvenkit/source/archive/` (45 files, byte-identical to the packed archive as of 2026-09-30). `pack` names its output after the input folder (`archive.archive`); the script renames it.
+- Localization is the only thing edited as text: change `src/wolvenkit/source/raw/user/jackhumbert/localization/let_there_be_flight.<lang>.json.json`, then run the script. It deserializes with `cr2w -d` (the `import` command silently exits 3 on these jsons) and decides staleness after a full serialize round trip, because serializing adds default fields (`primaryKey`, `maleVariant`) the raw json omits.
+- Every other raw json is a stale export and must not be imported (`flight_hud.inkwidget.json` is from 2022 and predates the packed widget). Meshes, widgets, effects: edit in the Wolvenkit GUI, save into `source/archive/`, then run the script to pack.
+- `src/wolvenkit/source` is gitignored but its files are tracked: stage changes with `git add -u <path>` (plain `git add` refuses).
+- Other handy commands: `WolvenKit.CLI unbundle <archive> -o <dir>`, `archive <archive> --list`, `cr2w -s <file> -o <dir>` (CR2W to json). `-v` takes `Minimal`/`Diagnostic` etc., not short forms.
+- After repacking, `cmake --build build && cmake --install build` to get it into the game.
 
 ## How the plugin finds game functions (what a game patch actually breaks)
 

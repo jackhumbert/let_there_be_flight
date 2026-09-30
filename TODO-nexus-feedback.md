@@ -2,7 +2,7 @@
 
 Source: Nexus Posts tabs scraped with `tools/nexus_comments.py` (comments since 2025-07, plus stickies), analyzed per mod. Full per-mod reports with quotes: `docs/nexus-feedback-2026-09/report_<modid>.md` (5208 LTBF, 4885 Mod Settings, 4583 In-World Navigation, 4575 Input Loader); raw JSON stays out of the repo (re-scrape with the tool). Game is 2.31; all four mods load on it. Items are ordered by user impact within each repo. Each item is sized for one agent; "Done when" is the acceptance test. Repos: `flight_control` (LTBF, Nexus 5208), `../mod_settings` (4885), `../in_world_navigation` (4583), `../input_loader` (4575).
 
-Conventions for agents: conventional commit prefixes (`feat:`/`fix:` reach the changelog), no em-dashes, build with `cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -G Ninja && cmake --build build`, run `python tools/check_hashes.py` after touching hooks, do not tag releases (the user tags).
+Conventions for agents: conventional commit prefixes (`feat:`/`fix:` reach the changelog), no em-dashes, build with `cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -G Ninja && cmake --build build`, run `python tools/check_hashes.py` after touching hooks, after editing localization or other archive content run `python tools/pack_archive.py` (CLAUDE.md "Rebuilding the archive"), do not tag releases (the user tags).
 
 ## mod_settings (Nexus 4885, ~150 reporters on "menu missing")
 
