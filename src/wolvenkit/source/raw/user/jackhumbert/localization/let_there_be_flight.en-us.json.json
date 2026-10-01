@@ -757,6 +757,16 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Flight-Availability-Whitelist-Only",
               "femaleVariant": "Whitelist Only"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-PhysX-Flight-Physics",
+              "femaleVariant": "PhysX Flight Physics (experimental)"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-PhysX-Flight-Physics-Description",
+              "femaleVariant": "Let the physics engine simulate flying vehicles directly, so landing, skidding along the ground and crashing behave like real contacts with surface friction. Off uses the game's own vehicle movement, which can jitter when resting on the ground. Applies the next time flight is active."
             }
           ]
         }

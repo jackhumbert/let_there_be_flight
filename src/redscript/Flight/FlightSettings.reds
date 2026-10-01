@@ -35,6 +35,16 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.displayValues.WhitelistOnly", "UI-Settings-Flight-Availability-Whitelist-Only")
   public let flightAvailability: FlightAvailability = FlightAvailability.AllVehicles;
 
+  // Read by the plugin (FlightComponent::OnUpdate) from the class default each frame. On: a
+  // flying vehicle is simulated by PhysX alone (gravity, ground contacts and surface friction
+  // solved together), see src/red4ext/Physics/ChassisContacts.cpp. Off: the game's own
+  // vehicle integrator moves it and PhysX only reports contacts once per frame.
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-PhysX-Flight-Physics")
+  @runtimeProperty("ModSettings.description", "UI-Settings-PhysX-Flight-Physics-Description")
+  public let physxFlightPhysics: Bool = false;
+
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Enable-Auto-Activation")

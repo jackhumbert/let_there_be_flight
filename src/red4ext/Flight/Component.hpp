@@ -115,6 +115,11 @@ public:
   RED4ext::Vector3 supportNormal{0.0f, 0.0f, 1.0f};
   uint32_t framesSinceSupport = 1000;
   RED4ext::Vector3 supportOffset{0.0f, 0.0f, 0.0f};
+  // PhysX-owned flight (Mod Settings > PhysX Flight Physics), see Physics/ChassisContacts.cpp
+  bool physxOwned = false;
+  RED4ext::Vector3 pendingImpulse{0.0f, 0.0f, 0.0f};
+  RED4ext::Vector3 pendingAngularImpulse{0.0f, 0.0f, 0.0f};
+  float physxFrameDt = 0.0f;
 
 private:
   friend Descriptor;

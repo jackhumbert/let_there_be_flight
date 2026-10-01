@@ -1,6 +1,8 @@
 #include "Utils/FlightModule.hpp"
 #include "Flight/Component.hpp"
 #include <RED4ext/Scripting/Natives/vehiclePhysicsData.hpp>
+#include <RED4ext/Scripting/Natives/Generated/WorldTransform.hpp>
+#include <RED4ext/Scripting/Natives/Generated/Quaternion.hpp>
 #include <cmath>
 #include <spdlog/spdlog.h>
 
@@ -68,6 +70,55 @@ Vector3 Mul(const RED4ext::Matrix &m, const Vector3 &v) {
                  m.X.Z * v.X + m.Y.Z * v.Y + m.Z.Z * v.Z);
 }
 
+// --- PhysX-owned flight -------------------------------------------------------------------
+//
+// With Mod Settings > PhysX Flight Physics on, a flying vehicle is simulated by PhysX alone:
+// gravity, chassis contacts and surface friction are solved together in the PhysX step, so
+// resting, skidding and crashing behave natively. The game has no such mode (even wrecks keep
+// the RigidBody integrator), so it is built from the three sync points:
+//   SyncFromPhysX   copy the PhysX pose and velocity into the RigidBody (not the delta)
+//   IntegrateMotion skipped, the RigidBody no longer moves the vehicle
+//   PushToPhysX     write the PhysX velocity: current + LTBF thrust impulse + gravity * dt,
+//                   instead of the velocity that chases the RigidBody pose
+// The tracking velocities in the synchronizer are kept equal to what PhysX has, so switching
+// back (flight off, or the setting off) resumes the vanilla delta sync with no jump.
+// docs/physx-flight-design.md has the reverse-engineering behind this.
+
+// vehicle::PhysXSynchronizer tracking: int state +0 (0 idle), pushed linear +0x10, angular +0x20
+constexpr size_t kTrackingState = 0x0;
+constexpr size_t kTrackingLinear = 0x10;
+constexpr size_t kTrackingAngular = 0x20;
+constexpr float kGravity = 9.81f;
+constexpr float kMaxFrameDt = 0.1f;
+
+// alignment-safe scratch for the engine's 0x20-byte ConcurrentProxyWriter
+struct alignas(16) ProxyWriterStorage {
+  uint8_t data[0x40];
+};
+
+bool ChassisIsKinematic(void *chassis) {
+  // bool vehicle::ChassisComponent::GetBodyIsKinematic() const
+  return RED4ext::IHookable::StaticHook<bool, 856298520>(chassis);
+}
+RED4ext::Vector4 ChassisLinearVelocity(void *chassis) {
+  alignas(16) RED4ext::Vector4 out;
+  // Vector4 vehicle::ChassisComponent::GetBodyLinearVelocity() const
+  RED4ext::IHookable::StaticHook<RED4ext::Vector4 *, 1665341632>(chassis, &out);
+  return out;
+}
+RED4ext::Vector4 ChassisAngularVelocity(void *chassis) {
+  alignas(16) RED4ext::Vector4 out;
+  // Vector4 vehicle::ChassisComponent::GetBodyAngularVelocity() const
+  RED4ext::IHookable::StaticHook<RED4ext::Vector4 *, 2145786159>(chassis, &out);
+  return out;
+}
+void SetTracking(void *sync, const Vector3 &linear, const Vector3 &angular) {
+  auto t = reinterpret_cast<uint8_t *>(sync);
+  *reinterpret_cast<int32_t *>(t + kTrackingState) = 0;
+  *reinterpret_cast<Vector3 *>(t + kTrackingLinear) = linear;
+  *reinterpret_cast<Vector3 *>(t + kTrackingAngular) = angular;
+}
+
 FlightComponent *GetActiveFlightComponent(RED4ext::vehicle::PhysicsData *rb) {
   if (!rb || !rb->vehicle) {
     return nullptr;
@@ -81,11 +132,37 @@ FlightComponent *GetActiveFlightComponent(RED4ext::vehicle::PhysicsData *rb) {
 // 2.31: 0x1401A56DC
 REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 547299556, SyncFromPhysX, void *self, void *chassis,
                           RED4ext::vehicle::PhysicsData *rb, float a4, float consumedDt) {
+  auto owner = GetActiveFlightComponent(rb);
+  if (owner && owner->physxOwned && chassis && !ChassisIsKinematic(chassis)) {
+    // full copy from PhysX
+    struct alignas(16) {
+      RED4ext::Vector4 position;
+      RED4ext::Quaternion orientation;
+    } pose;
+    // Transform vehicle::ChassisComponent::GetBodyTransform() const
+    RED4ext::IHookable::StaticHook<void *, 411244519>(chassis, &pose);
+    alignas(16) RED4ext::WorldTransform xform;
+    xform.Position = RED4ext::WorldPosition(pose.position);
+    xform.Orientation = pose.orientation;
+    // void vehicle::RigidBody::ApplyNewXform(WorldTransform const &)
+    RED4ext::IHookable::StaticHook<void, 3129742900>(rb, &xform);
+
+    auto lv = ChassisLinearVelocity(chassis);
+    auto av = ChassisAngularVelocity(chassis);
+    rb->velocity = Vector3(lv.X, lv.Y, lv.Z);
+    rb->angularVelocity = Vector3(av.X, av.Y, av.Z);
+    rb->force = Vector3();
+    rb->torque = Vector3();
+    SetTracking(self, rb->velocity, rb->angularVelocity);
+    owner->physxFrameDt = consumedDt;
+    return;
+  }
+
   auto v0 = rb ? rb->velocity : Vector3();
   auto w0 = rb ? rb->angularVelocity : Vector3();
   SyncFromPhysX_Original(self, chassis, rb, a4, consumedDt);
 
-  auto fc = GetActiveFlightComponent(rb);
+  auto fc = owner;
   if (!fc) {
     return;
   }
@@ -144,6 +221,10 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 547299556, SyncFromPhysX, void *self,
 REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 2021199885, RigidBody_IntegrateMotion, RED4ext::vehicle::PhysicsData *rb,
                           float deltaTime) {
   auto fc = GetActiveFlightComponent(rb);
+  if (fc && fc->physxOwned) {
+    // PhysX moves the vehicle; the pose comes back in SyncFromPhysX
+    return;
+  }
   if (fc && fc->framesSinceSupport <= kSupportFrames) {
     // Linear only, at the centre of mass. Applying the impulse at the estimated contact
     // point (with an angular part) fed back into PushToPhysX's orientation chase and rocked
@@ -160,4 +241,43 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 2021199885, RigidBody_IntegrateMotion
     }
   }
   RigidBody_IntegrateMotion_Original(rb, deltaTime);
+}
+
+// bool vehicle::PhysXSynchronizer::PushToPhysX(ChassisComponent &, RigidBody const &, float, float, float)
+// 2.31: 0x1401A4F20, once per frame after the last fixed step
+REGISTER_FLIGHT_HOOK_HASH(char __fastcall, 3628605463, PushToPhysX, void *self, void *chassis,
+                          RED4ext::vehicle::PhysicsData *rb, float a4, float a5, float a6) {
+  auto fc = GetActiveFlightComponent(rb);
+  if (!fc || !fc->physxOwned || !chassis || ChassisIsKinematic(chassis) || rb->inverseMass <= 0.0f) {
+    return PushToPhysX_Original(self, chassis, rb, a4, a5, a6);
+  }
+
+  float dt = std::fmin(std::fmax(fc->physxFrameDt, 0.0f), kMaxFrameDt);
+  auto lv = ChassisLinearVelocity(chassis);
+  auto av = ChassisAngularVelocity(chassis);
+  auto linear = Add(Vector3(lv.X, lv.Y, lv.Z), Scale(fc->pendingImpulse, rb->inverseMass));
+  linear.Z -= kGravity * dt;
+  auto angular = Add(Vector3(av.X, av.Y, av.Z), Mul(rb->invertedWorldInertiaTensor, fc->pendingAngularImpulse));
+  fc->pendingImpulse = Vector3();
+  fc->pendingAngularImpulse = Vector3();
+  if (!std::isfinite(linear.X + linear.Y + linear.Z + angular.X + angular.Y + angular.Z)) {
+    return PushToPhysX_Original(self, chassis, rb, a4, a5, a6);
+  }
+
+  ProxyWriterStorage writer;
+  // ConcurrentProxyWriter vehicle::ChassisComponent::CreateWriter() (takes the proxy lock)
+  RED4ext::IHookable::StaticHook<void *, 3550813847>(chassis, &writer);
+  // ProxyWriter &physics::ProxyWriter::Set...(..., uint32_t actor)
+  RED4ext::IHookable::StaticHook<void *, 1416501174>(&writer, &linear, 0u);
+  RED4ext::IHookable::StaticHook<void *, 1900746789>(&writer, &angular, 0u);
+  RED4ext::IHookable::StaticHook<void *, 100078185>(&writer, false, 0u);
+  // void physics::ProxyWriter::Commit()
+  RED4ext::IHookable::StaticHook<void *, 200045>(&writer);
+  // physics::ConcurrentProxyWriter::~ConcurrentProxyWriter() (releases the lock)
+  RED4ext::IHookable::StaticHook<char, 1189351231>(&writer);
+
+  rb->velocity = linear;
+  rb->angularVelocity = angular;
+  SetTracking(self, linear, angular);
+  return 1;
 }
