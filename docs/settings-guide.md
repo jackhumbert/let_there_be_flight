@@ -30,7 +30,8 @@ Keybindings are a separate system, covered in "Controls" below.
 | Linear Brake Factor | 1.0 | 0 to 5, step 0.1 | How much the linear brake button slows the vehicle's straight-line velocity. | Raise for a snappier stop; this is the "brake" input, not general drag (see Linear Damp Factor below). |
 | Angular Brake Factor | 1.0 | 0 to 5, step 0.1 | How much the angular brake button slows the vehicle's rotation. | Raise if the vehicle keeps spinning after you let go of the brake button. |
 | Invert Lift | Off | Bool | Flips the lift axis, so pulling the stick down (or pressing the lift-down key) climbs and pushing up descends. Applied where the controller reads the `Lift` action, so it covers the gamepad stick and the keyboard lift keys together. | Turn on if you fly with an inverted vertical axis. This replaces the `preset="invertAxis"` XML edit that used to be the only way. |
-| Gamepad Toggle Requires Hold | Off | Bool | Makes the gamepad flight toggle need a half-second hold instead of a tap. The keyboard toggle stays a tap either way. | Turn on if L3 (or whatever you rebound it to) keeps activating flight by accident while you steer. |
+| Gamepad Toggle Requires Hold | Off | Bool | Makes the gamepad flight toggle need a hold (length set by Gamepad Toggle Hold Time) instead of a tap. The keyboard toggle stays a tap either way. | Turn on if L3 (or whatever you rebound it to) keeps activating flight by accident while you steer. |
+| Gamepad Toggle Hold Time | 1.0 | 0.2 to 3.0 | Seconds the gamepad toggle has to be held when Gamepad Toggle Requires Hold is on. | Keep it above 0.5: vanilla autodrive is a 0.5 s hold on the same button (L3), so at 0.5 or below one hold toggles both |
 
 ## Flight Physics Settings
 
@@ -239,7 +240,9 @@ Two things that used to need an XML edit are now settings:
 - **Moving, disabling or hold-gating the L3 flight toggle.** Rebind or clear
   **Key Bindings > Toggle Flight (Gamepad)**, and/or turn on **Flight Control
   Settings > Gamepad Toggle Requires Hold** so a stray stick click cannot
-  activate flight.
+  activate flight. L3 is also vanilla autodrive (hold 0.5 s to start or stop it,
+  tap while autodriving to switch free roam / destination); flight cannot be
+  activated while autodrive is driving, so that tap no longer toggles flight too.
 
 ## Presets
 
@@ -303,8 +306,7 @@ exposes today.
   (0.8 / 0.8), `defaultHoverHeight` (3.5), `hoverModeMinHoverHeight` /
   `hoverModeMaxHoverHeight` (1.0 / 7.0), `brakeOffset` (0.0), `distanceEase`
   (0.1), `normalEase` (0.3), `lookAheadMin` / `lookAheadMax` (1.0 / 10.0),
-  `fwtfCorrection` (0.0), `surgeOffset` (0.5), `gamepadToggleHoldTime` (0.5, the
-  hold length used by Gamepad Toggle Requires Hold), `pitchWithLift` (0.0),
+  `fwtfCorrection` (0.0), `surgeOffset` (0.5), `pitchWithLift` (0.0),
   `pitchWithSurge` (0.0), `yawD` (3.0, and appears unused: its only read is
   commented out in `FlightMode_Standard.reds`), and the PID tuning vectors
   `inputPitchPID`, `inputRollPID`, `aeroYawPID`, `aeroPitchPID`, `hoverModePID`.

@@ -38,6 +38,14 @@ public func IsVehicleFlightBlockedByStatusEffect(const scriptInterface: ref<Stat
   return StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"VehicleBlockFlight");
 }
 
+// Vanilla autodrive shares L3 with Flight_Toggle: a 0.5 s hold turns autodrive on or off and,
+// while it drives, a tap switches between free roam and the destination. Without this gate
+// that tap also toggled flight, so flight cannot be activated while autodrive is driving.
+public func IsAutodriveActive(game: GameInstance) -> Bool {
+  let autodrive = GameInstance.GetScriptableSystemsContainer(game).Get(n"AutoDriveSystem") as AutoDriveSystem;
+  return IsDefined(autodrive) && autodrive.GetAutodriveEnabled();
+}
+
 @addMethod(DefaultTransition)
 protected final func IsPlayerAllowedToEnterFlight(const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
   let fc = fs().playerComponent;
@@ -50,7 +58,7 @@ protected final func IsPlayerAllowedToEnterFlight(const scriptInterface: ref<Sta
     return false;
   }
 
-  let blockFlight = IsVehicleFlightBlockedByStatusEffect(scriptInterface);
+  let blockFlight = IsVehicleFlightBlockedByStatusEffect(scriptInterface) || IsAutodriveActive(vehicle.GetGame());
 
   return canActivate && !blockFlight;
 }

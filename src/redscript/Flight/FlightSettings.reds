@@ -85,6 +85,17 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.description", "UI-Settings-Gamepad-Toggle-Requires-Hold-Description")
   public let gamepadToggleRequiresHold: Bool = false;
 
+  // Seconds the gamepad toggle has to be held when gamepadToggleRequiresHold is on. Vanilla
+  // autodrive is a 0.5 s hold on the same button, so the default stays clear of it.
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Control-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Gamepad-Toggle-Hold-Time")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Gamepad-Toggle-Hold-Time-Description")
+  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.min", "0.2")
+  @runtimeProperty("ModSettings.max", "3.0")
+  public let gamepadToggleHoldTime: Float = 1.0;
+
   // Flight Physics Settings
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
@@ -278,8 +289,6 @@ public native class FlightSettings extends IScriptable {
     FlightSettings.SetFloat("secondCounter", 0.0);
 
     FlightSettings.SetFloat("surgeOffset", 0.5);
-
-    FlightSettings.SetFloat("gamepadToggleHoldTime", 0.5);
 
     FlightSettings.SetFloat("pitchWithLift", 0.0);
     FlightSettings.SetFloat("pitchWithSurge", 0.0);

@@ -39,7 +39,7 @@ public class VehicleFlightTransition extends DefaultTransition {
       return false;
     }
     let heldFor = scriptInterface.GetActionStateTime(n"Flight_Toggle");
-    return heldFor >= FlightSettings.GetFloat("gamepadToggleHoldTime") && heldFor < this.GetInStateTime();
+    return heldFor >= FlightSettings.GetInstance().gamepadToggleHoldTime && heldFor < this.GetInStateTime();
   }
 
 }

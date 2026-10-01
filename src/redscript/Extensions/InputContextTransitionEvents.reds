@@ -26,7 +26,7 @@ protected final const func ShowVehicleDriverInputHints(stateContext: ref<StateCo
   let object: wref<GameObject>;
   VehicleComponent.GetVehicle(scriptInterface.owner.GetGame(), scriptInterface.executionOwner, object);
   let vehicle = object as VehicleObject;
-  if IsDefined(vehicle) && vehicle.IsFlightAvailable() && !IsVehicleFlightBlockedByStatusEffect(scriptInterface) {
+  if IsDefined(vehicle) && vehicle.IsFlightAvailable() && !IsVehicleFlightBlockedByStatusEffect(scriptInterface) && !IsAutodriveActive(vehicle.GetGame()) {
     this.ShowInputHint(scriptInterface, n"Flight_Toggle", n"VehicleDriver", LocKeyToString(n"Input-Hint-Enable-Flight"), inkInputHintHoldIndicationType.FromInputConfig, true, 2);
   }
 }

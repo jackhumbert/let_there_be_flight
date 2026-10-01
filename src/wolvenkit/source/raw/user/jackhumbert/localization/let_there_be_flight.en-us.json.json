@@ -711,7 +711,17 @@
             {
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Gamepad-Toggle-Requires-Hold-Description",
-              "femaleVariant": "Require the gamepad flight toggle to be held for half a second instead of tapped, so a stray stick click does not activate flight. The keyboard toggle stays a tap."
+              "femaleVariant": "Require the gamepad flight toggle to be held (see Gamepad Toggle Hold Time) instead of tapped, so a stray stick click does not activate flight. The keyboard toggle stays a tap."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Gamepad-Toggle-Hold-Time",
+              "femaleVariant": "Gamepad Toggle Hold Time"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Gamepad-Toggle-Hold-Time-Description",
+              "femaleVariant": "Seconds to hold the gamepad flight toggle when Gamepad Toggle Requires Hold is on. Vanilla autodrive is a 0.5 second hold on the same button, so keep this above 0.5 or one hold does both."
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
