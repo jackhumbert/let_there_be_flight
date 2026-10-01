@@ -767,6 +767,16 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-PhysX-Flight-Physics-Description",
               "femaleVariant": "Let the physics engine simulate flying vehicles directly, so landing, skidding along the ground and crashing behave like real contacts with surface friction. Off uses the game's own vehicle movement, which can jitter when resting on the ground. Applies the next time flight is active."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Ground-Friction",
+              "femaleVariant": "Ground Friction"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Ground-Friction-Description",
+              "femaleVariant": "How strongly a flying vehicle grips the ground when it touches or scrapes along it (PhysX Flight Physics only). 0 leaves it sliding freely; higher values stop slides and crashes faster."
             }
           ]
         }

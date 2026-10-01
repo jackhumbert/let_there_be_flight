@@ -45,6 +45,17 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.description", "UI-Settings-PhysX-Flight-Physics-Description")
   public let physxFlightPhysics: Bool = true;
 
+  // Read by the plugin each frame. Extra friction against the ground for flying vehicles
+  // (PhysX Flight Physics only), as a Coulomb coefficient on top of PhysX's own.
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Ground-Friction")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Ground-Friction-Description")
+  @runtimeProperty("ModSettings.step", "0.1")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "3.0")
+  public let groundFriction: Float = 1.0;
+
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Enable-Auto-Activation")

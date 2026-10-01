@@ -4,6 +4,9 @@
 #include <RED4ext/Scripting/Natives/vehiclePhysics.hpp>
 #include <RED4ext/Scripting/Natives/vehiclePhysicsData.hpp>
 #include <cmath>
+#include <mutex>
+#include <unordered_set>
+#include <spdlog/spdlog.h>
 
 // Material-aware scraping audio for flying vehicles sliding on their chassis.
 //
@@ -52,6 +55,16 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1399724886, NotifyContacts, RED4ext::
   }
   if (contact[kContactState] == kContactLost) {
     return;
+  }
+  // log each ground material a flying vehicle touches once, to tune per-surface friction
+  {
+    static std::mutex seenLock;
+    static std::unordered_set<uint64_t> seen;
+    auto material = *reinterpret_cast<const RED4ext::CName *>(contact + kContactMaterials + 8 * (isFirst ? 1 : 0));
+    std::lock_guard<std::mutex> _(seenLock);
+    if (seen.insert(material.hash).second) {
+      spdlog::info("[ScrapeAudio] flying vehicle touched ground material '{}'", material.ToString());
+    }
   }
   // only what the vanilla gate dropped; everything else already went through NotifyContacts
   auto physics = self->physics;

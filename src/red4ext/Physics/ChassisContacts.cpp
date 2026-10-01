@@ -92,6 +92,9 @@ constexpr float kGravity = 9.81f;
 constexpr float kMaxFrameDt = 0.1f;
 // time constant for the contact spin to fade once contacts stop changing it
 constexpr float kContactSpinDecay = 0.5f;
+// a PhysX velocity correction counts as a ground contact above this size and upward share
+constexpr float kGroundPushThreshold = 0.03f;
+constexpr float kGroundMinUp = 0.3f;
 
 // alignment-safe scratch for the engine's 0x20-byte ConcurrentProxyWriter
 struct alignas(16) ProxyWriterStorage {
@@ -161,6 +164,19 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 547299556, SyncFromPhysX, void *self,
     owner->contactSpin = Add(Scale(owner->contactSpin, decay), worldSpin);
     if (!std::isfinite(Dot(owner->contactSpin, owner->contactSpin))) {
       owner->contactSpin = Vector3();
+    }
+
+    // Likewise the linear velocity PhysX changed is the contact push: its direction is the
+    // ground normal and its size how hard the ground pushed (m/s this frame), the normal
+    // impulse per mass that Coulomb friction scales with.
+    auto writtenLinear =
+        *reinterpret_cast<const Vector3 *>(reinterpret_cast<const uint8_t *>(self) + kTrackingLinear);
+    auto push = Sub(Vector3(lv.X, lv.Y, lv.Z), writtenLinear);
+    float pushLen = std::sqrt(Dot(push, push));
+    owner->groundContact = std::isfinite(pushLen) && pushLen > kGroundPushThreshold && push.Z / pushLen > kGroundMinUp;
+    if (owner->groundContact) {
+      owner->groundNormal = Scale(push, 1.0f / pushLen);
+      owner->groundPush = pushLen;
     }
 
     rb->velocity = Vector3(lv.X, lv.Y, lv.Z);
@@ -277,6 +293,19 @@ REGISTER_FLIGHT_HOOK_HASH(char __fastcall, 3628605463, PushToPhysX, void *self, 
   auto angular = Add(Vector3(av.X, av.Y, av.Z), Mul(rb->invertedWorldInertiaTensor, fc->pendingAngularImpulse));
   fc->pendingImpulse = Vector3();
   fc->pendingAngularImpulse = Vector3();
+
+  // Extra Coulomb friction on the ground: PhysX's own friction uses the chassis material,
+  // which lets cars slide like soap. Remove up to groundFriction * normal push of the
+  // sliding speed along the ground this frame.
+  if (fc->groundContact && fc->groundFriction > 0.0f) {
+    const auto &n = fc->groundNormal;
+    auto tangent = Sub(linear, Scale(n, Dot(linear, n)));
+    float slide = std::sqrt(Dot(tangent, tangent));
+    if (slide > 0.0001f) {
+      float remove = std::fmin(slide, fc->groundFriction * fc->groundPush);
+      linear = Sub(linear, Scale(tangent, remove / slide));
+    }
+  }
   if (!std::isfinite(linear.X + linear.Y + linear.Z + angular.X + angular.Y + angular.Z)) {
     return PushToPhysX_Original(self, chassis, rb, a4, a5, a6);
   }

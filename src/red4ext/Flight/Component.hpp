@@ -123,6 +123,12 @@ public:
   // angular velocity (world) the world gave the vehicle through contacts, decaying; flight
   // damping ignores it so collisions tumble physically while inputs stay damped
   RED4ext::Vector3 contactSpin{0.0f, 0.0f, 0.0f};
+  // ground contact seen by PhysX this frame (PhysX flight physics): push direction and size
+  // (m/s), used for extra Coulomb friction; groundFriction is Mod Settings > Ground Friction
+  RED4ext::Vector3 groundNormal{0.0f, 0.0f, 1.0f};
+  float groundPush = 0.0f;
+  bool groundContact = false;
+  float groundFriction = 1.0f;
 
   RED4ext::Vector4 GetContactSpin() { return RED4ext::Vector4(contactSpin.X, contactSpin.Y, contactSpin.Z, 0.0f); }
 
