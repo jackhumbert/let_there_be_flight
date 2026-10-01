@@ -8,7 +8,8 @@
 #include <unordered_set>
 #include <spdlog/spdlog.h>
 
-// Material-aware scraping audio for flying vehicles sliding on their chassis.
+// Material-aware scraping audio, sparks and ground scratch decals for flying vehicles sliding
+// on their chassis.
 //
 // vehicle::BaseObject::NotifyContacts drops every contact whose summed pair impulse is under
 // 100 while the vehicle is awake (Physics::sleepTimer == 1.0), before any FX, scraping or
@@ -35,8 +36,9 @@ constexpr size_t kContactImpulse = 0xAC;   // float, summed over the pair's poin
 constexpr uint8_t kContactLost = 1;
 // NotifyContacts' gate: awake vehicles ignore contacts below this summed impulse
 constexpr float kVanillaImpulseGate = 100.0f;
-// vehicle::BaseObject+0x5E8: vehicle::Audio*
+// vehicle::BaseObject+0x5E8: vehicle::Audio*, +0x5D8: vehicle::FX*
 constexpr size_t kBaseObjectAudio = 0x5E8;
+constexpr size_t kBaseObjectFX = 0x5D8;
 } // namespace
 
 // void vehicle::BaseObject::NotifyContacts(physics::ContactData const &, bool, vehicle::BaseObject *)
@@ -98,4 +100,28 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1399724886, NotifyContacts, RED4ext::
   RED4ext::IHookable::StaticHook<void, 2085232259>(audio, &position, &noNormal,
                                                     static_cast<const RED4ext::vehicle::BaseObject *>(nullptr), speed,
                                                     material);
+
+  // Sparks and ground scratch decals, through the vehicle's own fxCollision table (material ->
+  // impact/scratch particles and decals). Called once per frame per contact this keeps the
+  // looping scratch effects alive (FX::RetrievePreviousScratch matches them by position and
+  // material); FX::UpdateVehicleData breaks the loops that were not renewed this frame.
+  auto fx = *reinterpret_cast<void *const *>(reinterpret_cast<const uint8_t *>(self) + kBaseObjectFX);
+  if (fx && speed > 0.0001f) {
+    // contact point in the vehicle's local frame, from the rigid body pose
+    const auto &xform = self->physicsData->currentTransform;
+    float px = position.X - static_cast<float>(xform.Position.x.Bits) / 131072.0f;
+    float py = position.Y - static_cast<float>(xform.Position.y.Bits) / 131072.0f;
+    float pz = position.Z - static_cast<float>(xform.Position.z.Bits) / 131072.0f;
+    const auto &q = xform.Orientation;
+    // rotate by the conjugate quaternion: v' = v + 2w(-u x v) + 2(-u x (-u x v)), u = (i, j, k)
+    float ux = -q.i, uy = -q.j, uz = -q.k, w = q.r;
+    float cx = uy * pz - uz * py, cy = uz * px - ux * pz, cz = ux * py - uy * px;
+    RED4ext::Vector3 localPos(px + 2.0f * (w * cx + uy * cz - uz * cy), py + 2.0f * (w * cy + uz * cx - ux * cz),
+                              pz + 2.0f * (w * cz + ux * cy - uy * cx));
+    RED4ext::Vector3 slideDir(-tx / speed, -ty / speed, -tz / speed);
+    float deltaV = 0.0f; // no per-frame impact burst, scratches only
+    // void vehicle::FX::NotifyCollision(Vector3 const &localPos, Vector3 const &worldPos, Vector3 const &normal,
+    //                                   Vector3 const &slideDir, float deltaV, float slideSpeed, CName material)
+    RED4ext::IHookable::StaticHook<void, 3095401716>(fx, &localPos, &position, &n, &slideDir, deltaV, speed, material);
+  }
 }
