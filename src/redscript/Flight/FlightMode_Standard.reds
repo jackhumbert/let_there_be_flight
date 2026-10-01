@@ -129,7 +129,8 @@ public abstract class FlightModeStandard extends FlightMode {
     // yawCorrection += FlightSettings.GetFloat("yawD") * changeAngle / timeDelta;
 
     let velocityDamp: Vector4 = this.component.linearBrake * FlightSettings.GetInstance().brakeFactorLinear * this.component.stats.s_brakingFrictionFactor * this.component.stats.d_localVelocity;
-    let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetInstance().brakeFactorAngular * this.component.stats.s_brakingFrictionFactor;
+    // Angular brake damping lives in FlightMode.ApplyPhysics only (it used to be applied here
+    // as well, which doubled it and pushed the brake past the stability limit).
     // let velocityDamp: Vector4; 
     // let angularDamp: Vector4;
     
@@ -157,11 +158,11 @@ public abstract class FlightModeStandard extends FlightMode {
     this.force -= velocityDamp;
 
     // pitch correction
-    this.torque.X = -(pitchCorrection * (1.0 - this.component.angularBrake) + angularDamp.X);
+    this.torque.X = -(pitchCorrection * (1.0 - this.component.angularBrake));
     // roll correction
-    this.torque.Y = (rollCorrection * (1.0 - this.component.angularBrake) - angularDamp.Y);
+    this.torque.Y = (rollCorrection * (1.0 - this.component.angularBrake));
     // yaw correction
-    this.torque.Z = -((this.component.yaw - (rollDegOffInput * pitchDegOffInput / 1800.0)) * this.standardModeYawFactor + angularDamp.Z );
+    this.torque.Z = -((this.component.yaw - (rollDegOffInput * pitchDegOffInput / 1800.0)) * this.standardModeYawFactor);
     // rotational brake
     // torque = torque + (angularDamp);
 

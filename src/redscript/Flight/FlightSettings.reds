@@ -290,6 +290,10 @@ public native class FlightSettings extends IScriptable {
 
     FlightSettings.SetFloat("surgeOffset", 0.5);
 
+    // angular damping stability cap, see FlightMode.CapDamping
+    FlightSettings.SetFloat("dampStabilityK", 0.19);
+    FlightSettings.SetFloat("dampMaxPerFrame", 1.0);
+
     FlightSettings.SetFloat("pitchWithLift", 0.0);
     FlightSettings.SetFloat("pitchWithSurge", 0.0);
 

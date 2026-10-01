@@ -32,6 +32,24 @@ public abstract class FlightMode {
 
   public func Update(timeDelta: Float) -> Void;
 
+  // Limits one axis of the angular damping torque so it cannot remove more than
+  // dampMaxPerFrame of that axis' angular velocity in a single frame.
+  protected final func CapDamping(damp: Float, angularVelocity: Float, tensor: Float, inertia: Float) -> Float {
+    if AbsF(angularVelocity) < 0.0001 || inertia <= 0.0 || tensor <= 0.0 {
+      return damp;
+    }
+    let response = FlightSettings.GetFloat("dampStabilityK") * this.component.stats.s_mass * tensor / inertia;
+    if response <= 0.0 {
+      return damp;
+    }
+    let maxGain = FlightSettings.GetFloat("dampMaxPerFrame") / response;
+    let gain = damp / angularVelocity;
+    if gain > maxGain {
+      return angularVelocity * maxGain;
+    }
+    return damp;
+  }
+
   public func ApplyPhysics(timeDelta: Float) -> Void {
     let fs =  FlightSettings.GetInstance();
     
@@ -67,6 +85,15 @@ public abstract class FlightMode {
     // this.dampAccVector.X -= timeDelta / 0.200;
     // this.dampAccVector.Y -= timeDelta / 0.200;
     // this.dampAccVector.Z -= timeDelta / 0.200;
+
+    // Damping is a torque proportional to angular velocity, applied once per frame. The
+    // engine removes roughly k = dampStabilityK * gain * mass * thrusterTensor / inertia of
+    // the angular velocity per frame (calibrated 2026-09-30 on a Shion MZ1 from brake
+    // telemetry; independent of frame time). k > 1 overshoots and k >= 2 diverges, which
+    // was the front-to-back twitch when braking. Cap each axis at k = dampMaxPerFrame.
+    angularDamp.X = this.CapDamping(angularDamp.X, this.component.stats.d_angularVelocity.X, this.component.thrusterTensor.X, this.component.stats.s_momentOfInertia.X);
+    angularDamp.Y = this.CapDamping(angularDamp.Y, this.component.stats.d_angularVelocity.Y, MaxF(this.component.thrusterTensor.Y, 1.0), this.component.stats.s_momentOfInertia.Y);
+    angularDamp.Z = this.CapDamping(angularDamp.Z, this.component.stats.d_angularVelocity.Z, this.component.thrusterTensor.Z, this.component.stats.s_momentOfInertia.Z);
 
     // clamp the dampening
     if Vector4.Length(angularDamp) > fs.generalDampFactorAngularMax {
