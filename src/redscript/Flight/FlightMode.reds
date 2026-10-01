@@ -55,7 +55,11 @@ public abstract class FlightMode {
     
     let velocityDamp: Vector4; // = this.component.stats.d_speed * this.component.stats.d_localVelocity * fs.generalDampFactorLinear * this.component.stats.s_airResistanceFactor;
     // let angularDamp: Vector4 = this.component.stats.d_angularVelocity * fs.generalDampFactorAngular;
-    let angularDamp: Vector4 = this.component.stats.d_angularVelocity * (fs.generalDampFactorAngular + this.component.angularBrake * fs.brakeFactorAngular * this.component.stats.s_brakingFrictionFactor);
+    // Damp only the rotation that did not come from the world: with PhysX flight physics the
+    // plugin measures how much spin contacts (ground, walls, impacts) gave the vehicle, so a
+    // tip-over or crash tumbles physically while inputs and free flight stay damped.
+    let spin = this.component.stats.d_angularVelocity - Quaternion.Conjugate(this.component.stats.d_orientation) * this.component.GetContactSpin();
+    let angularDamp: Vector4 = spin * (fs.generalDampFactorAngular + this.component.angularBrake * fs.brakeFactorAngular * this.component.stats.s_brakingFrictionFactor);
 
     // angularDamp += this.component.stats.d_angularAcceleration;
     
@@ -91,9 +95,9 @@ public abstract class FlightMode {
     // the angular velocity per frame (calibrated 2026-09-30 on a Shion MZ1 from brake
     // telemetry; independent of frame time). k > 1 overshoots and k >= 2 diverges, which
     // was the front-to-back twitch when braking. Cap each axis at k = dampMaxPerFrame.
-    angularDamp.X = this.CapDamping(angularDamp.X, this.component.stats.d_angularVelocity.X, this.component.thrusterTensor.X, this.component.stats.s_momentOfInertia.X);
-    angularDamp.Y = this.CapDamping(angularDamp.Y, this.component.stats.d_angularVelocity.Y, MaxF(this.component.thrusterTensor.Y, 1.0), this.component.stats.s_momentOfInertia.Y);
-    angularDamp.Z = this.CapDamping(angularDamp.Z, this.component.stats.d_angularVelocity.Z, this.component.thrusterTensor.Z, this.component.stats.s_momentOfInertia.Z);
+    angularDamp.X = this.CapDamping(angularDamp.X, spin.X, this.component.thrusterTensor.X, this.component.stats.s_momentOfInertia.X);
+    angularDamp.Y = this.CapDamping(angularDamp.Y, spin.Y, MaxF(this.component.thrusterTensor.Y, 1.0), this.component.stats.s_momentOfInertia.Y);
+    angularDamp.Z = this.CapDamping(angularDamp.Z, spin.Z, this.component.thrusterTensor.Z, this.component.stats.s_momentOfInertia.Z);
 
     // clamp the dampening
     if Vector4.Length(angularDamp) > fs.generalDampFactorAngularMax {

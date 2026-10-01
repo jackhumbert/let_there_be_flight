@@ -90,6 +90,8 @@ constexpr size_t kTrackingLinear = 0x10;
 constexpr size_t kTrackingAngular = 0x20;
 constexpr float kGravity = 9.81f;
 constexpr float kMaxFrameDt = 0.1f;
+// time constant for the contact spin to fade once contacts stop changing it
+constexpr float kContactSpinDecay = 0.5f;
 
 // alignment-safe scratch for the engine's 0x20-byte ConcurrentProxyWriter
 struct alignas(16) ProxyWriterStorage {
@@ -149,6 +151,18 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 547299556, SyncFromPhysX, void *self,
 
     auto lv = ChassisLinearVelocity(chassis);
     auto av = ChassisAngularVelocity(chassis);
+
+    // Inside the PhysX step only contacts change the spin, so what PhysX reports minus what
+    // PushToPhysX wrote last frame is the spin the world gave the vehicle. Accumulate it with
+    // a decay; FlightMode.ApplyPhysics leaves that part undamped.
+    auto written = *reinterpret_cast<const Vector3 *>(reinterpret_cast<const uint8_t *>(self) + kTrackingAngular);
+    auto worldSpin = Sub(Vector3(av.X, av.Y, av.Z), written);
+    float decay = std::exp(-std::fmax(consumedDt, 0.0f) / kContactSpinDecay);
+    owner->contactSpin = Add(Scale(owner->contactSpin, decay), worldSpin);
+    if (!std::isfinite(Dot(owner->contactSpin, owner->contactSpin))) {
+      owner->contactSpin = Vector3();
+    }
+
     rb->velocity = Vector3(lv.X, lv.Y, lv.Z);
     rb->angularVelocity = Vector3(av.X, av.Y, av.Z);
     rb->force = Vector3();
@@ -158,6 +172,9 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 547299556, SyncFromPhysX, void *self,
     return;
   }
 
+  if (owner) {
+    owner->contactSpin = Vector3();
+  }
   auto v0 = rb ? rb->velocity : Vector3();
   auto w0 = rb ? rb->angularVelocity : Vector3();
   SyncFromPhysX_Original(self, chassis, rb, a4, consumedDt);

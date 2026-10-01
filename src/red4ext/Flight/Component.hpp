@@ -120,12 +120,18 @@ public:
   RED4ext::Vector3 pendingImpulse{0.0f, 0.0f, 0.0f};
   RED4ext::Vector3 pendingAngularImpulse{0.0f, 0.0f, 0.0f};
   float physxFrameDt = 0.0f;
+  // angular velocity (world) the world gave the vehicle through contacts, decaying; flight
+  // damping ignores it so collisions tumble physically while inputs stay damped
+  RED4ext::Vector3 contactSpin{0.0f, 0.0f, 0.0f};
+
+  RED4ext::Vector4 GetContactSpin() { return RED4ext::Vector4(contactSpin.X, contactSpin.Y, contactSpin.Z, 0.0f); }
 
 private:
   friend Descriptor;
 
   static void OnDescribe(Descriptor *aType, RED4ext::CRTTISystem *) {
     aType->AddFunction<&FlightComponent::ChaseTarget>("ChaseTarget");
+    aType->AddFunction<&FlightComponent::GetContactSpin>("GetContactSpin");
   }
 };
 RED4EXT_ASSERT_OFFSET(FlightComponent, sys, 0xA8);

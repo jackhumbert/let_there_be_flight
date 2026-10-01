@@ -45,6 +45,9 @@ public native class FlightComponent extends GameComponent {
   public let explosionThreshold: Float = 0.5;
 
   public native func ChaseTarget(target: wref<GameObject>) -> Void;
+  // world-space angular velocity contacts gave the vehicle (PhysX flight physics only),
+  // decaying over ~0.5 s; see FlightMode.ApplyPhysics
+  public native func GetContactSpin() -> Vector4;
   // public native func ChaseTarget() -> Void;
 
   // private let helper: ref<vehicleFlightHelper>;
