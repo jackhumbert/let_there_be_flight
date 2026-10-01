@@ -95,7 +95,7 @@ void FlightComponent::OnUpdate(float deltaTime) {
     // float delta = deltaTime;
     // args.emplace_back(CRTTISystem::Get()->GetType("Float"), &delta);
     ExecuteFunction(this, this->nativeType->GetFunction("OnUpdate"), nullptr, deltaTime);
-    this->physxOwned = this->active && GetFlightSettingsBool(rtti, "physxFlightPhysics", false);
+    this->physxOwned = this->active && GetFlightSettingsBool(rtti, "physxFlightPhysics", true);
     if (this->physxOwned) {
       // applied straight to the PhysX body in the PushToPhysX hook
       this->pendingImpulse += this->force.AsVector3();

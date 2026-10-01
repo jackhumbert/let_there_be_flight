@@ -43,7 +43,7 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-PhysX-Flight-Physics")
   @runtimeProperty("ModSettings.description", "UI-Settings-PhysX-Flight-Physics-Description")
-  public let physxFlightPhysics: Bool = false;
+  public let physxFlightPhysics: Bool = true;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")
