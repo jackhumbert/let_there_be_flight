@@ -54,6 +54,22 @@ python tools/pack_archive.py --check   # exit 1 if a localization json has not b
 - Other handy commands: `WolvenKit.CLI unbundle <archive> -o <dir>`, `archive <archive> --list`, `cr2w -s <file> -o <dir>` (CR2W to json). `-v` takes `Minimal`/`Diagnostic` etc., not short forms.
 - After repacking, `cmake --build build && cmake --install build` to get it into the game.
 
+## Running Lua in the live game (CET bridge)
+
+`tools/cet.py` runs Lua inside the running game through a small CET mod (`tools/cet_bridge/init.lua`, installed as `bin/x64/plugins/cyber_engine_tweaks/mods/claude_bridge/`). CET's sandbox has no sockets, so the transport is `request.txt` / `response.txt` in the mod folder, polled every 0.1 s on the game's main thread.
+
+```
+python tools/cet.py install                       # copy the mod into the game (then restart, or CET overlay > Reload all mods)
+python tools/cet.py run "Game.GetPlayer()"        # expression -> its value
+python tools/cet.py run 'print(x); return y, z'   # chunk; print() output is captured; exit code 1 on a Lua error
+python tools/cet.py mcp                           # stdio MCP server with a `cet_lua` tool
+```
+
+- MCP: add `"cet": {"type": "stdio", "command": "python", "args": ["tools/cet.py", "mcp"]}` to `.mcp.json` (gitignored, local) and restart Claude Code.
+- CET's sandbox has no `load`; the bridge uses `loadstring` (LuaJIT, Lua 5.1: no `table.pack`/`table.unpack`).
+- Do not `GameDump()` raw struct returns (e.g. the `Matrix` from `VehicleObject.GetInertiaTensor()`); it crashed CET 1.37.1. Read fields from redscript and log them instead.
+- Known CET 1.37.1 crash on quit after any CET mod reload (hot reload or Reload all mods): access violation at `cyber_engine_tweaks+0xac37`. Harmless (only on exit), not LTBF.
+
 ## How the plugin finds game functions (what a game patch actually breaks)
 
 - Almost every hook is `REGISTER_FLIGHT_HOOK_HASH(ret, <hash>, Name, args...)` in `src/red4ext/Hooks/*.cpp`. The hash is a RED4ext universal address hash resolved at runtime by `RED4ext::UniversalRelocBase::Resolve`, i.e. by the installed RED4ext's address database for the running game version. `UniversalRelocFunc<...>(hash)` is used the same way for calls.
