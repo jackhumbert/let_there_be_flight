@@ -302,7 +302,7 @@ REGISTER_FLIGHT_HOOK_HASH(char __fastcall, 3628605463, PushToPhysX, void *self, 
     auto tangent = Sub(linear, Scale(n, Dot(linear, n)));
     float slide = std::sqrt(Dot(tangent, tangent));
     if (slide > 0.0001f) {
-      float remove = std::fmin(slide, fc->groundFriction * fc->groundPush);
+      float remove = std::fmin(slide, fc->groundFriction * fc->groundMaterialFriction * fc->groundPush);
       linear = Sub(linear, Scale(tangent, remove / slide));
     }
   }

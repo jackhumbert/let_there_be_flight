@@ -4,7 +4,11 @@
 #include <RED4ext/Scripting/Natives/vehiclePhysics.hpp>
 #include <RED4ext/Scripting/Natives/vehiclePhysicsData.hpp>
 #include <cmath>
+#include <atomic>
+#include <chrono>
 #include <mutex>
+#include <string>
+#include <unordered_map>
 #include <unordered_set>
 #include <spdlog/spdlog.h>
 
@@ -27,6 +31,13 @@
 // stop for scrapingMaxCollisionCooldown.
 
 namespace {
+// diagnostics (temporary), see FX_NotifyCollision below
+thread_local bool tFromLTBF = false;
+std::atomic<uint32_t> gVanillaCalls{0}, gLTBFCalls{0};
+std::atomic<int64_t> gLastLog{0};
+}
+
+namespace {
 // physics::ContactData (0xB8), filled per PxContactPair by the simulation event callback
 constexpr size_t kContactPosition = 0x80; // Vector3, max-impulse point
 constexpr size_t kContactNormal = 0x8C;   // Vector3, flipped when the vehicle is shape 1
@@ -34,6 +45,42 @@ constexpr size_t kContactMaterials = 0x98; // CName[2], one per shape
 constexpr size_t kContactState = 0x78;     // 0 found, 2 persists, 1 lost
 constexpr size_t kContactImpulse = 0xAC;   // float, summed over the pair's points
 constexpr uint8_t kContactLost = 1;
+// Ground friction multiplier per physics material (on top of Mod Settings > Ground Friction).
+// Names are the .physmat CNames seen on contacts in 2.31; matched by prefix so variants like
+// metal_painted / metal_car share "metal". Unknown materials get kUnknownFriction.
+struct MaterialFrictionEntry {
+  const char *prefix;
+  float friction;
+};
+constexpr MaterialFrictionEntry kMaterialFriction[] = {
+    {"asphalt", 1.0f},   {"concrete", 1.0f},  {"stone", 1.0f},   {"default_material", 0.9f},
+    {"dirt", 0.8f},      {"sand", 0.7f},      {"wood", 0.7f},    {"trash", 0.6f},
+    {"cardboard", 0.6f}, {"upholstery", 0.6f}, {"metal", 0.5f},  {"plastic", 0.5f},
+    {"character", 0.4f}, {"glass", 0.3f},
+};
+constexpr float kUnknownFriction = 0.8f;
+
+float MaterialFriction(RED4ext::CName material) {
+  static std::mutex lock;
+  static std::unordered_map<uint64_t, float> cache;
+  std::lock_guard<std::mutex> _(lock);
+  auto it = cache.find(material.hash);
+  if (it != cache.end()) {
+    return it->second;
+  }
+  std::string name = material.ToString();
+  float friction = kUnknownFriction;
+  for (const auto &entry : kMaterialFriction) {
+    if (name.rfind(entry.prefix, 0) == 0) {
+      friction = entry.friction;
+      break;
+    }
+  }
+  cache.emplace(material.hash, friction);
+  spdlog::info("[ScrapeAudio] flying vehicle touched ground material '{}' (friction x{})", name, friction);
+  return friction;
+}
+
 // NotifyContacts' gate: awake vehicles ignore contacts below this summed impulse
 constexpr float kVanillaImpulseGate = 100.0f;
 // vehicle::BaseObject+0x5E8: vehicle::Audio*, +0x5D8: vehicle::FX*
@@ -58,15 +105,10 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1399724886, NotifyContacts, RED4ext::
   if (contact[kContactState] == kContactLost) {
     return;
   }
-  // log each ground material a flying vehicle touches once, to tune per-surface friction
+  // per-material ground friction (and a one-time log line per new material)
   {
-    static std::mutex seenLock;
-    static std::unordered_set<uint64_t> seen;
     auto material = *reinterpret_cast<const RED4ext::CName *>(contact + kContactMaterials + 8 * (isFirst ? 1 : 0));
-    std::lock_guard<std::mutex> _(seenLock);
-    if (seen.insert(material.hash).second) {
-      spdlog::info("[ScrapeAudio] flying vehicle touched ground material '{}'", material.ToString());
-    }
+    fc->groundMaterialFriction = MaterialFriction(material);
   }
   // only what the vanilla gate dropped; everything else already went through NotifyContacts
   auto physics = self->physics;
@@ -122,6 +164,29 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1399724886, NotifyContacts, RED4ext::
     float deltaV = 0.0f; // no per-frame impact burst, scratches only
     // void vehicle::FX::NotifyCollision(Vector3 const &localPos, Vector3 const &worldPos, Vector3 const &normal,
     //                                   Vector3 const &slideDir, float deltaV, float slideSpeed, CName material)
+    tFromLTBF = true;
     RED4ext::IHookable::StaticHook<void, 3095401716>(fx, &localPos, &position, &n, &slideDir, deltaV, speed, material);
+    tFromLTBF = false;
   }
+}
+
+// --- diagnostics (temporary): are scratch effects being requested, and with what? --------
+
+// void vehicle::FX::NotifyCollision(Vector3 const &localPos, Vector3 const &worldPos, Vector3 const &normal,
+//                                   Vector3 const &slideDir, float deltaV, float slideSpeed, CName material)
+// 2.31: 0x140108294
+REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3095401716, FX_NotifyCollision, uint8_t *self, RED4ext::Vector3 *localPos,
+                          RED4ext::Vector3 *worldPos, RED4ext::Vector3 *normal, RED4ext::Vector3 *slideDir, float deltaV,
+                          float slideSpeed, RED4ext::CName material) {
+  (tFromLTBF ? gLTBFCalls : gVanillaCalls)++;
+  auto now = std::chrono::steady_clock::now().time_since_epoch().count();
+  auto last = gLastLog.load();
+  if (now - last > 2'000'000'000LL && gLastLog.compare_exchange_strong(last, now)) {
+    auto params = self ? *reinterpret_cast<float *const *>(self + 0xA8) : nullptr;
+    spdlog::info("[ScrapeFX] NotifyCollision calls in 2 s: vanilla {} ltbf {}; last deltaV {:.2f} slide {:.2f} '{}'; "
+                 "thresholds impact {:.2f} scratch {:.2f} reuse {:.2f}",
+                 gVanillaCalls.exchange(0), gLTBFCalls.exchange(0), deltaV, slideSpeed, material.ToString(),
+                 params ? params[1] : -1.0f, params ? params[2] : -1.0f, params ? params[6] : -1.0f);
+  }
+  FX_NotifyCollision_Original(self, localPos, worldPos, normal, slideDir, deltaV, slideSpeed, material);
 }

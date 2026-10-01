@@ -128,7 +128,9 @@ public:
   RED4ext::Vector3 groundNormal{0.0f, 0.0f, 1.0f};
   float groundPush = 0.0f;
   bool groundContact = false;
-  float groundFriction = 1.0f;
+  float groundFriction = 0.1f;
+  // friction multiplier of the last ground material touched, see Physics/ScrapeAudio.cpp
+  float groundMaterialFriction = 1.0f;
 
   RED4ext::Vector4 GetContactSpin() { return RED4ext::Vector4(contactSpin.X, contactSpin.Y, contactSpin.Z, 0.0f); }
 
