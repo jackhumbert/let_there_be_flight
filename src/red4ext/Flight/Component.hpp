@@ -114,7 +114,7 @@ public:
   // chassis contact support, see Physics/ChassisContacts.cpp
   RED4ext::Vector3 supportNormal{0.0f, 0.0f, 1.0f};
   uint32_t framesSinceSupport = 1000;
-  bool supportSettled = false;
+  RED4ext::Vector3 supportOffset{0.0f, 0.0f, 0.0f};
 
 private:
   friend Descriptor;

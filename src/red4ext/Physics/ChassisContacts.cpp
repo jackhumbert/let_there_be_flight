@@ -4,43 +4,64 @@
 #include <cmath>
 #include <spdlog/spdlog.h>
 
-// Chassis contact support for flying vehicles.
+// Chassis contact handling for flying vehicles.
 //
 // Vehicles integrate their own rigid body (vehicle::RigidBody) at a fixed 60 Hz: every step
 // applies gravity and solves *wheel* contacts only, then integrates the pose. PhysX resolves
 // chassis contacts asynchronously and the result only comes back once per frame, in
 // PhysXSynchronizer::SyncFromPhysX, as a velocity impulse (PhysX velocity minus the velocity
-// that was pushed to it). Between those, nothing constrains the chassis, so a vehicle resting
-// on its body (in flight its wheels do not hold it up: a landed drone, a car on its roof or a
-// curb) sinks by gravity every step, gets pushed back out once per frame, keeps a phantom
-// downward velocity of about g*dt and visibly jitters.
+// that was pushed to it). In flight the wheels do not hold the vehicle up, so a vehicle on its
+// body (a landed drone, a car on its roof, skidding along the ground) sank by gravity every
+// step, was pushed back out once per frame and jittered; scraping over mesh seams could also
+// return a large depenetration impulse that launched it.
 //
-// SyncFromPhysX's velocity change is the contact correction; its upward-pointing part,
-// smoothed over frames, is the support normal. While PhysX keeps reporting support, each fixed step clamps the velocity into that
-// surface to a small creep instead of letting gravity accumulate. The creep keeps the contact
-// (and therefore the signal) alive; once PhysX stops pushing back (driven off a ledge, tipped
-// over an edge) the support lapses after a few frames and the vehicle falls normally.
-// See docs/drone-ground-jitter-analysis.md for the call order this relies on.
+// Two fixes, both only while flight is active:
+// 1. SyncFromPhysX: the correction along its own direction is limited to the approach speed
+//    plus a small bounce, so a contact can stop the vehicle but not launch it.
+// 2. The correction is also an impulse J applied at the contact point r: J = m * dv and
+//    I * dw = r x J, so r (perpendicular to J) = (J x I*dw) / |J|^2. That gives a smoothed
+//    support normal and contact offset. Every fixed step (RigidBody::IntegrateMotion), the
+//    contact point's velocity v + w x r into the surface is limited to a small creep by an
+//    impulse at r, which changes both v and w like a real contact: resting stays put,
+//    skidding slides freely, a corner touching down pivots, and once PhysX stops reporting
+//    the contact (off a ledge) it lapses and the vehicle falls normally.
+// See docs/drone-ground-jitter-analysis.md for the engine call order this relies on.
 
 namespace {
+using RED4ext::Vector3;
+
 // velocity change from SyncFromPhysX below this is not treated as a contact
 constexpr float kSupportThreshold = 0.03f;
 // frames a support normal stays valid without PhysX reporting it again
 constexpr uint32_t kSupportFrames = 3;
-// allowed speed into a supporting surface, keeps PhysX reporting the contact
+// allowed speed of the contact point into the surface, keeps PhysX reporting the contact
 constexpr float kCreepSpeed = 0.05f;
-// a contact correction only counts as support if it points at least this much up: the
-// correction also carries friction impulses in arbitrary horizontal directions
+// a correction only counts as support if it points at least this much up: corrections also
+// carry friction impulses in arbitrary horizontal directions
 constexpr float kMinSupportUp = 0.3f;
-// per-frame blend of a new correction direction into the cached normal; friction noise
-// averages out while slopes still converge to their real normal
+// per-frame blend of a new correction into the cached normal and contact offset
 constexpr float kNormalBlend = 0.1f;
-// only a settled vehicle is clamped. A vehicle touching down on a corner has to pivot about
-// that point while its centre of mass keeps falling; clamping the centre's velocity there
-// made it sink far too slowly. PhysX corrections that change the spin, or spin itself,
-// mean an off-centre contact.
-constexpr float kMaxSettledSpinCorrection = 0.05f; // rad/s per frame
-constexpr float kMaxSettledSpin = 0.2f;            // rad/s
+constexpr float kOffsetBlend = 0.3f;
+// contact offsets further than this from the centre of mass are estimation noise
+constexpr float kMaxOffset = 3.0f;
+// launch guard: a correction may remove the approach speed (with this much restitution)
+// plus kLaunchMargin, nothing more
+constexpr float kRestitution = 0.2f;
+constexpr float kLaunchMargin = 0.5f;
+
+float Dot(const Vector3 &a, const Vector3 &b) { return a.X * b.X + a.Y * b.Y + a.Z * b.Z; }
+Vector3 Cross(const Vector3 &a, const Vector3 &b) {
+  return Vector3(a.Y * b.Z - a.Z * b.Y, a.Z * b.X - a.X * b.Z, a.X * b.Y - a.Y * b.X);
+}
+Vector3 Scale(const Vector3 &a, float s) { return Vector3(a.X * s, a.Y * s, a.Z * s); }
+Vector3 Add(const Vector3 &a, const Vector3 &b) { return Vector3(a.X + b.X, a.Y + b.Y, a.Z + b.Z); }
+Vector3 Sub(const Vector3 &a, const Vector3 &b) { return Vector3(a.X - b.X, a.Y - b.Y, a.Z - b.Z); }
+Vector3 Lerp(const Vector3 &a, const Vector3 &b, float t) { return Add(a, Scale(Sub(b, a), t)); }
+// inertia tensors are symmetric, so row/column order does not matter
+Vector3 Mul(const RED4ext::Matrix &m, const Vector3 &v) {
+  return Vector3(m.X.X * v.X + m.Y.X * v.Y + m.Z.X * v.Z, m.X.Y * v.X + m.Y.Y * v.Y + m.Z.Y * v.Z,
+                 m.X.Z * v.X + m.Y.Z * v.Y + m.Z.Z * v.Z);
+}
 
 FlightComponent *GetActiveFlightComponent(RED4ext::vehicle::PhysicsData *rb) {
   if (!rb || !rb->vehicle) {
@@ -55,39 +76,62 @@ FlightComponent *GetActiveFlightComponent(RED4ext::vehicle::PhysicsData *rb) {
 // 2.31: 0x1401A56DC
 REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 547299556, SyncFromPhysX, void *self, void *chassis,
                           RED4ext::vehicle::PhysicsData *rb, float a4, float consumedDt) {
-  auto before = rb ? rb->velocity : RED4ext::Vector3();
-  auto beforeSpin = rb ? rb->angularVelocity : RED4ext::Vector3();
+  auto v0 = rb ? rb->velocity : Vector3();
+  auto w0 = rb ? rb->angularVelocity : Vector3();
   SyncFromPhysX_Original(self, chassis, rb, a4, consumedDt);
 
   auto fc = GetActiveFlightComponent(rb);
   if (!fc) {
     return;
   }
-  float dx = rb->velocity.X - before.X;
-  float dy = rb->velocity.Y - before.Y;
-  float dz = rb->velocity.Z - before.Z;
-  float len = std::sqrt(dx * dx + dy * dy + dz * dz);
-  float sx = rb->angularVelocity.X - beforeSpin.X;
-  float sy = rb->angularVelocity.Y - beforeSpin.Y;
-  float sz = rb->angularVelocity.Z - beforeSpin.Z;
-  fc->supportSettled = std::sqrt(sx * sx + sy * sy + sz * sz) < kMaxSettledSpinCorrection;
-  if (len > kSupportThreshold && std::isfinite(len) && dz / len > kMinSupportUp) {
-    auto &n = fc->supportNormal;
-    if (fc->framesSinceSupport > kSupportFrames) {
-      // new contact: start from straight up rather than a stale normal
-      n = RED4ext::Vector3(0.0f, 0.0f, 1.0f);
+  auto dv = Sub(rb->velocity, v0);
+  auto dw = Sub(rb->angularVelocity, w0);
+  float len = std::sqrt(Dot(dv, dv));
+  if (!std::isfinite(len) || len <= kSupportThreshold) {
+    if (fc->framesSinceSupport < 1000) {
+      fc->framesSinceSupport++;
     }
-    float nx = n.X + (dx / len - n.X) * kNormalBlend;
-    float ny = n.Y + (dy / len - n.Y) * kNormalBlend;
-    float nz = n.Z + (dz / len - n.Z) * kNormalBlend;
-    float nlen = std::sqrt(nx * nx + ny * ny + nz * nz);
-    if (nlen > 0.0001f) {
-      n = RED4ext::Vector3(nx / nlen, ny / nlen, nz / nlen);
-    }
-    fc->framesSinceSupport = 0;
-  } else if (fc->framesSinceSupport < 1000) {
-    fc->framesSinceSupport++;
+    return;
   }
+  auto dir = Scale(dv, 1.0f / len);
+
+  // 1. launch guard
+  float approach = -Dot(v0, dir);
+  float allowed = std::fmax(approach, 0.0f) * (1.0f + kRestitution) + kLaunchMargin;
+  if (len > allowed) {
+    float s = allowed / len;
+    dv = Scale(dv, s);
+    dw = Scale(dw, s);
+    rb->velocity = Add(v0, dv);
+    rb->angularVelocity = Add(w0, dw);
+  }
+
+  // 2. support normal and contact offset
+  if (dir.Z <= kMinSupportUp || rb->inverseMass <= 0.0f) {
+    if (fc->framesSinceSupport < 1000) {
+      fc->framesSinceSupport++;
+    }
+    return;
+  }
+  auto J = Scale(dv, 1.0f / rb->inverseMass);
+  auto T = Mul(rb->worldInertiaTensor, dw);
+  float jj = Dot(J, J);
+  auto r = jj > 0.000001f ? Scale(Cross(J, T), 1.0f / jj) : Vector3();
+  float rl = std::sqrt(Dot(r, r));
+  if (!std::isfinite(rl)) {
+    r = Vector3();
+  } else if (rl > kMaxOffset) {
+    r = Scale(r, kMaxOffset / rl);
+  }
+
+  bool fresh = fc->framesSinceSupport > kSupportFrames;
+  auto n = Lerp(fresh ? Vector3(0.0f, 0.0f, 1.0f) : fc->supportNormal, dir, kNormalBlend);
+  float nl = std::sqrt(Dot(n, n));
+  if (nl > 0.0001f) {
+    fc->supportNormal = Scale(n, 1.0f / nl);
+  }
+  fc->supportOffset = fresh ? r : Lerp(fc->supportOffset, r, kOffsetBlend);
+  fc->framesSinceSupport = 0;
 }
 
 // void vehicle::RigidBody::IntegrateMotion(float)
@@ -95,20 +139,20 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 547299556, SyncFromPhysX, void *self,
 REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 2021199885, RigidBody_IntegrateMotion, RED4ext::vehicle::PhysicsData *rb,
                           float deltaTime) {
   auto fc = GetActiveFlightComponent(rb);
-  if (fc && fc->framesSinceSupport <= kSupportFrames && fc->supportSettled) {
-    auto &w = rb->angularVelocity;
-    if (w.X * w.X + w.Y * w.Y + w.Z * w.Z > kMaxSettledSpin * kMaxSettledSpin) {
-      RigidBody_IntegrateMotion_Original(rb, deltaTime);
-      return;
-    }
-    auto &n = fc->supportNormal;
-    auto &v = rb->velocity;
-    float vn = v.X * n.X + v.Y * n.Y + v.Z * n.Z;
+  if (fc && fc->framesSinceSupport <= kSupportFrames && rb->inverseMass > 0.0f) {
+    const auto &n = fc->supportNormal;
+    const auto &r = fc->supportOffset;
+    auto pointVelocity = Add(rb->velocity, Cross(rb->angularVelocity, r));
+    float vn = Dot(pointVelocity, n);
     if (vn < -kCreepSpeed) {
-      float remove = vn + kCreepSpeed;
-      v.X -= n.X * remove;
-      v.Y -= n.Y * remove;
-      v.Z -= n.Z * remove;
+      // impulse lambda along n at r that brings the point's normal speed to -kCreepSpeed
+      auto a = Mul(rb->invertedWorldInertiaTensor, Cross(r, n));
+      float k = rb->inverseMass + Dot(n, Cross(a, r));
+      if (k > 0.000001f) {
+        float lambda = -(vn + kCreepSpeed) / k;
+        rb->velocity = Add(rb->velocity, Scale(n, lambda * rb->inverseMass));
+        rb->angularVelocity = Add(rb->angularVelocity, Scale(a, lambda));
+      }
     }
   }
   RigidBody_IntegrateMotion_Original(rb, deltaTime);
