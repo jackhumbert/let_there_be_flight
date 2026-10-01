@@ -111,6 +111,10 @@ public:
   RED4ext::vehicle::ChassisComponent * chassis = NULL;
   float linearDamp = 0;
   float angularDamp = 0;
+  // chassis contact support, see Physics/ChassisContacts.cpp
+  RED4ext::Vector3 supportNormal{0.0f, 0.0f, 1.0f};
+  uint32_t framesSinceSupport = 1000;
+  bool supportSettled = false;
 
 private:
   friend Descriptor;
