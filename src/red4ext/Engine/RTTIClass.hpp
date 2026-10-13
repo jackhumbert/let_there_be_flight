@@ -6,6 +6,15 @@
 #include <RED4ext/RTTISystem.hpp>
 #include <RED4ext/Scripting/IScriptable.hpp>
 
+#ifdef __APPLE__
+namespace RED4ext::game
+{
+struct Component;
+}
+// macos/MacShims.cpp: the game's own gameComponent allocator (the one FlightComponent's GetAllocator returns).
+extern "C" RED4ext::Memory::IAllocator* ltbf_mac_game_component_allocator();
+#endif
+
 namespace Engine
 {
 
@@ -29,7 +38,7 @@ public:
   RED4ext::CClassStaticFunction* AddFunction(RTTIStaticFunction<R, TR> aFunc, const char* aName,
                                              RED4ext::CBaseFunction::Flags aFlags = {})
   {
-    const auto* ptr = reinterpret_cast<RED4ext::ScriptingFunction_t<R*>>(aFunc);
+    auto* ptr = reinterpret_cast<RED4ext::ScriptingFunction_t<R*>>(aFunc);
     auto* func = RED4ext::CClassStaticFunction::Create(this, aName, aName, ptr, aFlags);
 
     RED4ext::CClass::RegisterFunction(func);
@@ -42,7 +51,7 @@ public:
   RED4ext::CClassStaticFunction* AddFunction(RTTIMemberFunction<C, R, TR> aFunc, const char* aName,
                                              RED4ext::CBaseFunction::Flags aFlags = {})
   {
-    const auto* ptr = reinterpret_cast<RED4ext::ScriptingFunction_t<R*>>(aFunc);
+    auto* ptr = reinterpret_cast<RED4ext::ScriptingFunction_t<R*>>(aFunc);
     auto* func = RED4ext::CClassFunction::Create(this, aName, aName, ptr, aFlags);
 
     RED4ext::CClass::RegisterFunction(func);
@@ -54,7 +63,7 @@ public:
     requires detail::IsFunctionPtr<decltype(AFunc)>
   RED4ext::CClassFunction* AddFunction(const char* aName, RED4ext::CBaseFunction::Flags aFlags = {})
   {
-    const auto* ptr = WrapScriptableFunction<AFunc>();
+    auto* ptr = WrapScriptableFunction<AFunc>();
 
     RED4ext::CClassFunction* func;
     if constexpr (detail::IsMemberFunctionPtr<decltype(AFunc)>)
@@ -128,6 +137,32 @@ class RTTIClassDescriptor : public RED4ext::TTypedClass<T>, public detail::TypeD
 public:
     RTTIClassDescriptor() : RED4ext::TTypedClass<T>(0ull) {}
 
+#ifdef __APPLE__
+    // LTBF R42g (macOS): allocate instances from the pool the game frees them to. TTypedClass::AllocMemory allocates through the
+    // class's GetAllocator() (the SDK default is Memory::RTTIAllocator, PoolRTTI), but the game destroys an object through the
+    // object's own GetAllocator() (vtable slot 0x10; game 0x102104940: GetAllocator, destructor, allocator->Free). That is
+    // ISerializable's (Memory::ScriptAllocator, PoolScript) for every LTBF class except FlightComponent, whose game::Component
+    // override returns the game's component allocator. On macOS those are different pools, so every freed LTBF object went onto
+    // another pool's free list (Boots C to E1: zeroed vtables of live components, corrupt free lists). The class side now returns
+    // exactly what the instance side returns, chosen by the class that declares the GetAllocator T inherits.
+    RED4ext::Memory::IAllocator* GetAllocator() const override
+    {
+        using InstanceGetter = decltype(&T::GetAllocator);
+        if constexpr (std::is_same_v<InstanceGetter, RED4ext::Memory::IAllocator* (RED4ext::ISerializable::*)()>)
+        {
+            return RED4ext::Memory::ScriptAllocator::Get();
+        }
+        else if constexpr (std::is_same_v<InstanceGetter, RED4ext::Memory::IAllocator* (RED4ext::game::Component::*)()>)
+        {
+            return ltbf_mac_game_component_allocator();
+        }
+        else
+        {
+            static_assert(sizeof(T) == 0, "LTBF macOS: a class with its own GetAllocator needs a matching class-side allocator here");
+        }
+    }
+#endif
+
     void SetName(const char* aName)
     {
         RED4ext::CClass::name = RED4ext::CNamePool::Add(aName);
@@ -142,7 +177,7 @@ public:
     RED4ext::CClassStaticFunction* AddFunction(RTTIStaticFunction<R, TR> aFunc, const char* aName,
                                                RED4ext::CBaseFunction::Flags aFlags = {})
     {
-        const auto* ptr = reinterpret_cast<RED4ext::ScriptingFunction_t<R*>>(aFunc);
+        auto* ptr = reinterpret_cast<RED4ext::ScriptingFunction_t<R*>>(aFunc);
         auto* func = RED4ext::CClassStaticFunction::Create(this, aName, aName, ptr, aFlags);
 
         RED4ext::CClass::RegisterFunction(func);
@@ -155,7 +190,7 @@ public:
     RED4ext::CClassStaticFunction* AddFunction(RTTIMemberFunction<C, R, TR> aFunc, const char* aName,
                                                RED4ext::CBaseFunction::Flags aFlags = {})
     {
-        const auto* ptr = reinterpret_cast<RED4ext::ScriptingFunction_t<R*>>(aFunc);
+        auto* ptr = reinterpret_cast<RED4ext::ScriptingFunction_t<R*>>(aFunc);
         auto* func = RED4ext::CClassFunction::Create(this, aName, aName, ptr, aFlags);
 
         RED4ext::CClass::RegisterFunction(func);
@@ -167,7 +202,7 @@ public:
     requires detail::IsFunctionPtr<decltype(AFunc)>
     RED4ext::CClassFunction* AddFunction(const char* aName, RED4ext::CBaseFunction::Flags aFlags = {})
     {
-        const auto* ptr = WrapScriptableFunction<AFunc>();
+        auto* ptr = WrapScriptableFunction<AFunc>();
 
         RED4ext::CClassFunction* func;
         if constexpr (detail::IsMemberFunctionPtr<decltype(AFunc)>)

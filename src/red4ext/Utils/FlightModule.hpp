@@ -1,6 +1,7 @@
 #pragma once
 
 #include <RED4ext/Common.hpp>
+#include <RED4ext/Relocation.hpp>
 #include <RED4ext/Api/PluginHandle.hpp>
 #include <RED4ext/Api/Sdk.hpp>
 #include <functional>
@@ -8,6 +9,9 @@
 #include <map>
 #include <string>
 #include <spdlog/spdlog.h>
+#ifdef __APPLE__
+#include "MacShims.hpp"
+#endif
 
 struct FlightModule {
   virtual void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle){};
@@ -23,6 +27,47 @@ public:
   void *m_hook;
   void **m_original;
 
+#ifdef __APPLE__
+  // LTBF R41: one attach attempt with a log line; an unmapped hash (trap) or a refused attach skips the hook. The two targets
+  // Codeware hooks too (LtbfMac::IsCodewareShared) are not attached in Main: ltbf_registerNatives attaches them through
+  // Codeware's hook chain, once every plugin has loaded.
+  bool m_attached = false;
+  bool m_unmapped = false;
+
+  bool IsShared() const { return !m_unmapped && LtbfMac::IsCodewareShared(m_address); }
+
+  void Attach(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
+    if (m_attached)
+      return;
+    if (m_unmapped) {
+      LtbfMac::Log("[ltbf] hook %s skipped: its address hash has no Mac row (fail-safe)", m_name.c_str());
+      return;
+    }
+    const auto result = LtbfMac::AttachHook(aSdk, aHandle, LtbfMac::ImageBase() + this->m_address, this->m_hook, this->m_original,
+                                            m_name.c_str(), IsShared());
+    m_attached = result == LtbfMac::HookResult::Installed || result == LtbfMac::HookResult::Chained;
+  }
+
+  virtual void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) override {
+    if (IsShared()) {
+      LtbfMac::Log("[ltbf] hook %s rva=0x%lx is shared with Codeware: attached from ltbf_registerNatives", m_name.c_str(),
+                   static_cast<unsigned long>(m_address));
+      return;
+    }
+    Attach(aSdk, aHandle);
+  };
+
+  void LoadShared(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
+    if (IsShared())
+      Attach(aSdk, aHandle);
+  }
+
+  virtual void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) override {
+    // A chained hook stays in Codeware's chain (Codeware owns the target); only a direct RED4ext hook is detached.
+    if (m_attached && !IsShared() && aSdk && aSdk->hooking && aSdk->hooking->Detach)
+      aSdk->hooking->Detach(aHandle, reinterpret_cast<void *>(LtbfMac::ImageBase() + this->m_address));
+  };
+#else
   virtual void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) override {
     spdlog::info("Attaching {} at 0x{:X}", m_name, m_address);
     while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(this->m_address), this->m_hook, this->m_original)) {
@@ -33,6 +78,7 @@ public:
   virtual void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) override {
     aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(this->m_address));
   };
+#endif
 };
 
 class FlightModuleFactory {
@@ -83,6 +129,15 @@ public:
     }
   }
 
+#ifdef __APPLE__
+  // LTBF R41: the hooks on targets Codeware also hooks, attached from ltbf_registerNatives.
+  void LoadShared(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
+    for (const auto &hook : s_hooks) {
+      hook->LoadShared(aSdk, aHandle);
+    }
+  }
+#endif
+
   void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) {
     for (const auto &hook : s_hooks) {
       hook->Unload(aSdk, aHandle);
@@ -130,7 +185,13 @@ class FlightModuleHookHash : IFlightModuleHook {
 public: 
   explicit FlightModuleHookHash(std::string name, uint32_t hash, void * hook, void ** original) {
     this->m_name = name;
+#ifdef __APPLE__
+    const auto resolved = RED4ext::UniversalRelocBase::Resolve(hash);
+    this->m_unmapped = LtbfMac::IsTrap(resolved);
+    this->m_address = this->m_unmapped ? 0 : resolved - LtbfMac::ImageBase();
+#else
     this->m_address = RED4ext::UniversalRelocBase::Resolve(hash) - reinterpret_cast<uintptr_t>(GetModuleHandle(nullptr));
+#endif
     this->m_hook = hook;
     this->m_original = original;
     FlightModuleFactory::GetInstance().registerHook(this);

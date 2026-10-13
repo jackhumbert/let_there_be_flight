@@ -1,4 +1,5 @@
 #include "Utils/FlightModule.hpp"
+#include "Utils/PlatformLayout.hpp"
 #include <RED4ext/Common.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/Entity.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/EntityTemplate.hpp>
@@ -77,7 +78,7 @@ void __fastcall AddWeapons(RED4ext::vehicle::BaseObject *vehicle) {
       gapso->paramName = "renderPlane";
       gas->animParams.EmplaceBack(*gapso);
     }
-    vehicle->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::game::AttachmentSlots>(gas));
+    vehicle->componentsStorage.components.EmplaceBack(LTBF_AS_COMPONENT_HANDLE(RED4ext::Handle<RED4ext::game::AttachmentSlots>(gas)));
   }
 
   //{
@@ -148,7 +149,7 @@ void __fastcall AddWeaponSlots(RED4ext::ent::SlotComponent *sc) {
     slot->relativePosition.Y += 0.75;
     slot->slotName = "PanzerCannon";
     sc->slots.EmplaceBack(*slot);
-    sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
+    LTBF_SLOT_INDEX_LOOKUP(sc).Emplace(slot->slotName, sc->slots.size - 1);
   }
   {
     auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
@@ -157,7 +158,7 @@ void __fastcall AddWeaponSlots(RED4ext::ent::SlotComponent *sc) {
     slot->relativePosition.Y += 0.75;
     slot->slotName = "PanamVehicleTurret";
     sc->slots.EmplaceBack(*slot);
-    sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
+    LTBF_SLOT_INDEX_LOOKUP(sc).Emplace(slot->slotName, sc->slots.size - 1);
   }
   {
     auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
@@ -166,7 +167,7 @@ void __fastcall AddWeaponSlots(RED4ext::ent::SlotComponent *sc) {
     slot->relativePosition.Y += 0.75;
     slot->slotName = "PanzerHomingMissiles";
     sc->slots.EmplaceBack(*slot);
-    sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
+    LTBF_SLOT_INDEX_LOOKUP(sc).Emplace(slot->slotName, sc->slots.size - 1);
   }
   {
     auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
@@ -175,7 +176,7 @@ void __fastcall AddWeaponSlots(RED4ext::ent::SlotComponent *sc) {
     // slot->relativePosition.Y += 0.75;
     slot->slotName = "WeaponLeft";
     sc->slots.EmplaceBack(*slot);
-    sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
+    LTBF_SLOT_INDEX_LOOKUP(sc).Emplace(slot->slotName, sc->slots.size - 1);
   }
   {
     auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
@@ -184,7 +185,7 @@ void __fastcall AddWeaponSlots(RED4ext::ent::SlotComponent *sc) {
     // slot->relativePosition.Y += 0.75;
     slot->slotName = "PanzerCounterMeasuresLeft";
     sc->slots.EmplaceBack(*slot);
-    sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
+    LTBF_SLOT_INDEX_LOOKUP(sc).Emplace(slot->slotName, sc->slots.size - 1);
   }
   {
     auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
@@ -193,7 +194,7 @@ void __fastcall AddWeaponSlots(RED4ext::ent::SlotComponent *sc) {
     // slot->relativePosition.Y += 0.75;
     slot->slotName = "WeaponRight";
     sc->slots.EmplaceBack(*slot);
-    sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
+    LTBF_SLOT_INDEX_LOOKUP(sc).Emplace(slot->slotName, sc->slots.size - 1);
   }
   {
     auto slot = reinterpret_cast<RED4ext::ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
@@ -202,7 +203,7 @@ void __fastcall AddWeaponSlots(RED4ext::ent::SlotComponent *sc) {
     // slot->relativePosition.Y += 0.75;
     slot->slotName = "PanzerCounterMeasuresRight";
     sc->slots.EmplaceBack(*slot);
-    sc->slotIndexLookup.Emplace(slot->slotName, sc->slots.size - 1);
+    LTBF_SLOT_INDEX_LOOKUP(sc).Emplace(slot->slotName, sc->slots.size - 1);
   }
 }
 

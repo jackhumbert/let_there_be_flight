@@ -19,7 +19,7 @@
 
 void ERRCHECK_fn(FMOD_RESULT result, const char *file, int line) {
   if (result != FMOD_OK) {
-    spdlog::error("{0}({1}): FMOD error {2} - {3}", file, line, result, FMOD_ErrorString(result));
+    spdlog::error("{0}({1}): FMOD error {2} - {3}", file, line, static_cast<int>(result), FMOD_ErrorString(result));
   }
 }
 
@@ -60,8 +60,14 @@ bool FlightAudio::Load(RED4ext::CGameApplication *aApp) {
   const char *strings = strings_path.c_str();
   //ERRCHECK(fmod_system->initialize(1024, FMOD_STUDIO_INIT_LIVEUPDATE,
   //                                 FMOD_INIT_3D_RIGHTHANDED | FMOD_INIT_PROFILE_ENABLE, extraDriverData));
+#ifdef __APPLE__
+  // LTBF R41: no FMOD Studio live update on macOS. It opens a TCP listener (port 9264), which makes macOS ask whether the game
+  // may accept incoming connections.
+  ERRCHECK(fmod_system->initialize(1024, FMOD_STUDIO_INIT_NORMAL, FMOD_INIT_3D_RIGHTHANDED, extraDriverData));
+#else
   ERRCHECK(fmod_system->initialize(1024, FMOD_STUDIO_INIT_LIVEUPDATE,
                                    FMOD_INIT_3D_RIGHTHANDED, extraDriverData));
+#endif
   ERRCHECK(fmod_system->loadBankFile(bank, FMOD_STUDIO_LOAD_BANK_NORMAL, &soundBank));
   ERRCHECK(fmod_system->loadBankFile(strings, FMOD_STUDIO_LOAD_BANK_NORMAL, &stringsBank));
 
@@ -215,8 +221,13 @@ void FlightAudio::UpdateEvent(RED4ext::CString emitterName, RED4ext::Matrix matr
     ERRCHECK(eventMap[emitterName.c_str()]->set3DAttributes(&eventAttributes));
     ERRCHECK(eventMap[emitterName.c_str()]->setVolume(eventVolume));
 
-    for (int i = 0; i < flightAudioUpdateCls->allProps.size; i++) {
-      auto pParameterName = flightAudioUpdateCls->allProps[i]->name.ToString();
+#ifdef __APPLE__
+    auto &allProps = flightAudioUpdateCls->unk118; // LTBF R41: the macOS SDK's name for the fork's CClass::allProps (0x118)
+#else
+    auto &allProps = flightAudioUpdateCls->allProps;
+#endif
+    for (int i = 0; i < allProps.size; i++) {
+      auto pParameterName = allProps[i]->name.ToString();
       eventMap[emitterName.c_str()]->setParameterByName(
           pParameterName, flightAudioUpdateCls->GetProperty(pParameterName)->GetValue<float>(update));
     }

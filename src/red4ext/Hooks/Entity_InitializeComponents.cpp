@@ -1,5 +1,6 @@
 
 #include "Flight/Component.hpp"
+#include "Utils/PlatformLayout.hpp"
 #include "LoadResRef.hpp"
 #include "Utils/FlightModule.hpp"
 #include <RED4ext/Common.hpp>
@@ -27,6 +28,27 @@ static bool IsFlightHudEnabled(RED4ext::CRTTISystem *rtti) {
   auto data = (*variant)->GetDataPtr();
   return data ? *reinterpret_cast<bool *>(data) : true;
 }
+
+#ifdef __APPLE__
+#include <cstdlib>
+#include <cstring>
+// LTBF R42e (macOS, diagnostics): LTBF_MAC_SKIP=<comma list> leaves parts of the per-vehicle setup out, to find which one breaks the
+// entity teardown (Boot C: SIGSEGV in the game's Entity_Uninitialize after a teleport). Words: thrusters (the thruster mesh components
+// through EntityExt::AddComponent), config (the flight configuration), hud (the FlightHUD WidgetHudComponent), component (the
+// FlightComponent itself, and so everything). Unset = Windows behaviour.
+static bool LtbfMacSkip(const char *aWhat) {
+  static const char *s_skip = std::getenv("LTBF_MAC_SKIP");
+  static bool s_logged = false;
+  if (!s_logged) {
+    s_logged = true;
+    spdlog::info("[ltbf] LTBF_MAC_SKIP={}", s_skip ? s_skip : "(unset)");
+  }
+  return s_skip && std::strstr(s_skip, aWhat) != nullptr;
+}
+#define LTBF_MAC_SKIP(what) LtbfMacSkip(what)
+#else
+#define LTBF_MAC_SKIP(what) false
+#endif
 
 /// @hash 3490519617
 // void Entity_InitializeComponents(RED4ext::ent::Entity *entity, void *a2, void *a3);
@@ -56,14 +78,14 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityE
     canEnterFlight = false;
   }
 
-  if (isVehicle && canEnterFlight) {
+  if (isVehicle && canEnterFlight && !LTBF_MAC_SKIP("component")) {
     auto fc = (FlightComponent *)FlightComponent::GetRTTIType()->CreateInstance(true);
     fc->name = "flightComponent";
     fc->id = RED4ext::CRUID::Next();
     // fc->entity = entity;
 
     auto fch = RED4ext::Handle<FlightComponent>(fc);
-    vehicle->componentsStorage.components.EmplaceBack(fch);
+    vehicle->componentsStorage.components.EmplaceBack(LTBF_AS_COMPONENT_HANDLE(fch));
 
     // auto fc = (FlightComponent*)FlightComponent::GetRTTIType()->CreateInstance(true);
     // fc->name = "flightComponent";
@@ -89,7 +111,7 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityE
 
       auto configurationCls = IFlightConfiguration::GetConfigurationClass(entity);
 
-      if (configurationCls) {
+      if (configurationCls && !LTBF_MAC_SKIP("config")) {
         // spdlog::info("Looked for class '{}' using '{}'", className, configurationCls->name.ToString());
         auto configuration = configurationCls->CreateInstance<IFlightConfiguration *>(true);
         if (!configuration) {
@@ -111,7 +133,7 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityE
         // configuration->AddMeshes(entity, vcc);
         if (Utils::LooksLikeDynArray(configuration->thrusters, 64)) {
           for (auto const & thruster : configuration->thrusters) {
-            if (thruster && thruster->meshComponent) {
+            if (thruster && thruster->meshComponent && !LTBF_MAC_SKIP("thrusters")) {
               thruster->meshComponent.refCount->IncRef();
               entity->AddComponent(thruster->meshComponent);
             }
@@ -203,7 +225,7 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityE
     // (hudFlightController, ~380 widgets) every time the player mounts this vehicle and
     // tear it down on every unmount (see docs/mount-stutter-analysis.md). Skip it entirely
     // when the flight UI is disabled in Mod Settings; the controller would only hide itself.
-    if (IsFlightHudEnabled(rtti)) {
+    if (IsFlightHudEnabled(rtti) && !LTBF_MAC_SKIP("hud")) {
       auto whc = rtti->GetClass("WidgetHudComponent")->CreateInstance<RED4ext::WidgetHudComponent *>(true);
       whc->name = "FlightHUD";
       whc->id = RED4ext::CRUID::Next();
@@ -212,7 +234,7 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityE
       whc->hudEntriesResource.path = "user\\jackhumbert\\widgets\\hud_flight.inkhud";
       // whc->hudEntriesResource.token = resource.token;
       LoadResRef<RED4ext::ink::HudEntriesResource>(&whc->hudEntriesResource.path, &whc->hudEntriesResource.token, false);
-      entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::WidgetHudComponent>(whc));
+      entity->componentsStorage.components.EmplaceBack(LTBF_AS_COMPONENT_HANDLE(RED4ext::Handle<RED4ext::WidgetHudComponent>(whc)));
     } else {
       LTBF_WARN_ONCE("[Entity_InitializeComponents] flight UI disabled in Mod Settings; FlightHUD component not added to vehicles");
     }

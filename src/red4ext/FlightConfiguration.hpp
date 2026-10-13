@@ -67,6 +67,8 @@ private:
     aType->AddFunction<&IFlightConfiguration::OnDeactivationCore>("OnDeactivationCore");
   }
 };
+LTBF_FORCE_RTTI_REGISTRAR(IFlightConfiguration) // LTBF R41: macOS, see Engine/RTTIRegistrar.hpp
+
 RED4EXT_ASSERT_OFFSET(IFlightConfiguration, component, 0x40);
 RED4EXT_ASSERT_OFFSET(IFlightConfiguration, thrusters, 0x50);
 RED4EXT_ASSERT_OFFSET(IFlightConfiguration, flightCameraBone, 0x60);

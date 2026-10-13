@@ -1,13 +1,18 @@
 #include "FlightConfiguration.hpp"
+#include "Utils/PlatformLayout.hpp"
 #include <RED4ext/Memory/Allocators.hpp>
-#include <PhysX3.hpp>
+#ifndef __APPLE__
+#include <PhysX3.hpp> // LTBF R41: only the thruster colliders use it, and they are skipped on macOS
+#endif
 #include <RED4ext/Scripting/Natives/Generated/physics/ColliderSphere.hpp>
 #include <RED4ext/Scripting/Natives/Generated/physics/SimulationFilter.hpp>
 #include <RED4ext/Scripting/Natives/Generated/physics/QueryFilter.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/SlotComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/physics/FilterData.hpp>
+#ifndef __APPLE__
 #include <RED4ext/Scripting/Natives/physicsProxyHelper.hpp>
 #include <RED4ext/Scripting/Natives/physicsPhysicalSystemProxy.hpp>
+#endif
 #include <RED4ext/Scripting/Natives/Generated/ent/HardTransformBinding.hpp>
 
 using namespace RED4ext;
@@ -68,8 +73,13 @@ CClass* IFlightConfiguration::GetConfigurationClass(ent::Entity* entity) {
   }
 
   char className[256];
+#ifdef __APPLE__
+  auto appearance = entity->appearanceName.ToString(); // LTBF R41: macOS SDK name
+  snprintf(className, sizeof(className), "FlightConfiguration_%s", appearance ? appearance : "None");
+#else
   auto appearance = entity->currentAppearance.ToString();
   sprintf_s(className, "FlightConfiguration_%s", appearance ? appearance : "None");
+#endif
 
   auto configurationCls = rtti->GetClassByScriptName(className);
   if (!configurationCls) {
@@ -127,7 +137,7 @@ void IFlightConfiguration::AddSlots(ent::SlotComponent *slotComponent) {
   slot->slotName = "CustomFlightCamera";
   slot->relativePosition = this->flightCameraOffset;
   slotComponent->slots.EmplaceBack(*slot);
-  slotComponent->slotIndexLookup.Emplace(slot->slotName, slotComponent->slots.size - 1);
+  LTBF_SLOT_INDEX_LOOKUP(slotComponent).Emplace(slot->slotName, slotComponent->slots.size - 1);
 
   //for (auto thruster : thrusters) {
   //  auto slot = reinterpret_cast<ent::Slot *>(rtti->GetClass("entSlot")->CreateInstance(true));
@@ -137,7 +147,7 @@ void IFlightConfiguration::AddSlots(ent::SlotComponent *slotComponent) {
   //  slot->relativeRotation = thruster->relativeRotation;
   //  //slot->relativeRotation = Quaternion(0.0, 0.0, 0.0, 1.0);
   //  slotComponent->slots.EmplaceBack(*slot);
-  //  slotComponent->slotIndexLookup.Emplace(slot->slotName, slotComponent->slots.size - 1);
+  //  LTBF_SLOT_INDEX_LOOKUP(slotComponent).Emplace(slot->slotName, slotComponent->slots.size - 1);
   //}
 }
 
@@ -151,6 +161,12 @@ void IFlightConfiguration::AddSlots(ent::SlotComponent *slotComponent) {
 // }
 
 void IFlightConfiguration::AddColliders() {
+#ifdef __APPLE__
+  // LTBF R41: the thruster colliders need the chassis proxy id and lock offsets, ProxyID::GetProxy, FilterData::Init (inlined on
+  // macOS), ColliderSphere creation and the slot lookups, none verified on macOS yet (macos/NOT_YET.md). Skipped until R41b.
+  LtbfMac::SkipOnce("LTBF_MAC_TODO_R41b_ChassisComponent_proxyID", "thruster colliders (IFlightConfiguration::AddColliders)");
+  return;
+#else
   auto rtti = CRTTISystem::Get();
 
   auto filterDataCls = rtti->GetClass("physicsFilterData");
@@ -232,6 +248,7 @@ void IFlightConfiguration::AddColliders() {
     proxyHelper.UpdateProxyCache();
     proxyHelper.Unlock();
   }
+#endif
 }
 
 void IFlightConfiguration::OnActivationCore() {
@@ -242,6 +259,10 @@ void IFlightConfiguration::OnActivationCore() {
 void IFlightConfiguration::RemoveColliders() {
   if (this->originalShapeCount == -1)
     return;
+#ifdef __APPLE__
+  // LTBF R41: AddColliders is skipped on macOS (see there), so originalShapeCount stays -1 and nothing reaches this point.
+  return;
+#else
 
   auto rtti = CRTTISystem::Get();
 
@@ -289,6 +310,7 @@ void IFlightConfiguration::RemoveColliders() {
     proxyHelper.UpdateProxyCache();
     proxyHelper.Unlock();
   }
+#endif
 }
 
 void IFlightConfiguration::OnDeactivationCore() {
