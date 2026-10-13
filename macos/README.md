@@ -9,7 +9,15 @@ difference is equivalent. What is not done yet: `NOT_YET.md`. Where every addres
 
 ## Status
 
-@@STATUS@@
+Tested on Cyberpunk 2077 2.3.1 (Steam, native macOS, Apple Silicon) in automated in-world runs (a save is loaded, a car is spawned,
+the player is mounted as driver):
+
+- Loads with the macOS framework ports; the plugin's hooks install; the scripts link with no errors; no crash in 14 in-world runs.
+- O toggles flight through the player state machine; Space lifts the car; yaw works; turning flight off lands the car.
+- With Mod Settings for macOS, the 66 settings are listed, and a change reaches the mod, is saved and comes back after a restart.
+- Open: forward thrust in Hover & Fly mode only reached about 0.5 m/s in the test, although the mod produces the expected force
+  (`NOT_YET.md`); the flight keys cannot be rebound in the Controls menu on macOS; a few effects are not ported yet (`NOT_YET.md`).
+- Not hand-tested by a player yet.
 
 ## What you need to run it
 
