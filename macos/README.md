@@ -15,9 +15,9 @@ the player is mounted as driver):
 - Loads with the macOS framework ports; the plugin's hooks install; the scripts link with no errors; no crash in 14 in-world runs.
 - O toggles flight through the player state machine; Space lifts the car; yaw works; turning flight off lands the car.
 - With Mod Settings for macOS, the 66 settings are listed, and a change reaches the mod, is saved and comes back after a restart.
-- Open: forward thrust in Hover & Fly mode only reached about 0.5 m/s in the test, although the mod produces the expected force
-  (`NOT_YET.md`); the flight keys cannot be rebound in the Controls menu on macOS; a few effects are not ported yet (`NOT_YET.md`).
-- Not hand-tested by a player yet.
+- Hand-tested by a player (2026-10-13): flying around Night City works, forward flight included.
+- Open: the flight keys cannot be rebound in the Controls menu on macOS; a few effects are not ported yet (`NOT_YET.md`). The automated
+  test's forward-thrust stall (about 0.5 m/s at its spot) did not happen in the hand test (`NOT_YET.md`).
 
 ## What you need to run it
 

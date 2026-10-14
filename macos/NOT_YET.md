@@ -155,13 +155,13 @@ Automated test (`ltbf_flight`): an Archer Hella spawned next to the player in Ka
 the O key. Works: Flight_Toggle through the player state machine, Space (Lift) raises the car (1.6 to 2.2 m in 3 s), yaw (up to 167
 degrees in 4 s), flight off lands the car, Mod Settings values reach the mod, no crash in 14 in-world boots.
 
-- OPEN: forward thrust. In Hover & Fly mode LTBF produces the expected force along the car's forward vector (about 890 per frame for
+- Forward thrust in the automated test (not seen in play). In Hover & Fly mode LTBF produces the expected force along the car's forward vector (about 890 per frame for
   surge 1.0), but the car's speed levels off at about 0.47 to 0.49 m/s (1 to 2 m in 6 s), every run, at the test spot. Checked and not
   the cause: LTBF's collision damping (its timer is at the recovered value), the game's resistance pass (it does not change the
   velocity), the area speed limiter (LTBF skips it while flying), tire grip (the car hovers about 1 m up), the thruster share (100%),
   the flight mode (Drone mode just settles on the ground without lift input). Not yet known: whether this is the spawned test vehicle
   or the test spot, or a velocity clamp in the macOS physics path (LTBF_MAC_DIAG=1 logs `ForceSetLinearVelocity` callers; the samples
-  so far are parked vehicles). Next: a hand test in an open area with an owned car, then a filtered log of the flying car's
-  Recalculate / ForceSetLinearVelocity calls.
+  so far are parked vehicles). A hand test by a player on 2026-10-13 found forward flight perfectly fine, so the stall looks specific to
+  the test setup (a car spawned next to the player in a street in Kabuki).
 - Key bindings: LTBF's bindings use `overridableUI`, which needs settings entries the Mac input loader does not create; the Mac copy of
   the key file drops the attribute (see README). The keys are not rebindable in the Controls menu on macOS.
