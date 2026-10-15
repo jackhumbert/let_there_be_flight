@@ -2,7 +2,7 @@
 
 Read-only survey, 2026-10-12. No game launch, no build, no probes. Every address below was read from the game binaries.
 
-- Sources: `let_there_be_flight` v0.3.18 (7721e31, branch `macos`), `mod_settings` v0.2.21 (4231819, branch `macos`). The SDK is jackhumbert's fork (`deps/red4ext.sdk`, b5ea591, branch `new-types`), and `red_lib` is jackhumbert's `jack` branch (2d9bb93).
+- Sources: `let_there_be_flight` v0.3.18 (7721e31, branch `macos`; rebased onto main 6d7c1b7 on 2026-10-14), `mod_settings` v0.2.21 (4231819, branch `macos`). The SDK is jackhumbert's fork (`deps/red4ext.sdk`, b5ea591, branch `new-types`), and `red_lib` is jackhumbert's `jack` branch (2d9bb93).
 - Mac binary: `Cyberpunk 2077.app/Contents/MacOS/Cyberpunk2077` (Steam 2.3.1). Windows reference: the Windows `Cyberpunk2077.exe` of the same game build with `cyberpunk2077_addresses.json`.
 - RVA conventions: Mac RVA = address - 0x100000000. Windows RVA = `0001:` offset + 0x1000.
 - Inventory sources:

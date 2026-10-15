@@ -1,10 +1,10 @@
 # Let There Be Flight for macOS (Apple Silicon)
 
-A port of [jackhumbert/let_there_be_flight](https://github.com/jackhumbert/let_there_be_flight) v0.3.18 to the native macOS build of
-Cyberpunk 2077 (2.3.1, Steam, Apple Silicon). Port by codeman101 (skyman3215). MIT, like upstream.
+A port of [jackhumbert/let_there_be_flight](https://github.com/jackhumbert/let_there_be_flight) `main` (6d7c1b7, which is v0.3.18 plus 18
+commits) to the native macOS build of Cyberpunk 2077 (2.3.1, Steam, Apple Silicon). Port by codeman101 (skyman3215). MIT, like upstream.
 
 Everything macOS-specific is in this folder and in `#ifdef __APPLE__` blocks in `src/red4ext`. The Windows build is meant to be
-unchanged: `WINDOWS_CHECK.md` lists every shared file whose Windows view (`unifdef -U__APPLE__`) differs from v0.3.18 and why each
+unchanged: `WINDOWS_CHECK.md` lists every shared file whose Windows view (`unifdef -U__APPLE__`) differs from `main` and why each
 difference is equivalent. What is not done yet: `NOT_YET.md`. Where every address comes from: `ADDRESS_SURVEY.md`.
 
 ## Status
@@ -16,6 +16,8 @@ the player is mounted as driver):
 - O toggles flight through the player state machine; Space lifts the car; yaw works; turning flight off lands the car.
 - With Mod Settings for macOS, the 66 settings are listed, and a change reaches the mod, is saved and comes back after a restart.
 - Hand-tested by a player (2026-10-13): flying around Night City works, forward flight included.
+- Rebased onto `main` on 2026-10-14. The automated runs and the 2026-10-13 hand test above were made on the v0.3.18 base. The rebased
+  build (`main` 6d7c1b7 plus the Mac commits) was hand-tested in game on 2026-10-14: take-off, flying, camera and audio work.
 - Open: the flight keys cannot be rebound in the Controls menu on macOS; a few effects are not ported yet (`NOT_YET.md`). The automated
   test's forward-thrust stall (about 0.5 m/s at its spot) did not happen in the hand test (`NOT_YET.md`).
 
