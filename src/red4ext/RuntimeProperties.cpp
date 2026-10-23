@@ -12,6 +12,9 @@ struct ScriptRTTIContainer {
 };
 
 struct ScriptData {
+#ifdef __APPLE__
+  void *unk00_25; // game 2.5: 8 new bytes at the start (definitionsByName +8, classes +0xD8)
+#endif
   RED4ext::HashMap<uint64_t, uint64_t> unk00;
   RED4ext::HashMap<uint64_t, uint64_t> unk30;
   RED4ext::HashMap<uint64_t, uint64_t> unk60;
@@ -26,6 +29,9 @@ struct ScriptData {
   uint8_t unk60MUTX;
 void* unk138;
 };
+#ifdef __APPLE__
+static_assert(offsetof(ScriptData, classes) == 0xD8);
+#endif
 
 #ifdef __APPLE__
 // LTBF R41: the four CreateCRTTI*TypeFromClass functions have no standalone macOS copy. The game creates these types by name:
