@@ -6,25 +6,25 @@
 #    hook chain from ltbf_registerNatives.
 #  - GetFxForMaterial (inlined on macOS), SkidMarkEffectStart 0x1340f28 and TireTrackEffectStart 0x134199c: not hooked on macOS
 #    (the flight trail effects, macos/NOT_YET.md).
-0x12048e8  # GetLocationFromOffset (TPPCameraComponent::CalculateLookAtPosition, result through x8)
-0x12073c8  # GetYaw
-0x12080f0  # UpdatePitch
-0x1208a04  # TPPCameraStats_Update (TPPCameraComponent::SetVehicleData)
-0x1242f44  # AreaSpeedLimiter_Update
-0x128ae3c  # UpdateTireParameters
-0x12b1bf8  # UpdateVehicleCameraInput
-0x12d2738  # BikeSuspension_AnimationUpdate
-0x12dc200  # VehicleUpdateOrientationWithPID
-0x12de77c  # CarSuspension_AnimationUpdate
-0x13057e0  # VehicleDetachPart
-0x130d970  # RollFactorTorqueThing (DrivingForcesHelper::Apply)
-0x133bd08  # WheelEffectUpdate
-0x1359264  # ApplyForceAtPosition
-0x13592ec  # vehiclePhysicsData_ApplyTorqueAtPosition
-0x13598e0  # PhysicsUnkStructVelocityUpdate (RigidBody::ForceSetLinearVelocity)
-0x1359958  # PhysicsStructUpdate (RigidBody::Recalculate)
-0x1391684  # VehicleHelperUpdate
-0x1392998  # ProcessAirResistance
-0x1398b58  # FourWheelTorque (ApplyAntiSwaybarForce)
-0x3317ef8  # GetGameSystemsData
-0x357dd5c  # FPPCameraUpdate (FPPCameraComponent::Rotate)
+0x2a5d238  # GetLocationFromOffset (TPPCameraComponent::CalculateLookAtPosition, result through x8)
+0x2a5fe58  # GetYaw
+0x2a60ba4  # UpdatePitch
+0x2a614bc  # TPPCameraStats_Update (TPPCameraComponent::SetVehicleData)
+0x2a9b43c  # AreaSpeedLimiter_Update
+0x2ae37fc  # UpdateTireParameters
+0x2b073e4  # UpdateVehicleCameraInput
+0x2b29100  # BikeSuspension_AnimationUpdate
+0x2b33030  # VehicleUpdateOrientationWithPID
+0x2b3572c  # CarSuspension_AnimationUpdate
+0x2b5d484  # VehicleDetachPart
+0x2b65468  # RollFactorTorqueThing (DrivingForcesHelper::Apply)
+0x2b8d1bc  # WheelEffectUpdate
+0x2baa740  # ApplyForceAtPosition
+0x2baa7cc  # vehiclePhysicsData_ApplyTorqueAtPosition
+0x2baadb4  # PhysicsUnkStructVelocityUpdate (RigidBody::ForceSetLinearVelocity)
+0x2baaf34  # PhysicsStructUpdate (RigidBody::Recalculate)
+0x2be1d10  # VehicleHelperUpdate
+0x2be2ff4  # ProcessAirResistance
+0x2be9170  # FourWheelTorque (ApplyAntiSwaybarForce)
+0x1aebc3c  # GetGameSystemsData
+0x1e7d44c  # FPPCameraUpdate (FPPCameraComponent::Rotate)

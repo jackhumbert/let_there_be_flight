@@ -58,11 +58,11 @@ __attribute__((noinline)) uintptr_t ltbf_mac_trap_stub()
 constexpr uint32_t kVftIScriptable = 1180173983;
 constexpr uint32_t kVftIComponent = 1586431952;
 constexpr uint32_t kVftGameComponent = 331746781;
-constexpr uintptr_t kVtableIComponent = 0x6ED3698;     // entIComponent (constructor 0xCA5E34)
-constexpr uintptr_t kVtableGameComponent = 0x6FB1820;  // gameComponent (constructor 0x1F2A148)
+constexpr uintptr_t kVtableIComponent = 0x78C6FB0;     // entIComponent (constructor 0xCA5E34)
+constexpr uintptr_t kVtableGameComponent = 0x7862FB8;  // gameComponent (constructor 0x1F2A148)
 // IScriptable has three candidate macOS vtables (R41b); its one base call LTBF makes (slot 0xD8) is Codeware's row
 // IScriptable_sub_D8 (4175699423).
-constexpr uintptr_t kIScriptableSubD8 = 0x2238918;
+constexpr uintptr_t kIScriptableSubD8 = 0x11e4da0;
 
 const char* PluginPathC()
 {
@@ -230,7 +230,7 @@ RED4ext::PluginHandle PluginHandleValue()
 
 bool IsCodewareShared(uintptr_t aRva)
 {
-    return aRva == 0xC985EC || aRva == 0x21FBF90;
+    return aRva == 0x19AA7D8 || aRva == 0x11A7E28;
 }
 
 const char* HookResultName(HookResult aResult)

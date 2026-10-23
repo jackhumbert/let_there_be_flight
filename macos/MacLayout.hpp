@@ -27,8 +27,8 @@
 // ---- R41b results (macos/ADDRESS_LEFTOVERS.md). The two items R41b left unverified keep a fail-safe and a log line. -------------
 // The game's dynamic CRUID accessor: uint64_t() returning (old + 1) * 4 | 1 on the int64 global at 0x8DC7EB0 (Windows hash
 // 2027097961, inline `lock xadd` there). CRUID::Next on macOS calls it.
-#define LTBF_MAC_CRUID_NEXT_RVA 0x91248C
-#define LTBF_MAC_CRUID_COUNTER_RVA 0x8DC7EB0
+#define LTBF_MAC_CRUID_NEXT_RVA 0xF3559C
+#define LTBF_MAC_CRUID_COUNTER_RVA 0x99DBE00
 // FPPCameraComponent.animFeature's vehicleProceduralCameraWeight (Windows +0xEC inside the anim feature): not checked on macOS.
 // LTBF sets it through the reflected property instead of the offset; this placeholder stays until the offset is read.
 #ifndef LTBF_MAC_TODO_R41b_FPPAnimFeature_vehicleProceduralCameraWeight
@@ -52,7 +52,7 @@ constexpr std::ptrdiff_t WheeledPhysics_airDragCoefficient = 0xC80; // W 0xC90
 // vehicle::BikePhysics
 constexpr std::ptrdiff_t BikePhysics_vehicle = 0xDC8;            // W 0xDE0
 // The global flag byte ApplyAirResistance tests (W .data 0x32FE130; M __bss 0x8FEEA51, written at runtime)
-constexpr uintptr_t AirResistanceFlagRva = 0x8FEEA51;
+constexpr uintptr_t AirResistanceFlagRva = 0x9CD0561;
 
 // ---- R41b (macos/ADDRESS_LEFTOVERS.md sections 1 and "new layout findings") ------------------------------------------------------
 // vehicle::BikePhysics: turnRate is a WheeledPhysics member (W 0xF4); the bike block moves by -0x18 (W 0xE18/0xE1C/0xE20)
