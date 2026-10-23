@@ -520,12 +520,14 @@ struct BaseObject : game::Object, IHookable
       float unk2C0;
       uint32_t unk60;
     } input;
+    uint64_t unk2C8_25; // 2.5: 8 new bytes after input (Mac bike code reads input 0x264..0x2C4 unchanged; physics 0x2C8 -> 0x2D0)
     Physics *physics;                     // 2C8
     PhysicsData *physicsData;             // 2D0
         Handle<ISerializable> curveSetData;
     Handle<ISerializable> /* LTBF R41: Handle<ChassisComponent> */ chassis;
     float unk2F8[16];
     uint64_t chassisType;
+    uint64_t unk340_25; // 2.5: 8 new bytes before worldTransform (Mac code: 0x338 -> 0x340, 0x340 -> 0x350)
     WorldTransform worldTransform;
     Vector3 unk360;
     float unk36C;
@@ -537,7 +539,8 @@ struct BaseObject : game::Object, IHookable
     // Ref<AI::Archetype> archetype;  // 3A0 ??
     void * unk3A8;
     void * unk3B0;
-    action::ActionInterface actionInterface; // 3B8
+    action::ActionInterface actionInterface; // 3B8 (2.5: 3C8)
+    uint8_t unk3D0_25[0x10]; // 2.5: 0x10 more somewhere between actionInterface and 0x4A8 (old 0x4A8.. move +0x20); LTBF reads nothing there
         Handle<ISerializable> driving;
         Handle<ISerializable> drivingParamsGeneric;
         Handle<ISerializable> drivingParamsRace;
@@ -679,7 +682,7 @@ struct BaseObject : game::Object, IHookable
     HashMap<uint32_t, void*> unkB60;
 };
 // #pragma pack(pop)
-RED4EXT_ASSERT_SIZE(BaseObject, 0xBA0);
+RED4EXT_ASSERT_SIZE(BaseObject, 0xBC0); // 2.5: +0x20 (the game object is 0xBA0 in 2.5; this struct's tail is 0x20 longer, unused)
 RED4EXT_ASSERT_OFFSET(BaseObject, isOnGround, 0x25C);
 // RED4EXT_ASSERT_OFFSET(BaseObject, acceleration, 0x264);
 // RED4EXT_ASSERT_OFFSET(BaseObject, deceleration, 0x268);
@@ -687,13 +690,14 @@ RED4EXT_ASSERT_OFFSET(BaseObject, isOnGround, 0x25C);
 // RED4EXT_ASSERT_OFFSET(BaseObject, burnout, 0x2BC);
 // RED4EXT_ASSERT_OFFSET(BaseObject, archetype, 0x3A0);
 // RED4EXT_ASSERT_OFFSET(BaseObject, isVehicleOnStateLocked, 0x6D2);
-RED4EXT_ASSERT_OFFSET(BaseObject, physics, 0x2C8);
-RED4EXT_ASSERT_OFFSET(BaseObject, physicsData, 0x2D0);      // LTBF R41: R40, same on macOS
-RED4EXT_ASSERT_OFFSET(BaseObject, actionInterface, 0x3B8);  // LTBF R41: R41b, same on macOS
-RED4EXT_ASSERT_OFFSET(BaseObject, input, 0x264);
-RED4EXT_ASSERT_OFFSET(BaseObject, meshParamsRegistry, 0x610);
-RED4EXT_ASSERT_OFFSET(BaseObject, autonomousData, 0x860);
-RED4EXT_ASSERT_OFFSET(BaseObject, destruction_related, 0xA20);
+RED4EXT_ASSERT_OFFSET(BaseObject, physics, 0x2D0);        // 2.5 (2.3.1 0x2C8)
+RED4EXT_ASSERT_OFFSET(BaseObject, physicsData, 0x2D8);    // 2.5 (2.3.1 0x2D0)      // LTBF R41: R40, same on macOS
+RED4EXT_ASSERT_OFFSET(BaseObject, actionInterface, 0x3C8);// 2.5 (2.3.1 0x3B8)  // LTBF R41: R41b, same on macOS
+RED4EXT_ASSERT_OFFSET(BaseObject, input, 0x264);          // unchanged in 2.5 (Mac bike update 0x2B291B8 reads +0x264, +0x278)
+RED4EXT_ASSERT_OFFSET(BaseObject, worldTransform, 0x350); // 2.5 (2.3.1 0x340)
+RED4EXT_ASSERT_OFFSET(BaseObject, meshParamsRegistry, 0x630); // 2.5 (2.3.1 0x610)
+RED4EXT_ASSERT_OFFSET(BaseObject, autonomousData, 0x880);  // 2.5 (2.3.1 0x860)
+RED4EXT_ASSERT_OFFSET(BaseObject, destruction_related, 0xA40); // 2.5 (2.3.1 0xA20)
 // char (*__kaboom)[sizeof(BaseObject)] = 1;
 // char (*__kaboom2)[offsetof(BaseObject, physicsSystem)] = 1;
 }

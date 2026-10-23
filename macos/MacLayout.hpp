@@ -84,7 +84,7 @@ constexpr std::ptrdiff_t ChassisComponent_proxyID = 0x160;
 constexpr std::ptrdiff_t ChassisComponent_sharedMutex = 0x16C;
 constexpr std::ptrdiff_t ProxyHelper_mutex = 0x18;
 // vehicle::BaseObject.actionInterface (same)
-constexpr std::ptrdiff_t BaseObject_actionInterface = 0x3B8;
+constexpr std::ptrdiff_t BaseObject_actionInterface = 0x3C8; // 2.5 (2.3.1 0x3B8)
 // ent::SlotComponent.slotIndexLookup (same; R41b: GetSlotIndex reads [+0x150..+0x16C] inline)
 constexpr std::ptrdiff_t SlotComponent_slotIndexLookup = 0x150;
 // ent::VisualControllerComponent.resourcePaths: INFERRED, not read from a macOS function. The class has the same size (0x128) and the
