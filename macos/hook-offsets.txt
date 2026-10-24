@@ -1,0 +1,30 @@
+# Image-relative offsets Let There Be Flight hooks (RED4EXT_GUM_HOOK_OFFSETS allowlist entries). One per line; # starts a comment.
+# RED4ext-macos installs a detour only for an offset on the allowlist; any other Attach reports success and does nothing (the plugin
+# logs that as NOT ACTIVE). Rows from macos/LtbfSdkRows.inc (R40 / R41b). Kept in step with the hooks of the build.
+# Not listed, on purpose:
+#  - 0xc985ec Entity_Initialize and 0x21fbf90 ScriptValidator_Validate: Codeware hooks them and lists them; LTBF joins Codeware's
+#    hook chain from ltbf_registerNatives.
+#  - GetFxForMaterial (inlined on macOS), SkidMarkEffectStart 0x1340f28 and TireTrackEffectStart 0x134199c: not hooked on macOS
+#    (the flight trail effects, macos/NOT_YET.md).
+0x2a5d238  # GetLocationFromOffset (TPPCameraComponent::CalculateLookAtPosition, result through x8)
+0x2a5fe58  # GetYaw
+0x2a60ba4  # UpdatePitch
+0x2a614bc  # TPPCameraStats_Update (TPPCameraComponent::SetVehicleData)
+0x2a9b43c  # AreaSpeedLimiter_Update
+0x2ae37fc  # UpdateTireParameters
+0x2b073e4  # UpdateVehicleCameraInput
+0x2b29100  # BikeSuspension_AnimationUpdate
+0x2b33030  # VehicleUpdateOrientationWithPID
+0x2b3572c  # CarSuspension_AnimationUpdate
+0x2b5d484  # VehicleDetachPart
+0x2b65468  # RollFactorTorqueThing (DrivingForcesHelper::Apply)
+0x2b8d1bc  # WheelEffectUpdate
+0x2baa740  # ApplyForceAtPosition
+0x2baa7cc  # vehiclePhysicsData_ApplyTorqueAtPosition
+0x2baadb4  # PhysicsUnkStructVelocityUpdate (RigidBody::ForceSetLinearVelocity)
+0x2baaf34  # PhysicsStructUpdate (RigidBody::Recalculate)
+0x2be1d10  # VehicleHelperUpdate
+0x2be2ff4  # ProcessAirResistance
+0x2be9170  # FourWheelTorque (ApplyAntiSwaybarForce)
+0x1aebc3c  # GetGameSystemsData
+0x1e7d44c  # FPPCameraUpdate (FPPCameraComponent::Rotate)

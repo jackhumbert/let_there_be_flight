@@ -31,6 +31,8 @@ private:
 
   static void OnDescribe(Descriptor *aType, RED4ext::CRTTISystem *) {}
 };
+LTBF_FORCE_RTTI_REGISTRAR(IFlightThruster) // LTBF R41: macOS, see Engine/RTTIRegistrar.hpp
+
 RED4EXT_ASSERT_OFFSET(IFlightThruster, flightComponent, 0x40);
 RED4EXT_ASSERT_OFFSET(IFlightThruster, boneName, 0x50);
 RED4EXT_ASSERT_OFFSET(IFlightThruster, slotName, 0x58);

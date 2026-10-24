@@ -20,6 +20,8 @@ private:
     aType->AddFunction<&MeshComponentExt::SetMesh>("SetMesh");
   }
 };
+LTBF_FORCE_RTTI_REGISTRAR(MeshComponentExt) // LTBF R41: macOS, see Engine/RTTIRegistrar.hpp
+
 
 
 class IPlacedComponentExt : public Engine::RTTIExpansion<IPlacedComponentExt, RED4ext::ent::IPlacedComponent> {
@@ -33,6 +35,8 @@ private:
     aType->AddFunction<&IPlacedComponentExt::SetParentTransform>("SetParentTransform");
   }
 };
+LTBF_FORCE_RTTI_REGISTRAR(IPlacedComponentExt) // LTBF R41: macOS, see Engine/RTTIRegistrar.hpp
+
 
 class EntityExt : public Engine::RTTIExpansion<EntityExt, RED4ext::ent::Entity> {
 public:
@@ -79,3 +83,5 @@ private:
 
   static void OnExpand(Descriptor *aType, RED4ext::CRTTISystem *);
 };
+LTBF_FORCE_RTTI_REGISTRAR(EntityExt) // LTBF R41: macOS, see Engine/RTTIRegistrar.hpp
+
