@@ -121,5 +121,5 @@ jobs:
           category: main
           changelog: ${{ steps.nexus_changelog.outputs.changelog }}
           update_mod_version: true
-          archive_existing_version: true
+          archive_existing_version: false
           primary_mod_manager_download: true
