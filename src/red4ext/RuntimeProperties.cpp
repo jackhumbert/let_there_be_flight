@@ -11,22 +11,6 @@ struct ScriptRTTIContainer {
   ScriptHost *host;
 };
 
-struct ScriptData {
-  RED4ext::HashMap<uint64_t, uint64_t> unk00;
-  RED4ext::HashMap<uint64_t, uint64_t> unk30;
-  RED4ext::HashMap<uint64_t, uint64_t> unk60;
-  RED4ext::DynArray<void*> files;
-  RED4ext::DynArray<void *> functions;
-  RED4ext::DynArray<void *> enums;
-  RED4ext::DynArray<void*> unkC0;
-  RED4ext::DynArray<ScriptClass*> classes;
-  RED4ext::DynArray<void*> types;
-  RED4ext::DynArray<RED4ext::CString> strings;
-  RED4ext::HashMap<uint64_t, uint64_t> unk100;
-  uint8_t unk60MUTX;
-void* unk138;
-};
-
 RED4ext::CRTTIHandleType **__fastcall CreateCRTTIArrayTypeFromClass(RED4ext::CRTTIArrayType **a1, RED4ext::CBaseRTTIType *a2) {
   RED4ext::UniversalRelocFunc<decltype(&CreateCRTTIArrayTypeFromClass)> call(1404578149);
   return call(a1, a2);
@@ -48,11 +32,12 @@ RED4ext::CRTTIResourceAsyncReferenceType **__fastcall CreateCRTTIRaRefTypeFromCl
 }
 
 // bool CScriptDataValidator::Validate(CScriptedDataEnvironment const &, IScriptDataErrorReporter &) const
-REGISTER_FLIGHT_HOOK_HASH(bool __fastcall, 898639042, ProcessScriptTypes, uint32_t* version, const ScriptData* scriptData, void* scriptLogger) {
+// Struct layouts are 2.5 (ScriptDefinitions.hpp); the first argument is the validator (this).
+REGISTER_FLIGHT_HOOK_HASH(bool __fastcall, 898639042, ProcessScriptTypes, uint32_t* version, const CScriptedDataEnvironment* scriptData, void* scriptLogger) {
   for (const auto& scriptClass : scriptData->classes) {
     for (const auto& prop : scriptClass->properties) {
-      if (prop->runtimeProperties.size) {
-        auto offsetStr = prop->runtimeProperties.Get("offset");
+      if (prop->attributes.size) {
+        auto offsetStr = prop->attributes.Get("offset");
         if (offsetStr) {
           auto cstr = offsetStr->c_str();
           char* p;
@@ -60,8 +45,8 @@ REGISTER_FLIGHT_HOOK_HASH(bool __fastcall, 898639042, ProcessScriptTypes, uint32
           RED4ext::CName typeName = prop->type->name;
           if (*p == 0) {
             spdlog::info("{}.{} at 0x{:X} {}", scriptClass->name.ToString(), prop->name.ToString(), offsetValue, prop->type->name.ToString());
-            if (prop->flags.isNative) {
-              auto customTypeStr = prop->runtimeProperties.Get("type");
+            if (prop->flags.isImported) {
+              auto customTypeStr = prop->attributes.Get("type");
               if (customTypeStr) {
                 spdlog::info("Custom type: {}", customTypeStr->c_str());
                 typeName = RED4ext::CName(customTypeStr->c_str());

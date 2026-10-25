@@ -115,7 +115,7 @@ public native let handbrake: Float;
 // public native let turnX3: Float;
 
 @addField(VehicleObject)
-@runtimeProperty("offset", "0x699")
+@runtimeProperty("offset", "0x6B9")
 public native let ignoreImpulses: Bool;
 
 @addField(VehicleObject)
@@ -123,7 +123,7 @@ public native let ignoreImpulses: Bool;
 public native let turnX: Float;
 
 @addField(VehicleObject)
-@runtimeProperty("offset", "0xB04")
+@runtimeProperty("offset", "0xB34")
 public native let tracePosition: Vector3;
 
 @addMethod(VehicleObject)
