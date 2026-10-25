@@ -27,6 +27,13 @@ struct FlightStatus {
 
 // doesn't seem to affect audio bug
 
+#ifdef __APPLE__
+// LTBF R41: GetFxForMaterial is inlined on macOS (R40: no function to hook), and SkidMarkEffectStart / TireTrackEffectStart only
+// restart the effect when GetFxForMaterial flagged a flight mode change in the MaterialFx's spare byte; they do not get the material
+// name the replacement effect is looked up by. So on macOS the flight trail effects are not replaced and none of the three hooks is
+// registered (macos/NOT_YET.md).
+#else
+
 // replace tire tracks & skid marks with our own effects
 REGISTER_FLIGHT_HOOK_HASH(RED4ext::vehicle::MaterialFx * __fastcall, 2081691750, GetFxForMaterial, RED4ext::vehicle::Effects *effects,
                      RED4ext::CName material, bool isBackWheel) {
@@ -71,3 +78,4 @@ REGISTER_FLIGHT_HOOK_HASH(bool __fastcall, 2693082452, SkidMarkEffectStart, RED4
   auto modeChanged = ((FlightStatus*)&fxLookup->normal.particle.extra_byte_for_fun)->hasChanged;
   return SkidMarkEffectStart_Original(effects, unk30, fxLookup, a4, a5, physicalMaterialChange || modeChanged, conditionChange, condition);
 }
+#endif

@@ -1,0 +1,1 @@
+# Symbols that may stay undefined at link time (looked up when the dylib loads). One per line. Empty on purpose.

@@ -17,7 +17,7 @@ public class VehicleFlightDriverCombatTPPContextEvents extends VehicleFlightDriv
 
   protected func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
     FlightLog.Info("[InputContext] " + NameToString(this.GetStateName()) + " from " + NameToString(stateContext.GetStateMachineCurrentState(n"InputContext")));
-    this.m_weapon = DefaultTransition.GetActiveWeapon(scriptInterface);
+    this.m_weapon = DefaultTransition.GetRightActiveWeapon(scriptInterface);
     stateContext.SetPermanentBoolParameter(n"inMeleeDriverCombat", this.m_weapon.IsMelee(), true);
     FlightSettings.SetBool("inTPPDriverCombat", true);
     if this.m_gameplaySettings.GetIsInputHintEnabled() && this.m_isGameplayInputHintManagerInitialized {
