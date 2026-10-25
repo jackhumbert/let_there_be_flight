@@ -13,7 +13,7 @@ public class VehicleFlightDriverCombatAimContextEvents extends VehicleFlightDriv
 
   protected func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
     super.OnEnter(stateContext, scriptInterface);
-    this.m_weapon = DefaultTransition.GetActiveWeapon(scriptInterface);
+    this.m_weapon = DefaultTransition.GetRightActiveWeapon(scriptInterface);
     stateContext.SetPermanentBoolParameter(n"inMeleeDriverCombat", this.m_weapon.IsMelee(), true);
     if this.m_gameplaySettings.GetIsInputHintEnabled() && this.m_isGameplayInputHintManagerInitialized {
       this.ShowVehicleDriverCombatTPPInputHints(stateContext, scriptInterface);
