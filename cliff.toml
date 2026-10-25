@@ -14,7 +14,7 @@ body = """
     ### {{ group | upper_first }}
     {% for commit in commits %}\
         - {% if commit.breaking %}[**breaking**] {% endif %}\
-            {{ commit.message | upper_first }} [{{ commit.scope }}] ({{ commit.id }})
+            {{ commit.message | upper_first }}{% if commit.scope %} ({{ commit.scope }}){% endif %} ({{ commit.id }})
     {% endfor %}\
 {% endfor %}
 ### Contributors
@@ -39,4 +39,6 @@ commit_parsers = [
     { message = "^ci", group = "CI", skip = true },
     { body = ".*security", group = "Security" }
 ]
-tag_pattern = "v[0-9]+.[0-9]+.[0-9]+"
+# git-cliff 0.10 matches this as a glob (libgit2 tag_names), not a regex;
+# the old regex-style "v[0-9]+..." matched no tags at all.
+tag_pattern = "v[0-9]*"
