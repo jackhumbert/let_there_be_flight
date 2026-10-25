@@ -15,6 +15,8 @@ param(
     [int]$ShotWidth = 1600   # width of the screenshot the -X/-Y coordinates come from
 )
 $ErrorActionPreference = 'Stop'
+# `-Keys w,lctrl` through `powershell -File` arrives as one string
+$Keys = @($Keys | ForEach-Object { $_ -split ',' } | Where-Object { $_ })
 Add-Type @'
 using System;
 using System.Runtime.InteropServices;
