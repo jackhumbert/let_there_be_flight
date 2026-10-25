@@ -448,7 +448,10 @@ public native class FlightComponent extends GameComponent {
       // try without wind
       // FlightAudio.Get().Stop("windLeft");
       // FlightAudio.Get().Stop("windRight");
-      this.sys.playerComponent = null;
+      // a direct seat swap mounts the next vehicle before this unmount finishes, so only clear our own entry
+      if this.sys.playerComponent == this {
+        this.sys.playerComponent = null;
+      }
       this.isPlayerMounted = false;
       if this.active {
         this.sys.ctlr.Deactivate(true);
