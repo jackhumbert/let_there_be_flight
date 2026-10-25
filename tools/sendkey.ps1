@@ -9,6 +9,8 @@ param(
     [string[]]$Keys = @(),
     [int]$HoldMs = 80,
     [int]$X = -1,
+    [int]$MoveX = 0,
+    [int]$MoveY = 0,
     [int]$Y = -1,
     [int]$ShotWidth = 1600   # width of the screenshot the -X/-Y coordinates come from
 )
@@ -21,6 +23,12 @@ public static class LtbfKeys {
     [StructLayout(LayoutKind.Sequential)] struct MOUSEINPUT { public int dx, dy; public uint mouseData, dwFlags, time; public IntPtr extra; }
     [StructLayout(LayoutKind.Explicit, Size = 40)] struct INPUT { [FieldOffset(0)] public uint type; [FieldOffset(8)] public KEYBDINPUT ki; [FieldOffset(8)] public MOUSEINPUT mi; }
     // lmb/rmb: MOUSEEVENTF_LEFTDOWN 0x2 / LEFTUP 0x4, RIGHTDOWN 0x8 / RIGHTUP 0x10
+    // relative move (MOUSEEVENTF_MOVE 0x1): the game reads raw deltas for its own menu cursor
+    public static void Move(int dx, int dy) {
+        var i = new INPUT { type = 0 };
+        i.mi.dx = dx; i.mi.dy = dy; i.mi.dwFlags = 0x1;
+        SendInput(1, new[] { i }, Marshal.SizeOf(typeof(INPUT)));
+    }
     public static void Mouse(bool right, bool up) {
         var i = new INPUT { type = 0 };
         i.mi.dwFlags = right ? (up ? 0x10u : 0x8u) : (up ? 0x4u : 0x2u);
@@ -56,11 +64,18 @@ if (-not $proc) { Write-Error 'Cyberpunk2077 window not found' }
 [LtbfKeys]::SetProcessDPIAware() | Out-Null
 [LtbfKeys]::SetForegroundWindow($proc.MainWindowHandle) | Out-Null
 Start-Sleep -Milliseconds 200
+if ($MoveX -ne 0 -or $MoveY -ne 0) {
+    [LtbfKeys]::Move($MoveX, $MoveY)
+    Write-Output "moved $MoveX,$MoveY"
+    if (-not $Keys) { return }
+}
 if ($X -ge 0 -and $Y -ge 0) {
     $r = New-Object LtbfKeys+RECT
     [LtbfKeys]::GetWindowRect($proc.MainWindowHandle, [ref]$r) | Out-Null
     $scale = ($r.Right - $r.Left) / $ShotWidth
     [LtbfKeys]::SetCursorPos([int]($r.Left + $X * $scale), [int]($r.Top + $Y * $scale)) | Out-Null
+    # SetCursorPos makes no input event, and the game only re-reads the cursor on mouse input: nudge it
+    [LtbfKeys]::Move(1, 0); Start-Sleep -Milliseconds 30; [LtbfKeys]::Move(-1, 0)
     Start-Sleep -Milliseconds 150
     [LtbfKeys]::Mouse($false, $false); Start-Sleep -Milliseconds 80; [LtbfKeys]::Mouse($false, $true)
     Write-Output "clicked $X,$Y"

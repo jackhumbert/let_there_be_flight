@@ -25,7 +25,15 @@ def run(code, timeout):
     tmp = os.path.join(BRIDGE, "request.txt.tmp")
     with open(tmp, "w", encoding="utf-8", newline="\n") as f:
         f.write(rid + "\n" + code)
-    os.replace(tmp, os.path.join(BRIDGE, "request.txt"))
+    # the mod may have request.txt open for its poll at this instant; Windows then refuses the replace
+    for attempt in range(50):
+        try:
+            os.replace(tmp, os.path.join(BRIDGE, "request.txt"))
+            break
+        except PermissionError:
+            if attempt == 49:
+                raise
+            time.sleep(0.02)
     deadline = time.monotonic() + timeout
     resp = os.path.join(BRIDGE, "response.txt")
     while time.monotonic() < deadline:
