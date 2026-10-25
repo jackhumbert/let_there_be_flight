@@ -24,6 +24,20 @@
 // thrusterMesh / thrusterAppearance overrides in vehicles.tweak. `canEnterFlight = false`
 // on a record has the same effect and is kept for older configs.
 //
+// Per-vehicle whitelist.
+//
+// `canEnterFlight = true` is the opt-in half of the same flag. With Mod Settings >
+// Let There Be Flight > General Flight Settings > Flight Availability set to
+// "Whitelist Only", only records carrying it can be flown; every other vehicle keeps its
+// flight component but the toggle, its input hint and the flight quickhacks are not offered.
+// In the default "All Vehicles" mode the flag only re-enables a record that something else
+// turned off. Example r6/tweaks/my_flight_whitelist.yaml:
+//
+//   Vehicle.v_sport2_quadra_type66_player:
+//     canEnterFlight: true
+//   Vehicle.v_sport1_rayfield_caliburn_player:
+//     canEnterFlight: true
+//
 // Vehicles reported crashing with CrystalCoat on 2.3 / 2.31 (uncomment to disable):
 //
 // Vehicle.v_sport1_rayfield_caliburn_player { bool flightDisabled = true; }

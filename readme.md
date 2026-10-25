@@ -19,18 +19,48 @@ Other features include:
 
 ## Dependencies
 
-* [RED4ext](https://github.com/WopsS/RED4ext)
-* [TweakXL](https://github.com/psiberx/cp2077-tweak-xl)
-* [ArchiveXL](https://github.com/psiberx/cp2077-archive-xl)
-* [Input Loader](https://github.com/jackhumbert/cyberpunk2077-input-loader)
-* [Redscript](https://github.com/jac3km4/redscript)
-* [Mod Settings](https://github.com/jackhumbert/mod_settings) (optional)
+* [RED4ext](https://github.com/WopsS/RED4ext) 1.29.0+
+* [TweakXL](https://github.com/psiberx/cp2077-tweak-xl) 1.11.0+
+* [ArchiveXL](https://github.com/psiberx/cp2077-archive-xl) 1.27.0+
+* [Input Loader](https://github.com/jackhumbert/cyberpunk2077-input-loader) v0.2.3+
+* [Redscript](https://github.com/jac3km4/redscript) 0.5.31+
+* [Mod Settings](https://github.com/jackhumbert/mod_settings) v0.2.21+ (optional)
 
 ## Configuration
 
 [`red4ext/let_there_be_flight/inputs.xml`](https://github.com/jackhumbert/let_there_be_flight/tree/main/src/input_loader/let_there_be_flight.xml) contains all the keybindings for the keyboard & controller - you can customize these to your liking. See all possibilities here: https://nativedb.red4ext.com/EInputKey
 
 Other settings can be found in `red4ext/plugins/let_there_be_flight/packed.reds` for the time being - search for `FlightSettings.SetFloat` to see all the variables used by the mod.
+
+### Restricting flight to certain vehicles
+
+**Mod Settings > Let There Be Flight > General Flight Settings > Flight Availability** decides which vehicles you are allowed to fly. No redscript needed.
+
+| Mode | What can fly |
+|---|---|
+| All Vehicles | Everything, the default and the behaviour of every earlier version. |
+| Owned Vehicles | Your summoned vehicle, plus any vehicle whose record is unlocked in your garage (bought, quest rewards, gifts). Note this goes by record, so an identical model spawned by traffic also counts. |
+| Player Vehicle Only | Only the vehicle the game marks as yours, i.e. the one you summon. |
+| Whitelist Only | Only the vehicle records you list yourself, see below. |
+
+The setting applies live, and it only gates what you can fly: every vehicle still gets its flight component, so nothing about how other vehicles look or drive changes. In a restricted mode the flight toggle does nothing on a vehicle that is not allowed, its input hint is not shown, and the flight quickhacks are not offered for it.
+
+For **Whitelist Only**, create a file called `r6/tweaks/my_flight_whitelist.yaml` (any name works, it just has to be in `r6/tweaks` and end in `.yaml`) and list one record per vehicle:
+
+```yaml
+Vehicle.v_sport2_quadra_type66_player:
+  canEnterFlight: true
+
+Vehicle.v_sport1_rayfield_caliburn_player:
+  canEnterFlight: true
+
+Vehicle.v_sportbike2_arch_jackie_player:
+  canEnterFlight: true
+```
+
+The record names are the same `Vehicle.<name>` ids used elsewhere in TweakDB; [`src/tweaks/vehicles.tweak`](https://github.com/jackhumbert/let_there_be_flight/tree/main/src/tweaks/vehicles.tweak) lists most of the player-ownable ones. The opposite flag, `flightDisabled: true`, blacklists a vehicle in every mode and is documented in [`src/tweaks/vehicleFlight.tweak`](https://github.com/jackhumbert/let_there_be_flight/tree/main/src/tweaks/vehicleFlight.tweak).
+
+### Per-vehicle configuration classes
 
 Vehicles can be customized via extending the `IFlightConfiguration` class (should not be extended directly if you don't know what you're doing - use `CarFlightConfiguration`, `SixWheelCarFlightConfiguration`, or `BikeFlightConfiguration`). As an example, the below disables flight for all vehicles except the Jen Rowley Type 66:
 
@@ -51,6 +81,17 @@ public class FlightConfiguration_quadra_type66__basic_jen_rowley extends CarFlig
   public func CanActivate() -> Bool = true;
 }
 ```
+
+## Compatibility
+
+Known interactions with other mods, checked against the mod sources where they are public. "Reported" means Nexus user reports only, not verified here.
+
+- Dark Future: works with LTBF 0.3.18 and later. Older LTBF versions replaced `VehicleEventsTransition.HandleCameraInput` with `@replaceMethod`, which collided with the same replacement in Dark Future's `DFVehicleSleepSystem.reds` and failed redscript compilation. LTBF now wraps that method instead. If you still see a compile error naming `HandleCameraInput`, update LTBF.
+- Limited HUD: reported to work again with current versions of both mods. The Nexus description that lists it as incompatible is out of date.
+- Project E3 HUD: reported layout overlap with the flight HUD. Not verified; turn off the flight UI in Mod Settings if the two collide.
+- Night City Alive, Night City Allies, Car Modification Shop, Vehicle Navigation System, Enhanced Vehicle System, Need More Smoke FX: no public source to check and no specific conflicting function named in reports. Not verified either way.
+
+LTBF replaces these base game methods, so any other mod that also replaces one of them will fail to compile: `VehicleComponent.OnVehicleWaterEvent`, `VehicleObject.SendQuickhackCommands`, and `OnVehicleStateChanged` on `VehicleCombatContextDecisions`, `VehicleDriverCombatContextDecisions` and `VehicleDriverContextDecisions`.
 
 ## Troubleshooting
 

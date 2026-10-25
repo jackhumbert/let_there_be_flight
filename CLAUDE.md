@@ -9,9 +9,7 @@ Sibling repos with the same build/release shape and their own CLAUDE.md: `../mod
 - `src/red4ext/` - the plugin. `Main.cpp` = entry, dependency version checks, registers scripts/tweaks/archive/inputs with the other plugins. `Hooks/` = one game-function hook per file. `Utils/FlightModule.hpp` = hook registry macros.
 - `src/redscript/` - 71 `.reds` files, packed by CMake into `packed.reds` + `module.reds`.
 - `src/tweaks/` - `.tweak` (native) + `.yaml` tweaks, packed into one file each.
-- `src/wolvenkit/` - Wolvenkit project. The built `packed/archive/pc/mod/let_there_be_flight.archive` is committed; CMake just copies it. Rebuild in Wolvenkit only when the archive content changes.
-  - Without the GUI: WolvenKit CLI 9.0.1 is at `D:\cp2077_work\build\tools\wolvenkit-9.0.1\WolvenKit.CLI.exe`. To change one file, `extract` the committed archive to a scratch folder, replace the file (`convert serialize` / edit the JSON / `convert deserialize` for CR2W like the localization json), then `pack` that folder. Do not pack `source/archive` alone: it lacks 7 of the archive's 45 files (some thruster meshes, a streaming sector and block). Compare `archive -l` listings before and after. Done this way on 2026-10-25 for three missing Mod Settings labels.
-  - `src/wolvenkit/source` is in `.gitignore` but its files are tracked; `git add` on them needs `-f` (or stage with `git add -u`).
+- `src/wolvenkit/` - Wolvenkit project. The built `packed/archive/pc/mod/let_there_be_flight.archive` is committed; CMake just copies it. Rebuild it with `python tools/pack_archive.py` (see "Rebuilding the archive").
 - `src/fmod_studio/` - FMOD project. Built banks `Build/Desktop/*.bank` are committed; CMake copies them plus `fmod.dll`/`fmodstudio.dll`.
 - `src/input_loader/let_there_be_flight.xml` - keybinds, installed as `inputs.xml`.
 - `deps/` - git submodules (see below). `deps/fmod`, `deps/PhysX_3.4`, `deps/PxShared` are NOT submodules (gitignored local SDK drops) - do not delete.
@@ -30,6 +28,7 @@ cmake --install build      # copies game_dir + game_dir_debug into CYBERPUNK_207
 cmake --build build --target let_there_be_flight_release   # zips game_dir -> let_there_be_flight_<ver>.zip
 ```
 
+- C++ compiles need the MSVC environment: from an agent shell a bare `cmake --build build` fails with `Cannot open include file: 'concepts'` (redscript-only rebuilds still succeed). Wrap it in the PowerShell tool: `cmd /c '"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" >nul && cmake --build build'`. The same applies to the sibling repos.
 - Game dir is read from the `CYBERPUNK_2077_GAME_DIR` cache var (currently the Steam install). Game version for the `.rc`/badge comes from `Cyberpunk2077.exe` FileVersion via `deps/red4ext.sdk/cmake/GetGameVersion.cmake`; in CI there is no exe so it falls back to the SDK's `RED4EXT_RUNTIME_LATEST` macro. Keep the fork's `Api/v0/Runtime.hpp` `RUNTIME_LATEST` pointing at the current patch or the release name/badge will be wrong.
 - Mod version comes from the latest git tag (`ConfigureVersionFromGit`). Untagged local builds get `+<branch>.<n>.<sha>` metadata (CI builds drop it).
 - `game_dir_requirements/` is NOT safe to copy wholesale into the game: `FindRED4ext`/`FindArchiveXL`/`FindTweakXL` unpack whatever release zip is cached in `build/downloads/` (fetched once, then never refreshed unless `-DMOD_FORCE_UPDATE_DEPS=ON`), so it can hold years-old RED4ext/ArchiveXL/TweakXL. Do not use it for local testing at all: the in-tree `input_loader.dll` / `mod_settings.dll` report wrong plugin versions (input_loader 0.1.1 from its hardcoded project version, mod_settings the parent's LTBF version), so `Main.cpp`'s dependency check rejects them. Install the real Input Loader / Mod Settings release zips into the game instead.
@@ -37,6 +36,39 @@ cmake --build build --target let_there_be_flight_release   # zips game_dir -> le
 - Redscript is compiled/linted against `deps/mod_settings/redscript` too (`.redscript-ide`).
 - Dead config, safe to ignore: `src/red4ext/CMakeLists.txt` and `cmake/FindCodeware.cmake` are never included (the plugin target is built by `configure_red4ext` globbing the dir); the `src/redscript/codeware` submodule in `.gitmodules` is not checked out and not needed. Nothing in the plugin includes Codeware headers.
 - `ZOLTAN_CLANG_EXE` is hardcoded in root `CMakeLists.txt` to a local zoltan build; `configure_red4ext_addresses` is commented out, so zoltan does not run in the normal build.
+
+## Rebuilding the archive (WolvenKit CLI)
+
+Agents can rebuild the archive without the Wolvenkit GUI:
+
+```
+python tools/pack_archive.py           # import changed localization, pack, verify, write packed/.../let_there_be_flight.archive
+python tools/pack_archive.py --check   # exit 1 if a localization json has not been packed yet
+```
+
+- CLI: WolvenKit.Console 9.0.1 (GitHub release zip), installed at `%LOCALAPPDATA%\Programs\WolvenKit.Console\9.0.1\WolvenKit.CLI.exe`; the script downloads it if missing, `WOLVENKIT_CLI` overrides the path. On the current PC (kevin) it is at `D:\cp2077_work\build\tools\wolvenkit-9.0.1\WolvenKit.CLI.exe` (set `WOLVENKIT_CLI` to it: agent shells there have `%LOCALAPPDATA%` writes redirected), with the game's `oo2ext_7_win64.dll` copied next to it. Do not use the NuGet `wolvenkit.cli` dotnet tool (`cp77tools`, stuck at 1.6.1; 8.x+ packages are not valid tools) or `%LOCALAPPDATA%\Programs\WolvenKit` (GUI, no working CLI).
+- Source of truth: the CR2W files in `src/wolvenkit/source/archive/` (45 files, byte-identical to the packed archive as of 2026-09-30). `pack` names its output after the input folder (`archive.archive`); the script renames it.
+- Localization is the only thing edited as text: change `src/wolvenkit/source/raw/user/jackhumbert/localization/let_there_be_flight.<lang>.json.json`, then run the script. It deserializes with `cr2w -d` (the `import` command silently exits 3 on these jsons) and decides staleness after a full serialize round trip, because serializing adds default fields (`primaryKey`, `maleVariant`) the raw json omits.
+- Every other raw json is a stale export and must not be imported (`flight_hud.inkwidget.json` is from 2022 and predates the packed widget). Meshes, widgets, effects: edit in the Wolvenkit GUI, save into `source/archive/`, then run the script to pack.
+- `src/wolvenkit/source` is gitignored but its files are tracked: stage changes with `git add -u <path>` (plain `git add` refuses).
+- Other handy commands: `WolvenKit.CLI unbundle <archive> -o <dir>`, `archive <archive> --list`, `cr2w -s <file> -o <dir>` (CR2W to json). `-v` takes `Minimal`/`Diagnostic` etc., not short forms.
+- After repacking, `cmake --build build && cmake --install build` to get it into the game.
+
+## Running Lua in the live game (CET bridge)
+
+`tools/cet.py` runs Lua inside the running game through a small CET mod (`tools/cet_bridge/init.lua`, installed as `bin/x64/plugins/cyber_engine_tweaks/mods/claude_bridge/`). CET's sandbox has no sockets, so the transport is `request.txt` / `response.txt` in the mod folder, polled every 0.1 s on the game's main thread.
+
+```
+python tools/cet.py install                       # copy the mod into the game (then restart, or CET overlay > Reload all mods)
+python tools/cet.py run "Game.GetPlayer()"        # expression -> its value
+python tools/cet.py run 'print(x); return y, z'   # chunk; print() output is captured; exit code 1 on a Lua error
+python tools/cet.py mcp                           # stdio MCP server with a `cet_lua` tool
+```
+
+- MCP: add `"cet": {"type": "stdio", "command": "python", "args": ["tools/cet.py", "mcp"]}` to `.mcp.json` (gitignored, local) and restart Claude Code.
+- CET's sandbox has no `load`; the bridge uses `loadstring` (LuaJIT, Lua 5.1: no `table.pack`/`table.unpack`).
+- Do not `GameDump()` raw struct returns (e.g. the `Matrix` from `VehicleObject.GetInertiaTensor()`); it crashed CET 1.37.1. Read fields from redscript and log them instead.
+- Known CET 1.37.1 crash on quit after any CET mod reload (hot reload or Reload all mods): access violation at `cyber_engine_tweaks+0xac37`. Harmless (only on exit), not LTBF.
 
 ## How the plugin finds game functions (what a game patch actually breaks)
 
@@ -74,7 +106,7 @@ Runtime version floors are in two places and must agree: `Main.cpp` (`HasDepende
 ## Driving the game (in-game tests with screenshots)
 
 - `r6/scripts/autocontinue.reds` loads the newest save on launch. `ManualSave-178` (2026-10-25) has V in the Mizutani Shion on a street in the city center (-1842, -891, 8); a newer save becomes the autoload.
-- `tools/cet.py "<lua>"` (or `-f file.lua`) runs Lua in the game through the `claude_bridge` CET mod (`bin/x64/plugins/cyber_engine_tweaks/mods/claude_bridge`, file transport, main thread). `--wait-ready -t 180` waits for the game to load. Lua can call any redscript, including LTBF's (`FlightSystem.GetInstance().playerComponent`).
+- `tools/cet.py run "<lua>"` (or `run -f file.lua`) runs Lua in the game through the `claude_bridge` CET mod (see "Running Lua in the live game"). `tools/cet.py wait --timeout 180` blocks until the game has loaded. Lua can call any redscript, including LTBF's (`FlightSystem.GetInstance().playerComponent`).
 - `tools/cet/state.lua`: one JSON line with vehicle, position, velocity, flight active and mode. `tools/cet/mount_nearest.lua` with `MATCH = 'kusanagi'` prepended mounts the nearest matching vehicle within 40 m.
 - `tools/sendkey.ps1 -Keys o` / `-Keys space -HoldMs 3000`: hardware-scancode key presses to the game window (the game ignores virtual keys). LTBF keys: `O` toggle flight, `Space`/`Left Ctrl` lift, `W`/`S` thrust, `A`/`D` yaw. A load ends on "press Space to continue".
 - `tools/screenshot.ps1 -Out x.png`: captures the game window (Borderless Windowed, 3840x2160) downscaled to 1600 wide.

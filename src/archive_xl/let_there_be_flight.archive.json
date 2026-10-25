@@ -56,7 +56,7 @@
       },
       {
         "path": "base\\worlds\\03_night_city\\_compiled\\default\\exterior_-3_-4_0_4.streamingsector",
-        "expectedNodes": 242,
+        "expectedNodes": 243,
         "nodeDeletions": [
           { "type": "worldCollisionNode", "index": 238 }
         ]

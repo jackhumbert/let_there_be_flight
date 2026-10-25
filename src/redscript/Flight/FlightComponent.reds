@@ -45,6 +45,9 @@ public native class FlightComponent extends GameComponent {
   public let explosionThreshold: Float = 0.5;
 
   public native func ChaseTarget(target: wref<GameObject>) -> Void;
+  // world-space angular velocity contacts gave the vehicle (PhysX flight physics only),
+  // decaying over ~0.5 s; see FlightMode.ApplyPhysics
+  public native func GetContactSpin() -> Vector4;
   // public native func ChaseTarget() -> Void;
 
   // private let helper: ref<vehicleFlightHelper>;
@@ -127,8 +130,13 @@ public native class FlightComponent extends GameComponent {
 
     if oneOfOurs {
       this.thrusterTensor = this.configuration.GetThrusterTensor();
-      this.configuration.RemoveColliders();
-      this.configuration.AddColliders();
+      // only rebuild the thruster colliders while we are actually flying; a
+      // parked or traffic vehicle sheds its thrusters when it is destroyed and
+      // arming the collider bookkeeping there strips the wreck's own shapes
+      if this.active {
+        this.configuration.RemoveColliders();
+        this.configuration.AddColliders();
+      }
     }
   }
 
@@ -393,6 +401,7 @@ public native class FlightComponent extends GameComponent {
       // FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName());
       // (this.GetVehicle().FindComponentByName(n"cars_sport_fx") as EffectSpawnerComponent).AddEffect();
       this.sys.SetPlayerComponent(this);
+      this.sys.NotifyHudVehicleChanged(this.GetVehicle());
       this.sys.ctlr.ResetInputs();
       this.isPlayerMounted = true;
       this.SetupVehicleTPPBBListener();
@@ -423,8 +432,9 @@ public native class FlightComponent extends GameComponent {
     this.SetupTires();
     let wheeled = this.GetVehicle() as WheeledObject;
     // FindGround runs four synchronous raycasts; only pay for them when auto activation
-    // (off by default) can actually use the result.
-    if FlightSettings.GetInstance().autoActivationEnabled && evt.character.IsPlayer() && evt.isMounting && IsDefined(wheeled) {
+    // (off by default) can actually use the result. IsFlightAvailable() keeps auto
+    // activation on the same Flight Availability gate as the toggle and the input hint.
+    if FlightSettings.GetInstance().autoActivationEnabled && evt.character.IsPlayer() && evt.isMounting && IsDefined(wheeled) && this.GetVehicle().IsFlightAvailable() {
       if !this.FindGround(normal) || this.distance > FlightSettings.GetInstance().autoActivationHeight {
         this.Activate(true);
       }
@@ -460,6 +470,8 @@ public native class FlightComponent extends GameComponent {
       }
       this.sys.ctlr.ResetInputs();
       this.sys.ctlr.Disable();
+      // After the deactivation above, so a flight exit still plays its outro first.
+      this.sys.NotifyHudVehicleChanged(null);
       FlightLog.Info("[FlightComponent] OnUnmountingEvent done");
     }
   }
@@ -795,14 +807,25 @@ public native class FlightComponent extends GameComponent {
     }
   }
 
+  private final func StopDestroyedAlarm() -> Void {
+    if this.isDestroyed && this.hasExploded && this.alarmIsPlaying {
+      FlightAudio.Get().Stop("vehicleDestroyed" + this.GetUniqueID());
+      this.alarmIsPlaying = false;
+    }
+  }
+
   public func Deactivate(silent: Bool) -> Void {
+    // the destroyed-vehicle alarm can be playing on a component that is not
+    // active, so it has to be stopped before the early return below
+    this.StopDestroyedAlarm();
+
+    if !this.active {
+      return;
+    }
+
     this.active = false;
     for thruster in this.configuration.thrusters {
       thruster.Stop();
-    }
-
-    if this.isDestroyed && this.hasExploded && this.alarmIsPlaying {
-        FlightAudio.Get().Stop("vehicleDestroyed" + this.GetUniqueID());
     }
 
     if !silent {
@@ -880,7 +903,10 @@ public native class FlightComponent extends GameComponent {
     this.isDestroyed = true;
     this.hasExploded = true;
     this.hasUpdate = false;
-    this.Deactivate(true);
+    this.StopDestroyedAlarm();
+    if this.active {
+      this.Deactivate(true);
+    }
   }
 
   // protected cb func OnHit(evt: ref<gameHitEvent>) -> Bool {

@@ -18,6 +18,17 @@ public class hudFlightController extends inkHUDGameController {
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Enabled")
   public let enabled: Bool = true;
 
+  // Read from the class default by Entity_InitializeComponents (C++). On: the flight hud
+  // entry is part of the player's own hud entries resource, so it is spawned once per
+  // session. Off: the pre-0.3.19 behaviour, one FlightHUD WidgetHudComponent per vehicle,
+  // which makes the engine rebuild the entire HUD on every mount and unmount.
+  // Takes effect for entities spawned after the change, so reload a save to flip it.
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-UI-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Hud-Attached-To-Player")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Hud-Attached-To-Player-Description")
+  public let attachToPlayer: Bool = true;
+
   private let m_Date: inkTextRef;
   private let m_Timer: inkTextRef;
   private let m_CameraID: inkTextRef;
@@ -77,15 +88,15 @@ public class hudFlightController extends inkHUDGameController {
     this.GetRootWidget().SetVisible(false);
     // this.PlayLibraryAnimation(n"outro");
 
-    let vehicle = FlightSystem.GetInstance().playerComponent.GetVehicle();
-    this.m_healthStatPoolListener = new FlightUIVehicleHealthStatPoolListener();
-    this.m_healthStatPoolListener.m_owner = this;
-    this.m_healthStatPoolListener.m_vehicle = vehicle;
-    let stats = GameInstance.GetStatPoolsSystem(vehicle.GetGame());
-    if IsDefined(stats) {  
-      stats.RequestRegisteringListener(Cast<StatsObjectID>(vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
+    // With the hud entry on the player there is no mounted vehicle at this point, so the
+    // health listener is bound later, from OnFlightVehicleChanged. Binding it here as well
+    // covers the per-vehicle fallback path, where this runs on mount.
+    FlightSystem.GetInstance().SetHud(this);
+    let component = FlightSystem.GetInstance().playerComponent;
+    if IsDefined(component) {
+      this.BindVehicle(component.GetVehicle());
     }
-    
+
     LTBF_RegisterListener(this);
   }
 
@@ -94,9 +105,72 @@ public class hudFlightController extends inkHUDGameController {
     FlightLog.Info("[hudFlightController] OnUninitialize");
     // TakeOverControlSystem.CreateInputHint(this.GetPlayerControlledObject().GetGame(), false);
     // SecurityTurret.CreateInputHint(this.GetPlayerControlledObject().GetGame(), false);
-    if IsDefined(this.m_healthStatPoolListener) {
-      GameInstance.GetStatPoolsSystem(this.m_gameInstance).RequestUnregisteringListener(Cast(this.m_healthStatPoolListener.m_vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
+    this.UnbindVehicle();
+    FlightSystem.GetInstance().SetHud(null);
+  }
+
+  // Binds the health stat pool listener (and the vehicle blackboard) to whichever vehicle
+  // the player is in. Called on every mount when the HUD lives on the player, and once from
+  // OnInitialize on the per-vehicle fallback path.
+  private final func BindVehicle(vehicle: wref<VehicleObject>) -> Void {
+    this.UnbindVehicle();
+    if !IsDefined(vehicle) {
+      return;
     }
+    this.m_vehicleBlackboard = vehicle.GetBlackboard();
+    this.m_healthStatPoolListener = new FlightUIVehicleHealthStatPoolListener();
+    this.m_healthStatPoolListener.m_owner = this;
+    this.m_healthStatPoolListener.m_vehicle = vehicle;
+    let stats = GameInstance.GetStatPoolsSystem(vehicle.GetGame());
+    if IsDefined(stats) {
+      stats.RequestRegisteringListener(Cast<StatsObjectID>(vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
+    }
+  }
+
+  private final func UnbindVehicle() -> Void {
+    this.m_vehicleBlackboard = null;
+    if !IsDefined(this.m_healthStatPoolListener) {
+      return;
+    }
+    let vehicle = this.m_healthStatPoolListener.m_vehicle;
+    if IsDefined(vehicle) {
+      let stats = GameInstance.GetStatPoolsSystem(vehicle.GetGame());
+      if IsDefined(stats) {
+        stats.RequestUnregisteringListener(Cast<StatsObjectID>(vehicle.GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
+      }
+    }
+    this.m_healthStatPoolListener = null;
+  }
+
+  // FlightSystem.NotifyHudVehicleChanged, from FlightComponent's mount and unmount
+  // handlers. This is what replaces the old "the engine spawns and destroys the whole hud
+  // entry per mount" lifecycle: the widgets stay, only what they describe changes.
+  public final func OnFlightVehicleChanged(vehicle: wref<VehicleObject>) -> Void {
+    this.BindVehicle(vehicle);
+    if IsDefined(vehicle) {
+      FlightLog.Info("[hudFlightController] FlightHUD bound to " + vehicle.GetDisplayName());
+      inkTextRef.SetText(this.m_hp_condition_text, vehicle.GetDisplayName());
+      let stats = GameInstance.GetStatPoolsSystem(vehicle.GetGame());
+      if IsDefined(stats) {
+        this.ReactToHPChange(stats.GetStatPoolValue(Cast<StatsObjectID>(vehicle.GetEntityID()), gamedataStatPoolType.Health, true));
+      }
+    } else {
+      FlightLog.Info("[hudFlightController] FlightHUD unbound");
+      this.HideHud();
+    }
+  }
+
+  private final func HideHud() -> Void {
+    if IsDefined(this.m_introAnimationProxy) && this.m_introAnimationProxy.IsPlaying() {
+      this.m_introAnimationProxy.Stop();
+    }
+    if IsDefined(this.m_outroAnimationProxy) && this.m_outroAnimationProxy.IsPlaying() {
+      this.m_outroAnimationProxy.Stop();
+    }
+    if this.GetRootWidget().IsVisible() {
+      FlightLog.Info("[hudFlightController] FlightHUD hidden");
+    }
+    this.GetRootWidget().SetVisible(false);
   }
 
   private func UpdateTime() -> Void {
@@ -129,7 +203,10 @@ public class hudFlightController extends inkHUDGameController {
   }
 
   protected cb func OnModeChange(mode: Int32) -> Bool {
-    inkTextRef.SetText(this.m_CameraID, FlightSystem.GetInstance().playerComponent.GetFlightMode().GetDescription());
+    let component = FlightSystem.GetInstance().playerComponent;
+    if IsDefined(component) {
+      inkTextRef.SetText(this.m_CameraID, component.GetFlightMode().GetDescription());
+    }
   }
 
   protected cb func OnCameraModeChanged(tpp: Bool) -> Bool {
@@ -227,13 +304,21 @@ public class hudFlightController extends inkHUDGameController {
     FlightLog.Info("[hudFlightController] ActivateUI");
     if activate {
       if this.enabled {
-        let vehicle = FlightSystem.GetInstance().playerComponent.GetVehicle();
+        let component = FlightSystem.GetInstance().playerComponent;
+        let vehicle: wref<VehicleObject>;
+        if IsDefined(component) {
+          vehicle = component.GetVehicle();
+        }
         if IsDefined(vehicle) {
           inkTextRef.SetText(this.m_hp_condition_text, vehicle.GetDisplayName());
           let stats = GameInstance.GetStatPoolsSystem(this.m_gameInstance);
-          this.ReactToHPChange(stats.GetStatPoolValue(Cast<StatsObjectID>(vehicle.GetEntityID()), gamedataStatPoolType.Health, true));  
+          if IsDefined(stats) {
+            this.ReactToHPChange(stats.GetStatPoolValue(Cast<StatsObjectID>(vehicle.GetEntityID()), gamedataStatPoolType.Health, true));
+          }
         }
-        inkTextRef.SetText(this.m_CameraID, FlightSystem.GetInstance().playerComponent.GetFlightMode().GetDescription());
+        if IsDefined(component) {
+          inkTextRef.SetText(this.m_CameraID, component.GetFlightMode().GetDescription());
+        }
 
         let hp_gauge = this.GetRootCompoundWidget().GetWidget(n"hp_gauge");
         if IsDefined(hp_gauge) {
@@ -243,6 +328,9 @@ public class hudFlightController extends inkHUDGameController {
           hp_gauge.SetMargin(new inkMargin(1520.0, -370.0, 0.0, 0.0));
         }
         
+        if !this.GetRootWidget().IsVisible() {
+          FlightLog.Info("[hudFlightController] FlightHUD shown");
+        }
         this.GetRootWidget().SetVisible(true);
         let options: inkAnimOptions;
         options.executionDelay = 0.50;
@@ -277,7 +365,12 @@ public class hudFlightController extends inkHUDGameController {
     this.m_playerPuppet = playerPuppet;
     this.m_gameInstance = playerPuppet.GetGame();
     // this.UpdateTime();
-    this.m_vehicleBlackboard = FlightSystem.GetInstance().playerComponent.GetVehicle().GetBlackboard();
+    // With the hud entry on the player this fires once per session, before any mount, so
+    // there is usually no vehicle yet. OnFlightVehicleChanged fills it in on mount.
+    let component = FlightSystem.GetInstance().playerComponent;
+    if IsDefined(component) {
+      this.BindVehicle(component.GetVehicle());
+    }
     this.m_vehicleFlightBlackboard = FlightController.GetInstance().GetBlackboard();
     this.m_scannerBlackboard = GameInstance.GetBlackboardSystem(this.m_gameInstance).Get(GetAllBlackboardDefs().UI_Scanner);
     this.RegisterBB();
@@ -357,6 +450,7 @@ public class hudFlightController extends inkHUDGameController {
   protected cb func OnPlayerDetach(playerPuppet: ref<GameObject>) -> Bool {
     FlightLog.Info("[hudFlightController] OnPlayerDetach");
     this.UnregisterBB();
+    this.UnbindVehicle();
   }
 
   // protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool {

@@ -1,3 +1,16 @@
+// Native field declarations for engine classes.
+//
+// Codeware declares most of these too. redscript keeps the first declaration it
+// sees and warns "a field with this name is already defined in the class, this
+// will have no effect" for the rest, so every field Codeware also provides is
+// gated on Codeware being absent. The gated names and types match Codeware's
+// exactly, so the rest of the mod reads the same field either way.
+//
+// Fields without a gate are ones Codeware does not declare (entityTags,
+// meshApperance). Note meshApperance keeps its historic misspelling: it is our
+// own field, it does not collide with Codeware's meshAppearance, and third
+// party flight configurations reference it by that name.
+
 // Entity
 
 // @addField(Entity)
@@ -16,10 +29,12 @@ public native func AddSlot(boneName: CName, slotName: CName, relativePosition: V
 
 // IComponent
 
+@if(!ModuleExists("Codeware"))
 @addField(IComponent)
 @runtimeProperty("offset", "0x40")
 public native let name: CName;
 
+@if(!ModuleExists("Codeware"))
 @addField(IComponent)
 @runtimeProperty("offset", "0x48")
 public native let appearanceName: CName;
@@ -35,6 +50,7 @@ public native func SetParentTransform(bindName: CName, slotName: CName);
 @addMethod(MeshComponent)
 public native func SetMesh(mesh: ResRef);
 
+@if(!ModuleExists("Codeware"))
 @addField(MeshComponent)
 @runtimeProperty("offset", "0x178")
 public native let visualScale: Vector3;
@@ -61,6 +77,7 @@ enum ERenderObjectType {
     ROT_Enemy = 27,
 }
 
+@if(!ModuleExists("Codeware"))
 @addField(MeshComponent)
 @runtimeProperty("offset", "0x188")
 public native let objectTypeID: ERenderObjectType;
@@ -69,10 +86,12 @@ public native let objectTypeID: ERenderObjectType;
 @runtimeProperty("offset", "0x190")
 public native let meshApperance: CName;
 
+@if(!ModuleExists("Codeware"))
 @addField(MeshComponent)
 @runtimeProperty("offset", "0x198")
 public native let chunkMask: Uint64;
 
+@if(!ModuleExists("Codeware"))
 @addField(MeshComponent)
 @runtimeProperty("offset", "0x1A4")
 public native let motionBlurScale: Float;
@@ -84,10 +103,12 @@ enum entMeshComponentLODMode {
     AppearanceProxy = 2,
 }
 
+@if(!ModuleExists("Codeware"))
 @addField(MeshComponent)
 @runtimeProperty("offset", "0x1A8")
 public native let LODMode: entMeshComponentLODMode;
 
+@if(!ModuleExists("Codeware"))
 @addField(MeshComponent)
 @runtimeProperty("offset", "0x1AB")
 public native let order: Uint8;
@@ -102,10 +123,12 @@ public native let order: Uint8;
 
 // PhysicalMeshComponent
 
+@if(!ModuleExists("Codeware"))
 @addField(PhysicalMeshComponent)
 @runtimeProperty("offset", "0x228")
 public native let visibilityAnimationParam: CName;
 
+@if(!ModuleExists("Codeware"))
 @addField(PhysicalMeshComponent)
 @runtimeProperty("offset", "0x23A")
 public native let startInactive: Bool;

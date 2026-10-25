@@ -15,6 +15,10 @@
 
 struct IFlightThruster;
 
+namespace physx {
+class PxShape;
+}
+
 class IFlightConfiguration : public Engine::RTTIClass<IFlightConfiguration, RED4ext::IScriptable> {
 public:
 
@@ -24,7 +28,13 @@ public:
   RED4ext::DynArray<RED4ext::Handle<IFlightThruster>> thrusters;
   RED4ext::CName flightCameraBone = "roof_border_front";
   RED4ext::Vector3 flightCameraOffset = RED4ext::Vector3(0.0, 0.0, 0.0);
+  // -1 means we have not attached anything to the chassis body yet
   int32_t originalShapeCount = -1;
+  // the thruster shapes we attached, tracked by pointer: an index range does
+  // not survive the game adding or removing chassis shapes (destruction)
+  static constexpr int32_t maxTrackedShapes = 16;
+  physx::PxShape *attachedShapes[maxTrackedShapes] = {};
+  int32_t attachedShapeCount = 0;
 
   void Setup(RED4ext::vehicle::BaseObject * vehicle);
   void AddSlots(RED4ext::ent::SlotComponent* slotComponent);
@@ -46,6 +56,8 @@ public:
 
   void AddColliders();
   void RemoveColliders();
+  bool IsTrackedShape(physx::PxShape *shape) const;
+  void TrackShape(physx::PxShape *shape);
   void OnActivationCore();
   void OnDeactivationCore();
 
