@@ -10,6 +10,8 @@ Sibling repos with the same build/release shape and their own CLAUDE.md: `../mod
 - `src/redscript/` - 71 `.reds` files, packed by CMake into `packed.reds` + `module.reds`.
 - `src/tweaks/` - `.tweak` (native) + `.yaml` tweaks, packed into one file each.
 - `src/wolvenkit/` - Wolvenkit project. The built `packed/archive/pc/mod/let_there_be_flight.archive` is committed; CMake just copies it. Rebuild in Wolvenkit only when the archive content changes.
+  - Without the GUI: WolvenKit CLI 9.0.1 is at `D:\cp2077_work\build\tools\wolvenkit-9.0.1\WolvenKit.CLI.exe`. To change one file, `extract` the committed archive to a scratch folder, replace the file (`convert serialize` / edit the JSON / `convert deserialize` for CR2W like the localization json), then `pack` that folder. Do not pack `source/archive` alone: it lacks 7 of the archive's 45 files (some thruster meshes, a streaming sector and block). Compare `archive -l` listings before and after. Done this way on 2026-10-25 for three missing Mod Settings labels.
+  - `src/wolvenkit/source` is in `.gitignore` but its files are tracked; `git add` on them needs `-f` (or stage with `git add -u`).
 - `src/fmod_studio/` - FMOD project. Built banks `Build/Desktop/*.bank` are committed; CMake copies them plus `fmod.dll`/`fmodstudio.dll`.
 - `src/input_loader/let_there_be_flight.xml` - keybinds, installed as `inputs.xml`.
 - `deps/` - git submodules (see below). `deps/fmod`, `deps/PhysX_3.4`, `deps/PxShared` are NOT submodules (gitignored local SDK drops) - do not delete.
