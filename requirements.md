@@ -4,4 +4,4 @@
 * ArchiveXL 1.28.0+ (optional on game 2.5+)
 * Redscript 0.5.32+
 * Input Loader v0.2.3+
-* Mod Settings v0.2.21+ (optional)
+* Mod Settings v0.2.23+ (optional)
