@@ -1,9 +1,10 @@
 -- Mount the player in the driver seat of the nearest vehicle whose record ID contains MATCH
 -- (set MATCH before this chunk, e.g. "MATCH = 'shion'"; nil = any vehicle). Returns what it mounted.
+-- Optional: SEAT (default "seat_front_left"), RANGE in meters (default 40).
 local match = MATCH and string.lower(MATCH) or nil
 local player = Game.GetPlayer()
 local q = Game["TSQ_ALL;"]()
-q.maxDistance = 40
+q.maxDistance = RANGE or 40
 local _, parts = Game.GetTargetingSystem():GetTargetParts(player, q)
 local best, bestDist
 for _, part in ipairs(parts or {}) do
@@ -16,9 +17,9 @@ for _, part in ipairs(parts or {}) do
     end
   end
 end
-if not best then return "no matching vehicle within 40 m" end
+if not best then return "no matching vehicle in range" end
 
-local seat = "seat_front_left"
+local seat = SEAT or "seat_front_left"
 local data = NewObject("handle:gameMountEventData")
 data.isInstant = true
 data.slotName = seat
