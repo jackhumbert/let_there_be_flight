@@ -19,7 +19,9 @@ import urllib.request
 
 import websocket
 
-CHROME = r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+CHROME = next((p for p in (r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+                           r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe") if os.path.exists(p)),
+              "chrome.exe")
 PORT = 9223
 GAME_ID = 3333  # cyberpunk2077
 
