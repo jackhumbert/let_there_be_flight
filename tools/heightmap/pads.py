@@ -510,6 +510,8 @@ def build(args):
             pad["ok"] = bool(deck["on"] >= MIN_SHARE * n and deck["clear"] >= MIN_SHARE * n)
             if not pad["ok"]:
                 pad["reason"] = "hand-placed pad fails the deck check"
+        if pad["id"] in removed:
+            pad.update(ok=False, reason="removed in overrides")
         pads.append(pad)
 
     pads.sort(key=lambda p: (not p["ok"], p["pos"][0], p["pos"][1]))

@@ -1,6 +1,13 @@
 {
   "comment": "Hand edits applied by pads.py build. remove: pad ids to drop. names: id -> display name. add: pads the scan cannot find, each {id, name, pos: [x, y, deck z], yaw, radius, note}; they get the same deck check as found pads. The spaceport (Phantom Liberty, q306) has no pad meshes in the open-world sectors, so its spots are picked from the nav map (flat, open sky, 12 m radius).",
-  "remove": [],
+  "remove_comment": "Visual-only decks: no cooked collision under them (tools/heightmap/pad_collision.py, 2026-10-26). The two 499 m pads sit on a tower whose collision ends at 120 to 176 m; the open-world spaceport has only proxies. Take one off this list once a sector of our own gives it a real deck (docs/helipads.md, step 8).",
+  "remove": [
+    "8040860436745735587",
+    "9809853698133370437",
+    "spaceport_apron",
+    "spaceport_launchpad_2",
+    "spaceport_terminal_apron"
+  ],
   "names": {},
   "add": [
     {
@@ -39,9 +46,9 @@
   "specials_comment": "Step 6 (docs/helipads.md): one rare car parked on each of these pads. car = Vehicle record; offset = [right, forward] m from the deck centre in the pad's frame and heading = degrees from the pad's yaw, both set in game. Not read by pads.py yet.",
   "specials": [
     {
-      "pad": "8040860436745735587",
+      "pad": "4087052302204947314",
       "car": "Vehicle.v_sport1_rayfield_aerondight",
-      "note": "v2, deck 499 m, the highest pad",
+      "note": "deck 368.5 m, open sky (the 499 m pad first picked has no collision)",
       "offset": null,
       "heading": null
     },
