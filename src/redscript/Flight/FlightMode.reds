@@ -54,6 +54,13 @@ public abstract class FlightMode {
     let fs =  FlightSettings.GetInstance();
     
     let velocityDamp: Vector4; // = this.component.stats.d_speed * this.component.stats.d_localVelocity * fs.generalDampFactorLinear * this.component.stats.s_airResistanceFactor;
+    // With PhysX flight physics the game's integrator is skipped (RigidBody_IntegrateMotion in
+    // ChassisContacts.cpp), and with it the vanilla air resistance that gave every mode a top
+    // speed; without it full surge accelerates forever. Same quadratic drag as
+    // vehicle::WheeledPhysics::ApplyAirResistance (1.2 * factor * v^2), as an acceleration.
+    if fs.physxFlightPhysics && this.component.stats.s_mass > 0.0 {
+      velocityDamp = this.component.stats.d_localVelocity * this.component.stats.d_speed * 1.2 * this.component.stats.s_airResistanceFactor / this.component.stats.s_mass;
+    }
     // let angularDamp: Vector4 = this.component.stats.d_angularVelocity * fs.generalDampFactorAngular;
     // Damp only the rotation that did not come from the world: with PhysX flight physics the
     // plugin measures how much spin contacts (ground, walls, impacts) gave the vehicle, so a
