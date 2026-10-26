@@ -422,32 +422,34 @@ public native class FlightController extends IScriptable {
 
     let usesRightStick = this.sys.playerComponent.GetFlightMode().usesRightStickInput;
 
-    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Enable-Flight", n"Flight_Toggle"),       this.enabled && !this.active);
+    // The hint list keeps one hint per action, whatever the source: each action is added once
+    // here with its label picked up front. A hide after a show of the same action in one event
+    // removes the shown one (Linear Brake and the Autopilot hint never appeared that way), and
+    // reordering such pairs crashed the game on flight activation (2026-10-26).
+    evt.AddInputHint(FlightController.CreateInputHint(this.FlightToggleHintLabel(), n"Flight_Toggle"),      (this.enabled && !this.active) || (this.active && !this.showOptions));
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Yaw", n"Yaw"),                           this.FlightControlsShown() && !this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Pitch", n"Pitch"),                       this.FlightControlsShown() && !this.showOptions && (usesRightStick || this.usingKB));
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Roll", n"Roll"),                         this.FlightControlsShown() && !this.showOptions && (usesRightStick || this.usingKB));
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Lift", n"Lift"),                         this.FlightControlsShown() && !this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint(this.LinearBrakeHintLabel(), n"Flight_LinearBrake"),  this.FlightControlsShown() && !this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Angular-Brake", n"Flight_AngularBrake"), this.FlightControlsShown() && !this.showOptions && this.usingKB);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Flight-Options", n"Flight_Options"),     this.FlightControlsShown() && !this.showOptions);
 
-    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Disable-Flight", n"Flight_Toggle"),      this.active && !this.showOptions);
-    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Yaw", n"Yaw"),                           this.active && !this.showOptions);
-    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Pitch", n"Pitch"),                       this.active && !this.showOptions && (usesRightStick || this.usingKB));
-    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Roll", n"Roll"),                         this.active && !this.showOptions && (usesRightStick || this.usingKB));
-    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Lift", n"Lift"),                         this.active && !this.showOptions);
-    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Linear-Brake", n"Flight_LinearBrake"),   this.active && !this.showOptions && this.usingKB);
-    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Angular-Brake", n"Flight_AngularBrake"), this.active && !this.showOptions && this.usingKB);
-    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Brake", n"Flight_LinearBrake"),          this.active && !this.showOptions && !this.usingKB);
-    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Flight-Options", n"Flight_Options"),     this.active && !this.showOptions);
-
-    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Sway", n"Sway"),                         this.active && this.showOptions && this.usingKB);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Sway", n"Sway"),                         this.FlightControlsShown() && this.showOptions && this.usingKB);
     // let desc: String;
     // desc = this.sys.playerComponent.GetNextFlightModeDescription();
-    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Next-Mode", n"Flight_ModeSwitchForward"),     this.active && (this.showOptions || this.usingKB));
-    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Prev-Mode", n"Flight_ModeSwitchBackward"),     this.active && this.showOptions && !this.usingKB);
+    evt.AddInputHint(FlightController.CreateInputHint(this.NextModeHintLabel(), n"Flight_ModeSwitchForward"),     this.FlightControlsShown() && (this.showOptions || this.usingKB));
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Prev-Mode", n"Flight_ModeSwitchBackward"),     this.FlightControlsShown() && this.showOptions && !this.usingKB);
     // evt.AddInputHint(FlightController.CreateInputHint(n"Raise Hover Height", n"FlightOptions_Up"), true);
     // evt.AddInputHint(FlightController.CreateInputHint(n"Lower Hover Height", n"FlightOptions_Down"), true);
-    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Toggle-UI", n"Flight_UIToggle"),         this.active && this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Toggle-UI", n"Flight_UIToggle"),         this.FlightControlsShown() && this.showOptions);
     // autodrive while flying: the vanilla autodrive hold toggles the Autopilot mode, and while it
     // flies the camera hold toggles the cinematic camera (vanilla's hint text, LocKey#96518)
     let autopilotEngaged = this.active && this.mode == this.AutopilotModeIndex();
-    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Autopilot", n"HoldAutodrive"),           this.active && !this.showOptions && !autopilotEngaged);
-    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Disable-Autopilot", n"HoldAutodrive"),   autopilotEngaged);
-    evt.AddInputHint(FlightController.CreateInputHintText(GetLocalizedText("LocKey#96518"), n"HoldCinematicCamera"), autopilotEngaged);
+    evt.AddInputHint(FlightController.CreateInputHint(this.AutopilotHintLabel(), n"HoldAutodrive"),         autopilotEngaged || (this.active && !this.showOptions && !this.AutopilotHoldSharesNextMode()));
+    // the LocKey string as vanilla passes it, resolved by the hint widget (GetLocalizedText here
+    // gave "Fast Swim")
+    evt.AddInputHint(FlightController.CreateInputHintText("LocKey#96518", n"HoldCinematicCamera"), autopilotEngaged);
     // evt.AddInputHint(FlightController.CreateInputHint(n"Fire", n"ShootPrimary"),                 this.active && !this.showOptions);
 
     uiSystem.QueueEvent(evt);
@@ -481,6 +483,39 @@ public native class FlightController extends IScriptable {
       i += 1;
     }
     return -1;
+  }
+
+  // Flight control hints: hidden while the Autopilot flies (input still takes over briefly, but
+  // that is an escape hatch, not something to advertise).
+  private func FlightControlsShown() -> Bool {
+    return this.active && this.mode != this.AutopilotModeIndex();
+  }
+
+  // The hint list keeps one hint per key: on keyboard the autodrive hold shares G with Next Mode,
+  // so the two are one hint while Next Mode is still on G.
+  private func AutopilotHoldSharesNextMode() -> Bool {
+    return this.usingKB && EnumInt(this.vehicleFlightModeSwitchForward) == EnumInt(EInputKey.IK_G);
+  }
+
+  private func FlightToggleHintLabel() -> CName {
+    return this.active ? n"Input-Hint-Disable-Flight" : n"Input-Hint-Enable-Flight";
+  }
+
+  // Both brakes are on C (keyboard) / A (pad) by default and only one of the two hints shows, so
+  // it reads "Brake" unless the keyboard angular brake was rebound.
+  private func LinearBrakeHintLabel() -> CName {
+    return this.usingKB && EnumInt(this.vehicleFlightLinearBrake) != EnumInt(this.vehicleFlightAngularBrake) ? n"Input-Hint-Linear-Brake" : n"Input-Hint-Brake";
+  }
+
+  private func AutopilotHintLabel() -> CName {
+    return this.FlightControlsShown() ? n"Input-Hint-Autopilot" : n"Input-Hint-Disable-Autopilot";
+  }
+
+  private func NextModeHintLabel() -> CName {
+    if !this.showOptions && this.AutopilotHoldSharesNextMode() {
+      return n"Input-Hint-Next-Mode-Autopilot";
+    }
+    return n"Input-Hint-Next-Mode";
   }
 
   // Next / previous mode, skipping Autopilot: that one is reached through the autodrive hold.

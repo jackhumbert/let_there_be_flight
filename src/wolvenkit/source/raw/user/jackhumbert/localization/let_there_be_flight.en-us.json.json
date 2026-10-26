@@ -857,6 +857,11 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Autopilot-Max-Pitch-Description",
               "femaleVariant": "How far the nose tilts up or down on climbs and descents, in degrees. 0 keeps it level."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Next-Mode-Autopilot",
+              "femaleVariant": "Next Mode / Hold: Autopilot"
             }
           ]
         }
