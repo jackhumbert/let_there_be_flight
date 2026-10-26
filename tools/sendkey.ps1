@@ -59,6 +59,7 @@ $codes = @{
     x = 0x2D; c = 0x2E; v = 0x2F; b = 0x30; z = 0x2C; t = 0x14; y = 0x15; u = 0x16; i = 0x17; o = 0x18; p = 0x19
     '1' = 0x02; '2' = 0x03; '3' = 0x04; '4' = 0x05
     up = 'e48'; down = 'e50'; left = 'e4B'; right = 'e4D'
+    lwin = 'e5B'   # e.g. -Keys lwin,lalt,r starts / stops a Game Bar recording
     lmb = 'mL'; rmb = 'mR'
 }
 $proc = Get-Process Cyberpunk2077 -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
