@@ -133,6 +133,7 @@ git tag vX.Y.Z && git push origin main vX.Y.Z
 - Before tagging: submodule pins committed and pushed to their own repos (CI clones with `submodules: true` over HTTPS; every `.gitmodules` URL must be publicly clonable). `build.yaml` on the push must be green.
 - Checkout uses `fetch-depth: 0`; with a shallow clone git-cliff sees no history and the release body has no Changes section (every release through v0.3.18 was hand-edited for that reason).
 - Commit messages feed git-cliff (`cliff.toml`): use `feat:` / `fix:` prefixes for anything that should appear in the changelog. `chore:` and `ci:` are skipped.
+- `git-cliff --current` (0.10.0) groups commits by date, not by tag ancestry: v0.3.20 merged 41 older-dated commits from jordan, and the generated notes put them under [0.3.19] and included the whole history. The GitHub notes were rewritten by hand from `git log v0.3.19..v0.3.20`; the Nexus changelog (append-only via API) still has the long text. Likely fix, untested: generate from the tag range, e.g. `git-cliff --strip header --tag <tag> <prev-tag>..<tag>` with `<prev-tag>` from `git describe --tags --abbrev=0 <tag>^`. Check before the next release that merges older history.
 - Release-note history: v0.3.17 (2025-08-29) "for 2.30+" - disabled thruster customizations (crystal coat crash), redscript 1.0 update, Limited HUD incompatibility.
 - Nexus Mods: manual upload of the same zip today. See "Nexus" below.
 
