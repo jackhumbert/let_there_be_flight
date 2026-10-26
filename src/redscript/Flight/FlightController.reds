@@ -218,6 +218,7 @@ public native class FlightController extends IScriptable {
 
   private func SetPlayer(player: ref<PlayerPuppet>) {
     this.sys.Setup(player);
+    FlightHelipadSystem.GetInstance(player.GetGame()).Start(player);
     this.gameInstance = player.GetGame();
     this.player = player;
 

@@ -882,6 +882,41 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Autopilot-Pad-Range-Description",
               "femaleVariant": "Land on the nearest AV landing pad within this many metres of the destination instead of at the destination itself. 0: only when the destination is on a pad."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Landing-Pads",
+              "femaleVariant": "Landing Pads"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Landing-Pads-Show",
+              "femaleVariant": "Show Landing Pads on the Map"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Landing-Pads-Show-Description",
+              "femaleVariant": "Mark AV landing pads on the world map and the minimap. Track one and engage the Autopilot to fly there and land on it."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Landing-Pads-Discovered",
+              "femaleVariant": "Only Discovered Pads"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Landing-Pads-Discovered-Description",
+              "femaleVariant": "Show only the pads you have been near (within 150 m). Off: show every pad in the city."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "LTBF-Landing-Pad",
+              "femaleVariant": "AV Landing Pad"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "LTBF-Landing-Pad-Description",
+              "femaleVariant": "Track it, then hold the autodrive key while flying: the Autopilot flies there and lands on the pad."
             }
           ]
         }

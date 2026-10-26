@@ -390,6 +390,13 @@ public class FlightModeAutopilot extends FlightModeStandard {
       target = FlightNavMap.GetTargetOverride();
       return true;
     }
+    // a landing pad's pin tracked on the map: its deck (vanilla's destination is snapped to a road)
+    let helipads = FlightHelipadSystem.GetInstance(game);
+    let pad = IsDefined(helipads) ? helipads.GetTrackedPad() : -1;
+    if pad >= 0 {
+      target = FlightNavMap.GetHelipadPosition(pad);
+      return true;
+    }
     let autodrive = GameInstance.GetScriptableSystemsContainer(game).Get(n"AutoDriveSystem") as AutoDriveSystem;
     if IsDefined(autodrive) && NotEquals(autodrive.GetAutodriveDestinationType(), gameAutodriveDestinationType.None) {
       target = Vector4.Vector3To4(autodrive.GetAutodriveDestination());
@@ -420,6 +427,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.replanTimer -= timeDelta;
     let target: Vector4;
     let has = this.CurrentDestination(target);
+    if !has && (Equals(this.status, "descending") || Equals(this.status, "landed")) {
+      // the game untracks a map pin once the player reaches it, mid-descent: finish the landing
+      return;
+    }
     if !has {
       if this.hasDestination {
         ArrayClear(this.route);
