@@ -19,11 +19,11 @@ SS = 16  # supersampling factor
 
 # geometry in 64-px cell units
 RING_OUTER = 30.0   # radius
-RING_WIDTH = 5.0
+RING_WIDTH = 4.5
 H_HEIGHT = 28.0
 H_WIDTH = 25.0
-H_STEM = 7.5        # stem width
-H_BAR = 6.5         # crossbar height
+H_STEM = 6.5        # stem width
+H_BAR = 5.5         # crossbar height
 
 
 def draw(size, ring_width=RING_WIDTH, stem=H_STEM, bar=H_BAR):
@@ -43,10 +43,10 @@ def draw(size, ring_width=RING_WIDTH, stem=H_STEM, bar=H_BAR):
     d.rectangle((c + hw - st, c - hh, c + hw, c + hh), fill=255)
     d.rectangle((c - hw, c - br / 2, c + hw, c + br / 2), fill=255)
     alpha = img.resize((size, size), Image.LANCZOS)
-    # white where covered, black where fully transparent, like the vanilla atlas: with white
-    # (255, 255, 255, 0) there the in-game icon drew as a solid white square
-    rgb = alpha.point(lambda a: 255 if a > 0 else 0)
-    return Image.merge("RGBA", (rgb, rgb, rgb, alpha))
+    # premultiplied, like the vanilla atlas (edge pixels there have RGB <= alpha): the UI blend
+    # adds the RGB, so white (255, 255, 255, 0) drew a solid white square and white edge pixels
+    # drew the anti-aliasing away (a hard, bold outline)
+    return Image.merge("RGBA", (alpha, alpha, alpha, alpha))
 
 
 def main():
@@ -55,8 +55,8 @@ def main():
     ap.add_argument("--compare", help="exported vanilla mappin_icons.png (4K slot) for a side-by-side sheet")
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
-    # small sizes get slightly heavier strokes so they survive the downscale
-    icons = {64: draw(64), 32: draw(32, ring_width=5.5, stem=8.0, bar=7.0), 22: draw(22, ring_width=6.5, stem=9.0, bar=8.0)}
+    # the 22 px one gets slightly heavier strokes so the ring survives the downscale
+    icons = {64: draw(64), 32: draw(32), 22: draw(22, ring_width=5.0, stem=7.0, bar=6.0)}
     for size, im in icons.items():
         im.save(os.path.join(args.out, f"landing_pad_icon_{size}.png"))
     if args.compare:
@@ -65,12 +65,18 @@ def main():
         sheet = Image.new("RGBA", (64 * 6 + 70, 64 * 2 + 30), (20, 24, 30, 255))
         for i, cell in enumerate(cells + [icons[64]]):
             sheet.alpha_composite(cell, (10 + i * 74, 10))
-        # tinted like the map does (white x tint) at the sizes the game uses
-        tint = Image.new("RGBA", (64, 64), (94, 246, 255, 255))
-        for i, size in enumerate((64, 32, 22)):
-            im = icons[size]
-            colored = Image.composite(tint.resize(im.size), Image.new("RGBA", im.size, (0, 0, 0, 0)), im.split()[3])
-            sheet.alpha_composite(colored, (10 + i * 74, 84))
+        # at the sizes the game uses, blended premultiplied (out = rgb * tint + bg * (1 - a)) as the
+        # UI does, next to the vanilla vehicle icon at the same sizes
+        bg = (20, 24, 30)
+        for i, (size, cell) in enumerate(((32, icons[32]), (22, icons[22]),
+                                          (32, cells[0].resize((32, 32), Image.LANCZOS)),
+                                          (22, cells[0].resize((22, 22), Image.LANCZOS)))):
+            out = Image.new("RGBA", cell.size)
+            for x in range(cell.width):
+                for y in range(cell.height):
+                    r, g, b, a = cell.getpixel((x, y))
+                    out.putpixel((x, y), tuple(min(255, round(c + k * (1 - a / 255))) for c, k in zip((r, g, b), bg)) + (255,))
+            sheet.alpha_composite(out, (10 + i * 74, 84))
         sheet = sheet.resize((sheet.width * 2, sheet.height * 2), Image.NEAREST)
         sheet.save(os.path.join(args.out, "landing_pad_icon_compare.png"))
 
