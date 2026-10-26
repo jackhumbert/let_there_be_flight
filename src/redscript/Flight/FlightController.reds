@@ -444,10 +444,9 @@ public native class FlightController extends IScriptable {
     evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Toggle-UI", n"Flight_UIToggle"),         this.active && this.showOptions);
     // autodrive while flying: the vanilla autodrive hold toggles the Autopilot mode, and while it
     // flies the camera hold toggles the cinematic camera (vanilla's hint text, LocKey#96518)
-    // TODO localize "Autopilot" / "Disable Autopilot"
     let autopilotEngaged = this.active && this.mode == this.AutopilotModeIndex();
-    evt.AddInputHint(FlightController.CreateInputHintText("Autopilot", n"HoldAutodrive"),                   this.active && !this.showOptions && !autopilotEngaged);
-    evt.AddInputHint(FlightController.CreateInputHintText("Disable Autopilot", n"HoldAutodrive"),           autopilotEngaged);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Autopilot", n"HoldAutodrive"),           this.active && !this.showOptions && !autopilotEngaged);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Disable-Autopilot", n"HoldAutodrive"),   autopilotEngaged);
     evt.AddInputHint(FlightController.CreateInputHintText(GetLocalizedText("LocKey#96518"), n"HoldCinematicCamera"), autopilotEngaged);
     // evt.AddInputHint(FlightController.CreateInputHint(n"Fire", n"ShootPrimary"),                 this.active && !this.showOptions);
 
@@ -521,8 +520,7 @@ public native class FlightController extends IScriptable {
     }
     let destination: Vector4;
     if !FlightModeAutopilot.GetDestination(this.gameInstance, destination) {
-      // TODO localize (needs a key in the localization json and an archive repack)
-      this.ShowSimpleMessage(n"Autopilot: set a destination on the map first");
+      this.ShowSimpleMessage(n"Simple-Message-Autopilot-No-Destination");
       GameInstance.GetAudioSystem(this.gameInstance).Play(n"ui_menu_onpress");
       return;
     }
@@ -889,7 +887,7 @@ public native class FlightController extends IScriptable {
     GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().UI_Notifications).SetVariant(GetAllBlackboardDefs().UI_Notifications.OnscreenMessage, ToVariant(msg), true);
   }
 
-  // CreateInputHint with ready text (vanilla LocKey# strings, or not localized yet).
+  // CreateInputHint with ready text (vanilla LocKey# strings).
   public static func CreateInputHintText(text: String, action: CName) -> InputHintData {
     let data = FlightController.CreateInputHint(n"", action);
     data.localizedLabel = text;

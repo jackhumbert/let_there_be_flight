@@ -777,6 +777,86 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Ground-Friction-Description",
               "femaleVariant": "How strongly a flying vehicle grips the ground when it touches or scrapes along it (PhysX Flight Physics only). 0 leaves it sliding freely; higher values stop slides and crashes faster."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Autopilot",
+              "femaleVariant": "Autopilot"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Disable-Autopilot",
+              "femaleVariant": "Disable Autopilot"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Simple-Message-Autopilot-No-Destination",
+              "femaleVariant": "Autopilot: set a destination on the map first"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot",
+              "femaleVariant": "Autopilot"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Enabled",
+              "femaleVariant": "Autopilot"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Enabled-Description",
+              "femaleVariant": "While flying, hold the autodrive key to fly to the tracked destination on its own. Any flight input takes over for a moment."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Max-Speed",
+              "femaleVariant": "Top Speed"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Max-Speed-Description",
+              "femaleVariant": "Highest speed the autopilot flies at, in m/s (45 m/s is about 160 km/h)."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Cornering",
+              "femaleVariant": "Cornering"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Cornering-Description",
+              "femaleVariant": "Sideways acceleration allowed in turns, in m/s2. Higher values take corners faster and tighter."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Braking",
+              "femaleVariant": "Braking"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Braking-Description",
+              "femaleVariant": "Deceleration planned before corners and the destination, in m/s2. Higher values brake later and harder."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Max-Bank",
+              "femaleVariant": "Max Bank Angle"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Max-Bank-Description",
+              "femaleVariant": "How far the vehicle leans into turns, in degrees. 0 keeps it level."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Max-Pitch",
+              "femaleVariant": "Max Pitch Angle"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Max-Pitch-Description",
+              "femaleVariant": "How far the nose tilts up or down on climbs and descents, in degrees. 0 keeps it level."
             }
           ]
         }

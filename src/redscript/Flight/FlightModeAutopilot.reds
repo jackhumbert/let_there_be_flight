@@ -13,19 +13,61 @@
 // audio and the standard attitude control react as usual. Any player input wins for that frame
 // and holds the autopilot off briefly; the route is replanned if the car ends up far from it.
 public class FlightModeAutopilot extends FlightModeStandard {
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Mode-Settings")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Autopilot-Enabled")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Autopilot-Enabled-Description")
   public let enabled: Bool = true;
 
-  // tuning (plain fields for now; not in Mod Settings yet)
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Autopilot")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Autopilot-Max-Speed")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Autopilot-Max-Speed-Description")
+  @runtimeProperty("ModSettings.step", "1.0")
+  @runtimeProperty("ModSettings.min", "10.0")
+  @runtimeProperty("ModSettings.max", "100.0")
   public let maxSpeed: Float = 45.0;          // m/s
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Autopilot")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Autopilot-Cornering")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Autopilot-Cornering-Description")
+  @runtimeProperty("ModSettings.step", "0.5")
+  @runtimeProperty("ModSettings.min", "1.0")
+  @runtimeProperty("ModSettings.max", "15.0")
   public let lateralAccel: Float = 5.0;       // m/s2 allowed in corners
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Autopilot")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Autopilot-Braking")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Autopilot-Braking-Description")
+  @runtimeProperty("ModSettings.step", "0.5")
+  @runtimeProperty("ModSettings.min", "2.0")
+  @runtimeProperty("ModSettings.max", "15.0")
   public let brakeAccel: Float = 6.0;         // m/s2 planned deceleration
+
+  // controller tuning, not in Mod Settings
   public let velocityGain: Float = 1.2;       // 1/s, velocity error -> acceleration
   public let maxAccel: Float = 12.0;          // m/s2
   public let yawGain: Float = 0.04;           // full yaw input at 25 degrees heading error
   public let yawRateDamping: Float = 0.25;
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Autopilot")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Autopilot-Max-Bank")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Autopilot-Max-Bank-Description")
+  @runtimeProperty("ModSettings.step", "1.0")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "45.0")
   public let maxBankDeg: Float = 25.0;
   public let lateralCorrection: Float = 1.0;  // 1/s, sideways velocity error -> extra bank accel
   public let bankTime: Float = 0.4;           // s, smoothing of the bank target
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Autopilot")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Autopilot-Max-Pitch")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Autopilot-Max-Pitch-Description")
+  @runtimeProperty("ModSettings.step", "1.0")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "45.0")
   public let maxPitchDeg: Float = 20.0;
   public let bankSign: Float = 1.0;           // flip if the car banks out of turns
   public let pitchSign: Float = 1.0;          // flip (-1) if the nose drops when climbing
@@ -57,6 +99,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let stuckTimer: Float;
   public let offRouteNow: Float;
   public let blockedAhead: Bool;
+  public let settleTimer: Float;
 
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeAutopilot> {
     let self = new FlightModeAutopilot();
@@ -284,6 +327,26 @@ public class FlightModeAutopilot extends FlightModeStandard {
     return allowed;
   }
 
+  // The route from `from` (on segment this.segment) is free on the nav map for `along` metres.
+  private func RouteClear(from: Vector4, along: Float) -> Bool {
+    let n = ArraySize(this.route);
+    let p = from;
+    let left = along;
+    let i = this.segment;
+    while i < n - 1 && left > 0.0 {
+      let b = this.route[i + 1];
+      let d = Vector4.Distance(p, b);
+      let end = d > left ? p + Vector4.Normalize(b - p) * left : b;
+      if FlightNavMap.SegmentClear(p, end) < 1.0 {
+        return false;
+      }
+      left -= d;
+      p = b;
+      i += 1;
+    }
+    return true;
+  }
+
   // Point at route distance s from the start (clamped to the ends).
   private func PointAt(s: Float) -> Vector4 {
     let n = ArraySize(this.route);
@@ -377,16 +440,17 @@ public class FlightModeAutopilot extends FlightModeStandard {
       // off the route: slow down while getting back, the route's margins assume the car is on it
       this.targetSpeed = MinF(this.targetSpeed, MaxF(8.0, this.maxSpeed - this.offRouteSlowdown * MaxF(offRoute - 2.0, 0.0)));
       // where the current velocity is taking the car must be free on the map; brake to stop short
-      // of the first blocked point otherwise
+      // of the first blocked point otherwise. Only when the car is leaving a route that is clear
+      // over the same distance: where the route itself grazes the map's margin (passing a ledge
+      // or under a deck) the velocity test fails too, and braking there stalls the car on the line
+      this.blockedAhead = false;
       if stats.d_speed > 3.0 {
         let reach = v * this.collisionHorizon;
         let clear = FlightNavMap.SegmentClear(FlightNavMap.IsFree(p) ? p : closest, p + reach);
-        if clear < 1.0 {
+        if clear < 1.0 && this.RouteClear(closest, Vector4.Length(reach)) {
           let room = MaxF(clear * Vector4.Length(reach) - 5.0, 0.0);
           this.targetSpeed = MinF(this.targetSpeed, SqrtF(2.0 * this.brakeAccel * room));
           this.blockedAhead = true;
-        } else {
-          this.blockedAhead = false;
         }
       }
       // barely moving while it should fly: wedged against something the map doesn't know about
@@ -411,10 +475,18 @@ public class FlightModeAutopilot extends FlightModeStandard {
         this.status = "arrived";
         this.holdPosition = this.route[ArraySize(this.route) - 1];
         ArrayClear(this.route);
+        this.settleTimer = 0.0;
         FlightLog.Info("[Autopilot] arrived");
-        if this.component.isPlayerMounted {
-          // like vanilla autodrive: "destination reached", then hand the controls back (the
-          // previous mode takes over and hovers here)
+      }
+    } else {
+      if Equals(this.status, "arrived") && this.component.isPlayerMounted {
+        // hold on the destination until the car is still, then hand the controls back like
+        // vanilla autodrive ("destination reached"). The previous mode has no horizontal
+        // damping, so speed left over at the hand-back carries the car on for tens of metres.
+        this.settleTimer += timeDelta;
+        if (stats.d_speed < 0.5 && Vector4.Distance(p, this.holdPosition) < 2.0) || this.settleTimer > 5.0 {
+          this.status = "idle";
+          FlightLog.Info("[Autopilot] settled after " + FloatToStringPrec(this.settleTimer, 1) + " s, handing back");
           FlightModeAutopilot.Notify(this.component.GetVehicle().GetGame(), "LocKey#96672");
           FlightController.GetInstance().ExitAutopilot();
         }
