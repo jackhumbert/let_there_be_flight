@@ -61,6 +61,21 @@ public class FlightModeAutopilot extends FlightModeStandard {
   @runtimeProperty("ModSettings.max", "500.0")
   public let padRange: Float = 0.0;           // m around a destination on the ground to look for a landing pad (0 = off)
 
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Autopilot")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Autopilot-Aerobatics")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Autopilot-Aerobatics-Description")
+  public let aerobatics: Bool = false;        // full 3D attitude and manoeuvres (FlightAerobatics.reds)
+
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Autopilot")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Autopilot-Stunts")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Autopilot-Stunts-Description")
+  @runtimeProperty("ModSettings.step", "5.0")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "120.0")
+  public let stuntInterval: Float = 0.0;      // s between stunts on long straights with aerobatics on (0 = none)
+
   // takeoff and landing
   public let takeoffHeight: Float = 10.0;     // m above the floor climbed straight up before flying off
   public let climbRate: Float = 5.0;          // m/s during the takeoff climb
@@ -123,6 +138,33 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let offRouteSlowdown: Float = 3.0;   // m/s less target speed per metre off the route (past 2 m)
   public let collisionHorizon: Float = 1.5;   // s of current velocity checked against the map
 
+  // aerobatics tuning, not in Mod Settings
+  public let attitudeFrequency: Float = 5.0;  // rad/s, natural frequency of the attitude control
+  public let attitudeDamping: Float = 0.8;
+  public let maxAngularAccel: Float = 20.0;   // rad/s2
+  // rad/s2 of angular acceleration per unit of mode torque x mass x thruster tensor / inertia
+  // (FlightComponent scales the torque by those, PhysX divides by its own inertia), per axis.
+  // tools/cet/torque_probe.lua on an Archer Quartz hovering, 2026-10-26: roll 0.52, yaw 0.95,
+  // pitch 2.5 to 2.8 over the first frames, then falling off while still pushed; all respond two
+  // frames late (at 32 fps)
+  public let torqueGainPitch: Float = 2.0;
+  public let torqueGainRoll: Float = 0.5;
+  public let torqueGainYaw: Float = 0.9;
+  public let attitudeLead: Float = 0.25;
+  public let attitudeDelay: Float = 0.1;      // s ahead a manoeuvre's attitude is taken (the car's response lag)
+  public let settledError: Float = 10.0;      // deg of attitude error under which a manoeuvre may start      // s of the commanded acceleration added to the velocity for the nose
+  public let maxHeadingRate: Float = 0.9;     // rad/s the heading may turn at hover speeds
+  public let maneuverAccel: Float = 10.0;     // m/s2 a pitch manoeuvre's circle is sized for
+  public let maneuverMaxAccel: Float = 25.0;  // m/s2 the tracking of a manoeuvre may command
+  public let maneuverJerk: Float = 80.0;      // m/s3 rate limit of the acceleration during a manoeuvre
+  public let maneuverPosGain: Float = 1.0;    // 1/s2, position error -> acceleration
+  public let maneuverVelGain: Float = 2.0;    // 1/s, velocity error -> acceleration
+  public let maneuverRollTime: Float = 1.5;   // s of a half roll
+  public let maneuverMinSpeed: Float = 12.0;  // m/s
+  public let maneuverMaxSpeed: Float = 25.0;  // m/s, faster and the circles do not fit in the city
+  public let maneuverAbortDistance: Float = 15.0; // m off the shape before giving up on it
+  public let pitchMargin: Float = 1.0;        // m of room above and below a pitched car (see FlightAerobatics.reds)
+
   // state, public for debugging from CET
   public let status: String = "idle";
   public let route: array<Vector4>;
@@ -169,6 +211,19 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let rollRate: Float;                 // rad/s, filtered
   public let telemetry: Bool;
   public let telemetryTime: Float;
+  // aerobatics
+  public let maneuver: ref<FlightManeuver>;
+  public let maneuverCooldown: Float;
+  public let stuntTimer: Float;
+  public let closestNow: Vector4;             // closest point on the route this frame
+  public let overlayVelocity: Vector4;        // a barrel roll's offset rate, added to the desired velocity
+  public let headingRef: Vector4;             // horizontal heading flown at hover speeds
+  public let attAccel: Vector4;               // commanded acceleration, smoothed, for the attitude
+  public let targetRight: Vector4;            // attitude target, world
+  public let targetForward: Vector4;
+  public let targetUp: Vector4;
+  public let omegaRef: Vector4;               // rad/s, world: rate of the attitude target
+  public let attitudeError: Float;            // rad
 
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeAutopilot> {
     let self = new FlightModeAutopilot();
@@ -201,6 +256,16 @@ public class FlightModeAutopilot extends FlightModeStandard {
     if this.takingOff {
       this.holdPosition = this.takeoffPoint;
     }
+    this.maneuver = null;
+    this.maneuverCooldown = 0.0;
+    this.stuntTimer = 0.0;
+    this.overlayVelocity = new Vector4(0.0, 0.0, 0.0, 0.0);
+    this.headingRef = this.component.stats.d_forward2D;
+    this.attAccel = new Vector4(0.0, 0.0, 0.0, 0.0);
+    this.targetRight = this.component.stats.d_right;
+    this.targetForward = this.component.stats.d_forward;
+    this.targetUp = this.component.stats.d_up;
+    this.omegaRef = new Vector4(0.0, 0.0, 0.0, 0.0);
     if this.component.isPlayerMounted {
       this.PublishAutodriveUI(true);
     }
@@ -824,6 +889,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
       this.speedRate = 0.0;
       this.accelCmd = new Vector4(0.0, 0.0, 0.0, 0.0);
       this.yawCmd = 0.0;
+      if IsDefined(this.maneuver) {
+        FlightLog.Info("[Autopilot] " + this.maneuver.GetName() + " cut short by player input");
+        this.maneuver = null;
+      }
+      this.headingRef = stats.d_forward2D;
       this.UpdateWithNormalLift(timeDelta, FlightUtils.Up(), 9.81 * this.gravityFactor + this.component.lift * this.standardModeLiftFactor - v.Z);
       return;
     }
@@ -837,12 +907,19 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let target = this.holdPosition;
     this.targetSpeed = 0.0;
     this.emergencyBrake = false;
-    let following = Equals(this.status, "following") && ArraySize(this.route) >= 2 && !this.takingOff;
+    // a pitch manoeuvre flies its own shape; the route is picked up again after it
+    if !this.aerobatics && IsDefined(this.maneuver) {
+      this.EndManeuver(); // switched off in Mod Settings mid-manoeuvre
+    }
+    let shaped = IsDefined(this.maneuver) && !this.maneuver.IsOverlay();
+    this.overlayVelocity = new Vector4(0.0, 0.0, 0.0, 0.0);
+    let following = Equals(this.status, "following") && ArraySize(this.route) >= 2 && !this.takingOff && !shaped;
     if following {
       let closest: Vector4;
       let offRoute: Float;
       this.ClosestOnRoute(p, closest, offRoute);
       this.offRouteNow = offRoute;
+      this.closestNow = closest;
       if offRoute > this.replanDistance && this.replanTimer <= 0.0 && this.request == 0 {
         this.RequestRoute(p);
       }
@@ -874,6 +951,13 @@ public class FlightModeAutopilot extends FlightModeStandard {
         target = this.AlongRoute(closest, ahead);
       }
       this.curvatureAhead = this.CurvatureAhead(closest, ahead);
+      // barrel roll: aim at the route point moved round the roll's circle
+      if IsDefined(this.maneuver) && Equals(this.maneuver.kind, FlightManeuverKind.BarrelRoll) {
+        let offset: Vector4;
+        let barrelUp: Vector4;
+        this.maneuver.BarrelOffset(this.maneuver.time, offset, this.overlayVelocity, barrelUp);
+        target += offset;
+      }
       this.targetSpeed = this.AllowedSpeed(closest);
       // off the route: slow down while getting back, the route's margins assume the car is on it
       this.targetSpeed = MinF(this.targetSpeed, MaxF(8.0, this.maxSpeed - this.offRouteSlowdown * MaxF(offRoute - 2.0, 0.0)));
@@ -900,6 +984,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
           this.targetSpeed = MinF(this.targetSpeed, SqrtF(2.0 * this.brakeAccel * room));
           this.blockedAhead = true;
         }
+      }
+      if this.aerobatics {
+        this.ChooseManeuver(p, closest, timeDelta);
       }
       // the speed actually flown follows the target through an S-curve: the rate of change eases
       // in and out (jerk-limited) instead of stepping to full acceleration, and the target's
@@ -1013,7 +1100,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let toTarget = target - p;
     let desiredVelocity: Vector4;
     if following {
-      desiredVelocity = Vector4.Normalize(toTarget) * this.speedCmd;
+      desiredVelocity = Vector4.Normalize(toTarget) * this.speedCmd + this.overlayVelocity;
     } else {
       // start the next stretch of route following from the speed the car has
       this.speedCmd = stats.d_speed;
@@ -1041,10 +1128,35 @@ public class FlightModeAutopilot extends FlightModeStandard {
     accel.X = horizontal.X;
     accel.Y = horizontal.Y;
     accel.Z = ClampF(accel.Z, -this.maxAccel, this.maxAccel);
+    let jerk = this.accelJerk;
+    if shaped {
+      // track the manoeuvre's shape: its own acceleration plus corrections towards it
+      let refPos: Vector4;
+      let refVel: Vector4;
+      let refAcc: Vector4;
+      let refFwd: Vector4;
+      let refUp: Vector4;
+      this.maneuver.Sample(this.maneuver.time, refPos, refVel, refAcc, refFwd, refUp);
+      target = refPos;
+      this.lookahead = refPos;
+      desiredVelocity = refVel;
+      accel = refAcc + (refVel - v) * this.maneuverVelGain + (refPos - p) * this.maneuverPosGain;
+      if Vector4.Length(accel) > this.maneuverMaxAccel {
+        accel = Vector4.Normalize(accel) * this.maneuverMaxAccel;
+      }
+      jerk = this.maneuverJerk;
+      if Vector4.Distance(refPos, p) > this.maneuverAbortDistance {
+        FlightLog.Warn("[Autopilot] " + this.maneuver.GetName() + " abandoned " + FloatToStringPrec(Vector4.Distance(refPos, p), 1) + " m off its shape at "
+          + FloatToStringPrec(this.maneuver.time, 2) + " s: car " + FloatToStringPrec(p.X, 1) + ", " + FloatToStringPrec(p.Y, 1) + ", " + FloatToStringPrec(p.Z, 1)
+          + " shape " + FloatToStringPrec(refPos.X, 1) + ", " + FloatToStringPrec(refPos.Y, 1) + ", " + FloatToStringPrec(refPos.Z, 1)
+          + " from " + FloatToStringPrec(this.maneuver.origin.X, 1) + ", " + FloatToStringPrec(this.maneuver.origin.Y, 1) + ", " + FloatToStringPrec(this.maneuver.origin.Z, 1));
+        this.EndManeuver();
+      }
+    }
     // ease changes of the acceleration itself (it is what is felt): rate-limit the command,
     // except in an emergency stop for blocked space
     let change = accel - this.accelCmd;
-    let maxChange = this.accelJerk * timeDelta;
+    let maxChange = jerk * timeDelta;
     if !this.emergencyBrake && Vector4.Length(change) > maxChange {
       change = Vector4.Normalize(change) * maxChange;
     }
@@ -1072,6 +1184,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
     } else if Equals(this.status, "descending") || Equals(this.status, "landed") {
       let f = ClampF((this.landingStartZ - p.Z) / MaxF(this.landingStartZ - this.landingSpot.Z, 0.5), 0.0, 1.0);
       heading = FlightModeAutopilot.BlendHeading(this.landingHeading0, this.landingHeading, f * f * (3.0 - 2.0 * f)) * 10.0;
+    }
+    if this.aerobatics {
+      this.FlyAerobatic(timeDelta, accel, heading);
+      return;
     }
     // heading error part of the yaw input, eased into and out of turns (low-pass and a limit on how
     // fast it may change); the yaw-rate damping below stays instant, delaying it made the heading
@@ -1170,6 +1286,292 @@ public class FlightModeAutopilot extends FlightModeStandard {
         + " remaining " + FloatToStringPrec(this.remaining, 0) + " yaw " + FloatToStringPrec(yaw, 2)
         + " surge " + FloatToStringPrec(surge, 2) + " bank " + FloatToStringPrec(Rad2Deg(bank), 1)
         + " z " + FloatToStringPrec(p.Z, 1) + " -> " + FloatToStringPrec(target.Z, 1));
+    }
+  }
+
+  // --- aerobatics --------------------------------------------------------------------------
+
+  // While following the route: turn round over the top or underneath when the route doubles back
+  // on the car, and with stuntInterval set, a stunt on a long straight now and then. Only what
+  // fits on the nav map is flown.
+  private func ChooseManeuver(p: Vector4, closest: Vector4, timeDelta: Float) -> Void {
+    this.maneuverCooldown = MaxF(this.maneuverCooldown - timeDelta, 0.0);
+    let stats = this.component.stats;
+    let v = stats.d_velocity;
+    if IsDefined(this.maneuver) || this.maneuverCooldown > 0.0 || this.blockedAhead || this.emergencyBrake
+      || stats.d_speed2D < this.maneuverMinSpeed || AbsF(v.Z) > 3.0 {
+      return;
+    }
+    let side = RandRangeF(0.0, 1.0) < 0.5 ? -1.0 : 1.0;
+    // the route goes back the way the car came (overshot, or a new destination behind): an
+    // Immelmann, or a split-S where the route carries on lower
+    let ahead = this.AlongRoute(closest, 25.0) - p;
+    if stats.d_speed2D <= this.maneuverMaxSpeed && Vector4.Length2D(ahead) > 5.0
+      && Vector4.Dot(Vector4.Normalize2D(ahead), Vector4.Normalize2D(v)) < -0.5 {
+      let down = ahead.Z < -10.0;
+      if !this.TryManeuver(down ? FlightManeuverKind.SplitS : FlightManeuverKind.Immelmann, side, p, closest)
+        && !this.TryManeuver(down ? FlightManeuverKind.Immelmann : FlightManeuverKind.SplitS, side, p, closest) {
+        this.maneuverCooldown = 1.0; // neither fits here: look again in a moment
+      }
+      return;
+    }
+    if this.stuntInterval <= 0.0 {
+      return;
+    }
+    this.stuntTimer += timeDelta;
+    if this.stuntTimer < this.stuntInterval {
+      return;
+    }
+    let kinds: array<FlightManeuverKind> = [FlightManeuverKind.AileronRoll, FlightManeuverKind.BarrelRoll, FlightManeuverKind.Loop];
+    let kind = kinds[Min(Cast<Int32>(RandRangeF(0.0, 3.0)), 2)];
+    if Equals(kind, FlightManeuverKind.Loop) && stats.d_speed2D > this.maneuverMaxSpeed {
+      kind = FlightManeuverKind.AileronRoll;
+    }
+    let reach = stats.d_speed * FlightManeuver.Create(kind, side, p, v, this.maneuverAccel, this.maneuverRollTime).duration;
+    if this.DistanceToSharpBend(closest) > reach + 30.0 && this.remaining > reach + 100.0 && AbsF(this.curvatureAhead) < 0.004
+      && this.TryManeuver(kind, side, p, closest) {
+      this.stuntTimer = 0.0;
+    } else {
+      this.stuntTimer = this.stuntInterval - 1.0; // try again in a second
+    }
+  }
+
+  // Starts the manoeuvre if its whole shape is free on the map.
+  private func TryManeuver(kind: FlightManeuverKind, side: Float, p: Vector4, closest: Vector4) -> Bool {
+    let stats = this.component.stats;
+    // only from settled flight with the nose along the path: a shape started off it begins with a
+    // jump of the attitude target (up to 75 degrees after a previous manoeuvre), which the car
+    // overshot and fell out of
+    if Rad2Deg(this.attitudeError) > this.settledError || Vector4.Length(stats.d_angularVelocity) > 1.0
+      || Vector4.Dot(stats.d_forward2D, Vector4.Normalize2D(stats.d_velocity)) < 0.95 {
+      return false;
+    }
+    let m = FlightManeuver.Create(kind, side, p, stats.d_velocity, this.maneuverAccel, this.maneuverRollTime);
+    let fits: Bool;
+    if Equals(kind, FlightManeuverKind.AileronRoll) {
+      fits = this.RouteClear(closest, stats.d_speed * m.duration + 10.0);
+    } else if Equals(kind, FlightManeuverKind.BarrelRoll) {
+      fits = this.BarrelFits(m, closest);
+    } else {
+      fits = m.Fits(this.pitchMargin);
+    }
+    if !fits {
+      return false;
+    }
+    this.maneuver = m;
+    FlightLog.Info("[Autopilot] " + m.GetName() + " at " + FloatToStringPrec(stats.d_speed, 1) + " m/s"
+      + (m.IsOverlay() ? "" : ", radius " + FloatToStringPrec(m.radius, 1) + " m") + ", " + FloatToStringPrec(m.duration, 1) + " s");
+    return true;
+  }
+
+  // The barrel roll's circle around the route ahead is free on the map.
+  private func BarrelFits(m: ref<FlightManeuver>, closest: Vector4) -> Bool {
+    let speed = this.component.stats.d_speed;
+    let prev = closest;
+    let fits = true;
+    let i = 1;
+    while fits && i <= 16 {
+      m.time = m.duration * Cast<Float>(i) / 16.0;
+      let offset: Vector4;
+      let offsetVelocity: Vector4;
+      let up: Vector4;
+      m.BarrelOffset(m.time, offset, offsetVelocity, up);
+      let q = this.AlongRoute(closest, speed * m.time) + offset;
+      fits = FlightNavMap.IsFree(q) && FlightNavMap.SegmentClear(prev, q) >= 1.0;
+      prev = q;
+      i += 1;
+    }
+    m.time = 0.0;
+    return fits;
+  }
+
+  private func EndManeuver() -> Void {
+    if IsDefined(this.maneuver) {
+      FlightLog.Info("[Autopilot] " + this.maneuver.GetName() + " done");
+      if !this.maneuver.IsOverlay() {
+        // pick the route up again from where the shape left the car
+        this.speedCmd = this.component.stats.d_speed;
+        this.speedRate = 0.0;
+        this.aheadSmooth = 15.0;
+        this.replanTimer = 0.0;
+        this.holdPosition = this.component.stats.d_position;
+      }
+    }
+    this.maneuver = null;
+    this.maneuverCooldown = 4.0;
+    this.stuntTimer = 0.0;
+  }
+
+  // From CET, for testing: kind as FlightManeuverKind (1 aileron roll .. 5 split-S), side +-1.
+  public func StartManeuver(kind: Int32, side: Float) -> String {
+    if !this.aerobatics {
+      return "aerobatics off";
+    }
+    if IsDefined(this.maneuver) {
+      return "busy with " + this.maneuver.GetName();
+    }
+    let k = IntEnum<FlightManeuverKind>(kind);
+    let following = Equals(this.status, "following") && ArraySize(this.route) >= 2 && !this.takingOff;
+    if (Equals(k, FlightManeuverKind.AileronRoll) || Equals(k, FlightManeuverKind.BarrelRoll)) && !following {
+      return "rolls need a route to follow";
+    }
+    if this.component.stats.d_speed2D < 8.0 {
+      return "too slow";
+    }
+    if this.component.stats.d_speed2D > this.maneuverMaxSpeed && !(Equals(k, FlightManeuverKind.AileronRoll) || Equals(k, FlightManeuverKind.BarrelRoll)) {
+      return "too fast for a pitch manoeuvre";
+    }
+    if Rad2Deg(this.attitudeError) > this.settledError || Vector4.Length(this.component.stats.d_angularVelocity) > 1.0
+      || Vector4.Dot(this.component.stats.d_forward2D, Vector4.Normalize2D(this.component.stats.d_velocity)) < 0.95 {
+      return "not settled";
+    }
+    return this.TryManeuver(k, side, this.component.stats.d_position, this.closestNow) ? this.maneuver.GetName() : "does not fit here";
+  }
+
+  // Flies the commanded acceleration with the car's attitude as a full 3D target: the nose along
+  // the flight path (the heading at hover speeds), the top towards the turn and away from gravity
+  // (a coordinated turn in any direction), or a manoeuvre's own attitude. Thrust is applied along
+  // whichever way the car points, so the attitude never costs the path anything.
+  private func FlyAerobatic(timeDelta: Float, accel: Vector4, heading: Vector4) -> Void {
+    let stats = this.component.stats;
+    let v = stats.d_velocity;
+    let z = FlightUtils.Up();
+    let dt = MaxF(timeDelta, 0.001);
+
+    // heading at hover speeds: towards the wanted one, eased and at most maxHeadingRate
+    if Vector4.Length(heading) > 2.0 {
+      let want = Vector4.Normalize2D(heading);
+      let angle = AcosF(ClampF(Vector4.Dot(want, this.headingRef), -1.0, 1.0));
+      if angle > 0.0001 {
+        let f = MinF(ClampF(dt / this.yawSmoothing, 0.0, 1.0), this.maxHeadingRate * dt / angle);
+        this.headingRef = FlightModeAutopilot.BlendHeading(this.headingRef, want, f);
+      }
+    }
+
+    // a manoeuvre's attitude is taken attitudeDelay ahead: the car answers torque two frames late
+    let ahead = IsDefined(this.maneuver) ? MinF(this.maneuver.time + this.attitudeDelay, this.maneuver.duration) : 0.0;
+    // the nose follows the flight path from a lower speed than in level flight, or a manoeuvre
+    // starts with the nose well off its path
+    let blend = ClampF((stats.d_speed - 4.0) / 8.0, 0.0, 1.0);
+    blend = blend * blend * (3.0 - 2.0 * blend);
+    let fwd: Vector4;
+    let up: Vector4;
+    if IsDefined(this.maneuver) && !this.maneuver.IsOverlay() {
+      let refPos: Vector4;
+      let refVel: Vector4;
+      let refAcc: Vector4;
+      this.maneuver.Sample(ahead, refPos, refVel, refAcc, fwd, up);
+    } else {
+      // nose: the velocity plus a little of the commanded acceleration, so it leads into turns,
+      // climbs and dives
+      let path = v + accel * this.attitudeLead;
+      fwd = this.headingRef * (1.0 - blend);
+      if Vector4.Length(path) > 1.0 {
+        fwd += Vector4.Normalize(path) * blend;
+      }
+      fwd = Vector4.Length(fwd) > 0.1 ? Vector4.Normalize(fwd) : this.headingRef;
+      this.attAccel += (accel - this.attAccel) * ClampF(dt / this.bankTime, 0.0, 1.0);
+      let u = FlightAttitude.Across(this.attAccel * blend + z * (9.81 * this.gravityFactor), fwd);
+      if Vector4.Length(u) < 1.0 {
+        u = FlightAttitude.Across(this.targetUp, fwd);
+      }
+      up = Vector4.Normalize(u);
+      if IsDefined(this.maneuver) {
+        if Equals(this.maneuver.kind, FlightManeuverKind.AileronRoll) {
+          up = this.maneuver.RollUp(ahead, fwd, up);
+        } else {
+          // barrel roll: top towards the centre of the circle round the route
+          let offset: Vector4;
+          let offsetVelocity: Vector4;
+          let barrelUp: Vector4;
+          this.maneuver.BarrelOffset(ahead, offset, offsetVelocity, barrelUp);
+          let across = FlightAttitude.Across(barrelUp, fwd);
+          if Vector4.Length(across) > 0.5 {
+            up = Vector4.Normalize(across);
+          }
+        }
+      }
+    }
+    let right = Vector4.Normalize(Vector4.Cross(fwd, up));
+    up = Vector4.Cross(right, fwd);
+
+    // rate of the target, smoothed (it is what the car should be turning at)
+    let step = FlightAttitude.RotationError(this.targetRight, this.targetForward, this.targetUp, right, fwd, up);
+    let omega = (this.targetRight * step.X + this.targetForward * step.Y + this.targetUp * step.Z) * (1.0 / dt);
+    this.omegaRef += (omega - this.omegaRef) * ClampF(dt / 0.05, 0.0, 1.0);
+    this.targetRight = right;
+    this.targetForward = fwd;
+    this.targetUp = up;
+
+    // attitude control in the body frame: angular acceleration from the error and the rate error,
+    // then the torque that gives it on each axis
+    let error = FlightAttitude.RotationError(stats.d_right, stats.d_forward, stats.d_up, right, fwd, up);
+    this.attitudeError = Vector4.Length(error);
+    let rateRef = new Vector4(Vector4.Dot(this.omegaRef, stats.d_right), Vector4.Dot(this.omegaRef, stats.d_forward), Vector4.Dot(this.omegaRef, stats.d_up), 0.0);
+    let rate = stats.d_angularVelocity;
+    rate.W = 0.0;
+    let alpha = error * (this.attitudeFrequency * this.attitudeFrequency) + (rateRef - rate) * (2.0 * this.attitudeDamping * this.attitudeFrequency);
+    if Vector4.Length(alpha) > this.maxAngularAccel {
+      alpha = Vector4.Normalize(alpha) * this.maxAngularAccel;
+    }
+    let mass = stats.s_mass;
+    let inertia = stats.s_momentOfInertia;
+    let tensor = this.component.thrusterTensor;
+    let torque = new Vector4(
+      alpha.X * inertia.X / MaxF(this.torqueGainPitch * mass * tensor.X, 0.001),
+      alpha.Y * inertia.Y / MaxF(this.torqueGainRoll * mass * MaxF(tensor.Y, 1.0), 0.001),
+      alpha.Z * inertia.Z / MaxF(this.torqueGainYaw * mass * tensor.Z, 0.001), 0.0);
+    // ApplyPhysics damps all rotation: give back what it takes from the rotation wanted
+    let fs = FlightSettings.GetInstance();
+    let giveBack = rateRef * fs.generalDampFactorAngular;
+    giveBack.Z *= fs.generalYawDampFactor;
+    if Vector4.Length(giveBack) > fs.generalDampFactorAngularMax {
+      giveBack = Vector4.Normalize(giveBack) * fs.generalDampFactorAngularMax; // ApplyPhysics' own cap
+    }
+    torque += giveBack;
+
+    // thrust: the commanded acceleration and gravity, in the car's frame
+    let local = Quaternion.Conjugate(stats.d_orientation) * (accel + z * (9.81 * this.gravityFactor));
+    this.force = local;
+    this.torque = torque;
+    // inputs for audio and the thrusters' look; no yaw input, ApplyPhysics damps less on an axis
+    // with input and the give-back above assumes full damping
+    this.component.surge = ClampF(local.Y / this.standardModeSurgeFactor, -1.0, 1.0);
+    this.component.sway = ClampF(local.X / this.standardModeSwayFactor, -1.0, 1.0);
+    this.component.yaw = 0.0;
+    this.component.lift = 0.0;
+    this.component.linearBrake = 0.0;
+    this.component.angularBrake = 0.0;
+
+    if this.telemetry {
+      this.telemetryTime += timeDelta;
+      let p = stats.d_position;
+      FlightLog.Info("[AutopilotA] " + FloatToStringPrec(this.telemetryTime, 3) + " " + FloatToStringPrec(p.X, 2) + " " + FloatToStringPrec(p.Y, 2) + " " + FloatToStringPrec(p.Z, 2)
+        + " " + FloatToStringPrec(v.X, 2) + " " + FloatToStringPrec(v.Y, 2) + " " + FloatToStringPrec(v.Z, 2)
+        + " " + FloatToStringPrec(Rad2Deg(this.attitudeError), 2)
+        + " " + FloatToStringPrec(rate.X, 3) + " " + FloatToStringPrec(rate.Y, 3) + " " + FloatToStringPrec(rate.Z, 3)
+        + " " + FloatToStringPrec(rateRef.X, 3) + " " + FloatToStringPrec(rateRef.Y, 3) + " " + FloatToStringPrec(rateRef.Z, 3)
+        + " " + FloatToStringPrec(up.X, 3) + " " + FloatToStringPrec(up.Y, 3) + " " + FloatToStringPrec(up.Z, 3)
+        + " " + FloatToStringPrec(stats.d_up.X, 3) + " " + FloatToStringPrec(stats.d_up.Y, 3) + " " + FloatToStringPrec(stats.d_up.Z, 3)
+        + " " + FloatToStringPrec(accel.X, 2) + " " + FloatToStringPrec(accel.Y, 2) + " " + FloatToStringPrec(accel.Z, 2)
+        + " " + (IsDefined(this.maneuver) ? ToString(EnumInt(this.maneuver.kind)) + " " + FloatToStringPrec(this.maneuver.time, 2) : "0 0")
+        + " " + this.status);
+    }
+    this.logTimer -= timeDelta;
+    if this.logTimer <= 0.0 {
+      this.logTimer = 1.0;
+      FlightLog.Info("[Autopilot] " + this.status + (IsDefined(this.maneuver) ? " (" + this.maneuver.GetName() + " " + FloatToStringPrec(this.maneuver.time, 1) + " s)" : "")
+        + " seg " + ToString(this.segment) + "/" + ToString(ArraySize(this.route))
+        + " speed " + FloatToStringPrec(stats.d_speed, 1) + " target " + FloatToStringPrec(this.targetSpeed, 1)
+        + " remaining " + FloatToStringPrec(this.remaining, 0) + " attitude error " + FloatToStringPrec(Rad2Deg(this.attitudeError), 1)
+        + " up " + FloatToStringPrec(stats.d_up.Z, 2) + " z " + FloatToStringPrec(stats.d_position.Z, 1));
+    }
+
+    if IsDefined(this.maneuver) {
+      this.maneuver.time += timeDelta;
+      if this.maneuver.IsDone() {
+        this.EndManeuver();
+      }
     }
   }
 }

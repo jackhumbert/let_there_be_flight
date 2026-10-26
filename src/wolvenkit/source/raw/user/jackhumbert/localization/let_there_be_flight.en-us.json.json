@@ -850,6 +850,26 @@
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Aerobatics",
+              "femaleVariant": "Aerobatics"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Aerobatics-Description",
+              "femaleVariant": "Fly like an aircraft: bank as far as a turn needs, point the nose along climbs and dives, and turn round with an Immelmann or split-S when the route doubles back, where there is room. Max Bank and Max Pitch do not apply."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Stunts",
+              "femaleVariant": "Stunt Interval"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Stunts-Description",
+              "femaleVariant": "With Aerobatics on: seconds between stunts (aileron roll, barrel roll, loop) on long straights with room for them. 0 turns stunts off."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Autopilot-Max-Pitch",
               "femaleVariant": "Max Pitch Angle"
             },
