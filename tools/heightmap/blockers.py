@@ -106,6 +106,12 @@ def group_summary(inner):
                 size = [round(2 * x, 1) for x in h]
             blocker_actors.append({
                 "position": [round(x, 1) for x in pos],
+                # the actor's position as stored (WorldPosition fixed point): what the plugin
+                # looks for in the cooked node's compiledData
+                "bits": [p[c]["Bits"] for c in "xyz"],
+                # every shape of the actor is a blocker or query-only: moving the whole actor
+                # away removes nothing else
+                "only_blockers": all(n in BLOCKERS or n in NO_COLLISION for n in names),
                 "shapes": collections.Counter(kinds).most_common(),
                 "presets": sorted(set(names)),
                 "size": size,
@@ -177,11 +183,15 @@ def scan(args):
     os.makedirs(args.out, exist_ok=True)
     done_path = os.path.join(args.out, "scanned.json")
     done = json.load(open(done_path)) if os.path.exists(done_path) else {}
-    files = [
-        os.path.join(args.sectors, n)
-        for n in sorted(os.listdir(args.sectors))
-        if re.match(args.match, n) and done.get(n) != "ok"
-    ]
+    if args.rescan:
+        have = {n[: -len(".json")] for n in os.listdir(args.out) if n.endswith(".streamingsector.json")}
+        files = [os.path.join(args.sectors, n) for n in sorted(os.listdir(args.sectors)) if n in have]
+    else:
+        files = [
+            os.path.join(args.sectors, n)
+            for n in sorted(os.listdir(args.sectors))
+            if re.match(args.match, n) and done.get(n) != "ok"
+        ]
     print(f"{len(files)} sectors to scan")
     batches = [files[i : i + BATCH] for i in range(0, len(files), BATCH)]
     with ProcessPoolExecutor(args.jobs) as pool:
@@ -231,20 +241,59 @@ def report(args):
     print("wrote", args.output)
 
 
+def export(args):
+    """Write the plugin's table (src/red4ext/Navigation/Blockers): per sector, the stored
+    positions of the blocker actors to move away. Only actors whose every shape is a blocker or
+    query-only, so real walls in the same group stay; minus the --exclude boxes (map edges)."""
+    boxes = [tuple(float(v) for v in b.split(",")) for b in args.exclude]
+    per_sector = collections.defaultdict(list)
+    skipped = collections.Counter()
+    for n in sorted(os.listdir(args.out)):
+        if not n.endswith(".streamingsector.json"):
+            continue
+        sector = n[: -len(".json")]
+        for g in json.load(open(os.path.join(args.out, n)))["groups"]:
+            for b in g["blockers"]:
+                x, y = b["position"][0], b["position"][1]
+                if any(x0 <= x <= x1 and y0 <= y <= y1 for x0, y0, x1, y1 in boxes):
+                    skipped["excluded area"] += 1
+                elif not b.get("only_blockers"):
+                    skipped["actor also has real collision"] += 1
+                elif "bits" not in b:
+                    skipped["no position bits (rescan)"] += 1
+                else:
+                    per_sector[sector].append(b["bits"])
+    lines = [
+        "# Let There Be Flight: invisible vehicle blockers to move away when their sector loads.",
+        "# Written by tools/heightmap/blockers.py export; S = sector path, A = actor position as",
+        "# stored (WorldPosition fixed point x y z), found in the sector's cooked collision data.",
+    ]
+    for sector in sorted(per_sector):
+        lines.append(r"S base\worlds\03_night_city\_compiled\default" + "\\" + sector)
+        lines += [f"A {x} {y} {z}" for x, y, z in per_sector[sector]]
+    open(args.output, "w", newline="\n").write("\n".join(lines) + "\n")
+    print(f"{sum(len(v) for v in per_sector.values())} actors in {len(per_sector)} sectors -> {args.output}; skipped {dict(skipped)}")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
+    e = sub.add_parser("export")
+    e.add_argument("out")
+    e.add_argument("-o", "--output", required=True)
+    e.add_argument("--exclude", action="append", default=[], help="x0,y0,x1,y1 box to leave alone (repeatable)")
     s = sub.add_parser("scan")
     s.add_argument("--sectors", required=True)
     s.add_argument("-o", "--out", required=True)
     s.add_argument("--wolvenkit", default=DEFAULT_WOLVENKIT)
     s.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 2) // 2))
     s.add_argument("--match", default=r"^(exterior|interior)_.*\.streamingsector$")
+    s.add_argument("--rescan", action="store_true", help="redo the sectors that have results in -o")
     r = sub.add_parser("report")
     r.add_argument("out")
     r.add_argument("-o", "--output", default="blockers.md")
     args = ap.parse_args()
-    scan(args) if args.cmd == "scan" else report(args)
+    {"scan": scan, "report": report, "export": export}[args.cmd](args)
 
 
 if __name__ == "__main__":

@@ -79,6 +79,10 @@ endif()
 
 # Landing pads found in the world sectors and checked against the nav map (tools/heightmap/pads.py, small, in git).
 configure_mod_file(src/navigation/helipads.tsv red4ext/plugins/${MOD_SLUG}/helipads.tsv)
+# Invisible vehicle blockers the plugin moves out of the world as sectors load (tools/heightmap/blockers.py export).
+# Not shipped until removal is confirmed in game (docs/autodrive-flight-plan.md, "Invisible colliders sweep"):
+# without the file the hook in Hooks/StreamingSector_PostLoad.cpp does nothing.
+# configure_mod_file(src/navigation/blockers.txt red4ext/plugins/${MOD_SLUG}/blockers.txt)
 
 configure_red4ext(src/red4ext)
 # configure_red4ext_addresses(Addresses.hpp)
