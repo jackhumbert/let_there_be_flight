@@ -1,3 +1,8 @@
+* gamepad hold mode vs autodrive (2026-10-25): with Gamepad Toggle Requires Hold on and a GPS route set, an L3 hold
+  starts vanilla autodrive at 0.5 s, then IsAutodriveActive() refuses flight at the 1.0 s hold. For now the docs say to
+  move the toggle off L3. Possible fix: when a hold reaches gamepadToggleHoldTime, stop autodrive (AutoDriveSystem
+  SetAutodriveEnabled(false)) and activate flight instead of refusing (autodrive would start briefly first).
+
 ? screen effect at high speed
 ? screen effect at high g
 * disable passenger exit until not in flight

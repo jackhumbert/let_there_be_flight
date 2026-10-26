@@ -711,7 +711,7 @@
             {
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Gamepad-Toggle-Requires-Hold-Description",
-              "femaleVariant": "Require the gamepad flight toggle to be held (see Gamepad Toggle Hold Time) instead of tapped, so a stray stick click does not activate flight. The keyboard toggle stays a tap."
+              "femaleVariant": "Require the gamepad flight toggle to be held (see Gamepad Toggle Hold Time) instead of tapped, so a stray stick click does not activate flight. The keyboard toggle stays a tap. Best with Toggle Flight (Gamepad) moved off L3: with a route set, an L3 hold starts autodrive first and flight is refused."
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",

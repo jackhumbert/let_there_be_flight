@@ -30,8 +30,8 @@ Keybindings are a separate system, covered in "Controls" below.
 | Linear Brake Factor | 1.0 | 0 to 5, step 0.1 | How much the linear brake button slows the vehicle's straight-line velocity. | Raise for a snappier stop; this is the "brake" input, not general drag (see Linear Damp Factor below). |
 | Angular Brake Factor | 1.0 | 0 to 5, step 0.1 | How much the angular brake button slows the vehicle's rotation. | Raise if the vehicle keeps spinning after you let go of the brake button. |
 | Invert Lift | Off | Bool | Flips the lift axis, so pulling the stick down (or pressing the lift-down key) climbs and pushing up descends. Applied where the controller reads the `Lift` action, so it covers the gamepad stick and the keyboard lift keys together. | Turn on if you fly with an inverted vertical axis. This replaces the `preset="invertAxis"` XML edit that used to be the only way. |
-| Gamepad Toggle Requires Hold | Off | Bool | Makes the gamepad flight toggle need a hold (length set by Gamepad Toggle Hold Time) instead of a tap. The keyboard toggle stays a tap either way. | Turn on if L3 (or whatever you rebound it to) keeps activating flight by accident while you steer. |
-| Gamepad Toggle Hold Time | 1.0 | 0.2 to 3.0 | Seconds the gamepad toggle has to be held when Gamepad Toggle Requires Hold is on. | Keep it above 0.5: vanilla autodrive is a 0.5 s hold on the same button (L3), so at 0.5 or below one hold toggles both |
+| Gamepad Toggle Requires Hold | Off | Bool | Makes the gamepad flight toggle need a hold (length set by Gamepad Toggle Hold Time) instead of a tap. The keyboard toggle stays a tap either way. | Turn on if L3 (or whatever you rebound it to) keeps activating flight by accident while you steer. If you do, also move Toggle Flight (Gamepad) off L3: with a GPS route set, an L3 hold starts vanilla autodrive at 0.5 s and flight is refused while autodrive drives. |
+| Gamepad Toggle Hold Time | 1.0 | 0.2 to 3.0 | Seconds the gamepad toggle has to be held when Gamepad Toggle Requires Hold is on. | Keep it above 0.5: vanilla autodrive is a 0.5 s hold on the same button (L3), so at 0.5 or below one hold toggles both. Any hold on L3 starts autodrive first when a route is set, so hold mode works best with the toggle on another button. |
 
 ## Flight Physics Settings
 
@@ -243,6 +243,10 @@ Two things that used to need an XML edit are now settings:
   activate flight. L3 is also vanilla autodrive (hold 0.5 s to start or stop it,
   tap while autodriving to switch free roam / destination); flight cannot be
   activated while autodrive is driving, so that tap no longer toggles flight too.
+  With **Gamepad Toggle Requires Hold** on, keep the toggle off L3: when a GPS
+  route is set, an L3 hold reaches vanilla's 0.5 s autodrive threshold before
+  LTBF's hold time, autodrive starts, and flight is then refused. Tap mode (the
+  default) is unaffected. Checked in game on 2.5 with a virtual pad (2026-10-25).
 
 ## Presets
 
