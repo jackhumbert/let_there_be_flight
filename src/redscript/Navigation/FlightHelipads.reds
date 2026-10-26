@@ -1,10 +1,13 @@
 // Landing pads on the map (docs/helipads.md): a pin for each AV landing pad from FlightNavMap's
 // helipad list, shown once discovered (flown or walked within discoverDistance) or all of them.
-// Pins are registered like the game's drop points (a static point of interest that shows on the
-// world map and can be tracked); FlightHelipadMappinData marks them as ours, so the map, the
-// minimap and the world markers give them their own icon and text, and the Autopilot lands on
-// the pad when its pin is tracked. Registered pins live only for the session: they are
-// registered again on each load, from the discovered pad ids saved with the game.
+// Pins are registered with the drop point variant and our own mappin type (MappinSystem.RegisterMappin
+// makes a RuntimeMappin, which shows on the world map and can be tracked; it always reads as
+// visited, so it never plays the map's "new" pulse). FlightHelipadMappinData marks them as ours,
+// so the map, the minimap and the world markers give them their own icon (UIIcon.LTBF_LandingPad),
+// text and spawn range (MappinUISpawnProfile.LTBF_LandingPad, src/tweaks/helipads.yaml), and the
+// Autopilot lands on the pad when its pin is tracked. Registered pins live only for the session:
+// they are registered again on each load, from the discovered pad ids saved with the game.
+// How the game handles these pins (from the 2.5 binary): docs/helipads.md, section 5.
 
 public class FlightHelipadMappinData extends MappinScriptData {
   public let index: Int32;
@@ -36,7 +39,6 @@ public class FlightHelipadSystem extends ScriptableSystem {
 
   public let discoverDistance: Float = 150.0; // m (horizontal) from a pad that discovers it
   public let tickInterval: Float = 2.0;       // s between discovery checks and pin updates
-  public let icon: CName = n"vehicle";        // mappin_icons.inkatlas part (there is no AV icon)
   public let lastMapPin: wref<BaseWorldMapMappinController>; // last of our pins drawn on the world map
 
   private persistent let discovered: array<CName>; // pad ids, saved with the game
@@ -119,13 +121,30 @@ public class FlightHelipadSystem extends ScriptableSystem {
   }
 
   private func Discover(position: Vector4) -> Void {
+    let found = 0;
     for index in FlightNavMap.FindHelipadsInRange(position, this.discoverDistance) {
       let id = FlightNavMap.GetHelipadId(index);
       if !ArrayContains(this.discovered, StringToName(id)) {
         ArrayPush(this.discovered, StringToName(id));
+        found += 1;
         FlightLog.Info("[Helipads] discovered " + id + " (" + ToString(ArraySize(this.discovered)) + " of " + ToString(FlightNavMap.GetHelipadCount()) + ")");
       }
     }
+    if found > 0 && this.showOnMap {
+      this.NotifyDiscovered(found);
+    }
+  }
+
+  // A toast like the game's location reveals, one per tick however many pads were found.
+  private func NotifyDiscovered(count: Int32) -> Void {
+    let msg: SimpleScreenMessage;
+    msg.isShown = true;
+    msg.duration = 3.0;
+    msg.message = count == 1
+      ? GetLocalizedTextByKey(n"LTBF-Landing-Pad-Discovered")
+      : StrReplace(GetLocalizedTextByKey(n"LTBF-Landing-Pads-Discovered"), "{count}", ToString(count));
+    msg.type = SimpleMessageType.Reveal;
+    GameInstance.GetBlackboardSystem(this.GetGameInstance()).Get(GetAllBlackboardDefs().UI_Notifications).SetVariant(GetAllBlackboardDefs().UI_Notifications.WarningMessage, ToVariant(msg), true);
   }
 
   // Register or remove pins so that exactly the pads the settings ask for have one.
@@ -146,7 +165,7 @@ public class FlightHelipadSystem extends ScriptableSystem {
 
   private func RegisterPin(index: Int32) -> NewMappinID {
     let data: MappinData;
-    data.mappinType = t"Mappins.DropPointStaticMappin";
+    data.mappinType = t"Mappins.LTBF_LandingPadMappin"; // src/tweaks/helipads.yaml
     data.variant = gamedataMappinVariant.ServicePointDropPointVariant;
     data.active = true;
     let script = new FlightHelipadMappinData();
@@ -173,6 +192,11 @@ public class FlightHelipadSystem extends ScriptableSystem {
     return FlightHelipadSystem.PadOf(mappinSystem.GetMappin(mappinSystem.GetManuallyTrackedMappinID()));
   }
 
+  // The pins' icon (src/tweaks/helipads.yaml).
+  public static func Icon() -> wref<UIIcon_Record> {
+    return TweakDBInterface.GetUIIconRecord(t"UIIcon.LTBF_LandingPad");
+  }
+
   // Title for a pad's pin: its name, or "AV Landing Pad".
   public static func Title(index: Int32) -> String {
     let name = FlightNavMap.GetHelipadName(index);
@@ -182,13 +206,34 @@ public class FlightHelipadSystem extends ScriptableSystem {
 
 // --- the pins' look ------------------------------------------------------------------------------
 
+// Spawn range on the minimap and as in-world markers: the containers ask this once per pin (and
+// again when it is tracked or untracked); the same widget and runtime profile as a drop point,
+// with our longer spawn profile.
+@wrapMethod(MinimapContainerController)
+public func CreateMappinUIProfile(mappin: wref<IMappin>, mappinVariant: gamedataMappinVariant, customData: ref<MappinControllerCustomData>) -> MappinUIProfile {
+  if FlightHelipadSystem.PadOf(mappin) >= 0 {
+    return MappinUIProfile.Create(r"base\\gameplay\\gui\\widgets\\minimap\\minimap_poi_mappin.inkwidget", t"MappinUISpawnProfile.LTBF_LandingPad", t"MinimapMappinUIProfile.DropPoint");
+  }
+  return wrappedMethod(mappin, mappinVariant, customData);
+}
+
+@wrapMethod(WorldMappinsContainerController)
+public func CreateMappinUIProfile(mappin: wref<IMappin>, mappinVariant: gamedataMappinVariant, customData: ref<MappinControllerCustomData>) -> MappinUIProfile {
+  if FlightHelipadSystem.PadOf(mappin) >= 0 {
+    return MappinUIProfile.Create(r"base\\gameplay\\gui\\widgets\\mappins\\quest\\default_mappin.inkwidget", t"MappinUISpawnProfile.LTBF_LandingPad", t"WorldMappinUIProfile.DropPoint");
+  }
+  return wrappedMethod(mappin, mappinVariant, customData);
+}
+
+// Icon: SetTexture with the UIIcon record sets our atlas and part together (the TweakDBID overload
+// goes through an async image request that left a blank white square). Each spawn gets its own
+// widget (no pooling, checked in the binary), so this never leaks to a vanilla pin.
 @wrapMethod(BaseWorldMapMappinController)
 protected func UpdateIcon() {
   wrappedMethod();
   if FlightHelipadSystem.PadOf(this.m_mappin) >= 0 {
-    let system = FlightHelipadSystem.GetInstance(GetGameInstance());
-    inkImageRef.SetTexturePart(this.iconWidget, system.icon);
-    system.lastMapPin = this; // for tests from CET (select / track it through the map menu)
+    this.SetTexture(this.iconWidget, FlightHelipadSystem.Icon());
+    FlightHelipadSystem.GetInstance(GetGameInstance()).lastMapPin = this; // test handle (CET)
   }
 }
 
@@ -196,7 +241,7 @@ protected func UpdateIcon() {
 protected func UpdateIcon() {
   wrappedMethod();
   if FlightHelipadSystem.PadOf(this.m_mappin) >= 0 {
-    inkImageRef.SetTexturePart(this.iconWidget, FlightHelipadSystem.GetInstance(GetGameInstance()).icon);
+    this.SetTexture(this.iconWidget, FlightHelipadSystem.Icon());
   }
 }
 
@@ -204,7 +249,7 @@ protected func UpdateIcon() {
 protected func UpdateIcon() {
   wrappedMethod();
   if FlightHelipadSystem.PadOf(this.m_mappin) >= 0 {
-    inkImageRef.SetTexturePart(this.iconWidget, FlightHelipadSystem.GetInstance(GetGameInstance()).icon);
+    this.SetTexture(this.iconWidget, FlightHelipadSystem.Icon());
   }
 }
 

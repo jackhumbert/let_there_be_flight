@@ -915,6 +915,16 @@
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "LTBF-Landing-Pad-Discovered",
+              "femaleVariant": "Landing pad discovered"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "LTBF-Landing-Pads-Discovered",
+              "femaleVariant": "{count} landing pads discovered"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "LTBF-Landing-Pad-Description",
               "femaleVariant": "Track it, then hold the autodrive key while flying: the Autopilot flies there and lands on the pad."
             }

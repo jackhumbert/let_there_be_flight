@@ -1,0 +1,25 @@
+# Landing pad map pins (src/redscript/Navigation/FlightHelipads.reds, docs/helipads.md).
+
+# The pins' mappin type (MappinData.mappinType). The drop point type the pins started from is
+# world-map only (showOnMinimap / showInWorld false), so the minimap and in-world containers never
+# got them; Mappins.DefaultStaticMappin has all three on.
+Mappins.LTBF_LandingPadMappin:
+  $base: Mappins.DropPointStaticMappin
+  showOnMinimap: true
+  showOnMap: true
+  showInWorld: true
+
+# Spawn range of the pins on the minimap and as in-world markers. The containers measure the 3D
+# distance from the player (2.5, checked in the binary), so a pad far below a flying car needs
+# more than LongRange's 140 m. The world map spawns every pin regardless (profile "Always").
+MappinUISpawnProfile.LTBF_LandingPad:
+  $base: MappinUISpawnProfile.LongRange
+  spawnDistance: 400.0
+  despawnDistance: 420.0
+
+# The pins' icon: a ring with an H in the style of mappin_icons.inkatlas, drawn by
+# tools/icons/landing_pad_icon.py and packed by tools/icons/build_icon_atlas.py.
+UIIcon.LTBF_LandingPad:
+  $type: gamedataUIIcon_Record
+  atlasResourcePath: user\jackhumbert\textures\landing_pad_icons.inkatlas
+  atlasPartName: landing_pad
