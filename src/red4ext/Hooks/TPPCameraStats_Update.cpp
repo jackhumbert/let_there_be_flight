@@ -8,19 +8,61 @@
 
 using namespace RED4ext;
 
+// Camera tweak params in game 2.5, as SetParamsFromTweak lays them out. The SDK struct still has the 1.6
+// layout past `data`: its drivingDirectionCompensation* fields land on slopeCorrectionInAir* here.
+constexpr size_t kDrivingDirectionCompensationSpeedCoef = 0x578;
+constexpr size_t kDrivingDirectionCompensationAngleSmooth = 0x580;
+// Adds (change in forward speed per frame) * 10, clamped to +-1, * 0.5 m to the boom length. In flight
+// the speed is never that smooth (the speed surges in turns, the Autopilot's speed hold flickers), so
+// the camera pumps in and out.
+constexpr size_t kElasticBoomAcceleration = 0x527;
+
+template <typename T> static T &CameraField(vehicle::TPPCameraComponent *camera, size_t offset) {
+  return *reinterpret_cast<T *>(reinterpret_cast<uintptr_t>(camera) + offset);
+}
+
+// vanilla values of the params changed for flight, put back when flight ends
+static struct {
+  vehicle::TPPCameraComponent *camera = nullptr;
+  float drivingDirectionCompensationSpeedCoef;
+  float drivingDirectionCompensationAngleSmooth;
+  bool elasticBoomAcceleration;
+} saved;
+
+static void SaveFlightParams(vehicle::TPPCameraComponent *camera) {
+  if (saved.camera == camera)
+    return;
+  saved.camera = camera;
+  saved.drivingDirectionCompensationSpeedCoef = CameraField<float>(camera, kDrivingDirectionCompensationSpeedCoef);
+  saved.drivingDirectionCompensationAngleSmooth = CameraField<float>(camera, kDrivingDirectionCompensationAngleSmooth);
+  saved.elasticBoomAcceleration = CameraField<bool>(camera, kElasticBoomAcceleration);
+}
+
+static void RestoreFlightParams(vehicle::TPPCameraComponent *camera) {
+  // a different camera means the saved one belonged to another (possibly gone) vehicle: drop it
+  if (saved.camera == camera) {
+    CameraField<float>(camera, kDrivingDirectionCompensationSpeedCoef) = saved.drivingDirectionCompensationSpeedCoef;
+    CameraField<float>(camera, kDrivingDirectionCompensationAngleSmooth) = saved.drivingDirectionCompensationAngleSmooth;
+    CameraField<bool>(camera, kElasticBoomAcceleration) = saved.elasticBoomAcceleration;
+  }
+  saved.camera = nullptr;
+}
+
 // adjusts TPP camera based on flight mode
 // void vehicle::TPPCameraComponent::SetVehicleData(vehicle::CameraParentData const &)
 REGISTER_FLIGHT_HOOK_HASH(uintptr_t, 4125170300, TPPCameraStats_Update, vehicle::TPPCameraComponent *camera, uintptr_t data) {
   uintptr_t result = TPPCameraStats_Update_Original(camera, data);
-  
+
   auto fc = FlightController::FlightController::GetInstance();
   //bool resetSlope = false;
   if (fc->active) {
     camera->data.isInAir = false;
-    camera->drivingDirectionCompensationAngleSmooth =
+    SaveFlightParams(camera);
+    CameraField<float>(camera, kDrivingDirectionCompensationAngleSmooth) =
         FlightSettings::GetProperty<float>("drivingDirectionCompensationAngleSmooth");
-    camera->drivingDirectionCompensationSpeedCoef =
+    CameraField<float>(camera, kDrivingDirectionCompensationSpeedCoef) =
         FlightSettings::GetProperty<float>("drivingDirectionCompensationSpeedCoef");
+    CameraField<bool>(camera, kElasticBoomAcceleration) = false;
 
     auto rtti = CRTTISystem::Get();
     auto fcc = rtti->GetClass("FlightSystem");
@@ -58,6 +100,8 @@ REGISTER_FLIGHT_HOOK_HASH(uintptr_t, 4125170300, TPPCameraStats_Update, vehicle:
     //camera->slopeCorrectionInAirPitchMin = -90.0;
   } else {
     //resetSlope = true;
+    if (saved.camera)
+      RestoreFlightParams(camera);
   }
 
   //if (resetSlope && camera->slopeCorrectionOnGroundStrength == 0.0 && defaultSlopeCorrectionOnGroundStrength != 0.0) {
