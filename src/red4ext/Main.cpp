@@ -16,6 +16,7 @@
 #include <ArchiveXL.hpp>
 #include <TweakXL.hpp>
 #include "GameModFolders.hpp"
+#include "Navigation/NavMap.hpp"
 #include <RED4ext/ResourceDepot.hpp>
 #include <filesystem>
 #include <fstream>
@@ -197,6 +198,8 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     if (!builtInArchives) {
       ArchiveXL::RegisterArchive(aHandle, "let_there_be_flight.archive");
     }
+
+    Navigation::NavMap::Get().Load(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "navmap.bin");
 
     RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);
     Engine::RTTIRegistrar::RegisterPending();
