@@ -8,6 +8,8 @@
 // Autopilot lands on the pad when its pin is tracked. Registered pins live only for the session:
 // they are registered again on each load, from the discovered pad ids saved with the game.
 // How the game handles these pins (from the 2.5 binary): docs/helipads.md, section 5.
+// The first touchdown on each pad (in a vehicle, inside its radius, at deck height, nearly
+// stopped) gives a one-off supply drop of eddies and crafting components, also saved.
 
 public class FlightHelipadMappinData extends MappinScriptData {
   public let index: Int32;
@@ -39,9 +41,15 @@ public class FlightHelipadSystem extends ScriptableSystem {
 
   public let discoverDistance: Float = 150.0; // m (horizontal) from a pad that discovers it
   public let tickInterval: Float = 2.0;       // s between discovery checks and pin updates
+  public let touchdownHeight: Float = 3.0;    // m from the deck to the car's position
+  public let touchdownSpeed: Float = 1.5;     // m/s
+  public let supplyMoney: Int32 = 750;        // eddies on the first touchdown on a pad
+  public let supplyCommon: Int32 = 8;         // common crafting components
+  public let supplyUncommon: Int32 = 3;       // uncommon crafting components
   public let lastMapPin: wref<BaseWorldMapMappinController>; // last of our pins drawn on the world map
 
   private persistent let discovered: array<CName>; // pad ids, saved with the game
+  private persistent let supplied: array<CName>;   // pad ids whose supplies were collected
   private let mappins: array<NewMappinID>;         // per pad index, valid where pinned is set
   private let pinned: array<Bool>;
   private let player: wref<PlayerPuppet>;
@@ -112,6 +120,7 @@ public class FlightHelipadSystem extends ScriptableSystem {
       return;
     }
     this.Discover(this.player.GetWorldPosition());
+    this.CheckTouchdown();
     this.SyncPins();
     this.Schedule();
   }
@@ -131,18 +140,60 @@ public class FlightHelipadSystem extends ScriptableSystem {
       }
     }
     if found > 0 && this.showOnMap {
-      this.NotifyDiscovered(found);
+      this.Notify(found == 1
+        ? GetLocalizedTextByKey(n"LTBF-Landing-Pad-Discovered")
+        : StrReplace(GetLocalizedTextByKey(n"LTBF-Landing-Pads-Discovered"), "{count}", ToString(found)),
+        GetLocalizedTextByKey(n"LTBF-Landing-Pad-Discovered-Description"));
     }
   }
 
-  // A toast like the game's location reveals, one per tick however many pads were found.
-  private func NotifyDiscovered(count: Int32) -> Void {
+  // The pad the player's vehicle stands on: inside its radius, within touchdownHeight of the deck
+  // and slower than touchdownSpeed; -1 otherwise.
+  public func GetTouchdownPad() -> Int32 {
+    let vehicle = GetMountedVehicle(this.player);
+    if !IsDefined(vehicle) || Vector4.Length(vehicle.GetLinearVelocity()) > this.touchdownSpeed {
+      return -1;
+    }
+    let position = vehicle.GetWorldPosition();
+    let pad = FlightNavMap.FindNearestHelipad(position, 50.0);
+    if pad < 0 {
+      return -1;
+    }
+    let deck = FlightNavMap.GetHelipadPosition(pad);
+    if Vector4.Length2D(position - deck) > FlightNavMap.GetHelipadRadius(pad) || AbsF(position.Z - deck.Z) > this.touchdownHeight {
+      return -1;
+    }
+    return pad;
+  }
+
+  public func IsSupplied(index: Int32) -> Bool {
+    return ArrayContains(this.supplied, StringToName(FlightNavMap.GetHelipadId(index)));
+  }
+
+  private func CheckTouchdown() -> Void {
+    let pad = this.GetTouchdownPad();
+    if pad < 0 || this.IsSupplied(pad) {
+      return;
+    }
+    let id = FlightNavMap.GetHelipadId(pad);
+    ArrayPush(this.supplied, StringToName(id));
+    let transactions = GameInstance.GetTransactionSystem(this.GetGameInstance());
+    transactions.GiveItem(this.player, MarketSystem.Money(), this.supplyMoney);
+    transactions.GiveItem(this.player, ItemID.FromTDBID(t"Items.CommonMaterial1"), this.supplyCommon);
+    transactions.GiveItem(this.player, ItemID.FromTDBID(t"Items.UncommonMaterial1"), this.supplyUncommon);
+    FlightLog.Info("[Helipads] supplies at " + id + " (" + ToString(ArraySize(this.supplied)) + " of " + ToString(FlightNavMap.GetHelipadCount()) + ")");
+    this.Notify(GetLocalizedTextByKey(n"LTBF-Landing-Pad-Supplies"),
+      StrReplace(GetLocalizedTextByKey(n"LTBF-Landing-Pad-Supplies-Description"), "{money}", ToString(this.supplyMoney)));
+  }
+
+  // A toast like the game's location reveals, title only. It plays the warning animation and the
+  // chip malfunction jingle, so it reads as an alert; the quest-update style notification meant to
+  // replace it (title plus `text`) did not draw in game yet, see docs/helipads.md section 6.
+  private func Notify(title: String, text: String) -> Void {
     let msg: SimpleScreenMessage;
     msg.isShown = true;
     msg.duration = 3.0;
-    msg.message = count == 1
-      ? GetLocalizedTextByKey(n"LTBF-Landing-Pad-Discovered")
-      : StrReplace(GetLocalizedTextByKey(n"LTBF-Landing-Pads-Discovered"), "{count}", ToString(count));
+    msg.message = title;
     msg.type = SimpleMessageType.Reveal;
     GameInstance.GetBlackboardSystem(this.GetGameInstance()).Get(GetAllBlackboardDefs().UI_Notifications).SetVariant(GetAllBlackboardDefs().UI_Notifications.WarningMessage, ToVariant(msg), true);
   }

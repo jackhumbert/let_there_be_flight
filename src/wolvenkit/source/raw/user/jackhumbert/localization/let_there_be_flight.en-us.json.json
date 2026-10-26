@@ -927,6 +927,21 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "LTBF-Landing-Pad-Description",
               "femaleVariant": "Track it, then hold the autodrive key while flying: the Autopilot flies there and lands on the pad."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "LTBF-Landing-Pad-Supplies",
+              "femaleVariant": "Landing pad supplies"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "LTBF-Landing-Pad-Supplies-Description",
+              "femaleVariant": "Stashed for the first crew to land here: {money} eddies and crafting components."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "LTBF-Landing-Pad-Discovered-Description",
+              "femaleVariant": "Added to the map. Track it, then hold the autodrive key while flying: the Autopilot lands on it."
             }
           ]
         }

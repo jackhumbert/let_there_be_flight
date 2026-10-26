@@ -75,6 +75,7 @@ public class hudFlightController extends inkHUDGameController {
   private let m_hp_mask: inkWidgetRef;
   private let m_hp_condition_text: inkTextRef;
   private let m_currentZoom: Float;
+  private let m_shown: Bool;
 
   protected cb func OnInitialize() -> Bool {
     FlightLog.Info("[hudFlightController] OnInitialize");
@@ -193,20 +194,37 @@ public class hudFlightController extends inkHUDGameController {
   }
 
   protected cb func OnActivateUI(activate: Bool) -> Bool {
-    this.ActivateUI(activate);
+    this.Show(activate);
   }
 
   protected cb func OnActivate(activate: Bool) -> Bool {
     if this.IsUIactive() {
-      this.ActivateUI(activate);
+      this.Show(activate);
     }
   }
 
   protected cb func OnModeChange(mode: Int32) -> Bool {
     let component = FlightSystem.GetInstance().playerComponent;
-    if IsDefined(component) {
-      inkTextRef.SetText(this.m_CameraID, component.GetFlightMode().GetDescription());
+    if IsDefined(component) && mode >= 0 && mode < ArraySize(component.modes) {
+      // the blackboard changes before the component switches modes: name the new one
+      inkTextRef.SetText(this.m_CameraID, component.modes[mode].GetDescription());
     }
+    if this.IsUIactive() && this.IsActive() {
+      this.Show(true);
+    }
+  }
+
+  // While the Autopilot flies, vanilla's autodrive panel (with the AUTOPILOT logo,
+  // Extensions/AutoDriveController.reds) stands in for this HUD, so it steps aside. Plays the
+  // intro / outro only when the HUD actually appears or goes.
+  private final func Show(active: Bool) -> Void {
+    let ctlr = FlightController.GetInstance();
+    let show = active && !(IsDefined(ctlr) && ctlr.GetBlackboard().GetInt(GetAllBlackboardDefs().VehicleFlight.Mode) == ctlr.AutopilotModeIndex());
+    if Equals(show, this.m_shown) {
+      return;
+    }
+    this.m_shown = show;
+    this.ActivateUI(show);
   }
 
   protected cb func OnCameraModeChanged(tpp: Bool) -> Bool {
@@ -375,7 +393,7 @@ public class hudFlightController extends inkHUDGameController {
     this.m_scannerBlackboard = GameInstance.GetBlackboardSystem(this.m_gameInstance).Get(GetAllBlackboardDefs().UI_Scanner);
     this.RegisterBB();
     this.UpdateCrosshairVisibility();
-    this.ActivateUI(this.IsUIactive() && this.IsActive());
+    this.Show(this.IsUIactive() && this.IsActive());
   }
 
   protected func RegisterBB() {
@@ -490,7 +508,7 @@ public class hudFlightController extends inkHUDGameController {
 
   protected cb func OnScannerUIVisibleChanged(visible: Bool) -> Bool {
     if this.IsUIactive() && this.IsActive() {
-      this.ActivateUI(!visible);
+      this.Show(!visible);
     }
   }
 

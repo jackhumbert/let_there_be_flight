@@ -481,7 +481,7 @@ public native class FlightController extends IScriptable {
   }
 
   // Index of the Autopilot mode, -1 if it is not in the mode list.
-  private func AutopilotModeIndex() -> Int32 {
+  public func AutopilotModeIndex() -> Int32 {
     let i = 0;
     for mode in this.sys.playerComponent.modes {
       if IsDefined(mode as FlightModeAutopilot) {

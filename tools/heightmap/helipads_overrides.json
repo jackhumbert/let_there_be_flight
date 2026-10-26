@@ -35,5 +35,43 @@
       "radius": 10.0,
       "note": "base of the middle launch pad; check in game"
     }
+  ],
+  "specials_comment": "Step 6 (docs/helipads.md): one rare car parked on each of these pads. car = Vehicle record; offset = [right, forward] m from the deck centre in the pad's frame and heading = degrees from the pad's yaw, both set in game. Not read by pads.py yet.",
+  "specials": [
+    {
+      "pad": "8040860436745735587",
+      "car": "Vehicle.v_sport1_rayfield_aerondight",
+      "note": "v2, deck 499 m, the highest pad",
+      "offset": null,
+      "heading": null
+    },
+    {
+      "pad": "7298787575256532198",
+      "car": "Vehicle.v_sport1_quadra_turbo_r",
+      "note": "deck 418.5 m",
+      "offset": null,
+      "heading": null
+    },
+    {
+      "pad": "7237546816158707450",
+      "car": "Vehicle.v_sport1_herrera_outlaw",
+      "note": "v2 sheltered under an overhang, 23 m clearance",
+      "offset": null,
+      "heading": null
+    },
+    {
+      "pad": "1287285041939429647",
+      "car": "Vehicle.v_sport1_herrera_riptide",
+      "note": "Dogtown v3",
+      "offset": null,
+      "heading": null
+    },
+    {
+      "pad": "spaceport_terminal_roof",
+      "car": "Vehicle.v_sport1_rayfield_caliburn",
+      "note": "spaceport, guarded area",
+      "offset": null,
+      "heading": null
+    }
   ]
 }
