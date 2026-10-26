@@ -1,0 +1,39 @@
+{
+  "comment": "Hand edits applied by pads.py build. remove: pad ids to drop. names: id -> display name. add: pads the scan cannot find, each {id, name, pos: [x, y, deck z], yaw, radius, note}; they get the same deck check as found pads. The spaceport (Phantom Liberty, q306) has no pad meshes in the open-world sectors, so its spots are picked from the nav map (flat, open sky, 12 m radius).",
+  "remove": [],
+  "names": {},
+  "add": [
+    {
+      "id": "spaceport_apron",
+      "name": "NCX Spaceport apron",
+      "pos": [-3975.0, 843.0, 32.0],
+      "yaw": 90.0,
+      "radius": 10.0,
+      "note": "north runway deck; spaceport is a guarded area, check in game"
+    },
+    {
+      "id": "spaceport_terminal_apron",
+      "name": "NCX Spaceport terminal apron",
+      "pos": [-3931.0, 239.0, 32.0],
+      "yaw": 90.0,
+      "radius": 10.0,
+      "note": "west of the terminal; check in game"
+    },
+    {
+      "id": "spaceport_terminal_roof",
+      "name": "NCX Spaceport terminal roof",
+      "pos": [-3289.0, 455.0, 83.5],
+      "yaw": 0.0,
+      "radius": 8.0,
+      "note": "roof of the hexagonal terminal; check in game"
+    },
+    {
+      "id": "spaceport_launchpad_2",
+      "name": "NCX Spaceport launch pad 2",
+      "pos": [-4753.0, -245.0, 11.0],
+      "yaw": 0.0,
+      "radius": 10.0,
+      "note": "base of the middle launch pad; check in game"
+    }
+  ]
+}

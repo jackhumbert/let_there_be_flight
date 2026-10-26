@@ -61,6 +61,16 @@ python spans.py reach W\spans
 python navmap.py W\spans -o W\navmap.bin
 ```
 
+Landing pads (`pads.py`, minutes; needs only the raw exterior sectors and `navmap.bin`, see
+`docs/helipads.md`):
+
+```
+$CLI unbundle $PC\ep1\ep1_1_nightcity.archive -o W\raw\ep1 -r "_compiled.default.exterior_.*\.streamingsector$"
+python pads.py scan --sectors W\raw\ep1\base\worlds\03_night_city\_compiled\default -o W\pads
+python pads.py build W\pads --navmap W\navmap.bin -o W\pads\helipads.json --preview W\pads\pads.png
+python flat_spots.py W\navmap.bin -6400 -400 -2300 1200 -o spaceport.png --radius 12   # spots for helipads_overrides.json
+```
+
 Previews and checks:
 
 - `rasterize.py --presets ... -o W\city4 --cell 4` + `preview.py W\city4 -o top.png`: shaded
