@@ -71,6 +71,18 @@ python pads.py build W\pads --navmap W\navmap.bin -o W\pads\helipads.json --prev
 python flat_spots.py W\navmap.bin -6400 -400 -2300 1200 -o spaceport.png --radius 12   # spots for helipads_overrides.json
 ```
 
+Invisible blockers (`blockers.py`, ~20 min with 10 jobs): collision groups using the presets
+"Vehicle Blocker" / "Block Player and Vehicles", for removal with ArchiveXL `nodeDeletions` in
+`src/archive_xl/let_there_be_flight.archive.json` (index = nodeData index, expectedNodes = the
+nodeData count; one deletion removes one collision group). Groups are `pure` (only blockers),
+`foliage` (blockers plus query-only tree crowns) or `mixed` (also real walls / trunks):
+
+```
+$CLI unbundle $PC\ep1\ep1_1_nightcity.archive -o W\raw\ep1 -r "_compiled.default.(exterior|interior)_.*\.streamingsector$"
+python blockers.py scan --sectors W\raw\ep1\base\worlds\03_night_city\_compiled\default -o W\blockers --jobs 10
+python blockers.py report W\blockers -o W\blockers.md
+```
+
 Previews and checks:
 
 - `rasterize.py --presets ... -o W\city4 --cell 4` + `preview.py W\city4 -o top.png`: shaded

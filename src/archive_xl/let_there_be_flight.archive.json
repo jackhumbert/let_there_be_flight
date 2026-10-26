@@ -12,91 +12,74 @@
     "sectors": [
       {
         "path": "base\\worlds\\03_night_city\\_compiled\\default\\exterior_-6_-11_0_2.streamingsector",
-        "expectedNodes": 227,
+        "expectedNodes": 226,
         "nodeDeletions": [
-          { "type": "worldCollisionNode", "index": 168 },
-          { "type": "worldCollisionNode", "index": 187 },
-          { "type": "worldCollisionNode", "index": 195 }
+          { "type": "worldCookedCollisionNode", "index": 167 },
+          { "type": "worldCookedCollisionNode", "index": 194 }
         ]
       },
       {
         "path": "base\\worlds\\03_night_city\\_compiled\\default\\exterior_-6_-12_0_2.streamingsector",
         "expectedNodes": 640,
         "nodeDeletions": [
-          { "type": "worldCollisionNode", "index": 612 },
-          { "type": "worldCollisionNode", "index": 638 },
-          { "type": "worldCollisionNode", "index": 633 }
+          { "type": "worldCookedCollisionNode", "index": 611 },
+          { "type": "worldCookedCollisionNode", "index": 638 }
         ]
       },
       {
         "path": "base\\worlds\\03_night_city\\_compiled\\default\\exterior_-11_-23_0_1.streamingsector",
         "expectedNodes": 190,
         "nodeDeletions": [
-          { "type": "worldCollisionNode", "index": 172 }
+          { "type": "worldCookedCollisionNode", "index": 172 }
         ]
       },
       {
         "path": "base\\worlds\\03_night_city\\_compiled\\default\\exterior_-10_-26_0_1.streamingsector",
         "expectedNodes": 165,
         "nodeDeletions": [
-          { "type": "worldCollisionNode", "index": 129 },
-          { "type": "worldCollisionNode", "index": 136 },
-          { "type": "worldCollisionNode", "index": 138 },
-          { "type": "worldCollisionNode", "index": 128 }
+          { "type": "worldCookedCollisionNode", "index": 128 },
+          { "type": "worldCookedCollisionNode", "index": 129 },
+          { "type": "worldCookedCollisionNode", "index": 136 },
+          { "type": "worldCookedCollisionNode", "index": 138 }
         ]
       },
       {
         "path": "base\\worlds\\03_night_city\\_compiled\\default\\exterior_-10_-25_0_1.streamingsector",
         "expectedNodes": 246,
         "nodeDeletions": [
-          { "type": "worldCollisionNode", "index": 231 },
-          { "type": "worldCollisionNode", "index": 236 },
-          { "type": "worldCollisionNode", "index": 227 }
+          { "type": "worldCookedCollisionNode", "index": 227 },
+          { "type": "worldCookedCollisionNode", "index": 231 },
+          { "type": "worldCookedCollisionNode", "index": 236 }
         ]
       },
       {
         "path": "base\\worlds\\03_night_city\\_compiled\\default\\exterior_-3_-4_0_4.streamingsector",
         "expectedNodes": 243,
         "nodeDeletions": [
-          { "type": "worldCollisionNode", "index": 238 }
+          { "type": "worldCookedCollisionNode", "index": 239 }
         ]
       },
       {
         "path": "base\\worlds\\03_night_city\\_compiled\\default\\exterior_-6_-14_0_2.streamingsector",
-        "expectedNodes": 657,
+        "expectedNodes": 658,
         "nodeDeletions": [
-          { "type": "worldCollisionNode", "index": 652 },
-          { "type": "worldCollisionNode", "index": 654 }
-        ]
-      },
-      {
-        "path": "base\\worlds\\03_night_city\\_compiled\\default\\exterior_-10_-12_0_2.streamingsector",
-        "expectedNodes": 609,
-        "nodeDeletions": [
-          { "type": "worldCollisionNode", "index": 552 },
-          { "type": "worldCollisionNode", "index": 562 }
+          { "type": "worldCookedCollisionNode", "index": 653 },
+          { "type": "worldCookedCollisionNode", "index": 655 }
         ]
       },
       {
         "path": "base\\worlds\\03_night_city\\_compiled\\default\\exterior_-7_-12_0_2.streamingsector",
         "expectedNodes": 598,
         "nodeDeletions": [
-          { "type": "worldCollisionNode", "index": 540 },
-          { "type": "worldCollisionNode", "index": 554 }
-        ]
-      },
-      {
-        "path": "base\\worlds\\03_night_city\\_compiled\\default\\exterior_-13_-25_0_2.streamingsector",
-        "expectedNodes": 431,
-        "nodeDeletions": [
-          { "type": "worldCollisionNode", "index": 423 }
+          { "type": "worldCookedCollisionNode", "index": 540 },
+          { "type": "worldCookedCollisionNode", "index": 554 }
         ]
       },
       {
         "path": "base\\worlds\\03_night_city\\_compiled\\default\\exterior_-5_-6_0_3.streamingsector",
         "expectedNodes": 313,
         "nodeDeletions": [
-          { "type": "worldCollisionNode", "index": 215 }
+          { "type": "worldCookedCollisionNode", "index": 215 }
         ]
       }
     ]
