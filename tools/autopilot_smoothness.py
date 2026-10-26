@@ -28,11 +28,13 @@ def runs(path):
                 continue
             wall = datetime.strptime(m.group(1), "%Y-%m-%d %H:%M:%S.%f")
             parts = m.group(2).split()
-            # t x y z vx vy vz yawRate target ax ay az yaw [bankTarget roll] status
+            # t x y z vx vy vz yawRate target ax ay az yaw [bankTarget roll [speedCmd offRoute
+            # blocked emergency [lookX lookY lookZ ahead]]] status; row: the first 13, status,
+            # then the rest from index 14
             floats = [float(x) for x in parts[:-1]]
-            if len(floats) < 15:
-                floats += [0.0] * (15 - len(floats))
-            row = floats[:13] + [parts[-1]] + floats[13:15]
+            if len(floats) < 23:
+                floats += [0.0] * (23 - len(floats))
+            row = floats[:13] + [parts[-1]] + floats[13:23]
             if last is not None and (wall - last).total_seconds() > 2.0 and cur:
                 out.append(cur)
                 cur = []
@@ -142,6 +144,23 @@ def analyse(rows):
             direction, last_extreme = 1, roll
         elif (direction > 0 and roll > last_extreme) or (direction < 0 and roll < last_extreme):
             last_extreme = roll
+    # yaw wobble: reversals of the yaw rate by more than 0.05 rad/s
+    yaw_rev, ylast, ydir = 0, None, 0
+    for x in acc:
+        if not x[4]:
+            continue
+        y = x[5]
+        if ylast is None:
+            ylast = y
+            continue
+        if ydir >= 0 and y < ylast - 0.05:
+            yaw_rev += ydir > 0
+            ydir, ylast = -1, y
+        elif ydir <= 0 and y > ylast + 0.05:
+            yaw_rev += ydir < 0
+            ydir, ylast = 1, y
+        elif (ydir > 0 and y > ylast) or (ydir < 0 and y < ylast):
+            ylast = y
     frames = sum(1 for x in acc if x[4])
     dur = rows[-1][0] - rows[0][0]
     return {
@@ -156,6 +175,7 @@ def analyse(rows):
         "yaw accel rms rad/s2": rms(ya),
         "yaw accel p95 |rad/s2|": pct([abs(x) for x in ya], 95),
         "target speed change p95 |m/s2|": pct([abs(x) for x in ts], 95),
+        "yaw reversals > 0.05 rad/s per min": yaw_rev / max(frames * 0.05 / 60.0, 1e-6),
         "roll rate rms deg/s": rms(rr),
         "roll rate p95 |deg/s|": pct([abs(x) for x in rr], 95),
         "roll reversals > 2 deg per min": reversals / max(frames * 0.05 / 60.0, 1e-6),
