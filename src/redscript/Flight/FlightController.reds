@@ -51,6 +51,9 @@ public native class FlightController extends IScriptable {
   private let modeBeforeAutopilot: Int32;
   // the autodrive hold just fired; a keyboard Next Mode on the same key (G) must not follow it
   private let autopilotHoldConsumed: Bool;
+  // set by the Autopilot after touchdown: the flight state machine then turns flight off as if
+  // the toggle had been pressed (VehicleFlightActiveDecisions.ToVehicleFlightDeactivating)
+  public let autopilotRequestsFlightOff: Bool;
   public let showUI: Bool;
   public let linearBrake: ref<InputPID>;
   public let angularBrake: ref<InputPID>;
@@ -340,9 +343,12 @@ public native class FlightController extends IScriptable {
 
   private func Deactivate(silent: Bool) -> Void {
     this.active = false;
+    this.autopilotRequestsFlightOff = false;
     // don't come back in Autopilot next time flight is switched on
     let autopilot = this.AutopilotModeIndex();
     if autopilot >= 0 && this.mode == autopilot {
+      // its own Deactivate takes down vanilla's autodrive panel (and the hints that come with it)
+      this.sys.playerComponent.modes[autopilot].Deactivate();
       this.mode = this.modeBeforeAutopilot != autopilot ? this.modeBeforeAutopilot : 0;
       this.GetBlackboard().SetInt(GetAllBlackboardDefs().VehicleFlight.Mode, this.mode);
     }

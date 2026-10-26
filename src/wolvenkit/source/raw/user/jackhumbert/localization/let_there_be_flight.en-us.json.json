@@ -862,6 +862,16 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "Input-Hint-Next-Mode-Autopilot",
               "femaleVariant": "Next Mode / Hold: Autopilot"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Land",
+              "femaleVariant": "Land at Destination"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Land-Description",
+              "femaleVariant": "Touch down at a destination on the ground and switch flight off, like autodrive stopping at the curb. Off: hover over the destination and hand the controls back."
             }
           ]
         }

@@ -579,10 +579,14 @@ public native class FlightComponent extends GameComponent {
       this.aeroYawPID.Reset();
       this.pitchAeroPID.Reset();
 
+      // the player's mode comes from the controller: pick it before activating, or the mode the
+      // component last flew in (the Autopilot, after a landing) is the one activated
+      if this.isPlayerMounted {
+        this.mode = this.sys.ctlr.mode;
+      }
       this.modes[this.mode].Activate();
 
       if this.isPlayerMounted {
-        this.mode = this.sys.ctlr.mode;
         this.sys.ctlr.Activate(silent);
         FlightAudio.Get().Play("vehicle3_on");
         // this.sys.audio.StartWithPitch("playerVehicle", "vehicle3_TPP", this.GetPitch());

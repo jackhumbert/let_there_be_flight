@@ -46,6 +46,20 @@ public class FlightModeAutopilot extends FlightModeStandard {
   @runtimeProperty("ModSettings.max", "15.0")
   public let brakeAccel: Float = 6.0;         // m/s2 planned deceleration
 
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Autopilot")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Autopilot-Land")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Autopilot-Land-Description")
+  public let landAtDestination: Bool = true;
+
+  // takeoff and landing
+  public let takeoffHeight: Float = 10.0;     // m above the floor climbed straight up before flying off
+  public let climbRate: Float = 5.0;          // m/s during the takeoff climb
+  public let approachHeight: Float = 20.0;    // m above the landing spot the route ends at
+  public let descentRate: Float = 4.0;        // m/s at most during the landing descent
+  public let touchdownRate: Float = 0.8;      // m/s in the last metres
+  public let landingSearch: Int32 = 12;       // rings of 2 m columns searched for a landing spot
+
   // controller tuning, not in Mod Settings
   public let velocityGain: Float = 1.2;       // 1/s, velocity error -> acceleration
   public let maxAccel: Float = 12.0;          // m/s2
@@ -100,6 +114,13 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let offRouteNow: Float;
   public let blockedAhead: Bool;
   public let settleTimer: Float;
+  public let routeGoal: Vector4;              // where the route ends: the destination, or above the landing spot
+  public let takingOff: Bool;
+  public let takeoffPoint: Vector4;
+  public let landing: Bool;                   // the destination is on the ground: descend and touch down there
+  public let landingSpot: Vector4;            // car-centre resting height (the bake's floor)
+  public let touchdownTimer: Float;
+  public let touchdownLow: Float;
 
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeAutopilot> {
     let self = new FlightModeAutopilot();
@@ -117,8 +138,102 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.status = "idle";
     this.replanTimer = 0.0;
     this.remaining = 0.0;
+    this.landing = false;
+    this.takingOff = this.TakeoffPoint(this.holdPosition, this.takeoffPoint);
+    if this.takingOff {
+      this.holdPosition = this.takeoffPoint;
+    }
     if this.component.isPlayerMounted {
       this.PublishAutodriveUI(true);
+    }
+  }
+
+  // --- takeoff and landing -----------------------------------------------------------------
+
+  // The free gap a car at p is in, or the one just above it (a car resting on the ground sits a
+  // little under the bake's floor).
+  private static func GapAt(p: Vector4, out gap: Vector2) -> Bool {
+    for g in FlightNavMap.GetGaps(p) {
+      if p.Z < g.Y {
+        gap = g;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Near the floor: climb straight up first, clear of traffic and street furniture, then fly off.
+  private func TakeoffPoint(p: Vector4, out point: Vector4) -> Bool {
+    let gap: Vector2;
+    if !FlightNavMap.IsLoaded() || !FlightModeAutopilot.GapAt(p, gap) {
+      return false;
+    }
+    let z = MinF(gap.X + this.takeoffHeight, gap.Y - 2.0);
+    if z - p.Z < 2.0 {
+      return false;
+    }
+    point = new Vector4(p.X, p.Y, z, 1.0);
+    return true;
+  }
+
+  // A destination on the ground (a GPS pin on a street): the nearest column within reach that is
+  // flat, at the same level, and open far enough above to come straight down into. The spot is
+  // the bake's floor there, which is where a resting car's position sits.
+  private func FindLandingSpot(target: Vector4, out spot: Vector4, out top: Float) -> Bool {
+    let gap: Vector2;
+    if !FlightModeAutopilot.GapAt(target, gap) || target.Z - gap.X > 4.0 {
+      return false; // a point in the air: hover there
+    }
+    let level = gap.X;
+    let r = 0;
+    while r <= this.landingSearch {
+      let count = r == 0 ? 1 : 6 * r;
+      let best = 1000000.0;
+      let i = 0;
+      while i < count {
+        let angle = 6.2831853 * Cast<Float>(i) / Cast<Float>(count);
+        let c = new Vector4(target.X + 2.0 * Cast<Float>(r) * CosF(angle), target.Y + 2.0 * Cast<Float>(r) * SinF(angle), level + 1.0, 1.0);
+        let g: Vector2;
+        if FlightModeAutopilot.GapAt(c, g) && AbsF(g.X - level) < 3.0 && g.Y - g.X > 6.0 && this.IsFlat(c, g.X) {
+          let d = Vector4.DistanceSquared2D(c, target);
+          if d < best {
+            best = d;
+            spot = new Vector4(c.X, c.Y, g.X, 1.0);
+            top = g.Y;
+          }
+        }
+        i += 1;
+      }
+      if best < 1000000.0 {
+        return true;
+      }
+      r += 1;
+    }
+    return false;
+  }
+
+  // the four neighbouring columns have their floor within half a metre of this one
+  private func IsFlat(c: Vector4, floor: Float) -> Bool {
+    let offsets: array<Vector4> = [new Vector4(2.0, 0.0, 0.0, 0.0), new Vector4(-2.0, 0.0, 0.0, 0.0), new Vector4(0.0, 2.0, 0.0, 0.0), new Vector4(0.0, -2.0, 0.0, 0.0)];
+    for o in offsets {
+      let g: Vector2;
+      if !FlightModeAutopilot.GapAt(c + o, g) || AbsF(g.X - floor) > 0.5 {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Where the route should end for this destination: above the landing spot, or the point itself.
+  private func ChooseRouteGoal() -> Void {
+    let top: Float;
+    this.landing = this.landAtDestination && this.FindLandingSpot(this.destination, this.landingSpot, top);
+    if this.landing {
+      this.routeGoal = new Vector4(this.landingSpot.X, this.landingSpot.Y, MinF(this.landingSpot.Z + this.approachHeight, top - 2.0), 1.0);
+      FlightLog.Info("[Autopilot] landing spot " + FloatToStringPrec(this.landingSpot.X, 1) + ", " + FloatToStringPrec(this.landingSpot.Y, 1) + ", " + FloatToStringPrec(this.landingSpot.Z, 1)
+        + " (" + FloatToStringPrec(Vector4.Distance2D(this.landingSpot, this.destination), 1) + " m from the destination)");
+    } else {
+      this.routeGoal = this.destination;
     }
   }
 
@@ -193,7 +308,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       this.status = "no nav map";
       return;
     }
-    this.request = FlightNavMap.PlanAsync(from, this.destination, false);
+    this.request = FlightNavMap.PlanAsync(from, this.routeGoal, false);
     this.replanTimer = 3.0;
     if ArraySize(this.route) < 2 {
       // nothing to follow meanwhile: hold here (a replan keeps following the old route)
@@ -219,7 +334,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
       this.destination = target;
       this.hasDestination = true;
       ArrayClear(this.route);
-      this.RequestRoute(this.component.stats.d_position);
+      this.ChooseRouteGoal();
+      this.RequestRoute(this.takingOff ? this.takeoffPoint : this.component.stats.d_position);
     }
     if this.request > 0 && FlightNavMap.IsPlanReady(this.request) {
       let points = FlightNavMap.TakePlan(this.request);
@@ -401,14 +517,20 @@ public class FlightModeAutopilot extends FlightModeStandard {
       // manual: player inputs as given, altitude held by damping vertical speed
       this.overrideTimer -= timeDelta;
       this.holdPosition = p;
+      this.takingOff = false;
       this.UpdateWithNormalLift(timeDelta, FlightUtils.Up(), 9.81 * this.gravityFactor + this.component.lift * this.standardModeLiftFactor - v.Z);
       return;
     }
 
     // where to go
+    // takeoff: up the column to the takeoff point first (the route starts there)
+    if this.takingOff && Vector4.Distance(p, this.takeoffPoint) < 1.5 && AbsF(v.Z) < 2.0 {
+      this.takingOff = false;
+      FlightLog.Info("[Autopilot] takeoff done at " + FloatToStringPrec(p.Z, 1));
+    }
     let target = this.holdPosition;
     this.targetSpeed = 0.0;
-    let following = Equals(this.status, "following") && ArraySize(this.route) >= 2;
+    let following = Equals(this.status, "following") && ArraySize(this.route) >= 2 && !this.takingOff;
     if following {
       let closest: Vector4;
       let offRoute: Float;
@@ -472,11 +594,40 @@ public class FlightModeAutopilot extends FlightModeStandard {
         this.PublishProgress();
       }
       if this.remaining < this.arriveDistance && stats.d_speed < 3.0 {
-        this.status = "arrived";
-        this.holdPosition = this.route[ArraySize(this.route) - 1];
+        this.status = this.landing ? "descending" : "arrived";
+        this.holdPosition = this.landing ? this.landingSpot : this.route[ArraySize(this.route) - 1];
         ArrayClear(this.route);
         this.settleTimer = 0.0;
-        FlightLog.Info("[Autopilot] arrived");
+        this.touchdownTimer = 0.0;
+        FlightLog.Info("[Autopilot] arrived" + (this.landing ? ", descending" : ""));
+      }
+    } else if Equals(this.status, "descending") {
+      // down the column at a capped rate, slowing in the last metres and sinking on at the
+      // touchdown rate past the bake's floor (the ground can be lower); touched down once the car
+      // stops sinking close to it, resting on its wheels
+      let height = p.Z - this.landingSpot.Z;
+      this.settleTimer += timeDelta; // time since the descent began
+      // stopped sinking: no new low point for a while (the reported vertical speed stays around
+      // -0.5 m/s on the wheels while the thrusters press down, so it is no use here)
+      if this.settleTimer < 2.0 || p.Z < this.touchdownLow - 0.1 {
+        this.touchdownLow = p.Z;
+        this.touchdownTimer = 0.0;
+      } else {
+        this.touchdownTimer += timeDelta;
+      }
+      if this.touchdownTimer > 0.7 && height < 3.0 {
+        this.status = "landed";
+        FlightLog.Info("[Autopilot] touched down " + FloatToStringPrec(height, 2) + " m above the floor, " + FloatToStringPrec(Vector4.Distance2D(p, this.landingSpot), 1) + " m from the spot");
+        if this.component.isPlayerMounted {
+          FlightModeAutopilot.Notify(this.component.GetVehicle().GetGame(), "LocKey#96672");
+          FlightController.GetInstance().autopilotRequestsFlightOff = true;
+        }
+      } else if this.touchdownTimer > 1.5 {
+        // held up well above the floor (something the map doesn't have): stay in the air
+        this.status = "arrived";
+        this.holdPosition = p;
+        this.settleTimer = 0.0;
+        FlightLog.Warn("[Autopilot] descent stopped " + FloatToStringPrec(height, 1) + " m above the floor, hovering");
       }
     } else {
       if Equals(this.status, "arrived") && this.component.isPlayerMounted {
@@ -505,6 +656,14 @@ public class FlightModeAutopilot extends FlightModeStandard {
       if Vector4.Length(desiredVelocity) > 10.0 {
         desiredVelocity = Vector4.Normalize(desiredVelocity) * 10.0;
       }
+      if this.takingOff {
+        desiredVelocity.Z = ClampF(desiredVelocity.Z, -this.climbRate, this.climbRate);
+      } else if Equals(this.status, "descending") {
+        desiredVelocity.Z = -ClampF(0.5 * (p.Z - this.landingSpot.Z), this.touchdownRate, this.descentRate);
+      } else if Equals(this.status, "landed") {
+        // flight is being switched off: keep settling onto the wheels
+        desiredVelocity = new Vector4(0.0, 0.0, -this.touchdownRate, 0.0);
+      }
     }
     let accel = (desiredVelocity - v) * this.velocityGain;
     let horizontal = new Vector4(accel.X, accel.Y, 0.0, 0.0);
@@ -519,8 +678,12 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let blend = ClampF((stats.d_speed - 8.0) / 17.0, 0.0, 1.0);
     blend = blend * blend * (3.0 - 2.0 * blend);
 
-    // heading: along the desired velocity, or keep the current one when hovering
+    // heading: along the desired velocity, or keep the current one when hovering; during the
+    // takeoff climb, turn to the route's first leg
     let heading = new Vector4(desiredVelocity.X, desiredVelocity.Y, 0.0, 0.0);
+    if this.takingOff && ArraySize(this.route) >= 2 {
+      heading = new Vector4(this.route[1].X - this.route[0].X, this.route[1].Y - this.route[0].Y, 0.0, 0.0);
+    }
     let yaw = 0.0;
     if Vector4.Length(heading) > 2.0 {
       let error = Vector4.GetAngleDegAroundAxis(Vector4.Normalize(heading), stats.d_forward2D, FlightUtils.Up());
