@@ -47,6 +47,10 @@ public native class FlightController extends IScriptable {
   }
 
   public let showOptions: Bool;
+  // mode to return to when the autodrive hold switches the Autopilot off
+  private let modeBeforeAutopilot: Int32;
+  // the autodrive hold just fired; a keyboard Next Mode on the same key (G) must not follow it
+  private let autopilotHoldConsumed: Bool;
   public let showUI: Bool;
   public let linearBrake: ref<InputPID>;
   public let angularBrake: ref<InputPID>;
@@ -336,6 +340,12 @@ public native class FlightController extends IScriptable {
 
   private func Deactivate(silent: Bool) -> Void {
     this.active = false;
+    // don't come back in Autopilot next time flight is switched on
+    let autopilot = this.AutopilotModeIndex();
+    if autopilot >= 0 && this.mode == autopilot {
+      this.mode = this.modeBeforeAutopilot != autopilot ? this.modeBeforeAutopilot : 0;
+      this.GetBlackboard().SetInt(GetAllBlackboardDefs().VehicleFlight.Mode, this.mode);
+    }
     this.SetupActions();
 
     //let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
@@ -398,6 +408,7 @@ public native class FlightController extends IScriptable {
         this.player.RegisterInputListener(this, n"Flight_ModeSwitchBackward");
         this.player.RegisterInputListener(this, n"Flight_RightStickToggle");
         this.player.RegisterInputListener(this, n"Flight_HoodDetach");
+        this.player.RegisterInputListener(this, n"HoldAutodrive");
       }
     }
 
@@ -431,6 +442,13 @@ public native class FlightController extends IScriptable {
     // evt.AddInputHint(FlightController.CreateInputHint(n"Raise Hover Height", n"FlightOptions_Up"), true);
     // evt.AddInputHint(FlightController.CreateInputHint(n"Lower Hover Height", n"FlightOptions_Down"), true);
     evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Toggle-UI", n"Flight_UIToggle"),         this.active && this.showOptions);
+    // autodrive while flying: the vanilla autodrive hold toggles the Autopilot mode, and while it
+    // flies the camera hold toggles the cinematic camera (vanilla's hint text, LocKey#96518)
+    // TODO localize "Autopilot" / "Disable Autopilot"
+    let autopilotEngaged = this.active && this.mode == this.AutopilotModeIndex();
+    evt.AddInputHint(FlightController.CreateInputHintText("Autopilot", n"HoldAutodrive"),                   this.active && !this.showOptions && !autopilotEngaged);
+    evt.AddInputHint(FlightController.CreateInputHintText("Disable Autopilot", n"HoldAutodrive"),           autopilotEngaged);
+    evt.AddInputHint(FlightController.CreateInputHintText(GetLocalizedText("LocKey#96518"), n"HoldCinematicCamera"), autopilotEngaged);
     // evt.AddInputHint(FlightController.CreateInputHint(n"Fire", n"ShootPrimary"),                 this.active && !this.showOptions);
 
     uiSystem.QueueEvent(evt);
@@ -442,20 +460,74 @@ public native class FlightController extends IScriptable {
     // this.surge.Reset(this.surge.GetValue() * MaxF(0.0, 1.0 - impact * 5.0));
   }
 
-  private func CycleMode(direction: Int32) -> Void {
-    let newMode = this.sys.playerComponent.GetNextFlightMode(direction);
-    this.mode = this.mode + direction;
-    if this.mode < 0 {
-      this.mode += ArraySize(this.sys.playerComponent.modes);
-    }
-    this.mode = this.mode % ArraySize(this.sys.playerComponent.modes);
+  private func SetMode(mode: Int32) -> Void {
+    this.mode = mode;
     this.GetBlackboard().SetInt(GetAllBlackboardDefs().VehicleFlight.Mode, this.mode);
     let evt = new VehicleFlightModeChangeEvent();
     evt.mode = this.mode;
     GetMountedVehicle(this.player).QueueEvent(evt);
+    let newMode = this.sys.playerComponent.modes[this.mode];
     this.ShowSimpleMessage(StringToName(newMode.GetDescription() + " " + GetLocalizedTextByKey(n"Simple-Message-Suffix-Enabled")));
     GameInstance.GetAudioSystem(this.gameInstance).Play(n"ui_menu_onpress");
     this.SetupActions();
+  }
+
+  // Index of the Autopilot mode, -1 if it is not in the mode list.
+  private func AutopilotModeIndex() -> Int32 {
+    let i = 0;
+    for mode in this.sys.playerComponent.modes {
+      if IsDefined(mode as FlightModeAutopilot) {
+        return i;
+      }
+      i += 1;
+    }
+    return -1;
+  }
+
+  // Next / previous mode, skipping Autopilot: that one is reached through the autodrive hold.
+  private func CycleMode(direction: Int32) -> Void {
+    let count = ArraySize(this.sys.playerComponent.modes);
+    let autopilot = this.AutopilotModeIndex();
+    let next = this.mode;
+    let steps = 0;
+    while steps < count {
+      next = (next + direction + count) % count;
+      steps += 1;
+      if next != autopilot {
+        break;
+      }
+    }
+    this.SetMode(next);
+  }
+
+  // Back to the mode the Autopilot was engaged from (arrival, or the autodrive hold again).
+  public func ExitAutopilot() -> Void {
+    let autopilot = this.AutopilotModeIndex();
+    if autopilot >= 0 && this.mode == autopilot {
+      this.SetMode(this.modeBeforeAutopilot != autopilot ? this.modeBeforeAutopilot : 0);
+    }
+  }
+
+  // The vanilla autodrive hold (Vehicle_Autodrive: hold G / L3) while flying: fly the planned
+  // route to the GPS destination with the Autopilot mode, or hand back to the mode before it.
+  private func ToggleAutopilot() -> Void {
+    let autopilot = this.AutopilotModeIndex();
+    if autopilot < 0 {
+      return;
+    }
+    if this.mode == autopilot {
+      this.ExitAutopilot();
+      return;
+    }
+    let destination: Vector4;
+    if !FlightModeAutopilot.GetDestination(this.gameInstance, destination) {
+      // TODO localize (needs a key in the localization json and an archive repack)
+      this.ShowSimpleMessage(n"Autopilot: set a destination on the map first");
+      GameInstance.GetAudioSystem(this.gameInstance).Play(n"ui_menu_onpress");
+      return;
+    }
+    this.modeBeforeAutopilot = this.mode;
+    this.SetMode(autopilot);
   }
 
   protected func ResetInputs() {
@@ -587,13 +659,30 @@ public native class FlightController extends IScriptable {
         this.sys.playerComponent.GetFlightMode().usesRightStickInput = !this.sys.playerComponent.GetFlightMode().usesRightStickInput;
         this.SetupActions();
       }
-      if Equals(actionName, n"Flight_ModeSwitchForward") && ListenerAction.IsButtonJustPressed(action) && (this.showOptions || this.player.PlayerLastUsedKBM()) {
-        this.CycleMode(1);
-        this.SetupActions();
+      if Equals(actionName, n"HoldAutodrive") && Equals(actionType, gameinputActionType.BUTTON_HOLD_COMPLETE) {
+        this.ToggleAutopilot();
+        this.autopilotHoldConsumed = true;
+      }
+      if Equals(actionName, n"Flight_ModeSwitchForward") && (this.showOptions || this.player.PlayerLastUsedKBM()) {
+        if this.player.PlayerLastUsedKBM() {
+          // G is also the autodrive hold on keyboard: switch on release, and not after a hold
+          if ListenerAction.IsButtonJustPressed(action) {
+            this.autopilotHoldConsumed = false;
+          }
+          if ListenerAction.IsButtonJustReleased(action) {
+            if !this.autopilotHoldConsumed {
+              this.CycleMode(1);
+            }
+            this.autopilotHoldConsumed = false;
+          }
+        } else {
+          if ListenerAction.IsButtonJustPressed(action) {
+            this.CycleMode(1);
+          }
+        }
       }
       if Equals(actionName, n"Flight_ModeSwitchBackward") && ListenerAction.IsButtonJustPressed(action) && (this.showOptions || this.player.PlayerLastUsedKBM()) {
         this.CycleMode(-1);
-        this.SetupActions();
       }
       if this.showOptions && Equals(actionName, n"Flight_UIToggle") && ListenerAction.IsButtonJustPressed(action) {
           this.showUI = !this.showUI;
@@ -798,6 +887,13 @@ public native class FlightController extends IScriptable {
     };
     msg.isInstant = true;
     GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().UI_Notifications).SetVariant(GetAllBlackboardDefs().UI_Notifications.OnscreenMessage, ToVariant(msg), true);
+  }
+
+  // CreateInputHint with ready text (vanilla LocKey# strings, or not localized yet).
+  public static func CreateInputHintText(text: String, action: CName) -> InputHintData {
+    let data = FlightController.CreateInputHint(n"", action);
+    data.localizedLabel = text;
+    return data;
   }
 
   public static func CreateInputHint(label: CName, action: CName) -> InputHintData {

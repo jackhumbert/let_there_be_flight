@@ -55,6 +55,11 @@ public class VehicleFlightEventsTransition extends VehicleFlightTransition {
     if scriptInterface.IsActionJustTapped(n"ToggleVehCamera") && !this.IsVehicleCameraChangeBlocked(scriptInterface) {
       this.RequestToggleVehicleFlightCamera(scriptInterface);
     };
+    // vanilla's cinematic camera (a hold on the same key), like during autodrive: only while the
+    // Autopilot flies the car
+    if scriptInterface.IsActionJustHeld(n"HoldCinematicCamera") && !this.IsVehicleCameraChangeBlocked(scriptInterface) && FlightModeAutopilot.IsEngaged() {
+      scriptInterface.executionOwner.QueueEvent(new vehicleCinematicCameraToggleEvent());
+    };
     // if scriptInterface.IsActionJustTapped(n"VehicleCameraInverse") {
     //   this.ResetVehicleCamera(scriptInterface);
     // };

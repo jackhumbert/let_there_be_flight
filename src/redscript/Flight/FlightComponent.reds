@@ -272,6 +272,12 @@ public native class FlightComponent extends GameComponent {
     } else {
       droneMode.Deinitialize();
     }
+    let autopilotMode = FlightModeAutopilot.Create(this);
+    if autopilotMode.enabled {
+      ArrayPush(this.modes, autopilotMode);
+    } else {
+      autopilotMode.Deinitialize();
+    }
 
     this.audioUpdate = new FlightAudioUpdate();
 
@@ -347,12 +353,18 @@ public native class FlightComponent extends GameComponent {
     return this.modes[this.mode];
   }
 
+  // Skips the Autopilot mode, which is reached through the autodrive hold (FlightController).
   public func GetNextFlightMode(direction: Int32) -> ref<FlightMode> {
-    let mode = this.mode + direction;
-    if mode < 0 {
-      mode += ArraySize(this.sys.playerComponent.modes);
+    let count = ArraySize(this.modes);
+    let mode = this.mode;
+    let steps = 0;
+    while steps < count {
+      mode = (mode + direction + count) % count;
+      steps += 1;
+      if !IsDefined(this.modes[mode] as FlightModeAutopilot) {
+        break;
+      }
     }
-    mode = mode % ArraySize(this.sys.playerComponent.modes);
     return this.modes[mode];
   }
 
