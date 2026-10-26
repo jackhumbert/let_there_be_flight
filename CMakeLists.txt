@@ -77,6 +77,9 @@ else()
   message(WARNING "navmap.bin download failed (${_NAVMAP_STATUS}); the autopilot will be disabled")
 endif()
 
+# Landing pads found in the world sectors and checked against the nav map (tools/heightmap/pads.py, small, in git).
+configure_mod_file(src/navigation/helipads.tsv red4ext/plugins/${MOD_SLUG}/helipads.tsv)
+
 configure_red4ext(src/red4ext)
 # configure_red4ext_addresses(Addresses.hpp)
 set(MOD_NATIVE_TWEAKS ON)

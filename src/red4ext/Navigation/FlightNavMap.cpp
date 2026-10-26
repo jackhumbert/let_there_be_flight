@@ -1,4 +1,5 @@
 #include "FlightNavMap.hpp"
+#include "Helipads.hpp"
 #include "NavMap.hpp"
 #include "Planner.hpp"
 
@@ -38,6 +39,11 @@ RED4ext::DynArray<RED4ext::Vector4> ToScript(const Navigation::PlanResult &aResu
     }
   }
   return out;
+}
+
+const Navigation::Helipad *PadAt(int32_t aIndex) {
+  const auto &pads = Navigation::Helipads::Get().All();
+  return aIndex >= 0 && size_t(aIndex) < pads.size() ? &pads[aIndex] : nullptr;
 }
 
 void LogPlan(Navigation::Vec3 aStart, Navigation::Vec3 aGoal, const Navigation::PlanResult &aResult) {
@@ -138,6 +144,50 @@ void FlightNavMap::ClearTargetOverride() { hasTargetOverride = false; }
 bool FlightNavMap::HasTargetOverride() { return hasTargetOverride; }
 
 RED4ext::Vector4 FlightNavMap::GetTargetOverride() { return targetOverride; }
+
+int32_t FlightNavMap::GetHelipadCount() { return int32_t(Navigation::Helipads::Get().All().size()); }
+
+RED4ext::Vector4 FlightNavMap::GetHelipadPosition(int32_t aIndex) {
+  const auto *pad = PadAt(aIndex);
+  return pad ? RED4ext::Vector4{pad->x, pad->y, pad->z, 1.0f} : RED4ext::Vector4{};
+}
+
+float FlightNavMap::GetHelipadYaw(int32_t aIndex) {
+  const auto *pad = PadAt(aIndex);
+  return pad ? pad->yaw : 0.0f;
+}
+
+float FlightNavMap::GetHelipadRadius(int32_t aIndex) {
+  const auto *pad = PadAt(aIndex);
+  return pad ? pad->radius : 0.0f;
+}
+
+float FlightNavMap::GetHelipadClearance(int32_t aIndex) {
+  const auto *pad = PadAt(aIndex);
+  return pad ? Finite(pad->clearance) : 0.0f;
+}
+
+RED4ext::CString FlightNavMap::GetHelipadId(int32_t aIndex) {
+  const auto *pad = PadAt(aIndex);
+  return {pad ? pad->id.c_str() : ""};
+}
+
+RED4ext::CString FlightNavMap::GetHelipadName(int32_t aIndex) {
+  const auto *pad = PadAt(aIndex);
+  return {pad ? pad->name.c_str() : ""};
+}
+
+int32_t FlightNavMap::FindNearestHelipad(RED4ext::Vector4 aPosition, float aMaxDistance) {
+  return Navigation::Helipads::Get().Nearest(aPosition.X, aPosition.Y, aMaxDistance);
+}
+
+RED4ext::DynArray<int32_t> FlightNavMap::FindHelipadsInRange(RED4ext::Vector4 aPosition, float aRadius) {
+  RED4ext::DynArray<int32_t> out;
+  for (auto i : Navigation::Helipads::Get().InRange(aPosition.X, aPosition.Y, aRadius)) {
+    out.EmplaceBack(i);
+  }
+  return out;
+}
 
 void FlightNavMap::SetPlanParameters(float aPreferredHeight, float aClimbCost, float aUnderCost,
                                      float aHeuristicWeight) {

@@ -39,6 +39,21 @@ struct FlightNavMap : RED4ext::IScriptable {
   static bool HasTargetOverride();
   static RED4ext::Vector4 GetTargetOverride();
 
+  // Landing pads (Navigation::Helipads, helipads.tsv), by index 0 .. GetHelipadCount() - 1.
+  // Position is the deck centre a car rests on; an index out of range gives zeros / "".
+  static int32_t GetHelipadCount();
+  static RED4ext::Vector4 GetHelipadPosition(int32_t aIndex);
+  static float GetHelipadYaw(int32_t aIndex);
+  static float GetHelipadRadius(int32_t aIndex);
+  // Free height above the deck; 1e9 for open sky.
+  static float GetHelipadClearance(int32_t aIndex);
+  static RED4ext::CString GetHelipadId(int32_t aIndex);
+  static RED4ext::CString GetHelipadName(int32_t aIndex);
+  // Nearest pad within aMaxDistance metres (horizontal) of the position, or -1.
+  static int32_t FindNearestHelipad(RED4ext::Vector4 aPosition, float aMaxDistance);
+  // Pads within aRadius metres (horizontal), nearest first.
+  static RED4ext::DynArray<int32_t> FindHelipadsInRange(RED4ext::Vector4 aPosition, float aRadius);
+
   RTTI_IMPL_TYPEINFO(FlightNavMap);
   RTTI_IMPL_ALLOCATOR();
 };
@@ -60,4 +75,13 @@ RTTI_DEFINE_CLASS(FlightNavMap, {
   RTTI_METHOD(ClearTargetOverride);
   RTTI_METHOD(HasTargetOverride);
   RTTI_METHOD(GetTargetOverride);
+  RTTI_METHOD(GetHelipadCount);
+  RTTI_METHOD(GetHelipadPosition);
+  RTTI_METHOD(GetHelipadYaw);
+  RTTI_METHOD(GetHelipadRadius);
+  RTTI_METHOD(GetHelipadClearance);
+  RTTI_METHOD(GetHelipadId);
+  RTTI_METHOD(GetHelipadName);
+  RTTI_METHOD(FindNearestHelipad);
+  RTTI_METHOD(FindHelipadsInRange);
 });
