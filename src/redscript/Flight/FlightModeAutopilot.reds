@@ -52,6 +52,15 @@ public class FlightModeAutopilot extends FlightModeStandard {
   @runtimeProperty("ModSettings.description", "UI-Settings-Autopilot-Land-Description")
   public let landAtDestination: Bool = true;
 
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Autopilot")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Autopilot-Pad-Range")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Autopilot-Pad-Range-Description")
+  @runtimeProperty("ModSettings.step", "25.0")
+  @runtimeProperty("ModSettings.min", "0.0")
+  @runtimeProperty("ModSettings.max", "500.0")
+  public let padRange: Float = 0.0;           // m around a destination on the ground to look for a landing pad (0 = off)
+
   // takeoff and landing
   public let takeoffHeight: Float = 10.0;     // m above the floor climbed straight up before flying off
   public let climbRate: Float = 5.0;          // m/s during the takeoff climb
@@ -59,6 +68,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let descentRate: Float = 4.0;        // m/s at most during the landing descent
   public let touchdownRate: Float = 0.8;      // m/s in the last metres
   public let landingSearch: Int32 = 12;       // rings of 2 m columns searched for a landing spot
+  public let padSnapDistance: Float = 25.0;   // m: a destination this close to a landing pad (and at its level) is on it
+  public let padSnapLevel: Float = 6.0;       // m between the destination's height and the pad's deck
 
   // easing
   public let accelUp: Float = 7.0;            // m/s2 at most when speeding up
@@ -142,6 +153,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let takeoffPoint: Vector4;
   public let landing: Bool;                   // the destination is on the ground: descend and touch down there
   public let landingSpot: Vector4;            // car-centre resting height (the bake's floor)
+  public let landingPad: Int32;               // FlightNavMap helipad index landed on, -1: a spot found on the map (set in Activate)
   public let touchdownTimer: Float;
   public let takeoffStartZ: Float;
   public let takeoffHeading0: Vector4;
@@ -175,6 +187,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.replanTimer = 0.0;
     this.remaining = 0.0;
     this.landing = false;
+    this.landingPad = -1;
     this.speedCmd = this.component.stats.d_speed;
     this.speedRate = 0.0;
     this.accelCmd = new Vector4(0.0, 0.0, 0.0, 0.0);
@@ -269,13 +282,54 @@ public class FlightModeAutopilot extends FlightModeStandard {
     return true;
   }
 
+  // A landing pad (FlightNavMap helipads, docs/helipads.md) to land on for this destination: the
+  // one it is on (within padSnapDistance and at the pad's level), else with padRange set and the
+  // destination on the ground, the nearest within padRange. -1: none.
+  private func FindLandingPad(target: Vector4) -> Int32 {
+    let pad = FlightNavMap.FindNearestHelipad(target, this.padSnapDistance);
+    if pad >= 0 {
+      let deck = FlightNavMap.GetHelipadPosition(pad);
+      if AbsF(target.Z - deck.Z) < this.padSnapLevel {
+        return pad;
+      }
+    }
+    let gap: Vector2;
+    if this.padRange > 0.0 && FlightModeAutopilot.GapAt(target, gap) && target.Z - gap.X <= 4.0 {
+      return FlightNavMap.FindNearestHelipad(target, this.padRange);
+    }
+    return -1;
+  }
+
+  // A pad's heading to land on: its yaw (the prefab's forward, +Y turned by yaw), of its two ways
+  // the one nearer the arrival heading.
+  private static func PadHeading(pad: Int32, arrival: Vector4) -> Vector4 {
+    let yaw = Deg2Rad(FlightNavMap.GetHelipadYaw(pad));
+    let d = new Vector4(-SinF(yaw), CosF(yaw), 0.0, 0.0);
+    return Vector4.Dot(d, arrival) >= 0.0 ? d : d * -1.0;
+  }
+
   // Where the route should end for this destination: above the landing spot, or the point itself.
   private func ChooseRouteGoal() -> Void {
     let top: Float;
-    this.landing = this.landAtDestination && this.FindLandingSpot(this.destination, this.landingSpot, top);
+    this.landing = false;
+    this.landingPad = -1;
+    if this.landAtDestination {
+      this.landingPad = this.FindLandingPad(this.destination);
+      if this.landingPad >= 0 {
+        // the pad's deck is checked against the map when the pads are found; the spot is where a
+        // resting car's centre sits, as for a spot found on the map
+        let deck = FlightNavMap.GetHelipadPosition(this.landingPad);
+        this.landingSpot = new Vector4(deck.X, deck.Y, deck.Z + FlightNavMap.GetCarHalfHeight(), 1.0);
+        top = deck.Z + FlightNavMap.GetHelipadClearance(this.landingPad);
+        this.landing = true;
+      } else {
+        this.landing = this.FindLandingSpot(this.destination, this.landingSpot, top);
+      }
+    }
     if this.landing {
       this.routeGoal = new Vector4(this.landingSpot.X, this.landingSpot.Y, MinF(this.landingSpot.Z + this.approachHeight, top - 2.0), 1.0);
-      FlightLog.Info("[Autopilot] landing spot " + FloatToStringPrec(this.landingSpot.X, 1) + ", " + FloatToStringPrec(this.landingSpot.Y, 1) + ", " + FloatToStringPrec(this.landingSpot.Z, 1)
+      FlightLog.Info("[Autopilot] landing " + (this.landingPad >= 0 ? "pad " + FlightNavMap.GetHelipadId(this.landingPad) : "spot") + " at "
+        + FloatToStringPrec(this.landingSpot.X, 1) + ", " + FloatToStringPrec(this.landingSpot.Y, 1) + ", " + FloatToStringPrec(this.landingSpot.Z, 1)
         + " (" + FloatToStringPrec(Vector4.Distance2D(this.landingSpot, this.destination), 1) + " m from the destination)");
     } else {
       this.routeGoal = this.destination;
@@ -891,7 +945,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
         if this.landing {
           this.landingStartZ = p.Z;
           this.landingHeading0 = stats.d_forward2D;
-          this.landingHeading = this.LandingHeading(this.landingSpot, stats.d_forward2D);
+          this.landingHeading = this.landingPad >= 0
+            ? FlightModeAutopilot.PadHeading(this.landingPad, stats.d_forward2D)
+            : this.LandingHeading(this.landingSpot, stats.d_forward2D);
         }
         ArrayClear(this.route);
         this.settleTimer = 0.0;

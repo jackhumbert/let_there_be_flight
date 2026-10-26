@@ -2,6 +2,8 @@
 // Positions are a car's centre: the bake already grew every solid by the car's size.
 public native class FlightNavMap extends IScriptable {
   public native static func IsLoaded() -> Bool;
+  // half height of the car the bake grew solids by: a gap's bottom sits this far above the surface
+  public native static func GetCarHalfHeight() -> Float;
   // (bottom, top) of each free gap in the column, bottom up; top is 1e9 for open sky
   public native static func GetGaps(position: Vector4) -> array<Vector2>;
   public native static func IsFree(position: Vector4) -> Bool;

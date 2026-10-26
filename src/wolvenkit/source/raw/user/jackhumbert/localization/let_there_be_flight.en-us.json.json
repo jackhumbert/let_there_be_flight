@@ -872,6 +872,16 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Autopilot-Land-Description",
               "femaleVariant": "Touch down at a destination on the ground and switch flight off, like autodrive stopping at the curb. Off: hover over the destination and hand the controls back."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Pad-Range",
+              "femaleVariant": "Landing Pad Range"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Pad-Range-Description",
+              "femaleVariant": "Land on the nearest AV landing pad within this many metres of the destination instead of at the destination itself. 0: only when the destination is on a pad."
             }
           ]
         }

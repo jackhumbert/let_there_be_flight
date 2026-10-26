@@ -11,6 +11,9 @@
 
 struct FlightNavMap : RED4ext::IScriptable {
   static bool IsLoaded();
+  // Half height of the car cylinder the bake grew solids by: a gap's bottom is this far above the
+  // surface under it.
+  static float GetCarHalfHeight();
   // Gaps of the column at the position, bottom up, as (bottom, top); top is 1e9 for open sky.
   static RED4ext::DynArray<RED4ext::Vector2> GetGaps(RED4ext::Vector4 aPosition);
   static bool IsFree(RED4ext::Vector4 aPosition);
@@ -60,6 +63,7 @@ struct FlightNavMap : RED4ext::IScriptable {
 
 RTTI_DEFINE_CLASS(FlightNavMap, {
   RTTI_METHOD(IsLoaded);
+  RTTI_METHOD(GetCarHalfHeight);
   RTTI_METHOD(GetGaps);
   RTTI_METHOD(IsFree);
   RTTI_METHOD(GetFloor);

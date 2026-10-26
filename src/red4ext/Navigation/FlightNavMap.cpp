@@ -54,6 +54,8 @@ void LogPlan(Navigation::Vec3 aStart, Navigation::Vec3 aGoal, const Navigation::
 
 bool FlightNavMap::IsLoaded() { return Navigation::NavMap::Get().IsLoaded(); }
 
+float FlightNavMap::GetCarHalfHeight() { return Navigation::NavMap::Get().CarHalfHeight(); }
+
 RED4ext::DynArray<RED4ext::Vector2> FlightNavMap::GetGaps(RED4ext::Vector4 aPosition) {
   RED4ext::DynArray<RED4ext::Vector2> out;
   for (const auto &gap : Navigation::NavMap::Get().GetGaps(aPosition.X, aPosition.Y)) {
