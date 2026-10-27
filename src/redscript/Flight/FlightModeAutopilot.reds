@@ -187,7 +187,12 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // m/s2 the speed profile plans slowing with at most: the brake grows with speed (60 m/s2 and
   // more at 40 m/s), but the flown speed eases into it, and planned at full the car reached the
   // destination at 43 m/s and hit the ground, 2026-10-26
-  public let racePlanDecel: Float = 25.0;
+  public let racePlanDecel: Float = 18.0;     // what the car reached following the profile (19 m/s2), 2026-10-26
+  // descents: the line can drop 100 m in its last 150 m (Dogtown: 140 m buildings, then a low
+  // courtyard); flown at full speed the car fell at 44 m/s, rolled inverted pushing over into the
+  // dive, and reached the approach point at 41 m/s, 2026-10-26
+  public let raceMaxSink: Float = 15.0;       // m/s down at most
+  public let racePushOver: Float = 4.9;       // m/s2 at most bending the path downwards (half a g: no rolling over)
   // racing line tracking: the line's direction at the flown speed, its curvature fed forward
   // lineLead ahead (the bank takes a moment to build), a damped spring onto the line across it.
   // (Aiming at a lookahead point as on other routes cut inside every bend at speed: 60 m ahead at
@@ -1498,6 +1503,28 @@ public class FlightModeAutopilot extends FlightModeStandard {
     return 0.75 * MinF(Vector4.Length(inDir), Vector4.Length(outDir)) / TanF(angle * 0.5);
   }
 
+  // Speed allowed at route point k for its descent: the sink rate held to raceMaxSink, and where the
+  // path bends downwards (over a crest, into a dive) at most racePushOver of that bend.
+  private func DescentSpeed(k: Int32) -> Float {
+    let s = this.routeLength[k];
+    let a = this.PointAt(s - this.lineSpan);
+    let c = this.PointAt(s + this.lineSpan);
+    let along = Vector4.Distance(a, c);
+    let limit = 1000.0;
+    if along > 1.0 && c.Z < a.Z {
+      limit = this.raceMaxSink / MaxF((a.Z - c.Z) / along, 0.05);
+    }
+    if this.routeLine {
+      let tangent: Vector4;
+      let bend: Vector4;
+      this.LineFrame(s, tangent, bend);
+      if bend.Z < -0.0001 {
+        limit = MinF(limit, SqrtF(this.racePushOver / -bend.Z));
+      }
+    }
+    return limit;
+  }
+
   // Speed after braking back over `distance` metres from speed v at the race decel (stepped: the
   // brake and the drag grow with speed), at most top.
   private func RaceBrakeBack(v: Float, distance: Float, top: Float) -> Float {
@@ -1520,7 +1547,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let lateral = this.raceMargin * this.RaceLateral();
     let i = 0;
     while i < n {
-      ArrayPush(this.routeSpeed, MinF(top, SqrtF(lateral * MaxF(this.PointRadius(i), 1.0))));
+      ArrayPush(this.routeSpeed, MinF(MinF(top, SqrtF(lateral * MaxF(this.PointRadius(i), 1.0))), this.DescentSpeed(i)));
       i += 1;
     }
     this.routeSpeed[n - 1] = 0.0;

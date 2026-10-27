@@ -20,6 +20,7 @@ import numpy as np
 
 G = 9.81
 SURGE, LIFT, MARGIN, SPAN = 15.0, 25.0, 0.85, 15.0
+PLAN_DECEL, MAX_SINK, PUSH_OVER, LINE_SPAN = 18.0, 15.0, 4.9, 10.0  # FlightModeAutopilot race tuning
 
 
 def load(path):
@@ -44,9 +45,21 @@ def estimate(points, mass=1115.0, air=1.8, brake=1.4, start=0.0, step=2.0):
         if cr > 1e-6:
             radius[i] = np.linalg.norm(b - a) * np.linalg.norm(c - b) * np.linalg.norm(c - a) / (2 * cr)
     v = np.minimum(top, np.sqrt(lateral * radius))
+    # descents: sink rate and push-over (path bending downwards) limits
+    lo = max(1, int(LINE_SPAN / step))
+    for i in range(lo, n - lo):
+        a, b, c = p[i - lo], p[i], p[i + lo]
+        along = np.linalg.norm(c - a)
+        if along > 1.0 and c[2] < a[2]:
+            v[i] = min(v[i], MAX_SINK / max((a[2] - c[2]) / along, 0.05))
+        ab, bc = b - a, c - b
+        l1, l2 = np.linalg.norm(ab), np.linalg.norm(bc)
+        bend_z = (bc[2] / l2 - ab[2] / l1) * 2.0 / (l1 + l2)
+        if bend_z < -1e-4:
+            v[i] = min(v[i], math.sqrt(PUSH_OVER / -bend_z))
     v[-1] = 0.0
     for i in range(n - 2, -1, -1):  # braking
-        dec = MARGIN * (SURGE + brake * v[i + 1] + k_air * v[i + 1] ** 2)
+        dec = min(MARGIN * (SURGE + brake * v[i + 1] + k_air * v[i + 1] ** 2), PLAN_DECEL)
         v[i] = min(v[i], math.sqrt(v[i + 1] ** 2 + 2 * dec * step))
     v[0] = min(v[0], start)
     for i in range(1, n):  # accelerating
