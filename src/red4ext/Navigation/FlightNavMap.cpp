@@ -103,7 +103,7 @@ int32_t FlightNavMap::PlanAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal,
 }
 
 int32_t FlightNavMap::PlanRaceAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, float aPreferredHeight,
-                                    float aClimbCost, float aMinPassage, float aHeuristicWeight) {
+                                    float aClimbCost, float aMinPassage, float aHeuristicWeight, float aTurnCost) {
   auto params = planParams;
   params.racingLine = true;
   // the route's character comes from the Autopilot (FlightModeAutopilot race route fields)
@@ -111,6 +111,7 @@ int32_t FlightNavMap::PlanRaceAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aG
   params.climbCost = aClimbCost;
   params.minPassage = aMinPassage;
   params.heuristicWeight = std::max(1.0f, aHeuristicWeight);
+  params.turnCost = std::max(0.0f, aTurnCost);
   return StartPlan(aStart, aGoal, params);
 }
 

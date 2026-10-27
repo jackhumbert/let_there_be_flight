@@ -31,6 +31,9 @@ struct PlanParams {
   float climbCost = 3.0f;        // extra cost per metre of rise in preferred altitude
   float underCost = 0.5f;        // extra cost per metre flown with something overhead
   float heuristicWeight = 1.5f;  // > 1 trades optimality for speed
+  float turnCost = 0.0f;         // cost (as metres flown) per 45 degrees the route turns over a few
+                                 // cells, at every step: it prefers straighter, more open corridors,
+                                 // whose bends the racing line can take wide
   float minPassage = 0.0f;       // m of free height (car-centre gap, the car's size already taken off)
                                  // the route may squeeze through between columns; 0 = any
   uint32_t maxExpansions = 3000000;

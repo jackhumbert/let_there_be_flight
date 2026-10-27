@@ -22,6 +22,7 @@ G = 9.81
 SURGE, LIFT, MARGIN, SPAN = 15.0, 25.0, 0.85, 15.0
 PLAN_DECEL, MAX_SINK, PUSH_OVER, LINE_SPAN = 18.0, 15.0, 15.0, 10.0  # FlightModeAutopilot race tuning
 SINK_APPROACH = 250.0  # m before the end where MAX_SINK applies
+DRIFT = 20.0  # deg the nose turns into a bend at most (raceDriftMax): the surge's share adds to the lift
 
 
 def load(path):
@@ -36,7 +37,7 @@ def estimate(points, mass=1115.0, air=1.8, brake=1.4, start=0.0, step=2.0):
     p = np.stack([np.interp(d, s, points[:, k]) for k in range(3)], 1)
     k_air = 1.2 * air / mass
     top = 0.97 * math.sqrt(SURGE / k_air)
-    lateral = MARGIN * math.sqrt((G + LIFT) ** 2 - G * G)
+    lateral = MARGIN * (math.sqrt((G + LIFT) ** 2 - G * G) + SURGE * math.sin(math.radians(DRIFT)))
     n = len(d)
     off = max(1, int(SPAN / step))
     radius = np.full(n, 1e6)

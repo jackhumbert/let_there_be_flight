@@ -184,6 +184,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let lineRadiusSpan: Float = 15.0;    // m either side of a racing line point its bend radius is taken over
   public let raceOffLine: Float = 4.0;        // m off a racing line before the car is treated as off it
   public let raceTakeoffHeight: Float = 3.0;  // m above the floor before the racing line takes over
+  public let coverLimit: Float = 6.0;         // m the map's free space may start above the car before it is under cover
   // race route character (planner, Navigation/Planner.hpp; tools/navplan/laptime.py compares them):
   // between the buildings (40 m, climbing costly, 8 m passages at least: city centre to Dogtown
   // about 80 s, the street start in ManualSave-181 to Dogtown 33 s) or over the rooftops (100 m,
@@ -192,6 +193,15 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let raceClimbCost: Float = 2.0;      // per metre of climbing, against 1 per metre flown
   public let raceMinPassage: Float = 8.0;     // m of free height the route may squeeze through at least (0 = any)
   public let raceSearchWeight: Float = 1.2;   // A* heuristic weight, 1 = optimal (slower to plan)
+  // per 45 degrees the route turns over a few cells (as metres flown): straighter, more open
+  // corridors, whose bends the racing line takes wide. At 5 the tightest bend from the street
+  // start to Dogtown widened from 28 to 46 m (tools/navplan, 2026-10-27)
+  public let raceTurnCost: Float = 5.0;
+  // drift: in a bend the nose turns into it, up to raceDriftMax at raceDriftFull sideways (none
+  // below raceDriftStart), so the surge thrust pushes round the corner along with the banked lift
+  public let raceDriftMax: Float = 20.0;      // deg
+  public let raceDriftStart: Float = 8.0;     // m/s2
+  public let raceDriftFull: Float = 28.0;     // m/s2
   // m/s2 the speed profile plans slowing with at most: the brake grows with speed (60 m/s2 and
   // more at 40 m/s), but the flown speed eases into it, and planned at full the car reached the
   // destination at 43 m/s and hit the ground, 2026-10-26
@@ -257,6 +267,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let settleTimer: Float;
   public let routeGoal: Vector4;              // where the route ends: the destination, or above the landing spot
   public let takingOff: Bool;
+  public let underCover: Bool;                // engaged somewhere covered the map does not have: holding
   public let takeoffPoint: Vector4;
   public let landing: Bool;                   // the destination is on the ground: descend and touch down there
   public let landingSpot: Vector4;            // car-centre resting height (the bake's floor)
@@ -296,6 +307,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let routeLine: Bool;                 // the route is a racing line (evenly spaced, smooth)
   public let closestS: Float;                 // route distance of the closest point
   public let onLine: Bool;                    // following a racing line this frame (the ribbon applies)
+  public let ribbonNeed: Vector4;             // m/s2, the line's bend ahead at the speed flown (no deadband)
   public let bankRateNow: Float;              // rad/s
 
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeAutopilot> {
@@ -322,7 +334,15 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.yawCmd = 0.0;
     this.lastRoll = -AsinF(ClampF(Vector4.Dot(this.component.stats.d_right, FlightUtils.Up()), -1.0, 1.0));
     this.rollRate = 0.0;
-    this.takingOff = this.TakeoffPoint(this.holdPosition, this.takeoffPoint);
+    this.underCover = this.UnderCover(this.holdPosition);
+    if this.underCover {
+      // somewhere covered the map does not have (a car park, under a structure): the nearest free
+      // space is above the roof, and climbing to it went 47 m up inside a building, 2026-10-27
+      this.status = "under cover";
+      FlightLog.Warn("[Autopilot] under cover at " + FloatToStringPrec(this.holdPosition.X, 1) + ", " + FloatToStringPrec(this.holdPosition.Y, 1)
+        + ", " + FloatToStringPrec(this.holdPosition.Z, 1) + ": holding, move out into the open first");
+    }
+    this.takingOff = !this.underCover && this.TakeoffPoint(this.holdPosition, this.takeoffPoint);
     this.takeoffStartZ = this.holdPosition.Z;
     this.takeoffHeading0 = this.component.stats.d_forward2D;
     this.aheadSmooth = 15.0;
@@ -359,6 +379,16 @@ public class FlightModeAutopilot extends FlightModeStandard {
       }
     }
     return false;
+  }
+
+  // The car is below the free space the map has here by more than coverLimit: under something the
+  // map closed (a car park, an arcade under a tower). Not when the map has nothing here at all.
+  private func UnderCover(p: Vector4) -> Bool {
+    let gap: Vector2;
+    if !FlightNavMap.IsLoaded() || FlightNavMap.IsFree(p) || !FlightModeAutopilot.GapAt(p, gap) {
+      return false;
+    }
+    return gap.X - p.Z > this.coverLimit;
   }
 
   // Near the floor: climb straight up first, clear of traffic and street furniture, then fly off.
@@ -559,7 +589,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     // Race: the planner spreads the route into a racing line of wide bends
     this.requestRace = this.raceMode;
     this.request = this.raceMode
-      ? FlightNavMap.PlanRaceAsync(from, this.routeGoal, this.raceRouteHeight, this.raceClimbCost, this.raceMinPassage, this.raceSearchWeight)
+      ? FlightNavMap.PlanRaceAsync(from, this.routeGoal, this.raceRouteHeight, this.raceClimbCost, this.raceMinPassage, this.raceSearchWeight, this.raceTurnCost)
       : FlightNavMap.PlanAsync(from, this.routeGoal, false);
     this.replanTimer = 3.0;
     if ArraySize(this.route) < 2 {
@@ -570,6 +600,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
   }
 
   private func UpdateRoute(timeDelta: Float) -> Void {
+    if this.underCover {
+      return;
+    }
     this.replanTimer -= timeDelta;
     let target: Vector4;
     let has = this.CurrentDestination(target);
@@ -1034,6 +1067,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
         this.maneuver = null;
       }
       this.headingRef = stats.d_forward2D;
+      if this.underCover && !this.UnderCover(p) {
+        this.underCover = false; // flown out into the open by hand: plan from here
+        this.status = "idle";
+      }
       this.UpdateWithNormalLift(timeDelta, FlightUtils.Up(), 9.81 * this.gravityFactor + this.component.lift * this.standardModeLiftFactor - v.Z);
       return;
     }
@@ -1499,7 +1536,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   private func RaceLateral() -> Float {
     let g = 9.81 * this.gravityFactor;
     let lift = g + this.standardModeLiftFactor;
-    return SqrtF(MaxF(lift * lift - g * g, 1.0));
+    // plus the surge's share with the nose turned into the bend (drift)
+    return SqrtF(MaxF(lift * lift - g * g, 1.0)) + this.standardModeSurgeFactor * SinF(Deg2Rad(this.raceDriftMax));
   }
 
   private func TopSpeed() -> Float {
@@ -1847,6 +1885,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
         let ribbonBend: Vector4;
         this.LineFrameOver(this.closestS + stats.d_speed * this.ribbonLead, this.ribbonSpan, ribbonTangent, ribbonBend);
         bankAccel = ribbonBend * (stats.d_speed * stats.d_speed);
+        this.ribbonNeed = bankAccel;
         let need = Vector4.Length(bankAccel);
         bankAccel = need > this.ribbonDeadband ? bankAccel * ((need - this.ribbonDeadband) / need) : new Vector4(0.0, 0.0, 0.0, 0.0);
       }
@@ -1881,6 +1920,15 @@ public class FlightModeAutopilot extends FlightModeStandard {
           if Vector4.Length(across) > 0.5 {
             up = Vector4.Normalize(across);
           }
+        }
+      } else if this.onLine && this.raceDriftMax > 0.0 {
+        // drift: the nose turned into the bend about the car's top, more the harder the bend
+        let inward = FlightAttitude.Across(FlightAttitude.Across(this.ribbonNeed, fwd), up);
+        let need = Vector4.Length(inward);
+        if need > this.raceDriftStart {
+          let f = ClampF((need - this.raceDriftStart) / MaxF(this.raceDriftFull - this.raceDriftStart, 0.1), 0.0, 1.0);
+          let drift = Deg2Rad(this.raceDriftMax) * f * f * (3.0 - 2.0 * f);
+          fwd = Vector4.Normalize(fwd * CosF(drift) + Vector4.Normalize(inward) * SinF(drift));
         }
       }
     }

@@ -101,6 +101,8 @@ bool ClearWide(const NavMap &aMap, Vec3 aA, Vec3 aB, float aSide) {
   return true;
 }
 
+constexpr int kTurnBase = 4; // cells a bend is judged over (turnCost)
+
 float Distance(Vec3 aA, Vec3 aB) {
   float dx = aB.x - aA.x, dy = aB.y - aA.y, dz = aB.z - aA.z;
   return std::sqrt(dx * dx + dy * dy + dz * dz);
@@ -373,6 +375,32 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
     }
     GapM cur = GapAt(view, cx, cy, KeyGap(key));
     float curPreferred = Preferred(cur, aParams.preferredHeight);
+    // for turnCost: the nodes kTurnBase and kTurnBase - 1 steps back along the search's path, so
+    // a bend is judged over a few cells (a straight line at 25 degrees is a staircase of 0 and 45
+    // degree steps; judged step by step it would turn at every stair)
+    int32_t backX = cx, backY = cy, nearX = cx, nearY = cy;
+    bool haveBack = false;
+    if (aParams.turnCost > 0.0f) {
+      uint64_t k = key;
+      int steps = 0;
+      while (steps < kTurnBase) {
+        uint64_t parent = recs[k].parent;
+        if (parent == k) {
+          break;
+        }
+        k = parent;
+        ++steps;
+        if (steps == kTurnBase - 1) {
+          nearX = KeyCx(k, width);
+          nearY = KeyCy(k, width);
+        }
+      }
+      if (steps == kTurnBase) {
+        backX = KeyCx(k, width);
+        backY = KeyCy(k, width);
+        haveBack = true;
+      }
+    }
     for (int d = 0; d < 8; ++d) {
       int32_t nx = cx + kDx[d], ny = cy + kDy[d];
       const uint16_t *gaps;
@@ -388,7 +416,15 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
         if (overlap < aParams.minPassage && MakeKey(nx, ny, j, width) != goalKey) {
           continue;
         }
-        float cost = step * (1.0f + (std::isfinite(next.t) ? aParams.underCost : 0.0f)) +
+        float turn = 0.0f;
+        if (haveBack) {
+          // angle between the last kTurnBase steps and the kTurnBase steps ending at the next cell
+          float ax = float(cx - backX), ay = float(cy - backY);
+          float bx = float(nx - nearX), by = float(ny - nearY);
+          float angle = std::fabs(std::atan2(ax * by - ay * bx, ax * bx + ay * by));
+          turn = aParams.turnCost * angle / 0.78539816f;
+        }
+        float cost = turn + step * (1.0f + (std::isfinite(next.t) ? aParams.underCost : 0.0f)) +
                      aParams.climbCost * std::max(0.0f, Preferred(next, aParams.preferredHeight) - curPreferred);
         uint64_t nextKey = MakeKey(nx, ny, j, width);
         float ng = g + cost;
