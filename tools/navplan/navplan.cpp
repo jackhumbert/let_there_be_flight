@@ -73,6 +73,9 @@ int main(int argc, char **argv) {
   if (const char *v = std::getenv("NAVPLAN_LINE_PUSH")) {
     params.linePush = std::strtof(v, nullptr);
   }
+  if (const char *v = std::getenv("NAVPLAN_HEURISTIC")) {
+    params.heuristicWeight = std::strtof(v, nullptr);
+  }
   if (const char *v = std::getenv("NAVPLAN_UNDER_COST")) {
     params.underCost = std::strtof(v, nullptr);
   }

@@ -109,6 +109,9 @@ int32_t FlightNavMap::PlanRaceAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aG
   // about the same time as 25 m, a third of the planning time, far more air around the line)
   params.preferredHeight = 100.0f;
   params.climbCost = 0.5f;
+  // a closer to optimal search: after the 2026-10-26 rebake the default 1.5 found a Dogtown route
+  // diving into a 4 m street gap, 81 s against 71 s at 1.2 (tools/navplan/laptime.py), 1.6 s to plan
+  params.heuristicWeight = 1.2f;
   return StartPlan(aStart, aGoal, params);
 }
 
