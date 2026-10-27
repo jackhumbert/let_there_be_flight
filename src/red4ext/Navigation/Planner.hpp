@@ -31,6 +31,8 @@ struct PlanParams {
   float climbCost = 3.0f;        // extra cost per metre of rise in preferred altitude
   float underCost = 0.5f;        // extra cost per metre flown with something overhead
   float heuristicWeight = 1.5f;  // > 1 trades optimality for speed
+  float minPassage = 0.0f;       // m of free height (car-centre gap, the car's size already taken off)
+                                 // the route may squeeze through between columns; 0 = any
   uint32_t maxExpansions = 3000000;
   float maxGradient = 1.0f;      // rise per horizontal metre allowed in the height profile
   float legClearance = 2.0f;     // straight legs must also be free this far to either side (m), on top
@@ -46,6 +48,12 @@ struct PlanParams {
   // (1.7% within 3 m without), 55.6 s against 52.4 s; 8 m or a push only on the fine passes cost
   // more time for no more room
   float lineClearance = 6.0f;    // m
+  // m above the floor below (car-centre height, the car's size already taken off) the line keeps,
+  // but within lineFloorEnds of its start and end: street furniture (traffic lights, signs, lamps)
+  // is streamed in as props and not on the map; a between-the-buildings line flew 6 m over a
+  // street at 85 m/s and hit a traffic light's arm, 2026-10-27
+  float lineFloorClearance = 12.0f;
+  float lineFloorEnds = 60.0f;   // m
   float linePush = 0.1f;         // m
   float lineStep = 0.08f;        // gradient step per pass (stable below 0.125)
   float directMargin = 20.0f;    // cruise this far above the highest floor along the line

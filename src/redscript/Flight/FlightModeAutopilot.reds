@@ -184,6 +184,14 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let lineRadiusSpan: Float = 15.0;
   public let raceOffLine: Float = 4.0;        // m off a racing line before the car is treated as off it
   public let raceTakeoffHeight: Float = 3.0;  // m above the floor before the racing line takes over
+  // race route character (planner, Navigation/Planner.hpp; tools/navplan/laptime.py compares them):
+  // between the buildings (40 m, climbing costly, 8 m passages at least: city centre to Dogtown
+  // about 80 s, the street start in ManualSave-181 to Dogtown 33 s) or over the rooftops (100 m,
+  // 0.5, 0: about 71 s and 38 s). 12 m passages found no route at all from that street start.
+  public let raceRouteHeight: Float = 40.0;   // m above the local floor the route would like to fly
+  public let raceClimbCost: Float = 2.0;      // per metre of climbing, against 1 per metre flown
+  public let raceMinPassage: Float = 8.0;     // m of free height the route may squeeze through at least (0 = any)
+  public let raceSearchWeight: Float = 1.2;   // A* heuristic weight, 1 = optimal (slower to plan)
   // m/s2 the speed profile plans slowing with at most: the brake grows with speed (60 m/s2 and
   // more at 40 m/s), but the flown speed eases into it, and planned at full the car reached the
   // destination at 43 m/s and hit the ground, 2026-10-26
@@ -536,7 +544,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
     }
     // Race: the planner spreads the route into a racing line of wide bends
     this.requestRace = this.raceMode;
-    this.request = this.raceMode ? FlightNavMap.PlanRaceAsync(from, this.routeGoal) : FlightNavMap.PlanAsync(from, this.routeGoal, false);
+    this.request = this.raceMode
+      ? FlightNavMap.PlanRaceAsync(from, this.routeGoal, this.raceRouteHeight, this.raceClimbCost, this.raceMinPassage, this.raceSearchWeight)
+      : FlightNavMap.PlanAsync(from, this.routeGoal, false);
     this.replanTimer = 3.0;
     if ArraySize(this.route) < 2 {
       // nothing to follow meanwhile: hold here (a replan keeps following the old route)

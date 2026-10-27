@@ -102,16 +102,15 @@ int32_t FlightNavMap::PlanAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal,
   return StartPlan(aStart, aGoal, params);
 }
 
-int32_t FlightNavMap::PlanRaceAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal) {
+int32_t FlightNavMap::PlanRaceAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, float aPreferredHeight,
+                                    float aClimbCost, float aMinPassage, float aHeuristicWeight) {
   auto params = planParams;
   params.racingLine = true;
-  // high over the rooftops, where there is room for wide bends at speed (tools/navplan/laptime.py:
-  // about the same time as 25 m, a third of the planning time, far more air around the line)
-  params.preferredHeight = 100.0f;
-  params.climbCost = 0.5f;
-  // a closer to optimal search: after the 2026-10-26 rebake the default 1.5 found a Dogtown route
-  // diving into a 4 m street gap, 81 s against 71 s at 1.2 (tools/navplan/laptime.py), 1.6 s to plan
-  params.heuristicWeight = 1.2f;
+  // the route's character comes from the Autopilot (FlightModeAutopilot race route fields)
+  params.preferredHeight = aPreferredHeight;
+  params.climbCost = aClimbCost;
+  params.minPassage = aMinPassage;
+  params.heuristicWeight = std::max(1.0f, aHeuristicWeight);
   return StartPlan(aStart, aGoal, params);
 }
 
@@ -127,6 +126,14 @@ int32_t StartPlan(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, Navigation::P
   }
   std::thread([request, start, goal, params]() {
     auto result = Navigation::Plan(Navigation::NavMap::Get(), start, goal, params);
+    if (!result.ok && params.minPassage > 0.0f) {
+      // no way through without a squeeze point (a start or destination tucked under something):
+      // better a tight route than none
+      LogPlan(start, goal, result);
+      auto anyPassage = params; // (the lambda's copy is const)
+      anyPassage.minPassage = 0.0f;
+      result = Navigation::Plan(Navigation::NavMap::Get(), start, goal, anyPassage);
+    }
     LogPlan(start, goal, result);
     std::lock_guard guard(requestsLock);
     request->result = std::move(result);

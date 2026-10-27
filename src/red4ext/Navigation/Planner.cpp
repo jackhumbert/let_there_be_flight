@@ -179,6 +179,11 @@ std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute
     if (n < 7) {
       continue;
     }
+    // route distance from the start, for the floor clearance's exemption at the ends
+    std::vector<float> along(n, 0.0f);
+    for (size_t i = 1; i < n; ++i) {
+      along[i] = along[i - 1] + Distance(pts[i - 1], pts[i]);
+    }
     for (int pass = 0; pass < passes; ++pass) {
       float moved = 0.0f;
       for (size_t i = 2; i + 2 < n; ++i) {
@@ -208,12 +213,23 @@ std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute
             }
           }
         }
-        if (g.x * g.x + g.y * g.y + g.z * g.z < 1e-4f) {
+        bool low = false; // under the floor clearance: lifted even where the line is straight
+        if (along[i] > aParams.lineFloorEnds && along.back() - along[i] > aParams.lineFloorEnds) {
+          Gap here;
+          low = aMap.FindGap(p.x, p.y, p.z, here) && p.z < std::min(here.bottom + aParams.lineFloorClearance, here.top - 1.0f) - 0.01f;
+        }
+        if (!low && g.x * g.x + g.y * g.y + g.z * g.z < 1e-4f) {
           continue;
         }
         float before = -1.0f; // only needed when the move is not free with room to the sides
         for (float step = aParams.lineStep; step > aParams.lineStep * 0.2f; step *= 0.5f) {
           Vec3 q{p.x - g.x * step, p.y - g.y * step, p.z - g.z * step};
+          // floor clearance: up to lineFloorClearance over the floor below, where the gap has room
+          Gap gap;
+          if (along[i] > aParams.lineFloorEnds && along.back() - along[i] > aParams.lineFloorEnds &&
+              aMap.FindGap(q.x, q.y, q.z, gap)) {
+            q.z = std::max(q.z, std::min(gap.bottom + aParams.lineFloorClearance, gap.top - 1.0f));
+          }
           float after = std::min(ClearSides(aMap, b, q, side), ClearSides(aMap, q, c, side));
           bool ok = after >= 1.0f;
           // (grazes judged over the two legs either side together: one per leg can add up)
@@ -364,7 +380,12 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
       float step = d < 4 ? cell : cell * 1.41421356f;
       for (uint32_t j = 0; j < n; ++j) {
         GapM next{aMap.VoxelZ(gaps[2 * j]), aMap.VoxelZ(gaps[2 * j + 1])};
-        if (std::min(cur.t, next.t) - std::max(cur.b, next.b) < minOverlap) {
+        float overlap = std::min(cur.t, next.t) - std::max(cur.b, next.b);
+        if (overlap < minOverlap) {
+          continue;
+        }
+        // squeeze points: a passage lower than minPassage is left out (but for reaching the goal)
+        if (overlap < aParams.minPassage && MakeKey(nx, ny, j, width) != goalKey) {
           continue;
         }
         float cost = step * (1.0f + (std::isfinite(next.t) ? aParams.underCost : 0.0f)) +
