@@ -92,9 +92,14 @@ Previews and checks:
   `--radius` near 55). `check_navmap.py W\spans`: compares the plugin's `FlightNavMap.GetGaps`
   with the bake (needs navmap.bin installed and the game running).
 
-Last full bake (2026-10-26, game 2.5): outputs kept in `D:\cp2077_work\build\heightmap\`
-(`navmap.bin`, `spans\free.npz`, `spans\solid.npz`, `geometry.npz`, `presets_table.json`,
-`nodes.json`). The raw sectors and per-sector triangles (~20 GB) were not kept.
+Last full bake (2026-10-26 evening, game 2.5, with `spans.py` fill_hollow): everything in
+`D:\cp2077_work\build\heightmap\bake_2026-10-26\` (raw sectors, per-sector triangles, proxies,
+spans, `navmap.bin`), 36 minutes on kevin with 10 jobs, reusing `geometry.npz` and
+`presets_table.json` from the morning bake in `D:\cp2077_work\build\heightmap\` (whose
+`navmap.bin` is the previous map). Against the morning bake about 2% of columns lost free space
+(towers whose collision has a hole, now solid, and some low arcades under skyscrapers), none
+gained. 3 sectors failed to parse (JSONDecodeError): exterior_-17_21_0_0, exterior_-21_-1_0_0,
+exterior_-23_1_4_0.
 
 ## Format notes worth knowing
 
