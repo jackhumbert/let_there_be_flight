@@ -4,8 +4,12 @@
 #include <chrono>
 #include <cmath>
 #include <limits>
+#include <memory>
+#include <mutex>
 #include <queue>
+#include <cstring>
 #include <spdlog/fmt/fmt.h>
+#include <spdlog/spdlog.h>
 #include <unordered_map>
 
 namespace Navigation {
@@ -293,7 +297,414 @@ bool TryDirect(NavMap::View &aView, Vec3 aStart, Vec3 aGoal, const PlanParams &a
   return true;
 }
 
+// --- doorways: the search in two layers ------------------------------------------------------
+// The map in blocks of kBlock x kBlock columns (32 m). A block's doorways are where a car can cross
+// its edge into the next block: for each run of side-by-side crossable columns in one height
+// layer, the columns in its middle (and at both ends of a long run). The doorways of a block are
+// joined by the cheapest way between them inside it, and to their partners across the edge. The
+// first search over doorways finds which blocks the route goes through; the plan itself is then
+// searched only in those blocks and their neighbours. Doorways come from the 2 m map, so every
+// street and alley is still there (a search over coarse cells could not thread the city's streets
+// and went round it over the water, 2026-10-27). A block is worked out the first time a search
+// reaches it and kept for the session: the map does not change.
+constexpr int32_t kBlock = 16;
+constexpr char kDoorwayTag[8] = {'L', 'T', 'B', 'F', 'D', 'O', 'O', 'R'};
+
+// the fine search's cost of a step, without the turn and bearing parts, which depend on the way in
+struct StepCosts {
+  float cell = 2.0f, minOverlap = 0.5f, minPassage = 0.0f, preferredHeight = 25.0f, climbCost = 3.0f, underCost = 0.5f;
+  bool operator==(const StepCosts &aOther) const {
+    return cell == aOther.cell && minOverlap == aOther.minOverlap && minPassage == aOther.minPassage &&
+           preferredHeight == aOther.preferredHeight && climbCost == aOther.climbCost && underCost == aOther.underCost;
+  }
+  bool Passable(GapM aFrom, GapM aTo) const {
+    float overlap = std::min(aFrom.t, aTo.t) - std::max(aFrom.b, aTo.b);
+    return overlap >= minOverlap && overlap >= minPassage;
+  }
+  float Cost(GapM aFrom, GapM aTo, bool aDiagonal) const {
+    float step = aDiagonal ? cell * 1.41421356f : cell;
+    return step * (1.0f + (std::isfinite(aTo.t) ? underCost : 0.0f)) +
+           climbCost * std::max(0.0f, Preferred(aTo, preferredHeight) - Preferred(aFrom, preferredHeight));
+  }
+};
+
+int32_t BlockOf(int32_t aCell) { return aCell >= 0 ? aCell / kBlock : (aCell - kBlock + 1) / kBlock; }
+
+// Cheapest costs from aSources over the columns x0 <= x < x1, y0 <= y < y1 (aBackward: the costs to
+// reach the sources instead, each step counted the way it is flown).
+std::unordered_map<uint64_t, float> RegionCosts(NavMap::View &aView, const StepCosts &aCosts, int32_t aWidth, int32_t aX0,
+                                                int32_t aY0, int32_t aX1, int32_t aY1,
+                                                const std::vector<std::pair<uint64_t, float>> &aSources, bool aBackward) {
+  static const int32_t kDx[8] = {1, -1, 0, 0, 1, 1, -1, -1};
+  static const int32_t kDy[8] = {0, 0, 1, -1, 1, -1, 1, -1};
+  std::unordered_map<uint64_t, float> dist;
+  using Entry = std::pair<float, uint64_t>;
+  std::priority_queue<Entry, std::vector<Entry>, std::greater<Entry>> open;
+  for (auto [key, cost] : aSources) {
+    auto it = dist.find(key);
+    if (it == dist.end() || cost < it->second) {
+      dist[key] = cost;
+      open.push({cost, key});
+    }
+  }
+  while (!open.empty()) {
+    auto [d, key] = open.top();
+    open.pop();
+    if (d > dist[key]) {
+      continue;
+    }
+    int32_t cx = KeyCx(key, aWidth), cy = KeyCy(key, aWidth);
+    GapM cur = GapAt(aView, cx, cy, KeyGap(key));
+    for (int k = 0; k < 8; ++k) {
+      int32_t nx = cx + kDx[k], ny = cy + kDy[k];
+      if (nx < aX0 || ny < aY0 || nx >= aX1 || ny >= aY1) {
+        continue;
+      }
+      const uint16_t *gaps;
+      uint32_t n = aView.Column(nx, ny, gaps);
+      for (uint32_t j = 0; j < n; ++j) {
+        GapM next{aView.Map().VoxelZ(gaps[2 * j]), aView.Map().VoxelZ(gaps[2 * j + 1])};
+        if (!aCosts.Passable(cur, next)) {
+          continue;
+        }
+        float nd = d + (aBackward ? aCosts.Cost(next, cur, k >= 4) : aCosts.Cost(cur, next, k >= 4));
+        uint64_t nextKey = MakeKey(nx, ny, j, aWidth);
+        auto it = dist.find(nextKey);
+        if (it == dist.end() || nd < it->second) {
+          dist[nextKey] = nd;
+          open.push({nd, nextKey});
+        }
+      }
+    }
+  }
+  return dist;
+}
+
+class Doorways {
+public:
+  struct Link {
+    uint32_t to;
+    float cost;
+  };
+  struct Door {
+    int32_t cx, cy;
+    uint32_t gap;
+    std::vector<Link> links;
+  };
+
+  Doorways(const StepCosts &aCosts, int32_t aWidth) : costs(aCosts), width(aWidth) {}
+
+  const StepCosts costs;
+  const int32_t width;
+  std::vector<Door> doors;
+
+  // the doorways of block (aBx, aBy), working it out the first time
+  const std::vector<uint32_t> &Block(NavMap::View &aView, int32_t aBx, int32_t aBy) {
+    int64_t id = (int64_t(aBy) << 32) ^ int64_t(uint32_t(aBx));
+    auto it = blocks.find(id);
+    if (it != blocks.end()) {
+      return it->second;
+    }
+    std::vector<uint32_t> mine;
+    for (int side = 0; side < 4; ++side) {
+      Edge(aView, aBx, aBy, side, mine);
+    }
+    std::sort(mine.begin(), mine.end());
+    mine.erase(std::unique(mine.begin(), mine.end()), mine.end());
+    // inside the block: from each doorway to the others
+    const int32_t x0 = aBx * kBlock, y0 = aBy * kBlock;
+    for (uint32_t from : mine) {
+      uint64_t fromKey = MakeKey(doors[from].cx, doors[from].cy, doors[from].gap, width);
+      auto dist = RegionCosts(aView, costs, width, x0, y0, x0 + kBlock, y0 + kBlock, {{fromKey, 0.0f}}, false);
+      for (uint32_t to : mine) {
+        if (to == from) {
+          continue;
+        }
+        auto d = dist.find(MakeKey(doors[to].cx, doors[to].cy, doors[to].gap, width));
+        if (d != dist.end()) {
+          Join(from, to, d->second);
+        }
+      }
+    }
+    return blocks[id] = std::move(mine);
+  }
+
+  // The whole set as bytes, for a bake: its costs, the doorways and their links, the blocks done.
+  std::vector<uint8_t> Save() const {
+    std::vector<uint8_t> out;
+    auto put = [&](const void *aData, size_t aSize) {
+      out.insert(out.end(), static_cast<const uint8_t *>(aData), static_cast<const uint8_t *>(aData) + aSize);
+    };
+    const uint32_t version = 1;
+    put(&version, 4);
+    put(&costs, sizeof(costs));
+    put(&width, 4);
+    uint32_t n = uint32_t(doors.size());
+    put(&n, 4);
+    for (const auto &door : doors) {
+      put(&door.cx, 4);
+      put(&door.cy, 4);
+      uint8_t gap = uint8_t(door.gap);
+      put(&gap, 1);
+      uint16_t links = uint16_t(door.links.size());
+      put(&links, 2);
+      for (const auto &link : door.links) {
+        put(&link.to, 4);
+        put(&link.cost, 4);
+      }
+    }
+    n = uint32_t(blocks.size());
+    put(&n, 4);
+    for (const auto &[id, mine] : blocks) {
+      put(&id, 8);
+      uint32_t count = uint32_t(mine.size());
+      put(&count, 4);
+      put(mine.data(), mine.size() * 4);
+    }
+    return out;
+  }
+
+  // A set saved by Save, if it was made with these costs for a map this wide.
+  bool Load(const std::vector<uint8_t> &aData) {
+    size_t at = 0;
+    bool ok = true;
+    auto get = [&](void *aTo, size_t aSize) {
+      if (!ok || at + aSize > aData.size()) {
+        ok = false;
+        return;
+      }
+      std::memcpy(aTo, aData.data() + at, aSize);
+      at += aSize;
+    };
+    uint32_t version = 0;
+    StepCosts saved;
+    int32_t savedWidth = 0;
+    get(&version, 4);
+    get(&saved, sizeof(saved));
+    get(&savedWidth, 4);
+    if (!ok || version != 1 || !(saved == costs) || savedWidth != width) {
+      return false;
+    }
+    uint32_t n = 0;
+    get(&n, 4);
+    std::vector<Door> loaded(ok ? n : 0);
+    for (auto &door : loaded) {
+      uint8_t gap = 0;
+      uint16_t links = 0;
+      get(&door.cx, 4);
+      get(&door.cy, 4);
+      get(&gap, 1);
+      get(&links, 2);
+      door.gap = gap;
+      door.links.resize(ok ? links : 0);
+      for (auto &link : door.links) {
+        get(&link.to, 4);
+        get(&link.cost, 4);
+      }
+    }
+    get(&n, 4);
+    std::unordered_map<int64_t, std::vector<uint32_t>> loadedBlocks;
+    for (uint32_t i = 0; ok && i < n; ++i) {
+      int64_t id = 0;
+      uint32_t count = 0;
+      get(&id, 8);
+      get(&count, 4);
+      std::vector<uint32_t> mine(ok ? count : 0);
+      get(mine.data(), mine.size() * 4);
+      loadedBlocks[id] = std::move(mine);
+    }
+    if (!ok) {
+      return false;
+    }
+    doors = std::move(loaded);
+    blocks = std::move(loadedBlocks);
+    byKey.clear();
+    for (uint32_t i = 0; i < doors.size(); ++i) {
+      byKey[MakeKey(doors[i].cx, doors[i].cy, doors[i].gap, width)] = i;
+    }
+    return true;
+  }
+
+  // the doorway at (column, gap), if there is one
+  bool Find(uint64_t aKey, uint32_t &aDoor) const {
+    auto it = byKey.find(aKey);
+    if (it == byKey.end()) {
+      return false;
+    }
+    aDoor = it->second;
+    return true;
+  }
+
+private:
+  std::unordered_map<uint64_t, uint32_t> byKey;
+  std::unordered_map<int64_t, std::vector<uint32_t>> blocks;
+
+  uint32_t At(int32_t aCx, int32_t aCy, uint32_t aGap) {
+    uint64_t key = MakeKey(aCx, aCy, aGap, width);
+    auto it = byKey.find(key);
+    if (it != byKey.end()) {
+      return it->second;
+    }
+    doors.push_back({aCx, aCy, aGap, {}});
+    return byKey[key] = uint32_t(doors.size() - 1);
+  }
+
+  void Join(uint32_t aFrom, uint32_t aTo, float aCost) {
+    for (auto &link : doors[aFrom].links) {
+      if (link.to == aTo) {
+        link.cost = std::min(link.cost, aCost);
+        return;
+      }
+    }
+    doors[aFrom].links.push_back({aTo, aCost});
+  }
+
+  // The crossings over one edge of the block: side 0 east, 1 north, 2 west, 3 south. Each run of
+  // crossings along the edge that stays in one height layer gets doorways at its middle (and at
+  // its ends if it is long), on both sides of the edge, joined across.
+  void Edge(NavMap::View &aView, int32_t aBx, int32_t aBy, int aSide, std::vector<uint32_t> &aMine) {
+    struct Crossing {
+      int32_t k;
+      uint32_t in, out;
+      float lo, hi;
+    };
+    std::vector<std::vector<Crossing>> runs;
+    std::vector<size_t> open; // runs still being extended, by index
+    for (int32_t k = 0; k < kBlock; ++k) {
+      int32_t ix, iy, ox, oy;
+      switch (aSide) {
+      case 0:
+        ix = aBx * kBlock + kBlock - 1, iy = aBy * kBlock + k, ox = ix + 1, oy = iy;
+        break;
+      case 1:
+        ix = aBx * kBlock + k, iy = aBy * kBlock + kBlock - 1, ox = ix, oy = iy + 1;
+        break;
+      case 2:
+        ix = aBx * kBlock, iy = aBy * kBlock + k, ox = ix - 1, oy = iy;
+        break;
+      default:
+        ix = aBx * kBlock + k, iy = aBy * kBlock, ox = ix, oy = iy - 1;
+        break;
+      }
+      const uint16_t *gi, *go;
+      uint32_t ni = aView.Column(ix, iy, gi), no = aView.Column(ox, oy, go);
+      std::vector<size_t> next;
+      for (uint32_t i = 0; i < ni; ++i) {
+        GapM a{aView.Map().VoxelZ(gi[2 * i]), aView.Map().VoxelZ(gi[2 * i + 1])};
+        for (uint32_t j = 0; j < no; ++j) {
+          GapM b{aView.Map().VoxelZ(go[2 * j]), aView.Map().VoxelZ(go[2 * j + 1])};
+          if (!costs.Passable(a, b) || !costs.Passable(b, a)) {
+            continue;
+          }
+          Crossing c{k, i, j, std::max(a.b, b.b), std::min(a.t, b.t)};
+          // carried on from a run at the previous column whose height range it overlaps
+          size_t run = runs.size();
+          for (size_t r : open) {
+            const Crossing &last = runs[r].back();
+            if (std::min(last.hi, c.hi) - std::max(last.lo, c.lo) >= costs.minOverlap) {
+              run = r;
+              break;
+            }
+          }
+          if (run == runs.size()) {
+            runs.push_back({});
+          }
+          if (std::find(next.begin(), next.end(), run) == next.end()) {
+            runs[run].push_back(c);
+            next.push_back(run);
+          }
+        }
+      }
+      open = std::move(next);
+    }
+    auto cell = [&](int32_t aK, bool aOut, int32_t &aX, int32_t &aY) {
+      switch (aSide) {
+      case 0:
+        aX = aBx * kBlock + kBlock - 1 + (aOut ? 1 : 0), aY = aBy * kBlock + aK;
+        break;
+      case 1:
+        aX = aBx * kBlock + aK, aY = aBy * kBlock + kBlock - 1 + (aOut ? 1 : 0);
+        break;
+      case 2:
+        aX = aBx * kBlock - (aOut ? 1 : 0), aY = aBy * kBlock + aK;
+        break;
+      default:
+        aX = aBx * kBlock + aK, aY = aBy * kBlock - (aOut ? 1 : 0);
+        break;
+      }
+    };
+    for (const auto &run : runs) {
+      // one doorway an opening (with doorways at the ends of long ones as well, a 1 km square of
+      // the city had 206 000 links: about 50 MB for the city in a bake)
+      std::vector<size_t> picks{run.size() / 2};
+      for (size_t p : picks) {
+        const Crossing &c = run[p];
+        int32_t ix, iy, ox, oy;
+        cell(c.k, false, ix, iy);
+        cell(c.k, true, ox, oy);
+        uint32_t in = At(ix, iy, c.in), out = At(ox, oy, c.out);
+        GapM a = GapAt(aView, ix, iy, c.in), b = GapAt(aView, ox, oy, c.out);
+        Join(in, out, costs.Cost(a, b, false));
+        Join(out, in, costs.Cost(b, a, false));
+        aMine.push_back(in);
+      }
+    }
+  }
+};
+
+// One set of doorways per map and set of step costs (the Race and its no-minPassage retry), kept
+// for the session; plans running at once take turns.
+std::mutex doorwaysLock;
+std::vector<std::unique_ptr<Doorways>> doorwaySets;
+
+// The set for these costs; a new one starts from the map's baked doorways when they were made
+// with the same costs (the Race's), else empty, filled in as searches reach blocks.
+Doorways &DoorwaysFor(const NavMap &aMap, const StepCosts &aCosts) {
+  for (auto &set : doorwaySets) {
+    if (set->costs == aCosts && set->width == aMap.Width()) {
+      return *set;
+    }
+  }
+  doorwaySets.push_back(std::make_unique<Doorways>(aCosts, aMap.Width()));
+  std::vector<uint8_t> baked;
+  if (aMap.Section(kDoorwayTag, baked) && doorwaySets.back()->Load(baked)) {
+    spdlog::info("[NavMap] {} baked doorways", doorwaySets.back()->doors.size());
+  }
+  return *doorwaySets.back();
+}
+
 } // namespace
+
+DoorwayCount WorkOutDoorways(const NavMap &aMap, const PlanParams &aParams, float aX0, float aY0, float aX1, float aY1) {
+  auto t0 = std::chrono::steady_clock::now();
+  DoorwayCount count;
+  NavMap::View view(aMap);
+  StepCosts costs;
+  costs.cell = aMap.CellSize();
+  costs.minOverlap = aMap.VoxelHeight();
+  costs.minPassage = aParams.minPassage;
+  costs.preferredHeight = aParams.preferredHeight;
+  costs.climbCost = aParams.climbCost;
+  costs.underCost = aParams.underCost;
+  std::lock_guard guard(doorwaysLock);
+  Doorways &doorways = DoorwaysFor(aMap, costs);
+  int32_t cx0, cy0, cx1, cy1;
+  aMap.CellOf(aX0, aY0, cx0, cy0);
+  aMap.CellOf(aX1, aY1, cx1, cy1);
+  for (int32_t by = BlockOf(cy0); by <= BlockOf(cy1); ++by) {
+    for (int32_t bx = BlockOf(cx0); bx <= BlockOf(cx1); ++bx) {
+      doorways.Block(view, bx, by);
+      ++count.blocks;
+    }
+  }
+  count.doors = uint32_t(doorways.doors.size());
+  for (const auto &door : doorways.doors) {
+    count.links += uint32_t(door.links.size());
+  }
+  count.milliseconds = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
+  count.saved = doorways.Save();
+  return count;
+}
 
 PlanResult PlanWithRetries(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &aParams,
                            const std::function<void(const PlanResult &)> &aAttempt) {
@@ -338,6 +749,9 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
     }
     out.info = fmt::format("{}: {} points, {:.0f} m, {} expansions, {} grid nodes, {:.1f} ms", aWhat,
                            out.points.size(), out.length, out.expansions, out.gridNodes, out.milliseconds);
+    if (out.doorwayExpansions > 0) {
+      out.info += fmt::format(" ({} doorway expansions, {} blocks)", out.doorwayExpansions, out.doorwayBlocks);
+    }
     if (out.searchMilliseconds > 0.0) {
       out.info += fmt::format(" (search {:.1f} ms, line {:.1f} ms)", out.searchMilliseconds, out.milliseconds - out.searchMilliseconds);
     }
@@ -398,20 +812,13 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
     }
   };
 
-  // One search, only over the columns aAllowed marks (none: anywhere). aPath gets the nodes from a
-  // start seed to the goal; aLimit says the search ran out of expansions.
-  auto search = [&](const Corridor *aAllowed, std::vector<uint64_t> &aPath, bool &aLimit) -> bool {
-    std::unordered_map<uint64_t, Rec> recs;
-    recs.reserve(size_t(1) << 20);
-    std::priority_queue<Entry, std::vector<Entry>, std::greater<Entry>> open;
-    uint32_t expansions = 0;
-    aLimit = false;
-
-    // The take-off is part of the search: it starts from every free gap within startRadius, each at
-    // the cost of getting there from the start (the distance, rises counted three times over, and
-    // blocked map along the way five times over), so it finds the way out from under a deck or
-    // between buildings itself. One anchor gap could be a pocket the map closed off: from under a
-    // structure in Kabuki the search had one expansion and no route (2026-10-27).
+  // The take-off is part of the search: it starts from every free gap within startRadius, each at
+  // the cost of getting there from the start (the distance, rises counted three times over, and
+  // blocked map along the way five times over), so it finds the way out from under a deck or
+  // between buildings itself. One anchor gap could be a pocket the map closed off: from under a
+  // structure in Kabuki the search had one expansion and no route (2026-10-27).
+  std::vector<std::pair<uint64_t, float>> seeds;
+  {
     const int32_t r = int32_t(std::ceil(aParams.startRadius / cell));
     for (int32_t dy = -r; dy <= r; ++dy) {
       for (int32_t dx = -r; dx <= r; ++dx) {
@@ -432,21 +839,31 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
           }
           Vec3 at{x, y, z};
           float len = Distance(aStart, at);
-          float cost = flat + 3.0f * std::max(0.0f, z - aStart.z) + std::max(0.0f, aStart.z - z) +
-                       5.0f * (1.0f - Clear(aMap, aStart, at)) * len;
-          uint64_t key = MakeKey(cx, cy, i, width);
-          auto it = recs.find(key);
-          if (it == recs.end() || cost < it->second.g) {
-            recs[key] = {cost, key};
-            open.push({cost + heuristic(cx, cy), key});
-          }
+          seeds.push_back({MakeKey(cx, cy, i, width), flat + 3.0f * std::max(0.0f, z - aStart.z) + std::max(0.0f, aStart.z - z) +
+                                                          5.0f * (1.0f - Clear(aMap, aStart, at)) * len});
         }
       }
     }
-    if (recs.empty()) {
-      const uint64_t anchorKey = MakeKey(sx, sy, sg, width);
-      recs[anchorKey] = {0.0f, anchorKey};
-      open.push({heuristic(sx, sy), anchorKey});
+    if (seeds.empty()) {
+      seeds.push_back({MakeKey(sx, sy, sg, width), 0.0f});
+    }
+  }
+
+  // One search, only over the columns aAllowed marks (none: anywhere). aPath gets the nodes from a
+  // start seed to the goal; aLimit says the search ran out of expansions.
+  auto search = [&](const Corridor *aAllowed, std::vector<uint64_t> &aPath, bool &aLimit) -> bool {
+    std::unordered_map<uint64_t, Rec> recs;
+    recs.reserve(size_t(1) << 20);
+    std::priority_queue<Entry, std::vector<Entry>, std::greater<Entry>> open;
+    uint32_t expansions = 0;
+    aLimit = false;
+
+    for (auto [key, cost] : seeds) {
+      auto it = recs.find(key);
+      if (it == recs.end() || cost < it->second.g) {
+        recs[key] = {cost, key};
+        open.push({cost + heuristic(KeyCx(key, width), KeyCy(key, width)), key});
+      }
     }
 
     uint64_t endKey = 0;
@@ -560,9 +977,144 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
     return true;
   };
 
+  // The doorways first (a long plan): which blocks the route goes through, then the plan itself
+  // only in those blocks and the ones round them (the whole map if that finds no way).
   std::vector<uint64_t> path;
   bool limit = false;
-  bool found = search(nullptr, path, limit);
+  bool found = false;
+  if (aParams.doorways && Distance(aStart, goal) > aParams.doorwaysFrom) {
+    std::lock_guard guard(doorwaysLock);
+    StepCosts costs;
+    costs.cell = cell;
+    costs.minOverlap = minOverlap;
+    costs.minPassage = aParams.minPassage;
+    costs.preferredHeight = aParams.preferredHeight;
+    costs.climbCost = aParams.climbCost;
+    costs.underCost = aParams.underCost;
+    Doorways &doorways = DoorwaysFor(aMap, costs);
+    // from the start seeds to the doorways of the blocks they are in, and from the doorways of the
+    // goal's block and the ones round it to the goal
+    int32_t sx0 = width, sy0 = aMap.Height(), sx1 = -1, sy1 = -1;
+    for (auto [key, cost] : seeds) {
+      sx0 = std::min(sx0, KeyCx(key, width));
+      sy0 = std::min(sy0, KeyCy(key, width));
+      sx1 = std::max(sx1, KeyCx(key, width));
+      sy1 = std::max(sy1, KeyCy(key, width));
+    }
+    const int32_t bsx0 = BlockOf(sx0), bsy0 = BlockOf(sy0), bsx1 = BlockOf(sx1), bsy1 = BlockOf(sy1);
+    auto fromStart = RegionCosts(view, costs, width, bsx0 * kBlock, bsy0 * kBlock, (bsx1 + 1) * kBlock, (bsy1 + 1) * kBlock, seeds, false);
+    const int32_t gbx = BlockOf(gx), gby = BlockOf(gy);
+    auto toGoal = RegionCosts(view, costs, width, (gbx - 1) * kBlock, (gby - 1) * kBlock, (gbx + 2) * kBlock, (gby + 2) * kBlock,
+                              {{goalKey, 0.0f}}, true);
+
+    // A* over doorways; a start doorway is its own parent
+    constexpr uint32_t kNone = std::numeric_limits<uint32_t>::max();
+    std::unordered_map<uint32_t, Rec> doorRecs;
+    using DoorEntry = std::pair<float, uint32_t>;
+    std::priority_queue<DoorEntry, std::vector<DoorEntry>, std::greater<DoorEntry>> doorOpen;
+    auto doorHeuristic = [&](uint32_t aDoor) { return heuristic(doorways.doors[aDoor].cx, doorways.doors[aDoor].cy); };
+    for (int32_t by = bsy0; by <= bsy1; ++by) {
+      for (int32_t bx = bsx0; bx <= bsx1; ++bx) {
+        const std::vector<uint32_t> blockDoors = doorways.Block(view, bx, by);
+        for (uint32_t door : blockDoors) {
+          const auto &d = doorways.doors[door];
+          auto it = fromStart.find(MakeKey(d.cx, d.cy, d.gap, width));
+          if (it != fromStart.end()) {
+            doorRecs[door] = {it->second, uint64_t(door)};
+            doorOpen.push({it->second + doorHeuristic(door), door});
+          }
+        }
+      }
+    }
+    // the goal's doorways: their cost onwards to the goal
+    std::unordered_map<uint32_t, float> goalDoors;
+    for (int32_t by = gby - 1; by <= gby + 1; ++by) {
+      for (int32_t bx = gbx - 1; bx <= gbx + 1; ++bx) {
+        const std::vector<uint32_t> blockDoors = doorways.Block(view, bx, by);
+        for (uint32_t door : blockDoors) {
+          const auto &d = doorways.doors[door];
+          auto it = toGoal.find(MakeKey(d.cx, d.cy, d.gap, width));
+          if (it != toGoal.end()) {
+            goalDoors[door] = it->second;
+          }
+        }
+      }
+    }
+    float best = kInf;
+    uint32_t bestDoor = kNone;
+    while (!doorOpen.empty()) {
+      auto [f, door] = doorOpen.top();
+      doorOpen.pop();
+      float g = doorRecs[door].g;
+      if (f > g + doorHeuristic(door) + 1e-3f) {
+        continue; // stale entry
+      }
+      if (f >= best) {
+        break; // nothing left beats the way to the goal already found
+      }
+      if (++out.doorwayExpansions > aParams.maxExpansions) {
+        break;
+      }
+      auto onward = goalDoors.find(door);
+      if (onward != goalDoors.end() && g + onward->second < best) {
+        best = g + onward->second;
+        bestDoor = door;
+      }
+      // its links inside its own block (Block can add doorways: no references kept across it)
+      doorways.Block(view, BlockOf(doorways.doors[door].cx), BlockOf(doorways.doors[door].cy));
+      const auto links = doorways.doors[door].links;
+      for (auto [to, cost] : links) {
+        float ng = g + cost;
+        auto it = doorRecs.find(to);
+        if (it == doorRecs.end() || ng < it->second.g) {
+          doorRecs[to] = {ng, uint64_t(door)};
+          doorOpen.push({ng + doorHeuristic(to), to});
+        }
+      }
+    }
+    if (bestDoor != kNone) {
+      // the blocks of the doorways on the way, with the start's and the goal's, and doorwayMargin
+      // blocks round each
+      std::vector<std::pair<int32_t, int32_t>> through;
+      for (uint32_t door = bestDoor;; door = uint32_t(doorRecs[door].parent)) {
+        through.push_back({BlockOf(doorways.doors[door].cx), BlockOf(doorways.doors[door].cy)});
+        if (doorRecs[door].parent == door) {
+          break;
+        }
+      }
+      for (int32_t by = bsy0; by <= bsy1; ++by) {
+        for (int32_t bx = bsx0; bx <= bsx1; ++bx) {
+          through.push_back({bx, by});
+        }
+      }
+      through.push_back({gbx, gby});
+      int32_t bx0 = through[0].first, bx1 = bx0, by0 = through[0].second, by1 = by0;
+      for (auto [bx, by] : through) {
+        bx0 = std::min(bx0, bx);
+        bx1 = std::max(bx1, bx);
+        by0 = std::min(by0, by);
+        by1 = std::max(by1, by);
+      }
+      const int32_t margin = aParams.doorwayMargin;
+      Corridor corridor;
+      corridor.x0 = (bx0 - margin) * kBlock;
+      corridor.y0 = (by0 - margin) * kBlock;
+      corridor.w = (bx1 - bx0 + 1 + 2 * margin) * kBlock;
+      corridor.h = (by1 - by0 + 1 + 2 * margin) * kBlock;
+      corridor.cells.assign(size_t(corridor.w) * corridor.h, 0);
+      for (auto [bx, by] : through) {
+        for (int32_t y = (by - margin) * kBlock; y < (by + margin + 1) * kBlock; ++y) {
+          uint8_t *row = &corridor.cells[size_t(y - corridor.y0) * corridor.w];
+          std::fill(row + ((bx - margin) * kBlock - corridor.x0), row + ((bx + margin + 1) * kBlock - corridor.x0), uint8_t(1));
+        }
+      }
+      out.doorwayBlocks = uint32_t(through.size());
+      found = search(&corridor, path, limit);
+    }
+  }
+  if (!found) {
+    found = search(nullptr, path, limit);
+  }
 
   if (!found) {
     return finish(limit ? "search limit reached" : "no route");

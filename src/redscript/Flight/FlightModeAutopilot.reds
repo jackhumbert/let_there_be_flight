@@ -190,7 +190,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // about 80 s, the street start in ManualSave-181 to Dogtown 33 s) or over the rooftops (100 m,
   // 0.5, 0: about 71 s and 38 s). 12 m passages found no route at all from that street start.
   public let raceRouteHeight: Float = 40.0;   // m above the local floor the route would like to fly
-  public let raceClimbCost: Float = 2.0;      // per metre of climbing, against 1 per metre flown
+  // 0.5 (2026-10-27): at 2 every rise of the floor-following height in the city cost so much that
+  // Northside to the Pacifica coast went round the city over the water (5.45 km, against 5.24 km
+  // through it) once the doorway search could find the cheapest route
+  public let raceClimbCost: Float = 0.5;      // per metre of climbing, against 1 per metre flown
   public let raceMinPassage: Float = 8.0;     // m of free height the route may squeeze through at least (0 = any)
   public let raceSearchWeight: Float = 1.2;   // A* heuristic weight, 1 = optimal (slower to plan)
   // per 45 degrees the route turns over a few cells (as metres flown): straighter, more open

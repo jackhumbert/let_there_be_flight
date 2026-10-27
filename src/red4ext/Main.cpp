@@ -96,6 +96,24 @@ bool loaded = false;
 bool builtInArchives = false;
 RED4ext::PluginHandle pluginHandle;
 
+// The nav map built into this DLL as resource NAVMAP (RCDATA, from the build's navmap.rc), if it
+// has one.
+bool LoadEmbeddedNavMap() {
+  HMODULE self = nullptr;
+  if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                          reinterpret_cast<LPCWSTR>(&LoadEmbeddedNavMap), &self)) {
+    return false;
+  }
+  HRSRC info = FindResourceW(self, L"NAVMAP", MAKEINTRESOURCEW(10)); // RT_RCDATA
+  HGLOBAL data = info ? LoadResource(self, info) : nullptr;
+  const uint8_t *bytes = data ? static_cast<const uint8_t *>(LockResource(data)) : nullptr;
+  if (!bytes) {
+    return false;
+  }
+  std::vector<uint8_t> copy(bytes, bytes + SizeofResource(self, info));
+  return Navigation::NavMap::Get().Load(std::move(copy), "navmap (embedded)");
+}
+
 // After initialization: report whether our archive got mounted (a file only it contains), so logs show
 // whether the built-in loader / ArchiveXL actually picked it up
 bool OnInitializationExit(RED4ext::CGameApplication *aApp) {
@@ -201,7 +219,11 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
       ArchiveXL::RegisterArchive(aHandle, "let_there_be_flight.archive");
     }
 
-    Navigation::NavMap::Get().Load(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "navmap.bin");
+    // the nav map is embedded in the plugin (one file fewer to ship: CMakeLists.txt, LTBF_NAVMAP_EMBED);
+    // a navmap.bin next to it is the fallback, for a plugin built without one
+    if (!LoadEmbeddedNavMap()) {
+      Navigation::NavMap::Get().Load(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "navmap.bin");
+    }
     Navigation::Helipads::Get().Load(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "helipads.tsv");
     Navigation::Blockers::Get().Load(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "blockers.txt");
     Navigation::Blockers::Get().LoadHidden(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "hidden_nodes.txt");

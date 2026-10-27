@@ -47,6 +47,25 @@ int main(int argc, char **argv) {
     std::fprintf(stderr, "could not load %s\n", argv[1]);
     return 1;
   }
+  if (const char *area = std::getenv("NAVPLAN_DOORWAY_COUNT")) {
+    // x0,y0,x1,y1: work out the doorways over the area with the Race's costs, and count them
+    float x0, y0, x1, y1;
+    if (std::sscanf(area, "%f,%f,%f,%f", &x0, &y0, &x1, &y1) == 4) {
+      Navigation::PlanParams race;
+      race.minPassage = 8.0f;
+      race.preferredHeight = 40.0f;
+      race.climbCost = 0.5f;
+      auto n = Navigation::WorkOutDoorways(map, race, x0, y0, x1, y1);
+      std::printf("doorways: %u blocks, %u doors, %u links, %.0f ms, %zu bytes\n", n.blocks, n.doors, n.links, n.milliseconds,
+                  n.saved.size());
+      // the raw set to the out prefix (tools/heightmap/doorways.py packs it into navmap.bin)
+      if (FILE *f = std::fopen((std::string(argv[8]) + ".doorways").c_str(), "wb")) {
+        std::fwrite(n.saved.data(), 1, n.saved.size(), f);
+        std::fclose(f);
+      }
+      return 0;
+    }
+  }
   Navigation::Vec3 start{std::strtof(argv[2], nullptr), std::strtof(argv[3], nullptr), std::strtof(argv[4], nullptr)};
   Navigation::Vec3 goal{std::strtof(argv[5], nullptr), std::strtof(argv[6], nullptr), std::strtof(argv[7], nullptr)};
   std::string prefix = argv[8];
@@ -69,6 +88,9 @@ int main(int argc, char **argv) {
   // tuning without a rebuild: NAVPLAN_<NAME> overrides the racing line parameter of that name
   if (const char *v = std::getenv("NAVPLAN_LINE_CLEARANCE")) {
     params.lineClearance = std::strtof(v, nullptr);
+  }
+  if (const char *v = std::getenv("NAVPLAN_DOORWAYS")) {
+    params.doorways = std::atoi(v) != 0;
   }
   if (const char *v = std::getenv("NAVPLAN_BEARING")) {
     params.bearingCost = std::strtof(v, nullptr);
@@ -104,6 +126,11 @@ int main(int argc, char **argv) {
     }
   });
   std::printf("%s\n", line.info.c_str());
+  if (std::getenv("NAVPLAN_REPEAT")) {
+    // the same plan again: what a later plan costs once the doorways it needs are worked out
+    auto again = Navigation::PlanWithRetries(map, start, goal, params);
+    std::printf("again: %s\n", again.info.c_str());
+  }
   for (size_t i = 0; i + 1 < line.rejectedLine.size(); ++i) {
     const auto &a = line.rejectedLine[i], &b = line.rejectedLine[i + 1];
     float forward = map.SegmentClear(a.x, a.y, a.z, b.x, b.y, b.z);

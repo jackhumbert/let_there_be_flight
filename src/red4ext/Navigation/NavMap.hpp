@@ -50,6 +50,8 @@ public:
   static NavMap &Get();
 
   bool Load(const std::filesystem::path &aPath);
+  // the map already in memory (embedded in the plugin); aPath only names it in the log
+  bool Load(std::vector<uint8_t> aBytes, const std::filesystem::path &aPath);
   bool IsLoaded() const { return loaded; }
 
   // Gaps of the column containing (x, y), bottom up. Empty: outside the map, no data, or no
@@ -75,6 +77,11 @@ public:
   float CellSize() const { return cell; }
   float CarRadius() const { return radius; }
   float CarHalfHeight() const { return halfHeight; }
+
+  // A section appended to the file after the map (a bake's extras, such as the planner's
+  // doorways): the file ends in packed size (u64), raw size (u64) and the section's 8 byte tag,
+  // after the zlib data. False if the file has none with that tag.
+  bool Section(const char aTag[8], std::vector<uint8_t> &aOut) const;
 
 private:
   struct IndexEntry {

@@ -35,19 +35,23 @@ NavMap &NavMap::Get() {
 }
 
 bool NavMap::Load(const std::filesystem::path &aPath) {
-  std::lock_guard guard(lock);
-  loaded = false;
-  cache.clear();
-  lru.clear();
-
   std::ifstream in(aPath, std::ios::binary | std::ios::ate);
   if (!in) {
     spdlog::warn("[NavMap] {} not found, autopilot navigation disabled", aPath.string());
     return false;
   }
-  file.resize(static_cast<size_t>(in.tellg()));
+  std::vector<uint8_t> bytes(static_cast<size_t>(in.tellg()));
   in.seekg(0);
-  in.read(reinterpret_cast<char *>(file.data()), file.size());
+  in.read(reinterpret_cast<char *>(bytes.data()), bytes.size());
+  return Load(std::move(bytes), aPath);
+}
+
+bool NavMap::Load(std::vector<uint8_t> aBytes, const std::filesystem::path &aPath) {
+  std::lock_guard guard(lock);
+  loaded = false;
+  cache.clear();
+  lru.clear();
+  file = std::move(aBytes);
 
   if (file.size() < sizeof(Header)) {
     spdlog::error("[NavMap] {} is too small", aPath.string());
@@ -91,6 +95,22 @@ bool NavMap::Load(const std::filesystem::path &aPath) {
                aPath.filename().string(), file.size() / 1e6, width, height, cell, originX, originY, radius,
                halfHeight);
   return true;
+}
+
+bool NavMap::Section(const char aTag[8], std::vector<uint8_t> &aOut) const {
+  if (!loaded || file.size() < 24 || std::memcmp(file.data() + file.size() - 8, aTag, 8) != 0) {
+    return false;
+  }
+  uint64_t packed, raw;
+  std::memcpy(&packed, file.data() + file.size() - 24, 8);
+  std::memcpy(&raw, file.data() + file.size() - 16, 8);
+  if (packed + 24 > file.size()) {
+    return false;
+  }
+  aOut.resize(size_t(raw));
+  size_t got = tinfl_decompress_mem_to_mem(aOut.data(), aOut.size(), file.data() + file.size() - 24 - packed, size_t(packed),
+                                           TINFL_FLAG_PARSE_ZLIB_HEADER);
+  return got == raw;
 }
 
 std::shared_ptr<const NavMap::Tile> NavMap::Inflate(uint32_t aKey) const {

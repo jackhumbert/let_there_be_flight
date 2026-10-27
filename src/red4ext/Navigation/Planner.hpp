@@ -47,6 +47,12 @@ struct PlanParams {
   // least startLift above its floor.
   float startRadius = 30.0f;     // m
   float startLift = 3.0f;        // m
+  // the search in two layers for plans longer than doorwaysFrom: first over the doorways between
+  // 32 m blocks (worked out from the 2 m map, kept for the session), then the plan itself in the
+  // blocks that route passes and doorwayMargin blocks round them
+  bool doorways = true;
+  float doorwaysFrom = 300.0f;   // m
+  int32_t doorwayMargin = 1;     // blocks
   float maxGradient = 1.0f;      // rise per horizontal metre allowed in the height profile
   float legClearance = 2.0f;     // straight legs must also be free this far to either side (m), on top
                                  // of the bake's car inflation, so a follower can stray a little
@@ -84,6 +90,8 @@ struct PlanResult {
   std::vector<Vec3> points;
   std::vector<Vec3> rejectedLine; // a racing line that was not free all the way (diagnostics)
   uint32_t expansions = 0;
+  uint32_t doorwayExpansions = 0; // of the search over doorways, not in expansions
+  uint32_t doorwayBlocks = 0;     // blocks the doorway route passed
   uint32_t gridNodes = 0; // nodes on the A* path before simplification
   float length = 0;
   double milliseconds = 0;
@@ -99,5 +107,13 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
 // plan this way.
 PlanResult PlanWithRetries(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &aParams,
                            const std::function<void(const PlanResult &)> &aAttempt = {});
+
+// Works out the doorways of every block over the area (metres), for a bake; how many there are.
+struct DoorwayCount {
+  uint32_t blocks = 0, doors = 0, links = 0;
+  double milliseconds = 0;
+  std::vector<uint8_t> saved; // the set as bytes (zlib it and append it to navmap.bin, tag LTBFDOOR)
+};
+DoorwayCount WorkOutDoorways(const NavMap &aMap, const PlanParams &aParams, float aX0, float aY0, float aX1, float aY1);
 
 } // namespace Navigation
