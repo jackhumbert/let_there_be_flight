@@ -156,9 +156,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let torqueGainPitch: Float = 2.0;
   public let torqueGainRoll: Float = 0.5;
   public let torqueGainYaw: Float = 0.9;
-  public let attitudeLead: Float = 0.25;
+  public let attitudeLead: Float = 0.25;      // s of the commanded acceleration added to the velocity for the nose
   public let attitudeDelay: Float = 0.1;      // s ahead a manoeuvre's attitude is taken (the car's response lag)
-  public let settledError: Float = 10.0;      // deg of attitude error under which a manoeuvre may start      // s of the commanded acceleration added to the velocity for the nose
+  public let settledError: Float = 10.0;      // deg of attitude error under which a manoeuvre may start
   public let maxHeadingRate: Float = 0.9;     // rad/s the heading may turn at hover speeds
   public let maneuverAccel: Float = 10.0;     // m/s2 a pitch manoeuvre's circle is sized for
   public let maneuverMaxAccel: Float = 25.0;  // m/s2 the tracking of a manoeuvre may command
@@ -169,7 +169,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let maneuverMinSpeed: Float = 12.0;  // m/s
   public let maneuverMaxSpeed: Float = 25.0;  // m/s, faster and the circles do not fit in the city
   public let maneuverAbortDistance: Float = 15.0; // m off the shape before giving up on it
-  public let pitchMargin: Float = 1.0;
+  public let pitchMargin: Float = 1.0;        // m of room above and below a pitched car (see FlightAerobatics.reds)
   // race: the same thrust the player has (surge, lift, brake), with the lift banked into turns
   public let raceMargin: Float = 0.85;        // share of the envelope the speed profile plans for
   public let raceJerk: Float = 60.0;          // m/s3, rate limit of the acceleration command
@@ -180,8 +180,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let raceRoundShare: Float = 0.5;     // of each leg at most (two corners can meet midway)
   public let raceRoundStep: Float = 0.7;
   public let raceRoundMin: Float = 8.0;       // m
-  public let raceBankTime: Float = 0.12;
-  public let lineRadiusSpan: Float = 15.0;
+  public let raceBankTime: Float = 0.12;      // s, smoothing of the acceleration the attitude follows
+  public let lineRadiusSpan: Float = 15.0;    // m either side of a racing line point its bend radius is taken over
   public let raceOffLine: Float = 4.0;        // m off a racing line before the car is treated as off it
   public let raceTakeoffHeight: Float = 3.0;  // m above the floor before the racing line takes over
   // race route character (planner, Navigation/Planner.hpp; tools/navplan/laptime.py compares them):
@@ -208,14 +208,22 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let lineLead: Float = 0.25;          // s
   public let lineSpring: Float = 1.0;         // 1/s, distance off the line -> speed back towards it
   public let lineVelocityGain: Float = 2.5;   // 1/s, velocity error -> acceleration
-  public let lineSpan: Float = 10.0;          // m either side a line point's direction and bend are taken over    // m either side of a racing line point its bend radius is taken over      // s, smoothing of the acceleration the attitude follows
+  public let lineSpan: Float = 10.0;          // m either side a line point's direction and bend are taken over
+  // ribbon: on a racing line the bank comes from the line's own bend (over ribbonSpan either side,
+  // ribbonLead seconds ahead) at the speed flown, not from the commanded acceleration, which
+  // carries every small correction back onto the line and rolled the car for each of them
+  public let ribbonSpan: Float = 50.0;        // m
+  public let ribbonLead: Float = 0.3;         // s
+  // sideways acceleration the ribbon ignores: at 80 m/s a 2 km bend in the line already asks for
+  // 3 m/s2 (an 18 degree bank), which read as rolling for nothing; only what is above it banks
+  public let ribbonDeadband: Float = 3.0;     // m/s2
   // bank easing with aerobatics: the bank follows its target through a critically damped second
   // order filter with limited roll rate and roll acceleration (the target flicks as route points
   // pass; followed directly, the car rolled at 21 rad/s2 and more, 2026-10-26)
   public let rollFrequency: Float = 4.0;      // rad/s
   public let raceRollFrequency: Float = 6.0;  // rad/s
   public let rollRateMax: Float = 2.5;        // rad/s
-  public let rollAccelMax: Float = 10.0;      // rad/s2        // m of room above and below a pitched car (see FlightAerobatics.reds)
+  public let rollAccelMax: Float = 10.0;      // rad/s2
 
   // state, public for debugging from CET
   public let status: String = "idle";
@@ -282,6 +290,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let requestRace: Bool;               // the pending plan asked for a racing line
   public let routeLine: Bool;                 // the route is a racing line (evenly spaced, smooth)
   public let closestS: Float;                 // route distance of the closest point
+  public let onLine: Bool;                    // following a racing line this frame (the ribbon applies)
   public let bankRateNow: Float;              // rad/s
 
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeAutopilot> {
@@ -955,9 +964,13 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // A racing line's direction at route distance s and its bend there (towards the centre, 1 / radius
   // long), both taken over lineSpan either side.
   private func LineFrame(s: Float, out tangent: Vector4, out bend: Vector4) -> Void {
-    let a = this.PointAt(s - this.lineSpan);
+    this.LineFrameOver(s, this.lineSpan, tangent, bend);
+  }
+
+  private func LineFrameOver(s: Float, span: Float, out tangent: Vector4, out bend: Vector4) -> Void {
+    let a = this.PointAt(s - span);
     let b = this.PointAt(s);
-    let c = this.PointAt(s + this.lineSpan);
+    let c = this.PointAt(s + span);
     let ab = b - a;
     let bc = c - b;
     let l1 = Vector4.Length(ab);
@@ -1256,7 +1269,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
     }
     let accel = (desiredVelocity - v) * this.velocityGain;
     let jerk = this.accelJerk;
-    if this.raceMode && following && this.routeLine {
+    this.onLine = this.raceMode && following && this.routeLine;
+    if this.onLine {
       let tangent: Vector4;
       let bend: Vector4;
       this.LineFrame(this.closestS, tangent, bend);
@@ -1821,7 +1835,17 @@ public class FlightModeAutopilot extends FlightModeStandard {
       }
       fwd = Vector4.Length(fwd) > 0.1 ? Vector4.Normalize(fwd) : this.headingRef;
       this.attAccel += (accel - this.attAccel) * ClampF(dt / (this.raceMode ? this.raceBankTime : this.bankTime), 0.0, 1.0);
-      let u = FlightAttitude.Across(this.attAccel * blend + z * (9.81 * this.gravityFactor), fwd);
+      let bankAccel = this.attAccel;
+      if this.onLine {
+        // the ribbon: the acceleration the line's bend needs ahead, at the speed flown
+        let ribbonTangent: Vector4;
+        let ribbonBend: Vector4;
+        this.LineFrameOver(this.closestS + stats.d_speed * this.ribbonLead, this.ribbonSpan, ribbonTangent, ribbonBend);
+        bankAccel = ribbonBend * (stats.d_speed * stats.d_speed);
+        let need = Vector4.Length(bankAccel);
+        bankAccel = need > this.ribbonDeadband ? bankAccel * ((need - this.ribbonDeadband) / need) : new Vector4(0.0, 0.0, 0.0, 0.0);
+      }
+      let u = FlightAttitude.Across(bankAccel * blend + z * (9.81 * this.gravityFactor), fwd);
       let held = FlightAttitude.Across(this.targetUp, fwd);
       if Vector4.Length(u) < 1.0 {
         u = held;
