@@ -1,6 +1,10 @@
 public class FlightModeHoverFly extends FlightModeStandard {
   protected let hovering: Float;
+  // world height held above the hover band while there is no lift input
   protected let referenceZ: Float;
+  protected let holdingAltitude: Bool;
+  // m/s^2 per metre off referenceZ
+  public let altitudeHoldFactor: Float = 1.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Mode-Settings")
@@ -33,8 +37,10 @@ public class FlightModeHoverFly extends FlightModeStandard {
   public func Activate() -> Void {
     let normal: Vector4;
     this.referenceZ = this.component.stats.d_position.Z;
+    this.holdingAltitude = false;
+    this.component.hoverGroundPID.Reset();
     this.component.FindGround(normal);
-    this.component.hoverHeight = MaxF(this.component.distance, FlightSettings.GetFloat("hoverModeMinHoverHeight"));
+    this.component.hoverHeight = ClampF(this.component.distance, FlightSettings.GetFloat("hoverModeMinHoverHeight"), FlightSettings.GetFloat("hoverModeMaxHoverHeight"));
   }
 
   public func Deactivate() {}
@@ -53,18 +59,44 @@ public class FlightModeHoverFly extends FlightModeStandard {
 
     if lastHovering == 0.0 && this.hovering > 0.0 {
       this.component.hoverHeight = this.component.distance;
+      // the PID did not run above the band, start it fresh at the new target
+      this.component.hoverGroundPID.Reset();
     }
 
-    // this.component.hoverHeight = MaxF(this.component.hoverHeight + this.component.lift * timeDelta * this.standardModeHoverFactor, FlightSettings.GetFloat("hoverModeMinHoverHeight"));
-    this.component.hoverHeight = MaxF(this.component.hoverHeight + this.component.lift * this.heightCorrectionFactor, FlightSettings.GetFloat("hoverModeMinHoverHeight"));
-    // this.component.hoverHeight = MaxF(this.component.hoverHeight + this.component.lift, FlightSettings.GetFloat("hoverModeMinHoverHeight"));
+    // heightCorrectionFactor was tuned as metres per frame at 60 fps; kept inside the band so the
+    // ground PID never chases a target the hover weighting has already faded out
+    this.component.hoverHeight = ClampF(this.component.hoverHeight + this.component.lift * this.heightCorrectionFactor * timeDelta * 60.0, FlightSettings.GetFloat("hoverModeMinHoverHeight"), FlightSettings.GetFloat("hoverModeMaxHoverHeight"));
 
     let heightDifference = this.component.hoverHeight - this.component.distance;
     let idealNormal = Vector4.Interpolate(FlightUtils.Up(), normal, this.hovering);
 
-    let hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, FlightSettings.GetFloat("hoverClamp"));// / FlightSettings.GetFloat("hoverClamp");
-    let flyCorrection = this.component.lift;// * timeDelta;
-    let liftFactor = LerpF(this.hovering, flyCorrection * this.standardModeLiftFactor - this.component.stats.d_velocity.Z * this.heightDampening, hoverCorrection * this.standardModeHoverFactor);
+    let hoverCorrection = 0.0;
+    if this.hovering > 0.0 {
+      hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, FlightSettings.GetFloat("hoverClamp"));// / FlightSettings.GetFloat("hoverClamp");
+    }
+
+    // Above the band there is no ground to hold, and damping vertical speed alone turns any
+    // leftover vertical force into a steady climb or sink. Hold the height where the vehicle
+    // would stop under that damping once lift is released.
+    let z = this.component.stats.d_position.Z;
+    let vz = this.component.stats.d_velocity.Z;
+    if AbsF(this.component.lift) > 0.01 || this.hovering > 0.0 {
+      this.holdingAltitude = false;
+    } else {
+      if !this.holdingAltitude {
+        this.holdingAltitude = true;
+        this.referenceZ = z;
+        if this.heightDampening > 0.0 {
+          this.referenceZ += vz / this.heightDampening;
+        }
+      }
+    }
+
+    let flyCorrection = this.component.lift * this.standardModeLiftFactor - vz * this.heightDampening;
+    if this.holdingAltitude {
+      flyCorrection += ClampF((this.referenceZ - z) * this.altitudeHoldFactor, -this.standardModeLiftFactor, this.standardModeLiftFactor);
+    }
+    let liftFactor = LerpF(this.hovering, flyCorrection, hoverCorrection * this.standardModeHoverFactor);
     // liftFactor -= this.component.stats.d_velocity.Z * this.heightDampening;
     liftFactor *= (1.0 - this.component.linearBrake);
 
