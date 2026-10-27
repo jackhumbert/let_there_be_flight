@@ -6,7 +6,7 @@ casts vertical rays over the pad's disc (13 columns of 2 m within 4 m, as pads.p
 per column, the vehicle-blocking surface nearest the deck height.
 
   python pad_collision.py sectors W\\pads\\helipads.json -o W\\padcol\\sectors.txt
-      sector names (levels 0 to 2, the pad's cell and its neighbours) for sectors.py --match
+      sector names (levels 0 to 3, the pad's cell and its neighbours) for sectors.py --match
   python sectors.py --sectors <raw ep1 _compiled\\default> --geometry W\\geometry.npz
       -o W\\padcol\\tris --match "<regex printed by the step above>"
   python pad_collision.py check W\\pads\\helipads.json --tris W\\padcol\\tris
@@ -24,7 +24,7 @@ import re
 
 import numpy as np
 
-LEVELS = (0, 1, 2)
+LEVELS = (0, 1, 2, 3)  # level 3 holds the pad proxies and some roofs (the 499 m tower's)
 DECK_TOL = 1.5      # m: a hit this close to the deck counts as the deck
 PASS_COLUMNS = 10   # of 13
 DISC = [(dx, dy) for dx in (-4, -2, 0, 2, 4) for dy in (-4, -2, 0, 2, 4) if dx * dx + dy * dy <= 16]
