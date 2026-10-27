@@ -106,6 +106,8 @@ def check(cli: Path, tmp: Path) -> list[tuple[Path, Path]]:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--check", action="store_true", help="report stale raw json and exit 1 if any")
+    parser.add_argument("--drop", action="append", default=[], metavar="DEPOT_PATH",
+                        help="a file the archive loses on purpose (forward or back slashes; repeatable)")
     args = parser.parse_args()
 
     cli = find_cli()
@@ -134,6 +136,7 @@ def main() -> None:
             committed = tmp / "committed"
             run(cli, "unbundle", str(OUTPUT), "-o", str(committed))
             dropped = {p.relative_to(committed) for p in committed.rglob("*") if p.is_file()} - set(want)
+            dropped = {p for p in dropped if p.as_posix().lower() not in {d.replace("\\", "/").lower() for d in args.drop}}
             if dropped:
                 sys.exit(f"source/archive lacks files the committed archive has (copy them in first): {sorted(dropped)}")
         got = sorted(p.relative_to(unpacked) for p in unpacked.rglob("*") if p.is_file())
