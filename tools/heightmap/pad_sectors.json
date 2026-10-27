@@ -48,6 +48,7 @@
       "entities": [
         "user\\jackhumbert\\entities\\ltbf_hangar.ent",
         "user\\jackhumbert\\entities\\ltbf_hangar_1.ent",
+        "user\\jackhumbert\\entities\\ltbf_hangar_2.ent",
         "user\\jackhumbert\\entities\\ltbf_hangar_lights.ent"
       ]
     },

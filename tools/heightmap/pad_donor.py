@@ -32,6 +32,14 @@ def sectors_around(x, y, z):
             for dy in (-1, 0, 1):
                 for dz in (-1, 0, 1):
                     names.add(f"exterior_{cx + dx}_{cy + dy}_{cz + dz}_{level}")
+        # interiors (shops, garages) are on a grid of half the size, floored: (-937, -84) is
+        # interior_-15_-2_0_1 (mesh_scan.py, 2026-10-27)
+        size = 32.0 * (1 << level)
+        cx, cy, cz = (int(math.floor(v / size)) for v in (x, y, z))
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                for dz in (-1, 0, 1):
+                    names.add(f"interior_{cx + dx}_{cy + dy}_{cz + dz}_{level}")
     return names
 
 

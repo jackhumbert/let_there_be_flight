@@ -201,7 +201,11 @@ def serialize_batch(wolvenkit, files, match=None):
             if not os.path.exists(jp):
                 errors.append(name)
                 continue
-            rc = json.load(open(jp, encoding="utf-8"))["Data"]["RootChunk"]
+            try:
+                rc = json.load(open(jp, encoding="utf-8"))["Data"]["RootChunk"]
+            except ValueError:  # WolvenKit left an empty or cut-off json
+                errors.append(name)
+                continue
             found += placements_in(rc, name[: -len(".streamingsector")], match)
             os.remove(jp)
         return found, errors
