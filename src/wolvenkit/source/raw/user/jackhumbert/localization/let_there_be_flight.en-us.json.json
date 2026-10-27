@@ -870,6 +870,16 @@
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Race",
+              "femaleVariant": "Race"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Race-Description",
+              "femaleVariant": "Get there as fast as the vehicle can: full thrust and braking, up to its top speed, and turns flown banked hard into the lift. Turns Aerobatics on with it. Top Speed, Cornering and Braking do not apply."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Autopilot-Max-Pitch",
               "femaleVariant": "Max Pitch Angle"
             },
