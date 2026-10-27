@@ -11,6 +11,10 @@ each pad's position +- its streaming distance, and writes both files back.
   python pad_sector.py [--config pad_sectors.json] [--wolvenkit <WolvenKit 10 CLI>]
   then: python tools/pack_archive.py
 
+"decals" (optional): {"material": .mi, "pos", "quat" [i, j, k, r], "scale" (the decal box),
+"node_id", settings of the cooked decal it was copied from}, as worldStaticDecalNodes with
+debugName "[LTBF decal] <material>" (hangar_build.py fills them from the hangar's vignettes).
+
 "spawners" (optional): vehicle spawners, {"record": "Vehicle.<id>", "pos", "yaw", "node_id",
 "streaming_distance"}, copies of the sector's first spawner (a Watson pad car) with debugName
 "[LTBF spawner] <record>"; like that one they give a fresh car on every load.
@@ -42,12 +46,15 @@ def cli(wk, *args):
 
 
 SPAWNER_PREFIX = "[LTBF spawner] "  # debugName of the vehicle spawners this tool adds
+DECAL_PREFIX = "[LTBF decal] "      # and of its decals
 
 
 def is_pad(node):
     d = node["Data"]
     if d.get("$type") == "worldPopulationSpawnerNode":
         return str(d.get("debugName", {}).get("$value", "")).startswith(SPAWNER_PREFIX)
+    if d.get("$type") == "worldStaticDecalNode":
+        return str(d.get("debugName", {}).get("$value", "")).startswith(DECAL_PREFIX)
     return d.get("$type") == "worldEntityNode" and \
         str(d.get("entityTemplate", {}).get("DepotPath", {}).get("$value", "")).startswith(PAD_PREFIX)
 
@@ -63,6 +70,24 @@ def place(data, x, y, z, yaw, node_id, streaming_distance, index):
         d[key] = {"$type": "Vector3", "X": x, "Y": y, "Z": z}
     d["streamingDistance"] = float(streaming_distance)
     return d
+
+
+def decal_node(dc):
+    """A worldStaticDecalNode (the uncooked decal node sector mods use) from a decal entry: the
+    material and the cooked decal's settings; WolvenKit fills the other fields with defaults."""
+    node = {"$type": "worldStaticDecalNode",
+            "debugName": {"$type": "CName", "$storage": "string", "$value": DECAL_PREFIX + dc["material"].rsplit("\\", 1)[-1]},
+            "material": {"DepotPath": {"$type": "ResourcePath", "$storage": "string", "$value": dc["material"]}, "Flags": "Default"},
+            # the default hides a decal 20 m away, less than the hangar is long
+            "autoHideDistance": float(dc.get("auto_hide", 60.0))}
+    for key in ("alpha", "normalThreshold", "roughnessScale"):
+        if key in dc:
+            node[key] = dc[key]
+    if "normalsBlendingMode" in dc:
+        node["normalsBlendingMode"] = dc["normalsBlendingMode"]
+    if "surfaceType" in dc:
+        node["surfaceType"] = dc["surfaceType"]
+    return node
 
 
 def renumber_handles(doc):
@@ -122,6 +147,14 @@ def build_sector(doc, cfg):
         x, y, z = sp["pos"]
         kept_data.append(place(spawner_data, x, y, z, sp["yaw"], sp["node_id"],
                                sp.get("streaming_distance", spawner_data["streamingDistance"]), len(kept)))
+        kept.append(n_)
+    for dc in cfg.get("decals", []):
+        n_ = {"HandleId": "0", "Data": decal_node(dc)}
+        d = place(template_data, *dc["pos"], 0.0, dc["node_id"], dc.get("streaming_distance", 80.0), len(kept))
+        i, j, k, r = dc["quat"]
+        d["transform"]["orientation"].update(i=i, j=j, k=k, r=r)
+        d["scale"] = {"$type": "Vector3", "X": dc["scale"][0], "Y": dc["scale"][1], "Z": dc["scale"][2]}
+        kept_data.append(d)
         kept.append(n_)
     rc["nodes"] = kept
     rc["nodeData"]["Data"] = kept_data

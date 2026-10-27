@@ -28,7 +28,8 @@ public:
   struct Actor {
     int32_t x, y, z;
   };
-  // a placement by its globalNodeId, with the x y it is stored at as a check
+  // a placement by its globalNodeId, with the x y it is stored at as a check; id 0 (foliage
+  // clusters and other nodes without one) matches by the x y alone
   struct Node {
     uint64_t id;
     float x, y;

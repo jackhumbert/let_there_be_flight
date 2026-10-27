@@ -80,11 +80,30 @@ size_t MoveActors(world::CookedCollisionNode *aNode, const std::vector<Navigatio
 // nodeDeletions hides a node: 2 km below the map, scale 0.
 constexpr uintptr_t SetupIdOffset = 0x58;
 constexpr uintptr_t SetupScaleOffset = 0x20;
+constexpr uint32_t SetupSize = 0x90;
+
+void Hide(uint8_t *aRecord) {
+  reinterpret_cast<float *>(aRecord)[2] = -2000.0f;
+  auto *scale = reinterpret_cast<float *>(aRecord + SetupScaleOffset);
+  scale[0] = scale[1] = scale[2] = 0.0f;
+}
 
 bool HideNode(DataBuffer &aSetups, const Navigation::Blockers::Node &aNode) {
   auto *data = static_cast<uint8_t *>(aSetups.buffer.data);
   uint32_t size = aSetups.buffer.size;
   if (!data) {
+    return false;
+  }
+  // nodes without a globalNodeId (foliage clusters, cooked statics) are listed with id 0: match the
+  // record by its stored x y alone, record by record
+  if (aNode.id == 0) {
+    for (uint32_t at = 0; at + SetupSize <= size; at += SetupSize) {
+      auto *record = reinterpret_cast<const float *>(data + at);
+      if (std::abs(record[0] - aNode.x) < 0.05f && std::abs(record[1] - aNode.y) < 0.05f) {
+        Hide(data + at);
+        return true;
+      }
+    }
     return false;
   }
   for (uint32_t at = SetupIdOffset; at + sizeof(uint64_t) <= size; at += 8) {
@@ -93,9 +112,7 @@ bool HideNode(DataBuffer &aSetups, const Navigation::Blockers::Node &aNode) {
     }
     auto *record = reinterpret_cast<float *>(data + at - SetupIdOffset);
     if (std::abs(record[0] - aNode.x) < 0.05f && std::abs(record[1] - aNode.y) < 0.05f) {
-      record[2] = -2000.0f;
-      auto *scale = reinterpret_cast<float *>(data + at - SetupIdOffset + SetupScaleOffset);
-      scale[0] = scale[1] = scale[2] = 0.0f;
+      Hide(data + at - SetupIdOffset);
       return true;
     }
     // not the layout this was written for: log the words around the id to find it

@@ -16,6 +16,7 @@ import math
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 
 DEFAULT_WOLVENKIT = r"D:\cp2077_work\build\tools\wolvenkit-10.0.0-beta.1\WolvenKit.CLI.exe"
@@ -125,7 +126,11 @@ def main():
             if not os.path.exists(jp):
                 print("not serialized:", sector)
                 continue
-            rc = json.load(open(jp, encoding="utf-8"))["Data"]["RootChunk"]
+            try:
+                rc = json.load(open(jp, encoding="utf-8"))["Data"]["RootChunk"]
+            except ValueError:  # WolvenKit left an empty or cut-off json
+                print(f"skipped {os.path.basename(jp)}: unreadable json", file=sys.stderr)
+                continue
             nodes = rc["nodes"]
             for k, nd in enumerate(rc["nodeData"]["Data"]):
                 node = nodes[int(nd["nodeIdx"])]["Data"]
