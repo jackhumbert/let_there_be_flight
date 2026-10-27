@@ -247,7 +247,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // ahead (ribbonLead) so the slower roll still starts in time
   public let raceRollRateMax: Float = 1.0;    // rad/s
   public let raceRollAccelMax: Float = 3.0;   // rad/s2
-  // pitch on a racing line, the same way as the bank: from the line's own slope ribbonLead ahead
+  // pitch in Race, the same way as the bank (off the line too: the take-off and the arrival); on a
+  // racing line from the line's own slope ribbonLead ahead
   // (not the velocity plus the commanded acceleration, which carries every height correction and
   // bobbed the nose), eased through the same filter
   public let racePitchFrequency: Float = 2.5; // rad/s
@@ -324,7 +325,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let ribbonNeed: Vector4;             // m/s2, the line's bend ahead at the speed flown (no deadband)
   public let bankRateNow: Float;
   public let pitchAngle: Float;               // rad, eased nose pitch on a racing line
-  public let pitchRateNow: Float;             // rad/s              // rad/s
+  public let pitchRateNow: Float;             // rad/s
+  private let cinematicCallback: ref<CallbackHandle>;
+  private let cinematicContext: Bool;         // UIGameContext.CinematicCamera pushed              // rad/s
 
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeAutopilot> {
     let self = new FlightModeAutopilot();
@@ -566,10 +569,39 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let bb = GameInstance.GetBlackboardSystem(game).Get(GetAllBlackboardDefs().UI_AutodriveData);
     bb.SetBool(GetAllBlackboardDefs().UI_AutodriveData.FreeRoamEnabled, false);
     bb.SetBool(GetAllBlackboardDefs().UI_AutodriveData.AutoDriveEnabled, enabled, true);
-    if !enabled && bb.GetBool(GetAllBlackboardDefs().UI_AutodriveData.CinematicCameraActive) {
+    if enabled {
+      if !IsDefined(this.cinematicCallback) {
+        this.cinematicCallback = bb.RegisterListenerBool(GetAllBlackboardDefs().UI_AutodriveData.CinematicCameraActive, this, n"OnCinematicCameraChanged");
+      }
+      this.OnCinematicCameraChanged(bb.GetBool(GetAllBlackboardDefs().UI_AutodriveData.CinematicCameraActive));
+      return;
+    }
+    if IsDefined(this.cinematicCallback) {
+      bb.UnregisterListenerBool(GetAllBlackboardDefs().UI_AutodriveData.CinematicCameraActive, this.cinematicCallback);
+      this.cinematicCallback = null;
+    }
+    this.OnCinematicCameraChanged(false);
+    if bb.GetBool(GetAllBlackboardDefs().UI_AutodriveData.CinematicCameraActive) {
       // leave the cinematic camera with the autopilot, as vanilla does when autodrive ends
       GetPlayer(game).QueueEvent(new vehicleCinematicCameraToggleEvent());
     }
+  }
+
+  // Vanilla autodrive's cinematic camera hides the whole HUD (minimap, quest, hints, the panel):
+  // the engine pushes UIGameContext.CinematicCamera for its own autodrive only, so with the
+  // Autopilot flying the HUD stayed up. Pushed here while the cinematic camera is on.
+  protected cb func OnCinematicCameraChanged(active: Bool) -> Bool {
+    if Equals(active, this.cinematicContext) {
+      return true;
+    }
+    this.cinematicContext = active;
+    let ui = GameInstance.GetUISystem(this.component.GetVehicle().GetGame());
+    if active {
+      ui.PushGameContext(UIGameContext.CinematicCamera);
+    } else {
+      ui.PopGameContext(UIGameContext.CinematicCamera);
+    }
+    return true;
   }
 
   private func PublishProgress() -> Void {
@@ -1862,24 +1894,45 @@ public class FlightModeAutopilot extends FlightModeStandard {
     return level * CosF(this.bankAngle) + side * SinF(this.bankAngle);
   }
 
-  // On a racing line: the nose's pitch from the line's slope ahead, eased (critically damped, rate
-  // and acceleration limited), on the nose's own heading. Elsewhere it follows the nose as it is.
+  // In Race: the nose's pitch eased (critically damped, rate and acceleration limited), on the
+  // nose's own heading. On a racing line the pitch wanted is the line's slope ahead; off it (the
+  // take-off and the arrival) the nose's own. Elsewhere the nose stays as it is.
   private func EasePitch(dt: Float, fwd: Vector4) -> Vector4 {
     let level = Vector4.Normalize2D(fwd);
-    if !this.onLine || Vector4.Length(level) < 0.5 {
-      this.pitchAngle = AsinF(ClampF(fwd.Z, -1.0, 1.0));
-      this.pitchRateNow = 0.0;
+    if !this.raceMode || Vector4.Length(level) < 0.5 {
+      this.SyncPitch(fwd);
       return fwd;
     }
-    let tangent: Vector4;
-    let bend: Vector4;
-    this.LineFrameOver(this.closestS + this.component.stats.d_speed * this.ribbonLead, this.ribbonSpan, tangent, bend);
-    let wanted = AsinF(ClampF(tangent.Z, -1.0, 1.0));
+    let wanted = AsinF(ClampF(fwd.Z, -1.0, 1.0));
+    if this.onLine {
+      let tangent: Vector4;
+      let bend: Vector4;
+      this.LineFrameOver(this.closestS + this.component.stats.d_speed * this.ribbonLead, this.ribbonSpan, tangent, bend);
+      // the same steep-path rule as the nose off the line: on the final drop to a landing spot
+      // the line's own slope held the nose at the ground for 4 s (2026-10-27)
+      let slope = AsinF(ClampF(tangent.Z, -1.0, 1.0));
+      wanted = AsinF(ClampF(this.Unsteep(level * CosF(slope) + FlightUtils.Up() * SinF(slope)).Z, -1.0, 1.0));
+    }
     let f = this.racePitchFrequency;
     let accel = ClampF(f * f * (wanted - this.pitchAngle) - 2.0 * f * this.pitchRateNow, -this.racePitchAccelMax, this.racePitchAccelMax);
     this.pitchRateNow = ClampF(this.pitchRateNow + accel * dt, -this.racePitchRateMax, this.racePitchRateMax);
     this.pitchAngle = ClampF(this.pitchAngle + this.pitchRateNow * dt, -1.5, 1.5);
     return level * CosF(this.pitchAngle) + FlightUtils.Up() * SinF(this.pitchAngle);
+  }
+
+  // A steep path (the drop onto a landing spot): the nose nearer level instead of pointing at the
+  // ground, where which way is up has no answer and the bank flicked across +-80 degrees.
+  private func Unsteep(fwd: Vector4) -> Vector4 {
+    let steep = ClampF((AbsF(fwd.Z) - 0.6) / 0.3, 0.0, 1.0);
+    if steep > 0.0 {
+      return Vector4.Normalize(fwd * (1.0 - 0.6 * steep) + this.headingRef * (0.6 * steep));
+    }
+    return fwd;
+  }
+
+  private func SyncPitch(fwd: Vector4) -> Void {
+    this.pitchAngle = AsinF(ClampF(fwd.Z, -1.0, 1.0));
+    this.pitchRateNow = 0.0;
   }
 
   private func SyncBank(fwd: Vector4, up: Vector4) -> Void {
@@ -1924,6 +1977,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       let refVel: Vector4;
       let refAcc: Vector4;
       this.maneuver.Sample(ahead, refPos, refVel, refAcc, fwd, up);
+      this.SyncPitch(fwd);
     } else {
       // nose: the velocity plus a little of the commanded acceleration, so it leads into turns,
       // climbs and dives
@@ -1933,14 +1987,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
         fwd += Vector4.Normalize(path) * blend;
       }
       fwd = Vector4.Length(fwd) > 0.1 ? Vector4.Normalize(fwd) : this.headingRef;
-      fwd = this.EasePitch(dt, fwd);
-      // a steep path (the drop onto a landing spot): the nose stays nearer level instead of
-      // pointing at the ground, where which way is up has no answer and the bank flicked across
-      // +-80 degrees (2026-10-27)
-      let steep = ClampF((AbsF(fwd.Z) - 0.6) / 0.3, 0.0, 1.0);
-      if steep > 0.0 {
-        fwd = Vector4.Normalize(fwd * (1.0 - 0.6 * steep) + this.headingRef * (0.6 * steep));
-      }
+      // nearer level on a steep path (2026-10-27), then eased
+      fwd = this.EasePitch(dt, this.Unsteep(fwd));
       this.attAccel += (accel - this.attAccel) * ClampF(dt / (this.raceMode ? this.raceBankTime : this.bankTime), 0.0, 1.0);
       let bankAccel = this.attAccel;
       if this.onLine {

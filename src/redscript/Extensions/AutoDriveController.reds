@@ -16,3 +16,18 @@ private final func OnAutoDriveStateChanged(state: Bool) -> Void {
   }
   logo.SetTexturePart(n"logo");
 }
+
+// The panel's distance and time counters show only for vanilla's own destination
+// (AutoDriveSystem.GetAutodriveDestinationType); the Autopilot publishes its route's in
+// UI_AutodriveData (FlightModeAutopilot.PublishProgress) whatever it flies to.
+@wrapMethod(AutoDriveController)
+private func UpdateUIData() -> Void {
+  if !FlightModeAutopilot.IsEngaged() {
+    wrappedMethod();
+    return;
+  }
+  inkWidgetRef.SetVisible(this.m_remainingDistanceCounterContainer, true);
+  this.m_remainingDistanceCounterTextParams.UpdateMeasurement("DISTANCE", Cast<Float>(FloorF(this.m_autodriveBB.GetFloat(this.m_autodriveBBDef.DestinationRemainingLength))), EMeasurementUnit.Meter);
+  inkWidgetRef.SetVisible(this.m_remainingTimeCounterContainer, true);
+  this.m_remainingTimeCounterTextParams.UpdateTime("TIME", FloorF(this.m_autodriveBB.GetFloat(this.m_autodriveBBDef.DestinationRemainingTime)));
+}

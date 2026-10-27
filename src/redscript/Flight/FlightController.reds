@@ -451,9 +451,11 @@ public native class FlightController extends IScriptable {
     // evt.AddInputHint(FlightController.CreateInputHint(n"Lower Hover Height", n"FlightOptions_Down"), true);
     evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Toggle-UI", n"Flight_UIToggle"),         this.FlightControlsShown() && this.showOptions);
     // autodrive while flying: the vanilla autodrive hold toggles the Autopilot mode, and while it
-    // flies the camera hold toggles the cinematic camera (vanilla's hint text, LocKey#96518)
+    // flies the camera hold toggles the cinematic camera (vanilla's hint text, LocKey#96518).
+    // Engaged, the hints are vanilla autodrive's: no stop hint (the autodrive panel's own key
+    // badge is that), only the camera.
     let autopilotEngaged = this.active && this.mode == this.AutopilotModeIndex();
-    evt.AddInputHint(FlightController.CreateInputHint(this.AutopilotHintLabel(), n"HoldAutodrive"),         autopilotEngaged || (this.active && !this.showOptions && !this.AutopilotHoldSharesNextMode()));
+    evt.AddInputHint(FlightController.CreateInputHint(this.AutopilotHintLabel(), n"HoldAutodrive"),         this.active && !autopilotEngaged && !this.showOptions && !this.AutopilotHoldSharesNextMode());
     // the LocKey string as vanilla passes it, resolved by the hint widget (GetLocalizedText here
     // gave "Fast Swim")
     evt.AddInputHint(FlightController.CreateInputHintText("LocKey#96518", n"HoldCinematicCamera"), autopilotEngaged);
