@@ -138,7 +138,9 @@ def _placement(mesh, node, sector, pos, q, scale, node_id):
     }
 
 
-def placements_in(rc, sector):
+def placements_in(rc, sector, match=None):
+    """Every placement in a serialized sector of a mesh that match(o) names (default: pad meshes)."""
+    match = match or _pad_mesh
     by_key = collections.defaultdict(list)
     for k, d in enumerate(rc["nodeData"]["Data"]):
         d = {**d, "_k": k}  # several entries can share (nodeIdx, instanceIndex); k is their own slot
@@ -155,7 +157,7 @@ def placements_in(rc, sector):
             # the node's nodeData entries are all at the origin
             transforms = node["cookedWorldTransformsBuffer"]["Data"]["Transforms"]
             for j, n in enumerate(inner):
-                mesh = _pad_mesh(n)
+                mesh = match(n)
                 if not mesh:
                     continue
                 r = data["TransformRanges"][j]
@@ -169,11 +171,11 @@ def placements_in(rc, sector):
         hits = []
         if inner:
             for j, n in enumerate(inner):
-                mesh = _pad_mesh(n)
+                mesh = match(n)
                 if mesh:
                     hits.append((mesh, by_key.get((i, j), [])))
         else:
-            mesh = _pad_mesh(node)
+            mesh = match(node)
             if mesh:
                 hits.append((mesh, by_key.get((i, None), [])))
         for mesh, ds in hits:
@@ -187,7 +189,7 @@ def placements_in(rc, sector):
     return out
 
 
-def serialize_batch(wolvenkit, files):
+def serialize_batch(wolvenkit, files, match=None):
     tmp = tempfile.mkdtemp(prefix="pads_")
     try:
         cmd = [wolvenkit, "cr2w", "-s", *files, "-o", tmp, "-v", "Minimal"]
@@ -200,7 +202,7 @@ def serialize_batch(wolvenkit, files):
                 errors.append(name)
                 continue
             rc = json.load(open(jp, encoding="utf-8"))["Data"]["RootChunk"]
-            found += placements_in(rc, name[: -len(".streamingsector")])
+            found += placements_in(rc, name[: -len(".streamingsector")], match)
             os.remove(jp)
         return found, errors
     finally:

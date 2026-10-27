@@ -28,7 +28,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 SOURCE = os.path.join(REPO, "src", "wolvenkit", "source", "archive")
 DEFAULT_WOLVENKIT = r"D:\cp2077_work\build\tools\wolvenkit-10.0.0-beta.1\WolvenKit.CLI.exe"
-PAD_PREFIX = "user\\jackhumbert\\entities\\ltbf_landing_pad"
+PAD_PREFIX = "user\\jackhumbert\\entities\\ltbf_"  # every entity of ours (pads, hangar)
 
 
 def cli(wk, *args):

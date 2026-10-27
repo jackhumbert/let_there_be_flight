@@ -1,5 +1,5 @@
 {
- "comment": "Skeletons for pad_entity.py (from the in-game probe and vanilla colliders, 2026-10-26).",
+ "comment": "Skeletons for pad_entity.py (from the in-game probe and vanilla colliders, 2026-10-26). light_component: L_Main of base\\environment\\decoration\\lighting\\industrial\\fluorescent_light\\fluorescent_light_b_flicker.ent, on by default, no flicker or destruction (2026-10-27).",
  "ent": {
   "Header": {
    "WolvenKitVersion": "10.0.0-beta.1",
@@ -747,5 +747,179 @@
   },
   "vertices": [],
   "volumeModifier": 1
+ },
+ "light_component": {
+  "$type": "gameLightComponent",
+  "allowDistantLight": 1,
+  "areaRectSideA": 1,
+  "areaRectSideB": 1,
+  "areaShape": "ALS_Capsule",
+  "areaTwoSided": 1,
+  "attenuation": "LA_InverseSquare",
+  "autoHideDistance": 30,
+  "autoHideRange": 0,
+  "capsuleLength": 2.5,
+  "clampAttenuation": 1,
+  "colliderName": {
+   "$type": "CName",
+   "$storage": "string",
+   "$value": "None"
+  },
+  "colliderTag": {
+   "$type": "CName",
+   "$storage": "string",
+   "$value": "None"
+  },
+  "color": {
+   "$type": "Color",
+   "Alpha": 255,
+   "Blue": 249,
+   "Green": 98,
+   "Red": 91
+  },
+  "colorGroupSaturation": 100,
+  "contactShadows": "CSR_None",
+  "destructionEffect": {
+   "DepotPath": {
+    "$type": "ResourcePath",
+    "$storage": "uint64",
+    "$value": "0"
+   },
+   "Flags": "Soft"
+  },
+  "directional": 0,
+  "emissiveOnly": 0,
+  "enableContactShadows": 0,
+  "enableLocalShadows": 0,
+  "enableLocalShadowsForceStaticsOnly": 0,
+  "enableShadowAngleControl": 0,
+  "envColorGroup": "ECG_Default",
+  "EV": 0,
+  "flicker": {
+   "$type": "rendSLightFlickering",
+   "flickerPeriod": 0.200000003,
+   "flickerStrength": 0,
+   "positionOffset": 0
+  },
+  "forceLODLevel": -1,
+  "genericCurveSetOverride": {
+   "DepotPath": {
+    "$type": "ResourcePath",
+    "$storage": "uint64",
+    "$value": "0"
+   },
+   "Flags": "Default"
+  },
+  "group": "LG_Group0",
+  "id": "3517138206971998208",
+  "iesProfile": {
+   "DepotPath": {
+    "$type": "ResourcePath",
+    "$storage": "uint64",
+    "$value": "0"
+   },
+   "Flags": "Soft"
+  },
+  "initialTransform": null,
+  "innerAngle": 1,
+  "intensity": 1500,
+  "isDestructible": 0,
+  "isEnabled": 1,
+  "isReplicable": 0,
+  "lightChannel": "LC_Channel1, LC_Channel2, LC_Channel3, LC_Channel4, LC_Channel5, LC_Channel6, LC_Channel7, LC_Channel8, LC_ChannelWorld",
+  "localTransform": {
+   "$type": "WorldTransform",
+   "Orientation": {
+    "$type": "Quaternion",
+    "i": 0,
+    "j": -0.149549574,
+    "k": 0,
+    "r": 0.988754272
+   },
+   "Position": {
+    "$type": "WorldPosition",
+    "x": {
+     "$type": "FixedPoint",
+     "Bits": 0
+    },
+    "y": {
+     "$type": "FixedPoint",
+     "Bits": 13706
+    },
+    "z": {
+     "$type": "FixedPoint",
+     "Bits": 147470
+    }
+   }
+  },
+  "loopCurve": {
+   "$type": "CName",
+   "$storage": "string",
+   "$value": "None"
+  },
+  "loopTime": 2.5,
+  "materialZone": "Zero",
+  "meshBrokenAppearance": {
+   "$type": "CName",
+   "$storage": "string",
+   "$value": "None"
+  },
+  "name": {
+   "$type": "CName",
+   "$storage": "string",
+   "$value": "L_Main"
+  },
+  "noSpecular": 0,
+  "onStrength": 1,
+  "outerAngle": 181,
+  "parentTransform": null,
+  "pathTracingLightUsage": "PTLU_Everywhere",
+  "pathTracingOverrideScaleGI": 1,
+  "placedEditorData": null,
+  "portalAngleCutoff": 0,
+  "radius": 10,
+  "rayTracedShadowsPlatform": "RLSP_All",
+  "rayTracingContactShadowRange": -1,
+  "rayTracingIntensityScale": 1,
+  "rayTracingLightSourceRadius": -1,
+  "renderSceneLayerMask": "Default",
+  "roughnessBias": 20,
+  "rtxdiShadowStartingDistance": -1,
+  "scaleEnvProbes": 100,
+  "scaleGI": 100,
+  "scaleVolFog": 0,
+  "sceneDiffuse": 1,
+  "sceneSpecular": 0,
+  "sceneSpecularScale": 100,
+  "shadowAngle": -1,
+  "shadowFadeDistance": 10,
+  "shadowFadeRange": 5,
+  "shadowRadius": -1,
+  "shadowSoftnessMode": "LSSM_Default",
+  "softness": 2,
+  "sourceRadius": 0.0450000018,
+  "spotCapsule": 1,
+  "synchronizedLoop": 0,
+  "temperature": 0,
+  "turnOffCurve": {
+   "$type": "CName",
+   "$storage": "string",
+   "$value": "None"
+  },
+  "turnOffTime": 0.300000012,
+  "turnOnByDefault": 1,
+  "turnOnCurve": {
+   "$type": "CName",
+   "$storage": "string",
+   "$value": "None"
+  },
+  "turnOnTime": 0.300000012,
+  "type": "LT_Area",
+  "unit": "LU_Nit",
+  "useInEnvProbes": 0,
+  "useInFog": 0,
+  "useInGI": 0,
+  "useInParticles": 1,
+  "useInTransparents": 0
  }
 }

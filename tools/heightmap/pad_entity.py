@@ -197,8 +197,8 @@ def colliders(parts, tpl, blobs, library, stats, boxes_only=False):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("kit")
-    ap.add_argument("--blobs", required=True)
-    ap.add_argument("--geometry", required=True)
+    ap.add_argument("--blobs", help="pad_geometry.py npz (not needed when every shape is a box)")
+    ap.add_argument("--geometry", help="geometry_cache npz (not needed when every shape is a box)")
     ap.add_argument("--name", required=True)
     ap.add_argument("--depot", default=r"user\jackhumbert\entities")
     ap.add_argument("--templates", default=os.path.join(HERE, "pad_templates.json"))
@@ -209,8 +209,8 @@ def main():
     args = ap.parse_args()
     tpl = json.load(open(args.templates, encoding="utf-8"))
     parts = json.load(open(args.kit))["parts"]
-    blobs = np.load(args.blobs)
-    library = GeometryLibrary(args.geometry)
+    blobs = np.load(args.blobs) if args.blobs else {}
+    library = GeometryLibrary(args.geometry) if args.geometry else {}
     from collections import Counter
     stats = Counter()
 
