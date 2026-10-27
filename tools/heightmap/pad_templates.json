@@ -1,0 +1,751 @@
+{
+ "comment": "Skeletons for pad_entity.py (from the in-game probe and vanilla colliders, 2026-10-26).",
+ "ent": {
+  "Header": {
+   "WolvenKitVersion": "10.0.0-beta.1",
+   "WKitJsonVersion": "0.0.9",
+   "GameVersion": 2500,
+   "ExportedDateTime": "2026-10-26T23:22:10.7666835Z",
+   "DataType": "CR2W",
+   "ArchiveFileName": ""
+  },
+  "Data": {
+   "Version": 195,
+   "BuildVersion": 0,
+   "RootChunk": {
+    "$type": "entEntityTemplate",
+    "appearances": [
+     {
+      "$type": "entTemplateAppearance",
+      "appearanceName": {
+       "$type": "CName",
+       "$storage": "string",
+       "$value": "default"
+      },
+      "appearanceResource": {
+       "DepotPath": {
+        "$type": "ResourcePath",
+        "$storage": "string",
+        "$value": "user\\jackhumbert\\entities\\ltbf_probe_c.app"
+       },
+       "Flags": "Soft"
+      },
+      "name": {
+       "$type": "CName",
+       "$storage": "string",
+       "$value": "default"
+      }
+     }
+    ],
+    "backendDataOverrides": [],
+    "bindingOverrides": [],
+    "compiledData": {
+     "BufferId": "0",
+     "Flags": 7471104,
+     "Type": "WolvenKit.RED4.Archive.Buffer.RedPackage, WolvenKit.RED4, Version=10.0.0.0, Culture=neutral, PublicKeyToken=null",
+     "Data": {
+      "Version": 4,
+      "Sections": 0,
+      "CruidIndex": 0,
+      "CruidDict": {},
+      "Chunks": []
+     }
+    },
+    "compiledEntityLODFlags": 0,
+    "componentResolveSettings": [],
+    "components": [],
+    "cookingPlatform": "PLATFORM_PC",
+    "defaultAppearance": {
+     "$type": "CName",
+     "$storage": "string",
+     "$value": "default"
+    },
+    "entity": {
+     "HandleId": "2",
+     "Data": {
+      "$type": "entEntity",
+      "renderSceneLayerMask": "Default"
+     }
+    },
+    "includeInstanceBuffer": null,
+    "includes": [],
+    "inplaceResources": [],
+    "localData": null,
+    "resolvedDependencies": [],
+    "visualTagsSchema": null
+   },
+   "EmbeddedFiles": []
+  }
+ },
+ "app": {
+  "Header": {
+   "WolvenKitVersion": "10.0.0-beta.1",
+   "WKitJsonVersion": "0.0.9",
+   "GameVersion": 2500,
+   "ExportedDateTime": "2026-10-26T23:35:01.7755865Z",
+   "DataType": "CR2W",
+   "ArchiveFileName": ""
+  },
+  "Data": {
+   "Version": 195,
+   "BuildVersion": 0,
+   "RootChunk": {
+    "$type": "appearanceAppearanceResource",
+    "alternateAppearanceMapping": [],
+    "alternateAppearanceSettingName": {
+     "$type": "CName",
+     "$storage": "string",
+     "$value": "None"
+    },
+    "alternateAppearanceSuffixes": [],
+    "appearances": [
+     {
+      "HandleId": "0",
+      "Data": {
+       "$type": "appearanceAppearanceDefinition",
+       "censorFlags": 0,
+       "compiledData": {
+        "BufferId": "0",
+        "Flags": 0,
+        "Type": "WolvenKit.RED4.Archive.Buffer.RedPackage, WolvenKit.RED4, Version=10.0.0.0, Culture=neutral, PublicKeyToken=null",
+        "Data": {
+         "Version": 4,
+         "Sections": 7,
+         "CruidIndex": -1,
+         "CruidDict": {},
+         "Chunks": []
+        }
+       },
+       "components": [],
+       "cookedDataPathOverride": {
+        "DepotPath": {
+         "$type": "ResourcePath",
+         "$storage": "uint64",
+         "$value": "0"
+        },
+        "Flags": "Soft"
+       },
+       "forcedLodDistance": 0,
+       "hitRepresentationOverrides": [],
+       "inheritedVisualTags": {
+        "$type": "redTagList",
+        "tags": []
+       },
+       "looseDependencies": [],
+       "name": {
+        "$type": "CName",
+        "$storage": "string",
+        "$value": "default"
+       },
+       "parametersBuffer": {
+        "$type": "entEntityParametersBuffer",
+        "parameterBuffers": []
+       },
+       "parentAppearance": {
+        "$type": "CName",
+        "$storage": "string",
+        "$value": "None"
+       },
+       "partsMasks": [],
+       "partsOverrides": [],
+       "partsValues": [],
+       "proxyMesh": {
+        "DepotPath": {
+         "$type": "ResourcePath",
+         "$storage": "string",
+         "$value": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\5711316\\gate_1.mesh"
+        },
+        "Flags": "Soft"
+       },
+       "proxyMeshAppearance": {
+        "$type": "CName",
+        "$storage": "string",
+        "$value": "None"
+       },
+       "resolvedDependencies": [],
+       "visualTags": {
+        "$type": "redTagList",
+        "tags": []
+       }
+      }
+     }
+    ],
+    "baseEntity": {
+     "DepotPath": {
+      "$type": "ResourcePath",
+      "$storage": "string",
+      "$value": "user\\jackhumbert\\entities\\ltbf_probe_c.ent"
+     },
+     "Flags": "Default"
+    },
+    "baseEntityType": {
+     "$type": "CName",
+     "$storage": "string",
+     "$value": "None"
+    },
+    "baseType": {
+     "$type": "CName",
+     "$storage": "string",
+     "$value": "None"
+    },
+    "censorshipMapping": [],
+    "commonCookData": {
+     "DepotPath": {
+      "$type": "ResourcePath",
+      "$storage": "uint64",
+      "$value": "0"
+     },
+     "Flags": "Soft"
+    },
+    "cookingPlatform": "PLATFORM_PC",
+    "DismEffects": [],
+    "DismWoundConfig": {
+     "$type": "entdismembermentWoundsConfigSet",
+     "Configs": [
+      {
+       "HandleId": "1",
+       "Data": {
+        "$type": "entdismembermentWoundConfigContainer",
+        "AppearanceName": {
+         "$type": "CName",
+         "$storage": "string",
+         "$value": "default"
+        },
+        "Wounds": []
+       }
+      },
+      {
+       "HandleId": "2",
+       "Data": {
+        "$type": "entdismembermentWoundConfigContainer",
+        "AppearanceName": {
+         "$type": "CName",
+         "$storage": "string",
+         "$value": "gate_1_entropy"
+        },
+        "Wounds": []
+       }
+      },
+      {
+       "HandleId": "3",
+       "Data": {
+        "$type": "entdismembermentWoundConfigContainer",
+        "AppearanceName": {
+         "$type": "CName",
+         "$storage": "string",
+         "$value": "gate_1_neomilitary"
+        },
+        "Wounds": []
+       }
+      },
+      {
+       "HandleId": "4",
+       "Data": {
+        "$type": "entdismembermentWoundConfigContainer",
+        "AppearanceName": {
+         "$type": "CName",
+         "$storage": "string",
+         "$value": "gate_1_purple"
+        },
+        "Wounds": []
+       }
+      },
+      {
+       "HandleId": "5",
+       "Data": {
+        "$type": "entdismembermentWoundConfigContainer",
+        "AppearanceName": {
+         "$type": "CName",
+         "$storage": "string",
+         "$value": "gate_maelstrom"
+        },
+        "Wounds": []
+       }
+      },
+      {
+       "HandleId": "6",
+       "Data": {
+        "$type": "entdismembermentWoundConfigContainer",
+        "AppearanceName": {
+         "$type": "CName",
+         "$storage": "string",
+         "$value": "shutter_w300_h250_default"
+        },
+        "Wounds": []
+       }
+      },
+      {
+       "HandleId": "7",
+       "Data": {
+        "$type": "entdismembermentWoundConfigContainer",
+        "AppearanceName": {
+         "$type": "CName",
+         "$storage": "string",
+         "$value": "shutter_w300_h250_green"
+        },
+        "Wounds": []
+       }
+      },
+      {
+       "HandleId": "8",
+       "Data": {
+        "$type": "entdismembermentWoundConfigContainer",
+        "AppearanceName": {
+         "$type": "CName",
+         "$storage": "string",
+         "$value": "shutter_w300_h250_green2"
+        },
+        "Wounds": []
+       }
+      },
+      {
+       "HandleId": "9",
+       "Data": {
+        "$type": "entdismembermentWoundConfigContainer",
+        "AppearanceName": {
+         "$type": "CName",
+         "$storage": "string",
+         "$value": "shutter_w300_h250_grey"
+        },
+        "Wounds": []
+       }
+      },
+      {
+       "HandleId": "10",
+       "Data": {
+        "$type": "entdismembermentWoundConfigContainer",
+        "AppearanceName": {
+         "$type": "CName",
+         "$storage": "string",
+         "$value": "shutter_w300_h250_military_v1"
+        },
+        "Wounds": []
+       }
+      },
+      {
+       "HandleId": "11",
+       "Data": {
+        "$type": "entdismembermentWoundConfigContainer",
+        "AppearanceName": {
+         "$type": "CName",
+         "$storage": "string",
+         "$value": "shutter_w300_h250_red"
+        },
+        "Wounds": []
+       }
+      },
+      {
+       "HandleId": "12",
+       "Data": {
+        "$type": "entdismembermentWoundConfigContainer",
+        "AppearanceName": {
+         "$type": "CName",
+         "$storage": "string",
+         "$value": "shutter_w300_h250_yellow"
+        },
+        "Wounds": []
+       }
+      },
+      {
+       "HandleId": "13",
+       "Data": {
+        "$type": "entdismembermentWoundConfigContainer",
+        "AppearanceName": {
+         "$type": "CName",
+         "$storage": "string",
+         "$value": "shutter_w600_h400_default"
+        },
+        "Wounds": []
+       }
+      },
+      {
+       "HandleId": "14",
+       "Data": {
+        "$type": "entdismembermentWoundConfigContainer",
+        "AppearanceName": {
+         "$type": "CName",
+         "$storage": "string",
+         "$value": "shutter_w600_h400_green"
+        },
+        "Wounds": []
+       }
+      },
+      {
+       "HandleId": "15",
+       "Data": {
+        "$type": "entdismembermentWoundConfigContainer",
+        "AppearanceName": {
+         "$type": "CName",
+         "$storage": "string",
+         "$value": "shutter_w600_h400_green_2"
+        },
+        "Wounds": []
+       }
+      },
+      {
+       "HandleId": "16",
+       "Data": {
+        "$type": "entdismembermentWoundConfigContainer",
+        "AppearanceName": {
+         "$type": "CName",
+         "$storage": "string",
+         "$value": "shutter_w600_h400_grey"
+        },
+        "Wounds": []
+       }
+      },
+      {
+       "HandleId": "17",
+       "Data": {
+        "$type": "entdismembermentWoundConfigContainer",
+        "AppearanceName": {
+         "$type": "CName",
+         "$storage": "string",
+         "$value": "shutter_w600_h400_military_v1"
+        },
+        "Wounds": []
+       }
+      },
+      {
+       "HandleId": "18",
+       "Data": {
+        "$type": "entdismembermentWoundConfigContainer",
+        "AppearanceName": {
+         "$type": "CName",
+         "$storage": "string",
+         "$value": "shutter_w600_h400_red"
+        },
+        "Wounds": []
+       }
+      },
+      {
+       "HandleId": "19",
+       "Data": {
+        "$type": "entdismembermentWoundConfigContainer",
+        "AppearanceName": {
+         "$type": "CName",
+         "$storage": "string",
+         "$value": "shutter_w600_h400_yellow"
+        },
+        "Wounds": []
+       }
+      }
+     ]
+    },
+    "forceCompileProxy": 0,
+    "generatePlayerBlockingCollisionForProxy": 1,
+    "partType": {
+     "$type": "CName",
+     "$storage": "string",
+     "$value": "None"
+    },
+    "preset": {
+     "$type": "CName",
+     "$storage": "string",
+     "$value": "None"
+    },
+    "proxyPolyCount": 1400,
+    "Wounds": []
+   },
+   "EmbeddedFiles": []
+  }
+ },
+ "mesh_component": {
+  "$type": "entMeshComponent",
+  "autoHideDistance": 0,
+  "castLocalShadows": "Always",
+  "castRayTracedGlobalShadows": "Always",
+  "castRayTracedLocalShadows": "Always",
+  "castShadows": "Always",
+  "chunkMask": "18446744073709551615",
+  "forcedLodDistance": "Default",
+  "forceLODLevel": -1,
+  "id": "9000000000000000001",
+  "isEnabled": 1,
+  "isReplicable": 0,
+  "localTransform": {
+   "$type": "WorldTransform",
+   "Orientation": {
+    "$type": "Quaternion",
+    "i": 0,
+    "j": 0,
+    "k": 0,
+    "r": 1
+   },
+   "Position": {
+    "$type": "WorldPosition",
+    "x": {
+     "$type": "FixedPoint",
+     "Bits": 0
+    },
+    "y": {
+     "$type": "FixedPoint",
+     "Bits": 0
+    },
+    "z": {
+     "$type": "FixedPoint",
+     "Bits": 0
+    }
+   }
+  },
+  "LODMode": "AlwaysVisible",
+  "mesh": {
+   "DepotPath": {
+    "$type": "ResourcePath",
+    "$storage": "string",
+    "$value": "base\\environment\\architecture\\common\\tech_canopy\\tech_canopy_d_6m_straight_a.mesh"
+   },
+   "Flags": "Default"
+  },
+  "meshAppearance": {
+   "$type": "CName",
+   "$storage": "string",
+   "$value": "default"
+  },
+  "motionBlurScale": 1,
+  "name": {
+   "$type": "CName",
+   "$storage": "string",
+   "$value": "deck"
+  },
+  "navigationImpact": {
+   "$type": "NavGenNavigationSetting",
+   "navmeshImpact": "Ignored"
+  },
+  "numInstances": 0,
+  "objectTypeID": "ROT_Static",
+  "order": 0,
+  "overrideMeshNavigationImpact": 1,
+  "parentTransform": null,
+  "renderingPlane": "RPl_Scene",
+  "renderSceneLayerMask": "Default",
+  "version": 0,
+  "visualScale": {
+   "$type": "Vector3",
+   "X": 1,
+   "Y": 1,
+   "Z": 1
+  }
+ },
+ "collider_component": {
+  "$type": "entColliderComponent",
+  "colliders": [],
+  "comOffset": {
+   "$type": "Transform",
+   "orientation": {
+    "$type": "Quaternion",
+    "i": 0,
+    "j": 0,
+    "k": 0,
+    "r": 1
+   },
+   "position": {
+    "$type": "Vector4",
+    "W": 0,
+    "X": 0,
+    "Y": 0,
+    "Z": 0
+   }
+  },
+  "dynamicTrafficSetting": {
+   "$type": "TrafficGenDynamicTrafficSetting",
+   "impact": "Ignored"
+  },
+  "filterData": {
+   "HandleId": "1",
+   "Data": {
+    "$type": "physicsFilterData",
+    "customFilterData": null,
+    "preset": {
+     "$type": "CName",
+     "$storage": "string",
+     "$value": "World Static"
+    },
+    "queryFilter": {
+     "$type": "physicsQueryFilter",
+     "mask1": "0",
+     "mask2": "143769604"
+    },
+    "simulationFilter": {
+     "$type": "physicsSimulationFilter",
+     "mask1": "376836",
+     "mask2": "5070"
+    }
+   }
+  },
+  "id": "9000000000000000002",
+  "inertia": {
+   "$type": "Vector3",
+   "X": 97.6953125,
+   "Y": 132.8125,
+   "Z": 35.1953125
+  },
+  "isEnabled": 1,
+  "isReplicable": 0,
+  "localTransform": {
+   "$type": "WorldTransform",
+   "Orientation": {
+    "$type": "Quaternion",
+    "i": 0,
+    "j": 0,
+    "k": 0,
+    "r": 1
+   },
+   "Position": {
+    "$type": "WorldPosition",
+    "x": {
+     "$type": "FixedPoint",
+     "Bits": 0
+    },
+    "y": {
+     "$type": "FixedPoint",
+     "Bits": 0
+    },
+    "z": {
+     "$type": "FixedPoint",
+     "Bits": 0
+    }
+   }
+  },
+  "mass": 187.5,
+  "massOverride": -1,
+  "name": {
+   "$type": "CName",
+   "$storage": "string",
+   "$value": "deck_collider"
+  },
+  "parentTransform": null,
+  "simulationType": "Static",
+  "startInactive": 0,
+  "useCCD": 0,
+  "volume": 0.149999991
+ },
+ "box": {
+  "$type": "physicsColliderBox",
+  "filterData": null,
+  "halfExtents": {
+   "$type": "Vector3",
+   "X": 3.0,
+   "Y": 1.5,
+   "Z": 0.1
+  },
+  "isImported": 0,
+  "isObstacle": 0,
+  "isQueryShapeOnly": 0,
+  "localToBody": {
+   "$type": "Transform",
+   "orientation": {
+    "$type": "Quaternion",
+    "i": 0,
+    "j": 0,
+    "k": 0,
+    "r": 1
+   },
+   "position": {
+    "$type": "Vector4",
+    "W": 0,
+    "X": 0,
+    "Y": 0,
+    "Z": -0.1
+   }
+  },
+  "material": {
+   "$type": "CName",
+   "$storage": "string",
+   "$value": "metal_painted.physmat"
+  },
+  "materialApperanceOverrides": [],
+  "tag": {
+   "$type": "CName",
+   "$storage": "string",
+   "$value": "None"
+  },
+  "volumeModifier": 1
+ },
+ "mesh_collider": {
+  "$type": "physicsColliderMesh",
+  "compiledGeometryBuffer": {
+   "BufferId": "2",
+   "Flags": 7471104,
+   "Bytes": ""
+  },
+  "faceMaterials": [],
+  "filterData": null,
+  "isImported": 0,
+  "isQueryShapeOnly": 0,
+  "localToBody": {
+   "$type": "Transform",
+   "orientation": {
+    "$type": "Quaternion",
+    "i": 0,
+    "j": 0,
+    "k": 0,
+    "r": 1
+   },
+   "position": {
+    "$type": "Vector4",
+    "W": 0,
+    "X": 0,
+    "Y": 0,
+    "Z": 0
+   }
+  },
+  "material": {
+   "$type": "CName",
+   "$storage": "string",
+   "$value": "metal_painted.physmat"
+  },
+  "materialApperanceOverrides": [],
+  "tag": {
+   "$type": "CName",
+   "$storage": "string",
+   "$value": "None"
+  },
+  "unk1": 0,
+  "unk2": [],
+  "volumeModifier": 1
+ },
+ "convex_collider": {
+  "$type": "physicsColliderConvex",
+  "compiledGeometryBuffer": {
+   "BufferId": "1",
+   "Flags": 7471104,
+   "Bytes": ""
+  },
+  "filterData": null,
+  "indexBuffer": [],
+  "isImported": 0,
+  "isQueryShapeOnly": 0,
+  "localToBody": {
+   "$type": "Transform",
+   "orientation": {
+    "$type": "Quaternion",
+    "i": 6.20629312e-17,
+    "j": 0.707106829,
+    "k": 0.707106829,
+    "r": -1.47196178e-17
+   },
+   "position": {
+    "$type": "Vector4",
+    "W": 0,
+    "X": 0,
+    "Y": 0,
+    "Z": 0
+   }
+  },
+  "material": {
+   "$type": "CName",
+   "$storage": "string",
+   "$value": "metal_painted.physmat"
+  },
+  "materialApperanceOverrides": [],
+  "polygonVertices": [],
+  "tag": {
+   "$type": "CName",
+   "$storage": "string",
+   "$value": "None"
+  },
+  "vertices": [],
+  "volumeModifier": 1
+ }
+}
