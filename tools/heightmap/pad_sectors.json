@@ -1,0 +1,23 @@
+{
+  "comment": "Our pad entities placed in the world by pad_sector.py (docs/helipads.md, step 8). sector: our sector that holds them (a second sector of our own with its own descriptor did not load, so they share this one). base_box: the descriptor box the sector's other nodes need (the Watson car spawners). pads: one per visual-only pad, the part entities (pad_entity.py, one per 100 meshes) at the proxy's transform; streaming_distance as far as the hidden proxy drew (its forcedAutoHideDistance); node_id: globalNodeId of the first part, the next ones count up.",
+  "sector": "user\\jackhumbert\\sectors\\helipad_vehicles.streamingsector",
+  "block": "user\\jackhumbert\\all.streamingblock",
+  "base_box": [[-1337.85974, 1015.79688, -32.7368622], [-1037.85974, 1315.79688, 267.263123]],
+  "pads": [
+    {
+      "pad": "8040860436745735587",
+      "note": "499 m tower v2; proxy in exterior_-3_0_0_3, hidden through src/navigation/hidden_nodes.txt",
+      "pos": [-1212.96021, 81.1298828, 495.75],
+      "yaw": 22.490910626517607,
+      "streaming_distance": 800.0,
+      "node_id": 1000000000000100,
+      "entities": [
+        "user\\jackhumbert\\entities\\ltbf_landing_pad_v2.ent",
+        "user\\jackhumbert\\entities\\ltbf_landing_pad_v2_1.ent",
+        "user\\jackhumbert\\entities\\ltbf_landing_pad_v2_2.ent",
+        "user\\jackhumbert\\entities\\ltbf_landing_pad_v2_3.ent",
+        "user\\jackhumbert\\entities\\ltbf_landing_pad_v2_4.ent"
+      ]
+    }
+  ]
+}

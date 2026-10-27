@@ -71,6 +71,14 @@ python pads.py build W\pads --navmap W\navmap.bin -o W\pads\helipads.json --prev
 python flat_spots.py W\navmap.bin -6400 -400 -2300 1200 -o spaceport.png --radius 12   # spots for helipads_overrides.json
 ```
 
+Visual-only pads (`docs/helipads.md` step 8, "Recipe"): `pad_collision.py` finds them (unbundle
+the level-3 sectors too: `-r "_compiled.default.exterior_-?\d+_-?\d+_-?\d+_3\.streamingsector$"`,
+517 files, and run `sectors.py` on them); `pad_donor.py` / `pad_kit.py` / `pad_geometry.py` /
+`pad_appearances.py` / `pad_entity.py` turn a complete prefab into our pad entity;
+`pad_sector.py` places the entities listed in `pad_sectors.json` in our sector and fits its
+streaming block descriptor. Hide the proxy in `src/navigation/hidden_nodes.txt`, list the pad
+with `own_deck` in `helipads_overrides.json`.
+
 Invisible blockers (`blockers.py`, ~20 min with 10 jobs): collision groups using the presets
 "Vehicle Blocker" / "Block Player and Vehicles", for removal with ArchiveXL `nodeDeletions` in
 `src/archive_xl/let_there_be_flight.archive.json` (index = nodeData index, expectedNodes = the
