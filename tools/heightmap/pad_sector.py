@@ -11,6 +11,10 @@ each pad's position +- its streaming distance, and writes both files back.
   python pad_sector.py [--config pad_sectors.json] [--wolvenkit <WolvenKit 10 CLI>]
   then: python tools/pack_archive.py
 
+"spawners" (optional): vehicle spawners, {"record": "Vehicle.<id>", "pos", "yaw", "node_id",
+"streaming_distance"}, copies of the sector's first spawner (a Watson pad car) with debugName
+"[LTBF spawner] <record>"; like that one they give a fresh car on every load.
+
 Lessons (2026-10-27): a second sector of our own with its own descriptor in the same block never
 loaded (not even at a spot where the same nodes worked), so all pads share this sector; the
 descriptor box gates loading, so it must cover every node.
@@ -37,10 +41,28 @@ def cli(wk, *args):
         raise SystemExit(f"WolvenKit {' '.join(args[:2])} failed:\n{r.stdout[-2000:]}{r.stderr[-1000:]}")
 
 
+SPAWNER_PREFIX = "[LTBF spawner] "  # debugName of the vehicle spawners this tool adds
+
+
 def is_pad(node):
     d = node["Data"]
+    if d.get("$type") == "worldPopulationSpawnerNode":
+        return str(d.get("debugName", {}).get("$value", "")).startswith(SPAWNER_PREFIX)
     return d.get("$type") == "worldEntityNode" and \
         str(d.get("entityTemplate", {}).get("DepotPath", {}).get("$value", "")).startswith(PAD_PREFIX)
+
+
+def place(data, x, y, z, yaw, node_id, streaming_distance, index):
+    d = copy.deepcopy(data)
+    h = math.radians(yaw) / 2.0
+    d["nodeIdx"] = str(index)
+    d["globalNodeId"]["hash"] = str(node_id)
+    d["transform"]["position"] = {"$type": "Vector4", "W": 0, "X": x, "Y": y, "Z": z}
+    d["transform"]["orientation"].update(i=0, j=0, k=math.sin(h), r=math.cos(h))
+    for key in ("streamingRefPoint", "preboostStreamingRefPoint", "secondaryRefPointPosition"):
+        d[key] = {"$type": "Vector3", "X": x, "Y": y, "Z": z}
+    d["streamingDistance"] = float(streaming_distance)
+    return d
 
 
 def renumber_handles(doc):
@@ -63,10 +85,16 @@ def build_sector(doc, cfg):
     rc = doc["Data"]["RootChunk"]
     nodes, data = rc["nodes"], rc["nodeData"]["Data"]
     pad_idx = [i for i, n in enumerate(nodes) if is_pad(n)]
-    if not pad_idx:
+    entity_idx = [i for i in pad_idx if nodes[i]["Data"]["$type"] == "worldEntityNode"]
+    if not entity_idx:
         raise SystemExit("the sector has no pad node to copy")
-    template_node = copy.deepcopy(nodes[pad_idx[0]])
-    template_data = copy.deepcopy(next(d for d in data if int(d["nodeIdx"]) == pad_idx[0]))
+    template_node = copy.deepcopy(nodes[entity_idx[0]])
+    template_data = copy.deepcopy(next(d for d in data if int(d["nodeIdx"]) == entity_idx[0]))
+    # vehicle spawners copy the first spawner node (the Watson pad's, which this tool never touches)
+    spawner_idx = next(i for i, n in enumerate(nodes)
+                       if n["Data"]["$type"] == "worldPopulationSpawnerNode" and i not in pad_idx)
+    spawner_node = copy.deepcopy(nodes[spawner_idx])
+    spawner_data = copy.deepcopy(next(d for d in data if int(d["nodeIdx"]) == spawner_idx))
     # keep the other nodes, renumbered
     remap, kept = {}, []
     for i, n in enumerate(nodes):
@@ -80,21 +108,21 @@ def build_sector(doc, cfg):
             kept_data.append(d)
     for pad in cfg["pads"]:
         x, y, z = pad["pos"]
-        h = math.radians(pad["yaw"]) / 2.0
         for j, path in enumerate(pad["entities"]):
             n_ = copy.deepcopy(template_node)
             n_["Data"]["entityTemplate"]["DepotPath"]["$value"] = path
             n_["Data"]["debugName"]["$value"] = path.rsplit("\\", 1)[-1][:-4]
-            d = copy.deepcopy(template_data)
-            d["nodeIdx"] = str(len(kept))
+            kept_data.append(place(template_data, x, y, z, pad["yaw"], pad["node_id"] + j,
+                                   pad["streaming_distance"], len(kept)))
             kept.append(n_)
-            d["globalNodeId"]["hash"] = str(pad["node_id"] + j)
-            d["transform"]["position"] = {"$type": "Vector4", "W": 0, "X": x, "Y": y, "Z": z}
-            d["transform"]["orientation"].update(i=0, j=0, k=math.sin(h), r=math.cos(h))
-            for key in ("streamingRefPoint", "preboostStreamingRefPoint", "secondaryRefPointPosition"):
-                d[key] = {"$type": "Vector3", "X": x, "Y": y, "Z": z}
-            d["streamingDistance"] = float(pad["streaming_distance"])
-            kept_data.append(d)
+    for sp in cfg.get("spawners", []):
+        n_ = copy.deepcopy(spawner_node)
+        n_["Data"]["objectRecordId"]["$value"] = sp["record"]
+        n_["Data"]["debugName"]["$value"] = SPAWNER_PREFIX + sp["record"]
+        x, y, z = sp["pos"]
+        kept_data.append(place(spawner_data, x, y, z, sp["yaw"], sp["node_id"],
+                               sp.get("streaming_distance", spawner_data["streamingDistance"]), len(kept)))
+        kept.append(n_)
     rc["nodes"] = kept
     rc["nodeData"]["Data"] = kept_data
     rc["persistentNodes"] = copy.deepcopy(kept_data)
@@ -104,9 +132,9 @@ def build_sector(doc, cfg):
 
 def fit_block(doc, cfg):
     (x0, y0, z0), (x1, y1, z1) = cfg["base_box"]
-    for pad in cfg["pads"]:
+    for pad in cfg["pads"] + cfg.get("spawners", []):
         x, y, z = pad["pos"]
-        r = pad["streaming_distance"]
+        r = pad.get("streaming_distance", 100.0)
         x0, y0, z0 = min(x0, x - r), min(y0, y - r), min(z0, z - r)
         x1, y1, z1 = max(x1, x + r), max(y1, y + r), max(z1, z + r)
     for desc in doc["Data"]["RootChunk"]["descriptors"]:
