@@ -73,6 +73,9 @@ struct PlanParams {
   // street at 85 m/s and hit a traffic light's arm, 2026-10-27
   float lineFloorClearance = 12.0f;
   float lineFloorEnds = 60.0f;   // m
+  // m under anything overhead the line keeps (a skybridge, a deck); the middle of the gap where
+  // there is not room for this and the floor clearance
+  float lineCeilingClearance = 6.0f;
   float linePush = 0.1f;         // m
   float lineStep = 0.08f;        // gradient step per pass (stable below 0.125)
   // weight of the vertical bend against the sideways one: crests and dips are pushed over and

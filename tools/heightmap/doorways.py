@@ -10,9 +10,10 @@ already has a doorway section gets it replaced.
 
     python tools/heightmap/doorways.py NAVMAP.bin OUT.bin [--area x0,y0,x1,y1] [--navplan build/navplan.exe]
 
-The Race's costs are fixed in navplan (NAVPLAN_DOORWAY_COUNT); if the Autopilot's race route fields
-change (raceRouteHeight, raceClimbCost, raceMinPassage), rebake: a set made with other costs is not
-used, and the plugin falls back to working blocks out as it goes.
+The Race's costs (height 40, climb 0.5, minimum passage 12) are fixed in navplan
+(NAVPLAN_DOORWAY_COUNT); if the Autopilot's race route fields change (raceRouteHeight,
+raceClimbCost, raceMinPassage), rebake: a set made with other costs is not used, and the plugin
+falls back to working blocks out as it goes.
 """
 
 import argparse

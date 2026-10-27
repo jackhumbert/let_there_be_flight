@@ -179,6 +179,24 @@ std::vector<Vec3> Resample(const std::vector<Vec3> &aPoints, float aSpacing) {
 // or at least no less than before. Points ahead of a corner move out and the apex moves
 // in, so the bend spreads over all the room there is. Coarse spacings first (the bend of a long
 // corner spreads over a few points per pass there), then finer ones down to lineSpacing.
+// The heights the line may take in a gap, at aAlong of aLength metres along it: lineFloorClearance
+// over the floor (but within lineFloorEnds of either end, where it takes off and lands) and
+// lineCeilingClearance under anything overhead; the middle of the gap where it has not room for
+// both. The ceiling was only a push of linePush a pass, which the smoothing undid: west-east went
+// under a skybridge a metre from its underside, one point left out of line with the rest, and the
+// speed plan braked from 96 to 39 m/s for that kink (2026-10-27).
+void Band(const Gap &aGap, float aAlong, float aLength, const PlanParams &aParams, float &aLo, float &aHi) {
+  const bool ends = aAlong <= aParams.lineFloorEnds || aLength - aAlong <= aParams.lineFloorEnds;
+  aLo = aGap.bottom;
+  aHi = std::isfinite(aGap.top) ? aGap.top - aParams.lineCeilingClearance : kInf;
+  if (!ends) {
+    aLo = aGap.bottom + aParams.lineFloorClearance;
+  }
+  if (aLo > aHi) {
+    aLo = aHi = 0.5f * (aGap.bottom + aGap.top);
+  }
+}
+
 std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute, const PlanParams &aParams) {
   std::vector<Vec3> pts = aRoute;
   const float side = aParams.lineSide;
@@ -222,22 +240,28 @@ std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute
             }
           }
         }
-        bool low = false; // under the floor clearance: lifted even where the line is straight
-        if (along[i] > aParams.lineFloorEnds && along.back() - along[i] > aParams.lineFloorEnds) {
+        // outside its height band (Band): moved into it even where the line is straight
+        bool outside = false;
+        {
           Gap here;
-          low = aMap.FindGap(p.x, p.y, p.z, here) && p.z < std::min(here.bottom + aParams.lineFloorClearance, here.top - 1.0f) - 0.01f;
+          if (aMap.FindGap(p.x, p.y, p.z, here)) {
+            float lo, hi;
+            Band(here, along[i], along.back(), aParams, lo, hi);
+            outside = p.z < lo - 0.01f || p.z > hi + 0.01f;
+          }
         }
-        if (!low && g.x * g.x + g.y * g.y + g.z * g.z < 1e-4f) {
+        if (!outside && g.x * g.x + g.y * g.y + g.z * g.z < 1e-4f) {
           continue;
         }
         float before = -1.0f; // only needed when the move is not free with room to the sides
         for (float step = aParams.lineStep; step > aParams.lineStep * 0.2f; step *= 0.5f) {
           Vec3 q{p.x - g.x * step, p.y - g.y * step, p.z - g.z * step};
-          // floor clearance: up to lineFloorClearance over the floor below, where the gap has room
+          // into the height band of its gap: clear of the floor below and anything overhead
           Gap gap;
-          if (along[i] > aParams.lineFloorEnds && along.back() - along[i] > aParams.lineFloorEnds &&
-              aMap.FindGap(q.x, q.y, q.z, gap)) {
-            q.z = std::max(q.z, std::min(gap.bottom + aParams.lineFloorClearance, gap.top - 1.0f));
+          if (aMap.FindGap(q.x, q.y, q.z, gap)) {
+            float lo, hi;
+            Band(gap, along[i], along.back(), aParams, lo, hi);
+            q.z = std::clamp(q.z, lo, hi);
           }
           float after = std::min(ClearSides(aMap, b, q, side), ClearSides(aMap, q, c, side));
           bool ok = after >= 1.0f;

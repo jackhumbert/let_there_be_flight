@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
     float x0, y0, x1, y1;
     if (std::sscanf(area, "%f,%f,%f,%f", &x0, &y0, &x1, &y1) == 4) {
       Navigation::PlanParams race;
-      race.minPassage = 8.0f;
+      race.minPassage = 12.0f; // FlightModeAutopilot.raceMinPassage
       race.preferredHeight = 40.0f;
       race.climbCost = 0.5f;
       auto n = Navigation::WorkOutDoorways(map, race, x0, y0, x1, y1);

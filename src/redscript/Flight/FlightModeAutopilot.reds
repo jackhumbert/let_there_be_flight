@@ -194,7 +194,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // Northside to the Pacifica coast went round the city over the water (5.45 km, against 5.24 km
   // through it) once the doorway search could find the cheapest route
   public let raceClimbCost: Float = 0.5;      // per metre of climbing, against 1 per metre flown
-  public let raceMinPassage: Float = 8.0;     // m of free height the route may squeeze through at least (0 = any)
+  // 12 (2026-10-27): at 8 west-east threaded an 11.5 m slot between a deck and a skybridge at 85 m/s,
+  // kinking the line (laptime 53.6 s, 47.4 s over it). The "no route at all" at 12 above was before
+  // the take-off was part of the plan; a start with no 12 m way out still gets the retry without it.
+  // The doorways in navmap.bin are baked with this value (tools/heightmap/doorways.py): rebake if it changes.
+  public let raceMinPassage: Float = 12.0;    // m of free height the route may squeeze through at least (0 = any)
   public let raceSearchWeight: Float = 1.2;   // A* heuristic weight, 1 = optimal (slower to plan)
   // per 45 degrees the route turns over a few cells (as metres flown): straighter, more open
   // corridors, whose bends the racing line takes wide. At 5 the tightest bend from the street
