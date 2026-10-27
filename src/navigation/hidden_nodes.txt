@@ -1,0 +1,6 @@
+# Let There Be Flight: node placements to hide when their sector loads (src/red4ext/Navigation/Blockers).
+# By hand. S = sector path, N = globalNodeId and the x y it is stored at (checked before hiding).
+# The 499 m tower v2 landing pad's proxy: our pad entity in helipad_vehicles.streamingsector
+# replaces it (docs/helipads.md, step 8).
+S base\worlds\03_night_city\_compiled\default\exterior_-3_0_0_3.streamingsector
+N 8040860436745735587 -1212.96021 81.1298828

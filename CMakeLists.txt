@@ -82,6 +82,7 @@ configure_mod_file(src/navigation/helipads.tsv red4ext/plugins/${MOD_SLUG}/helip
 # Invisible vehicle blockers the plugin moves out of the world as sectors load (tools/heightmap/blockers.py export).
 # Without the file the hook in Hooks/StreamingSector_PostLoad.cpp does nothing (A/B in docs/autodrive-flight-plan.md).
 configure_mod_file(src/navigation/blockers.txt red4ext/plugins/${MOD_SLUG}/blockers.txt)
+configure_mod_file(src/navigation/hidden_nodes.txt red4ext/plugins/${MOD_SLUG}/hidden_nodes.txt)
 
 configure_red4ext(src/red4ext)
 # configure_red4ext_addresses(Addresses.hpp)

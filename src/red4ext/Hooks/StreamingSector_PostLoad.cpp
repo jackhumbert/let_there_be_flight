@@ -4,7 +4,10 @@
 #include <RED4ext/Scripting/Natives/Generated/world/CookedCollisionNode.hpp>
 #include <RED4ext/Scripting/Natives/Generated/world/Node.hpp>
 #include <RED4ext/Scripting/Natives/Generated/world/StreamingSector.hpp>
+#include <cmath>
+#include <spdlog/fmt/fmt.h>
 #include <spdlog/spdlog.h>
+#include <string>
 
 using namespace RED4ext;
 
@@ -69,6 +72,43 @@ size_t MoveActors(world::CookedCollisionNode *aNode, const std::vector<Navigatio
   }
   return found;
 }
+
+// A placement in nodeSetups (CompiledNodeInstanceSetupInfo, layout from ArchiveXL's
+// Red/StreamingSector.hpp, 0x90 bytes before 2.5): +00 position (Vector4), +20 scale (Vector3),
+// +58 globalNodeID; still so on 2.5 (2026-10-27, the tower pad proxy). The record is found by its
+// globalNodeID and only touched when its stored x y are the listed ones, in case that changes. Hidden as ArchiveXL's
+// nodeDeletions hides a node: 2 km below the map, scale 0.
+constexpr uintptr_t SetupIdOffset = 0x58;
+constexpr uintptr_t SetupScaleOffset = 0x20;
+
+bool HideNode(DataBuffer &aSetups, const Navigation::Blockers::Node &aNode) {
+  auto *data = static_cast<uint8_t *>(aSetups.buffer.data);
+  uint32_t size = aSetups.buffer.size;
+  if (!data) {
+    return false;
+  }
+  for (uint32_t at = SetupIdOffset; at + sizeof(uint64_t) <= size; at += 8) {
+    if (*reinterpret_cast<const uint64_t *>(data + at) != aNode.id) {
+      continue;
+    }
+    auto *record = reinterpret_cast<float *>(data + at - SetupIdOffset);
+    if (std::abs(record[0] - aNode.x) < 0.05f && std::abs(record[1] - aNode.y) < 0.05f) {
+      record[2] = -2000.0f;
+      auto *scale = reinterpret_cast<float *>(data + at - SetupIdOffset + SetupScaleOffset);
+      scale[0] = scale[1] = scale[2] = 0.0f;
+      return true;
+    }
+    // not the layout this was written for: log the words around the id to find it
+    auto *words = reinterpret_cast<const float *>(data + at);
+    std::string dump;
+    for (int i = -36; i < 12 && at + i * 4 + 4 <= size && static_cast<int>(at) + i * 4 >= 0; ++i) {
+      dump += fmt::format(" {:+d}:{:.3f}", i * 4, words[i]);
+    }
+    spdlog::warn("[Blockers] node {} found at +{:x}, position check failed:{}", aNode.id, at, dump);
+    return false;
+  }
+  return false;
+}
 } // namespace
 
 // void world::StreamingSector::PostLoad(...): the sector's nodes are read but not set up yet;
@@ -79,11 +119,18 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3972601611, StreamingSector_PostLoad, world::Str
   if (!aSector || !blockers.IsLoaded()) {
     return;
   }
+  auto *buffer = reinterpret_cast<SectorNodeBuffer *>(reinterpret_cast<uintptr_t>(aSector) + NodeBufferOffset);
+  if (const auto *nodes = blockers.FindHidden(aSector->path.hash)) {
+    size_t hiddenCount = 0;
+    for (const auto &node : *nodes) {
+      hiddenCount += HideNode(buffer->nodeSetups, node) ? 1 : 0;
+    }
+    spdlog::info("[Blockers] {:016x}: hid {} of {} listed node(s)", aSector->path.hash, hiddenCount, nodes->size());
+  }
   const auto *actors = blockers.Find(aSector->path.hash);
   if (!actors) {
     return;
   }
-  auto *buffer = reinterpret_cast<SectorNodeBuffer *>(reinterpret_cast<uintptr_t>(aSector) + NodeBufferOffset);
   static const CName cookedCollision = "worldCookedCollisionNode";
   size_t found = 0;
   for (auto &handle : buffer->nodes) {

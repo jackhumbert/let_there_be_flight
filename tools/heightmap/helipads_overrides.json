@@ -1,12 +1,23 @@
 {
-  "comment": "Hand edits applied by pads.py build. remove: pad ids to drop. names: id -> display name. add: pads the scan cannot find, each {id, name, pos: [x, y, deck z], yaw, radius, note}; they get the same deck check as found pads. The spaceport (Phantom Liberty, q306) has no pad meshes in the open-world sectors, so its spots are picked from the nav map (flat, open sky, 12 m radius).",
-  "remove_comment": "Visual-only decks: no cooked collision under them (tools/heightmap/pad_collision.py, levels 0 to 3, 2026-10-26). The 499 m v2 pad's deck sits 7 m above the tower roof (498.5 m, collision in a level-3 sector) on visual-only structure; the spaceport's launch pad 2 has only proxies. Take one off this list once a sector of our own gives it a real deck (docs/helipads.md, step 8).",
+  "comment": "Hand edits applied by pads.py build. remove: pad ids to drop. names: id -> display name. add: pads the scan cannot find, each {id, name, pos: [x, y, deck z], yaw, radius, note}; they get the same deck check as found pads, except own_deck ones (a deck from our own sector, not in the nav map), and replace a found pad with the same id. The spaceport (Phantom Liberty, q306) has no pad meshes in the open-world sectors, so its spots are picked from the nav map (flat, open sky, 12 m radius).",
+  "remove_comment": "Visual-only decks: no cooked collision under them (tools/heightmap/pad_collision.py, levels 0 to 3, 2026-10-26). The spaceport's launch pad 2 has only proxies. Take one off this list once a sector of our own gives it a real deck (docs/helipads.md, step 8; the 499 m tower v2 went that way, see add).",
   "remove": [
-    "8040860436745735587",
     "spaceport_launchpad_2"
   ],
   "names": {},
   "add": [
+    {
+      "id": "8040860436745735587",
+      "pos": [
+        -1212.96,
+        81.13,
+        505.58
+      ],
+      "yaw": 22.5,
+      "radius": 6.0,
+      "own_deck": true,
+      "note": "499 m tower v2: the game's deck is visual only, ours is the v2 pad entity in user/jackhumbert/sectors/helipad_vehicles.streamingsector at the proxy's transform; deck height from rays in game"
+    },
     {
       "id": "spaceport_apron",
       "name": "NCX Spaceport apron",

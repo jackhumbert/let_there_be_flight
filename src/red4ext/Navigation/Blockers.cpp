@@ -53,9 +53,52 @@ bool Blockers::Load(const std::filesystem::path &aPath) {
   return true;
 }
 
+// Lines: "S <sector path>" starts a sector, "N <globalNodeId> <x> <y>" lists a placement of it.
+bool Blockers::LoadHidden(const std::filesystem::path &aPath) {
+  hidden.clear();
+  std::ifstream in(aPath);
+  if (!in) {
+    spdlog::warn("[Blockers] {} not found, no nodes hidden", aPath.string());
+    return false;
+  }
+  std::vector<Node> *current = nullptr;
+  size_t count = 0;
+  std::string line;
+  int lineNumber = 0;
+  while (std::getline(in, line)) {
+    ++lineNumber;
+    if (!line.empty() && line.back() == '\r') {
+      line.pop_back();
+    }
+    if (line.size() < 3 || line[0] == '#') {
+      continue;
+    }
+    if (line[0] == 'S' && line[1] == ' ') {
+      auto path = line.substr(2);
+      current = &hidden[RED4ext::ResourcePath(path.c_str()).hash];
+      continue;
+    }
+    Node node;
+    std::istringstream fields(line.substr(1));
+    if (line[0] != 'N' || !current || !(fields >> node.id >> node.x >> node.y)) {
+      spdlog::warn("[Blockers] {}:{}: cannot read the line, skipped", aPath.filename().string(), lineNumber);
+      continue;
+    }
+    current->push_back(node);
+    ++count;
+  }
+  spdlog::info("[Blockers] {} node(s) to hide in {} sector(s)", count, hidden.size());
+  return true;
+}
+
 const std::vector<Blockers::Actor> *Blockers::Find(uint64_t aSectorPath) const {
   auto it = sectors.find(aSectorPath);
   return it == sectors.end() ? nullptr : &it->second;
+}
+
+const std::vector<Blockers::Node> *Blockers::FindHidden(uint64_t aSectorPath) const {
+  auto it = hidden.find(aSectorPath);
+  return it == hidden.end() ? nullptr : &it->second;
 }
 
 } // namespace Navigation

@@ -420,7 +420,9 @@ def build(args):
     data = json.load(open(os.path.join(args.work, "placements.json")))
     nav = NavMap(args.navmap)
     overrides = json.load(open(args.overrides)) if os.path.exists(args.overrides) else {}
-    removed = set(overrides.get("remove", []))
+    dropped = set(overrides.get("remove", []))
+    # a scanned pad with the id of a hand-placed one is replaced by it (e.g. a deck from our sector)
+    removed = dropped | {a["id"] for a in overrides.get("add", [])}
     names = overrides.get("names", {})
 
     pads, specials = [], []
@@ -497,8 +499,16 @@ def build(args):
         # hand-placed pads get the same deck check (no re-centring), so a typo shows up as a reject
         x, y, z = a["pos"]
         radius = a.get("radius", 6.0)
-        deck = find_deck(nav, x, y, z - 1.5, z + 1.5, radius + 4.0, min(radius, TEST_RADIUS), z, recenter=False)
         pad = {**a, "sources": ["overrides"]}
+        if a.get("own_deck"):
+            # the deck is ours (an entity in our sector, docs/helipads.md step 8): the nav map has
+            # only what is under it, so trust the measured height
+            pad.update(clearance=None, check={"on_deck": "own deck", "clear": None, "spread": None}, ok=True)
+            if pad["id"] in dropped:
+                pad.update(ok=False, reason="removed in overrides")
+            pads.append(pad)
+            continue
+        deck = find_deck(nav, x, y, z - 1.5, z + 1.5, radius + 4.0, min(radius, TEST_RADIUS), z, recenter=False)
         if deck is None:
             pad.update(ok=False, reason="no vehicle collision at the deck height")
         else:
@@ -510,7 +520,7 @@ def build(args):
             pad["ok"] = bool(deck["on"] >= MIN_SHARE * n and deck["clear"] >= MIN_SHARE * n)
             if not pad["ok"]:
                 pad["reason"] = "hand-placed pad fails the deck check"
-        if pad["id"] in removed:
+        if pad["id"] in dropped:
             pad.update(ok=False, reason="removed in overrides")
         pads.append(pad)
 
