@@ -76,11 +76,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
   @runtimeProperty("ModSettings.max", "120.0")
   public let stuntInterval: Float = 0.0;      // s between stunts on long straights with aerobatics on (0 = none)
 
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Autopilot")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Autopilot-Race")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Autopilot-Race-Description")
-  public let raceMode: Bool = false;          // fly at the vehicle's full thrust, banking the lift into turns; implies aerobatics
+  // Race is how the Autopilot flies (2026-10-27): the racing line at the vehicle's full thrust,
+  // banking the lift into turns; implies aerobatics. No longer a Mod Setting (a saved "off" would
+  // have kept players on the old way); false is the archived normal mode, straight legs between
+  // the planner's waypoints with rounded corners.
+  public let raceMode: Bool = true;
 
   // takeoff and landing
   public let takeoffHeight: Float = 10.0;     // m above the floor climbed straight up before flying off

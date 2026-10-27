@@ -292,6 +292,38 @@ bool TryDirect(NavMap::View &aView, Vec3 aStart, Vec3 aGoal, const PlanParams &a
 
 } // namespace
 
+PlanResult PlanWithRetries(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &aParams,
+                           const std::function<void(const PlanResult &)> &aAttempt) {
+  auto params = aParams;
+  auto result = Plan(aMap, aStart, aGoal, params);
+  // a long trip at the Race's weight 1.2 ran out of expansions: Northside to the Pacifica coast
+  // (5.3 km) failed at 3 million, and the minPassage retry failed the same way; at 1.5 it took 1.1
+  // million (2026-10-27)
+  for (float weight : {1.5f, 2.0f}) {
+    if (result.ok || result.expansions <= params.maxExpansions || params.heuristicWeight >= weight) {
+      break;
+    }
+    if (aAttempt) {
+      aAttempt(result);
+    }
+    params.heuristicWeight = weight;
+    result = Plan(aMap, aStart, aGoal, params);
+  }
+  if (!result.ok && params.minPassage > 0.0f) {
+    // no way through without a squeeze point (a start or destination tucked under something):
+    // better a tight route than none
+    if (aAttempt) {
+      aAttempt(result);
+    }
+    params.minPassage = 0.0f;
+    result = Plan(aMap, aStart, aGoal, params);
+  }
+  if (aAttempt) {
+    aAttempt(result);
+  }
+  return result;
+}
+
 PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &aParams) {
   auto t0 = std::chrono::steady_clock::now();
   PlanResult out;

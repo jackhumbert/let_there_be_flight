@@ -126,16 +126,8 @@ int32_t StartPlan(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, Navigation::P
     requests[id] = request;
   }
   std::thread([request, start, goal, params]() {
-    auto result = Navigation::Plan(Navigation::NavMap::Get(), start, goal, params);
-    if (!result.ok && params.minPassage > 0.0f) {
-      // no way through without a squeeze point (a start or destination tucked under something):
-      // better a tight route than none
-      LogPlan(start, goal, result);
-      auto anyPassage = params; // (the lambda's copy is const)
-      anyPassage.minPassage = 0.0f;
-      result = Navigation::Plan(Navigation::NavMap::Get(), start, goal, anyPassage);
-    }
-    LogPlan(start, goal, result);
+    auto result = Navigation::PlanWithRetries(Navigation::NavMap::Get(), start, goal, params,
+                                              [&](const Navigation::PlanResult &aAttempt) { LogPlan(start, goal, aAttempt); });
     std::lock_guard guard(requestsLock);
     request->result = std::move(result);
     request->ready = true;

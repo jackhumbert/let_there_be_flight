@@ -17,6 +17,7 @@
 
 #include "NavMap.hpp"
 
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -81,5 +82,12 @@ struct PlanResult {
 };
 
 PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &aParams);
+
+// Plan, and when that fails, again less fussily: a search that ran out of expansions with a greedier
+// heuristic (1.5, then 2.0), a route with no way through a minPassage squeeze without it. Each
+// attempt, failed ones included, goes to aAttempt (for the log). The Autopilot and navplan both
+// plan this way.
+PlanResult PlanWithRetries(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &aParams,
+                           const std::function<void(const PlanResult &)> &aAttempt = {});
 
 } // namespace Navigation

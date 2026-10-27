@@ -94,7 +94,12 @@ int main(int argc, char **argv) {
   if (const char *v = std::getenv("NAVPLAN_LINE_SIDE")) {
     params.lineSide = std::strtof(v, nullptr);
   }
-  auto line = Navigation::Plan(map, start, goal, params);
+  // as the Autopilot plans it: with its retries when the first search fails
+  auto line = Navigation::PlanWithRetries(map, start, goal, params, [](const Navigation::PlanResult &aAttempt) {
+    if (!aAttempt.ok) {
+      std::printf("  attempt: %s\n", aAttempt.info.c_str());
+    }
+  });
   std::printf("%s\n", line.info.c_str());
   for (size_t i = 0; i + 1 < line.rejectedLine.size(); ++i) {
     const auto &a = line.rejectedLine[i], &b = line.rejectedLine[i + 1];
