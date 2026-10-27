@@ -106,6 +106,139 @@ float Distance(Vec3 aA, Vec3 aB) {
   return std::sqrt(dx * dx + dy * dy + dz * dz);
 }
 
+// Longest stretch (m) of the polyline that is blocked, sampled every half metre along its whole
+// length (so where the legs are cut does not change the answer).
+constexpr float kGrazeStep = 0.5f;
+constexpr float kGrazeAllowed = 1.0f; // m: the planner's own legs graze this much between their samples
+// m, the finished line: moves are checked at SegmentClear's 1 m sampling, the line at half a metre,
+// which finds a little more; still half the 3 m the bake grew solids by for the car
+constexpr float kGrazeAllowedLine = 1.5f;
+
+float LongestBlocked(const NavMap &aMap, const std::vector<Vec3> &aPoints) {
+  float run = 0.0f, longest = 0.0f, carry = 0.0f;
+  for (size_t i = 0; i + 1 < aPoints.size(); ++i) {
+    Vec3 a = aPoints[i], b = aPoints[i + 1];
+    float len = Distance(a, b);
+    for (float s = carry; s <= len; s += kGrazeStep) {
+      float t = len > 1e-4f ? s / len : 0.0f;
+      bool free = aMap.IsFree(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t);
+      run = free ? 0.0f : run + kGrazeStep;
+      longest = std::max(longest, run);
+      carry = s + kGrazeStep - len;
+    }
+  }
+  return longest;
+}
+
+// The leg is free but for a graze no longer than the planner's own legs have.
+bool LegFree(const NavMap &aMap, Vec3 aA, Vec3 aB) {
+  return Clear(aMap, aA, aB) >= 1.0f || LongestBlocked(aMap, {aA, aB}) <= kGrazeAllowed;
+}
+
+// How much of the leg is free, the leg and its two side-offset copies taken together (0..1).
+float ClearSides(const NavMap &aMap, Vec3 aA, Vec3 aB, float aSide) {
+  float clear = Clear(aMap, aA, aB);
+  float dx = aB.x - aA.x, dy = aB.y - aA.y;
+  float len = std::hypot(dx, dy);
+  if (aSide <= 0.0f || len < 1e-3f || clear < 1.0f) {
+    return clear;
+  }
+  float px = -dy / len * aSide, py = dx / len * aSide;
+  for (float s : {1.0f, -1.0f}) {
+    clear = std::min(clear, Clear(aMap, {aA.x + s * px, aA.y + s * py, aA.z}, {aB.x + s * px, aB.y + s * py, aB.z}));
+  }
+  return clear;
+}
+
+// Each leg of the polyline cut into equal steps of at most aSpacing, its corners kept: every new
+// leg lies on an old one, so a free polyline stays free.
+std::vector<Vec3> Resample(const std::vector<Vec3> &aPoints, float aSpacing) {
+  std::vector<Vec3> out{aPoints.front()};
+  for (size_t i = 0; i + 1 < aPoints.size(); ++i) {
+    Vec3 a = aPoints[i], b = aPoints[i + 1];
+    int steps = std::max(1, int(std::ceil(Distance(a, b) / aSpacing)));
+    for (int k = 1; k <= steps; ++k) {
+      float t = float(k) / float(steps);
+      out.push_back({a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t});
+    }
+  }
+  return out;
+}
+
+// Racing line: gradient descent on the summed squared second differences of the points (their
+// bend), each move kept only where both legs to the neighbours stay free, with lineSide to spare
+// or at least no less than before. Points ahead of a corner move out and the apex moves
+// in, so the bend spreads over all the room there is. Coarse spacings first (the bend of a long
+// corner spreads over a few points per pass there), then finer ones down to lineSpacing.
+std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute, const PlanParams &aParams) {
+  std::vector<Vec3> pts = aRoute;
+  const float side = aParams.lineSide;
+  for (auto [spacing, passes] : {std::pair{40.0f, 300}, {20.0f, 300}, {10.0f, 200}, {aParams.lineSpacing, 100}}) {
+    pts = Resample(pts, spacing);
+    const size_t n = pts.size();
+    if (n < 7) {
+      continue;
+    }
+    for (int pass = 0; pass < passes; ++pass) {
+      float moved = 0.0f;
+      for (size_t i = 2; i + 2 < n; ++i) {
+        const Vec3 &a = pts[i - 2], &b = pts[i - 1], &p = pts[i], &c = pts[i + 1], &d = pts[i + 2];
+        // d/dp of |b - 2p + c|^2 + |a - 2b + p|^2 + |p - 2c + d|^2, halved
+        Vec3 g{a.x - 4 * b.x + 6 * p.x - 4 * c.x + d.x, a.y - 4 * b.y + 6 * p.y - 4 * c.y + d.y,
+               a.z - 4 * b.z + 6 * p.z - 4 * c.z + d.z};
+        // away from blocked space close across the line: probe lineClearance to either side and
+        // above / below; where one side is blocked and the other free, push towards the free one.
+        // (Smoothing alone leaves the line skimming the map's margin wherever a wall is on the
+        // inside of a bend, and the car's tracking error then reaches the wall, 2026-10-26)
+        {
+          float tx = c.x - b.x, ty = c.y - b.y;
+          float tl = std::hypot(tx, ty);
+          if (tl > 1e-3f) {
+            const float r = aParams.lineClearance;
+            const Vec3 dirs[2] = {{-ty / tl, tx / tl, 0.0f}, {0.0f, 0.0f, 1.0f}};
+            for (const Vec3 &n : dirs) {
+              bool plus = aMap.IsFree(p.x + n.x * r, p.y + n.y * r, p.z + n.z * r);
+              bool minus = aMap.IsFree(p.x - n.x * r, p.y - n.y * r, p.z - n.z * r);
+              if (plus != minus) {
+                float k = (plus ? 1.0f : -1.0f) * aParams.linePush / aParams.lineStep; // undone by * step below
+                g.x -= n.x * k;
+                g.y -= n.y * k;
+                g.z -= n.z * k;
+              }
+            }
+          }
+        }
+        if (g.x * g.x + g.y * g.y + g.z * g.z < 1e-4f) {
+          continue;
+        }
+        float before = -1.0f; // only needed when the move is not free with room to the sides
+        for (float step = aParams.lineStep; step > aParams.lineStep * 0.2f; step *= 0.5f) {
+          Vec3 q{p.x - g.x * step, p.y - g.y * step, p.z - g.z * step};
+          float after = std::min(ClearSides(aMap, b, q, side), ClearSides(aMap, q, c, side));
+          bool ok = after >= 1.0f;
+          // (grazes judged over the two legs either side together: one per leg can add up)
+          if (!ok && LongestBlocked(aMap, {a, b, q, c, d}) <= kGrazeAllowed) {
+            // free, but closer to the sides than lineSide: fine where the line already was
+            if (before < 0.0f) {
+              before = std::min(ClearSides(aMap, b, p, side), ClearSides(aMap, p, c, side));
+            }
+            ok = after >= before;
+          }
+          if (ok) {
+            moved += Distance(p, q);
+            pts[i] = q;
+            break;
+          }
+        }
+      }
+      if (moved < 0.0005f * float(n)) {
+        break; // settled: under half a millimetre per point
+      }
+    }
+  }
+  return pts;
+}
+
 bool TryDirect(NavMap::View &aView, Vec3 aStart, Vec3 aGoal, const PlanParams &aParams, PlanResult &aOut) {
   const NavMap &map = aView.Map();
   float dx = aGoal.x - aStart.x, dy = aGoal.y - aStart.y;
@@ -347,6 +480,22 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
     out.points.push_back(goal); // start and goal share a column
   }
   out.ok = true;
+  if (aParams.racingLine && out.points.size() > 2) {
+    // kept only if the finished line is free all the way; otherwise the pulled route stays
+    auto line = RacingLine(aMap, out.points, aParams);
+    if (LongestBlocked(aMap, line) <= kGrazeAllowedLine) {
+      out.points = std::move(line);
+      return finish("racing line");
+    }
+    size_t blocked = 0;
+    while (blocked + 1 < line.size() && LegFree(aMap, line[blocked], line[blocked + 1])) {
+      ++blocked;
+    }
+    out.rejectedLine = line;
+    return finish(fmt::format("route (racing line blocked at leg {} of {}, {:.1f} {:.1f} {:.1f})", blocked, line.size() - 1,
+                              line[blocked].x, line[blocked].y, line[blocked].z)
+                      .c_str());
+  }
   return finish("route");
 }
 

@@ -33,6 +33,8 @@ struct FlightNavMap : RED4ext::IScriptable {
   // returns the points once (empty if it failed or is unknown) and forgets the request, with
   // its info string in GetLastPlanInfo.
   static int32_t PlanAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, bool aDirect);
+  // PlanAsync with the racing line (Planner.hpp): the Autopilot's Race option
+  static int32_t PlanRaceAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal);
   static bool IsPlanReady(int32_t aId);
   static RED4ext::DynArray<RED4ext::Vector4> TakePlan(int32_t aId);
 
@@ -73,6 +75,7 @@ RTTI_DEFINE_CLASS(FlightNavMap, {
   RTTI_METHOD(GetLastPlanInfo);
   RTTI_METHOD(SetPlanParameters);
   RTTI_METHOD(PlanAsync);
+  RTTI_METHOD(PlanRaceAsync);
   RTTI_METHOD(IsPlanReady);
   RTTI_METHOD(TakePlan);
   RTTI_METHOD(SetTargetOverride);

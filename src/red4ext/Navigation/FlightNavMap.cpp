@@ -92,9 +92,28 @@ RED4ext::DynArray<RED4ext::Vector4> FlightNavMap::Plan(RED4ext::Vector4 aStart, 
   return ToScript(result);
 }
 
+namespace {
+int32_t StartPlan(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, Navigation::PlanParams params);
+}
+
 int32_t FlightNavMap::PlanAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, bool aDirect) {
   auto params = planParams;
   params.tryDirect = aDirect;
+  return StartPlan(aStart, aGoal, params);
+}
+
+int32_t FlightNavMap::PlanRaceAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal) {
+  auto params = planParams;
+  params.racingLine = true;
+  // high over the rooftops, where there is room for wide bends at speed (tools/navplan/laptime.py:
+  // about the same time as 25 m, a third of the planning time, far more air around the line)
+  params.preferredHeight = 100.0f;
+  params.climbCost = 0.5f;
+  return StartPlan(aStart, aGoal, params);
+}
+
+namespace {
+int32_t StartPlan(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, Navigation::PlanParams params) {
   Navigation::Vec3 start{aStart.X, aStart.Y, aStart.Z}, goal{aGoal.X, aGoal.Y, aGoal.Z};
   auto request = std::make_shared<Request>();
   int32_t id;
@@ -112,6 +131,7 @@ int32_t FlightNavMap::PlanAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal,
   }).detach();
   return id;
 }
+} // namespace
 
 bool FlightNavMap::IsPlanReady(int32_t aId) {
   std::lock_guard guard(requestsLock);

@@ -174,7 +174,28 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let raceMargin: Float = 0.85;        // share of the envelope the speed profile plans for
   public let raceJerk: Float = 60.0;          // m/s3, rate limit of the acceleration command
   public let raceSpeedCap: Float = 120.0;     // m/s, whatever the drag would allow
-  public let raceBankTime: Float = 0.12;      // s, smoothing of the acceleration the attitude follows
+  // race: corners rounded much wider (the bend's radius sets its speed); the cut steps down by
+  // raceRoundStep until the arc is clear, to at least raceRoundMin
+  public let raceCornerRound: Float = 150.0;  // m
+  public let raceRoundShare: Float = 0.5;     // of each leg at most (two corners can meet midway)
+  public let raceRoundStep: Float = 0.7;
+  public let raceRoundMin: Float = 8.0;       // m
+  public let raceBankTime: Float = 0.12;
+  public let lineRadiusSpan: Float = 15.0;
+  public let raceOffLine: Float = 4.0;        // m off a racing line before the car is treated as off it
+  public let raceTakeoffHeight: Float = 3.0;  // m above the floor before the racing line takes over
+  // m/s2 the speed profile plans slowing with at most: the brake grows with speed (60 m/s2 and
+  // more at 40 m/s), but the flown speed eases into it, and planned at full the car reached the
+  // destination at 43 m/s and hit the ground, 2026-10-26
+  public let racePlanDecel: Float = 25.0;
+  // racing line tracking: the line's direction at the flown speed, its curvature fed forward
+  // lineLead ahead (the bank takes a moment to build), a damped spring onto the line across it.
+  // (Aiming at a lookahead point as on other routes cut inside every bend at speed: 60 m ahead at
+  // 75 m/s, the car swung 7 to 20 m off the line and into buildings, 2026-10-26)
+  public let lineLead: Float = 0.25;          // s
+  public let lineSpring: Float = 1.0;         // 1/s, distance off the line -> speed back towards it
+  public let lineVelocityGain: Float = 2.5;   // 1/s, velocity error -> acceleration
+  public let lineSpan: Float = 10.0;          // m either side a line point's direction and bend are taken over    // m either side of a racing line point its bend radius is taken over      // s, smoothing of the acceleration the attitude follows
   // bank easing with aerobatics: the bank follows its target through a critically damped second
   // order filter with limited roll rate and roll acceleration (the target flicks as route points
   // pass; followed directly, the car rolled at 21 rad/s2 and more, 2026-10-26)
@@ -245,6 +266,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let routeSpeed: array<Float>;        // race: fastest speed at each route point (backward pass)
   public let pathCurvature: Vector4;          // 1/m, towards the centre of the route's bend ahead (race feed-forward)
   public let bankAngle: Float;                // rad, eased bank of the attitude target about the nose
+  public let requestRace: Bool;               // the pending plan asked for a racing line
+  public let routeLine: Bool;                 // the route is a racing line (evenly spaced, smooth)
+  public let closestS: Float;                 // route distance of the closest point
   public let bankRateNow: Float;              // rad/s
 
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeAutopilot> {
@@ -316,7 +340,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
     if !FlightNavMap.IsLoaded() || !FlightModeAutopilot.GapAt(p, gap) {
       return false;
     }
-    let z = MinF(gap.X + this.takeoffHeight, gap.Y - 2.0);
+    // Race: only clear of the ground, then the racing line climbs away while speeding up
+    let z = MinF(gap.X + (this.raceMode ? this.raceTakeoffHeight : this.takeoffHeight), gap.Y - 2.0);
     if z - p.Z < 2.0 {
       return false;
     }
@@ -504,7 +529,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
       this.status = "no nav map";
       return;
     }
-    this.request = FlightNavMap.PlanAsync(from, this.routeGoal, false);
+    // Race: the planner spreads the route into a racing line of wide bends
+    this.requestRace = this.raceMode;
+    this.request = this.raceMode ? FlightNavMap.PlanRaceAsync(from, this.routeGoal) : FlightNavMap.PlanAsync(from, this.routeGoal, false);
     this.replanTimer = 3.0;
     if ArraySize(this.route) < 2 {
       // nothing to follow meanwhile: hold here (a replan keeps following the old route)
@@ -541,7 +568,20 @@ public class FlightModeAutopilot extends FlightModeStandard {
       let points = FlightNavMap.TakePlan(this.request);
       this.request = 0;
       if ArraySize(points) >= 2 {
-        this.route = this.RoundCorners(points);
+        // a racing line has its points lineSpacing (5 m) apart; when the planner could not make
+        // one free all the way it sends the plain route, corners and all
+        this.routeLine = this.requestRace && ArraySize(points) > 2
+          && Vector4.Distance(points[0], points[ArraySize(points) - 1]) / Cast<Float>(ArraySize(points) - 1) < 10.0;
+        if this.routeLine {
+          // already smooth: no corners to round
+          this.route = points;
+          ArrayClear(this.routeArc);
+          for q in points {
+            ArrayPush(this.routeArc, false);
+          }
+        } else {
+          this.route = this.RoundCorners(points);
+        }
         ArrayClear(this.routeLength);
         let total = 0.0;
         let i = 0;
@@ -587,10 +627,12 @@ public class FlightModeAutopilot extends FlightModeStandard {
       let rounded = false;
       // full cut, then half; below that the corner stays sharp: tiny arcs made for very slow
       // corners (8 m/s), where the lookahead cutting a sharp corner flew it faster and fine
-      let cut = this.cornerRound;
-      while !rounded && cut >= 0.5 * this.cornerRound {
-        let d1 = MinF(0.4 * Vector4.Distance(a, b), cut);
-        let d2 = MinF(0.4 * Vector4.Distance(b, c), cut);
+      let cut = this.raceMode ? this.raceCornerRound : this.cornerRound;
+      let share = this.raceMode ? this.raceRoundShare : 0.4;
+      let smallest = this.raceMode ? this.raceRoundMin : 0.5 * this.cornerRound;
+      while !rounded && cut >= smallest {
+        let d1 = MinF(share * Vector4.Distance(a, b), cut);
+        let d2 = MinF(share * Vector4.Distance(b, c), cut);
         if d1 > 1.0 && d2 > 1.0 {
           let q1 = b + Vector4.Normalize(a - b) * d1;
           let q2 = b + Vector4.Normalize(c - b) * d2;
@@ -615,7 +657,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
             rounded = true;
           }
         }
-        cut *= 0.5;
+        cut *= this.raceMode ? this.raceRoundStep : 0.5;
       }
       if !rounded {
         ArrayPush(out, b);
@@ -895,6 +937,23 @@ public class FlightModeAutopilot extends FlightModeStandard {
     return -turn / (0.5 * (Vector4.Length(d1) + Vector4.Length(d2)));
   }
 
+  // A racing line's direction at route distance s and its bend there (towards the centre, 1 / radius
+  // long), both taken over lineSpan either side.
+  private func LineFrame(s: Float, out tangent: Vector4, out bend: Vector4) -> Void {
+    let a = this.PointAt(s - this.lineSpan);
+    let b = this.PointAt(s);
+    let c = this.PointAt(s + this.lineSpan);
+    let ab = b - a;
+    let bc = c - b;
+    let l1 = Vector4.Length(ab);
+    let l2 = Vector4.Length(bc);
+    tangent = Vector4.Length(c - a) > 0.01 ? Vector4.Normalize(c - a) : this.component.stats.d_forward;
+    bend = new Vector4(0.0, 0.0, 0.0, 0.0);
+    if l1 > 0.5 && l2 > 0.5 {
+      bend = (bc * (1.0 / l2) - ab * (1.0 / l1)) * (2.0 / (l1 + l2));
+    }
+  }
+
   // Curvature of the route over the first part of the lookahead, 3D: towards the bend's centre,
   // 1 / radius long.
   private func CurvatureVector(closest: Vector4, ahead: Float) -> Vector4 {
@@ -968,6 +1027,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       this.ClosestOnRoute(p, closest, offRoute);
       this.offRouteNow = offRoute;
       this.closestNow = closest;
+      this.closestS = this.routeLength[this.segment] + Vector4.Distance(this.route[this.segment], closest);
       if offRoute > this.replanDistance && this.replanTimer <= 0.0 && this.request == 0 {
         this.RequestRoute(p);
       }
@@ -1011,7 +1071,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
       }
       this.targetSpeed = this.AllowedSpeed(closest);
       // off the route: slow down while getting back, the route's margins assume the car is on it
-      this.targetSpeed = MinF(this.targetSpeed, MaxF(8.0, this.TopSpeed() - this.offRouteSlowdown * MaxF(offRoute - 2.0, 0.0)));
+      let slackOff = this.routeLine ? this.raceOffLine + 1.0 : 2.0;
+      let slowdown = this.routeLine ? 0.5 * this.offRouteSlowdown : this.offRouteSlowdown;
+      this.targetSpeed = MinF(this.targetSpeed, MaxF(8.0, this.TopSpeed() - slowdown * MaxF(offRoute - slackOff, 0.0)));
       // where the current velocity is taking the car must be free on the map; brake to stop short
       // of the first blocked point otherwise. Only when the car is leaving a route that is clear
       // over the same distance: where the route itself grazes the map's margin (passing a ledge
@@ -1030,7 +1092,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
         // avoids a full-brake jolt for nothing
         // (blocked space within 10 m cannot be braked for at speed, only steered away from, and
         // came from the map's margin around the car itself on the route)
-        if blockedAt && travelled > 10.0 && this.DistanceToRoute(hit) > 2.0 && this.RouteClear(closest, Vector4.Length(reach)) {
+        // (on a racing line, which the planner checked free all the way, only once the car has
+        // left it: at speed the straight-line prediction runs into the walls past every bend, and
+        // braking for those cost 24 s on the Dogtown route, 2026-10-26)
+        let lineHeld = this.routeLine && offRoute < this.raceOffLine;
+        if blockedAt && !lineHeld && travelled > 10.0 && this.DistanceToRoute(hit) > 2.0 && this.RouteClear(closest, Vector4.Length(reach)) {
           let room = MaxF(travelled - 5.0, 0.0);
           this.targetSpeed = MinF(this.targetSpeed, SqrtF(2.0 * (this.raceMode ? this.raceMargin * this.RaceDecel(0.0) : this.brakeAccel) * room));
           this.blockedAhead = true;
@@ -1175,7 +1241,24 @@ public class FlightModeAutopilot extends FlightModeStandard {
     }
     let accel = (desiredVelocity - v) * this.velocityGain;
     let jerk = this.accelJerk;
-    if this.raceMode && following {
+    if this.raceMode && following && this.routeLine {
+      let tangent: Vector4;
+      let bend: Vector4;
+      this.LineFrame(this.closestS, tangent, bend);
+      let leadTangent: Vector4;
+      this.LineFrame(this.closestS + stats.d_speed * this.lineLead, leadTangent, bend);
+      let across = this.closestNow - p;
+      across -= tangent * Vector4.Dot(across, tangent);
+      let back = across * this.lineSpring;
+      if Vector4.Length(back) > 15.0 {
+        back = Vector4.Normalize(back) * 15.0;
+      }
+      desiredVelocity = tangent * this.speedCmd + back + this.overlayVelocity;
+      accel = (desiredVelocity - v) * this.lineVelocityGain + bend * (this.speedCmd * this.speedCmd);
+      target = this.PointAt(this.closestS + 30.0);
+      this.lookahead = target;
+      jerk = this.raceJerk;
+    } else if this.raceMode && following {
       // the bend's own acceleration ahead of time (velocity error alone turns too late at speed);
       // the thrust limits are applied in the car's frame (FlyAerobatic)
       accel += this.pathCurvature * (this.speedCmd * this.speedCmd);
@@ -1396,10 +1479,13 @@ public class FlightModeAutopilot extends FlightModeStandard {
     if k <= 0 || k >= n - 1 {
       return 1000000.0;
     }
+    let s = this.routeLength[k];
+    if this.routeLine {
+      return FlightModeAutopilot.Circumradius(this.PointAt(s - this.lineRadiusSpan), this.route[k], this.PointAt(s + this.lineRadiusSpan));
+    }
     if ArraySize(this.routeArc) == n && this.routeArc[k] {
       return FlightModeAutopilot.Circumradius(this.route[k - 1], this.route[k], this.route[k + 1]);
     }
-    let s = this.routeLength[k];
     let inDir = this.route[k] - this.PointAt(s - this.cornerSpan);
     let outDir = this.PointAt(s + this.cornerSpan) - this.route[k];
     if Vector4.Length(inDir) < 0.5 || Vector4.Length(outDir) < 0.5 {
@@ -1419,7 +1505,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let left = distance;
     while left > 0.0 && vv < top {
       let step = MinF(left, 5.0);
-      vv = SqrtF(vv * vv + 2.0 * this.raceMargin * this.RaceDecel(vv) * step);
+      vv = SqrtF(vv * vv + 2.0 * MinF(this.raceMargin * this.RaceDecel(vv), this.racePlanDecel) * step);
       left -= step;
     }
     return MinF(vv, top);

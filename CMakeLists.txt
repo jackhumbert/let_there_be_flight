@@ -120,6 +120,18 @@ target_link_libraries(let_there_be_flight.dll
     TweakXL
 )
 
+# offline route planner on navmap.bin with the plugin's planner, for tuning and plotting routes
+# (tools/navplan); not built by default
+add_executable(navplan EXCLUDE_FROM_ALL
+  tools/navplan/navplan.cpp
+  src/red4ext/Navigation/NavMap.cpp
+  src/red4ext/Navigation/Planner.cpp
+  src/red4ext/ThirdParty/miniz/miniz_tinfl.cpp
+)
+target_include_directories(navplan PRIVATE src/red4ext)
+target_compile_features(navplan PRIVATE cxx_std_20)
+target_link_libraries(navplan PRIVATE spdlog)
+
 # configure_inputs(src/input_loader/let_there_be_flight.xml)
 configure_mod_file(src/input_loader/${MOD_SLUG}.xml red4ext/plugins/${MOD_SLUG}/inputs.xml)
 configure_redscript(src/redscript)
