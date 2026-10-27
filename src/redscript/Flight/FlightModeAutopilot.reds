@@ -211,6 +211,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // dive, and reached the approach point at 41 m/s, 2026-10-26
   public let raceMaxSink: Float = 15.0;       // m/s down at most, on the approach only:
   public let raceSinkApproach: Float = 250.0; // m before the route's end (elsewhere it slowed the car for nothing)
+  public let raceArriveLength: Float = 120.0; // m before the route's end braked at most raceArriveDecel
+  public let raceArriveDecel: Float = 5.0;    // m/s2
   // m/s2 at most bending the path downwards: the car stays upright and pushes with negative lift
   // (FlyAerobatic keeps the top from turning over past raceTopDown); at half a g, three of the five
   // slowdowns on the street start to Dogtown were crests, down to 15 m/s, 2026-10-27
@@ -228,17 +230,23 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // ribbonLead seconds ahead) at the speed flown, not from the commanded acceleration, which
   // carries every small correction back onto the line and rolled the car for each of them
   public let ribbonSpan: Float = 50.0;        // m
-  public let ribbonLead: Float = 0.3;         // s
+  public let ribbonLead: Float = 0.8;         // s (0.3 with the quicker roll)
   // sideways acceleration the ribbon ignores: at 80 m/s a 2 km bend in the line already asks for
   // 3 m/s2 (an 18 degree bank), which read as rolling for nothing; only what is above it banks
   public let ribbonDeadband: Float = 3.0;     // m/s2
+  public let ribbonSlow: Float = 10.0;        // m/s under which the ribbon banks nothing (full from 25 m/s)
   // bank easing with aerobatics: the bank follows its target through a critically damped second
   // order filter with limited roll rate and roll acceleration (the target flicks as route points
   // pass; followed directly, the car rolled at 21 rad/s2 and more, 2026-10-26)
   public let rollFrequency: Float = 4.0;      // rad/s
-  public let raceRollFrequency: Float = 6.0;  // rad/s
+  public let raceRollFrequency: Float = 2.5;  // rad/s
   public let rollRateMax: Float = 2.5;        // rad/s
   public let rollAccelMax: Float = 10.0;      // rad/s2
+  // Race rolls are the gentlest movements: at 6 rad/s, 2.5 rad/s and 10 rad/s2 the bank swung up to
+  // 90 degrees within a second between the Dogtown towers (2026-10-27); the ribbon looks further
+  // ahead (ribbonLead) so the slower roll still starts in time
+  public let raceRollRateMax: Float = 1.0;    // rad/s
+  public let raceRollAccelMax: Float = 3.0;   // rad/s2
 
   // state, public for debugging from CET
   public let status: String = "idle";
@@ -410,6 +418,13 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // flat, at the same level, and open far enough above to come straight down into. The spot is
   // the bake's floor there, which is where a resting car's position sits.
   private func FindLandingSpot(target: Vector4, out spot: Vector4, out top: Float) -> Bool {
+    // first a spot with room to come straight down from the approach height: one with just 6 m
+    // over it was under a canopy in Dogtown, and the car hit the canopy arriving, 2026-10-27
+    return this.FindLandingSpotWithRoom(target, this.approachHeight + 4.0, spot, top)
+      || this.FindLandingSpotWithRoom(target, 6.0, spot, top);
+  }
+
+  private func FindLandingSpotWithRoom(target: Vector4, room: Float, out spot: Vector4, out top: Float) -> Bool {
     let gap: Vector2;
     if !FlightModeAutopilot.GapAt(target, gap) || target.Z - gap.X > 4.0 {
       return false; // a point in the air: hover there
@@ -424,7 +439,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
         let angle = 6.2831853 * Cast<Float>(i) / Cast<Float>(count);
         let c = new Vector4(target.X + 2.0 * Cast<Float>(r) * CosF(angle), target.Y + 2.0 * Cast<Float>(r) * SinF(angle), level + 1.0, 1.0);
         let g: Vector2;
-        if FlightModeAutopilot.GapAt(c, g) && AbsF(g.X - level) < 3.0 && g.Y - g.X > 6.0 && this.IsFlat(c, g.X) {
+        if FlightModeAutopilot.GapAt(c, g) && AbsF(g.X - level) < 3.0 && g.Y - g.X > room && this.IsFlat(c, g.X) {
           let d = Vector4.DistanceSquared2D(c, target);
           if d < best {
             best = d;
@@ -1618,6 +1633,17 @@ public class FlightModeAutopilot extends FlightModeStandard {
       i += 1;
     }
     this.routeSpeed[n - 1] = 0.0;
+    // the final approach braked gently: planned at the full race braking the car reached the
+    // approach point at 19 m/s, 2026-10-27
+    let total = this.routeLength[n - 1];
+    i = 0;
+    while i < n {
+      let left = total - this.routeLength[i];
+      if left < this.raceArriveLength {
+        this.routeSpeed[i] = MinF(this.routeSpeed[i], SqrtF(2.0 * this.raceArriveDecel * MaxF(left, 0.0)));
+      }
+      i += 1;
+    }
     i = n - 2;
     while i >= 0 {
       let d = this.routeLength[i + 1] - this.routeLength[i];
@@ -1820,8 +1846,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let wanted = AtanF(Vector4.Dot(up, side), Vector4.Dot(up, level));
     let error = FlightModeAutopilot.WrapAngle(wanted - this.bankAngle);
     let f = this.raceMode ? this.raceRollFrequency : this.rollFrequency;
-    let rollAccel = ClampF(f * f * error - 2.0 * f * this.bankRateNow, -this.rollAccelMax, this.rollAccelMax);
-    this.bankRateNow = ClampF(this.bankRateNow + rollAccel * dt, -this.rollRateMax, this.rollRateMax);
+    let accelMax = this.raceMode ? this.raceRollAccelMax : this.rollAccelMax;
+    let rateMax = this.raceMode ? this.raceRollRateMax : this.rollRateMax;
+    let rollAccel = ClampF(f * f * error - 2.0 * f * this.bankRateNow, -accelMax, accelMax);
+    this.bankRateNow = ClampF(this.bankRateNow + rollAccel * dt, -rateMax, rateMax);
     this.bankAngle = FlightModeAutopilot.WrapAngle(this.bankAngle + this.bankRateNow * dt);
     return level * CosF(this.bankAngle) + side * SinF(this.bankAngle);
   }
@@ -1877,6 +1905,13 @@ public class FlightModeAutopilot extends FlightModeStandard {
         fwd += Vector4.Normalize(path) * blend;
       }
       fwd = Vector4.Length(fwd) > 0.1 ? Vector4.Normalize(fwd) : this.headingRef;
+      // a steep path (the drop onto a landing spot): the nose stays nearer level instead of
+      // pointing at the ground, where which way is up has no answer and the bank flicked across
+      // +-80 degrees (2026-10-27)
+      let steep = ClampF((AbsF(fwd.Z) - 0.6) / 0.3, 0.0, 1.0);
+      if steep > 0.0 {
+        fwd = Vector4.Normalize(fwd * (1.0 - 0.6 * steep) + this.headingRef * (0.6 * steep));
+      }
       this.attAccel += (accel - this.attAccel) * ClampF(dt / (this.raceMode ? this.raceBankTime : this.bankTime), 0.0, 1.0);
       let bankAccel = this.attAccel;
       if this.onLine {
@@ -1886,6 +1921,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
         this.LineFrameOver(this.closestS + stats.d_speed * this.ribbonLead, this.ribbonSpan, ribbonTangent, ribbonBend);
         bankAccel = ribbonBend * (stats.d_speed * stats.d_speed);
         this.ribbonNeed = bankAccel;
+        // level when slow: the final drop to a landing spot flicked the bank across +-80 degrees
+        bankAccel *= ClampF((stats.d_speed - this.ribbonSlow) / 15.0, 0.0, 1.0);
         let need = Vector4.Length(bankAccel);
         bankAccel = need > this.ribbonDeadband ? bankAccel * ((need - this.ribbonDeadband) / need) : new Vector4(0.0, 0.0, 0.0, 0.0);
       }

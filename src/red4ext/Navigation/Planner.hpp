@@ -59,6 +59,11 @@ struct PlanParams {
   float lineFloorEnds = 60.0f;   // m
   float linePush = 0.1f;         // m
   float lineStep = 0.08f;        // gradient step per pass (stable below 0.125)
+  // weight of the vertical bend against the sideways one: crests and dips are pushed over and
+  // pulled through with the lift alone, so they are rounded off more (stable while
+  // lineStep x weight stays below 0.125). 1.5: from the street start to Dogtown half the line at 90%
+  // of top speed instead of 30%, a crest that slowed the car to 41 m/s rounded off
+  float lineVerticalWeight = 1.5f;
   float directMargin = 20.0f;    // cruise this far above the highest floor along the line
   float maxCruise = 700.0f;
 };

@@ -192,7 +192,7 @@ std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute
         const Vec3 &a = pts[i - 2], &b = pts[i - 1], &p = pts[i], &c = pts[i + 1], &d = pts[i + 2];
         // d/dp of |b - 2p + c|^2 + |a - 2b + p|^2 + |p - 2c + d|^2, halved
         Vec3 g{a.x - 4 * b.x + 6 * p.x - 4 * c.x + d.x, a.y - 4 * b.y + 6 * p.y - 4 * c.y + d.y,
-               a.z - 4 * b.z + 6 * p.z - 4 * c.z + d.z};
+               (a.z - 4 * b.z + 6 * p.z - 4 * c.z + d.z) * aParams.lineVerticalWeight};
         // away from blocked space close across the line: probe lineClearance to either side and
         // above / below; where one side is blocked and the other free, push towards the free one.
         // (Smoothing alone leaves the line skimming the map's margin wherever a wall is on the
