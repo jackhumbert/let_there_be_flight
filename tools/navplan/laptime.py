@@ -20,7 +20,8 @@ import numpy as np
 
 G = 9.81
 SURGE, LIFT, MARGIN, SPAN = 15.0, 25.0, 0.85, 15.0
-PLAN_DECEL, MAX_SINK, PUSH_OVER, LINE_SPAN = 18.0, 15.0, 4.9, 10.0  # FlightModeAutopilot race tuning
+PLAN_DECEL, MAX_SINK, PUSH_OVER, LINE_SPAN = 18.0, 15.0, 15.0, 10.0  # FlightModeAutopilot race tuning
+SINK_APPROACH = 250.0  # m before the end where MAX_SINK applies
 
 
 def load(path):
@@ -50,7 +51,7 @@ def estimate(points, mass=1115.0, air=1.8, brake=1.4, start=0.0, step=2.0):
     for i in range(lo, n - lo):
         a, b, c = p[i - lo], p[i], p[i + lo]
         along = np.linalg.norm(c - a)
-        if along > 1.0 and c[2] < a[2]:
+        if along > 1.0 and c[2] < a[2] and d[-1] - d[i] < SINK_APPROACH:
             v[i] = min(v[i], MAX_SINK / max((a[2] - c[2]) / along, 0.05))
         ab, bc = b - a, c - b
         l1, l2 = np.linalg.norm(ab), np.linalg.norm(bc)

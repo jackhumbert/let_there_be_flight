@@ -199,8 +199,13 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // descents: the line can drop 100 m in its last 150 m (Dogtown: 140 m buildings, then a low
   // courtyard); flown at full speed the car fell at 44 m/s, rolled inverted pushing over into the
   // dive, and reached the approach point at 41 m/s, 2026-10-26
-  public let raceMaxSink: Float = 15.0;       // m/s down at most
-  public let racePushOver: Float = 4.9;       // m/s2 at most bending the path downwards (half a g: no rolling over)
+  public let raceMaxSink: Float = 15.0;       // m/s down at most, on the approach only:
+  public let raceSinkApproach: Float = 250.0; // m before the route's end (elsewhere it slowed the car for nothing)
+  // m/s2 at most bending the path downwards: the car stays upright and pushes with negative lift
+  // (FlyAerobatic keeps the top from turning over past raceTopDown); at half a g, three of the five
+  // slowdowns on the street start to Dogtown were crests, down to 15 m/s, 2026-10-27
+  public let racePushOver: Float = 15.0;
+  public let raceTopDown: Float = 0.8;        // g of downward pull the attitude follows; the thrust gives the rest
   // racing line tracking: the line's direction at the flown speed, its curvature fed forward
   // lineLead ahead (the bank takes a moment to build), a damped spring onto the line across it.
   // (Aiming at a lookahead point as on other routes cut inside every bend at speed: 60 m ahead at
@@ -1535,7 +1540,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let c = this.PointAt(s + this.lineSpan);
     let along = Vector4.Distance(a, c);
     let limit = 1000.0;
-    if along > 1.0 && c.Z < a.Z {
+    if along > 1.0 && c.Z < a.Z && this.routeLength[ArraySize(this.route) - 1] - s < this.raceSinkApproach {
       limit = this.raceMaxSink / MaxF((a.Z - c.Z) / along, 0.05);
     }
     if this.routeLine {
@@ -1844,6 +1849,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
         bankAccel = ribbonBend * (stats.d_speed * stats.d_speed);
         let need = Vector4.Length(bankAccel);
         bankAccel = need > this.ribbonDeadband ? bankAccel * ((need - this.ribbonDeadband) / need) : new Vector4(0.0, 0.0, 0.0, 0.0);
+      }
+      if this.raceMode {
+        // pushing over: past raceTopDown the top would turn towards the ground and the car roll
+        // over; it stays upright and the thrust (negative lift) gives the rest
+        bankAccel.Z = MaxF(bankAccel.Z, -this.raceTopDown * 9.81 * this.gravityFactor);
       }
       let u = FlightAttitude.Across(bankAccel * blend + z * (9.81 * this.gravityFactor), fwd);
       let held = FlightAttitude.Across(this.targetUp, fwd);
