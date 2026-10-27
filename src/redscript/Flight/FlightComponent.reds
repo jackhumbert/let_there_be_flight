@@ -48,6 +48,9 @@ public native class FlightComponent extends GameComponent {
   // world-space angular velocity contacts gave the vehicle (PhysX flight physics only),
   // decaying over ~0.5 s; see FlightMode.ApplyPhysics
   public native func GetContactSpin() -> Vector4;
+  // angular impulse (world) for a change of angular velocity (world, rad/s), with the inertia the
+  // flight torque is applied with; W = 1, or W = 0 when not known (not PhysX-owned flight)
+  public native func AngularImpulseFor(worldRate: Vector4) -> Vector4;
   // public native func ChaseTarget() -> Void;
 
   // private let helper: ref<vehicleFlightHelper>;

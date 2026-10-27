@@ -286,6 +286,9 @@ REGISTER_FLIGHT_HOOK_HASH(char __fastcall, 3628605463, PushToPhysX, void *self, 
   }
 
   float dt = std::fmin(std::fmax(fc->physxFrameDt, 0.0f), kMaxFrameDt);
+  // for FlightComponent.AngularImpulseFor: the inertia the impulse below is applied with
+  fc->worldInertia = rb->worldInertiaTensor;
+  fc->worldInertiaValid = true;
   auto lv = ChassisLinearVelocity(chassis);
   auto av = ChassisAngularVelocity(chassis);
   auto linear = Add(Vector3(lv.X, lv.Y, lv.Z), Scale(fc->pendingImpulse, rb->inverseMass));

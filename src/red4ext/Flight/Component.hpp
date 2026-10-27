@@ -134,12 +134,32 @@ public:
 
   RED4ext::Vector4 GetContactSpin() { return RED4ext::Vector4(contactSpin.X, contactSpin.Y, contactSpin.Z, 0.0f); }
 
+  // the body's world inertia tensor as PhysX-owned flight applies the flight torque with it (copied
+  // each frame in Physics/ChassisContacts.cpp PushToPhysX)
+  RED4ext::Matrix worldInertia;
+  bool worldInertiaValid = false;
+
+  // Angular impulse (world) that changes the angular velocity by aRate (world, rad/s), with the
+  // inertia the flight torque is applied with; W = 1, or all 0 when that is not known (not
+  // PhysX-owned flight). Lets attitude control ask for an angular acceleration on any vehicle
+  // instead of a torque tuned on one (FlightModeAutopilot.FlyAerobatic).
+  RED4ext::Vector4 AngularImpulseFor(RED4ext::Vector4 aRate) {
+    if (!physxOwned || !worldInertiaValid) {
+      return RED4ext::Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+    }
+    const auto &m = worldInertia;
+    return RED4ext::Vector4(m.X.X * aRate.X + m.Y.X * aRate.Y + m.Z.X * aRate.Z,
+                            m.X.Y * aRate.X + m.Y.Y * aRate.Y + m.Z.Y * aRate.Z,
+                            m.X.Z * aRate.X + m.Y.Z * aRate.Y + m.Z.Z * aRate.Z, 1.0f);
+  }
+
 private:
   friend Descriptor;
 
   static void OnDescribe(Descriptor *aType, RED4ext::CRTTISystem *) {
     aType->AddFunction<&FlightComponent::ChaseTarget>("ChaseTarget");
     aType->AddFunction<&FlightComponent::GetContactSpin>("GetContactSpin");
+    aType->AddFunction<&FlightComponent::AngularImpulseFor>("AngularImpulseFor");
   }
 };
 RED4EXT_ASSERT_OFFSET(FlightComponent, sys, 0xA8);

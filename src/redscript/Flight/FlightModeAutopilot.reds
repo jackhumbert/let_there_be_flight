@@ -1822,8 +1822,16 @@ public class FlightModeAutopilot extends FlightModeStandard {
       fwd = Vector4.Length(fwd) > 0.1 ? Vector4.Normalize(fwd) : this.headingRef;
       this.attAccel += (accel - this.attAccel) * ClampF(dt / (this.raceMode ? this.raceBankTime : this.bankTime), 0.0, 1.0);
       let u = FlightAttitude.Across(this.attAccel * blend + z * (9.81 * this.gravityFactor), fwd);
+      let held = FlightAttitude.Across(this.targetUp, fwd);
       if Vector4.Length(u) < 1.0 {
-        u = FlightAttitude.Across(this.targetUp, fwd);
+        u = held;
+      }
+      // with the path near vertical, gravity says nothing about which way the top should face and
+      // small sideways accelerations swung it from frame to frame (yaw chatter in dives and steep
+      // climbs, 2026-10-27): hold the top where it was instead
+      let vertical = ClampF((AbsF(fwd.Z) - 0.7) / 0.25, 0.0, 1.0);
+      if vertical > 0.0 && Vector4.Length(held) > 0.01 {
+        u = Vector4.Normalize(u) * (1.0 - vertical) + Vector4.Normalize(held) * vertical;
       }
       up = this.EaseBank(dt, fwd, Vector4.Normalize(u));
       if IsDefined(this.maneuver) {
@@ -1871,10 +1879,27 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let mass = stats.s_mass;
     let inertia = stats.s_momentOfInertia;
     let tensor = this.component.thrusterTensor;
-    let torque = new Vector4(
-      alpha.X * inertia.X / MaxF(this.torqueGainPitch * mass * tensor.X, 0.001),
-      alpha.Y * inertia.Y / MaxF(this.torqueGainRoll * mass * MaxF(tensor.Y, 1.0), 0.001),
-      alpha.Z * inertia.Z / MaxF(this.torqueGainYaw * mass * tensor.Z, 0.001), 0.0);
+    // FlightComponent turns the mode torque into an angular impulse: x dt, x mass, x the thruster
+    // tensor per axis, into the world frame; PhysX applies it with the body's world inertia. So the
+    // torque for alpha is that inertia x alpha, back through the same steps. The per-axis gains
+    // below were measured on one car (an Archer Quartz) and are only the fallback without PhysX-owned
+    // flight: on a Thorton Colby the yaw came out about three times too stiff and shook at 7 Hz
+    // (2026-10-27).
+    let torque: Vector4;
+    let impulse = this.component.AngularImpulseFor(stats.d_orientation * alpha);
+    if impulse.W > 0.5 {
+      impulse.W = 0.0;
+      let localImpulse = Quaternion.Conjugate(stats.d_orientation) * impulse;
+      torque = new Vector4(
+        localImpulse.X / MaxF(mass * tensor.X, 0.001),
+        localImpulse.Y / MaxF(mass * MaxF(tensor.Y, 1.0), 0.001),
+        localImpulse.Z / MaxF(mass * tensor.Z, 0.001), 0.0);
+    } else {
+      torque = new Vector4(
+        alpha.X * inertia.X / MaxF(this.torqueGainPitch * mass * tensor.X, 0.001),
+        alpha.Y * inertia.Y / MaxF(this.torqueGainRoll * mass * MaxF(tensor.Y, 1.0), 0.001),
+        alpha.Z * inertia.Z / MaxF(this.torqueGainYaw * mass * tensor.Z, 0.001), 0.0);
+    }
     // ApplyPhysics damps all rotation: give back what it takes from the rotation wanted
     let fs = FlightSettings.GetInstance();
     let giveBack = rateRef * fs.generalDampFactorAngular;
