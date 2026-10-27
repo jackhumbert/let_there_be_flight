@@ -326,6 +326,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let bankRateNow: Float;
   public let pitchAngle: Float;               // rad, eased nose pitch on a racing line
   public let pitchRateNow: Float;             // rad/s
+  public let commandSurge: Float;             // -1..1, the thrust it commands, for the engine sound
+  public let commandSway: Float;
   private let cinematicCallback: ref<CallbackHandle>;
   private let cinematicContext: Bool;         // UIGameContext.CinematicCamera pushed              // rad/s
 
@@ -1911,7 +1913,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
       // the same steep-path rule as the nose off the line: on the final drop to a landing spot
       // the line's own slope held the nose at the ground for 4 s (2026-10-27)
       let slope = AsinF(ClampF(tangent.Z, -1.0, 1.0));
-      wanted = AsinF(ClampF(this.Unsteep(level * CosF(slope) + FlightUtils.Up() * SinF(slope)).Z, -1.0, 1.0));
+      let along = this.Unsteep(level * CosF(slope) + FlightUtils.Up() * SinF(slope));
+      wanted = AsinF(ClampF(along.Z, -1.0, 1.0));
     }
     let f = this.racePitchFrequency;
     let accel = ClampF(f * f * (wanted - this.pitchAngle) - 2.0 * f * this.pitchRateNow, -this.racePitchAccelMax, this.racePitchAccelMax);
@@ -2119,8 +2122,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.torque = torque;
     // inputs for audio and the thrusters' look; no yaw input, ApplyPhysics damps less on an axis
     // with input and the give-back above assumes full damping
-    this.component.surge = ClampF(local.Y / this.standardModeSurgeFactor, -1.0, 1.0);
-    this.component.sway = ClampF(local.X / this.standardModeSwayFactor, -1.0, 1.0);
+    this.commandSurge = ClampF(local.Y / this.standardModeSurgeFactor, -1.0, 1.0);
+    this.commandSway = ClampF(local.X / this.standardModeSwayFactor, -1.0, 1.0);
+    this.component.surge = this.commandSurge;
+    this.component.sway = this.commandSway;
     this.component.yaw = 0.0;
     this.component.lift = 0.0;
     this.component.linearBrake = 0.0;

@@ -1113,7 +1113,23 @@ public native class FlightComponent extends GameComponent {
     } else {
       this.audioUpdate.damage = (1.0 - (vehHealthPercent / 100.0)) * 0.2;
     }
-    if this.isPlayerMounted {
+    let autopilot = this.GetFlightMode() as FlightModeAutopilot;
+    if this.isPlayerMounted && IsDefined(autopilot) {
+      // The Autopilot flies without the player's inputs, which sat at zero and left the engine
+      // nearly silent at 90 m/s (2026-10-27): what it commands instead. Surge and sway from its
+      // own fields (this.surge and the rest stay the player's: the Autopilot reads them to see
+      // when the player takes over, and its own values there held it in a takeover, flying
+      // backwards out of the map), lift from its thrust against gravity (force is in the car's
+      // frame), and the turns from how the car is actually rotating (body rates, rad/s).
+      let g = 9.81 * autopilot.gravityFactor;
+      let w = this.stats.d_angularVelocity;
+      this.audioUpdate.surge = autopilot.commandSurge * ratio;
+      this.audioUpdate.sway = autopilot.commandSway * ratio;
+      this.audioUpdate.lift = ClampF((force.Z - g) / MaxF(autopilot.standardModeLiftFactor, 1.0), -1.0, 1.0) * ratio;
+      this.audioUpdate.yaw = ClampF(w.Z, -1.0, 1.0) * ratio;
+      this.audioUpdate.pitch = ClampF(w.X, -1.0, 1.0) * ratio;
+      this.audioUpdate.roll = ClampF(w.Y / 1.5, -1.0, 1.0) * ratio;
+    } else if this.isPlayerMounted {
       // more responsive-sounding
       this.audioUpdate.surge = this.sys.ctlr.surge.GetInput() * ratio;
       this.audioUpdate.yaw = this.sys.ctlr.yaw.GetInput() * ratio;
