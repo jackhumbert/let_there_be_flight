@@ -108,9 +108,9 @@ def plot(runs, out):
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    # reference palette (light surface), categorical slots 1 and 2, validated together
+    # reference palette (light surface), categorical slots 1 to 3, validated together
     surface, ink, ink2, grid = "#fcfcfb", "#0b0b0b", "#52514e", "#e6e5e1"
-    actual, target = "#2a78d6", "#eb6834"
+    actual, target, third = "#2a78d6", "#eb6834", "#1baf7a"
     plt.rcParams.update({
         "figure.facecolor": surface, "axes.facecolor": surface, "axes.edgecolor": grid,
         "axes.labelcolor": ink2, "xtick.color": ink2, "ytick.color": ink2, "text.color": ink,
@@ -130,6 +130,7 @@ def plot(runs, out):
         ax = axes[1][c]
         ax.plot(t, [r["w"][1] for r in rows], color=actual, lw=1.2, label="roll rate")
         ax.plot(t, [r["w"][2] for r in rows], color=target, lw=1.2, label="yaw rate")
+        ax.plot(t, [r["w"][0] for r in rows], color=third, lw=1.2, label="pitch rate")
         ax = axes[2][c]
         ax.plot(t, [math.sqrt(sum(x * x for x in r["v"])) for r in rows], color=actual, lw=1.4)
         axes[2][c].set_xlabel("time (s)")

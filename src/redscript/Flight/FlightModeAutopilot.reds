@@ -247,6 +247,12 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // ahead (ribbonLead) so the slower roll still starts in time
   public let raceRollRateMax: Float = 1.0;    // rad/s
   public let raceRollAccelMax: Float = 3.0;   // rad/s2
+  // pitch on a racing line, the same way as the bank: from the line's own slope ribbonLead ahead
+  // (not the velocity plus the commanded acceleration, which carries every height correction and
+  // bobbed the nose), eased through the same filter
+  public let racePitchFrequency: Float = 2.5; // rad/s
+  public let racePitchRateMax: Float = 1.0;   // rad/s
+  public let racePitchAccelMax: Float = 3.0;  // rad/s2
 
   // state, public for debugging from CET
   public let status: String = "idle";
@@ -316,7 +322,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let closestS: Float;                 // route distance of the closest point
   public let onLine: Bool;                    // following a racing line this frame (the ribbon applies)
   public let ribbonNeed: Vector4;             // m/s2, the line's bend ahead at the speed flown (no deadband)
-  public let bankRateNow: Float;              // rad/s
+  public let bankRateNow: Float;
+  public let pitchAngle: Float;               // rad, eased nose pitch on a racing line
+  public let pitchRateNow: Float;             // rad/s              // rad/s
 
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeAutopilot> {
     let self = new FlightModeAutopilot();
@@ -1854,6 +1862,26 @@ public class FlightModeAutopilot extends FlightModeStandard {
     return level * CosF(this.bankAngle) + side * SinF(this.bankAngle);
   }
 
+  // On a racing line: the nose's pitch from the line's slope ahead, eased (critically damped, rate
+  // and acceleration limited), on the nose's own heading. Elsewhere it follows the nose as it is.
+  private func EasePitch(dt: Float, fwd: Vector4) -> Vector4 {
+    let level = Vector4.Normalize2D(fwd);
+    if !this.onLine || Vector4.Length(level) < 0.5 {
+      this.pitchAngle = AsinF(ClampF(fwd.Z, -1.0, 1.0));
+      this.pitchRateNow = 0.0;
+      return fwd;
+    }
+    let tangent: Vector4;
+    let bend: Vector4;
+    this.LineFrameOver(this.closestS + this.component.stats.d_speed * this.ribbonLead, this.ribbonSpan, tangent, bend);
+    let wanted = AsinF(ClampF(tangent.Z, -1.0, 1.0));
+    let f = this.racePitchFrequency;
+    let accel = ClampF(f * f * (wanted - this.pitchAngle) - 2.0 * f * this.pitchRateNow, -this.racePitchAccelMax, this.racePitchAccelMax);
+    this.pitchRateNow = ClampF(this.pitchRateNow + accel * dt, -this.racePitchRateMax, this.racePitchRateMax);
+    this.pitchAngle = ClampF(this.pitchAngle + this.pitchRateNow * dt, -1.5, 1.5);
+    return level * CosF(this.pitchAngle) + FlightUtils.Up() * SinF(this.pitchAngle);
+  }
+
   private func SyncBank(fwd: Vector4, up: Vector4) -> Void {
     let level: Vector4;
     let side: Vector4;
@@ -1905,6 +1933,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
         fwd += Vector4.Normalize(path) * blend;
       }
       fwd = Vector4.Length(fwd) > 0.1 ? Vector4.Normalize(fwd) : this.headingRef;
+      fwd = this.EasePitch(dt, fwd);
       // a steep path (the drop onto a landing spot): the nose stays nearer level instead of
       // pointing at the ground, where which way is up has no answer and the bank flicked across
       // +-80 degrees (2026-10-27)
