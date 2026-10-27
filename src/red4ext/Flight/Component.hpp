@@ -119,6 +119,7 @@ public:
   bool physxOwned = false;
   RED4ext::Vector3 pendingImpulse{0.0f, 0.0f, 0.0f};
   RED4ext::Vector3 pendingAngularImpulse{0.0f, 0.0f, 0.0f};
+  // PhysX time consumed since the last PushToPhysX
   float physxFrameDt = 0.0f;
   // angular velocity (world) the world gave the vehicle through contacts, decaying; flight
   // damping ignores it so collisions tumble physically while inputs stay damped

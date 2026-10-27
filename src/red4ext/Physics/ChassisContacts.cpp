@@ -184,12 +184,16 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 547299556, SyncFromPhysX, void *self,
     rb->force = Vector3();
     rb->torque = Vector3();
     SetTracking(self, rb->velocity, rb->angularVelocity);
-    owner->physxFrameDt = consumedDt;
+    // PushToPhysX only runs on frames with a physics step (60 Hz), this runs every frame: add up
+    // the time so gravity covers all of it, not just the last frame (above 60 fps that left about
+    // a quarter of gravity out and flying vehicles drifted up)
+    owner->physxFrameDt += consumedDt;
     return;
   }
 
   if (owner) {
     owner->contactSpin = Vector3();
+    owner->physxFrameDt = 0.0f;
   }
   auto v0 = rb ? rb->velocity : Vector3();
   auto w0 = rb ? rb->angularVelocity : Vector3();
@@ -286,6 +290,7 @@ REGISTER_FLIGHT_HOOK_HASH(char __fastcall, 3628605463, PushToPhysX, void *self, 
   }
 
   float dt = std::fmin(std::fmax(fc->physxFrameDt, 0.0f), kMaxFrameDt);
+  fc->physxFrameDt = 0.0f;
   // for FlightComponent.AngularImpulseFor: the inertia the impulse below is applied with
   fc->worldInertia = rb->worldInertiaTensor;
   fc->worldInertiaValid = true;
