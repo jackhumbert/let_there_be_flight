@@ -35,9 +35,18 @@ struct PlanParams {
   float turnCost = 0.0f;         // cost (as metres flown) per 45 degrees the route turns over a few
                                  // cells, at every step: it prefers straighter, more open corridors,
                                  // whose bends the racing line can take wide
+  float bearingCost = 0.0f;      // extra cost per metre flown straight away from the goal (none
+                                 // flown towards it): a route that heads off the other way looks
+                                 // wrong to someone watching even when it is cheaper
   float minPassage = 0.0f;       // m of free height (car-centre gap, the car's size already taken off)
                                  // the route may squeeze through between columns; 0 = any
   uint32_t maxExpansions = 3000000;
+  // The take-off is part of the plan: the search starts from every free gap within startRadius of
+  // the start (the car, often on a street under a deck or between buildings), each at the cost of
+  // getting there, and the route begins at the start itself. The first point off the ground is at
+  // least startLift above its floor.
+  float startRadius = 30.0f;     // m
+  float startLift = 3.0f;        // m
   float maxGradient = 1.0f;      // rise per horizontal metre allowed in the height profile
   float legClearance = 2.0f;     // straight legs must also be free this far to either side (m), on top
                                  // of the bake's car inflation, so a follower can stray a little
@@ -78,6 +87,7 @@ struct PlanResult {
   uint32_t gridNodes = 0; // nodes on the A* path before simplification
   float length = 0;
   double milliseconds = 0;
+  double searchMilliseconds = 0; // of milliseconds, the grid search and the route pulled straight
   std::string info;
 };
 

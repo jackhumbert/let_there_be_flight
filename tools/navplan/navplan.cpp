@@ -70,6 +70,9 @@ int main(int argc, char **argv) {
   if (const char *v = std::getenv("NAVPLAN_LINE_CLEARANCE")) {
     params.lineClearance = std::strtof(v, nullptr);
   }
+  if (const char *v = std::getenv("NAVPLAN_BEARING")) {
+    params.bearingCost = std::strtof(v, nullptr);
+  }
   if (const char *v = std::getenv("NAVPLAN_LINE_PUSH")) {
     params.linePush = std::strtof(v, nullptr);
   }

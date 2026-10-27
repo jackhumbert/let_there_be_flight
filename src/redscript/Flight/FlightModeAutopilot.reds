@@ -355,7 +355,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.yawCmd = 0.0;
     this.lastRoll = -AsinF(ClampF(Vector4.Dot(this.component.stats.d_right, FlightUtils.Up()), -1.0, 1.0));
     this.rollRate = 0.0;
-    this.underCover = this.UnderCover(this.holdPosition);
+    // In Race the take-off is part of the plan: the route starts at the car, and the planner finds
+    // the way out from under a deck or between buildings itself (PlanParams.startRadius). The
+    // straight climb and the hold under cover are the archived normal mode's.
+    this.underCover = !this.raceMode && this.UnderCover(this.holdPosition);
     if this.underCover {
       // somewhere covered the map does not have (a car park, under a structure): the nearest free
       // space is above the roof, and climbing to it went 47 m up inside a building, 2026-10-27
@@ -363,7 +366,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       FlightLog.Warn("[Autopilot] under cover at " + FloatToStringPrec(this.holdPosition.X, 1) + ", " + FloatToStringPrec(this.holdPosition.Y, 1)
         + ", " + FloatToStringPrec(this.holdPosition.Z, 1) + ": holding, move out into the open first");
     }
-    this.takingOff = !this.underCover && this.TakeoffPoint(this.holdPosition, this.takeoffPoint);
+    this.takingOff = !this.raceMode && !this.underCover && this.TakeoffPoint(this.holdPosition, this.takeoffPoint);
     this.takeoffStartZ = this.holdPosition.Z;
     this.takeoffHeading0 = this.component.stats.d_forward2D;
     this.aheadSmooth = 15.0;

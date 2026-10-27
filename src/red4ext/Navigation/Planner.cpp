@@ -116,18 +116,21 @@ constexpr float kGrazeAllowed = 1.0f; // m: the planner's own legs graze this mu
 // which finds a little more; still half the 3 m the bake grew solids by for the car
 constexpr float kGrazeAllowedLine = 1.5f;
 
-float LongestBlocked(const NavMap &aMap, const std::vector<Vec3> &aPoints) {
-  float run = 0.0f, longest = 0.0f, carry = 0.0f;
+// The longest run of blocked space along the polyline, from aSkip metres on (the stretch from a
+// car under cover out to the free space is blocked on the map and is flown anyway).
+float LongestBlocked(const NavMap &aMap, const std::vector<Vec3> &aPoints, float aSkip = 0.0f) {
+  float run = 0.0f, longest = 0.0f, carry = 0.0f, along = 0.0f;
   for (size_t i = 0; i + 1 < aPoints.size(); ++i) {
     Vec3 a = aPoints[i], b = aPoints[i + 1];
     float len = Distance(a, b);
     for (float s = carry; s <= len; s += kGrazeStep) {
       float t = len > 1e-4f ? s / len : 0.0f;
-      bool free = aMap.IsFree(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t);
+      bool free = along + s < aSkip || aMap.IsFree(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t);
       run = free ? 0.0f : run + kGrazeStep;
       longest = std::max(longest, run);
       carry = s + kGrazeStep - len;
     }
+    along += len;
   }
   return longest;
 }
@@ -335,6 +338,9 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
     }
     out.info = fmt::format("{}: {} points, {:.0f} m, {} expansions, {} grid nodes, {:.1f} ms", aWhat,
                            out.points.size(), out.length, out.expansions, out.gridNodes, out.milliseconds);
+    if (out.searchMilliseconds > 0.0) {
+      out.info += fmt::format(" (search {:.1f} ms, line {:.1f} ms)", out.searchMilliseconds, out.milliseconds - out.searchMilliseconds);
+    }
     return out;
   };
 
@@ -368,10 +374,7 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
     float g;
     uint64_t parent;
   };
-  std::unordered_map<uint64_t, Rec> recs;
-  recs.reserve(1 << 20);
   using Entry = std::pair<float, uint64_t>;
-  std::priority_queue<Entry, std::vector<Entry>, std::greater<Entry>> open;
 
   float goalX, goalY;
   aMap.CellCentre(gx, gy, goalX, goalY);
@@ -380,106 +383,190 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
     aMap.CellCentre(aCx, aCy, x, y);
     return aParams.heuristicWeight * std::hypot(x - goalX, y - goalY);
   };
-
-  const uint64_t startKey = MakeKey(sx, sy, sg, width);
   const uint64_t goalKey = MakeKey(gx, gy, gg, width);
-  recs[startKey] = {0.0f, startKey};
-  open.push({heuristic(sx, sy), startKey});
   static const int32_t kDx[8] = {1, -1, 0, 0, 1, 1, -1, -1};
   static const int32_t kDy[8] = {0, 0, 1, -1, 1, -1, 1, -1};
   const float minOverlap = aMap.VoxelHeight();
-  bool found = false;
 
-  while (!open.empty()) {
-    auto [f, key] = open.top();
-    open.pop();
-    int32_t cx = KeyCx(key, width), cy = KeyCy(key, width);
-    float g = recs[key].g;
-    if (f > g + heuristic(cx, cy) + 1e-3f) {
-      continue; // stale entry
+  // columns a search may use (none: all of them)
+  struct Corridor {
+    int32_t x0 = 0, y0 = 0, w = 0, h = 0;
+    std::vector<uint8_t> cells;
+    bool Has(int32_t aX, int32_t aY) const {
+      int32_t x = aX - x0, y = aY - y0;
+      return x >= 0 && y >= 0 && x < w && y < h && cells[size_t(y) * w + x];
     }
-    if (key == goalKey) {
-      found = true;
-      break;
-    }
-    if (++out.expansions > aParams.maxExpansions) {
-      break;
-    }
-    GapM cur = GapAt(view, cx, cy, KeyGap(key));
-    float curPreferred = Preferred(cur, aParams.preferredHeight);
-    // for turnCost: the nodes kTurnBase and kTurnBase - 1 steps back along the search's path, so
-    // a bend is judged over a few cells (a straight line at 25 degrees is a staircase of 0 and 45
-    // degree steps; judged step by step it would turn at every stair)
-    int32_t backX = cx, backY = cy, nearX = cx, nearY = cy;
-    bool haveBack = false;
-    if (aParams.turnCost > 0.0f) {
-      uint64_t k = key;
-      int steps = 0;
-      while (steps < kTurnBase) {
-        uint64_t parent = recs[k].parent;
-        if (parent == k) {
-          break;
-        }
-        k = parent;
-        ++steps;
-        if (steps == kTurnBase - 1) {
-          nearX = KeyCx(k, width);
-          nearY = KeyCy(k, width);
-        }
-      }
-      if (steps == kTurnBase) {
-        backX = KeyCx(k, width);
-        backY = KeyCy(k, width);
-        haveBack = true;
-      }
-    }
-    for (int d = 0; d < 8; ++d) {
-      int32_t nx = cx + kDx[d], ny = cy + kDy[d];
-      const uint16_t *gaps;
-      uint32_t n = view.Column(nx, ny, gaps);
-      float step = d < 4 ? cell : cell * 1.41421356f;
-      for (uint32_t j = 0; j < n; ++j) {
-        GapM next{aMap.VoxelZ(gaps[2 * j]), aMap.VoxelZ(gaps[2 * j + 1])};
-        float overlap = std::min(cur.t, next.t) - std::max(cur.b, next.b);
-        if (overlap < minOverlap) {
+  };
+
+  // One search, only over the columns aAllowed marks (none: anywhere). aPath gets the nodes from a
+  // start seed to the goal; aLimit says the search ran out of expansions.
+  auto search = [&](const Corridor *aAllowed, std::vector<uint64_t> &aPath, bool &aLimit) -> bool {
+    std::unordered_map<uint64_t, Rec> recs;
+    recs.reserve(size_t(1) << 20);
+    std::priority_queue<Entry, std::vector<Entry>, std::greater<Entry>> open;
+    uint32_t expansions = 0;
+    aLimit = false;
+
+    // The take-off is part of the search: it starts from every free gap within startRadius, each at
+    // the cost of getting there from the start (the distance, rises counted three times over, and
+    // blocked map along the way five times over), so it finds the way out from under a deck or
+    // between buildings itself. One anchor gap could be a pocket the map closed off: from under a
+    // structure in Kabuki the search had one expansion and no route (2026-10-27).
+    const int32_t r = int32_t(std::ceil(aParams.startRadius / cell));
+    for (int32_t dy = -r; dy <= r; ++dy) {
+      for (int32_t dx = -r; dx <= r; ++dx) {
+        int32_t cx = sx + dx, cy = sy + dy;
+        float x, y;
+        aMap.CellCentre(cx, cy, x, y);
+        float flat = std::hypot(x - aStart.x, y - aStart.y);
+        if (flat > aParams.startRadius) {
           continue;
         }
-        // squeeze points: a passage lower than minPassage is left out (but for reaching the goal)
-        if (overlap < aParams.minPassage && MakeKey(nx, ny, j, width) != goalKey) {
-          continue;
-        }
-        float turn = 0.0f;
-        if (haveBack) {
-          // angle between the last kTurnBase steps and the kTurnBase steps ending at the next cell
-          float ax = float(cx - backX), ay = float(cy - backY);
-          float bx = float(nx - nearX), by = float(ny - nearY);
-          float angle = std::fabs(std::atan2(ax * by - ay * bx, ax * bx + ay * by));
-          turn = aParams.turnCost * angle / 0.78539816f;
-        }
-        float cost = turn + step * (1.0f + (std::isfinite(next.t) ? aParams.underCost : 0.0f)) +
-                     aParams.climbCost * std::max(0.0f, Preferred(next, aParams.preferredHeight) - curPreferred);
-        uint64_t nextKey = MakeKey(nx, ny, j, width);
-        float ng = g + cost;
-        auto it = recs.find(nextKey);
-        if (it == recs.end() || ng < it->second.g) {
-          recs[nextKey] = {ng, key};
-          open.push({ng + heuristic(nx, ny), nextKey});
+        const uint16_t *g;
+        uint32_t count = view.Column(cx, cy, g);
+        for (uint32_t i = 0; i < count; ++i) {
+          GapM gap = GapAt(view, cx, cy, i);
+          float z = std::clamp(std::max(aStart.z, gap.b + aParams.startLift), gap.b, std::min(gap.t, kTopCap) - aMap.VoxelHeight());
+          if (z < gap.b) {
+            continue; // no room
+          }
+          Vec3 at{x, y, z};
+          float len = Distance(aStart, at);
+          float cost = flat + 3.0f * std::max(0.0f, z - aStart.z) + std::max(0.0f, aStart.z - z) +
+                       5.0f * (1.0f - Clear(aMap, aStart, at)) * len;
+          uint64_t key = MakeKey(cx, cy, i, width);
+          auto it = recs.find(key);
+          if (it == recs.end() || cost < it->second.g) {
+            recs[key] = {cost, key};
+            open.push({cost + heuristic(cx, cy), key});
+          }
         }
       }
     }
-  }
-  if (!found) {
-    return finish(out.expansions > aParams.maxExpansions ? "search limit reached" : "no route");
-  }
+    if (recs.empty()) {
+      const uint64_t anchorKey = MakeKey(sx, sy, sg, width);
+      recs[anchorKey] = {0.0f, anchorKey};
+      open.push({heuristic(sx, sy), anchorKey});
+    }
+
+    uint64_t endKey = 0;
+    bool found = false;
+    while (!open.empty()) {
+      auto [f, key] = open.top();
+      open.pop();
+      int32_t cx = KeyCx(key, width), cy = KeyCy(key, width);
+      float g = recs[key].g;
+      if (f > g + heuristic(cx, cy) + 1e-3f) {
+        continue; // stale entry
+      }
+      GapM cur = GapAt(view, cx, cy, KeyGap(key));
+      if (key == goalKey) {
+        endKey = key;
+        found = true;
+        break;
+      }
+      if (++expansions > aParams.maxExpansions) {
+        aLimit = true;
+        break;
+      }
+      float curPreferred = Preferred(cur, aParams.preferredHeight);
+      // for turnCost: the nodes kTurnBase and kTurnBase - 1 steps back along the search's path, so
+      // a bend is judged over a few cells (a straight line at 25 degrees is a staircase of 0 and 45
+      // degree steps; judged step by step it would turn at every stair)
+      int32_t backX = cx, backY = cy, nearX = cx, nearY = cy;
+      bool haveBack = false;
+      if (aParams.turnCost > 0.0f) {
+        uint64_t k = key;
+        int steps = 0;
+        while (steps < kTurnBase) {
+          uint64_t parent = recs[k].parent;
+          if (parent == k) {
+            break;
+          }
+          k = parent;
+          ++steps;
+          if (steps == kTurnBase - 1) {
+            nearX = KeyCx(k, width);
+            nearY = KeyCy(k, width);
+          }
+        }
+        if (steps == kTurnBase) {
+          backX = KeyCx(k, width);
+          backY = KeyCy(k, width);
+          haveBack = true;
+        }
+      }
+      for (int d = 0; d < 8; ++d) {
+        int32_t nx = cx + kDx[d], ny = cy + kDy[d];
+        if (aAllowed && !aAllowed->Has(nx, ny)) {
+          continue;
+        }
+        const uint16_t *gaps;
+        uint32_t n = view.Column(nx, ny, gaps);
+        float step = d < 4 ? cell : cell * 1.41421356f;
+        for (uint32_t j = 0; j < n; ++j) {
+          GapM next{aMap.VoxelZ(gaps[2 * j]), aMap.VoxelZ(gaps[2 * j + 1])};
+          float overlap = std::min(cur.t, next.t) - std::max(cur.b, next.b);
+          if (overlap < minOverlap) {
+            continue;
+          }
+          // squeeze points: a passage lower than minPassage is left out (but for reaching the goal)
+          if (overlap < aParams.minPassage && MakeKey(nx, ny, j, width) != goalKey) {
+            continue;
+          }
+          float turn = 0.0f;
+          if (haveBack) {
+            // angle between the last kTurnBase steps and the kTurnBase steps ending at the next cell
+            float ax = float(cx - backX), ay = float(cy - backY);
+            float bx = float(nx - nearX), by = float(ny - nearY);
+            float angle = std::fabs(std::atan2(ax * by - ay * bx, ax * bx + ay * by));
+            turn = aParams.turnCost * angle / 0.78539816f;
+          }
+          // bearing: a step heading away from the goal costs more, (1 - cos) / 2 of bearingCost per
+          // metre, so the route keeps going the way a watcher expects it to go
+          float bearing = 0.0f;
+          if (aParams.bearingCost > 0.0f) {
+            float tx = float(gx - cx), ty = float(gy - cy);
+            float tl = std::hypot(tx, ty);
+            if (tl > 0.5f) {
+              float cosine = (float(kDx[d]) * tx + float(kDy[d]) * ty) / (tl * std::hypot(float(kDx[d]), float(kDy[d])));
+              bearing = aParams.bearingCost * step * 0.5f * (1.0f - cosine);
+            }
+          }
+          float cost = turn + bearing + step * (1.0f + (std::isfinite(next.t) ? aParams.underCost : 0.0f)) +
+                       aParams.climbCost * std::max(0.0f, Preferred(next, aParams.preferredHeight) - curPreferred);
+          uint64_t nextKey = MakeKey(nx, ny, j, width);
+          float ng = g + cost;
+          auto it = recs.find(nextKey);
+          if (it == recs.end() || ng < it->second.g) {
+            recs[nextKey] = {ng, key};
+            open.push({ng + heuristic(nx, ny), nextKey});
+          }
+        }
+      }
+    }
+    out.expansions += expansions;
+    if (!found) {
+      return false;
+    }
+    aPath.clear();
+    for (uint64_t k = endKey;; k = recs[k].parent) {
+      aPath.push_back(k);
+      if (recs[k].parent == k) {
+        break; // a start seed
+      }
+    }
+    std::reverse(aPath.begin(), aPath.end());
+    return true;
+  };
 
   std::vector<uint64_t> path;
-  for (uint64_t k = goalKey;; k = recs[k].parent) {
-    path.push_back(k);
-    if (k == startKey) {
-      break;
-    }
+  bool limit = false;
+  bool found = search(nullptr, path, limit);
+
+  if (!found) {
+    return finish(limit ? "search limit reached" : "no route");
   }
-  std::reverse(path.begin(), path.end());
   const size_t n = path.size();
   out.gridNodes = uint32_t(n);
 
@@ -511,7 +598,7 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
       seg[i] = std::hypot(xs[i + 1] - xs[i], ys[i + 1] - ys[i]);
     }
   }
-  z[0] = std::clamp(aStart.z, lo[0], hi[0]);
+  z[0] = std::clamp(std::max(aStart.z, lo[0] + aParams.startLift), lo[0], hi[0]);
   z[n - 1] = goal.z;
   for (size_t i = n - 1; i-- > 0;) { // climb early before obstacles
     z[i] = std::min(std::max(z[i], z[i + 1] - aParams.maxGradient * seg[i]), hi[i]);
@@ -524,19 +611,27 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
   for (size_t i = 0; i < n; ++i) {
     dense[i] = {xs[i], ys[i], z[i]};
   }
-  dense.front() = aStart;
   dense.back() = goal;
+  // the route begins at the start itself, then the gap the search left from (the take-off)
+  float startLeg = 0.0f;
+  if (Distance(aStart, dense.front()) > 1.0f) {
+    startLeg = Distance(aStart, dense.front());
+    dense.insert(dense.begin(), aStart);
+  } else {
+    dense.front() = aStart;
+  }
+  const size_t nd = dense.size();
 
   // string pulling: from each anchor, the furthest node with a free straight leg. Legs keep
   // legClearance to the sides where that still allows a leg of a useful length; in tight spots
   // the plain test is used, so the route does not turn into a staircase of single cells.
   auto furthest = [&](size_t aFrom, float aSide) {
-    size_t good = aFrom + 1, bad = n;
+    size_t good = aFrom + 1, bad = nd;
     for (size_t stride = 2;; stride *= 2) {
-      size_t j = std::min(n - 1, aFrom + stride);
+      size_t j = std::min(nd - 1, aFrom + stride);
       if (ClearWide(aMap, dense[aFrom], dense[j], aSide)) {
         good = j;
-        if (j == n - 1) {
+        if (j == nd - 1) {
           break;
         }
       } else {
@@ -544,7 +639,7 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
         break;
       }
     }
-    while (bad < n && bad - good > 1) {
+    while (bad < nd && bad - good > 1) {
       size_t mid = (good + bad) / 2;
       if (ClearWide(aMap, dense[aFrom], dense[mid], aSide)) {
         good = mid;
@@ -557,9 +652,9 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
   const size_t minWideNodes = size_t(std::ceil(20.0f / cell));
   out.points.push_back(dense.front());
   size_t a = 0;
-  while (a + 1 < n) {
+  while (a + 1 < nd) {
     size_t good = furthest(a, aParams.legClearance);
-    if (good < n - 1 && good - a < minWideNodes) {
+    if (good < nd - 1 && good - a < minWideNodes) {
       good = std::max(good, furthest(a, 0.0f));
     }
     out.points.push_back(dense[good]);
@@ -569,10 +664,12 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
     out.points.push_back(goal); // start and goal share a column
   }
   out.ok = true;
+  out.searchMilliseconds = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
   if (aParams.racingLine && out.points.size() > 2) {
     // kept only if the finished line is free all the way; otherwise the pulled route stays
     auto line = RacingLine(aMap, out.points, aParams);
-    if (LongestBlocked(aMap, line) <= kGrazeAllowedLine) {
+    // (the stretch out from under cover to the free space is blocked on the map: not counted)
+    if (LongestBlocked(aMap, line, startLeg + 5.0f) <= kGrazeAllowedLine) {
       out.points = std::move(line);
       return finish("racing line");
     }
