@@ -44,14 +44,13 @@ public abstract class FlightCinematic {
     return 3;
   }
 
-  // A flyby zooms on the car while it is far: the field of view that keeps about this much of the
-  // car's surroundings (m) in frame, between the bounds, degrees
-  public static func ZoomSpan() -> Float {
-    return 14.0;
-  }
-
-  public static func Zoom(camera: ref<vehicleCinematicCameraComponent>, distance: Float) -> Void {
-    camera.SetFOV(ClampF(Rad2Deg(2.0 * AtanF(0.5 * FlightCinematic.ZoomSpan(), distance)), 12.0, 60.0));
+  // Shots cut short in flight, s (-1: as made). AttachedFront1 (ahead of the car, looking back at
+  // its nose) looked odd for its 6 s.
+  public static func MaxDuration(name: String) -> Float {
+    if Equals(name, "S_AttachedFront1_Static") {
+      return 2.5;
+    }
+    return -1.0;
   }
 
   public static func List(camera: ref<vehicleCinematicCameraComponent>, context: vehicleCinematicCameraShotUpdateContext) -> Void {
@@ -114,12 +113,7 @@ public func GetShotSpaceTransform(data: CinematicCameraData) -> WorldTransform {
 public func Update(context: vehicleCinematicCameraShotUpdateContext) -> WorldTransform {
   let result = wrappedMethod(context);
   if FlightCinematic.Flying() {
-    result = FlightCinematic.AimAtCar(result, context);
-    if IsDefined(this.root as cameraShotRoot_FixedShot) {
-      let car = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(context.vehicleTransform));
-      FlightCinematic.Zoom(context.cameraComponent, Vector4.Distance(car, WorldPosition.ToVector4(WorldTransform.GetWorldPosition(result))));
-    }
-    return result;
+    return FlightCinematic.AimAtCar(result, context);
   }
   return result;
 }
@@ -229,4 +223,15 @@ public func Evaluate(const data: CinematicCameraData, const finalTransform: Worl
   let limit = MaxF(this.maxDistanceFromCamera, 1.25 * fixed.flightReach);
   let camera = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(finalTransform));
   return Vector4.Distance(WorldPosition.ToVector4(WorldTransform.GetWorldPosition(data.vehicleTransform)), camera) >= limit;
+}
+
+@wrapMethod(vehicleCinematicCameraShot)
+public func ShouldStop(const finalTransform: WorldTransform) -> Bool {
+  if FlightCinematic.Flying() {
+    let most = FlightCinematic.MaxDuration(this.name);
+    if most > 0.0 && this.runtimeData.currentTime - this.runtimeData.shotStartTime >= most {
+      return true;
+    }
+  }
+  return wrappedMethod(finalTransform);
 }
