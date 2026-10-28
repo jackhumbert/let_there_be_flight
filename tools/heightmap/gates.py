@@ -1,4 +1,4 @@
-﻿"""Free roam gates from the planner's doorways: openings worth flying through.
+"""Free roam gates from the planner's doorways: openings worth flying through.
 
 The doorways baked into the nav map (doorways.py) are where a car can cross the edge of a 32 m
 block. Each one is measured on the map at flight height: how wide the opening is along the block
@@ -7,15 +7,23 @@ car can fly straight through it for a stretch either side. Narrow, deep openings
 (and under things) score best; one gate is kept per GATE_SPACING metres. The Autopilot's free
 roam picks its legs through these (src/navigation/gates.tsv, FlightModeAutopilot).
 
-    python tools/heightmap/gates.py NAVMAP.bin -o src/navigation/gates.tsv [--count 80] [--preview gates.png]
+    python tools/heightmap/gates.py NAVMAP.bin -o src/navigation/gates.tsv --navplan build/navplan.exe [--count 80] [--preview gates.png]
+
+--navplan flies each candidate with the Autopilot's own planner (build/navplan.exe, cmake --build build
+--target navplan) and keeps only those with enough ways in and out no steeper than 45 degrees.
 
 NAVMAP.bin must carry the doorway section (doorways.py), as the bake the plugin embeds does.
 """
 
 import argparse
+import csv
 import math
+import os
 import struct
+import subprocess
+import tempfile
 import zlib
+from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 
@@ -33,6 +41,14 @@ MAX_WIDTH = 50.0
 MIN_WALL = 20.0  # m both walls must rise above the gate
 RUN = 80.0  # m the car must be able to fly straight either side of the gate (gateLead + 20)
 GATE_SPACING = 150.0  # m between kept gates
+# --navplan: the gate flown from and to points WAY_OUT m off in 8 directions with the Race's planner; kept
+# with at least MIN_WAYS ways in and MIN_WAYS out no steeper than MAX_PITCH (FlightModeAutopilot.freeRoamMaxPitch).
+# Gates deep among tall buildings passed every other test, and their legs came over the roofs and dropped
+# into them at 80 degrees (2026-10-28).
+GATE_LEAD = 60.0  # FlightModeAutopilot.gateLead
+WAY_OUT = 800.0
+MAX_PITCH = 45.0
+MIN_WAYS = 3
 MIN_GROUND = -2.0  # m, the opening's floor (open sea reads -13.5)
 
 
@@ -128,11 +144,73 @@ def measure(m, cx, cy, gap):
     return best
 
 
+def steepest_pitch(points, span=10.0):
+    """FlightModeAutopilot.SteepestPitch: steepest climb or descent, each over span m of horizontal travel."""
+    steepest, i, j, n = 0.0, 0, 1, len(points)
+    while j < n:
+        flat = math.hypot(points[j][0] - points[i][0], points[j][1] - points[i][1])
+        rise = abs(points[j][2] - points[i][2])
+        if flat >= span:
+            steepest = max(steepest, math.degrees(math.atan2(rise, flat)))
+            i += 1
+        else:
+            if rise > span:
+                steepest = max(steepest, math.degrees(math.atan2(rise, max(flat, 0.01))))
+            j += 1
+    return steepest
+
+
+def plan_line(navmap, navplan, start, goal, prefix):
+    """The Race's racing line from start to goal (navplan with FlightModeAutopilot's race fields), or None."""
+    env = dict(os.environ, NAVPLAN_MIN_PASSAGE="12", NAVPLAN_HEURISTIC="1.2", NAVPLAN_TURN_COST="5")
+    r = subprocess.run([navplan, navmap, *(f"{v:.1f}" for v in start), *(f"{v:.1f}" for v in goal), prefix, "40", "0.5"],
+                       env=env, capture_output=True, text=True)
+    if r.returncode != 0 or not os.path.exists(prefix + "_line.csv"):
+        return None
+    with open(prefix + "_line.csv") as f:
+        return [tuple(float(row[k]) for k in "xyz") for row in csv.DictReader(f)]
+
+
+def approaches(nav, navmap, navplan, g):
+    """(ways in, ways out, directions tried): of points WAY_OUT m off in 8 directions, how many the
+    planner reaches the gate from and goes on to with nothing steeper than MAX_PITCH, its straight
+    run (GATE_LEAD either side, as the Autopilot flies it) included."""
+    yaw = math.radians(g["yaw"])
+    ins = outs = tried = 0
+    with tempfile.TemporaryDirectory() as tmp:
+        for k in range(8):
+            a = 2 * math.pi * k / 8
+            fx, fy = g["x"] + WAY_OUT * math.cos(a), g["y"] + WAY_OUT * math.sin(a)
+            col = nav.gaps(fx, fy)
+            if not col or col[-1][0] < MIN_GROUND:
+                continue
+            far = (fx, fy, col[-1][0] + FLY_ABOVE)
+            # through the gate the way that faces away from this point
+            sign = 1.0 if math.cos(a) * math.cos(yaw) + math.sin(a) * math.sin(yaw) < 0 else -1.0
+            way = (sign * math.cos(yaw), sign * math.sin(yaw))
+            entry = (g["x"] - way[0] * GATE_LEAD, g["y"] - way[1] * GATE_LEAD, g["z"])
+            run = [(entry[0] + way[0] * d, entry[1] + way[1] * d, g["z"]) for d in np.arange(0.0, 2 * GATE_LEAD + 0.1, 5.0)]
+            tried += 1
+            line = plan_line(navmap, navplan, far, entry, os.path.join(tmp, f"in{k}"))
+            if line and steepest_pitch(line + run[1:]) <= MAX_PITCH:
+                ins += 1
+            # and out: from the run's end on to the point on the other side
+            back = (g["x"] - (fx - g["x"]), g["y"] - (fy - g["y"]))
+            col = nav.gaps(*back)
+            if col and col[-1][0] >= MIN_GROUND:
+                line = plan_line(navmap, navplan, run[-1], (back[0], back[1], col[-1][0] + FLY_ABOVE), os.path.join(tmp, f"out{k}"))
+                if line and steepest_pitch(run + line[1:]) <= MAX_PITCH:
+                    outs += 1
+    return ins, outs, tried
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("navmap")
     ap.add_argument("-o", "--out", required=True)
     ap.add_argument("--count", type=int, default=80)
+    ap.add_argument("--navplan", help="build/navplan.exe: keep only gates the planner can fly in and out of within MAX_PITCH")
+    ap.add_argument("--jobs", type=int, default=8)
     ap.add_argument("--area", default="-3400,-3600,3600,2600", help="x0,y0,x1,y1 (default: the city)")
     ap.add_argument("--preview")
     args = ap.parse_args()
@@ -150,22 +228,31 @@ def main():
             gates.append(g)
     print(f"{len(doors)} doorways, {len(gates)} openings")
     gates.sort(key=lambda g: -g["score"])
-    kept = []
+    pool = []
     for g in gates:
-        if all(math.hypot(g["x"] - k["x"], g["y"] - k["y"]) >= GATE_SPACING for k in kept):
-            kept.append(g)
-        if len(kept) >= args.count:
-            break
+        if all(math.hypot(g["x"] - k["x"], g["y"] - k["y"]) >= GATE_SPACING for k in pool):
+            pool.append(g)
+    if args.navplan:
+        args.navplan = os.path.abspath(args.navplan)
+        # fly each one as the Autopilot would plan it: kept if enough ways in and out stay within MAX_PITCH
+        with ThreadPoolExecutor(args.jobs) as ex:
+            results = list(ex.map(lambda g: approaches(m.nav, args.navmap, args.navplan, g), pool))
+        for g, (ins, outs, tried) in zip(pool, results):
+            g["ins"], g["outs"], g["tried"] = ins, outs, tried
+        print(f"{len(pool)} candidates flown; {sum(1 for g in pool if g['ins'] >= MIN_WAYS and g['outs'] >= MIN_WAYS)} pass")
+        pool = [g for g in pool if g["ins"] >= MIN_WAYS and g["outs"] >= MIN_WAYS]
+    kept = pool[: args.count]
     with open(args.out, "w", newline="\n") as f:
         f.write("# Free roam gates: openings to fly through, generated by tools/heightmap/gates.py from the nav map's doorways.\n")
         f.write("# x y z: the gate's centre at flight height; yaw: the way through (degrees, either direction);\n")
         f.write("# width: free space across on the map (m, the car's radius already off); wall: lower wall above the gate (m);\n")
         f.write("# ceiling: free height above the gate (m, inf for open sky)\n")
-        f.write("# x\ty\tz\tyaw\twidth\twall\tceiling\tscore\n")
+        f.write("# ways_in, ways_out: of 8 directions, how many the planner flies in and out of within 45 degrees (--navplan)\n")
+        f.write("# x\ty\tz\tyaw\twidth\twall\tceiling\tscore\tways_in\tways_out\n")
         for g in kept:
             ceiling = "inf" if math.isinf(g["ceiling"]) else f"{g['ceiling']:.0f}"
             f.write(f"{g['x']:.1f}\t{g['y']:.1f}\t{g['z']:.1f}\t{g['yaw']:.0f}\t{g['width']:.0f}\t{g['wall']:.0f}\t"
-                    f"{ceiling}\t{g['score']:.2f}\n")
+                    f"{ceiling}\t{g['score']:.2f}\t{g.get('ins', -1)}\t{g.get('outs', -1)}\n")
     print(f"kept {len(kept)} gates -> {args.out}")
     if args.preview:
         import matplotlib
