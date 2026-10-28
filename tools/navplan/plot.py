@@ -10,7 +10,7 @@ one; with several, one colour each, plus markers where a racing line leg is bloc
 
 navplan (tools/navplan/navplan.cpp) writes <prefix>_route.csv and <prefix>_line.csv; an LTBF log draws the flown path from the
 Autopilot telemetry in it;
-tools/cet/route_dump.lua writes the in-game route (route_dump.csv, extra columns ignored).
+LtbfBridge.RouteDump (tools/bridge) writes the in-game route (red4ext/logs/ltbf_route_<time>.csv, extra columns ignored).
 """
 
 import argparse

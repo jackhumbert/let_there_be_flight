@@ -35,6 +35,13 @@ def main():
         raise SystemExit("no rows")
     span = rows[-1]["t"] - rows[0]["t"]
     print(f"{len(rows)} rows over {span:.0f} s ({len(rows) / max(span, 1e-6):.0f} a second)")
+    # the flight as a whole (what the CET route timer and free roam log reported before 2026-10-28)
+    flown = sum(math.dist((a["x"], a["y"], a["z"]), (b["x"], b["y"], b["z"])) for a, b in zip(rows, rows[1:])
+                if math.dist((a["x"], a["y"], a["z"]), (b["x"], b["y"], b["z"])) < 50.0)  # not a reset's jump
+    moving = [r for r in rows if r["following"]]
+    print(f"flown {flown:.0f} m, top speed {max(r['speed'] for r in rows):.1f} m/s, mean {flown / max(span, 1e-6):.1f} m/s,"
+          f" following a route {len(moving) / len(rows) * 100:.0f}% of the time,"
+          f" slowest while following {min((r['speed'] for r in moving), default=0.0):.1f} m/s")
 
     flying = [r for r in rows if r["following"] and not r["maneuver"] and r["plan_cmd"] >= 0]
     print(f"\nfollowing a route, no manoeuvre: {len(flying)} rows")

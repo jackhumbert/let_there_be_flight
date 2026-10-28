@@ -6,22 +6,22 @@
 #include <cstdio>
 #include <ctime>
 #include <filesystem>
+#include <map>
 #include <mutex>
 #include <string>
 
 namespace {
+struct File {
+  FILE *file;
+  uint32_t rows;
+};
 std::mutex lock;
-FILE *file = nullptr;
-uint32_t rows = 0;
+std::map<int32_t, File> files;
+int32_t nextFile = 1;
 constexpr uint32_t kFlushEvery = 120; // rows (about 2 s): a crash keeps all but the last moments
 } // namespace
 
-bool FlightTelemetry::Begin(RED4ext::CString aName, RED4ext::CString aHeader) {
-  std::lock_guard guard(lock);
-  if (file) {
-    std::fclose(file);
-    file = nullptr;
-  }
+int32_t FlightTelemetry::Begin(RED4ext::CString aName, RED4ext::CString aHeader) {
   auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
   std::tm local{};
   localtime_s(&local, &now);
@@ -31,43 +31,47 @@ bool FlightTelemetry::Begin(RED4ext::CString aName, RED4ext::CString aHeader) {
   std::error_code error;
   std::filesystem::create_directories(dir, error);
   auto path = dir / (std::string("ltbf_") + aName.c_str() + "_" + stamp + ".csv");
+  FILE *file = nullptr;
   if (_wfopen_s(&file, path.c_str(), L"w") != 0 || !file) {
-    file = nullptr;
     spdlog::warn("[Telemetry] cannot open {}", path.string());
-    return false;
+    return 0;
   }
   std::setvbuf(file, nullptr, _IOFBF, 1 << 16);
   std::fputs(aHeader.c_str(), file);
   std::fputc('\n', file);
-  rows = 0;
+  std::lock_guard guard(lock);
+  int32_t id = nextFile++;
+  files[id] = {file, 0};
   spdlog::info("[Telemetry] writing {}", path.string());
-  return true;
+  return id;
 }
 
-bool FlightTelemetry::IsOpen() {
+bool FlightTelemetry::IsOpen(int32_t aFile) {
   std::lock_guard guard(lock);
-  return file != nullptr;
+  return files.contains(aFile);
 }
 
-void FlightTelemetry::Row(RED4ext::DynArray<float> aValues) {
+void FlightTelemetry::Row(int32_t aFile, RED4ext::DynArray<float> aValues) {
   std::lock_guard guard(lock);
-  if (!file) {
+  auto it = files.find(aFile);
+  if (it == files.end()) {
     return;
   }
   for (uint32_t i = 0; i < aValues.size; ++i) {
-    std::fprintf(file, i == 0 ? "%.6g" : ",%.6g", aValues[i]);
+    std::fprintf(it->second.file, i == 0 ? "%.6g" : ",%.6g", aValues[i]);
   }
-  std::fputc('\n', file);
-  if (++rows % kFlushEvery == 0) {
-    std::fflush(file);
+  std::fputc('\n', it->second.file);
+  if (++it->second.rows % kFlushEvery == 0) {
+    std::fflush(it->second.file);
   }
 }
 
-void FlightTelemetry::End() {
+void FlightTelemetry::End(int32_t aFile) {
   std::lock_guard guard(lock);
-  if (file) {
-    std::fclose(file);
-    file = nullptr;
-    spdlog::info("[Telemetry] {} rows written", rows);
+  auto it = files.find(aFile);
+  if (it != files.end()) {
+    std::fclose(it->second.file);
+    spdlog::info("[Telemetry] {} rows written", it->second.rows);
+    files.erase(it);
   }
 }

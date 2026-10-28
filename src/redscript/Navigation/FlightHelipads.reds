@@ -284,7 +284,7 @@ protected func UpdateIcon() {
   wrappedMethod();
   if FlightHelipadSystem.PadOf(this.m_mappin) >= 0 {
     this.SetTexture(this.iconWidget, FlightHelipadSystem.Icon());
-    FlightHelipadSystem.GetInstance(GetGameInstance()).lastMapPin = this; // test handle (CET)
+    FlightHelipadSystem.GetInstance(GetGameInstance()).lastMapPin = this; // test handle
   }
 }
 

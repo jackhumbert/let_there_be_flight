@@ -1,6 +1,6 @@
 """Smoothness numbers for an Autopilot flight from its per-frame telemetry.
 
-Switch telemetry on in the game (CET), fly, then run this on the LTBF log:
+Switch telemetry on in the game (python ../cp2077_tools/bridge.py call LtbfBridge.Telemetry true), fly, then run this on the LTBF log:
 
     python tools/autopilot_smoothness.py [--log <let_there_be_flight.log>] [--run -1] [--csv out.csv]
 

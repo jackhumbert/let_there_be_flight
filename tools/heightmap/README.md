@@ -128,7 +128,7 @@ Previews and checks:
 
 - `rasterize.py --presets ... -o W\city4 --cell 4` + `preview.py W\city4 -o top.png`: shaded
   top-surface map. `spans.py preview W\spans -o gaps.png --bounds x0,y0,x1,y1`: gaps per column.
-- `validate.py W\spans [--teleport x,y,z]`: compares the bake with live raycasts through the CET
+- `validate.py W\spans [--teleport x,y,z]`: compares the bake with live raycasts through the native
   bridge around the player (collision streams in only ~60 m around a parked car, so keep
   `--radius` near 55). `check_navmap.py W\spans`: compares the plugin's `FlightNavMap.GetGaps`
   with the bake (needs navmap.bin installed and the game running).

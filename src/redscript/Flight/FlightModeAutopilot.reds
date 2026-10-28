@@ -150,7 +150,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let maxAngularAccel: Float = 20.0;   // rad/s2
   // rad/s2 of angular acceleration per unit of mode torque x mass x thruster tensor / inertia
   // (FlightComponent scales the torque by those, PhysX divides by its own inertia), per axis.
-  // tools/cet/torque_probe.lua on an Archer Quartz hovering, 2026-10-26: roll 0.52, yaw 0.95,
+  // the torque probe (tools/bridge, TorqueProbe) on an Archer Quartz hovering, 2026-10-26: roll 0.52, yaw 0.95,
   // pitch 2.5 to 2.8 over the first frames, then falling off while still pushed; all respond two
   // frames late (at 32 fps)
   public let torqueGainPitch: Float = 2.0;
@@ -295,7 +295,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // into the dive (2026-10-27)
   public let freeRoamMaxRise: Float = 100.0;
 
-  // state, public for debugging from CET
+  // state, public for tests (tools/bridge/ltbf_bridge.reds)
   public let status: String = "idle";
   public let route: array<Vector4>;
   public let routeLength: array<Float>;       // route distance of each corner from the start
@@ -346,7 +346,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let rollRate: Float;                 // rad/s, filtered
   public let telemetry: Bool;
   public let telemetryTime: Float;
-  public let telemetryFile: Bool;             // a FlightTelemetry file is open (WriteTelemetry)
+  public let telemetryFile: Int32;            // the open FlightTelemetry file (WriteTelemetry), 0: none
   public let telemetryClock: Float;           // s since it was opened
   // aerobatics
   public let maneuver: ref<FlightManeuver>;
@@ -1524,18 +1524,18 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // tools/autopilot_telemetry.py summarises a file.
   private func WriteTelemetry(p: Vector4, v: Vector4, timeDelta: Float) -> Void {
     if !this.telemetry {
-      if this.telemetryFile {
-        FlightTelemetry.End();
-        this.telemetryFile = false;
+      if this.telemetryFile != 0 {
+        FlightTelemetry.End(this.telemetryFile);
+        this.telemetryFile = 0;
       }
       return;
     }
-    if !this.telemetryFile {
+    if this.telemetryFile == 0 {
       this.telemetryFile = FlightTelemetry.Begin("autopilot", "t,x,y,z,vx,vy,vz,speed,speed2d,target,target_rate,cmd,off,following,maneuver,on_line,segment,"
         + "plan_x,plan_y,plan_z,cmd_fwd_x,cmd_fwd_y,cmd_fwd_z,cmd_up_x,cmd_up_y,cmd_up_z,fwd_x,fwd_y,fwd_z,up_x,up_y,up_z,"
         + "attitude_error,plan_cmd,cmd_car,up_cmd_car,plan_pitch,cmd_pitch,car_pitch,collision_timer");
       this.telemetryClock = 0.0;
-      if !this.telemetryFile {
+      if this.telemetryFile == 0 {
         return;
       }
     }
@@ -1589,7 +1589,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     ArrayPush(row, FlightModeAutopilot.PitchOf(fwd));
     ArrayPush(row, FlightModeAutopilot.PitchOf(stats.d_forward));
     ArrayPush(row, this.component.collisionTimer);
-    FlightTelemetry.Row(row);
+    FlightTelemetry.Row(this.telemetryFile, row);
   }
 
   // Steepest climb or descent along the points, degrees, each taken over at least `span` metres of
@@ -2067,8 +2067,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.component.angularBrake = 0.0;
     this.UpdateWithNormalLift(timeDelta, normal, liftForce);
 
-    // per-frame telemetry for tuning (tools/autopilot_smoothness.py); switch on from CET with
-    // FlightSystem.GetInstance().playerComponent:GetFlightMode().telemetry = true
+    // per-frame telemetry for tuning (tools/autopilot_smoothness.py); switch on with
+    // python ../cp2077_tools/bridge.py call LtbfBridge.Telemetry true
     if this.telemetry {
       this.telemetryTime += timeDelta;
       FlightLog.Info("[AutopilotT] " + FloatToStringPrec(this.telemetryTime, 3) + " " + FloatToStringPrec(p.X, 2) + " " + FloatToStringPrec(p.Y, 2) + " " + FloatToStringPrec(p.Z, 2)
@@ -2406,7 +2406,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.stuntTimer = 0.0;
   }
 
-  // From CET, for testing: kind as FlightManeuverKind (1 aileron roll .. 5 split-S), side +-1.
+  // For tests (LtbfBridge.Aerobatics): kind as FlightManeuverKind (1 aileron roll .. 5 split-S), side +-1.
   public func StartManeuver(kind: Int32, side: Float) -> String {
     if !this.IsAerobatic() {
       return "aerobatics off";
