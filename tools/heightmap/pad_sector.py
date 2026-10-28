@@ -19,6 +19,9 @@ debugName "[LTBF decal] <material>" (hangar_build.py fills them from the hangar'
 "streaming_distance"}, copies of the sector's first spawner (a Watson pad car) with debugName
 "[LTBF spawner] <record>"; like that one they give a fresh car on every load.
 
+"colliders" (optional): a tiles file from proxy_colliders.py build (relative to this folder), one
+collider entity per tile (collision for proxy-only buildings), placed unrotated at its "pos".
+
 Lessons (2026-10-27): a second sector of our own with its own descriptor in the same block never
 loaded (not even at a spot where the same nodes worked), so all pads share this sector; the
 descriptor box gates loading, so it must cover every node.
@@ -140,6 +143,12 @@ def build_sector(doc, cfg):
             kept_data.append(place(template_data, x, y, z, pad["yaw"], pad["node_id"] + j,
                                    pad["streaming_distance"], len(kept)))
             kept.append(n_)
+    for c in colliders(cfg):
+        n_ = copy.deepcopy(template_node)
+        n_["Data"]["entityTemplate"]["DepotPath"]["$value"] = c["entity"]
+        n_["Data"]["debugName"]["$value"] = c["entity"].rsplit("\\", 1)[-1][:-4]
+        kept_data.append(place(template_data, *c["pos"], 0.0, c["node_id"], c["streaming_distance"], len(kept)))
+        kept.append(n_)
     for sp in cfg.get("spawners", []):
         n_ = copy.deepcopy(spawner_node)
         n_["Data"]["objectRecordId"]["$value"] = sp["record"]
@@ -163,9 +172,17 @@ def build_sector(doc, cfg):
     return len(kept) - len(remap)
 
 
+def colliders(cfg):
+    """Proxy collider tiles (proxy_colliders.py build): {"entity", "pos", "streaming_distance",
+    "node_id"} rows from the tiles file that "colliders" names (relative to this folder)."""
+    if not cfg.get("colliders"):
+        return []
+    return json.load(open(os.path.join(HERE, cfg["colliders"]), encoding="utf-8"))["tiles"]
+
+
 def fit_block(doc, cfg):
     (x0, y0, z0), (x1, y1, z1) = cfg["base_box"]
-    for pad in cfg["pads"] + cfg.get("spawners", []):
+    for pad in cfg["pads"] + cfg.get("spawners", []) + colliders(cfg):
         x, y, z = pad["pos"]
         r = pad.get("streaming_distance", 100.0)
         x0, y0, z0 = min(x0, x - r), min(y0, y - r), min(z0, z - r)

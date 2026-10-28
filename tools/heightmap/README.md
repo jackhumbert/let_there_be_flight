@@ -91,6 +91,39 @@ python blockers.py scan --sectors W\raw\ep1\base\worlds\03_night_city\_compiled\
 python blockers.py report W\blockers -o W\blockers.md
 ```
 
+Collision for proxy-only buildings (`proxy_colliders.py`, 2026-10-28): parts of the city exist only
+as proxy meshes and have no collision at all, so flying cars pass through them (the raised complex
+at (-1600, -680), 150 to 350 m up, is the biggest; 80 clusters, 8.5 km2 of surface in the city).
+The tool finds proxy surface with no vehicle-blocking collision or terrain within 4 m, cooks it
+into PhysX triangle meshes (`tools/physx_cook`, see its README) and writes one collider-only
+entity per 128 m tile, placed by `pad_sector.py` from `proxy_collider_tiles.json` ("colliders" in
+`pad_sectors.json`). The proxies stay the visual. Needs the full run's `sectors` (collision
+triangles) and `terrain2`. About an hour on kevin:
+
+```
+python proxy_colliders.py scan --sectors W\raw\ep1\base\worlds\03_night_city\_compiled\default -o P --match "^exterior_.*_[1-6]\.streamingsector$"
+python proxy_colliders.py export P --raw W\proxywork\raw
+python proxy_colliders.py solid P --tris W\sectors --presets W\presets_table.json
+python proxy_colliders.py audit P --terrain W\terrain2 --city=-3000,-3500,1600,3800
+python proxy_colliders.py build P --entities P\ents
+$CLI cr2w -d P\ents\*.ent.json -o ..\..\src\wolvenkit\source\archive\user\jackhumbert\entities   # in batches of ~40
+python pad_sector.py
+python ..\pack_archive.py
+```
+
+- Finest proxy first: a proxy surface counts as covered by real collision, by terrain, by being
+  under the top real surface of its column (undersides below streets), or by an already kept
+  finer proxy. Partly covered triangles are cut down to 6 m and only the uncovered pieces kept.
+- The ocean patches (`global_ocean_patch_*`, 87 km2) are left out (`--exclude`), and so are terrain
+  proxies.
+- 548 tiles, 1.69 M triangles, 50 MB cooked (27 MB packed archive, from 7 MB). Each tile streams
+  within its reach + 300 m.
+- The nav map bake takes the same triangles: `spans.py bin --extra P\colliders.npz` (written by
+  `build`), so the Autopilot does not plan through the new walls.
+- Checked in game with rays (`tools/cet/proxycol_rays.lua`): the five reported points inside the
+  raised complex all hit the proxy's surfaces above and below (e.g. (-1200, -689): 294.9 and
+  208.4, the proxy's floor slabs at 295 and 208).
+
 Previews and checks:
 
 - `rasterize.py --presets ... -o W\city4 --cell 4` + `preview.py W\city4 -o top.png`: shaded

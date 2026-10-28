@@ -97,10 +97,12 @@ def cmd_bin(args):
         pending_n = 0
 
     files = sorted(
-        f for f in os.listdir(args.sectors) if f.endswith(".npz") and not f.endswith(".terrain.npz")
-    )
+        os.path.join(args.sectors, f)
+        for f in os.listdir(args.sectors)
+        if f.endswith(".npz") and not f.endswith(".terrain.npz")
+    ) + list(args.extra)
     for k, f in enumerate(files):
-        d = np.load(os.path.join(args.sectors, f))
+        d = np.load(f)
         names = [str(n) for n in d["preset_names"]]
         keep = np.array([lookup.get(n, {"blocks_vehicles": True})["blocks_vehicles"] for n in names])
         tris = d["tris"][keep[d["preset"]]]
@@ -431,6 +433,8 @@ def main():
     sub = ap.add_subparsers(dest="cmd", required=True)
     b = sub.add_parser("bin")
     b.add_argument("--sectors", required=True)
+    b.add_argument("--extra", action="append", default=[],
+                   help="more triangle npz files (tris, preset, preset_names), e.g. proxy_colliders.py build's colliders.npz")
     b.add_argument("--presets", required=True)
     b.add_argument("--terrain-dir", required=True)
     b.add_argument("-o", "--out", required=True)

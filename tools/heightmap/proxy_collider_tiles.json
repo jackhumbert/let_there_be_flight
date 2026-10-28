@@ -1,0 +1,6033 @@
+{
+ "comment": "proxy_colliders.py build: collision for proxy-only geometry, one collider entity per tile (pad_sector.py \"colliders\")",
+ "tiles": [
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m24_28.ent",
+   "pos": [
+    -3008.0,
+    3648.0,
+    19.0
+   ],
+   "streaming_distance": 331.5,
+   "node_id": 1000000000010000,
+   "tris": 270
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m23_19.ent",
+   "pos": [
+    -2880.0,
+    2496.0,
+    12.0
+   ],
+   "streaming_distance": 391.9,
+   "node_id": 1000000000010001,
+   "tris": 16
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m23_20.ent",
+   "pos": [
+    -2880.0,
+    2624.0,
+    17.0
+   ],
+   "streaming_distance": 390.6,
+   "node_id": 1000000000010002,
+   "tris": 307
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m20_m25.ent",
+   "pos": [
+    -2496.0,
+    -3136.0,
+    119.0
+   ],
+   "streaming_distance": 379.4,
+   "node_id": 1000000000010003,
+   "tris": 15
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m20_m24.ent",
+   "pos": [
+    -2496.0,
+    -3008.0,
+    117.0
+   ],
+   "streaming_distance": 383.6,
+   "node_id": 1000000000010004,
+   "tris": 396
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m20_m21.ent",
+   "pos": [
+    -2496.0,
+    -2624.0,
+    97.0
+   ],
+   "streaming_distance": 355.2,
+   "node_id": 1000000000010005,
+   "tris": 215
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m20_m18.ent",
+   "pos": [
+    -2496.0,
+    -2240.0,
+    22.0
+   ],
+   "streaming_distance": 385.6,
+   "node_id": 1000000000010006,
+   "tris": 1853
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m20_m17.ent",
+   "pos": [
+    -2496.0,
+    -2112.0,
+    22.0
+   ],
+   "streaming_distance": 385.8,
+   "node_id": 1000000000010007,
+   "tris": 1899
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m20_m8.ent",
+   "pos": [
+    -2496.0,
+    -960.0,
+    11.0
+   ],
+   "streaming_distance": 387.6,
+   "node_id": 1000000000010008,
+   "tris": 590
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m20_m7.ent",
+   "pos": [
+    -2496.0,
+    -832.0,
+    11.0
+   ],
+   "streaming_distance": 337.3,
+   "node_id": 1000000000010009,
+   "tris": 282
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m20_m5.ent",
+   "pos": [
+    -2496.0,
+    -576.0,
+    8.0
+   ],
+   "streaming_distance": 378.9,
+   "node_id": 1000000000010010,
+   "tris": 236
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m20_1.ent",
+   "pos": [
+    -2496.0,
+    192.0,
+    44.0
+   ],
+   "streaming_distance": 392.0,
+   "node_id": 1000000000010011,
+   "tris": 366
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m20_2.ent",
+   "pos": [
+    -2496.0,
+    320.0,
+    44.0
+   ],
+   "streaming_distance": 392.8,
+   "node_id": 1000000000010012,
+   "tris": 203
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m19_m25.ent",
+   "pos": [
+    -2368.0,
+    -3136.0,
+    158.0
+   ],
+   "streaming_distance": 378.2,
+   "node_id": 1000000000010013,
+   "tris": 2626
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m19_m24.ent",
+   "pos": [
+    -2368.0,
+    -3008.0,
+    102.0
+   ],
+   "streaming_distance": 380.6,
+   "node_id": 1000000000010014,
+   "tris": 1349
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m19_m23.ent",
+   "pos": [
+    -2368.0,
+    -2880.0,
+    87.0
+   ],
+   "streaming_distance": 383.5,
+   "node_id": 1000000000010015,
+   "tris": 26662
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m19_m22.ent",
+   "pos": [
+    -2368.0,
+    -2752.0,
+    87.0
+   ],
+   "streaming_distance": 385.6,
+   "node_id": 1000000000010016,
+   "tris": 19439
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m19_m21.ent",
+   "pos": [
+    -2368.0,
+    -2624.0,
+    80.0
+   ],
+   "streaming_distance": 369.5,
+   "node_id": 1000000000010017,
+   "tris": 194787
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m19_m20.ent",
+   "pos": [
+    -2368.0,
+    -2496.0,
+    108.0
+   ],
+   "streaming_distance": 366.3,
+   "node_id": 1000000000010018,
+   "tris": 292
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m19_m6.ent",
+   "pos": [
+    -2368.0,
+    -704.0,
+    99.0
+   ],
+   "streaming_distance": 387.8,
+   "node_id": 1000000000010019,
+   "tris": 1051
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m19_m5.ent",
+   "pos": [
+    -2368.0,
+    -576.0,
+    26.0
+   ],
+   "streaming_distance": 380.2,
+   "node_id": 1000000000010020,
+   "tris": 1654
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m19_m3.ent",
+   "pos": [
+    -2368.0,
+    -320.0,
+    186.0
+   ],
+   "streaming_distance": 384.0,
+   "node_id": 1000000000010021,
+   "tris": 33
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m19_m2.ent",
+   "pos": [
+    -2368.0,
+    -192.0,
+    186.0
+   ],
+   "streaming_distance": 374.4,
+   "node_id": 1000000000010022,
+   "tris": 65
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m19_0.ent",
+   "pos": [
+    -2368.0,
+    64.0,
+    120.0
+   ],
+   "streaming_distance": 395.1,
+   "node_id": 1000000000010023,
+   "tris": 838
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m19_1.ent",
+   "pos": [
+    -2368.0,
+    192.0,
+    104.0
+   ],
+   "streaming_distance": 391.1,
+   "node_id": 1000000000010024,
+   "tris": 721
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m19_3.ent",
+   "pos": [
+    -2368.0,
+    448.0,
+    60.0
+   ],
+   "streaming_distance": 351.3,
+   "node_id": 1000000000010025,
+   "tris": 1379
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m19_17.ent",
+   "pos": [
+    -2368.0,
+    2240.0,
+    48.0
+   ],
+   "streaming_distance": 388.2,
+   "node_id": 1000000000010026,
+   "tris": 90
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m19_18.ent",
+   "pos": [
+    -2368.0,
+    2368.0,
+    48.0
+   ],
+   "streaming_distance": 390.4,
+   "node_id": 1000000000010027,
+   "tris": 5613
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m18_m21.ent",
+   "pos": [
+    -2240.0,
+    -2624.0,
+    161.0
+   ],
+   "streaming_distance": 372.8,
+   "node_id": 1000000000010028,
+   "tris": 422
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m18_m20.ent",
+   "pos": [
+    -2240.0,
+    -2496.0,
+    96.0
+   ],
+   "streaming_distance": 392.0,
+   "node_id": 1000000000010029,
+   "tris": 12034
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m18_m11.ent",
+   "pos": [
+    -2240.0,
+    -1344.0,
+    15.0
+   ],
+   "streaming_distance": 357.2,
+   "node_id": 1000000000010030,
+   "tris": 847
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m18_m10.ent",
+   "pos": [
+    -2240.0,
+    -1216.0,
+    15.0
+   ],
+   "streaming_distance": 377.7,
+   "node_id": 1000000000010031,
+   "tris": 830
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m18_m7.ent",
+   "pos": [
+    -2240.0,
+    -832.0,
+    77.0
+   ],
+   "streaming_distance": 381.4,
+   "node_id": 1000000000010032,
+   "tris": 325
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m18_m6.ent",
+   "pos": [
+    -2240.0,
+    -704.0,
+    22.0
+   ],
+   "streaming_distance": 403.7,
+   "node_id": 1000000000010033,
+   "tris": 3301
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m18_m5.ent",
+   "pos": [
+    -2240.0,
+    -576.0,
+    62.0
+   ],
+   "streaming_distance": 384.9,
+   "node_id": 1000000000010034,
+   "tris": 1598
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m18_m3.ent",
+   "pos": [
+    -2240.0,
+    -320.0,
+    -3.0
+   ],
+   "streaming_distance": 402.1,
+   "node_id": 1000000000010035,
+   "tris": 4217
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m18_m2.ent",
+   "pos": [
+    -2240.0,
+    -192.0,
+    22.0
+   ],
+   "streaming_distance": 405.9,
+   "node_id": 1000000000010036,
+   "tris": 4176
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m18_m1.ent",
+   "pos": [
+    -2240.0,
+    -64.0,
+    113.0
+   ],
+   "streaming_distance": 390.5,
+   "node_id": 1000000000010037,
+   "tris": 1233
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m18_0.ent",
+   "pos": [
+    -2240.0,
+    64.0,
+    120.0
+   ],
+   "streaming_distance": 393.9,
+   "node_id": 1000000000010038,
+   "tris": 2315
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m18_1.ent",
+   "pos": [
+    -2240.0,
+    192.0,
+    108.0
+   ],
+   "streaming_distance": 392.1,
+   "node_id": 1000000000010039,
+   "tris": 1570
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m18_2.ent",
+   "pos": [
+    -2240.0,
+    320.0,
+    476.0
+   ],
+   "streaming_distance": 383.5,
+   "node_id": 1000000000010040,
+   "tris": 423
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m18_3.ent",
+   "pos": [
+    -2240.0,
+    448.0,
+    171.0
+   ],
+   "streaming_distance": 385.2,
+   "node_id": 1000000000010041,
+   "tris": 816
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m18_4.ent",
+   "pos": [
+    -2240.0,
+    576.0,
+    171.0
+   ],
+   "streaming_distance": 385.5,
+   "node_id": 1000000000010042,
+   "tris": 1943
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m18_13.ent",
+   "pos": [
+    -2240.0,
+    1728.0,
+    35.0
+   ],
+   "streaming_distance": 375.7,
+   "node_id": 1000000000010043,
+   "tris": 4350
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m18_14.ent",
+   "pos": [
+    -2240.0,
+    1856.0,
+    35.0
+   ],
+   "streaming_distance": 381.1,
+   "node_id": 1000000000010044,
+   "tris": 5929
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m18_15.ent",
+   "pos": [
+    -2240.0,
+    1984.0,
+    49.0
+   ],
+   "streaming_distance": 344.9,
+   "node_id": 1000000000010045,
+   "tris": 185
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m18_17.ent",
+   "pos": [
+    -2240.0,
+    2240.0,
+    48.0
+   ],
+   "streaming_distance": 390.0,
+   "node_id": 1000000000010046,
+   "tris": 10037
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m18_18.ent",
+   "pos": [
+    -2240.0,
+    2368.0,
+    48.0
+   ],
+   "streaming_distance": 393.2,
+   "node_id": 1000000000010047,
+   "tris": 1140
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m18_19.ent",
+   "pos": [
+    -2240.0,
+    2496.0,
+    48.0
+   ],
+   "streaming_distance": 361.9,
+   "node_id": 1000000000010048,
+   "tris": 105
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m18_28.ent",
+   "pos": [
+    -2240.0,
+    3648.0,
+    16.0
+   ],
+   "streaming_distance": 347.5,
+   "node_id": 1000000000010049,
+   "tris": 266
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_m22.ent",
+   "pos": [
+    -2112.0,
+    -2752.0,
+    385.0
+   ],
+   "streaming_distance": 378.5,
+   "node_id": 1000000000010050,
+   "tris": 224
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_m21.ent",
+   "pos": [
+    -2112.0,
+    -2624.0,
+    96.0
+   ],
+   "streaming_distance": 416.4,
+   "node_id": 1000000000010051,
+   "tris": 11644
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_m20.ent",
+   "pos": [
+    -2112.0,
+    -2496.0,
+    47.0
+   ],
+   "streaming_distance": 402.4,
+   "node_id": 1000000000010052,
+   "tris": 101355
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_m19.ent",
+   "pos": [
+    -2112.0,
+    -2368.0,
+    203.0
+   ],
+   "streaming_distance": 394.0,
+   "node_id": 1000000000010053,
+   "tris": 9394
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_m10.ent",
+   "pos": [
+    -2112.0,
+    -1216.0,
+    14.0
+   ],
+   "streaming_distance": 328.9,
+   "node_id": 1000000000010054,
+   "tris": 380
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_m9.ent",
+   "pos": [
+    -2112.0,
+    -1088.0,
+    50.0
+   ],
+   "streaming_distance": 367.4,
+   "node_id": 1000000000010055,
+   "tris": 20
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_m7.ent",
+   "pos": [
+    -2112.0,
+    -832.0,
+    76.0
+   ],
+   "streaming_distance": 385.3,
+   "node_id": 1000000000010056,
+   "tris": 1274
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_m6.ent",
+   "pos": [
+    -2112.0,
+    -704.0,
+    6.0
+   ],
+   "streaming_distance": 406.9,
+   "node_id": 1000000000010057,
+   "tris": 16676
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_m5.ent",
+   "pos": [
+    -2112.0,
+    -576.0,
+    114.0
+   ],
+   "streaming_distance": 413.0,
+   "node_id": 1000000000010058,
+   "tris": 9590
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_m4.ent",
+   "pos": [
+    -2112.0,
+    -448.0,
+    25.0
+   ],
+   "streaming_distance": 414.8,
+   "node_id": 1000000000010059,
+   "tris": 14259
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_m3.ent",
+   "pos": [
+    -2112.0,
+    -320.0,
+    -3.0
+   ],
+   "streaming_distance": 407.5,
+   "node_id": 1000000000010060,
+   "tris": 8940
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_m2.ent",
+   "pos": [
+    -2112.0,
+    -192.0,
+    -2.0
+   ],
+   "streaming_distance": 392.4,
+   "node_id": 1000000000010061,
+   "tris": 16144
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_m1.ent",
+   "pos": [
+    -2112.0,
+    -64.0,
+    113.0
+   ],
+   "streaming_distance": 389.4,
+   "node_id": 1000000000010062,
+   "tris": 4595
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_0.ent",
+   "pos": [
+    -2112.0,
+    64.0,
+    104.0
+   ],
+   "streaming_distance": 384.0,
+   "node_id": 1000000000010063,
+   "tris": 1389
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_1.ent",
+   "pos": [
+    -2112.0,
+    192.0,
+    309.0
+   ],
+   "streaming_distance": 389.4,
+   "node_id": 1000000000010064,
+   "tris": 1782
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_2.ent",
+   "pos": [
+    -2112.0,
+    320.0,
+    233.0
+   ],
+   "streaming_distance": 385.7,
+   "node_id": 1000000000010065,
+   "tris": 2306
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_4.ent",
+   "pos": [
+    -2112.0,
+    576.0,
+    60.0
+   ],
+   "streaming_distance": 346.2,
+   "node_id": 1000000000010066,
+   "tris": 144
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_6.ent",
+   "pos": [
+    -2112.0,
+    832.0,
+    59.0
+   ],
+   "streaming_distance": 374.2,
+   "node_id": 1000000000010067,
+   "tris": 501
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_11.ent",
+   "pos": [
+    -2112.0,
+    1472.0,
+    15.0
+   ],
+   "streaming_distance": 374.7,
+   "node_id": 1000000000010068,
+   "tris": 1
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_13.ent",
+   "pos": [
+    -2112.0,
+    1728.0,
+    39.0
+   ],
+   "streaming_distance": 380.7,
+   "node_id": 1000000000010069,
+   "tris": 5287
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_15.ent",
+   "pos": [
+    -2112.0,
+    1984.0,
+    44.0
+   ],
+   "streaming_distance": 330.6,
+   "node_id": 1000000000010070,
+   "tris": 322
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_16.ent",
+   "pos": [
+    -2112.0,
+    2112.0,
+    48.0
+   ],
+   "streaming_distance": 332.6,
+   "node_id": 1000000000010071,
+   "tris": 91
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_18.ent",
+   "pos": [
+    -2112.0,
+    2368.0,
+    23.0
+   ],
+   "streaming_distance": 382.1,
+   "node_id": 1000000000010072,
+   "tris": 179
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_19.ent",
+   "pos": [
+    -2112.0,
+    2496.0,
+    23.0
+   ],
+   "streaming_distance": 382.7,
+   "node_id": 1000000000010073,
+   "tris": 57
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_20.ent",
+   "pos": [
+    -2112.0,
+    2624.0,
+    26.0
+   ],
+   "streaming_distance": 389.8,
+   "node_id": 1000000000010074,
+   "tris": 125
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_21.ent",
+   "pos": [
+    -2112.0,
+    2752.0,
+    26.0
+   ],
+   "streaming_distance": 374.8,
+   "node_id": 1000000000010075,
+   "tris": 123
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_m24.ent",
+   "pos": [
+    -1984.0,
+    -3008.0,
+    156.0
+   ],
+   "streaming_distance": 403.6,
+   "node_id": 1000000000010076,
+   "tris": 1123
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_m23.ent",
+   "pos": [
+    -1984.0,
+    -2880.0,
+    136.0
+   ],
+   "streaming_distance": 393.6,
+   "node_id": 1000000000010077,
+   "tris": 812
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_m21.ent",
+   "pos": [
+    -1984.0,
+    -2624.0,
+    397.0
+   ],
+   "streaming_distance": 389.0,
+   "node_id": 1000000000010078,
+   "tris": 1209
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_m20.ent",
+   "pos": [
+    -1984.0,
+    -2496.0,
+    52.0
+   ],
+   "streaming_distance": 393.5,
+   "node_id": 1000000000010079,
+   "tris": 85209
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_m19.ent",
+   "pos": [
+    -1984.0,
+    -2368.0,
+    28.0
+   ],
+   "streaming_distance": 398.6,
+   "node_id": 1000000000010080,
+   "tris": 58956
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_m18.ent",
+   "pos": [
+    -1984.0,
+    -2240.0,
+    56.0
+   ],
+   "streaming_distance": 389.0,
+   "node_id": 1000000000010081,
+   "tris": 13827
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_m10.ent",
+   "pos": [
+    -1984.0,
+    -1216.0,
+    116.0
+   ],
+   "streaming_distance": 383.6,
+   "node_id": 1000000000010082,
+   "tris": 381
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_m9.ent",
+   "pos": [
+    -1984.0,
+    -1088.0,
+    116.0
+   ],
+   "streaming_distance": 385.6,
+   "node_id": 1000000000010083,
+   "tris": 277
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_m7.ent",
+   "pos": [
+    -1984.0,
+    -832.0,
+    100.0
+   ],
+   "streaming_distance": 386.7,
+   "node_id": 1000000000010084,
+   "tris": 495
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_m6.ent",
+   "pos": [
+    -1984.0,
+    -704.0,
+    7.0
+   ],
+   "streaming_distance": 417.1,
+   "node_id": 1000000000010085,
+   "tris": 26656
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_m5.ent",
+   "pos": [
+    -1984.0,
+    -576.0,
+    7.0
+   ],
+   "streaming_distance": 414.1,
+   "node_id": 1000000000010086,
+   "tris": 5974
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_m4.ent",
+   "pos": [
+    -1984.0,
+    -448.0,
+    130.0
+   ],
+   "streaming_distance": 394.7,
+   "node_id": 1000000000010087,
+   "tris": 3118
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_m3.ent",
+   "pos": [
+    -1984.0,
+    -320.0,
+    101.0
+   ],
+   "streaming_distance": 394.4,
+   "node_id": 1000000000010088,
+   "tris": 1777
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_m2.ent",
+   "pos": [
+    -1984.0,
+    -192.0,
+    67.0
+   ],
+   "streaming_distance": 380.8,
+   "node_id": 1000000000010089,
+   "tris": 1939
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_0.ent",
+   "pos": [
+    -1984.0,
+    64.0,
+    104.0
+   ],
+   "streaming_distance": 380.5,
+   "node_id": 1000000000010090,
+   "tris": 1623
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_1.ent",
+   "pos": [
+    -1984.0,
+    192.0,
+    171.0
+   ],
+   "streaming_distance": 370.1,
+   "node_id": 1000000000010091,
+   "tris": 1708
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_2.ent",
+   "pos": [
+    -1984.0,
+    320.0,
+    109.0
+   ],
+   "streaming_distance": 389.8,
+   "node_id": 1000000000010092,
+   "tris": 406
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_3.ent",
+   "pos": [
+    -1984.0,
+    448.0,
+    109.0
+   ],
+   "streaming_distance": 393.8,
+   "node_id": 1000000000010093,
+   "tris": 92
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_8.ent",
+   "pos": [
+    -1984.0,
+    1088.0,
+    19.0
+   ],
+   "streaming_distance": 375.5,
+   "node_id": 1000000000010094,
+   "tris": 297
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_9.ent",
+   "pos": [
+    -1984.0,
+    1216.0,
+    57.0
+   ],
+   "streaming_distance": 385.8,
+   "node_id": 1000000000010095,
+   "tris": 230
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_11.ent",
+   "pos": [
+    -1984.0,
+    1472.0,
+    16.0
+   ],
+   "streaming_distance": 366.0,
+   "node_id": 1000000000010096,
+   "tris": 78
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_12.ent",
+   "pos": [
+    -1984.0,
+    1600.0,
+    7.0
+   ],
+   "streaming_distance": 323.6,
+   "node_id": 1000000000010097,
+   "tris": 97
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_15.ent",
+   "pos": [
+    -1984.0,
+    1984.0,
+    45.0
+   ],
+   "streaming_distance": 378.7,
+   "node_id": 1000000000010098,
+   "tris": 17
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_16.ent",
+   "pos": [
+    -1984.0,
+    2112.0,
+    44.0
+   ],
+   "streaming_distance": 380.6,
+   "node_id": 1000000000010099,
+   "tris": 432
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_19.ent",
+   "pos": [
+    -1984.0,
+    2496.0,
+    23.0
+   ],
+   "streaming_distance": 376.0,
+   "node_id": 1000000000010100,
+   "tris": 441
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_20.ent",
+   "pos": [
+    -1984.0,
+    2624.0,
+    26.0
+   ],
+   "streaming_distance": 388.4,
+   "node_id": 1000000000010101,
+   "tris": 353
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_21.ent",
+   "pos": [
+    -1984.0,
+    2752.0,
+    26.0
+   ],
+   "streaming_distance": 338.8,
+   "node_id": 1000000000010102,
+   "tris": 197
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m16_28.ent",
+   "pos": [
+    -1984.0,
+    3648.0,
+    16.0
+   ],
+   "streaming_distance": 365.5,
+   "node_id": 1000000000010103,
+   "tris": 21
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_m24.ent",
+   "pos": [
+    -1856.0,
+    -3008.0,
+    167.0
+   ],
+   "streaming_distance": 408.0,
+   "node_id": 1000000000010104,
+   "tris": 2498
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_m23.ent",
+   "pos": [
+    -1856.0,
+    -2880.0,
+    132.0
+   ],
+   "streaming_distance": 410.5,
+   "node_id": 1000000000010105,
+   "tris": 5342
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_m19.ent",
+   "pos": [
+    -1856.0,
+    -2368.0,
+    49.0
+   ],
+   "streaming_distance": 390.1,
+   "node_id": 1000000000010106,
+   "tris": 10749
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_m18.ent",
+   "pos": [
+    -1856.0,
+    -2240.0,
+    53.0
+   ],
+   "streaming_distance": 386.0,
+   "node_id": 1000000000010107,
+   "tris": 3988
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_m15.ent",
+   "pos": [
+    -1856.0,
+    -1856.0,
+    46.0
+   ],
+   "streaming_distance": 361.9,
+   "node_id": 1000000000010108,
+   "tris": 94
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_m12.ent",
+   "pos": [
+    -1856.0,
+    -1472.0,
+    43.0
+   ],
+   "streaming_distance": 368.4,
+   "node_id": 1000000000010109,
+   "tris": 385
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_m10.ent",
+   "pos": [
+    -1856.0,
+    -1216.0,
+    51.0
+   ],
+   "streaming_distance": 385.7,
+   "node_id": 1000000000010110,
+   "tris": 3767
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_m9.ent",
+   "pos": [
+    -1856.0,
+    -1088.0,
+    116.0
+   ],
+   "streaming_distance": 383.5,
+   "node_id": 1000000000010111,
+   "tris": 607
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_m7.ent",
+   "pos": [
+    -1856.0,
+    -832.0,
+    85.0
+   ],
+   "streaming_distance": 399.1,
+   "node_id": 1000000000010112,
+   "tris": 1937
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_m6.ent",
+   "pos": [
+    -1856.0,
+    -704.0,
+    7.0
+   ],
+   "streaming_distance": 412.1,
+   "node_id": 1000000000010113,
+   "tris": 23727
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_m5.ent",
+   "pos": [
+    -1856.0,
+    -576.0,
+    7.0
+   ],
+   "streaming_distance": 391.6,
+   "node_id": 1000000000010114,
+   "tris": 4235
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_m3.ent",
+   "pos": [
+    -1856.0,
+    -320.0,
+    101.0
+   ],
+   "streaming_distance": 385.9,
+   "node_id": 1000000000010115,
+   "tris": 975
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_m2.ent",
+   "pos": [
+    -1856.0,
+    -192.0,
+    67.0
+   ],
+   "streaming_distance": 380.8,
+   "node_id": 1000000000010116,
+   "tris": 3528
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_1.ent",
+   "pos": [
+    -1856.0,
+    192.0,
+    400.0
+   ],
+   "streaming_distance": 381.4,
+   "node_id": 1000000000010117,
+   "tris": 1372
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_2.ent",
+   "pos": [
+    -1856.0,
+    320.0,
+    109.0
+   ],
+   "streaming_distance": 390.3,
+   "node_id": 1000000000010118,
+   "tris": 351
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_3.ent",
+   "pos": [
+    -1856.0,
+    448.0,
+    109.0
+   ],
+   "streaming_distance": 392.6,
+   "node_id": 1000000000010119,
+   "tris": 490
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_4.ent",
+   "pos": [
+    -1856.0,
+    576.0,
+    207.0
+   ],
+   "streaming_distance": 415.9,
+   "node_id": 1000000000010120,
+   "tris": 276
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_5.ent",
+   "pos": [
+    -1856.0,
+    704.0,
+    207.0
+   ],
+   "streaming_distance": 378.6,
+   "node_id": 1000000000010121,
+   "tris": 23
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_8.ent",
+   "pos": [
+    -1856.0,
+    1088.0,
+    63.0
+   ],
+   "streaming_distance": 345.4,
+   "node_id": 1000000000010122,
+   "tris": 3451
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_9.ent",
+   "pos": [
+    -1856.0,
+    1216.0,
+    143.0
+   ],
+   "streaming_distance": 382.8,
+   "node_id": 1000000000010123,
+   "tris": 1393
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_10.ent",
+   "pos": [
+    -1856.0,
+    1344.0,
+    79.0
+   ],
+   "streaming_distance": 384.6,
+   "node_id": 1000000000010124,
+   "tris": 6652
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_11.ent",
+   "pos": [
+    -1856.0,
+    1472.0,
+    55.0
+   ],
+   "streaming_distance": 363.1,
+   "node_id": 1000000000010125,
+   "tris": 3398
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_15.ent",
+   "pos": [
+    -1856.0,
+    1984.0,
+    23.0
+   ],
+   "streaming_distance": 374.7,
+   "node_id": 1000000000010126,
+   "tris": 720
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_16.ent",
+   "pos": [
+    -1856.0,
+    2112.0,
+    23.0
+   ],
+   "streaming_distance": 351.9,
+   "node_id": 1000000000010127,
+   "tris": 113
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_20.ent",
+   "pos": [
+    -1856.0,
+    2624.0,
+    26.0
+   ],
+   "streaming_distance": 338.9,
+   "node_id": 1000000000010128,
+   "tris": 175
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_27.ent",
+   "pos": [
+    -1856.0,
+    3520.0,
+    13.0
+   ],
+   "streaming_distance": 370.7,
+   "node_id": 1000000000010129,
+   "tris": 126
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_28.ent",
+   "pos": [
+    -1856.0,
+    3648.0,
+    16.0
+   ],
+   "streaming_distance": 366.3,
+   "node_id": 1000000000010130,
+   "tris": 260
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_m13.ent",
+   "pos": [
+    -1728.0,
+    -1600.0,
+    51.0
+   ],
+   "streaming_distance": 345.3,
+   "node_id": 1000000000010131,
+   "tris": 392
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_m10.ent",
+   "pos": [
+    -1728.0,
+    -1216.0,
+    53.0
+   ],
+   "streaming_distance": 372.7,
+   "node_id": 1000000000010132,
+   "tris": 3939
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_m9.ent",
+   "pos": [
+    -1728.0,
+    -1088.0,
+    113.0
+   ],
+   "streaming_distance": 368.1,
+   "node_id": 1000000000010133,
+   "tris": 457
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_m7.ent",
+   "pos": [
+    -1728.0,
+    -832.0,
+    68.0
+   ],
+   "streaming_distance": 409.0,
+   "node_id": 1000000000010134,
+   "tris": 3396
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_m6.ent",
+   "pos": [
+    -1728.0,
+    -704.0,
+    62.0
+   ],
+   "streaming_distance": 408.6,
+   "node_id": 1000000000010135,
+   "tris": 18339
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_m5.ent",
+   "pos": [
+    -1728.0,
+    -576.0,
+    7.0
+   ],
+   "streaming_distance": 401.2,
+   "node_id": 1000000000010136,
+   "tris": 2863
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_m1.ent",
+   "pos": [
+    -1728.0,
+    -64.0,
+    23.0
+   ],
+   "streaming_distance": 369.5,
+   "node_id": 1000000000010137,
+   "tris": 11
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_0.ent",
+   "pos": [
+    -1728.0,
+    64.0,
+    479.0
+   ],
+   "streaming_distance": 364.5,
+   "node_id": 1000000000010138,
+   "tris": 1406
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_1.ent",
+   "pos": [
+    -1728.0,
+    192.0,
+    308.0
+   ],
+   "streaming_distance": 388.5,
+   "node_id": 1000000000010139,
+   "tris": 312
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_2.ent",
+   "pos": [
+    -1728.0,
+    320.0,
+    219.0
+   ],
+   "streaming_distance": 390.4,
+   "node_id": 1000000000010140,
+   "tris": 2256
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_3.ent",
+   "pos": [
+    -1728.0,
+    448.0,
+    139.0
+   ],
+   "streaming_distance": 408.4,
+   "node_id": 1000000000010141,
+   "tris": 885
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_4.ent",
+   "pos": [
+    -1728.0,
+    576.0,
+    207.0
+   ],
+   "streaming_distance": 435.0,
+   "node_id": 1000000000010142,
+   "tris": 406
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_5.ent",
+   "pos": [
+    -1728.0,
+    704.0,
+    207.0
+   ],
+   "streaming_distance": 372.1,
+   "node_id": 1000000000010143,
+   "tris": 22
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_7.ent",
+   "pos": [
+    -1728.0,
+    960.0,
+    224.0
+   ],
+   "streaming_distance": 405.2,
+   "node_id": 1000000000010144,
+   "tris": 1794
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_8.ent",
+   "pos": [
+    -1728.0,
+    1088.0,
+    69.0
+   ],
+   "streaming_distance": 398.4,
+   "node_id": 1000000000010145,
+   "tris": 9879
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_9.ent",
+   "pos": [
+    -1728.0,
+    1216.0,
+    70.0
+   ],
+   "streaming_distance": 395.4,
+   "node_id": 1000000000010146,
+   "tris": 7956
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_10.ent",
+   "pos": [
+    -1728.0,
+    1344.0,
+    112.0
+   ],
+   "streaming_distance": 407.6,
+   "node_id": 1000000000010147,
+   "tris": 2684
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_11.ent",
+   "pos": [
+    -1728.0,
+    1472.0,
+    62.0
+   ],
+   "streaming_distance": 441.4,
+   "node_id": 1000000000010148,
+   "tris": 1952
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_12.ent",
+   "pos": [
+    -1728.0,
+    1600.0,
+    39.0
+   ],
+   "streaming_distance": 392.7,
+   "node_id": 1000000000010149,
+   "tris": 11607
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_13.ent",
+   "pos": [
+    -1728.0,
+    1728.0,
+    30.0
+   ],
+   "streaming_distance": 393.9,
+   "node_id": 1000000000010150,
+   "tris": 4849
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_19.ent",
+   "pos": [
+    -1728.0,
+    2496.0,
+    26.0
+   ],
+   "streaming_distance": 349.4,
+   "node_id": 1000000000010151,
+   "tris": 269
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_26.ent",
+   "pos": [
+    -1728.0,
+    3392.0,
+    13.0
+   ],
+   "streaming_distance": 366.4,
+   "node_id": 1000000000010152,
+   "tris": 57
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_27.ent",
+   "pos": [
+    -1728.0,
+    3520.0,
+    13.0
+   ],
+   "streaming_distance": 369.0,
+   "node_id": 1000000000010153,
+   "tris": 191
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_m15.ent",
+   "pos": [
+    -1600.0,
+    -1856.0,
+    256.0
+   ],
+   "streaming_distance": 364.6,
+   "node_id": 1000000000010154,
+   "tris": 22
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_m11.ent",
+   "pos": [
+    -1600.0,
+    -1344.0,
+    64.0
+   ],
+   "streaming_distance": 382.4,
+   "node_id": 1000000000010155,
+   "tris": 1843
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_m10.ent",
+   "pos": [
+    -1600.0,
+    -1216.0,
+    26.0
+   ],
+   "streaming_distance": 382.7,
+   "node_id": 1000000000010156,
+   "tris": 1656
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_m9.ent",
+   "pos": [
+    -1600.0,
+    -1088.0,
+    44.0
+   ],
+   "streaming_distance": 382.6,
+   "node_id": 1000000000010157,
+   "tris": 5287
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_m8.ent",
+   "pos": [
+    -1600.0,
+    -960.0,
+    76.0
+   ],
+   "streaming_distance": 380.7,
+   "node_id": 1000000000010158,
+   "tris": 5749
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_m7.ent",
+   "pos": [
+    -1600.0,
+    -832.0,
+    143.0
+   ],
+   "streaming_distance": 387.8,
+   "node_id": 1000000000010159,
+   "tris": 646
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_m6.ent",
+   "pos": [
+    -1600.0,
+    -704.0,
+    96.0
+   ],
+   "streaming_distance": 403.4,
+   "node_id": 1000000000010160,
+   "tris": 10570
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_m5.ent",
+   "pos": [
+    -1600.0,
+    -576.0,
+    7.0
+   ],
+   "streaming_distance": 395.1,
+   "node_id": 1000000000010161,
+   "tris": 1847
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_m4.ent",
+   "pos": [
+    -1600.0,
+    -448.0,
+    144.0
+   ],
+   "streaming_distance": 391.2,
+   "node_id": 1000000000010162,
+   "tris": 1345
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_m3.ent",
+   "pos": [
+    -1600.0,
+    -320.0,
+    523.0
+   ],
+   "streaming_distance": 392.1,
+   "node_id": 1000000000010163,
+   "tris": 837
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_1.ent",
+   "pos": [
+    -1600.0,
+    192.0,
+    235.0
+   ],
+   "streaming_distance": 363.6,
+   "node_id": 1000000000010164,
+   "tris": 149
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_2.ent",
+   "pos": [
+    -1600.0,
+    320.0,
+    222.0
+   ],
+   "streaming_distance": 407.7,
+   "node_id": 1000000000010165,
+   "tris": 2470
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_3.ent",
+   "pos": [
+    -1600.0,
+    448.0,
+    222.0
+   ],
+   "streaming_distance": 393.9,
+   "node_id": 1000000000010166,
+   "tris": 1410
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_4.ent",
+   "pos": [
+    -1600.0,
+    576.0,
+    315.0
+   ],
+   "streaming_distance": 377.3,
+   "node_id": 1000000000010167,
+   "tris": 2137
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_7.ent",
+   "pos": [
+    -1600.0,
+    960.0,
+    57.0
+   ],
+   "streaming_distance": 398.9,
+   "node_id": 1000000000010168,
+   "tris": 13363
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_8.ent",
+   "pos": [
+    -1600.0,
+    1088.0,
+    57.0
+   ],
+   "streaming_distance": 403.4,
+   "node_id": 1000000000010169,
+   "tris": 8022
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_9.ent",
+   "pos": [
+    -1600.0,
+    1216.0,
+    73.0
+   ],
+   "streaming_distance": 399.5,
+   "node_id": 1000000000010170,
+   "tris": 2270
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_10.ent",
+   "pos": [
+    -1600.0,
+    1344.0,
+    58.0
+   ],
+   "streaming_distance": 405.6,
+   "node_id": 1000000000010171,
+   "tris": 3739
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_11.ent",
+   "pos": [
+    -1600.0,
+    1472.0,
+    62.0
+   ],
+   "streaming_distance": 417.8,
+   "node_id": 1000000000010172,
+   "tris": 2990
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_12.ent",
+   "pos": [
+    -1600.0,
+    1600.0,
+    66.0
+   ],
+   "streaming_distance": 422.9,
+   "node_id": 1000000000010173,
+   "tris": 15235
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_13.ent",
+   "pos": [
+    -1600.0,
+    1728.0,
+    49.0
+   ],
+   "streaming_distance": 411.9,
+   "node_id": 1000000000010174,
+   "tris": 15599
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_14.ent",
+   "pos": [
+    -1600.0,
+    1856.0,
+    51.0
+   ],
+   "streaming_distance": 345.0,
+   "node_id": 1000000000010175,
+   "tris": 558
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_18.ent",
+   "pos": [
+    -1600.0,
+    2368.0,
+    26.0
+   ],
+   "streaming_distance": 356.2,
+   "node_id": 1000000000010176,
+   "tris": 179
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_19.ent",
+   "pos": [
+    -1600.0,
+    2496.0,
+    26.0
+   ],
+   "streaming_distance": 347.3,
+   "node_id": 1000000000010177,
+   "tris": 151
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_24.ent",
+   "pos": [
+    -1600.0,
+    3136.0,
+    12.0
+   ],
+   "streaming_distance": 376.3,
+   "node_id": 1000000000010178,
+   "tris": 268
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_25.ent",
+   "pos": [
+    -1600.0,
+    3264.0,
+    11.0
+   ],
+   "streaming_distance": 338.9,
+   "node_id": 1000000000010179,
+   "tris": 250
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_m17.ent",
+   "pos": [
+    -1472.0,
+    -2112.0,
+    113.0
+   ],
+   "streaming_distance": 380.8,
+   "node_id": 1000000000010180,
+   "tris": 5010
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_m16.ent",
+   "pos": [
+    -1472.0,
+    -1984.0,
+    133.0
+   ],
+   "streaming_distance": 382.1,
+   "node_id": 1000000000010181,
+   "tris": 2439
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_m15.ent",
+   "pos": [
+    -1472.0,
+    -1856.0,
+    167.0
+   ],
+   "streaming_distance": 376.7,
+   "node_id": 1000000000010182,
+   "tris": 883
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_m14.ent",
+   "pos": [
+    -1472.0,
+    -1728.0,
+    130.0
+   ],
+   "streaming_distance": 389.5,
+   "node_id": 1000000000010183,
+   "tris": 133
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_m13.ent",
+   "pos": [
+    -1472.0,
+    -1600.0,
+    57.0
+   ],
+   "streaming_distance": 358.7,
+   "node_id": 1000000000010184,
+   "tris": 359
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_m11.ent",
+   "pos": [
+    -1472.0,
+    -1344.0,
+    91.0
+   ],
+   "streaming_distance": 373.3,
+   "node_id": 1000000000010185,
+   "tris": 4869
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_m9.ent",
+   "pos": [
+    -1472.0,
+    -1088.0,
+    84.0
+   ],
+   "streaming_distance": 345.4,
+   "node_id": 1000000000010186,
+   "tris": 248
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_m8.ent",
+   "pos": [
+    -1472.0,
+    -960.0,
+    53.0
+   ],
+   "streaming_distance": 384.6,
+   "node_id": 1000000000010187,
+   "tris": 584
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_m7.ent",
+   "pos": [
+    -1472.0,
+    -832.0,
+    143.0
+   ],
+   "streaming_distance": 388.1,
+   "node_id": 1000000000010188,
+   "tris": 864
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_m6.ent",
+   "pos": [
+    -1472.0,
+    -704.0,
+    109.0
+   ],
+   "streaming_distance": 406.7,
+   "node_id": 1000000000010189,
+   "tris": 21505
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_m5.ent",
+   "pos": [
+    -1472.0,
+    -576.0,
+    123.0
+   ],
+   "streaming_distance": 398.9,
+   "node_id": 1000000000010190,
+   "tris": 5663
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_m4.ent",
+   "pos": [
+    -1472.0,
+    -448.0,
+    497.0
+   ],
+   "streaming_distance": 388.9,
+   "node_id": 1000000000010191,
+   "tris": 102
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_m3.ent",
+   "pos": [
+    -1472.0,
+    -320.0,
+    497.0
+   ],
+   "streaming_distance": 389.8,
+   "node_id": 1000000000010192,
+   "tris": 2924
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_0.ent",
+   "pos": [
+    -1472.0,
+    64.0,
+    491.0
+   ],
+   "streaming_distance": 329.2,
+   "node_id": 1000000000010193,
+   "tris": 98
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_2.ent",
+   "pos": [
+    -1472.0,
+    320.0,
+    222.0
+   ],
+   "streaming_distance": 400.9,
+   "node_id": 1000000000010194,
+   "tris": 3569
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_3.ent",
+   "pos": [
+    -1472.0,
+    448.0,
+    222.0
+   ],
+   "streaming_distance": 398.1,
+   "node_id": 1000000000010195,
+   "tris": 2524
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_4.ent",
+   "pos": [
+    -1472.0,
+    576.0,
+    84.0
+   ],
+   "streaming_distance": 383.1,
+   "node_id": 1000000000010196,
+   "tris": 4428
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_5.ent",
+   "pos": [
+    -1472.0,
+    704.0,
+    89.0
+   ],
+   "streaming_distance": 378.3,
+   "node_id": 1000000000010197,
+   "tris": 1463
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_7.ent",
+   "pos": [
+    -1472.0,
+    960.0,
+    34.0
+   ],
+   "streaming_distance": 404.4,
+   "node_id": 1000000000010198,
+   "tris": 9050
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_8.ent",
+   "pos": [
+    -1472.0,
+    1088.0,
+    57.0
+   ],
+   "streaming_distance": 358.0,
+   "node_id": 1000000000010199,
+   "tris": 848
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_9.ent",
+   "pos": [
+    -1472.0,
+    1216.0,
+    64.0
+   ],
+   "streaming_distance": 378.1,
+   "node_id": 1000000000010200,
+   "tris": 791
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_10.ent",
+   "pos": [
+    -1472.0,
+    1344.0,
+    64.0
+   ],
+   "streaming_distance": 386.5,
+   "node_id": 1000000000010201,
+   "tris": 827
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_12.ent",
+   "pos": [
+    -1472.0,
+    1600.0,
+    41.0
+   ],
+   "streaming_distance": 353.2,
+   "node_id": 1000000000010202,
+   "tris": 278
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_14.ent",
+   "pos": [
+    -1472.0,
+    1856.0,
+    35.0
+   ],
+   "streaming_distance": 363.9,
+   "node_id": 1000000000010203,
+   "tris": 1137
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_17.ent",
+   "pos": [
+    -1472.0,
+    2240.0,
+    26.0
+   ],
+   "streaming_distance": 327.8,
+   "node_id": 1000000000010204,
+   "tris": 209
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_m17.ent",
+   "pos": [
+    -1344.0,
+    -2112.0,
+    77.0
+   ],
+   "streaming_distance": 389.9,
+   "node_id": 1000000000010205,
+   "tris": 2722
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_m16.ent",
+   "pos": [
+    -1344.0,
+    -1984.0,
+    61.0
+   ],
+   "streaming_distance": 396.7,
+   "node_id": 1000000000010206,
+   "tris": 1994
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_m15.ent",
+   "pos": [
+    -1344.0,
+    -1856.0,
+    134.0
+   ],
+   "streaming_distance": 373.0,
+   "node_id": 1000000000010207,
+   "tris": 1266
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_m14.ent",
+   "pos": [
+    -1344.0,
+    -1728.0,
+    96.0
+   ],
+   "streaming_distance": 390.6,
+   "node_id": 1000000000010208,
+   "tris": 1640
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_m13.ent",
+   "pos": [
+    -1344.0,
+    -1600.0,
+    57.0
+   ],
+   "streaming_distance": 391.8,
+   "node_id": 1000000000010209,
+   "tris": 1893
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_m11.ent",
+   "pos": [
+    -1344.0,
+    -1344.0,
+    63.0
+   ],
+   "streaming_distance": 376.9,
+   "node_id": 1000000000010210,
+   "tris": 3474
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_m10.ent",
+   "pos": [
+    -1344.0,
+    -1216.0,
+    63.0
+   ],
+   "streaming_distance": 377.0,
+   "node_id": 1000000000010211,
+   "tris": 834
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_m9.ent",
+   "pos": [
+    -1344.0,
+    -1088.0,
+    76.0
+   ],
+   "streaming_distance": 364.9,
+   "node_id": 1000000000010212,
+   "tris": 805
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_m8.ent",
+   "pos": [
+    -1344.0,
+    -960.0,
+    53.0
+   ],
+   "streaming_distance": 384.0,
+   "node_id": 1000000000010213,
+   "tris": 1032
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_m7.ent",
+   "pos": [
+    -1344.0,
+    -832.0,
+    30.0
+   ],
+   "streaming_distance": 382.0,
+   "node_id": 1000000000010214,
+   "tris": 3561
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_m6.ent",
+   "pos": [
+    -1344.0,
+    -704.0,
+    29.0
+   ],
+   "streaming_distance": 407.6,
+   "node_id": 1000000000010215,
+   "tris": 19711
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_m5.ent",
+   "pos": [
+    -1344.0,
+    -576.0,
+    136.0
+   ],
+   "streaming_distance": 401.0,
+   "node_id": 1000000000010216,
+   "tris": 8679
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_2.ent",
+   "pos": [
+    -1344.0,
+    320.0,
+    149.0
+   ],
+   "streaming_distance": 389.5,
+   "node_id": 1000000000010217,
+   "tris": 1739
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_3.ent",
+   "pos": [
+    -1344.0,
+    448.0,
+    235.0
+   ],
+   "streaming_distance": 391.7,
+   "node_id": 1000000000010218,
+   "tris": 91
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_4.ent",
+   "pos": [
+    -1344.0,
+    576.0,
+    84.0
+   ],
+   "streaming_distance": 384.7,
+   "node_id": 1000000000010219,
+   "tris": 2316
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_5.ent",
+   "pos": [
+    -1344.0,
+    704.0,
+    193.0
+   ],
+   "streaming_distance": 391.6,
+   "node_id": 1000000000010220,
+   "tris": 479
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_6.ent",
+   "pos": [
+    -1344.0,
+    832.0,
+    170.0
+   ],
+   "streaming_distance": 378.5,
+   "node_id": 1000000000010221,
+   "tris": 734
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_7.ent",
+   "pos": [
+    -1344.0,
+    960.0,
+    223.0
+   ],
+   "streaming_distance": 369.4,
+   "node_id": 1000000000010222,
+   "tris": 370
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_8.ent",
+   "pos": [
+    -1344.0,
+    1088.0,
+    71.0
+   ],
+   "streaming_distance": 353.4,
+   "node_id": 1000000000010223,
+   "tris": 1509
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_9.ent",
+   "pos": [
+    -1344.0,
+    1216.0,
+    133.0
+   ],
+   "streaming_distance": 378.9,
+   "node_id": 1000000000010224,
+   "tris": 328
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_10.ent",
+   "pos": [
+    -1344.0,
+    1344.0,
+    82.0
+   ],
+   "streaming_distance": 369.8,
+   "node_id": 1000000000010225,
+   "tris": 3580
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_11.ent",
+   "pos": [
+    -1344.0,
+    1472.0,
+    20.0
+   ],
+   "streaming_distance": 386.4,
+   "node_id": 1000000000010226,
+   "tris": 6175
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_12.ent",
+   "pos": [
+    -1344.0,
+    1600.0,
+    98.0
+   ],
+   "streaming_distance": 383.3,
+   "node_id": 1000000000010227,
+   "tris": 125
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_13.ent",
+   "pos": [
+    -1344.0,
+    1728.0,
+    59.0
+   ],
+   "streaming_distance": 353.4,
+   "node_id": 1000000000010228,
+   "tris": 130
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_14.ent",
+   "pos": [
+    -1344.0,
+    1856.0,
+    50.0
+   ],
+   "streaming_distance": 373.6,
+   "node_id": 1000000000010229,
+   "tris": 180
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_15.ent",
+   "pos": [
+    -1344.0,
+    1984.0,
+    50.0
+   ],
+   "streaming_distance": 372.5,
+   "node_id": 1000000000010230,
+   "tris": 18
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_16.ent",
+   "pos": [
+    -1344.0,
+    2112.0,
+    26.0
+   ],
+   "streaming_distance": 332.8,
+   "node_id": 1000000000010231,
+   "tris": 209
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_17.ent",
+   "pos": [
+    -1344.0,
+    2240.0,
+    26.0
+   ],
+   "streaming_distance": 349.1,
+   "node_id": 1000000000010232,
+   "tris": 139
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_23.ent",
+   "pos": [
+    -1344.0,
+    3008.0,
+    14.0
+   ],
+   "streaming_distance": 366.3,
+   "node_id": 1000000000010233,
+   "tris": 217
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_m18.ent",
+   "pos": [
+    -1216.0,
+    -2240.0,
+    167.0
+   ],
+   "streaming_distance": 379.8,
+   "node_id": 1000000000010234,
+   "tris": 14
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_m17.ent",
+   "pos": [
+    -1216.0,
+    -2112.0,
+    59.0
+   ],
+   "streaming_distance": 390.8,
+   "node_id": 1000000000010235,
+   "tris": 6790
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_m16.ent",
+   "pos": [
+    -1216.0,
+    -1984.0,
+    59.0
+   ],
+   "streaming_distance": 388.1,
+   "node_id": 1000000000010236,
+   "tris": 3810
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_m15.ent",
+   "pos": [
+    -1216.0,
+    -1856.0,
+    134.0
+   ],
+   "streaming_distance": 386.2,
+   "node_id": 1000000000010237,
+   "tris": 192
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_m14.ent",
+   "pos": [
+    -1216.0,
+    -1728.0,
+    96.0
+   ],
+   "streaming_distance": 406.0,
+   "node_id": 1000000000010238,
+   "tris": 705
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_m13.ent",
+   "pos": [
+    -1216.0,
+    -1600.0,
+    57.0
+   ],
+   "streaming_distance": 398.3,
+   "node_id": 1000000000010239,
+   "tris": 3618
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_m10.ent",
+   "pos": [
+    -1216.0,
+    -1216.0,
+    41.0
+   ],
+   "streaming_distance": 375.2,
+   "node_id": 1000000000010240,
+   "tris": 1087
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_m9.ent",
+   "pos": [
+    -1216.0,
+    -1088.0,
+    48.0
+   ],
+   "streaming_distance": 355.6,
+   "node_id": 1000000000010241,
+   "tris": 527
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_m7.ent",
+   "pos": [
+    -1216.0,
+    -832.0,
+    57.0
+   ],
+   "streaming_distance": 384.6,
+   "node_id": 1000000000010242,
+   "tris": 1113
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_m6.ent",
+   "pos": [
+    -1216.0,
+    -704.0,
+    32.0
+   ],
+   "streaming_distance": 394.0,
+   "node_id": 1000000000010243,
+   "tris": 8962
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_m5.ent",
+   "pos": [
+    -1216.0,
+    -576.0,
+    67.0
+   ],
+   "streaming_distance": 390.3,
+   "node_id": 1000000000010244,
+   "tris": 3101
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_m4.ent",
+   "pos": [
+    -1216.0,
+    -448.0,
+    67.0
+   ],
+   "streaming_distance": 375.1,
+   "node_id": 1000000000010245,
+   "tris": 574
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_m2.ent",
+   "pos": [
+    -1216.0,
+    -192.0,
+    496.0
+   ],
+   "streaming_distance": 343.1,
+   "node_id": 1000000000010246,
+   "tris": 1439
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_m1.ent",
+   "pos": [
+    -1216.0,
+    -64.0,
+    16.0
+   ],
+   "streaming_distance": 365.8,
+   "node_id": 1000000000010247,
+   "tris": 2987
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_0.ent",
+   "pos": [
+    -1216.0,
+    64.0,
+    498.0
+   ],
+   "streaming_distance": 368.1,
+   "node_id": 1000000000010248,
+   "tris": 4026
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_1.ent",
+   "pos": [
+    -1216.0,
+    192.0,
+    289.0
+   ],
+   "streaming_distance": 373.3,
+   "node_id": 1000000000010249,
+   "tris": 86
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_2.ent",
+   "pos": [
+    -1216.0,
+    320.0,
+    289.0
+   ],
+   "streaming_distance": 371.1,
+   "node_id": 1000000000010250,
+   "tris": 7
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_4.ent",
+   "pos": [
+    -1216.0,
+    576.0,
+    205.0
+   ],
+   "streaming_distance": 353.3,
+   "node_id": 1000000000010251,
+   "tris": 1540
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_6.ent",
+   "pos": [
+    -1216.0,
+    832.0,
+    54.0
+   ],
+   "streaming_distance": 361.9,
+   "node_id": 1000000000010252,
+   "tris": 1913
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_7.ent",
+   "pos": [
+    -1216.0,
+    960.0,
+    97.0
+   ],
+   "streaming_distance": 375.4,
+   "node_id": 1000000000010253,
+   "tris": 320
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_9.ent",
+   "pos": [
+    -1216.0,
+    1216.0,
+    105.0
+   ],
+   "streaming_distance": 365.7,
+   "node_id": 1000000000010254,
+   "tris": 452
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_10.ent",
+   "pos": [
+    -1216.0,
+    1344.0,
+    59.0
+   ],
+   "streaming_distance": 378.8,
+   "node_id": 1000000000010255,
+   "tris": 362
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_11.ent",
+   "pos": [
+    -1216.0,
+    1472.0,
+    79.0
+   ],
+   "streaming_distance": 385.6,
+   "node_id": 1000000000010256,
+   "tris": 482
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_12.ent",
+   "pos": [
+    -1216.0,
+    1600.0,
+    30.0
+   ],
+   "streaming_distance": 362.8,
+   "node_id": 1000000000010257,
+   "tris": 143
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_18.ent",
+   "pos": [
+    -1216.0,
+    2368.0,
+    15.0
+   ],
+   "streaming_distance": 343.7,
+   "node_id": 1000000000010258,
+   "tris": 172
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_21.ent",
+   "pos": [
+    -1216.0,
+    2752.0,
+    38.0
+   ],
+   "streaming_distance": 380.9,
+   "node_id": 1000000000010259,
+   "tris": 507
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_22.ent",
+   "pos": [
+    -1216.0,
+    2880.0,
+    12.0
+   ],
+   "streaming_distance": 379.4,
+   "node_id": 1000000000010260,
+   "tris": 337
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_23.ent",
+   "pos": [
+    -1216.0,
+    3008.0,
+    12.0
+   ],
+   "streaming_distance": 374.8,
+   "node_id": 1000000000010261,
+   "tris": 502
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_26.ent",
+   "pos": [
+    -1216.0,
+    3392.0,
+    9.0
+   ],
+   "streaming_distance": 363.8,
+   "node_id": 1000000000010262,
+   "tris": 318
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_27.ent",
+   "pos": [
+    -1216.0,
+    3520.0,
+    9.0
+   ],
+   "streaming_distance": 364.0,
+   "node_id": 1000000000010263,
+   "tris": 318
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_m27.ent",
+   "pos": [
+    -1088.0,
+    -3392.0,
+    49.0
+   ],
+   "streaming_distance": 372.6,
+   "node_id": 1000000000010264,
+   "tris": 834
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_m25.ent",
+   "pos": [
+    -1088.0,
+    -3136.0,
+    49.0
+   ],
+   "streaming_distance": 364.6,
+   "node_id": 1000000000010265,
+   "tris": 83
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_m18.ent",
+   "pos": [
+    -1088.0,
+    -2240.0,
+    167.0
+   ],
+   "streaming_distance": 378.4,
+   "node_id": 1000000000010266,
+   "tris": 198
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_m17.ent",
+   "pos": [
+    -1088.0,
+    -2112.0,
+    107.0
+   ],
+   "streaming_distance": 396.0,
+   "node_id": 1000000000010267,
+   "tris": 3698
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_m16.ent",
+   "pos": [
+    -1088.0,
+    -1984.0,
+    133.0
+   ],
+   "streaming_distance": 393.7,
+   "node_id": 1000000000010268,
+   "tris": 4627
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_m15.ent",
+   "pos": [
+    -1088.0,
+    -1856.0,
+    52.0
+   ],
+   "streaming_distance": 396.3,
+   "node_id": 1000000000010269,
+   "tris": 1851
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_m14.ent",
+   "pos": [
+    -1088.0,
+    -1728.0,
+    52.0
+   ],
+   "streaming_distance": 398.2,
+   "node_id": 1000000000010270,
+   "tris": 515
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_m13.ent",
+   "pos": [
+    -1088.0,
+    -1600.0,
+    125.0
+   ],
+   "streaming_distance": 402.6,
+   "node_id": 1000000000010271,
+   "tris": 433
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_m11.ent",
+   "pos": [
+    -1088.0,
+    -1344.0,
+    27.0
+   ],
+   "streaming_distance": 342.6,
+   "node_id": 1000000000010272,
+   "tris": 352
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_m10.ent",
+   "pos": [
+    -1088.0,
+    -1216.0,
+    33.0
+   ],
+   "streaming_distance": 387.2,
+   "node_id": 1000000000010273,
+   "tris": 133
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_m9.ent",
+   "pos": [
+    -1088.0,
+    -1088.0,
+    35.0
+   ],
+   "streaming_distance": 366.5,
+   "node_id": 1000000000010274,
+   "tris": 22
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_m8.ent",
+   "pos": [
+    -1088.0,
+    -960.0,
+    130.0
+   ],
+   "streaming_distance": 358.9,
+   "node_id": 1000000000010275,
+   "tris": 15
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_m6.ent",
+   "pos": [
+    -1088.0,
+    -704.0,
+    121.0
+   ],
+   "streaming_distance": 383.9,
+   "node_id": 1000000000010276,
+   "tris": 3359
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_m5.ent",
+   "pos": [
+    -1088.0,
+    -576.0,
+    124.0
+   ],
+   "streaming_distance": 383.8,
+   "node_id": 1000000000010277,
+   "tris": 2040
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_m3.ent",
+   "pos": [
+    -1088.0,
+    -320.0,
+    26.0
+   ],
+   "streaming_distance": 378.1,
+   "node_id": 1000000000010278,
+   "tris": 117
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_m2.ent",
+   "pos": [
+    -1088.0,
+    -192.0,
+    26.0
+   ],
+   "streaming_distance": 372.6,
+   "node_id": 1000000000010279,
+   "tris": 497
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_0.ent",
+   "pos": [
+    -1088.0,
+    64.0,
+    167.0
+   ],
+   "streaming_distance": 385.8,
+   "node_id": 1000000000010280,
+   "tris": 648
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_1.ent",
+   "pos": [
+    -1088.0,
+    192.0,
+    246.0
+   ],
+   "streaming_distance": 372.0,
+   "node_id": 1000000000010281,
+   "tris": 1662
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_2.ent",
+   "pos": [
+    -1088.0,
+    320.0,
+    95.0
+   ],
+   "streaming_distance": 369.5,
+   "node_id": 1000000000010282,
+   "tris": 4893
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_3.ent",
+   "pos": [
+    -1088.0,
+    448.0,
+    53.0
+   ],
+   "streaming_distance": 378.0,
+   "node_id": 1000000000010283,
+   "tris": 387
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_11.ent",
+   "pos": [
+    -1088.0,
+    1472.0,
+    43.0
+   ],
+   "streaming_distance": 376.5,
+   "node_id": 1000000000010284,
+   "tris": 171
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_12.ent",
+   "pos": [
+    -1088.0,
+    1600.0,
+    44.0
+   ],
+   "streaming_distance": 375.6,
+   "node_id": 1000000000010285,
+   "tris": 126
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_19.ent",
+   "pos": [
+    -1088.0,
+    2496.0,
+    28.0
+   ],
+   "streaming_distance": 354.8,
+   "node_id": 1000000000010286,
+   "tris": 162
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_20.ent",
+   "pos": [
+    -1088.0,
+    2624.0,
+    35.0
+   ],
+   "streaming_distance": 388.9,
+   "node_id": 1000000000010287,
+   "tris": 212
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_22.ent",
+   "pos": [
+    -1088.0,
+    2880.0,
+    17.0
+   ],
+   "streaming_distance": 381.0,
+   "node_id": 1000000000010288,
+   "tris": 478
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_23.ent",
+   "pos": [
+    -1088.0,
+    3008.0,
+    15.0
+   ],
+   "streaming_distance": 378.7,
+   "node_id": 1000000000010289,
+   "tris": 248
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_24.ent",
+   "pos": [
+    -1088.0,
+    3136.0,
+    11.0
+   ],
+   "streaming_distance": 318.4,
+   "node_id": 1000000000010290,
+   "tris": 222
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_25.ent",
+   "pos": [
+    -1088.0,
+    3264.0,
+    9.0
+   ],
+   "streaming_distance": 384.6,
+   "node_id": 1000000000010291,
+   "tris": 581
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_26.ent",
+   "pos": [
+    -1088.0,
+    3392.0,
+    9.0
+   ],
+   "streaming_distance": 364.7,
+   "node_id": 1000000000010292,
+   "tris": 210
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_27.ent",
+   "pos": [
+    -1088.0,
+    3520.0,
+    27.0
+   ],
+   "streaming_distance": 370.3,
+   "node_id": 1000000000010293,
+   "tris": 4
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m9_28.ent",
+   "pos": [
+    -1088.0,
+    3648.0,
+    9.0
+   ],
+   "streaming_distance": 371.9,
+   "node_id": 1000000000010294,
+   "tris": 314
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_m25.ent",
+   "pos": [
+    -960.0,
+    -3136.0,
+    49.0
+   ],
+   "streaming_distance": 365.0,
+   "node_id": 1000000000010295,
+   "tris": 738
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_m16.ent",
+   "pos": [
+    -960.0,
+    -1984.0,
+    131.0
+   ],
+   "streaming_distance": 392.0,
+   "node_id": 1000000000010296,
+   "tris": 40
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_m15.ent",
+   "pos": [
+    -960.0,
+    -1856.0,
+    47.0
+   ],
+   "streaming_distance": 395.7,
+   "node_id": 1000000000010297,
+   "tris": 2627
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_m14.ent",
+   "pos": [
+    -960.0,
+    -1728.0,
+    131.0
+   ],
+   "streaming_distance": 390.4,
+   "node_id": 1000000000010298,
+   "tris": 92
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_m12.ent",
+   "pos": [
+    -960.0,
+    -1472.0,
+    33.0
+   ],
+   "streaming_distance": 379.2,
+   "node_id": 1000000000010299,
+   "tris": 570
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_m10.ent",
+   "pos": [
+    -960.0,
+    -1216.0,
+    15.0
+   ],
+   "streaming_distance": 387.0,
+   "node_id": 1000000000010300,
+   "tris": 344
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_m9.ent",
+   "pos": [
+    -960.0,
+    -1088.0,
+    35.0
+   ],
+   "streaming_distance": 366.7,
+   "node_id": 1000000000010301,
+   "tris": 13
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_m6.ent",
+   "pos": [
+    -960.0,
+    -704.0,
+    144.0
+   ],
+   "streaming_distance": 390.1,
+   "node_id": 1000000000010302,
+   "tris": 305
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_m5.ent",
+   "pos": [
+    -960.0,
+    -576.0,
+    145.0
+   ],
+   "streaming_distance": 397.8,
+   "node_id": 1000000000010303,
+   "tris": 451
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_m1.ent",
+   "pos": [
+    -960.0,
+    -64.0,
+    247.0
+   ],
+   "streaming_distance": 374.1,
+   "node_id": 1000000000010304,
+   "tris": 456
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_0.ent",
+   "pos": [
+    -960.0,
+    64.0,
+    11.0
+   ],
+   "streaming_distance": 383.4,
+   "node_id": 1000000000010305,
+   "tris": 4950
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_1.ent",
+   "pos": [
+    -960.0,
+    192.0,
+    11.0
+   ],
+   "streaming_distance": 386.5,
+   "node_id": 1000000000010306,
+   "tris": 4731
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_2.ent",
+   "pos": [
+    -960.0,
+    320.0,
+    165.0
+   ],
+   "streaming_distance": 386.6,
+   "node_id": 1000000000010307,
+   "tris": 1676
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_3.ent",
+   "pos": [
+    -960.0,
+    448.0,
+    165.0
+   ],
+   "streaming_distance": 375.8,
+   "node_id": 1000000000010308,
+   "tris": 742
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_4.ent",
+   "pos": [
+    -960.0,
+    576.0,
+    44.0
+   ],
+   "streaming_distance": 362.0,
+   "node_id": 1000000000010309,
+   "tris": 280
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_9.ent",
+   "pos": [
+    -960.0,
+    1216.0,
+    21.0
+   ],
+   "streaming_distance": 377.2,
+   "node_id": 1000000000010310,
+   "tris": 262
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_11.ent",
+   "pos": [
+    -960.0,
+    1472.0,
+    43.0
+   ],
+   "streaming_distance": 364.0,
+   "node_id": 1000000000010311,
+   "tris": 56
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_18.ent",
+   "pos": [
+    -960.0,
+    2368.0,
+    57.0
+   ],
+   "streaming_distance": 388.3,
+   "node_id": 1000000000010312,
+   "tris": 346
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_19.ent",
+   "pos": [
+    -960.0,
+    2496.0,
+    49.0
+   ],
+   "streaming_distance": 386.2,
+   "node_id": 1000000000010313,
+   "tris": 386
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_20.ent",
+   "pos": [
+    -960.0,
+    2624.0,
+    39.0
+   ],
+   "streaming_distance": 387.3,
+   "node_id": 1000000000010314,
+   "tris": 402
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_21.ent",
+   "pos": [
+    -960.0,
+    2752.0,
+    47.0
+   ],
+   "streaming_distance": 348.1,
+   "node_id": 1000000000010315,
+   "tris": 207
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_23.ent",
+   "pos": [
+    -960.0,
+    3008.0,
+    15.0
+   ],
+   "streaming_distance": 377.8,
+   "node_id": 1000000000010316,
+   "tris": 874
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_24.ent",
+   "pos": [
+    -960.0,
+    3136.0,
+    44.0
+   ],
+   "streaming_distance": 388.5,
+   "node_id": 1000000000010317,
+   "tris": 299
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_25.ent",
+   "pos": [
+    -960.0,
+    3264.0,
+    44.0
+   ],
+   "streaming_distance": 388.5,
+   "node_id": 1000000000010318,
+   "tris": 704
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_26.ent",
+   "pos": [
+    -960.0,
+    3392.0,
+    9.0
+   ],
+   "streaming_distance": 366.2,
+   "node_id": 1000000000010319,
+   "tris": 214
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_27.ent",
+   "pos": [
+    -960.0,
+    3520.0,
+    9.0
+   ],
+   "streaming_distance": 366.7,
+   "node_id": 1000000000010320,
+   "tris": 530
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_m23.ent",
+   "pos": [
+    -832.0,
+    -2880.0,
+    39.0
+   ],
+   "streaming_distance": 342.5,
+   "node_id": 1000000000010321,
+   "tris": 902
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_m20.ent",
+   "pos": [
+    -832.0,
+    -2496.0,
+    33.0
+   ],
+   "streaming_distance": 374.7,
+   "node_id": 1000000000010322,
+   "tris": 4
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_m19.ent",
+   "pos": [
+    -832.0,
+    -2368.0,
+    15.0
+   ],
+   "streaming_distance": 376.1,
+   "node_id": 1000000000010323,
+   "tris": 102
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_m16.ent",
+   "pos": [
+    -832.0,
+    -1984.0,
+    33.0
+   ],
+   "streaming_distance": 367.0,
+   "node_id": 1000000000010324,
+   "tris": 357
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_m15.ent",
+   "pos": [
+    -832.0,
+    -1856.0,
+    48.0
+   ],
+   "streaming_distance": 360.1,
+   "node_id": 1000000000010325,
+   "tris": 611
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_m13.ent",
+   "pos": [
+    -832.0,
+    -1600.0,
+    15.0
+   ],
+   "streaming_distance": 356.0,
+   "node_id": 1000000000010326,
+   "tris": 114
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_m12.ent",
+   "pos": [
+    -832.0,
+    -1472.0,
+    33.0
+   ],
+   "streaming_distance": 369.8,
+   "node_id": 1000000000010327,
+   "tris": 258
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_m11.ent",
+   "pos": [
+    -832.0,
+    -1344.0,
+    134.0
+   ],
+   "streaming_distance": 381.7,
+   "node_id": 1000000000010328,
+   "tris": 30
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_m10.ent",
+   "pos": [
+    -832.0,
+    -1216.0,
+    115.0
+   ],
+   "streaming_distance": 382.9,
+   "node_id": 1000000000010329,
+   "tris": 8704
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_m9.ent",
+   "pos": [
+    -832.0,
+    -1088.0,
+    154.0
+   ],
+   "streaming_distance": 384.3,
+   "node_id": 1000000000010330,
+   "tris": 3180
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_m8.ent",
+   "pos": [
+    -832.0,
+    -960.0,
+    53.0
+   ],
+   "streaming_distance": 340.9,
+   "node_id": 1000000000010331,
+   "tris": 490
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_m6.ent",
+   "pos": [
+    -832.0,
+    -704.0,
+    145.0
+   ],
+   "streaming_distance": 398.1,
+   "node_id": 1000000000010332,
+   "tris": 64
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_m5.ent",
+   "pos": [
+    -832.0,
+    -576.0,
+    144.0
+   ],
+   "streaming_distance": 409.2,
+   "node_id": 1000000000010333,
+   "tris": 163
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_m4.ent",
+   "pos": [
+    -832.0,
+    -448.0,
+    45.0
+   ],
+   "streaming_distance": 374.3,
+   "node_id": 1000000000010334,
+   "tris": 4
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_m2.ent",
+   "pos": [
+    -832.0,
+    -192.0,
+    209.0
+   ],
+   "streaming_distance": 398.3,
+   "node_id": 1000000000010335,
+   "tris": 1433
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_m1.ent",
+   "pos": [
+    -832.0,
+    -64.0,
+    103.0
+   ],
+   "streaming_distance": 399.1,
+   "node_id": 1000000000010336,
+   "tris": 4159
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_0.ent",
+   "pos": [
+    -832.0,
+    64.0,
+    117.0
+   ],
+   "streaming_distance": 382.1,
+   "node_id": 1000000000010337,
+   "tris": 681
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_1.ent",
+   "pos": [
+    -832.0,
+    192.0,
+    121.0
+   ],
+   "streaming_distance": 387.4,
+   "node_id": 1000000000010338,
+   "tris": 499
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_2.ent",
+   "pos": [
+    -832.0,
+    320.0,
+    194.0
+   ],
+   "streaming_distance": 381.8,
+   "node_id": 1000000000010339,
+   "tris": 196
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_4.ent",
+   "pos": [
+    -832.0,
+    576.0,
+    20.0
+   ],
+   "streaming_distance": 364.3,
+   "node_id": 1000000000010340,
+   "tris": 998
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_5.ent",
+   "pos": [
+    -832.0,
+    704.0,
+    23.0
+   ],
+   "streaming_distance": 385.6,
+   "node_id": 1000000000010341,
+   "tris": 695
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_6.ent",
+   "pos": [
+    -832.0,
+    832.0,
+    28.0
+   ],
+   "streaming_distance": 332.2,
+   "node_id": 1000000000010342,
+   "tris": 228
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_7.ent",
+   "pos": [
+    -832.0,
+    960.0,
+    29.0
+   ],
+   "streaming_distance": 394.1,
+   "node_id": 1000000000010343,
+   "tris": 3744
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_8.ent",
+   "pos": [
+    -832.0,
+    1088.0,
+    47.0
+   ],
+   "streaming_distance": 393.9,
+   "node_id": 1000000000010344,
+   "tris": 9390
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_9.ent",
+   "pos": [
+    -832.0,
+    1216.0,
+    140.0
+   ],
+   "streaming_distance": 386.0,
+   "node_id": 1000000000010345,
+   "tris": 3287
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_10.ent",
+   "pos": [
+    -832.0,
+    1344.0,
+    23.0
+   ],
+   "streaming_distance": 377.2,
+   "node_id": 1000000000010346,
+   "tris": 464
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_17.ent",
+   "pos": [
+    -832.0,
+    2240.0,
+    91.0
+   ],
+   "streaming_distance": 356.1,
+   "node_id": 1000000000010347,
+   "tris": 121
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_20.ent",
+   "pos": [
+    -832.0,
+    2624.0,
+    44.0
+   ],
+   "streaming_distance": 387.0,
+   "node_id": 1000000000010348,
+   "tris": 27
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_25.ent",
+   "pos": [
+    -832.0,
+    3264.0,
+    9.0
+   ],
+   "streaming_distance": 364.6,
+   "node_id": 1000000000010349,
+   "tris": 210
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_26.ent",
+   "pos": [
+    -832.0,
+    3392.0,
+    9.0
+   ],
+   "streaming_distance": 372.2,
+   "node_id": 1000000000010350,
+   "tris": 114
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_27.ent",
+   "pos": [
+    -832.0,
+    3520.0,
+    9.0
+   ],
+   "streaming_distance": 363.5,
+   "node_id": 1000000000010351,
+   "tris": 212
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_m20.ent",
+   "pos": [
+    -704.0,
+    -2496.0,
+    20.0
+   ],
+   "streaming_distance": 382.8,
+   "node_id": 1000000000010352,
+   "tris": 367
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_m19.ent",
+   "pos": [
+    -704.0,
+    -2368.0,
+    15.0
+   ],
+   "streaming_distance": 355.3,
+   "node_id": 1000000000010353,
+   "tris": 212
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_m17.ent",
+   "pos": [
+    -704.0,
+    -2112.0,
+    33.0
+   ],
+   "streaming_distance": 343.4,
+   "node_id": 1000000000010354,
+   "tris": 1098
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_m10.ent",
+   "pos": [
+    -704.0,
+    -1216.0,
+    115.0
+   ],
+   "streaming_distance": 387.5,
+   "node_id": 1000000000010355,
+   "tris": 89
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_m9.ent",
+   "pos": [
+    -704.0,
+    -1088.0,
+    157.0
+   ],
+   "streaming_distance": 385.8,
+   "node_id": 1000000000010356,
+   "tris": 998
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_m4.ent",
+   "pos": [
+    -704.0,
+    -448.0,
+    40.0
+   ],
+   "streaming_distance": 376.5,
+   "node_id": 1000000000010357,
+   "tris": 24
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_m3.ent",
+   "pos": [
+    -704.0,
+    -320.0,
+    34.0
+   ],
+   "streaming_distance": 378.7,
+   "node_id": 1000000000010358,
+   "tris": 4
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_m2.ent",
+   "pos": [
+    -704.0,
+    -192.0,
+    203.0
+   ],
+   "streaming_distance": 425.5,
+   "node_id": 1000000000010359,
+   "tris": 1888
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_m1.ent",
+   "pos": [
+    -704.0,
+    -64.0,
+    197.0
+   ],
+   "streaming_distance": 421.1,
+   "node_id": 1000000000010360,
+   "tris": 2818
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_0.ent",
+   "pos": [
+    -704.0,
+    64.0,
+    281.0
+   ],
+   "streaming_distance": 384.7,
+   "node_id": 1000000000010361,
+   "tris": 638
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_1.ent",
+   "pos": [
+    -704.0,
+    192.0,
+    20.0
+   ],
+   "streaming_distance": 376.1,
+   "node_id": 1000000000010362,
+   "tris": 1135
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_2.ent",
+   "pos": [
+    -704.0,
+    320.0,
+    20.0
+   ],
+   "streaming_distance": 389.1,
+   "node_id": 1000000000010363,
+   "tris": 741
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_3.ent",
+   "pos": [
+    -704.0,
+    448.0,
+    20.0
+   ],
+   "streaming_distance": 389.9,
+   "node_id": 1000000000010364,
+   "tris": 471
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_4.ent",
+   "pos": [
+    -704.0,
+    576.0,
+    19.0
+   ],
+   "streaming_distance": 400.0,
+   "node_id": 1000000000010365,
+   "tris": 7911
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_5.ent",
+   "pos": [
+    -704.0,
+    704.0,
+    35.0
+   ],
+   "streaming_distance": 417.2,
+   "node_id": 1000000000010366,
+   "tris": 3791
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_6.ent",
+   "pos": [
+    -704.0,
+    832.0,
+    280.0
+   ],
+   "streaming_distance": 384.5,
+   "node_id": 1000000000010367,
+   "tris": 341
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_7.ent",
+   "pos": [
+    -704.0,
+    960.0,
+    31.0
+   ],
+   "streaming_distance": 396.5,
+   "node_id": 1000000000010368,
+   "tris": 6179
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_8.ent",
+   "pos": [
+    -704.0,
+    1088.0,
+    36.0
+   ],
+   "streaming_distance": 397.6,
+   "node_id": 1000000000010369,
+   "tris": 40931
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_9.ent",
+   "pos": [
+    -704.0,
+    1216.0,
+    88.0
+   ],
+   "streaming_distance": 404.0,
+   "node_id": 1000000000010370,
+   "tris": 15233
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_10.ent",
+   "pos": [
+    -704.0,
+    1344.0,
+    74.0
+   ],
+   "streaming_distance": 427.0,
+   "node_id": 1000000000010371,
+   "tris": 21207
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_11.ent",
+   "pos": [
+    -704.0,
+    1472.0,
+    23.0
+   ],
+   "streaming_distance": 422.8,
+   "node_id": 1000000000010372,
+   "tris": 13882
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_12.ent",
+   "pos": [
+    -704.0,
+    1600.0,
+    163.0
+   ],
+   "streaming_distance": 380.5,
+   "node_id": 1000000000010373,
+   "tris": 16
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_14.ent",
+   "pos": [
+    -704.0,
+    1856.0,
+    63.0
+   ],
+   "streaming_distance": 340.8,
+   "node_id": 1000000000010374,
+   "tris": 184
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_15.ent",
+   "pos": [
+    -704.0,
+    1984.0,
+    73.0
+   ],
+   "streaming_distance": 363.8,
+   "node_id": 1000000000010375,
+   "tris": 306
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_18.ent",
+   "pos": [
+    -704.0,
+    2368.0,
+    86.0
+   ],
+   "streaming_distance": 396.5,
+   "node_id": 1000000000010376,
+   "tris": 6147
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_19.ent",
+   "pos": [
+    -704.0,
+    2496.0,
+    86.0
+   ],
+   "streaming_distance": 395.2,
+   "node_id": 1000000000010377,
+   "tris": 5641
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_20.ent",
+   "pos": [
+    -704.0,
+    2624.0,
+    55.0
+   ],
+   "streaming_distance": 359.9,
+   "node_id": 1000000000010378,
+   "tris": 284
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_25.ent",
+   "pos": [
+    -704.0,
+    3264.0,
+    9.0
+   ],
+   "streaming_distance": 364.4,
+   "node_id": 1000000000010379,
+   "tris": 108
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_26.ent",
+   "pos": [
+    -704.0,
+    3392.0,
+    9.0
+   ],
+   "streaming_distance": 369.9,
+   "node_id": 1000000000010380,
+   "tris": 310
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_m21.ent",
+   "pos": [
+    -576.0,
+    -2624.0,
+    31.0
+   ],
+   "streaming_distance": 384.1,
+   "node_id": 1000000000010381,
+   "tris": 183
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_m20.ent",
+   "pos": [
+    -576.0,
+    -2496.0,
+    32.0
+   ],
+   "streaming_distance": 384.6,
+   "node_id": 1000000000010382,
+   "tris": 157
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_m13.ent",
+   "pos": [
+    -576.0,
+    -1600.0,
+    48.0
+   ],
+   "streaming_distance": 361.9,
+   "node_id": 1000000000010383,
+   "tris": 558
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_m12.ent",
+   "pos": [
+    -576.0,
+    -1472.0,
+    48.0
+   ],
+   "streaming_distance": 380.5,
+   "node_id": 1000000000010384,
+   "tris": 495
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_m11.ent",
+   "pos": [
+    -576.0,
+    -1344.0,
+    17.0
+   ],
+   "streaming_distance": 365.4,
+   "node_id": 1000000000010385,
+   "tris": 176
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_m6.ent",
+   "pos": [
+    -576.0,
+    -704.0,
+    8.0
+   ],
+   "streaming_distance": 367.1,
+   "node_id": 1000000000010386,
+   "tris": 274
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_m5.ent",
+   "pos": [
+    -576.0,
+    -576.0,
+    13.0
+   ],
+   "streaming_distance": 370.8,
+   "node_id": 1000000000010387,
+   "tris": 34
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_m4.ent",
+   "pos": [
+    -576.0,
+    -448.0,
+    13.0
+   ],
+   "streaming_distance": 370.7,
+   "node_id": 1000000000010388,
+   "tris": 287
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_m3.ent",
+   "pos": [
+    -576.0,
+    -320.0,
+    -12.0
+   ],
+   "streaming_distance": 368.1,
+   "node_id": 1000000000010389,
+   "tris": 860
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_m1.ent",
+   "pos": [
+    -576.0,
+    -64.0,
+    47.0
+   ],
+   "streaming_distance": 352.2,
+   "node_id": 1000000000010390,
+   "tris": 262
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_0.ent",
+   "pos": [
+    -576.0,
+    64.0,
+    16.0
+   ],
+   "streaming_distance": 405.8,
+   "node_id": 1000000000010391,
+   "tris": 7239
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_1.ent",
+   "pos": [
+    -576.0,
+    192.0,
+    79.0
+   ],
+   "streaming_distance": 395.4,
+   "node_id": 1000000000010392,
+   "tris": 24914
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_2.ent",
+   "pos": [
+    -576.0,
+    320.0,
+    51.0
+   ],
+   "streaming_distance": 446.1,
+   "node_id": 1000000000010393,
+   "tris": 5822
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_3.ent",
+   "pos": [
+    -576.0,
+    448.0,
+    136.0
+   ],
+   "streaming_distance": 389.1,
+   "node_id": 1000000000010394,
+   "tris": 425
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_4.ent",
+   "pos": [
+    -576.0,
+    576.0,
+    111.0
+   ],
+   "streaming_distance": 411.7,
+   "node_id": 1000000000010395,
+   "tris": 17320
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_5.ent",
+   "pos": [
+    -576.0,
+    704.0,
+    134.0
+   ],
+   "streaming_distance": 397.6,
+   "node_id": 1000000000010396,
+   "tris": 2555
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_6.ent",
+   "pos": [
+    -576.0,
+    832.0,
+    108.0
+   ],
+   "streaming_distance": 376.3,
+   "node_id": 1000000000010397,
+   "tris": 284
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_7.ent",
+   "pos": [
+    -576.0,
+    960.0,
+    42.0
+   ],
+   "streaming_distance": 400.7,
+   "node_id": 1000000000010398,
+   "tris": 7413
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_8.ent",
+   "pos": [
+    -576.0,
+    1088.0,
+    101.0
+   ],
+   "streaming_distance": 392.1,
+   "node_id": 1000000000010399,
+   "tris": 6359
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_9.ent",
+   "pos": [
+    -576.0,
+    1216.0,
+    87.0
+   ],
+   "streaming_distance": 396.3,
+   "node_id": 1000000000010400,
+   "tris": 20271
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_10.ent",
+   "pos": [
+    -576.0,
+    1344.0,
+    27.0
+   ],
+   "streaming_distance": 416.5,
+   "node_id": 1000000000010401,
+   "tris": 21046
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_11.ent",
+   "pos": [
+    -576.0,
+    1472.0,
+    51.0
+   ],
+   "streaming_distance": 398.4,
+   "node_id": 1000000000010402,
+   "tris": 19314
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_12.ent",
+   "pos": [
+    -576.0,
+    1600.0,
+    160.0
+   ],
+   "streaming_distance": 380.6,
+   "node_id": 1000000000010403,
+   "tris": 1261
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_14.ent",
+   "pos": [
+    -576.0,
+    1856.0,
+    42.0
+   ],
+   "streaming_distance": 379.2,
+   "node_id": 1000000000010404,
+   "tris": 205
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_15.ent",
+   "pos": [
+    -576.0,
+    1984.0,
+    78.0
+   ],
+   "streaming_distance": 363.8,
+   "node_id": 1000000000010405,
+   "tris": 334
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_18.ent",
+   "pos": [
+    -576.0,
+    2368.0,
+    90.0
+   ],
+   "streaming_distance": 392.5,
+   "node_id": 1000000000010406,
+   "tris": 40
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_19.ent",
+   "pos": [
+    -576.0,
+    2496.0,
+    65.0
+   ],
+   "streaming_distance": 390.0,
+   "node_id": 1000000000010407,
+   "tris": 8416
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_m17.ent",
+   "pos": [
+    -448.0,
+    -2112.0,
+    11.0
+   ],
+   "streaming_distance": 374.5,
+   "node_id": 1000000000010408,
+   "tris": 306
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_m15.ent",
+   "pos": [
+    -448.0,
+    -1856.0,
+    12.0
+   ],
+   "streaming_distance": 344.3,
+   "node_id": 1000000000010409,
+   "tris": 788
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_m14.ent",
+   "pos": [
+    -448.0,
+    -1728.0,
+    8.0
+   ],
+   "streaming_distance": 367.2,
+   "node_id": 1000000000010410,
+   "tris": 212
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_m12.ent",
+   "pos": [
+    -448.0,
+    -1472.0,
+    47.0
+   ],
+   "streaming_distance": 378.1,
+   "node_id": 1000000000010411,
+   "tris": 100
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_m6.ent",
+   "pos": [
+    -448.0,
+    -704.0,
+    9.0
+   ],
+   "streaming_distance": 367.8,
+   "node_id": 1000000000010412,
+   "tris": 462
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_m5.ent",
+   "pos": [
+    -448.0,
+    -576.0,
+    26.0
+   ],
+   "streaming_distance": 376.7,
+   "node_id": 1000000000010413,
+   "tris": 19
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_m4.ent",
+   "pos": [
+    -448.0,
+    -448.0,
+    8.0
+   ],
+   "streaming_distance": 373.2,
+   "node_id": 1000000000010414,
+   "tris": 445
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_m3.ent",
+   "pos": [
+    -448.0,
+    -320.0,
+    14.0
+   ],
+   "streaming_distance": 368.6,
+   "node_id": 1000000000010415,
+   "tris": 202
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_m2.ent",
+   "pos": [
+    -448.0,
+    -192.0,
+    13.0
+   ],
+   "streaming_distance": 372.3,
+   "node_id": 1000000000010416,
+   "tris": 246
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_0.ent",
+   "pos": [
+    -448.0,
+    64.0,
+    15.0
+   ],
+   "streaming_distance": 369.6,
+   "node_id": 1000000000010417,
+   "tris": 4770
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_1.ent",
+   "pos": [
+    -448.0,
+    192.0,
+    53.0
+   ],
+   "streaming_distance": 442.3,
+   "node_id": 1000000000010418,
+   "tris": 11050
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_2.ent",
+   "pos": [
+    -448.0,
+    320.0,
+    96.0
+   ],
+   "streaming_distance": 396.6,
+   "node_id": 1000000000010419,
+   "tris": 4534
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_3.ent",
+   "pos": [
+    -448.0,
+    448.0,
+    160.0
+   ],
+   "streaming_distance": 396.9,
+   "node_id": 1000000000010420,
+   "tris": 4622
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_4.ent",
+   "pos": [
+    -448.0,
+    576.0,
+    129.0
+   ],
+   "streaming_distance": 386.0,
+   "node_id": 1000000000010421,
+   "tris": 227
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_5.ent",
+   "pos": [
+    -448.0,
+    704.0,
+    231.0
+   ],
+   "streaming_distance": 370.4,
+   "node_id": 1000000000010422,
+   "tris": 90
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_6.ent",
+   "pos": [
+    -448.0,
+    832.0,
+    115.0
+   ],
+   "streaming_distance": 374.5,
+   "node_id": 1000000000010423,
+   "tris": 1005
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_7.ent",
+   "pos": [
+    -448.0,
+    960.0,
+    42.0
+   ],
+   "streaming_distance": 402.1,
+   "node_id": 1000000000010424,
+   "tris": 9982
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_8.ent",
+   "pos": [
+    -448.0,
+    1088.0,
+    44.0
+   ],
+   "streaming_distance": 393.8,
+   "node_id": 1000000000010425,
+   "tris": 9034
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_9.ent",
+   "pos": [
+    -448.0,
+    1216.0,
+    32.0
+   ],
+   "streaming_distance": 401.3,
+   "node_id": 1000000000010426,
+   "tris": 19609
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_10.ent",
+   "pos": [
+    -448.0,
+    1344.0,
+    83.0
+   ],
+   "streaming_distance": 405.5,
+   "node_id": 1000000000010427,
+   "tris": 18909
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_11.ent",
+   "pos": [
+    -448.0,
+    1472.0,
+    175.0
+   ],
+   "streaming_distance": 374.2,
+   "node_id": 1000000000010428,
+   "tris": 9
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_14.ent",
+   "pos": [
+    -448.0,
+    1856.0,
+    42.0
+   ],
+   "streaming_distance": 380.1,
+   "node_id": 1000000000010429,
+   "tris": 103
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_16.ent",
+   "pos": [
+    -448.0,
+    2112.0,
+    65.0
+   ],
+   "streaming_distance": 363.8,
+   "node_id": 1000000000010430,
+   "tris": 140
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_19.ent",
+   "pos": [
+    -448.0,
+    2496.0,
+    65.0
+   ],
+   "streaming_distance": 369.1,
+   "node_id": 1000000000010431,
+   "tris": 226
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_m21.ent",
+   "pos": [
+    -320.0,
+    -2624.0,
+    30.0
+   ],
+   "streaming_distance": 381.5,
+   "node_id": 1000000000010432,
+   "tris": 680
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_m20.ent",
+   "pos": [
+    -320.0,
+    -2496.0,
+    32.0
+   ],
+   "streaming_distance": 377.0,
+   "node_id": 1000000000010433,
+   "tris": 230
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_m19.ent",
+   "pos": [
+    -320.0,
+    -2368.0,
+    26.0
+   ],
+   "streaming_distance": 377.8,
+   "node_id": 1000000000010434,
+   "tris": 86
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_m17.ent",
+   "pos": [
+    -320.0,
+    -2112.0,
+    16.0
+   ],
+   "streaming_distance": 369.4,
+   "node_id": 1000000000010435,
+   "tris": 734
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_m16.ent",
+   "pos": [
+    -320.0,
+    -1984.0,
+    12.0
+   ],
+   "streaming_distance": 318.8,
+   "node_id": 1000000000010436,
+   "tris": 214
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_m14.ent",
+   "pos": [
+    -320.0,
+    -1728.0,
+    18.0
+   ],
+   "streaming_distance": 388.0,
+   "node_id": 1000000000010437,
+   "tris": 92
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_m13.ent",
+   "pos": [
+    -320.0,
+    -1600.0,
+    14.0
+   ],
+   "streaming_distance": 388.2,
+   "node_id": 1000000000010438,
+   "tris": 548
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_m12.ent",
+   "pos": [
+    -320.0,
+    -1472.0,
+    22.0
+   ],
+   "streaming_distance": 383.2,
+   "node_id": 1000000000010439,
+   "tris": 7
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_m11.ent",
+   "pos": [
+    -320.0,
+    -1344.0,
+    22.0
+   ],
+   "streaming_distance": 374.3,
+   "node_id": 1000000000010440,
+   "tris": 43
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_m10.ent",
+   "pos": [
+    -320.0,
+    -1216.0,
+    48.0
+   ],
+   "streaming_distance": 336.3,
+   "node_id": 1000000000010441,
+   "tris": 259
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_m9.ent",
+   "pos": [
+    -320.0,
+    -1088.0,
+    14.0
+   ],
+   "streaming_distance": 373.8,
+   "node_id": 1000000000010442,
+   "tris": 137
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_m7.ent",
+   "pos": [
+    -320.0,
+    -832.0,
+    9.0
+   ],
+   "streaming_distance": 342.4,
+   "node_id": 1000000000010443,
+   "tris": 106
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_m6.ent",
+   "pos": [
+    -320.0,
+    -704.0,
+    9.0
+   ],
+   "streaming_distance": 365.9,
+   "node_id": 1000000000010444,
+   "tris": 361
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_m5.ent",
+   "pos": [
+    -320.0,
+    -576.0,
+    9.0
+   ],
+   "streaming_distance": 366.1,
+   "node_id": 1000000000010445,
+   "tris": 375
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_m4.ent",
+   "pos": [
+    -320.0,
+    -448.0,
+    13.0
+   ],
+   "streaming_distance": 379.7,
+   "node_id": 1000000000010446,
+   "tris": 150
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_m3.ent",
+   "pos": [
+    -320.0,
+    -320.0,
+    8.0
+   ],
+   "streaming_distance": 381.9,
+   "node_id": 1000000000010447,
+   "tris": 573
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_2.ent",
+   "pos": [
+    -320.0,
+    320.0,
+    176.0
+   ],
+   "streaming_distance": 399.2,
+   "node_id": 1000000000010448,
+   "tris": 971
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_3.ent",
+   "pos": [
+    -320.0,
+    448.0,
+    71.0
+   ],
+   "streaming_distance": 396.8,
+   "node_id": 1000000000010449,
+   "tris": 6530
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_4.ent",
+   "pos": [
+    -320.0,
+    576.0,
+    112.0
+   ],
+   "streaming_distance": 402.9,
+   "node_id": 1000000000010450,
+   "tris": 6594
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_5.ent",
+   "pos": [
+    -320.0,
+    704.0,
+    75.0
+   ],
+   "streaming_distance": 382.0,
+   "node_id": 1000000000010451,
+   "tris": 829
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_7.ent",
+   "pos": [
+    -320.0,
+    960.0,
+    332.0
+   ],
+   "streaming_distance": 368.8,
+   "node_id": 1000000000010452,
+   "tris": 123
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_8.ent",
+   "pos": [
+    -320.0,
+    1088.0,
+    168.0
+   ],
+   "streaming_distance": 391.1,
+   "node_id": 1000000000010453,
+   "tris": 588
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_9.ent",
+   "pos": [
+    -320.0,
+    1216.0,
+    201.0
+   ],
+   "streaming_distance": 394.6,
+   "node_id": 1000000000010454,
+   "tris": 185
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_10.ent",
+   "pos": [
+    -320.0,
+    1344.0,
+    54.0
+   ],
+   "streaming_distance": 393.8,
+   "node_id": 1000000000010455,
+   "tris": 4384
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_11.ent",
+   "pos": [
+    -320.0,
+    1472.0,
+    72.0
+   ],
+   "streaming_distance": 366.1,
+   "node_id": 1000000000010456,
+   "tris": 264
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_12.ent",
+   "pos": [
+    -320.0,
+    1600.0,
+    70.0
+   ],
+   "streaming_distance": 382.4,
+   "node_id": 1000000000010457,
+   "tris": 490
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m3_18.ent",
+   "pos": [
+    -320.0,
+    2368.0,
+    60.0
+   ],
+   "streaming_distance": 385.0,
+   "node_id": 1000000000010458,
+   "tris": 98
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m2_m21.ent",
+   "pos": [
+    -192.0,
+    -2624.0,
+    29.0
+   ],
+   "streaming_distance": 367.0,
+   "node_id": 1000000000010459,
+   "tris": 516
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m2_m19.ent",
+   "pos": [
+    -192.0,
+    -2368.0,
+    26.0
+   ],
+   "streaming_distance": 367.2,
+   "node_id": 1000000000010460,
+   "tris": 568
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m2_m18.ent",
+   "pos": [
+    -192.0,
+    -2240.0,
+    32.0
+   ],
+   "streaming_distance": 367.2,
+   "node_id": 1000000000010461,
+   "tris": 232
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m2_m16.ent",
+   "pos": [
+    -192.0,
+    -1984.0,
+    10.0
+   ],
+   "streaming_distance": 371.5,
+   "node_id": 1000000000010462,
+   "tris": 71
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m2_m15.ent",
+   "pos": [
+    -192.0,
+    -1856.0,
+    9.0
+   ],
+   "streaming_distance": 372.6,
+   "node_id": 1000000000010463,
+   "tris": 1035
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m2_m13.ent",
+   "pos": [
+    -192.0,
+    -1600.0,
+    12.0
+   ],
+   "streaming_distance": 363.5,
+   "node_id": 1000000000010464,
+   "tris": 88
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m2_m12.ent",
+   "pos": [
+    -192.0,
+    -1472.0,
+    22.0
+   ],
+   "streaming_distance": 384.0,
+   "node_id": 1000000000010465,
+   "tris": 16
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m2_m11.ent",
+   "pos": [
+    -192.0,
+    -1344.0,
+    22.0
+   ],
+   "streaming_distance": 373.5,
+   "node_id": 1000000000010466,
+   "tris": 49
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m2_m8.ent",
+   "pos": [
+    -192.0,
+    -960.0,
+    13.0
+   ],
+   "streaming_distance": 348.3,
+   "node_id": 1000000000010467,
+   "tris": 366
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m2_m7.ent",
+   "pos": [
+    -192.0,
+    -832.0,
+    11.0
+   ],
+   "streaming_distance": 362.3,
+   "node_id": 1000000000010468,
+   "tris": 87
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m2_m6.ent",
+   "pos": [
+    -192.0,
+    -704.0,
+    9.0
+   ],
+   "streaming_distance": 378.8,
+   "node_id": 1000000000010469,
+   "tris": 245
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m2_m5.ent",
+   "pos": [
+    -192.0,
+    -576.0,
+    11.0
+   ],
+   "streaming_distance": 342.3,
+   "node_id": 1000000000010470,
+   "tris": 106
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m2_m4.ent",
+   "pos": [
+    -192.0,
+    -448.0,
+    8.0
+   ],
+   "streaming_distance": 375.0,
+   "node_id": 1000000000010471,
+   "tris": 298
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m2_0.ent",
+   "pos": [
+    -192.0,
+    64.0,
+    126.0
+   ],
+   "streaming_distance": 389.4,
+   "node_id": 1000000000010472,
+   "tris": 218
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m2_1.ent",
+   "pos": [
+    -192.0,
+    192.0,
+    126.0
+   ],
+   "streaming_distance": 389.0,
+   "node_id": 1000000000010473,
+   "tris": 14
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m2_4.ent",
+   "pos": [
+    -192.0,
+    576.0,
+    75.0
+   ],
+   "streaming_distance": 380.7,
+   "node_id": 1000000000010474,
+   "tris": 814
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m2_12.ent",
+   "pos": [
+    -192.0,
+    1600.0,
+    56.0
+   ],
+   "streaming_distance": 353.9,
+   "node_id": 1000000000010475,
+   "tris": 137
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m1_m21.ent",
+   "pos": [
+    -64.0,
+    -2624.0,
+    31.0
+   ],
+   "streaming_distance": 337.9,
+   "node_id": 1000000000010476,
+   "tris": 199
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m1_m15.ent",
+   "pos": [
+    -64.0,
+    -1856.0,
+    7.0
+   ],
+   "streaming_distance": 365.8,
+   "node_id": 1000000000010477,
+   "tris": 37
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m1_m10.ent",
+   "pos": [
+    -64.0,
+    -1216.0,
+    14.0
+   ],
+   "streaming_distance": 382.9,
+   "node_id": 1000000000010478,
+   "tris": 242
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m1_m9.ent",
+   "pos": [
+    -64.0,
+    -1088.0,
+    10.0
+   ],
+   "streaming_distance": 381.3,
+   "node_id": 1000000000010479,
+   "tris": 95
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m1_m8.ent",
+   "pos": [
+    -64.0,
+    -960.0,
+    43.0
+   ],
+   "streaming_distance": 366.0,
+   "node_id": 1000000000010480,
+   "tris": 711
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m1_m7.ent",
+   "pos": [
+    -64.0,
+    -832.0,
+    10.0
+   ],
+   "streaming_distance": 364.8,
+   "node_id": 1000000000010481,
+   "tris": 112
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m1_m6.ent",
+   "pos": [
+    -64.0,
+    -704.0,
+    9.0
+   ],
+   "streaming_distance": 362.7,
+   "node_id": 1000000000010482,
+   "tris": 106
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m1_m5.ent",
+   "pos": [
+    -64.0,
+    -576.0,
+    8.0
+   ],
+   "streaming_distance": 354.0,
+   "node_id": 1000000000010483,
+   "tris": 318
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m1_m4.ent",
+   "pos": [
+    -64.0,
+    -448.0,
+    13.0
+   ],
+   "streaming_distance": 381.6,
+   "node_id": 1000000000010484,
+   "tris": 367
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m1_m3.ent",
+   "pos": [
+    -64.0,
+    -320.0,
+    69.0
+   ],
+   "streaming_distance": 379.2,
+   "node_id": 1000000000010485,
+   "tris": 768
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m1_0.ent",
+   "pos": [
+    -64.0,
+    64.0,
+    126.0
+   ],
+   "streaming_distance": 382.2,
+   "node_id": 1000000000010486,
+   "tris": 96
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m1_1.ent",
+   "pos": [
+    -64.0,
+    192.0,
+    126.0
+   ],
+   "streaming_distance": 389.1,
+   "node_id": 1000000000010487,
+   "tris": 297
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_0_m13.ent",
+   "pos": [
+    64.0,
+    -1600.0,
+    14.0
+   ],
+   "streaming_distance": 334.1,
+   "node_id": 1000000000010488,
+   "tris": 110
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_0_m11.ent",
+   "pos": [
+    64.0,
+    -1344.0,
+    13.0
+   ],
+   "streaming_distance": 365.0,
+   "node_id": 1000000000010489,
+   "tris": 88
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_0_m10.ent",
+   "pos": [
+    64.0,
+    -1216.0,
+    13.0
+   ],
+   "streaming_distance": 364.2,
+   "node_id": 1000000000010490,
+   "tris": 403
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_0_m9.ent",
+   "pos": [
+    64.0,
+    -1088.0,
+    28.0
+   ],
+   "streaming_distance": 347.7,
+   "node_id": 1000000000010491,
+   "tris": 578
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_0_m8.ent",
+   "pos": [
+    64.0,
+    -960.0,
+    47.0
+   ],
+   "streaming_distance": 378.1,
+   "node_id": 1000000000010492,
+   "tris": 485
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_0_m7.ent",
+   "pos": [
+    64.0,
+    -832.0,
+    55.0
+   ],
+   "streaming_distance": 328.8,
+   "node_id": 1000000000010493,
+   "tris": 269
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_0_m4.ent",
+   "pos": [
+    64.0,
+    -448.0,
+    65.0
+   ],
+   "streaming_distance": 381.2,
+   "node_id": 1000000000010494,
+   "tris": 636
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_0_m3.ent",
+   "pos": [
+    64.0,
+    -320.0,
+    69.0
+   ],
+   "streaming_distance": 379.4,
+   "node_id": 1000000000010495,
+   "tris": 4
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_1_m11.ent",
+   "pos": [
+    192.0,
+    -1344.0,
+    9.0
+   ],
+   "streaming_distance": 369.7,
+   "node_id": 1000000000010496,
+   "tris": 128
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_1_m10.ent",
+   "pos": [
+    192.0,
+    -1216.0,
+    17.0
+   ],
+   "streaming_distance": 366.7,
+   "node_id": 1000000000010497,
+   "tris": 88
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_1_m8.ent",
+   "pos": [
+    192.0,
+    -960.0,
+    54.0
+   ],
+   "streaming_distance": 377.2,
+   "node_id": 1000000000010498,
+   "tris": 16
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_1_m7.ent",
+   "pos": [
+    192.0,
+    -832.0,
+    54.0
+   ],
+   "streaming_distance": 369.3,
+   "node_id": 1000000000010499,
+   "tris": 194
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_1_m6.ent",
+   "pos": [
+    192.0,
+    -704.0,
+    10.0
+   ],
+   "streaming_distance": 375.6,
+   "node_id": 1000000000010500,
+   "tris": 447
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_1_m5.ent",
+   "pos": [
+    192.0,
+    -576.0,
+    10.0
+   ],
+   "streaming_distance": 376.6,
+   "node_id": 1000000000010501,
+   "tris": 252
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_1_m3.ent",
+   "pos": [
+    192.0,
+    -320.0,
+    35.0
+   ],
+   "streaming_distance": 374.0,
+   "node_id": 1000000000010502,
+   "tris": 362
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_1_m1.ent",
+   "pos": [
+    192.0,
+    -64.0,
+    76.0
+   ],
+   "streaming_distance": 349.8,
+   "node_id": 1000000000010503,
+   "tris": 170
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_1_11.ent",
+   "pos": [
+    192.0,
+    1472.0,
+    405.0
+   ],
+   "streaming_distance": 381.0,
+   "node_id": 1000000000010504,
+   "tris": 1440
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_2_m13.ent",
+   "pos": [
+    320.0,
+    -1600.0,
+    14.0
+   ],
+   "streaming_distance": 363.6,
+   "node_id": 1000000000010505,
+   "tris": 85
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_2_m12.ent",
+   "pos": [
+    320.0,
+    -1472.0,
+    14.0
+   ],
+   "streaming_distance": 326.8,
+   "node_id": 1000000000010506,
+   "tris": 158
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_2_m9.ent",
+   "pos": [
+    320.0,
+    -1088.0,
+    149.0
+   ],
+   "streaming_distance": 374.5,
+   "node_id": 1000000000010507,
+   "tris": 2849
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_2_m8.ent",
+   "pos": [
+    320.0,
+    -960.0,
+    240.0
+   ],
+   "streaming_distance": 374.5,
+   "node_id": 1000000000010508,
+   "tris": 1764
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_2_m7.ent",
+   "pos": [
+    320.0,
+    -832.0,
+    24.0
+   ],
+   "streaming_distance": 374.1,
+   "node_id": 1000000000010509,
+   "tris": 528
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_2_m6.ent",
+   "pos": [
+    320.0,
+    -704.0,
+    20.0
+   ],
+   "streaming_distance": 374.3,
+   "node_id": 1000000000010510,
+   "tris": 352
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_2_11.ent",
+   "pos": [
+    320.0,
+    1472.0,
+    453.0
+   ],
+   "streaming_distance": 366.8,
+   "node_id": 1000000000010511,
+   "tris": 21
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_3_m9.ent",
+   "pos": [
+    448.0,
+    -1088.0,
+    309.0
+   ],
+   "streaming_distance": 378.4,
+   "node_id": 1000000000010512,
+   "tris": 336
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_3_m8.ent",
+   "pos": [
+    448.0,
+    -960.0,
+    34.0
+   ],
+   "streaming_distance": 330.6,
+   "node_id": 1000000000010513,
+   "tris": 540
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_3_m7.ent",
+   "pos": [
+    448.0,
+    -832.0,
+    26.0
+   ],
+   "streaming_distance": 385.3,
+   "node_id": 1000000000010514,
+   "tris": 1456
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_3_m6.ent",
+   "pos": [
+    448.0,
+    -704.0,
+    10.0
+   ],
+   "streaming_distance": 380.0,
+   "node_id": 1000000000010515,
+   "tris": 230
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_4_m10.ent",
+   "pos": [
+    576.0,
+    -1216.0,
+    35.0
+   ],
+   "streaming_distance": 368.9,
+   "node_id": 1000000000010516,
+   "tris": 355
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_4_m8.ent",
+   "pos": [
+    576.0,
+    -960.0,
+    160.0
+   ],
+   "streaming_distance": 392.7,
+   "node_id": 1000000000010517,
+   "tris": 350
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_4_m7.ent",
+   "pos": [
+    576.0,
+    -832.0,
+    34.0
+   ],
+   "streaming_distance": 389.3,
+   "node_id": 1000000000010518,
+   "tris": 743
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_4_m6.ent",
+   "pos": [
+    576.0,
+    -704.0,
+    14.0
+   ],
+   "streaming_distance": 382.4,
+   "node_id": 1000000000010519,
+   "tris": 1048
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_4_m4.ent",
+   "pos": [
+    576.0,
+    -448.0,
+    23.0
+   ],
+   "streaming_distance": 326.9,
+   "node_id": 1000000000010520,
+   "tris": 110
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_5_m11.ent",
+   "pos": [
+    704.0,
+    -1344.0,
+    46.0
+   ],
+   "streaming_distance": 372.1,
+   "node_id": 1000000000010521,
+   "tris": 428
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_5_m10.ent",
+   "pos": [
+    704.0,
+    -1216.0,
+    36.0
+   ],
+   "streaming_distance": 369.8,
+   "node_id": 1000000000010522,
+   "tris": 85
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_5_m8.ent",
+   "pos": [
+    704.0,
+    -960.0,
+    160.0
+   ],
+   "streaming_distance": 381.3,
+   "node_id": 1000000000010523,
+   "tris": 253
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_5_m7.ent",
+   "pos": [
+    704.0,
+    -832.0,
+    36.0
+   ],
+   "streaming_distance": 380.8,
+   "node_id": 1000000000010524,
+   "tris": 566
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_5_m6.ent",
+   "pos": [
+    704.0,
+    -704.0,
+    41.0
+   ],
+   "streaming_distance": 379.5,
+   "node_id": 1000000000010525,
+   "tris": 4
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_5_18.ent",
+   "pos": [
+    704.0,
+    2368.0,
+    153.0
+   ],
+   "streaming_distance": 360.1,
+   "node_id": 1000000000010526,
+   "tris": 260
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_5_19.ent",
+   "pos": [
+    704.0,
+    2496.0,
+    153.0
+   ],
+   "streaming_distance": 357.1,
+   "node_id": 1000000000010527,
+   "tris": 228
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_6_m11.ent",
+   "pos": [
+    832.0,
+    -1344.0,
+    53.0
+   ],
+   "streaming_distance": 353.3,
+   "node_id": 1000000000010528,
+   "tris": 774
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_6_m9.ent",
+   "pos": [
+    832.0,
+    -1088.0,
+    57.0
+   ],
+   "streaming_distance": 355.5,
+   "node_id": 1000000000010529,
+   "tris": 702
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_6_m7.ent",
+   "pos": [
+    832.0,
+    -832.0,
+    38.0
+   ],
+   "streaming_distance": 376.9,
+   "node_id": 1000000000010530,
+   "tris": 501
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_7_m14.ent",
+   "pos": [
+    960.0,
+    -1728.0,
+    121.0
+   ],
+   "streaming_distance": 383.5,
+   "node_id": 1000000000010531,
+   "tris": 388
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_7_m7.ent",
+   "pos": [
+    960.0,
+    -832.0,
+    38.0
+   ],
+   "streaming_distance": 376.9,
+   "node_id": 1000000000010532,
+   "tris": 343
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_8_m20.ent",
+   "pos": [
+    1088.0,
+    -2496.0,
+    117.0
+   ],
+   "streaming_distance": 384.4,
+   "node_id": 1000000000010533,
+   "tris": 85
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_8_m19.ent",
+   "pos": [
+    1088.0,
+    -2368.0,
+    150.0
+   ],
+   "streaming_distance": 381.8,
+   "node_id": 1000000000010534,
+   "tris": 91
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_8_m18.ent",
+   "pos": [
+    1088.0,
+    -2240.0,
+    204.0
+   ],
+   "streaming_distance": 345.3,
+   "node_id": 1000000000010535,
+   "tris": 39
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_8_m14.ent",
+   "pos": [
+    1088.0,
+    -1728.0,
+    121.0
+   ],
+   "streaming_distance": 384.0,
+   "node_id": 1000000000010536,
+   "tris": 40
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_8_m10.ent",
+   "pos": [
+    1088.0,
+    -1216.0,
+    58.0
+   ],
+   "streaming_distance": 350.3,
+   "node_id": 1000000000010537,
+   "tris": 601
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_8_m8.ent",
+   "pos": [
+    1088.0,
+    -960.0,
+    40.0
+   ],
+   "streaming_distance": 356.7,
+   "node_id": 1000000000010538,
+   "tris": 184
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_8_m7.ent",
+   "pos": [
+    1088.0,
+    -832.0,
+    42.0
+   ],
+   "streaming_distance": 388.1,
+   "node_id": 1000000000010539,
+   "tris": 963
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_8_m6.ent",
+   "pos": [
+    1088.0,
+    -704.0,
+    23.0
+   ],
+   "streaming_distance": 361.8,
+   "node_id": 1000000000010540,
+   "tris": 202
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_9_m21.ent",
+   "pos": [
+    1216.0,
+    -2624.0,
+    178.0
+   ],
+   "streaming_distance": 381.7,
+   "node_id": 1000000000010541,
+   "tris": 24
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_9_m20.ent",
+   "pos": [
+    1216.0,
+    -2496.0,
+    139.0
+   ],
+   "streaming_distance": 391.0,
+   "node_id": 1000000000010542,
+   "tris": 33
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_9_m19.ent",
+   "pos": [
+    1216.0,
+    -2368.0,
+    141.0
+   ],
+   "streaming_distance": 390.7,
+   "node_id": 1000000000010543,
+   "tris": 233
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_9_m7.ent",
+   "pos": [
+    1216.0,
+    -832.0,
+    42.0
+   ],
+   "streaming_distance": 386.2,
+   "node_id": 1000000000010544,
+   "tris": 182
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_10_m21.ent",
+   "pos": [
+    1344.0,
+    -2624.0,
+    184.0
+   ],
+   "streaming_distance": 386.9,
+   "node_id": 1000000000010545,
+   "tris": 29
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_10_m20.ent",
+   "pos": [
+    1344.0,
+    -2496.0,
+    263.0
+   ],
+   "streaming_distance": 391.3,
+   "node_id": 1000000000010546,
+   "tris": 24
+  },
+  {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_10_m19.ent",
+   "pos": [
+    1344.0,
+    -2368.0,
+    264.0
+   ],
+   "streaming_distance": 390.0,
+   "node_id": 1000000000010547,
+   "tris": 5
+  }
+ ]
+}
