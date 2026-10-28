@@ -1190,7 +1190,20 @@ public native class FlightComponent extends GameComponent {
     // this.sys.audio.Update("leftRear", leftRearPosition, engineVolume);
     // this.sys.audio.Update("rightRear", rightRearPosition, engineVolume);
     if this.isPlayerMounted {
-      this.audioUpdate.inside = this.sys.ctlr.isTPP ? MaxF(0.0, this.audioUpdate.inside - timeDelta * 4.0) : MinF(1.0, this.audioUpdate.inside + timeDelta * 4.0);
+      let game = this.GetVehicle().GetGame();
+      let cinematic = GameInstance.GetBlackboardSystem(game).Get(GetAllBlackboardDefs().UI_AutodriveData).GetBool(GetAllBlackboardDefs().UI_AutodriveData.CinematicCameraActive);
+      if cinematic {
+        // the cinematic camera's shots are around the car, but the player's soundListener (and the
+        // game's own listener) stays with V: hear from the camera
+        let camera = GameInstance.GetCameraSystem(game);
+        let transform: Transform;
+        if camera.GetActiveCameraWorldTransform(transform) {
+          FlightAudio.Get().SetCameraListener(transform.position, camera.GetActiveCameraForward(), camera.GetActiveCameraUp());
+        }
+      }
+      // outside for the cinematic camera's shots as for TPP (entered from FPP it kept the cabin muffle)
+      let outside = this.sys.ctlr.isTPP || cinematic;
+      this.audioUpdate.inside = outside ? MaxF(0.0, this.audioUpdate.inside - timeDelta * 4.0) : MinF(1.0, this.audioUpdate.inside + timeDelta * 4.0);
       // try without wind
       // FlightAudio.Get().UpdateEvent("windLeft", Matrix.BuiltTranslation(windLeftPosition), 1.0, this.audioUpdate);
       // FlightAudio.Get().UpdateEvent("windRight",  Matrix.BuiltTranslation(windRightPosition), 1.0, this.audioUpdate);

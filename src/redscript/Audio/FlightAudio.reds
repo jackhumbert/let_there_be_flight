@@ -25,6 +25,8 @@ public native class FlightAudio extends IScriptable {
   public native func UpdateEvent(emitterName: String, eventMatrix: Matrix, volume: Float, update: ref<FlightAudioUpdate>) -> Void;
   public native func UpdateEventMatrix(emitterName: String, eventMatrix: Matrix) -> Void;
   public native func UpdateListenerMatrix(matrix: Matrix) -> Void;
+  // hear from here this frame instead of the player's soundListener (the cinematic camera's shots)
+  public native func SetCameraListener(position: Vector4, forward: Vector4, up: Vector4) -> Void;
   public native func UpdateParameter(parameterName: String, value: Float) -> Void;
 
 

@@ -1,4 +1,6 @@
+#include <chrono>
 #include <iostream>
+#include <mutex>
 
 #include "FlightAudio.hpp"
 #include <RED4ext/Common.hpp>
@@ -184,6 +186,30 @@ void FlightAudio::Stop(RED4ext::CString emitterName) {
       spdlog::warn(fmt::format("[FlightAudio] Sound is not playing: {}", emitterName.c_str()));
     }
   //}
+}
+
+static std::mutex cameraListenerLock;
+static RED4ext::Matrix cameraListener;
+static std::chrono::steady_clock::time_point cameraListenerTime;
+
+void FlightAudio::SetCameraListener(RED4ext::Vector4 aPosition, RED4ext::Vector4 aForward, RED4ext::Vector4 aUp) {
+  std::lock_guard guard(cameraListenerLock);
+  auto &m = cameraListener;
+  m.Y = {aForward.X, aForward.Y, aForward.Z, 0.0f};
+  m.Z = {aUp.X, aUp.Y, aUp.Z, 0.0f};
+  m.X = {aForward.Y * aUp.Z - aForward.Z * aUp.Y, aForward.Z * aUp.X - aForward.X * aUp.Z,
+         aForward.X * aUp.Y - aForward.Y * aUp.X, 0.0f};
+  m.W = {aPosition.X, aPosition.Y, aPosition.Z, 1.0f};
+  cameraListenerTime = std::chrono::steady_clock::now();
+}
+
+bool FlightAudio::GetCameraListener(RED4ext::Matrix &aMatrix) {
+  std::lock_guard guard(cameraListenerLock);
+  if (std::chrono::steady_clock::now() - cameraListenerTime > std::chrono::milliseconds(200)) {
+    return false;
+  }
+  aMatrix = cameraListener;
+  return true;
 }
 
 void FlightAudio::UpdateListenerMatrix(RED4ext::Matrix matrix) {
