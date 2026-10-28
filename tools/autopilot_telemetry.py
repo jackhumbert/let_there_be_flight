@@ -8,12 +8,147 @@ car's nose, up_cmd_car the same for the up vectors (bank): both the car's dynami
 stretches flown steeper than --steep degrees, each with what the plan, the command and the car
 were doing there, and the collisions (collision_timer resetting).
 
-    python tools/autopilot_telemetry.py LOG.csv [--steep 45] [--worst 10]
+--attitude splits the orientation into heading, pitch and bank (degrees) for the plan (the route
+segment's direction; a route has no bank), the command (targetForward / targetUp) and the car, and
+reports each difference by phase: level and straight, turning (the plan's heading turning faster
+than 8 deg/s), climbing or diving (the plan steeper than 10 deg). --plot PNG draws them over time.
+
+    python tools/autopilot_telemetry.py LOG.csv [--steep 45] [--worst 10] [--attitude] [--plot out.png]
 """
 
 import argparse
 import csv
 import math
+
+
+def heading(x, y):
+    return math.degrees(math.atan2(y, x))
+
+
+def pitch(x, y, z):
+    n = math.sqrt(x * x + y * y + z * z)
+    return math.degrees(math.asin(max(-1.0, min(1.0, z / n)))) if n > 1e-6 else 0.0
+
+
+def bank(fx, fy, fz, ux, uy, uz):
+    """Roll about the nose, degrees, positive with the right side down."""
+    # right = forward x up
+    rz = fx * uy - fy * ux
+    return math.degrees(math.asin(max(-1.0, min(1.0, -rz))))
+
+
+def wrap(d):
+    return (d + 180.0) % 360.0 - 180.0
+
+
+def attitude(rows):
+    """Per row: plan / command / car heading, pitch, bank, and the plan's heading rate (deg/s)."""
+    out = []
+    for r in rows:
+        a = {"t": r["t"], "following": r["following"] > 0 and r["maneuver"] == 0 and r["plan_cmd"] >= 0}
+        a["plan_h"], a["plan_p"] = heading(r["plan_x"], r["plan_y"]), pitch(r["plan_x"], r["plan_y"], r["plan_z"])
+        a["cmd_h"], a["cmd_p"] = heading(r["cmd_fwd_x"], r["cmd_fwd_y"]), pitch(r["cmd_fwd_x"], r["cmd_fwd_y"], r["cmd_fwd_z"])
+        a["car_h"], a["car_p"] = heading(r["fwd_x"], r["fwd_y"]), pitch(r["fwd_x"], r["fwd_y"], r["fwd_z"])
+        a["cmd_b"] = bank(r["cmd_fwd_x"], r["cmd_fwd_y"], r["cmd_fwd_z"], r["cmd_up_x"], r["cmd_up_y"], r["cmd_up_z"])
+        a["car_b"] = bank(r["fwd_x"], r["fwd_y"], r["fwd_z"], r["up_x"], r["up_y"], r["up_z"])
+        out.append(a)
+    # the plan's heading rate, over 0.5 s either side (route segments are short and noisy frame to frame)
+    j0 = j1 = 0
+    for i, a in enumerate(out):
+        while out[j0]["t"] < a["t"] - 0.5:
+            j0 += 1
+        while j1 + 1 < len(out) and out[j1 + 1]["t"] <= a["t"] + 0.5:
+            j1 += 1
+        dt = out[j1]["t"] - out[j0]["t"]
+        a["plan_rate"] = wrap(out[j1]["plan_h"] - out[j0]["plan_h"]) / dt if dt > 0.1 else 0.0
+    return out
+
+
+def report_attitude(att):
+    phases = {
+        "level, straight": lambda a: abs(a["plan_rate"]) <= 8.0 and abs(a["plan_p"]) <= 10.0,
+        "turning": lambda a: abs(a["plan_rate"]) > 8.0 and abs(a["plan_p"]) <= 10.0,
+        "climbing or diving": lambda a: abs(a["plan_p"]) > 10.0,
+    }
+    rows = [a for a in att if a["following"]]
+    print(f"\nattitude, following a route ({len(rows)} rows); median / p90 of the absolute difference, degrees")
+    print("                       share | heading plan>cmd cmd>car | pitch plan>cmd cmd>car | bank cmd>car")
+    for name, test in phases.items():
+        sel = [a for a in rows if test(a)]
+        if not sel:
+            continue
+        def col(f):
+            v = [abs(f(a)) for a in sel]
+            return f"{pct(v, 0.5):5.1f}/{pct(v, 0.9):5.1f}"
+        print(f"{name:>20} {len(sel) / len(rows) * 100:5.0f}% | {col(lambda a: wrap(a['cmd_h'] - a['plan_h']))} "
+              f"{col(lambda a: wrap(a['car_h'] - a['cmd_h']))} | {col(lambda a: a['cmd_p'] - a['plan_p'])} "
+              f"{col(lambda a: a['car_p'] - a['cmd_p'])} | {col(lambda a: a['car_b'] - a['cmd_b'])}")
+    # signed: does the car lag the command (turning less) or lead it?
+    turning = [a for a in rows if abs(a["plan_rate"]) > 8.0]
+    if turning:
+        lag = [wrap(a["car_h"] - a["cmd_h"]) * (1 if a["plan_rate"] > 0 else -1) for a in turning]
+        cut = [wrap(a["cmd_h"] - a["plan_h"]) * (1 if a["plan_rate"] > 0 else -1) for a in turning]
+        print(f"in turns, signed with the turn (+ = further into it): command vs plan median {pct(cut, 0.5):+.1f}, "
+              f"car vs command median {pct(lag, 0.5):+.1f} degrees")
+
+
+def plot_attitude(att, rows, path):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    t = [a["t"] for a in att]
+    fig, ax = plt.subplots(5, 1, figsize=(14, 15), sharex=True)
+    ax[0].plot(t, [r["speed"] for r in rows], label="speed")
+    ax[0].plot(t, [r["target"] for r in rows], label="target", alpha=0.7)
+    ax[0].set_ylabel("m/s")
+    unwrap = lambda key: _unwrap([a[key] for a in att])
+    for key, label in (("plan_h", "plan"), ("cmd_h", "command"), ("car_h", "car")):
+        ax[1].plot(t, unwrap(key), label=label, lw=1)
+    ax[1].set_ylabel("heading, deg")
+    for key, label in (("plan_p", "plan"), ("cmd_p", "command"), ("car_p", "car")):
+        ax[2].plot(t, [a[key] for a in att], label=label, lw=1)
+    ax[2].set_ylabel("pitch, deg")
+    ax[3].plot(t, [a["cmd_b"] for a in att], label="command", lw=1)
+    ax[3].plot(t, [a["car_b"] for a in att], label="car", lw=1)
+    ax[3].set_ylabel("bank, deg")
+    ax[4].plot(t, [r["plan_cmd"] for r in rows], label="plan vs command", lw=1)
+    ax[4].plot(t, [r["cmd_car"] for r in rows], label="command vs car (nose)", lw=1)
+    ax[4].plot(t, [r["up_cmd_car"] for r in rows], label="command vs car (up)", lw=1)
+    ax[4].set_ylabel("angle, deg")
+    ax[4].set_xlabel("s")
+    for a in ax:
+        a.legend(loc="upper right", fontsize=8)
+        a.grid(alpha=0.3)
+        # shade manoeuvres and time off a route
+        for r0, r1 in _spans(t, [not x["following"] for x in att]):
+            a.axvspan(r0, r1, color="0.85", lw=0)
+    fig.tight_layout()
+    fig.savefig(path, dpi=90)
+    print(f"plot -> {path}")
+
+
+def _unwrap(degrees):
+    out, offset = [], 0.0
+    for i, d in enumerate(degrees):
+        if i and d + offset - out[-1] > 180:
+            offset -= 360
+        elif i and d + offset - out[-1] < -180:
+            offset += 360
+        out.append(d + offset)
+    return out
+
+
+def _spans(t, flags):
+    spans, start = [], None
+    for ti, f in zip(t, flags):
+        if f and start is None:
+            start = ti
+        elif not f and start is not None:
+            spans.append((start, ti))
+            start = None
+    if start is not None:
+        spans.append((start, t[-1]))
+    return spans
 
 
 def pct(values, q):
@@ -29,6 +164,8 @@ def main():
     ap.add_argument("--steep", type=float, default=45.0)
     ap.add_argument("--worst", type=int, default=10)
     ap.add_argument("--window", type=float, default=0.5, help="s over which the flown climb angle is taken")
+    ap.add_argument("--attitude", action="store_true", help="heading, pitch and bank: plan vs command vs car, by phase")
+    ap.add_argument("--plot", help="draw speed, heading, pitch, bank and the angles over time into this PNG")
     args = ap.parse_args()
     rows = [{k: float(v) for k, v in r.items()} for r in csv.DictReader(open(args.log))]
     if not rows:
@@ -85,6 +222,12 @@ def main():
     print("\nworst nose tracking (cmd_car):")
     for r in worst:
         print(f"  t {r['t']:.1f} cmd_car {r['cmd_car']:.0f} plan_cmd {r['plan_cmd']:.0f} speed {r['speed']:.1f} at ({r['x']:.0f}, {r['y']:.0f}, {r['z']:.0f})")
+
+    if args.attitude or args.plot:
+        att = attitude(rows)
+        report_attitude(att)
+        if args.plot:
+            plot_attitude(att, rows, args.plot)
 
 
 if __name__ == "__main__":
