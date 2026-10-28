@@ -213,6 +213,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // more at 40 m/s), but the flown speed eases into it, and planned at full the car reached the
   // destination at 43 m/s and hit the ground, 2026-10-26
   public let racePlanDecel: Float = 18.0;     // what the car reached following the profile (19 m/s2), 2026-10-26
+  public let raceBrakeGripMin: Float = 0.3;   // share of racePlanDecel planned for in a bend at the full lateral envelope
+  public let raceRateProbe: Float = 0.25;     // s ahead the allowed speed's rate of fall is read from (RaceTargetRate)
   // descents: the line can drop 100 m in its last 150 m (Dogtown: 140 m buildings, then a low
   // courtyard); flown at full speed the car fell at 44 m/s, rolled inverted pushing over into the
   // dive, and reached the approach point at 41 m/s, 2026-10-26
@@ -292,6 +294,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let holdPosition: Vector4;
   public let lookahead: Vector4;
   public let targetSpeed: Float;
+  public let targetRate: Float;               // m/s2, how fast targetSpeed is falling along the route (race; fed forward)
   public let remaining: Float;
   public let overrideTimer: Float;
   public let replanTimer: Float;
@@ -1395,6 +1398,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     }
     let target = this.holdPosition;
     this.targetSpeed = 0.0;
+    this.targetRate = 0.0;
     this.emergencyBrake = false;
     // a pitch manoeuvre flies its own shape; the route is picked up again after it
     if !this.IsAerobatic() && IsDefined(this.maneuver) {
@@ -1452,6 +1456,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
         target += offset;
       }
       this.targetSpeed = this.AllowedSpeed(closest);
+      this.targetRate = this.raceMode ? this.RaceTargetRate(stats.d_speed) : 0.0;
       // off the route: slow down while getting back, the route's margins assume the car is on it
       let slackOff = this.routeLine ? this.raceOffLine + 1.0 : 2.0;
       let slowdown = this.routeLine ? 0.5 * this.offRouteSlowdown : this.offRouteSlowdown;
@@ -1496,7 +1501,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       let slowing = this.targetSpeed < this.speedCmd;
       let rateDown = this.raceMode ? this.RaceDecel(this.speedCmd) : this.brakeMax;
       let rateUp = this.raceMode ? MaxF(this.standardModeSurgeFactor - this.DragAccel(this.speedCmd), 0.5) : this.accelUp;
-      let wantedRate = ClampF((this.targetSpeed - this.speedCmd) * (slowing ? 2.0 * this.speedGain : this.speedGain), -rateDown, rateUp);
+      let wantedRate = ClampF(this.targetRate + (this.targetSpeed - this.speedCmd) * (slowing ? 2.0 * this.speedGain : this.speedGain), -rateDown, rateUp);
       let jerk = (this.raceMode ? this.raceJerk : (slowing ? this.brakeJerk : this.speedJerk)) * timeDelta;
       this.speedRate += ClampF(wantedRate - this.speedRate, -jerk, jerk);
       this.speedCmd = MaxF(this.speedCmd + this.speedRate * timeDelta, 0.0);
@@ -1643,7 +1648,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
         back = Vector4.Normalize(back) * 15.0;
       }
       desiredVelocity = tangent * this.speedCmd + back + this.overlayVelocity;
-      accel = (desiredVelocity - v) * this.lineVelocityGain + bend * (this.speedCmd * this.speedCmd);
+      // plus the flown speed's own rate along the line: on velocity error alone the car trailed a
+      // braking curve by rate / lineVelocityGain (7 m/s at 18 m/s2), more than brakeLead covers, and
+      // reached the Petrochem gap at 45 m/s for a 33 m/s bend, into the wall (2026-10-28)
+      accel = (desiredVelocity - v) * this.lineVelocityGain + bend * (this.speedCmd * this.speedCmd) + tangent * this.speedRate;
       target = this.PointAt(this.closestS + 30.0);
       this.lookahead = target;
       jerk = this.raceJerk;
@@ -1923,6 +1931,23 @@ public class FlightModeAutopilot extends FlightModeStandard {
     return MinF(vv, top);
   }
 
+  // RaceBrakeBack in a bend of the given radius: the lift banked into the bend is not there for
+  // braking, so the braking share shrinks as the bend takes more of the lateral envelope (a
+  // friction circle), down to raceBrakeGripMin. Braking and turning at once into the Petrochem gap
+  // the car slowed at 7 to 11 m/s2 against the 18 planned (2026-10-28).
+  private func RaceBrakeBackCornering(v: Float, distance: Float, top: Float, radius: Float, lateral: Float) -> Float {
+    let vv = v;
+    let left = distance;
+    while left > 0.0 && vv < top {
+      let step = MinF(left, 5.0);
+      let use = MinF(vv * vv / MaxF(radius, 1.0) / MaxF(lateral, 1.0), 1.0);
+      let grip = MaxF(SqrtF(1.0 - use * use), this.raceBrakeGripMin);
+      vv = SqrtF(vv * vv + 2.0 * MinF(this.raceMargin * this.RaceDecel(vv), this.racePlanDecel) * grip * step);
+      left -= step;
+    }
+    return MinF(vv, top);
+  }
+
   // Fastest speed at each route point: what its bend allows with the lift banked into it, then a
   // backward pass so every point can still be slowed for the ones after it; 0 at the goal.
   private func BuildSpeedProfile() -> Void {
@@ -1948,9 +1973,12 @@ public class FlightModeAutopilot extends FlightModeStandard {
       i += 1;
     }
     i = n - 2;
+    let radiusAfter = this.PointRadius(n - 1);
     while i >= 0 {
       let d = this.routeLength[i + 1] - this.routeLength[i];
-      this.routeSpeed[i] = MinF(this.routeSpeed[i], this.RaceBrakeBack(this.routeSpeed[i + 1], d, top));
+      let radius = this.PointRadius(i);
+      this.routeSpeed[i] = MinF(this.routeSpeed[i], this.RaceBrakeBackCornering(this.routeSpeed[i + 1], d, top, MinF(radius, radiusAfter), lateral));
+      radiusAfter = radius;
       i -= 1;
     }
     let stats = this.component.stats;
@@ -1973,6 +2001,32 @@ public class FlightModeAutopilot extends FlightModeStandard {
       distance -= 3.0;
     }
     return this.RaceBrakeBack(next, MaxF(distance, 0.0), top);
+  }
+
+  // RaceAllowedSpeed at route distance s instead of the car's (the profile is built already).
+  private func RaceAllowedAt(s: Float) -> Float {
+    let n = ArraySize(this.route);
+    let k = Max(this.segment + 1, 1);
+    while k < n - 1 && this.routeLength[k] <= s {
+      k += 1;
+    }
+    let distance = this.routeLength[k] - s - this.speedCmd * this.brakeLead;
+    if k == n - 1 {
+      distance -= 3.0;
+    }
+    return this.RaceBrakeBack(this.routeSpeed[k], MaxF(distance, 0.0), this.RaceTopSpeed());
+  }
+
+  // How fast the allowed speed falls as the car flies on (m/s2, 0 or less), from the profile
+  // raceRateProbe seconds ahead. Fed forward into the flown speed: on the speed error alone it
+  // trailed a braking curve by rate / (2 speedGain), 5 to 7 m/s over the profile into the
+  // Petrochem gap even with the car on the flown speed (2026-10-28).
+  private func RaceTargetRate(speed: Float) -> Float {
+    if ArraySize(this.routeSpeed) != ArraySize(this.route) || ArraySize(this.route) < 2 {
+      return 0.0;
+    }
+    let ahead = this.RaceAllowedAt(this.closestS + MaxF(speed, 1.0) * this.raceRateProbe);
+    return MinF((ahead - this.RaceAllowedAt(this.closestS)) / this.raceRateProbe, 0.0);
   }
 
   // --- aerobatics --------------------------------------------------------------------------
