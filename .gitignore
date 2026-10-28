@@ -393,3 +393,6 @@ red4ext/deps/*
 prereqs.redscripts
 crash_stack.hpp
 .mcp.json
+
+# packed at build time from src/wolvenkit/source (CMakeLists.txt, tools/pack_archive.py)
+src/wolvenkit/packed/

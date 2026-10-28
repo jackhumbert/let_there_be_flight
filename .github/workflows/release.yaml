@@ -13,6 +13,8 @@ jobs:
       GIT_CLIFF_VERSION: 0.10.0
       CHANGELOG_FILE: ${{ github.workspace }}-CHANGES.md
       NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
+      # read access to the private repo holding the game's Oodle dll, which packing the archive needs
+      CI_ASSETS_TOKEN: ${{ secrets.CI_ASSETS_TOKEN }}
 
     steps:
       - uses: actions/checkout@v4
@@ -23,11 +25,26 @@ jobs:
         with:
           arch: amd64
 
+      - name: Fetch the Oodle dll
+        uses: actions/checkout@v4
+        with:
+          repository: jackhumbert/cp2077-ci-assets
+          token: ${{ env.CI_ASSETS_TOKEN }}
+          path: ci_assets
+
       - name: Configure CMake
-        run: cmake -B ${{ github.workspace }}/build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CI_BUILD=ON -DGITHUB_ENV="$env:GITHUB_ENV" -G Ninja
-  
+        run: cmake -B ${{ github.workspace }}/build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CI_BUILD=ON -DGITHUB_ENV="$env:GITHUB_ENV" -DLTBF_OODLE_DLL="${{ github.workspace }}/ci_assets/oo2ext_7_win64.dll" -G Ninja
+
       - name: Build
         run: cmake --build ${{ github.workspace }}/build --config RelWithDebInfo
+
+      # a release without the archive would load with no meshes, effects, HUD or sectors
+      - name: Check the archive was packed
+        run: |
+          if (-not (Test-Path "${{ github.workspace }}/game_dir/red4ext/plugins/let_there_be_flight/let_there_be_flight.archive")) {
+            Write-Error "let_there_be_flight.archive was not packed"
+            exit 1
+          }
 
       - name: Install git-cliff
         uses: Alex079/setup-custom-tool@v1

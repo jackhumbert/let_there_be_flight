@@ -74,6 +74,9 @@ endif()
 option(LTBF_NAVMAP_EMBED "Embed navmap.bin in the plugin DLL" ON)
 if(EXISTS "${_NAVMAP}" AND LTBF_NAVMAP_EMBED)
   set(_NAVMAP_EMBEDDED ON)
+  # a navmap.bin left in game_dir from before embedding would be installed and zipped into releases,
+  # and outdated: the plugin reads it only when the DLL has none
+  file(REMOVE "${MOD_GAME_DIR}/red4ext/plugins/${MOD_SLUG}/navmap.bin")
 elseif(EXISTS "${_NAVMAP}")
   configure_mod_file("${_NAVMAP}" red4ext/plugins/${MOD_SLUG}/navmap.bin)
 elseif(CMAKE_CI_BUILD)
@@ -84,6 +87,8 @@ endif()
 
 # Landing pads found in the world sectors and checked against the nav map (tools/heightmap/pads.py, small, in git).
 configure_mod_file(src/navigation/helipads.tsv red4ext/plugins/${MOD_SLUG}/helipads.tsv)
+# Openings for the Autopilot's free roam to fly through, from the nav map's doorways (tools/heightmap/gates.py, in git).
+configure_mod_file(src/navigation/gates.tsv red4ext/plugins/${MOD_SLUG}/gates.tsv)
 # Invisible vehicle blockers the plugin moves out of the world as sectors load (tools/heightmap/blockers.py export).
 # Without the file the hook in Hooks/StreamingSector_PostLoad.cpp does nothing (A/B in docs/autodrive-flight-plan.md).
 configure_mod_file(src/navigation/blockers.txt red4ext/plugins/${MOD_SLUG}/blockers.txt)
@@ -103,7 +108,39 @@ configure_tweaks(src/tweaks)
 # Tweaks always go through TweakXL. tools/tweaks_to_json.py can write them as JSON for the game's built-in
 # TweakDB loader (2.5+), but that loader crashes on new typed flats, so the JSON is not shipped: the built-in
 # loader would pick up anything under a "tweaks" folder in the plugin directory.
-configure_archives(src/wolvenkit/packed/archive/pc/mod/let_there_be_flight.archive)
+# The archive is not in git: it is packed from src/wolvenkit/source at build time (tools/pack_archive.py) with a
+# WolvenKit CLI and the game's Oodle dll (oo2ext_7_win64.dll: not redistributable, so CI gets it from a private repo,
+# .github/workflows). It is written to src/wolvenkit/packed (gitignored), where game.py --archive-only finds it.
+# With neither, an archive already there is shipped; with none at all the build has no archive (a warning).
+set(LTBF_WOLVENKIT_CLI "$ENV{WOLVENKIT_CLI}" CACHE FILEPATH "WolvenKit.CLI.exe to pack the archive with (oo2ext_7_win64.dll next to it)")
+set(LTBF_OODLE_DLL "$ENV{LTBF_OODLE_DLL}" CACHE FILEPATH "oo2ext_7_win64.dll to pack the archive with (copied next to the CLI)")
+set(_ARCHIVE "${CMAKE_CURRENT_SOURCE_DIR}/src/wolvenkit/packed/archive/pc/mod/let_there_be_flight.archive")
+if(LTBF_WOLVENKIT_CLI OR LTBF_OODLE_DLL)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  file(GLOB_RECURSE _ARCHIVE_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/wolvenkit/source/archive/*"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/wolvenkit/source/raw/user/jackhumbert/localization/*.json.json")
+  set(_PACK_ARGS --out "${_ARCHIVE}")
+  if(LTBF_WOLVENKIT_CLI)
+    list(APPEND _PACK_ARGS --cli "${LTBF_WOLVENKIT_CLI}")
+  endif()
+  if(LTBF_OODLE_DLL)
+    list(APPEND _PACK_ARGS --oodle "${LTBF_OODLE_DLL}")
+  endif()
+  add_custom_command(
+    OUTPUT "${_ARCHIVE}"
+    DEPENDS ${_ARCHIVE_SOURCES} "${CMAKE_CURRENT_SOURCE_DIR}/tools/pack_archive.py"
+    COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tools/pack_archive.py" ${_PACK_ARGS}
+    COMMENT "Packing let_there_be_flight.archive"
+    VERBATIM)
+  message(STATUS "Archive: packed at build time")
+  configure_archives("${_ARCHIVE}")
+elseif(EXISTS "${_ARCHIVE}")
+  message(STATUS "Archive: the one already in src/wolvenkit/packed (no WolvenKit CLI or Oodle dll to repack it)")
+  configure_archives("${_ARCHIVE}")
+else()
+  message(WARNING "No archive: set WOLVENKIT_CLI (with oo2ext_7_win64.dll next to it) or LTBF_OODLE_DLL to pack one")
+endif()
 # One config, installed twice: .archive.xl is read by ArchiveXL when it is installed, .archive.json by the
 # game's built-in loader (2.5+, via GameModFolders.hpp) when it is not. JSON is valid YAML, so ArchiveXL reads it too.
 configure_mod_file(src/archive_xl/${MOD_SLUG}.archive.json red4ext/plugins/${MOD_SLUG}/${MOD_SLUG}.archive.json)

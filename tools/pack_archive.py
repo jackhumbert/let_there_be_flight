@@ -12,10 +12,14 @@ from 2022 and predates the packed widget), so edit those assets in the Wolvenkit
 
   python tools/pack_archive.py           # import + pack + verify
   python tools/pack_archive.py --check   # only report raw json that differs from source/archive
+  python tools/pack_archive.py --out build/archive/let_there_be_flight.archive --oodle path/to/oo2ext_7_win64.dll
 
-The CLI is found via WOLVENKIT_CLI, then %LOCALAPPDATA%/Programs/WolvenKit.Console/<version>/.
+The CLI is --cli, then WOLVENKIT_CLI, then %LOCALAPPDATA%/Programs/WolvenKit.Console/<version>/.
 If missing it is downloaded from the WolvenKit GitHub release (the NuGet `wolvenkit.cli`
-dotnet tool stopped being a valid tool package after 8.x).
+dotnet tool stopped being a valid tool package after 8.x). Packing needs the game's
+oo2ext_7_win64.dll next to the CLI (Oodle; not redistributable): --oodle copies it there. CMake
+runs this at build time when it has a CLI or the dll (LTBF_WOLVENKIT_CLI / LTBF_OODLE_DLL); CI
+gets the dll from a private repo (.github/workflows).
 """
 
 import argparse
@@ -39,8 +43,8 @@ SOURCE = WK / "source" / "archive"
 OUTPUT = WK / "packed" / "archive" / "pc" / "mod" / "let_there_be_flight.archive"
 
 
-def find_cli() -> Path:
-    env = os.environ.get("WOLVENKIT_CLI")
+def find_cli(given: str | None = None) -> Path:
+    env = given or os.environ.get("WOLVENKIT_CLI")
     if env:
         return Path(env)
     install = Path(os.environ["LOCALAPPDATA"]) / "Programs" / "WolvenKit.Console" / WOLVENKIT_VERSION
@@ -108,9 +112,17 @@ def main() -> None:
     parser.add_argument("--check", action="store_true", help="report stale raw json and exit 1 if any")
     parser.add_argument("--drop", action="append", default=[], metavar="DEPOT_PATH",
                         help="a file the archive loses on purpose (forward or back slashes; repeatable)")
+    parser.add_argument("--out", type=Path, default=OUTPUT, help="where to write the archive (default: the packed path in src/wolvenkit)")
+    parser.add_argument("--cli", help="WolvenKit.CLI.exe (default: WOLVENKIT_CLI, else the pinned version, downloaded if missing)")
+    parser.add_argument("--oodle", type=Path, help="the game's oo2ext_7_win64.dll, copied next to the CLI if it is not there")
     args = parser.parse_args()
 
-    cli = find_cli()
+    cli = find_cli(args.cli)
+    if args.oodle:
+        target = cli.parent / args.oodle.name
+        if not target.exists():
+            shutil.copyfile(args.oodle, target)
+    out = args.out.resolve()
     with tempfile.TemporaryDirectory() as tmp_str:
         tmp = Path(tmp_str)
         stale = check(cli, tmp)
@@ -132,9 +144,10 @@ def main() -> None:
         run(cli, "unbundle", str(archive), "-o", str(unpacked))
         want = sorted(p.relative_to(SOURCE) for p in SOURCE.rglob("*") if p.is_file())
         # never ship an archive that lost files: source/archive missed 7 of the 45 on one checkout
-        if OUTPUT.exists():
+        previous = OUTPUT if OUTPUT.exists() else out
+        if previous.exists():
             committed = tmp / "committed"
-            run(cli, "unbundle", str(OUTPUT), "-o", str(committed))
+            run(cli, "unbundle", str(previous), "-o", str(committed))
             dropped = {p.relative_to(committed) for p in committed.rglob("*") if p.is_file()} - set(want)
             dropped = {p for p in dropped if p.as_posix().lower() not in {d.replace("\\", "/").lower() for d in args.drop}}
             if dropped:
@@ -146,8 +159,9 @@ def main() -> None:
         if bad:
             sys.exit(f"archive content mismatch: {bad}")
 
-        shutil.copyfile(archive, OUTPUT)
-        print(f"packed {len(want)} files -> {OUTPUT.relative_to(ROOT)} ({OUTPUT.stat().st_size} bytes)")
+        out.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(archive, out)
+        print(f"packed {len(want)} files -> {out} ({out.stat().st_size} bytes)")
 
 
 if __name__ == "__main__":
