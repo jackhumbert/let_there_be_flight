@@ -168,7 +168,7 @@ Vehicle.$(v):
   $instances:
     - { v: VehicleDestructionParamsDefault_2w }
     - { v: VehicleDestructionParamsApollo }
-    - { v: v_sportbike2_arch_inline1 }
+    - { v: v_sportbike2_arch_inline0 }
     - { v: v_sportbike1_yaiba_kusanagi_inline0 }
     - { v: v_sportbike3_brennan_apollo_police_inline1 }
     - { v: v_sportbike3_brennan_apollo_kurtz_inline1 }
