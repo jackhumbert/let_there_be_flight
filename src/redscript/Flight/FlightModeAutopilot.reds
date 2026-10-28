@@ -302,6 +302,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let bankTarget: Float;               // rad, smoothed
   public let curvatureAhead: Float;           // 1/m, signed (positive = turning right)
   public let stuckTimer: Float;
+  public let lastPosition: Vector4;           // last position CheckedPosition passed
+  public let positionJumpTimer: Float;        // s a jump in the position has been held off
+  public let positionJumpHold: Float = 0.5;   // s a jump is held off before it counts as a real move
   public let offRouteNow: Float;
   public let blockedAhead: Bool;
   public let emergencyBrake: Bool;            // blocked space too close to ease into: brake hard
@@ -387,6 +390,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.speedRate = 0.0;
     this.accelCmd = new Vector4(0.0, 0.0, 0.0, 0.0);
     this.yawCmd = 0.0;
+    this.lastPosition = this.component.stats.d_position;
+    this.positionJumpTimer = 0.0;
     this.lastRoll = -AsinF(ClampF(Vector4.Dot(this.component.stats.d_right, FlightUtils.Up()), -1.0, 1.0));
     this.rollRate = 0.0;
     // In Race the take-off is part of the plan: the route starts at the car, and the planner finds
@@ -1358,9 +1363,29 @@ public class FlightModeAutopilot extends FlightModeStandard {
       || AbsF(this.component.sway) > 0.15 || this.component.linearBrake > 0.15;
   }
 
+  // The car's position, with a jump further than it could have flown held off for up to
+  // positionJumpHold (then taken as a real move, a teleport). In free roam over the Badlands edge
+  // the car froze for 4 s and its position read where flight was switched on, 2 km back, for a
+  // moment: off the route by that much, the Autopilot replanned from there and braked for the end
+  // of the new route (2026-10-28).
+  private func CheckedPosition(position: Vector4, timeDelta: Float) -> Vector4 {
+    let reach = MaxF(this.component.stats.d_speed, 20.0) * MaxF(timeDelta, 0.02) * 3.0 + 10.0;
+    if Vector4.Distance(position, this.lastPosition) > reach && this.positionJumpTimer < this.positionJumpHold {
+      if this.positionJumpTimer == 0.0 {
+        FlightLog.Warn("[Autopilot] position jumped " + FloatToStringPrec(Vector4.Distance(position, this.lastPosition), 0) + " m to "
+          + FloatToStringPrec(position.X, 1) + ", " + FloatToStringPrec(position.Y, 1) + ", " + FloatToStringPrec(position.Z, 1) + ": held off");
+      }
+      this.positionJumpTimer += timeDelta;
+      return this.lastPosition;
+    }
+    this.positionJumpTimer = 0.0;
+    this.lastPosition = position;
+    return position;
+  }
+
   public func Update(timeDelta: Float) -> Void {
     let stats = this.component.stats;
-    let p = stats.d_position;
+    let p = this.CheckedPosition(stats.d_position, timeDelta);
     let v = stats.d_velocity;
 
     this.UpdateRoute(timeDelta);
