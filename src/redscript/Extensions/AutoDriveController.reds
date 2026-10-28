@@ -19,11 +19,17 @@ private final func OnAutoDriveStateChanged(state: Bool) -> Void {
 
 // The panel's distance and time counters show only for vanilla's own destination
 // (AutoDriveSystem.GetAutodriveDestinationType); the Autopilot publishes its route's in
-// UI_AutodriveData (FlightModeAutopilot.PublishProgress) whatever it flies to.
+// UI_AutodriveData (FlightModeAutopilot.PublishProgress) whatever it flies to. In free roam
+// there are none, as in vanilla's.
 @wrapMethod(AutoDriveController)
 private func UpdateUIData() -> Void {
   if !FlightModeAutopilot.IsEngaged() {
     wrappedMethod();
+    return;
+  }
+  if FlightModeAutopilot.IsFreeRoaming() {
+    inkWidgetRef.SetVisible(this.m_remainingDistanceCounterContainer, false);
+    inkWidgetRef.SetVisible(this.m_remainingTimeCounterContainer, false);
     return;
   }
   inkWidgetRef.SetVisible(this.m_remainingDistanceCounterContainer, true);

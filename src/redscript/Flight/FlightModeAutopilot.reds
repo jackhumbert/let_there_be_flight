@@ -261,6 +261,23 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let racePitchFrequency: Float = 2.5; // rad/s
   public let racePitchRateMax: Float = 1.0;   // rad/s
   public let racePitchAccelMax: Float = 3.0;  // rad/s2
+  // free roam (engaged with no destination tracked, like vanilla autodrive's free roam): legs to
+  // random points ahead, chained into one route without stopping, around where it began
+  public let freeRoamRadius: Float = 2500.0;  // m from where free roam began the legs stay within
+  public let freeRoamLegMin: Float = 900.0;   // m
+  public let freeRoamLegMax: Float = 1600.0;  // m
+  public let freeRoamSpread: Float = 60.0;    // deg either side of the heading a leg may turn (widened when nothing fits)
+  public let freeRoamChainAt: Float = 700.0;  // m left on the route when the next leg is planned
+  public let freeRoamJoinAhead: Float = 4.0;  // s of the flown speed ahead the next leg starts, at least freeRoamJoinMin
+  public let freeRoamJoinMin: Float = 150.0;  // m
+  public let freeRoamSmoothSpan: Float = 60.0;  // m either side of a join smoothed out
+  // m/s at most: on and on into new areas at 89 m/s the world could not stream in fast enough and
+  // the game stopped on its loading overlay (1.6 km past Watson heading east, 2026-10-27)
+  public let freeRoamTopSpeed: Float = 60.0;
+  // m a leg's end may differ in height from where it starts: from a tower's top (387 m) down to a
+  // street (28 m) the line crested and dived 350 m, the car slowed to 9 m/s and rolled over pushing
+  // into the dive (2026-10-27)
+  public let freeRoamMaxRise: Float = 100.0;
 
   // state, public for debugging from CET
   public let status: String = "idle";
@@ -335,6 +352,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let pitchRateNow: Float;             // rad/s
   public let commandSurge: Float;             // -1..1, the thrust it commands, for the engine sound
   public let commandSway: Float;
+  public let freeRoam: Bool;                  // flying free roam legs (no destination tracked)
+  public let freeRoamCentre: Vector4;
+  public let requestJoin: Bool;               // the pending plan is the next free roam leg, from joinPoint
+  public let joinS: Float;                    // route distance of joinPoint
+  public let joinPoint: Vector4;
   private let cinematicCallback: ref<CallbackHandle>;
   private let cinematicContext: Bool;         // UIGameContext.CinematicCamera pushed              // rad/s
 
@@ -351,6 +373,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
     ArrayClear(this.route);
     this.request = 0;
     this.hasDestination = false;
+    this.freeRoam = false;
+    this.requestJoin = false;
     this.status = "idle";
     this.replanTimer = 0.0;
     this.remaining = 0.0;
@@ -549,6 +573,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public func Deactivate() -> Void {
     ArrayClear(this.route);
     this.request = 0;
+    this.freeRoam = false;
+    this.requestJoin = false;
     this.status = "idle";
     if this.component.isPlayerMounted {
       this.PublishAutodriveUI(false);
@@ -562,6 +588,15 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let ctlr = FlightController.GetInstance();
     let pc = FlightSystem.GetInstance().playerComponent;
     return IsDefined(ctlr) && ctlr.IsActive() && IsDefined(pc) && IsDefined(pc.GetFlightMode() as FlightModeAutopilot);
+  }
+
+  // Engaged and flying free roam (no destination tracked).
+  public static func IsFreeRoaming() -> Bool {
+    if !FlightModeAutopilot.IsEngaged() {
+      return false;
+    }
+    let mode = FlightSystem.GetInstance().playerComponent.GetFlightMode() as FlightModeAutopilot;
+    return mode.freeRoam;
   }
 
   // Vanilla autodrive's toast (AutoDriveSystem.SendNotification): same style, its own strings.
@@ -616,7 +651,19 @@ public class FlightModeAutopilot extends FlightModeStandard {
     return true;
   }
 
+  // vanilla's panel in its free roam state (no counters)
+  private func PublishFreeRoamUI() -> Void {
+    if !this.component.isPlayerMounted {
+      return;
+    }
+    let bb = GameInstance.GetBlackboardSystem(this.component.GetVehicle().GetGame()).Get(GetAllBlackboardDefs().UI_AutodriveData);
+    bb.SetBool(GetAllBlackboardDefs().UI_AutodriveData.FreeRoamEnabled, this.freeRoam, true);
+  }
+
   private func PublishProgress() -> Void {
+    if this.freeRoam {
+      return;
+    }
     let bb = GameInstance.GetBlackboardSystem(this.component.GetVehicle().GetGame()).Get(GetAllBlackboardDefs().UI_AutodriveData);
     let speed = MaxF(MaxF(this.component.stats.d_speed, this.targetSpeed), 10.0);
     bb.SetFloat(GetAllBlackboardDefs().UI_AutodriveData.DestinationRemainingLength, this.remaining);
@@ -655,6 +702,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     }
     // Race: the planner spreads the route into a racing line of wide bends
     this.requestRace = this.raceMode;
+    this.requestJoin = false;
     this.request = this.raceMode
       ? FlightNavMap.PlanRaceAsync(from, this.routeGoal, this.raceRouteHeight, this.raceClimbCost, this.raceMinPassage, this.raceSearchWeight, this.raceTurnCost)
       : FlightNavMap.PlanAsync(from, this.routeGoal, false);
@@ -673,29 +721,50 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.replanTimer -= timeDelta;
     let target: Vector4;
     let has = this.CurrentDestination(target);
-    if !has && (Equals(this.status, "descending") || Equals(this.status, "landed")) {
+    if !has && !this.freeRoam && (Equals(this.status, "descending") || Equals(this.status, "landed") || Equals(this.status, "arrived")) {
       // the game untracks a map pin once the player reaches it, mid-descent: finish the landing
+      // (or the hand-back), not free roam from there
       return;
     }
-    if !has {
-      if this.hasDestination {
-        ArrayClear(this.route);
-        this.holdPosition = this.component.stats.d_position;
+    if has {
+      if this.freeRoam {
+        // a destination tracked during free roam: fly there instead
+        this.freeRoam = false;
+        this.hasDestination = false;
+        this.request = 0;
+        this.requestJoin = false;
+        this.PublishFreeRoamUI();
+        FlightLog.Info("[Autopilot] destination tracked, leaving free roam");
       }
-      this.hasDestination = false;
-      this.status = "no destination";
-      return;
-    }
-    if !this.hasDestination || Vector4.Distance(target, this.destination) > 20.0 {
-      this.destination = target;
-      this.hasDestination = true;
-      ArrayClear(this.route);
-      this.ChooseRouteGoal();
-      this.RequestRoute(this.takingOff ? this.takeoffPoint : this.component.stats.d_position);
+      if !this.hasDestination || Vector4.Distance(target, this.destination) > 20.0 {
+        this.destination = target;
+        this.hasDestination = true;
+        ArrayClear(this.route);
+        this.ChooseRouteGoal();
+        this.RequestRoute(this.takingOff ? this.takeoffPoint : this.component.stats.d_position);
+      }
+    } else {
+      // no destination tracked (none when engaged, or untracked on the way): free roam
+      if !this.freeRoam {
+        this.BeginFreeRoam();
+      }
+      this.ChainFreeRoam();
     }
     if this.request > 0 && FlightNavMap.IsPlanReady(this.request) {
       let points = FlightNavMap.TakePlan(this.request);
       this.request = 0;
+      if this.requestJoin {
+        this.requestJoin = false;
+        // the next free roam leg, if the car has not passed where it starts
+        if ArraySize(points) >= 2 && this.joinS > this.closestS + 20.0 {
+          this.SpliceRoute(points);
+        } else {
+          this.replanTimer = 0.5; // ChainFreeRoam tries another
+          FlightLog.Warn("[Autopilot] free roam: next leg " + (ArraySize(points) >= 2 ? "came too late" : "found no route"));
+        }
+        FlightLog.Info("[Autopilot] " + FlightNavMap.GetLastPlanInfo());
+        return;
+      }
       if ArraySize(points) >= 2 {
         // a racing line has its points lineSpacing (5 m) apart; when the planner could not make
         // one free all the way it sends the plain route, corners and all
@@ -722,6 +791,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
           i += 1;
         }
         this.segment = 0;
+        this.closestS = 0.0;
         this.status = "following";
         ArrayClear(this.routeSpeed);
         if this.raceMode {
@@ -733,6 +803,181 @@ public class FlightModeAutopilot extends FlightModeStandard {
       }
       FlightLog.Info("[Autopilot] " + FlightNavMap.GetLastPlanInfo());
     }
+  }
+
+  // --- free roam ------------------------------------------------------------------------------
+
+  private func BeginFreeRoam() -> Void {
+    let stats = this.component.stats;
+    this.freeRoam = true;
+    this.hasDestination = false;
+    this.landing = false;
+    this.landingPad = -1;
+    this.request = 0;
+    this.requestJoin = false;
+    this.freeRoamCentre = stats.d_position;
+    ArrayClear(this.route);
+    this.holdPosition = this.takingOff ? this.takeoffPoint : stats.d_position;
+    this.replanTimer = 0.0;
+    this.status = "free roam";
+    this.PublishFreeRoamUI();
+    FlightLog.Info("[Autopilot] free roam around " + FloatToStringPrec(stats.d_position.X, 1) + ", " + FloatToStringPrec(stats.d_position.Y, 1));
+  }
+
+  // A point for the next leg to end at: freeRoamLegMin to freeRoamLegMax away from `from`, within
+  // freeRoamSpread of `heading` (wider for each candidate that does not fit, at the edge of the
+  // area or of the map), inside freeRoamRadius of where free roam began, raceRouteHeight above the
+  // ground under open sky there.
+  private func PickFreeRoamGoal(from: Vector4, heading: Vector4, out goal: Vector4) -> Bool {
+    let base = AtanF(heading.Y, heading.X);
+    let tries = 0;
+    while tries < 24 {
+      let spread = MinF(Deg2Rad(this.freeRoamSpread) * (1.0 + Cast<Float>(tries) / 6.0), 3.1415927);
+      let angle = base + RandRangeF(-1.0, 1.0) * spread;
+      let distance = RandRangeF(this.freeRoamLegMin, this.freeRoamLegMax);
+      let c = new Vector4(from.X + distance * CosF(angle), from.Y + distance * SinF(angle), from.Z, 1.0);
+      if Vector4.Distance2D(c, this.freeRoamCentre) <= this.freeRoamRadius {
+        let gaps = FlightNavMap.GetGaps(c);
+        let n = ArraySize(gaps);
+        if n > 0 {
+          let sky = gaps[n - 1];
+          let z = MinF(sky.X + this.raceRouteHeight, sky.Y - 5.0);
+          // near the height of the leg before, until nothing like that fits
+          if z > sky.X + 5.0 && (AbsF(z - from.Z) <= this.freeRoamMaxRise || tries >= 16) {
+            goal = new Vector4(c.X, c.Y, z, 1.0);
+            return true;
+          }
+        }
+      }
+      tries += 1;
+    }
+    return false;
+  }
+
+  // Plans a leg from `from` towards a new goal; join: it continues the route from route point
+  // joinIndex (spliced on by SpliceRoute once planned).
+  private func NextFreeRoamLeg(from: Vector4, heading: Vector4, join: Bool) -> Bool {
+    let goal: Vector4;
+    if !this.PickFreeRoamGoal(from, heading, goal) {
+      this.replanTimer = 1.0;
+      FlightLog.Warn("[Autopilot] free roam: no point found for the next leg");
+      return false;
+    }
+    this.destination = goal;
+    this.routeGoal = goal;
+    this.RequestRoute(from);
+    this.requestJoin = join;
+    FlightLog.Info("[Autopilot] free roam: next leg to " + FloatToStringPrec(goal.X, 1) + ", " + FloatToStringPrec(goal.Y, 1) + ", " + FloatToStringPrec(goal.Z, 1)
+      + " (" + FloatToStringPrec(Vector4.Distance2D(from, goal), 0) + " m)");
+    return true;
+  }
+
+  // With no route, a first leg from here; on a route that is running out, the next leg from a
+  // point ahead on it, so the car flies on into it without slowing.
+  private func ChainFreeRoam() -> Void {
+    if this.request > 0 || this.replanTimer > 0.0 {
+      return;
+    }
+    let stats = this.component.stats;
+    let n = ArraySize(this.route);
+    if n < 2 {
+      let heading = Vector4.Length2D(stats.d_velocity) > 3.0 ? Vector4.Normalize2D(stats.d_velocity) : stats.d_forward2D;
+      this.NextFreeRoamLeg(this.takingOff ? this.takeoffPoint : stats.d_position, heading, false);
+      return;
+    }
+    if !Equals(this.status, "following") || this.routeLength[n - 1] - this.closestS > this.freeRoamChainAt {
+      return;
+    }
+    // the point at that distance, not the next route point after it: a plain route's legs can be
+    // a kilometre long, and its end was the join every time, always reached before the plan
+    // (2026-10-27)
+    let s = MinF(this.closestS + MaxF(this.freeRoamJoinMin, stats.d_speed * this.freeRoamJoinAhead), this.routeLength[n - 1]);
+    let point = this.PointAt(s);
+    let back = point - this.PointAt(s - 10.0);
+    let heading = Vector4.Length2D(back) > 0.1 ? Vector4.Normalize2D(back) : stats.d_forward2D;
+    if this.NextFreeRoamLeg(point, heading, true) {
+      this.joinS = s;
+      this.joinPoint = point;
+    }
+  }
+
+  // The route kept from just behind the car up to joinPoint, then the new leg (which starts
+  // there), the bend where they meet smoothed out over freeRoamSmoothSpan.
+  private func SpliceRoute(points: array<Vector4>) -> Void {
+    let line = this.requestRace && ArraySize(points) > 2
+      && Vector4.Distance(points[0], points[ArraySize(points) - 1]) / Cast<Float>(ArraySize(points) - 1) < 10.0;
+    let oldArc = this.routeArc;
+    let tail: array<Vector4>;
+    let tailArc: array<Bool>;
+    if line {
+      tail = points;
+      for q in points {
+        ArrayPush(tailArc, false);
+      }
+    } else {
+      tail = this.RoundCorners(points);
+      tailArc = this.routeArc;
+    }
+    let first = Max(this.segment - 2, 0);
+    let trimmed = this.routeLength[first];
+    let route: array<Vector4>;
+    let arc: array<Bool>;
+    let i = first;
+    while i < ArraySize(this.route) && this.routeLength[i] < this.joinS - 0.5 {
+      ArrayPush(route, this.route[i]);
+      ArrayPush(arc, i < ArraySize(oldArc) && oldArc[i]);
+      i += 1;
+    }
+    ArrayPush(route, this.joinPoint);
+    ArrayPush(arc, false);
+    let join = ArraySize(route) - 1;
+    i = 1;
+    while i < ArraySize(tail) {
+      ArrayPush(route, tail[i]);
+      ArrayPush(arc, tailArc[i]);
+      i += 1;
+    }
+    // the legs meet at an angle: ease the points round the join towards their neighbours where
+    // the map allows (a point only moves if both its segments stay clear), leaving the stretch
+    // the car is on alone. Racing line points are about 5 m apart.
+    let centre = route[join];
+    let span = Cast<Int32>(this.freeRoamSmoothSpan / 5.0);
+    let lo = Max(join - span, this.segment - first + 2);
+    let hi = Min(join + span, ArraySize(route) - 2);
+    let pass = 0;
+    while pass < 20 {
+      let k = lo;
+      while k <= hi {
+        if Vector4.Distance(route[k], centre) < this.freeRoamSmoothSpan {
+          let q = route[k] * 0.5 + (route[k - 1] + route[k + 1]) * 0.25;
+          if FlightNavMap.SegmentClear(route[k - 1], q) >= 1.0 && FlightNavMap.SegmentClear(q, route[k + 1]) >= 1.0 {
+            route[k] = q;
+          }
+        }
+        k += 1;
+      }
+      pass += 1;
+    }
+    this.route = route;
+    this.routeArc = arc;
+    this.routeLine = this.routeLine && line;
+    this.segment -= first;
+    this.closestS -= trimmed;
+    ArrayClear(this.routeLength);
+    let total = 0.0;
+    i = 0;
+    while i < ArraySize(this.route) {
+      if i > 0 {
+        total += Vector4.Distance(this.route[i - 1], this.route[i]);
+      }
+      ArrayPush(this.routeLength, total);
+      i += 1;
+    }
+    ArrayClear(this.routeSpeed);
+    if this.raceMode {
+      this.BuildSpeedProfile();
+    }
+    FlightLog.Info("[Autopilot] free roam: next leg joined, " + FloatToStringPrec(total - this.closestS, 0) + " m ahead");
   }
 
   // The planner's route is straight legs meeting at corners. Replace each corner with a short
@@ -1293,7 +1538,13 @@ public class FlightModeAutopilot extends FlightModeStandard {
       if this.component.isPlayerMounted {
         this.PublishProgress();
       }
-      if this.remaining < this.arriveDistance && stats.d_speed < 3.0 {
+      if this.freeRoam && this.remaining < this.arriveDistance && stats.d_speed < 3.0 {
+        // the end of the route before the next leg joined: on from here (ChainFreeRoam)
+        this.holdPosition = this.route[ArraySize(this.route) - 1];
+        ArrayClear(this.route);
+        this.status = "free roam";
+        FlightLog.Info("[Autopilot] free roam: end of the route, planning on from here");
+      } else if this.remaining < this.arriveDistance && stats.d_speed < 3.0 {
         this.status = this.landing ? "descending" : "arrived";
         this.holdPosition = this.landing ? this.landingSpot : this.route[ArraySize(this.route) - 1];
         if this.landing {
@@ -1590,7 +1841,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let stats = this.component.stats;
     let k = 1.2 * stats.s_airResistanceFactor / MaxF(stats.s_mass, 1.0);
     let top = k > 0.0 ? SqrtF(this.standardModeSurgeFactor / k) : this.raceSpeedCap;
-    return MinF(0.97 * top, this.raceSpeedCap);
+    return MinF(0.97 * top, this.freeRoam ? this.freeRoamTopSpeed : this.raceSpeedCap);
   }
 
   // Slowing at speed v: full reverse surge, the brake (velocity damping, FlightMode_Standard) and drag.

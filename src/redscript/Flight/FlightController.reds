@@ -552,7 +552,8 @@ public native class FlightController extends IScriptable {
   }
 
   // The vanilla autodrive hold (Vehicle_Autodrive: hold G / L3) while flying: fly the planned
-  // route to the GPS destination with the Autopilot mode, or hand back to the mode before it.
+  // route to the GPS destination with the Autopilot mode (free roam without one, as vanilla
+  // autodrive does), or hand back to the mode before it.
   private func ToggleAutopilot() -> Void {
     let autopilot = this.AutopilotModeIndex();
     if autopilot < 0 {
@@ -560,12 +561,6 @@ public native class FlightController extends IScriptable {
     }
     if this.mode == autopilot {
       this.ExitAutopilot();
-      return;
-    }
-    let destination: Vector4;
-    if !FlightModeAutopilot.GetDestination(this.gameInstance, destination) {
-      this.ShowSimpleMessage(n"Simple-Message-Autopilot-No-Destination");
-      GameInstance.GetAudioSystem(this.gameInstance).Play(n"ui_menu_onpress");
       return;
     }
     this.modeBeforeAutopilot = this.mode;
