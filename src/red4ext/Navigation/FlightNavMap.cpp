@@ -1,4 +1,5 @@
 #include "FlightNavMap.hpp"
+#include "Gates.hpp"
 #include "Helipads.hpp"
 #include "NavMap.hpp"
 #include "Planner.hpp"
@@ -44,6 +45,11 @@ RED4ext::DynArray<RED4ext::Vector4> ToScript(const Navigation::PlanResult &aResu
 const Navigation::Helipad *PadAt(int32_t aIndex) {
   const auto &pads = Navigation::Helipads::Get().All();
   return aIndex >= 0 && size_t(aIndex) < pads.size() ? &pads[aIndex] : nullptr;
+}
+
+const Navigation::Gate *GateAt(int32_t aIndex) {
+  const auto &gates = Navigation::Gates::Get().All();
+  return aIndex >= 0 && size_t(aIndex) < gates.size() ? &gates[aIndex] : nullptr;
 }
 
 void LogPlan(Navigation::Vec3 aStart, Navigation::Vec3 aGoal, const Navigation::PlanResult &aResult) {
@@ -209,6 +215,26 @@ int32_t FlightNavMap::FindNearestHelipad(RED4ext::Vector4 aPosition, float aMaxD
 RED4ext::DynArray<int32_t> FlightNavMap::FindHelipadsInRange(RED4ext::Vector4 aPosition, float aRadius) {
   RED4ext::DynArray<int32_t> out;
   for (auto i : Navigation::Helipads::Get().InRange(aPosition.X, aPosition.Y, aRadius)) {
+    out.EmplaceBack(i);
+  }
+  return out;
+}
+
+int32_t FlightNavMap::GetGateCount() { return int32_t(Navigation::Gates::Get().All().size()); }
+
+RED4ext::Vector4 FlightNavMap::GetGatePosition(int32_t aIndex) {
+  const auto *gate = GateAt(aIndex);
+  return gate ? RED4ext::Vector4{gate->x, gate->y, gate->z, 1.0f} : RED4ext::Vector4{};
+}
+
+float FlightNavMap::GetGateYaw(int32_t aIndex) {
+  const auto *gate = GateAt(aIndex);
+  return gate ? gate->yaw : 0.0f;
+}
+
+RED4ext::DynArray<int32_t> FlightNavMap::FindGatesInRange(RED4ext::Vector4 aPosition, float aRadius) {
+  RED4ext::DynArray<int32_t> out;
+  for (auto i : Navigation::Gates::Get().InRange(aPosition.X, aPosition.Y, aRadius)) {
     out.EmplaceBack(i);
   }
   return out;

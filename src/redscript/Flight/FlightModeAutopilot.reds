@@ -270,6 +270,19 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let freeRoamLegMax: Float = 1600.0;  // m
   public let freeRoamSpread: Float = 60.0;    // deg either side of the heading a leg may turn (widened when nothing fits)
   public let freeRoamMaxDepth: Float = 2.0;   // m below 0 the ground under a leg's end may be at most (open sea reads -13.5 on the map)
+  public let freeRoamMaxTurn: Float = 100.0;  // deg either side of the heading a leg may turn at most, unless nothing fits
+  public let freeRoamMaxPitch: Float = 45.0;  // deg, steepest climb or descent a leg may have
+  public let freeRoamGateMin: Float = 300.0;  // m, nearest gate a leg goes for (PickFreeRoamGate)
+  public let gateLead: Float = 60.0;          // m of straight run before and after a gate (gates.py checks 80)
+  public let gateStep: Float = 5.0;           // m between the run's points (a racing line's spacing)
+  public let gateMemory: Int32 = 8;           // gates flown lately, not picked again
+  public let gateTail: array<Vector4>;        // the run through the gate of the leg being planned
+  public let recentGates: array<Int32>;
+  public let gateEndS: Float;                 // route distance where the last gate's straight run ends (0: none)
+  public let gateEntry: Vector4;              // where the leg being planned meets its gate's run
+  public let routeGateTail: array<Vector4>;   // the gate run of the leg in use, for a replan towards it
+  public let routeGateEntry: Vector4;
+  public let spliceGate: Bool;                // the plan being taken is a gate leg
   public let freeRoamChainAt: Float = 700.0;  // m left on the route when the next leg is planned
   public let freeRoamJoinAhead: Float = 4.0;  // s of the flown speed ahead the next leg starts, at least freeRoamJoinMin
   public let freeRoamJoinMin: Float = 150.0;  // m
@@ -333,6 +346,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let rollRate: Float;                 // rad/s, filtered
   public let telemetry: Bool;
   public let telemetryTime: Float;
+  public let telemetryFile: Bool;             // a FlightTelemetry file is open (WriteTelemetry)
+  public let telemetryClock: Float;           // s since it was opened
   // aerobatics
   public let maneuver: ref<FlightManeuver>;
   public let maneuverCooldown: Float;
@@ -393,6 +408,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.yawCmd = 0.0;
     this.lastPosition = this.component.stats.d_position;
     this.positionJumpTimer = 0.0;
+    this.gateEndS = 0.0;
+    ArrayClear(this.gateTail);
     this.lastRoll = -AsinF(ClampF(Vector4.Dot(this.component.stats.d_right, FlightUtils.Up()), -1.0, 1.0));
     this.rollRate = 0.0;
     // In Race the take-off is part of the plan: the route starts at the car, and the planner finds
@@ -712,6 +729,12 @@ public class FlightModeAutopilot extends FlightModeStandard {
     // Race: the planner spreads the route into a racing line of wide bends
     this.requestRace = this.raceMode;
     this.requestJoin = false;
+    // a replan towards a gate still ahead (off the route on the way there): through it again. Without
+    // the run the leg ended at the gate's entry, and the next one was joined before it (2026-10-28).
+    if ArraySize(this.gateTail) == 0 && ArraySize(this.routeGateTail) > 0 && this.gateEndS > this.closestS
+      && Vector4.Distance(this.routeGoal, this.routeGateEntry) < 1.0 {
+      this.gateTail = this.routeGateTail;
+    }
     this.request = this.raceMode
       ? FlightNavMap.PlanRaceAsync(from, this.routeGoal, this.raceRouteHeight, this.raceClimbCost, this.raceMinPassage, this.raceSearchWeight, this.raceTurnCost)
       : FlightNavMap.PlanAsync(from, this.routeGoal, false);
@@ -762,6 +785,28 @@ public class FlightModeAutopilot extends FlightModeStandard {
     if this.request > 0 && FlightNavMap.IsPlanReady(this.request) {
       let points = FlightNavMap.TakePlan(this.request);
       this.request = 0;
+      // a free roam leg to a gate: planned to just before it, then straight through
+      let gateLeg = ArraySize(points) >= 2 && ArraySize(this.gateTail) > 0;
+      if gateLeg {
+        for q in this.gateTail {
+          ArrayPush(points, q);
+        }
+        this.routeGateTail = this.gateTail;
+        this.routeGateEntry = this.gateEntry;
+      }
+      ArrayClear(this.gateTail);
+      this.spliceGate = gateLeg;
+      // free roam: no leg steeper than freeRoamMaxPitch anywhere. A leg's ends are fixed, so the
+      // planner's 45 degree limit does not reach them: legs into gates among tall buildings came
+      // over the roofs and dropped to the gate at 80 degrees (2026-10-28). Another leg instead.
+      // Chained legs only: a first leg climbs out from the street, a replan starts wherever the car is.
+      if this.requestJoin && ArraySize(points) >= 2 && FlightModeAutopilot.SteepestPitch(points, 10.0) > this.freeRoamMaxPitch {
+        FlightLog.Info("[Autopilot] free roam: leg steeper than " + FloatToStringPrec(this.freeRoamMaxPitch, 0) + " degrees ("
+          + FloatToStringPrec(FlightModeAutopilot.SteepestPitch(points, 10.0), 0) + "), another one");
+        this.requestJoin = false;
+        this.replanTimer = 0.2;
+        return;
+      }
       if this.requestJoin {
         this.requestJoin = false;
         // the next free roam leg, if the car has not passed where it starts
@@ -801,6 +846,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
         }
         this.segment = 0;
         this.closestS = 0.0;
+        this.gateEndS = gateLeg ? total : 0.0;
         this.status = "following";
         ArrayClear(this.routeSpeed);
         if this.raceMode {
@@ -835,13 +881,13 @@ public class FlightModeAutopilot extends FlightModeStandard {
 
   // A point for the next leg to end at: freeRoamLegMin to freeRoamLegMax away from `from`, within
   // freeRoamSpread of `heading` (wider for each candidate that does not fit, at the edge of the
-  // area or of the map), inside freeRoamRadius of where free roam began, raceRouteHeight above the
-  // ground under open sky there.
-  private func PickFreeRoamGoal(from: Vector4, heading: Vector4, out goal: Vector4) -> Bool {
+  // area or of the map, up to maxTurn degrees), inside freeRoamRadius of where free roam began,
+  // raceRouteHeight above the ground under open sky there.
+  private func PickFreeRoamGoal(from: Vector4, heading: Vector4, maxTurn: Float, out goal: Vector4) -> Bool {
     let base = AtanF(heading.Y, heading.X);
     let tries = 0;
     while tries < 24 {
-      let spread = MinF(Deg2Rad(this.freeRoamSpread) * (1.0 + Cast<Float>(tries) / 6.0), 3.1415927);
+      let spread = MinF(Deg2Rad(this.freeRoamSpread) * (1.0 + Cast<Float>(tries) / 6.0), Deg2Rad(maxTurn));
       let angle = base + RandRangeF(-1.0, 1.0) * spread;
       let distance = RandRangeF(this.freeRoamLegMin, this.freeRoamLegMax);
       let c = new Vector4(from.X + distance * CosF(angle), from.Y + distance * SinF(angle), from.Z, 1.0);
@@ -865,16 +911,76 @@ public class FlightModeAutopilot extends FlightModeStandard {
     return false;
   }
 
+  // A gate for the next leg (gates.tsv: openings between buildings, mined from the nav map's
+  // doorways by tools/heightmap/gates.py): freeRoamGateMin to freeRoamLegMax away, within
+  // freeRoamSpread of `heading`, inside freeRoamRadius, not one of the last few flown. `entry` is
+  // gateLead before it, where the planned route ends; gateTail is the straight run from there
+  // through the gate to gateLead past it, gateStep apart, for the route to carry on with.
+  private func PickFreeRoamGate(from: Vector4, heading: Vector4, out entry: Vector4) -> Bool {
+    let candidates: array<Int32>;
+    for i in FlightNavMap.FindGatesInRange(from, this.freeRoamLegMax) {
+      let gate = FlightNavMap.GetGatePosition(i);
+      let toGate = gate - from;
+      if !ArrayContains(this.recentGates, i) && Vector4.Length2D(toGate) >= this.freeRoamGateMin
+        && Vector4.Distance2D(gate, this.freeRoamCentre) <= this.freeRoamRadius
+        && Vector4.Dot(FlightModeAutopilot.Flat(toGate), FlightModeAutopilot.Flat(heading)) >= CosF(Deg2Rad(this.freeRoamSpread)) {
+        ArrayPush(candidates, i);
+      }
+    }
+    while ArraySize(candidates) > 0 {
+      let k = RandRange(0, ArraySize(candidates));
+      let i = candidates[k];
+      ArrayErase(candidates, k);
+      let gate = FlightNavMap.GetGatePosition(i);
+      let yaw = Deg2Rad(FlightNavMap.GetGateYaw(i));
+      let way = new Vector4(CosF(yaw), SinF(yaw), 0.0, 0.0);
+      if Vector4.Dot(way, gate - from) < 0.0 {
+        way = -way;
+      }
+      let start = gate - way * this.gateLead;
+      let end = gate + way * this.gateLead;
+      if FlightNavMap.SegmentClear(start, end) >= 1.0 {
+        entry = start;
+        this.gateEntry = start;
+        ArrayClear(this.gateTail);
+        let d = this.gateStep;
+        while d <= 2.0 * this.gateLead + 0.01 {
+          ArrayPush(this.gateTail, start + way * d);
+          d += this.gateStep;
+        }
+        ArrayPush(this.recentGates, i);
+        if ArraySize(this.recentGates) > this.gateMemory {
+          ArrayErase(this.recentGates, 0);
+        }
+        FlightLog.Info("[Autopilot] free roam: through gate " + ToString(i) + " at " + FloatToStringPrec(gate.X, 1) + ", "
+          + FloatToStringPrec(gate.Y, 1) + ", " + FloatToStringPrec(gate.Z, 1));
+        return true;
+      }
+    }
+    return false;
+  }
+
   // Plans a leg from `from` towards a new goal; join: it continues the route from route point
   // joinIndex (spliced on by SpliceRoute once planned).
   private func NextFreeRoamLeg(from: Vector4, heading: Vector4, join: Bool) -> Bool {
     let goal: Vector4;
-    if !this.PickFreeRoamGoal(from, heading, goal) {
+    ArrayClear(this.gateTail);
+    // a gate ahead, else a point ahead; at the edge of the area, the area moved to here and the
+    // same again; turning further only when nothing else fits (a coast with the sea ahead): a goal
+    // behind the car turned it round on the spot
+    let found = this.PickFreeRoamGate(from, heading, goal) || this.PickFreeRoamGoal(from, heading, this.freeRoamMaxTurn, goal);
+    if !found {
+      this.freeRoamCentre = from;
+      FlightLog.Info("[Autopilot] free roam: nothing ahead, area moved to " + FloatToStringPrec(from.X, 1) + ", " + FloatToStringPrec(from.Y, 1));
+      found = this.PickFreeRoamGate(from, heading, goal) || this.PickFreeRoamGoal(from, heading, this.freeRoamMaxTurn, goal)
+        || this.PickFreeRoamGoal(from, heading, 180.0, goal);
+    }
+    if !found {
       this.replanTimer = 1.0;
       FlightLog.Warn("[Autopilot] free roam: no point found for the next leg");
       return false;
     }
-    this.destination = goal;
+    this.destination = ArraySize(this.gateTail) > 0 ? this.gateTail[ArraySize(this.gateTail) - 1] : goal;
     this.routeGoal = goal;
     this.RequestRoute(from);
     this.requestJoin = join;
@@ -892,7 +998,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let stats = this.component.stats;
     let n = ArraySize(this.route);
     if n < 2 {
-      let heading = Vector4.Length2D(stats.d_velocity) > 3.0 ? Vector4.Normalize2D(stats.d_velocity) : stats.d_forward2D;
+      let heading = Vector4.Length2D(stats.d_velocity) > 3.0 ? FlightModeAutopilot.Flat(stats.d_velocity) : FlightModeAutopilot.Flat(stats.d_forward);
       this.NextFreeRoamLeg(this.takingOff ? this.takeoffPoint : stats.d_position, heading, false);
       return;
     }
@@ -902,10 +1008,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
     // the point at that distance, not the next route point after it: a plain route's legs can be
     // a kilometre long, and its end was the join every time, always reached before the plan
     // (2026-10-27)
-    let s = MinF(this.closestS + MaxF(this.freeRoamJoinMin, stats.d_speed * this.freeRoamJoinAhead), this.routeLength[n - 1]);
+    // and not before the end of a gate's straight run still ahead: the next leg would cut it off
+    let s = MinF(MaxF(this.closestS + MaxF(this.freeRoamJoinMin, stats.d_speed * this.freeRoamJoinAhead), this.gateEndS), this.routeLength[n - 1]);
     let point = this.PointAt(s);
     let back = point - this.PointAt(s - 10.0);
-    let heading = Vector4.Length2D(back) > 0.1 ? Vector4.Normalize2D(back) : stats.d_forward2D;
+    let heading = Vector4.Length2D(back) > 0.1 ? FlightModeAutopilot.Flat(back) : FlightModeAutopilot.Flat(stats.d_forward);
     if this.NextFreeRoamLeg(point, heading, true) {
       this.joinS = s;
       this.joinPoint = point;
@@ -954,6 +1061,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let centre = route[join];
     let span = Cast<Int32>(this.freeRoamSmoothSpan / 5.0);
     let lo = Max(join - span, this.segment - first + 2);
+    if this.gateEndS >= this.joinS - 1.0 {
+      lo = Max(lo, join); // joined at the end of a gate's run: the run stays straight
+    }
     let hi = Min(join + span, ArraySize(route) - 2);
     let pass = 0;
     while pass < 20 {
@@ -984,6 +1094,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       ArrayPush(this.routeLength, total);
       i += 1;
     }
+    this.gateEndS = this.spliceGate ? total : MaxF(this.gateEndS - trimmed, 0.0);
     ArrayClear(this.routeSpeed);
     if this.raceMode {
       this.BuildSpeedProfile();
@@ -1093,6 +1204,14 @@ public class FlightModeAutopilot extends FlightModeStandard {
   }
 
   // radius of the circle through a, b, c (1e6 when they are in a line)
+  // The horizontal unit vector of v (zero if v is vertical). Vector4.Normalize2D keeps v's Z as it
+  // is: a dot product of two of those added the Zs' product, 64 for two opposite headings while
+  // descending, and free roam took a gate straight behind the car for one ahead (2026-10-28).
+  public static func Flat(v: Vector4) -> Vector4 {
+    let length = SqrtF(v.X * v.X + v.Y * v.Y);
+    return length > 0.0001 ? new Vector4(v.X / length, v.Y / length, 0.0, 0.0) : new Vector4(0.0, 0.0, 0.0, 0.0);
+  }
+
   private static func Circumradius(a: Vector4, b: Vector4, c: Vector4) -> Float {
     let ab = b - a;
     let bc = c - b;
@@ -1386,10 +1505,127 @@ public class FlightModeAutopilot extends FlightModeStandard {
     return position;
   }
 
+  // Angle between two directions, degrees (-1 if either is zero).
+  private static func AngleBetween(a: Vector4, b: Vector4) -> Float {
+    let la = SqrtF(a.X * a.X + a.Y * a.Y + a.Z * a.Z);
+    let lb = SqrtF(b.X * b.X + b.Y * b.Y + b.Z * b.Z);
+    if la < 0.0001 || lb < 0.0001 {
+      return -1.0;
+    }
+    return Rad2Deg(AcosF(ClampF((a.X * b.X + a.Y * b.Y + a.Z * b.Z) / (la * lb), -1.0, 1.0)));
+  }
+
+  // With telemetry on, one row a frame to red4ext/logs/ltbf_autopilot_<time>.csv (FlightTelemetry):
+  // where the car is and how fast, the speed it is held to, and how its orientation follows the
+  // plan: the route's direction at the car, the nose and up the controller asked for last frame
+  // (targetForward / targetUp) and the car's own, with the angles between them (plan_cmd: the
+  // controller's choices such as drift into bends; cmd_car and up_cmd_car: the car's response).
+  // Taken at the start of the frame, so a command is paired with what the car made of it.
+  // tools/autopilot_telemetry.py summarises a file.
+  private func WriteTelemetry(p: Vector4, v: Vector4, timeDelta: Float) -> Void {
+    if !this.telemetry {
+      if this.telemetryFile {
+        FlightTelemetry.End();
+        this.telemetryFile = false;
+      }
+      return;
+    }
+    if !this.telemetryFile {
+      this.telemetryFile = FlightTelemetry.Begin("autopilot", "t,x,y,z,vx,vy,vz,speed,speed2d,target,target_rate,cmd,off,following,maneuver,on_line,segment,"
+        + "plan_x,plan_y,plan_z,cmd_fwd_x,cmd_fwd_y,cmd_fwd_z,cmd_up_x,cmd_up_y,cmd_up_z,fwd_x,fwd_y,fwd_z,up_x,up_y,up_z,"
+        + "attitude_error,plan_cmd,cmd_car,up_cmd_car,plan_pitch,cmd_pitch,car_pitch,collision_timer");
+      this.telemetryClock = 0.0;
+      if !this.telemetryFile {
+        return;
+      }
+    }
+    this.telemetryClock += timeDelta;
+    let stats = this.component.stats;
+    let n = ArraySize(this.route);
+    let plan = new Vector4(0.0, 0.0, 0.0, 0.0);
+    if this.segment + 1 < n {
+      plan = this.route[this.segment + 1] - this.route[this.segment];
+    }
+    let fwd = this.targetForward;
+    let up = this.targetUp;
+    let row: array<Float>;
+    ArrayPush(row, this.telemetryClock);
+    ArrayPush(row, p.X);
+    ArrayPush(row, p.Y);
+    ArrayPush(row, p.Z);
+    ArrayPush(row, v.X);
+    ArrayPush(row, v.Y);
+    ArrayPush(row, v.Z);
+    ArrayPush(row, stats.d_speed);
+    ArrayPush(row, stats.d_speed2D);
+    ArrayPush(row, this.targetSpeed);
+    ArrayPush(row, this.targetRate);
+    ArrayPush(row, this.speedCmd);
+    ArrayPush(row, this.offRouteNow);
+    ArrayPush(row, Equals(this.status, "following") ? 1.0 : 0.0);
+    ArrayPush(row, IsDefined(this.maneuver) ? 1.0 : 0.0);
+    ArrayPush(row, this.onLine ? 1.0 : 0.0);
+    ArrayPush(row, Cast<Float>(this.segment));
+    ArrayPush(row, plan.X);
+    ArrayPush(row, plan.Y);
+    ArrayPush(row, plan.Z);
+    ArrayPush(row, fwd.X);
+    ArrayPush(row, fwd.Y);
+    ArrayPush(row, fwd.Z);
+    ArrayPush(row, up.X);
+    ArrayPush(row, up.Y);
+    ArrayPush(row, up.Z);
+    ArrayPush(row, stats.d_forward.X);
+    ArrayPush(row, stats.d_forward.Y);
+    ArrayPush(row, stats.d_forward.Z);
+    ArrayPush(row, stats.d_up.X);
+    ArrayPush(row, stats.d_up.Y);
+    ArrayPush(row, stats.d_up.Z);
+    ArrayPush(row, Rad2Deg(this.attitudeError));
+    ArrayPush(row, FlightModeAutopilot.AngleBetween(plan, fwd));
+    ArrayPush(row, FlightModeAutopilot.AngleBetween(fwd, stats.d_forward));
+    ArrayPush(row, FlightModeAutopilot.AngleBetween(up, stats.d_up));
+    ArrayPush(row, FlightModeAutopilot.PitchOf(plan));
+    ArrayPush(row, FlightModeAutopilot.PitchOf(fwd));
+    ArrayPush(row, FlightModeAutopilot.PitchOf(stats.d_forward));
+    ArrayPush(row, this.component.collisionTimer);
+    FlightTelemetry.Row(row);
+  }
+
+  // Steepest climb or descent along the points, degrees, each taken over at least `span` metres of
+  // horizontal travel (single short steps are noise).
+  private static func SteepestPitch(points: array<Vector4>, span: Float) -> Float {
+    let steepest = 0.0;
+    let n = ArraySize(points);
+    let i = 0;
+    let j = 1;
+    while j < n {
+      let flat = Vector4.Distance2D(points[i], points[j]);
+      if flat >= span {
+        steepest = MaxF(steepest, Rad2Deg(AtanF(AbsF(points[j].Z - points[i].Z), flat)));
+        i += 1;
+      } else {
+        // a vertical stretch shorter than span across: steep as can be
+        if AbsF(points[j].Z - points[i].Z) > span {
+          steepest = MaxF(steepest, Rad2Deg(AtanF(AbsF(points[j].Z - points[i].Z), MaxF(flat, 0.01))));
+        }
+        j += 1;
+      }
+    }
+    return steepest;
+  }
+
+  // Pitch of a direction above the horizontal, degrees.
+  private static func PitchOf(d: Vector4) -> Float {
+    let l = SqrtF(d.X * d.X + d.Y * d.Y + d.Z * d.Z);
+    return l < 0.0001 ? 0.0 : Rad2Deg(AsinF(ClampF(d.Z / l, -1.0, 1.0)));
+  }
+
   public func Update(timeDelta: Float) -> Void {
     let stats = this.component.stats;
     let p = this.CheckedPosition(stats.d_position, timeDelta);
     let v = stats.d_velocity;
+    this.WriteTelemetry(p, v, timeDelta);
 
     this.UpdateRoute(timeDelta);
 
@@ -2075,7 +2311,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     // Immelmann, or a split-S where the route carries on lower
     let ahead = this.AlongRoute(closest, 25.0) - p;
     if stats.d_speed2D <= this.maneuverMaxSpeed && Vector4.Length2D(ahead) > 5.0
-      && Vector4.Dot(Vector4.Normalize2D(ahead), Vector4.Normalize2D(v)) < -0.5 {
+      && Vector4.Dot(FlightModeAutopilot.Flat(ahead), FlightModeAutopilot.Flat(v)) < -0.5 {
       let down = ahead.Z < -10.0;
       if !this.TryManeuver(down ? FlightManeuverKind.SplitS : FlightManeuverKind.Immelmann, side, p, closest)
         && !this.TryManeuver(down ? FlightManeuverKind.Immelmann : FlightManeuverKind.SplitS, side, p, closest) {

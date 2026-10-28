@@ -60,6 +60,15 @@ struct FlightNavMap : RED4ext::IScriptable {
   // Pads within aRadius metres (horizontal), nearest first.
   static RED4ext::DynArray<int32_t> FindHelipadsInRange(RED4ext::Vector4 aPosition, float aRadius);
 
+  // Free roam gates (Navigation::Gates, gates.tsv), by index 0 .. GetGateCount() - 1. Position is
+  // the opening's centre at the height to fly it; an index out of range gives zeros.
+  static int32_t GetGateCount();
+  static RED4ext::Vector4 GetGatePosition(int32_t aIndex);
+  // Degrees, the way through (either direction).
+  static float GetGateYaw(int32_t aIndex);
+  // Gates within aRadius metres (horizontal), nearest first.
+  static RED4ext::DynArray<int32_t> FindGatesInRange(RED4ext::Vector4 aPosition, float aRadius);
+
   RTTI_IMPL_TYPEINFO(FlightNavMap);
   RTTI_IMPL_ALLOCATOR();
 };
@@ -92,4 +101,8 @@ RTTI_DEFINE_CLASS(FlightNavMap, {
   RTTI_METHOD(GetHelipadName);
   RTTI_METHOD(FindNearestHelipad);
   RTTI_METHOD(FindHelipadsInRange);
+  RTTI_METHOD(GetGateCount);
+  RTTI_METHOD(GetGatePosition);
+  RTTI_METHOD(GetGateYaw);
+  RTTI_METHOD(FindGatesInRange);
 });

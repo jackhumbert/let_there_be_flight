@@ -17,6 +17,7 @@
 #include <TweakXL.hpp>
 #include "GameModFolders.hpp"
 #include "Navigation/Blockers.hpp"
+#include "Navigation/Gates.hpp"
 #include "Navigation/Helipads.hpp"
 #include "Navigation/NavMap.hpp"
 #include <RED4ext/ResourceDepot.hpp>
@@ -225,6 +226,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
       Navigation::NavMap::Get().Load(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "navmap.bin");
     }
     Navigation::Helipads::Get().Load(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "helipads.tsv");
+    Navigation::Gates::Get().Load(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "gates.tsv");
     Navigation::Blockers::Get().Load(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "blockers.txt");
     Navigation::Blockers::Get().LoadHidden(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "hidden_nodes.txt");
 

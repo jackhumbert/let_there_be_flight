@@ -44,4 +44,12 @@ public native class FlightNavMap extends IScriptable {
   public native static func FindNearestHelipad(position: Vector4, maxDistance: Float) -> Int32;
   // pads within radius metres (horizontal), nearest first
   public native static func FindHelipadsInRange(position: Vector4, radius: Float) -> array<Int32>;
+  // free roam gates: openings to fly through (gates.tsv, tools/heightmap/gates.py), index 0 .. count - 1.
+  // Position is the opening's centre at the height to fly it (w = 1); an index out of range gives zeros.
+  public native static func GetGateCount() -> Int32;
+  public native static func GetGatePosition(index: Int32) -> Vector4;
+  // degrees, the way through (either direction)
+  public native static func GetGateYaw(index: Int32) -> Float;
+  // gates within radius metres (horizontal), nearest first
+  public native static func FindGatesInRange(position: Vector4, radius: Float) -> array<Int32>;
 }
