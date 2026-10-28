@@ -11,12 +11,12 @@
       "pos": [
         -1212.96,
         81.13,
-        505.58
+        505.685
       ],
       "yaw": 22.5,
       "radius": 6.0,
       "own_deck": true,
-      "note": "499 m tower v2: the game's deck is visual only, ours is the v2 pad entity in user/jackhumbert/sectors/helipad_vehicles.streamingsector at the proxy's transform; deck height from rays in game"
+      "note": "499 m tower v2: the game's deck is visual only; in its place the inventor's city hangar (pad_sectors.json hangar_city, docs/helipads.md section 9) stands on the roof (498.51), its deck top 7.175 above, the hatch at the centre; yaw 22.5 lines a car up with the hatch's 12 m side (the hangar is turned 90 deg from the pad). Was our v2 pad entity at 505.58 until 2026-10-27"
     },
     {
       "id": "spaceport_apron",
