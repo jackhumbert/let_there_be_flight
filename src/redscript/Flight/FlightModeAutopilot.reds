@@ -269,6 +269,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let freeRoamLegMin: Float = 900.0;   // m
   public let freeRoamLegMax: Float = 1600.0;  // m
   public let freeRoamSpread: Float = 60.0;    // deg either side of the heading a leg may turn (widened when nothing fits)
+  public let freeRoamMaxDepth: Float = 2.0;   // m below 0 the ground under a leg's end may be at most (open sea reads -13.5 on the map)
   public let freeRoamChainAt: Float = 700.0;  // m left on the route when the next leg is planned
   public let freeRoamJoinAhead: Float = 4.0;  // s of the flown speed ahead the next leg starts, at least freeRoamJoinMin
   public let freeRoamJoinMin: Float = 150.0;  // m
@@ -850,8 +851,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
         if n > 0 {
           let sky = gaps[n - 1];
           let z = MinF(sky.X + this.raceRouteHeight, sky.Y - 5.0);
-          // near the height of the leg before, until nothing like that fits
-          if z > sky.X + 5.0 && (AbsF(z - from.Z) <= this.freeRoamMaxRise || tries >= 16) {
+          // near the height of the leg before, until nothing like that fits; over land: a leg out to
+          // sea west of the city crossed the playable area's edge about 300 m offshore, and the game
+          // put the car back where flight was switched on (2026-10-28)
+          if z > sky.X + 5.0 && sky.X >= -this.freeRoamMaxDepth && (AbsF(z - from.Z) <= this.freeRoamMaxRise || tries >= 16) {
             goal = new Vector4(c.X, c.Y, z, 1.0);
             return true;
           }
