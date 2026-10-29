@@ -197,6 +197,95 @@ void Band(const Gap &aGap, float aAlong, float aLength, const PlanParams &aParam
   }
 }
 
+// The line's heights solved on their own, its path across kept: the smoothest heights (least
+// summed squared second difference) within each point's height band (Band: the floor clearance
+// below, anything overhead), coarse to fine (every 16th point, then every 8th, ... each coarse
+// point held to the band of the stretch it stands for, so a bump between them still counts), the
+// first and last two points fixed. The smoothing passes in RacingLine aim at the same but stop
+// after a hundred local passes at the fine spacing, so a bump in the floor left a short ramp and a
+// crest at its top: from the city centre to Dogtown two 5 m bumps 110 m apart braked the car from
+// 60 to 44 m/s and again to 40 (racePushOver, 2026-10-28). A point whose legs are not free at the
+// solved height goes back to where it was, with its neighbour.
+void SmoothHeights(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams &aParams) {
+  const size_t n = aPts.size();
+  if (aParams.lineHeightIterations <= 0 || n < 9) {
+    return;
+  }
+  std::vector<float> along(n, 0.0f), lo(n), hi(n), z(n);
+  for (size_t i = 0; i < n; ++i) {
+    along[i] = i ? along[i - 1] + Distance(aPts[i - 1], aPts[i]) : 0.0f;
+    z[i] = lo[i] = hi[i] = aPts[i].z;
+  }
+  for (size_t i = 2; i + 2 < n; ++i) {
+    Gap gap;
+    if (aMap.FindGap(aPts[i].x, aPts[i].y, aPts[i].z, gap)) {
+      Band(gap, along[i], along.back(), aParams, lo[i], hi[i]);
+      // the line where it is now is always allowed (a band can sit above it near a takeoff)
+      lo[i] = std::min(lo[i], z[i]);
+      hi[i] = std::max(hi[i], z[i]);
+    }
+  }
+  for (size_t stride : {16u, 8u, 4u, 2u, 1u}) {
+    std::vector<size_t> idx;
+    for (size_t i = 0; i < n; i += stride) {
+      idx.push_back(i);
+    }
+    if (idx.back() != n - 1) {
+      idx.push_back(n - 1);
+    }
+    const size_t m = idx.size();
+    if (m < 7) {
+      continue;
+    }
+    std::vector<float> s(m), slo(m), shi(m), next(m);
+    for (size_t k = 0; k < m; ++k) {
+      s[k] = z[idx[k]];
+      size_t from = k ? (idx[k - 1] + idx[k]) / 2 : 0, to = k + 1 < m ? (idx[k] + idx[k + 1]) / 2 : n - 1;
+      slo[k] = -kInf;
+      shi[k] = kInf;
+      for (size_t i = from; i <= to; ++i) {
+        slo[k] = std::max(slo[k], lo[i]);
+        shi[k] = std::min(shi[k], hi[i]);
+      }
+      if (slo[k] > shi[k] || k < 2 || k + 2 >= m) {
+        slo[k] = shi[k] = s[k];
+      }
+    }
+    for (int it = 0; it < aParams.lineHeightIterations; ++it) {
+      next = s;
+      for (size_t k = 2; k + 2 < m; ++k) {
+        float g = s[k - 2] - 4.0f * s[k - 1] + 6.0f * s[k] - 4.0f * s[k + 1] + s[k + 2];
+        next[k] = std::clamp(s[k] - 0.1f * g, slo[k], shi[k]); // stable below 0.125
+      }
+      s.swap(next);
+    }
+    // back onto every point: the solved ones, the rest in between linearly, within their bands
+    for (size_t k = 0; k + 1 < m; ++k) {
+      for (size_t i = idx[k]; i <= idx[k + 1]; ++i) {
+        float t = idx[k + 1] > idx[k] ? float(i - idx[k]) / float(idx[k + 1] - idx[k]) : 0.0f;
+        z[i] = std::clamp(s[k] + (s[k + 1] - s[k]) * t, lo[i], hi[i]);
+      }
+    }
+  }
+  std::vector<Vec3> solved = aPts;
+  for (size_t i = 0; i < n; ++i) {
+    solved[i].z = z[i];
+  }
+  for (int round = 0; round < 8; ++round) {
+    bool reverted = false;
+    for (size_t i = 0; i + 1 < n; ++i) {
+      if (!LegFree(aMap, solved[i], solved[i + 1]) && (solved[i].z != aPts[i].z || solved[i + 1].z != aPts[i + 1].z)) {
+        solved[i] = aPts[i];
+        solved[i + 1] = aPts[i + 1];
+        reverted = true;
+      }
+    }
+    if (!reverted) {
+      break;
+    }
+  }
+  aPts = solved;
+}
 std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute, const PlanParams &aParams) {
   std::vector<Vec3> pts = aRoute;
   const float side = aParams.lineSide;
@@ -285,6 +374,7 @@ std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute
       }
     }
   }
+  SmoothHeights(aMap, pts, aParams);
   return pts;
 }
 

@@ -116,6 +116,9 @@ int main(int argc, char **argv) {
   if (const char *v = std::getenv("NAVPLAN_MAX_GRADIENT")) {
     params.maxGradient = std::strtof(v, nullptr);
   }
+  if (const char *v = std::getenv("NAVPLAN_HEIGHT_ITERATIONS")) {
+    params.lineHeightIterations = std::atoi(v);
+  }
   if (const char *v = std::getenv("NAVPLAN_LINE_SIDE")) {
     params.lineSide = std::strtof(v, nullptr);
   }
