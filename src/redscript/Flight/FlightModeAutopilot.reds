@@ -94,6 +94,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let droneBrakeYaw: Float = 45.0;     // deg the nose swings towards the turn coming in a hard stop (droneBrakeTurn)
   public let droneStopMinDrop: Float = 15.0;  // m/s the speed flown falls by in a stop (PlanStops)
   public let droneStopMinDecel: Float = 6.0;  // m/s2 of braking that counts towards a stop
+  public let droneStopArrive: Float = 250.0;  // m before the route's end where the arrival's braking is part of a stop
   public let droneStopJoin: Float = 120.0;    // m between two stops that are flown as one
   public let droneStopTurnAhead: Float = 30.0; // m past a stop's end its turn is judged at
   public let droneStopLead: Float = 0.3;      // s ahead the planned slew is read
@@ -116,7 +117,17 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let touchdownRate: Float = 0.8;      // m/s in the last metres
   public let landingSearch: Int32 = 12;       // rings of 2 m columns searched for a landing spot
   public let landingShaft: Float = 4.0;       // m around a landing spot that must be open above it too (ShaftClear)
-  public let landingOverSpot: Float = 1.5;    // m from the spot across before the descent sinks
+  // m from the spot across within which the descent sinks: the clear shaft (ShaftClear), so the
+  // car slides the last metres over the spot while coming down instead of stopping above it first
+  public let landingOverSpot: Float = 4.0;
+  // the descent takes over from the route this far from its end (m) and below this speed (m/s); it
+  // keeps closing on the spot and sinks once within landingOverSpot. Taken over 4 m out, the car
+  // hung still for 2 s above the spot first (2026-10-29)
+  public let landingEntry: Float = 15.0;
+  public let landingEntrySpeed: Float = 10.0;
+  public let landingRecheck: Float = 300.0;   // m before the route's end the landing spot is checked for vehicles again
+  public let landingShiftSpan: Float = 150.0; // m of the route's end moved over to a new spot
+  public let spotCheckTimer: Float;
   public let padSnapDistance: Float = 25.0;   // m: a destination this close to a landing pad (and at its level) is on it
   public let padSnapLevel: Float = 6.0;       // m between the destination's height and the pad's deck
 
@@ -1904,13 +1915,16 @@ public class FlightModeAutopilot extends FlightModeStandard {
       if this.component.isPlayerMounted {
         this.PublishProgress();
       }
+      if ArraySize(this.route) >= 2 {
+        this.RecheckLandingSpot(timeDelta);
+      }
       if this.freeRoam && this.remaining < this.arriveDistance && stats.d_speed < 3.0 {
         // the end of the route before the next leg joined: on from here (ChainFreeRoam)
         this.holdPosition = this.route[ArraySize(this.route) - 1];
         ArrayClear(this.route);
         this.status = "free roam";
         FlightLog.Info("[Autopilot] free roam: end of the route, planning on from here");
-      } else if this.remaining < this.arriveDistance && stats.d_speed < 3.0 {
+      } else if this.landing ? this.remaining < this.landingEntry && stats.d_speed < this.landingEntrySpeed : this.remaining < this.arriveDistance && stats.d_speed < 3.0 {
         // the spot again now the cars around it have streamed in: taken, the nearest free one
         // with room (from up here a few metres across is fine; the shaft above it is open)
         if this.landing && this.landingPad < 0 && this.SpotTaken(this.landingSpot) {
@@ -2429,9 +2443,14 @@ public class FlightModeAutopilot extends FlightModeStandard {
     if n < 3 || !this.routeLine {
       return;
     }
+    // from where the car is now, at its speed (the profile can be rebuilt mid-route)
+    let first = Clamp(this.segment, 0, n - 1);
     let flown: array<Float>;
-    ArrayPush(flown, MinF(this.routeSpeed[0], this.component.stats.d_speed));
-    let i = 1;
+    let i = 0;
+    while i <= first {
+      ArrayPush(flown, i == first ? MinF(this.routeSpeed[i], this.component.stats.d_speed) : this.routeSpeed[i]);
+      i += 1;
+    }
     while i < n {
       let v = flown[i - 1];
       let d = this.routeLength[i] - this.routeLength[i - 1];
@@ -2445,7 +2464,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
     while i < n - 1 {
       let d = MaxF(this.routeLength[i + 1] - this.routeLength[i], 0.01);
       let decel = (flown[i] * flown[i] - flown[i + 1] * flown[i + 1]) / (2.0 * d);
-      if decel >= this.droneStopMinDecel {
+      // the arrival's gentler braking counts near the end: the stop into a landing is one with it
+      let arriving = this.routeLength[n - 1] - this.routeLength[i] < this.droneStopArrive;
+      if decel >= (arriving ? 0.8 * this.raceArriveDecel : this.droneStopMinDecel) {
         let k = ArraySize(starts);
         if k > 0 && this.routeLength[i] - this.routeLength[ends[k - 1]] < this.droneStopJoin {
           ends[k - 1] = i + 1;
@@ -2455,6 +2476,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
         }
       }
       i += 1;
+    }
+    // a stop that ends near the route's end runs on to it (into the landing), as one
+    let last = ArraySize(ends) - 1;
+    if last >= 0 && this.routeLength[n - 1] - this.routeLength[ends[last]] < this.droneStopArrive {
+      ends[last] = n - 1;
     }
     let k = 0;
     let kept = 0;
@@ -2484,6 +2510,77 @@ public class FlightModeAutopilot extends FlightModeStandard {
       k += 1;
     }
   }
+  // The route's end moved over to a landing spot `to` (the end keeping its height above the floor):
+  // the last landingShiftSpan metres shifted by the same offset, eased in, each moved point free
+  // on the map; false (and nothing changed) where one is not. The speed profile is rebuilt.
+  private func ShiftRouteEnd(to: Vector4) -> Bool {
+    let n = ArraySize(this.route);
+    if n < 3 {
+      return false;
+    }
+    let total = this.routeLength[n - 1];
+    let end = this.route[n - 1];
+    let offset = new Vector4(to.X - end.X, to.Y - end.Y, to.Z - this.landingSpot.Z, 0.0);
+    let moved: array<Vector4>;
+    let i = 0;
+    while i < n {
+      let q = this.route[i];
+      let left = total - this.routeLength[i];
+      if i > this.segment + 1 && left < this.landingShiftSpan {
+        let f = 1.0 - left / this.landingShiftSpan;
+        f = f * f * (3.0 - 2.0 * f);
+        q += offset * f;
+        if !FlightNavMap.IsFree(q) {
+          return false;
+        }
+      }
+      ArrayPush(moved, q);
+      i += 1;
+    }
+    this.route = moved;
+    ArrayClear(this.routeLength);
+    let sum = 0.0;
+    i = 0;
+    while i < n {
+      if i > 0 {
+        sum += Vector4.Distance(this.route[i - 1], this.route[i]);
+      }
+      ArrayPush(this.routeLength, sum);
+      i += 1;
+    }
+    this.routeGoal = this.route[n - 1];
+    ArrayClear(this.routeSpeed);
+    return true;
+  }
+
+  // The landing spot again on the approach, once the cars around it have streamed in: taken, the
+  // route's end is moved to the nearest free one (ShiftRouteEnd), so the car flies into it in one
+  // go. Checked on arrival only, the car came to a stop above a parked car's spot and then moved
+  // 28 m over before coming down, two actions where there should be one (2026-10-29).
+  private func RecheckLandingSpot(timeDelta: Float) -> Void {
+    if !this.landing || this.landingPad >= 0 || this.remaining > this.landingRecheck || this.remaining < 15.0 {
+      return;
+    }
+    this.spotCheckTimer -= timeDelta;
+    if this.spotCheckTimer > 0.0 {
+      return;
+    }
+    this.spotCheckTimer = 0.5;
+    if !this.SpotTaken(this.landingSpot) {
+      return;
+    }
+    let top: Float;
+    let spot: Vector4;
+    if this.FindLandingSpot(this.destination, spot, top) && Vector4.Distance2D(spot, this.landingSpot) > 2.0 {
+      let over = Vector4.Distance2D(spot, this.landingSpot);
+      if this.ShiftRouteEnd(spot) {
+        this.landingSpot = spot;
+        FlightLog.Info("[Autopilot] landing spot taken by a vehicle, " + FloatToStringPrec(this.remaining, 0) + " m out: route end moved "
+          + FloatToStringPrec(over, 1) + " m to " + FloatToStringPrec(spot.X, 1) + ", " + FloatToStringPrec(spot.Y, 1));
+      }
+    }
+  }
+
   // The slew planned at route distance s (signed: positive swings the nose right), 0 outside a stop.
   private func PlannedSlew(s: Float) -> Float {
     let k = 0;
