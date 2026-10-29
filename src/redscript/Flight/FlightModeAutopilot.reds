@@ -392,7 +392,12 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let pitchRateNow: Float;             // rad/s
   public let commandSurge: Float;             // -1..1, the thrust it commands, for the engine sound
   public let commandSway: Float;
-  public let thrustCmd: Vector4;              // m/s2 in the car's frame (sway, surge, lift) FlyAerobatic set (force is redone by ApplyPhysics)
+  public let dronePitch: Float;               // rad, drone style's eased body tilt forward (DroneAttitude)
+  public let droneRoll: Float;                // rad, and to the right
+  public let dronePitchRate: Float;
+  public let droneRollRate: Float;
+  public let droneEaseLive: Bool;             // drone style's attitude was flown last frame
+  public let thrustCmd: Vector4;             // m/s2 in the car's frame (sway, surge, lift) FlyAerobatic set (force is redone by ApplyPhysics)
   public let freeRoam: Bool;                  // flying free roam legs (no destination tracked)
   public let freeRoamCentre: Vector4;
   public let requestJoin: Bool;               // the pending plan is the next free roam leg, from joinPoint
@@ -2582,7 +2587,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // the commanded acceleration and gravity need (DroneBodyAngle). FlyAerobatic's thrust then gives
   // that acceleration in the car's frame: what the tilt leaves along the nose and across goes to
   // surge and sway, which swivel the thrusters.
-  private func DroneAttitude(dt: Float, accel: Vector4, blend: Float, out fwd: Vector4, out up: Vector4) -> Void {
+  private func DroneAttitude(dt: Float, accel: Vector4, blend: Float, live: Bool, out fwd: Vector4, out up: Vector4) -> Void {
     let stats = this.component.stats;
     let z = FlightUtils.Up();
     let g = 9.81 * this.gravityFactor;
@@ -2604,9 +2609,35 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let cap = Deg2Rad(this.droneMaxTilt);
     let pitch = ClampF(this.DroneBodyAngle(AtanF(ahead, thrust.Z), size, along), -cap, cap);
     let roll = ClampF(this.DroneBodyAngle(AtanF(Vector4.Dot(thrust, side), thrust.Z), size, this.standardModeSwayFactor), -cap, cap);
+    // eased as the plane's pitch and bank are (EasePitch, EaseBank): followed directly, the tilt
+    // flicked with every change of the commanded acceleration and the car overshot it, rolling to
+    // 85 degrees for a 50 degree command into Dogtown (2026-10-28). What the tilt lags by, the
+    // thrust in the car's frame (FlyAerobatic) still gives, up to the surge and sway limits.
+    if !live {
+      this.dronePitch = pitch;
+      this.droneRoll = roll;
+      this.dronePitchRate = 0.0;
+      this.droneRollRate = 0.0;
+    }
+    let rate: Float;
+    this.dronePitch = FlightModeAutopilot.EaseAngle(dt, pitch, this.dronePitch, this.dronePitchRate, this.racePitchFrequency, this.racePitchRateMax, this.racePitchAccelMax, rate);
+    this.dronePitchRate = rate;
+    this.droneRoll = FlightModeAutopilot.EaseAngle(dt, roll, this.droneRoll, this.droneRollRate, this.raceRollFrequency, this.raceRollRateMax, this.raceRollAccelMax, rate);
+    this.droneRollRate = rate;
+    pitch = this.dronePitch;
+    roll = this.droneRoll;
     // top towards the thrust: tilted forward is nose down, as a quadcopter speeding up
     up = Vector4.Normalize(z + h * TanF(pitch) + side * TanF(roll));
     fwd = Vector4.Normalize(FlightAttitude.Across(h, up));
+  }
+
+  // An angle eased towards wanted: critically damped at frequency f, its rate and acceleration
+  // limited (EaseBank and EasePitch do the same for the plane). Returns the new angle, the new
+  // rate in rateOut.
+  private static func EaseAngle(dt: Float, wanted: Float, angle: Float, rateIn: Float, f: Float, rateMax: Float, accelMax: Float, out rateOut: Float) -> Float {
+    let accel = ClampF(f * f * (wanted - angle) - 2.0 * f * rateIn, -accelMax, accelMax);
+    rateOut = ClampF(rateIn + accel * dt, -rateMax, rateMax);
+    return angle + rateOut * dt;
   }
 
   // The body's tilt on one axis for a thrust direction `angle` from vertical: droneBodyShare of it,
@@ -2665,6 +2696,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
       }
     }
 
+    // drone style's eased tilt starts from the wanted one when it was not flown last frame
+    let droneLive = this.droneEaseLive;
+    this.droneEaseLive = false;
     // a manoeuvre's attitude is taken attitudeDelay ahead: the car answers torque two frames late
     let ahead = IsDefined(this.maneuver) ? MinF(this.maneuver.time + this.attitudeDelay, this.maneuver.duration) : 0.0;
     // the nose follows the flight path from a lower speed than in level flight, or a manoeuvre
@@ -2680,7 +2714,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
       this.maneuver.Sample(ahead, refPos, refVel, refAcc, fwd, up);
       this.SyncPitch(fwd);
     } else if this.droneStyle && !IsDefined(this.maneuver) {
-      this.DroneAttitude(dt, accel, blend, fwd, up);
+      this.DroneAttitude(dt, accel, blend, droneLive, fwd, up);
+      this.droneEaseLive = true;
     } else {
       // nose: the velocity plus a little of the commanded acceleration, so it leads into turns,
       // climbs and dives
