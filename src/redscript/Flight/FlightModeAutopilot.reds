@@ -109,6 +109,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let descentRate: Float = 4.0;        // m/s at most during the landing descent
   public let touchdownRate: Float = 0.8;      // m/s in the last metres
   public let landingSearch: Int32 = 12;       // rings of 2 m columns searched for a landing spot
+  public let landingShaft: Float = 4.0;       // m around a landing spot that must be open above it too (ShaftClear)
+  public let landingOverSpot: Float = 1.5;    // m from the spot across before the descent sinks
   public let padSnapDistance: Float = 25.0;   // m: a destination this close to a landing pad (and at its level) is on it
   public let padSnapLevel: Float = 6.0;       // m between the destination's height and the pad's deck
 
@@ -538,7 +540,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
         let angle = 6.2831853 * Cast<Float>(i) / Cast<Float>(count);
         let c = new Vector4(target.X + 2.0 * Cast<Float>(r) * CosF(angle), target.Y + 2.0 * Cast<Float>(r) * SinF(angle), level + 1.0, 1.0);
         let g: Vector2;
-        if FlightModeAutopilot.GapAt(c, g) && AbsF(g.X - level) < 3.0 && g.Y - g.X > room && this.IsFlat(c, g.X) {
+        if FlightModeAutopilot.GapAt(c, g) && AbsF(g.X - level) < 3.0 && g.Y - g.X > room && this.IsFlat(c, g.X)
+          && this.ShaftClear(c, g.X, room) && !this.SpotTaken(new Vector4(c.X, c.Y, g.X, 1.0)) {
           let d = Vector4.DistanceSquared2D(c, target);
           if d < best {
             best = d;
@@ -552,6 +555,54 @@ public class FlightModeAutopilot extends FlightModeStandard {
         return true;
       }
       r += 1;
+    }
+    return false;
+  }
+
+  // The columns around c out to landingShaft metres are open at least room above floor too, so
+  // the car comes down a shaft, not a hole: the bake grows solids by 3 m for the car, and in
+  // Dogtown a spot whose neighbours all had a walkway over them at 6 to 12 m let a Hellhound
+  // (longer than that, and turning on the way down) catch the walkway's edge (2026-10-29).
+  private func ShaftClear(c: Vector4, floor: Float, room: Float) -> Bool {
+    let ring = 2.0;
+    while ring <= this.landingShaft {
+      let i = 0;
+      while i < 8 {
+        let angle = 0.7853982 * Cast<Float>(i);
+        let g: Vector2;
+        let p = new Vector4(c.X + ring * CosF(angle), c.Y + ring * SinF(angle), floor + 1.0, 1.0);
+        if !FlightModeAutopilot.GapAt(p, g) || g.Y < floor + room {
+          return false;
+        }
+        i += 1;
+      }
+      ring += 2.0;
+    }
+    return true;
+  }
+
+  // A vehicle in the spot (floor height, car centre at rest): vertical rays in the Vehicle
+  // collision group (it sees cars, not the ground) from 6 m above down through the spot, at its
+  // centre and on rings of 2 and 4 m. Parked cars are not on the nav map: the first landing with a
+  // clear shaft in Dogtown came down on a parked convertible (2026-10-29). Cars only exist where
+  // the world has streamed in, so the spot is checked again on arrival.
+  private func SpotTaken(spot: Vector4) -> Bool {
+    let queries = GameInstance.GetSpatialQueriesSystem(this.component.GetVehicle().GetGame());
+    let ring = 0.0;
+    while ring <= 4.0 {
+      let count = ring > 0.0 ? 8 : 1;
+      let i = 0;
+      while i < count {
+        let angle = 0.7853982 * Cast<Float>(i);
+        let x = spot.X + ring * CosF(angle);
+        let y = spot.Y + ring * SinF(angle);
+        let hit: TraceResult;
+        if queries.SyncRaycastByCollisionGroup(new Vector4(x, y, spot.Z + 6.0, 1.0), new Vector4(x, y, spot.Z - 2.0, 1.0), n"Vehicle", hit, false, false) {
+          return true;
+        }
+        i += 1;
+      }
+      ring += 2.0;
     }
     return false;
   }
@@ -1848,6 +1899,20 @@ public class FlightModeAutopilot extends FlightModeStandard {
         this.status = "free roam";
         FlightLog.Info("[Autopilot] free roam: end of the route, planning on from here");
       } else if this.remaining < this.arriveDistance && stats.d_speed < 3.0 {
+        // the spot again now the cars around it have streamed in: taken, the nearest free one
+        // with room (from up here a few metres across is fine; the shaft above it is open)
+        if this.landing && this.landingPad < 0 && this.SpotTaken(this.landingSpot) {
+          let top: Float;
+          let spot: Vector4;
+          if this.FindLandingSpot(this.destination, spot, top) {
+            FlightLog.Info("[Autopilot] landing spot taken by a vehicle, moving to " + FloatToStringPrec(spot.X, 1) + ", " + FloatToStringPrec(spot.Y, 1)
+              + " (" + FloatToStringPrec(Vector4.Distance2D(spot, this.landingSpot), 1) + " m over)");
+            this.landingSpot = spot;
+          } else {
+            FlightLog.Info("[Autopilot] landing spot taken by a vehicle and no free one near: hovering");
+            this.landing = false;
+          }
+        }
         this.status = this.landing ? "descending" : "arrived";
         this.holdPosition = this.landing ? this.landingSpot : this.route[ArraySize(this.route) - 1];
         if this.landing {
@@ -1868,6 +1933,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
       // stops sinking close to it, resting on its wheels
       let height = p.Z - this.landingSpot.Z;
       this.settleTimer += timeDelta; // time since the descent began
+      if Vector4.Distance2D(p, this.landingSpot) > this.landingOverSpot {
+        this.settleTimer = 0.0; // still moving over the spot: not sinking yet
+      }
       // stopped sinking: no new low point for a while (the reported vertical speed stays around
       // -0.5 m/s on the wheels while the thrusters press down, so it is no use here)
       if this.settleTimer < 2.0 || p.Z < this.touchdownLow - 0.1 {
@@ -1924,7 +1992,14 @@ public class FlightModeAutopilot extends FlightModeStandard {
       if this.takingOff {
         desiredVelocity.Z = ClampF(desiredVelocity.Z, -this.climbRate, this.climbRate);
       } else if Equals(this.status, "descending") {
-        desiredVelocity.Z = -ClampF(0.5 * (p.Z - this.landingSpot.Z), this.touchdownRate, this.descentRate);
+        // over the spot first, at the height the descent began: moved to another spot on arrival
+        // (the first one taken by a parked car), the car slid 28 m across while sinking and hit a
+        // walkway at 9 m above the floor on the way (2026-10-29)
+        if Vector4.Distance2D(p, this.landingSpot) > this.landingOverSpot {
+          desiredVelocity.Z = ClampF(0.5 * (this.landingStartZ - p.Z), -2.0, 2.0);
+        } else {
+          desiredVelocity.Z = -ClampF(0.5 * (p.Z - this.landingSpot.Z), this.touchdownRate, this.descentRate);
+        }
       } else if Equals(this.status, "landed") {
         // flight is being switched off: keep settling onto the wheels
         desiredVelocity = new Vector4(0.0, 0.0, -this.touchdownRate, 0.0);
