@@ -850,36 +850,6 @@
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
-              "secondaryKey": "UI-Settings-Autopilot-Aerobatics",
-              "femaleVariant": "Aerobatics"
-            },
-            {
-              "$type": "localizationPersistenceOnScreenEntry",
-              "secondaryKey": "UI-Settings-Autopilot-Aerobatics-Description",
-              "femaleVariant": "Fly like an aircraft: bank as far as a turn needs, point the nose along climbs and dives, and turn round with an Immelmann or split-S when the route doubles back, where there is room. Max Bank and Max Pitch do not apply."
-            },
-            {
-              "$type": "localizationPersistenceOnScreenEntry",
-              "secondaryKey": "UI-Settings-Autopilot-Drone",
-              "femaleVariant": "Drone Style"
-            },
-            {
-              "$type": "localizationPersistenceOnScreenEntry",
-              "secondaryKey": "UI-Settings-Autopilot-Drone-Description",
-              "femaleVariant": "Fly like a quadcopter instead of a plane: the nose stays level and faces along the route, the vehicle tilts towards where it is speeding up, turning or slowing, and the thrusters swivel to give the rest."
-            },
-            {
-              "$type": "localizationPersistenceOnScreenEntry",
-              "secondaryKey": "UI-Settings-Autopilot-Stunts",
-              "femaleVariant": "Stunt Interval"
-            },
-            {
-              "$type": "localizationPersistenceOnScreenEntry",
-              "secondaryKey": "UI-Settings-Autopilot-Stunts-Description",
-              "femaleVariant": "With Aerobatics on: seconds between stunts (aileron roll, barrel roll, loop) on long straights with room for them. 0 turns stunts off."
-            },
-            {
-              "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Autopilot-Race",
               "femaleVariant": "Race"
             },

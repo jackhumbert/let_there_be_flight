@@ -61,26 +61,20 @@ public class FlightModeAutopilot extends FlightModeStandard {
   @runtimeProperty("ModSettings.max", "500.0")
   public let padRange: Float = 0.0;           // m around a destination on the ground to look for a landing pad (0 = off)
 
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Autopilot")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Autopilot-Aerobatics")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Autopilot-Aerobatics-Description")
-  public let aerobatics: Bool = false;        // full 3D attitude and manoeuvres (FlightAerobatics.reds)
+  // Manoeuvres (FlightAerobatics.reds: rolls, loop, Immelmann, split-S, as stunts on straights or
+  // to turn round where the route doubles back) are disconnected since 2026-10-29 (Jack): nothing
+  // starts one, and these are no longer Mod Settings. The code is kept.
+  public let aerobatics: Bool = false;        // full 3D attitude (Race implies it)
+  public let stuntInterval: Float = 0.0;      // s between stunts on long straights (unused while disconnected)
 
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Autopilot")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Autopilot-Stunts")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Autopilot-Stunts-Description")
-  @runtimeProperty("ModSettings.step", "5.0")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "120.0")
-  public let stuntInterval: Float = 0.0;      // s between stunts on long straights with aerobatics on (0 = none)
-
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Autopilot")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Autopilot-Drone")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Autopilot-Drone-Description")
-  public let droneStyle: Bool = false;        // fly like a quadcopter (DroneAttitude), not a plane
+  // The Race flies like a quadcopter (DroneAttitude), the only style since 2026-10-29 (Jack): the
+  // plane attitude in FlyAerobatic is no longer flown (manoeuvres aside) and is kept for reference.
+  // Not a Mod Setting, and not switched anywhere.
+  public let droneStyle: Bool = true;
+  // drone style: hard stops swing the nose round instead of pulling back (not in Mod Settings:
+  // LtbfBridge.DroneBrakeTurn; a Mod Setting is written back from its stored value when the mode
+  // is engaged)
+  public let droneBrakeTurn: Bool = false;
 
   // drone style (2026-10-28): the body tilts droneBodyShare of the way to the thrust direction the
   // commanded acceleration and gravity need, the surge and sway thrusters point the rest (Jack:
@@ -93,7 +87,12 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // keeps the thrust from pointing down) and the lift pushes down: gravity plus
   // (standardModeLiftFactor - g) of lift downwards, 25 m/s2, planned at raceMargin
   public let dronePushOver: Float = 21.0;
-  public let droneRollLook: Float = 1.5;      // s of the line ahead the roll is held for (DroneTurnAhead; 1.0 still eased 31 to 24 degrees before the Dogtown gap)
+  public let droneYawLead: Float = 0.3;       // s along the racing line the nose aims (DroneAttitude)
+  public let droneYawFrequency: Float = 3.0;  // rad/s, heading easing
+  public let droneYawRateMax: Float = 1.5;    // rad/s
+  public let droneYawAccelMax: Float = 5.0;   // rad/s2
+  public let droneBrakeYaw: Float = 45.0;     // deg the nose swings towards the turn coming in a hard stop (droneBrakeTurn)
+  public let droneRollLook: Float = 1.5;     // s of the line ahead the roll is held for (DroneTurnAhead; 1.0 still eased 31 to 24 degrees before the Dogtown gap)
   public let droneRollStep: Float = 0.2;      // s between the points it looks at
 
   // Race is how the Autopilot flies (2026-10-27): the racing line at the vehicle's full thrust,
@@ -401,6 +400,12 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let dronePitchRate: Float;
   public let droneRollRate: Float;
   public let droneEaseLive: Bool;             // drone style's attitude was flown last frame
+  public let droneYaw: Float;                 // rad, drone style's eased heading
+  public let droneYawRate: Float;
+  public let droneBrakeSide: Float;           // +1 / -1 the nose swings for the stop under way, 0 none
+  public let droneLastBrakeSide: Float;
+  public let droneBrakeDecel: Float;          // m/s2 along the travel the slewing stop saw (telemetry)
+  public let droneBrakeAmount: Float;         // 0..1 of droneBrakeYaw
   public let thrustCmd: Vector4;             // m/s2 in the car's frame (sway, surge, lift) FlyAerobatic set (force is redone by ApplyPhysics)
   public let freeRoam: Bool;                  // flying free roam legs (no destination tracked)
   public let freeRoamCentre: Vector4;
@@ -1611,7 +1616,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       this.telemetryFile = FlightTelemetry.Begin("autopilot", "t,x,y,z,vx,vy,vz,speed,speed2d,target,target_rate,cmd,off,following,maneuver,on_line,segment,"
         + "plan_x,plan_y,plan_z,cmd_fwd_x,cmd_fwd_y,cmd_fwd_z,cmd_up_x,cmd_up_y,cmd_up_z,fwd_x,fwd_y,fwd_z,up_x,up_y,up_z,"
         + "attitude_error,plan_cmd,cmd_car,up_cmd_car,plan_pitch,cmd_pitch,car_pitch,collision_timer,"
-        + "drone,cmd_tilt,car_tilt,thrust_right,thrust_fwd,thrust_up");
+        + "drone,cmd_tilt,car_tilt,thrust_right,thrust_fwd,thrust_up,brake_decel,brake_slew");
       this.telemetryClock = 0.0;
       if this.telemetryFile == 0 {
         return;
@@ -1674,6 +1679,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
     ArrayPush(row, this.thrustCmd.X);
     ArrayPush(row, this.thrustCmd.Y);
     ArrayPush(row, this.thrustCmd.Z);
+    ArrayPush(row, this.droneBrakeDecel);
+    ArrayPush(row, this.droneBrakeAmount * this.droneBrakeSide);
     FlightTelemetry.Row(this.telemetryFile, row);
   }
 
@@ -1837,9 +1844,6 @@ public class FlightModeAutopilot extends FlightModeStandard {
           this.targetSpeed = MinF(this.targetSpeed, SqrtF(2.0 * (this.raceMode ? this.raceMargin * this.RaceDecel(0.0) : this.brakeAccel) * room));
           this.blockedAhead = true;
         }
-      }
-      if this.IsAerobatic() && !this.droneStyle {
-        this.ChooseManeuver(p, closest, timeDelta);
       }
       // the speed actually flown follows the target through an S-curve: the rate of change eases
       // in and out (jerk-limited) instead of stepping to full acceleration, and the target's
@@ -2541,6 +2545,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
 
   // For tests (LtbfBridge.Aerobatics): kind as FlightManeuverKind (1 aileron roll .. 5 split-S), side +-1.
   public func StartManeuver(kind: Int32, side: Float) -> String {
+    if this.droneStyle {
+      return "manoeuvres are disconnected (drone style)";
+    }
     if !this.IsAerobatic() {
       return "aerobatics off";
     }
@@ -2668,12 +2675,62 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let stats = this.component.stats;
     let z = FlightUtils.Up();
     let g = 9.81 * this.gravityFactor;
-    let path = FlightModeAutopilot.Flat(stats.d_velocity + accel * this.attitudeLead);
+    // where the nose points: on a racing line along the line a moment ahead, which is smooth by
+    // construction; off it the velocity's horizontal part. That part is small and noisy on a
+    // steep climb or drop, and the nose twitched there (yaw jitter 7 deg/s RMS, the command's far
+    // more, over four legs with 16 to 32% of the route steeper than 45 degrees, 2026-10-29): it
+    // holds the last heading where the direction is near vertical
+    // (Flat returns a unit vector: the horizontal part with its length is taken by hand)
+    let ahead3 = stats.d_velocity + accel * this.attitudeLead;
+    let path = new Vector4(ahead3.X, ahead3.Y, 0.0, 0.0);
+    let pathWeight = ClampF(Vector4.Length(path) / 6.0, 0.0, 1.0);
+    if this.onLine {
+      let tangent: Vector4;
+      let bend: Vector4;
+      this.LineFrameOver(this.closestS + stats.d_speed * this.droneYawLead, this.lineSpan, tangent, bend);
+      path = FlightModeAutopilot.Flat(tangent);
+      pathWeight = ClampF((Vector4.Length(path) - 0.15) / 0.35, 0.0, 1.0);
+    }
+    let previous = live ? new Vector4(CosF(this.droneYaw), SinF(this.droneYaw), 0.0, 0.0) : this.headingRef;
     let h = this.headingRef * (1.0 - blend);
-    if Vector4.Length(path) > 1.0 {
-      h += Vector4.Normalize(path) * blend;
+    if Vector4.Length(path) > 0.01 {
+      h += (Vector4.Normalize(path) * pathWeight + previous * (1.0 - pathWeight)) * blend;
     }
     h = Vector4.Length(h) > 0.1 ? Vector4.Normalize(h) : this.headingRef;
+    // braking turned into a slew (droneBrakeTurn): the nose swings towards the turn coming, up to
+    // droneBrakeYaw, so the stop is a tilt across as much as back
+    let side0 = Vector4.Normalize(Vector4.Cross(h, z));
+    let swing = 0.0;
+    if this.droneBrakeTurn {
+      let travel = new Vector4(stats.d_velocity.X, stats.d_velocity.Y, 0.0, 0.0);
+      let decel = Vector4.Length(travel) > 1.0 ? -Vector4.Dot(this.attAccel, Vector4.Normalize(travel)) : 0.0;
+      let b = ClampF((decel - 3.0) / 8.0, 0.0, 1.0) * ClampF((stats.d_speed2D - 12.0) / 10.0, 0.0, 1.0);
+      b = b * b * (3.0 - 2.0 * b);
+      this.droneBrakeDecel = decel;
+      this.droneBrakeAmount = b;
+      if b < 0.02 {
+        this.droneBrakeSide = 0.0;
+      } else if this.droneBrakeSide == 0.0 {
+        // the side is picked once per stop: towards the turn coming, else the last one
+        let coming = this.DroneTurnAhead(side0);
+        this.droneBrakeSide = AbsF(coming) > 1.0 ? (coming > 0.0 ? 1.0 : -1.0) : (this.droneLastBrakeSide != 0.0 ? this.droneLastBrakeSide : 1.0);
+        this.droneLastBrakeSide = this.droneBrakeSide;
+        FlightLog.Info("[Autopilot] drone stop: slewing " + (this.droneBrakeSide > 0.0 ? "right" : "left") + " at " + FloatToStringPrec(stats.d_speed2D, 1)
+          + " m/s, braking " + FloatToStringPrec(decel, 1) + " m/s2");
+      }
+      swing = this.droneBrakeSide * Deg2Rad(this.droneBrakeYaw) * b;
+    }
+    // the heading eased like the tilt (EaseAngle): rate and acceleration limited
+    let wantedYaw = AtanF(h.Y, h.X) - swing;
+    if !live {
+      this.droneYaw = wantedYaw;
+      this.droneYawRate = 0.0;
+    }
+    let yawRate: Float;
+    this.droneYaw = FlightModeAutopilot.WrapAngle(FlightModeAutopilot.EaseAngle(dt, this.droneYaw + FlightModeAutopilot.WrapAngle(wantedYaw - this.droneYaw), this.droneYaw,
+      this.droneYawRate, this.droneYawFrequency, this.droneYawRateMax, this.droneYawAccelMax, yawRate));
+    this.droneYawRate = yawRate;
+    h = new Vector4(CosF(this.droneYaw), SinF(this.droneYaw), 0.0, 0.0);
     let side = Vector4.Normalize(Vector4.Cross(h, z));
     this.attAccel += (accel - this.attAccel) * ClampF(dt / this.droneTiltTime, 0.0, 1.0);
     let thrust = this.attAccel + z * g;
@@ -2822,7 +2879,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       let refAcc: Vector4;
       this.maneuver.Sample(ahead, refPos, refVel, refAcc, fwd, up);
       this.SyncPitch(fwd);
-    } else if this.droneStyle && !IsDefined(this.maneuver) {
+    } else if !IsDefined(this.maneuver) {
       this.DroneAttitude(dt, accel, blend, droneLive, fwd, up);
       this.droneEaseLive = true;
     } else {
