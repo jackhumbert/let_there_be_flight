@@ -89,6 +89,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let droneBodyShare: Float = 0.5;
   public let droneMaxTilt: Float = 55.0;      // deg the body tilts at most, either axis (sets the speed envelope)
   public let droneTiltTime: Float = 0.2;      // s, smoothing of the acceleration the tilt follows
+  // m/s2 bending the path downwards, in place of racePushOver: the body stays upright (DroneAttitude
+  // keeps the thrust from pointing down) and the lift pushes down: gravity plus
+  // (standardModeLiftFactor - g) of lift downwards, 25 m/s2, planned at raceMargin
+  public let dronePushOver: Float = 21.0;
 
   // Race is how the Autopilot flies (2026-10-27): the racing line at the vehicle's full thrust,
   // banking the lift into turns; implies aerobatics. No longer a Mod Setting (a saved "off" would
@@ -2203,7 +2207,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       let bend: Vector4;
       this.LineFrame(s, tangent, bend);
       if bend.Z < -0.0001 {
-        limit = MinF(limit, SqrtF(this.racePushOver / -bend.Z));
+        limit = MinF(limit, SqrtF((this.droneStyle ? this.dronePushOver : this.racePushOver) / -bend.Z));
       }
     }
     return limit;
@@ -2301,11 +2305,31 @@ public class FlightModeAutopilot extends FlightModeStandard {
     while k < n - 1 && this.routeLength[k] <= s {
       k += 1;
     }
-    let distance = this.routeLength[k] - s - this.speedCmd * this.brakeLead;
+    let lead = this.speedCmd * this.brakeLead;
+    let distance = this.routeLength[k] - s - lead;
     if k == n - 1 {
       distance -= 3.0;
     }
-    return this.RaceBrakeBack(this.routeSpeed[k], MaxF(distance, 0.0), this.RaceTopSpeed());
+    let allowed = this.RaceBrakeBack(this.routeSpeed[k], MaxF(distance, 0.0), this.RaceTopSpeed());
+    // between two points the profile's own slope (v^2 linear along the segment): braked back at
+    // the full race decel from the next point instead, the allowed speed was a sawtooth over each
+    // 5 m segment wherever the profile slows gently (the arrival's raceArriveDecel), and its rate
+    // read ahead (RaceTargetRate) flicked between -2.9 and -5.8 m/s2 frame to frame, the thrust
+    // with it (2026-10-28). Read at s + lead, in the segment there: the lead (0.6 s of the flown
+    // speed) is longer than a segment, so in the car's own one it always read the next point.
+    let sl = s + lead;
+    let j = k;
+    while j < n - 1 && this.routeLength[j] <= sl {
+      j += 1;
+    }
+    let len = this.routeLength[j] - this.routeLength[j - 1];
+    if len > 0.01 {
+      let t = ClampF((sl - this.routeLength[j - 1]) / len, 0.0, 1.0);
+      let a = this.routeSpeed[j - 1];
+      let b = this.routeSpeed[j];
+      allowed = MinF(allowed, SqrtF(MaxF(a * a + (b * b - a * a) * t, 0.0)));
+    }
+    return allowed;
   }
 
   // How fast the allowed speed falls as the car flies on (m/s2, 0 or less), from the profile
