@@ -93,6 +93,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // keeps the thrust from pointing down) and the lift pushes down: gravity plus
   // (standardModeLiftFactor - g) of lift downwards, 25 m/s2, planned at raceMargin
   public let dronePushOver: Float = 21.0;
+  public let droneRollLook: Float = 1.5;      // s of the line ahead the roll is held for (DroneTurnAhead; 1.0 still eased 31 to 24 degrees before the Dogtown gap)
+  public let droneRollStep: Float = 0.2;      // s between the points it looks at
 
   // Race is how the Autopilot flies (2026-10-27): the racing line at the vehicle's full thrust,
   // banking the lift into turns; implies aerobatics. No longer a Mod Setting (a saved "off" would
@@ -2608,7 +2610,15 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let along = ahead >= 0.0 ? this.standardModeSurgeFactor : this.RaceDecel(stats.d_speed) - this.DragAccel(stats.d_speed);
     let cap = Deg2Rad(this.droneMaxTilt);
     let pitch = ClampF(this.DroneBodyAngle(AtanF(ahead, thrust.Z), size, along), -cap, cap);
-    let roll = ClampF(this.DroneBodyAngle(AtanF(Vector4.Dot(thrust, side), thrust.Z), size, this.standardModeSwayFactor), -cap, cap);
+    // the roll for the turn coming, not only the one now (DroneTurnAhead): braking from 71 to 31 m/s
+    // into the gap into Dogtown, a gentle bend then a sharp one in the same direction banked 28
+    // degrees, eased to 14 and banked 55, one turn flown as two (2026-10-28)
+    let lateral = Vector4.Dot(thrust, side);
+    let coming = this.DroneTurnAhead(side);
+    if AbsF(coming) > AbsF(lateral) && (coming * lateral >= 0.0 || AbsF(lateral) < 2.0) {
+      lateral = coming;
+    }
+    let roll = ClampF(this.DroneBodyAngle(AtanF(lateral, thrust.Z), size, this.standardModeSwayFactor), -cap, cap);
     // eased as the plane's pitch and bank are (EasePitch, EaseBank): followed directly, the tilt
     // flicked with every change of the commanded acceleration and the car overshot it, rolling to
     // 85 degrees for a 50 degree command into Dogtown (2026-10-28). What the tilt lags by, the
@@ -2629,6 +2639,30 @@ public class FlightModeAutopilot extends FlightModeStandard {
     // top towards the thrust: tilted forward is nose down, as a quadcopter speeding up
     up = Vector4.Normalize(z + h * TanF(pitch) + side * TanF(roll));
     fwd = Vector4.Normalize(FlightAttitude.Across(h, up));
+  }
+
+  // The strongest sideways acceleration (m/s2 along side, signed) the racing line needs over the
+  // next droneRollLook seconds, each point at the speed the plan allows there; 0 off a line.
+  private func DroneTurnAhead(side: Vector4) -> Float {
+    if !this.onLine || ArraySize(this.routeSpeed) != ArraySize(this.route) {
+      return 0.0;
+    }
+    let speed = this.component.stats.d_speed;
+    let strongest = 0.0;
+    let t = this.droneRollStep;
+    while t <= this.droneRollLook {
+      let s = this.closestS + speed * t;
+      let tangent: Vector4;
+      let bend: Vector4;
+      this.LineFrameOver(s, this.lineSpan, tangent, bend);
+      let v = MinF(speed, this.RaceAllowedAt(s));
+      let need = Vector4.Dot(bend, side) * v * v;
+      if AbsF(need) > AbsF(strongest) {
+        strongest = need;
+      }
+      t += this.droneRollStep;
+    }
+    return strongest;
   }
 
   // An angle eased towards wanted: critically damped at frequency f, its rate and acceleration
