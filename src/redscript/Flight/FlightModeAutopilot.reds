@@ -98,6 +98,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let droneStopJoin: Float = 120.0;    // m between two stops that are flown as one
   public let droneStopTurnAhead: Float = 30.0; // m past a stop's end its turn is judged at
   public let droneStopLead: Float = 0.3;      // s ahead the planned slew is read
+  public let droneSlewBendOff: Float = 0.0067;  // 1/m (a 150 m radius): the line bending more is a turn, flown unslewed (PlanStops)
+  public let droneSlewMinStraight: Float = 80.0; // m a straight stretch of a stop must run to be slewed
+  public let droneSlewMargin: Float = 30.0;   // m before a turn the slew is over
   public let speedHumpMerge: Float = 6.0;     // m/s a rise of the profile between two slowings may be at most to be held down (FlattenSpeedHumps)
   public let speedHumpSpan: Float = 150.0;    // m either side the slowings are looked for
   public let droneRollLook: Float = 1.5;     // s of the line ahead the roll is held for (DroneTurnAhead; 1.0 still eased 31 to 24 degrees before the Dogtown gap)
@@ -2492,19 +2495,43 @@ public class FlightModeAutopilot extends FlightModeStandard {
       if va - vb >= this.droneStopMinDrop {
         let length = MaxF(this.routeLength[b] - this.routeLength[a], 1.0);
         let decel = (va * va - vb * vb) / (2.0 * length);
-        let tangent: Vector4;
-        let bend: Vector4;
-        this.LineFrameOver(this.routeLength[b] + this.droneStopTurnAhead, this.lineSpan, tangent, bend);
-        let cross = Vector4.Cross(tangent, bend);
-        let turn = cross.Z; // positive: the line turns left
-        ArrayPush(this.stopStartS, this.routeLength[a]);
-        ArrayPush(this.stopEndS, this.routeLength[b]);
-        ArrayPush(this.stopSide, turn > 0.0 ? -1.0 : 1.0);
         let f = ClampF((decel - 3.0) / 8.0, 0.0, 1.0);
-        ArrayPush(this.stopAmount, f * f * (3.0 - 2.0 * f));
+        f = f * f * (3.0 - 2.0 * f);
         FlightLog.Info("[Autopilot] stop " + ToString(kept) + ": " + FloatToStringPrec(this.routeLength[a], 0) + " to " + FloatToStringPrec(this.routeLength[b], 0)
-          + " m, " + FloatToStringPrec(va, 0) + " to " + FloatToStringPrec(vb, 0) + " m/s (" + FloatToStringPrec(decel, 1) + " m/s2), slew "
-          + (turn > 0.0 ? "left" : "right") + " " + FloatToStringPrec(f, 2));
+          + " m, " + FloatToStringPrec(va, 0) + " to " + FloatToStringPrec(vb, 0) + " m/s (" + FloatToStringPrec(decel, 1) + " m/s2)");
+        // slewed only on its straight stretches (droneSlewMinStraight long at least), unwound
+        // droneSlewMargin before a bend: turns are flown with the nose along the line (Jack liked
+        // the turn into the Dogtown gap that way, 2026-10-29). Faded by the bend point by point
+        // instead, the slew swung in and out three times through that stop.
+        let s = this.routeLength[a];
+        let runStart = -1.0;
+        while s <= this.routeLength[b] + 0.01 {
+          let tangent: Vector4;
+          let bend: Vector4;
+          this.LineFrameOver(s, this.lineSpan, tangent, bend);
+          let straight = Vector4.Length(new Vector4(bend.X, bend.Y, 0.0, 0.0)) < this.droneSlewBendOff;
+          if straight && runStart < 0.0 {
+            runStart = s;
+          }
+          let last = s + 5.0 > this.routeLength[b] + 0.01;
+          if runStart >= 0.0 && (!straight || last) {
+            // the run ends here; up to a bend it unwinds droneSlewMargin before it
+            let runEnd = straight ? s : s - this.droneSlewMargin;
+            if runEnd - runStart >= this.droneSlewMinStraight {
+              this.LineFrameOver(runEnd + this.droneStopTurnAhead, this.lineSpan, tangent, bend);
+              let cross = Vector4.Cross(tangent, bend);
+              let turn = cross.Z; // positive: the line turns left
+              ArrayPush(this.stopStartS, runStart);
+              ArrayPush(this.stopEndS, runEnd);
+              ArrayPush(this.stopSide, turn > 0.0 ? -1.0 : 1.0);
+              ArrayPush(this.stopAmount, f);
+              FlightLog.Info("[Autopilot]   slew " + FloatToStringPrec(runStart, 0) + " to " + FloatToStringPrec(runEnd, 0) + " m " + (turn > 0.0 ? "left" : "right")
+                + " " + FloatToStringPrec(f, 2));
+            }
+            runStart = -1.0;
+          }
+          s += 5.0;
+        }
         kept += 1;
       }
       k += 1;
@@ -2581,7 +2608,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
     }
   }
 
-  // The slew planned at route distance s (signed: positive swings the nose right), 0 outside a stop.
+  // The slew planned at route distance s (PlanStops' slewed stretches; signed: positive swings the
+  // nose right), 0 elsewhere.
   private func PlannedSlew(s: Float) -> Float {
     let k = 0;
     while k < ArraySize(this.stopStartS) {
