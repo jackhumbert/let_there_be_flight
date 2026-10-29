@@ -81,7 +81,9 @@ struct PlanParams {
   float lineOverEnds = 150.0f;
   float lineOverReach = 10.0f;   // m under an obstacle's top the line solved without it may pass and still go over
   float lineOverThick = 12.0f;   // m thick at most an obstacle the line goes over instead of under (a beam, a skybridge)
-  float lineOverRise = 10.0f;    // m higher on average the whole line may come out for going over
+  float lineOverRise = 25.0f;    // m higher on average the whole line may come out for going over
+  float lineOverGain = 0.25f;     // going over must leave at most this share of the bend around it
+  float lineOverWindow = 150.0f; // m either side of an obstacle its bend is compared over
   // m under anything overhead the line keeps (a skybridge, a deck); the middle of the gap where
   // there is not room for this and the floor clearance
   float lineCeilingClearance = 6.0f;
