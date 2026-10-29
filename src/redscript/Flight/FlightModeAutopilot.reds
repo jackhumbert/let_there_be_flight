@@ -93,6 +93,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let droneYawAccelMax: Float = 5.0;   // rad/s2
   public let droneBrakeYaw: Float = 45.0;     // deg the nose swings towards the turn coming in a hard stop (droneBrakeTurn), at most
   public let droneLandSlewYaw: Float = 120.0; // deg the nose has come round by the end of a stop into the landing
+  public let droneLandSlewTime: Float = 5.0;  // s before the descent the landing turn starts, spread evenly over them
   public let droneStopMinDrop: Float = 15.0;  // m/s the speed flown falls by in a stop (PlanStops)
   public let droneStopMinDecel: Float = 6.0;  // m/s2 of braking that counts towards a stop
   public let droneStopArrive: Float = 250.0;  // m before the route's end where the arrival's braking is part of a stop
@@ -435,9 +436,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let stopAmount: array<Float>;        // 0..1 of droneBrakeYaw
   public let stopToEnd: array<Bool>;          // the slewed stretch runs on into the landing
   public let landSlewOn: Bool;                // a landing turn is under way (LandSlewYaw)
-  public let landSlewFrom: Float;             // the start of its stretch
   public let landSlewP: Float;                // 0..1 through it, before easing
-  public let landSlewLastS: Float;            // route distance landSlewP was carried to
   public let landSlewStartYaw: Float;         // rad, the nose when it began
   public let landSlewDelta: Float;            // rad, signed, the whole turn to the landing heading
   public let landSlewHeading: Vector4;        // the heading it ends on, landed on by the descent
@@ -2716,6 +2715,28 @@ public class FlightModeAutopilot extends FlightModeStandard {
     return this.stopSide[k] * this.stopAmount[k] * (this.stopToEnd[k] ? this.SlewProgress(k, s) : SinF(3.14159265 * p));
   }
 
+  // Seconds the planned speeds (routeSpeed) take from here to where the descent takes over
+  // (landingEntry before the end, below landingEntrySpeed). Braking's 2d/v put it 2 s too far
+  // out: the brake eases off near the end and hands over at 10 m/s, not 0.
+  private func TimeToDescent() -> Float {
+    let n = ArraySize(this.routeLength);
+    if n < 2 || ArraySize(this.routeSpeed) != n {
+      return 0.0;
+    }
+    let end = this.routeLength[n - 1] - this.landingEntry;
+    let t = 0.0;
+    let i = n - 1;
+    while i > 0 && this.routeLength[i] > this.closestS {
+      let from = MaxF(this.routeLength[i - 1], this.closestS);
+      let to = MinF(this.routeLength[i], end);
+      if to > from {
+        t += (to - from) / MaxF(0.5 * (this.routeSpeed[i - 1] + this.routeSpeed[i]), this.landingEntrySpeed);
+      }
+      i -= 1;
+    }
+    return t;
+  }
+
   // Into the landing the nose makes one turn, from where it was when the stretch began to the
   // heading it lands on, the descent finishing it (one motion, Jack 2026-10-29: as an angle off
   // the line it followed the moved end's wiggles, and below 12 m/s the nose fell back to the old
@@ -2725,12 +2746,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // Started by a stretch into the landing (k), it then runs on its own to where the descent takes
   // over, however the stops are planned again: chosen again for a moved spot it went back 75
   // degrees at 110 deg/s, and restarted with a replanned stretch's start it went back 50.
-  private func LandSlewYaw(k: Int32, s: Float, yaw: Float) -> Float {
+  private func LandSlewYaw(k: Int32, timeLeft: Float, dt: Float, yaw: Float) -> Float {
     if !this.landSlewOn {
       this.landSlewOn = true;
-      this.landSlewFrom = this.stopStartS[k];
       this.landSlewP = 0.0;
-      this.landSlewLastS = MinF(s, this.landSlewFrom);
       this.landSlewStartYaw = yaw;
       let start = this.landSlewStartYaw;
       let startHeading = new Vector4(CosF(start), SinF(start), 0.0, 0.0);
@@ -2755,16 +2774,15 @@ public class FlightModeAutopilot extends FlightModeStandard {
       this.landSlewDelta = best * direction;
       FlightLog.Info("[Autopilot]   landing turn " + FloatToStringPrec(Rad2Deg(this.landSlewDelta), 0) + " deg");
     }
-    // progress carried on over the distance left, so a moved end (26 m further for a parked car)
-    // stretches what is left of the turn instead of setting it back (17 degrees, a stall)
-    let end = this.routeLength[ArraySize(this.routeLength) - 1] - this.landingEntry;
-    let ds = s - this.landSlewLastS;
-    if ds > 0.0 {
-      this.landSlewP = ClampF(this.landSlewP + (1.0 - this.landSlewP) * ds / MaxF(end - this.landSlewLastS, ds), 0.0, 1.0);
-      this.landSlewLastS = s;
+    // progress carried on over the time left, so a moved end (26 m further for a parked car)
+    // stretches what is left of the turn instead of setting it back (17 degrees, a stall). Over
+    // time, not distance: over distance half the turn was done in the first 3 s of a 10 s brake,
+    // still at 50 m/s (Jack 2026-10-29: "starts to slew way too early")
+    if dt > 0.0 {
+      this.landSlewP = ClampF(this.landSlewP + (1.0 - this.landSlewP) * dt / MaxF(timeLeft, dt), 0.0, 1.0);
     }
     let p = this.landSlewP;
-    return this.landSlewStartYaw + this.landSlewDelta * (p < 0.2 ? p * p / 0.4 : p - 0.1) / 0.9;
+    return this.landSlewStartYaw + this.landSlewDelta * p * p * (3.0 - 2.0 * p);
   }
 
   // Speed allowed now: the next route point's profile speed, braked back over the distance to it
@@ -3113,7 +3131,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
       this.droneBrakeSide = slew > 0.0 ? 1.0 : (slew < 0.0 ? -1.0 : 0.0);
       let k = this.SlewIndexAt(sAhead);
       if this.landSlewOn || k >= 0 && this.stopToEnd[k] {
-        wantedYaw = this.LandSlewYaw(k, sAhead, live ? this.droneYaw : wantedYaw);
+        // into the landing the nose keeps to the line until droneLandSlewTime before the descent
+        let timeLeft = this.TimeToDescent();
+        if this.landSlewOn || timeLeft <= this.droneLandSlewTime {
+          wantedYaw = this.LandSlewYaw(k, timeLeft, dt, live ? this.droneYaw : wantedYaw);
+        }
       } else {
         swing = slew * Deg2Rad(this.droneBrakeYaw);
       }
