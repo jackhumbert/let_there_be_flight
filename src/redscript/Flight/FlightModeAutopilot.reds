@@ -100,7 +100,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let droneStopLead: Float = 0.3;      // s ahead the planned slew is read
   public let droneSlewBendOff: Float = 0.0067;  // 1/m (a 150 m radius): the line bending more is a turn, flown unslewed (PlanStops)
   public let droneSlewMinStraight: Float = 80.0; // m a straight stretch of a stop must run to be slewed
-  public let droneSlewMargin: Float = 30.0;   // m before a turn the slew is over
+  public let droneSlewMargin: Float = 30.0;   // m before a turn the slew is over, at least
+  public let droneSlewRelease: Float = 0.8;   // s at the flown speed before a turn the slew is over, at least
+  public let droneSlewHeadingOff: Float = 5.0; // deg the line may turn over a slewed stretch into a turn
+  public let droneSlewMinTime: Float = 2.0;   // s at the flown speed a slewed stretch must last, at least
   public let speedHumpMerge: Float = 6.0;     // m/s a rise of the profile between two slowings may be at most to be held down (FlattenSpeedHumps)
   public let speedHumpSpan: Float = 150.0;    // m either side the slowings are looked for
   public let droneRollLook: Float = 1.5;     // s of the line ahead the roll is held for (DroneTurnAhead; 1.0 still eased 31 to 24 degrees before the Dogtown gap)
@@ -429,6 +432,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let stopEndS: array<Float>;
   public let stopSide: array<Float>;          // +1 slews right, -1 left
   public let stopAmount: array<Float>;        // 0..1 of droneBrakeYaw
+  public let keepSlew: Bool;                  // the next PlanStops carries on a slew under way (the route's end moved)
   public let thrustCmd: Vector4;             // m/s2 in the car's frame (sway, surge, lift) FlyAerobatic set (force is redone by ApplyPhysics)
   public let freeRoam: Bool;                  // flying free roam legs (no destination tracked)
   public let freeRoamCentre: Vector4;
@@ -2438,6 +2442,21 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // action per stop: reacting to the commanded braking frame by frame it began 2.5 s late and swung
   // once per dip of the profile.
   private func PlanStops() -> Void {
+    // a slew under way when the route's end moves (a parked car on the landing spot) carries on to
+    // the new end: replanned, the moved end's bend dropped it and the nose swung back 50 m out
+    let keepSide = 0.0;
+    let keepAmount = 0.0;
+    let keepEnd = 0.0;
+    let k = 0;
+    while this.keepSlew && k < ArraySize(this.stopStartS) {
+      if this.closestS >= this.stopStartS[k] && this.closestS <= this.stopEndS[k] {
+        keepSide = this.stopSide[k];
+        keepAmount = this.stopAmount[k];
+        keepEnd = this.stopEndS[k];
+      }
+      k += 1;
+    }
+    this.keepSlew = false;
     ArrayClear(this.stopStartS);
     ArrayClear(this.stopEndS);
     ArrayClear(this.stopSide);
@@ -2485,7 +2504,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     if last >= 0 && this.routeLength[n - 1] - this.routeLength[ends[last]] < this.droneStopArrive {
       ends[last] = n - 1;
     }
-    let k = 0;
+    k = 0;
     let kept = 0;
     while k < ArraySize(starts) {
       let a = starts[k];
@@ -2503,21 +2522,43 @@ public class FlightModeAutopilot extends FlightModeStandard {
         // droneSlewMargin before a bend: turns are flown with the nose along the line (Jack liked
         // the turn into the Dogtown gap that way, 2026-10-29). Faded by the bend point by point
         // instead, the slew swung in and out three times through that stop.
+        // A gentle bend leading into a turn is part of the turn: a stretch running into a bend
+        // ends where the line has turned droneSlewHeadingOff from the stretch's start, unwound
+        // droneSlewRelease before that at the flown speed, and must last droneSlewMinTime. Unwound
+        // only 30 m before the sharp part, the nose swung 45 degrees towards the Dogtown gap 4 s
+        // before it and back out as the car turned in; that brake is now flown nose along the line,
+        // like the turn before slewing stops. A stretch running to the stop's end (the landing)
+        // ends with it, however the line turns there.
         let s = this.routeLength[a];
         let runStart = -1.0;
+        let runSpeed = 0.0;
+        let runHeading: Vector4;
+        let turnedS = -1.0;
+        let j = a;
+        let cosOff = CosF(Deg2Rad(this.droneSlewHeadingOff));
         while s <= this.routeLength[b] + 0.01 {
+          while j < b && this.routeLength[j + 1] < s {
+            j += 1;
+          }
           let tangent: Vector4;
           let bend: Vector4;
           this.LineFrameOver(s, this.lineSpan, tangent, bend);
+          let flat = Vector4.Normalize(new Vector4(tangent.X, tangent.Y, 0.0, 0.0));
           let straight = Vector4.Length(new Vector4(bend.X, bend.Y, 0.0, 0.0)) < this.droneSlewBendOff;
           if straight && runStart < 0.0 {
             runStart = s;
+            runSpeed = flown[j];
+            runHeading = flat;
+            turnedS = -1.0;
+          }
+          if runStart >= 0.0 && turnedS < 0.0 && Vector4.Dot(flat, runHeading) < cosOff {
+            turnedS = s;
           }
           let last = s + 5.0 > this.routeLength[b] + 0.01;
           if runStart >= 0.0 && (!straight || last) {
-            // the run ends here; up to a bend it unwinds droneSlewMargin before it
-            let runEnd = straight ? s : s - this.droneSlewMargin;
-            if runEnd - runStart >= this.droneSlewMinStraight {
+            // the run ends here; up to a turn it is unwound before it
+            let runEnd = straight ? s : (turnedS >= 0.0 ? turnedS : s) - MaxF(this.droneSlewMargin, flown[j] * this.droneSlewRelease);
+            if runEnd - runStart >= MaxF(this.droneSlewMinStraight, runSpeed * this.droneSlewMinTime) {
               this.LineFrameOver(runEnd + this.droneStopTurnAhead, this.lineSpan, tangent, bend);
               let cross = Vector4.Cross(tangent, bend);
               let turn = cross.Z; // positive: the line turns left
@@ -2535,6 +2576,16 @@ public class FlightModeAutopilot extends FlightModeStandard {
         kept += 1;
       }
       k += 1;
+    }
+    if keepSide != 0.0 && this.PlannedSlew(this.closestS) == 0.0 {
+      // it ran to the old end: it runs to the new one
+      let total = this.routeLength[n - 1];
+      let end = total - keepEnd < this.droneStopArrive ? total : keepEnd;
+      ArrayPush(this.stopStartS, this.closestS);
+      ArrayPush(this.stopEndS, end);
+      ArrayPush(this.stopSide, keepSide);
+      ArrayPush(this.stopAmount, keepAmount);
+      FlightLog.Info("[Autopilot]   slew kept " + FloatToStringPrec(this.closestS, 0) + " to " + FloatToStringPrec(end, 0) + " m");
     }
   }
   // The route's end moved over to a landing spot `to` (the end keeping its height above the floor):
@@ -2577,6 +2628,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     }
     this.routeGoal = this.route[n - 1];
     ArrayClear(this.routeSpeed);
+    this.keepSlew = true;
     return true;
   }
 
