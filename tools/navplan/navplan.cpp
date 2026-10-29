@@ -128,6 +128,18 @@ int main(int argc, char **argv) {
   if (const char *v = std::getenv("NAVPLAN_LINE_SPREAD")) {
     params.lineSpread = std::strtof(v, nullptr);
   }
+  if (const char *v = std::getenv("NAVPLAN_HEIGHT_WAVELENGTH")) {
+    params.lineHeightWavelength = std::strtof(v, nullptr);
+  }
+  if (const char *v = std::getenv("NAVPLAN_HEIGHT_FREE")) {
+    params.lineHeightFree = std::strtof(v, nullptr);
+  }
+  if (const char *v = std::getenv("NAVPLAN_HEIGHT_SCALE")) {
+    params.lineHeightScale = std::strtof(v, nullptr);
+  }
+  if (const char *v = std::getenv("NAVPLAN_CLIMB_SCALE")) {
+    params.climbScale = std::strtof(v, nullptr);
+  }
   if (const char *v = std::getenv("NAVPLAN_OVER_REACH")) {
     params.lineOverReach = std::strtof(v, nullptr);
   }

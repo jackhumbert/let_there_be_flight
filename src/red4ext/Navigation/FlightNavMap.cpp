@@ -118,6 +118,10 @@ int32_t FlightNavMap::PlanRaceAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aG
   params.minPassage = aMinPassage;
   params.heuristicWeight = std::max(1.0f, aHeuristicWeight);
   params.turnCost = std::max(0.0f, aTurnCost);
+  // a climb's cost grows exponentially with its rise (ClimbCost): round the Dogtown stadium, not
+  // over it (Jack, 2026-10-29); the city's small rises cost about what they did. The baked doorways
+  // hold the old step costs, so they are worked out again at first use until the map is rebaked.
+  params.climbScale = 30.0f;
   return StartPlan(aStart, aGoal, params);
 }
 

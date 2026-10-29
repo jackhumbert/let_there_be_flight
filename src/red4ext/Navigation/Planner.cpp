@@ -162,7 +162,10 @@ float ClearSides(const NavMap &aMap, Vec3 aA, Vec3 aB, float aSide) {
 // The polyline's points moved to even spacing along it (aSpacing at most, its ends kept): the height
 // solve takes bends point to point, and at the Dogtown beam points bunched to 3.7 m across (from
 // 4.8) hid a crest the car slowed for from 93 to 64 m/s.
-std::vector<Vec3> Respace(const std::vector<Vec3> &aPoints, float aSpacing) {
+// Where a new leg is not free (it cut a corner: the take-off, a tight street), the old points
+// between its ends go back in: those legs lie on the old ones. Without that, two of five routes
+// lost their racing line (2026-10-29).
+std::vector<Vec3> Respace(const NavMap &aMap, const std::vector<Vec3> &aPoints, float aSpacing) {
   std::vector<float> along(aPoints.size(), 0.0f);
   for (size_t i = 1; i < aPoints.size(); ++i) {
     along[i] = along[i - 1] + Distance(aPoints[i - 1], aPoints[i]);
@@ -171,7 +174,8 @@ std::vector<Vec3> Respace(const std::vector<Vec3> &aPoints, float aSpacing) {
     return aPoints;
   }
   int steps = std::max(2, int(std::ceil(along.back() / aSpacing)));
-  std::vector<Vec3> out{aPoints.front()};
+  std::vector<Vec3> even{aPoints.front()};
+  std::vector<float> evenAt{0.0f};
   size_t j = 1;
   for (int k = 1; k < steps; ++k) {
     float at = along.back() * float(k) / float(steps);
@@ -180,9 +184,25 @@ std::vector<Vec3> Respace(const std::vector<Vec3> &aPoints, float aSpacing) {
     }
     float t = along[j] > along[j - 1] ? (at - along[j - 1]) / (along[j] - along[j - 1]) : 0.0f;
     const Vec3 &a = aPoints[j - 1], &b = aPoints[j];
-    out.push_back({a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t});
+    even.push_back({a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t});
+    evenAt.push_back(at);
   }
-  out.push_back(aPoints.back());
+  even.push_back(aPoints.back());
+  evenAt.push_back(along.back());
+  std::vector<Vec3> out{even.front()};
+  size_t old = 1;
+  for (size_t k = 1; k < even.size(); ++k) {
+    bool free = LegFree(aMap, even[k - 1], even[k]);
+    while (old < aPoints.size() && along[old] <= evenAt[k - 1]) {
+      ++old;
+    }
+    if (!free) {
+      for (size_t i = old; i < aPoints.size() && along[i] < evenAt[k]; ++i) {
+        out.push_back(aPoints[i]);
+      }
+    }
+    out.push_back(even[k]);
+  }
   return out;
 }
 
@@ -240,9 +260,14 @@ void Band(const Gap &aGap, float aAlong, float aLength, const PlanParams &aParam
 // top of a thin obstacle (lineOverThick) over a run of points, away from the ends (lineOverEnds),
 // the points under it take the gap above instead, and they are solved again. It only ever lifts the line over something, never into it.
 namespace {
-// The points are evenly spaced (Respace), so the bend is taken point to point.
+// The points are evenly spaced (Respace, aSpacing metres), so the bend is taken point to point.
+// The heights also cost their height over the band's floor (the floor clearance over the terrain),
+// exponentially past aFree; aPull sets the cost's slope there to balance the bend at
+// lineHeightWavelength. Without it nothing held the line down, and a smooth arc from the street to the
+// Dogtown stadium's rim peaked 60 m higher than the stadium needed (Jack, 2026-10-29: cost the
+// height over the terrain; slaloms are fine as long as they are not jerky).
 void SolveHeights(std::vector<float> &aZ, const std::vector<float> &aLo, const std::vector<float> &aHi,
-                  int aIterations) {
+                  int aIterations, float aSpacing, float aPull, float aFree, float aScale) {
   const size_t n = aZ.size();
   for (size_t stride : {16u, 8u, 4u, 2u, 1u}) {
     std::vector<size_t> idx;
@@ -257,6 +282,9 @@ void SolveHeights(std::vector<float> &aZ, const std::vector<float> &aLo, const s
       continue;
     }
     std::vector<float> s(m), slo(m), shi(m), next(m);
+    // the pull in this level's units: the bend energy per point scales with spacing^4
+    const float spacing = aSpacing * float(stride);
+    const float pull = aPull * spacing * spacing * spacing * spacing;
     for (size_t k = 0; k < m; ++k) {
       s[k] = aZ[idx[k]];
       size_t from = k ? (idx[k - 1] + idx[k]) / 2 : 0, to = k + 1 < m ? (idx[k] + idx[k + 1]) / 2 : n - 1;
@@ -274,8 +302,16 @@ void SolveHeights(std::vector<float> &aZ, const std::vector<float> &aLo, const s
     for (int it = 0; it < aIterations; ++it) {
       next = s;
       for (size_t k = 2; k + 2 < m; ++k) {
-        float g = s[k - 2] - 4.0f * s[k - 1] + 6.0f * s[k] - 4.0f * s[k + 1] + s[k + 2];
-        next[k] = std::clamp(s[k] - 0.1f * g, slo[k], shi[k]); // stable below 0.125
+        // the height cost rises exponentially past aFree over the band's floor (aScale metres per
+        // e-fold), and is nothing below it: a pull in proportion to the height dragged lines 30 m up
+        // down onto the terrain, into crests at speed (Jack: small heights should not matter)
+        float over = s[k] - slo[k] - aFree, steep = 0.0f, push = 0.0f;
+        if (over > 0.0f) {
+          steep = pull * std::exp(std::min(over / aScale, 20.0f));
+          push = aScale * (steep - pull);
+        }
+        float g = s[k - 2] - 4.0f * s[k - 1] + 6.0f * s[k] - 4.0f * s[k + 1] + s[k + 2] + push;
+        next[k] = std::clamp(s[k] - 1.6f / (16.0f + steep) * g, slo[k], shi[k]); // stable below 2 / (16 + slope)
       }
       s.swap(next);
     }
@@ -300,6 +336,9 @@ void SmoothHeights(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
     along[i] = i ? along[i - 1] + Distance(aPts[i - 1], aPts[i]) : 0.0f;
     z[i] = lo[i] = hi[i] = aPts[i].z;
   }
+  // the pull to the band's floor that balances the bend at lineHeightWavelength: (2 pi / L)^4
+  const float spacing = along.back() / float(n - 1);
+  const float pull = aParams.lineHeightWavelength > 0.0f ? std::pow(6.2831853f / aParams.lineHeightWavelength, 4.0f) : 0.0f;
   bool ceilings = false;
   for (size_t i = 2; i + 2 < n; ++i) {
     Gap gap;
@@ -332,13 +371,13 @@ void SmoothHeights(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
       }
     }
   }
-  SolveHeights(z, lo, hi, aParams.lineHeightIterations);
+  SolveHeights(z, lo, hi, aParams.lineHeightIterations, spacing, pull, aParams.lineHeightFree, aParams.lineHeightScale);
   if (ceilings) {
     std::vector<float> zFree = z, hiFree(n, kInf);
     for (size_t i = 0; i < n; ++i) {
       hiFree[i] = (i < 2 || i + 2 >= n) ? hi[i] : kInf;
     }
-    SolveHeights(zFree, lo, hiFree, aParams.lineHeightIterations);
+    SolveHeights(zFree, lo, hiFree, aParams.lineHeightIterations, spacing, pull, aParams.lineHeightFree, aParams.lineHeightScale);
     // the bend around a run (aFrom..aTo, lineOverWindow either side): over the whole line, the
     // take-off's bend drowned the beam's (only 10% smoother over it, against 79% from another start)
     auto bend = [&](const std::vector<float> &aZ, size_t aFrom, size_t aTo) {
@@ -381,7 +420,7 @@ void SmoothHeights(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
           tryHi[k] = aboveHi[k];
           tryZ[k] = std::clamp(std::max(z[k], zFree[k]), tryLo[k], tryHi[k]);
         }
-        SolveHeights(tryZ, tryLo, tryHi, aParams.lineHeightIterations);
+        SolveHeights(tryZ, tryLo, tryHi, aParams.lineHeightIterations, spacing, pull, aParams.lineHeightFree, aParams.lineHeightScale);
         double best = bend(z, i, j), e = bend(tryZ, i, j), rise = 0.0;
         for (size_t k = 0; k < n; ++k) {
           rise += tryZ[k] - z[k];
@@ -398,6 +437,27 @@ void SmoothHeights(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
     if (over) {
       spdlog::info("[Planner] heights: {} points taken over what was overhead", over);
     }
+  }
+  // a leg not free at its solved heights: its points pinned where they were and the heights solved
+  // again around them, so the neighbours blend in (put back alone, they left a 6 m spike at a
+  // building's edge, 2026-10-29)
+  for (int round = 0; round < 4; ++round) {
+    bool pinned = false;
+    for (size_t i = 0; i + 1 < n; ++i) {
+      Vec3 a = aPts[i], b = aPts[i + 1];
+      a.z = z[i];
+      b.z = z[i + 1];
+      if ((z[i] != aPts[i].z || z[i + 1] != aPts[i + 1].z) && !LegFree(aMap, a, b)) {
+        for (size_t k : {i, i + 1}) {
+          lo[k] = hi[k] = z[k] = aPts[k].z;
+        }
+        pinned = true;
+      }
+    }
+    if (!pinned) {
+      break;
+    }
+    SolveHeights(z, lo, hi, aParams.lineHeightIterations, spacing, pull, aParams.lineHeightFree, aParams.lineHeightScale);
   }
   std::vector<Vec3> solved = aPts;
   for (size_t i = 0; i < n; ++i) {
@@ -671,7 +731,7 @@ std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute
   // where the heights then change most (a dive under the Dogtown beam lifted over it: 3.7 m apart
   // across instead of 4.8)
   for (int pass = 0; pass < 2; ++pass) {
-    pts = Respace(pts, aParams.lineSpacing);
+    pts = Respace(aMap, pts, aParams.lineSpacing);
     SmoothHeights(aMap, pts, aParams);
   }
   return pts;
@@ -723,12 +783,24 @@ bool TryDirect(NavMap::View &aView, Vec3 aStart, Vec3 aGoal, const PlanParams &a
 constexpr int32_t kBlock = 16;
 constexpr char kDoorwayTag[8] = {'L', 'T', 'B', 'F', 'D', 'O', 'O', 'R'};
 
+// The cost of climbing aRise metres in one step: aCost a metre, growing exponentially with the
+// rise (aScale metres per e-fold; 0 = in proportion). A small rise costs about what it did, a wall
+// far more: at 0.5 a metre the Dogtown route climbed 165 m over the stadium in one step rather than
+// go round it (Jack, 2026-10-29), and a higher flat rate sent routes round the city over the water.
+float ClimbCost(float aRise, float aCost, float aScale) {
+  if (aRise <= 0.0f) {
+    return 0.0f;
+  }
+  return aScale > 0.0f ? aCost * aScale * (std::exp(std::min(aRise / aScale, 10.0f)) - 1.0f) : aCost * aRise;
+}
+
 // the fine search's cost of a step, without the turn and bearing parts, which depend on the way in
 struct StepCosts {
-  float cell = 2.0f, minOverlap = 0.5f, minPassage = 0.0f, preferredHeight = 25.0f, climbCost = 3.0f, underCost = 0.5f;
+  float cell = 2.0f, minOverlap = 0.5f, minPassage = 0.0f, preferredHeight = 25.0f, climbCost = 3.0f, underCost = 0.5f, climbScale = 0.0f;
   bool operator==(const StepCosts &aOther) const {
     return cell == aOther.cell && minOverlap == aOther.minOverlap && minPassage == aOther.minPassage &&
-           preferredHeight == aOther.preferredHeight && climbCost == aOther.climbCost && underCost == aOther.underCost;
+           preferredHeight == aOther.preferredHeight && climbCost == aOther.climbCost && underCost == aOther.underCost &&
+           climbScale == aOther.climbScale;
   }
   bool Passable(GapM aFrom, GapM aTo) const {
     float overlap = std::min(aFrom.t, aTo.t) - std::max(aFrom.b, aTo.b);
@@ -737,7 +809,7 @@ struct StepCosts {
   float Cost(GapM aFrom, GapM aTo, bool aDiagonal) const {
     float step = aDiagonal ? cell * 1.41421356f : cell;
     return step * (1.0f + (std::isfinite(aTo.t) ? underCost : 0.0f)) +
-           climbCost * std::max(0.0f, Preferred(aTo, preferredHeight) - Preferred(aFrom, preferredHeight));
+           ClimbCost(Preferred(aTo, preferredHeight) - Preferred(aFrom, preferredHeight), climbCost, climbScale);
   }
 };
 
@@ -1098,6 +1170,7 @@ DoorwayCount WorkOutDoorways(const NavMap &aMap, const PlanParams &aParams, floa
   costs.minPassage = aParams.minPassage;
   costs.preferredHeight = aParams.preferredHeight;
   costs.climbCost = aParams.climbCost;
+  costs.climbScale = aParams.climbScale;
   costs.underCost = aParams.underCost;
   std::lock_guard guard(doorwaysLock);
   Doorways &doorways = DoorwaysFor(aMap, costs);
@@ -1364,7 +1437,7 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
             }
           }
           float cost = turn + bearing + step * (1.0f + (std::isfinite(next.t) ? aParams.underCost : 0.0f)) +
-                       aParams.climbCost * std::max(0.0f, Preferred(next, aParams.preferredHeight) - curPreferred);
+                       ClimbCost(Preferred(next, aParams.preferredHeight) - curPreferred, aParams.climbCost, aParams.climbScale);
           uint64_t nextKey = MakeKey(nx, ny, j, width);
           float ng = g + cost;
           auto it = recs.find(nextKey);
@@ -1403,6 +1476,7 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
     costs.minPassage = aParams.minPassage;
     costs.preferredHeight = aParams.preferredHeight;
     costs.climbCost = aParams.climbCost;
+  costs.climbScale = aParams.climbScale;
     costs.underCost = aParams.underCost;
     Doorways &doorways = DoorwaysFor(aMap, costs);
     // from the start seeds to the doorways of the blocks they are in, and from the doorways of the

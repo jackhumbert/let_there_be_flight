@@ -30,6 +30,7 @@ struct Vec3 {
 struct PlanParams {
   float preferredHeight = 25.0f; // metres above the gap floor (the floor is already a car-centre height)
   float climbCost = 3.0f;        // extra cost per metre of rise in preferred altitude
+  float climbScale = 0.0f;       // m of rise in one step per e-fold of its cost (ClimbCost); 0 = in proportion
   float underCost = 0.5f;        // extra cost per metre flown with something overhead
   float heuristicWeight = 1.5f;  // > 1 trades optimality for speed
   float turnCost = 0.0f;         // cost (as metres flown) per 45 degrees the route turns over a few
@@ -76,6 +77,11 @@ struct PlanParams {
   // iterations per level of the coarse-to-fine height solve after the smoothing (SmoothHeights,
   // Planner.cpp); 0 = off
   int lineHeightIterations = 3000;
+  // swells in the heights longer than this follow the terrain (the band's floor), shorter ones are
+  // smoothed out (SmoothHeights); 0 = no pull down, the smoothest heights alone
+  float lineHeightWavelength = 800.0f; // m
+  float lineHeightFree = 30.0f;  // m over the band's floor (the floor clearance) that costs nothing
+  float lineHeightScale = 30.0f; // m past that per e-fold of the height's cost
   // m from either end within which SmoothHeights keeps a point in its own gap rather than taking it
   // over what is overhead (the take-off and the landing may be under a deck)
   float lineOverEnds = 150.0f;
