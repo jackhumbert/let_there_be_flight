@@ -92,6 +92,13 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let droneYawRateMax: Float = 1.5;    // rad/s
   public let droneYawAccelMax: Float = 5.0;   // rad/s2
   public let droneBrakeYaw: Float = 45.0;     // deg the nose swings towards the turn coming in a hard stop (droneBrakeTurn)
+  public let droneStopMinDrop: Float = 15.0;  // m/s the speed flown falls by in a stop (PlanStops)
+  public let droneStopMinDecel: Float = 6.0;  // m/s2 of braking that counts towards a stop
+  public let droneStopJoin: Float = 120.0;    // m between two stops that are flown as one
+  public let droneStopTurnAhead: Float = 30.0; // m past a stop's end its turn is judged at
+  public let droneStopLead: Float = 0.3;      // s ahead the planned slew is read
+  public let speedHumpMerge: Float = 6.0;     // m/s a rise of the profile between two slowings may be at most to be held down (FlattenSpeedHumps)
+  public let speedHumpSpan: Float = 150.0;    // m either side the slowings are looked for
   public let droneRollLook: Float = 1.5;     // s of the line ahead the roll is held for (DroneTurnAhead; 1.0 still eased 31 to 24 degrees before the Dogtown gap)
   public let droneRollStep: Float = 0.2;      // s between the points it looks at
 
@@ -403,9 +410,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let droneYaw: Float;                 // rad, drone style's eased heading
   public let droneYawRate: Float;
   public let droneBrakeSide: Float;           // +1 / -1 the nose swings for the stop under way, 0 none
-  public let droneLastBrakeSide: Float;
-  public let droneBrakeDecel: Float;          // m/s2 along the travel the slewing stop saw (telemetry)
   public let droneBrakeAmount: Float;         // 0..1 of droneBrakeYaw
+  public let stopStartS: array<Float>;        // route distance where each planned stop begins (PlanStops)
+  public let stopEndS: array<Float>;
+  public let stopSide: array<Float>;          // +1 slews right, -1 left
+  public let stopAmount: array<Float>;        // 0..1 of droneBrakeYaw
   public let thrustCmd: Vector4;             // m/s2 in the car's frame (sway, surge, lift) FlyAerobatic set (force is redone by ApplyPhysics)
   public let freeRoam: Bool;                  // flying free roam legs (no destination tracked)
   public let freeRoamCentre: Vector4;
@@ -1616,7 +1625,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       this.telemetryFile = FlightTelemetry.Begin("autopilot", "t,x,y,z,vx,vy,vz,speed,speed2d,target,target_rate,cmd,off,following,maneuver,on_line,segment,"
         + "plan_x,plan_y,plan_z,cmd_fwd_x,cmd_fwd_y,cmd_fwd_z,cmd_up_x,cmd_up_y,cmd_up_z,fwd_x,fwd_y,fwd_z,up_x,up_y,up_z,"
         + "attitude_error,plan_cmd,cmd_car,up_cmd_car,plan_pitch,cmd_pitch,car_pitch,collision_timer,"
-        + "drone,cmd_tilt,car_tilt,thrust_right,thrust_fwd,thrust_up,brake_decel,brake_slew");
+        + "drone,cmd_tilt,car_tilt,thrust_right,thrust_fwd,thrust_up,brake_slew");
       this.telemetryClock = 0.0;
       if this.telemetryFile == 0 {
         return;
@@ -1679,7 +1688,6 @@ public class FlightModeAutopilot extends FlightModeStandard {
     ArrayPush(row, this.thrustCmd.X);
     ArrayPush(row, this.thrustCmd.Y);
     ArrayPush(row, this.thrustCmd.Z);
-    ArrayPush(row, this.droneBrakeDecel);
     ArrayPush(row, this.droneBrakeAmount * this.droneBrakeSide);
     FlightTelemetry.Row(this.telemetryFile, row);
   }
@@ -2362,10 +2370,130 @@ public class FlightModeAutopilot extends FlightModeStandard {
       radiusAfter = radius;
       i -= 1;
     }
+    this.FlattenSpeedHumps();
+    this.PlanStops();
     let stats = this.component.stats;
-    FlightLog.Info("[Autopilot] race" + (this.droneStyle ? " (drone)" : "") + ": top " + FloatToStringPrec(top, 1) + " m/s, lateral " + FloatToStringPrec(this.RaceLateral(), 1)
+    FlightLog.Info("[Autopilot] race" + (this.droneStyle ? " (drone)" : "") + ": " + ToString(ArraySize(this.stopStartS)) + " stops, top " + FloatToStringPrec(top, 1) + " m/s, lateral " + FloatToStringPrec(this.RaceLateral(), 1)
       + " m/s2, decel " + FloatToStringPrec(this.RaceDecel(0.0), 1) + " + " + FloatToStringPrec(this.RaceDecel(30.0) - this.RaceDecel(0.0), 1) + " at 30 m/s"
       + " (mass " + FloatToStringPrec(stats.s_mass, 0) + ", air " + FloatToStringPrec(stats.s_airResistanceFactor, 3) + ", brake friction " + FloatToStringPrec(stats.s_brakingFrictionFactor, 2) + ")");
+  }
+
+  // Small rises of the profile between two slowings held down: where the speed climbs less than
+  // speedHumpMerge above the lower of the slowest points within speedHumpSpan either side, it stays
+  // at that. Into Dogtown the profile braked 109 to 41 m/s, rose to 45 and braked again to 30: two
+  // stops, flown as two, for 4 m/s (2026-10-29). Only lowers speeds, so every point can still be
+  // slowed for the ones after it.
+  private func FlattenSpeedHumps() -> Void {
+    let n = ArraySize(this.routeSpeed);
+    if n < 3 {
+      return;
+    }
+    let flat: array<Float>;
+    let i = 0;
+    while i < n {
+      let left = this.routeSpeed[i];
+      let j = i;
+      while j > 0 && this.routeLength[i] - this.routeLength[j - 1] <= this.speedHumpSpan {
+        j -= 1;
+        left = MinF(left, this.routeSpeed[j]);
+      }
+      let right = this.routeSpeed[i];
+      j = i;
+      while j < n - 1 && this.routeLength[j + 1] - this.routeLength[i] <= this.speedHumpSpan {
+        j += 1;
+        right = MinF(right, this.routeSpeed[j]);
+      }
+      let low = MaxF(left, right);
+      ArrayPush(flat, this.routeSpeed[i] > low && this.routeSpeed[i] - low < this.speedHumpMerge ? low : this.routeSpeed[i]);
+      i += 1;
+    }
+    this.routeSpeed = flat;
+  }
+
+  // The route's stops: stretches where the speed the car will fly falls at droneStopMinDecel or
+  // more, joined when less than droneStopJoin apart, and kept when the speed falls by
+  // droneStopMinDrop over one. The speed flown is the profile capped by what the car can speed up
+  // to (surge less drag, from its speed now): the profile alone is the speed allowed, which falls
+  // long before the car gets there, and the first try made one stop of the last 1000 m of the route
+  // (2026-10-29). Gentle slowing (the arrival's raceArriveDecel) is no stop. Each stop gets the side
+  // its slew swings to (towards the turn at its end, the racing line's bend droneStopTurnAhead past
+  // it) and a strength from its mean braking. Planned, the slew starts with the braking and is one
+  // action per stop: reacting to the commanded braking frame by frame it began 2.5 s late and swung
+  // once per dip of the profile.
+  private func PlanStops() -> Void {
+    ArrayClear(this.stopStartS);
+    ArrayClear(this.stopEndS);
+    ArrayClear(this.stopSide);
+    ArrayClear(this.stopAmount);
+    let n = ArraySize(this.routeSpeed);
+    if n < 3 || !this.routeLine {
+      return;
+    }
+    let flown: array<Float>;
+    ArrayPush(flown, MinF(this.routeSpeed[0], this.component.stats.d_speed));
+    let i = 1;
+    while i < n {
+      let v = flown[i - 1];
+      let d = this.routeLength[i] - this.routeLength[i - 1];
+      let up = MaxF(this.standardModeSurgeFactor - this.DragAccel(v), 0.5);
+      ArrayPush(flown, MinF(this.routeSpeed[i], SqrtF(v * v + 2.0 * up * d)));
+      i += 1;
+    }
+    let starts: array<Int32>;
+    let ends: array<Int32>;
+    i = 0;
+    while i < n - 1 {
+      let d = MaxF(this.routeLength[i + 1] - this.routeLength[i], 0.01);
+      let decel = (flown[i] * flown[i] - flown[i + 1] * flown[i + 1]) / (2.0 * d);
+      if decel >= this.droneStopMinDecel {
+        let k = ArraySize(starts);
+        if k > 0 && this.routeLength[i] - this.routeLength[ends[k - 1]] < this.droneStopJoin {
+          ends[k - 1] = i + 1;
+        } else {
+          ArrayPush(starts, i);
+          ArrayPush(ends, i + 1);
+        }
+      }
+      i += 1;
+    }
+    let k = 0;
+    let kept = 0;
+    while k < ArraySize(starts) {
+      let a = starts[k];
+      let b = ends[k];
+      let va = flown[a];
+      let vb = flown[b];
+      if va - vb >= this.droneStopMinDrop {
+        let length = MaxF(this.routeLength[b] - this.routeLength[a], 1.0);
+        let decel = (va * va - vb * vb) / (2.0 * length);
+        let tangent: Vector4;
+        let bend: Vector4;
+        this.LineFrameOver(this.routeLength[b] + this.droneStopTurnAhead, this.lineSpan, tangent, bend);
+        let cross = Vector4.Cross(tangent, bend);
+        let turn = cross.Z; // positive: the line turns left
+        ArrayPush(this.stopStartS, this.routeLength[a]);
+        ArrayPush(this.stopEndS, this.routeLength[b]);
+        ArrayPush(this.stopSide, turn > 0.0 ? -1.0 : 1.0);
+        let f = ClampF((decel - 3.0) / 8.0, 0.0, 1.0);
+        ArrayPush(this.stopAmount, f * f * (3.0 - 2.0 * f));
+        FlightLog.Info("[Autopilot] stop " + ToString(kept) + ": " + FloatToStringPrec(this.routeLength[a], 0) + " to " + FloatToStringPrec(this.routeLength[b], 0)
+          + " m, " + FloatToStringPrec(va, 0) + " to " + FloatToStringPrec(vb, 0) + " m/s (" + FloatToStringPrec(decel, 1) + " m/s2), slew "
+          + (turn > 0.0 ? "left" : "right") + " " + FloatToStringPrec(f, 2));
+        kept += 1;
+      }
+      k += 1;
+    }
+  }
+  // The slew planned at route distance s (signed: positive swings the nose right), 0 outside a stop.
+  private func PlannedSlew(s: Float) -> Float {
+    let k = 0;
+    while k < ArraySize(this.stopStartS) {
+      if s >= this.stopStartS[k] && s <= this.stopEndS[k] {
+        return this.stopSide[k] * this.stopAmount[k];
+      }
+      k += 1;
+    }
+    return 0.0;
   }
 
   // Speed allowed now: the next route point's profile speed, braked back over the distance to it
@@ -2699,26 +2827,13 @@ public class FlightModeAutopilot extends FlightModeStandard {
     h = Vector4.Length(h) > 0.1 ? Vector4.Normalize(h) : this.headingRef;
     // braking turned into a slew (droneBrakeTurn): the nose swings towards the turn coming, up to
     // droneBrakeYaw, so the stop is a tilt across as much as back
-    let side0 = Vector4.Normalize(Vector4.Cross(h, z));
     let swing = 0.0;
-    if this.droneBrakeTurn {
-      let travel = new Vector4(stats.d_velocity.X, stats.d_velocity.Y, 0.0, 0.0);
-      let decel = Vector4.Length(travel) > 1.0 ? -Vector4.Dot(this.attAccel, Vector4.Normalize(travel)) : 0.0;
-      let b = ClampF((decel - 3.0) / 8.0, 0.0, 1.0) * ClampF((stats.d_speed2D - 12.0) / 10.0, 0.0, 1.0);
-      b = b * b * (3.0 - 2.0 * b);
-      this.droneBrakeDecel = decel;
-      this.droneBrakeAmount = b;
-      if b < 0.02 {
-        this.droneBrakeSide = 0.0;
-      } else if this.droneBrakeSide == 0.0 {
-        // the side is picked once per stop: towards the turn coming, else the last one
-        let coming = this.DroneTurnAhead(side0);
-        this.droneBrakeSide = AbsF(coming) > 1.0 ? (coming > 0.0 ? 1.0 : -1.0) : (this.droneLastBrakeSide != 0.0 ? this.droneLastBrakeSide : 1.0);
-        this.droneLastBrakeSide = this.droneBrakeSide;
-        FlightLog.Info("[Autopilot] drone stop: slewing " + (this.droneBrakeSide > 0.0 ? "right" : "left") + " at " + FloatToStringPrec(stats.d_speed2D, 1)
-          + " m/s, braking " + FloatToStringPrec(decel, 1) + " m/s2");
-      }
-      swing = this.droneBrakeSide * Deg2Rad(this.droneBrakeYaw) * b;
+    if this.droneBrakeTurn && this.onLine {
+      // from the plan (PlanStops), droneStopLead seconds ahead, so the swing starts with the braking
+      let slew = this.PlannedSlew(this.closestS + stats.d_speed * this.droneStopLead);
+      this.droneBrakeAmount = AbsF(slew);
+      this.droneBrakeSide = slew > 0.0 ? 1.0 : (slew < 0.0 ? -1.0 : 0.0);
+      swing = slew * Deg2Rad(this.droneBrakeYaw);
     }
     // the heading eased like the tilt (EaseAngle): rate and acceleration limited
     let wantedYaw = AtanF(h.Y, h.X) - swing;
