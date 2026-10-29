@@ -80,6 +80,8 @@ struct PlanParams {
   // there is not room for this and the floor clearance
   float lineCeilingClearance = 6.0f;
   float linePush = 0.1f;         // m
+  // m either side a point's clearance push is shared with its neighbours, tapering off (RacingLine); 0 = only its own
+  float lineSpread = 30.0f;
   float lineStep = 0.08f;        // gradient step per pass (stable below 0.125)
   // weight of the vertical bend against the sideways one: crests and dips are pushed over and
   // pulled through with the lift alone, so they are rounded off more (stable while

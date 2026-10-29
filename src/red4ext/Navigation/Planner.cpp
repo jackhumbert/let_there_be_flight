@@ -300,35 +300,68 @@ std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute
     for (size_t i = 1; i < n; ++i) {
       along[i] = along[i - 1] + Distance(pts[i - 1], pts[i]);
     }
+    // the clearance push spread over the points within lineSpread either side (tapering off), so
+    // the line moves away from a wall gradually: pushed point by point, at a pinch by the gap into
+    // Dogtown (a tower on one side, a wall on the other) only the points by the tower moved, and
+    // the line wiggled and then turned 50 degrees in 25 m (2026-10-28)
+    const int reach = aParams.lineSpread > 0.0f ? int(std::round(aParams.lineSpread / spacing)) : 0;
+    const float unit = aParams.linePush / aParams.lineStep; // undone by * step below
+    std::vector<Vec3> push(n), spread(n);
     for (int pass = 0; pass < passes; ++pass) {
       float moved = 0.0f;
+      // away from blocked space close across the line: probe lineClearance to either side and
+      // above / below; where one side is blocked and the other free, push towards the free one.
+      // (Smoothing alone leaves the line skimming the map's margin wherever a wall is on the
+      // inside of a bend, and the car's tracking error then reaches the wall, 2026-10-26)
+      for (size_t i = 2; i + 2 < n; ++i) {
+        const Vec3 &b = pts[i - 1], &p = pts[i], &c = pts[i + 1];
+        push[i] = {0.0f, 0.0f, 0.0f};
+        float tx = c.x - b.x, ty = c.y - b.y;
+        float tl = std::hypot(tx, ty);
+        if (tl > 1e-3f) {
+          const float r = aParams.lineClearance;
+          const Vec3 dirs[2] = {{-ty / tl, tx / tl, 0.0f}, {0.0f, 0.0f, 1.0f}};
+          for (const Vec3 &dir : dirs) {
+            bool plus = aMap.IsFree(p.x + dir.x * r, p.y + dir.y * r, p.z + dir.z * r);
+            bool minus = aMap.IsFree(p.x - dir.x * r, p.y - dir.y * r, p.z - dir.z * r);
+            if (plus != minus) {
+              float k = (plus ? 1.0f : -1.0f) * unit;
+              push[i].x += dir.x * k;
+              push[i].y += dir.y * k;
+              push[i].z += dir.z * k;
+            }
+          }
+        }
+      }
+      for (size_t i = 2; i + 2 < n; ++i) {
+        Vec3 sum{0.0f, 0.0f, 0.0f};
+        for (int j = -reach; j <= reach; ++j) {
+          long k = long(i) + j;
+          if (k < 2 || k + 2 >= long(n)) {
+            continue;
+          }
+          float w = 1.0f - float(std::abs(j)) / float(reach + 1);
+          sum.x += push[k].x * w;
+          sum.y += push[k].y * w;
+          sum.z += push[k].z * w;
+        }
+        // no stronger than one point's own push, across and up / down
+        float across = std::hypot(sum.x, sum.y);
+        if (across > unit) {
+          sum.x *= unit / across;
+          sum.y *= unit / across;
+        }
+        sum.z = std::clamp(sum.z, -unit, unit);
+        spread[i] = sum;
+      }
       for (size_t i = 2; i + 2 < n; ++i) {
         const Vec3 &a = pts[i - 2], &b = pts[i - 1], &p = pts[i], &c = pts[i + 1], &d = pts[i + 2];
         // d/dp of |b - 2p + c|^2 + |a - 2b + p|^2 + |p - 2c + d|^2, halved
         Vec3 g{a.x - 4 * b.x + 6 * p.x - 4 * c.x + d.x, a.y - 4 * b.y + 6 * p.y - 4 * c.y + d.y,
                (a.z - 4 * b.z + 6 * p.z - 4 * c.z + d.z) * aParams.lineVerticalWeight};
-        // away from blocked space close across the line: probe lineClearance to either side and
-        // above / below; where one side is blocked and the other free, push towards the free one.
-        // (Smoothing alone leaves the line skimming the map's margin wherever a wall is on the
-        // inside of a bend, and the car's tracking error then reaches the wall, 2026-10-26)
-        {
-          float tx = c.x - b.x, ty = c.y - b.y;
-          float tl = std::hypot(tx, ty);
-          if (tl > 1e-3f) {
-            const float r = aParams.lineClearance;
-            const Vec3 dirs[2] = {{-ty / tl, tx / tl, 0.0f}, {0.0f, 0.0f, 1.0f}};
-            for (const Vec3 &n : dirs) {
-              bool plus = aMap.IsFree(p.x + n.x * r, p.y + n.y * r, p.z + n.z * r);
-              bool minus = aMap.IsFree(p.x - n.x * r, p.y - n.y * r, p.z - n.z * r);
-              if (plus != minus) {
-                float k = (plus ? 1.0f : -1.0f) * aParams.linePush / aParams.lineStep; // undone by * step below
-                g.x -= n.x * k;
-                g.y -= n.y * k;
-                g.z -= n.z * k;
-              }
-            }
-          }
-        }
+        g.x -= spread[i].x;
+        g.y -= spread[i].y;
+        g.z -= spread[i].z;
         // outside its height band (Band): moved into it even where the line is straight
         bool outside = false;
         {
