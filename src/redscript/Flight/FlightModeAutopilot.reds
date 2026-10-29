@@ -91,7 +91,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let droneYawFrequency: Float = 3.0;  // rad/s, heading easing
   public let droneYawRateMax: Float = 1.5;    // rad/s
   public let droneYawAccelMax: Float = 5.0;   // rad/s2
-  public let droneBrakeYaw: Float = 45.0;     // deg the nose swings towards the turn coming in a hard stop (droneBrakeTurn)
+  public let droneBrakeYaw: Float = 45.0;     // deg the nose swings towards the turn coming in a hard stop (droneBrakeTurn), at most
+  public let droneLandSlewYaw: Float = 120.0; // deg the nose has come round by the end of a stop into the landing
   public let droneStopMinDrop: Float = 15.0;  // m/s the speed flown falls by in a stop (PlanStops)
   public let droneStopMinDecel: Float = 6.0;  // m/s2 of braking that counts towards a stop
   public let droneStopArrive: Float = 250.0;  // m before the route's end where the arrival's braking is part of a stop
@@ -432,7 +433,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let stopEndS: array<Float>;
   public let stopSide: array<Float>;          // +1 slews right, -1 left
   public let stopAmount: array<Float>;        // 0..1 of droneBrakeYaw
-  public let keepSlew: Bool;                  // the next PlanStops carries on a slew under way (the route's end moved)
+  public let stopToEnd: array<Bool>;          // the slewed stretch runs on into the landing
+  public let keepSlew: Bool;                 // the next PlanStops carries on a slew under way (the route's end moved)
   public let thrustCmd: Vector4;             // m/s2 in the car's frame (sway, surge, lift) FlyAerobatic set (force is redone by ApplyPhysics)
   public let freeRoam: Bool;                  // flying free roam legs (no destination tracked)
   public let freeRoamCentre: Vector4;
@@ -2446,13 +2448,17 @@ public class FlightModeAutopilot extends FlightModeStandard {
     // the new end: replanned, the moved end's bend dropped it and the nose swung back 50 m out
     let keepSide = 0.0;
     let keepAmount = 0.0;
+    let keepStart = 0.0;
     let keepEnd = 0.0;
+    let keepToEnd = false;
     let k = 0;
     while this.keepSlew && k < ArraySize(this.stopStartS) {
       if this.closestS >= this.stopStartS[k] && this.closestS <= this.stopEndS[k] {
         keepSide = this.stopSide[k];
         keepAmount = this.stopAmount[k];
+        keepStart = this.stopStartS[k];
         keepEnd = this.stopEndS[k];
+        keepToEnd = this.stopToEnd[k];
       }
       k += 1;
     }
@@ -2461,6 +2467,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     ArrayClear(this.stopEndS);
     ArrayClear(this.stopSide);
     ArrayClear(this.stopAmount);
+    ArrayClear(this.stopToEnd);
     let n = ArraySize(this.routeSpeed);
     if n < 3 || !this.routeLine {
       return;
@@ -2566,8 +2573,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
               ArrayPush(this.stopEndS, runEnd);
               ArrayPush(this.stopSide, turn > 0.0 ? -1.0 : 1.0);
               ArrayPush(this.stopAmount, f);
+              let toEnd = straight && b == n - 1;
+              ArrayPush(this.stopToEnd, toEnd);
               FlightLog.Info("[Autopilot]   slew " + FloatToStringPrec(runStart, 0) + " to " + FloatToStringPrec(runEnd, 0) + " m " + (turn > 0.0 ? "left" : "right")
-                + " " + FloatToStringPrec(f, 2));
+                + " " + FloatToStringPrec(f, 2) + (toEnd ? " into the landing" : ""));
             }
             runStart = -1.0;
           }
@@ -2578,14 +2587,14 @@ public class FlightModeAutopilot extends FlightModeStandard {
       k += 1;
     }
     if keepSide != 0.0 && this.PlannedSlew(this.closestS) == 0.0 {
-      // it ran to the old end: it runs to the new one
-      let total = this.routeLength[n - 1];
-      let end = total - keepEnd < this.droneStopArrive ? total : keepEnd;
-      ArrayPush(this.stopStartS, this.closestS);
+      // it ran to the old end: it runs to the new one (from its own start, so the swing goes on)
+      let end = keepToEnd ? this.routeLength[n - 1] : keepEnd;
+      ArrayPush(this.stopStartS, keepStart);
       ArrayPush(this.stopEndS, end);
       ArrayPush(this.stopSide, keepSide);
       ArrayPush(this.stopAmount, keepAmount);
-      FlightLog.Info("[Autopilot]   slew kept " + FloatToStringPrec(this.closestS, 0) + " to " + FloatToStringPrec(end, 0) + " m");
+      ArrayPush(this.stopToEnd, keepToEnd);
+      FlightLog.Info("[Autopilot]   slew kept " + FloatToStringPrec(keepStart, 0) + " to " + FloatToStringPrec(end, 0) + " m");
     }
   }
   // The route's end moved over to a landing spot `to` (the end keeping its height above the floor):
@@ -2661,12 +2670,24 @@ public class FlightModeAutopilot extends FlightModeStandard {
   }
 
   // The slew planned at route distance s (PlanStops' slewed stretches; signed: positive swings the
-  // nose right), 0 elsewhere.
+  // nose right), in droneBrakeYaw, 0 elsewhere. The nose keeps swinging through a stretch rather
+  // than holding an angle (held at 45 degrees into the landing it looked locked, Jack 2026-10-29):
+  // into the landing it comes round steadily with the distance, droneLandSlewYaw by the end, so
+  // it turns slower as the car slows and settles as it stops; elsewhere it swings out and back
+  // in one arc, peaking at droneBrakeYaw halfway.
   private func PlannedSlew(s: Float) -> Float {
     let k = 0;
     while k < ArraySize(this.stopStartS) {
       if s >= this.stopStartS[k] && s <= this.stopEndS[k] {
-        return this.stopSide[k] * this.stopAmount[k];
+        let p = ClampF((s - this.stopStartS[k]) / MaxF(this.stopEndS[k] - this.stopStartS[k], 1.0), 0.0, 1.0);
+        let shape: Float;
+        if this.stopToEnd[k] {
+          // eased in over the first fifth, then even
+          shape = (p < 0.2 ? p * p / 0.4 : p - 0.1) / 0.9 * this.droneLandSlewYaw / this.droneBrakeYaw;
+        } else {
+          shape = SinF(3.14159265 * p);
+        }
+        return this.stopSide[k] * this.stopAmount[k] * shape;
       }
       k += 1;
     }
