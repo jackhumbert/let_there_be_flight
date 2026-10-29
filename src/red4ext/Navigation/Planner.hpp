@@ -82,6 +82,11 @@ struct PlanParams {
   float linePush = 0.1f;         // m
   // m either side a point's clearance push is shared with its neighbours, tapering off (RacingLine); 0 = only its own
   float lineSpread = 30.0f;
+  // the path across solved in a corridor after the smoothing (SmoothLateral, Planner.cpp)
+  int lineCorridorIterations = 3000; // per level, coarse to fine; 0 = off
+  float lineCorridorMax = 40.0f;     // m the free width is looked for either side
+  float lineCorridorMargin = 6.0f;   // m kept from blocked space across the line (lineClearance)
+  float lineCurvatureRate = 0.5f;    // weight of how fast the bend changes against the bend itself
   float lineStep = 0.08f;        // gradient step per pass (stable below 0.125)
   // weight of the vertical bend against the sideways one: crests and dips are pushed over and
   // pulled through with the lift alone, so they are rounded off more (stable while

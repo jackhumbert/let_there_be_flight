@@ -116,6 +116,15 @@ int main(int argc, char **argv) {
   if (const char *v = std::getenv("NAVPLAN_MAX_GRADIENT")) {
     params.maxGradient = std::strtof(v, nullptr);
   }
+  if (const char *v = std::getenv("NAVPLAN_CORRIDOR_ITERATIONS")) {
+    params.lineCorridorIterations = std::atoi(v);
+  }
+  if (const char *v = std::getenv("NAVPLAN_CORRIDOR_MARGIN")) {
+    params.lineCorridorMargin = std::strtof(v, nullptr);
+  }
+  if (const char *v = std::getenv("NAVPLAN_CURVATURE_RATE")) {
+    params.lineCurvatureRate = std::strtof(v, nullptr);
+  }
   if (const char *v = std::getenv("NAVPLAN_LINE_SPREAD")) {
     params.lineSpread = std::strtof(v, nullptr);
   }

@@ -286,6 +286,133 @@ void SmoothHeights(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
   }
   aPts = solved;
 }
+// The line's path across solved on its own, its heights kept: each point may move along its
+// horizontal normal within the free width there (marched out to lineCorridorMax at its height,
+// less lineCorridorMargin; where it already is always allowed), and the offsets minimise the
+// summed squared second differences (bend) plus lineCurvatureRate times the third differences
+// (how fast the bend changes, so turns build up and ease off instead of switching on), coarse to
+// fine as SmoothHeights. A corridor rather than RacingLine's moves, each kept only if its legs stay
+// free with room to the sides: by the gap into Dogtown every step outwards turned the leg by a
+// tower's corner and swept its side clearance into it, so the line came in tight and turned 50
+// degrees in 25 m after a gentle bend (2026-10-28). The same failure as elastic bands at obstacle
+// corners; racing line planners solve in a corridor (Heilmeier et al. 2020), drone planners add a
+// jerk term. A leg not free at the solved offsets goes back to where it was, with its neighbour.
+void SmoothLateral(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams &aParams) {
+  const size_t n = aPts.size();
+  if (aParams.lineCorridorIterations <= 0 || n < 12) {
+    return;
+  }
+  std::vector<float> along(n, 0.0f), lo(n, 0.0f), hi(n, 0.0f), d(n, 0.0f);
+  std::vector<Vec3> normal(n, {0.0f, 0.0f, 0.0f});
+  for (size_t i = 1; i < n; ++i) {
+    along[i] = along[i - 1] + Distance(aPts[i - 1], aPts[i]);
+  }
+  const float step = 0.5f;
+  for (size_t i = 1; i + 1 < n; ++i) {
+    if (along[i] <= aParams.lineFloorEnds || along.back() - along[i] <= aParams.lineFloorEnds) {
+      continue; // the take-off and the landing stay as they are
+    }
+    float tx = aPts[i + 1].x - aPts[i - 1].x, ty = aPts[i + 1].y - aPts[i - 1].y;
+    float tl = std::hypot(tx, ty);
+    if (tl < 1e-3f) {
+      continue;
+    }
+    normal[i] = {ty / tl, -tx / tl, 0.0f}; // to the right of the line
+    const Vec3 &p = aPts[i];
+    float extent[2] = {0.0f, 0.0f};
+    for (int s = 0; s < 2; ++s) {
+      float sign = s ? -1.0f : 1.0f;
+      float r = step;
+      while (r <= aParams.lineCorridorMax &&
+             aMap.IsFree(p.x + normal[i].x * r * sign, p.y + normal[i].y * r * sign, p.z)) {
+        r += step;
+      }
+      extent[s] = r - step;
+    }
+    hi[i] = std::max(0.0f, extent[0] - aParams.lineCorridorMargin);
+    lo[i] = std::min(0.0f, -(extent[1] - aParams.lineCorridorMargin));
+  }
+  const float w = aParams.lineCurvatureRate;
+  const float rate = 1.6f / (16.0f + 64.0f * w); // stable below 2 / (16 + 64 w)
+  for (size_t stride : {16u, 8u, 4u, 2u, 1u}) {
+    std::vector<size_t> idx;
+    for (size_t i = 0; i < n; i += stride) {
+      idx.push_back(i);
+    }
+    if (idx.back() != n - 1) {
+      idx.push_back(n - 1);
+    }
+    const size_t m = idx.size();
+    if (m < 9) {
+      continue;
+    }
+    std::vector<float> s(m), slo(m), shi(m), next(m);
+    std::vector<Vec3> q(m);
+    for (size_t k = 0; k < m; ++k) {
+      s[k] = d[idx[k]];
+      // a coarse point stands for the stretch around it: the narrowest of its widths
+      size_t from = k ? (idx[k - 1] + idx[k]) / 2 : 0, to = k + 1 < m ? (idx[k] + idx[k + 1]) / 2 : n - 1;
+      slo[k] = -kInf;
+      shi[k] = kInf;
+      for (size_t i = from; i <= to; ++i) {
+        slo[k] = std::max(slo[k], lo[i]);
+        shi[k] = std::min(shi[k], hi[i]);
+      }
+      if (slo[k] > shi[k] || k < 3 || k + 3 >= m) {
+        slo[k] = shi[k] = s[k];
+      }
+      slo[k] = std::min(slo[k], s[k]);
+      shi[k] = std::max(shi[k], s[k]);
+    }
+    for (int it = 0; it < aParams.lineCorridorIterations; ++it) {
+      for (size_t k = 0; k < m; ++k) {
+        const Vec3 &p = aPts[idx[k]], &nk = normal[idx[k]];
+        q[k] = {p.x + nk.x * s[k], p.y + nk.y * s[k], 0.0f};
+      }
+      next = s;
+      for (size_t k = 3; k + 3 < m; ++k) {
+        // d/dq of the squared second differences (1 -4 6 -4 1) and third differences (-1 6 -15 20 -15 6 -1)
+        float gx = q[k - 2].x - 4 * q[k - 1].x + 6 * q[k].x - 4 * q[k + 1].x + q[k + 2].x;
+        float gy = q[k - 2].y - 4 * q[k - 1].y + 6 * q[k].y - 4 * q[k + 1].y + q[k + 2].y;
+        gx += w * (-q[k - 3].x + 6 * q[k - 2].x - 15 * q[k - 1].x + 20 * q[k].x - 15 * q[k + 1].x + 6 * q[k + 2].x - q[k + 3].x);
+        gy += w * (-q[k - 3].y + 6 * q[k - 2].y - 15 * q[k - 1].y + 20 * q[k].y - 15 * q[k + 1].y + 6 * q[k + 2].y - q[k + 3].y);
+        const Vec3 &nk = normal[idx[k]];
+        next[k] = std::clamp(s[k] - rate * (gx * nk.x + gy * nk.y), slo[k], shi[k]);
+      }
+      s.swap(next);
+    }
+    for (size_t k = 0; k + 1 < m; ++k) {
+      for (size_t i = idx[k]; i <= idx[k + 1]; ++i) {
+        float t = idx[k + 1] > idx[k] ? float(i - idx[k]) / float(idx[k + 1] - idx[k]) : 0.0f;
+        d[i] = std::clamp(s[k] + (s[k + 1] - s[k]) * t, lo[i], hi[i]);
+      }
+    }
+  }
+  std::vector<Vec3> solved = aPts;
+  for (size_t i = 0; i < n; ++i) {
+    solved[i].x += normal[i].x * d[i];
+    solved[i].y += normal[i].y * d[i];
+  }
+  for (int round = 0; round < 8; ++round) {
+    bool reverted = false;
+    for (size_t i = 0; i + 1 < n; ++i) {
+      bool moved = solved[i].x != aPts[i].x || solved[i].y != aPts[i].y || solved[i + 1].x != aPts[i + 1].x ||
+                   solved[i + 1].y != aPts[i + 1].y;
+      if (moved && (!LegFree(aMap, solved[i], solved[i + 1]) ||
+                    ClearSides(aMap, solved[i], solved[i + 1], aParams.lineSide) <
+                        std::min(1.0f, ClearSides(aMap, aPts[i], aPts[i + 1], aParams.lineSide)))) {
+        solved[i] = aPts[i];
+        solved[i + 1] = aPts[i + 1];
+        reverted = true;
+      }
+    }
+    if (!reverted) {
+      break;
+    }
+  }
+  aPts = solved;
+}
+
 std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute, const PlanParams &aParams) {
   std::vector<Vec3> pts = aRoute;
   const float side = aParams.lineSide;
@@ -407,6 +534,7 @@ std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute
       }
     }
   }
+  SmoothLateral(aMap, pts, aParams);
   SmoothHeights(aMap, pts, aParams);
   return pts;
 }
