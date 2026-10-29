@@ -206,25 +206,16 @@ void Band(const Gap &aGap, float aAlong, float aLength, const PlanParams &aParam
 // crest at its top: from the city centre to Dogtown two 5 m bumps 110 m apart braked the car from
 // 60 to 44 m/s and again to 40 (racePushOver, 2026-10-28). A point whose legs are not free at the
 // solved height goes back to where it was, with its neighbour.
-void SmoothHeights(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams &aParams) {
-  const size_t n = aPts.size();
-  if (aParams.lineHeightIterations <= 0 || n < 9) {
-    return;
-  }
-  std::vector<float> along(n, 0.0f), lo(n), hi(n), z(n);
-  for (size_t i = 0; i < n; ++i) {
-    along[i] = i ? along[i - 1] + Distance(aPts[i - 1], aPts[i]) : 0.0f;
-    z[i] = lo[i] = hi[i] = aPts[i].z;
-  }
-  for (size_t i = 2; i + 2 < n; ++i) {
-    Gap gap;
-    if (aMap.FindGap(aPts[i].x, aPts[i].y, aPts[i].z, gap)) {
-      Band(gap, along[i], along.back(), aParams, lo[i], hi[i]);
-      // the line where it is now is always allowed (a band can sit above it near a takeoff)
-      lo[i] = std::min(lo[i], z[i]);
-      hi[i] = std::max(hi[i], z[i]);
-    }
-  }
+// Over rather than under: the route keeps to the gap it was searched in, so a line high over the
+// city dived under a beam (8 m thick, open sky over it) and the car braked from 86 to 25 m/s for
+// the bend (Dogtown, 2026-10-29; Jack: no braking for a crest, gravity arcs). So the heights are
+// first solved without anything overhead; where that line passes within lineOverReach under the
+// top of a thin obstacle (lineOverThick) over a run of points, away from the ends (lineOverEnds),
+// the points under it take the gap above instead, and they are solved again. It only ever lifts the line over something, never into it.
+namespace {
+void SolveHeights(std::vector<float> &aZ, const std::vector<float> &aLo, const std::vector<float> &aHi,
+                  int aIterations) {
+  const size_t n = aZ.size();
   for (size_t stride : {16u, 8u, 4u, 2u, 1u}) {
     std::vector<size_t> idx;
     for (size_t i = 0; i < n; i += stride) {
@@ -239,19 +230,20 @@ void SmoothHeights(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
     }
     std::vector<float> s(m), slo(m), shi(m), next(m);
     for (size_t k = 0; k < m; ++k) {
-      s[k] = z[idx[k]];
+      s[k] = aZ[idx[k]];
       size_t from = k ? (idx[k - 1] + idx[k]) / 2 : 0, to = k + 1 < m ? (idx[k] + idx[k + 1]) / 2 : n - 1;
       slo[k] = -kInf;
       shi[k] = kInf;
       for (size_t i = from; i <= to; ++i) {
-        slo[k] = std::max(slo[k], lo[i]);
-        shi[k] = std::min(shi[k], hi[i]);
+        slo[k] = std::max(slo[k], aLo[i]);
+        shi[k] = std::min(shi[k], aHi[i]);
       }
       if (slo[k] > shi[k] || k < 2 || k + 2 >= m) {
         slo[k] = shi[k] = s[k];
       }
+      s[k] = std::clamp(s[k], slo[k], shi[k]);
     }
-    for (int it = 0; it < aParams.lineHeightIterations; ++it) {
+    for (int it = 0; it < aIterations; ++it) {
       next = s;
       for (size_t k = 2; k + 2 < m; ++k) {
         float g = s[k - 2] - 4.0f * s[k - 1] + 6.0f * s[k] - 4.0f * s[k + 1] + s[k + 2];
@@ -263,8 +255,104 @@ void SmoothHeights(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
     for (size_t k = 0; k + 1 < m; ++k) {
       for (size_t i = idx[k]; i <= idx[k + 1]; ++i) {
         float t = idx[k + 1] > idx[k] ? float(i - idx[k]) / float(idx[k + 1] - idx[k]) : 0.0f;
-        z[i] = std::clamp(s[k] + (s[k + 1] - s[k]) * t, lo[i], hi[i]);
+        aZ[i] = std::clamp(s[k] + (s[k + 1] - s[k]) * t, aLo[i], aHi[i]);
       }
+    }
+  }
+}
+} // namespace
+
+void SmoothHeights(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams &aParams) {
+  const size_t n = aPts.size();
+  if (aParams.lineHeightIterations <= 0 || n < 9) {
+    return;
+  }
+  std::vector<float> along(n, 0.0f), lo(n), hi(n), z(n), aboveLo(n, kInf), aboveHi(n, kInf), aboveBottom(n, kInf);
+  for (size_t i = 0; i < n; ++i) {
+    along[i] = i ? along[i - 1] + Distance(aPts[i - 1], aPts[i]) : 0.0f;
+    z[i] = lo[i] = hi[i] = aPts[i].z;
+  }
+  bool ceilings = false;
+  for (size_t i = 2; i + 2 < n; ++i) {
+    Gap gap;
+    if (aMap.FindGap(aPts[i].x, aPts[i].y, aPts[i].z, gap)) {
+      Band(gap, along[i], along.back(), aParams, lo[i], hi[i]);
+      // the line where it is now is always allowed (a band can sit above it near a takeoff)
+      lo[i] = std::min(lo[i], z[i]);
+      hi[i] = std::max(hi[i], z[i]);
+      // the gap over whatever is overhead, for the line to go over it instead
+      if (aParams.lineOverReach >= 0.0f && std::isfinite(gap.top) && along[i] > aParams.lineOverEnds && along.back() - along[i] > aParams.lineOverEnds) {
+        for (const Gap &g : aMap.GetGaps(aPts[i].x, aPts[i].y)) {
+          if (g.bottom >= gap.top && g.bottom - gap.top <= aParams.lineOverThick) {
+            Band(g, along[i], along.back(), aParams, aboveLo[i], aboveHi[i]);
+            // over a beam or a skybridge, not a street: lineCeilingClearance is room enough (the
+            // floor clearance is for street furniture the map lacks)
+            aboveLo[i] = std::min(aboveLo[i], g.bottom + aParams.lineCeilingClearance);
+            aboveBottom[i] = g.bottom;
+            ceilings = true;
+            break;
+          }
+        }
+      }
+    }
+  }
+  SolveHeights(z, lo, hi, aParams.lineHeightIterations);
+  if (ceilings) {
+    std::vector<float> zFree = z, hiFree(n, kInf);
+    for (size_t i = 0; i < n; ++i) {
+      hiFree[i] = (i < 2 || i + 2 >= n) ? hi[i] : kInf;
+    }
+    SolveHeights(zFree, lo, hiFree, aParams.lineHeightIterations);
+    auto bend = [&](const std::vector<float> &aZ) {
+      double sum = 0.0;
+      for (size_t i = 1; i + 1 < n; ++i) {
+        double d = aZ[i - 1] - 2.0 * aZ[i] + aZ[i + 1];
+        sum += d * d;
+      }
+      return sum;
+    };
+    // each run of points under a thin obstacle that the free line comes within lineOverReach of
+    // along most of it is tried over the top, and kept there when the whole line comes out smoother
+    // (the height solve's own measure) and no more than lineOverRise higher on average (smoother but
+    // 30 m higher, a leg in the centre went from 18.5 to 20.8 s). Taken over on nearness alone, a run went over one point (a
+    // spike), over 200 m towers, and over skybridges 12 m higher than the line needed to be: the city
+    // centre to Dogtown took 41 to 74 s instead of 37 (navplan, laptime.py)
+    double best = bend(z);
+    int over = 0;
+    for (size_t i = 2; i + 2 < n;) {
+      if (!std::isfinite(aboveBottom[i])) {
+        ++i;
+        continue;
+      }
+      size_t j = i, close = 0;
+      while (j + 2 < n && std::isfinite(aboveBottom[j])) {
+        close += zFree[j] >= aboveBottom[j] - aParams.lineOverReach ? 1 : 0;
+        ++j;
+      }
+      if (2 * close > j - i) {
+        std::vector<float> tryLo = lo, tryHi = hi, tryZ = z;
+        for (size_t k = i; k < j; ++k) {
+          tryLo[k] = aboveLo[k];
+          tryHi[k] = aboveHi[k];
+          tryZ[k] = std::clamp(std::max(z[k], zFree[k]), tryLo[k], tryHi[k]);
+        }
+        SolveHeights(tryZ, tryLo, tryHi, aParams.lineHeightIterations);
+        double e = bend(tryZ), rise = 0.0;
+        for (size_t k = 0; k < n; ++k) {
+          rise += tryZ[k] - z[k];
+        }
+        if (e < best && rise / double(n) <= aParams.lineOverRise) {
+          best = e;
+          lo.swap(tryLo);
+          hi.swap(tryHi);
+          z.swap(tryZ);
+          over += int(j - i);
+        }
+      }
+      i = j;
+    }
+    if (over) {
+      spdlog::info("[Planner] heights: {} points taken over what was overhead", over);
     }
   }
   std::vector<Vec3> solved = aPts;

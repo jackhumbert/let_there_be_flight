@@ -128,6 +128,9 @@ int main(int argc, char **argv) {
   if (const char *v = std::getenv("NAVPLAN_LINE_SPREAD")) {
     params.lineSpread = std::strtof(v, nullptr);
   }
+  if (const char *v = std::getenv("NAVPLAN_OVER_REACH")) {
+    params.lineOverReach = std::strtof(v, nullptr);
+  }
   if (const char *v = std::getenv("NAVPLAN_HEIGHT_ITERATIONS")) {
     params.lineHeightIterations = std::atoi(v);
   }

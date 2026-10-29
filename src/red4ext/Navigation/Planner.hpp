@@ -76,6 +76,12 @@ struct PlanParams {
   // iterations per level of the coarse-to-fine height solve after the smoothing (SmoothHeights,
   // Planner.cpp); 0 = off
   int lineHeightIterations = 3000;
+  // m from either end within which SmoothHeights keeps a point in its own gap rather than taking it
+  // over what is overhead (the take-off and the landing may be under a deck)
+  float lineOverEnds = 150.0f;
+  float lineOverReach = 10.0f;   // m under an obstacle's top the line solved without it may pass and still go over
+  float lineOverThick = 12.0f;   // m thick at most an obstacle the line goes over instead of under (a beam, a skybridge)
+  float lineOverRise = 10.0f;    // m higher on average the whole line may come out for going over
   // m under anything overhead the line keeps (a skybridge, a deck); the middle of the gap where
   // there is not room for this and the floor clearance
   float lineCeilingClearance = 6.0f;

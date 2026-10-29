@@ -2581,7 +2581,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
           if runStart >= 0.0 && (!straight || last) {
             // the run ends here; up to a turn it is unwound before it
             let runEnd = straight ? s : (turnedS >= 0.0 ? turnedS : s) - MaxF(this.droneSlewMargin, flown[j] * this.droneSlewRelease);
-            if runEnd - runStart >= MaxF(this.droneSlewMinStraight, runSpeed * this.droneSlewMinTime) {
+            // only into the landing (Jack, 2026-10-29): mid-route a crest's stop swung the nose 45
+            // degrees and back on a straight line, its side picked from a bend that was vertical
+            let toEnd = straight && b == n - 1;
+            if toEnd && runEnd - runStart >= MaxF(this.droneSlewMinStraight, runSpeed * this.droneSlewMinTime) {
               this.LineFrameOver(runEnd + this.droneStopTurnAhead, this.lineSpan, tangent, bend);
               let cross = Vector4.Cross(tangent, bend);
               let turn = cross.Z; // positive: the line turns left
@@ -2589,7 +2592,6 @@ public class FlightModeAutopilot extends FlightModeStandard {
               ArrayPush(this.stopEndS, runEnd);
               ArrayPush(this.stopSide, turn > 0.0 ? -1.0 : 1.0);
               ArrayPush(this.stopAmount, f);
-              let toEnd = straight && b == n - 1;
               ArrayPush(this.stopToEnd, toEnd);
               FlightLog.Info("[Autopilot]   slew " + FloatToStringPrec(runStart, 0) + " to " + FloatToStringPrec(runEnd, 0) + " m " + (turn > 0.0 ? "left" : "right")
                 + " " + FloatToStringPrec(f, 2) + (toEnd ? " into the landing" : ""));
