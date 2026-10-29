@@ -93,7 +93,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let droneYawAccelMax: Float = 5.0;   // rad/s2
   public let droneBrakeYaw: Float = 45.0;     // deg the nose swings towards the turn coming in a hard stop (droneBrakeTurn), at most
   public let droneLandSlewYaw: Float = 120.0; // deg the nose has come round by the end of a stop into the landing
-  public let droneLandSlewTime: Float = 5.0;  // s before the descent the landing turn starts, spread evenly over them
+  public let droneLandSlewBefore: Float = 2.0; // s before the descent the landing turn starts
+  public let droneLandSlewDuring: Float = 2.0; // s into the descent it ends; spread evenly over both
   public let droneStopMinDrop: Float = 15.0;  // m/s the speed flown falls by in a stop (PlanStops)
   public let droneStopMinDecel: Float = 6.0;  // m/s2 of braking that counts towards a stop
   public let droneStopArrive: Float = 250.0;  // m before the route's end where the arrival's braking is part of a stop
@@ -437,6 +438,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let stopToEnd: array<Bool>;          // the slewed stretch runs on into the landing
   public let landSlewOn: Bool;                // a landing turn is under way (LandSlewYaw)
   public let landSlewP: Float;                // 0..1 through it, before easing
+  public let landSlewDescent: Float;          // s since the descent began, the turn still under way
   public let landSlewStartYaw: Float;         // rad, the nose when it began
   public let landSlewDelta: Float;            // rad, signed, the whole turn to the landing heading
   public let landSlewHeading: Vector4;        // the heading it ends on, landed on by the descent
@@ -1963,12 +1965,14 @@ public class FlightModeAutopilot extends FlightModeStandard {
           this.landingHeading = this.landingPad >= 0
             ? FlightModeAutopilot.PadHeading(this.landingPad, stats.d_forward2D)
             : this.LandingHeading(this.landingSpot, stats.d_forward2D);
-          // a landing turn under way (LandSlewYaw) ends on its own heading
+          // a landing turn under way (LandSlewYaw) ends on its own heading, droneLandSlewDuring into the descent
           if this.landSlewOn {
             this.landingHeading = this.landSlewHeading;
+            this.landSlewDescent = 0.0;
           }
+        } else {
+          this.landSlewOn = false;
         }
-        this.landSlewOn = false;
         ArrayClear(this.route);
         this.settleTimer = 0.0;
         this.touchdownTimer = 0.0;
@@ -2720,8 +2724,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // out: the brake eases off near the end and hands over at 10 m/s, not 0.
   private func TimeToDescent() -> Float {
     let n = ArraySize(this.routeLength);
+    // no speeds for this route yet (a moved end, replanning): far off. 0 started the landing turn
+    // 6 s early, when a parked car moved the end 134 m out
     if n < 2 || ArraySize(this.routeSpeed) != n {
-      return 0.0;
+      return 1000.0;
     }
     let end = this.routeLength[n - 1] - this.landingEntry;
     let t = 0.0;
@@ -2754,24 +2760,33 @@ public class FlightModeAutopilot extends FlightModeStandard {
       let start = this.landSlewStartYaw;
       let startHeading = new Vector4(CosF(start), SinF(start), 0.0, 0.0);
       let base = this.landingPad >= 0 ? FlightModeAutopilot.PadHeading(this.landingPad, startHeading) : this.LandingHeading(this.landingSpot, startHeading);
-      // a positive slew swings the nose right, a falling yaw
-      let direction = this.stopSide[k] > 0.0 ? -1.0 : 1.0;
+      // a positive slew swings the nose right, a falling yaw; without a stretch into the landing
+      // (k -1) either way
       let want = Deg2Rad(this.droneLandSlewYaw);
       let best = -1.0;
-      let i = 0;
-      while i < (this.landingPad >= 0 ? 1 : 2) {
-        let heading = i == 0 ? base : base * -1.0;
-        let turn = FlightModeAutopilot.WrapAngle(AtanF(heading.Y, heading.X) - start) * direction;
-        if turn < 0.0 {
-          turn += 6.2831853;
+      let bestDirection = 1.0;
+      let d = 0;
+      while d < 2 {
+        let direction = d == 0 ? 1.0 : -1.0;
+        if k < 0 || direction == (this.stopSide[k] > 0.0 ? -1.0 : 1.0) {
+          let i = 0;
+          while i < (this.landingPad >= 0 ? 1 : 2) {
+            let heading = i == 0 ? base : base * -1.0;
+            let turn = FlightModeAutopilot.WrapAngle(AtanF(heading.Y, heading.X) - start) * direction;
+            if turn < 0.0 {
+              turn += 6.2831853;
+            }
+            if best < 0.0 || AbsF(turn - want) < AbsF(best - want) {
+              best = turn;
+              bestDirection = direction;
+              this.landSlewHeading = heading;
+            }
+            i += 1;
+          }
         }
-        if best < 0.0 || AbsF(turn - want) < AbsF(best - want) {
-          best = turn;
-          this.landSlewHeading = heading;
-        }
-        i += 1;
+        d += 1;
       }
-      this.landSlewDelta = best * direction;
+      this.landSlewDelta = best * bestDirection;
       FlightLog.Info("[Autopilot]   landing turn " + FloatToStringPrec(Rad2Deg(this.landSlewDelta), 0) + " deg");
     }
     // progress carried on over the time left, so a moved end (26 m further for a parked car)
@@ -3123,19 +3138,25 @@ public class FlightModeAutopilot extends FlightModeStandard {
     // droneBrakeYaw, so the stop is a tilt across as much as back
     let swing = 0.0;
     let wantedYaw = AtanF(h.Y, h.X);
-    if this.droneBrakeTurn && this.onLine && Equals(this.status, "following") {
+    if this.droneBrakeTurn && this.landSlewOn && (Equals(this.status, "descending") || Equals(this.status, "landed")) {
+      // the landing turn runs on droneLandSlewDuring into the descent
+      this.landSlewDescent += dt;
+      wantedYaw = this.LandSlewYaw(-1, MaxF(this.droneLandSlewDuring - this.landSlewDescent, 0.0), dt, this.droneYaw);
+    } else if this.droneBrakeTurn && this.onLine && Equals(this.status, "following") {
       // from the plan (PlanStops), droneStopLead seconds ahead, so the swing starts with the braking
       let sAhead = this.closestS + stats.d_speed * this.droneStopLead;
       let slew = this.PlannedSlew(sAhead);
       this.droneBrakeAmount = AbsF(slew);
       this.droneBrakeSide = slew > 0.0 ? 1.0 : (slew < 0.0 ? -1.0 : 0.0);
       let k = this.SlewIndexAt(sAhead);
-      if this.landSlewOn || k >= 0 && this.stopToEnd[k] {
-        // into the landing the nose keeps to the line until droneLandSlewTime before the descent
-        let timeLeft = this.TimeToDescent();
-        if this.landSlewOn || timeLeft <= this.droneLandSlewTime {
-          wantedYaw = this.LandSlewYaw(k, timeLeft, dt, live ? this.droneYaw : wantedYaw);
-        }
+      // into the landing the nose keeps to the line until droneLandSlewBefore before the descent,
+      // then turns whatever the stretches: tied to a stretch into the landing it never started when
+      // a parked car moved the end 131 m out and the replanned stretch stopped short of it
+      let timeLeft = this.landing ? this.TimeToDescent() : 1000.0;
+      if this.landSlewOn || timeLeft <= this.droneLandSlewBefore {
+        wantedYaw = this.LandSlewYaw(k >= 0 && this.stopToEnd[k] ? k : -1, timeLeft + this.droneLandSlewDuring, dt, live ? this.droneYaw : wantedYaw);
+      } else if k >= 0 && this.stopToEnd[k] {
+        // a stretch into the landing holds the nose along the line until the turn
       } else {
         swing = slew * Deg2Rad(this.droneBrakeYaw);
       }
