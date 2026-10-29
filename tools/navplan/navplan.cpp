@@ -140,6 +140,12 @@ int main(int argc, char **argv) {
   if (const char *v = std::getenv("NAVPLAN_CLIMB_SCALE")) {
     params.climbScale = std::strtof(v, nullptr);
   }
+  if (const char *v = std::getenv("NAVPLAN_TURN_ROUNDS")) {
+    params.lineTurnRounds = std::atoi(v);
+  }
+  if (const char *v = std::getenv("NAVPLAN_TURN_WEIGHT_MAX")) {
+    params.lineTurnWeightMax = std::strtof(v, nullptr);
+  }
   if (const char *v = std::getenv("NAVPLAN_OVER_REACH")) {
     params.lineOverReach = std::strtof(v, nullptr);
   }

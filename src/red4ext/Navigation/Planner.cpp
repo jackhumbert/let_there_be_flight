@@ -144,6 +144,17 @@ bool LegFree(const NavMap &aMap, Vec3 aA, Vec3 aB) {
   return Clear(aMap, aA, aB) >= 1.0f || LongestBlocked(aMap, {aA, aB}) <= kGrazeAllowed;
 }
 
+// LegFree for leg aI of aPts, and the grazes either side of it taken as one run, as the finished
+// line is checked (LongestBlocked over it, kGrazeAllowedLine): legs each grazing a metre either
+// side of a point passed alone and failed together, and a route lost its racing line (2026-10-29).
+bool LegRunFree(const NavMap &aMap, const std::vector<Vec3> &aPts, size_t aI) {
+  if (!LegFree(aMap, aPts[aI], aPts[aI + 1])) {
+    return false;
+  }
+  size_t from = aI > 0 ? aI - 1 : aI, to = std::min(aI + 2, aPts.size() - 1);
+  return LongestBlocked(aMap, std::vector<Vec3>(aPts.begin() + from, aPts.begin() + to + 1)) <= kGrazeAllowedLine;
+}
+
 // How much of the leg is free, the leg and its two side-offset copies taken together (0..1).
 float ClearSides(const NavMap &aMap, Vec3 aA, Vec3 aB, float aSide) {
   float clear = Clear(aMap, aA, aB);
@@ -443,11 +454,12 @@ void SmoothHeights(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
   // building's edge, 2026-10-29)
   for (int round = 0; round < 4; ++round) {
     bool pinned = false;
+    std::vector<Vec3> at = aPts;
+    for (size_t i = 0; i < n; ++i) {
+      at[i].z = z[i];
+    }
     for (size_t i = 0; i + 1 < n; ++i) {
-      Vec3 a = aPts[i], b = aPts[i + 1];
-      a.z = z[i];
-      b.z = z[i + 1];
-      if ((z[i] != aPts[i].z || z[i + 1] != aPts[i + 1].z) && !LegFree(aMap, a, b)) {
+      if ((z[i] != aPts[i].z || z[i + 1] != aPts[i + 1].z) && !LegRunFree(aMap, at, i)) {
         for (size_t k : {i, i + 1}) {
           lo[k] = hi[k] = z[k] = aPts[k].z;
         }
@@ -466,7 +478,7 @@ void SmoothHeights(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
   for (int round = 0; round < 8; ++round) {
     bool reverted = false;
     for (size_t i = 0; i + 1 < n; ++i) {
-      if (!LegFree(aMap, solved[i], solved[i + 1]) && (solved[i].z != aPts[i].z || solved[i + 1].z != aPts[i + 1].z)) {
+      if (!LegRunFree(aMap, solved, i) && (solved[i].z != aPts[i].z || solved[i + 1].z != aPts[i + 1].z)) {
         solved[i] = aPts[i];
         solved[i + 1] = aPts[i + 1];
         reverted = true;
@@ -489,6 +501,104 @@ void SmoothHeights(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
 // degrees in 25 m after a gentle bend (2026-10-28). The same failure as elastic bands at obstacle
 // corners; racing line planners solve in a corridor (Heilmeier et al. 2020), drone planners add a
 // jerk term. A leg not free at the solved offsets goes back to where it was, with its neighbour.
+// SmoothLateral's coarse-to-fine solve of the offsets d across the line (each bend weighted).
+void SolveLateral(std::vector<float> &d, const std::vector<float> &lo, const std::vector<float> &hi,
+                  const std::vector<Vec3> &normal, const std::vector<Vec3> &aPts, const std::vector<float> &weight,
+                  float w, float rate, int aIterations) {
+  const size_t n = aPts.size();
+  for (size_t stride : {16u, 8u, 4u, 2u, 1u}) {
+    std::vector<size_t> idx;
+    for (size_t i = 0; i < n; i += stride) {
+      idx.push_back(i);
+    }
+    if (idx.back() != n - 1) {
+      idx.push_back(n - 1);
+    }
+    const size_t m = idx.size();
+    if (m < 9) {
+      continue;
+    }
+    std::vector<float> s(m), slo(m), shi(m), next(m), wk(m, 1.0f);
+    std::vector<Vec3> q(m), wb(m);
+    for (size_t k = 0; k < m; ++k) {
+      s[k] = d[idx[k]];
+      // a coarse point stands for the stretch around it: the narrowest of its widths
+      size_t from = k ? (idx[k - 1] + idx[k]) / 2 : 0, to = k + 1 < m ? (idx[k] + idx[k + 1]) / 2 : n - 1;
+      slo[k] = -kInf;
+      shi[k] = kInf;
+      for (size_t i = from; i <= to; ++i) {
+        slo[k] = std::max(slo[k], lo[i]);
+        shi[k] = std::min(shi[k], hi[i]);
+        wk[k] = std::max(wk[k], weight[i]);
+      }
+      if (slo[k] > shi[k] || k < 3 || k + 3 >= m) {
+        slo[k] = shi[k] = s[k];
+      }
+      slo[k] = std::min(slo[k], s[k]);
+      shi[k] = std::max(shi[k], s[k]);
+    }
+    for (int it = 0; it < aIterations; ++it) {
+      for (size_t k = 0; k < m; ++k) {
+        const Vec3 &p = aPts[idx[k]], &nk = normal[idx[k]];
+        q[k] = {p.x + nk.x * s[k], p.y + nk.y * s[k], 0.0f};
+      }
+      // each bend times its weight: d/dq of the summed weight x squared second difference
+      for (size_t k = 1; k + 1 < m; ++k) {
+        wb[k] = {wk[k] * (q[k - 1].x - 2 * q[k].x + q[k + 1].x), wk[k] * (q[k - 1].y - 2 * q[k].y + q[k + 1].y), 0.0f};
+      }
+      next = s;
+      for (size_t k = 3; k + 3 < m; ++k) {
+        // d/dq of the weighted second differences and of the third differences (-1 6 -15 20 -15 6 -1)
+        float gx = wb[k - 1].x - 2 * wb[k].x + wb[k + 1].x;
+        float gy = wb[k - 1].y - 2 * wb[k].y + wb[k + 1].y;
+        gx += w * (-q[k - 3].x + 6 * q[k - 2].x - 15 * q[k - 1].x + 20 * q[k].x - 15 * q[k + 1].x + 6 * q[k + 2].x - q[k + 3].x);
+        gy += w * (-q[k - 3].y + 6 * q[k - 2].y - 15 * q[k - 1].y + 20 * q[k].y - 15 * q[k + 1].y + 6 * q[k + 2].y - q[k + 3].y);
+        const Vec3 &nk = normal[idx[k]];
+        next[k] = std::clamp(s[k] - rate * (gx * nk.x + gy * nk.y), slo[k], shi[k]);
+      }
+      s.swap(next);
+    }
+    for (size_t k = 0; k + 1 < m; ++k) {
+      for (size_t i = idx[k]; i <= idx[k + 1]; ++i) {
+        float t = idx[k + 1] > idx[k] ? float(i - idx[k]) / float(idx[k + 1] - idx[k]) : 0.0f;
+        d[i] = std::clamp(s[k] + (s[k + 1] - s[k]) * t, lo[i], hi[i]);
+      }
+    }
+  }
+}
+
+// How much each point's turn costs the car: the speed it would carry there without its turns
+// (lineTopSpeed, speeding up at lineAccel from the start, braking at lineDecel to the end) against
+// what the turn allows (lineLateralAccel / bend), squared; 1 where the turn costs nothing.
+std::vector<float> TurnCost(const std::vector<Vec3> &aPts, const PlanParams &aParams) {
+  const size_t n = aPts.size();
+  std::vector<float> flat(n, 0.0f), free(n, aParams.lineTopSpeed), cost(n, 1.0f);
+  for (size_t i = 1; i < n; ++i) {
+    flat[i] = std::hypot(aPts[i].x - aPts[i - 1].x, aPts[i].y - aPts[i - 1].y);
+  }
+  free[0] = 0.0f;
+  for (size_t i = 1; i < n; ++i) {
+    free[i] = std::min(free[i], std::sqrt(free[i - 1] * free[i - 1] + 2.0f * aParams.lineAccel * Distance(aPts[i - 1], aPts[i])));
+  }
+  free[n - 1] = 0.0f;
+  for (size_t i = n - 1; i-- > 0;) {
+    free[i] = std::min(free[i], std::sqrt(free[i + 1] * free[i + 1] + 2.0f * aParams.lineDecel * Distance(aPts[i], aPts[i + 1])));
+  }
+  for (size_t i = 2; i + 2 < n; ++i) {
+    float h1 = flat[i - 1] + flat[i], h2 = flat[i + 1] + flat[i + 2];
+    if (h1 < 1.0f || h2 < 1.0f) {
+      continue;
+    }
+    float ax = (aPts[i].x - aPts[i - 2].x) / h1, ay = (aPts[i].y - aPts[i - 2].y) / h1;
+    float bx = (aPts[i + 2].x - aPts[i].x) / h2, by = (aPts[i + 2].y - aPts[i].y) / h2;
+    float turn = std::acos(std::clamp(ax * bx + ay * by, -1.0f, 1.0f)) / (0.5f * (h1 + h2));
+    if (turn > 1e-6f) {
+      cost[i] = std::max(1.0f, free[i] * free[i] * turn / aParams.lineLateralAccel);
+    }
+  }
+  return cost;
+}
+
 void SmoothLateral(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams &aParams) {
   const size_t n = aPts.size();
   if (aParams.lineCorridorIterations <= 0 || n < 12) {
@@ -525,60 +635,29 @@ void SmoothLateral(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
     lo[i] = std::min(0.0f, -(extent[1] - aParams.lineCorridorMargin));
   }
   const float w = aParams.lineCurvatureRate;
-  const float rate = 1.6f / (16.0f + 64.0f * w); // stable below 2 / (16 + 64 w)
-  for (size_t stride : {16u, 8u, 4u, 2u, 1u}) {
-    std::vector<size_t> idx;
-    for (size_t i = 0; i < n; i += stride) {
-      idx.push_back(i);
-    }
-    if (idx.back() != n - 1) {
-      idx.push_back(n - 1);
-    }
-    const size_t m = idx.size();
-    if (m < 9) {
-      continue;
-    }
-    std::vector<float> s(m), slo(m), shi(m), next(m);
-    std::vector<Vec3> q(m);
-    for (size_t k = 0; k < m; ++k) {
-      s[k] = d[idx[k]];
-      // a coarse point stands for the stretch around it: the narrowest of its widths
-      size_t from = k ? (idx[k - 1] + idx[k]) / 2 : 0, to = k + 1 < m ? (idx[k] + idx[k + 1]) / 2 : n - 1;
-      slo[k] = -kInf;
-      shi[k] = kInf;
-      for (size_t i = from; i <= to; ++i) {
-        slo[k] = std::max(slo[k], lo[i]);
-        shi[k] = std::min(shi[k], hi[i]);
+  // rounds: the bends that cost the car speed (TurnCost) weighted up by that cost and the line
+  // solved again, so it spreads those turns over the room there is and leaves the rest alone.
+  // Smoothest-in-shape alone, a line going round the Dogtown stadium slowed from 76 to 48 m/s and
+  // 71 to 56 in its turns (Jack, 2026-10-29: it does not need to slow down).
+  std::vector<float> weight(n, 1.0f);
+  for (int round = 0; round <= aParams.lineTurnRounds; ++round) {
+    if (round > 0) {
+      std::vector<Vec3> now = aPts;
+      for (size_t i = 0; i < n; ++i) {
+        now[i].x += normal[i].x * d[i];
+        now[i].y += normal[i].y * d[i];
       }
-      if (slo[k] > shi[k] || k < 3 || k + 3 >= m) {
-        slo[k] = shi[k] = s[k];
-      }
-      slo[k] = std::min(slo[k], s[k]);
-      shi[k] = std::max(shi[k], s[k]);
-    }
-    for (int it = 0; it < aParams.lineCorridorIterations; ++it) {
-      for (size_t k = 0; k < m; ++k) {
-        const Vec3 &p = aPts[idx[k]], &nk = normal[idx[k]];
-        q[k] = {p.x + nk.x * s[k], p.y + nk.y * s[k], 0.0f};
-      }
-      next = s;
-      for (size_t k = 3; k + 3 < m; ++k) {
-        // d/dq of the squared second differences (1 -4 6 -4 1) and third differences (-1 6 -15 20 -15 6 -1)
-        float gx = q[k - 2].x - 4 * q[k - 1].x + 6 * q[k].x - 4 * q[k + 1].x + q[k + 2].x;
-        float gy = q[k - 2].y - 4 * q[k - 1].y + 6 * q[k].y - 4 * q[k + 1].y + q[k + 2].y;
-        gx += w * (-q[k - 3].x + 6 * q[k - 2].x - 15 * q[k - 1].x + 20 * q[k].x - 15 * q[k + 1].x + 6 * q[k + 2].x - q[k + 3].x);
-        gy += w * (-q[k - 3].y + 6 * q[k - 2].y - 15 * q[k - 1].y + 20 * q[k].y - 15 * q[k + 1].y + 6 * q[k + 2].y - q[k + 3].y);
-        const Vec3 &nk = normal[idx[k]];
-        next[k] = std::clamp(s[k] - rate * (gx * nk.x + gy * nk.y), slo[k], shi[k]);
-      }
-      s.swap(next);
-    }
-    for (size_t k = 0; k + 1 < m; ++k) {
-      for (size_t i = idx[k]; i <= idx[k + 1]; ++i) {
-        float t = idx[k + 1] > idx[k] ? float(i - idx[k]) / float(idx[k + 1] - idx[k]) : 0.0f;
-        d[i] = std::clamp(s[k] + (s[k + 1] - s[k]) * t, lo[i], hi[i]);
+      std::vector<float> cost = TurnCost(now, aParams);
+      for (size_t i = 0; i < n; ++i) {
+        weight[i] = std::min(weight[i] * cost[i], aParams.lineTurnWeightMax);
       }
     }
+    float heaviest = 1.0f;
+    for (float x : weight) {
+      heaviest = std::max(heaviest, x);
+    }
+    const float rate = 1.6f / (16.0f * heaviest + 64.0f * w); // stable below 2 / (16 weight + 64 w)
+    SolveLateral(d, lo, hi, normal, aPts, weight, w, rate, aParams.lineCorridorIterations);
   }
   std::vector<Vec3> solved = aPts;
   for (size_t i = 0; i < n; ++i) {
@@ -590,7 +669,7 @@ void SmoothLateral(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
     for (size_t i = 0; i + 1 < n; ++i) {
       bool moved = solved[i].x != aPts[i].x || solved[i].y != aPts[i].y || solved[i + 1].x != aPts[i + 1].x ||
                    solved[i + 1].y != aPts[i + 1].y;
-      if (moved && (!LegFree(aMap, solved[i], solved[i + 1]) ||
+      if (moved && (!LegRunFree(aMap, solved, i) ||
                     ClearSides(aMap, solved[i], solved[i + 1], aParams.lineSide) <
                         std::min(1.0f, ClearSides(aMap, aPts[i], aPts[i + 1], aParams.lineSide)))) {
         solved[i] = aPts[i];

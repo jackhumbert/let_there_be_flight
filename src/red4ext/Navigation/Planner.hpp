@@ -101,6 +101,15 @@ struct PlanParams {
   float lineCorridorMax = 40.0f;     // m the free width is looked for either side
   float lineCorridorMargin = 6.0f;   // m kept from blocked space across the line (lineClearance)
   float lineCurvatureRate = 0.5f;    // weight of how fast the bend changes against the bend itself
+  // rounds of weighting up the bends that cost the car speed and solving the path across again
+  // (SmoothLateral, TurnCost); 0 = the smoothest shape alone. The car's limits are the drone
+  // style's (FlightModeAutopilot's race profile: lateral 22.7 m/s2)
+  int lineTurnRounds = 3;
+  float lineTurnWeightMax = 30.0f;  // the most a bend's weight grows
+  float lineTopSpeed = 120.0f;      // m/s
+  float lineLateralAccel = 22.7f;   // m/s2
+  float lineAccel = 10.0f;          // m/s2
+  float lineDecel = 15.0f;          // m/s2
   float lineStep = 0.08f;        // gradient step per pass (stable below 0.125)
   // weight of the vertical bend against the sideways one: crests and dips are pushed over and
   // pulled through with the lift alone, so they are rounded off more (stable while
