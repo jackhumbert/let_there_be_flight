@@ -6,4 +6,6 @@ public native class FlightTelemetry {
   // one line of numbers, in the header's order
   public static native func Row(file: Int32, values: array<Float>) -> Void;
   public static native func End(file: Int32) -> Void;
+  // seconds since midnight UTC, to line rows up with a recording made outside the game
+  public static native func WallClock() -> Float;
 }

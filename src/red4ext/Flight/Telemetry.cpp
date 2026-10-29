@@ -58,12 +58,21 @@ void FlightTelemetry::Row(int32_t aFile, RED4ext::DynArray<float> aValues) {
     return;
   }
   for (uint32_t i = 0; i < aValues.size; ++i) {
-    std::fprintf(it->second.file, i == 0 ? "%.6g" : ",%.6g", aValues[i]);
+    // 9 digits round-trip a float: 6 cut a wall clock (WallClock) to a tenth of a second
+    std::fprintf(it->second.file, i == 0 ? "%.9g" : ",%.9g", aValues[i]);
   }
   std::fputc('\n', it->second.file);
   if (++it->second.rows % kFlushEvery == 0) {
     std::fflush(it->second.file);
   }
+}
+
+// Seconds since midnight UTC (to a few milliseconds as a float), to line rows up with a recording
+// made outside the game (a test's video starts at a wall-clock time).
+float FlightTelemetry::WallClock() {
+  auto now = std::chrono::system_clock::now().time_since_epoch();
+  auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now).count() % 86400000;
+  return float(ms) / 1000.0f;
 }
 
 void FlightTelemetry::End(int32_t aFile) {

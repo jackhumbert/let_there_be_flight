@@ -11,6 +11,7 @@ struct FlightTelemetry : RED4ext::IScriptable {
   static bool IsOpen(int32_t aFile);
   static void Row(int32_t aFile, RED4ext::DynArray<float> aValues);
   static void End(int32_t aFile);
+  static float WallClock();
 
   RTTI_IMPL_TYPEINFO(FlightTelemetry);
   RTTI_IMPL_ALLOCATOR();
@@ -21,4 +22,5 @@ RTTI_DEFINE_CLASS(FlightTelemetry, {
   RTTI_METHOD(IsOpen);
   RTTI_METHOD(Row);
   RTTI_METHOD(End);
+  RTTI_METHOD(WallClock);
 });
