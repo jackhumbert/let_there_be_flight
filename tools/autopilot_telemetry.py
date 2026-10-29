@@ -11,7 +11,8 @@ were doing there, and the collisions (collision_timer resetting).
 --attitude splits the orientation into heading, pitch and bank (degrees) for the plan (the route
 segment's direction; a route has no bank), the command (targetForward / targetUp) and the car, and
 reports each difference by phase: level and straight, turning (the plan's heading turning faster
-than 8 deg/s), climbing or diving (the plan steeper than 10 deg). --plot PNG draws them over time.
+than 8 deg/s), climbing or diving (the plan steeper than 10 deg). --plot PNG draws them over time,
+with the body tilt and the thrusters' angle off the car's top for logs that have them (drone style).
 
     python tools/autopilot_telemetry.py LOG.csv [--steep 45] [--worst 10] [--attitude] [--plot out.png]
 """
@@ -97,7 +98,9 @@ def plot_attitude(att, rows, path):
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     t = [a["t"] for a in att]
-    fig, ax = plt.subplots(5, 1, figsize=(14, 15), sharex=True)
+    # drone-era logs (2026-10-28) also have the body tilt and the commanded thrust in the car's frame
+    thrust = "thrust_up" in rows[0]
+    fig, ax = plt.subplots(6 if thrust else 5, 1, figsize=(14, 18 if thrust else 15), sharex=True)
     ax[0].plot(t, [r["speed"] for r in rows], label="speed")
     ax[0].plot(t, [r["target"] for r in rows], label="target", alpha=0.7)
     ax[0].set_ylabel("m/s")
@@ -115,7 +118,13 @@ def plot_attitude(att, rows, path):
     ax[4].plot(t, [r["cmd_car"] for r in rows], label="command vs car (nose)", lw=1)
     ax[4].plot(t, [r["up_cmd_car"] for r in rows], label="command vs car (up)", lw=1)
     ax[4].set_ylabel("angle, deg")
-    ax[4].set_xlabel("s")
+    if thrust:
+        ax[5].plot(t, [r["cmd_tilt"] for r in rows], label="body tilt, command", lw=1)
+        ax[5].plot(t, [r["car_tilt"] for r in rows], label="body tilt, car", lw=1)
+        ax[5].plot(t, [math.degrees(math.atan2(math.hypot(r["thrust_right"], r["thrust_fwd"]), r["thrust_up"])) for r in rows],
+                   label="thrust off the car's top", lw=1)
+        ax[5].set_ylabel("deg from vertical / top")
+    ax[-1].set_xlabel("s")
     for a in ax:
         a.legend(loc="upper right", fontsize=8)
         a.grid(alpha=0.3)
