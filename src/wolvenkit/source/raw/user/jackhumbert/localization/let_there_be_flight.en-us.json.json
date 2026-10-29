@@ -860,6 +860,16 @@
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Drone",
+              "femaleVariant": "Drone Style"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Drone-Description",
+              "femaleVariant": "Fly like a quadcopter instead of a plane: the nose stays level and faces along the route, the vehicle tilts towards where it is speeding up, turning or slowing, and the thrusters swivel to give the rest."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Autopilot-Stunts",
               "femaleVariant": "Stunt Interval"
             },

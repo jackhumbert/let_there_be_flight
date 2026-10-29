@@ -76,6 +76,20 @@ public class FlightModeAutopilot extends FlightModeStandard {
   @runtimeProperty("ModSettings.max", "120.0")
   public let stuntInterval: Float = 0.0;      // s between stunts on long straights with aerobatics on (0 = none)
 
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Autopilot")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Autopilot-Drone")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Autopilot-Drone-Description")
+  public let droneStyle: Bool = false;        // fly like a quadcopter (DroneAttitude), not a plane
+
+  // drone style (2026-10-28): the body tilts droneBodyShare of the way to the thrust direction the
+  // commanded acceleration and gravity need, the surge and sway thrusters point the rest (Jack:
+  // with lift and surge both there, 22.5 degrees of body for travelling at 45 degrees), so the
+  // thrusters keep moving; no stunts
+  public let droneBodyShare: Float = 0.5;
+  public let droneMaxTilt: Float = 55.0;      // deg the body tilts at most, either axis (sets the speed envelope)
+  public let droneTiltTime: Float = 0.2;      // s, smoothing of the acceleration the tilt follows
+
   // Race is how the Autopilot flies (2026-10-27): the racing line at the vehicle's full thrust,
   // banking the lift into turns; implies aerobatics. No longer a Mod Setting (a saved "off" would
   // have kept players on the old way); false is the archived normal mode, straight legs between
@@ -374,6 +388,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let pitchRateNow: Float;             // rad/s
   public let commandSurge: Float;             // -1..1, the thrust it commands, for the engine sound
   public let commandSway: Float;
+  public let thrustCmd: Vector4;              // m/s2 in the car's frame (sway, surge, lift) FlyAerobatic set (force is redone by ApplyPhysics)
   public let freeRoam: Bool;                  // flying free roam legs (no destination tracked)
   public let freeRoamCentre: Vector4;
   public let requestJoin: Bool;               // the pending plan is the next free roam leg, from joinPoint
@@ -1533,7 +1548,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
     if this.telemetryFile == 0 {
       this.telemetryFile = FlightTelemetry.Begin("autopilot", "t,x,y,z,vx,vy,vz,speed,speed2d,target,target_rate,cmd,off,following,maneuver,on_line,segment,"
         + "plan_x,plan_y,plan_z,cmd_fwd_x,cmd_fwd_y,cmd_fwd_z,cmd_up_x,cmd_up_y,cmd_up_z,fwd_x,fwd_y,fwd_z,up_x,up_y,up_z,"
-        + "attitude_error,plan_cmd,cmd_car,up_cmd_car,plan_pitch,cmd_pitch,car_pitch,collision_timer");
+        + "attitude_error,plan_cmd,cmd_car,up_cmd_car,plan_pitch,cmd_pitch,car_pitch,collision_timer,"
+        + "drone,cmd_tilt,car_tilt,thrust_right,thrust_fwd,thrust_up");
       this.telemetryClock = 0.0;
       if this.telemetryFile == 0 {
         return;
@@ -1589,6 +1605,13 @@ public class FlightModeAutopilot extends FlightModeStandard {
     ArrayPush(row, FlightModeAutopilot.PitchOf(fwd));
     ArrayPush(row, FlightModeAutopilot.PitchOf(stats.d_forward));
     ArrayPush(row, this.component.collisionTimer);
+    // body tilt from vertical, and the thrust in the car's frame (m/s2: sway, surge, lift)
+    ArrayPush(row, this.droneStyle ? 1.0 : 0.0);
+    ArrayPush(row, FlightModeAutopilot.AngleBetween(up, FlightUtils.Up()));
+    ArrayPush(row, FlightModeAutopilot.AngleBetween(stats.d_up, FlightUtils.Up()));
+    ArrayPush(row, this.thrustCmd.X);
+    ArrayPush(row, this.thrustCmd.Y);
+    ArrayPush(row, this.thrustCmd.Z);
     FlightTelemetry.Row(this.telemetryFile, row);
   }
 
@@ -1753,7 +1776,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
           this.blockedAhead = true;
         }
       }
-      if this.IsAerobatic() {
+      if this.IsAerobatic() && !this.droneStyle {
         this.ChooseManeuver(p, closest, timeDelta);
       }
       // the speed actually flown follows the target through an S-curve: the rate of change eases
@@ -2112,7 +2135,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   private func RaceTopSpeed() -> Float {
     let stats = this.component.stats;
     let k = 1.2 * stats.s_airResistanceFactor / MaxF(stats.s_mass, 1.0);
-    let top = k > 0.0 ? SqrtF(this.standardModeSurgeFactor / k) : this.raceSpeedCap;
+    let push = this.droneStyle ? this.DroneAccel(this.standardModeSurgeFactor) : this.standardModeSurgeFactor;
+    let top = k > 0.0 ? SqrtF(push / k) : this.raceSpeedCap;
     return MinF(0.97 * top, this.freeRoam ? this.freeRoamTopSpeed : this.raceSpeedCap);
   }
 
@@ -2124,6 +2148,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
 
   // Sideways acceleration in a level turn: the full lift banked into it, the rest holding the car up.
   private func RaceLateral() -> Float {
+    if this.droneStyle {
+      return this.DroneAccel(this.standardModeSwayFactor);
+    }
     let g = 9.81 * this.gravityFactor;
     let lift = g + this.standardModeLiftFactor;
     // plus the surge's share with the nose turned into the bend (drift)
@@ -2246,7 +2273,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       i -= 1;
     }
     let stats = this.component.stats;
-    FlightLog.Info("[Autopilot] race: top " + FloatToStringPrec(top, 1) + " m/s, lateral " + FloatToStringPrec(this.RaceLateral(), 1)
+    FlightLog.Info("[Autopilot] race" + (this.droneStyle ? " (drone)" : "") + ": top " + FloatToStringPrec(top, 1) + " m/s, lateral " + FloatToStringPrec(this.RaceLateral(), 1)
       + " m/s2, decel " + FloatToStringPrec(this.RaceDecel(0.0), 1) + " + " + FloatToStringPrec(this.RaceDecel(30.0) - this.RaceDecel(0.0), 1) + " at 30 m/s"
       + " (mass " + FloatToStringPrec(stats.s_mass, 0) + ", air " + FloatToStringPrec(stats.s_airResistanceFactor, 3) + ", brake friction " + FloatToStringPrec(stats.s_brakingFrictionFactor, 2) + ")");
   }
@@ -2526,6 +2553,74 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.bankRateNow = 0.0;
   }
 
+  // Drone style's attitude target: the nose level, along the flight path (the heading at hover
+  // speeds, blend as in FlyAerobatic), the body tilted on each axis towards the thrust direction
+  // the commanded acceleration and gravity need (DroneBodyAngle). FlyAerobatic's thrust then gives
+  // that acceleration in the car's frame: what the tilt leaves along the nose and across goes to
+  // surge and sway, which swivel the thrusters.
+  private func DroneAttitude(dt: Float, accel: Vector4, blend: Float, out fwd: Vector4, out up: Vector4) -> Void {
+    let stats = this.component.stats;
+    let z = FlightUtils.Up();
+    let g = 9.81 * this.gravityFactor;
+    let path = FlightModeAutopilot.Flat(stats.d_velocity + accel * this.attitudeLead);
+    let h = this.headingRef * (1.0 - blend);
+    if Vector4.Length(path) > 1.0 {
+      h += Vector4.Normalize(path) * blend;
+    }
+    h = Vector4.Length(h) > 0.1 ? Vector4.Normalize(h) : this.headingRef;
+    let side = Vector4.Normalize(Vector4.Cross(h, z));
+    this.attAccel += (accel - this.attAccel) * ClampF(dt / this.droneTiltTime, 0.0, 1.0);
+    let thrust = this.attAccel + z * g;
+    // pushing down harder than gravity is the lift's job (negative lift), not a body turned over
+    thrust.Z = MaxF(thrust.Z, 0.3 * g);
+    let size = Vector4.Length(thrust);
+    let ahead = Vector4.Dot(thrust, h);
+    // braking: reverse surge and the brake (RaceDecel), much more than forward surge
+    let along = ahead >= 0.0 ? this.standardModeSurgeFactor : this.RaceDecel(stats.d_speed) - this.DragAccel(stats.d_speed);
+    let cap = Deg2Rad(this.droneMaxTilt);
+    let pitch = ClampF(this.DroneBodyAngle(AtanF(ahead, thrust.Z), size, along), -cap, cap);
+    let roll = ClampF(this.DroneBodyAngle(AtanF(Vector4.Dot(thrust, side), thrust.Z), size, this.standardModeSwayFactor), -cap, cap);
+    // top towards the thrust: tilted forward is nose down, as a quadcopter speeding up
+    up = Vector4.Normalize(z + h * TanF(pitch) + side * TanF(roll));
+    fwd = Vector4.Normalize(FlightAttitude.Across(h, up));
+  }
+
+  // The body's tilt on one axis for a thrust direction `angle` from vertical: droneBodyShare of it,
+  // or more where the thrusters (`thrusters` m/s2 across the body at most, raceMargin of it planned)
+  // cannot point the rest of `thrust` m/s2. Sway is 5 m/s2, so turns lean mostly on the body.
+  private func DroneBodyAngle(angle: Float, thrust: Float, thrusters: Float) -> Float {
+    let reach = AsinF(ClampF(this.raceMargin * thrusters / MaxF(thrust, 0.1), 0.0, 1.0));
+    let body = angle * this.droneBodyShare;
+    let rest = angle - body;
+    if rest > reach {
+      return angle - reach;
+    }
+    if rest < -reach {
+      return angle + reach;
+    }
+    return body;
+  }
+
+  // Drone style's envelope: the most horizontal acceleration level flight leaves along one body
+  // axis, the body tilted at most droneMaxTilt with `thrusters` m/s2 across it and the lift (at most
+  // g + standardModeLiftFactor) holding the car up.
+  private func DroneAccel(thrusters: Float) -> Float {
+    let g = 9.81 * this.gravityFactor;
+    let liftMax = g + this.standardModeLiftFactor;
+    let best = thrusters;
+    let deg = 1.0;
+    while deg <= this.droneMaxTilt {
+      let b = Deg2Rad(deg);
+      let lift = (g + thrusters * SinF(b)) / CosF(b);
+      if lift > liftMax {
+        break;
+      }
+      best = MaxF(best, lift * SinF(b) + thrusters * CosF(b));
+      deg += 1.0;
+    }
+    return best;
+  }
+
   // Flies the commanded acceleration with the car's attitude as a full 3D target: the nose along
   // the flight path (the heading at hover speeds), the top towards the turn and away from gravity
   // (a coordinated turn in any direction), or a manoeuvre's own attitude. Thrust is applied along
@@ -2560,6 +2655,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
       let refAcc: Vector4;
       this.maneuver.Sample(ahead, refPos, refVel, refAcc, fwd, up);
       this.SyncPitch(fwd);
+    } else if this.droneStyle && !IsDefined(this.maneuver) {
+      this.DroneAttitude(dt, accel, blend, fwd, up);
     } else {
       // nose: the velocity plus a little of the commanded acceleration, so it leads into turns,
       // climbs and dives
@@ -2698,6 +2795,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       local.Z = ClampF(local.Z, g - this.standardModeLiftFactor, g + this.standardModeLiftFactor);
     }
     this.force = local;
+    this.thrustCmd = local;
     this.torque = torque;
     // inputs for audio and the thrusters' look; no yaw input, ApplyPhysics damps less on an axis
     // with input and the give-back above assumes full damping
