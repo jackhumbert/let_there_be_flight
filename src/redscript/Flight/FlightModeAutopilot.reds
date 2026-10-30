@@ -85,6 +85,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // (standardModeLiftFactor - g) of lift downwards, 25 m/s2, planned at raceMargin
   public let dronePushOver: Float = 21.0;
   private let vehicleModel: ref<FlightVehicleModel>;
+  // fly the speeds of the route's trajectory (FlightTrajectory, docs/design/trajectory.md) instead of
+  // working them out while flying; off until the A/B in game passes (LtbfBridge.UseTrajectory)
+  public let useTrajectory: Bool = false;
+  public let trajectory: ref<FlightTrajectory>;
   public let droneYawLead: Float = 0.3;       // s along the racing line the nose aims (DroneAttitude)
   public let droneYawFrequency: Float = 3.0;  // rad/s, heading easing
   public let droneYawRateMax: Float = 1.5;    // rad/s
@@ -1715,13 +1719,22 @@ public class FlightModeAutopilot extends FlightModeStandard {
       // eased.
       // (slowing responds faster than speeding up: lagging behind a braking curve means arriving
       // too fast; AllowedSpeed also starts its curves brakeLead earlier for the ramp-in)
-      let slowing = this.targetSpeed < this.speedCmd;
-      let rateDown = this.RaceDecel(this.speedCmd);
-      let rateUp = this.Vehicle().Accel(this.speedCmd);
-      let wantedRate = ClampF(this.targetRate + (this.targetSpeed - this.speedCmd) * (slowing ? 2.0 * this.speedGain : this.speedGain), -rateDown, rateUp);
-      let jerk = this.raceJerk * timeDelta;
-      this.speedRate += ClampF(wantedRate - this.speedRate, -jerk, jerk);
-      this.speedCmd = MaxF(this.speedCmd + this.speedRate * timeDelta, 0.0);
+      if this.FollowsTrajectory() {
+        // the trajectory's speed and its rate at the car's place on the line, a moment ahead for
+        // the time the thrust takes; braking for blocked space still overrides it (below)
+        let sRef = this.closestS + stats.d_speed * this.lineLead;
+        this.targetSpeed = this.trajectory.Speed(sRef);
+        this.speedCmd = this.targetSpeed;
+        this.speedRate = this.trajectory.Along(sRef);
+      } else {
+        let slowing = this.targetSpeed < this.speedCmd;
+        let rateDown = this.RaceDecel(this.speedCmd);
+        let rateUp = this.Vehicle().Accel(this.speedCmd);
+        let wantedRate = ClampF(this.targetRate + (this.targetSpeed - this.speedCmd) * (slowing ? 2.0 * this.speedGain : this.speedGain), -rateDown, rateUp);
+        let jerk = this.raceJerk * timeDelta;
+        this.speedRate += ClampF(wantedRate - this.speedRate, -jerk, jerk);
+        this.speedCmd = MaxF(this.speedCmd + this.speedRate * timeDelta, 0.0);
+      }
       // blocked space: ease into it like any other limit while there is room to stop at brakeMax,
       // snap down (and brake hard) only when there is not and it has been blocked for a moment.
       // At speed the 1.5 s velocity ray often pokes into geometry the route is about to bend
@@ -2134,10 +2147,28 @@ public class FlightModeAutopilot extends FlightModeStandard {
     }
     this.FlattenSpeedHumps();
     this.PlanStops();
+    this.BuildTrajectory();
     let stats = this.component.stats;
     FlightLog.Info("[Autopilot] race" + (this.droneStyle ? " (drone)" : "") + ": " + ToString(ArraySize(this.stopStartS)) + " stops, top " + FloatToStringPrec(top, 1) + " m/s, lateral " + FloatToStringPrec(this.RaceLateral(), 1)
       + " m/s2, decel " + FloatToStringPrec(this.RaceDecel(0.0), 1) + " + " + FloatToStringPrec(this.RaceDecel(30.0) - this.RaceDecel(0.0), 1) + " at 30 m/s"
       + " (mass " + FloatToStringPrec(stats.s_mass, 0) + ", air " + FloatToStringPrec(stats.s_airResistanceFactor, 3) + ", brake friction " + FloatToStringPrec(stats.s_brakingFrictionFactor, 2) + ")");
+  }
+
+  // The route's trajectory for this car: from the car's speed when the route starts at the car, free
+  // to start at any speed when the route is rebuilt around a car already on it (a spliced leg, a
+  // moved landing spot).
+  // On a racing line with a trajectory for it, nothing blocked ahead: speeds come from the trajectory.
+  private func FollowsTrajectory() -> Bool {
+    return this.useTrajectory && this.routeLine && !this.blockedAhead && IsDefined(this.trajectory) && this.trajectory.IsValid();
+  }
+
+  private func BuildTrajectory() -> Void {
+    let start = this.closestS < 1.0 ? this.component.stats.d_speed : 1000.0;
+    this.trajectory = FlightTrajectory.Build(this.route, this.Vehicle(), start, true);
+    let bad = this.trajectory.Violations();
+    if StrLen(bad) > 0 {
+      FlightLog.Warn("[Autopilot] trajectory outside the car's limits: " + bad);
+    }
   }
 
   // Small rises of the profile between two slowings held down: where the speed climbs less than
