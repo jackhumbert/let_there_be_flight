@@ -46,7 +46,7 @@
       ],
       "truth": "the wall left of the 15 m gap the North route takes under the elevated road (real collision)",
       "navmap": "blocked",
-      "cause": "real collision: exterior_-10_-6_0_1 Complex / Simple Environment Collision, exterior_-19_-12_0_0 World Static",
+      "cause": "real collision: exterior_-19_-12_0_0 World Static boxes (node 326 groups 5 and 6) and exterior_-10_-6_0_1 Simple Environment Collision; Complex Environment Collision there is query only (shooting, visibility) and blocks nothing",
       "rays": [
         [
           -1166,
@@ -58,7 +58,7 @@
         ]
       ],
       "expect": "hit",
-      "note": "2026-10-30 in game: LtbfBridge.Ray came back clear here (expected hit). Its preset is Complex Environment Collision, likely outside the ray's query groups (Static, Terrain, VehicleBlocker, PlayerBlocker): to check before trusting a clear ray on such collision."
+      "note": "In game the ray hits at x -1156 (metal) once V stands next to the box: this wall is in a finest-level sector (exterior_-19_-12_0_0), which streams in only close by."
     }
   ]
 }
