@@ -123,6 +123,13 @@ struct PlanParams {
   float maxCruise = 700.0f;
   // racing lines: a slot whose room costs more than slotDetourLoss m/s, or slotDetourShare of the speed
   // there (and slotDetourLossMin at least), is routed around when that loses less (PlanRace)
+  // a plan from a car already flying (|startVelocity| over 5 m/s): the route starts with a straight
+  // lead-in of startLead seconds along the velocity (15 to 80 m), so the line leaves the start the way
+  // the car is going, and the start is not smoothed as a take-off (lineTakeoff)
+  Vec3 startVelocity{0.0f, 0.0f, 0.0f};
+  float startLead = 1.0f;
+  bool lineTakeoff = true;           // the line's first lineFloorEnds kept as planned (a take-off from the street)
+  bool lineLanding = true;           // the line's last lineFloorEnds kept as planned (a landing)
   float lineSettle = 0.0005f;   // m per point a smoothing pass moves at most once settled (RacingLine)
   float slotDetourLoss = 20.0f;
   float slotDetourShare = 0.25f;
@@ -162,6 +169,13 @@ PlanResult PlanWithRetries(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const Pl
 // 20% longer and loses less speed in dips (DipLoss); otherwise the first line, flown slower there. Jack, 2026-10-30: a small slowdown is flown, a large one routed round.
 PlanResult PlanRace(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &aParams,
                     const std::function<void(const PlanResult &)> &aAttempt = {});
+
+// Back onto a racing line after leaving it (a hit, knocked off it): a connector from aCar, flying at
+// startVelocity (a lead-in along it), to the point aJoinAhead metres along aLine past the car, ending
+// along the line's next lineFloorEnds, then the rest of aLine as it was. aLine: the line still ahead,
+// from about the car's place on it.
+PlanResult PlanRejoin(const NavMap &aMap, Vec3 aCar, const std::vector<Vec3> &aLine, float aJoinAhead,
+                      const PlanParams &aParams);
 
 // The Race's route character: what FlightNavMap::PlanRaceAsync starts from before the Autopilot's
 // race route fields (raceRouteHeight, raceClimbCost, raceMinPassage, raceSearchWeight, raceTurnCost,

@@ -27,7 +27,11 @@ public native class FlightNavMap extends IScriptable {
   // the same search on a worker thread: poll IsPlanReady, then TakePlan once
   public native static func PlanAsync(start: Vector4, goal: Vector4, direct: Bool) -> Int32;
   // PlanAsync with the route spread into a racing line of wide bends (the Autopilot's Race option)
-  public native static func PlanRaceAsync(start: Vector4, goal: Vector4, preferredHeight: Float, climbCost: Float, minPassage: Float, heuristicWeight: Float, turnCost: Float, vehicle: ref<FlightVehicleModel>, detour: Bool) -> Int32;
+  public native static func PlanRaceAsync(start: Vector4, goal: Vector4, preferredHeight: Float, climbCost: Float, minPassage: Float, heuristicWeight: Float, turnCost: Float, vehicle: ref<FlightVehicleModel>, detour: Bool, avoid: array<Vector4>, velocity: Vector4) -> Int32;
+  // back onto the route's line after leaving it: a connector from car (flying at velocity) to the line
+  // joinAhead metres on, then the rest of line (the line from about the car's place on it); taken with
+  // IsPlanReady / TakePlan like the others
+  public native static func PlanRejoinAsync(car: Vector4, velocity: Vector4, line: array<Vector4>, joinAhead: Float, vehicle: ref<FlightVehicleModel>, avoid: array<Vector4>) -> Int32;
   public native static func IsPlanReady(id: Int32) -> Bool;
   public native static func TakePlan(id: Int32) -> array<Vector4>;
   // autopilot destination override (testing, other mods); wins over the GPS target

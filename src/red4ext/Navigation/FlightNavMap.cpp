@@ -158,7 +158,8 @@ int32_t FlightNavMap::PlanAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal,
 
 int32_t FlightNavMap::PlanRaceAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, float aPreferredHeight,
                                     float aClimbCost, float aMinPassage, float aHeuristicWeight, float aTurnCost,
-                                    RED4ext::Handle<FlightVehicleModel> aVehicle, bool aDetour) {
+                                    RED4ext::Handle<FlightVehicleModel> aVehicle, bool aDetour,
+                                    RED4ext::DynArray<RED4ext::Vector4> aAvoid, RED4ext::Vector4 aVelocity) {
   auto params = planParams;
   Navigation::RacePreset(params);
   // the line is shaped for the car flying it (TurnCost)
@@ -169,6 +170,12 @@ int32_t FlightNavMap::PlanRaceAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aG
   if (!aDetour) {
     params.slotDetourLoss = params.slotDetourLossMin = 1e9f;
   }
+  // the car's velocity: a plan for a car already flying starts the way it is going
+  params.startVelocity = {aVelocity.X, aVelocity.Y, aVelocity.Z};
+  // places the car hit something lately (x, y, z, radius in w): routed round like a tight slot
+  for (const auto &a : aAvoid) {
+    params.avoid.push_back({{a.X, a.Y, a.Z}, std::max(a.W, 1.0f), params.slotAvoidCost});
+  }
   // the route's character from the Autopilot's race route fields (defaults as RacePreset)
   params.preferredHeight = aPreferredHeight;
   params.climbCost = aClimbCost;
@@ -176,6 +183,40 @@ int32_t FlightNavMap::PlanRaceAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aG
   params.heuristicWeight = std::max(1.0f, aHeuristicWeight);
   params.turnCost = std::max(0.0f, aTurnCost);
   return StartPlan(aStart, aGoal, params);
+}
+
+int32_t FlightNavMap::PlanRejoinAsync(RED4ext::Vector4 aCar, RED4ext::Vector4 aVelocity, RED4ext::DynArray<RED4ext::Vector4> aLine,
+                                      float aJoinAhead, RED4ext::Handle<FlightVehicleModel> aVehicle,
+                                      RED4ext::DynArray<RED4ext::Vector4> aAvoid) {
+  auto params = planParams;
+  Navigation::RacePreset(params);
+  if (aVehicle) {
+    params.vehicle = aVehicle->Spec();
+  }
+  params.startVelocity = {aVelocity.X, aVelocity.Y, aVelocity.Z};
+  for (const auto &a : aAvoid) {
+    params.avoid.push_back({{a.X, a.Y, a.Z}, std::max(a.W, 1.0f), params.slotAvoidCost});
+  }
+  std::vector<Navigation::Vec3> line;
+  for (const auto &p : aLine) {
+    line.push_back({p.X, p.Y, p.Z});
+  }
+  Navigation::Vec3 car{aCar.X, aCar.Y, aCar.Z};
+  auto request = std::make_shared<Request>();
+  int32_t id;
+  {
+    std::lock_guard guard(requestsLock);
+    id = nextRequest++;
+    requests[id] = request;
+  }
+  std::thread([request, car, line, aJoinAhead, params]() {
+    auto result = Navigation::PlanRejoin(Navigation::NavMap::Get(), car, line, aJoinAhead, params);
+    spdlog::info("[NavMap] {}", result.info);
+    std::lock_guard guard(requestsLock);
+    request->result = std::move(result);
+    request->ready = true;
+  }).detach();
+  return id;
 }
 
 namespace {

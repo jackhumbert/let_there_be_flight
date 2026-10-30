@@ -174,6 +174,89 @@ PlanResult PlanRace(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParam
   return result;
 }
 
+PlanResult PlanRejoin(const NavMap &aMap, Vec3 aCar, const std::vector<Vec3> &aLine, float aJoinAhead,
+                      const PlanParams &aParams) {
+  auto t0 = std::chrono::steady_clock::now();
+  PlanResult out;
+  if (aLine.size() < 3) {
+    out.info = "rejoin: no line ahead";
+    return out;
+  }
+  // the join: aJoinAhead along the line from its point nearest the car; the lead-out: the line's
+  // next lineFloorEnds after it, so the connector ends going the way the line goes
+  size_t nearest = 0;
+  for (size_t i = 1; i < aLine.size(); ++i) {
+    nearest = Distance(aCar, aLine[i]) < Distance(aCar, aLine[nearest]) ? i : nearest;
+  }
+  size_t join = nearest;
+  for (float d = 0.0f; join + 1 < aLine.size() && d < aJoinAhead; ++join) {
+    d += Distance(aLine[join], aLine[join + 1]);
+  }
+  size_t leadOut = join;
+  for (float d = 0.0f; leadOut + 1 < aLine.size() && d < aParams.lineFloorEnds; ++leadOut) {
+    d += Distance(aLine[leadOut], aLine[leadOut + 1]);
+  }
+  if (leadOut <= join + 1) {
+    out.info = "rejoin: the line ends too soon after the car";
+    return out;
+  }
+  auto params = aParams;
+  params.racingLine = false; // the connector's route first, its line below with the lead-out on it
+  params.doorways = false;
+  // straight when the air allows: the lead-in along the car's velocity, then straight to the join
+  // (knocked off a line, the car is mostly in open air); otherwise searched at the car's own height
+  // over the floor, not the Race's (the search climbed 50 m and the car braked for it)
+  PlanResult route;
+  {
+    const Vec3 v = aParams.startVelocity;
+    const float speed = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+    Vec3 ahead = aCar;
+    if (speed > 5.0f) {
+      const float lead = std::clamp(speed * aParams.startLead, 15.0f, 80.0f) / speed;
+      ahead = {aCar.x + v.x * lead, aCar.y + v.y * lead, aCar.z + v.z * lead};
+    }
+    const Vec3 &to = aLine[join];
+    const bool leadClear = ClearWide(aMap, aCar, ahead, aParams.lineSide), toClear = ClearWide(aMap, ahead, to, aParams.lineSide);
+    out.info = fmt::format(" (lead-in {}, straight on {})", leadClear ? "clear" : "blocked", toClear ? "clear" : "blocked");
+    if (leadClear && toClear) {
+      route.ok = true;
+      route.points = {aCar, ahead, to};
+      route.length = Distance(aCar, ahead) + Distance(ahead, to);
+    } else {
+      Gap gap;
+      if (aMap.FindGap(aCar.x, aCar.y, aCar.z, gap)) {
+        params.preferredHeight = std::max(aCar.z - gap.bottom, 5.0f);
+      }
+      route = Plan(aMap, aCar, to, params);
+    }
+  }
+  if (!route.ok) {
+    out.info = "rejoin: " + route.info;
+    return out;
+  }
+  std::vector<Vec3> pts = route.points;
+  pts.insert(pts.end(), aLine.begin() + join + 1, aLine.begin() + leadOut + 1);
+  params.racingLine = true;
+  params.lineTakeoff = false;
+  params.lineLanding = false;
+  auto line = RacingLine(aMap, pts, params);
+  if (LongestBlocked(aMap, line) > kGrazeAllowedLine) {
+    line = pts; // the connector's own route, corners and all
+  }
+  out.points = std::move(line);
+  out.points.insert(out.points.end(), aLine.begin() + leadOut + 1, aLine.end());
+  out.ok = true;
+  out.expansions = route.expansions;
+  out.milliseconds = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
+  for (size_t i = 0; i + 1 < out.points.size(); ++i) {
+    out.length += Distance(out.points[i], out.points[i + 1]);
+  }
+  out.info = fmt::format("rejoin: {:.0f} m {} to the line {:.0f} m on, {} points in all, {:.1f} ms{}", route.length,
+                         route.points.size() == 3 && route.expansions == 0 ? "straight" : "searched", aJoinAhead, out.points.size(),
+                         out.milliseconds, out.info);
+  return out;
+}
+
 PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &aParams) {
   auto t0 = std::chrono::steady_clock::now();
   PlanResult out;
@@ -196,6 +279,22 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
 
   if (!aMap.IsLoaded()) {
     return finish("no nav map");
+  }
+  // already flying: searched from the end of a straight lead-in along the velocity, the car's own
+  // position put back in front, so the line leaves the start the way the car is going
+  const Vec3 car = aStart;
+  bool leadIn = false;
+  {
+    const Vec3 v = aParams.startVelocity;
+    const float speed = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+    if (speed > 5.0f) {
+      const float lead = std::clamp(speed * aParams.startLead, 15.0f, 80.0f) / speed;
+      const Vec3 ahead{car.x + v.x * lead, car.y + v.y * lead, car.z + v.z * lead};
+      if (aMap.SegmentClear(car.x, car.y, car.z, ahead.x, ahead.y, ahead.z) >= 1.0f) {
+        aStart = ahead;
+        leadIn = true;
+      }
+    }
   }
   NavMap::View view(aMap);
   const int32_t width = aMap.Width();
@@ -662,11 +761,16 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
   if (out.points.size() == 1) {
     out.points.push_back(goal); // start and goal share a column
   }
+  if (leadIn) {
+    out.points.insert(out.points.begin(), car);
+  }
   out.ok = true;
   out.searchMilliseconds = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
   if (aParams.racingLine && out.points.size() > 2) {
     // kept only if the finished line is free all the way; otherwise the pulled route stays
-    auto line = RacingLine(aMap, out.points, aParams);
+    auto lineParams = aParams;
+    lineParams.lineTakeoff = lineParams.lineTakeoff && !leadIn;
+    auto line = RacingLine(aMap, out.points, lineParams);
     // (the stretch out from under cover to the free space is blocked on the map: not counted)
     if (LongestBlocked(aMap, line, startLeg + 5.0f) <= kGrazeAllowedLine) {
       out.points = std::move(line);

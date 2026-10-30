@@ -91,6 +91,20 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let trajectory: ref<FlightTrajectory>;
   public let trajectoryAttitudeLead: Float = 0.0;  // s ahead the planned tilt is read (the plan's tilts already start early)
   private let attRef: Vector4;                     // the trajectory's acceleration, smoothed as attAccel is
+  // leaving the line on a trajectory (docs/design/trajectory.md, step 5): replanned from the car's
+  // state, never steered back to a point behind it
+  public let replanOffLine: Float = 8.0;    // m off the line before replanning (replanDistance without a trajectory)
+  public let trajectoryCorrectionMax: Float = 15.0; // m/s2 the follower adds to the trajectory's acceleration at most
+  public let rejoinAhead: Float = 3.0;      // s of the car's speed along the line it rejoins it (rejoinMin m at least)
+  public let rejoinMin: Float = 150.0;
+  private let requestRejoin: Bool;
+  public let hitAvoidRadius: Float = 10.0;  // m round a hit the next plans keep away from
+  public let hitAvoidTime: Float = 60.0;    // s a hit is kept away from
+  private let lastCollisionTimer: Float = 1000.0;
+  private let recovering: Float;            // s left of the controls' damping after a hit (FlightComponent.ProcessImpact)
+  private let hits: array<Vector4>;         // x, y, z and the radius kept away from
+  private let hitTimes: array<Float>;
+  private let clock: Float;
   public let droneYawLead: Float = 0.3;       // s along the racing line the nose aims (DroneAttitude)
   public let droneYawFrequency: Float = 3.0;  // rad/s, heading easing
   public let droneYawRateMax: Float = 1.5;    // rad/s
@@ -754,7 +768,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
       && Vector4.Distance(this.routeGoal, this.routeGateEntry) < 1.0 {
       this.gateTail = this.routeGateTail;
     }
-    this.request = FlightNavMap.PlanRaceAsync(from, this.routeGoal, this.raceRouteHeight, this.raceClimbCost, this.raceMinPassage, this.raceSearchWeight, this.raceTurnCost, this.Vehicle(), this.useTrajectory);
+    this.request = FlightNavMap.PlanRaceAsync(from, this.routeGoal, this.raceRouteHeight, this.raceClimbCost, this.raceMinPassage, this.raceSearchWeight, this.raceTurnCost, this.Vehicle(), this.useTrajectory, this.hits,
+      this.useTrajectory ? this.component.stats.d_velocity : new Vector4(0.0, 0.0, 0.0, 0.0));
     this.replanTimer = 3.0;
     if ArraySize(this.route) < 2 {
       // nothing to follow meanwhile: hold here (a replan keeps following the old route)
@@ -799,6 +814,14 @@ public class FlightModeAutopilot extends FlightModeStandard {
     if this.request > 0 && FlightNavMap.IsPlanReady(this.request) {
       let points = FlightNavMap.TakePlan(this.request);
       this.request = 0;
+      if this.requestRejoin {
+        this.requestRejoin = false;
+        FlightLog.Info("[Autopilot] " + FlightNavMap.GetLastPlanInfo());
+        if ArraySize(points) < 2 {
+          this.RequestRoute(this.component.stats.d_position);
+          return;
+        }
+      }
       // a free roam leg to a gate: planned to just before it, then straight through
       let gateLeg = ArraySize(points) >= 2 && ArraySize(this.gateTail) > 0;
       if gateLeg {
@@ -1605,6 +1628,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.WriteTelemetry(p, v, timeDelta);
 
     this.UpdateRoute(timeDelta);
+    if this.useTrajectory {
+      this.WatchHits(timeDelta, p, v);
+    }
 
     if this.PlayerInput() {
       this.overrideTimer = this.overrideHold;
@@ -1641,7 +1667,13 @@ public class FlightModeAutopilot extends FlightModeStandard {
       this.offRouteNow = offRoute;
       this.closestNow = closest;
       this.closestS = this.routeLength[this.segment] + Vector4.Distance(this.route[this.segment], closest);
-      if offRoute > this.replanDistance && this.replanTimer <= 0.0 && this.request == 0 {
+      if this.useTrajectory && this.routeLine {
+        // off the line on a trajectory: a new one from where the car is going, at most once a second
+        if offRoute > this.replanOffLine && this.recovering <= 0.0 && this.replanTimer <= 2.0 && this.request == 0 {
+          FlightLog.Info("[Autopilot] " + FloatToStringPrec(offRoute, 1) + " m off the line at " + FloatToStringPrec(stats.d_speed, 1) + " m/s: replanning from here");
+          this.Replan(p, v);
+        }
+      } else if offRoute > this.replanDistance && this.replanTimer <= 0.0 && this.request == 0 {
         this.RequestRoute(p);
       }
       let ahead = ClampF(0.7 * stats.d_speed + 12.0, 15.0, 90.0);
@@ -1764,7 +1796,15 @@ public class FlightModeAutopilot extends FlightModeStandard {
       } else {
         this.stuckTimer = 0.0;
       }
-      if this.stuckTimer > 4.0 {
+      if this.stuckTimer > 4.0 && this.useTrajectory {
+        // wedged: out to the nearest free space first, and a new route from there
+        let free = this.NearestFree(p);
+        FlightLog.Warn("[Autopilot] wedged at " + FloatToStringPrec(p.X, 1) + ", " + FloatToStringPrec(p.Y, 1) + ", " + FloatToStringPrec(p.Z, 1)
+          + ": out to " + FloatToStringPrec(free.X, 1) + ", " + FloatToStringPrec(free.Y, 1) + ", " + FloatToStringPrec(free.Z, 1) + " and replanning");
+        this.stuckTimer = 0.0;
+        ArrayClear(this.route);
+        this.RequestRoute(free);
+      } else if this.stuckTimer > 4.0 {
         this.status = "stuck";
         this.holdPosition = p;
         ArrayClear(this.route);
@@ -1916,7 +1956,14 @@ public class FlightModeAutopilot extends FlightModeStandard {
       // the bend at the speed actually flown on a trajectory (planned at its own speed, a car a little
       // slower turned in too hard and ran inside the line)
       let bendSpeed = this.FollowsTrajectory() ? stats.d_speed : this.speedCmd;
-      accel = (desiredVelocity - v) * this.lineVelocityGain + bend * (bendSpeed * bendSpeed) + tangent * this.speedRate;
+      let correct = (desiredVelocity - v) * this.lineVelocityGain;
+      // on a trajectory its own acceleration goes in whole and the correction is capped: flying a
+      // little across a new line (just replanned), the whole velocity error braked the car from 79
+      // to 18 m/s against 57 planned
+      if this.FollowsTrajectory() && Vector4.Length(correct) > this.trajectoryCorrectionMax {
+        correct = Vector4.Normalize(correct) * this.trajectoryCorrectionMax;
+      }
+      accel = correct + bend * (bendSpeed * bendSpeed) + tangent * this.speedRate;
       target = this.PointAt(this.closestS + 30.0);
       this.lookahead = target;
       jerk = this.raceJerk;
@@ -1957,6 +2004,12 @@ public class FlightModeAutopilot extends FlightModeStandard {
           + " from " + FloatToStringPrec(this.maneuver.origin.X, 1) + ", " + FloatToStringPrec(this.maneuver.origin.Y, 1) + ", " + FloatToStringPrec(this.maneuver.origin.Z, 1));
         this.EndManeuver();
       }
+    }
+    // after a hit, while the controls are damped: hold the velocity the car has (pulled back to the
+    // line it reversed towards a point it had passed), level, until the replan
+    if this.recovering > 0.0 && following {
+      accel = new Vector4(0.0, 0.0, 0.0, 0.0);
+      desiredVelocity = v;
     }
     // ease changes of the acceleration itself (it is what is felt): rate-limit the command,
     // except in an emergency stop for blocked space
@@ -2162,6 +2215,73 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // The route's trajectory for this car: from the car's speed when the route starts at the car, free
   // to start at any speed when the route is rebuilt around a car already on it (a spliced leg, a
   // moved landing spot).
+  // A hit (FlightComponent resets collisionTimer): remembered for the next plans for hitAvoidTime,
+  // and once the controls' damping is over (collisionRecoveryDelay) a replan from the car's state.
+  private func WatchHits(dt: Float, p: Vector4, v: Vector4) -> Void {
+    this.clock += dt;
+    let timer = this.component.collisionTimer;
+    if timer < this.lastCollisionTimer - 0.05 && Equals(this.status, "following") {
+      ArrayPush(this.hits, new Vector4(p.X, p.Y, p.Z, this.hitAvoidRadius));
+      ArrayPush(this.hitTimes, this.clock);
+      this.recovering = FlightSettings.GetFloat("collisionRecoveryDelay");
+      FlightLog.Info("[Autopilot] hit at " + FloatToStringPrec(p.X, 1) + ", " + FloatToStringPrec(p.Y, 1) + ", " + FloatToStringPrec(p.Z, 1)
+        + " at " + FloatToStringPrec(Vector4.Length(v), 1) + " m/s: holding, then replanning round it");
+    }
+    this.lastCollisionTimer = timer;
+    while ArraySize(this.hitTimes) > 0 && this.clock - this.hitTimes[0] > this.hitAvoidTime {
+      ArrayErase(this.hits, 0);
+      ArrayErase(this.hitTimes, 0);
+    }
+    if this.recovering > 0.0 {
+      this.recovering -= dt;
+      if this.recovering <= 0.0 && this.request == 0 && Equals(this.status, "following") {
+        this.Replan(p, v);
+      }
+    }
+  }
+
+  // Back onto the line from where the car is: a connector from it (a lead-in along its velocity) to the
+  // line a few seconds on, then the rest of the line as it was (FlightNavMap.PlanRejoinAsync; a full
+  // replan when there is no line left to rejoin, or no way back onto it).
+  private func Replan(p: Vector4, v: Vector4) -> Void {
+    let n = ArraySize(this.route);
+    if !this.routeLine || n - this.segment < 4 {
+      this.RequestRoute(p);
+      return;
+    }
+    let line: array<Vector4>;
+    let i = this.segment;
+    while i < n {
+      ArrayPush(line, this.route[i]);
+      i += 1;
+    }
+    this.requestRace = true;
+    this.requestJoin = false;
+    this.requestRejoin = true;
+    this.request = FlightNavMap.PlanRejoinAsync(p, v, line, MaxF(this.rejoinMin, Vector4.Length(v) * this.rejoinAhead), this.Vehicle(), this.hits);
+    this.replanTimer = 3.0;
+  }
+
+  // The nearest free point to p on the nav map, up, sideways or down, 1 to 8 m out (p if none).
+  private func NearestFree(p: Vector4) -> Vector4 {
+    if FlightNavMap.IsFree(p) {
+      return p;
+    }
+    let r = 1.0;
+    while r <= 8.0 {
+      let dirs = [new Vector4(0.0, 0.0, 1.0, 0.0), new Vector4(1.0, 0.0, 0.0, 0.0), new Vector4(-1.0, 0.0, 0.0, 0.0),
+        new Vector4(0.0, 1.0, 0.0, 0.0), new Vector4(0.0, -1.0, 0.0, 0.0), new Vector4(0.0, 0.0, -1.0, 0.0)];
+      for d in dirs {
+        let q = p + d * r;
+        if FlightNavMap.IsFree(q) {
+          return q;
+        }
+      }
+      r += 1.0;
+    }
+    return p;
+  }
+
   // On a racing line with a trajectory for it, nothing blocked ahead: speeds come from the trajectory.
   private func FollowsTrajectory() -> Bool {
     return this.useTrajectory && this.routeLine && !this.blockedAhead && IsDefined(this.trajectory) && this.trajectory.IsValid();

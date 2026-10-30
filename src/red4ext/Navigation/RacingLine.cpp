@@ -384,8 +384,8 @@ void SmoothLateral(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
   }
   const float step = 0.5f;
   for (size_t i = 1; i + 1 < n; ++i) {
-    if (along[i] <= aParams.lineFloorEnds || along.back() - along[i] <= aParams.lineFloorEnds) {
-      continue; // the take-off and the landing stay as they are
+    if ((aParams.lineTakeoff && along[i] <= aParams.lineFloorEnds) || (aParams.lineLanding && along.back() - along[i] <= aParams.lineFloorEnds)) {
+      continue; // the take-off and the landing stay as they are (a car already flying has no take-off)
     }
     float tx = aPts[i + 1].x - aPts[i - 1].x, ty = aPts[i + 1].y - aPts[i - 1].y;
     float tl = std::hypot(tx, ty);

@@ -42,7 +42,13 @@ struct FlightNavMap : RED4ext::IScriptable {
   // PlanAsync with the racing line (Planner.hpp): the Autopilot's Race option
   static int32_t PlanRaceAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, float aPreferredHeight, float aClimbCost,
                                float aMinPassage, float aHeuristicWeight, float aTurnCost,
-                               RED4ext::Handle<FlightVehicleModel> aVehicle, bool aDetour);
+                               RED4ext::Handle<FlightVehicleModel> aVehicle, bool aDetour,
+                               RED4ext::DynArray<RED4ext::Vector4> aAvoid, RED4ext::Vector4 aVelocity);
+  // back onto the route's line after leaving it: a connector from aCar (flying at aVelocity) to the
+  // line joinAhead metres on, then the rest of aLine (the line from about the car's place on it)
+  static int32_t PlanRejoinAsync(RED4ext::Vector4 aCar, RED4ext::Vector4 aVelocity, RED4ext::DynArray<RED4ext::Vector4> aLine,
+                                 float aJoinAhead, RED4ext::Handle<FlightVehicleModel> aVehicle,
+                                 RED4ext::DynArray<RED4ext::Vector4> aAvoid);
   static bool IsPlanReady(int32_t aId);
   static RED4ext::DynArray<RED4ext::Vector4> TakePlan(int32_t aId);
 
@@ -95,6 +101,7 @@ RTTI_DEFINE_CLASS(FlightNavMap, {
   RTTI_METHOD(SetPlanParameters);
   RTTI_METHOD(PlanAsync);
   RTTI_METHOD(PlanRaceAsync);
+  RTTI_METHOD(PlanRejoinAsync);
   RTTI_METHOD(IsPlanReady);
   RTTI_METHOD(TakePlan);
   RTTI_METHOD(SetTargetOverride);
