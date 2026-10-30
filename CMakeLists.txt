@@ -178,6 +178,7 @@ add_executable(navplan EXCLUDE_FROM_ALL
   src/red4ext/Navigation/RacingLine.cpp
   src/red4ext/Navigation/Doorways.cpp
   src/red4ext/Navigation/Vehicle.cpp
+  src/red4ext/Navigation/Trajectory.cpp
   src/red4ext/ThirdParty/miniz/miniz_tinfl.cpp
 )
 target_include_directories(navplan PRIVATE src/red4ext)

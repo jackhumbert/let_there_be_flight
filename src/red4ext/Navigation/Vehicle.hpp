@@ -61,20 +61,4 @@ float PlanDecel(const VehicleSpec &aSpec, float aSpeed);
 // Pulling the path upwards: the lift over gravity.
 float PullUp(const VehicleSpec &aSpec);
 
-// The fastest speed the car can fly along a polyline, sampled every aStep metres: each point's
-// limit from its bend (turns at margin x Lateral, crests at pushOver, pull-ups at
-// margin x PullUp, over aSpan either side), then speeding up from aStartSpeed (Accel) and braking
-// to 0 at the end (PlanDecel). The plan's own profile; the Autopilot's in game
-// (FlightModeAutopilot.BuildSpeedProfile) adds the landing approach and corner braking.
-struct SpeedProfile {
-  enum class Limit : unsigned char { None, Turn, Crest, PullUp };
-  std::vector<float> distance; // m along the line
-  std::vector<float> speed;    // m/s flown
-  std::vector<float> limit;    // m/s the bend alone allows
-  std::vector<Limit> why;
-  float top = 0.0f;
-};
-SpeedProfile Profile(const VehicleSpec &aSpec, const std::vector<float> &aX, const std::vector<float> &aY,
-                     const std::vector<float> &aZ, float aStartSpeed = 0.0f, float aStep = 2.0f, float aSpan = 10.0f);
-
 } // namespace Navigation

@@ -3,9 +3,10 @@
 // racing line, and writes next to the given prefix:
 //   <prefix>_route.csv    x,y,z: the plain route
 //   <prefix>_line.csv     x,y,z: the racing line (a rejected one too, to see where it is blocked)
-//   <prefix>_profile.csv  d,x,y,z,v,limit,why,clearance: the line every 2 m, with the speed the car
-//                         flies it at (Navigation/Vehicle.hpp), what limits it there and the
-//                         distance to the nearest blocked space (up to 10 m)
+//   <prefix>_profile.csv  d,t,x,y,z,v,why,clearance: the line every 2 m with the speed and time the
+//                         car flies it with (Navigation/Trajectory.hpp), what sets the speed there
+//                         and the distance to the nearest blocked space (up to 10 m)
+//   <prefix>_trajectory.csv  the full trajectory: velocity, acceleration, along / lateral m/s2
 // and prints one line "metrics {json}" for the tuner (tools/navplan/tune.py).
 //
 //   navplan <navmap.bin> <sx> <sy> <sz> <gx> <gy> <gz> <out prefix>
@@ -15,6 +16,7 @@
 //                           race route fields and FlightNavMap::PlanRaceAsync); off: PlanParams defaults
 //   NAVPLAN_PARAMS=a=1,b=2  PlanParams fields by name (the table below), applied after the preset
 //   NAVPLAN_VEHICLE=a=1,..  the car (VehicleSpec fields by name; tools/navplan/vehicles.json names cars)
+//   NAVPLAN_LINE=<csv>     build the trajectory on this line (x,y,z columns) instead of planning one
 //   NAVPLAN_REPEAT=1        plan the line again: what a later plan costs once its doorways are known
 //   NAVPLAN_DOORWAY_COUNT=x0,y0,x1,y1  work out the doorways over that area instead, and save them
 //
@@ -22,6 +24,7 @@
 
 #include "Navigation/NavMap.hpp"
 #include "Navigation/Planner.hpp"
+#include "Navigation/Trajectory.hpp"
 #include "Navigation/Vehicle.hpp"
 
 #include <spdlog/sinks/stdout_sinks.h>
@@ -31,6 +34,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <sstream>
 #include <string>
 #include <variant>
@@ -125,22 +129,6 @@ float Clearance(const Navigation::NavMap &aMap, float aX, float aY, float aZ) {
   return best;
 }
 
-float Dist(const Navigation::Vec3 &aA, const Navigation::Vec3 &aB) {
-  return std::sqrt((aA.x - aB.x) * (aA.x - aB.x) + (aA.y - aB.y) * (aA.y - aB.y) + (aA.z - aB.z) * (aA.z - aB.z));
-}
-
-const char *Why(Navigation::SpeedProfile::Limit aLimit) {
-  switch (aLimit) {
-  case Navigation::SpeedProfile::Limit::Turn:
-    return "turn";
-  case Navigation::SpeedProfile::Limit::Crest:
-    return "crest";
-  case Navigation::SpeedProfile::Limit::PullUp:
-    return "pull-up";
-  default:
-    return "";
-  }
-}
 } // namespace
 
 int main(int argc, char **argv) {
@@ -202,12 +190,38 @@ int main(int argc, char **argv) {
     }
   }
   std::printf("vehicle %s\n", params.vehicle.Describe().c_str());
-  // as the Autopilot plans it: with its retries when the first search fails
-  auto line = Navigation::PlanWithRetries(map, start, goal, params, [](const Navigation::PlanResult &aAttempt) {
-    if (!aAttempt.ok) {
-      std::printf("  attempt: %s\n", aAttempt.info.c_str());
+  // as the Autopilot plans it: with its retries when the first search fails; or a line given as a
+  // CSV (NAVPLAN_LINE, x,y,z columns: a RouteDump from the game) to build its trajectory alone
+  Navigation::PlanResult line;
+  if (const char *given = std::getenv("NAVPLAN_LINE")) {
+    if (FILE *f = std::fopen(given, "r")) {
+      char row[512];
+      std::fgets(row, sizeof(row), f); // header
+      int32_t x = -1, y = -1, z = -1, col = 0;
+      for (char *c = std::strtok(row, ",\r\n"); c; c = std::strtok(nullptr, ",\r\n"), ++col) {
+        x = std::strcmp(c, "x") == 0 ? col : x;
+        y = std::strcmp(c, "y") == 0 ? col : y;
+        z = std::strcmp(c, "z") == 0 ? col : z;
+      }
+      while (std::fgets(row, sizeof(row), f)) {
+        float v[32] = {};
+        col = 0;
+        for (char *c = std::strtok(row, ","); c && col < 32; c = std::strtok(nullptr, ","), ++col) {
+          v[col] = std::strtof(c, nullptr);
+        }
+        line.points.push_back({v[x], v[y], v[z]});
+      }
+      std::fclose(f);
     }
-  });
+    line.ok = line.points.size() >= 2;
+    line.info = "line from " + std::string(given) + ": " + std::to_string(line.points.size()) + " points";
+  } else {
+    line = Navigation::PlanWithRetries(map, start, goal, params, [](const Navigation::PlanResult &aAttempt) {
+      if (!aAttempt.ok) {
+        std::printf("  attempt: %s\n", aAttempt.info.c_str());
+      }
+    });
+  }
   std::printf("%s\n", line.info.c_str());
   double milliseconds = line.milliseconds;
   if (std::getenv("NAVPLAN_REPEAT")) {
@@ -229,40 +243,32 @@ int main(int argc, char **argv) {
     std::fprintf(stderr, "could not write %s_*.csv\n", prefix.c_str());
     return 1;
   }
-  // the speed the car flies the line at, and its clearance
-  std::vector<float> xs, ys, zs;
-  for (const auto &p : points) {
-    xs.push_back(p.x);
-    ys.push_back(p.y);
-    zs.push_back(p.z);
+  // the trajectory the car flies the line with (Trajectory.hpp), and its clearance
+  auto trajectory = Navigation::BuildTrajectory(params.vehicle, points);
+  for (const auto &v : trajectory.violations) {
+    std::printf("trajectory: %s\n", v.c_str());
   }
-  auto profile = Navigation::Profile(params.vehicle, xs, ys, zs);
-  float time = 0.0f;
   if (FILE *f = std::fopen((prefix + "_profile.csv").c_str(), "w")) {
-    std::fprintf(f, "d,x,y,z,v,limit,why,clearance\n");
-    size_t j = 0;
-    float s0 = 0.0f;
-    for (size_t i = 0; i < profile.distance.size(); ++i) {
-      // the point at this distance along the line
-      const float d = profile.distance[i];
-      while (j + 2 < points.size() && s0 + Dist(points[j], points[j + 1]) < d) {
-        s0 += Dist(points[j], points[j + 1]);
-        ++j;
-      }
-      const float leg = std::max(Dist(points[j], points[j + 1]), 1e-6f), t = std::clamp((d - s0) / leg, 0.0f, 1.0f);
-      const float x = points[j].x + t * (points[j + 1].x - points[j].x), y = points[j].y + t * (points[j + 1].y - points[j].y),
-                  z = points[j].z + t * (points[j + 1].z - points[j].z);
-      std::fprintf(f, "%.1f,%.2f,%.2f,%.2f,%.2f,%.2f,%s,%.0f\n", d, x, y, z, profile.speed[i], profile.limit[i],
-                   Why(profile.why[i]), Clearance(map, x, y, z));
-      if (i > 0) {
-        time += (d - profile.distance[i - 1]) / std::max(0.5f * (profile.speed[i] + profile.speed[i - 1]), 0.5f);
-      }
+    std::fprintf(f, "d,t,x,y,z,v,why,clearance\n");
+    for (const auto &q : trajectory.samples) {
+      std::fprintf(f, "%.1f,%.3f,%.2f,%.2f,%.2f,%.2f,%s,%.0f\n", q.s, q.t, q.position.x, q.position.y, q.position.z, q.speed,
+                   Navigation::LimitName(q.limit), Clearance(map, q.position.x, q.position.y, q.position.z));
     }
     std::fclose(f);
   }
+  if (FILE *f = std::fopen((prefix + "_trajectory.csv").c_str(), "w")) {
+    std::fprintf(f, "s,t,x,y,z,vx,vy,vz,ax,ay,az,speed,along,lateral,limit\n");
+    for (const auto &q : trajectory.samples) {
+      std::fprintf(f, "%.1f,%.3f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%s\n", q.s, q.t, q.position.x,
+                   q.position.y, q.position.z, q.velocity.x, q.velocity.y, q.velocity.z, q.acceleration.x, q.acceleration.y,
+                   q.acceleration.z, q.speed, q.along, q.lateral, Navigation::LimitName(q.limit));
+    }
+    std::fclose(f);
+  }
+  const float length = trajectory.samples.empty() ? 0.0f : trajectory.samples.back().s, time = trajectory.Duration();
   std::printf("metrics {\"route_ok\": %s, \"line_ok\": %s, \"racing_line\": %s, \"length\": %.1f, \"time\": %.2f, "
               "\"top\": %.1f, \"ms\": %.1f}\n",
               route.ok ? "true" : "false", line.ok ? "true" : "false", line.rejectedLine.empty() && line.ok ? "true" : "false",
-              profile.distance.empty() ? 0.0f : profile.distance.back(), time, profile.top, milliseconds);
+              length, time, trajectory.top, milliseconds);
   return route.ok && line.ok ? 0 : 1;
 }
