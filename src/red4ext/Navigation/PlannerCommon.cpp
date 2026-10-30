@@ -188,16 +188,4 @@ std::vector<Vec3> Resample(const std::vector<Vec3> &aPoints, float aSpacing) {
   return out;
 }
 
-// Racing line: gradient descent on the summed squared second differences of the points (their
-// bend), each move kept only where both legs to the neighbours stay free, with lineSide to spare
-// or at least no less than before. Points ahead of a corner move out and the apex moves
-// in, so the bend spreads over all the room there is. Coarse spacings first (the bend of a long
-// corner spreads over a few points per pass there), then finer ones down to lineSpacing.
-// The heights the line may take in a gap, at aAlong of aLength metres along it: lineFloorClearance
-// over the floor (but within lineFloorEnds of either end, where it takes off and lands) and
-// lineCeilingClearance under anything overhead; the middle of the gap where it has not room for
-// both. The ceiling was only a push of linePush a pass, which the smoothing undid: west-east went
-// under a skybridge a metre from its underside, one point left out of line with the rest, and the
-// speed plan braked from 96 to 39 m/s for that kink (2026-10-27).
-
 } // namespace Navigation::detail

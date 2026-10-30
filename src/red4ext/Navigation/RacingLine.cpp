@@ -16,6 +16,10 @@ namespace Navigation::detail {
 
 namespace {
 
+// The heights the line may take in a gap, at aAlong of aLength metres along it: lineFloorClearance
+// over the floor (but within lineFloorEnds of either end, where it takes off and lands) and
+// lineCeilingClearance under anything overhead; the middle of the gap where it has not room for
+// both. (A ceiling push alone is undone by the smoothing and leaves a kink under a skybridge.)
 void Band(const Gap &aGap, float aAlong, float aLength, const PlanParams &aParams, float &aLo, float &aHi) {
   const bool ends = aAlong <= aParams.lineFloorEnds || aLength - aAlong <= aParams.lineFloorEnds;
   aLo = aGap.bottom;
@@ -32,24 +36,21 @@ void Band(const Gap &aGap, float aAlong, float aLength, const PlanParams &aParam
 // summed squared second difference) within each point's height band (Band: the floor clearance
 // below, anything overhead), coarse to fine (every 16th point, then every 8th, ... each coarse
 // point held to the band of the stretch it stands for, so a bump between them still counts), the
-// first and last two points fixed. The smoothing passes in RacingLine aim at the same but stop
-// after a hundred local passes at the fine spacing, so a bump in the floor left a short ramp and a
-// crest at its top: from the city centre to Dogtown two 5 m bumps 110 m apart braked the car from
-// 60 to 44 m/s and again to 40 (racePushOver, 2026-10-28). A point whose legs are not free at the
-// solved height goes back to where it was, with its neighbour.
+// first and last two points fixed. The smoothing passes in RacingLine stop after a hundred local
+// passes at the fine spacing, so a bump in the floor would leave a ramp and a crest. A point whose
+// legs are not free at the solved height goes back to where it was, with its neighbour.
 // Over rather than under: the route keeps to the gap it was searched in, so a line high over the
-// city dived under a beam (8 m thick, open sky over it) and the car braked from 86 to 25 m/s for
-// the bend (Dogtown, 2026-10-29; Jack: no braking for a crest, gravity arcs). So the heights are
-// first solved without anything overhead; where that line passes within lineOverReach under the
-// top of a thin obstacle (lineOverThick) over a run of points, away from the ends (lineOverEnds),
-// the points under it take the gap above instead, and they are solved again. It only ever lifts the line over something, never into it.
+// city could dive under a thin beam with open sky over it. So the heights are first solved without
+// anything overhead; where that line passes within lineOverReach under the top of a thin obstacle
+// (lineOverThick) over a run of points, away from the ends (lineOverEnds), the points under it
+// take the gap above instead, and they are solved again. It only ever lifts the line over
+// something, never into it.
 namespace {
 // The points are evenly spaced (Respace, aSpacing metres), so the bend is taken point to point.
 // The heights also cost their height over the band's floor (the floor clearance over the terrain),
 // exponentially past aFree; aPull sets the cost's slope there to balance the bend at
-// lineHeightWavelength. Without it nothing held the line down, and a smooth arc from the street to the
-// Dogtown stadium's rim peaked 60 m higher than the stadium needed (Jack, 2026-10-29: cost the
-// height over the terrain; slaloms are fine as long as they are not jerky).
+// lineHeightWavelength. Without it nothing holds the line down and smooth arcs peak far higher
+// than what they clear.
 void SolveHeights(std::vector<float> &aZ, const std::vector<float> &aLo, const std::vector<float> &aHi,
                   int aIterations, float aSpacing, float aPull, float aFree, float aScale) {
   const size_t n = aZ.size();
@@ -87,8 +88,8 @@ void SolveHeights(std::vector<float> &aZ, const std::vector<float> &aLo, const s
       next = s;
       for (size_t k = 2; k + 2 < m; ++k) {
         // the height cost rises exponentially past aFree over the band's floor (aScale metres per
-        // e-fold), and is nothing below it: a pull in proportion to the height dragged lines 30 m up
-        // down onto the terrain, into crests at speed (Jack: small heights should not matter)
+        // e-fold), and is nothing below it, so small heights do not matter (a pull in proportion to
+        // the height drags lines down onto the terrain, into crests at speed)
         float over = s[k] - slo[k] - aFree, steep = 0.0f, push = 0.0f;
         if (over > 0.0f) {
           steep = pull * std::exp(std::min(over / aScale, 20.0f));
@@ -129,8 +130,8 @@ void SmoothHeights(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
     if (aMap.FindGap(aPts[i].x, aPts[i].y, aPts[i].z, gap)) {
       Band(gap, along[i], along.back(), aParams, lo[i], hi[i]);
       // a floor that is a thin slab with room under it (a beam, a skybridge) is no street:
-      // lineCeilingClearance over it is enough (points already over the Dogtown beam kept 12 m and
-      // humped the line over it, the crest the car slowed for)
+      // lineCeilingClearance over it is enough (the full floor clearance humps the line over it,
+      // a crest the car slows for)
       for (const Gap &under : aMap.GetGaps(aPts[i].x, aPts[i].y)) {
         if (under.top <= gap.bottom && gap.bottom - under.top <= aParams.lineOverThick) {
           lo[i] = std::min(lo[i], gap.bottom + aParams.lineCeilingClearance);
@@ -181,11 +182,9 @@ void SmoothHeights(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
     };
     // each run of points under a thin obstacle that the free line comes within lineOverReach of
     // along most of it is tried over the top, and kept there when the line around it comes out much
-    // smoother (lineOverGain of the height solve's own measure: the Dogtown beam 0.004 from
-    // two starts; every other candidate on five routes 0.47 or more) and no more than lineOverRise
-    // higher on average. Taken over on nearness alone, a run went over one point (a
-    // spike), over 200 m towers, and over skybridges 12 m higher than the line needed to be: the city
-    // centre to Dogtown took 41 to 74 s instead of 37 (navplan, laptime.py)
+    // smoother (lineOverGain of the height solve's own measure) and no more than lineOverRise
+    // higher on average. Taken over on nearness alone, runs go over single points (spikes), over
+    // towers, and over skybridges far higher than the line needs to be.
     int over = 0;
     for (size_t i = 2; i + 2 < n;) {
       if (!std::isfinite(aboveBottom[i])) {
@@ -223,8 +222,7 @@ void SmoothHeights(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
     }
   }
   // a leg not free at its solved heights: its points pinned where they were and the heights solved
-  // again around them, so the neighbours blend in (put back alone, they left a 6 m spike at a
-  // building's edge, 2026-10-29)
+  // again around them, so the neighbours blend in (put back alone they leave a spike)
   for (int round = 0; round < 4; ++round) {
     bool pinned = false;
     std::vector<Vec3> at = aPts;
@@ -269,11 +267,10 @@ void SmoothHeights(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
 // summed squared second differences (bend) plus lineCurvatureRate times the third differences
 // (how fast the bend changes, so turns build up and ease off instead of switching on), coarse to
 // fine as SmoothHeights. A corridor rather than RacingLine's moves, each kept only if its legs stay
-// free with room to the sides: by the gap into Dogtown every step outwards turned the leg by a
-// tower's corner and swept its side clearance into it, so the line came in tight and turned 50
-// degrees in 25 m after a gentle bend (2026-10-28). The same failure as elastic bands at obstacle
-// corners; racing line planners solve in a corridor (Heilmeier et al. 2020), drone planners add a
-// jerk term. A leg not free at the solved offsets goes back to where it was, with its neighbour.
+// free with room to the sides: those cannot swing a line wide past an obstacle corner on the
+// inside (every step outwards turns the leg into the corner). Racing line planners solve in a
+// corridor (Heilmeier et al. 2020), drone planners add a jerk term. A leg not free at the solved
+// offsets goes back to where it was, with its neighbour.
 // SmoothLateral's coarse-to-fine solve of the offsets d across the line (each bend weighted).
 void SolveLateral(std::vector<float> &d, const std::vector<float> &lo, const std::vector<float> &hi,
                   const std::vector<Vec3> &normal, const std::vector<Vec3> &aPts, const std::vector<float> &weight,
@@ -412,9 +409,8 @@ void SmoothLateral(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
   }
   const float w = aParams.lineCurvatureRate;
   // rounds: the bends that cost the car speed (TurnCost) weighted up by that cost and the line
-  // solved again, so it spreads those turns over the room there is and leaves the rest alone.
-  // Smoothest-in-shape alone, a line going round the Dogtown stadium slowed from 76 to 48 m/s and
-  // 71 to 56 in its turns (Jack, 2026-10-29: it does not need to slow down).
+  // solved again, so it spreads those turns over the room there is and leaves the rest alone (the
+  // smoothest shape alone slows the car in its turns)
   std::vector<float> weight(n, 1.0f);
   for (int round = 0; round <= aParams.lineTurnRounds; ++round) {
     if (round > 0) {
@@ -462,6 +458,12 @@ void SmoothLateral(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
 
 } // namespace
 
+// Racing line: gradient descent on the summed squared second differences of the points (their
+// bend), each move kept only where both legs to the neighbours stay free, with lineSide to spare
+// or at least no less than before. Points ahead of a corner move out and the apex moves in, so the
+// bend spreads over all the room there is. Coarse spacings first (the bend of a long corner
+// spreads over a few points per pass there), then finer ones down to lineSpacing; then
+// SmoothLateral and SmoothHeights.
 std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute, const PlanParams &aParams) {
   std::vector<Vec3> pts = aRoute;
   const float side = aParams.lineSide;
@@ -477,9 +479,8 @@ std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute
       along[i] = along[i - 1] + Distance(pts[i - 1], pts[i]);
     }
     // the clearance push spread over the points within lineSpread either side (tapering off), so
-    // the line moves away from a wall gradually: pushed point by point, at a pinch by the gap into
-    // Dogtown (a tower on one side, a wall on the other) only the points by the tower moved, and
-    // the line wiggled and then turned 50 degrees in 25 m (2026-10-28)
+    // the line moves away from a wall gradually (pushed point by point, at a pinch only the points
+    // by one side move, and the line wiggles and kinks)
     const int reach = aParams.lineSpread > 0.0f ? int(std::round(aParams.lineSpread / spacing)) : 0;
     const float unit = aParams.linePush / aParams.lineStep; // undone by * step below
     std::vector<Vec3> push(n), spread(n);
@@ -488,7 +489,7 @@ std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute
       // away from blocked space close across the line: probe lineClearance to either side and
       // above / below; where one side is blocked and the other free, push towards the free one.
       // (Smoothing alone leaves the line skimming the map's margin wherever a wall is on the
-      // inside of a bend, and the car's tracking error then reaches the wall, 2026-10-26)
+      // inside of a bend.)
       for (size_t i = 2; i + 2 < n; ++i) {
         const Vec3 &b = pts[i - 1], &p = pts[i], &c = pts[i + 1];
         push[i] = {0.0f, 0.0f, 0.0f};
@@ -585,8 +586,7 @@ std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute
   }
   SmoothLateral(aMap, pts, aParams);
   // twice, evenly spaced each time: spaced along the line's old heights, the points stay bunched
-  // where the heights then change most (a dive under the Dogtown beam lifted over it: 3.7 m apart
-  // across instead of 4.8)
+  // where the heights then change most (a dive lifted over a beam)
   for (int pass = 0; pass < 2; ++pass) {
     pts = Respace(aMap, pts, aParams.lineSpacing);
     SmoothHeights(aMap, pts, aParams);

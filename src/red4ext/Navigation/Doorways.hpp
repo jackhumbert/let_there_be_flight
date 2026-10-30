@@ -22,16 +22,15 @@ namespace Navigation::detail {
 // joined by the cheapest way between them inside it, and to their partners across the edge. The
 // first search over doorways finds which blocks the route goes through; the plan itself is then
 // searched only in those blocks and their neighbours. Doorways come from the 2 m map, so every
-// street and alley is still there (a search over coarse cells could not thread the city's streets
-// and went round it over the water, 2026-10-27). A block is worked out the first time a search
-// reaches it and kept for the session: the map does not change.
+// street and alley is still there (a search over coarse cells cannot thread the city's streets).
+// A block is worked out the first time a search reaches it and kept for the session: the map does
+// not change.
 inline constexpr int32_t kBlock = 16;
 inline constexpr char kDoorwayTag[8] = {'L', 'T', 'B', 'F', 'D', 'O', 'O', 'R'};
 
 // The cost of climbing aRise metres in one step: aCost a metre, growing exponentially with the
 // rise (aScale metres per e-fold; 0 = in proportion). A small rise costs about what it did, a wall
-// far more: at 0.5 a metre the Dogtown route climbed 165 m over the stadium in one step rather than
-// go round it (Jack, 2026-10-29), and a higher flat rate sent routes round the city over the water.
+// far more, so routes go round a stadium rather than over it without going round the city.
 float ClimbCost(float aRise, float aCost, float aScale);
 
 // the fine search's cost of a step, without the turn and bearing parts, which depend on the way in

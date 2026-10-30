@@ -59,9 +59,7 @@ PlanResult PlanWithRetries(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const Pl
                            const std::function<void(const PlanResult &)> &aAttempt) {
   auto params = aParams;
   auto result = Plan(aMap, aStart, aGoal, params);
-  // a long trip at the Race's weight 1.2 ran out of expansions: Northside to the Pacifica coast
-  // (5.3 km) failed at 3 million, and the minPassage retry failed the same way; at 1.5 it took 1.1
-  // million (2026-10-27)
+  // a long trip at the Race's weight 1.2 can run out of expansions where 1.5 finds it
   for (float weight : {1.5f, 2.0f}) {
     if (result.ok || result.expansions <= params.maxExpansions || params.heuristicWeight >= weight) {
       break;
@@ -164,8 +162,7 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
   // The take-off is part of the search: it starts from every free gap within startRadius, each at
   // the cost of getting there from the start (the distance, rises counted three times over, and
   // blocked map along the way five times over), so it finds the way out from under a deck or
-  // between buildings itself. One anchor gap could be a pocket the map closed off: from under a
-  // structure in Kabuki the search had one expansion and no route (2026-10-27).
+  // between buildings itself (one anchor gap can be a pocket the map closed off).
   std::vector<std::pair<uint64_t, float>> seeds;
   {
     const int32_t r = int32_t(std::ceil(aParams.startRadius / cell));

@@ -60,19 +60,17 @@ float LongestBlocked(const NavMap &aMap, const std::vector<Vec3> &aPoints, float
 bool LegFree(const NavMap &aMap, Vec3 aA, Vec3 aB);
 
 // LegFree for leg aI of aPts, and the grazes either side of it taken as one run, as the finished
-// line is checked (LongestBlocked over it, kGrazeAllowedLine): legs each grazing a metre either
-// side of a point passed alone and failed together, and a route lost its racing line (2026-10-29).
+// line is checked (LongestBlocked over it, kGrazeAllowedLine): legs each grazing a little either
+// side of a point pass alone and fail together.
 bool LegRunFree(const NavMap &aMap, const std::vector<Vec3> &aPts, size_t aI);
 
 // How much of the leg is free, the leg and its two side-offset copies taken together (0..1).
 float ClearSides(const NavMap &aMap, Vec3 aA, Vec3 aB, float aSide);
 
 // The polyline's points moved to even spacing along it (aSpacing at most, its ends kept): the height
-// solve takes bends point to point, and at the Dogtown beam points bunched to 3.7 m across (from
-// 4.8) hid a crest the car slowed for from 93 to 64 m/s.
+// solve takes bends point to point, and bunched points hide a crest.
 // Where a new leg is not free (it cut a corner: the take-off, a tight street), the old points
-// between its ends go back in: those legs lie on the old ones. Without that, two of five routes
-// lost their racing line (2026-10-29).
+// between its ends go back in: those legs lie on the old ones.
 std::vector<Vec3> Respace(const NavMap &aMap, const std::vector<Vec3> &aPoints, float aSpacing);
 
 // Each leg of the polyline cut into equal steps of at most aSpacing, its corners kept: every new

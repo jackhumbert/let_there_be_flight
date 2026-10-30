@@ -61,25 +61,22 @@ public class FlightModeAutopilot extends FlightModeStandard {
   @runtimeProperty("ModSettings.max", "500.0")
   public let padRange: Float = 0.0;           // m around a destination on the ground to look for a landing pad (0 = off)
 
-  // Manoeuvres (FlightAerobatics.reds: rolls, loop, Immelmann, split-S, as stunts on straights or
-  // to turn round where the route doubles back) are disconnected since 2026-10-29 (Jack): nothing
-  // starts one, and these are no longer Mod Settings. The code is kept.
+  // Manoeuvres (FlightAerobatics.reds: rolls, loop, Immelmann, split-S) are disconnected: nothing
+  // starts one, and these are not Mod Settings. The code is kept (docs/history.md).
   public let aerobatics: Bool = false;        // full 3D attitude (Race implies it)
   public let stuntInterval: Float = 0.0;      // s between stunts on long straights (unused while disconnected)
 
-  // The Race flies like a quadcopter (DroneAttitude), the only style since 2026-10-29 (Jack): the
-  // plane attitude in FlyAerobatic is no longer flown (manoeuvres aside) and is kept for reference.
-  // Not a Mod Setting, and not switched anywhere.
+  // The Race flies like a quadcopter (DroneAttitude), the only style; the plane attitude in
+  // FlyAerobatic is kept but not flown. Not a Mod Setting.
   public let droneStyle: Bool = true;
   // drone style: hard stops swing the nose round instead of pulling back (not in Mod Settings:
   // LtbfBridge.DroneBrakeTurn; a Mod Setting is written back from its stored value when the mode
   // is engaged)
   public let droneBrakeTurn: Bool = false;
 
-  // drone style (2026-10-28): the body tilts droneBodyShare of the way to the thrust direction the
-  // commanded acceleration and gravity need, the surge and sway thrusters point the rest (Jack:
-  // with lift and surge both there, 22.5 degrees of body for travelling at 45 degrees), so the
-  // thrusters keep moving; no stunts
+  // drone style: the body tilts droneBodyShare of the way to the thrust direction the commanded
+  // acceleration and gravity need, and the surge and sway thrusters point the rest (half: 22.5
+  // degrees of body for travelling at 45), so the thrusters keep moving
   public let droneBodyShare: Float = 0.5;
   public let droneMaxTilt: Float = 55.0;      // deg the body tilts at most, either axis (sets the speed envelope)
   public let droneTiltTime: Float = 0.2;      // s, smoothing of the acceleration the tilt follows
@@ -110,7 +107,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let droneSlewMinTime: Float = 2.0;   // s at the flown speed a slewed stretch must last, at least
   public let speedHumpMerge: Float = 6.0;     // m/s a rise of the profile between two slowings may be at most to be held down (FlattenSpeedHumps)
   public let speedHumpSpan: Float = 150.0;    // m either side the slowings are looked for
-  public let droneRollLook: Float = 1.5;     // s of the line ahead the roll is held for (DroneTurnAhead; 1.0 still eased 31 to 24 degrees before the Dogtown gap)
+  public let droneRollLook: Float = 1.5;     // s of the line ahead the roll is held for (DroneTurnAhead)
   public let droneRollStep: Float = 0.2;      // s between the points it looks at
 
   // The Autopilot always flies the Race (the racing line at the car's full thrust). Nothing reads
@@ -127,8 +124,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // car slides the last metres over the spot while coming down instead of stopping above it first
   public let landingOverSpot: Float = 4.0;
   // the descent takes over from the route this far from its end (m) and below this speed (m/s); it
-  // keeps closing on the spot and sinks once within landingOverSpot. Taken over 4 m out, the car
-  // hung still for 2 s above the spot first (2026-10-29)
+  // keeps closing on the spot and sinks once within landingOverSpot (taken over right above the
+  // spot, the car hung still before sinking)
   public let landingEntry: Float = 15.0;
   public let landingEntrySpeed: Float = 10.0;
   public let landingRecheck: Float = 300.0;   // m before the route's end the landing spot is checked for vehicles again
@@ -176,10 +173,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let attitudeDamping: Float = 0.8;
   public let maxAngularAccel: Float = 20.0;   // rad/s2
   // rad/s2 of angular acceleration per unit of mode torque x mass x thruster tensor / inertia
-  // (FlightComponent scales the torque by those, PhysX divides by its own inertia), per axis.
-  // the torque probe (tools/ingame, TorqueProbe) on an Archer Quartz hovering, 2026-10-26: roll 0.52, yaw 0.95,
-  // pitch 2.5 to 2.8 over the first frames, then falling off while still pushed; all respond two
-  // frames late (at 32 fps)
+  // (FlightComponent scales the torque by those, PhysX divides by its own inertia), per axis,
+  // measured with TorqueProbe (tools/ingame) on an Archer Quartz; all respond two frames late
   public let torqueGainPitch: Float = 2.0;
   public let torqueGainRoll: Float = 0.5;
   public let torqueGainYaw: Float = 0.9;
@@ -210,52 +205,44 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let raceBankTime: Float = 0.12;      // s, smoothing of the acceleration the attitude follows
   public let lineRadiusSpan: Float = 15.0;    // m either side of a racing line point its bend radius is taken over
   public let raceOffLine: Float = 4.0;        // m off a racing line before the car is treated as off it
-  // race route character (planner, Navigation/Planner.hpp; tools/navplan/laptime.py compares them):
-  // between the buildings (40 m, climbing costly, 8 m passages at least: city centre to Dogtown
-  // about 80 s, the street start in ManualSave-181 to Dogtown 33 s) or over the rooftops (100 m,
-  // 0.5, 0: about 71 s and 38 s). 12 m passages found no route at all from that street start.
+  // race route character (Navigation::RacePreset holds the same defaults; tools/navplan/bench.py
+  // compares settings): between the buildings rather than over the rooftops
   public let raceRouteHeight: Float = 40.0;   // m above the local floor the route would like to fly
-  // 0.5 (2026-10-27): at 2 every rise of the floor-following height in the city cost so much that
-  // Northside to the Pacifica coast went round the city over the water (5.45 km, against 5.24 km
-  // through it) once the doorway search could find the cheapest route
+  // climbing is cheap: dearer, every rise of the floor-following height made routes go round the
+  // city over the water
   public let raceClimbCost: Float = 0.5;      // per metre of climbing, against 1 per metre flown
-  // 12 (2026-10-27): at 8 west-east threaded an 11.5 m slot between a deck and a skybridge at 85 m/s,
-  // kinking the line (laptime 53.6 s, 47.4 s over it). The "no route at all" at 12 above was before
-  // the take-off was part of the plan; a start with no 12 m way out still gets the retry without it.
-  // The doorways in navmap.bin are baked with this value (tools/navmap_bake/doorways.py): rebake if it changes.
+  // 12: narrower slots between decks and skybridges kink the line at speed. A start with no 12 m
+  // way out gets the retry without it. The doorways in navmap.bin are baked with this value
+  // (tools/navmap_bake/doorways.py): rebake if it changes.
   public let raceMinPassage: Float = 12.0;    // m of free height the route may squeeze through at least (0 = any)
   public let raceSearchWeight: Float = 1.2;   // A* heuristic weight, 1 = optimal (slower to plan)
   // per 45 degrees the route turns over a few cells (as metres flown): straighter, more open
-  // corridors, whose bends the racing line takes wide. At 5 the tightest bend from the street
-  // start to Dogtown widened from 28 to 46 m (tools/navplan, 2026-10-27)
+  // corridors, whose bends the racing line takes wide
   public let raceTurnCost: Float = 5.0;
   // drift: in a bend the nose turns into it, up to raceDriftMax at raceDriftFull sideways (none
   // below raceDriftStart), so the surge thrust pushes round the corner along with the banked lift
   public let raceDriftMax: Float = 20.0;      // deg
   public let raceDriftStart: Float = 8.0;     // m/s2
   public let raceDriftFull: Float = 28.0;     // m/s2
-  // m/s2 the speed profile plans slowing with at most: the brake grows with speed (60 m/s2 and
-  // more at 40 m/s), but the flown speed eases into it, and planned at full the car reached the
-  // destination at 43 m/s and hit the ground, 2026-10-26
-  public let racePlanDecel: Float = 18.0;     // what the car reached following the profile (19 m/s2), 2026-10-26
+  // m/s2 the speed profile plans slowing with at most: the brake grows with speed, but the flown
+  // speed eases into it, and planned at full the car arrived too fast
+  public let racePlanDecel: Float = 18.0;     // what the car reached following the profile (19 m/s2)
   public let raceBrakeGripMin: Float = 0.3;   // share of racePlanDecel planned for in a bend at the full lateral envelope
   public let raceRateProbe: Float = 0.25;     // s ahead the allowed speed's rate of fall is read from (RaceTargetRate)
-  // descents: the line can drop 100 m in its last 150 m (Dogtown: 140 m buildings, then a low
-  // courtyard); flown at full speed the car fell at 44 m/s, rolled inverted pushing over into the
-  // dive, and reached the approach point at 41 m/s, 2026-10-26
+  // descents: the line can drop 100 m in its last 150 m (Dogtown); flown at full speed the car
+  // fell too fast and rolled inverted pushing over into the dive
   public let raceMaxSink: Float = 15.0;       // m/s down at most, on the approach only:
   public let raceSinkApproach: Float = 250.0; // m before the route's end (elsewhere it slowed the car for nothing)
   public let raceArriveLength: Float = 120.0; // m before the route's end braked at most raceArriveDecel
   public let raceArriveDecel: Float = 5.0;    // m/s2
   // m/s2 at most bending the path downwards: the car stays upright and pushes with negative lift
-  // (FlyAerobatic keeps the top from turning over past raceTopDown); at half a g, three of the five
-  // slowdowns on the street start to Dogtown were crests, down to 15 m/s, 2026-10-27
+  // (FlyAerobatic keeps the top from turning over past raceTopDown); at half a g crests were most
+  // of the slowdowns
   public let racePushOver: Float = 15.0;
   public let raceTopDown: Float = 0.8;        // g of downward pull the attitude follows; the thrust gives the rest
   // racing line tracking: the line's direction at the flown speed, its curvature fed forward
   // lineLead ahead (the bank takes a moment to build), a damped spring onto the line across it.
-  // (Aiming at a lookahead point as on other routes cut inside every bend at speed: 60 m ahead at
-  // 75 m/s, the car swung 7 to 20 m off the line and into buildings, 2026-10-26)
+  // (Aiming at a lookahead point cuts inside every bend at speed.)
   public let lineLead: Float = 0.25;          // s
   public let lineSpring: Float = 1.0;         // 1/s, distance off the line -> speed back towards it
   public let lineVelocityGain: Float = 2.5;   // 1/s, velocity error -> acceleration
@@ -269,13 +256,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // 3 m/s2 (an 18 degree bank), which read as rolling for nothing; only what is above it banks
   public let ribbonDeadband: Float = 3.0;     // m/s2
   public let ribbonSlow: Float = 10.0;        // m/s under which the ribbon banks nothing (full from 25 m/s)
-  // bank easing with aerobatics: the bank follows its target through a critically damped second
-  // order filter with limited roll rate and roll acceleration (the target flicks as route points
-  // pass; followed directly, the car rolled at 21 rad/s2 and more, 2026-10-26)
+  // bank easing: the bank follows its target through a critically damped second order filter
+  // with limited roll rate and roll acceleration (the target flicks as route points pass)
   public let raceRollFrequency: Float = 2.5;  // rad/s
-  // Race rolls are the gentlest movements: at 6 rad/s, 2.5 rad/s and 10 rad/s2 the bank swung up to
-  // 90 degrees within a second between the Dogtown towers (2026-10-27); the ribbon looks further
-  // ahead (ribbonLead) so the slower roll still starts in time
+  // Race rolls are the gentlest movements (faster ones swung the bank to 90 degrees within a
+  // second); the ribbon looks further ahead (ribbonLead) so the slower roll still starts in time
   public let raceRollRateMax: Float = 1.0;    // rad/s
   public let raceRollAccelMax: Float = 3.0;   // rad/s2
   // pitch in Race, the same way as the bank (off the line too: the take-off and the arrival); on a
@@ -309,12 +294,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let freeRoamJoinAhead: Float = 4.0;  // s of the flown speed ahead the next leg starts, at least freeRoamJoinMin
   public let freeRoamJoinMin: Float = 150.0;  // m
   public let freeRoamSmoothSpan: Float = 60.0;  // m either side of a join smoothed out
-  // m/s at most: on and on into new areas at 89 m/s the world could not stream in fast enough and
-  // the game stopped on its loading overlay (1.6 km past Watson heading east, 2026-10-27)
+  // m/s at most: faster, the world cannot stream in new areas in time and the game stops on its
+  // loading overlay
   public let freeRoamTopSpeed: Float = 60.0;
-  // m a leg's end may differ in height from where it starts: from a tower's top (387 m) down to a
-  // street (28 m) the line crested and dived 350 m, the car slowed to 9 m/s and rolled over pushing
-  // into the dive (2026-10-27)
+  // m a leg's end may differ in height from where it starts (from a tower top to a street the line
+  // crested and dived, and the car rolled over pushing into the dive)
   public let freeRoamMaxRise: Float = 100.0;
 
   // state, public for tests (tools/ingame/ltbf_bridge.reds)
@@ -489,8 +473,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // flat, at the same level, and open far enough above to come straight down into. The spot is
   // the bake's floor there, which is where a resting car's position sits.
   private func FindLandingSpot(target: Vector4, out spot: Vector4, out top: Float) -> Bool {
-    // first a spot with room to come straight down from the approach height: one with just 6 m
-    // over it was under a canopy in Dogtown, and the car hit the canopy arriving, 2026-10-27
+    // first a spot with room to come straight down from the approach height (a spot with little
+    // room over it can be under a canopy)
     return this.FindLandingSpotWithRoom(target, this.approachHeight + 4.0, spot, top)
       || this.FindLandingSpotWithRoom(target, 6.0, spot, top);
   }
@@ -530,9 +514,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   }
 
   // The columns around c out to landingShaft metres are open at least room above floor too, so
-  // the car comes down a shaft, not a hole: the bake grows solids by 3 m for the car, and in
-  // Dogtown a spot whose neighbours all had a walkway over them at 6 to 12 m let a Hellhound
-  // (longer than that, and turning on the way down) catch the walkway's edge (2026-10-29).
+  // the car comes down a shaft, not a hole: the bake grows solids by 3 m for the car, and a car
+  // longer than that, turning on the way down, catches a walkway over the neighbouring columns.
   private func ShaftClear(c: Vector4, floor: Float, room: Float) -> Bool {
     let ring = 2.0;
     while ring <= this.landingShaft {
@@ -553,9 +536,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
 
   // A vehicle in the spot (floor height, car centre at rest): vertical rays in the Vehicle
   // collision group (it sees cars, not the ground) from 6 m above down through the spot, at its
-  // centre and on rings of 2 and 4 m. Parked cars are not on the nav map: the first landing with a
-  // clear shaft in Dogtown came down on a parked convertible (2026-10-29). Cars only exist where
-  // the world has streamed in, so the spot is checked again on arrival.
+  // centre and on rings of 2 and 4 m. Parked cars are not on the nav map, and only exist where the
+  // world has streamed in, so the spot is checked again on the approach and on arrival.
   private func SpotTaken(spot: Vector4) -> Bool {
     let queries = GameInstance.GetSpatialQueriesSystem(this.component.GetVehicle().GetGame());
     let ring = 0.0;
@@ -776,8 +758,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
     // Race: the planner spreads the route into a racing line of wide bends
     this.requestRace = true;
     this.requestJoin = false;
-    // a replan towards a gate still ahead (off the route on the way there): through it again. Without
-    // the run the leg ended at the gate's entry, and the next one was joined before it (2026-10-28).
+    // a replan towards a gate still ahead (off the route on the way there): through it again, or the
+    // leg ends at the gate's entry and the next one is joined before it
     if ArraySize(this.gateTail) == 0 && ArraySize(this.routeGateTail) > 0 && this.gateEndS > this.closestS
       && Vector4.Distance(this.routeGoal, this.routeGateEntry) < 1.0 {
       this.gateTail = this.routeGateTail;
@@ -839,8 +821,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
       ArrayClear(this.gateTail);
       this.spliceGate = gateLeg;
       // free roam: no leg steeper than freeRoamMaxPitch anywhere. A leg's ends are fixed, so the
-      // planner's 45 degree limit does not reach them: legs into gates among tall buildings came
-      // over the roofs and dropped to the gate at 80 degrees (2026-10-28). Another leg instead.
+      // planner's 45 degree limit does not reach them (legs into gates among tall buildings came
+      // over the roofs and dropped to the gate). Another leg instead.
       // Chained legs only: a first leg climbs out from the street, a replan starts wherever the car is.
       if this.requestJoin && ArraySize(points) >= 2 && FlightModeAutopilot.SteepestPitch(points, 10.0) > this.freeRoamMaxPitch {
         FlightLog.Info("[Autopilot] free roam: leg steeper than " + FloatToStringPrec(this.freeRoamMaxPitch, 0) + " degrees ("
@@ -938,9 +920,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
         if n > 0 {
           let sky = gaps[n - 1];
           let z = MinF(sky.X + this.raceRouteHeight, sky.Y - 5.0);
-          // near the height of the leg before, until nothing like that fits; over land: a leg out to
-          // sea west of the city crossed the playable area's edge about 300 m offshore, and the game
-          // put the car back where flight was switched on (2026-10-28)
+          // near the height of the leg before, until nothing like that fits; over land: past the
+          // playable area's edge offshore the game puts the car back where flight was switched on
           if z > sky.X + 5.0 && sky.X >= -this.freeRoamMaxDepth && (AbsF(z - from.Z) <= this.freeRoamMaxRise || tries >= 16) {
             goal = new Vector4(c.X, c.Y, z, 1.0);
             return true;
@@ -1046,9 +1027,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
     if !Equals(this.status, "following") || this.routeLength[n - 1] - this.closestS > this.freeRoamChainAt {
       return;
     }
-    // the point at that distance, not the next route point after it: a plain route's legs can be
-    // a kilometre long, and its end was the join every time, always reached before the plan
-    // (2026-10-27)
+    // the point at that distance, not the next route point after it (a plain route's legs can be
+    // a kilometre long)
     // and not before the end of a gate's straight run still ahead: the next leg would cut it off
     let s = MinF(MaxF(this.closestS + MaxF(this.freeRoamJoinMin, stats.d_speed * this.freeRoamJoinAhead), this.gateEndS), this.routeLength[n - 1]);
     let point = this.PointAt(s);
@@ -1243,9 +1223,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   }
 
   // radius of the circle through a, b, c (1e6 when they are in a line)
-  // The horizontal unit vector of v (zero if v is vertical). Vector4.Normalize2D keeps v's Z as it
-  // is: a dot product of two of those added the Zs' product, 64 for two opposite headings while
-  // descending, and free roam took a gate straight behind the car for one ahead (2026-10-28).
+  // The horizontal unit vector of v (zero if v is vertical). Vector4.Normalize2D keeps v's Z: a dot
+  // product of two of those adds the Zs' product.
   public static func Flat(v: Vector4) -> Vector4 {
     let length = SqrtF(v.X * v.X + v.Y * v.Y);
     return length > 0.0001 ? new Vector4(v.X / length, v.Y / length, 0.0, 0.0) : new Vector4(0.0, 0.0, 0.0, 0.0);
@@ -1369,8 +1348,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
 
   // Sideways acceleration corner speeds are planned for: the Cornering setting, but no more than
   // 80% of what full sideways thrust gives (standardModeSwayFactor, 5 m/s2 by default), which is
-  // all that turns the car (the bank does not tilt the lift); planned above it, the car slid
-  // 9 to 14 m wide out of bends (2026-10-26)
+  // all that turns the car (the bank does not tilt the lift); planned above it, the car slides
+  // wide out of bends.
   private func CorneringAccel() -> Float {
     return MinF(this.lateralAccel, 0.8 * this.standardModeSwayFactor);
   }
@@ -1486,10 +1465,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
   }
 
   // The car's position, with a jump further than it could have flown held off for up to
-  // positionJumpHold (then taken as a real move, a teleport). In free roam over the Badlands edge
-  // the car froze for 4 s and its position read where flight was switched on, 2 km back, for a
-  // moment: off the route by that much, the Autopilot replanned from there and braked for the end
-  // of the new route (2026-10-28).
+  // positionJumpHold (then taken as a real move, a teleport). The game can freeze the car and
+  // report a stale position for a moment (seen at the Badlands edge); followed, the Autopilot
+  // replanned from there and braked.
   private func CheckedPosition(position: Vector4, timeDelta: Float) -> Vector4 {
     let reach = MaxF(this.component.stats.d_speed, 20.0) * MaxF(timeDelta, 0.02) * 3.0 + 10.0;
     if Vector4.Distance(position, this.lastPosition) > reach && this.positionJumpTimer < this.positionJumpHold {
@@ -1739,8 +1717,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
         // (blocked space within 10 m cannot be braked for at speed, only steered away from, and
         // came from the map's margin around the car itself on the route)
         // (on a racing line, which the planner checked free all the way, only once the car has
-        // left it: at speed the straight-line prediction runs into the walls past every bend, and
-        // braking for those cost 24 s on the Dogtown route, 2026-10-26)
+        // left it: at speed the straight-line prediction runs into the walls past every bend)
         let lineHeld = this.routeLine && offRoute < this.raceOffLine;
         if blockedAt && !lineHeld && travelled > 10.0 && this.DistanceToRoute(hit) > 2.0 && this.RouteClear(closest, Vector4.Length(reach)) {
           let room = MaxF(travelled - 5.0, 0.0);
@@ -1907,9 +1884,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
         desiredVelocity = Vector4.Normalize(desiredVelocity) * 10.0;
       }
       if Equals(this.status, "descending") {
-        // over the spot first, at the height the descent began: moved to another spot on arrival
-        // (the first one taken by a parked car), the car slid 28 m across while sinking and hit a
-        // walkway at 9 m above the floor on the way (2026-10-29)
+        // over the spot first, at the height the descent began (sliding across while sinking, the car
+        // can hit what is over the neighbouring columns)
         if Vector4.Distance2D(p, this.landingSpot) > this.landingOverSpot {
           desiredVelocity.Z = ClampF(0.5 * (this.landingStartZ - p.Z), -2.0, 2.0);
         } else {
@@ -1936,9 +1912,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
         back = Vector4.Normalize(back) * 15.0;
       }
       desiredVelocity = tangent * this.speedCmd + back + this.overlayVelocity;
-      // plus the flown speed's own rate along the line: on velocity error alone the car trailed a
-      // braking curve by rate / lineVelocityGain (7 m/s at 18 m/s2), more than brakeLead covers, and
-      // reached the Petrochem gap at 45 m/s for a 33 m/s bend, into the wall (2026-10-28)
+      // plus the flown speed's own rate along the line: on velocity error alone the car trails a
+      // braking curve by rate / lineVelocityGain, more than brakeLead covers
       accel = (desiredVelocity - v) * this.lineVelocityGain + bend * (this.speedCmd * this.speedCmd) + tangent * this.speedRate;
       target = this.PointAt(this.closestS + 30.0);
       this.lookahead = target;
@@ -2127,8 +2102,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
 
   // RaceBrakeBack in a bend of the given radius: the lift banked into the bend is not there for
   // braking, so the braking share shrinks as the bend takes more of the lateral envelope (a
-  // friction circle), down to raceBrakeGripMin. Braking and turning at once into the Petrochem gap
-  // the car slowed at 7 to 11 m/s2 against the 18 planned (2026-10-28).
+  // friction circle), down to raceBrakeGripMin.
   private func RaceBrakeBackCornering(v: Float, distance: Float, top: Float, radius: Float, lateral: Float) -> Float {
     let vv = v;
     let left = distance;
@@ -2155,8 +2129,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       i += 1;
     }
     this.routeSpeed[n - 1] = 0.0;
-    // the final approach braked gently: planned at the full race braking the car reached the
-    // approach point at 19 m/s, 2026-10-27
+    // the final approach brakes gently (planned at the full race braking the car arrives too fast)
     let total = this.routeLength[n - 1];
     i = 0;
     while i < n {
@@ -2185,9 +2158,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
 
   // Small rises of the profile between two slowings held down: where the speed climbs less than
   // speedHumpMerge above the lower of the slowest points within speedHumpSpan either side, it stays
-  // at that. Into Dogtown the profile braked 109 to 41 m/s, rose to 45 and braked again to 30: two
-  // stops, flown as two, for 4 m/s (2026-10-29). Only lowers speeds, so every point can still be
-  // slowed for the ones after it.
+  // at that, so two slowings close together are flown as one stop. Only lowers speeds, so every
+  // point can still be slowed for the ones after it.
   private func FlattenSpeedHumps() -> Void {
     let n = ArraySize(this.routeSpeed);
     if n < 3 {
@@ -2219,12 +2191,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // more, joined when less than droneStopJoin apart, and kept when the speed falls by
   // droneStopMinDrop over one. The speed flown is the profile capped by what the car can speed up
   // to (surge less drag, from its speed now): the profile alone is the speed allowed, which falls
-  // long before the car gets there, and the first try made one stop of the last 1000 m of the route
-  // (2026-10-29). Gentle slowing (the arrival's raceArriveDecel) is no stop. Each stop gets the side
-  // its slew swings to (towards the turn at its end, the racing line's bend droneStopTurnAhead past
-  // it) and a strength from its mean braking. Planned, the slew starts with the braking and is one
-  // action per stop: reacting to the commanded braking frame by frame it began 2.5 s late and swung
-  // once per dip of the profile.
+  // long before the car gets there. Gentle slowing (the arrival's raceArriveDecel) is no stop. Each
+  // stop gets the side its slew swings to (towards the turn at its end, the racing line's bend
+  // droneStopTurnAhead past it) and a strength from its mean braking. Planned, the slew starts with
+  // the braking and is one action per stop (reacting to the commanded braking it starts late and
+  // swings once per dip of the profile).
   private func PlanStops() -> Void {
     // a slew under way when the route's end moves (a parked car on the landing spot) carries on to
     // the new end: replanned, the moved end's bend dropped it and the nose swung back 50 m out
@@ -2308,16 +2279,12 @@ public class FlightModeAutopilot extends FlightModeStandard {
         FlightLog.Info("[Autopilot] stop " + ToString(kept) + ": " + FloatToStringPrec(this.routeLength[a], 0) + " to " + FloatToStringPrec(this.routeLength[b], 0)
           + " m, " + FloatToStringPrec(va, 0) + " to " + FloatToStringPrec(vb, 0) + " m/s (" + FloatToStringPrec(decel, 1) + " m/s2)");
         // slewed only on its straight stretches (droneSlewMinStraight long at least), unwound
-        // droneSlewMargin before a bend: turns are flown with the nose along the line (Jack liked
-        // the turn into the Dogtown gap that way, 2026-10-29). Faded by the bend point by point
-        // instead, the slew swung in and out three times through that stop.
+        // droneSlewMargin before a bend: turns are flown with the nose along the line.
         // A gentle bend leading into a turn is part of the turn: a stretch running into a bend
         // ends where the line has turned droneSlewHeadingOff from the stretch's start, unwound
-        // droneSlewRelease before that at the flown speed, and must last droneSlewMinTime. Unwound
-        // only 30 m before the sharp part, the nose swung 45 degrees towards the Dogtown gap 4 s
-        // before it and back out as the car turned in; that brake is now flown nose along the line,
-        // like the turn before slewing stops. A stretch running to the stop's end (the landing)
-        // ends with it, however the line turns there.
+        // droneSlewRelease before that at the flown speed, and must last droneSlewMinTime. A
+        // stretch running to the stop's end (the landing) ends with it, however the line turns
+        // there.
         let s = this.routeLength[a];
         let runStart = -1.0;
         let runSpeed = 0.0;
@@ -2347,8 +2314,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
           if runStart >= 0.0 && (!straight || last) {
             // the run ends here; up to a turn it is unwound before it
             let runEnd = straight ? s : (turnedS >= 0.0 ? turnedS : s) - MaxF(this.droneSlewMargin, flown[j] * this.droneSlewRelease);
-            // only into the landing (Jack, 2026-10-29): mid-route a crest's stop swung the nose 45
-            // degrees and back on a straight line, its side picked from a bend that was vertical
+            // only into the landing: mid-route stops are flown nose along the line
             let toEnd = straight && b == n - 1;
             if toEnd && runEnd - runStart >= MaxF(this.droneSlewMinStraight, runSpeed * this.droneSlewMinTime) {
               this.LineFrameOver(runEnd + this.droneStopTurnAhead, this.lineSpan, tangent, bend);
@@ -2427,8 +2393,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
 
   // The landing spot again on the approach, once the cars around it have streamed in: taken, the
   // route's end is moved to the nearest free one (ShiftRouteEnd), so the car flies into it in one
-  // go. Checked on arrival only, the car came to a stop above a parked car's spot and then moved
-  // 28 m over before coming down, two actions where there should be one (2026-10-29).
+  // go rather than stopping over the taken spot and moving over.
   private func RecheckLandingSpot(timeDelta: Float) -> Void {
     if !this.landing || this.landingPad >= 0 || this.remaining > this.landingRecheck || this.remaining < 15.0 {
       return;
@@ -2476,8 +2441,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
 
   // The slew planned at route distance s (signed: positive swings the nose right), in
   // droneBrakeYaw, 0 elsewhere: out and back in one arc, peaking halfway (held at an angle, it
-  // looked locked, Jack 2026-10-29). Into the landing it is the progress of the landing turn
-  // (LandSlewYaw), not an angle off the line.
+  // looks locked). Into the landing it is the progress of the landing turn (LandSlewYaw), not an
+  // angle off the line.
   private func PlannedSlew(s: Float) -> Float {
     let k = this.SlewIndexAt(s);
     if k < 0 {
@@ -2488,12 +2453,12 @@ public class FlightModeAutopilot extends FlightModeStandard {
   }
 
   // Seconds the planned speeds (routeSpeed) take from here to where the descent takes over
-  // (landingEntry before the end, below landingEntrySpeed). Braking's 2d/v put it 2 s too far
-  // out: the brake eases off near the end and hands over at 10 m/s, not 0.
+  // (landingEntry before the end, below landingEntrySpeed). Not 2d/v: the brake eases off near the
+  // end and hands over at landingEntrySpeed, not 0.
   private func TimeToDescent() -> Float {
     let n = ArraySize(this.routeLength);
-    // no speeds for this route yet (a moved end, replanning): far off. 0 started the landing turn
-    // 6 s early, when a parked car moved the end 134 m out
+    // no speeds for this route yet (a moved end, replanning): far off (0 would start the landing
+    // turn early)
     if n < 2 || ArraySize(this.routeSpeed) != n {
       return 1000.0;
     }
@@ -2512,14 +2477,12 @@ public class FlightModeAutopilot extends FlightModeStandard {
   }
 
   // Into the landing the nose makes one turn, from where it was when the stretch began to the
-  // heading it lands on, the descent finishing it (one motion, Jack 2026-10-29: as an angle off
-  // the line it followed the moved end's wiggles, and below 12 m/s the nose fell back to the old
-  // hover heading, then turned again as it sank: 70 degrees back, 70 on, 80 back). The landing
-  // heading is the spot's most open line (LandingHeading) or the pad's, whichever of its two ways
-  // makes a turn in the slew's direction nearest droneLandSlewYaw. Returns the nose yaw wanted.
+  // heading it lands on, the descent finishing it: one motion. The landing heading is the spot's
+  // most open line (LandingHeading) or the pad's, whichever of its two ways makes a turn in the
+  // slew's direction nearest droneLandSlewYaw. Returns the nose yaw wanted.
   // Started by a stretch into the landing (k), it then runs on its own to where the descent takes
-  // over, however the stops are planned again: chosen again for a moved spot it went back 75
-  // degrees at 110 deg/s, and restarted with a replanned stretch's start it went back 50.
+  // over, however the stops are planned again (chosen again for a moved spot, or restarted with a
+  // replanned stretch, it went back).
   private func LandSlewYaw(k: Int32, timeLeft: Float, dt: Float, yaw: Float) -> Float {
     if !this.landSlewOn {
       this.landSlewOn = true;
@@ -2557,10 +2520,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
       this.landSlewDelta = best * bestDirection;
       FlightLog.Info("[Autopilot]   landing turn " + FloatToStringPrec(Rad2Deg(this.landSlewDelta), 0) + " deg");
     }
-    // progress carried on over the time left, so a moved end (26 m further for a parked car)
-    // stretches what is left of the turn instead of setting it back (17 degrees, a stall). Over
-    // time, not distance: over distance half the turn was done in the first 3 s of a 10 s brake,
-    // still at 50 m/s (Jack 2026-10-29: "starts to slew way too early")
+    // progress carried on over the time left, so a moved end stretches what is left of the turn
+    // instead of setting it back. Over time, not distance: over distance most of the turn is done
+    // early in a long brake, still at speed.
     if dt > 0.0 {
       this.landSlewP = ClampF(this.landSlewP + (1.0 - this.landSlewP) * dt / MaxF(timeLeft, dt), 0.0, 1.0);
     }
@@ -2598,11 +2560,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
     }
     let allowed = this.RaceBrakeBack(this.routeSpeed[k], MaxF(distance, 0.0), this.RaceTopSpeed());
     // between two points the profile's own slope (v^2 linear along the segment): braked back at
-    // the full race decel from the next point instead, the allowed speed was a sawtooth over each
-    // 5 m segment wherever the profile slows gently (the arrival's raceArriveDecel), and its rate
-    // read ahead (RaceTargetRate) flicked between -2.9 and -5.8 m/s2 frame to frame, the thrust
-    // with it (2026-10-28). Read at s + lead, in the segment there: the lead (0.6 s of the flown
-    // speed) is longer than a segment, so in the car's own one it always read the next point.
+    // the full race decel from the next point instead, the allowed speed is a sawtooth over each
+    // segment wherever the profile slows gently, and its rate read ahead (RaceTargetRate) flickers,
+    // the thrust with it. Read at s + lead, in the segment there: the lead is longer than a
+    // segment.
     let sl = s + lead;
     let j = k;
     while j < n - 1 && this.routeLength[j] <= sl {
@@ -2620,8 +2581,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
 
   // How fast the allowed speed falls as the car flies on (m/s2, 0 or less), from the profile
   // raceRateProbe seconds ahead. Fed forward into the flown speed: on the speed error alone it
-  // trailed a braking curve by rate / (2 speedGain), 5 to 7 m/s over the profile into the
-  // Petrochem gap even with the car on the flown speed (2026-10-28).
+  // trails a braking curve by rate / (2 speedGain).
   private func RaceTargetRate(speed: Float) -> Float {
     if ArraySize(this.routeSpeed) != ArraySize(this.route) || ArraySize(this.route) < 2 {
       return 0.0;
@@ -2826,8 +2786,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
       let tangent: Vector4;
       let bend: Vector4;
       this.LineFrameOver(this.closestS + this.component.stats.d_speed * this.ribbonLead, this.ribbonSpan, tangent, bend);
-      // the same steep-path rule as the nose off the line: on the final drop to a landing spot
-      // the line's own slope held the nose at the ground for 4 s (2026-10-27)
+      // the same steep-path rule as the nose off the line (the line's own slope on the final drop
+      // to a landing spot would hold the nose at the ground)
       let slope = AsinF(ClampF(tangent.Z, -1.0, 1.0));
       let along = this.Unsteep(level * CosF(slope) + FlightUtils.Up() * SinF(slope));
       wanted = AsinF(ClampF(along.Z, -1.0, 1.0));
@@ -2874,9 +2834,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let g = 9.81 * this.gravityFactor;
     // where the nose points: on a racing line along the line a moment ahead, which is smooth by
     // construction; off it the velocity's horizontal part. That part is small and noisy on a
-    // steep climb or drop, and the nose twitched there (yaw jitter 7 deg/s RMS, the command's far
-    // more, over four legs with 16 to 32% of the route steeper than 45 degrees, 2026-10-29): it
-    // holds the last heading where the direction is near vertical
+    // steep climb or drop (the nose twitches): it holds the last heading where the direction is
+    // near vertical
     // (Flat returns a unit vector: the horizontal part with its length is taken by hand)
     let ahead3 = stats.d_velocity + accel * this.attitudeLead;
     let path = new Vector4(ahead3.X, ahead3.Y, 0.0, 0.0);
@@ -2951,9 +2910,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let along = ahead >= 0.0 ? this.standardModeSurgeFactor : this.RaceDecel(stats.d_speed) - this.DragAccel(stats.d_speed);
     let cap = Deg2Rad(this.droneMaxTilt);
     let pitch = ClampF(this.DroneBodyAngle(AtanF(ahead, thrust.Z), size, along), -cap, cap);
-    // the roll for the turn coming, not only the one now (DroneTurnAhead): braking from 71 to 31 m/s
-    // into the gap into Dogtown, a gentle bend then a sharp one in the same direction banked 28
-    // degrees, eased to 14 and banked 55, one turn flown as two (2026-10-28)
+    // the roll for the turn coming, not only the one now (DroneTurnAhead): a gentle bend then a
+    // sharp one in the same direction is flown as one turn, not two
     let lateral = Vector4.Dot(thrust, side);
     let coming = this.DroneTurnAhead(side);
     if AbsF(coming) > AbsF(lateral) && (coming * lateral >= 0.0 || AbsF(lateral) < 2.0) {
@@ -2961,9 +2919,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
     }
     let roll = ClampF(this.DroneBodyAngle(AtanF(lateral, thrust.Z), size, this.standardModeSwayFactor), -cap, cap);
     // eased as the plane's pitch and bank are (EasePitch, EaseBank): followed directly, the tilt
-    // flicked with every change of the commanded acceleration and the car overshot it, rolling to
-    // 85 degrees for a 50 degree command into Dogtown (2026-10-28). What the tilt lags by, the
-    // thrust in the car's frame (FlyAerobatic) still gives, up to the surge and sway limits.
+    // flicks with every change of the commanded acceleration and the car overshoots it. What the
+    // tilt lags by, the thrust in the car's frame (FlyAerobatic) still gives, up to the surge and
+    // sway limits.
     if !live {
       this.dronePitch = pitch;
       this.droneRoll = roll;
@@ -3087,7 +3045,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
         fwd += Vector4.Normalize(path) * blend;
       }
       fwd = Vector4.Length(fwd) > 0.1 ? Vector4.Normalize(fwd) : this.headingRef;
-      // nearer level on a steep path (2026-10-27), then eased
+      // nearer level on a steep path, then eased
       fwd = this.EasePitch(dt, this.Unsteep(fwd));
       this.attAccel += (accel - this.attAccel) * ClampF(dt / this.raceBankTime, 0.0, 1.0);
       let bankAccel = this.attAccel;
@@ -3112,8 +3070,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
         u = held;
       }
       // with the path near vertical, gravity says nothing about which way the top should face and
-      // small sideways accelerations swung it from frame to frame (yaw chatter in dives and steep
-      // climbs, 2026-10-27): hold the top where it was instead
+      // small sideways accelerations swing it from frame to frame: hold the top where it was instead
       let vertical = ClampF((AbsF(fwd.Z) - 0.7) / 0.25, 0.0, 1.0);
       if vertical > 0.0 && Vector4.Length(held) > 0.01 {
         u = Vector4.Normalize(u) * (1.0 - vertical) + Vector4.Normalize(held) * vertical;
@@ -3177,8 +3134,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     // tensor per axis, into the world frame; PhysX applies it with the body's world inertia. So the
     // torque for alpha is that inertia x alpha, back through the same steps. The per-axis gains
     // below were measured on one car (an Archer Quartz) and are only the fallback without PhysX-owned
-    // flight: on a Thorton Colby the yaw came out about three times too stiff and shook at 7 Hz
-    // (2026-10-27).
+    // flight (on other cars they come out too stiff and shake).
     let torque: Vector4;
     let impulse = this.component.AngularImpulseFor(stats.d_orientation * alpha);
     if impulse.W > 0.5 {

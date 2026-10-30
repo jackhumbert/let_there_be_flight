@@ -15,10 +15,6 @@
 namespace Navigation {
 namespace detail {
 
-// The cost of climbing aRise metres in one step: aCost a metre, growing exponentially with the
-// rise (aScale metres per e-fold; 0 = in proportion). A small rise costs about what it did, a wall
-// far more: at 0.5 a metre the Dogtown route climbed 165 m over the stadium in one step rather than
-// go round it (Jack, 2026-10-29), and a higher flat rate sent routes round the city over the water.
 float ClimbCost(float aRise, float aCost, float aScale) {
   if (aRise <= 0.0f) {
     return 0.0f;

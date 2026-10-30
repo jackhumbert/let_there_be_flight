@@ -2,9 +2,8 @@
 
 // The car's limits, worked out in one place from its stats and the flight tuning: the planner
 // (Planner.cpp), the Autopilot in game (FlightVehicleModel, FlightModeAutopilot.reds) and the
-// offline tools (navplan, tools/navplan/vehicles.json) all read them from here. Before
-// (2026-10-29) they were written down four times and disagreed: dips.py, laptime.py (an older
-// plane model), fixed PlanParams defaults and the Autopilot's own per-car code.
+// offline tools (navplan, tools/navplan/vehicles.json) all read them from here
+// (docs/design/vehicle-limits.md).
 //
 // No game types: navplan builds this without the game.
 

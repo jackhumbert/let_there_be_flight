@@ -65,14 +65,11 @@ struct PlanParams {
   float lineSpacing = 5.0f;      // metres between the finished line's points
   float lineSide = 3.0f;         // the line also stays free this far to either side (m)
   // blocked space this close across the line pushes it away, linePush per pass (where the move
-  // stays free). Dogtown at 100 m, tools/navplan/laptime.py: no point within 5 m of blocked space
-  // (1.7% within 3 m without), 55.6 s against 52.4 s; 8 m or a push only on the fine passes cost
-  // more time for no more room
+  // stays free)
   float lineClearance = 6.0f;    // m
   // m above the floor below (car-centre height, the car's size already taken off) the line keeps,
   // but within lineFloorEnds of its start and end: street furniture (traffic lights, signs, lamps)
-  // is streamed in as props and not on the map; a between-the-buildings line flew 6 m over a
-  // street at 85 m/s and hit a traffic light's arm, 2026-10-27
+  // is streamed in as props and not on the map
   float lineFloorClearance = 12.0f;
   float lineFloorEnds = 60.0f;   // m
   // iterations per level of the coarse-to-fine height solve after the smoothing (SmoothHeights,
@@ -112,8 +109,7 @@ struct PlanParams {
   float lineStep = 0.08f;        // gradient step per pass (stable below 0.125)
   // weight of the vertical bend against the sideways one: crests and dips are pushed over and
   // pulled through with the lift alone, so they are rounded off more (stable while
-  // lineStep x weight stays below 0.125). 1.5: from the street start to Dogtown half the line at 90%
-  // of top speed instead of 30%, a crest that slowed the car to 41 m/s rounded off
+  // lineStep x weight stays below 0.125)
   float lineVerticalWeight = 1.5f;
   float directMargin = 20.0f;    // cruise this far above the highest floor along the line
   float maxCruise = 700.0f;
