@@ -1,4 +1,4 @@
-"""Raw cooked collision blobs for a pad kit's mesh / convex shapes (docs/helipads.md, step 8).
+"""Raw cooked collision blobs for a pad kit's mesh / convex shapes (docs/archive/helipads.md, step 8).
 
 A kit's collision actors reference their triangle / convex meshes by hash into the world's
 geometry cache. An entity collider (physicsColliderMesh / physicsColliderConvex) carries the

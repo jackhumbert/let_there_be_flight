@@ -1,4 +1,4 @@
-"""Inventory everything placed in a complete landing pad's footprint (docs/helipads.md, step 8).
+"""Inventory everything placed in a complete landing pad's footprint (docs/archive/helipads.md, step 8).
 
 A visual-only pad gets a real deck by copying a complete pad of the same prefab: this lists the
 pieces of the donor, i.e. every node instance whose position lies in the prefab's footprint

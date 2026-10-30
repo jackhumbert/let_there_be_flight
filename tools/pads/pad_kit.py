@@ -1,5 +1,5 @@
 """Isolate a landing pad prefab's own parts by intersecting several of its placements
-(docs/helipads.md, step 8).
+(docs/archive/helipads.md, step 8).
 
 pad_donor.py lists everything in one pad's footprint, which includes the building around it.
 Instances of the same prefab share their parts at the same local transforms while their

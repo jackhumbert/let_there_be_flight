@@ -3,7 +3,7 @@
 Renders the floor of the highest gap per 2 m column with the flat areas outlined, and prints the
 largest flat areas' centres (deck heights). A column is flat when its top floor varies by at most
 0.5 m and has open sky within --radius m. Used for the spaceport pads in helipads_overrides.json
-(docs/helipads.md).
+(docs/archive/helipads.md).
 
 Usage: python flat_spots.py navmap.bin x0 y0 x1 y1 -o region.png [--radius 10] [--count 25]
 """

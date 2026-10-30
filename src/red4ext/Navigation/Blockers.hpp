@@ -22,7 +22,7 @@ namespace Navigation {
 // (Hooks/StreamingSector_PostLoad.cpp has the layout).
 //
 // The same hook hides listed node placements (hidden_nodes.txt, by hand): e.g. the visual-only
-// proxy of a landing pad that our own pad entity replaces (docs/helipads.md, step 8).
+// proxy of a landing pad that our own pad entity replaces (docs/archive/helipads.md, step 8).
 class Blockers {
 public:
   struct Actor {

@@ -98,7 +98,7 @@ SETTINGS
 
 LTBF's settings (lift, turn resistance, flight UI, etc.) live under Mod Settings, not a
 separate menu. Install Mod Settings and open it in-game to find them. A settings guide is in
-the repo at docs/settings-guide.md if you want details on what each option does.
+the repo at docs/nexus/settings-guide.md if you want details on what each option does.
 
 UNINSTALLATION
 

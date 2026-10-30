@@ -35,7 +35,7 @@ public native class FlightNavMap extends IScriptable {
   public native static func ClearTargetOverride() -> Void;
   public native static func HasTargetOverride() -> Bool;
   public native static func GetTargetOverride() -> Vector4;
-  // AV landing pads found in the world (helipads.tsv, docs/helipads.md), index 0 .. count - 1.
+  // AV landing pads found in the world (helipads.tsv, docs/archive/helipads.md), index 0 .. count - 1.
   // Position is the deck centre a car rests on (w = 1); an index out of range gives zeros / "".
   public native static func GetHelipadCount() -> Int32;
   public native static func GetHelipadPosition(index: Int32) -> Vector4;

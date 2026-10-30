@@ -589,7 +589,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     return true;
   }
 
-  // A landing pad (FlightNavMap helipads, docs/helipads.md) to land on for this destination: the
+  // A landing pad (FlightNavMap helipads, docs/archive/helipads.md) to land on for this destination: the
   // one it is on (within padSnapDistance and at the pad's level), else with padRange set and the
   // destination on the ground, the nearest within padRange. -1: none.
   private func FindLandingPad(target: Vector4) -> Int32 {

@@ -1,6 +1,6 @@
 #pragma once
 
-// Route planning over the NavMap (docs/autodrive-flight-plan.md, docs/autopilot-research.md).
+// Route planning over the NavMap (docs/archive/autodrive-flight-plan.md, docs/research/autopilot-research.md).
 //
 // 1. Direct (optional): climb to a cruise altitude above everything along the straight line,
 //    fly straight, descend. Used when every leg is free.

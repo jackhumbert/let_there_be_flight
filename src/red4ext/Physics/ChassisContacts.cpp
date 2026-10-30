@@ -29,7 +29,7 @@
 //    Applying it as an impulse at r with an angular part rocked the vehicle diagonally:
 //    SyncFromPhysX's spin change also contains PushToPhysX's orientation chase, so r is
 //    only good enough as a weight.
-// See docs/drone-ground-jitter-analysis.md for the engine call order this relies on.
+// See docs/research/drone-ground-jitter-analysis.md for the engine call order this relies on.
 
 namespace {
 using RED4ext::Vector3;
@@ -82,7 +82,7 @@ Vector3 Mul(const RED4ext::Matrix &m, const Vector3 &v) {
 //                   instead of the velocity that chases the RigidBody pose
 // The tracking velocities in the synchronizer are kept equal to what PhysX has, so switching
 // back (flight off, or the setting off) resumes the vanilla delta sync with no jump.
-// docs/physx-flight-design.md has the reverse-engineering behind this.
+// docs/design/physx-flight.md has the reverse-engineering behind this.
 
 // vehicle::PhysXSynchronizer tracking: int state +0 (0 idle), pushed linear +0x10, angular +0x20
 constexpr size_t kTrackingState = 0x0;

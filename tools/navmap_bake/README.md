@@ -2,7 +2,7 @@
 
 Builds `navmap.bin`, the city-wide free-space map the autopilot plans over
 (`src/red4ext/Navigation/NavMap.hpp`), from the game's own files. Background, decisions and
-validation results: `docs/autodrive-flight-plan.md`.
+validation results: `docs/archive/autodrive-flight-plan.md`.
 
 What goes in: cooked collision of every exterior and interior streaming sector (boxes, capsules,
 convex and triangle meshes from the geometry cache; presets that block vehicles only), terrain
@@ -62,7 +62,7 @@ python navmap.py W\spans -o W\navmap.bin
 ```
 
 Landing pads (`pads.py`, minutes; needs only the raw exterior sectors and `navmap.bin`, see
-`docs/helipads.md`):
+`docs/archive/helipads.md`):
 
 ```
 $CLI unbundle $PC\ep1\ep1_1_nightcity.archive -o W\raw\ep1 -r "_compiled.default.exterior_.*\.streamingsector$"
@@ -71,7 +71,7 @@ python pads.py build W\pads --navmap W\navmap.bin -o W\pads\helipads.json --prev
 python flat_spots.py W\navmap.bin -6400 -400 -2300 1200 -o spaceport.png --radius 12   # spots for helipads_overrides.json
 ```
 
-Visual-only pads (`docs/helipads.md` step 8, "Recipe"): `pad_collision.py` finds them (unbundle
+Visual-only pads (`docs/archive/helipads.md` step 8, "Recipe"): `pad_collision.py` finds them (unbundle
 the level-3 sectors too: `-r "_compiled.default.exterior_-?\d+_-?\d+_-?\d+_3\.streamingsector$"`,
 517 files, and run `sectors.py` on them); `pad_donor.py` / `pad_kit.py` / `pad_geometry.py` /
 `pad_appearances.py` / `pad_entity.py` turn a complete prefab into our pad entity;

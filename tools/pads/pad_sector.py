@@ -1,4 +1,4 @@
-"""Place our pad entities in the world (docs/helipads.md, step 8): rewrite our sector's pad nodes
+"""Place our pad entities in the world (docs/archive/helipads.md, step 8): rewrite our sector's pad nodes
 from pad_sectors.json and fit its streaming block descriptor.
 
 Works on the committed CR2W files in src/wolvenkit/source/archive: serializes the sector and the

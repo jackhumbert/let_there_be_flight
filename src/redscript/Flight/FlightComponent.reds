@@ -420,7 +420,7 @@ public native class FlightComponent extends GameComponent {
       this.sys.ctlr.ResetInputs();
       this.isPlayerMounted = true;
       this.SetupVehicleTPPBBListener();
-      // timing marker, see docs/mount-stutter-analysis.md
+      // timing marker, see docs/research/mount-stutter-analysis.md
       FlightLog.Info("[FlightComponent] OnMountingEvent done");
       // try without wind
       // FlightAudio.Get().Start("windLeft", "wind_TPP");

@@ -1,4 +1,4 @@
-// Landing pads on the map (docs/helipads.md): a pin for each AV landing pad from FlightNavMap's
+// Landing pads on the map (docs/archive/helipads.md): a pin for each AV landing pad from FlightNavMap's
 // helipad list, shown once discovered (flown or walked within discoverDistance) or all of them.
 // Pins are registered with the drop point variant and our own mappin type (MappinSystem.RegisterMappin
 // makes a RuntimeMappin, which shows on the world map and can be tracked; it always reads as
@@ -7,7 +7,7 @@
 // text and spawn range (MappinUISpawnProfile.LTBF_LandingPad, src/tweaks/helipads.yaml), and the
 // Autopilot lands on the pad when its pin is tracked. Registered pins live only for the session:
 // they are registered again on each load, from the discovered pad ids saved with the game.
-// How the game handles these pins (from the 2.5 binary): docs/helipads.md, section 5.
+// How the game handles these pins (from the 2.5 binary): docs/archive/helipads.md, section 5.
 // The first touchdown on each pad (in a vehicle, inside its radius, at deck height, nearly
 // stopped) gives a one-off supply drop of eddies and crafting components, also saved.
 
@@ -188,7 +188,7 @@ public class FlightHelipadSystem extends ScriptableSystem {
 
   // A toast like the game's location reveals, title only. It plays the warning animation and the
   // chip malfunction jingle, so it reads as an alert; the quest-update style notification meant to
-  // replace it (title plus `text`) did not draw in game yet, see docs/helipads.md section 6.
+  // replace it (title plus `text`) did not draw in game yet, see docs/archive/helipads.md section 6.
   private func Notify(title: String, text: String) -> Void {
     let msg: SimpleScreenMessage;
     msg.isShown = true;

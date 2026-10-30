@@ -1,5 +1,5 @@
 {
-  "comment": "Our pad entities placed in the world by pad_sector.py (docs/helipads.md, step 8). sector: our sector that holds them (a second sector of our own with its own descriptor did not load, so they share this one). base_box: the descriptor box the sector's other nodes need (the Watson car spawners). pads: one per visual-only pad, the part entities (pad_entity.py, one per 100 meshes) at the proxy's transform; streaming_distance as far as the hidden proxy drew (its forcedAutoHideDistance); node_id: globalNodeId of the first part, the next ones count up. spawners: vehicle spawners (pad_sector.py), a fresh car on every load.",
+  "comment": "Our pad entities placed in the world by pad_sector.py (docs/archive/helipads.md, step 8). sector: our sector that holds them (a second sector of our own with its own descriptor did not load, so they share this one). base_box: the descriptor box the sector's other nodes need (the Watson car spawners). pads: one per visual-only pad, the part entities (pad_entity.py, one per 100 meshes) at the proxy's transform; streaming_distance as far as the hidden proxy drew (its forcedAutoHideDistance); node_id: globalNodeId of the first part, the next ones count up. spawners: vehicle spawners (pad_sector.py), a fresh car on every load.",
   "sector": "user\\jackhumbert\\sectors\\helipad_vehicles.streamingsector",
   "block": "user\\jackhumbert\\all.streamingblock",
   "colliders": "../world/proxy_collider_tiles.json",
@@ -18,7 +18,7 @@
   "pads": [
     {
       "pad": "hangar",
-      "note": "the inventor's hangar (docs/helipads.md section 9; tools/kitbash/hangar_build.py), on bare salt flat in the Badlands; z is the floor origin, terrain 58.21 .. 58.46 under it",
+      "note": "the inventor's hangar (docs/archive/helipads.md section 9; tools/kitbash/hangar_build.py), on bare salt flat in the Badlands; z is the floor origin, terrain 58.21 .. 58.46 under it",
       "pos": [
         1735.0,
         -1215.0,

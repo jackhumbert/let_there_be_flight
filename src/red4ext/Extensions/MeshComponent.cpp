@@ -90,7 +90,7 @@ void EntityExt::AddComponent(Handle<ent::IComponent> const & componentToAdd) {
     if (customization) {
       LTBF_WARN_ONCE("[EntityExt] vehicle has a vehicleVisualCustomization (CrystalCoat) component; thruster meshes are not "
                      "registered with it. If this vehicle crashes, set 'bool flightDisabled = true;' on its Vehicle record "
-                     "in a tweak (see docs/crystalcoat-crash-analysis.md)");
+                     "in a tweak (see docs/research/crystalcoat-crash-analysis.md)");
     }
 
 #if 0 // disabled since v0.3.16 (7a1a51d): CrystalCoat crash
