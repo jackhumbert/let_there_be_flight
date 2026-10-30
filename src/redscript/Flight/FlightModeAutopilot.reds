@@ -144,22 +144,6 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // controller tuning, not in Mod Settings
   public let velocityGain: Float = 1.2;       // 1/s, velocity error -> acceleration
   public let maxAccel: Float = 12.0;          // m/s2
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Autopilot")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Autopilot-Max-Bank")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Autopilot-Max-Bank-Description")
-  @runtimeProperty("ModSettings.step", "1.0")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "45.0")
-  public let maxBankDeg: Float = 25.0;
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Autopilot")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Autopilot-Max-Pitch")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Autopilot-Max-Pitch-Description")
-  @runtimeProperty("ModSettings.step", "1.0")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "45.0")
-  public let maxPitchDeg: Float = 20.0;
   public let overrideHold: Float = 1.5;       // s the autopilot stays off after player input
   public let replanDistance: Float = 30.0;    // m off the route before replanning
   public let arriveDistance: Float = 6.0;

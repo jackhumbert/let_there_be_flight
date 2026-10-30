@@ -840,16 +840,6 @@
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
-              "secondaryKey": "UI-Settings-Autopilot-Max-Bank",
-              "femaleVariant": "Max Bank Angle"
-            },
-            {
-              "$type": "localizationPersistenceOnScreenEntry",
-              "secondaryKey": "UI-Settings-Autopilot-Max-Bank-Description",
-              "femaleVariant": "How far the vehicle leans into turns, in degrees. 0 keeps it level."
-            },
-            {
-              "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Autopilot-Race",
               "femaleVariant": "Race"
             },
@@ -857,16 +847,6 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Autopilot-Race-Description",
               "femaleVariant": "Get there as fast as the vehicle can: full thrust and braking, up to its top speed, and turns flown banked hard into the lift. Turns Aerobatics on with it. Top Speed, Cornering and Braking do not apply."
-            },
-            {
-              "$type": "localizationPersistenceOnScreenEntry",
-              "secondaryKey": "UI-Settings-Autopilot-Max-Pitch",
-              "femaleVariant": "Max Pitch Angle"
-            },
-            {
-              "$type": "localizationPersistenceOnScreenEntry",
-              "secondaryKey": "UI-Settings-Autopilot-Max-Pitch-Description",
-              "femaleVariant": "How far the nose tilts up or down on climbs and descents, in degrees. 0 keeps it level."
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
