@@ -94,7 +94,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // leaving the line on a trajectory (docs/design/trajectory.md, step 5): replanned from the car's
   // state, never steered back to a point behind it
   public let replanOffLine: Float = 8.0;    // m off the line before replanning (replanDistance without a trajectory)
-  public let trajectoryCorrectionMax: Float = 15.0; // m/s2 the follower adds to the trajectory's acceleration at most
+  public let trajectoryCorrectionMax: Float = 25.0; // m/s2 the follower adds to the trajectory's acceleration at most (swept)
   public let rejoinAhead: Float = 3.0;      // s of the car's speed along the line it rejoins it (rejoinMin m at least)
   public let rejoinMin: Float = 150.0;
   private let requestRejoin: Bool;
