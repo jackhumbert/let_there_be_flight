@@ -14,7 +14,11 @@ Steps:
            "uncovered". Writes uncovered.npz (kept triangles, world space, with the placement
            index of each) and audit.json (per placement: kept area, total area), plus a preview
            (--preview) of kept triangles over the city.
-  build    Cut the kept triangles into --tile m tiles, cook each tile's triangles (PhysX 3.4,
+  force    The placements listed in proxy_collider_force.json (buildings drawn without wall
+           collision that audit counted as covered: a surface under the top real surface of its
+           column counts as covered there), their triangles inside each entry's box not within --tol
+           of real collision -> forced.npz, for build --force.
+  build    Cut the kept triangles (and with --force the forced ones) into --tile m tiles, cook each tile's triangles (PhysX 3.4,
            tools/packaging/physx_cook) relative to the tile centre and write one collider entity per tile
            (.ent WolvenKit JSON, entColliderComponent with one physicsColliderMesh) plus
            tiles.json (entity name, position) for placing them (pad_sector.py "colliders").
@@ -475,6 +479,63 @@ def cmd_audit(args):
 # --------------------------------------------------------------------------------------- build
 
 
+def cmd_force(args):
+    from scipy import ndimage
+
+    rows = json.load(open(os.path.join(args.work, "placements.json")))
+    index = {(r["sector"], str(r["gid"]), r["mesh"]): i for i, r in enumerate(rows)}
+    meta = json.load(open(os.path.join(args.work, "solid", "meta.json")))
+    voxel, tile = meta["voxel"], meta["tile"]
+    reach = max(1, int(math.ceil(args.tol / voxel)))
+    entries = json.load(open(args.list))["buildings"]
+    kept_t, kept_o, missing = [], [], 0
+    for e in entries:
+        lo, hi = np.array(e["box"][:3], float), np.array(e["box"][3:], float)
+        tris, owner = [], []
+        for pl in e["placements"]:
+            i = index.get((pl["sector"], str(pl["gid"]), pl["mesh"]))
+            w = _placed(args.work, rows[i]) if i is not None else None
+            if w is None:
+                missing += 1
+                continue
+            m = np.all(w.max(1) >= lo, 1) & np.all(w.min(1) <= hi, 1)
+            tris.append(w[m])
+            owner.append(np.full(m.sum(), i, np.int32))
+        if not tris:
+            continue
+        tris, owner = np.concatenate(tris), np.concatenate(owner)
+        if not len(tris):
+            continue
+        # real collision near the box (the audit's solid voxels), grown by --tol
+        vlo = np.floor(lo / voxel).astype(np.int64) - reach - 1
+        vhi = np.floor(hi / voxel).astype(np.int64) + reach + 1
+        grid = np.zeros(tuple(vhi - vlo + 1), bool)
+        for tx in range(int(lo[0] // tile) - 1, int(hi[0] // tile) + 2):
+            for ty in range(int(lo[1] // tile) - 1, int(hi[1] // tile) + 2):
+                for f in glob.glob(os.path.join(args.work, "solid", f"{tx}_{ty}_*.npy")):
+                    v = np.load(f).astype(np.int64)
+                    v = v[np.all((v >= vlo) & (v <= vhi), axis=1)]
+                    grid[tuple((v - vlo).T)] = True
+        solid = ndimage.binary_dilation(grid, np.ones((3, 3, 3), bool), iterations=reach)
+        pts, ids = sample(tris, voxel * 0.75)
+        v = np.clip(np.floor(pts / voxel).astype(np.int64) - vlo, 0, np.array(grid.shape) - 1)
+        out = np.zeros(len(tris), bool)
+        out[ids[~solid[tuple(v.T)]]] = True
+        kept_t.append(tris[out].astype(np.float32))
+        kept_o.append(owner[out])
+        print(f"({e['near'][0]}, {e['near'][1]}): {out.sum()} of {len(tris)} triangles, {tri_area(tris[out]).sum():.0f} m2",
+              file=sys.stderr)
+    tris = np.concatenate(kept_t) if kept_t else np.zeros((0, 3, 3), np.float32)
+    owner = np.concatenate(kept_o) if kept_o else np.zeros(0, np.int32)
+    # overlapping boxes take the same triangle more than once
+    _, first = np.unique(np.round(tris.reshape(len(tris), 9), 2), axis=0, return_index=True)
+    first = np.sort(first)
+    tris, owner = tris[first], owner[first]
+    np.savez(os.path.join(args.work, "forced.npz"), tris=tris, owner=owner)
+    print(f"{len(entries)} buildings, {len(tris)} triangles ({tri_area(tris).sum() / 1e6:.3f} km2), "
+          f"{missing} placements not found", file=sys.stderr)
+
+
 def cmd_build(args):
     import base64
     import copy
@@ -483,10 +544,13 @@ def cmd_build(args):
     from physx_cook import cook
 
     d = np.load(os.path.join(args.work, "uncovered.npz"))
-    tris = d["tris"].astype(np.float64)
+    tris = d["tris"]
+    if args.force:
+        tris = np.concatenate([tris, np.load(os.path.join(args.work, "forced.npz"))["tris"]])
     # the same triangles for the nav map bake (spans.py bin --extra)
-    np.savez(os.path.join(args.work, "colliders.npz"), tris=d["tris"], preset=np.zeros(len(tris), np.uint16),
+    np.savez(os.path.join(args.work, "colliders.npz"), tris=tris, preset=np.zeros(len(tris), np.uint16),
              preset_names=np.array(["World Static"]))
+    tris = tris.astype(np.float64)
     tpl = json.load(open(os.path.join(paths.TOOLS, "pads", "pad_templates.json"),
                          encoding="utf-8"))
     c = tris.mean(1)
@@ -593,8 +657,13 @@ def main():
     p.add_argument("--split", type=float, default=6.0, help="cut partly covered triangles down to this edge (m)")
     p.add_argument("--min-area", type=float, default=50.0, help="uncovered m2 for a placement to count")
     p.add_argument("--preview")
+    p = sub.add_parser("force")
+    p.add_argument("work")
+    p.add_argument("--list", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "proxy_collider_force.json"))
+    p.add_argument("--tol", type=float, default=4.0, help="a surface within this of real collision is covered (m)")
     p = sub.add_parser("build")
     p.add_argument("work")
+    p.add_argument("--force", action="store_true", help="add forced.npz (the force step)")
     p.add_argument("--entities", required=True, help="output folder for the .ent.json files")
     p.add_argument("--tiles", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "proxy_collider_tiles.json"))
     p.add_argument("--depot", default=r"user\jackhumbert\entities")
@@ -603,7 +672,7 @@ def main():
     p.add_argument("--node-id", type=int, default=1000000000010000)
     args = ap.parse_args()
     {"scan": cmd_scan, "export": cmd_export, "solid": cmd_solid, "audit": cmd_audit,
-     "build": cmd_build}[args.cmd](args)
+     "force": cmd_force, "build": cmd_build}[args.cmd](args)
 
 
 if __name__ == "__main__":

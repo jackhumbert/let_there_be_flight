@@ -12,7 +12,7 @@
         115
       ],
       "truth": "nothing: open air beside the elevated road, Jack saw nothing there (North run, 2026-10-30, the swerve at 0:21)",
-      "navmap": "blocked from z 22 to 210 in the columns at y -633 (bake_2026-10-29_noblockers)",
+      "navmap": "blocked from z 22 to 210 in bake_2026-10-29_noblockers; free from z 34 to 118 since bake_2026-10-30_forced (no hollow fill)",
       "cause": "bake: spans.py fill_hollow filled the 32 to 120 m gap under the wall of an overhead mass (exterior_-5_-3_0_2 World Static, z 120 to 208) as if it were a 15 m thick roof; only a corner of one mesh reaches into the box (exterior_-3_-2_0_3 node 466 group 22 actor 24, z 85 to 97). In game, rays at z 50 and 70 are clear.",
       "rays": [
         [
@@ -57,7 +57,8 @@
           55
         ]
       ],
-      "expect": "hit"
+      "expect": "hit",
+      "note": "2026-10-30 in game: LtbfBridge.Ray came back clear here (expected hit). Its preset is Complex Environment Collision, likely outside the ray's query groups (Static, Terrain, VehicleBlocker, PlayerBlocker): to check before trusting a clear ray on such collision."
     }
   ]
 }

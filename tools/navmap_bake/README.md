@@ -105,7 +105,8 @@ python proxy_colliders.py scan --sectors W\raw\ep1\base\worlds\03_night_city\_co
 python proxy_colliders.py export P --raw W\proxywork\raw
 python proxy_colliders.py solid P --tris W\sectors --presets W\presets_table.json
 python proxy_colliders.py audit P --terrain W\terrain2 --city=-3000,-3500,1600,3800
-python proxy_colliders.py build P --entities P\ents
+python proxy_colliders.py force P          # tools/world/proxy_collider_force.json: buildings audit missed
+python proxy_colliders.py build P --entities P\ents --force
 $CLI cr2w -d P\ents\*.ent.json -o ..\..\src\wolvenkit\source\archive\user\jackhumbert\entities   # in batches of ~40
 python pad_sector.py
 python ..\pack_archive.py
@@ -114,6 +115,12 @@ python ..\pack_archive.py
 - Finest proxy first: a proxy surface counts as covered by real collision, by terrain, by being
   under the top real surface of its column (undersides below streets), or by an already kept
   finer proxy. Partly covered triangles are cut down to 6 m and only the uncovered pieces kept.
+- The "under the top real surface" rule also drops the walls of a building with collision only near
+  its top (the Dogtown combat tower: collision to 117 m and from about 312 m, walls between drawn
+  only). Such buildings are listed by hand in `tools/world/proxy_collider_force.json` and `force`
+  gives their placements' triangles inside each entry's box collision wherever no real collision
+  is within 4 m. The list came from the space the bake's old hollow fill closed
+  (`tools/world/opened_patches.py`; docs/history.md 2026-10-30); the fill is gone.
 - The ocean patches (`global_ocean_patch_*`, 87 km2) are left out (`--exclude`), and so are terrain
   proxies.
 - 548 tiles, 1.69 M triangles, 50 MB cooked (27 MB packed archive, from 7 MB). Each tile streams

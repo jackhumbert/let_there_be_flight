@@ -6,8 +6,7 @@ Pipeline (each step is a subcommand):
          them into 256 m tiles on disk (a triangle crossing tiles goes into each).
   build  Per tile: voxelize at --cell x --vz (2 m x 0.5 m), sampling triangles finely enough
          in 3D that walls come out continuous. Mark solid below the lowest surface of each
-         column (you cannot get under the world) and below the terrain, and fill tall spaces
-         under thick solid (see fill_hollow). Inflate the solid by
+         column (you cannot get under the world) and below the terrain. Inflate the solid by
          the car (a cylinder: --radius sideways, --half-height up and down) and store the free
          runs of every column, plus the raw solid runs for validation.
   merge  Join tiles into one file: free.npz / solid.npz with per-column run counts and the
@@ -43,10 +42,6 @@ from scipy import ndimage
 from presets import fnv1a64, load_lookup
 
 TILE_CELLS = 128
-# fill_hollow: free space at least HOLLOW_GAP tall under solid at least HOLLOW_ROOF thick is the
-# inside of a building whose collision has a hole, not a way through
-HOLLOW_GAP = 40.0  # m
-HOLLOW_ROOF = 15.0  # m
 Z0, Z1 = -200.0, 1000.0  # voxel range; geometry outside is clipped (sky quest spaces sit at 1.6 km+)
 FLUSH_TRIS = 20_000_000
 MAX_POINTS = 30_000_000
@@ -213,33 +208,6 @@ def sample_points(tris, cell, vz):
             yield np.einsum("kv,tvc->tkc", w, group[i : i + per]).reshape(-1, 3)
 
 
-def fill_hollow(solid, vz):
-    """Fill free runs at least HOLLOW_GAP tall that have solid at least HOLLOW_ROOF thick directly
-    above them, in place. A tower on the Dogtown edge (-1856, -2236) has vehicle collision only
-    from the ground to 118 m and from 253 m to its top at 461 m; its walls between are visual only,
-    the space read as free, and the Autopilot flew through the building (2026-10-26). Bridges,
-    overpasses and decks have thin solid over low clearance and stay open."""
-    gap_min = int(np.ceil(HOLLOW_GAP / vz))
-    roof_min = int(np.ceil(HOLLOW_ROOF / vz))
-    ny, nx, nz = solid.shape
-    cols = solid.reshape(-1, nz)
-    # only columns with free space below solid somewhere
-    candidates = np.nonzero((~cols[:, :-1] & cols[:, 1:]).any(1))[0]
-    filled = 0
-    for c in candidates:
-        col = cols[c]
-        pad = np.concatenate([[False], col, [False]]).astype(np.int8)
-        edges = np.diff(pad)
-        starts, ends = np.nonzero(edges == 1)[0], np.nonzero(edges == -1)[0]  # solid runs [s, e)
-        for k in range(len(starts) - 1):
-            gap = starts[k + 1] - ends[k]
-            roof = ends[k + 1] - starts[k + 1]
-            if gap >= gap_min and roof >= roof_min:
-                col[ends[k]:starts[k + 1]] = True
-                filled += 1
-    return filled
-
-
 def runs_of(mask):
     """mask (cols, nz) bool -> counts (cols,) and runs (n, 2) [start, end) per column, in order."""
     pad = np.zeros((mask.shape[0], 1), bool)
@@ -283,7 +251,6 @@ def build_tile(work, tx, ty, radius, half_height):
     lowest = np.where(occ.any(2), occ.argmax(2), -1)
     tz = np.floor((np.nan_to_num(tgrid, nan=cfg["z0"] - 1) - cfg["z0"]) / vz)
     solid = occ | (zi < lowest[:, :, None]) | (zi <= tz[:, :, None])
-    fill_hollow(solid, vz)
 
     # inflate by the car: disc of `radius` sideways, `half_height` up and down
     r = radius / cell
