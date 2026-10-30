@@ -1,0 +1,6 @@
+# name	start x y z	goal x y z	(benchmark routes: tools/navplan/tune.py, check.py)
+dog	-1070.6 -1260.1 11.6	-1773.9 -2432.4 32
+cc2dog	-1842 -891 10	-1777 -2446 32
+we	-2600 -400 20	-600 -400 20
+ns	-1300 600 40	-1300 -1500 40
+via	-1842.3 -891.6 66	-1071 -1262 11

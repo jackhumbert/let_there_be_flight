@@ -1,57 +1,34 @@
-"""Where a racing line makes the drone-style Autopilot slow down for nothing: the speed it can fly
-(turns at the banked lateral limit, crests at the push-over limit, pull-ups at the lift's, then
-speeding up and braking), and every dip in it (a slowdown it speeds up out of again), outside the
-landing's approach. The line's look matters more than its time (Jack, 2026-10-29: it does not need
-to slow down), so this reports the dips, not a lap time.
+"""Where a racing line makes the drone-style Autopilot slow down for nothing: every dip in its speed
+(a slowdown it speeds up out of again), outside the landing's approach. The line's look matters
+more than its time (Jack, 2026-10-29: it does not need to slow down), so this reports the dips, not
+a lap time.
 
-    python tools/navplan/dips.py line.csv [more.csv ...]
+The speeds come from navplan's <prefix>_profile.csv (the car's limits in
+src/red4ext/Navigation/Vehicle.hpp, the same the planner and the Autopilot use); this file holds
+no physics of its own. A RouteDump CSV from the game (columns s, speed) works too: the Autopilot's
+own profile.
+
+    python tools/navplan/dips.py prefix_profile.csv [more.csv ...]
 """
 
 import argparse
 import csv
-import math
 
 import numpy as np
 
-TOP, LATERAL, PUSH_OVER, PULL_UP, ACCEL, DECEL = 120.0, 22.7, 21.0, 40.0, 10.0, 15.0
-SPAN, STEP, APPROACH, DIP = 10.0, 2.0, 300.0, 5.0
+APPROACH, DIP = 300.0, 5.0  # m before the end not counted (the landing), m/s a dip must lose
 
 
 def load(path):
+    """Distance, speed and limit reason along a profile CSV (navplan) or a route dump (game)."""
     with open(path) as f:
-        return np.array([[float(r["x"]), float(r["y"]), float(r["z"])] for r in csv.DictReader(f)])
-
-
-def profile(points):
-    seg = np.linalg.norm(np.diff(points, axis=0), axis=1)
-    s = np.concatenate([[0.0], np.cumsum(seg)])
-    d = np.arange(0.0, s[-1], STEP)
-    p = np.stack([np.interp(d, s, points[:, k]) for k in range(3)], 1)
-    n, k = len(d), int(SPAN / STEP)
-    limit = np.full(n, TOP)
-    why = [""] * n
-    for i in range(k, n - k):
-        a, b, c = p[i - k], p[i], p[i + k]
-        h1, h2 = np.linalg.norm((b - a)[:2]), np.linalg.norm((c - b)[:2])
-        if h1 < 1.0 or h2 < 1.0:
-            continue
-        t1, t2 = (b - a)[:2] / h1, (c - b)[:2] / h2
-        turn = math.acos(max(-1.0, min(1.0, float(t1 @ t2))))
-        kh = turn / (0.5 * (h1 + h2))
-        kv = ((c[2] - b[2]) / h2 - (b[2] - a[2]) / h1) / (0.5 * (h1 + h2))
-        for lim, tag in ((math.sqrt(LATERAL / kh) if kh > 1e-6 else TOP, "turn"),
-                         (math.sqrt(PUSH_OVER / -kv) if kv < -1e-6 else TOP, "crest"),
-                         (math.sqrt(PULL_UP / kv) if kv > 1e-6 else TOP, "pull-up")):
-            if lim < limit[i]:
-                limit[i], why[i] = lim, tag
-    v = limit.copy()
-    v[0] = 0.0
-    for i in range(1, n):
-        v[i] = min(v[i], math.sqrt(v[i - 1] ** 2 + 2 * ACCEL * STEP))
-    v[-1] = 0.0
-    for i in range(n - 2, -1, -1):
-        v[i] = min(v[i], math.sqrt(v[i + 1] ** 2 + 2 * DECEL * STEP))
-    return d, v, limit, why
+        rows = list(csv.DictReader(f))
+    if rows and "v" in rows[0]:
+        return (np.array([float(r["d"]) for r in rows]), np.array([float(r["v"]) for r in rows]),
+                [r.get("why", "") for r in rows])
+    if rows and "speed" in rows[0]:
+        return (np.array([float(r["s"]) for r in rows]), np.array([float(r["speed"]) for r in rows]), [""] * len(rows))
+    raise SystemExit(f"{path}: no speeds (navplan's _profile.csv or a RouteDump CSV)")
 
 
 def dips(d, v, why):
@@ -79,7 +56,7 @@ def main():
     ap.add_argument("lines", nargs="+")
     args = ap.parse_args()
     for path in args.lines:
-        d, v, limit, why = profile(load(path))
+        d, v, why = load(path)
         found = dips(d, v, why)
         lost = sum(t - lo for _, t, lo, _ in found)
         name = path.replace(chr(92), "/").split("/")[-1]

@@ -1,0 +1,5 @@
+{
+  "_doc": "Cars for navplan (NAVPLAN_VEHICLE) and tune.py: VehicleSpec fields (src/red4ext/Navigation/Vehicle.hpp); missing fields take its defaults (the Autopilot's tuning). Stats come from the game: LtbfBridge.VehicleModel prints the mounted car's line.",
+  "shion": {"mass": 1500, "airResistance": 2.0, "brakingFriction": 1.4, "drone": 1, "pushOver": 21},
+  "archer_quartz": {"mass": 1115, "airResistance": 1.8, "brakingFriction": 1.4, "drone": 0, "pushOver": 15}
+}

@@ -568,21 +568,24 @@ void SolveLateral(std::vector<float> &d, const std::vector<float> &lo, const std
 }
 
 // How much each point's turn costs the car: the speed it would carry there without its turns
-// (lineTopSpeed, speeding up at lineAccel from the start, braking at lineDecel to the end) against
-// what the turn allows (lineLateralAccel / bend), squared; 1 where the turn costs nothing.
+// (the car's top speed, speeding up from the start and braking to the end as Vehicle.hpp plans it)
+// against what the turn allows (the planned lateral limit / bend), squared; 1 where the turn costs
+// nothing.
 std::vector<float> TurnCost(const std::vector<Vec3> &aPts, const PlanParams &aParams) {
   const size_t n = aPts.size();
-  std::vector<float> flat(n, 0.0f), free(n, aParams.lineTopSpeed), cost(n, 1.0f);
+  const auto &car = aParams.vehicle;
+  const float lateral = car.margin * Lateral(car);
+  std::vector<float> flat(n, 0.0f), free(n, TopSpeed(car)), cost(n, 1.0f);
   for (size_t i = 1; i < n; ++i) {
     flat[i] = std::hypot(aPts[i].x - aPts[i - 1].x, aPts[i].y - aPts[i - 1].y);
   }
   free[0] = 0.0f;
   for (size_t i = 1; i < n; ++i) {
-    free[i] = std::min(free[i], std::sqrt(free[i - 1] * free[i - 1] + 2.0f * aParams.lineAccel * Distance(aPts[i - 1], aPts[i])));
+    free[i] = std::min(free[i], std::sqrt(free[i - 1] * free[i - 1] + 2.0f * Accel(car, free[i - 1]) * Distance(aPts[i - 1], aPts[i])));
   }
   free[n - 1] = 0.0f;
   for (size_t i = n - 1; i-- > 0;) {
-    free[i] = std::min(free[i], std::sqrt(free[i + 1] * free[i + 1] + 2.0f * aParams.lineDecel * Distance(aPts[i], aPts[i + 1])));
+    free[i] = std::min(free[i], std::sqrt(free[i + 1] * free[i + 1] + 2.0f * PlanDecel(car, free[i + 1]) * Distance(aPts[i], aPts[i + 1])));
   }
   for (size_t i = 2; i + 2 < n; ++i) {
     float h1 = flat[i - 1] + flat[i], h2 = flat[i + 1] + flat[i + 2];
@@ -593,7 +596,7 @@ std::vector<float> TurnCost(const std::vector<Vec3> &aPts, const PlanParams &aPa
     float bx = (aPts[i + 2].x - aPts[i].x) / h2, by = (aPts[i + 2].y - aPts[i].y) / h2;
     float turn = std::acos(std::clamp(ax * bx + ay * by, -1.0f, 1.0f)) / (0.5f * (h1 + h2));
     if (turn > 1e-6f) {
-      cost[i] = std::max(1.0f, free[i] * free[i] * turn / aParams.lineLateralAccel);
+      cost[i] = std::max(1.0f, free[i] * free[i] * turn / lateral);
     }
   }
   return cost;
@@ -1801,6 +1804,17 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
                       .c_str());
   }
   return finish("route");
+}
+
+void RacePreset(PlanParams &aParams) {
+  aParams.racingLine = true;
+  aParams.preferredHeight = 40.0f;
+  aParams.climbCost = 0.5f;
+  aParams.minPassage = 12.0f;
+  aParams.heuristicWeight = 1.2f;
+  aParams.turnCost = 5.0f;
+  // a climb's cost grows exponentially with its rise (ClimbCost): round the Dogtown stadium, not over it
+  aParams.climbScale = 30.0f;
 }
 
 } // namespace Navigation

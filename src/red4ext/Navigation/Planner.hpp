@@ -16,6 +16,7 @@
 // The result is a polyline of car-centre positions; the flight mode turns it into a trajectory.
 
 #include "NavMap.hpp"
+#include "Vehicle.hpp"
 
 #include <functional>
 #include <string>
@@ -102,14 +103,12 @@ struct PlanParams {
   float lineCorridorMargin = 6.0f;   // m kept from blocked space across the line (lineClearance)
   float lineCurvatureRate = 0.5f;    // weight of how fast the bend changes against the bend itself
   // rounds of weighting up the bends that cost the car speed and solving the path across again
-  // (SmoothLateral, TurnCost); 0 = the smoothest shape alone. The car's limits are the drone
-  // style's (FlightModeAutopilot's race profile: lateral 22.7 m/s2)
+  // (SmoothLateral, TurnCost); 0 = the smoothest shape alone. The car's limits come from vehicle.
   int lineTurnRounds = 3;
   float lineTurnWeightMax = 30.0f;  // the most a bend's weight grows
-  float lineTopSpeed = 120.0f;      // m/s
-  float lineLateralAccel = 22.7f;   // m/s2
-  float lineAccel = 10.0f;          // m/s2
-  float lineDecel = 15.0f;          // m/s2
+  // the car flying the line (Vehicle.hpp); the Autopilot passes its own (FlightVehicleModel), the
+  // default is the Shion in drone style
+  VehicleSpec vehicle;
   float lineStep = 0.08f;        // gradient step per pass (stable below 0.125)
   // weight of the vertical bend against the sideways one: crests and dips are pushed over and
   // pulled through with the lift alone, so they are rounded off more (stable while
@@ -143,6 +142,12 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
 // plan this way.
 PlanResult PlanWithRetries(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &aParams,
                            const std::function<void(const PlanResult &)> &aAttempt = {});
+
+// The Race's route character: what FlightNavMap::PlanRaceAsync starts from before the Autopilot's
+// race route fields (raceRouteHeight, raceClimbCost, raceMinPassage, raceSearchWeight, raceTurnCost,
+// whose defaults match these) and what navplan plans with under NAVPLAN_RACE=1. The baked doorways
+// (tools/navmap_bake/doorways.py) use minPassage: rebake if it changes.
+void RacePreset(PlanParams &aParams);
 
 // Works out the doorways of every block over the area (metres), for a bake; how many there are.
 struct DoorwayCount {

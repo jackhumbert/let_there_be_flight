@@ -9,6 +9,8 @@
 #include <RED4ext/Scripting/Natives/Generated/Vector4.hpp>
 #include <RedLib.hpp>
 
+#include "FlightVehicleModel.hpp"
+
 struct FlightNavMap : RED4ext::IScriptable {
   static bool IsLoaded();
   // Half height of the car cylinder the bake grew solids by: a gap's bottom is this far above the
@@ -35,7 +37,8 @@ struct FlightNavMap : RED4ext::IScriptable {
   static int32_t PlanAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, bool aDirect);
   // PlanAsync with the racing line (Planner.hpp): the Autopilot's Race option
   static int32_t PlanRaceAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, float aPreferredHeight, float aClimbCost,
-                               float aMinPassage, float aHeuristicWeight, float aTurnCost);
+                               float aMinPassage, float aHeuristicWeight, float aTurnCost,
+                               RED4ext::Handle<FlightVehicleModel> aVehicle);
   static bool IsPlanReady(int32_t aId);
   static RED4ext::DynArray<RED4ext::Vector4> TakePlan(int32_t aId);
 

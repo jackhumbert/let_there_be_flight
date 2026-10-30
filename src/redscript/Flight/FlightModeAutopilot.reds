@@ -87,6 +87,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // keeps the thrust from pointing down) and the lift pushes down: gravity plus
   // (standardModeLiftFactor - g) of lift downwards, 25 m/s2, planned at raceMargin
   public let dronePushOver: Float = 21.0;
+  private let vehicleModel: ref<FlightVehicleModel>;
   public let droneYawLead: Float = 0.3;       // s along the racing line the nose aims (DroneAttitude)
   public let droneYawFrequency: Float = 3.0;  // rad/s, heading easing
   public let droneYawRateMax: Float = 1.5;    // rad/s
@@ -855,7 +856,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       this.gateTail = this.routeGateTail;
     }
     this.request = this.raceMode
-      ? FlightNavMap.PlanRaceAsync(from, this.routeGoal, this.raceRouteHeight, this.raceClimbCost, this.raceMinPassage, this.raceSearchWeight, this.raceTurnCost)
+      ? FlightNavMap.PlanRaceAsync(from, this.routeGoal, this.raceRouteHeight, this.raceClimbCost, this.raceMinPassage, this.raceSearchWeight, this.raceTurnCost, this.Vehicle())
       : FlightNavMap.PlanAsync(from, this.routeGoal, false);
     this.replanTimer = 3.0;
     if ArraySize(this.route) < 2 {
@@ -1890,7 +1891,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       // too fast; AllowedSpeed also starts its curves brakeLead earlier for the ramp-in)
       let slowing = this.targetSpeed < this.speedCmd;
       let rateDown = this.raceMode ? this.RaceDecel(this.speedCmd) : this.brakeMax;
-      let rateUp = this.raceMode ? MaxF(this.standardModeSurgeFactor - this.DragAccel(this.speedCmd), 0.5) : this.accelUp;
+      let rateUp = this.raceMode ? this.Vehicle().Accel(this.speedCmd) : this.accelUp;
       let wantedRate = ClampF(this.targetRate + (this.targetSpeed - this.speedCmd) * (slowing ? 2.0 * this.speedGain : this.speedGain), -rateDown, rateUp);
       let jerk = (this.raceMode ? this.raceJerk : (slowing ? this.brakeJerk : this.speedJerk)) * timeDelta;
       this.speedRate += ClampF(wantedRate - this.speedRate, -jerk, jerk);
@@ -2259,39 +2260,53 @@ public class FlightModeAutopilot extends FlightModeStandard {
     return this.aerobatics || this.raceMode;
   }
 
+  // The car's limits (FlightVehicleModel, worked out in C++ in Navigation/Vehicle.hpp, which the
+  // planner and navplan use too), filled from the car's stats and this mode's tuning.
+  public func Vehicle() -> ref<FlightVehicleModel> {
+    if !IsDefined(this.vehicleModel) {
+      this.vehicleModel = new FlightVehicleModel();
+    }
+    let m = this.vehicleModel;
+    let stats = this.component.stats;
+    let settings = FlightSettings.GetInstance();
+    m.mass = stats.s_mass;
+    m.airResistance = stats.s_airResistanceFactor;
+    m.brakingFriction = stats.s_brakingFrictionFactor;
+    m.surge = this.standardModeSurgeFactor;
+    m.sway = this.standardModeSwayFactor;
+    m.lift = this.standardModeLiftFactor;
+    m.gravityFactor = this.gravityFactor;
+    m.brakeLinear = settings.brakeFactorLinear;
+    m.drag = settings.physxFlightPhysics;
+    m.drone = this.droneStyle;
+    m.maxTilt = this.droneMaxTilt;
+    m.driftMax = this.raceDriftMax;
+    m.speedCap = this.freeRoam ? this.freeRoamTopSpeed : this.raceSpeedCap;
+    m.margin = this.raceMargin;
+    m.planDecel = this.racePlanDecel;
+    m.pushOver = this.droneStyle ? this.dronePushOver : this.racePushOver;
+    return m;
+  }
+
   // Air drag at speed v (FlightMode.ApplyPhysics), m/s2.
   private func DragAccel(v: Float) -> Float {
-    let stats = this.component.stats;
-    if !FlightSettings.GetInstance().physxFlightPhysics || stats.s_mass <= 0.0 {
-      return 0.0;
-    }
-    return 1.2 * stats.s_airResistanceFactor * v * v / stats.s_mass;
+    return this.Vehicle().Drag(v);
   }
 
   // Where full surge equals the drag.
   private func RaceTopSpeed() -> Float {
-    let stats = this.component.stats;
-    let k = 1.2 * stats.s_airResistanceFactor / MaxF(stats.s_mass, 1.0);
-    let push = this.droneStyle ? this.DroneAccel(this.standardModeSurgeFactor) : this.standardModeSurgeFactor;
-    let top = k > 0.0 ? SqrtF(push / k) : this.raceSpeedCap;
-    return MinF(0.97 * top, this.freeRoam ? this.freeRoamTopSpeed : this.raceSpeedCap);
+    return this.Vehicle().TopSpeed();
   }
 
   // Slowing at speed v: full reverse surge, the brake (velocity damping, FlightMode_Standard) and drag.
   private func RaceDecel(v: Float) -> Float {
-    let brake = FlightSettings.GetInstance().brakeFactorLinear * this.component.stats.s_brakingFrictionFactor * v;
-    return this.standardModeSurgeFactor + brake + this.DragAccel(v);
+    return this.Vehicle().Decel(v);
   }
 
-  // Sideways acceleration in a level turn: the full lift banked into it, the rest holding the car up.
+  // Sideways acceleration in a level turn: drone style the sway envelope, plane style the full lift
+  // banked into it (the rest holding the car up) plus the surge's share with the nose drifted in.
   private func RaceLateral() -> Float {
-    if this.droneStyle {
-      return this.DroneAccel(this.standardModeSwayFactor);
-    }
-    let g = 9.81 * this.gravityFactor;
-    let lift = g + this.standardModeLiftFactor;
-    // plus the surge's share with the nose turned into the bend (drift)
-    return SqrtF(MaxF(lift * lift - g * g, 1.0)) + this.standardModeSurgeFactor * SinF(Deg2Rad(this.raceDriftMax));
+    return this.Vehicle().Lateral();
   }
 
   private func TopSpeed() -> Float {
@@ -2353,7 +2368,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let left = distance;
     while left > 0.0 && vv < top {
       let step = MinF(left, 5.0);
-      vv = SqrtF(vv * vv + 2.0 * MinF(this.raceMargin * this.RaceDecel(vv), this.racePlanDecel) * step);
+      vv = SqrtF(vv * vv + 2.0 * this.Vehicle().PlanDecel(vv) * step);
       left -= step;
     }
     return MinF(vv, top);
@@ -2370,7 +2385,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       let step = MinF(left, 5.0);
       let use = MinF(vv * vv / MaxF(radius, 1.0) / MaxF(lateral, 1.0), 1.0);
       let grip = MaxF(SqrtF(1.0 - use * use), this.raceBrakeGripMin);
-      vv = SqrtF(vv * vv + 2.0 * MinF(this.raceMargin * this.RaceDecel(vv), this.racePlanDecel) * grip * step);
+      vv = SqrtF(vv * vv + 2.0 * this.Vehicle().PlanDecel(vv) * grip * step);
       left -= step;
     }
     return MinF(vv, top);
@@ -2499,7 +2514,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     while i < n {
       let v = flown[i - 1];
       let d = this.routeLength[i] - this.routeLength[i - 1];
-      let up = MaxF(this.standardModeSurgeFactor - this.DragAccel(v), 0.5);
+      let up = this.Vehicle().Accel(v);
       ArrayPush(flown, MinF(this.routeSpeed[i], SqrtF(v * v + 2.0 * up * d)));
       i += 1;
     }
@@ -3272,20 +3287,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // axis, the body tilted at most droneMaxTilt with `thrusters` m/s2 across it and the lift (at most
   // g + standardModeLiftFactor) holding the car up.
   private func DroneAccel(thrusters: Float) -> Float {
-    let g = 9.81 * this.gravityFactor;
-    let liftMax = g + this.standardModeLiftFactor;
-    let best = thrusters;
-    let deg = 1.0;
-    while deg <= this.droneMaxTilt {
-      let b = Deg2Rad(deg);
-      let lift = (g + thrusters * SinF(b)) / CosF(b);
-      if lift > liftMax {
-        break;
-      }
-      best = MaxF(best, lift * SinF(b) + thrusters * CosF(b));
-      deg += 1.0;
-    }
-    return best;
+    return this.Vehicle().DroneAccel(thrusters);
   }
 
   // Flies the commanded acceleration with the car's attitude as a full 3D target: the nose along
