@@ -28,6 +28,9 @@ public native class FlightAudio extends IScriptable {
   // hear from here this frame instead of the player's soundListener (the cinematic camera's shots)
   public native func SetCameraListener(position: Vector4, forward: Vector4, up: Vector4) -> Void;
   public native func UpdateParameter(parameterName: String, value: Float) -> Void;
+  // every playing event paused / resumed
+  public native func Pause() -> Void;
+  public native func Resume() -> Void;
 
 
   public static func Get() -> ref<FlightAudio> {

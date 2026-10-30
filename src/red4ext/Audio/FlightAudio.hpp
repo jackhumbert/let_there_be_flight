@@ -46,5 +46,7 @@ private:
     aType->AddFunction<&FlightAudio::StartWithPitch>("StartWithPitch");
     aType->AddFunction<&FlightAudio::Stop>("Stop");
     aType->AddFunction<&FlightAudio::UpdateEvent>("UpdateEvent");
+    aType->AddFunction<&FlightAudio::Pause>("Pause");
+    aType->AddFunction<&FlightAudio::Resume>("Resume");
   }
 };

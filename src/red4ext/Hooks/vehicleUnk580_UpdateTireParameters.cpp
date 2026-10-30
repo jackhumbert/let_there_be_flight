@@ -9,30 +9,31 @@
 #include <spdlog/spdlog.h>
 #include "Flight/Component.hpp"
 
+#include <atomic>
 #include <queue>
 
 using namespace RED4ext;
 
 /// @hash 1554324956
-// void __fastcall UpdateTireParameters(vehicle::TireParameterUpdate * tpu, vehicle::TireUpdate *tireUpdate, CName emitter);
+// void __fastcall UpdateTireParameters(vehicle::TireParameterUpdate *tpu, vehicle::TireUpdate *tireUpdate, CName emitter,
+//                                      float suspensionPressure);
+// (the 4th argument, in xmm3, was left out before 2026-10-30: the original got whatever xmm3 held)
 
-// doesn't affect audio bug
-// stop tire skid sfx
+namespace VehicleAudio {
+extern std::atomic<uint64_t> flyingVehicle;
+}
+
+// stop tire skid sfx; and which vehicle is flying, for SetSoundParameter
 REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1554324956, UpdateTireParameters,
-                     vehicle::TireParameterUpdate *tpu, vehicle::TireUpdate * tireUpdate, CName emitter) {
+                     vehicle::TireParameterUpdate *tpu, vehicle::TireUpdate * tireUpdate, CName emitter, float suspensionPressure) {
   auto fc = FlightComponent::Get(tpu->acoustics->vehicle);
+  const uint64_t entity = *reinterpret_cast<const uint64_t *>(&tpu->entityID);
   if (fc && fc->active) {
-//    float skidValue = tireUpdate->skidValue2;
-//    if (tpu->acoustics->unk3D0) {
-//      skidValue = tireUpdate->skidValue;
-//    }
-//    auto phys = (vehicle::WheeledPhysics*)tpu->acoustics->vehicle->physics;
-//    spdlog::info("{}: {}", tpu->variables->wheelIndex, phys->insert2[tpu->variables->wheelIndex].dampedSpringForce);
-//    fc->ExecuteFunction("HandleScraping", skidValue, tpu->variables->wheelIndex, tpu->variables->emitterName);
-//    CGameEngine::Get()->audioThing->GetEmitterPosition(tpu->acoustics->vehicle->entityID, tpu->variables->emitterName);
-
+    VehicleAudio::flyingVehicle = entity;
     tireUpdate->skidValue = 0.0;
     tireUpdate->skidValue2 = 0.0;
+  } else if (VehicleAudio::flyingVehicle == entity) {
+    VehicleAudio::flyingVehicle = 0;
   }
-  UpdateTireParameters_Original(tpu, tireUpdate, emitter);
+  UpdateTireParameters_Original(tpu, tireUpdate, emitter, suspensionPressure);
 }
