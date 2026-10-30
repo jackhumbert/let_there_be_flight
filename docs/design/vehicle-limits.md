@@ -33,9 +33,8 @@ The limits are functions of it: `Drag`, `DroneAccel`, `TopSpeed`, `Lateral`, `Ac
 | navplan | `NAVPLAN_VEHICLE=name=value,...` (VehicleSpec field names); writes `<prefix>_profile.csv` (`d,t,x,y,z,v,why,clearance`) and `<prefix>_trajectory.csv` from the trajectory |
 | tune.py, bench.py, dips.py | `tools/navplan/vehicles.json` names cars and passes them to navplan; dips.py reads the profile CSV and has no physics of its own |
 
-The Autopilot's own speed profile, `FlightModeAutopilot.BuildSpeedProfile` (redscript), is the
-same profile as the trajectory's (it agrees within 0.5 m/s where both are set by a turn, braking or
-the arrival) without the speeding up; it goes when the Autopilot follows the trajectory.
+The Autopilot flies the trajectory's speeds; it has no speed profile of its own (the redscript one
+was removed, `docs/history.md`).
 
 ## Adding a car
 

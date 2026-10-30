@@ -247,7 +247,7 @@ Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aL
       v = flat;
     }
     // lowering a stretch moves its braking earlier: braked back again (without this the merge left
-    // drops of 40 m/s2 at a merged stretch's start; FlightModeAutopilot.FlattenSpeedHumps has it too)
+    // drops of 40 m/s2 at a merged stretch's start)
     brakeBack();
 
     // speeding up from the start: surge less drag, sharing the envelope with the bend as braking does

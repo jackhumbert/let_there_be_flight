@@ -1,6 +1,6 @@
 // A trajectory along a route (C++, src/red4ext/Navigation/Trajectory.hpp): speed, time, velocity and
-// acceleration at every 2 m, inside the car's limits. The Autopilot builds one for its route and,
-// with useTrajectory, flies the speeds from it (docs/design/trajectory.md).
+// acceleration at every 2 m, inside the car's limits. The Autopilot builds one for its route and
+// flies the speeds and tilts from it (docs/design/trajectory.md).
 public native class FlightTrajectory extends IScriptable {
   // the trajectory along route for the car in vehicle, from startSpeed m/s, stopping at its end when stop
   public native static func Build(route: array<Vector4>, vehicle: ref<FlightVehicleModel>, startSpeed: Float, stop: Bool) -> ref<FlightTrajectory>;
