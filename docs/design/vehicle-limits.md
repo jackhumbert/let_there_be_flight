@@ -19,6 +19,8 @@ The limits are functions of it: `Drag`, `DroneAccel`, `TopSpeed`, `Lateral`, `Ac
 
 - Pull-up is the lift over gravity, planned at `margin` (`margin x lift`). The old `dips.py` used a
   fixed 40 m/s2.
+- `surgeShare` (0.88) is fitted from telemetry: the share of the surge the car gets speeding up;
+  `TopSpeed` and `Accel` use it. Refit after a change to the flight physics (`docs/history.md`).
 - `pushOver` is already a planned value (the margin is in it): 21 m/s2 drone style, 15 plane style.
 
 ## Who reads it

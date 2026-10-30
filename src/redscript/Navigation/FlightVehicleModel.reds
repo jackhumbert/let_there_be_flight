@@ -6,6 +6,7 @@ public native class FlightVehicleModel extends IScriptable {
   public native let airResistance: Float;
   public native let brakingFriction: Float;
   public native let surge: Float;           // m/s2, standardModeSurgeFactor
+  public native let surgeShare: Float;      // share of it the car gets in level flight (fitted)
   public native let sway: Float;            // m/s2, standardModeSwayFactor
   public native let lift: Float;            // m/s2 over gravity, standardModeLiftFactor
   public native let gravityFactor: Float;

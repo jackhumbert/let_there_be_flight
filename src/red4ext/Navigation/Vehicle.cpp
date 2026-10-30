@@ -32,6 +32,7 @@ bool VehicleSpec::Parse(const std::string &aText, std::string &aError) {
     else if (key == "airResistance") field = &airResistance;
     else if (key == "brakingFriction") field = &brakingFriction;
     else if (key == "surge") field = &surge;
+    else if (key == "surgeShare") field = &surgeShare;
     else if (key == "sway") field = &sway;
     else if (key == "lift") field = &lift;
     else if (key == "gravityFactor") field = &gravityFactor;
@@ -89,7 +90,8 @@ float DroneAccel(const VehicleSpec &aSpec, float aThrusters) {
 
 float TopSpeed(const VehicleSpec &aSpec) {
   const float k = aSpec.drag ? 1.2f * aSpec.airResistance / std::max(aSpec.mass, 1.0f) : 0.0f;
-  const float push = aSpec.drone ? DroneAccel(aSpec, aSpec.surge) : aSpec.surge;
+  // (drone style was DroneAccel(surge): 120 m/s, while the car levels off at 89 to 91)
+  const float push = aSpec.surge * aSpec.surgeShare;
   const float top = k > 0.0f ? std::sqrt(push / k) : aSpec.speedCap;
   return std::min(0.97f * top, aSpec.speedCap);
 }
@@ -103,7 +105,9 @@ float Lateral(const VehicleSpec &aSpec) {
   return std::sqrt(std::max(lift * lift - g * g, 1.0f)) + aSpec.surge * std::sin(aSpec.driftMax * kDeg);
 }
 
-float Accel(const VehicleSpec &aSpec, float aSpeed) { return std::max(aSpec.surge - Drag(aSpec, aSpeed), 0.5f); }
+float Accel(const VehicleSpec &aSpec, float aSpeed) {
+  return std::max(aSpec.surge * aSpec.surgeShare - Drag(aSpec, aSpeed), 0.5f);
+}
 
 float Decel(const VehicleSpec &aSpec, float aSpeed) {
   return aSpec.surge + aSpec.brakeLinear * aSpec.brakingFriction * aSpeed + Drag(aSpec, aSpeed);

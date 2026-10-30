@@ -21,6 +21,9 @@ struct VehicleSpec {
   float brakingFriction = 1.4f;  // s_brakingFrictionFactor
   // the flight tuning (FlightMode_Standard, FlightMode, FlightSettings)
   float surge = 15.0f;           // m/s2, standardModeSurgeFactor
+  // share of the surge the car gets speeding up in level flight (telemetry fit, docs/history.md
+  // 2026-10-30: 0.88 for the Shion, drag as modelled); top speed is where that meets the drag
+  float surgeShare = 0.88f;
   float sway = 5.0f;             // m/s2, standardModeSwayFactor
   float lift = 25.0f;            // m/s2 over gravity, standardModeLiftFactor
   float gravityFactor = 1.0f;
@@ -47,12 +50,12 @@ float Drag(const VehicleSpec &aSpec, float aSpeed);
 // Drone style: the most horizontal acceleration level flight leaves along one body axis with
 // `thrusters` m/s2 across it, the body tilted at most maxTilt and the lift holding the car up.
 float DroneAccel(const VehicleSpec &aSpec, float aThrusters);
-// Where full surge meets the drag (97% of it), at most speedCap.
+// Where the surge the car gets (surgeShare) meets the drag (97% of it), at most speedCap.
 float TopSpeed(const VehicleSpec &aSpec);
 // Sideways acceleration in a level turn: drone style the sway envelope, plane style the lift
 // banked into the turn plus the surge's share with the nose drifted in.
 float Lateral(const VehicleSpec &aSpec);
-// Speeding up at v: surge less drag (at least 0.5).
+// Speeding up at v: the surge the car gets (surgeShare) less drag (at least 0.5).
 float Accel(const VehicleSpec &aSpec, float aSpeed);
 // Slowing at v: full reverse surge, the brake (grows with v) and drag.
 float Decel(const VehicleSpec &aSpec, float aSpeed);

@@ -13,6 +13,7 @@ struct FlightVehicleModel : RED4ext::IScriptable {
   float airResistance = 2.0f;
   float brakingFriction = 1.4f;
   float surge = 15.0f;
+  float surgeShare = 0.88f;
   float sway = 5.0f;
   float lift = 25.0f;
   float gravityFactor = 1.0f;
@@ -32,6 +33,7 @@ struct FlightVehicleModel : RED4ext::IScriptable {
     s.airResistance = airResistance;
     s.brakingFriction = brakingFriction;
     s.surge = surge;
+    s.surgeShare = surgeShare;
     s.sway = sway;
     s.lift = lift;
     s.gravityFactor = gravityFactor;
@@ -65,6 +67,7 @@ RTTI_DEFINE_CLASS(FlightVehicleModel, {
   RTTI_PROPERTY(airResistance);
   RTTI_PROPERTY(brakingFriction);
   RTTI_PROPERTY(surge);
+  RTTI_PROPERTY(surgeShare);
   RTTI_PROPERTY(sway);
   RTTI_PROPERTY(lift);
   RTTI_PROPERTY(gravityFactor);
