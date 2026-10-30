@@ -465,6 +465,9 @@ void SmoothLateral(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
 // spreads over a few points per pass there), then finer ones down to lineSpacing; then
 // SmoothLateral and SmoothHeights.
 std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute, const PlanParams &aParams) {
+  using Clock = std::chrono::steady_clock;
+  auto ms = [](Clock::time_point aFrom) { return std::chrono::duration<double, std::milli>(Clock::now() - aFrom).count(); };
+  const auto t0 = Clock::now();
   std::vector<Vec3> pts = aRoute;
   const float side = aParams.lineSide;
   for (auto [spacing, passes] : {std::pair{40.0f, 300}, {20.0f, 300}, {10.0f, 200}, {aParams.lineSpacing, 100}}) {
@@ -484,7 +487,10 @@ std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute
     const int reach = aParams.lineSpread > 0.0f ? int(std::round(aParams.lineSpread / spacing)) : 0;
     const float unit = aParams.linePush / aParams.lineStep; // undone by * step below
     std::vector<Vec3> push(n), spread(n);
+    const auto tl0 = Clock::now();
+    int ran = 0, checks = 0;
     for (int pass = 0; pass < passes; ++pass) {
+      ++ran;
       float moved = 0.0f;
       // away from blocked space close across the line: probe lineClearance to either side and
       // above / below; where one side is blocked and the other free, push towards the free one.
@@ -562,6 +568,7 @@ std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute
             Band(gap, along[i], along.back(), aParams, lo, hi);
             q.z = std::clamp(q.z, lo, hi);
           }
+          ++checks;
           float after = std::min(ClearSides(aMap, b, q, side), ClearSides(aMap, q, c, side));
           bool ok = after >= 1.0f;
           // (grazes judged over the two legs either side together: one per leg can add up)
@@ -579,18 +586,26 @@ std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute
           }
         }
       }
-      if (moved < 0.0005f * float(n)) {
-        break; // settled: under half a millimetre per point
+      if (moved < aParams.lineSettle * float(n)) {
+        break; // settled: under lineSettle per point
       }
     }
+    spdlog::debug("[Planner] passes at {:.0f} m: {} of {} passes, {} points, {} move checks, {:.0f} ms", spacing, ran, passes, n,
+                 checks, ms(tl0));
   }
+  const double passesMs = ms(t0);
+  const auto t1 = Clock::now();
   SmoothLateral(aMap, pts, aParams);
+  const double lateralMs = ms(t1);
+  const auto t2 = Clock::now();
   // twice, evenly spaced each time: spaced along the line's old heights, the points stay bunched
   // where the heights then change most (a dive lifted over a beam)
   for (int pass = 0; pass < 2; ++pass) {
     pts = Respace(aMap, pts, aParams.lineSpacing);
     SmoothHeights(aMap, pts, aParams);
   }
+  spdlog::info("[Planner] racing line stages: passes {:.0f} ms, across {:.0f} ms, heights {:.0f} ms ({} points)", passesMs,
+               lateralMs, ms(t2), pts.size());
   return pts;
 }
 

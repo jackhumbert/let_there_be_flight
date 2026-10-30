@@ -49,6 +49,7 @@ bool NavMap::Load(const std::filesystem::path &aPath) {
 bool NavMap::Load(std::vector<uint8_t> aBytes, const std::filesystem::path &aPath) {
   std::lock_guard guard(lock);
   loaded = false;
+  ++generation;
   cache.clear();
   lru.clear();
   file = std::move(aBytes);
@@ -158,6 +159,50 @@ std::shared_ptr<const NavMap::Tile> NavMap::GetTile(uint32_t aKey) const {
   return tile;
 }
 
+const NavMap::Tile *NavMap::RecentTile(uint32_t aKey) const {
+  constexpr int kSlots = 8;
+  thread_local struct {
+    const NavMap *map = nullptr;
+    uint32_t generation = 0;
+    uint32_t keys[kSlots];
+    std::shared_ptr<const Tile> tiles[kSlots];
+    int used = 0, next = 0;
+  } recent;
+  const uint32_t now = generation.load(std::memory_order_relaxed);
+  if (recent.map != this || recent.generation != now) {
+    for (auto &t : recent.tiles) {
+      t.reset();
+    }
+    recent.map = this;
+    recent.generation = now;
+    recent.used = recent.next = 0;
+  }
+  for (int i = 0; i < recent.used; ++i) {
+    if (recent.keys[i] == aKey) {
+      return recent.tiles[i].get();
+    }
+  }
+  const int slot = recent.next;
+  recent.next = (recent.next + 1) % kSlots;
+  recent.used = std::max(recent.used, slot + 1);
+  recent.keys[slot] = aKey;
+  recent.tiles[slot] = GetTile(aKey);
+  return recent.tiles[slot].get();
+}
+
+uint32_t NavMap::ColumnAt(int32_t aCx, int32_t aCy, const uint16_t *&aGaps) const {
+  if (!loaded || aCx < 0 || aCy < 0 || aCx >= int32_t(width) || aCy >= int32_t(height)) {
+    return 0;
+  }
+  const Tile *tile = RecentTile(uint32_t(aCy) / tileCells * tilesX + uint32_t(aCx) / tileCells);
+  if (!tile) {
+    return 0;
+  }
+  uint32_t col = (uint32_t(aCy) % tileCells) * tileCells + (uint32_t(aCx) % tileCells);
+  aGaps = tile->gaps + 2 * size_t(tile->starts[col]);
+  return tile->starts[col + 1] - tile->starts[col];
+}
+
 uint32_t NavMap::View::Column(int32_t aCx, int32_t aCy, const uint16_t *&aGaps) {
   if (!map.loaded || aCx < 0 || aCy < 0 || aCx >= int32_t(map.width) || aCy >= int32_t(map.height)) {
     return 0;
@@ -205,9 +250,8 @@ std::vector<Gap> NavMap::GetGaps(float aX, float aY) const {
   if (!CellOf(aX, aY, cx, cy)) {
     return out;
   }
-  View view(*this);
   const uint16_t *gaps;
-  uint32_t n = view.Column(cx, cy, gaps);
+  uint32_t n = ColumnAt(cx, cy, gaps);
   for (uint32_t g = 0; g < n; ++g) {
     out.push_back({VoxelZ(gaps[2 * g]), VoxelZ(gaps[2 * g + 1])});
   }
@@ -215,9 +259,16 @@ std::vector<Gap> NavMap::GetGaps(float aX, float aY) const {
 }
 
 bool NavMap::FindGap(float aX, float aY, float aZ, Gap &aOut) const {
-  for (const auto &gap : GetGaps(aX, aY)) {
-    if (aZ >= gap.bottom && aZ < gap.top) {
-      aOut = gap;
+  int32_t cx, cy;
+  if (!CellOf(aX, aY, cx, cy)) {
+    return false;
+  }
+  const uint16_t *gaps;
+  uint32_t n = ColumnAt(cx, cy, gaps);
+  for (uint32_t g = 0; g < n; ++g) {
+    const float bottom = VoxelZ(gaps[2 * g]), top = VoxelZ(gaps[2 * g + 1]);
+    if (aZ >= bottom && aZ < top) {
+      aOut = {bottom, top};
       return true;
     }
   }
@@ -233,7 +284,6 @@ float NavMap::SegmentClear(float aX0, float aY0, float aZ0, float aX1, float aY1
   float dx = aX1 - aX0, dy = aY1 - aY0, dz = aZ1 - aZ0;
   float length = std::sqrt(dx * dx + dy * dy + dz * dz);
   int steps = std::max(1, int(std::ceil(length / (0.5f * cell))));
-  View view(*this);
   for (int i = 0; i <= steps; ++i) {
     float t = float(i) / float(steps);
     float x = aX0 + dx * t, y = aY0 + dy * t, z = aZ0 + dz * t;
@@ -241,7 +291,7 @@ float NavMap::SegmentClear(float aX0, float aY0, float aZ0, float aX1, float aY1
     bool free = false;
     if (CellOf(x, y, cx, cy)) {
       const uint16_t *gaps;
-      uint32_t n = view.Column(cx, cy, gaps);
+      uint32_t n = ColumnAt(cx, cy, gaps);
       for (uint32_t g = 0; g < n && !free; ++g) {
         free = z >= VoxelZ(gaps[2 * g]) && z < VoxelZ(gaps[2 * g + 1]);
       }

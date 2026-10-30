@@ -123,6 +123,7 @@ struct PlanParams {
   float maxCruise = 700.0f;
   // racing lines: a slot whose room costs more than slotDetourLoss m/s, or slotDetourShare of the speed
   // there (and slotDetourLossMin at least), is routed around when that loses less (PlanRace)
+  float lineSettle = 0.0005f;   // m per point a smoothing pass moves at most once settled (RacingLine)
   float slotDetourLoss = 20.0f;
   float slotDetourShare = 0.25f;
   float slotDetourLossMin = 8.0f;

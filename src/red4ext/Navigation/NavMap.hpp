@@ -11,6 +11,7 @@
 // use and kept in a small LRU cache. Queries are thread safe. Heavy users (the planner) take a
 // View, which keeps the tiles it touched alive and reads them without locking.
 
+#include <atomic>
 #include <cstdint>
 #include <filesystem>
 #include <list>
@@ -95,6 +96,11 @@ private:
   };
 
   std::shared_ptr<const Tile> GetTile(uint32_t aKey) const; // takes the lock
+  // GetTile through a small per-thread cache of the tiles used last (queries along a line stay in
+  // one or two tiles): no lock, no reference counting. Valid until the map is loaded again.
+  const Tile *RecentTile(uint32_t aKey) const;
+  // the gaps of cell (cx, cy) as voxel pairs, through RecentTile; 0 outside the map or without data
+  uint32_t ColumnAt(int32_t aCx, int32_t aCy, const uint16_t *&aGaps) const;
   std::shared_ptr<const Tile> Inflate(uint32_t aKey) const;
 
   bool loaded = false;
@@ -107,6 +113,7 @@ private:
   mutable std::mutex lock;
   mutable std::unordered_map<uint32_t, CacheEntry> cache;
   mutable std::list<uint32_t> lru; // most recent first
+  std::atomic<uint32_t> generation{0}; // bumped by every Load: RecentTile's caches drop what they hold
 };
 
 } // namespace Navigation
