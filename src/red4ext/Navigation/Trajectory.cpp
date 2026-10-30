@@ -81,11 +81,14 @@ const char *LimitName(TrajectorySample::Limit aLimit) {
     return "start";
   case TrajectorySample::Limit::End:
     return "end";
+  case TrajectorySample::Limit::Room:
+    return "room";
   }
   return "";
 }
 
-Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aLine, const TrajectoryParams &aParams) {
+Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aLine, const TrajectoryParams &aParams,
+                           const NavMap *aMap) {
   using Limit = TrajectorySample::Limit;
   Trajectory out;
   out.top = TopSpeed(aSpec);
@@ -115,92 +118,128 @@ Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aL
     }
   }
 
-  // what each sample allows on its own
+  // room across the line: the nearest blocked space left, right, up and down (the map is car-centre
+  // space, the car's size already in it), and the speed that leaves the car enough of it
+  std::vector<float> room(n, aParams.roomLook), roomCap(n, 1e6f);
+  if (aMap) {
+    for (size_t i = 0; i < n; ++i) {
+      const float flat = std::hypot(tangent[i].x, tangent[i].y);
+      const Vec3 side = flat > 0.1f ? Vec3{-tangent[i].y / flat, tangent[i].x / flat, 0.0f} : Vec3{1.0f, 0.0f, 0.0f};
+      Vec3 up = Cross(side, tangent[i]);
+      up = Mul(up, 1.0f / std::max(Len(up), 1e-6f));
+      const Vec3 dirs[4] = {side, Mul(side, -1.0f), up, Mul(up, -1.0f)};
+      for (const auto &d : dirs) {
+        for (float r = 0.5f; r < room[i]; r += 0.5f) {
+          const Vec3 q = Add(p[i], Mul(d, r));
+          if (!aMap->IsFree(q.x, q.y, q.z)) {
+            room[i] = r;
+            break;
+          }
+        }
+      }
+      if (room[i] < aParams.roomLook) {
+        const float spare = std::max(room[i] - aParams.roomMin, 0.0f);
+        roomCap[i] = std::max(aParams.roomSpeed * std::sqrt(spare / aParams.roomGrow), aParams.roomSpeedMin);
+      }
+    }
+  }
+
+  // the speed along the line, with or without the room's caps
   std::vector<float> v(n);
   std::vector<Limit> why(n, Limit::Top);
-  auto take = [&](size_t i, float aLimit, Limit aWhy) {
-    if (aLimit < v[i]) {
-      v[i] = aLimit;
-      why[i] = aWhy;
+  auto speeds = [&](bool aRoom) {
+    std::fill(v.begin(), v.end(), 0.0f);
+    std::fill(why.begin(), why.end(), Limit::Top);
+    auto take = [&](size_t i, float aLimit, Limit aWhy) {
+      if (aLimit < v[i]) {
+        v[i] = aLimit;
+        why[i] = aWhy;
+      }
+    };
+    for (size_t i = 0; i < n; ++i) {
+      v[i] = out.top;
+      // the tighter of the bend radius and the bend vector's sideways part (level), the one the
+      // acceleration is worked out from: over a short tight bend the radius alone ran past the limit
+      const Vec3 across = Sub(bend[i], Mul(tangent[i], Dot(bend[i], tangent[i])));
+      const float level = std::hypot(across.x, across.y);
+      take(i, std::sqrt(lateral / std::max(1.0f / std::max(radius[i], 1.0f), level)), Limit::Turn);
+      if (bend[i].z < -1e-4f) {
+        take(i, std::sqrt(aSpec.pushOver / -bend[i].z), Limit::Crest);
+      } else if (bend[i].z > 1e-4f) {
+        take(i, std::sqrt(pullUp / bend[i].z), Limit::PullUp);
+      }
+      const float left = total - s[i];
+      if (left < aParams.sinkApproach && tangent[i].z < -0.05f) {
+        take(i, aParams.maxSink / -tangent[i].z, Limit::Sink);
+      }
+      if (aParams.stopAtEnd && left < aParams.arriveLength) {
+        take(i, std::sqrt(2.0f * aParams.arriveDecel * left), Limit::Arrive);
+      }
+      if (aRoom) {
+        take(i, roomCap[i], Limit::Room);
+      }
     }
-  };
-  for (size_t i = 0; i < n; ++i) {
-    v[i] = out.top;
-    // the tighter of the bend radius and the bend vector's sideways part (level), the one the
-    // acceleration is worked out from: over a short tight bend the radius alone ran past the limit
-    const Vec3 across = Sub(bend[i], Mul(tangent[i], Dot(bend[i], tangent[i])));
-    const float level = std::hypot(across.x, across.y);
-    take(i, std::sqrt(lateral / std::max(1.0f / std::max(radius[i], 1.0f), level)), Limit::Turn);
-    if (bend[i].z < -1e-4f) {
-      take(i, std::sqrt(aSpec.pushOver / -bend[i].z), Limit::Crest);
-    } else if (bend[i].z > 1e-4f) {
-      take(i, std::sqrt(pullUp / bend[i].z), Limit::PullUp);
+    if (aParams.stopAtEnd) {
+      v[n - 1] = 0.0f;
+      why[n - 1] = Limit::End;
     }
-    const float left = total - s[i];
-    if (left < aParams.sinkApproach && tangent[i].z < -0.05f) {
-      take(i, aParams.maxSink / -tangent[i].z, Limit::Sink);
-    }
-    if (aParams.stopAtEnd && left < aParams.arriveLength) {
-      take(i, std::sqrt(2.0f * aParams.arriveDecel * left), Limit::Arrive);
-    }
-  }
-  if (aParams.stopAtEnd) {
-    v[n - 1] = 0.0f;
-    why[n - 1] = Limit::End;
-  }
 
-  // braking back: lateral and braking share one envelope (a friction circle), down to brakeGripMin
-  auto brakeBack = [&]() {
-    for (size_t i = n - 1; i-- > 0;) {
-      const float ds = s[i + 1] - s[i], r = std::min(radius[i], radius[i + 1]), vv = v[i + 1];
+    // braking back: lateral and braking share one envelope (a friction circle), down to brakeGripMin
+    auto brakeBack = [&]() {
+      for (size_t i = n - 1; i-- > 0;) {
+        const float ds = s[i + 1] - s[i], r = std::min(radius[i], radius[i + 1]), vv = v[i + 1];
+        const float use = std::min(vv * vv / std::max(r, 1.0f) / std::max(lateral, 1.0f), 1.0f);
+        const float grip = std::max(std::sqrt(1.0f - use * use), aParams.brakeGripMin);
+        const float back = std::sqrt(vv * vv + 2.0f * PlanDecel(aSpec, vv) * grip * ds);
+        if (back < v[i]) {
+          v[i] = back;
+          why[i] = Limit::Brake;
+        }
+      }
+    };
+    brakeBack();
+
+    // small rises between two slowings held down, so two slowings close together are one
+    {
+      std::vector<float> flat = v;
+      for (size_t i = 0; i < n; ++i) {
+        float left = v[i], right = v[i];
+        for (size_t j = i; j > 0 && s[i] - s[j - 1] <= aParams.humpSpan; --j) {
+          left = std::min(left, v[j - 1]);
+        }
+        for (size_t j = i; j + 1 < n && s[j + 1] - s[i] <= aParams.humpSpan; ++j) {
+          right = std::min(right, v[j + 1]);
+        }
+        const float low = std::max(left, right);
+        if (v[i] > low && v[i] - low < aParams.humpMerge) {
+          flat[i] = low;
+        }
+      }
+      v = flat;
+    }
+    // lowering a stretch moves its braking earlier: braked back again (without this the merge left
+    // drops of 40 m/s2 at a merged stretch's start; FlightModeAutopilot.FlattenSpeedHumps has it too)
+    brakeBack();
+
+    // speeding up from the start: surge less drag, sharing the envelope with the bend as braking does
+    if (aParams.startSpeed < v[0]) {
+      v[0] = aParams.startSpeed;
+      why[0] = Limit::Start;
+    }
+    for (size_t i = 1; i < n; ++i) {
+      const float ds = s[i] - s[i - 1], r = std::min(radius[i], radius[i - 1]), vv = v[i - 1];
       const float use = std::min(vv * vv / std::max(r, 1.0f) / std::max(lateral, 1.0f), 1.0f);
       const float grip = std::max(std::sqrt(1.0f - use * use), aParams.brakeGripMin);
-      const float back = std::sqrt(vv * vv + 2.0f * PlanDecel(aSpec, vv) * grip * ds);
-      if (back < v[i]) {
-        v[i] = back;
-        why[i] = Limit::Brake;
+      const float up = std::sqrt(vv * vv + 2.0f * Accel(aSpec, vv) * grip * ds);
+      if (up < v[i]) {
+        v[i] = up;
+        why[i] = Limit::Accel;
       }
     }
   };
-  brakeBack();
-
-  // small rises between two slowings held down, so two slowings close together are one
-  {
-    std::vector<float> flat = v;
-    for (size_t i = 0; i < n; ++i) {
-      float left = v[i], right = v[i];
-      for (size_t j = i; j > 0 && s[i] - s[j - 1] <= aParams.humpSpan; --j) {
-        left = std::min(left, v[j - 1]);
-      }
-      for (size_t j = i; j + 1 < n && s[j + 1] - s[i] <= aParams.humpSpan; ++j) {
-        right = std::min(right, v[j + 1]);
-      }
-      const float low = std::max(left, right);
-      if (v[i] > low && v[i] - low < aParams.humpMerge) {
-        flat[i] = low;
-      }
-    }
-    v = flat;
-  }
-  // lowering a stretch moves its braking earlier: braked back again (without this the merge left
-  // drops of 40 m/s2 at a merged stretch's start; FlightModeAutopilot.FlattenSpeedHumps has it too)
-  brakeBack();
-
-  // speeding up from the start: surge less drag, sharing the envelope with the bend as braking does
-  if (aParams.startSpeed < v[0]) {
-    v[0] = aParams.startSpeed;
-    why[0] = Limit::Start;
-  }
-  for (size_t i = 1; i < n; ++i) {
-    const float ds = s[i] - s[i - 1], r = std::min(radius[i], radius[i - 1]), vv = v[i - 1];
-    const float use = std::min(vv * vv / std::max(r, 1.0f) / std::max(lateral, 1.0f), 1.0f);
-    const float grip = std::max(std::sqrt(1.0f - use * use), aParams.brakeGripMin);
-    const float up = std::sqrt(vv * vv + 2.0f * Accel(aSpec, vv) * grip * ds);
-    if (up < v[i]) {
-      v[i] = up;
-      why[i] = Limit::Accel;
-    }
-  }
+  speeds(false);
+  const std::vector<float> free = v;
+  speeds(true);
 
   // time, velocity and acceleration
   out.samples.resize(n);
@@ -210,6 +249,8 @@ Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aL
     q.position = p[i];
     q.speed = v[i];
     q.limit = why[i];
+    q.room = room[i];
+    q.roomLoss = std::max(free[i] - v[i], 0.0f);
     q.velocity = Mul(tangent[i], v[i]);
     if (i > 0) {
       const float ds = s[i] - s[i - 1];

@@ -56,7 +56,8 @@ const Field kFields[] = {
     F(lineHeightWavelength), F(lineHeightFree), F(lineHeightScale), F(lineOverEnds), F(lineOverReach),
     F(lineOverThick), F(lineOverRise), F(lineOverGain), F(lineOverWindow), F(lineCeilingClearance), F(linePush),
     F(lineSpread), F(lineCorridorIterations), F(lineCorridorMax), F(lineCorridorMargin), F(lineCurvatureRate),
-    F(lineTurnRounds), F(lineTurnWeightMax), F(lineStep), F(lineVerticalWeight), F(directMargin), F(maxCruise),
+    F(lineTurnRounds), F(lineTurnWeightMax), F(lineStep), F(lineVerticalWeight), F(directMargin), F(maxCruise), F(slotDetourLoss), F(slotDetourShare), F(slotDetourLossMin), F(slotAvoidRadius),
+    F(slotAvoidCost),
 };
 #undef F
 
@@ -216,7 +217,7 @@ int main(int argc, char **argv) {
     line.ok = line.points.size() >= 2;
     line.info = "line from " + std::string(given) + ": " + std::to_string(line.points.size()) + " points";
   } else {
-    line = Navigation::PlanWithRetries(map, start, goal, params, [](const Navigation::PlanResult &aAttempt) {
+    line = Navigation::PlanRace(map, start, goal, params, [](const Navigation::PlanResult &aAttempt) {
       if (!aAttempt.ok) {
         std::printf("  attempt: %s\n", aAttempt.info.c_str());
       }
@@ -225,7 +226,7 @@ int main(int argc, char **argv) {
   std::printf("%s\n", line.info.c_str());
   double milliseconds = line.milliseconds;
   if (std::getenv("NAVPLAN_REPEAT")) {
-    auto again = Navigation::PlanWithRetries(map, start, goal, params);
+    auto again = Navigation::PlanRace(map, start, goal, params);
     std::printf("again: %s\n", again.info.c_str());
     milliseconds = again.milliseconds;
   }
@@ -244,7 +245,7 @@ int main(int argc, char **argv) {
     return 1;
   }
   // the trajectory the car flies the line with (Trajectory.hpp), and its clearance
-  auto trajectory = Navigation::BuildTrajectory(params.vehicle, points);
+  auto trajectory = Navigation::BuildTrajectory(params.vehicle, points, {}, &map);
   for (const auto &v : trajectory.violations) {
     std::printf("trajectory: %s\n", v.c_str());
   }
@@ -257,11 +258,11 @@ int main(int argc, char **argv) {
     std::fclose(f);
   }
   if (FILE *f = std::fopen((prefix + "_trajectory.csv").c_str(), "w")) {
-    std::fprintf(f, "s,t,x,y,z,vx,vy,vz,ax,ay,az,speed,along,lateral,limit,yaw,pitch,roll\n");
+    std::fprintf(f, "s,t,x,y,z,vx,vy,vz,ax,ay,az,speed,along,lateral,limit,yaw,pitch,roll,room,room_loss\n");
     for (const auto &q : trajectory.samples) {
-      std::fprintf(f, "%.1f,%.3f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%s,%.4f,%.4f,%.4f\n", q.s, q.t, q.position.x,
+      std::fprintf(f, "%.1f,%.3f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%s,%.4f,%.4f,%.4f,%.1f,%.1f\n", q.s, q.t, q.position.x,
                    q.position.y, q.position.z, q.velocity.x, q.velocity.y, q.velocity.z, q.acceleration.x, q.acceleration.y,
-                   q.acceleration.z, q.speed, q.along, q.lateral, Navigation::LimitName(q.limit), q.yaw, q.pitch, q.roll);
+                   q.acceleration.z, q.speed, q.along, q.lateral, Navigation::LimitName(q.limit), q.yaw, q.pitch, q.roll, q.room, q.roomLoss);
     }
     std::fclose(f);
   }

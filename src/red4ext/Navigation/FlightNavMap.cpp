@@ -158,12 +158,16 @@ int32_t FlightNavMap::PlanAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal,
 
 int32_t FlightNavMap::PlanRaceAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, float aPreferredHeight,
                                     float aClimbCost, float aMinPassage, float aHeuristicWeight, float aTurnCost,
-                                    RED4ext::Handle<FlightVehicleModel> aVehicle) {
+                                    RED4ext::Handle<FlightVehicleModel> aVehicle, bool aDetour) {
   auto params = planParams;
   Navigation::RacePreset(params);
   // the line is shaped for the car flying it (TurnCost)
   if (aVehicle) {
     params.vehicle = aVehicle->Spec();
+  }
+  // slots too tight for the car's speed routed round (PlanRace) only for a trajectory follower
+  if (!aDetour) {
+    params.slotDetourLoss = params.slotDetourLossMin = 1e9f;
   }
   // the route's character from the Autopilot's race route fields (defaults as RacePreset)
   params.preferredHeight = aPreferredHeight;
@@ -185,7 +189,7 @@ int32_t StartPlan(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, Navigation::P
     requests[id] = request;
   }
   std::thread([request, start, goal, params]() {
-    auto result = Navigation::PlanWithRetries(Navigation::NavMap::Get(), start, goal, params,
+    auto result = Navigation::PlanRace(Navigation::NavMap::Get(), start, goal, params,
                                               [&](const Navigation::PlanResult &aAttempt) { LogPlan(start, goal, aAttempt); });
     std::lock_guard guard(requestsLock);
     request->result = std::move(result);

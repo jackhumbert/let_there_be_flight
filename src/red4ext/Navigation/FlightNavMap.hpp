@@ -42,7 +42,7 @@ struct FlightNavMap : RED4ext::IScriptable {
   // PlanAsync with the racing line (Planner.hpp): the Autopilot's Race option
   static int32_t PlanRaceAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, float aPreferredHeight, float aClimbCost,
                                float aMinPassage, float aHeuristicWeight, float aTurnCost,
-                               RED4ext::Handle<FlightVehicleModel> aVehicle);
+                               RED4ext::Handle<FlightVehicleModel> aVehicle, bool aDetour);
   static bool IsPlanReady(int32_t aId);
   static RED4ext::DynArray<RED4ext::Vector4> TakePlan(int32_t aId);
 

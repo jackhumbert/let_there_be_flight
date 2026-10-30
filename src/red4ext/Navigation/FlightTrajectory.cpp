@@ -26,7 +26,9 @@ RED4ext::Handle<FlightTrajectory> FlightTrajectory::Build(RED4ext::DynArray<RED4
   Navigation::TrajectoryParams params;
   params.startSpeed = std::max(aStartSpeed, 0.0f);
   params.stopAtEnd = aStop;
-  handle->trajectory = Navigation::BuildTrajectory(spec, line, params);
+  // the room across the line caps the speed where the map is loaded
+  const auto &map = Navigation::NavMap::Get();
+  handle->trajectory = Navigation::BuildTrajectory(spec, line, params, map.IsLoaded() ? &map : nullptr);
   return handle;
 }
 

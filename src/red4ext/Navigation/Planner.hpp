@@ -28,6 +28,14 @@ struct Vec3 {
   float x, y, z;
 };
 
+// A place the route search charges extra for: within radius of at (level), per metre flown, over
+// the height range at.z +- radius. Slots too tight for the car's speed (PlanRace) go in here.
+struct Avoid {
+  Vec3 at;
+  float radius = 15.0f;
+  float cost = 10.0f;
+};
+
 struct PlanParams {
   float preferredHeight = 25.0f; // metres above the gap floor (the floor is already a car-centre height)
   float climbCost = 3.0f;        // extra cost per metre of rise in preferred altitude
@@ -113,6 +121,14 @@ struct PlanParams {
   float lineVerticalWeight = 1.5f;
   float directMargin = 20.0f;    // cruise this far above the highest floor along the line
   float maxCruise = 700.0f;
+  // racing lines: a slot whose room costs more than slotDetourLoss m/s, or slotDetourShare of the speed
+  // there (and slotDetourLossMin at least), is routed around when that loses less (PlanRace)
+  float slotDetourLoss = 20.0f;
+  float slotDetourShare = 0.25f;
+  float slotDetourLossMin = 8.0f;
+  float slotAvoidRadius = 30.0f;   // m round a slot the search charges slotAvoidCost per metre
+  float slotAvoidCost = 10.0f;
+  std::vector<Avoid> avoid;
 };
 
 struct PlanResult {
@@ -138,6 +154,13 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
 // plan this way.
 PlanResult PlanWithRetries(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &aParams,
                            const std::function<void(const PlanResult &)> &aAttempt = {});
+
+// PlanWithRetries, then for a racing line the slots whose room would cost the car too much speed
+// (Trajectory.hpp's room caps, over slotDetour*): the route searched again round them (Avoid), and
+// round any the new line finds, up to three searches; kept when its line has none left and takes at
+// most 20% longer; otherwise the first line, flown slower there. Jack, 2026-10-30: a small slowdown is flown, a large one routed round.
+PlanResult PlanRace(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &aParams,
+                    const std::function<void(const PlanResult &)> &aAttempt = {});
 
 // The Race's route character: what FlightNavMap::PlanRaceAsync starts from before the Autopilot's
 // race route fields (raceRouteHeight, raceClimbCost, raceMinPassage, raceSearchWeight, raceTurnCost,

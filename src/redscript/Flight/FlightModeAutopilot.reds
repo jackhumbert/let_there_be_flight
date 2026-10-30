@@ -754,7 +754,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       && Vector4.Distance(this.routeGoal, this.routeGateEntry) < 1.0 {
       this.gateTail = this.routeGateTail;
     }
-    this.request = FlightNavMap.PlanRaceAsync(from, this.routeGoal, this.raceRouteHeight, this.raceClimbCost, this.raceMinPassage, this.raceSearchWeight, this.raceTurnCost, this.Vehicle());
+    this.request = FlightNavMap.PlanRaceAsync(from, this.routeGoal, this.raceRouteHeight, this.raceClimbCost, this.raceMinPassage, this.raceSearchWeight, this.raceTurnCost, this.Vehicle(), this.useTrajectory);
     this.replanTimer = 3.0;
     if ArraySize(this.route) < 2 {
       // nothing to follow meanwhile: hold here (a replan keeps following the old route)

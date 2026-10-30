@@ -1,4 +1,5 @@
 #include "Planner.hpp"
+#include "Trajectory.hpp"
 #include "Doorways.hpp"
 #include "PlannerCommon.hpp"
 
@@ -82,6 +83,86 @@ PlanResult PlanWithRetries(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const Pl
   if (aAttempt) {
     aAttempt(result);
   }
+  return result;
+}
+
+namespace {
+// The racing line's slots too tight for the car's speed: the worst sample of each stretch whose room
+// costs more than the params allow, as places to route round.
+std::vector<Avoid> Slots(const Trajectory &aTrajectory, const PlanParams &aParams, float &aWorst) {
+  std::vector<Avoid> out;
+  aWorst = 0.0f;
+  const auto &q = aTrajectory.samples;
+  for (size_t i = 0; i < q.size();) {
+    auto over = [&](size_t k) {
+      const float loss = q[k].roomLoss, free = q[k].speed + loss;
+      return loss >= aParams.slotDetourLossMin && (loss > aParams.slotDetourLoss || loss > aParams.slotDetourShare * free);
+    };
+    if (!over(i)) {
+      ++i;
+      continue;
+    }
+    size_t worst = i;
+    for (; i < q.size() && over(i); ++i) {
+      worst = q[i].roomLoss > q[worst].roomLoss ? i : worst;
+    }
+    aWorst = std::max(aWorst, q[worst].roomLoss);
+    out.push_back({q[worst].position, aParams.slotAvoidRadius, aParams.slotAvoidCost});
+  }
+  return out;
+}
+} // namespace
+
+PlanResult PlanRace(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &aParams,
+                    const std::function<void(const PlanResult &)> &aAttempt) {
+  auto result = PlanWithRetries(aMap, aStart, aGoal, aParams, aAttempt);
+  if (!result.ok || !aParams.racingLine || !result.rejectedLine.empty() || result.points.size() < 3) {
+    return result;
+  }
+  const auto first = BuildTrajectory(aParams.vehicle, result.points, {}, &aMap);
+  float worst = 0.0f;
+  auto slots = Slots(first, aParams, worst);
+  if (slots.empty()) {
+    return result;
+  }
+  // round the slots, and round any the new line finds next to them (a slot under an overhang moved
+  // up is often another one over it), at most three times
+  auto params = aParams;
+  const size_t found = slots.size();
+  char text[320];
+  std::string why = "no way round";
+  double extra = 0.0;
+  for (int32_t round = 0; round < 3 && !slots.empty(); ++round) {
+    params.avoid.insert(params.avoid.end(), slots.begin(), slots.end());
+    auto detour = PlanWithRetries(aMap, aStart, aGoal, params);
+    extra += detour.milliseconds;
+    if (!detour.ok || !detour.rejectedLine.empty() || detour.points.size() < 3) {
+      why = "no way round";
+      break;
+    }
+    const auto second = BuildTrajectory(aParams.vehicle, detour.points, {}, &aMap);
+    float worst2 = 0.0f;
+    slots = Slots(second, aParams, worst2);
+    if (second.Duration() > 1.2f * first.Duration()) {
+      std::snprintf(text, sizeof(text), "round them %.1f s", second.Duration());
+      why = text;
+      break;
+    }
+    if (slots.empty()) {
+      std::snprintf(text, sizeof(text), " (round %zu slot(s) costing up to %.0f m/s in %d search(es): %.1f s against %.1f)", found,
+                    worst, round + 1, second.Duration(), first.Duration());
+      detour.info += text;
+      detour.milliseconds += result.milliseconds + extra - detour.milliseconds;
+      return detour;
+    }
+    std::snprintf(text, sizeof(text), "%zu left at %.0f %.0f %.0f", slots.size(), slots[0].at.x, slots[0].at.y, slots[0].at.z);
+    why = text;
+  }
+  std::snprintf(text, sizeof(text), " (%zu slot(s) costing up to %.0f m/s flown slower, first at %.0f %.0f %.0f: %s)", found,
+                worst, first.samples.empty() ? 0.0f : params.avoid[aParams.avoid.size()].at.x,
+                params.avoid[aParams.avoid.size()].at.y, params.avoid[aParams.avoid.size()].at.z, why.c_str());
+  result.info += text;
+  result.milliseconds += extra;
   return result;
 }
 
@@ -298,6 +379,17 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
           }
           float cost = turn + bearing + step * (1.0f + (std::isfinite(next.t) ? aParams.underCost : 0.0f)) +
                        ClimbCost(Preferred(next, aParams.preferredHeight) - curPreferred, aParams.climbCost, aParams.climbScale);
+          if (!aParams.avoid.empty()) {
+            float x, y;
+            aMap.CellCentre(nx, ny, x, y);
+            const float z = Preferred(next, aParams.preferredHeight);
+            for (const auto &a : aParams.avoid) {
+              if (std::hypot(x - a.at.x, y - a.at.y) < a.radius && next.b < a.at.z + a.radius && next.t > a.at.z - a.radius &&
+                  std::abs(std::clamp(a.at.z, next.b, next.t) - a.at.z) < a.radius && std::isfinite(z)) {
+                cost += a.cost * step;
+              }
+            }
+          }
           uint64_t nextKey = MakeKey(nx, ny, j, width);
           float ng = g + cost;
           auto it = recs.find(nextKey);
