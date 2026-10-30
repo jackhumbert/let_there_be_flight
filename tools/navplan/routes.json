@@ -1,0 +1,10 @@
+{
+  "_doc": "Benchmark routes for the racing line (tools/navplan/bench.py, tune.py): start and goal as car-centre x, y, z; save is the game save whose start matches (game.py run --save), null when none does.",
+  "routes": [
+    {"name": "dog", "start": [-1070.6, -1260.1, 11.6], "goal": [-1773.9, -2432.4, 32], "save": "ManualSave-191", "note": "street start east of the city centre to the Dogtown landing"},
+    {"name": "cc2dog", "start": [-1842, -891, 10], "goal": [-1777, -2446, 32], "save": null, "note": "city centre street to Dogtown"},
+    {"name": "we", "start": [-2600, -400, 20], "goal": [-600, -400, 20], "save": null, "note": "west to east"},
+    {"name": "ns", "start": [-1300, 600, 40], "goal": [-1300, -1500, 40], "save": null, "note": "north to south"},
+    {"name": "via", "start": [-1842.3, -891.6, 66], "goal": [-1071, -1262, 11], "save": null, "note": "the centre leg, city centre to the ManualSave-191 street"}
+  ]
+}
