@@ -124,15 +124,18 @@ def run_all(navmap, vehicle, rts, params, out, jobs):
 
 def score(m, base):
     """One route's score against the defaults' line (0 = as good)."""
-    if m is None or not m["ok"]:
-        return 10.0
+    lost_line = m is None or not m["ok"]
     if base is None or not base["ok"]:
-        return 0.0
+        # the defaults found no racing line here: only gaining one counts
+        return 0.0 if lost_line else -2.0
+    if lost_line:
+        return 10.0
     s = (m["lost"] - base["lost"]) / 10.0
     s += 3.0 * (m["jerk"] / max(base["jerk"], 1e-3) - 1.0)
     s += 1.0 * (m["sharpest"] / max(base["sharpest"], 1e-3) - 1.0)
     s += (m["tight"] - base["tight"]) / 2.0
     s += 3.0 * (m["time"] / max(base["time"], 1e-3) - 1.0)
     s += max(m["height"] - base["height"], 0.0) / 20.0
-    s += max(m["ms"] - 1000.0, 0.0) / 200.0
+    # plan time only when it grows a lot: absolute times depend on how many plans run at once
+    s += max(m["ms"] / max(base["ms"], 1.0) - 2.0, 0.0)
     return s

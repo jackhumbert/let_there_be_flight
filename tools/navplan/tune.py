@@ -12,7 +12,8 @@ Score per route (lower is better; 0 = the defaults), averaged over the routes:
   speed lost in dips (dips.py) per 10 m/s; the bend's rate of change (jerk) and the sharpest bend,
   relative; the share of the line within 3 m of blocked space, per 2 %; the time, relative; the mean
   height over the defaults' line per 20 m (over rather than under is fine, a needless climb is
-  not); 10 for a route that loses its racing line; plan time over 1 s.
+  not); 10 for a route that loses its racing line, -2 for one that gains a line the defaults lack;
+  plan time only past twice the defaults' (absolute times depend on how many plans run at once).
 """
 
 import argparse
@@ -55,6 +56,7 @@ def main():
     ap.add_argument("--navplan", help="navplan.exe to run (default build/navplan.exe)")
     ap.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 4) - 2))
     ap.add_argument("--report", action="store_true")
+    ap.add_argument("--seed", help="json of parameters to try first (e.g. an earlier study's best)")
     args = ap.parse_args()
     import optuna
 
@@ -86,6 +88,10 @@ def main():
                                 load_if_exists=True, direction="minimize",
                                 sampler=optuna.samplers.TPESampler(seed=1, multivariate=True))
 
+    if args.seed and not study.trials:
+        with open(args.seed) as f:
+            study.enqueue_trial(json.load(f))
+
     def objective(trial):
         params = {}
         for k, (lo, hi, log, is_int) in SPACE.items():
@@ -99,7 +105,7 @@ def main():
         study.optimize(objective, n_trials=args.trials,
                        callbacks=[lambda s, t: print(f"trial {t.number}: {t.value:.3f} (best {s.best_value:.3f}, "
                                                      f"{t.user_attrs.get('fails')} lines lost)", flush=True)])
-    if not study.trials:
+    if not any(t.state == optuna.trial.TrialState.COMPLETE for t in study.trials):
         return
     best = study.best_trial
     print(f"\nbest trial {best.number}: tuning score {best.value:.3f} (0 = the defaults, lower is better)")
