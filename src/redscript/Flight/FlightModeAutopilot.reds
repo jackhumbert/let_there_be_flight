@@ -2228,21 +2228,6 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.component.angularBrake = 0.0;
     this.UpdateWithNormalLift(timeDelta, normal, liftForce);
 
-    // per-frame telemetry for tuning (tools/autopilot_smoothness.py); switch on with
-    // python ../cp2077_tools/bridge.py call LtbfBridge.Telemetry true
-    if this.telemetry {
-      this.telemetryTime += timeDelta;
-      FlightLog.Info("[AutopilotT] " + FloatToStringPrec(this.telemetryTime, 3) + " " + FloatToStringPrec(p.X, 2) + " " + FloatToStringPrec(p.Y, 2) + " " + FloatToStringPrec(p.Z, 2)
-        + " " + FloatToStringPrec(v.X, 2) + " " + FloatToStringPrec(v.Y, 2) + " " + FloatToStringPrec(v.Z, 2) + " " + FloatToStringPrec(stats.d_angularVelocity.Z, 3)
-        + " " + FloatToStringPrec(this.targetSpeed, 2) + " " + FloatToStringPrec(accel.X, 2) + " " + FloatToStringPrec(accel.Y, 2) + " " + FloatToStringPrec(accel.Z, 2)
-        + " " + FloatToStringPrec(yaw, 3) + " " + FloatToStringPrec(Rad2Deg(this.bankTarget), 2)
-        + " " + FloatToStringPrec(Rad2Deg(AsinF(ClampF(Vector4.Dot(stats.d_right, FlightUtils.Up()), -1.0, 1.0))), 2)
-        + " " + FloatToStringPrec(this.speedCmd, 2) + " " + FloatToStringPrec(this.offRouteNow, 2)
-        + " " + (this.blockedAhead ? "1" : "0") + " " + (this.emergencyBrake ? "1" : "0")
-        + " " + FloatToStringPrec(this.lookahead.X, 1) + " " + FloatToStringPrec(this.lookahead.Y, 1) + " " + FloatToStringPrec(this.lookahead.Z, 1)
-        + " " + FloatToStringPrec(this.aheadSmooth, 1) + " " + this.status);
-    }
-
     this.logTimer -= timeDelta;
     if this.logTimer <= 0.0 {
       this.logTimer = 1.0;

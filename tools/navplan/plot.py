@@ -30,11 +30,12 @@ from common.navmap import NavMap  # noqa: E402,F401 (city.py and navviz.py impor
 
 def load(path):
     """A route CSV (x,y,z columns), or an LTBF log: the flown path from its Autopilot telemetry
-    lines ([AutopilotA] with aerobatics, [AutopilotT] without; time, then x y z)."""
+    lines ([AutopilotA], aerobatics; time, then x y z). The Autopilot's telemetry CSV
+    (red4ext/logs/ltbf_autopilot_<time>.csv) has x, y, z columns and loads as a route CSV."""
     if not path.lower().endswith(".csv"):
         pts = []
         for line in open(path, errors="replace"):
-            for tag in ("[AutopilotA] ", "[AutopilotT] "):
+            for tag in ("[AutopilotA] ",):
                 if tag in line:
                     f = line.split(tag, 1)[1].split()
                     pts.append([float(f[1]), float(f[2]), float(f[3])])
