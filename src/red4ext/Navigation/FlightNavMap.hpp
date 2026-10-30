@@ -18,6 +18,10 @@ struct FlightNavMap : RED4ext::IScriptable {
   static float GetCarHalfHeight();
   // Gaps of the column at the position, bottom up, as (bottom, top); top is 1e9 for open sky.
   static RED4ext::DynArray<RED4ext::Vector2> GetGaps(RED4ext::Vector4 aPosition);
+  static RED4ext::DynArray<RED4ext::Vector4> GetOutlines(RED4ext::Vector4 aCentre, float aRadius,
+                                                         RED4ext::DynArray<float> aHeights);
+  static RED4ext::DynArray<RED4ext::Vector4> GetNavEdges(RED4ext::Vector4 aCentre, float aRadius, float aZMin,
+                                                         float aZMax);
   static bool IsFree(RED4ext::Vector4 aPosition);
   // Bottom / top of the gap containing the position; -1e9 when the position is blocked.
   static float GetFloor(RED4ext::Vector4 aPosition);
@@ -80,6 +84,8 @@ RTTI_DEFINE_CLASS(FlightNavMap, {
   RTTI_METHOD(IsLoaded);
   RTTI_METHOD(GetCarHalfHeight);
   RTTI_METHOD(GetGaps);
+  RTTI_METHOD(GetOutlines);
+  RTTI_METHOD(GetNavEdges);
   RTTI_METHOD(IsFree);
   RTTI_METHOD(GetFloor);
   RTTI_METHOD(GetCeiling);

@@ -6,6 +6,13 @@ public native class FlightNavMap extends IScriptable {
   public native static func GetCarHalfHeight() -> Float;
   // (bottom, top) of each free gap in the column, bottom up; top is 1e9 for open sky
   public native static func GetGaps(position: Vector4) -> array<Vector2>;
+  // the blocked space's outlines within radius of centre, sliced at each height: point pairs
+  // (a, b, a, b, ...), every edge between a blocked and a free cell; for drawing the map in game
+  public native static func GetOutlines(centre: Vector4, radius: Float, heights: array<Float>) -> array<Vector4>;
+  // the free space's wireframe within radius of centre, heights zMin to zMax: point pairs on every
+  // face between a free and a blocked column, and vertical lines at its corners; columns sampled
+  // coarser farther out; cached
+  public native static func GetNavEdges(centre: Vector4, radius: Float, zMin: Float, zMax: Float) -> array<Vector4>;
   public native static func IsFree(position: Vector4) -> Bool;
   // -1e9 when the position is not in a free gap
   public native static func GetFloor(position: Vector4) -> Float;

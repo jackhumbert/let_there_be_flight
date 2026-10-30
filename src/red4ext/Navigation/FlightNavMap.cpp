@@ -1,6 +1,7 @@
 #include "FlightNavMap.hpp"
 #include "Gates.hpp"
 #include "Helipads.hpp"
+#include "NavDraw.hpp"
 #include "NavMap.hpp"
 #include "Planner.hpp"
 
@@ -68,6 +69,53 @@ RED4ext::DynArray<RED4ext::Vector2> FlightNavMap::GetGaps(RED4ext::Vector4 aPosi
     out.EmplaceBack(gap.bottom, Finite(gap.top));
   }
   return out;
+}
+
+// Drawing geometry for the planner's view in game (NavDraw.hpp); done in C++ because in script,
+// 10,000 GetGaps a refresh held frames up to 66 ms.
+namespace {
+RED4ext::DynArray<RED4ext::Vector4> ToScript(const std::vector<Navigation::DrawPoint> &aPoints) {
+  RED4ext::DynArray<RED4ext::Vector4> out;
+  out.Reserve(uint32_t(aPoints.size()));
+  for (const auto &p : aPoints) {
+    out.EmplaceBack(p.x, p.y, p.z, 1.0f);
+  }
+  return out;
+}
+
+// GetNavEdges is called every frame; the wireframe is kept until the centre moves 4 m
+struct NavEdgesCache {
+  float x = 0.0f, y = 0.0f, radius = -1.0f, zMin = 0.0f, zMax = 0.0f;
+  RED4ext::DynArray<RED4ext::Vector4> edges;
+};
+std::mutex navEdgesLock;
+NavEdgesCache navEdges;
+} // namespace
+
+RED4ext::DynArray<RED4ext::Vector4> FlightNavMap::GetOutlines(RED4ext::Vector4 aCentre, float aRadius,
+                                                               RED4ext::DynArray<float> aHeights) {
+  std::vector<float> heights(aHeights.begin(), aHeights.end());
+  std::vector<Navigation::DrawPoint> points;
+  Navigation::Outlines(Navigation::NavMap::Get(), aCentre.X, aCentre.Y, aRadius, heights, points);
+  return ToScript(points);
+}
+
+RED4ext::DynArray<RED4ext::Vector4> FlightNavMap::GetNavEdges(RED4ext::Vector4 aCentre, float aRadius, float aZMin,
+                                                               float aZMax) {
+  std::lock_guard guard(navEdgesLock);
+  if (navEdges.radius == aRadius && navEdges.zMin == aZMin && navEdges.zMax == aZMax &&
+      std::hypot(aCentre.X - navEdges.x, aCentre.Y - navEdges.y) < 4.0f) {
+    return navEdges.edges;
+  }
+  std::vector<Navigation::DrawPoint> points;
+  Navigation::NavEdges(Navigation::NavMap::Get(), aCentre.X, aCentre.Y, aRadius, aZMin, aZMax, points);
+  navEdges.x = aCentre.X;
+  navEdges.y = aCentre.Y;
+  navEdges.radius = aRadius;
+  navEdges.zMin = aZMin;
+  navEdges.zMax = aZMax;
+  navEdges.edges = ToScript(points);
+  return navEdges.edges;
 }
 
 bool FlightNavMap::IsFree(RED4ext::Vector4 aPosition) {
