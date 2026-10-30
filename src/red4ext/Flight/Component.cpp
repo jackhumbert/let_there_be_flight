@@ -102,25 +102,25 @@ void FlightComponent::OnUpdate(float deltaTime) {
     vehicle = reinterpret_cast<vehicle::BaseObject *>(this->entity);
   }
   // A teleport (TeleportationFacility, vehicleTeleportEvent: vehicle::BaseObject::OnTeleport) makes
-  // the chassis kinematic with physics-disable bit 0x20 (the disable mask at BaseObject+0x260) until
+  // the chassis kinematic with PhysicsState::StreamingHold (BaseObject::physicsState, a mask) until
   // the collision under the new place has streamed in (SuspensionBase::ProcessStreamingHack, then
-  // EnablePhysicsAfterStreamingHack clears it), and bit 0x400 stays set while gameplay is hidden
+  // EnablePhysicsAfterStreamingHack clears it), and PhysicsState::GameplayHidden stays set while gameplay is hidden
   // (the loading screen; BaseObject::ProcessPhysicsUpdateRequest). With either set the game drives
   // the car kinematically and derives its velocity from the position change each frame
   // (BaseObject::PostMove_Common): the teleport's jump over one frame. ForceEnablePhysics below
   // cleared both at once, before the move had reached PhysX, and flight then flew against that
   // velocity. So while held, and for kTeleportClearFrames after, flight does nothing; then, after a
-  // teleport (0x20 seen; 0x400 alone is a pause or a menu), the velocities start at zero and the
+  // teleport (StreamingHold seen; GameplayHidden alone is a pause or a menu), the velocities start at zero and the
   // script is told (FlightComponent.OnTeleported).
-  constexpr uint32_t kTeleportHoldBits = 0x20 | 0x400;
+  constexpr uint32_t kTeleportHoldBits = vehicle::PhysicsState::StreamingHold | vehicle::PhysicsState::GameplayHidden;
   constexpr float kTeleportHoldMax = 15.0f;
   constexpr int32_t kTeleportClearFrames = 5;
   const auto base = reinterpret_cast<uint8_t *>(vehicle);
-  const auto disabled = *reinterpret_cast<uint32_t *>(base + 0x260);
+  const auto disabled = static_cast<uint32_t>(vehicle->physicsState);
   if (this->hasUpdate && (disabled & kTeleportHoldBits) && this->teleportHold < kTeleportHoldMax) {
     this->teleportHold = std::max(this->teleportHold, 0.0f) + deltaTime;
     this->teleportClear = 0;
-    this->teleportJump = this->teleportJump || (disabled & 0x20);
+    this->teleportJump = this->teleportJump || (disabled & vehicle::PhysicsState::StreamingHold);
   }
   if (this->teleportHold >= 0.0f) {
     this->force = Vector4();
@@ -136,7 +136,7 @@ void FlightComponent::OnUpdate(float deltaTime) {
     }
     this->teleportHold = -1.0f;
     if (!this->teleportJump) {
-      return; // a pause or a menu (0x400 alone): nothing moved
+      return; // a pause or a menu (GameplayHidden alone): nothing moved
     }
     this->teleportJump = false;
     this->contactSpin = Vector3();
@@ -147,11 +147,11 @@ void FlightComponent::OnUpdate(float deltaTime) {
     this->teleportSettle = 3;
     this->teleportQuiet = 10;
     // at rest: the rigid body, the previous velocity PostMove_Common differences against
-    // (BaseObject+0x370) and the copy scripts read (vehicle::RuntimeData at BaseObject+0x5F0:
+    // (BaseObject::unk360) and the copy scripts read (vehicle::RuntimeData at BaseObject+0x5F0:
     // linearVelocity +0x30, linear acceleration +0x60, angular velocity +0xB0, speeds +0xC8)
     vehicle->physicsData->velocity = Vector3();
     vehicle->physicsData->angularVelocity = Vector3();
-    std::memset(base + 0x370, 0, 12);
+    vehicle->unk360 = Vector3();
     if (auto runtime = *reinterpret_cast<uint8_t **>(base + 0x5F0)) {
       std::memset(runtime + 0x30, 0, 12);
       std::memset(runtime + 0x60, 0, 12);
