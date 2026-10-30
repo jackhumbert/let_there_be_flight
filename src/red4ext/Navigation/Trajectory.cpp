@@ -87,6 +87,35 @@ const char *LimitName(TrajectorySample::Limit aLimit) {
   return "";
 }
 
+float DipLoss(const Trajectory &aTrajectory, float aApproach, float aDip) {
+  const auto &q = aTrajectory.samples;
+  if (q.size() < 3) {
+    return 0.0f;
+  }
+  const float end = q.back().s - aApproach;
+  float lost = 0.0f;
+  for (size_t i = 1; i + 1 < q.size();) {
+    if (q[i].speed >= q[i - 1].speed - 1e-4f) {
+      ++i;
+      continue;
+    }
+    const float top = q[i - 1].speed;
+    size_t j = i;
+    while (j + 1 < q.size() && q[j + 1].speed <= q[j].speed + 1e-4f) {
+      ++j;
+    }
+    const size_t low = j;
+    while (j + 1 < q.size() && q[j + 1].speed >= q[j].speed - 1e-4f) {
+      ++j;
+    }
+    if (q[low].s < end && top - q[low].speed >= aDip && q[j].speed > q[low].speed + aDip) {
+      lost += top - q[low].speed;
+    }
+    i = j + 1;
+  }
+  return lost;
+}
+
 Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aLine, const TrajectoryParams &aParams,
                            const NavMap *aMap) {
   using Limit = TrajectorySample::Limit;

@@ -148,9 +148,17 @@ PlanResult PlanRace(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParam
       why = text;
       break;
     }
+    // the detour's own turns can cost what the slot did: kept only if it loses less speed in dips
+    const float lost1 = DipLoss(first), lost2 = DipLoss(second);
+    if (slots.empty() && lost2 >= lost1) {
+      std::snprintf(text, sizeof(text), "round them %.1f s but %.0f m/s lost in dips against %.0f", second.Duration(), lost2, lost1);
+      why = text;
+      break;
+    }
     if (slots.empty()) {
-      std::snprintf(text, sizeof(text), " (round %zu slot(s) costing up to %.0f m/s in %d search(es): %.1f s against %.1f)", found,
-                    worst, round + 1, second.Duration(), first.Duration());
+      std::snprintf(text, sizeof(text),
+                    " (round %zu slot(s) costing up to %.0f m/s in %d search(es): %.1f s against %.1f, %.0f m/s lost in dips against %.0f)",
+                    found, worst, round + 1, second.Duration(), first.Duration(), lost2, lost1);
       detour.info += text;
       detour.milliseconds += result.milliseconds + extra - detour.milliseconds;
       return detour;

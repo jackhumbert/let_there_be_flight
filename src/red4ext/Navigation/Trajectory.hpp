@@ -71,4 +71,8 @@ Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aL
 
 const char *LimitName(TrajectorySample::Limit aLimit);
 
+// m/s lost in dips: each slowdown the car speeds up out of again (by aDip m/s or more both ways),
+// outside the last aApproach metres (the landing), summed as top less low (tools/navplan/dips.py)
+float DipLoss(const Trajectory &aTrajectory, float aApproach = 300.0f, float aDip = 5.0f);
+
 } // namespace Navigation

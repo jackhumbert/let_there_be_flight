@@ -158,8 +158,8 @@ PlanResult PlanWithRetries(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const Pl
 
 // PlanWithRetries, then for a racing line the slots whose room would cost the car too much speed
 // (Trajectory.hpp's room caps, over slotDetour*): the route searched again round them (Avoid), and
-// round any the new line finds, up to three searches; kept when its line has none left and takes at
-// most 20% longer; otherwise the first line, flown slower there. Jack, 2026-10-30: a small slowdown is flown, a large one routed round.
+// round any the new line finds, up to three searches; kept when its line has none left, takes at most
+// 20% longer and loses less speed in dips (DipLoss); otherwise the first line, flown slower there. Jack, 2026-10-30: a small slowdown is flown, a large one routed round.
 PlanResult PlanRace(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &aParams,
                     const std::function<void(const PlanResult &)> &aAttempt = {});
 
