@@ -113,15 +113,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let droneRollLook: Float = 1.5;     // s of the line ahead the roll is held for (DroneTurnAhead; 1.0 still eased 31 to 24 degrees before the Dogtown gap)
   public let droneRollStep: Float = 0.2;      // s between the points it looks at
 
-  // Race is how the Autopilot flies (2026-10-27): the racing line at the vehicle's full thrust,
-  // banking the lift into turns; implies aerobatics. No longer a Mod Setting (a saved "off" would
-  // have kept players on the old way); false is the archived normal mode, straight legs between
-  // the planner's waypoints with rounded corners.
+  // The Autopilot always flies the Race (the racing line at the car's full thrust). Nothing reads
+  // this any more; it is kept for LtbfBridge.Aerobatics's race argument (docs/history.md).
   public let raceMode: Bool = true;
 
   // takeoff and landing
-  public let takeoffHeight: Float = 10.0;     // m above the floor climbed straight up before flying off
-  public let climbRate: Float = 5.0;          // m/s during the takeoff climb
   public let approachHeight: Float = 20.0;    // m above the landing spot the route ends at
   public let descentRate: Float = 4.0;        // m/s at most during the landing descent
   public let touchdownRate: Float = 0.8;      // m/s in the last metres
@@ -142,29 +138,15 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let padSnapLevel: Float = 6.0;       // m between the destination's height and the pad's deck
 
   // easing
-  public let accelUp: Float = 7.0;            // m/s2 at most when speeding up
   public let brakeMax: Float = 9.0;           // m/s2 at most when slowing (planned at brakeAccel)
   public let speedGain: Float = 1.0;          // 1/s, speed error -> rate of change of the flown speed
-  public let speedJerk: Float = 6.0;          // m/s3, how quickly that rate may change
   public let accelJerk: Float = 20.0;         // m/s3, rate limit of the acceleration command
   public let yawSmoothing: Float = 0.25;      // s, low-pass of the yaw input
-  public let yawSlew: Float = 1.5;            // 1/s, most the yaw input may change per second
-  public let bankRate: Float = 30.0;          // deg/s, most the bank target may change per second
-  public let verticalTurnYaw: Float = 0.2;    // most yaw input while turning during takeoff / landing
-  public let maxYawTurn: Float = 0.3;         // most yaw input for turning (about 0.9 rad/s)
-  public let rollDamping: Float = 0.35;       // s, measured roll rate taken out of the bank command
-  // m cut back from each route corner for a Bezier arc (at most 40% of each leg; halved until the
-  // arc is clear on the nav map); 0 = sharp corners. The arcs' bends are judged from their own
-  // geometry (routeArc): judged like sharp corners they read as gentle, 2026-10-26
-  public let cornerRound: Float = 40.0;
   public let brakeLead: Float = 0.6;          // s of the flown speed by which planned braking starts earlier
-  public let brakeJerk: Float = 12.0;         // m/s3, how quickly braking may build up
 
   // controller tuning, not in Mod Settings
   public let velocityGain: Float = 1.2;       // 1/s, velocity error -> acceleration
   public let maxAccel: Float = 12.0;          // m/s2
-  public let yawGain: Float = 0.04;           // full yaw input at 25 degrees heading error
-  public let yawRateDamping: Float = 0.25;
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Autopilot")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Autopilot-Max-Bank")
@@ -173,8 +155,6 @@ public class FlightModeAutopilot extends FlightModeStandard {
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "45.0")
   public let maxBankDeg: Float = 25.0;
-  public let lateralCorrection: Float = 0.6;  // 1/s, sideways velocity error -> extra bank accel (1.0 slammed the bank between +-25 deg, 0.3 let the car drift 9 m wide after bends)
-  public let bankTime: Float = 0.5;           // s, smoothing of the bank target
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Autopilot")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Autopilot-Max-Pitch")
@@ -183,8 +163,6 @@ public class FlightModeAutopilot extends FlightModeStandard {
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "45.0")
   public let maxPitchDeg: Float = 20.0;
-  public let bankSign: Float = 1.0;           // flip if the car banks out of turns
-  public let pitchSign: Float = 1.0;          // flip (-1) if the nose drops when climbing
   public let overrideHold: Float = 1.5;       // s the autopilot stays off after player input
   public let replanDistance: Float = 30.0;    // m off the route before replanning
   public let arriveDistance: Float = 6.0;
@@ -232,8 +210,6 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let raceBankTime: Float = 0.12;      // s, smoothing of the acceleration the attitude follows
   public let lineRadiusSpan: Float = 15.0;    // m either side of a racing line point its bend radius is taken over
   public let raceOffLine: Float = 4.0;        // m off a racing line before the car is treated as off it
-  public let raceTakeoffHeight: Float = 3.0;  // m above the floor before the racing line takes over
-  public let coverLimit: Float = 6.0;         // m the map's free space may start above the car before it is under cover
   // race route character (planner, Navigation/Planner.hpp; tools/navplan/laptime.py compares them):
   // between the buildings (40 m, climbing costly, 8 m passages at least: city centre to Dogtown
   // about 80 s, the street start in ManualSave-181 to Dogtown 33 s) or over the rooftops (100 m,
@@ -296,10 +272,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // bank easing with aerobatics: the bank follows its target through a critically damped second
   // order filter with limited roll rate and roll acceleration (the target flicks as route points
   // pass; followed directly, the car rolled at 21 rad/s2 and more, 2026-10-26)
-  public let rollFrequency: Float = 4.0;      // rad/s
   public let raceRollFrequency: Float = 2.5;  // rad/s
-  public let rollRateMax: Float = 2.5;        // rad/s
-  public let rollAccelMax: Float = 10.0;      // rad/s2
   // Race rolls are the gentlest movements: at 6 rad/s, 2.5 rad/s and 10 rad/s2 the bank swung up to
   // 90 degrees within a second between the Dogtown towers (2026-10-27); the ribbon looks further
   // ahead (ribbonLead) so the slower roll still starts in time
@@ -362,7 +335,6 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let overrideTimer: Float;
   public let replanTimer: Float;
   public let logTimer: Float;
-  public let bankTarget: Float;               // rad, smoothed
   public let curvatureAhead: Float;           // 1/m, signed (positive = turning right)
   public let stuckTimer: Float;
   public let lastPosition: Vector4;           // last position CheckedPosition passed
@@ -374,15 +346,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let blockedTimer: Float;
   public let settleTimer: Float;
   public let routeGoal: Vector4;              // where the route ends: the destination, or above the landing spot
-  public let takingOff: Bool;
-  public let underCover: Bool;                // engaged somewhere covered the map does not have: holding
-  public let takeoffPoint: Vector4;
   public let landing: Bool;                   // the destination is on the ground: descend and touch down there
   public let landingSpot: Vector4;            // car-centre resting height (the bake's floor)
   public let landingPad: Int32;               // FlightNavMap helipad index landed on, -1: a spot found on the map (set in Activate)
   public let touchdownTimer: Float;
-  public let takeoffStartZ: Float;
-  public let takeoffHeading0: Vector4;
   public let landingStartZ: Float;
   public let landingHeading0: Vector4;
   public let landingHeading: Vector4;
@@ -483,24 +450,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
     ArrayClear(this.gateTail);
     this.lastRoll = -AsinF(ClampF(Vector4.Dot(this.component.stats.d_right, FlightUtils.Up()), -1.0, 1.0));
     this.rollRate = 0.0;
-    // In Race the take-off is part of the plan: the route starts at the car, and the planner finds
-    // the way out from under a deck or between buildings itself (PlanParams.startRadius). The
-    // straight climb and the hold under cover are the archived normal mode's.
-    this.underCover = !this.raceMode && this.UnderCover(this.holdPosition);
-    if this.underCover {
-      // somewhere covered the map does not have (a car park, under a structure): the nearest free
-      // space is above the roof, and climbing to it went 47 m up inside a building, 2026-10-27
-      this.status = "under cover";
-      FlightLog.Warn("[Autopilot] under cover at " + FloatToStringPrec(this.holdPosition.X, 1) + ", " + FloatToStringPrec(this.holdPosition.Y, 1)
-        + ", " + FloatToStringPrec(this.holdPosition.Z, 1) + ": holding, move out into the open first");
-    }
-    this.takingOff = !this.raceMode && !this.underCover && this.TakeoffPoint(this.holdPosition, this.takeoffPoint);
-    this.takeoffStartZ = this.holdPosition.Z;
-    this.takeoffHeading0 = this.component.stats.d_forward2D;
+    // the take-off is part of the plan: the route starts at the car, and the planner finds the way
+    // out from under a deck or between buildings itself (PlanParams.startRadius)
     this.aheadSmooth = 15.0;
-    if this.takingOff {
-      this.holdPosition = this.takeoffPoint;
-    }
     this.maneuver = null;
     this.maneuverCooldown = 0.0;
     this.stuntTimer = 0.0;
@@ -531,31 +483,6 @@ public class FlightModeAutopilot extends FlightModeStandard {
       }
     }
     return false;
-  }
-
-  // The car is below the free space the map has here by more than coverLimit: under something the
-  // map closed (a car park, an arcade under a tower). Not when the map has nothing here at all.
-  private func UnderCover(p: Vector4) -> Bool {
-    let gap: Vector2;
-    if !FlightNavMap.IsLoaded() || FlightNavMap.IsFree(p) || !FlightModeAutopilot.GapAt(p, gap) {
-      return false;
-    }
-    return gap.X - p.Z > this.coverLimit;
-  }
-
-  // Near the floor: climb straight up first, clear of traffic and street furniture, then fly off.
-  private func TakeoffPoint(p: Vector4, out point: Vector4) -> Bool {
-    let gap: Vector2;
-    if !FlightNavMap.IsLoaded() || !FlightModeAutopilot.GapAt(p, gap) {
-      return false;
-    }
-    // Race: only clear of the ground, then the racing line climbs away while speeding up
-    let z = MinF(gap.X + (this.raceMode ? this.raceTakeoffHeight : this.takeoffHeight), gap.Y - 2.0);
-    if z - p.Z < 2.0 {
-      return false;
-    }
-    point = new Vector4(p.X, p.Y, z, 1.0);
-    return true;
   }
 
   // A destination on the ground (a GPS pin on a street): the nearest column within reach that is
@@ -847,7 +774,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       return;
     }
     // Race: the planner spreads the route into a racing line of wide bends
-    this.requestRace = this.raceMode;
+    this.requestRace = true;
     this.requestJoin = false;
     // a replan towards a gate still ahead (off the route on the way there): through it again. Without
     // the run the leg ended at the gate's entry, and the next one was joined before it (2026-10-28).
@@ -855,9 +782,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       && Vector4.Distance(this.routeGoal, this.routeGateEntry) < 1.0 {
       this.gateTail = this.routeGateTail;
     }
-    this.request = this.raceMode
-      ? FlightNavMap.PlanRaceAsync(from, this.routeGoal, this.raceRouteHeight, this.raceClimbCost, this.raceMinPassage, this.raceSearchWeight, this.raceTurnCost, this.Vehicle())
-      : FlightNavMap.PlanAsync(from, this.routeGoal, false);
+    this.request = FlightNavMap.PlanRaceAsync(from, this.routeGoal, this.raceRouteHeight, this.raceClimbCost, this.raceMinPassage, this.raceSearchWeight, this.raceTurnCost, this.Vehicle());
     this.replanTimer = 3.0;
     if ArraySize(this.route) < 2 {
       // nothing to follow meanwhile: hold here (a replan keeps following the old route)
@@ -867,9 +792,6 @@ public class FlightModeAutopilot extends FlightModeStandard {
   }
 
   private func UpdateRoute(timeDelta: Float) -> Void {
-    if this.underCover {
-      return;
-    }
     this.replanTimer -= timeDelta;
     let target: Vector4;
     let has = this.CurrentDestination(target);
@@ -893,7 +815,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
         this.hasDestination = true;
         ArrayClear(this.route);
         this.ChooseRouteGoal();
-        this.RequestRoute(this.takingOff ? this.takeoffPoint : this.component.stats.d_position);
+        this.RequestRoute(this.component.stats.d_position);
       }
     } else {
       // no destination tracked (none when engaged, or untracked on the way): free roam
@@ -970,9 +892,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
         this.gateEndS = gateLeg ? total : 0.0;
         this.status = "following";
         ArrayClear(this.routeSpeed);
-        if this.raceMode {
-          this.BuildSpeedProfile();
-        }
+        this.BuildSpeedProfile();
       } else {
         this.status = "no route";
         this.holdPosition = this.component.stats.d_position;
@@ -993,7 +913,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.requestJoin = false;
     this.freeRoamCentre = stats.d_position;
     ArrayClear(this.route);
-    this.holdPosition = this.takingOff ? this.takeoffPoint : stats.d_position;
+    this.holdPosition = stats.d_position;
     this.replanTimer = 0.0;
     this.status = "free roam";
     this.PublishFreeRoamUI();
@@ -1120,7 +1040,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let n = ArraySize(this.route);
     if n < 2 {
       let heading = Vector4.Length2D(stats.d_velocity) > 3.0 ? FlightModeAutopilot.Flat(stats.d_velocity) : FlightModeAutopilot.Flat(stats.d_forward);
-      this.NextFreeRoamLeg(this.takingOff ? this.takeoffPoint : stats.d_position, heading, false);
+      this.NextFreeRoamLeg(stats.d_position, heading, false);
       return;
     }
     if !Equals(this.status, "following") || this.routeLength[n - 1] - this.closestS > this.freeRoamChainAt {
@@ -1217,9 +1137,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     }
     this.gateEndS = this.spliceGate ? total : MaxF(this.gateEndS - trimmed, 0.0);
     ArrayClear(this.routeSpeed);
-    if this.raceMode {
-      this.BuildSpeedProfile();
-    }
+    this.BuildSpeedProfile();
     FlightLog.Info("[Autopilot] free roam: next leg joined, " + FloatToStringPrec(total - this.closestS, 0) + " m ahead");
   }
 
@@ -1244,9 +1162,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
       let rounded = false;
       // full cut, then half; below that the corner stays sharp: tiny arcs made for very slow
       // corners (8 m/s), where the lookahead cutting a sharp corner flew it faster and fine
-      let cut = this.raceMode ? this.raceCornerRound : this.cornerRound;
-      let share = this.raceMode ? this.raceRoundShare : 0.4;
-      let smallest = this.raceMode ? this.raceRoundMin : 0.5 * this.cornerRound;
+      let cut = this.raceCornerRound;
+      let share = this.raceRoundShare;
+      let smallest = this.raceRoundMin;
       while !rounded && cut >= smallest {
         let d1 = MinF(share * Vector4.Distance(a, b), cut);
         let d2 = MinF(share * Vector4.Distance(b, c), cut);
@@ -1274,7 +1192,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
             rounded = true;
           }
         }
-        cut *= this.raceMode ? this.raceRoundStep : 0.5;
+        cut *= this.raceRoundStep;
       }
       if !rounded {
         ArrayPush(out, b);
@@ -1467,46 +1385,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       this.remaining += Vector4.Distance(this.route[k], this.route[k + 1]);
       k += 1;
     }
-    if this.raceMode {
-      return this.RaceAllowedSpeed(toCorner);
-    }
-    // braking curves start brakeLead seconds early, the time the eased speed takes to ramp into
-    // full braking
-    let lead = this.speedCmd * this.brakeLead;
-    let allowed = MinF(this.maxSpeed, SqrtF(2.0 * this.brakeAccel * MaxF(this.remaining - 2.0 - lead, 0.0)));
-    // each corner is judged by the route's direction a stretch before and after it, so a run of
-    // small steps reads as the bend it really is instead of many tight corners
-    let distance = toCorner;
-    let start = this.routeLength[this.segment + 1] - toCorner; // route distance of the car
-    k = this.segment + 1;
-    while k < n - 1 && distance < 600.0 {
-      let s = this.routeLength[k];
-      if ArraySize(this.routeArc) == n && this.routeArc[k] {
-        // on a rounded corner: the bend is the arc's own
-        let radius = FlightModeAutopilot.Circumradius(this.route[k - 1], this.route[k], this.route[k + 1]);
-        let arcSpeed = SqrtF(this.CorneringAccel() * MaxF(radius, 1.0));
-        allowed = MinF(allowed, SqrtF(arcSpeed * arcSpeed + 2.0 * this.brakeAccel * MaxF(s - start - lead, 0.0)));
-      } else {
-        let before = this.PointAt(s - this.cornerSpan);
-        let after = this.PointAt(s + this.cornerSpan);
-        let inDir = this.route[k] - before;
-        let outDir = after - this.route[k];
-        if Vector4.Length(inDir) > 0.5 && Vector4.Length(outDir) > 0.5 {
-          let angle = AcosF(ClampF(Vector4.Dot(Vector4.Normalize(inDir), Vector4.Normalize(outDir)), -1.0, 1.0));
-          if angle > 0.05 {
-            let tangent = MinF(Vector4.Length(inDir), Vector4.Length(outDir));
-            // (x 0.75: at the sharp corners left unrounded the car turned tighter than this
-            // estimate, 9 m/s2 sideways against a 5 m/s2 limit; 0.55 crawled at 8 m/s, 2026-10-26)
-            let radius = 0.75 * tangent / TanF(angle * 0.5);
-            let cornerSpeed = SqrtF(this.CorneringAccel() * MaxF(radius, 1.0));
-            allowed = MinF(allowed, SqrtF(cornerSpeed * cornerSpeed + 2.0 * this.brakeAccel * MaxF(s - start - tangent - lead, 0.0)));
-          }
-        }
-      }
-      distance = s - start;
-      k += 1;
-    }
-    return allowed;
+    return this.RaceAllowedSpeed(toCorner);
   }
 
   // The route from `from` (on segment this.segment) is free on the nav map for `along` metres.
@@ -1766,7 +1645,6 @@ public class FlightModeAutopilot extends FlightModeStandard {
       // manual: player inputs as given, altitude held by damping vertical speed
       this.overrideTimer -= timeDelta;
       this.holdPosition = p;
-      this.takingOff = false;
       this.speedCmd = stats.d_speed;
       this.speedRate = 0.0;
       this.accelCmd = new Vector4(0.0, 0.0, 0.0, 0.0);
@@ -1776,31 +1654,18 @@ public class FlightModeAutopilot extends FlightModeStandard {
         this.maneuver = null;
       }
       this.headingRef = stats.d_forward2D;
-      if this.underCover && !this.UnderCover(p) {
-        this.underCover = false; // flown out into the open by hand: plan from here
-        this.status = "idle";
-      }
       this.UpdateWithNormalLift(timeDelta, FlightUtils.Up(), 9.81 * this.gravityFactor + this.component.lift * this.standardModeLiftFactor - v.Z);
       return;
     }
 
     // where to go
-    // takeoff: up the column to the takeoff point first (the route starts there)
-    if this.takingOff && Vector4.Distance(p, this.takeoffPoint) < 1.5 && AbsF(v.Z) < 2.0 {
-      this.takingOff = false;
-      FlightLog.Info("[Autopilot] takeoff done at " + FloatToStringPrec(p.Z, 1));
-    }
     let target = this.holdPosition;
     this.targetSpeed = 0.0;
     this.targetRate = 0.0;
     this.emergencyBrake = false;
-    // a pitch manoeuvre flies its own shape; the route is picked up again after it
-    if !this.IsAerobatic() && IsDefined(this.maneuver) {
-      this.EndManeuver(); // switched off in Mod Settings mid-manoeuvre
-    }
     let shaped = IsDefined(this.maneuver) && !this.maneuver.IsOverlay();
     this.overlayVelocity = new Vector4(0.0, 0.0, 0.0, 0.0);
-    let following = Equals(this.status, "following") && ArraySize(this.route) >= 2 && !this.takingOff && !shaped;
+    let following = Equals(this.status, "following") && ArraySize(this.route) >= 2 && !shaped;
     if following {
       let closest: Vector4;
       let offRoute: Float;
@@ -1840,7 +1705,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       }
       this.curvatureAhead = this.CurvatureAhead(closest, ahead);
       // smoothed: it steps as route points pass
-      let curvature = this.raceMode ? this.CurvatureVector(closest, ahead) : new Vector4(0.0, 0.0, 0.0, 0.0);
+      let curvature = this.CurvatureVector(closest, ahead);
       this.pathCurvature += (curvature - this.pathCurvature) * ClampF(timeDelta / 0.25, 0.0, 1.0);
       // barrel roll: aim at the route point moved round the roll's circle
       if IsDefined(this.maneuver) && Equals(this.maneuver.kind, FlightManeuverKind.BarrelRoll) {
@@ -1850,7 +1715,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
         target += offset;
       }
       this.targetSpeed = this.AllowedSpeed(closest);
-      this.targetRate = this.raceMode ? this.RaceTargetRate(stats.d_speed) : 0.0;
+      this.targetRate = this.RaceTargetRate(stats.d_speed);
       // off the route: slow down while getting back, the route's margins assume the car is on it
       let slackOff = this.routeLine ? this.raceOffLine + 1.0 : 2.0;
       let slowdown = this.routeLine ? 0.5 * this.offRouteSlowdown : this.offRouteSlowdown;
@@ -1879,7 +1744,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
         let lineHeld = this.routeLine && offRoute < this.raceOffLine;
         if blockedAt && !lineHeld && travelled > 10.0 && this.DistanceToRoute(hit) > 2.0 && this.RouteClear(closest, Vector4.Length(reach)) {
           let room = MaxF(travelled - 5.0, 0.0);
-          this.targetSpeed = MinF(this.targetSpeed, SqrtF(2.0 * (this.raceMode ? this.raceMargin * this.RaceDecel(0.0) : this.brakeAccel) * room));
+          this.targetSpeed = MinF(this.targetSpeed, SqrtF(2.0 * this.raceMargin * this.RaceDecel(0.0) * room));
           this.blockedAhead = true;
         }
       }
@@ -1890,10 +1755,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
       // (slowing responds faster than speeding up: lagging behind a braking curve means arriving
       // too fast; AllowedSpeed also starts its curves brakeLead earlier for the ramp-in)
       let slowing = this.targetSpeed < this.speedCmd;
-      let rateDown = this.raceMode ? this.RaceDecel(this.speedCmd) : this.brakeMax;
-      let rateUp = this.raceMode ? this.Vehicle().Accel(this.speedCmd) : this.accelUp;
+      let rateDown = this.RaceDecel(this.speedCmd);
+      let rateUp = this.Vehicle().Accel(this.speedCmd);
       let wantedRate = ClampF(this.targetRate + (this.targetSpeed - this.speedCmd) * (slowing ? 2.0 * this.speedGain : this.speedGain), -rateDown, rateUp);
-      let jerk = (this.raceMode ? this.raceJerk : (slowing ? this.brakeJerk : this.speedJerk)) * timeDelta;
+      let jerk = this.raceJerk * timeDelta;
       this.speedRate += ClampF(wantedRate - this.speedRate, -jerk, jerk);
       this.speedCmd = MaxF(this.speedCmd + this.speedRate * timeDelta, 0.0);
       // blocked space: ease into it like any other limit while there is room to stop at brakeMax,
@@ -2041,9 +1906,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       if Vector4.Length(desiredVelocity) > 10.0 {
         desiredVelocity = Vector4.Normalize(desiredVelocity) * 10.0;
       }
-      if this.takingOff {
-        desiredVelocity.Z = ClampF(desiredVelocity.Z, -this.climbRate, this.climbRate);
-      } else if Equals(this.status, "descending") {
+      if Equals(this.status, "descending") {
         // over the spot first, at the height the descent began: moved to another spot on arrival
         // (the first one taken by a parked car), the car slid 28 m across while sinking and hit a
         // walkway at 9 m above the floor on the way (2026-10-29)
@@ -2059,7 +1922,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     }
     let accel = (desiredVelocity - v) * this.velocityGain;
     let jerk = this.accelJerk;
-    this.onLine = this.raceMode && following && this.routeLine;
+    this.onLine = following && this.routeLine;
     if this.onLine {
       let tangent: Vector4;
       let bend: Vector4;
@@ -2080,7 +1943,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       target = this.PointAt(this.closestS + 30.0);
       this.lookahead = target;
       jerk = this.raceJerk;
-    } else if this.raceMode && following {
+    } else if following {
       // the bend's own acceleration ahead of time (velocity error alone turns too late at speed);
       // the thrust limits are applied in the car's frame (FlyAerobatic)
       accel += this.pathCurvature * (this.speedCmd * this.speedCmd);
@@ -2139,111 +2002,14 @@ public class FlightModeAutopilot extends FlightModeStandard {
     // the landing heading in step with the height lost, so the turn and the climb or descent
     // happen as one motion and end together
     let heading = new Vector4(desiredVelocity.X, desiredVelocity.Y, 0.0, 0.0);
-    if this.takingOff {
-      let goal = this.takeoffHeading0;
-      if ArraySize(this.route) >= 2 {
-        goal = new Vector4(this.route[1].X - this.route[0].X, this.route[1].Y - this.route[0].Y, 0.0, 0.0);
-      }
-      let f = ClampF((p.Z - this.takeoffStartZ) / MaxF(this.takeoffPoint.Z - this.takeoffStartZ, 0.5), 0.0, 1.0);
-      heading = FlightModeAutopilot.BlendHeading(this.takeoffHeading0, goal, f * f * (3.0 - 2.0 * f)) * 10.0;
-    } else if Equals(this.status, "descending") || Equals(this.status, "landed") {
+    if Equals(this.status, "descending") || Equals(this.status, "landed") {
       let f = ClampF((this.landingStartZ - p.Z) / MaxF(this.landingStartZ - this.landingSpot.Z, 0.5), 0.0, 1.0);
       heading = FlightModeAutopilot.BlendHeading(this.landingHeading0, this.landingHeading, f * f * (3.0 - 2.0 * f)) * 10.0;
     }
-    if this.IsAerobatic() {
-      this.FlyAerobatic(timeDelta, accel, heading);
-      return;
-    }
-    // heading error part of the yaw input, eased into and out of turns (low-pass and a limit on how
-    // fast it may change); the yaw-rate damping below stays instant, delaying it made the heading
-    // swing back and forth (+-4 rad/s) when the car started facing away from the route
-    let yawTurn = 0.0;
-    if Vector4.Length(heading) > 2.0 {
-      let error = Vector4.GetAngleDegAroundAxis(Vector4.Normalize(heading), stats.d_forward2D, FlightUtils.Up());
-      // capped to what the path needs (about twice speed x curvature ahead, as yaw input at
-      // roughly 3 rad/s per unit) and at least maxYawTurn: uncapped, the heading chased the
-      // swinging aim direction coming out of sharp corners at up to 1.5 rad/s; capped flat at
-      // 0.3, a 12 m/s bend needing 0.6 rad/s ran 9 m wide
-      let yawCap = ClampF(MaxF(this.maxYawTurn, 0.67 * stats.d_speed2D * AbsF(this.curvatureAhead)), 0.0, 1.0);
-      yawTurn = ClampF(error * this.yawGain, -yawCap, yawCap);
-      // turning with the climb or descent: gently, the heading may trail the height a little and
-      // finish the turn at the end (a short climb, or a descent losing most height early, made
-      // for 1.5 rad/s swings)
-      if this.takingOff || Equals(this.status, "descending") || Equals(this.status, "landed") {
-        yawTurn = ClampF(yawTurn, -this.verticalTurnYaw, this.verticalTurnYaw);
-      }
-    }
-    let yawStep = (yawTurn - this.yawCmd) * ClampF(timeDelta / this.yawSmoothing, 0.0, 1.0);
-    this.yawCmd += ClampF(yawStep, -this.yawSlew * timeDelta, this.yawSlew * timeDelta);
-    // positive yaw input turns right, which is a negative angular velocity about Z, so the damping
-    // term adds the rate back in (it opposes the turn already under way)
-    let yaw = 0.0;
-    if Vector4.Length(heading) > 2.0 || AbsF(this.yawCmd) > 0.01 {
-      yaw = ClampF(this.yawCmd + stats.d_angularVelocity.Z * this.yawRateDamping, -1.0, 1.0);
-    }
-
-    // acceleration in the car's frame
-    let local = Quaternion.Conjugate(stats.d_orientation) * accel;
-    let surge = ClampF(local.Y / this.standardModeSurgeFactor, -1.0, 1.0);
-    // the brake adds a lot of deceleration at once: ease it in and keep it to half, full only in
-    // an emergency stop
-    let brake = this.emergencyBrake ? ClampF(-local.Y / 12.0, 0.0, 1.0) : ClampF((-local.Y - 2.0) / 24.0, 0.0, 0.5);
-    // sideways thrust is what turns the car: in this flight mode the lift stays along world up
-    // whatever the bank (d_localUp), so the bank is for looks; full sway at every speed (halved at
-    // plane speeds, the car slid 14 m wide out of bends at full bank, 2026-10-26)
-    let sway = ClampF(local.X / this.standardModeSwayFactor, -1.0, 1.0);
-
-    // coordinated bank at speed: the route's own turn (v^2 x curvature) plus a small correction
-    // for sideways velocity error, smoothed; nose pitch along the climb
-    let lateralError = Vector4.Dot(desiredVelocity - v, stats.d_right);
-    let lateral = stats.d_speed2D * stats.d_speed2D * this.curvatureAhead + this.lateralCorrection * lateralError * stats.d_speed2D * 0.1;
-    let bankWanted = ClampF(AtanF(lateral, 9.81), -Deg2Rad(this.maxBankDeg), Deg2Rad(this.maxBankDeg)) * blend;
-    // smoothed, and limited in how fast it may change, so the car rolls into and out of a turn
-    // instead of flicking between full bank either way
-    let bankStep = (bankWanted - this.bankTarget) * ClampF(timeDelta / this.bankTime, 0.0, 1.0);
-    this.bankTarget += ClampF(bankStep, -Deg2Rad(this.bankRate) * timeDelta, Deg2Rad(this.bankRate) * timeDelta);
-    // roll damping: the attitude control tracks the target with a lag and swings past it (rocking
-    // by 10 to 20 degrees); take the measured roll rate out of the command so it eases in instead
-    let rollNow = -AsinF(ClampF(Vector4.Dot(stats.d_right, FlightUtils.Up()), -1.0, 1.0)); // same sense as bankTarget
-    if timeDelta > 0.0001 {
-      let rate = (rollNow - this.lastRoll) / timeDelta;
-      this.rollRate += (rate - this.rollRate) * ClampF(timeDelta / 0.1, 0.0, 1.0);
-    }
-    this.lastRoll = rollNow;
-    let bank = this.bankTarget - this.rollDamping * this.rollRate;
-    let climb = ClampF(AtanF(v.Z, MaxF(stats.d_speed2D, 1.0)), -Deg2Rad(this.maxPitchDeg), Deg2Rad(this.maxPitchDeg)) * blend;
-    let normal = FlightUtils.Up();
-    // UpdateWithNormalLift adds yaw x generalRollWithYaw of roll; take it back out, the bank is ours
-    normal = Vector4.RotateAxis(normal, stats.d_forward, this.bankSign * bank - yaw * FlightSettings.GetInstance().generalRollWithYaw);
-    normal = Vector4.RotateAxis(normal, stats.d_right, -this.pitchSign * climb);
-
-    let upright = MaxF(Vector4.Dot(stats.d_up, FlightUtils.Up()), 0.5);
-    let liftForce = (9.81 * this.gravityFactor + accel.Z) / upright;
-
-    this.component.surge = surge;
-    this.component.yaw = yaw;
-    this.component.sway = sway;
-    this.component.lift = 0.0;
-    this.component.linearBrake = brake;
-    this.component.angularBrake = 0.0;
-    this.UpdateWithNormalLift(timeDelta, normal, liftForce);
-
-    this.logTimer -= timeDelta;
-    if this.logTimer <= 0.0 {
-      this.logTimer = 1.0;
-      FlightLog.Info("[Autopilot] " + this.status + " seg " + ToString(this.segment) + "/" + ToString(ArraySize(this.route))
-        + " speed " + FloatToStringPrec(stats.d_speed, 1) + " target " + FloatToStringPrec(this.targetSpeed, 1)
-        + " remaining " + FloatToStringPrec(this.remaining, 0) + " yaw " + FloatToStringPrec(yaw, 2)
-        + " surge " + FloatToStringPrec(surge, 2) + " bank " + FloatToStringPrec(Rad2Deg(bank), 1)
-        + " z " + FloatToStringPrec(p.Z, 1) + " -> " + FloatToStringPrec(target.Z, 1));
-    }
+    this.FlyAerobatic(timeDelta, accel, heading);
   }
 
   // --- race ---------------------------------------------------------------------------------
-
-  private func IsAerobatic() -> Bool {
-    return this.aerobatics || this.raceMode;
-  }
 
   // The car's limits (FlightVehicleModel, worked out in C++ in Navigation/Vehicle.hpp, which the
   // planner and navplan use too), filled from the car's stats and this mode's tuning.
@@ -2295,7 +2061,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   }
 
   private func TopSpeed() -> Float {
-    return this.raceMode ? this.RaceTopSpeed() : this.maxSpeed;
+    return this.RaceTopSpeed();
   }
 
   // Bend radius at route point k (3D): from an arc's own geometry, or for a sharp corner from the
@@ -2982,14 +2748,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
     if this.droneStyle {
       return "manoeuvres are disconnected (drone style)";
     }
-    if !this.IsAerobatic() {
-      return "aerobatics off";
-    }
     if IsDefined(this.maneuver) {
       return "busy with " + this.maneuver.GetName();
     }
     let k = IntEnum<FlightManeuverKind>(kind);
-    let following = Equals(this.status, "following") && ArraySize(this.route) >= 2 && !this.takingOff;
+    let following = Equals(this.status, "following") && ArraySize(this.route) >= 2;
     if (Equals(k, FlightManeuverKind.AileronRoll) || Equals(k, FlightManeuverKind.BarrelRoll)) && !following {
       return "rolls need a route to follow";
     }
@@ -3040,9 +2803,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
     }
     let wanted = AtanF(Vector4.Dot(up, side), Vector4.Dot(up, level));
     let error = FlightModeAutopilot.WrapAngle(wanted - this.bankAngle);
-    let f = this.raceMode ? this.raceRollFrequency : this.rollFrequency;
-    let accelMax = this.raceMode ? this.raceRollAccelMax : this.rollAccelMax;
-    let rateMax = this.raceMode ? this.raceRollRateMax : this.rollRateMax;
+    let f = this.raceRollFrequency;
+    let accelMax = this.raceRollAccelMax;
+    let rateMax = this.raceRollRateMax;
     let rollAccel = ClampF(f * f * error - 2.0 * f * this.bankRateNow, -accelMax, accelMax);
     this.bankRateNow = ClampF(this.bankRateNow + rollAccel * dt, -rateMax, rateMax);
     this.bankAngle = FlightModeAutopilot.WrapAngle(this.bankAngle + this.bankRateNow * dt);
@@ -3054,7 +2817,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // take-off and the arrival) the nose's own. Elsewhere the nose stays as it is.
   private func EasePitch(dt: Float, fwd: Vector4) -> Vector4 {
     let level = Vector4.Normalize2D(fwd);
-    if !this.raceMode || Vector4.Length(level) < 0.5 {
+    if Vector4.Length(level) < 0.5 {
       this.SyncPitch(fwd);
       return fwd;
     }
@@ -3326,7 +3089,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       fwd = Vector4.Length(fwd) > 0.1 ? Vector4.Normalize(fwd) : this.headingRef;
       // nearer level on a steep path (2026-10-27), then eased
       fwd = this.EasePitch(dt, this.Unsteep(fwd));
-      this.attAccel += (accel - this.attAccel) * ClampF(dt / (this.raceMode ? this.raceBankTime : this.bankTime), 0.0, 1.0);
+      this.attAccel += (accel - this.attAccel) * ClampF(dt / this.raceBankTime, 0.0, 1.0);
       let bankAccel = this.attAccel;
       if this.onLine {
         // the ribbon: the acceleration the line's bend needs ahead, at the speed flown
@@ -3340,11 +3103,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
         let need = Vector4.Length(bankAccel);
         bankAccel = need > this.ribbonDeadband ? bankAccel * ((need - this.ribbonDeadband) / need) : new Vector4(0.0, 0.0, 0.0, 0.0);
       }
-      if this.raceMode {
-        // pushing over: past raceTopDown the top would turn towards the ground and the car roll
-        // over; it stays upright and the thrust (negative lift) gives the rest
-        bankAccel.Z = MaxF(bankAccel.Z, -this.raceTopDown * 9.81 * this.gravityFactor);
-      }
+      // pushing over: past raceTopDown the top would turn towards the ground and the car roll
+      // over; it stays upright and the thrust (negative lift) gives the rest
+      bankAccel.Z = MaxF(bankAccel.Z, -this.raceTopDown * 9.81 * this.gravityFactor);
       let u = FlightAttitude.Across(bankAccel * blend + z * (9.81 * this.gravityFactor), fwd);
       let held = FlightAttitude.Across(this.targetUp, fwd);
       if Vector4.Length(u) < 1.0 {
@@ -3444,14 +3205,12 @@ public class FlightModeAutopilot extends FlightModeStandard {
 
     // thrust: the commanded acceleration and gravity, in the car's frame
     let local = Quaternion.Conjugate(stats.d_orientation) * (accel + z * (9.81 * this.gravityFactor));
-    if this.raceMode {
-      // what the player's inputs give at most: surge along the nose (reverse surge plus the brake
-      // when slowing), sway across, lift (on top of hover) along the top
-      let g = 9.81 * this.gravityFactor;
-      local.X = ClampF(local.X, -this.standardModeSwayFactor, this.standardModeSwayFactor);
-      local.Y = ClampF(local.Y, this.DragAccel(stats.d_speed) - this.RaceDecel(stats.d_speed), this.standardModeSurgeFactor);
-      local.Z = ClampF(local.Z, g - this.standardModeLiftFactor, g + this.standardModeLiftFactor);
-    }
+    // what the player's inputs give at most: surge along the nose (reverse surge plus the brake
+    // when slowing), sway across, lift (on top of hover) along the top
+    let g = 9.81 * this.gravityFactor;
+    local.X = ClampF(local.X, -this.standardModeSwayFactor, this.standardModeSwayFactor);
+    local.Y = ClampF(local.Y, this.DragAccel(stats.d_speed) - this.RaceDecel(stats.d_speed), this.standardModeSurgeFactor);
+    local.Z = ClampF(local.Z, g - this.standardModeLiftFactor, g + this.standardModeLiftFactor);
     this.force = local;
     this.thrustCmd = local;
     this.torque = torque;
