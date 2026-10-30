@@ -105,9 +105,8 @@ endif()
 set(MOD_NATIVE_TWEAKS ON)
 set(MOD_YAML_TWEAKS ON)
 configure_tweaks(src/tweaks)
-# Tweaks always go through TweakXL. tools/tweaks_to_json.py can write them as JSON for the game's built-in
-# TweakDB loader (2.5+), but that loader crashes on new typed flats, so the JSON is not shipped: the built-in
-# loader would pick up anything under a "tweaks" folder in the plugin directory.
+# Tweaks always go through TweakXL: the game's built-in TweakDB loader (2.5+) crashes on new typed flats
+# (docs/history.md, "tweaks_to_json.py removed").
 # The archive is not in git: it is packed from src/wolvenkit/source at build time (tools/pack_archive.py) with a
 # WolvenKit CLI and the game's Oodle dll (oo2ext_7_win64.dll: not redistributable, so CI gets it from a private repo,
 # .github/workflows). It is written to src/wolvenkit/packed (gitignored), where game.py --archive-only finds it.
