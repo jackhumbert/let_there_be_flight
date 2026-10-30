@@ -177,7 +177,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let maxAngularAccel: Float = 20.0;   // rad/s2
   // rad/s2 of angular acceleration per unit of mode torque x mass x thruster tensor / inertia
   // (FlightComponent scales the torque by those, PhysX divides by its own inertia), per axis.
-  // the torque probe (tools/bridge, TorqueProbe) on an Archer Quartz hovering, 2026-10-26: roll 0.52, yaw 0.95,
+  // the torque probe (tools/ingame, TorqueProbe) on an Archer Quartz hovering, 2026-10-26: roll 0.52, yaw 0.95,
   // pitch 2.5 to 2.8 over the first frames, then falling off while still pushed; all respond two
   // frames late (at 32 fps)
   public let torqueGainPitch: Float = 2.0;
@@ -317,7 +317,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // into the dive (2026-10-27)
   public let freeRoamMaxRise: Float = 100.0;
 
-  // state, public for tests (tools/bridge/ltbf_bridge.reds)
+  // state, public for tests (tools/ingame/ltbf_bridge.reds)
   public let status: String = "idle";
   public let route: array<Vector4>;
   public let routeLength: array<Float>;       // route distance of each corner from the start
