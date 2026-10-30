@@ -1692,7 +1692,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
       if ArraySize(this.route) >= 2 {
         this.RecheckLandingSpot(timeDelta);
       }
-      if this.freeRoam && this.remaining < this.arriveDistance && stats.d_speed < 3.0 {
+      if ArraySize(this.route) < 2 {
+        // the route was just cleared (wedged, replanning): nothing to arrive at this frame
+      } else if this.freeRoam && this.remaining < this.arriveDistance && stats.d_speed < 3.0 {
         // the end of the route before the next leg joined: on from here (ChainFreeRoam)
         this.holdPosition = this.route[ArraySize(this.route) - 1];
         ArrayClear(this.route);
