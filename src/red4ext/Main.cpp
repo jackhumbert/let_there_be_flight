@@ -174,7 +174,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
 
     // Input Loader releases (through v0.2.3) report 0.1.1 from Query(), so the floor must stay there
     auto inputLoader_version = RED4EXT_SEMVER(0, 1, 1);
-    auto archiveXL_version = RED4EXT_SEMVER(1, 28, 0);
+    auto archiveXL_version = RED4EXT_SEMVER(1, 28, 3); // world node mutations (requirements.md, CMakeLists.txt)
     auto tweakXL_version = RED4EXT_SEMVER(1, 12, 0);
     auto modSettings_version = RED4EXT_SEMVER(0, 2, 23);
 

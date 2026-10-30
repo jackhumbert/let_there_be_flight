@@ -153,6 +153,9 @@ find_package(PhysX3)
 find_package(ModSettings)
 find_package(InputLoader)
 find_package(ArchiveXL)
+# 1.28.3 fixed instanced mesh world node mutations (the proxy colliders' sector edits); the shared
+# FindArchiveXL asks for 1.28.0. Keep in step with archiveXL_version in Main.cpp.
+list(TRANSFORM MOD_REQUIREMENTS REPLACE "^ArchiveXL [0-9.]+\\+$" "ArchiveXL 1.28.3+")
 list(TRANSFORM MOD_REQUIREMENTS REPLACE "^(ArchiveXL .*)$" "\\1 (optional on game 2.5+)")
 find_package(TweakXL)
 
