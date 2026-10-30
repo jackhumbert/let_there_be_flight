@@ -175,6 +175,9 @@ add_executable(navplan EXCLUDE_FROM_ALL
   tools/navplan/navplan.cpp
   src/red4ext/Navigation/NavMap.cpp
   src/red4ext/Navigation/Planner.cpp
+  src/red4ext/Navigation/PlannerCommon.cpp
+  src/red4ext/Navigation/RacingLine.cpp
+  src/red4ext/Navigation/Doorways.cpp
   src/red4ext/Navigation/Vehicle.cpp
   src/red4ext/ThirdParty/miniz/miniz_tinfl.cpp
 )
