@@ -130,6 +130,14 @@ public:
   float groundPush = 0.0f;
   bool groundContact = false;
   float groundFriction = 0.1f;
+  // the game's teleport hold (Flight/Component.cpp OnUpdate): s held so far, -1 when not held
+  float teleportHold = -1.0f;
+  int32_t teleportClear = 0; // frames the hold bits have been clear
+  bool teleportJump = false; // the hold is a teleport's (bit 0x20 seen)
+  // PhysX syncs left that zero the velocity after a teleport (Physics/ChassisContacts.cpp)
+  int32_t teleportSettle = 0;
+  // frames after a teleport whose flight forces are dropped (Flight/Component.cpp)
+  int32_t teleportQuiet = 0;
   // friction multiplier of the last ground material touched, see Physics/ScrapeAudio.cpp
   float groundMaterialFriction = 1.0f;
 

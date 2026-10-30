@@ -621,6 +621,21 @@ public native class FlightComponent extends GameComponent {
   public let smoothFx: Float = 1.0;
   public let accThreshold: Float = 1.0;
 
+  // Called by the plugin (Flight/Component.cpp) when the game lets go of a teleported car: the
+  // controllers and the modes start over at the new place.
+  protected func OnTeleported() -> Void {
+    let p = this.GetVehicle().GetWorldPosition();
+    FlightLog.Info("[FlightComponent] teleported to " + FloatToStringPrec(p.X, 1) + ", " + FloatToStringPrec(p.Y, 1) + ", " + FloatToStringPrec(p.Z, 1));
+    this.hoverGroundPID.Reset();
+    this.pitchPID.Reset();
+    this.rollPID.Reset();
+    this.aeroYawPID.Reset();
+    this.pitchAeroPID.Reset();
+    if this.mode >= 0 && this.mode < ArraySize(this.modes) {
+      this.modes[this.mode].Teleported();
+    }
+  }
+
   protected func OnUpdate(timeDelta: Float) -> Void {
     if this.GetVehicle().IsDestroyed() {
       if !this.isDestroyed {

@@ -1376,6 +1376,23 @@ public class FlightModeAutopilot extends FlightModeStandard {
       || AbsF(this.component.sway) > 0.15 || this.component.linearBrake > 0.15;
   }
 
+  // A teleport: the car is somewhere else at rest. Hold there, and plan the route again from there
+  // if there was one (the old one starts where the car was).
+  public func Teleported() -> Void {
+    let p = this.component.stats.d_position;
+    this.holdPosition = p;
+    this.lastPosition = p;
+    this.positionJumpTimer = 0.0;
+    this.speedCmd = 0.0;
+    this.speedRate = 0.0;
+    if ArraySize(this.route) > 0 || this.request != 0 {
+      ArrayClear(this.route);
+      ArrayClear(this.routeLength);
+      this.request = 0;
+      this.RequestRoute(p);
+    }
+  }
+
   // The car's position, with a jump further than it could have flown held off for up to
   // positionJumpHold (then taken as a real move, a teleport). The game can freeze the car and
   // report a stale position for a moment (seen at the Badlands edge); followed, the Autopilot

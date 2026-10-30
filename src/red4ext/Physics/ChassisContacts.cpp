@@ -38,6 +38,9 @@ using RED4ext::Vector3;
 constexpr float kSupportThreshold = 0.03f;
 // frames a support normal stays valid without PhysX reporting it again
 constexpr uint32_t kSupportFrames = 3;
+// m/s and rad/s past which a velocity is a fault, not flight (PushToPhysX)
+constexpr float kMaxSpeed = 500.0f;
+constexpr float kMaxSpin = 50.0f;
 // allowed speed of the contact point into the surface, keeps PhysX reporting the contact
 constexpr float kCreepSpeed = 0.05f;
 // a correction only counts as support if it points at least this much up: corrections also
@@ -146,6 +149,11 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 547299556, SyncFromPhysX, void *self,
     } pose;
     // Transform vehicle::ChassisComponent::GetBodyTransform() const
     RED4ext::IHookable::StaticHook<void *, 411244519>(chassis, &pose);
+    // a pose past the world's fixed-point range (16384 m) or not finite would wrap to -16384
+    if (!(std::fabs(pose.position.X) < 16000.0f && std::fabs(pose.position.Y) < 16000.0f &&
+          std::fabs(pose.position.Z) < 16000.0f)) {
+      return;
+    }
     alignas(16) RED4ext::WorldTransform xform;
     xform.Position = RED4ext::WorldPosition(pose.position);
     xform.Orientation = pose.orientation;
@@ -154,6 +162,23 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 547299556, SyncFromPhysX, void *self,
 
     auto lv = ChassisLinearVelocity(chassis);
     auto av = ChassisAngularVelocity(chassis);
+    if (owner->teleportHold >= 0.0f || owner->teleportSettle > 0) {
+      // held or just let go after a teleport (Flight/Component.cpp): PhysX reports the jump as a
+      // velocity (the distance over one frame); the car is at rest at the new place
+      if (owner->teleportHold < 0.0f) {
+        --owner->teleportSettle;
+      }
+      lv = RED4ext::Vector4();
+      av = RED4ext::Vector4();
+      Vector3 zero;
+      ProxyWriterStorage writer;
+      RED4ext::IHookable::StaticHook<void *, 3550813847>(chassis, &writer);
+      RED4ext::IHookable::StaticHook<void *, 1416501174>(&writer, &zero, 0u);
+      RED4ext::IHookable::StaticHook<void *, 1900746789>(&writer, &zero, 0u);
+      RED4ext::IHookable::StaticHook<void *, 200045>(&writer);
+      RED4ext::IHookable::StaticHook<char, 1189351231>(&writer);
+      SetTracking(self, Vector3(), Vector3());
+    }
 
     // Inside the PhysX step only contacts change the spin, so what PhysX reports minus what
     // PushToPhysX wrote last frame is the spin the world gave the vehicle. Accumulate it with
@@ -296,6 +321,10 @@ REGISTER_FLIGHT_HOOK_HASH(char __fastcall, 3628605463, PushToPhysX, void *self, 
   fc->worldInertiaValid = true;
   auto lv = ChassisLinearVelocity(chassis);
   auto av = ChassisAngularVelocity(chassis);
+  if (fc->teleportHold >= 0.0f || fc->teleportSettle > 0) {
+    lv = RED4ext::Vector4(); // the jump of a teleport, not a velocity (SyncFromPhysX above)
+    av = RED4ext::Vector4();
+  }
   auto linear = Add(Vector3(lv.X, lv.Y, lv.Z), Scale(fc->pendingImpulse, rb->inverseMass));
   linear.Z -= kGravity * dt;
   auto angular = Add(Vector3(av.X, av.Y, av.Z), Mul(rb->invertedWorldInertiaTensor, fc->pendingAngularImpulse));
@@ -314,7 +343,9 @@ REGISTER_FLIGHT_HOOK_HASH(char __fastcall, 3628605463, PushToPhysX, void *self, 
       linear = Sub(linear, Scale(tangent, remove / slide));
     }
   }
-  if (!std::isfinite(linear.X + linear.Y + linear.Z + angular.X + angular.Y + angular.Z)) {
+  // not finite, or faster than anything flies (a teleport's jump read as a velocity): leave it
+  if (!std::isfinite(linear.X + linear.Y + linear.Z + angular.X + angular.Y + angular.Z) ||
+      Dot(linear, linear) > kMaxSpeed * kMaxSpeed || Dot(angular, angular) > kMaxSpin * kMaxSpin) {
     return PushToPhysX_Original(self, chassis, rb, a4, a5, a6);
   }
 

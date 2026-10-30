@@ -28,6 +28,11 @@ public abstract class FlightMode {
 
   public func Activate() -> Void;
   public func Deactivate() -> Void;
+  // the car was teleported (FlightComponent.OnTeleported): start over where it is now (the heights
+  // and positions a mode holds are the old place's)
+  public func Teleported() -> Void {
+    this.Activate();
+  }
   public func GetDescription() -> String;
 
   public func Update(timeDelta: Float) -> Void;
