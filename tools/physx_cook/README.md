@@ -2,7 +2,7 @@
 
 `cook.exe` cooks triangle meshes into PhysX 3.4 blobs ("NXS MESH" v15, BV4 midphase, no face
 remap table): the format of the game's geometry cache and of `physicsColliderMesh.compiledGeometryBuffer`
-in an entity. Used by `tools/heightmap/proxy_colliders.py` through `tools/heightmap/physx_cook.py`.
+in an entity. Used by `tools/world/proxy_colliders.py` through `tools/world/physx_cook.py`.
 
 Re-cooking game meshes (decoded from the geometry cache) gives the same header and size; a few
 bytes differ in the triangle order inside BV4 leaves, and the game's blobs can carry per-triangle

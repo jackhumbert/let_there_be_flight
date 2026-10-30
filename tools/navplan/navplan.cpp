@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
       auto n = Navigation::WorkOutDoorways(map, params, x0, y0, x1, y1);
       std::printf("doorways: %u blocks, %u doors, %u links, %.0f ms, %zu bytes\n", n.blocks, n.doors, n.links, n.milliseconds,
                   n.saved.size());
-      // the raw set to the out prefix (tools/heightmap/doorways.py packs it into navmap.bin)
+      // the raw set to the out prefix (tools/navmap_bake/doorways.py packs it into navmap.bin)
       if (FILE *f = std::fopen((std::string(argv[8]) + ".doorways").c_str(), "wb")) {
         std::fwrite(n.saved.data(), 1, n.saved.size(), f);
         std::fclose(f);

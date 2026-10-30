@@ -41,6 +41,10 @@ from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_compl
 
 import numpy as np
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/, for common
+from common import paths  # noqa: E402
+from common import toolpath  # noqa: E402,F401 (modules from other tool folders)
+
 from glb import read_glb_triangles
 from proxies import ARCHIVES, glb_path
 from sectors import DEFAULT_WOLVENKIT, quat_matrix
@@ -483,7 +487,7 @@ def cmd_build(args):
     # the same triangles for the nav map bake (spans.py bin --extra)
     np.savez(os.path.join(args.work, "colliders.npz"), tris=d["tris"], preset=np.zeros(len(tris), np.uint16),
              preset_names=np.array(["World Static"]))
-    tpl = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "pad_templates.json"),
+    tpl = json.load(open(os.path.join(paths.TOOLS, "pads", "pad_templates.json"),
                          encoding="utf-8"))
     c = tris.mean(1)
     t = np.floor(c[:, :2] / args.tile).astype(int)

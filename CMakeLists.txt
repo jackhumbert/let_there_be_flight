@@ -42,7 +42,7 @@ foreach(_FILE ${LTBF_SOURCE_FMOD_FILES})
   configure_mod_file(/src/fmod_studio/Build/Desktop/${_TEMPFILE} red4ext/plugins/${MOD_SLUG}/${_TEMPFILE})
 endforeach()
 
-# Autopilot nav map, baked offline by tools/heightmap/ from the game's collision. Too big for git, so it is a
+# Autopilot nav map, baked offline by tools/navmap_bake/ from the game's collision. Too big for git, so it is a
 # release asset (tag navmap-<game version>) fetched once into build/downloads. After a rebake: upload the new
 # navmap.bin under a new tag and update the URL and hash here. LTBF_NAVMAP_FILE points at a local bake instead.
 
@@ -85,11 +85,11 @@ else()
   message(WARNING "navmap.bin download failed (${_NAVMAP_STATUS}); the autopilot will be disabled")
 endif()
 
-# Landing pads found in the world sectors and checked against the nav map (tools/heightmap/pads.py, small, in git).
+# Landing pads found in the world sectors and checked against the nav map (tools/pads/pads.py, small, in git).
 configure_mod_file(src/navigation/helipads.tsv red4ext/plugins/${MOD_SLUG}/helipads.tsv)
-# Openings for the Autopilot's free roam to fly through, from the nav map's doorways (tools/heightmap/gates.py, in git).
+# Openings for the Autopilot's free roam to fly through, from the nav map's doorways (tools/navmap_bake/gates.py, in git).
 configure_mod_file(src/navigation/gates.tsv red4ext/plugins/${MOD_SLUG}/gates.tsv)
-# Invisible vehicle blockers the plugin moves out of the world as sectors load (tools/heightmap/blockers.py export).
+# Invisible vehicle blockers the plugin moves out of the world as sectors load (tools/world/blockers.py export).
 # Without the file the hook in Hooks/StreamingSector_PostLoad.cpp does nothing (A/B in docs/autodrive-flight-plan.md).
 configure_mod_file(src/navigation/blockers.txt red4ext/plugins/${MOD_SLUG}/blockers.txt)
 configure_mod_file(src/navigation/hidden_nodes.txt red4ext/plugins/${MOD_SLUG}/hidden_nodes.txt)

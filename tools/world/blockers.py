@@ -270,7 +270,7 @@ def export(args):
                     per_sector[sector].append(b["bits"])
     lines = [
         "# Let There Be Flight: invisible vehicle blockers to move away when their sector loads.",
-        "# Written by tools/heightmap/blockers.py export; S = sector path, A = actor position as",
+        "# Written by tools/world/blockers.py export; S = sector path, A = actor position as",
         "# stored (WorldPosition fixed point x y z), found in the sector's cooked collision data.",
     ]
     for sector in sorted(per_sector):

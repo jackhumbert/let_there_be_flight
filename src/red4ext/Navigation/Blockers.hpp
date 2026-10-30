@@ -9,7 +9,7 @@ namespace Navigation {
 
 // Invisible vehicle blockers to take out of the world as their sectors load: the collision
 // actors of the presets "Vehicle Blocker" / "Block Player and Vehicles" that block flying cars
-// where nothing is visible (tools/heightmap/blockers.py export writes blockers.txt).
+// where nothing is visible (tools/world/blockers.py export writes blockers.txt).
 //
 // Why not ArchiveXL: on 2.5 a sector's collision is one shared worldCookedCollisionNode with the
 // actors serialized in its compiledData. ArchiveXL's nodeDeletions swaps the placement's node for

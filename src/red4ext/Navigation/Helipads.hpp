@@ -1,6 +1,6 @@
 #pragma once
 
-// Helipads: the AV landing pads found in the world sectors (tools/heightmap/pads.py,
+// Helipads: the AV landing pads found in the world sectors (tools/pads/pads.py,
 // docs/helipads.md), loaded from helipads.tsv in the plugin folder.
 //
 // Positions are the deck the car rests on (not the car's centre). Read once at plugin load and
@@ -15,7 +15,7 @@ namespace Navigation {
 
 struct Helipad {
   std::string id;   // the pad prefab's global node id, or <sector>/<slot> for a painted marking
-  std::string name; // empty unless named in tools/heightmap/helipads_overrides.json
+  std::string name; // empty unless named in tools/pads/helipads_overrides.json
   float x, y, z;    // deck centre, metres
   float yaw;        // degrees, from the pad prefab or its marking
   float radius;     // pad size, metres

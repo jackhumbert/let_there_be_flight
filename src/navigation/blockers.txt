@@ -1,5 +1,5 @@
 # Let There Be Flight: invisible vehicle blockers to move away when their sector loads.
-# Written by tools/heightmap/blockers.py export; S = sector path, A = actor position as
+# Written by tools/world/blockers.py export; S = sector path, A = actor position as
 # stored (WorldPosition fixed point x y z), found in the sector's cooked collision data.
 S base\worlds\03_night_city\_compiled\default\exterior_-10_-11_0_2.streamingsector
 A -323064768 -368078944 8936488

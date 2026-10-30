@@ -45,13 +45,13 @@ public native class FlightNavMap extends IScriptable {
   // free height above the deck; 1e9 for open sky
   public native static func GetHelipadClearance(index: Int32) -> Float;
   public native static func GetHelipadId(index: Int32) -> String;
-  // empty unless named in tools/heightmap/helipads_overrides.json
+  // empty unless named in tools/pads/helipads_overrides.json
   public native static func GetHelipadName(index: Int32) -> String;
   // nearest pad within maxDistance metres (horizontal), or -1
   public native static func FindNearestHelipad(position: Vector4, maxDistance: Float) -> Int32;
   // pads within radius metres (horizontal), nearest first
   public native static func FindHelipadsInRange(position: Vector4, radius: Float) -> array<Int32>;
-  // free roam gates: openings to fly through (gates.tsv, tools/heightmap/gates.py), index 0 .. count - 1.
+  // free roam gates: openings to fly through (gates.tsv, tools/navmap_bake/gates.py), index 0 .. count - 1.
   // Position is the opening's centre at the height to fly it (w = 1); an index out of range gives zeros.
   public native static func GetGateCount() -> Int32;
   public native static func GetGatePosition(index: Int32) -> Vector4;

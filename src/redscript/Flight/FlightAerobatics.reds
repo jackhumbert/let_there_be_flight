@@ -2,7 +2,7 @@
 // full 3D target (forward and up) instead of world up plus a bank and a yaw rate, and manoeuvres
 // that turn the car past 90 degrees are flown as time-parameterised 3D shapes.
 //
-// The nav map (tools/heightmap) is baked for a car cylinder of 3 m radius and 1.5 m half height.
+// The nav map (tools/navmap_bake) is baked for a car cylinder of 3 m radius and 1.5 m half height.
 // Any yaw or roll stays inside it (rolled on its side a car is about 2 m tall), so rolls fit
 // wherever the map is free; pitched past about 35 degrees the car is up to 2.4 m tall, so the
 // pitch manoeuvres (loop, Immelmann, split-S) keep pitchMargin of extra room above and below.

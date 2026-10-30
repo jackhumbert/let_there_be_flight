@@ -40,7 +40,7 @@ from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 from scipy import ndimage
 
-from presets import load_lookup
+from presets import fnv1a64, load_lookup
 
 TILE_CELLS = 128
 # fill_hollow: free space at least HOLLOW_GAP tall under solid at least HOLLOW_ROOF thick is the
@@ -57,6 +57,54 @@ def tile_params(meta, cell):
 
 
 # ----------------------------------------------------------------------------------------- bin
+
+
+# the invisible-blocker presets (blockers.py), by name and by the hash a sector holds when
+# WolvenKit does not resolve the name
+BLOCKER_PRESETS = {"Vehicle Blocker", "Block Player and Vehicles"}
+BLOCKER_PRESETS |= {str(fnv1a64(n)) for n in list(BLOCKER_PRESETS)}
+
+
+def removed_blockers(listing, scan_dir):
+    """Per sector (file name without .streamingsector): the positions of all its blocker actors
+    (blockers.py scan) and which of them the plugin moves away (src/navigation/blockers.txt)."""
+    removed = collections.defaultdict(set)
+    sector = None
+    for line in open(listing):
+        if line.startswith("S "):
+            sector = os.path.basename(line[2:].strip().replace("\\", "/")).replace(".streamingsector", "")
+        elif line.startswith("A ") and sector:
+            removed[sector].add(tuple(int(v) for v in line.split()[1:4]))
+    out = {}
+    for sector, bits in removed.items():
+        path = os.path.join(scan_dir, sector + ".streamingsector.json")
+        actors = []
+        if os.path.exists(path):
+            for g in json.load(open(path)).get("groups", []):
+                for b in g["blockers"]:
+                    actors.append((tuple(b["bits"]), b["position"]))
+        out[sector] = (actors, bits)
+    return out
+
+
+def drop_removed(name, tris, preset_names, preset, removed):
+    """The triangles minus the blocker shapes the plugin moves away in this sector: all of its
+    blocker-preset triangles when every blocker actor there is moved, else those nearest a moved
+    actor. Without this the planner kept avoiding blockers that are gone in game (2026-10-29)."""
+    if name not in removed:
+        return tris, preset
+    actors, bits = removed[name]
+    blocker = np.array([n in BLOCKER_PRESETS for n in preset_names])[preset]
+    if not blocker.any():
+        return tris, preset
+    drop = blocker.copy()
+    if actors and not all(a in bits for a, _ in actors):
+        pos = np.array([p for _, p in actors], np.float64)
+        gone = np.array([a in bits for a, _ in actors])
+        centre = tris[blocker].mean(axis=1)
+        nearest = np.argmin(((centre[:, None, :] - pos[None, :, :]) ** 2).sum(-1), axis=1)
+        drop[blocker] = gone[nearest]
+    return tris[~drop], preset[~drop]
 
 
 def cmd_bin(args):
@@ -101,11 +149,15 @@ def cmd_bin(args):
         for f in os.listdir(args.sectors)
         if f.endswith(".npz") and not f.endswith(".terrain.npz")
     ) + list(args.extra)
+    removed = removed_blockers(args.removed, args.blocker_scan) if args.removed else {}
+    dropped = 0
     for k, f in enumerate(files):
         d = np.load(f)
         names = [str(n) for n in d["preset_names"]]
         keep = np.array([lookup.get(n, {"blocks_vehicles": True})["blocks_vehicles"] for n in names])
-        tris = d["tris"][keep[d["preset"]]]
+        all_tris, all_preset = drop_removed(os.path.basename(f)[:-4], d["tris"], names, d["preset"], removed)
+        dropped += len(d["tris"]) - len(all_tris)
+        tris = all_tris[keep[all_preset]]
         if not len(tris):
             continue
         z = tris[:, :, 2]
@@ -134,7 +186,7 @@ def cmd_bin(args):
         if (k + 1) % 1000 == 0:
             print(f"{k + 1}/{len(files)} sectors binned", file=sys.stderr)
     flush()
-    print(f"{len(part)} tiles with triangles", file=sys.stderr)
+    print(f"{len(part)} tiles with triangles; {dropped} triangles of moved blockers left out", file=sys.stderr)
 
 
 # --------------------------------------------------------------------------------------- build
@@ -436,6 +488,8 @@ def main():
     b.add_argument("--extra", action="append", default=[],
                    help="more triangle npz files (tris, preset, preset_names), e.g. proxy_colliders.py build's colliders.npz")
     b.add_argument("--presets", required=True)
+    b.add_argument("--removed", help="src/navigation/blockers.txt: leave out the blockers the plugin moves away")
+    b.add_argument("--blocker-scan", help="blockers.py scan output (with --removed)")
     b.add_argument("--terrain-dir", required=True)
     b.add_argument("-o", "--out", required=True)
     b.add_argument("--cell", type=float, default=2.0)

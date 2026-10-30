@@ -246,7 +246,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // 12 (2026-10-27): at 8 west-east threaded an 11.5 m slot between a deck and a skybridge at 85 m/s,
   // kinking the line (laptime 53.6 s, 47.4 s over it). The "no route at all" at 12 above was before
   // the take-off was part of the plan; a start with no 12 m way out still gets the retry without it.
-  // The doorways in navmap.bin are baked with this value (tools/heightmap/doorways.py): rebake if it changes.
+  // The doorways in navmap.bin are baked with this value (tools/navmap_bake/doorways.py): rebake if it changes.
   public let raceMinPassage: Float = 12.0;    // m of free height the route may squeeze through at least (0 = any)
   public let raceSearchWeight: Float = 1.2;   // A* heuristic weight, 1 = optimal (slower to plan)
   // per 45 degrees the route turns over a few cells (as metres flown): straighter, more open
@@ -1033,7 +1033,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   }
 
   // A gate for the next leg (gates.tsv: openings between buildings, mined from the nav map's
-  // doorways by tools/heightmap/gates.py): freeRoamGateMin to freeRoamLegMax away, within
+  // doorways by tools/navmap_bake/gates.py): freeRoamGateMin to freeRoamLegMax away, within
   // freeRoamSpread of `heading`, inside freeRoamRadius, not one of the last few flown. `entry` is
   // gateLead before it, where the planned route ends; gateTail is the straight run from there
   // through the gate to gateLead past it, gateStep apart, for the route to carry on with.

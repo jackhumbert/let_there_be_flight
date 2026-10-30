@@ -1,7 +1,7 @@
 #pragma once
 
 // Gates: openings between buildings (and under things) for the Autopilot's free roam to fly through,
-// mined from the nav map's doorways (tools/heightmap/gates.py), loaded from gates.tsv in the plugin
+// mined from the nav map's doorways (tools/navmap_bake/gates.py), loaded from gates.tsv in the plugin
 // folder. Read once at plugin load and read-only afterwards, so queries need no locking.
 
 #include <cstdint>

@@ -33,6 +33,12 @@ import os
 
 import numpy as np
 
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/, for common
+from common import paths  # noqa: E402
+from common import toolpath  # noqa: E402,F401 (modules from other tool folders)
+
 from geometry_cache import GeometryLibrary
 
 HERE = os.path.dirname(os.path.abspath(__file__))

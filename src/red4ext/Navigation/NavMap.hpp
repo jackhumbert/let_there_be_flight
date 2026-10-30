@@ -1,6 +1,6 @@
 #pragma once
 
-// NavMap: the baked city-wide free-space map for the autopilot (tools/heightmap/navmap.py).
+// NavMap: the baked city-wide free-space map for the autopilot (tools/navmap_bake/navmap.py).
 //
 // Per 2 m column it holds the vertical gaps a car's centre can occupy, reachable from open sky.
 // Solids were inflated by a car cylinder when the map was baked, so a point inside a gap is a

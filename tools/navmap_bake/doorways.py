@@ -8,11 +8,11 @@ Race's costs and writes them raw; this packs them with zlib and appends them to 
 section the plugin finds by its tag at the end of the file (an older plugin ignores it). A map that
 already has a doorway section gets it replaced.
 
-    python tools/heightmap/doorways.py NAVMAP.bin OUT.bin [--area x0,y0,x1,y1] [--navplan build/navplan.exe]
+    python tools/navmap_bake/doorways.py NAVMAP.bin OUT.bin [--area x0,y0,x1,y1] [--navplan build/navplan.exe]
 
-The Race's costs (height 40, climb 0.5, minimum passage 12) are fixed in navplan
+The Race's costs (height 40, climb 0.5 growing with the rise at scale 30, minimum passage 12) are fixed in navplan
 (NAVPLAN_DOORWAY_COUNT); if the Autopilot's race route fields change (raceRouteHeight,
-raceClimbCost, raceMinPassage), rebake: a set made with other costs is not used, and the plugin
+raceClimbCost, raceMinPassage, or climbScale in FlightNavMap::PlanRaceAsync), rebake: a set made with other costs is not used, and the plugin
 falls back to working blocks out as it goes.
 """
 

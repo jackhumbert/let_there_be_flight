@@ -1,4 +1,4 @@
-# Nav map bake (tools/heightmap)
+# Nav map bake (tools/navmap_bake)
 
 Builds `navmap.bin`, the city-wide free-space map the autopilot plans over
 (`src/red4ext/Navigation/NavMap.hpp`), from the game's own files. Background, decisions and
