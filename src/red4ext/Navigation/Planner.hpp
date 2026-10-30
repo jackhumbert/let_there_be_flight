@@ -51,6 +51,7 @@ struct PlanParams {
   float minPassage = 0.0f;       // m of free height (car-centre gap, the car's size already taken off)
                                  // the route may squeeze through between columns; 0 = any
   uint32_t maxExpansions = 3000000;
+  uint32_t maxDoorwayExpansions = 60000; // doorway search steps at most (long routes use about 11k)
   // The take-off is part of the plan: the search starts from every free gap within startRadius of
   // the start (the car, often on a street under a deck or between buildings), each at the cost of
   // getting there, and the route begins at the start itself. The first point off the ground is at

@@ -655,7 +655,7 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
       if (f >= best) {
         break; // nothing left beats the way to the goal already found
       }
-      if (++out.doorwayExpansions > aParams.maxExpansions) {
+      if (++out.doorwayExpansions > aParams.maxDoorwayExpansions) {
         break;
       }
       auto onward = goalDoors.find(door);
@@ -713,6 +713,12 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
       }
       out.doorwayBlocks = uint32_t(through.size());
       found = search(&corridor, path, limit);
+    } else if (aParams.minPassage > 0.0f) {
+      // no way through the doorways at this passage (searched out, or past maxDoorwayExpansions):
+      // the whole map is taken to have none either. Searching both to their limits took 45 s for a
+      // rooftop north of the city centre (doorways 671k steps, the map 3M); PlanWithRetries drops
+      // the passage next
+      return finish("no route through passages this tall");
     }
   }
   if (!found) {
