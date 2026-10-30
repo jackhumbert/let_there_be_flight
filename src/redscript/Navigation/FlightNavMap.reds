@@ -13,6 +13,9 @@ public native class FlightNavMap extends IScriptable {
   // face between a free and a blocked column, and vertical lines at its corners; columns sampled
   // coarser farther out; cached
   public native static func GetNavEdges(centre: Vector4, radius: Float, zMin: Float, zMax: Float) -> array<Vector4>;
+  // the blocked space within radius of centre, heights zMin to zMax, as boxes (min, max, ...),
+  // merged along x and y; cached until the centre moves 4 m
+  public native static func GetNavBlocks(centre: Vector4, radius: Float, zMin: Float, zMax: Float) -> array<Vector4>;
   public native static func IsFree(position: Vector4) -> Bool;
   // -1e9 when the position is not in a free gap
   public native static func GetFloor(position: Vector4) -> Float;

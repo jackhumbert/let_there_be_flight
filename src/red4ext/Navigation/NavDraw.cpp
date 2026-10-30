@@ -242,4 +242,99 @@ void NavEdges(const NavMap &aMap, float aX, float aY, float aRadius, float aZMin
   }
 }
 
+void NavBlocks(const NavMap &aMap, float aX, float aY, float aRadius, float aZMin, float aZMax,
+               std::vector<DrawPoint> &aOut) {
+  aOut.clear();
+  int32_t cx, cy;
+  if (!aMap.IsLoaded() || !aMap.CellOf(aX, aY, cx, cy)) {
+    return;
+  }
+  const float cell = aMap.CellSize(), half = 0.5f * cell;
+  const int32_t n = std::max(1, int32_t(std::ceil(aRadius / cell)));
+  NavMap::View view(aMap);
+  struct Run {
+    int32_t i0, i1; // columns, inclusive
+    float lo, hi;
+    int32_t j0;     // first row
+    bool extended;
+  };
+  std::vector<Run> open, next;
+  std::vector<std::pair<float, float>> free;
+  auto emit = [&](const Run &aRun, int32_t aJ1) {
+    float x0, y0, x1, y1;
+    aMap.CellCentre(cx + aRun.i0, cy + aRun.j0, x0, y0);
+    aMap.CellCentre(cx + aRun.i1, cy + aJ1, x1, y1);
+    aOut.push_back({x0 - half, y0 - half, aRun.lo});
+    aOut.push_back({x1 + half, y1 + half, aRun.hi});
+  };
+  for (int32_t j = -n; j <= n + 1; ++j) {
+    // this row's runs: blocked ranges the same over consecutive columns inside the disc
+    std::vector<Run> row;
+    if (j <= n) {
+      const int32_t w = int32_t(std::floor(std::sqrt(float(n * n - std::min(j * j, n * n)))));
+      std::vector<Run> current;
+      for (int32_t i = -w; i <= w + 1; ++i) {
+        std::vector<std::pair<float, float>> blocked;
+        if (i <= w) {
+          FreeRanges(view, cx + i, cy + j, aZMin, aZMax, free);
+          float z = aZMin;
+          for (const auto &[b, t] : free) {
+            if (b > z) {
+              blocked.emplace_back(z, b);
+            }
+            z = std::max(z, t);
+          }
+          if (z < aZMax) {
+            blocked.emplace_back(z, aZMax);
+          }
+        }
+        std::vector<Run> still;
+        for (auto &r : current) {
+          bool same = false;
+          for (const auto &[lo, hi] : blocked) {
+            same = same || (lo == r.lo && hi == r.hi);
+          }
+          if (same) {
+            r.i1 = i;
+            still.push_back(r);
+          } else {
+            row.push_back(r);
+          }
+        }
+        for (const auto &[lo, hi] : blocked) {
+          bool continued = false;
+          for (const auto &r : still) {
+            continued = continued || (lo == r.lo && hi == r.hi);
+          }
+          if (!continued) {
+            still.push_back({i, i, lo, hi, j, false});
+          }
+        }
+        current.swap(still);
+      }
+    }
+    // a run the same as one open from the rows before extends it; open runs not continued end
+    next.clear();
+    for (auto &r : row) {
+      for (auto &o : open) {
+        if (!o.extended && o.i0 == r.i0 && o.i1 == r.i1 && o.lo == r.lo && o.hi == r.hi) {
+          o.extended = true;
+          r.j0 = o.j0;
+          break;
+        }
+      }
+    }
+    for (const auto &o : open) {
+      if (!o.extended) {
+        emit(o, j - 1);
+      }
+    }
+    for (auto &r : row) {
+      r.extended = false;
+      next.push_back(r);
+    }
+    open.swap(next);
+  }
+}
+
 } // namespace Navigation

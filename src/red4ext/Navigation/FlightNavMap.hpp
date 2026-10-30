@@ -22,6 +22,8 @@ struct FlightNavMap : RED4ext::IScriptable {
                                                          RED4ext::DynArray<float> aHeights);
   static RED4ext::DynArray<RED4ext::Vector4> GetNavEdges(RED4ext::Vector4 aCentre, float aRadius, float aZMin,
                                                          float aZMax);
+  static RED4ext::DynArray<RED4ext::Vector4> GetNavBlocks(RED4ext::Vector4 aCentre, float aRadius, float aZMin,
+                                                          float aZMax);
   static bool IsFree(RED4ext::Vector4 aPosition);
   // Bottom / top of the gap containing the position; -1e9 when the position is blocked.
   static float GetFloor(RED4ext::Vector4 aPosition);
@@ -92,6 +94,7 @@ RTTI_DEFINE_CLASS(FlightNavMap, {
   RTTI_METHOD(GetGaps);
   RTTI_METHOD(GetOutlines);
   RTTI_METHOD(GetNavEdges);
+  RTTI_METHOD(GetNavBlocks);
   RTTI_METHOD(IsFree);
   RTTI_METHOD(GetFloor);
   RTTI_METHOD(GetCeiling);

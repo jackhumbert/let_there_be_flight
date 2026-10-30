@@ -25,4 +25,10 @@ void Outlines(const NavMap &aMap, float aX, float aY, float aRadius, const std::
 void NavEdges(const NavMap &aMap, float aX, float aY, float aRadius, float aZMin, float aZMax,
               std::vector<DrawPoint> &aOut);
 
+// The blocked space around (aX, aY), heights aZMin to aZMax, as boxes (min, max, min, max, ...):
+// each column's blocked height ranges, merged with the same range in the next columns along x,
+// then those runs with the same run in the next rows along y. To fill the map in solid.
+void NavBlocks(const NavMap &aMap, float aX, float aY, float aRadius, float aZMin, float aZMax,
+               std::vector<DrawPoint> &aOut);
+
 } // namespace Navigation

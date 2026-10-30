@@ -89,7 +89,7 @@ struct NavEdgesCache {
   RED4ext::DynArray<RED4ext::Vector4> edges;
 };
 std::mutex navEdgesLock;
-NavEdgesCache navEdges;
+NavEdgesCache navEdges, navBlocks;
 } // namespace
 
 RED4ext::DynArray<RED4ext::Vector4> FlightNavMap::GetOutlines(RED4ext::Vector4 aCentre, float aRadius,
@@ -116,6 +116,24 @@ RED4ext::DynArray<RED4ext::Vector4> FlightNavMap::GetNavEdges(RED4ext::Vector4 a
   navEdges.zMax = aZMax;
   navEdges.edges = ToScript(points);
   return navEdges.edges;
+}
+
+RED4ext::DynArray<RED4ext::Vector4> FlightNavMap::GetNavBlocks(RED4ext::Vector4 aCentre, float aRadius, float aZMin,
+                                                                float aZMax) {
+  std::lock_guard guard(navEdgesLock);
+  if (navBlocks.radius == aRadius && std::abs(navBlocks.zMin - aZMin) < 4.0f && std::abs(navBlocks.zMax - aZMax) < 4.0f &&
+      std::hypot(aCentre.X - navBlocks.x, aCentre.Y - navBlocks.y) < 4.0f) {
+    return navBlocks.edges;
+  }
+  std::vector<Navigation::DrawPoint> points;
+  Navigation::NavBlocks(Navigation::NavMap::Get(), aCentre.X, aCentre.Y, aRadius, aZMin, aZMax, points);
+  navBlocks.x = aCentre.X;
+  navBlocks.y = aCentre.Y;
+  navBlocks.radius = aRadius;
+  navBlocks.zMin = aZMin;
+  navBlocks.zMax = aZMax;
+  navBlocks.edges = ToScript(points);
+  return navBlocks.edges;
 }
 
 bool FlightNavMap::IsFree(RED4ext::Vector4 aPosition) {
