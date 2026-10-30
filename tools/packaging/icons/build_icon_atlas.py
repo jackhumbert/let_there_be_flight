@@ -11,7 +11,7 @@ Steps (WolvenKit.Console 10; see the wolvenkit skill in E:\\src\\.claude\\skills
      (A first logo build put it alone in 210 x 34 / 106 x 18 / 72 x 12 textures made from the
      mappin template: the HUD drew it as a solid black box. Same-sized copies of vanilla's work.)
 Output goes into src/wolvenkit/source/archive/user/jackhumbert/textures/ (pack it with
-tools/pack_archive.py). Scripts use it with
+tools/packaging/pack_archive.py). Scripts use it with
   inkImageRef.SetAtlasResource(widget, r"user\\jackhumbert\\textures\\landing_pad_icons.inkatlas")
   inkImageRef.SetTexturePart(widget, n"landing_pad")
 
@@ -28,7 +28,7 @@ from PIL import Image
 
 GAME = r"D:\Games\SteamLibrary\steamapps\common\Cyberpunk 2077\archive\pc\content"
 WOLVENKIT = r"D:\cp2077_work\build\tools\wolvenkit-10.0.0-beta.1\WolvenKit.CLI.exe"
-REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 DEPOT_DIR = r"user\jackhumbert\textures"
 OUT = os.path.join(REPO, r"src\wolvenkit\source\archive", DEPOT_DIR)
 MAPPIN_DIR = r"base\gameplay\gui\common\icons"

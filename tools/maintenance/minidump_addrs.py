@@ -5,7 +5,7 @@ thread's CONTEXT) and module list, then scans the crashing thread's stack memory
 point into Cyberpunk2077.exe (candidate return addresses; a heuristic, not an unwinder).
 Addresses are rebased to the IDB's image base (0x140000000) for IDA lookups.
 
-  python tools/minidump_addrs.py <Cyberpunk2077.dmp> [--module Cyberpunk2077.exe] [--max 40]
+  python tools/maintenance/minidump_addrs.py <Cyberpunk2077.dmp> [--module Cyberpunk2077.exe] [--max 40]
 """
 import argparse
 import struct

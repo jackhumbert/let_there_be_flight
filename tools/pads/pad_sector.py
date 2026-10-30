@@ -9,7 +9,7 @@ vanilla v68 exterior sector's worldEntityNode), sets the descriptor box to base_
 each pad's position +- its streaming distance, and writes both files back.
 
   python pad_sector.py [--config pad_sectors.json] [--wolvenkit <WolvenKit 10 CLI>]
-  then: python tools/pack_archive.py
+  then: python tools/packaging/pack_archive.py
 
 "decals" (optional): {"material": .mi, "pos", "quat" [i, j, k, r], "scale" (the decal box),
 "node_id", settings of the cooked decal it was copied from}, as worldStaticDecalNodes with
@@ -225,7 +225,7 @@ def main():
             cli(args.wolvenkit, "cr2w", "-d", path, "-o", out)
             shutil.copy(os.path.join(out, os.path.basename(files[key][0])), files[key][0])
         print(f"{added} pad node(s) in {cfg['sector']}; descriptor box {box}")
-        print("now run tools/pack_archive.py")
+        print("now run tools/packaging/pack_archive.py")
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 

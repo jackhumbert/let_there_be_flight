@@ -18,7 +18,7 @@ MappinUISpawnProfile.LTBF_LandingPad:
   despawnDistance: 420.0
 
 # The pins' icon: a ring with an H in the style of mappin_icons.inkatlas, drawn by
-# tools/icons/landing_pad_icon.py and packed by tools/icons/build_icon_atlas.py.
+# tools/packaging/icons/landing_pad_icon.py and packed by tools/packaging/icons/build_icon_atlas.py.
 UIIcon.LTBF_LandingPad:
   $type: gamedataUIIcon_Record
   atlasResourcePath: user\jackhumbert\textures\landing_pad_icons.inkatlas

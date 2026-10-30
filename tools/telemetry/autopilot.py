@@ -14,7 +14,7 @@ reports each difference by phase: level and straight, turning (the plan's headin
 than 8 deg/s), climbing or diving (the plan steeper than 10 deg). --plot PNG draws them over time,
 with the body tilt and the thrusters' angle off the car's top for logs that have them (drone style).
 
-    python tools/autopilot_telemetry.py LOG.csv [--steep 45] [--worst 10] [--attitude] [--plot out.png]
+    python tools/telemetry/autopilot.py LOG.csv [--steep 45] [--worst 10] [--attitude] [--plot out.png]
 """
 
 import argparse

@@ -5,7 +5,7 @@ the 512 px texture) is a bold "AUTO" and a thin italic "DRIVE" whose letters sha
 has no stem of its own, it leans on the O). This keeps the vanilla "AUTO" pixels and draws "PILOT"
 in the thin style: 4 px strokes, italic stems, the P leaning on the O like the D does.
 
-  python tools/icons/autopilot_logo.py <vanilla png dir> <out dir>
+  python tools/packaging/icons/autopilot_logo.py <vanilla png dir> <out dir>
 
 <vanilla png dir> holds vanilla's autodrive.png, autodrive_1080p.png and autodrive_720p.png (the
 three textures of autodrive.inkatlas, exported with WolvenKit `export --uext png`). Writes
@@ -13,7 +13,7 @@ autopilot_logo.png, autopilot_logo_1080p.png, autopilot_logo_720p.png: copies of
 with the logo rectangle repainted, so they encode exactly like the originals (same sizes, same
 premultiplied white, RGB = alpha, peaking at vanilla's 229) and vanilla's atlas parts still fit;
 plus preview.png (vanilla above ours). Then:
-  python tools/icons/build_icon_atlas.py --icon autopilot --pngs <out dir> --work <scratch dir>
+  python tools/packaging/icons/build_icon_atlas.py --icon autopilot --pngs <out dir> --work <scratch dir>
 """
 import math
 import sys

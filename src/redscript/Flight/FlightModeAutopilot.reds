@@ -1521,7 +1521,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // (targetForward / targetUp) and the car's own, with the angles between them (plan_cmd: the
   // controller's choices such as drift into bends; cmd_car and up_cmd_car: the car's response).
   // Taken at the start of the frame, so a command is paired with what the car made of it.
-  // tools/autopilot_telemetry.py summarises a file.
+  // tools/telemetry/autopilot.py summarises a file.
   private func WriteTelemetry(p: Vector4, v: Vector4, timeDelta: Float) -> Void {
     if !this.telemetry {
       if this.telemetryFile != 0 {

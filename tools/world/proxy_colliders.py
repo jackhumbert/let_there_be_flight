@@ -15,7 +15,7 @@ Steps:
            index of each) and audit.json (per placement: kept area, total area), plus a preview
            (--preview) of kept triangles over the city.
   build    Cut the kept triangles into --tile m tiles, cook each tile's triangles (PhysX 3.4,
-           tools/physx_cook) relative to the tile centre and write one collider entity per tile
+           tools/packaging/physx_cook) relative to the tile centre and write one collider entity per tile
            (.ent WolvenKit JSON, entColliderComponent with one physicsColliderMesh) plus
            tiles.json (entity name, position) for placing them (pad_sector.py "colliders").
 

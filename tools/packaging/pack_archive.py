@@ -10,9 +10,9 @@ Only localization is imported. For everything else the CR2W files in source/arch
 source of truth: the other raw files are stale Wolvenkit exports (flight_hud.inkwidget.json is
 from 2022 and predates the packed widget), so edit those assets in the Wolvenkit GUI.
 
-  python tools/pack_archive.py           # import + pack + verify
-  python tools/pack_archive.py --check   # only report raw json that differs from source/archive
-  python tools/pack_archive.py --out build/archive/let_there_be_flight.archive --oodle path/to/oo2ext_7_win64.dll
+  python tools/packaging/pack_archive.py           # import + pack + verify
+  python tools/packaging/pack_archive.py --check   # only report raw json that differs from source/archive
+  python tools/packaging/pack_archive.py --out build/archive/let_there_be_flight.archive --oodle path/to/oo2ext_7_win64.dll
 
 The CLI is --cli, then WOLVENKIT_CLI, then %LOCALAPPDATA%/Programs/WolvenKit.Console/<version>/.
 If missing it is downloaded from the WolvenKit GitHub release (the NuGet `wolvenkit.cli`
@@ -35,7 +35,7 @@ import zipfile
 from pathlib import Path
 
 WOLVENKIT_VERSION = "9.0.1"
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 WK = ROOT / "src" / "wolvenkit"
 RAW = WK / "source" / "raw" / "user"
 LOCALIZATION = RAW / "jackhumbert" / "localization"

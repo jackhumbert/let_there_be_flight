@@ -2,8 +2,8 @@
 
 Switch telemetry on (python ../cp2077_tools/bridge.py call LtbfBridge.Aerobatics true 0 -1 0 1 does it), fly, then:
 
-    python tools/aerobatics_telemetry.py [let_there_be_flight.log or an extract ...]
-    python tools/aerobatics_telemetry.py before=run1.log after=run2.log --plot runs.png
+    python tools/telemetry/aerobatics.py [let_there_be_flight.log or an extract ...]
+    python tools/telemetry/aerobatics.py before=run1.log after=run2.log --plot runs.png
 
 Prints, for cruise and for each manoeuvre flown: duration, attitude error (mean / 95th / max,
 degrees), lowest car up.z reached (-1 = fully inverted), height change, and how closely the body
@@ -15,10 +15,13 @@ flight path (the car's against its target), the roll and yaw rates, and the spee
 
 import argparse
 import math
+import os
 import re
+import sys
 from pathlib import Path
 
-from common import paths  # noqa: E402 (tools/ is this script's folder)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/, for common
+from common import paths  # noqa: E402
 
 DEFAULT_LOG = Path(paths.LTBF_LOG)
 NAMES = {0: "cruise", 1: "aileron roll", 2: "barrel roll", 3: "loop", 4: "Immelmann", 5: "split-S"}

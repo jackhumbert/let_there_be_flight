@@ -107,7 +107,7 @@ set(MOD_YAML_TWEAKS ON)
 configure_tweaks(src/tweaks)
 # Tweaks always go through TweakXL: the game's built-in TweakDB loader (2.5+) crashes on new typed flats
 # (docs/history.md, "tweaks_to_json.py removed").
-# The archive is not in git: it is packed from src/wolvenkit/source at build time (tools/pack_archive.py) with a
+# The archive is not in git: it is packed from src/wolvenkit/source at build time (tools/packaging/pack_archive.py) with a
 # WolvenKit CLI and the game's Oodle dll (oo2ext_7_win64.dll: not redistributable, so CI gets it from a private repo,
 # .github/workflows). It is written to src/wolvenkit/packed (gitignored), where game.py --archive-only finds it.
 # With neither, an archive already there is shipped; with none at all the build has no archive (a warning).
@@ -128,8 +128,8 @@ if(LTBF_WOLVENKIT_CLI OR LTBF_OODLE_DLL)
   endif()
   add_custom_command(
     OUTPUT "${_ARCHIVE}"
-    DEPENDS ${_ARCHIVE_SOURCES} "${CMAKE_CURRENT_SOURCE_DIR}/tools/pack_archive.py"
-    COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tools/pack_archive.py" ${_PACK_ARGS}
+    DEPENDS ${_ARCHIVE_SOURCES} "${CMAKE_CURRENT_SOURCE_DIR}/tools/packaging/pack_archive.py"
+    COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tools/packaging/pack_archive.py" ${_PACK_ARGS}
     COMMENT "Packing let_there_be_flight.archive"
     VERBATIM)
   message(STATUS "Archive: packed at build time")

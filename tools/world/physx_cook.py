@@ -1,4 +1,4 @@
-"""Cook triangle meshes into PhysX 3.4 blobs with tools/physx_cook (cook.exe), in one process
+"""Cook triangle meshes into PhysX 3.4 blobs with tools/packaging/physx_cook (cook.exe), in one process
 call for many meshes. The blobs match the game's geometry cache format (NXS MESH v15, BV4).
 """
 
