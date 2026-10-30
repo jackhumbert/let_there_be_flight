@@ -201,7 +201,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let raceSearchWeight: Float = 1.2;   // A* heuristic weight, 1 = optimal (slower to plan)
   // per 45 degrees the route turns over a few cells (as metres flown): straighter, more open
   // corridors, whose bends the racing line takes wide
-  public let raceTurnCost: Float = 5.0;
+  public let raceTurnCost: Float = 6.559;
   // drift: in a bend the nose turns into it, up to raceDriftMax at raceDriftFull sideways (none
   // below raceDriftStart), so the surge thrust pushes round the corner along with the banked lift
   public let raceDriftMax: Float = 20.0;      // deg

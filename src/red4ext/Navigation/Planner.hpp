@@ -75,7 +75,7 @@ struct PlanParams {
   float lineSide = 3.0f;         // the line also stays free this far to either side (m)
   // blocked space this close across the line pushes it away, linePush per pass (where the move
   // stays free)
-  float lineClearance = 6.0f;    // m
+  float lineClearance = 4.685f;    // m
   // m above the floor below (car-centre height, the car's size already taken off) the line keeps,
   // but within lineFloorEnds of its start and end: street furniture (traffic lights, signs, lamps)
   // is streamed in as props and not on the map
@@ -86,8 +86,8 @@ struct PlanParams {
   int lineHeightIterations = 3000;
   // swells in the heights longer than this follow the terrain (the band's floor), shorter ones are
   // smoothed out (SmoothHeights); 0 = no pull down, the smoothest heights alone
-  float lineHeightWavelength = 800.0f; // m
-  float lineHeightFree = 30.0f;  // m over the band's floor (the floor clearance) that costs nothing
+  float lineHeightWavelength = 767.9f; // m
+  float lineHeightFree = 56.73f;  // m over the band's floor (the floor clearance) that costs nothing
   float lineHeightScale = 30.0f; // m past that per e-fold of the height's cost
   // m from either end within which SmoothHeights keeps a point in its own gap rather than taking it
   // over what is overhead (the take-off and the landing may be under a deck)
@@ -95,23 +95,23 @@ struct PlanParams {
   float lineOverReach = 10.0f;   // m under an obstacle's top the line solved without it may pass and still go over
   float lineOverThick = 12.0f;   // m thick at most an obstacle the line goes over instead of under (a beam, a skybridge)
   float lineOverRise = 25.0f;    // m higher on average the whole line may come out for going over
-  float lineOverGain = 0.25f;     // going over must leave at most this share of the bend around it
+  float lineOverGain = 0.4237f;     // going over must leave at most this share of the bend around it
   float lineOverWindow = 150.0f; // m either side of an obstacle its bend is compared over
   // m under anything overhead the line keeps (a skybridge, a deck); the middle of the gap where
   // there is not room for this and the floor clearance
   float lineCeilingClearance = 6.0f;
-  float linePush = 0.1f;         // m
+  float linePush = 0.08609f;         // m
   // m either side a point's clearance push is shared with its neighbours, tapering off (RacingLine); 0 = only its own
-  float lineSpread = 30.0f;
+  float lineSpread = 27.62f;
   // the path across solved in a corridor after the smoothing (SmoothLateral, Planner.cpp)
   int lineCorridorIterations = 3000; // per level, coarse to fine; 0 = off
-  float lineCorridorMax = 40.0f;     // m the free width is looked for either side
-  float lineCorridorMargin = 6.0f;   // m kept from blocked space across the line (lineClearance)
-  float lineCurvatureRate = 0.5f;    // weight of how fast the bend changes against the bend itself
+  float lineCorridorMax = 30.2f;     // m the free width is looked for either side
+  float lineCorridorMargin = 5.138f;   // m kept from blocked space across the line (lineClearance)
+  float lineCurvatureRate = 0.5779f;    // weight of how fast the bend changes against the bend itself
   // rounds of weighting up the bends that cost the car speed and solving the path across again
   // (SmoothLateral, TurnCost); 0 = the smoothest shape alone. The car's limits come from vehicle.
-  int lineTurnRounds = 3;
-  float lineTurnWeightMax = 30.0f;  // the most a bend's weight grows
+  int lineTurnRounds = 1;
+  float lineTurnWeightMax = 6.721f;  // the most a bend's weight grows
   // the car flying the line (Vehicle.hpp); the Autopilot passes its own (FlightVehicleModel), the
   // default is the Shion in drone style
   VehicleSpec vehicle;
@@ -119,7 +119,7 @@ struct PlanParams {
   // weight of the vertical bend against the sideways one: crests and dips are pushed over and
   // pulled through with the lift alone, so they are rounded off more (stable while
   // lineStep x weight stays below 0.125)
-  float lineVerticalWeight = 1.5f;
+  float lineVerticalWeight = 1.381f;
   float directMargin = 20.0f;    // cruise this far above the highest floor along the line
   float maxCruise = 700.0f;
   // racing lines: a slot whose room costs more than slotDetourLoss m/s, or slotDetourShare of the speed

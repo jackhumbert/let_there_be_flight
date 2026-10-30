@@ -857,7 +857,7 @@ void RacePreset(PlanParams &aParams) {
   aParams.climbCost = 0.5f;
   aParams.minPassage = 12.0f;
   aParams.heuristicWeight = 1.2f;
-  aParams.turnCost = 5.0f;
+  aParams.turnCost = 6.559f;
   // a climb's cost grows exponentially with its rise (ClimbCost): round the Dogtown stadium, not over it
   aParams.climbScale = 30.0f;
 }
