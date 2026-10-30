@@ -29,6 +29,10 @@ struct FlightTrajectory : RED4ext::IScriptable {
   RED4ext::Vector4 Position(float aS);
   RED4ext::Vector4 Velocity(float aS);
   RED4ext::Vector4 Acceleration(float aS);
+  // the drone's planned nose yaw, body pitch and roll, rad
+  float Yaw(float aS);
+  float Pitch(float aS);
+  float Roll(float aS);
   // what sets the speed at s ("turn", "brake", ...)
   RED4ext::CString Limit(float aS);
   // samples outside the car's limits (a planner bug), one line each
@@ -53,6 +57,9 @@ RTTI_DEFINE_CLASS(FlightTrajectory, {
   RTTI_METHOD(Position);
   RTTI_METHOD(Velocity);
   RTTI_METHOD(Acceleration);
+  RTTI_METHOD(Yaw);
+  RTTI_METHOD(Pitch);
+  RTTI_METHOD(Roll);
   RTTI_METHOD(Limit);
   RTTI_METHOD(Violations);
 });

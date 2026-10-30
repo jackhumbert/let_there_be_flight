@@ -257,11 +257,11 @@ int main(int argc, char **argv) {
     std::fclose(f);
   }
   if (FILE *f = std::fopen((prefix + "_trajectory.csv").c_str(), "w")) {
-    std::fprintf(f, "s,t,x,y,z,vx,vy,vz,ax,ay,az,speed,along,lateral,limit\n");
+    std::fprintf(f, "s,t,x,y,z,vx,vy,vz,ax,ay,az,speed,along,lateral,limit,yaw,pitch,roll\n");
     for (const auto &q : trajectory.samples) {
-      std::fprintf(f, "%.1f,%.3f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%s\n", q.s, q.t, q.position.x,
+      std::fprintf(f, "%.1f,%.3f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%s,%.4f,%.4f,%.4f\n", q.s, q.t, q.position.x,
                    q.position.y, q.position.z, q.velocity.x, q.velocity.y, q.velocity.z, q.acceleration.x, q.acceleration.y,
-                   q.acceleration.z, q.speed, q.along, q.lateral, Navigation::LimitName(q.limit));
+                   q.acceleration.z, q.speed, q.along, q.lateral, Navigation::LimitName(q.limit), q.yaw, q.pitch, q.roll);
     }
     std::fclose(f);
   }

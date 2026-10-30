@@ -25,6 +25,11 @@ struct TrajectoryParams {
   float humpMerge = 6.0f;     // m/s a rise between two slowings may be at most to be held down (speedHumpMerge)
   float startSpeed = 0.0f;    // m/s at the first sample
   bool stopAtEnd = true;      // 0 m/s at the last sample (a landing or an arrival)
+  // drone attitude (FlightModeAutopilot's drone tuning)
+  float bodyShare = 0.5f;     // share of the thrust's tilt the body takes (droneBodyShare)
+  float rollLook = 1.5f;      // s ahead a coming turn's roll is held for (droneRollLook)
+  float rollRateMax = 1.0f;   // rad/s (raceRollRateMax)
+  float pitchRateMax = 1.0f;  // rad/s (racePitchRateMax)
 };
 
 struct TrajectorySample {
@@ -36,6 +41,10 @@ struct TrajectorySample {
   float along = 0.0f;         // m/s2 along the line (speeding up > 0)
   float lateral = 0.0f;       // m/s2 across the line (the bend at this speed)
   Limit limit = Limit::Top;   // what sets the speed here
+  // the drone's attitude: nose yaw (rad, world, along the line), body pitch (nose down when speeding
+  // up) and roll (into the turn), rad; the tilts start early enough to reach each peak at the
+  // rate limits, and a turn's roll is held from a gentler bend before it
+  float yaw = 0.0f, pitch = 0.0f, roll = 0.0f;
 };
 
 struct Trajectory {

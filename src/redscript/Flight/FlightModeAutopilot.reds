@@ -89,6 +89,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // working them out while flying; off until the A/B in game passes (LtbfBridge.UseTrajectory)
   public let useTrajectory: Bool = false;
   public let trajectory: ref<FlightTrajectory>;
+  public let trajectoryAttitudeLead: Float = 0.0;  // s ahead the planned tilt is read (the plan's tilts already start early)
+  private let attRef: Vector4;                     // the trajectory's acceleration, smoothed as attAccel is
   public let droneYawLead: Float = 0.3;       // s along the racing line the nose aims (DroneAttitude)
   public let droneYawFrequency: Float = 3.0;  // rad/s, heading easing
   public let droneYawRateMax: Float = 1.5;    // rad/s
@@ -1911,7 +1913,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
       desiredVelocity = tangent * this.speedCmd + back + this.overlayVelocity;
       // plus the flown speed's own rate along the line: on velocity error alone the car trails a
       // braking curve by rate / lineVelocityGain, more than brakeLead covers
-      accel = (desiredVelocity - v) * this.lineVelocityGain + bend * (this.speedCmd * this.speedCmd) + tangent * this.speedRate;
+      // the bend at the speed actually flown on a trajectory (planned at its own speed, a car a little
+      // slower turned in too hard and ran inside the line)
+      let bendSpeed = this.FollowsTrajectory() ? stats.d_speed : this.speedCmd;
+      accel = (desiredVelocity - v) * this.lineVelocityGain + bend * (bendSpeed * bendSpeed) + tangent * this.speedRate;
       target = this.PointAt(this.closestS + 30.0);
       this.lookahead = target;
       jerk = this.raceJerk;
@@ -2471,6 +2476,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // (landingEntry before the end, below landingEntrySpeed). Not 2d/v: the brake eases off near the
   // end and hands over at landingEntrySpeed, not 0.
   private func TimeToDescent() -> Float {
+    // on the trajectory: its own clock from here to where the descent takes over
+    if this.FollowsTrajectory() {
+      let total = this.trajectory.Length();
+      return MaxF(this.trajectory.Time(total - this.landingEntry) - this.trajectory.Time(this.closestS), 0.0);
+    }
     let n = ArraySize(this.routeLength);
     // no speeds for this route yet (a moved end, replanning): far off (0 would start the landing
     // turn early)
@@ -2928,11 +2938,32 @@ public class FlightModeAutopilot extends FlightModeStandard {
     // the roll for the turn coming, not only the one now (DroneTurnAhead): a gentle bend then a
     // sharp one in the same direction is flown as one turn, not two
     let lateral = Vector4.Dot(thrust, side);
-    let coming = this.DroneTurnAhead(side);
-    if AbsF(coming) > AbsF(lateral) && (coming * lateral >= 0.0 || AbsF(lateral) < 2.0) {
-      lateral = coming;
+    let roll: Float;
+    if this.FollowsTrajectory() && Equals(this.status, "following") {
+      // the planned tilt a moment ahead, plus what the follower's correction adds to the trajectory's
+      // own acceleration (both tilts worked out the same way, so on the trajectory that is 0)
+      roll = ClampF(this.DroneBodyAngle(AtanF(lateral, thrust.Z), size, this.standardModeSwayFactor), -cap, cap);
+      this.attRef += (this.trajectory.Acceleration(this.closestS) - this.attRef) * ClampF(dt / this.droneTiltTime, 0.0, 1.0);
+      let thrustRef = this.attRef + z * g;
+      thrustRef.Z = MaxF(thrustRef.Z, 0.3 * g);
+      let sizeRef = Vector4.Length(thrustRef);
+      let aheadRef = Vector4.Dot(thrustRef, h);
+      let alongRef = aheadRef >= 0.0 ? this.standardModeSurgeFactor : this.RaceDecel(stats.d_speed) - this.DragAccel(stats.d_speed);
+      let pitchRef = ClampF(this.DroneBodyAngle(AtanF(aheadRef, thrustRef.Z), sizeRef, alongRef), -cap, cap);
+      let rollRef = ClampF(this.DroneBodyAngle(AtanF(Vector4.Dot(thrustRef, side), thrustRef.Z), sizeRef, this.standardModeSwayFactor), -cap, cap);
+      let sAtt = this.closestS + stats.d_speed * this.trajectoryAttitudeLead;
+      pitch = ClampF(this.trajectory.Pitch(sAtt) + pitch - pitchRef, -cap, cap);
+      // the plan's roll is towards (h.y, -h.x), the heading turned right; side may point the other way
+      let flip = Vector4.Dot(side, new Vector4(h.Y, -h.X, 0.0, 0.0)) >= 0.0 ? 1.0 : -1.0;
+      roll = ClampF(flip * this.trajectory.Roll(sAtt) + roll - rollRef, -cap, cap);
+    } else {
+      this.attRef = this.attAccel;
+      let coming = this.DroneTurnAhead(side);
+      if AbsF(coming) > AbsF(lateral) && (coming * lateral >= 0.0 || AbsF(lateral) < 2.0) {
+        lateral = coming;
+      }
+      roll = ClampF(this.DroneBodyAngle(AtanF(lateral, thrust.Z), size, this.standardModeSwayFactor), -cap, cap);
     }
-    let roll = ClampF(this.DroneBodyAngle(AtanF(lateral, thrust.Z), size, this.standardModeSwayFactor), -cap, cap);
     // eased as the plane's pitch and bank are (EasePitch, EaseBank): followed directly, the tilt
     // flicks with every change of the commanded acceleration and the car overshoots it. What the
     // tilt lags by, the thrust in the car's frame (FlyAerobatic) still gives, up to the surge and

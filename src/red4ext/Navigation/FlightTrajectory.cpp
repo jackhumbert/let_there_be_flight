@@ -1,6 +1,7 @@
 #include "FlightTrajectory.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <string>
 
 namespace {
@@ -81,6 +82,23 @@ RED4ext::Vector4 FlightTrajectory::Velocity(float aS) {
 RED4ext::Vector4 FlightTrajectory::Acceleration(float aS) {
   SAMPLE_AT(acceleration)
   return Lerp(a.acceleration, b.acceleration, t, 0.0f);
+}
+
+float FlightTrajectory::Yaw(float aS) {
+  SAMPLE_AT(yaw)
+  float d = b.yaw - a.yaw;
+  d -= 6.2831853f * std::round(d / 6.2831853f); // the short way round
+  return a.yaw + d * t;
+}
+
+float FlightTrajectory::Pitch(float aS) {
+  SAMPLE_AT(pitch)
+  return a.pitch + (b.pitch - a.pitch) * t;
+}
+
+float FlightTrajectory::Roll(float aS) {
+  SAMPLE_AT(roll)
+  return a.roll + (b.roll - a.roll) * t;
 }
 
 RED4ext::CString FlightTrajectory::Limit(float aS) {
