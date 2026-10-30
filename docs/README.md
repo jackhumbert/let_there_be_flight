@@ -4,7 +4,7 @@
   or decision (date, title, decision, why, numbers, tried and dropped, commits).
 - `design/`: how each subsystem works now, edited in place when it changes.
   - `autopilot.md`: the Autopilot flight mode, a flight from engage to landing, tuning.
-  - `planner.md`: route search, doorways, the racing line passes, navplan.
+  - `planner.md`: route search, doorways, the line's passes and repair, navplan.
   - `vehicle-limits.md`: the car's limits (VehicleSpec) and who reads them.
   - `navmap.md`: the baked nav map, how it is made and shipped.
   - `city-collision.md`: hidden colliders removed, proxy colliders added.

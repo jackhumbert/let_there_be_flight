@@ -1,4 +1,4 @@
-"""Draw the planner's view over a recorded run: the nav map's blocked outlines along the racing
+"""Draw the planner's view over a recorded run: the nav map's blocked outlines along the
 line, and the line itself, projected through the game camera frame by frame. What the planner
 avoids, next to what the game shows: an outline in empty air is a hidden collider.
 

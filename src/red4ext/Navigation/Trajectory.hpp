@@ -1,6 +1,6 @@
 #pragma once
 
-// The racing line with time on it (docs/design/trajectory.md): at every sample the speed, velocity,
+// The line with time on it (docs/design/trajectory.md): at every sample the speed, velocity,
 // acceleration and time the car flies it with, inside the limits of Vehicle.hpp. The Autopilot
 // tracks this instead of working out speeds, braking and turn-ins while it flies.
 

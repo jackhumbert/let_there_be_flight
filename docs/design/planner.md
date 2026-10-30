@@ -8,7 +8,7 @@ Route planning over the nav map, in the plugin and in navplan (the same sources)
 | `NavMap.hpp/.cpp` | the baked map: per 2 m column, the vertical gaps a car's centre can occupy (`docs/design/navmap.md`) |
 | `Planner.hpp/.cpp` | `PlanParams`, `Plan`, `PlanWithRetries`, `RacePreset`, `TryDirect` |
 | `Doorways.hpp/.cpp` | the doorway layer for long routes, `WorkOutDoorways` for the bake |
-| `RacingLine.cpp` | the racing line passes |
+| `Line.cpp` | the line: its passes and its repair (`Line`, `RepairLine`) |
 | `PlannerCommon.hpp/.cpp` | grid keys, gaps, leg checks shared by the above |
 | `Vehicle.hpp/.cpp` | the car's limits (`docs/design/vehicle-limits.md`) |
 | `NavDraw.hpp/.cpp` | geometry for drawing the map in game |
@@ -25,7 +25,7 @@ Route planning over the nav map, in the plugin and in navplan (the same sources)
    session; the Race's set is baked into `navmap.bin` (`tools/navmap_bake/doorways.py`) and has to be
    rebaked when the Race's step costs change.
 3. The route is pulled straight (only the corners every free leg needs).
-4. Racing line (`RacingLine`): the route spread into even points (`lineSpacing`), smoothed and pushed
+4. The line (`Line`), the only line made: the route spread into even points (`lineSpacing`), smoothed and pushed
    away from blocked space (`lineClearance`, spread over `lineSpread`), then:
    - `SmoothLateral`: the path across solved in a corridor of free width either side, smoothest bend
      plus its rate of change, then `lineTurnRounds` rounds weighting each bend by the speed it costs
@@ -34,8 +34,10 @@ Route planning over the nav map, in the plugin and in navplan (the same sources)
      ceiling clearance above), coarse to fine, with a height cost over the terrain
      (`lineHeightFree`, `lineHeightScale`, `lineHeightWavelength`); thin obstacles in the way are
      tried over the top (`lineOver*`). Solved twice with the points respaced evenly (`Respace`).
-   - Every leg is checked free with the grazes either side taken as one run (`LegRunFree`); a line
-     not free all the way is rejected and the plain route flown.
+   - Every leg is checked free with the grazes either side taken as one run (`LegRunFree`). Where
+     a stretch is blocked (`RepairLine`), that stretch and a few points either side (more until it
+     fits) are replaced by the route between them, evened out wherever the moves stay free; the
+     rest of the line is kept. `PlanResult::repaired` counts the stretches.
 5. `PlanWithRetries`: a search that runs out of expansions retries with a greedier heuristic (1.5,
    then 2.0); a route with no way through a `minPassage` squeeze retries without it.
 

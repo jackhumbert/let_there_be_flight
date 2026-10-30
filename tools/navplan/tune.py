@@ -1,4 +1,4 @@
-"""Tune the racing line's PlanParams offline: Optuna (TPE) searches the parameters below, each trial
+"""Tune the line's PlanParams offline: Optuna (TPE) searches the parameters below, each trial
 planning a set of routes with navplan (the plugin's own planner and the car's limits from
 src/red4ext/Navigation/Vehicle.hpp) and scoring the lines against the current defaults. Routes are
 split into a tuning set and a held-out set; the report gives both, and the best parameters as
@@ -12,7 +12,8 @@ Score per route (lower is better; 0 = the defaults), averaged over the routes:
   speed lost in dips (dips.py) per 10 m/s; the bend's rate of change (jerk) and the sharpest bend,
   relative; the share of the line within 3 m of blocked space, per 2 %; the time, relative; the mean
   height over the defaults' line per 20 m (over rather than under is fine, a needless climb is
-  not); 10 for a route that loses its racing line, -2 for one that gains a line the defaults lack;
+  not); 2 per stretch the smoothing leaves blocked (flown along the route's corners) beyond the
+  defaults'; 10 for a route that fails to plan, -2 for one that plans where the defaults fail;
   plan time only past twice the defaults' (absolute times depend on how many plans run at once).
 """
 
@@ -76,7 +77,8 @@ def main():
         with open(base_file, "w") as f:
             json.dump(base, f, indent=1)
     lost_lines = [n for n, m in base.items() if not m or not m["ok"]]
-    print(f"baseline: {len(lost_lines)} of {len(base)} routes without a racing line {lost_lines}", flush=True)
+    repaired = {n: m["repaired"] for n, m in base.items() if m and m["ok"] and m["repaired"]}
+    print(f"baseline: {len(lost_lines)} of {len(base)} routes not planned {lost_lines}, repaired stretches {repaired}", flush=True)
 
     def evaluate(params, subset, tag):
         res = run_all(navmap, vehicle, subset, params, os.path.join(args.out, tag), args.jobs)

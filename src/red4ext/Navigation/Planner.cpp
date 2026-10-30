@@ -87,7 +87,7 @@ PlanResult PlanWithRetries(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const Pl
 }
 
 namespace {
-// The racing line's slots too tight for the car's speed: the worst sample of each stretch whose room
+// The line's slots too tight for the car's speed: the worst sample of each stretch whose room
 // costs more than the params allow, as places to route round.
 std::vector<Avoid> Slots(const Trajectory &aTrajectory, const PlanParams &aParams, float &aWorst) {
   std::vector<Avoid> out;
@@ -116,7 +116,7 @@ std::vector<Avoid> Slots(const Trajectory &aTrajectory, const PlanParams &aParam
 PlanResult PlanRace(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &aParams,
                     const std::function<void(const PlanResult &)> &aAttempt) {
   auto result = PlanWithRetries(aMap, aStart, aGoal, aParams, aAttempt);
-  if (!result.ok || !aParams.racingLine || !result.rejectedLine.empty() || result.points.size() < 3) {
+  if (!result.ok || !aParams.line || result.points.size() < 3) {
     return result;
   }
   const auto first = BuildTrajectory(aParams.vehicle, result.points, {}, &aMap);
@@ -136,7 +136,7 @@ PlanResult PlanRace(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParam
     params.avoid.insert(params.avoid.end(), slots.begin(), slots.end());
     auto detour = PlanWithRetries(aMap, aStart, aGoal, params);
     extra += detour.milliseconds;
-    if (!detour.ok || !detour.rejectedLine.empty() || detour.points.size() < 3) {
+    if (!detour.ok || detour.points.size() < 3) {
       why = "no way round";
       break;
     }
@@ -203,7 +203,7 @@ PlanResult RejoinAt(const NavMap &aMap, Vec3 aCar, const std::vector<Vec3> &aLin
     return out;
   }
   auto params = aParams;
-  params.racingLine = false; // the connector's route first, its line below with the lead-out on it
+  params.line = false; // the connector's route first, its line below with the lead-out on it
   params.doorways = false;
   // straight when the air allows: the lead-in along the car's velocity, then straight to the join
   // (knocked off a line, the car is mostly in open air); otherwise searched at the car's own height
@@ -238,14 +238,10 @@ PlanResult RejoinAt(const NavMap &aMap, Vec3 aCar, const std::vector<Vec3> &aLin
   }
   std::vector<Vec3> pts = route.points;
   pts.insert(pts.end(), aLine.begin() + join + 1, aLine.begin() + leadOut + 1);
-  params.racingLine = true;
+  params.line = true;
   params.lineTakeoff = false;
   params.lineLanding = false;
-  auto line = RacingLine(aMap, pts, params);
-  if (LongestBlocked(aMap, line) > kGrazeAllowedLine) {
-    line = pts; // the connector's own route, corners and all
-  }
-  out.points = std::move(line);
+  out.points = RepairLine(aMap, Line(aMap, pts, params), pts, params, 0.0f, out.repaired);
   out.points.insert(out.points.end(), aLine.begin() + leadOut + 1, aLine.end());
   out.ok = true;
   out.expansions = route.expansions;
@@ -829,30 +825,20 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
   }
   out.ok = true;
   out.searchMilliseconds = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
-  if (aParams.racingLine && out.points.size() > 2) {
-    // kept only if the finished line is free all the way; otherwise the pulled route stays
+  if (aParams.line && out.points.size() > 2) {
     auto lineParams = aParams;
     lineParams.lineTakeoff = lineParams.lineTakeoff && !leadIn;
-    auto line = RacingLine(aMap, out.points, lineParams);
-    // (the stretch out from under cover to the free space is blocked on the map: not counted)
-    if (LongestBlocked(aMap, line, startLeg + 5.0f) <= kGrazeAllowedLine) {
-      out.points = std::move(line);
-      return finish("racing line");
-    }
-    size_t blocked = 0;
-    while (blocked + 1 < line.size() && LegFree(aMap, line[blocked], line[blocked + 1])) {
-      ++blocked;
-    }
-    out.rejectedLine = line;
-    return finish(fmt::format("route (racing line blocked at leg {} of {}, {:.1f} {:.1f} {:.1f})", blocked, line.size() - 1,
-                              line[blocked].x, line[blocked].y, line[blocked].z)
-                      .c_str());
+    auto line = Line(aMap, out.points, lineParams);
+    // where the smoothing left it blocked, those stretches only are taken along the route (the
+    // stretch out from under cover to the free space is blocked on the map: not counted)
+    out.points = RepairLine(aMap, std::move(line), out.points, lineParams, startLeg + 5.0f, out.repaired);
+    return finish(out.repaired > 0 ? fmt::format("line ({} blocked stretch(es) taken along the route)", out.repaired).c_str()
+                                   : "line");
   }
   return finish("route");
 }
 
 void RacePreset(PlanParams &aParams) {
-  aParams.racingLine = true;
   aParams.preferredHeight = 40.0f;
   aParams.climbCost = 0.5f;
   aParams.minPassage = 12.0f;

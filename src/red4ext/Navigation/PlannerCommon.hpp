@@ -1,6 +1,6 @@
 #pragma once
 
-// Planner internals shared by Planner.cpp, RacingLine.cpp and Doorways.cpp: the search grid's keys
+// Planner internals shared by Planner.cpp, Line.cpp and Doorways.cpp: the search grid's keys
 // and gaps, and the checks that a leg or a line is free. Not for use outside the planner.
 
 #include "Planner.hpp"
@@ -77,7 +77,14 @@ std::vector<Vec3> Respace(const NavMap &aMap, const std::vector<Vec3> &aPoints, 
 // leg lies on an old one, so a free polyline stays free.
 std::vector<Vec3> Resample(const std::vector<Vec3> &aPoints, float aSpacing);
 
-// The racing line through the route's corridor (RacingLine.cpp).
-std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute, const PlanParams &aParams);
+// The line through the route's corridor (Line.cpp).
+std::vector<Vec3> Line(const NavMap &aMap, const std::vector<Vec3> &aRoute, const PlanParams &aParams);
+
+// The line made free where its smoothing left it blocked (Line.cpp): each blocked stretch, and a few
+// points either side (more until it fits), replaced by aRoute (free, pulled straight) between the
+// line's points at its ends, then evened out wherever the moves stay free. Legs within aSkip of the
+// start (the take-off from under cover) do not count. aRepaired: the stretches replaced.
+std::vector<Vec3> RepairLine(const NavMap &aMap, std::vector<Vec3> aLine, const std::vector<Vec3> &aRoute,
+                             const PlanParams &aParams, float aSkip, int32_t &aRepaired);
 
 } // namespace Navigation::detail

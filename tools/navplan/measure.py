@@ -1,4 +1,4 @@
-"""Plan routes with navplan and measure the racing lines: shared by bench.py and tune.py.
+"""Plan routes with navplan and measure the lines: shared by bench.py and tune.py.
 
 navplan (tools/navplan/navplan.cpp) is the plugin's own planner and car limits
 (src/red4ext/Navigation/Vehicle.hpp); each plan writes <prefix>_profile.csv and prints a
@@ -89,7 +89,8 @@ def measure(prefix, metrics):
     bend = np.degrees(np.abs(np.diff(heading))) if len(heading) > 2 else np.zeros(1)
     jerk = np.abs(np.diff(bend)).mean() if len(bend) > 2 else 0.0
     return {
-        "ok": metrics["racing_line"],
+        "ok": metrics["line_ok"],
+        "repaired": metrics.get("repaired", 0),
         "lost": lost,
         "jerk": float(jerk),
         "sharpest": float(np.percentile(bend, 99)) if len(bend) else 0.0,
@@ -126,11 +127,13 @@ def score(m, base):
     """One route's score against the defaults' line (0 = as good)."""
     lost_line = m is None or not m["ok"]
     if base is None or not base["ok"]:
-        # the defaults found no racing line here: only gaining one counts
+        # the defaults found no route here: only gaining one counts
         return 0.0 if lost_line else -2.0
     if lost_line:
         return 10.0
-    s = (m["lost"] - base["lost"]) / 10.0
+    # a stretch the smoothing left blocked flies the route's corners there
+    s0 = 2.0 * (m["repaired"] - base["repaired"])
+    s = s0 + (m["lost"] - base["lost"]) / 10.0
     s += 3.0 * (m["jerk"] / max(base["jerk"], 1e-3) - 1.0)
     s += 1.0 * (m["sharpest"] / max(base["sharpest"], 1e-3) - 1.0)
     s += (m["tight"] - base["tight"]) / 2.0

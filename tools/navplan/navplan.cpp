@@ -1,8 +1,8 @@
 // Offline route planning on navmap.bin with the plugin's own planner (src/red4ext/Navigation), for
-// tuning and plotting routes without the game. Plans start -> goal twice, the plain route and the
-// racing line, and writes next to the given prefix:
-//   <prefix>_route.csv    x,y,z: the plain route
-//   <prefix>_line.csv     x,y,z: the racing line (a rejected one too, to see where it is blocked)
+// tuning and plotting routes without the game. Plans start -> goal twice, the route pulled straight
+// alone and then the line the Autopilot flies, and writes next to the given prefix:
+//   <prefix>_route.csv    x,y,z: the route pulled straight (the search's corners, before the line)
+//   <prefix>_line.csv     x,y,z: the line
 //   <prefix>_profile.csv  d,t,x,y,z,v,why,clearance: the line every 2 m with the speed and time the
 //                         car flies it with (Navigation/Trajectory.hpp), what sets the speed there
 //                         and the distance to the nearest blocked space (up to 10 m)
@@ -12,7 +12,7 @@
 //   navplan <navmap.bin> <sx> <sy> <sz> <gx> <gy> <gz> <out prefix>
 //
 // Environment:
-//   NAVPLAN_RACE=1          the racing line as the Autopilot's Race plans it (FlightModeAutopilot
+//   NAVPLAN_RACE=1          the line as the Autopilot plans it (FlightModeAutopilot
 //                           race route fields and FlightNavMap::PlanRaceAsync); off: PlanParams defaults
 //   NAVPLAN_PARAMS=a=1,b=2  PlanParams fields by name (the table below), applied after the preset
 //   NAVPLAN_VEHICLE=a=1,..  the car (VehicleSpec fields by name; tools/navplan/vehicles.json names cars)
@@ -23,6 +23,7 @@
 // Build: cmake --build build --target navplan (not part of the default build).
 
 #include "Navigation/NavMap.hpp"
+#include "Navigation/PlannerCommon.hpp"
 #include "Navigation/Planner.hpp"
 #include "Navigation/Trajectory.hpp"
 #include "Navigation/Vehicle.hpp"
@@ -167,6 +168,7 @@ int main(int argc, char **argv) {
   std::string prefix = argv[8];
 
   PlanParams params;
+  params.line = false; // the pulled route alone first, to compare
   auto route = Navigation::Plan(map, start, goal, params);
   std::printf("%s\n", route.info.c_str());
   for (size_t i = 0; i + 1 < route.points.size(); ++i) {
@@ -176,7 +178,7 @@ int main(int argc, char **argv) {
       std::printf("route leg %zu (%.1f %.1f %.1f -> %.1f %.1f %.1f) is free for %.2f of its length\n", i, a.x, a.y, a.z, b.x, b.y, b.z, clear);
     }
   }
-  params.racingLine = true;
+  params.line = true;
   if (race) {
     Navigation::RacePreset(params);
   }
@@ -230,16 +232,16 @@ int main(int argc, char **argv) {
     std::printf("again: %s\n", again.info.c_str());
     milliseconds = again.milliseconds;
   }
-  for (size_t i = 0; i + 1 < line.rejectedLine.size(); ++i) {
-    const auto &a = line.rejectedLine[i], &b = line.rejectedLine[i + 1];
+  for (size_t i = 0; i + 1 < line.points.size(); ++i) {
+    const auto &a = line.points[i], &b = line.points[i + 1];
     float forward = map.SegmentClear(a.x, a.y, a.z, b.x, b.y, b.z);
-    if (forward < 1.0f) {
+    if (forward < 1.0f && !Navigation::detail::LegFree(map, a, b)) {
       float backward = map.SegmentClear(b.x, b.y, b.z, a.x, a.y, a.z);
       std::printf("line leg %zu (%.1f %.1f %.1f -> %.1f %.1f %.1f): free %.2f forward, %.2f back, ends free %d %d\n", i,
                   a.x, a.y, a.z, b.x, b.y, b.z, forward, backward, map.IsFree(a.x, a.y, a.z), map.IsFree(b.x, b.y, b.z));
     }
   }
-  const auto &points = line.rejectedLine.empty() ? line.points : line.rejectedLine;
+  const auto &points = line.points;
   if (!Write(prefix + "_route.csv", route.points) || !Write(prefix + "_line.csv", points)) {
     std::fprintf(stderr, "could not write %s_*.csv\n", prefix.c_str());
     return 1;
@@ -267,9 +269,9 @@ int main(int argc, char **argv) {
     std::fclose(f);
   }
   const float length = trajectory.samples.empty() ? 0.0f : trajectory.samples.back().s, time = trajectory.Duration();
-  std::printf("metrics {\"route_ok\": %s, \"line_ok\": %s, \"racing_line\": %s, \"length\": %.1f, \"time\": %.2f, "
+  std::printf("metrics {\"route_ok\": %s, \"line_ok\": %s, \"repaired\": %d, \"length\": %.1f, \"time\": %.2f, "
               "\"top\": %.1f, \"ms\": %.1f}\n",
-              route.ok ? "true" : "false", line.ok ? "true" : "false", line.rejectedLine.empty() && line.ok ? "true" : "false",
+              route.ok ? "true" : "false", line.ok ? "true" : "false", line.repaired,
               length, time, trajectory.top, milliseconds);
   return route.ok && line.ok ? 0 : 1;
 }

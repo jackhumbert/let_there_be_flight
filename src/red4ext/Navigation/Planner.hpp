@@ -11,7 +11,8 @@
 // 3. Height profile: per node a target height inside the gaps it joins, raised ahead of climbs
 //    and lowered gently after them (capped gradient).
 // 4. String pulling: keep only the corners needed for every straight leg to stay free.
-// 5. Racing line (optional): the pulled route spread into wide bends inside the free space.
+// 5. The line: the pulled route spread into wide bends inside the free space; where that leaves a
+//    stretch blocked, that stretch alone follows the route, rounded as far as the room lets.
 //
 // The result is a polyline of car-centre positions; the flight mode turns it into a trajectory.
 
@@ -44,7 +45,7 @@ struct PlanParams {
   float heuristicWeight = 1.5f;  // > 1 trades optimality for speed
   float turnCost = 0.0f;         // cost (as metres flown) per 45 degrees the route turns over a few
                                  // cells, at every step: it prefers straighter, more open corridors,
-                                 // whose bends the racing line can take wide
+                                 // whose bends the line can take wide
   float bearingCost = 0.0f;      // extra cost per metre flown straight away from the goal (none
                                  // flown towards it): a route that heads off the other way looks
                                  // wrong to someone watching even when it is cheaper
@@ -68,9 +69,10 @@ struct PlanParams {
   float legClearance = 2.0f;     // straight legs must also be free this far to either side (m), on top
                                  // of the bake's car inflation, so a follower can stray a little
   bool tryDirect = false;
-  // racing line (the Autopilot's Race option): the route evened out to points lineSpacing apart
-  // and bent as little as the free space allows (least summed squared curvature), coarse to fine
-  bool racingLine = false;
+  // the line: the route evened out to points lineSpacing apart and bent as little as the free space
+  // allows (least summed squared curvature), coarse to fine. Off only for a piece the caller makes
+  // its line from together with what follows (PlanRejoin's connector).
+  bool line = true;
   float lineSpacing = 5.0f;      // metres between the finished line's points
   float lineSide = 3.0f;         // the line also stays free this far to either side (m)
   // blocked space this close across the line pushes it away, linePush per pass (where the move
@@ -101,7 +103,7 @@ struct PlanParams {
   // there is not room for this and the floor clearance
   float lineCeilingClearance = 6.0f;
   float linePush = 0.08609f;         // m
-  // m either side a point's clearance push is shared with its neighbours, tapering off (RacingLine); 0 = only its own
+  // m either side a point's clearance push is shared with its neighbours, tapering off (Line); 0 = only its own
   float lineSpread = 27.62f;
   // the path across solved in a corridor after the smoothing (SmoothLateral, Planner.cpp)
   int lineCorridorIterations = 3000; // per level, coarse to fine; 0 = off
@@ -122,7 +124,7 @@ struct PlanParams {
   float lineVerticalWeight = 1.381f;
   float directMargin = 20.0f;    // cruise this far above the highest floor along the line
   float maxCruise = 700.0f;
-  // racing lines: a slot whose room costs more than slotDetourLoss m/s, or slotDetourShare of the speed
+  // the line: a slot whose room costs more than slotDetourLoss m/s, or slotDetourShare of the speed
   // there (and slotDetourLossMin at least), is routed around when that loses less (PlanRace)
   // a plan from a car already flying (|startVelocity| over 5 m/s): the route starts with a straight
   // lead-in of startLead seconds along the velocity (15 to 80 m), so the line leaves the start the way
@@ -136,7 +138,7 @@ struct PlanParams {
   float startHeadingTime = 1.5f;
   bool lineTakeoff = true;           // the line's first lineFloorEnds kept as planned (a take-off from the street)
   bool lineLanding = true;           // the line's last lineFloorEnds kept as planned (a landing)
-  float lineSettle = 0.0005f;   // m per point a smoothing pass moves at most once settled (RacingLine)
+  float lineSettle = 0.0005f;   // m per point a smoothing pass moves at most once settled (Line)
   float slotDetourLoss = 20.0f;
   float slotDetourShare = 0.25f;
   float slotDetourLossMin = 8.0f;
@@ -149,7 +151,7 @@ struct PlanResult {
   bool ok = false;
   bool direct = false;
   std::vector<Vec3> points;
-  std::vector<Vec3> rejectedLine; // a racing line that was not free all the way (diagnostics)
+  int32_t repaired = 0;           // stretches of the line its smoothing left blocked, taken along the route
   uint32_t expansions = 0;
   uint32_t doorwayExpansions = 0; // of the search over doorways, not in expansions
   uint32_t doorwayBlocks = 0;     // blocks the doorway route passed
@@ -169,14 +171,14 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
 PlanResult PlanWithRetries(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &aParams,
                            const std::function<void(const PlanResult &)> &aAttempt = {});
 
-// PlanWithRetries, then for a racing line the slots whose room would cost the car too much speed
+// PlanWithRetries, then the line's slots whose room would cost the car too much speed
 // (Trajectory.hpp's room caps, over slotDetour*): the route searched again round them (Avoid), and
 // round any the new line finds, up to three searches; kept when its line has none left, takes at most
 // 20% longer and loses less speed in dips (DipLoss); otherwise the first line, flown slower there. Jack, 2026-10-30: a small slowdown is flown, a large one routed round.
 PlanResult PlanRace(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &aParams,
                     const std::function<void(const PlanResult &)> &aAttempt = {});
 
-// Back onto a racing line after leaving it (a hit, knocked off it): a connector from aCar, flying at
+// Back onto the line after leaving it (a hit, knocked off it): a connector from aCar, flying at
 // startVelocity (a lead-in along it), to the point aJoinAhead metres along aLine past the car, ending
 // along the line's next lineFloorEnds, then the rest of aLine as it was. aLine: the line still ahead,
 // from about the car's place on it.

@@ -3,7 +3,7 @@
 Background: per 2 m column, the height of the open-sky floor (roofs, streets), grey, darker is
 lower. Columns where the route's own height is blocked are red, so a route through red is through
 something. Each CSV (x,y,z, header row) is drawn as a line, coloured by height when it is the only
-one; with several, one colour each, plus markers where a racing line leg is blocked.
+one; with several, one colour each, plus markers where a line leg is blocked.
 
     python tools/navplan/plot.py NAVMAP.bin a_route.csv b_line.csv [-o out.png] [--margin 80]
             [--zoom x,y,radius]

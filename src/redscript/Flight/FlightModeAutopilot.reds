@@ -1,10 +1,10 @@
 // Autopilot: flies the planned route to the GPS destination (or FlightNavMap's target override).
 //
-// Route: FlightNavMap.PlanRaceAsync (C++, src/red4ext/Navigation/Planner.cpp) gives a racing line
+// Route: FlightNavMap.PlanRaceAsync (C++, src/red4ext/Navigation/Planner.cpp) gives a line
 // over the baked nav map (or, when it cannot make one, the plain route with its corners rounded
 // here), and FlightTrajectory (docs/design/trajectory.md) the speed, its rate and the body tilt
 // along it. Each frame:
-//   - follow: on a racing line the line's direction at the trajectory's speed, its bend and the
+//   - follow: on a line the line's direction at the trajectory's speed, its bend and the
 //     speed's rate fed forward, a spring back onto it; on a plain route a lookahead point along it;
 //   - speed: the trajectory's at the car's place on the route, lowered only to stop short of
 //     blocked space the map does not know about (PredictBlocked);
@@ -104,7 +104,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   private let hits: array<Vector4>;         // x, y, z and the radius kept away from
   private let hitTimes: array<Float>;
   private let clock: Float;
-  public let droneYawLead: Float = 0.3;       // s along the racing line the nose aims (DroneAttitude)
+  public let droneYawLead: Float = 0.3;       // s along the line the nose aims (DroneAttitude)
   public let droneYawFrequency: Float = 3.0;  // rad/s, heading easing
   public let droneYawRateMax: Float = 1.5;    // rad/s
   public let droneYawAccelMax: Float = 5.0;   // rad/s2
@@ -112,7 +112,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let droneLandSlewBefore: Float = 2.0; // s before the descent the landing turn starts
   public let droneLandSlewDuring: Float = 2.0; // s into the descent it ends; spread evenly over both
 
-  // The Autopilot always flies the Race (the racing line at the car's full thrust). Nothing reads
+  // The Autopilot always flies the Race (the line at the car's full thrust). Nothing reads
   // this any more; it is kept for LtbfBridge.Aerobatics's race argument (docs/history.md).
   public let raceMode: Bool = true;
 
@@ -187,7 +187,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let raceRoundStep: Float = 0.7;
   public let raceRoundMin: Float = 8.0;       // m
   public let raceBankTime: Float = 0.12;      // s, smoothing of the acceleration the attitude follows
-  public let raceOffLine: Float = 4.0;        // m off a racing line before the car is treated as off it
+  public let raceOffLine: Float = 4.0;        // m off a line before the car is treated as off it
   // race route character (Navigation::RacePreset holds the same defaults; tools/navplan/bench.py
   // compares settings): between the buildings rather than over the rooftops
   public let raceRouteHeight: Float = 40.0;   // m above the local floor the route would like to fly
@@ -200,7 +200,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let raceMinPassage: Float = 12.0;    // m of free height the route may squeeze through at least (0 = any)
   public let raceSearchWeight: Float = 1.2;   // A* heuristic weight, 1 = optimal (slower to plan)
   // per 45 degrees the route turns over a few cells (as metres flown): straighter, more open
-  // corridors, whose bends the racing line takes wide
+  // corridors, whose bends the line takes wide
   public let raceTurnCost: Float = 6.559;
   // drift: in a bend the nose turns into it, up to raceDriftMax at raceDriftFull sideways (none
   // below raceDriftStart), so the surge thrust pushes round the corner along with the banked lift
@@ -215,14 +215,14 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // of the slowdowns
   public let racePushOver: Float = 15.0;
   public let raceTopDown: Float = 0.8;        // g of downward pull the attitude follows; the thrust gives the rest
-  // racing line tracking: the line's direction at the flown speed, its curvature fed forward
+  // line tracking: the line's direction at the flown speed, its curvature fed forward
   // lineLead ahead (the bank takes a moment to build), a damped spring onto the line across it.
   // (Aiming at a lookahead point cuts inside every bend at speed.)
   public let lineLead: Float = 0.25;          // s
   public let lineSpring: Float = 1.0;         // 1/s, distance off the line -> speed back towards it
   public let lineVelocityGain: Float = 2.5;   // 1/s, velocity error -> acceleration
   public let lineSpan: Float = 10.0;          // m either side a line point's direction and bend are taken over
-  // ribbon: on a racing line the bank comes from the line's own bend (over ribbonSpan either side,
+  // ribbon: on a line the bank comes from the line's own bend (over ribbonSpan either side,
   // ribbonLead seconds ahead) at the speed flown, not from the commanded acceleration, which
   // carries every small correction back onto the line and rolled the car for each of them
   public let ribbonSpan: Float = 50.0;        // m
@@ -239,7 +239,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let raceRollRateMax: Float = 1.0;    // rad/s
   public let raceRollAccelMax: Float = 3.0;   // rad/s2
   // pitch in Race, the same way as the bank (off the line too: the take-off and the arrival); on a
-  // racing line from the line's own slope ribbonLead ahead
+  // line from the line's own slope ribbonLead ahead
   // (not the velocity plus the commanded acceleration, which carries every height correction and
   // bobbed the nose), eased through the same filter
   public let racePitchFrequency: Float = 2.5; // rad/s
@@ -256,7 +256,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let freeRoamMaxPitch: Float = 45.0;  // deg, steepest climb or descent a leg may have
   public let freeRoamGateMin: Float = 300.0;  // m, nearest gate a leg goes for (PickFreeRoamGate)
   public let gateLead: Float = 60.0;          // m of straight run before and after a gate (gates.py checks 80)
-  public let gateStep: Float = 5.0;           // m between the run's points (a racing line's spacing)
+  public let gateStep: Float = 5.0;           // m between the run's points (a line's spacing)
   public let gateMemory: Int32 = 8;           // gates flown lately, not picked again
   public let gateTail: array<Vector4>;        // the run through the gate of the leg being planned
   public let recentGates: array<Int32>;
@@ -336,13 +336,13 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let attitudeError: Float;            // rad
   public let pathCurvature: Vector4;          // 1/m, towards the centre of the route's bend ahead (race feed-forward)
   public let bankAngle: Float;                // rad, eased bank of the attitude target about the nose
-  public let requestRace: Bool;               // the pending plan asked for a racing line
-  public let routeLine: Bool;                 // the route is a racing line (evenly spaced, smooth)
+  public let requestRace: Bool;               // the pending plan is the planner's line
+  public let routeLine: Bool;                 // the route is a line (evenly spaced, smooth)
   public let closestS: Float;                 // route distance of the closest point
-  public let onLine: Bool;                    // following a racing line this frame (the ribbon applies)
+  public let onLine: Bool;                    // following a line this frame (the ribbon applies)
   public let ribbonNeed: Vector4;             // m/s2, the line's bend ahead at the speed flown (no deadband)
   public let bankRateNow: Float;
-  public let pitchAngle: Float;               // rad, eased nose pitch on a racing line
+  public let pitchAngle: Float;               // rad, eased nose pitch on a line
   public let pitchRateNow: Float;             // rad/s
   public let commandSurge: Float;             // -1..1, the thrust it commands, for the engine sound
   public let commandSway: Float;
@@ -719,7 +719,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       this.status = "no nav map";
       return;
     }
-    // Race: the planner spreads the route into a racing line of wide bends
+    // Race: the planner spreads the route into a line of wide bends
     this.requestRace = true;
     this.requestJoin = false;
     // a replan towards a gate still ahead (off the route on the way there): through it again, or the
@@ -817,8 +817,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
         return;
       }
       if ArraySize(points) >= 2 {
-        // a racing line has its points lineSpacing (5 m) apart; when the planner could not make
-        // one free all the way it sends the plain route, corners and all
+        // the planner's line has its points lineSpacing (5 m) apart; a two-point hop has corners
+        // to round
         this.routeLine = this.requestRace && ArraySize(points) > 2
           && Vector4.Distance(points[0], points[ArraySize(points) - 1]) / Cast<Float>(ArraySize(points) - 1) < 10.0;
         if this.routeLine {
@@ -1031,7 +1031,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     }
     // the legs meet at an angle: ease the points round the join towards their neighbours where
     // the map allows (a point only moves if both its segments stay clear), leaving the stretch
-    // the car is on alone. Racing line points are about 5 m apart.
+    // the car is on alone. The line's points are about 5 m apart.
     let centre = route[join];
     let span = Cast<Int32>(this.freeRoamSmoothSpan / 5.0);
     let lo = Max(join - span, this.segment - first + 2);
@@ -1332,7 +1332,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     return -turn / (0.5 * (Vector4.Length(d1) + Vector4.Length(d2)));
   }
 
-  // A racing line's direction at route distance s and its bend there (towards the centre, 1 / radius
+  // A line's direction at route distance s and its bend there (towards the centre, 1 / radius
   // long), both taken over lineSpan either side.
   private func LineFrame(s: Float, out tangent: Vector4, out bend: Vector4) -> Void {
     this.LineFrameOver(s, this.lineSpan, tangent, bend);
@@ -1564,7 +1564,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       this.closestS = this.routeLength[this.segment] + Vector4.Distance(this.route[this.segment], closest);
       this.remaining = this.routeLength[ArraySize(this.routeLength) - 1] - this.closestS;
       if this.routeLine {
-        // off the racing line: a new trajectory from where the car is going, at most once a second
+        // off the line: a new trajectory from where the car is going, at most once a second
         if offRoute > this.replanOffLine && this.recovering <= 0.0 && this.replanTimer <= 2.0 && this.request == 0 {
           FlightLog.Info("[Autopilot] " + FloatToStringPrec(offRoute, 1) + " m off the line at " + FloatToStringPrec(stats.d_speed, 1) + " m/s: replanning from here");
           this.Replan(p, v);
@@ -1634,7 +1634,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
         // avoids a full-brake jolt for nothing
         // (blocked space within 10 m cannot be braked for at speed, only steered away from, and
         // came from the map's margin around the car itself on the route)
-        // (on a racing line, which the planner checked free all the way, only once the car has
+        // (on a line, which the planner checked free all the way, only once the car has
         // left it: at speed the straight-line prediction runs into the walls past every bend)
         let lineHeld = this.routeLine && offRoute < this.raceOffLine;
         if blockedAt && !lineHeld && travelled > 10.0 && this.DistanceToRoute(hit) > 2.0 && this.RouteClear(closest, Vector4.Length(reach)) {
@@ -2384,7 +2384,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   }
 
   // In Race: the nose's pitch eased (critically damped, rate and acceleration limited), on the
-  // nose's own heading. On a racing line the pitch wanted is the line's slope ahead; off it (the
+  // nose's own heading. On a line the pitch wanted is the line's slope ahead; off it (the
   // take-off and the arrival) the nose's own. Elsewhere the nose stays as it is.
   private func EasePitch(dt: Float, fwd: Vector4) -> Vector4 {
     let level = Vector4.Normalize2D(fwd);
@@ -2443,7 +2443,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let stats = this.component.stats;
     let z = FlightUtils.Up();
     let g = 9.81 * this.gravityFactor;
-    // where the nose points: on a racing line along the line a moment ahead, which is smooth by
+    // where the nose points: on a line along the line a moment ahead, which is smooth by
     // construction; off it the velocity's horizontal part. That part is small and noisy on a
     // steep climb or drop (the nose twitches): it holds the last heading where the direction is
     // near vertical

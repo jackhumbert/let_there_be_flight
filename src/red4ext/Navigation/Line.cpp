@@ -36,7 +36,7 @@ void Band(const Gap &aGap, float aAlong, float aLength, const PlanParams &aParam
 // summed squared second difference) within each point's height band (Band: the floor clearance
 // below, anything overhead), coarse to fine (every 16th point, then every 8th, ... each coarse
 // point held to the band of the stretch it stands for, so a bump between them still counts), the
-// first and last two points fixed. The smoothing passes in RacingLine stop after a hundred local
+// first and last two points fixed. The smoothing passes in Line stop after a hundred local
 // passes at the fine spacing, so a bump in the floor would leave a ramp and a crest. A point whose
 // legs are not free at the solved height goes back to where it was, with its neighbour.
 // Over rather than under: the route keeps to the gap it was searched in, so a line high over the
@@ -266,9 +266,9 @@ void SmoothHeights(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
 // less lineCorridorMargin; where it already is always allowed), and the offsets minimise the
 // summed squared second differences (bend) plus lineCurvatureRate times the third differences
 // (how fast the bend changes, so turns build up and ease off instead of switching on), coarse to
-// fine as SmoothHeights. A corridor rather than RacingLine's moves, each kept only if its legs stay
+// fine as SmoothHeights. A corridor rather than Line's moves, each kept only if its legs stay
 // free with room to the sides: those cannot swing a line wide past an obstacle corner on the
-// inside (every step outwards turns the leg into the corner). Racing line planners solve in a
+// inside (every step outwards turns the leg into the corner). Car racing line planners solve in a
 // corridor (Heilmeier et al. 2020), drone planners add a jerk term. A leg not free at the solved
 // offsets goes back to where it was, with its neighbour.
 // SmoothLateral's coarse-to-fine solve of the offsets d across the line (each bend weighted).
@@ -458,13 +458,13 @@ void SmoothLateral(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
 
 } // namespace
 
-// Racing line: gradient descent on the summed squared second differences of the points (their
+// The line: gradient descent on the summed squared second differences of the points (their
 // bend), each move kept only where both legs to the neighbours stay free, with lineSide to spare
 // or at least no less than before. Points ahead of a corner move out and the apex moves in, so the
 // bend spreads over all the room there is. Coarse spacings first (the bend of a long corner
 // spreads over a few points per pass there), then finer ones down to lineSpacing; then
 // SmoothLateral and SmoothHeights.
-std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute, const PlanParams &aParams) {
+std::vector<Vec3> Line(const NavMap &aMap, const std::vector<Vec3> &aRoute, const PlanParams &aParams) {
   using Clock = std::chrono::steady_clock;
   auto ms = [](Clock::time_point aFrom) { return std::chrono::duration<double, std::milli>(Clock::now() - aFrom).count(); };
   const auto t0 = Clock::now();
@@ -604,9 +604,108 @@ std::vector<Vec3> RacingLine(const NavMap &aMap, const std::vector<Vec3> &aRoute
     pts = Respace(aMap, pts, aParams.lineSpacing);
     SmoothHeights(aMap, pts, aParams);
   }
-  spdlog::info("[Planner] racing line stages: passes {:.0f} ms, across {:.0f} ms, heights {:.0f} ms ({} points)", passesMs,
+  spdlog::info("[Planner] line stages: passes {:.0f} ms, across {:.0f} ms, heights {:.0f} ms ({} points)", passesMs,
                lateralMs, ms(t2), pts.size());
   return pts;
+}
+
+std::vector<Vec3> RepairLine(const NavMap &aMap, std::vector<Vec3> aLine, const std::vector<Vec3> &aRoute,
+                             const PlanParams &aParams, float aSkip, int32_t &aRepaired) {
+  aRepaired = 0;
+  if (aLine.size() < 3 || aRoute.size() < 2) {
+    return aLine;
+  }
+  const auto route = Resample(aRoute, aParams.lineSpacing);
+  auto nearest = [&](Vec3 aP, size_t aFrom) {
+    size_t best = aFrom;
+    float bestD = kInf;
+    for (size_t k = aFrom; k < route.size(); ++k) {
+      float d = Distance(aP, route[k]);
+      if (d < bestD) {
+        bestD = d;
+        best = k;
+      }
+    }
+    return best;
+  };
+  // a leg is blocked when it, or it with its neighbours, grazes more than the line may (LegRunFree);
+  // legs within aSkip of the start are the take-off from under cover and do not count
+  auto firstBlocked = [&](size_t aFrom, size_t &aLast) {
+    float along = 0.0f;
+    for (size_t i = 0; i + 1 < aLine.size(); ++i) {
+      if (i >= aFrom && along + Distance(aLine[i], aLine[i + 1]) > aSkip && !LegRunFree(aMap, aLine, i)) {
+        aLast = i;
+        while (aLast + 2 < aLine.size() && !LegRunFree(aMap, aLine, aLast + 1)) {
+          ++aLast;
+        }
+        return i;
+      }
+      along += Distance(aLine[i], aLine[i + 1]);
+    }
+    return aLine.size();
+  };
+  size_t from = 0;
+  for (int32_t round = 0; round < 32; ++round) {
+    size_t last = 0;
+    const size_t first = firstBlocked(from, last);
+    if (first >= aLine.size()) {
+      break;
+    }
+    const size_t n = aLine.size();
+    bool fixed = false;
+    for (size_t reach = 3;; reach *= 2) {
+      const size_t a = first > reach ? first - reach : 0, c = std::min(n - 1, last + 1 + reach);
+      const size_t ra = a == 0 ? 0 : nearest(aLine[a], 0), rc = c == n - 1 ? route.size() - 1 : nearest(aLine[c], ra);
+      // the line to a, the route from about a to about c (free: its legs were checked), the line on
+      // from c; the stretch then evened out by moving each point towards its neighbours' middle
+      // wherever both its legs stay free, so the route's corners round off as far as the room lets
+      std::vector<Vec3> piece{aLine[a]};
+      piece.insert(piece.end(), route.begin() + ra, route.begin() + rc + 1);
+      piece.push_back(aLine[c]);
+      piece = Resample(piece, aParams.lineSpacing);
+      std::vector<Vec3> pts(aLine.begin(), aLine.begin() + a);
+      const size_t p0 = pts.size();
+      pts.insert(pts.end(), piece.begin(), piece.end());
+      const size_t p1 = pts.size() - 1;
+      pts.insert(pts.end(), aLine.begin() + c + 1, aLine.end());
+      for (int pass = 0; pass < 200; ++pass) {
+        float moved = 0.0f;
+        for (size_t i = std::max<size_t>(p0, 1); i < p1 && i + 1 < pts.size(); ++i) {
+          const Vec3 prev = pts[i - 1], next = pts[i + 1], p = pts[i];
+          const Vec3 q{p.x + 0.5f * (0.5f * (prev.x + next.x) - p.x), p.y + 0.5f * (0.5f * (prev.y + next.y) - p.y),
+                       p.z + 0.5f * (0.5f * (prev.z + next.z) - p.z)};
+          if (LegFree(aMap, prev, q) && LegFree(aMap, q, next)) {
+            moved += Distance(p, q);
+            pts[i] = q;
+          }
+        }
+        if (moved < 0.01f * float(p1 - p0 + 1)) {
+          break;
+        }
+      }
+      float along = 0.0f;
+      for (size_t i = 0; i < p0; ++i) {
+        along += Distance(pts[i], pts[i + 1]);
+      }
+      const size_t s0 = p0 > 0 ? p0 - 1 : 0, s1 = std::min(p1 + 1, pts.size() - 1);
+      const float skip = std::max(0.0f, aSkip - along);
+      if (LongestBlocked(aMap, std::vector<Vec3>(pts.begin() + s0, pts.begin() + s1 + 1), skip) <= kGrazeAllowedLine) {
+        from = p1;
+        aLine = std::move(pts);
+        ++aRepaired;
+        fixed = true;
+        break;
+      }
+      if (a == 0 && c == n - 1) {
+        break;
+      }
+    }
+    if (!fixed) {
+      spdlog::warn("[Planner] the line stays blocked at {:.1f} {:.1f} {:.1f}", aLine[first].x, aLine[first].y, aLine[first].z);
+      from = last + 1;
+    }
+  }
+  return aLine;
 }
 
 } // namespace Navigation::detail

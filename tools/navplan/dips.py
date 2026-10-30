@@ -1,4 +1,4 @@
-"""Where a racing line makes the drone-style Autopilot slow down for nothing: every dip in its speed
+"""Where the line makes the drone-style Autopilot slow down for nothing: every dip in its speed
 (a slowdown it speeds up out of again), outside the landing's approach. The line's look matters
 more than its time (Jack, 2026-10-29: it does not need to slow down), so this reports the dips, not
 a lap time.

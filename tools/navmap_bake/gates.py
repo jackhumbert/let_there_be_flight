@@ -165,7 +165,7 @@ def steepest_pitch(points, span=10.0):
 
 
 def plan_line(navmap, navplan, start, goal, prefix):
-    """The Race's racing line from start to goal (navplan's NAVPLAN_RACE preset, Navigation::RacePreset), or None."""
+    """The Race's line from start to goal (navplan's NAVPLAN_RACE preset, Navigation::RacePreset), or None."""
     env = dict(os.environ, NAVPLAN_RACE="1")
     r = subprocess.run([navplan, navmap, *(f"{v:.1f}" for v in start), *(f"{v:.1f}" for v in goal), prefix],
                        env=env, capture_output=True, text=True)
