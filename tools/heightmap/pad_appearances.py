@@ -11,8 +11,13 @@ import shutil
 import subprocess
 import tempfile
 
-DEFAULT_WOLVENKIT = r"D:\cp2077_work\build\tools\wolvenkit-10.0.0-beta.1\WolvenKit.CLI.exe"
-CONTENT = r"D:\Games\SteamLibrary\steamapps\common\Cyberpunk 2077\archive\pc\content"
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/, for common
+from common import paths  # noqa: E402
+
+DEFAULT_WOLVENKIT = paths.WOLVENKIT
+CONTENT = os.path.join(paths.ARCHIVES, "content")
 
 
 def fnv1a64(s):

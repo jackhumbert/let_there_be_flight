@@ -18,7 +18,9 @@ import math
 import re
 from pathlib import Path
 
-DEFAULT_LOG = Path(r"D:\Games\SteamLibrary\steamapps\common\Cyberpunk 2077\red4ext\logs\let_there_be_flight.log")
+from common import paths  # noqa: E402 (tools/ is this script's folder)
+
+DEFAULT_LOG = Path(paths.LTBF_LOG)
 NAMES = {0: "cruise", 1: "aileron roll", 2: "barrel roll", 3: "loop", 4: "Immelmann", 5: "split-S"}
 
 

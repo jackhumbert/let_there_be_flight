@@ -11,7 +11,6 @@ give it as name=path. --pads marks the landing pads from helipads.tsv.
 """
 
 import argparse
-import zlib
 
 import matplotlib
 
@@ -19,7 +18,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from plot import INDEX, HEADER, NavMap, load
+from plot import NavMap, load
 
 # the built-up city and the edge of the Badlands; the map itself runs much further
 CITY = (-3400.0, -3600.0, 3600.0, 2600.0)
@@ -38,13 +37,11 @@ def floor_map(nav, res, extent):
     t = nav.tile
     for ty in range(cy0 // t, cy1 // t + 1):
         for tx in range(cx0 // t, cx1 // t + 1):
-            key = ty * nav.tx + tx
-            off, packed, raw = INDEX.unpack_from(nav.data, HEADER.size + key * INDEX.size)
-            if not off:
+            tile = nav.tile_data(tx, ty)
+            if tile is None:
                 continue
-            buf = zlib.decompress(nav.data[off:off + packed])
-            counts = np.frombuffer(buf, np.uint8, t * t).astype(np.int64)
-            gaps = np.frombuffer(buf, np.uint16, offset=t * t).reshape(-1, 2)
+            counts, gaps, _ = tile
+            counts = counts.astype(np.int64)
             last = np.cumsum(counts) - 1
             has = counts > 0
             top = np.full(t * t, np.nan, np.float32)

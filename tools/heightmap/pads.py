@@ -38,6 +38,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import numpy as np
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/, for common
+from common.navmap import NavMap  # noqa: E402
+
 from sectors import DEFAULT_WOLVENKIT, FIXED_POINT
 
 BATCH = 40
@@ -240,54 +243,6 @@ def scan(args):
 
 
 # --------------------------------------------------------------------------------------- build
-
-
-class NavMap:
-    """Reader for navmap.bin (format in navmap.py)."""
-
-    HEADER = struct.Struct("<8sII5fIIII II2f")
-
-    def __init__(self, path):
-        self.buf = open(path, "rb").read()
-        (magic, _, _, self.ox, self.oy, self.cell, self.z0, self.vz, self.nz, self.w, self.h,
-         self.tile, self.tx, self.ty, self.radius, self.half) = self.HEADER.unpack_from(self.buf, 0)
-        assert magic == b"LTBFNAV1", magic
-        self.index = np.frombuffer(
-            self.buf, dtype=[("off", "<u8"), ("csize", "<u4"), ("usize", "<u4")],
-            count=self.tx * self.ty, offset=self.HEADER.size,
-        )
-        self.cache = {}
-
-    def tile_data(self, tx, ty):
-        key = (tx, ty)
-        if key not in self.cache:
-            e = self.index[ty * self.tx + tx]
-            if e["off"] == 0:
-                self.cache[key] = None
-            else:
-                raw = zlib.decompress(self.buf[e["off"] : e["off"] + e["csize"]])
-                n = self.tile * self.tile
-                counts = np.frombuffer(raw, np.uint8, n)
-                gaps = np.frombuffer(raw, "<u2", offset=n).reshape(-1, 2)
-                starts = np.concatenate([[0], np.cumsum(counts, dtype=np.int64)])
-                self.cache[key] = (counts, gaps, starts)
-        return self.cache[key]
-
-    def gaps(self, x, y):
-        """(floor, ceiling) of each gap a car's centre can occupy; ceiling inf = open sky."""
-        cx = int(math.floor((x - self.ox) / self.cell))
-        cy = int(math.floor((y - self.oy) / self.cell))
-        if not (0 <= cx < self.w and 0 <= cy < self.h):
-            return []
-        t = self.tile_data(cx // self.tile, cy // self.tile)
-        if t is None:
-            return []
-        _, gaps, starts = t
-        i = (cy % self.tile) * self.tile + (cx % self.tile)
-        return [
-            (self.z0 + b * self.vz, math.inf if top >= self.nz else self.z0 + top * self.vz)
-            for b, top in gaps[starts[i] : starts[i + 1]]
-        ]
 
 
 def group(placements, reach=8.0, rise=14.0):

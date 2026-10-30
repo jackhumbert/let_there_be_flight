@@ -15,8 +15,6 @@ LtbfBridge.RouteDump (tools/bridge) writes the in-game route (red4ext/logs/ltbf_
 
 import argparse
 import csv
-import struct
-import zlib
 
 import matplotlib
 
@@ -24,49 +22,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-HEADER = struct.Struct("<8sII5fIIIIII2f")
-INDEX = struct.Struct("<QII")
+import os
+import sys
 
-
-class NavMap:
-    def __init__(self, path):
-        self.data = open(path, "rb").read()
-        (magic, version, flags, self.ox, self.oy, self.cell, self.z0, self.vz, self.nz, self.w, self.h,
-         self.tile, self.tx, self.ty, self.radius, self.half) = HEADER.unpack_from(self.data, 0)
-        assert magic == b"LTBFNAV1" and version == 1, "not a navmap.bin"
-        self.tiles = {}
-
-    def _tile(self, key):
-        if key not in self.tiles:
-            off, packed, raw = INDEX.unpack_from(self.data, HEADER.size + key * INDEX.size)
-            if not off:
-                self.tiles[key] = None
-            else:
-                buf = zlib.decompress(self.data[off:off + packed])
-                n = self.tile * self.tile
-                counts = np.frombuffer(buf, np.uint8, n)
-                gaps = np.frombuffer(buf, np.uint16, offset=n).reshape(-1, 2)
-                starts = np.concatenate([[0], np.cumsum(counts, dtype=np.int64)])
-                self.tiles[key] = (counts, gaps, starts)
-        return self.tiles[key]
-
-    def gaps(self, cx, cy):
-        """Gaps (bottom, top) in metres of cell (cx, cy); top is inf for open sky."""
-        if not (0 <= cx < self.w and 0 <= cy < self.h):
-            return []
-        t = self._tile((cy // self.tile) * self.tx + cx // self.tile)
-        if t is None:
-            return []
-        counts, gaps, starts = t
-        c = (cy % self.tile) * self.tile + cx % self.tile
-        out = []
-        for b, top in gaps[starts[c]:starts[c] + counts[c]]:
-            out.append((self.z0 + b * self.vz, np.inf if top >= self.nz else self.z0 + top * self.vz))
-        return out
-
-    def cell_of(self, x, y):
-        return int(np.floor((x - self.ox) / self.cell)), int(np.floor((y - self.oy) / self.cell))
-
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/, for common
+from common.navmap import NavMap  # noqa: E402,F401 (city.py and navviz.py import it from here)
 
 def load(path):
     """A route CSV (x,y,z columns), or an LTBF log: the flown path from its Autopilot telemetry
@@ -112,7 +72,7 @@ def main():
     blocked = np.zeros_like(floor, dtype=bool)
     for iy, cy in enumerate(range(cy0, cy1 + 1, step)):
         for ix, cx in enumerate(range(cx0, cx1 + 1, step)):
-            g = nav.gaps(cx, cy)
+            g = nav.column(cx, cy)
             if not g:
                 continue
             floor[iy, ix] = g[-1][0] if np.isinf(g[-1][1]) else np.nan
@@ -125,7 +85,7 @@ def main():
                 for cx in range(px - r, px + r + 1, step):
                     iy, ix = (cy - cy0) // step, (cx - cx0) // step
                     if 0 <= iy < floor.shape[0] and 0 <= ix < floor.shape[1]:
-                        if not any(b <= p[2] <= t for b, t in nav.gaps(cx, cy)):
+                        if not any(b <= p[2] <= t for b, t in nav.column(cx, cy)):
                             blocked[iy, ix] = True
 
     fig, ax = plt.subplots(figsize=(12, 12 * (y1 - y0) / max(x1 - x0, 1)), dpi=110)
@@ -167,7 +127,7 @@ def main():
             zs = np.interp(fine, s, route[:, 2])
             lo, hi = [], []
             for x, y, z in zip(xs, ys, zs):
-                g = [gap for gap in nav.gaps(*nav.cell_of(x, y)) if gap[0] <= z + 3 and z - 3 <= gap[1]]
+                g = [gap for gap in nav.column(*nav.cell_of(x, y)) if gap[0] <= z + 3 and z - 3 <= gap[1]]
                 lo.append(g[0][0] if g else np.nan)
                 hi.append(min(g[0][1], z + 60) if g else np.nan)
             ax.fill_between(fine, lo, hi, color="#dddddd", label="free gap at the route")

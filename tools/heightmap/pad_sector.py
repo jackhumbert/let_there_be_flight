@@ -35,10 +35,15 @@ import shutil
 import subprocess
 import tempfile
 
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/, for common
+from common import paths  # noqa: E402
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 SOURCE = os.path.join(REPO, "src", "wolvenkit", "source", "archive")
-DEFAULT_WOLVENKIT = r"D:\cp2077_work\build\tools\wolvenkit-10.0.0-beta.1\WolvenKit.CLI.exe"
+DEFAULT_WOLVENKIT = paths.WOLVENKIT
 PAD_PREFIX = "user\\jackhumbert\\entities\\ltbf_"  # every entity of ours (pads, hangar)
 
 

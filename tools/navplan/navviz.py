@@ -45,7 +45,7 @@ def outlines(nav, line, width, offsets):
                     near.setdefault((cx + dx, cy + dy), p[2])
 
     def blocked(k, z):
-        return not any(b <= z < t for b, t in nav.gaps(*k))
+        return not any(b <= z < t for b, t in nav.column(*k))
 
     segs = []
     for (cx, cy), zl in near.items():
@@ -79,7 +79,7 @@ class Solid:
             for j in range(ny):
                 x, y = self.x0 + (i + 0.5) * self.CELL, self.y0 + (j + 0.5) * self.CELL
                 col = self.solid[i, j]
-                for b, t in nav.gaps(*nav.cell_of(x, y)):
+                for b, t in nav.column(*nav.cell_of(x, y)):
                     col[(zs >= b) & (zs < t)] = False
 
     def blocked(self, pts):

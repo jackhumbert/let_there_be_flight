@@ -27,10 +27,13 @@ from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/, for common
+from common import paths  # noqa: E402
+
 from glb import read_glb_triangles
 from sectors import DEFAULT_WOLVENKIT, quat_matrix
 
-GAME = r"D:\Games\SteamLibrary\steamapps\common\Cyberpunk 2077"
+GAME = paths.GAME
 ARCHIVES = [
     os.path.join(GAME, r"archive\pc\content\basegame_3_nightcity.archive"),
     os.path.join(GAME, r"archive\pc\ep1\ep1_1_nightcity.archive"),

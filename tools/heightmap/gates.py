@@ -27,7 +27,11 @@ from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 
-from pads import NavMap
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/, for common
+from common.navmap import NavMap  # noqa: E402
+
 
 TAG = b"LTBFDOOR"
 BLOCK = 16  # columns per block edge (Planner.cpp kBlock)

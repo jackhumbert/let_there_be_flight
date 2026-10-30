@@ -14,10 +14,15 @@ import matplotlib
 import numpy as np
 from scipy import ndimage
 
-from pads import NavMap
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
+
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/, for common
+from common.navmap import NavMap  # noqa: E402
 
 
 def main():

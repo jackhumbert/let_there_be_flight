@@ -39,9 +39,12 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import numpy as np
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/, for common
+from common import paths  # noqa: E402
+
 from geometry_cache import GeometryLibrary
 
-DEFAULT_WOLVENKIT = r"D:\cp2077_work\build\tools\wolvenkit-10.0.0-beta.1\WolvenKit.CLI.exe"
+DEFAULT_WOLVENKIT = paths.WOLVENKIT
 FIXED_POINT = 1.0 / 131072.0  # WorldPosition FixedPoint.Bits, 17 fractional bits
 COLLISION_NODE_TYPES = ("worldCookedCollisionNode", "worldCollisionNode")
 BATCH = 80

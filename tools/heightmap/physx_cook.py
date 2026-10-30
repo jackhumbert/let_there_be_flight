@@ -9,7 +9,12 @@ import tempfile
 
 import numpy as np
 
-DEFAULT_COOK = r"D:\cp2077_work\build\tools\physx_cook\cook.exe"
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/, for common
+from common import paths  # noqa: E402
+
+DEFAULT_COOK = os.path.join(paths.WORK, "tools", "physx_cook", "cook.exe")
 
 
 def cook(meshes, exe=DEFAULT_COOK):

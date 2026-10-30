@@ -29,7 +29,12 @@ import subprocess
 import tempfile
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
-DEFAULT_WOLVENKIT = r"D:\cp2077_work\build\tools\wolvenkit-10.0.0-beta.1\WolvenKit.CLI.exe"
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/, for common
+from common import paths  # noqa: E402
+
+DEFAULT_WOLVENKIT = paths.WOLVENKIT
 FIXED_POINT = 1.0 / 131072.0
 BATCH = 80
 BLOCKERS = {
@@ -39,7 +44,7 @@ BLOCKERS = {
 }
 # presets that hold no collision at all (query only): deleting them with a blocker group is free
 NO_COLLISION = {"Foliage Crown", "No Collision", "Sight Blocker", "Block PhotoMode Camera"}
-PRESETS_TABLE = r"D:\cp2077_work\build\heightmap\presets_table.json"
+PRESETS_TABLE = os.path.join(paths.WORK, "heightmap", "presets_table.json")
 _names = {h: n for n, h in BLOCKERS.items()}
 if os.path.exists(PRESETS_TABLE):
     _names.update({p["hash"]: p["name"] for p in json.load(open(PRESETS_TABLE))})

@@ -19,7 +19,10 @@ import subprocess
 import sys
 import tempfile
 
-DEFAULT_WOLVENKIT = r"D:\cp2077_work\build\tools\wolvenkit-10.0.0-beta.1\WolvenKit.CLI.exe"
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/, for common
+from common import paths  # noqa: E402
+
+DEFAULT_WOLVENKIT = paths.WOLVENKIT
 FIXED_POINT = 1.0 / 131072.0
 LEVELS = (0, 1, 2, 3)
 

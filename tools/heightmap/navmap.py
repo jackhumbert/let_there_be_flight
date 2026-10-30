@@ -37,9 +37,9 @@ import zlib
 
 import numpy as np
 
-MAGIC = b"LTBFNAV1"
-VERSION = 1
-HEADER = struct.Struct("<8sII5fIIII II2f")
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/, for common
+from common.navmap import HEADER, MAGIC, VERSION  # noqa: E402
+
 
 
 def main():
