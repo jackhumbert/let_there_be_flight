@@ -1,0 +1,63 @@
+{
+  "_doc": "Known places where the nav map's solid space and the game disagree, or agree, for checking the hidden collider audit and the bake. box: x0,y0,z0,x1,y1,z1 in game space (not car-inflated). truth: what is there in game. rays: segments through the box; expect: what the game's collision answers (clear: nothing to hit; hit: real collision). Checked offline with tools/world/collision_at.py --case <name> and in game with tools/ingame/check_collider.py --case <name>.",
+  "cases": [
+    {
+      "name": "highway_pillar_ghost",
+      "box": [
+        -1134,
+        -635,
+        40,
+        -1114,
+        -631,
+        115
+      ],
+      "truth": "nothing: open air beside the elevated road, Jack saw nothing there (North run, 2026-10-30, the swerve at 0:21)",
+      "navmap": "blocked from z 22 to 210 in the columns at y -633 (bake_2026-10-29_noblockers)",
+      "cause": "bake: spans.py fill_hollow filled the 32 to 120 m gap under the wall of an overhead mass (exterior_-5_-3_0_2 World Static, z 120 to 208) as if it were a 15 m thick roof; only a corner of one mesh reaches into the box (exterior_-3_-2_0_3 node 466 group 22 actor 24, z 85 to 97). In game, rays at z 50 and 70 are clear.",
+      "rays": [
+        [
+          -1140,
+          -633,
+          50,
+          -1108,
+          -633,
+          50
+        ],
+        [
+          -1140,
+          -633,
+          70,
+          -1108,
+          -633,
+          70
+        ]
+      ],
+      "expect": "clear"
+    },
+    {
+      "name": "highway_wall_west",
+      "box": [
+        -1159,
+        -715,
+        40,
+        -1151,
+        -707,
+        68
+      ],
+      "truth": "the wall left of the 15 m gap the North route takes under the elevated road (real collision)",
+      "navmap": "blocked",
+      "cause": "real collision: exterior_-10_-6_0_1 Complex / Simple Environment Collision, exterior_-19_-12_0_0 World Static",
+      "rays": [
+        [
+          -1166,
+          -710,
+          55,
+          -1144,
+          -710,
+          55
+        ]
+      ],
+      "expect": "hit"
+    }
+  ]
+}
