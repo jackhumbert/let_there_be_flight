@@ -263,8 +263,9 @@ void SmoothHeights(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
 }
 // The line's path across solved on its own, its heights kept: each point may move along its
 // horizontal normal within the free width there (marched out to lineCorridorMax at its height,
-// less lineCorridorMargin; where it already is always allowed), and the offsets minimise the
-// summed squared second differences (bend) plus lineCurvatureRate times the third differences
+// less lineCorridorMargin; a point inside the margin is moved out where the width allows both
+// margins, its neighbours smoothed along, and may stay where it is in a narrower pinch), and the
+// offsets minimise the summed squared second differences (bend) plus lineCurvatureRate times the third differences
 // (how fast the bend changes, so turns build up and ease off instead of switching on), coarse to
 // fine as SmoothHeights. A corridor rather than Line's moves, each kept only if its legs stay
 // free with room to the sides: those cannot swing a line wide past an obstacle corner on the
@@ -304,8 +305,7 @@ void SolveLateral(std::vector<float> &d, const std::vector<float> &lo, const std
       if (slo[k] > shi[k] || k < 3 || k + 3 >= m) {
         slo[k] = shi[k] = s[k];
       }
-      slo[k] = std::min(slo[k], s[k]);
-      shi[k] = std::max(shi[k], s[k]);
+      s[k] = std::clamp(s[k], slo[k], shi[k]); // out of a margin it is in, the solve smooths the step
     }
     for (int it = 0; it < aIterations; ++it) {
       for (size_t k = 0; k < m; ++k) {
@@ -404,8 +404,14 @@ void SmoothLateral(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
       }
       extent[s] = r - step;
     }
-    hi[i] = std::max(0.0f, extent[0] - aParams.lineCorridorMargin);
-    lo[i] = std::min(0.0f, -(extent[1] - aParams.lineCorridorMargin));
+    hi[i] = extent[0] - aParams.lineCorridorMargin;
+    lo[i] = -(extent[1] - aParams.lineCorridorMargin);
+    if (lo[i] > hi[i]) {
+      // narrower than both margins: where it already is stays allowed (made to keep to the
+      // middle, the line weaves through every pinch)
+      hi[i] = std::max(0.0f, hi[i]);
+      lo[i] = std::min(0.0f, lo[i]);
+    }
   }
   const float w = aParams.lineCurvatureRate;
   // rounds: the bends that cost the car speed (TurnCost) weighted up by that cost and the line
