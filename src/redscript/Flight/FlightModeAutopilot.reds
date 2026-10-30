@@ -1953,9 +1953,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
       desiredVelocity = tangent * this.speedCmd + back + this.overlayVelocity;
       // plus the flown speed's own rate along the line: on velocity error alone the car trails a
       // braking curve by rate / lineVelocityGain, more than brakeLead covers
-      // the bend at the speed actually flown on a trajectory (planned at its own speed, a car a little
-      // slower turned in too hard and ran inside the line)
-      let bendSpeed = this.FollowsTrajectory() ? stats.d_speed : this.speedCmd;
+      // the bend at the lower of the speed flown and the trajectory's: planned at its own speed, a car
+      // a little slower turned in too hard and ran inside the line; at the flown speed, a car still
+      // faster than a new trajectory (just rejoined) was asked to take its bend at 85 m/s against 42
+      // planned, and lost all its speed to it
+      let bendSpeed = this.FollowsTrajectory() ? MinF(stats.d_speed, this.speedCmd) : this.speedCmd;
       let correct = (desiredVelocity - v) * this.lineVelocityGain;
       // on a trajectory its own acceleration goes in whole and the correction is capped: flying a
       // little across a new line (just replanned), the whole velocity error braked the car from 79

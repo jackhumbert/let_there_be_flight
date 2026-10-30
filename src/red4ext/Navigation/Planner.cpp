@@ -174,8 +174,10 @@ PlanResult PlanRace(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParam
   return result;
 }
 
-PlanResult PlanRejoin(const NavMap &aMap, Vec3 aCar, const std::vector<Vec3> &aLine, float aJoinAhead,
-                      const PlanParams &aParams) {
+namespace {
+// One rejoin: the connector to the line aJoinAhead metres on (PlanRejoin tries a few).
+PlanResult RejoinAt(const NavMap &aMap, Vec3 aCar, const std::vector<Vec3> &aLine, float aJoinAhead,
+                    const PlanParams &aParams) {
   auto t0 = std::chrono::steady_clock::now();
   PlanResult out;
   if (aLine.size() < 3) {
@@ -256,6 +258,41 @@ PlanResult PlanRejoin(const NavMap &aMap, Vec3 aCar, const std::vector<Vec3> &aL
                          out.milliseconds, out.info);
   return out;
 }
+} // namespace
+
+PlanResult PlanRejoin(const NavMap &aMap, Vec3 aCar, const std::vector<Vec3> &aLine, float aJoinAhead,
+                      const PlanParams &aParams) {
+  // a few joins, nearer and further, each scored by the time its trajectory takes to the end (from
+  // the car's speed) plus a second per 10 m/s it loses in dips; the best kept
+  auto t0 = std::chrono::steady_clock::now();
+  const Vec3 v = aParams.startVelocity;
+  TrajectoryParams tp;
+  tp.startSpeed = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+  PlanResult best;
+  float bestScore = 1e30f, bestAhead = 0.0f;
+  std::string tried;
+  for (float share : {0.7f, 1.0f, 1.5f}) {
+    auto r = RejoinAt(aMap, aCar, aLine, aJoinAhead * share, aParams);
+    if (!r.ok) {
+      continue;
+    }
+    const auto trajectory = BuildTrajectory(aParams.vehicle, r.points, tp, &aMap);
+    const float score = trajectory.Duration() + 0.1f * DipLoss(trajectory);
+    tried += fmt::format("{}{:.0f} m {:.1f}", tried.empty() ? "" : ", ", aJoinAhead * share, score);
+    if (score < bestScore) {
+      bestScore = score;
+      bestAhead = aJoinAhead * share;
+      best = std::move(r);
+    }
+  }
+  if (!best.ok) {
+    best.info = "rejoin: no way back onto the line";
+    return best;
+  }
+  best.milliseconds = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
+  best.info += fmt::format(" (joins tried, m and score: {}; {:.0f} m kept, {:.1f} ms in all)", tried, bestAhead, best.milliseconds);
+  return best;
+}
 
 PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &aParams) {
   auto t0 = std::chrono::steady_clock::now();
@@ -299,6 +336,17 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
   NavMap::View view(aMap);
   const int32_t width = aMap.Width();
   const float cell = aMap.CellSize();
+  // the car's heading for the first stretch of the search (startHeadingCost)
+  float headingReach = 0.0f;
+  Vec3 heading{0.0f, 0.0f, 0.0f};
+  {
+    const Vec3 v = aParams.startVelocity;
+    const float level = std::hypot(v.x, v.y);
+    if (level > 5.0f && aParams.startHeadingCost > 0.0f) {
+      heading = {v.x / level, v.y / level, 0.0f};
+      headingReach = std::max(40.0f, level * aParams.startHeadingTime);
+    }
+  }
 
   int32_t sx, sy, gx, gy;
   uint32_t sg, gg;
@@ -486,6 +534,15 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
           }
           float cost = turn + bearing + step * (1.0f + (std::isfinite(next.t) ? aParams.underCost : 0.0f)) +
                        ClimbCost(Preferred(next, aParams.preferredHeight) - curPreferred, aParams.climbCost, aParams.climbScale);
+          if (headingReach > 0.0f) {
+            float x, y;
+            aMap.CellCentre(nx, ny, x, y);
+            const float from = std::hypot(x - aStart.x, y - aStart.y);
+            if (from < headingReach) {
+              const float cosine = (float(kDx[d]) * heading.x + float(kDy[d]) * heading.y) / std::hypot(float(kDx[d]), float(kDy[d]));
+              cost += aParams.startHeadingCost * step * 0.5f * (1.0f - cosine) * (1.0f - from / headingReach);
+            }
+          }
           if (!aParams.avoid.empty()) {
             float x, y;
             aMap.CellCentre(nx, ny, x, y);

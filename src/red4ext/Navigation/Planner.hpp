@@ -128,6 +128,11 @@ struct PlanParams {
   // the car is going, and the start is not smoothed as a take-off (lineTakeoff)
   Vec3 startVelocity{0.0f, 0.0f, 0.0f};
   float startLead = 1.0f;
+  // and the search charges startHeadingCost per metre, times (1 - cos) / 2 of a step's turn away from
+  // the velocity, fading out over startHeadingTime seconds of the car's speed (40 m at least) from
+  // the start: the route bends away from where the car is going gradually, not across its path
+  float startHeadingCost = 3.0f;
+  float startHeadingTime = 1.5f;
   bool lineTakeoff = true;           // the line's first lineFloorEnds kept as planned (a take-off from the street)
   bool lineLanding = true;           // the line's last lineFloorEnds kept as planned (a landing)
   float lineSettle = 0.0005f;   // m per point a smoothing pass moves at most once settled (RacingLine)
