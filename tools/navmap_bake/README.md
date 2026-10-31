@@ -127,7 +127,8 @@ python ..\pack_archive.py
   within its reach + 300 m.
 - The nav map bake takes the same triangles: `spans.py bin --extra P\colliders.npz` (written by
   `build`), so the Autopilot does not plan through the new walls.
-- Checked in game with rays (`tools/cet/proxycol_rays.lua`): the five reported points inside the
+- Checked in game with rays (then a CET helper, since removed; now `LtbfBridge.Ray` and
+  `tools/ingame/ray_probe.py`): the five reported points inside the
   raised complex all hit the proxy's surfaces above and below (e.g. (-1200, -689): 294.9 and
   208.4, the proxy's floor slabs at 295 and 208).
 
