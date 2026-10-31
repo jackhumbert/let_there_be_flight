@@ -98,20 +98,28 @@ bool NavMap::Load(std::vector<uint8_t> aBytes, const std::filesystem::path &aPat
   return true;
 }
 
-bool NavMap::Section(const char aTag[8], std::vector<uint8_t> &aOut) const {
-  if (!loaded || file.size() < 24 || std::memcmp(file.data() + file.size() - 8, aTag, 8) != 0) {
+bool NavMap::Section(const char aTag[8], std::vector<uint8_t> &aOut, size_t aSkip) const {
+  if (!loaded) {
     return false;
   }
-  uint64_t packed, raw;
-  std::memcpy(&packed, file.data() + file.size() - 24, 8);
-  std::memcpy(&raw, file.data() + file.size() - 16, 8);
-  if (packed + 24 > file.size()) {
-    return false;
+  // back from the end over the appended sections, all tagged "LTBF..."
+  size_t end = file.size();
+  while (end >= 24 && std::memcmp(file.data() + end - 8, "LTBF", 4) == 0) {
+    uint64_t packed, raw;
+    std::memcpy(&packed, file.data() + end - 24, 8);
+    std::memcpy(&raw, file.data() + end - 16, 8);
+    if (packed + 24 > end) {
+      return false;
+    }
+    if (std::memcmp(file.data() + end - 8, aTag, 8) == 0 && aSkip-- == 0) {
+      aOut.resize(size_t(raw));
+      size_t got = tinfl_decompress_mem_to_mem(aOut.data(), aOut.size(), file.data() + end - 24 - packed, size_t(packed),
+                                               TINFL_FLAG_PARSE_ZLIB_HEADER);
+      return got == raw;
+    }
+    end -= size_t(packed) + 24;
   }
-  aOut.resize(size_t(raw));
-  size_t got = tinfl_decompress_mem_to_mem(aOut.data(), aOut.size(), file.data() + file.size() - 24 - packed, size_t(packed),
-                                           TINFL_FLAG_PARSE_ZLIB_HEADER);
-  return got == raw;
+  return false;
 }
 
 std::shared_ptr<const NavMap::Tile> NavMap::Inflate(uint32_t aKey) const {

@@ -198,6 +198,11 @@ int main(int argc, char **argv) {
     if (std::sscanf(area, "%f,%f,%f,%f", &x0, &y0, &x1, &y1) == 4) {
       PlanParams params;
       Navigation::RacePreset(params);
+      // another set: the Race with these changed (doorways.py bakes the Race's and the Race's without
+      // minPassage, the retry's)
+      if (const char *v = std::getenv("NAVPLAN_PARAMS"); v && !SetParams(params, v)) {
+        return 2;
+      }
       auto n = Navigation::WorkOutDoorways(map, params, x0, y0, x1, y1);
       std::printf("doorways: %u blocks, %u doors, %u links, %.0f ms, %zu bytes\n", n.blocks, n.doors, n.links, n.milliseconds,
                   n.saved.size());

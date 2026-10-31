@@ -77,8 +77,9 @@ std::unordered_map<uint64_t, float> RegionCosts(NavMap::View &aView, const StepC
 std::mutex doorwaysLock;
 std::vector<std::unique_ptr<Doorways>> doorwaySets;
 
-// The set for these costs; a new one starts from the map's baked doorways when they were made
-// with the same costs (the Race's), else empty, filled in as searches reach blocks.
+// The set for these costs; a new one starts from the map's baked doorways made with the same costs
+// (the Race's, and the Race's without minPassage for its retry: tools/navmap_bake/doorways.py),
+// else empty, filled in as searches reach blocks.
 Doorways &DoorwaysFor(const NavMap &aMap, const StepCosts &aCosts) {
   for (auto &set : doorwaySets) {
     if (set->costs == aCosts && set->width == aMap.Width()) {
@@ -87,8 +88,11 @@ Doorways &DoorwaysFor(const NavMap &aMap, const StepCosts &aCosts) {
   }
   doorwaySets.push_back(std::make_unique<Doorways>(aCosts, aMap.Width()));
   std::vector<uint8_t> baked;
-  if (aMap.Section(kDoorwayTag, baked) && doorwaySets.back()->Load(baked)) {
-    spdlog::info("[NavMap] {} baked doorways", doorwaySets.back()->doors.size());
+  for (size_t k = 0; aMap.Section(kDoorwayTag, baked, k); ++k) {
+    if (doorwaySets.back()->Load(baked)) {
+      spdlog::info("[NavMap] {} baked doorways (minimum passage {:.0f} m)", doorwaySets.back()->doors.size(), aCosts.minPassage);
+      break;
+    }
   }
   return *doorwaySets.back();
 }

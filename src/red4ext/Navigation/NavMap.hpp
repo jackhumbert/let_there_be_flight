@@ -83,7 +83,9 @@ public:
   // A section appended to the file after the map (a bake's extras, such as the planner's
   // doorways): the file ends in packed size (u64), raw size (u64) and the section's 8 byte tag,
   // after the zlib data. False if the file has none with that tag.
-  bool Section(const char aTag[8], std::vector<uint8_t> &aOut) const;
+  // The aSkip-th section with this tag among those appended to the end of the file (each: zlib
+  // payload, packed and raw size, tag; the last one first), inflated.
+  bool Section(const char aTag[8], std::vector<uint8_t> &aOut, size_t aSkip = 0) const;
 
 private:
   struct IndexEntry {
