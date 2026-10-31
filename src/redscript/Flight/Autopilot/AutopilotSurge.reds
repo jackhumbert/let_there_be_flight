@@ -37,8 +37,14 @@ public class AutopilotSurge extends IScriptable {
       this.changing = 0.0;
       return;
     }
-    let limit = ap.trajectory.Limit(s);
-    let want = (Equals(limit, "top") || Equals(limit, "accel")) && speed < ap.trajectory.Speed(s) + this.slack;
+    // with no trajectory the limit reads as Top, and the hold must not start
+    let valid = IsDefined(ap.trajectory) && ap.trajectory.IsValid();
+    // End is never read when not valid: want is false then
+    let limit = FlightTrajectoryLimit.End;
+    if valid {
+      limit = ap.trajectory.Limit(s);
+    }
+    let want = valid && (Equals(limit, FlightTrajectoryLimit.Top) || Equals(limit, FlightTrajectoryLimit.Accel)) && speed < ap.trajectory.Speed(s) + this.slack;
     if NotEquals(want, this.held) {
       this.changing += dt;
       if this.changing >= this.dwell {

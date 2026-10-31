@@ -35,14 +35,17 @@ struct FlightTrajectory : RED4ext::IScriptable {
   float Roll(float aS);
   // rad the nose is turned off the line into the bend (left > 0)
   float Drift(float aS);
-  // what sets the speed at s ("turn", "brake", ...)
-  RED4ext::CString Limit(float aS);
+  // what sets the speed at s; Top with no trajectory, so callers check IsValid
+  Navigation::TrajectorySample::Limit Limit(float aS);
   // samples outside the car's limits (a planner bug), one line each
   RED4ext::CString Violations();
 
   RTTI_IMPL_TYPEINFO(FlightTrajectory);
   RTTI_IMPL_ALLOCATOR();
 };
+
+// FlightTrajectory.reds declares the same values in this order
+RTTI_DEFINE_ENUM(Navigation::TrajectorySample::Limit, "FlightTrajectoryLimit");
 
 RTTI_DEFINE_CLASS(FlightTrajectory, {
   RTTI_METHOD(Build);

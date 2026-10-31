@@ -47,7 +47,8 @@ struct TrajectoryParams {
 };
 
 struct TrajectorySample {
-  enum class Limit : unsigned char { Top, Turn, Crest, PullUp, Sink, Arrive, Brake, Accel, Start, End, Room };
+  enum class Limit : int32_t { // int32_t: script reads it as FlightTrajectoryLimit
+    Top, Turn, Crest, PullUp, Sink, Arrive, Brake, Accel, Start, End, Room };
   float s = 0.0f;             // m along the line
   float t = 0.0f;             // s from the start
   Vec3 position{}, velocity{}, acceleration{};

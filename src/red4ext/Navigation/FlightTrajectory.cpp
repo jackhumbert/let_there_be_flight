@@ -65,12 +65,8 @@ float FlightTrajectory::Roll(float aS) { return Navigation::SampleAt(trajectory,
 
 float FlightTrajectory::Drift(float aS) { return Navigation::SampleAt(trajectory, aS).drift; }
 
-RED4ext::CString FlightTrajectory::Limit(float aS) {
-  // empty for no trajectory, as script tests the name ("top" would let the surge hold start)
-  if (!IsValid()) {
-    return {};
-  }
-  return Navigation::LimitName(Navigation::SampleAt(trajectory, aS).limit);
+Navigation::TrajectorySample::Limit FlightTrajectory::Limit(float aS) {
+  return Navigation::SampleAt(trajectory, aS).limit;
 }
 
 RED4ext::CString FlightTrajectory::Violations() {

@@ -237,6 +237,7 @@ add_executable(ltbf_tests
   tests/route_tests.cpp
   tests/trajectory_tests.cpp
   tests/attitude_tests.cpp
+  tests/surge_tests.cpp
   src/red4ext/Audio/EngineSynth/Synth.cpp
   src/red4ext/Audio/EngineSynth/Sources.cpp
   src/red4ext/Audio/Buses.cpp
@@ -253,6 +254,7 @@ add_executable(ltbf_tests
   src/red4ext/Navigation/Route.cpp
   src/red4ext/Navigation/Trajectory.cpp
   src/red4ext/Navigation/DroneAttitude.cpp
+  src/red4ext/Navigation/Surge.cpp
   src/red4ext/Navigation/NavMap.cpp
   src/red4ext/ThirdParty/miniz/miniz_tinfl.cpp
 )
