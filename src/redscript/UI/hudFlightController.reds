@@ -18,7 +18,7 @@ public class hudFlightController extends inkHUDGameController {
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Enabled")
   public let enabled: Bool = true;
 
-  // Read from the class default by Entity_InitializeComponents (C++). On: the flight hud
+  // Read from the class default by Entity_Initialize (C++). On: the flight hud
   // entry is part of the player's own hud entries resource, so it is spawned once per
   // session. Off: the pre-0.3.19 behaviour, one FlightHUD WidgetHudComponent per vehicle,
   // which makes the engine rebuild the entire HUD on every mount and unmount.

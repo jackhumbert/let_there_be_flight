@@ -12,7 +12,7 @@
 // using namespace RED4ext;
 
 /// @hash 2081691750
-// RED4ext::vehicle::MaterialFx * __fastcall GetFxForMaterial(RED4ext::vehicle::Effects *effects, RED4ext::CName material, bool isBackWheel);
+// RED4ext::vehicle::MaterialFx * __fastcall FX_FindWheelsMaterial(RED4ext::vehicle::Effects *effects, RED4ext::CName material, bool isBackWheel);
 
 /// @hash 3590925758
 // bool __fastcall TireTrackEffectStart(RED4ext::vehicle::Effects *effects, RED4ext::vehicle::Effects::Unk30 *a2, RED4ext::vehicle::MaterialFx *fxLookup, RED4ext::Transform *a4, RED4ext::Transform *a5, bool physicalMaterialChange, bool conditionChange, bool condition);
@@ -28,9 +28,10 @@ struct FlightStatus {
 // doesn't seem to affect audio bug
 
 // replace tire tracks & skid marks with our own effects
-REGISTER_FLIGHT_HOOK_HASH(RED4ext::vehicle::MaterialFx * __fastcall, 2081691750, GetFxForMaterial, RED4ext::vehicle::Effects *effects,
+// vehicle::FX::WheelsMaterial const * vehicle::FX::FindWheelsMaterial(CName, bool) const
+REGISTER_FLIGHT_HOOK_HASH(RED4ext::vehicle::MaterialFx * __fastcall, 2081691750, FX_FindWheelsMaterial, RED4ext::vehicle::Effects *effects,
                      RED4ext::CName material, bool isBackWheel) {
-  auto og = GetFxForMaterial_Original(effects, material, isBackWheel);
+  auto og = FX_FindWheelsMaterial_Original(effects, material, isBackWheel);
   RED4ext::vehicle::MaterialFx * fx = og;
   auto fc = FlightComponent::Get(effects->vehicle);
   if (fc) {

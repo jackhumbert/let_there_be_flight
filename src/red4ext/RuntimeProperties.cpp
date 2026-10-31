@@ -33,7 +33,7 @@ RED4ext::CRTTIResourceAsyncReferenceType **__fastcall CreateCRTTIRaRefTypeFromCl
 
 // bool CScriptDataValidator::Validate(CScriptedDataEnvironment const &, IScriptDataErrorReporter &) const
 // Struct layouts are 2.5 (ScriptDefinitions.hpp); the first argument is the validator (this).
-REGISTER_FLIGHT_HOOK_HASH(bool __fastcall, 898639042, ProcessScriptTypes, uint32_t* version, const CScriptedDataEnvironment* scriptData, void* scriptLogger) {
+REGISTER_FLIGHT_HOOK_HASH(bool __fastcall, 898639042, CScriptDataValidator_Validate, uint32_t* version, const CScriptedDataEnvironment* scriptData, void* scriptLogger) {
   for (const auto& scriptClass : scriptData->classes) {
     for (const auto& prop : scriptClass->properties) {
       if (prop->attributes.size) {
@@ -148,7 +148,7 @@ REGISTER_FLIGHT_HOOK_HASH(bool __fastcall, 898639042, ProcessScriptTypes, uint32
       }
     }
   }
-  auto og = ProcessScriptTypes_Original(version, scriptData, scriptLogger);
+  auto og = CScriptDataValidator_Validate_Original(version, scriptData, scriptLogger);
 
   return og;
 }

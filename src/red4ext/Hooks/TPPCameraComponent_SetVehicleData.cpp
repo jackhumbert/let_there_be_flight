@@ -50,8 +50,8 @@ static void RestoreFlightParams(vehicle::TPPCameraComponent *camera) {
 
 // adjusts TPP camera based on flight mode
 // void vehicle::TPPCameraComponent::SetVehicleData(vehicle::CameraParentData const &)
-REGISTER_FLIGHT_HOOK_HASH(uintptr_t, 4125170300, TPPCameraStats_Update, vehicle::TPPCameraComponent *camera, uintptr_t data) {
-  uintptr_t result = TPPCameraStats_Update_Original(camera, data);
+REGISTER_FLIGHT_HOOK_HASH(uintptr_t, 4125170300, TPPCameraComponent_SetVehicleData, vehicle::TPPCameraComponent *camera, uintptr_t data) {
+  uintptr_t result = TPPCameraComponent_SetVehicleData_Original(camera, data);
 
   auto fc = FlightController::FlightController::GetInstance();
   //bool resetSlope = false;

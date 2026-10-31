@@ -7,11 +7,11 @@
 using namespace RED4ext;
 
 // void vehicle::AreaSpeedLimiter::Update_PreMove(float,class THandle<class vehicle::BaseObject> const &)
-REGISTER_FLIGHT_HOOK_HASH(void, 1836326624, AreaSpeedLimiter_Update, void * self, 
+REGISTER_FLIGHT_HOOK_HASH(void, 1836326624, AreaSpeedLimiter_Update_PreMove, void * self, 
   float delta, Handle<vehicle::BaseObject> const & vehicle
 ) {
   auto fc = FlightController::FlightController::GetInstance();
   if (fc && fc->active)
     return;
-  return AreaSpeedLimiter_Update_Original(self, delta, vehicle);
+  return AreaSpeedLimiter_Update_PreMove_Original(self, delta, vehicle);
 }

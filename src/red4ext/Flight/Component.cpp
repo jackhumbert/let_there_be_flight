@@ -58,7 +58,7 @@ void FlightComponent::OnEnabled(bool enabled) {
 };
 
 // FlightSettings Bool read from the class defaults, which Mod Settings writes (same as the
-// flight HUD settings in Entity_InitializeComponents.cpp).
+// flight HUD settings in Entity_Initialize.cpp).
 static bool GetFlightSettingsBool(RED4ext::CRTTISystem *rtti, RED4ext::CName aProperty, bool aFallback) {
   auto cls = rtti->GetClass("FlightSettings");
   if (!cls) {

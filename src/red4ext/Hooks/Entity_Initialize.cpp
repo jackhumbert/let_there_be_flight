@@ -55,12 +55,12 @@ static bool IsFlightHudAttachedToPlayer(RED4ext::CRTTISystem *rtti) {
 static void AttachFlightHudToPlayer(RED4ext::CRTTISystem *rtti, EntityExt *entity) {
   auto whciCls = rtti->GetClass("WidgetHudComponentInterface");
   if (!whciCls) {
-    LTBF_WARN_ONCE("[Entity_InitializeComponents] WidgetHudComponentInterface class not found; FlightHUD not attached to the player");
+    LTBF_WARN_ONCE("[Entity_Initialize] WidgetHudComponentInterface class not found; FlightHUD not attached to the player");
     return;
   }
 
   if (!Utils::LooksLikeDynArray(entity->componentsStorage.components)) {
-    LTBF_WARN_ONCE("[Entity_InitializeComponents] player componentsStorage.components header looks corrupt (size {} capacity {}); FlightHUD not attached to the player",
+    LTBF_WARN_ONCE("[Entity_Initialize] player componentsStorage.components header looks corrupt (size {} capacity {}); FlightHUD not attached to the player",
                    entity->componentsStorage.components.size, entity->componentsStorage.components.capacity);
     return;
   }
@@ -78,7 +78,7 @@ static void AttachFlightHudToPlayer(RED4ext::CRTTISystem *rtti, EntityExt *entit
     auto whci = reinterpret_cast<RED4ext::WidgetHudComponentInterface *>(component);
     whci->hudEntriesResource.path = FLIGHT_HUD_ENTRIES;
     LoadResRef<RED4ext::ink::HudEntriesResource>(&whci->hudEntriesResource.path, &whci->hudEntriesResource.token, false);
-    spdlog::info("[Entity_InitializeComponents] FlightHUD attached to player ('{}' -> {})", component->name.ToString(),
+    spdlog::info("[Entity_Initialize] FlightHUD attached to player ('{}' -> {})", component->name.ToString(),
                  FLIGHT_HUD_ENTRIES);
     return;
   }
@@ -91,18 +91,18 @@ static void AttachFlightHudToPlayer(RED4ext::CRTTISystem *rtti, EntityExt *entit
   whc->hudEntriesResource.path = FLIGHT_HUD_ENTRIES;
   LoadResRef<RED4ext::ink::HudEntriesResource>(&whc->hudEntriesResource.path, &whc->hudEntriesResource.token, false);
   entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::WidgetHudComponent>(whc));
-  spdlog::info("[Entity_InitializeComponents] FlightHUD attached to player (new WidgetHudComponent)");
+  spdlog::info("[Entity_Initialize] FlightHUD attached to player (new WidgetHudComponent)");
 }
 
 /// @hash 3490519617
-// void Entity_InitializeComponents(RED4ext::ent::Entity *entity, void *a2, void *a3);
+// void Entity_Initialize(RED4ext::ent::Entity *entity, void *a2, void *a3);
 
 // void ent::Entity::Initialize(job::Builder &, ent::EntitySetupContext const &)
-REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityExt *entity, void *a2, void *a3) {
+REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_Initialize, EntityExt *entity, void *a2, void *a3) {
   auto rtti = RED4ext::CRTTISystem::Get();
 
   if (!entity) {
-    Entity_InitializeComponents_Original(entity, a2, a3);
+    Entity_Initialize_Original(entity, a2, a3);
     return;
   }
 
@@ -128,7 +128,7 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityE
   }
 
   if (isVehicle && canEnterFlight && !Utils::LooksLikeDynArray(vehicle->componentsStorage.components)) {
-    LTBF_WARN_ONCE("[Entity_InitializeComponents] componentsStorage.components header looks corrupt (size {} capacity {}); flight component not added",
+    LTBF_WARN_ONCE("[Entity_Initialize] componentsStorage.components header looks corrupt (size {} capacity {}); flight component not added",
                    vehicle->componentsStorage.components.size, vehicle->componentsStorage.components.capacity);
     canEnterFlight = false;
   }
@@ -170,8 +170,8 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityE
         // spdlog::info("Looked for class '{}' using '{}'", className, configurationCls->name.ToString());
         auto configuration = configurationCls->CreateInstance<IFlightConfiguration *>(true);
         if (!configuration) {
-          LTBF_WARN_ONCE("[Entity_InitializeComponents] could not instantiate flight configuration class '{}'", configurationCls->name.ToString());
-          Entity_InitializeComponents_Original(entity, a2, a3);
+          LTBF_WARN_ONCE("[Entity_Initialize] could not instantiate flight configuration class '{}'", configurationCls->name.ToString());
+          Entity_Initialize_Original(entity, a2, a3);
           return;
         }
         configurationCls->ConstructCls(configuration);
@@ -194,7 +194,7 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityE
             }
           }
         } else {
-          LTBF_WARN_ONCE("[Entity_InitializeComponents] configuration->thrusters header looks corrupt (size {} capacity {}); thruster meshes not added",
+          LTBF_WARN_ONCE("[Entity_Initialize] configuration->thrusters header looks corrupt (size {} capacity {}); thruster meshes not added",
                          configuration->thrusters.size, configuration->thrusters.capacity);
         }
         configuration->AddSlots(vs);
@@ -282,9 +282,9 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityE
     // docs/research/mount-stutter-analysis.md and AttachFlightHudToPlayer above. Skip it entirely
     // when the flight UI is disabled in Mod Settings; the controller would only hide itself.
     if (!IsFlightHudEnabled(rtti)) {
-      LTBF_WARN_ONCE("[Entity_InitializeComponents] flight UI disabled in Mod Settings; FlightHUD component not added to vehicles");
+      LTBF_WARN_ONCE("[Entity_Initialize] flight UI disabled in Mod Settings; FlightHUD component not added to vehicles");
     } else if (IsFlightHudAttachedToPlayer(rtti)) {
-      LTBF_WARN_ONCE("[Entity_InitializeComponents] FlightHUD lives on the player puppet; not adding it to vehicles");
+      LTBF_WARN_ONCE("[Entity_Initialize] FlightHUD lives on the player puppet; not adding it to vehicles");
     } else {
       auto whc = rtti->GetClass("WidgetHudComponent")->CreateInstance<RED4ext::WidgetHudComponent *>(true);
       whc->name = "FlightHUD";
@@ -295,7 +295,7 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityE
       // whc->hudEntriesResource.token = resource.token;
       LoadResRef<RED4ext::ink::HudEntriesResource>(&whc->hudEntriesResource.path, &whc->hudEntriesResource.token, false);
       entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::WidgetHudComponent>(whc));
-      LTBF_WARN_ONCE("[Entity_InitializeComponents] FlightHUD component added per vehicle (HUD attached to player is off)");
+      LTBF_WARN_ONCE("[Entity_Initialize] FlightHUD component added per vehicle (HUD attached to player is off)");
     }
 
     //{
@@ -309,5 +309,5 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_InitializeComponents, EntityE
     //}
   }
 
-  Entity_InitializeComponents_Original(entity, a2, a3);
+  Entity_Initialize_Original(entity, a2, a3);
 }

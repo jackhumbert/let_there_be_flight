@@ -11,9 +11,9 @@ using namespace RED4ext;
 static bool skip = false;
 
 // virtual void ent::SoundListenerComponent::OnTransformUpdated(struct Box &)
-// REGISTER_FLIGHT_HOOK_HASH(void, 562370452, OnTransformUpdated, ent::SoundListenerComponent *self, Box & box) {
+// REGISTER_FLIGHT_HOOK_HASH(void, 562370452, SoundListenerComponent_OnTransformUpdated, ent::SoundListenerComponent *self, Box & box) {
 //   if (!skip) {
-//     OnTransformUpdated_Original(self, box);
+//     SoundListenerComponent_OnTransformUpdated_Original(self, box);
 //   }
 // }
 
@@ -21,9 +21,9 @@ static bool skip = false;
 // (Hooked on 2026-10-27, game 2.5: it is called with the player's soundListener component exactly, yAxis
 // forward and zAxis up, in TPP and through the cinematic camera's shots alike; the game does not hear from
 // the cinematic camera either. The FMOD listener takes the active camera there instead, FlightComponent.)
-// REGISTER_FLIGHT_HOOK_HASH(void, 3465549286, SetListenerVectors, void *self, Vector4 & position, Vector4 & zAxis, Vector4 & yAxis) {
+// REGISTER_FLIGHT_HOOK_HASH(void, 3465549286, SoundSystem_SetListenerVectors, void *self, Vector4 & position, Vector4 & zAxis, Vector4 & yAxis) {
 //   if (!skip) {
-//     SetListenerVectors_Original(self, position, zAxis, yAxis);
+//     SoundSystem_SetListenerVectors_Original(self, position, zAxis, yAxis);
 //   }
 // }
 
@@ -44,11 +44,13 @@ static bool skip = false;
 //   uint16_t playingGruntsCount2;
 // };
 
-// REGISTER_FLIGHT_HOOK_HASH(bool, 3803060724, Limiter_CanSoundBePlayed, Limiter * self, CName name, Vector3 const & position) {
-//   return Limiter_CanSoundBePlayed_Original(self, name, position);
+// bool audio::AudioSoundsLimiter::CanSoundBePlayed(CName, Vector3 const &) const
+// REGISTER_FLIGHT_HOOK_HASH(bool, 3803060724, AudioSoundsLimiter_CanSoundBePlayed, Limiter * self, CName name, Vector3 const & position) {
+//   return AudioSoundsLimiter_CanSoundBePlayed_Original(self, name, position);
 // }
 
-// REGISTER_FLIGHT_HOOK_HASH(float, 3973389091, CalculateCullingDistance, CName name, uint8_t type) {
-//   auto ret = CalculateCullingDistance_Original(name, type);
+// float utils::CalculateCullingDistanceSquared(uint8_t, audio::LimitedSoundType)
+// REGISTER_FLIGHT_HOOK_HASH(float, 3973389091, CalculateCullingDistanceSquared, CName name, uint8_t type) {
+//   auto ret = CalculateCullingDistanceSquared_Original(name, type);
 //   return ret;
 // }

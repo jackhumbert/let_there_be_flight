@@ -5,7 +5,7 @@ Jack's goal: the city should be flyable as it looks. Two sides to it:
 - Hidden colliders (collision with nothing visible) are removed. `tools/world/blockers.py` finds
   invisible vehicle blockers in the streaming sectors; the list ships as `src/navigation/blockers.txt`
   and `hidden_nodes.txt`, and the plugin moves them out of the world as sectors load
-  (`src/red4ext/Navigation/Blockers.cpp`, the `StreamingSector_PostLoad` hook). The bake leaves them
+  (`src/red4ext/Navigation/Blockers.cpp`, the `StreamingSector_OnPostLoad` hook). The bake leaves them
   out too (`tools/navmap_bake/spans.py`). `tools/world/sector_edits_2.5.json` holds the older
   invisible wall removals ported to 2.5.
 - Collision is added where the game draws something solid but gives it none: proxy-only geometry

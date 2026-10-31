@@ -9,10 +9,10 @@
 // updates cameraDirection
 // updates cameraPitch from slopeAdjustment
 /// @hash 2719293980
-// void __fastcall UpdatePitch(RED4ext::vehicle::TPPCameraComponent *camera, RED4ext::Vector4 *localPosition, RED4ext::Vector3 *cameraPosition, RED4ext::vehicle::TPPCameraUpdate *update);
+// void __fastcall TPPCameraComponent_UpdateSlopeCompensation(RED4ext::vehicle::TPPCameraComponent *camera, RED4ext::Vector4 *localPosition, RED4ext::Vector3 *cameraPosition, RED4ext::vehicle::TPPCameraUpdate *update);
 
 // void vehicle::TPPCameraComponent::UpdateSlopeCompensation(Vector4 const &, Vector4 const &, vehicle::TPPCameraComponent::UpdateContext const &)
-REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 2719293980, UpdatePitch,
+REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 2719293980, TPPCameraComponent_UpdateSlopeCompensation,
                      RED4ext::vehicle::TPPCameraComponent *camera, RED4ext::Vector4 *localPosition,
                      RED4ext::Vector3 *cameraPosition, RED4ext::vehicle::TPPCameraUpdate *update) {
   auto vehicle = camera->vehicle;
@@ -21,6 +21,6 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 2719293980, UpdatePitch,
     camera->cameraDirection = update->locationFromOffset.AsVector3();
     camera->cameraPitch = FlightSettings::GetProperty<float>("tppCameraPitchOffset");
   } else {
-    UpdatePitch_Original(camera, localPosition, cameraPosition, update);
+    TPPCameraComponent_UpdateSlopeCompensation_Original(camera, localPosition, cameraPosition, update);
   }
 }

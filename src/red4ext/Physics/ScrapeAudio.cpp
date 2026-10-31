@@ -92,9 +92,9 @@ static_assert(kBaseObjectAudio == 0x608 && kBaseObjectFX == 0x5F8, "check agains
 
 // void vehicle::BaseObject::NotifyContacts(physics::ContactData const &, bool, vehicle::BaseObject *)
 // 2.31: 0x140106FD0
-REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1399724886, NotifyContacts, RED4ext::vehicle::BaseObject *self,
+REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1399724886, BaseObject_NotifyContacts, RED4ext::vehicle::BaseObject *self,
                           const uint8_t *contact, bool isFirst, RED4ext::vehicle::BaseObject *other) {
-  NotifyContacts_Original(self, contact, isFirst, other);
+  BaseObject_NotifyContacts_Original(self, contact, isFirst, other);
 
   // world contacts only: vehicle-vs-vehicle keeps the vanilla path
   if (!self || !contact || other) {

@@ -15,10 +15,10 @@
 // update with pid
 // vehicle->sub_2A8
 /// @hash 1414536155
-// void __fastcall VehicleUpdateOrientationWithPID(RED4ext::vehicle::CarBaseObject *a1, RED4ext::Transform *, float, float);
+// void __fastcall CarBaseObject_AdjustSplineTransformToRoad(RED4ext::vehicle::CarBaseObject *a1, RED4ext::Transform *, float, float);
 
 /// @hash 2268865059
-// void __fastcall FourWheelTorque(RED4ext::vehicle::WheeledPhysics *physics, unsigned __int8 rearWheelIndex,
+// void __fastcall WheelSuspensionBase_ApplyAntiSwaybarForce(RED4ext::vehicle::WheeledPhysics *physics, unsigned __int8 rearWheelIndex,
                                 // unsigned __int8 frontWheelIndex, float a4, RED4ext::Transform *transform);
 
 /// @hash 1404578149
@@ -39,7 +39,7 @@
 // struct ScriptData;
 
 /// @hash 898639042
-// bool __fastcall ProcessScriptTypes(uint32_t *version, ScriptData *scriptData, void *scriptLogger);
+// bool __fastcall CScriptDataValidator_Validate(uint32_t *version, ScriptData *scriptData, void *scriptLogger);
 
 // 1.6  RVA: 0x204390
 // 1.61 RVA: 0x204940
@@ -58,4 +58,4 @@
 // RED4ext::CString *__fastcall SetLocalizedTextString(__int64, RED4ext::CString *, RED4ext::CString *);
 
 /// @hash 1989218322
-// void __fastcall RollFactorTorqueThing(uint64_t *a1, float a2);
+// void __fastcall DrivingForcesHelper_Apply(uint64_t *a1, float a2);

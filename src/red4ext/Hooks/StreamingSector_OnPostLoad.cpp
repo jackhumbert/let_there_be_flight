@@ -128,10 +128,10 @@ bool HideNode(DataBuffer &aSetups, const Navigation::Blockers::Node &aNode) {
 }
 } // namespace
 
-// void world::StreamingSector::PostLoad(...): the sector's nodes are read but not set up yet;
+// void world::StreamingSector::OnPostLoad(PostLoadContext const &): the sector's nodes are read but not set up yet;
 // ArchiveXL patches sectors at the same point
-REGISTER_FLIGHT_HOOK_HASH(void, 3972601611, StreamingSector_PostLoad, world::StreamingSector *aSector, uint64_t a2) {
-  StreamingSector_PostLoad_Original(aSector, a2);
+REGISTER_FLIGHT_HOOK_HASH(void, 3972601611, StreamingSector_OnPostLoad, world::StreamingSector *aSector, uint64_t a2) {
+  StreamingSector_OnPostLoad_Original(aSector, a2);
   auto &blockers = Navigation::Blockers::Get();
   if (!aSector || !blockers.IsLoaded()) {
     return;

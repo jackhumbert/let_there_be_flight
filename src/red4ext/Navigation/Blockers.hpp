@@ -19,7 +19,7 @@ namespace Navigation {
 // ArchiveXL does for old collision nodes: it moves each listed actor 2 km below the map, by
 // finding the actor's stored position (WorldPosition fixed point x, y, z) among the cooked
 // node's actor records after the sector loads and before its nodes are set up
-// (Hooks/StreamingSector_PostLoad.cpp has the layout).
+// (Hooks/StreamingSector_OnPostLoad.cpp has the layout).
 //
 // The same hook hides listed node placements (hidden_nodes.txt, by hand): e.g. the visual-only
 // proxy of a landing pad that our own pad entity replaces (docs/archive/helipads.md, step 8).

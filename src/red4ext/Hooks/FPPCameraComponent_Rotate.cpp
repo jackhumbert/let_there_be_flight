@@ -8,12 +8,12 @@
 #include <RED4ext/Scripting/Natives/Generated/anim/AnimFeature_FPPCamera.hpp>
 
 /// @hash 2531201123
-// char __fastcall FPPCameraUpdate(RED4ext::game::FPPCameraComponent *fpp, float deltaTime, float deltaYaw,
+// char __fastcall FPPCameraComponent_Rotate(RED4ext::game::FPPCameraComponent *fpp, float deltaTime, float deltaYaw,
                                 // float deltaPitch, float deltaYawExternal, float deltaPitchExternal, char a7);
 
 // adjusts FPP camera based on flight mode
 // void game::FPPCameraComponent::Rotate(float, float, float, float, float, bool)
-REGISTER_FLIGHT_HOOK_HASH(char __fastcall, 2531201123, FPPCameraUpdate, RED4ext::game::FPPCameraComponent *fpp, float deltaTime,
+REGISTER_FLIGHT_HOOK_HASH(char __fastcall, 2531201123, FPPCameraComponent_Rotate, RED4ext::game::FPPCameraComponent *fpp, float deltaTime,
                      float deltaYaw, float deltaPitch, float deltaYawExternal, float deltaPitchExternal, char a7) {
   // a1 is a shifted pointer - this gets the whole struct
   // auto fpp = reinterpret_cast<RED4ext::game::FPPCameraComponent *>(a1 - 0x120);
@@ -56,7 +56,7 @@ REGISTER_FLIGHT_HOOK_HASH(char __fastcall, 2531201123, FPPCameraUpdate, RED4ext:
     // fpp->sensitivityMultY = 1.0;
   }
 
-  auto og = FPPCameraUpdate_Original(fpp, deltaTime, deltaYaw, deltaPitch, deltaYawExternal, deltaPitchExternal, a7);
+  auto og = FPPCameraComponent_Rotate_Original(fpp, deltaTime, deltaYaw, deltaPitch, deltaYawExternal, deltaPitchExternal, a7);
 
   if (lockCamera) {
     // fpp->animFeature->additiveCameraMovementsWeight = 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone");

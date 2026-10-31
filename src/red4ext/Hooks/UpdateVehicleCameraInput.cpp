@@ -9,8 +9,8 @@ using namespace RED4ext;
 // prevents the camera from resetting when the left thumbstick is pressed
 // TODO actually check to see if the left thumbstick is still bound to flight activation
 // void vehicle::BaseObject::UpdateVehicleCameraInput(void)
-REGISTER_FLIGHT_HOOK_HASH(void, 501486464, UpdateVehicleCameraInput, vehicle::BaseObject * self) {
-  UpdateVehicleCameraInput_Original(self);
+REGISTER_FLIGHT_HOOK_HASH(void, 501486464, BaseObject_UpdateVehicleCameraInput, vehicle::BaseObject * self) {
+  BaseObject_UpdateVehicleCameraInput_Original(self);
   auto fc = FlightController::FlightController::GetInstance();
   if (fc && fc->enabled) {
     self->input.vehicleCameraReset = 0;

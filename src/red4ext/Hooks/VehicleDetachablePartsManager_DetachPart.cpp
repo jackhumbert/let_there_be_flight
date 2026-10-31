@@ -40,17 +40,18 @@ struct Manager {
   uint32_t unkCC;
 };
 
-REGISTER_FLIGHT_HOOK_HASH(void, 2150896908, VehicleDetachPart, const Manager & self, uint32_t index, bool a3) {
+// void game::VehicleDetachablePartsManager::DetachPart(uint32_t, bool)
+REGISTER_FLIGHT_HOOK_HASH(void, 2150896908, VehicleDetachablePartsManager_DetachPart, const Manager & self, uint32_t index, bool a3) {
   // `Manager` is a hand-written layout; if it drifted, or the index is out of range,
   // just let the game do what it was going to do.
   if (!Utils::LooksLikeDynArray(self.parts, 256) || index >= self.parts.size) {
-    LTBF_WARN_ONCE("[VehicleDetachPart] parts header looks wrong or index out of range (index {} size {} capacity {}); not filtering",
+    LTBF_WARN_ONCE("[VehicleDetachablePartsManager_DetachPart] parts header looks wrong or index out of range (index {} size {} capacity {}); not filtering",
                    index, self.parts.size, self.parts.capacity);
-    VehicleDetachPart_Original(self, index, a3);
+    VehicleDetachablePartsManager_DetachPart_Original(self, index, a3);
     return;
   }
   if (!self.vehicle) {
-    VehicleDetachPart_Original(self, index, a3);
+    VehicleDetachablePartsManager_DetachPart_Original(self, index, a3);
     return;
   }
 
@@ -72,5 +73,5 @@ REGISTER_FLIGHT_HOOK_HASH(void, 2150896908, VehicleDetachPart, const Manager & s
   }
 
   if (shouldDetach)
-    VehicleDetachPart_Original(self, index, a3);
+    VehicleDetachablePartsManager_DetachPart_Original(self, index, a3);
 }

@@ -50,7 +50,7 @@ public func IsFlightWhitelistedByTweak() -> Bool {
   return TweakDBInterface.GetBool(tweakID, false);
 }
 
-// Whether LTBF attaches itself to this vehicle at all. The native Entity_InitializeComponents
+// Whether LTBF attaches itself to this vehicle at all. The native Entity_Initialize
 // hook calls this by name to decide whether to build a FlightComponent, so it must stay
 // independent of the Flight Availability setting: every vehicle, NPC and traffic included,
 // keeps its component and the setting only gates what the player can fly.

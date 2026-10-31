@@ -136,9 +136,9 @@ FlightComponent *GetActiveFlightComponent(RED4ext::vehicle::PhysicsData *rb) {
 }
 } // namespace
 
-// void vehicle::PhysXSynchronizer::SyncFromPhysX(ChassisComponent &, RigidBody &, float, float)
+// void vehicle::PhysXSynchronizer::SyncFromPhysX(ChassisComponent &, RigidBody &, float, float, float)
 // 2.31: 0x1401A56DC
-REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 547299556, SyncFromPhysX, void *self, void *chassis,
+REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 547299556, PhysXSynchronizer_SyncFromPhysX, void *self, void *chassis,
                           RED4ext::vehicle::PhysicsData *rb, float a4, float consumedDt) {
   auto owner = GetActiveFlightComponent(rb);
   if (owner && owner->physxOwned && chassis && !ChassisIsKinematic(chassis)) {
@@ -222,7 +222,7 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 547299556, SyncFromPhysX, void *self,
   }
   auto v0 = rb ? rb->velocity : Vector3();
   auto w0 = rb ? rb->angularVelocity : Vector3();
-  SyncFromPhysX_Original(self, chassis, rb, a4, consumedDt);
+  PhysXSynchronizer_SyncFromPhysX_Original(self, chassis, rb, a4, consumedDt);
 
   auto fc = owner;
   if (!fc) {
@@ -307,11 +307,11 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 2021199885, RigidBody_IntegrateMotion
 
 // bool vehicle::PhysXSynchronizer::PushToPhysX(ChassisComponent &, RigidBody const &, float, float, float)
 // 2.31: 0x1401A4F20, once per frame after the last fixed step
-REGISTER_FLIGHT_HOOK_HASH(char __fastcall, 3628605463, PushToPhysX, void *self, void *chassis,
+REGISTER_FLIGHT_HOOK_HASH(char __fastcall, 3628605463, PhysXSynchronizer_PushToPhysX, void *self, void *chassis,
                           RED4ext::vehicle::PhysicsData *rb, float a4, float a5, float a6) {
   auto fc = GetActiveFlightComponent(rb);
   if (!fc || !fc->physxOwned || !chassis || ChassisIsKinematic(chassis) || rb->inverseMass <= 0.0f) {
-    return PushToPhysX_Original(self, chassis, rb, a4, a5, a6);
+    return PhysXSynchronizer_PushToPhysX_Original(self, chassis, rb, a4, a5, a6);
   }
 
   float dt = std::fmin(std::fmax(fc->physxFrameDt, 0.0f), kMaxFrameDt);
@@ -346,7 +346,7 @@ REGISTER_FLIGHT_HOOK_HASH(char __fastcall, 3628605463, PushToPhysX, void *self, 
   // not finite, or faster than anything flies (a teleport's jump read as a velocity): leave it
   if (!std::isfinite(linear.X + linear.Y + linear.Z + angular.X + angular.Y + angular.Z) ||
       Dot(linear, linear) > kMaxSpeed * kMaxSpeed || Dot(angular, angular) > kMaxSpin * kMaxSpin) {
-    return PushToPhysX_Original(self, chassis, rb, a4, a5, a6);
+    return PhysXSynchronizer_PushToPhysX_Original(self, chassis, rb, a4, a5, a6);
   }
 
   ProxyWriterStorage writer;

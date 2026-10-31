@@ -301,8 +301,9 @@ void FlightSystem::OnUninitialize() {
   spdlog::info("[FlightSystem] OnUninitialize!");
 }
 
-REGISTER_FLIGHT_HOOK_HASH(DynArray<GameSystemData> *, 2463305925, GetGameSystemsDataHook, DynArray<GameSystemData> *gameSystemsData) {
-  GetGameSystemsDataHook_Original(gameSystemsData);
+// void game::GameSystemsSetup::LoadConfigFile(void)
+REGISTER_FLIGHT_HOOK_HASH(DynArray<GameSystemData> *, 2463305925, GameSystemsSetup_LoadConfigFile, DynArray<GameSystemData> *gameSystemsData) {
+  GameSystemsSetup_LoadConfigFile_Original(gameSystemsData);
   auto flightSystem = GameSystemData();
   flightSystem.name = "FlightSystem";
   flightSystem.inSingleplayer = true;

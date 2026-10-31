@@ -7,10 +7,11 @@
 // #include "LoadResRef.hpp"
 
 /// @hash 247932756
-// uintptr_t CreateStaticEffect(RED4ext::game::EffectSystem *, uintptr_t, uint64_t, uint64_t, uintptr_t, uintptr_t);
+// uintptr_t EffectSystem_CreateEffectStatic(RED4ext::game::EffectSystem *, uintptr_t, uint64_t, uint64_t, uintptr_t, uintptr_t);
 
 // doesn't seem to affect sound bug
-// REGISTER_FLIGHT_HOOK_HASH(uintptr_t, 247932756, CreateStaticEffect, RED4ext::game::EffectSystem *es, 
+// virtual Handle<game::IEffect> game::EffectSystem::CreateEffectStatic(CName, CName, Handle<ISerializable>, Handle<ISerializable>)
+// REGISTER_FLIGHT_HOOK_HASH(uintptr_t, 247932756, EffectSystem_CreateEffectStatic, RED4ext::game::EffectSystem *es, 
 //   uintptr_t effectRef, uint64_t effectNameHash, uint64_t effectTagHash, uintptr_t instigator, uintptr_t weapon) {
 //   bool exists = false;
 //   for (const auto hash : es->effectNameHashes) {
@@ -28,5 +29,5 @@
 //     es->unkA0 = 1; // needs sorting maybe?
 //   }
 
-//   return CreateStaticEffect_Original(es, effectRef, effectNameHash, effectTagHash, instigator, weapon);
+//   return EffectSystem_CreateEffectStatic_Original(es, effectRef, effectNameHash, effectTagHash, instigator, weapon);
 // }

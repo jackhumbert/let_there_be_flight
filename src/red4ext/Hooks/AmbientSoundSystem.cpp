@@ -244,10 +244,12 @@ RED4EXT_ASSERT_SIZE(AmbientSoundSystem, 0x118);
 // loops through audioInstances00, calls Tick, increment count based on unk38F, updates emitter positions
 // loops through oldAudioInstances58 and removes
 // updates priorities
+// void audio::AmbientSoundSystem::Tick(float)
 // REGISTER_FLIGHT_HOOK_HASH(void, 853347970, AmbientSoundSystem_Tick, AmbientSoundSystem *self, float delta) {
 //   return AmbientSoundSystem_Tick_Original(self, delta);
 // }
 
+// void audio::AmbientPaletteSpace::Update(double, Vector4 const &, DynArray<audio::AmbientPaletteTag> const &)
 // REGISTER_FLIGHT_HOOK_HASH(void, 2073240708, AmbientPaletteSpace_Update, AmbientPaletteSpace *self, 
 //   double delta, Vector4 const & position, DynArray<AmbientPaletteTag> const & tags) {
 //   //AmbientPaletteSpace_Update_Original(self, delta, position, tags);
