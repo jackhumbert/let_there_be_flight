@@ -122,6 +122,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let touchdownRate: Float = 0.8;      // m/s in the last metres
   public let landingSearch: Int32 = 12;       // rings of 2 m columns searched for a landing spot
   public let landingShaft: Float = 4.0;       // m around a landing spot that must be open above it too (ShaftClear)
+  // m around a landing spot whose floor must be level on the nav map (IsFlat): the bake grows solids
+  // by 3 m for the car, so a roof's edge on the map is 3 m out from the real one, then half the car
+  // and a couple of metres to spare (the map is 2 m columns)
+  public let landingFlat: Float = 8.0;
+  public let landingFootprint: Float = 3.0;   // m out from a landing spot the game's collision must be under the car too (SpotSupported)
   // m from the spot across within which the descent sinks: the clear shaft (ShaftClear), so the
   // car slides the last metres over the spot while coming down instead of stopping above it first
   public let landingOverSpot: Float = 4.0;
@@ -130,7 +135,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // spot, the car hung still before sinking)
   public let landingEntry: Float = 15.0;
   public let landingEntrySpeed: Float = 10.0;
-  public let landingRecheck: Float = 300.0;   // m before the route's end the landing spot is checked for vehicles again
+  public let landingRecheck: Float = 300.0;   // m before the route's end the landing spot is checked again (vehicles, the game's collision under the car)
   public let landingShiftSpan: Float = 150.0; // m of the route's end moved over to a new spot
   public let spotCheckTimer: Float;
   public let padSnapDistance: Float = 25.0;   // m: a destination this close to a landing pad (and at its level) is on it
@@ -462,7 +467,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
         let c = new Vector4(target.X + 2.0 * Cast<Float>(r) * CosF(angle), target.Y + 2.0 * Cast<Float>(r) * SinF(angle), level + 1.0, 1.0);
         let g: Vector2;
         if FlightModeAutopilot.GapAt(c, g) && AbsF(g.X - level) < 3.0 && g.Y - g.X > room && this.IsFlat(c, g.X)
-          && this.ShaftClear(c, g.X, room) && !this.SpotTaken(new Vector4(c.X, c.Y, g.X, 1.0)) {
+          && this.ShaftClear(c, g.X, room) && !this.SpotTaken(new Vector4(c.X, c.Y, g.X, 1.0))
+          && this.SpotSupported(new Vector4(c.X, c.Y, g.X, 1.0)) {
           let d = Vector4.DistanceSquared2D(c, target);
           if d < best {
             best = d;
@@ -526,16 +532,57 @@ public class FlightModeAutopilot extends FlightModeStandard {
     return false;
   }
 
-  // the four neighbouring columns have their floor within half a metre of this one
+  // the columns out to landingFlat around c (rings 2 m apart, eight directions) have their floor
+  // within half a metre of this one: room for the whole car, not just its centre (on a roof 2 m in
+  // from the map's edge the car's centre hung over the real one and it fell off)
   private func IsFlat(c: Vector4, floor: Float) -> Bool {
-    let offsets: array<Vector4> = [new Vector4(2.0, 0.0, 0.0, 0.0), new Vector4(-2.0, 0.0, 0.0, 0.0), new Vector4(0.0, 2.0, 0.0, 0.0), new Vector4(0.0, -2.0, 0.0, 0.0)];
-    for o in offsets {
-      let g: Vector2;
-      if !FlightModeAutopilot.GapAt(c + o, g) || AbsF(g.X - floor) > 0.5 {
-        return false;
+    let ring = 2.0;
+    while ring <= this.landingFlat + 0.01 {
+      let i = 0;
+      while i < 8 {
+        let angle = 0.7853982 * Cast<Float>(i);
+        let g: Vector2;
+        let p = new Vector4(c.X + ring * CosF(angle), c.Y + ring * SinF(angle), floor + 1.0, 1.0);
+        if !FlightModeAutopilot.GapAt(p, g) || AbsF(g.X - floor) > 0.5 {
+          return false;
+        }
+        i += 1;
       }
+      ring = ring + 2.0 > this.landingFlat && ring < this.landingFlat ? this.landingFlat : ring + 2.0;
     }
     return true;
+  }
+
+  // The game's own collision under the car at the spot, where it has streamed in: rays down at the
+  // centre and landingFootprint out in eight directions. All hitting at about one height: room to
+  // land. Some missing (an edge) or at another height (a ledge): not. None hitting: the world there
+  // has not streamed in yet, nothing to say (the nav map's IsFlat stands; it is checked again on
+  // the approach, RecheckLandingSpot).
+  private func SpotSupported(spot: Vector4) -> Bool {
+    let filter: QueryFilter;
+    QueryFilter.AddGroup(filter, n"Static");
+    QueryFilter.AddGroup(filter, n"Terrain");
+    QueryFilter.AddGroup(filter, n"VehicleBlocker");
+    let queries = GameInstance.GetSpatialQueriesSystem(this.component.GetVehicle().GetGame());
+    let hits = 0;
+    let lo = 1000000.0;
+    let hi = -1000000.0;
+    let i = -1;
+    while i < 8 {
+      let angle = 0.7853982 * Cast<Float>(i);
+      let r = i < 0 ? 0.0 : this.landingFootprint;
+      let x = spot.X + r * CosF(angle);
+      let y = spot.Y + r * SinF(angle);
+      let result: TraceResult;
+      queries.SyncRaycastByQueryFilter(new Vector4(x, y, spot.Z + 2.0, 1.0), new Vector4(x, y, spot.Z - 6.0, 1.0), filter, result, false, false);
+      if TraceResult.IsValid(result) {
+        hits += 1;
+        lo = MinF(lo, result.position.Z);
+        hi = MaxF(hi, result.position.Z);
+      }
+      i += 1;
+    }
+    return hits == 0 || (hits == 9 && hi - lo < 0.6);
   }
 
   // A landing pad (FlightNavMap helipads, docs/archive/helipads.md) to land on for this destination: the
@@ -2162,7 +2209,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
       return;
     }
     this.spotCheckTimer = 0.5;
-    if !this.SpotTaken(this.landingSpot) {
+    let taken = this.SpotTaken(this.landingSpot);
+    if !taken && this.SpotSupported(this.landingSpot) {
       return;
     }
     let top: Float;
@@ -2171,7 +2219,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       let over = Vector4.Distance2D(spot, this.landingSpot);
       if this.ShiftRouteEnd(spot) {
         this.landingSpot = spot;
-        FlightLog.Info("[Autopilot] landing spot taken by a vehicle, " + FloatToStringPrec(this.remaining, 0) + " m out: route end moved "
+        FlightLog.Info("[Autopilot] landing spot " + (taken ? "taken by a vehicle" : "not under the whole car (an edge or a ledge)") + ", " + FloatToStringPrec(this.remaining, 0) + " m out: route end moved "
           + FloatToStringPrec(over, 1) + " m to " + FloatToStringPrec(spot.X, 1) + ", " + FloatToStringPrec(spot.Y, 1));
       }
     }
