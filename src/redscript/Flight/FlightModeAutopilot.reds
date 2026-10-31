@@ -375,6 +375,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let landSlewHeading: Vector4;        // the heading it ends on, landed on by the descent
   public let thrustCmd: Vector4;             // m/s2 in the car's frame (sway, surge, lift) FlyAerobatic set (force is redone by ApplyPhysics)
   public let freeRoam: Bool;                  // flying free roam legs (no destination tracked)
+  // free roam chosen, as vanilla autodrive does (AutoDriveSystem.OnAutodriveToggled): on when engaged
+  // with no destination tracked, and kept when one is tracked later (a gig the game tracks on a
+  // call); a tap of the autodrive key switches to a tracked destination and back (ToggleFreeRoam)
+  public let freeRoamChosen: Bool;
   public let freeRoamCentre: Vector4;
   public let requestJoin: Bool;               // the pending plan is the next free roam leg, from joinPoint
   public let joinS: Float;                    // route distance of joinPoint
@@ -394,6 +398,14 @@ public class FlightModeAutopilot extends FlightModeStandard {
 
   public func Activate() -> Void {
     this.ahead.Reset();
+    let target: Vector4;
+    this.freeRoamChosen = !this.CurrentDestination(target);
+    // as vanilla autodrive: no combat events while it drives (AutoDriveSystem.OnAutodriveToggled)
+    if this.component.isPlayerMounted {
+      let game = this.component.GetVehicle().GetGame();
+      SetFactValue(game, n"disable_combat_events", 1);
+      SetFactValue(game, n"player_in_autodrive", 1);
+    }
     this.holdPosition = this.component.stats.d_position;
     ArrayClear(this.route);
     this.request = 0;
@@ -649,6 +661,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
   }
 
   public func Deactivate() -> Void {
+    if this.component.isPlayerMounted {
+      let game = this.component.GetVehicle().GetGame();
+      SetFactValue(game, n"disable_combat_events", 0);
+      SetFactValue(game, n"player_in_autodrive", 0);
+    }
     ArrayClear(this.route);
     this.request = 0;
     this.freeRoam = false;
@@ -823,16 +840,13 @@ public class FlightModeAutopilot extends FlightModeStandard {
       // (or the hand-back), not free roam from there
       return;
     }
-    if has {
-      if this.freeRoam {
-        // a destination tracked during free roam: fly there instead
-        this.freeRoam = false;
-        this.hasDestination = false;
-        this.request = 0;
-        this.requestJoin = false;
-        this.PublishFreeRoamUI();
-        FlightLog.Info("[Autopilot] destination tracked, leaving free roam");
+    if this.freeRoamChosen {
+      // free roam until the player switches (ToggleFreeRoam), whatever gets tracked meanwhile
+      if !this.freeRoam {
+        this.BeginFreeRoam();
       }
+      this.ChainFreeRoam();
+    } else if has {
       if !this.hasDestination || Vector4.Distance(target, this.destination) > 20.0 {
         this.destination = target;
         this.hasDestination = true;
@@ -841,11 +855,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
         this.RequestRoute(this.component.stats.d_position);
       }
     } else {
-      // no destination tracked (none when engaged, or untracked on the way): free roam
-      if !this.freeRoam {
-        this.BeginFreeRoam();
-      }
-      this.ChainFreeRoam();
+      // the destination untracked on the way: as vanilla autodrive
+      // (AutoDriveSystem.OnUpdateAutodriveOnDestinationChangeRequest), the Autopilot hands back
+      FlightLog.Info("[Autopilot] destination untracked on the way: handing back");
+      FlightController.GetInstance().ExitAutopilot();
+      return;
     }
     if this.request > 0 && FlightNavMap.IsPlanReady(this.request) {
       let points = FlightNavMap.TakePlan(this.request);
@@ -929,6 +943,34 @@ public class FlightModeAutopilot extends FlightModeStandard {
   }
 
   // --- free roam ------------------------------------------------------------------------------
+
+  // A tap of the autodrive key while engaged (FlightController), as vanilla's ToggleFreeRoamRequest:
+  // free roam to the tracked destination, or the destination to free roam. In free roam with
+  // nothing tracked it stays.
+  public func ToggleFreeRoam() -> Void {
+    let target: Vector4;
+    let has = this.CurrentDestination(target);
+    if this.freeRoamChosen {
+      if !has {
+        return;
+      }
+      this.freeRoamChosen = false;
+      this.freeRoam = false;
+      this.hasDestination = false;
+      this.request = 0;
+      this.requestJoin = false;
+      this.ahead.Reset();
+      this.PublishFreeRoamUI();
+      FlightLog.Info("[Autopilot] free roam off: to the tracked destination");
+    } else {
+      this.freeRoamChosen = true;
+      this.hasDestination = false;
+      this.landing = false;
+      this.request = 0;
+      this.ahead.Reset();
+      FlightLog.Info("[Autopilot] free roam on");
+    }
+  }
 
   private func BeginFreeRoam() -> Void {
     let stats = this.component.stats;

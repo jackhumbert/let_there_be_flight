@@ -543,6 +543,21 @@ public native class FlightController extends IScriptable {
     this.SetMode(next);
   }
 
+  // A tap of the mode switch (G on keyboard, also the autodrive key): with the Autopilot engaged,
+  // free roam and the tracked destination switch, as a tap does for vanilla autodrive; otherwise
+  // the next flight mode.
+  private func TapModeSwitch() -> Void {
+    let autopilot = this.AutopilotModeIndex();
+    if autopilot >= 0 && this.mode == autopilot {
+      let mode = this.sys.playerComponent.GetFlightMode() as FlightModeAutopilot;
+      if IsDefined(mode) {
+        mode.ToggleFreeRoam();
+        return;
+      }
+    }
+    this.CycleMode(1);
+  }
+
   // Back to the mode the Autopilot was engaged from (arrival, or the autodrive hold again).
   public func ExitAutopilot() -> Void {
     let autopilot = this.AutopilotModeIndex();
@@ -708,13 +723,13 @@ public native class FlightController extends IScriptable {
           }
           if ListenerAction.IsButtonJustReleased(action) {
             if !this.autopilotHoldConsumed {
-              this.CycleMode(1);
+              this.TapModeSwitch();
             }
             this.autopilotHoldConsumed = false;
           }
         } else {
           if ListenerAction.IsButtonJustPressed(action) {
-            this.CycleMode(1);
+            this.TapModeSwitch();
           }
         }
       }
