@@ -27,11 +27,11 @@ static_assert(offsetof(vehicle::TPPCameraComponent, boomLength) == 0x4D4);
 
 // gets the location for the camera to look at
 /// @hash 283779224
-// Vector4 *__fastcall GetLocationFromOffset(vehicle::TPPCameraComponent *camera, Vector4 *location, Vector3 *lookAtOffset);
+// Vector4 *__fastcall TPPCameraComponent_CalculateLookAtPosition(vehicle::TPPCameraComponent *camera, Vector4 *location, Vector3 *lookAtOffset);
 
 // uses preset->linearVelocity
 // Vector4 vehicle::TPPCameraComponent::CalculateLookAtPosition(vehicle::TPPCameraComponent::CameraPreset const &) const
-REGISTER_FLIGHT_HOOK_HASH(Vector4 *__fastcall, 283779224, GetLocationFromOffset,
+REGISTER_FLIGHT_HOOK_HASH(Vector4 *__fastcall, 283779224, TPPCameraComponent_CalculateLookAtPosition,
                      vehicle::TPPCameraComponent *camera, Vector4 *offset,
                      vehicle::TPPCameraComponent::CameraPreset *preset) {
   auto vehicle = camera->vehicle;
@@ -44,19 +44,19 @@ REGISTER_FLIGHT_HOOK_HASH(Vector4 *__fastcall, 283779224, GetLocationFromOffset,
     if (FlightSettings::GetProperty<bool>("tppCameraCenterOnMass") && !FlightSettings::GetBool("inTPPDriverCombat")) {
       has_changed_mode = !custom_mode;
       custom_mode = true;
-      vanilla = *GetLocationFromOffset_Original(camera, &vanilla, preset);
+      vanilla = *TPPCameraComponent_CalculateLookAtPosition_Original(camera, &vanilla, preset);
       *offset = vehicle->worldTransform.Position.AsVector4() +
              (vehicle->worldTransform.Orientation * vehicle->physicsData->centerOfMass);
     } else {
       has_changed_mode = custom_mode;
       custom_mode = false;
-      *offset = *GetLocationFromOffset_Original(camera, offset, preset);
+      *offset = *TPPCameraComponent_CalculateLookAtPosition_Original(camera, offset, preset);
       vanilla = *offset;
     }
   } else {
     has_changed_mode = custom_mode;
     custom_mode = false;
-    *offset = *GetLocationFromOffset_Original(camera, offset, preset);
+    *offset = *TPPCameraComponent_CalculateLookAtPosition_Original(camera, offset, preset);
     vanilla = *offset;
   }
 
