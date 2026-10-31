@@ -3,5 +3,5 @@
 * TweakXL 1.12.0+
 * ArchiveXL 1.28.3+ (optional on game 2.5+)
 * Redscript 0.5.32+
-* Input Loader v0.2.3+
-* Mod Settings v0.2.23+ (optional)
+* Input Loader 0.2.3+
+* Mod Settings 0.2.23+ (optional)

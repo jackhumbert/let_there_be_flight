@@ -155,8 +155,7 @@ find_package(InputLoader)
 find_package(ArchiveXL)
 # 1.28.3 fixed instanced mesh world node mutations (the proxy colliders' sector edits); the shared
 # FindArchiveXL asks for 1.28.0. Keep in step with archiveXL_version in Main.cpp.
-list(TRANSFORM MOD_REQUIREMENTS REPLACE "^ArchiveXL [0-9.]+\\+$" "ArchiveXL 1.28.3+")
-list(TRANSFORM MOD_REQUIREMENTS REPLACE "^(ArchiveXL .*)$" "\\1 (optional on game 2.5+)")
+mod_require(ArchiveXL 1.28.3 NOTE "optional on game 2.5+")
 find_package(TweakXL)
 
 target_link_libraries(let_there_be_flight.dll
@@ -242,8 +241,8 @@ target_link_libraries(${MOD_SLUG}.packed.reds PUBLIC mod_settings.packed.reds)
 configure_folder_file(readme.md)
 configure_folder_file(license.md)
 
-list(APPEND MOD_REQUIREMENTS "Input Loader v0.2.3+")
-list(APPEND MOD_REQUIREMENTS "Mod Settings v0.2.23+ (optional)")
+mod_require("Input Loader" 0.2.3)
+mod_require("Mod Settings" 0.2.23 OPTIONAL)
 
 configure_uninstall()
 configure_release(${MOD_SLUG}_${MOD_VERSION_STR}.zip)
