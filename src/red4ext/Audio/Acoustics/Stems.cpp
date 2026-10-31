@@ -41,6 +41,10 @@ std::mutex lock;
 std::array<FILE *, kStems> files{};
 uint64_t frames = 0;
 std::string base;
+// the thrusters' parameters, a row an update (WriteParams), from the game thread
+std::mutex paramsLock;
+FILE *params = nullptr;
+bool paramsHeader = false;
 bool infoWritten = false;
 std::condition_variable wake;
 bool stopping = false;
@@ -153,10 +157,38 @@ bool Start(const std::string &aBase) {
   rate.store(0);
   dropped.store(0);
   stopping = false;
+  {
+    std::lock_guard paramsGuard(paramsLock);
+    params = std::fopen((aBase + "_params.csv").c_str(), "w");
+    paramsHeader = false;
+  }
   recording.store(true);
   writer = std::thread(Write);
   spdlog::info("[Acoustics] stems to {}_*.wav", aBase);
   return true;
+}
+
+void WriteParams(const std::string &aId, float aPitch, float aVolume, const float *aPosition,
+                 const std::vector<std::pair<std::string, float>> &aValues) {
+  std::lock_guard guard(paramsLock);
+  if (!params) {
+    return;
+  }
+  if (!paramsHeader) {
+    std::fputs("wall,id,start_pitch,volume,x,y,z", params);
+    for (const auto &[name, _] : aValues) {
+      std::fprintf(params, ",%s", name.c_str());
+    }
+    std::fputc('\n', params);
+    paramsHeader = true;
+  }
+  const double wall = std::chrono::duration<double>(std::chrono::system_clock::now().time_since_epoch()).count();
+  std::fprintf(params, "%.4f,%s,%.4f,%.4f,%.3f,%.3f,%.3f", wall, aId.c_str(), aPitch, aVolume, aPosition[0],
+               aPosition[1], aPosition[2]);
+  for (const auto &[_, value] : aValues) {
+    std::fprintf(params, ",%.4f", value);
+  }
+  std::fputc('\n', params);
 }
 
 void Stop() {
@@ -175,6 +207,13 @@ void Stop() {
   for (auto *&f : files) {
     std::fclose(f);
     f = nullptr;
+  }
+  {
+    std::lock_guard paramsGuard(paramsLock);
+    if (params) {
+      std::fclose(params);
+      params = nullptr;
+    }
   }
   spdlog::info("[Acoustics] stems: {} frames to {}_*.wav, {} dropped", frames, base, dropped.load());
 }

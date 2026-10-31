@@ -202,6 +202,14 @@ target_include_directories(acoustics PRIVATE src/red4ext)
 target_compile_features(acoustics PRIVATE cxx_std_20)
 target_link_libraries(acoustics PRIVATE spdlog)
 
+# the engine synth over a run's thruster parameters (docs/design/engine-synth.md); not built by default
+add_executable(engine_synth EXCLUDE_FROM_ALL
+  tools/acoustics/engine_synth.cpp
+  src/red4ext/Audio/EngineSynth/Synth.cpp
+)
+target_include_directories(engine_synth PRIVATE src/red4ext)
+target_compile_features(engine_synth PRIVATE cxx_std_20)
+
 # the same code through FMOD with the mod's banks, a recording standing in for the thrusters
 # (tools/acoustics/fmod_check.cpp); not built by default
 add_executable(acoustics_fmod EXCLUDE_FROM_ALL
@@ -209,6 +217,7 @@ add_executable(acoustics_fmod EXCLUDE_FROM_ALL
   src/red4ext/Audio/Acoustics/Acoustics.cpp
   src/red4ext/Audio/Acoustics/Probe.cpp
   src/red4ext/Audio/Acoustics/Reflections.cpp
+  src/red4ext/Audio/Acoustics/Stems.cpp
   src/red4ext/Navigation/NavMap.cpp
   src/red4ext/ThirdParty/miniz/miniz_tinfl.cpp
 )

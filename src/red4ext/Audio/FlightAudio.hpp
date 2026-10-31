@@ -32,6 +32,14 @@ public:
   void Stop(RED4ext::CString emitterName);
   void UpdateEvent(RED4ext::CString emitterName, RED4ext::Matrix matrix, float eventVolume,
                      RED4ext::Handle<RED4ext::IScriptable> update);
+  // the engine synth in place of the thruster event (EngineSynth::Channels): started with the car's
+  // pitch, updated each frame with the thruster's matrix, volume and the same FlightAudioUpdate
+  void StartEngine(RED4ext::CString emitterName, float pitch);
+  void UpdateEngine(RED4ext::CString emitterName, RED4ext::Matrix matrix, float volume,
+                    RED4ext::Handle<RED4ext::IScriptable> update);
+  void StopEngine(RED4ext::CString emitterName);
+  // the synth channels and their cost as JSON, for tests
+  RED4ext::CString EngineState();
   // each frame the player's car flies: its matrix, the echoes' level (0: off), how far the view is
   // inside the cabin and who casts the near rays (Acoustics::RaySource: 0 none, 1 the scripts, 2 PhysX)
   void UpdateAcoustics(RED4ext::Matrix carMatrix, float gain, float inside, int32_t raySource);
@@ -73,5 +81,9 @@ private:
     aType->AddFunction<&FlightAudio::AcousticsLog>("AcousticsLog");
     aType->AddFunction<&FlightAudio::AcousticsStems>("AcousticsStems");
     aType->AddFunction<&FlightAudio::AcousticsTestSource>("AcousticsTestSource");
+    aType->AddFunction<&FlightAudio::StartEngine>("StartEngine");
+    aType->AddFunction<&FlightAudio::UpdateEngine>("UpdateEngine");
+    aType->AddFunction<&FlightAudio::StopEngine>("StopEngine");
+    aType->AddFunction<&FlightAudio::EngineState>("EngineState");
   }
 };

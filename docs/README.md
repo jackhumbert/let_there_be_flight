@@ -11,6 +11,7 @@
   - `landing-pads.md`: pads, pins, supplies, real decks for visual-only pads.
   - `physx-flight.md`: the experimental PhysX-owned flight physics.
   - `acoustics.md`: echoes and reverb from the nav map (offline prototype).
+  - `engine-synth.md`: a C++ thruster sound on the FMOD event's parameters (behind a switch).
 - `testing.md`: driving the game for tests, the test drivers and bridge helpers.
 - `release.md`: cutting a release, Nexus Mods.
 - `game-patch.md`: what a game patch breaks, the update checklist, reverse engineering.

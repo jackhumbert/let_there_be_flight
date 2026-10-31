@@ -82,10 +82,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("take", help="lib.Recording's <out>/<name> (.mp4, .wav, .wall, .offset beside it)")
     ap.add_argument("stems", help="the stems' base path (LtbfBridge.AcousticsStems returned it)")
-    ap.add_argument("--first", choices=TRACKS, default="wet")
+    ap.add_argument("--first", default="wet", help="the track played first: " + ", ".join(TRACKS) + " or an --extra's name")
     ap.add_argument("--shift", type=float, default=0.0, help="seconds added to the stems' place")
     ap.add_argument("--out", help="default <take>_fx.mp4")
     ap.add_argument("--small", action="store_true", help="video re-encoded at 1.7 Mbit/s")
+    ap.add_argument("--extra", action="append", default=[],
+                    help="name=path: another float WAV on the stems' timeline (engine_synth's render of the run), "
+                         "at the dry and wet tracks' gain")
     args = ap.parse_args()
 
     with open(args.take + ".wall") as f:
@@ -128,9 +131,18 @@ def main():
     for name, src in (("wet", "w0"), ("dry", "d0"), ("echoes", "e0"), ("bus", "b0")):
         filters.append(f"{place(src, at)},apad[{name}]")
     filters.append(f"{place('4:a', game_at)},apad[game]")
-    order = [args.first] + [t for t in TRACKS if t != args.first]
     titles = {"wet": "LTBF with echoes", "dry": "LTBF dry", "echoes": "echoes only", "bus": "LTBF bus",
               "game": "game recording"}
+    tracks = list(TRACKS)
+    for k, extra in enumerate(args.extra):
+        name, path = extra.split("=", 1)
+        inputs += ["-i", path]
+        filters.append(f"[{5 + k}:a]volume={gain:.4f},{place('x', at)[3:]},apad[{name}]")
+        titles[name] = name
+        tracks.append(name)
+    if args.first not in tracks:
+        sys.exit(f"--first {args.first}: no such track")
+    order = [args.first] + [t for t in tracks if t != args.first]
     out = args.out or args.take + "_fx.mp4"
     cmd = [paths.FFMPEG, "-hide_banner", "-loglevel", "error", "-y", *inputs, "-filter_complex", ";".join(filters),
            "-map", "0:v"]

@@ -50,6 +50,8 @@ public abstract native class IFlightThruster extends IScriptable {
   public let audioUpdate: ref<FlightAudioUpdate>;
   public let audioPitch: Float;
   public let audioPitchSeparation: Float = 0.001;
+  // the engine synth plays this thruster (FlightAudio.engineSource when it started), not the FMOD event
+  public let engineSynth: Bool;
   public let wheelIndex: Int32;
   public let initialOrientation: Quaternion;
 
@@ -194,7 +196,12 @@ public abstract native class IFlightThruster extends IScriptable {
       }
 
     // FlightAudio.Get().StartWithPitch(this.id, "vehicle3_TPP", this.audioPitch);
-      FlightAudio.Get().StartWithPitch(this.id, "vehicle3_TPP", this.flightComponent.GetPitch());
+      this.engineSynth = FlightAudio.Get().engineSource == 1;
+      if this.engineSynth {
+        FlightAudio.Get().StartEngine(this.id, this.flightComponent.GetPitch());
+      } else {
+        FlightAudio.Get().StartWithPitch(this.id, "vehicle3_TPP", this.flightComponent.GetPitch());
+      }
     }
   }
 
@@ -302,12 +309,20 @@ public abstract native class IFlightThruster extends IScriptable {
       rotatedMatrix.W = matrix.W;
     }
 
-    FlightAudio.Get().UpdateEvent(this.id, rotatedMatrix, volume, this.audioUpdate);
+    if this.engineSynth {
+      FlightAudio.Get().UpdateEngine(this.id, rotatedMatrix, volume, this.audioUpdate);
+    } else {
+      FlightAudio.Get().UpdateEvent(this.id, rotatedMatrix, volume, this.audioUpdate);
+    }
   }
 
   public func Stop() {
     if this.attached {
-      FlightAudio.Get().Stop(this.id);
+      if this.engineSynth {
+        FlightAudio.Get().StopEngine(this.id);
+      } else {
+        FlightAudio.Get().Stop(this.id);
+      }
       for fx in this.fxs {
         fx.Stop();
       }

@@ -452,6 +452,11 @@ void InsertBeforeObjectPans(FMOD::System *aCore, FMOD::ChannelGroup *aGroup, std
 
 } // namespace
 
+FMOD::DSP *CreateDsp(FMOD::System *aCore) {
+  FMOD::DSP *dsp = nullptr;
+  return Check(aCore->createDSP(Description(), &dsp), "createDSP") ? dsp : nullptr;
+}
+
 int AttachToEvent(FMOD::Studio::System *aStudio, FMOD::Studio::EventInstance *aInstance) {
   FMOD::System *core = nullptr;
   FMOD::ChannelGroup *group = nullptr;

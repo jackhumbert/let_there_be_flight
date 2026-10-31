@@ -21,6 +21,7 @@
 
 namespace FMOD {
 class System;
+class DSP;
 namespace Studio {
 class System;
 class EventInstance;
@@ -41,6 +42,10 @@ void Detach();
 // many; 0 for an event without one. DetachFromEvent before the instance is stopped and released.
 int AttachToEvent(FMOD::Studio::System *aStudio, FMOD::Studio::EventInstance *aInstance);
 void DetachFromEvent(FMOD::Studio::EventInstance *aInstance);
+
+// A DSP of the same kind for a sound the caller places itself (the engine synth's channels): just
+// before the sound's spatializer. The caller removes and releases it.
+FMOD::DSP *CreateDsp(FMOD::System *aCore);
 
 // Where the near rays' live hits come from.
 enum class RaySource : int32_t { None = 0, Scripts = 1, PhysX = 2 };

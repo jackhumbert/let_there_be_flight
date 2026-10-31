@@ -50,6 +50,16 @@ public native class FlightAudio extends IScriptable {
   // 2 pink noise, 3 a 440 Hz sine; the thrusters are muted while it plays
   public native func AcousticsTestSource(source: Int32) -> Void;
 
+  // the engine synth in place of the thruster event vehicle3_TPP (docs/design/engine-synth.md)
+  public native func StartEngine(emitterName: String, pitch: Float) -> Void;
+  public native func UpdateEngine(emitterName: String, eventMatrix: Matrix, volume: Float, update: ref<FlightAudioUpdate>) -> Void;
+  public native func StopEngine(emitterName: String) -> Void;
+  // its channels and cost as JSON, for tests
+  public native func EngineState() -> String;
+  // who makes the thrusters' sound: 0 the FMOD event, 1 the engine synth (not a Mod Setting yet:
+  // LtbfBridge.EngineSource for tests; takes effect when the thrusters next start)
+  public let engineSource: Int32 = 0;
+
   // the echoes on or off, and their level (not a Mod Setting yet: LtbfBridge.Acoustics for tests)
   public let acoustics: Bool = true;
   public let acousticsGain: Float = 1.0;

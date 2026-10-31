@@ -7,6 +7,7 @@
 //   <base>_wet.wav   the same with the echoes (the event DSPs' output)
 //   <base>_bus.wav   the master bus's output: LTBF's other FMOD sounds, with their echoes
 //   <base>.json      mixer rate and the first sample's wall clock time, to line them up with a video
+//   <base>_params.csv  each thruster's parameters as the game sent them (WriteParams)
 //
 // Stereo 32-bit float. The thrusters are summed unspatialized (Windows Sonic places them, after the
 // DSPs): mono sources in both channels. The DSPs add into a ring buffer by the master bus's mix clock
@@ -15,6 +16,7 @@
 
 #include <cstdint>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace Acoustics::Stems {
@@ -46,6 +48,12 @@ struct EventCursor {
 };
 // From an event DSP's read callback: its input (dry) and output (wet).
 void AddEvent(EventCursor &aCursor, const float *aIn, const float *aOut, unsigned int aLength, int aChannels);
+
+// While recording, a row of <base>_params.csv: wall clock (s), the thruster's id, its start pitch,
+// volume, world position (x, y, z) and the FMOD parameters by name (the header from the first row's
+// names). Game thread; the file is flushed when the stems stop.
+void WriteParams(const std::string &aId, float aPitch, float aVolume, const float *aPosition,
+                 const std::vector<std::pair<std::string, float>> &aValues);
 
 // JSON for State(): recording or not, frames written, frames dropped (late or overrun)
 std::string State();
