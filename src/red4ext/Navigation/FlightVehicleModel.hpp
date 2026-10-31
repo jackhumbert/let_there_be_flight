@@ -13,7 +13,7 @@ struct FlightVehicleModel : RED4ext::IScriptable {
   float airResistance = 2.0f;
   float brakingFriction = 1.4f;
   float surge = 15.0f;
-  float surgeShare = 0.88f;
+  float surgeShare = 1.0f;
   float sway = 5.0f;
   float lift = 25.0f;
   float gravityFactor = 1.0f;

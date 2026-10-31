@@ -21,9 +21,10 @@ struct VehicleSpec {
   float brakingFriction = 1.4f;  // s_brakingFrictionFactor
   // the flight tuning (FlightMode_Standard, FlightMode, FlightSettings)
   float surge = 15.0f;           // m/s2, standardModeSurgeFactor
-  // share of the surge the car gets speeding up in level flight (telemetry fit, docs/history.md
-  // 2026-10-30: 0.88 for the Shion, drag as modelled); top speed is where that meets the drag
-  float surgeShare = 0.88f;
+  // share of the surge the car gets speeding up in level flight near top speed (telemetry fit,
+  // tools/telemetry/fit_surge.py: 1.0 for the Shion, drag as modelled); top speed is where that meets
+  // the drag
+  float surgeShare = 1.0f;
   float sway = 5.0f;             // m/s2, standardModeSwayFactor
   float lift = 25.0f;            // m/s2 over gravity, standardModeLiftFactor
   float gravityFactor = 1.0f;
