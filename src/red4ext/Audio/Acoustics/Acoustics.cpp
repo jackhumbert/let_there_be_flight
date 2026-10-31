@@ -15,6 +15,7 @@
 #include <mutex>
 #include <optional>
 #include <thread>
+#include <unordered_map>
 
 namespace Acoustics {
 
@@ -51,7 +52,8 @@ std::mutex stateLock;
 Features lastFeatures{};
 Params lastParams{};
 float lastProbeMs = 0;
-std::atomic<uint64_t> probes{0}, blocks{0}, silentBlocks{0};
+// blocks rendered, those with sound coming in, and those skipped as silent
+std::atomic<uint64_t> probes{0}, blocks{0}, soundBlocks{0}, silentBlocks{0};
 
 std::mutex wakeLock;
 std::condition_variable wake;
@@ -137,6 +139,13 @@ FMOD_RESULT F_CALL DspRead(FMOD_DSP_STATE *aState, float *aIn, float *aOut, unsi
     std::memcpy(aOut, aIn, samples * sizeof(float));
     return FMOD_OK;
   }
+  float peak = 0;
+  for (size_t k = 0; k < samples; ++k) {
+    peak = std::max(peak, std::abs(aIn[k]));
+  }
+  if (peak > 1e-6f) {
+    soundBlocks.fetch_add(1, std::memory_order_relaxed);
+  }
   i.reflections.Process(aIn, aOut, aLength, aInChannels);
   // fade the echoes (out - in) to the level
   for (unsigned int s = 0; s < aLength; ++s) {
@@ -153,11 +162,10 @@ FMOD_RESULT F_CALL DspRead(FMOD_DSP_STATE *aState, float *aIn, float *aOut, unsi
 FMOD_RESULT F_CALL DspShouldIProcess(FMOD_DSP_STATE *aState, FMOD_BOOL aInputsIdle, unsigned int, FMOD_CHANNELMASK,
                                      int, FMOD_SPEAKERMODE) {
   auto &i = *static_cast<Instance *>(aState->plugindata);
-  if (!aInputsIdle) {
-    return FMOD_OK;
-  }
-  // nothing coming in: keep going while the echoes and reverb still ring
-  if (i.amount > 0 && i.reflections.TailLevel() > 1e-12f) {
+  // on: always (in the game the buses reported idle inputs while the thrusters played); off:
+  // while the echoes and reverb still ring
+  if (!aInputsIdle || level.load(std::memory_order_relaxed) > 0 ||
+      (i.amount > 0 && i.reflections.TailLevel() > 1e-12f)) {
     return FMOD_OK;
   }
   silentBlocks.fetch_add(1, std::memory_order_relaxed);
@@ -222,7 +230,9 @@ void Run() {
 
 } // namespace
 
-bool Attach(FMOD::Studio::System *aStudio, const std::vector<std::string> &aBuses) {
+namespace {
+
+FMOD_DSP_DESCRIPTION *Description() {
   static FMOD_DSP_DESCRIPTION description = [] {
     FMOD_DSP_DESCRIPTION d{};
     d.pluginsdkversion = FMOD_PLUGIN_SDK_VERSION;
@@ -237,6 +247,84 @@ bool Attach(FMOD::Studio::System *aStudio, const std::vector<std::string> &aBuse
     d.shouldiprocess = DspShouldIProcess;
     return d;
   }();
+  return &description;
+}
+
+// DSPs inserted into event instances, by instance (the game thread starts and stops events)
+std::mutex eventsLock;
+std::unordered_map<FMOD::Studio::EventInstance *, std::vector<Attached>> events;
+
+// A DSP just before every Object Spatializer under aGroup: those hand the sound to the output as
+// a 3D object, past every bus
+void InsertBeforeObjectPans(FMOD::System *aCore, FMOD::ChannelGroup *aGroup, std::vector<Attached> &aOut) {
+  int dsps = 0;
+  aGroup->getNumDSPs(&dsps);
+  for (int i = 0; i < dsps; ++i) {
+    FMOD::DSP *dsp = nullptr;
+    FMOD_DSP_TYPE type = FMOD_DSP_TYPE_UNKNOWN;
+    if (aGroup->getDSP(i, &dsp) != FMOD_OK || dsp->getType(&type) != FMOD_OK || type != FMOD_DSP_TYPE_OBJECTPAN) {
+      continue;
+    }
+    // index 0 is the output end: one further from it is just before the spatializer
+    Attached a{nullptr, aGroup};
+    if (Check(aCore->createDSP(Description(), &a.dsp), "createDSP") && Check(aGroup->addDSP(i + 1, a.dsp), "addDSP")) {
+      aOut.push_back(a);
+      ++i;
+      ++dsps;
+    } else if (a.dsp) {
+      a.dsp->release();
+    }
+  }
+  int groups = 0;
+  aGroup->getNumGroups(&groups);
+  for (int g = 0; g < groups; ++g) {
+    FMOD::ChannelGroup *child = nullptr;
+    if (aGroup->getGroup(g, &child) == FMOD_OK) {
+      InsertBeforeObjectPans(aCore, child, aOut);
+    }
+  }
+}
+
+} // namespace
+
+int AttachToEvent(FMOD::Studio::System *aStudio, FMOD::Studio::EventInstance *aInstance) {
+  FMOD::System *core = nullptr;
+  FMOD::ChannelGroup *group = nullptr;
+  // the instance's DSP graph exists once its start has gone through
+  aStudio->flushCommands();
+  if (!Check(aStudio->getCoreSystem(&core), "getCoreSystem") || !Check(aInstance->getChannelGroup(&group), "event getChannelGroup")) {
+    return 0;
+  }
+  std::vector<Attached> inserted;
+  InsertBeforeObjectPans(core, group, inserted);
+  const int count = int(inserted.size());
+  if (count) {
+    std::lock_guard guard(eventsLock);
+    auto &list = events[aInstance];
+    list.insert(list.end(), inserted.begin(), inserted.end());
+  }
+  return count;
+}
+
+void DetachFromEvent(FMOD::Studio::EventInstance *aInstance) {
+  std::vector<Attached> list;
+  {
+    std::lock_guard guard(eventsLock);
+    auto it = events.find(aInstance);
+    if (it == events.end()) {
+      return;
+    }
+    list = std::move(it->second);
+    events.erase(it);
+  }
+  for (auto &a : list) {
+    a.group->removeDSP(a.dsp);
+    a.dsp->release();
+  }
+}
+
+bool Attach(FMOD::Studio::System *aStudio, const std::vector<std::string> &aBuses) {
+  FMOD_DSP_DESCRIPTION &description = *Description();
   FMOD::System *core = nullptr;
   if (!Check(aStudio->getCoreSystem(&core), "getCoreSystem")) {
     return false;
@@ -254,7 +342,9 @@ bool Attach(FMOD::Studio::System *aStudio, const std::vector<std::string> &aBuse
   for (auto *bus : buses) {
     Attached a{bus};
     if (Check(bus->getChannelGroup(&a.group), "getChannelGroup") && Check(core->createDSP(&description, &a.dsp), "createDSP") &&
-        Check(a.group->addDSP(FMOD_CHANNELCONTROL_DSP_TAIL, a.dsp), "addDSP")) {
+        // at the output end: Studio connects its events into the bus past the tail, so a DSP there
+        // heard nothing in the game; after the fader, the bus volume is in the sound already
+        Check(a.group->addDSP(FMOD_CHANNELCONTROL_DSP_HEAD, a.dsp), "addDSP")) {
       attached.push_back(a);
     } else {
       if (a.dsp) {
@@ -282,6 +372,16 @@ void Detach() {
     worker.join();
   }
   level.store(0.0f);
+  std::vector<FMOD::Studio::EventInstance *> instances;
+  {
+    std::lock_guard guard(eventsLock);
+    for (auto &[instance, _] : events) {
+      instances.push_back(instance);
+    }
+  }
+  for (auto *instance : instances) {
+    DetachFromEvent(instance);
+  }
   for (auto &a : attached) {
     a.group->removeDSP(a.dsp);
     a.dsp->release();
@@ -316,6 +416,13 @@ std::string State() {
     p = lastParams;
     ms = lastProbeMs;
   }
+  size_t eventDsps = 0;
+  {
+    std::lock_guard guard(eventsLock);
+    for (auto &[_, list] : events) {
+      eventDsps += list.size();
+    }
+  }
   float gain, inside;
   bool fresh;
   {
@@ -327,12 +434,12 @@ std::string State() {
   // JSON has no infinity: a miss is null
   auto num = [](float x) { return std::isfinite(x) ? fmt::format("{:.3f}", x) : std::string("null"); };
   return fmt::format(
-      "{{\"buses\":{},\"flying\":{},\"gain\":{},\"inside\":{},\"level\":{},\"probes\":{},\"probeMs\":{},"
-      "\"blocks\":{},\"silentBlocks\":{},\"floor\":{},\"ceiling\":{},\"left\":{},\"right\":{},\"enclosure\":{},"
+      "{{\"buses\":{},\"eventDsps\":{},\"flying\":{},\"gain\":{},\"inside\":{},\"level\":{},\"probes\":{},\"probeMs\":{},"
+      "\"blocks\":{},\"soundBlocks\":{},\"silentBlocks\":{},\"floor\":{},\"ceiling\":{},\"left\":{},\"right\":{},\"enclosure\":{},"
       "\"meanFreePath\":{},\"floorDelay\":{},\"floorGain\":{},\"leftDelay\":{},\"rightDelay\":{},"
       "\"floorFeedback\":{},\"wallFeedback\":{},\"rt60\":{},\"wet\":{}}}",
-      attached.size(), fresh ? "true" : "false", num(gain), num(inside), num(level.load()), probes.load(), num(ms),
-      blocks.load(), silentBlocks.load(), num(f.floor), num(f.ceiling), num(f.left), num(f.right), num(f.enclosure),
+      attached.size(), eventDsps, fresh ? "true" : "false", num(gain), num(inside), num(level.load()), probes.load(), num(ms),
+      blocks.load(), soundBlocks.load(), silentBlocks.load(), num(f.floor), num(f.ceiling), num(f.left), num(f.right), num(f.enclosure),
       num(f.meanFreePath), num(p.floor.delay), num(p.floor.gain), num(p.left.delay), num(p.right.delay),
       num(p.floorFeedback), num(p.wallFeedback), num(p.rt60), num(p.wet));
 }

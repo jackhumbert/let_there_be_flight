@@ -38,7 +38,7 @@ public native class FlightAudio extends IScriptable {
   public native func AcousticsState() -> String;
 
   // the echoes on or off, and their level (not a Mod Setting yet: LtbfBridge.Acoustics for tests)
-  public let acoustics: Bool = false;
+  public let acoustics: Bool = true;
   public let acousticsGain: Float = 1.0;
 
 

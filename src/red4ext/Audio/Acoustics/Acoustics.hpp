@@ -22,16 +22,24 @@ namespace FMOD {
 class System;
 namespace Studio {
 class System;
-}
+class EventInstance;
+} // namespace Studio
 } // namespace FMOD
 
 namespace Acoustics {
 
-// A DSP on each named bus's channel group, before its fader (so the bus volume scales the echoes
+// A DSP on each named bus's channel group, at its output end after the fader (the bus volume is in
+// the sound it gets, so it scales the echoes
 // too). Call after the banks load. False if a bus or the DSP could not be set up (logged).
 bool Attach(FMOD::Studio::System *aStudio, const std::vector<std::string> &aBuses);
-// Before the FMOD system is released: stops the worker and removes the DSPs.
+// Before the FMOD system is released: stops the worker and removes the DSPs, the events' too.
 void Detach();
+
+// A DSP just before each Object Spatializer in a started event instance (vehicle3_TPP's: those hand
+// the sound to the output as a 3D object, past every bus, so a bus DSP never hears it). Returns how
+// many; 0 for an event without one. DetachFromEvent before the instance is stopped and released.
+int AttachToEvent(FMOD::Studio::System *aStudio, FMOD::Studio::EventInstance *aInstance);
+void DetachFromEvent(FMOD::Studio::EventInstance *aInstance);
 
 // The player's flying car (world, z up), the echoes' level (Tuning::gain; 0 = off) and how far the
 // view is inside the cabin (0 outside .. 1 first person: the echoes drop about 10 dB).

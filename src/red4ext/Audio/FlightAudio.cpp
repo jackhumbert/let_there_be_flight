@@ -70,8 +70,10 @@ bool FlightAudio::Load(RED4ext::CGameApplication *aApp) {
 
   spdlog::info("FMOD loaded");
 
-  // the flying sound's echoes off the city; the alarms on bus:/Warning stay dry
-  Acoustics::Attach(fmod_system, {"bus:/Engine", "bus:/Wind"});
+  // the flying sound's echoes off the city: on the master bus for what mixes through the buses, and
+  // in each thruster event before its Object Spatializer (Start), which hands the rest to the
+  // output past every bus
+  Acoustics::Attach(fmod_system, {"bus:/"});
 
   return true;
 }
@@ -145,6 +147,7 @@ void FlightAudio::Start(RED4ext::CString emitterName, RED4ext::CString eventName
     // float pitch = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
     // ERRCHECK(eventInstance->setPitch(1.0 + pitch * 0.01));
     eventMap[emitterName.c_str()] = eventInstance;
+    Acoustics::AttachToEvent(fmod_system, eventInstance);
     ERRCHECK(fmod_system->update());
   //}
 }
@@ -162,6 +165,7 @@ void FlightAudio::StartWithPitch(RED4ext::CString emitterName, RED4ext::CString 
     ERRCHECK(eventInstance->setTimelinePosition(rand()));
     ERRCHECK(eventInstance->setPitch(pitch));
     eventMap[emitterName.c_str()] = eventInstance;
+    Acoustics::AttachToEvent(fmod_system, eventInstance);
     ERRCHECK(fmod_system->update());
   //}
 }
@@ -183,6 +187,7 @@ void FlightAudio::Stop(RED4ext::CString emitterName) {
   //if (emitterName) {
     if (eventMap.find(emitterName.c_str()) != eventMap.end()) {
       spdlog::info(fmt::format("[FlightAudio] Stopping sound: {}", emitterName.c_str()));
+      Acoustics::DetachFromEvent(eventMap[emitterName.c_str()]);
       ERRCHECK(eventMap[emitterName.c_str()]->stop(FMOD_STUDIO_STOP_IMMEDIATE));
       ERRCHECK(fmod_system->update());
       eventMap[emitterName.c_str()]->release();
@@ -232,7 +237,30 @@ void FlightAudio::UpdateAcoustics(RED4ext::Matrix carMatrix, float gain, float i
 }
 
 RED4ext::CString FlightAudio::AcousticsState() {
-  return {Acoustics::State().c_str()};
+  // and what FMOD is playing: channels (real ones mixed), and each event's state, volume as set
+  // and as heard, and audibility
+  int channels = 0, real = 0;
+  coreSystem->getChannelsPlaying(&channels, &real);
+  std::string events;
+  for (auto const &[name, instance] : eventMap) {
+    FMOD_STUDIO_PLAYBACK_STATE state = FMOD_STUDIO_PLAYBACK_STOPPED;
+    float volume = 0, finalVolume = 0, audibility = -1;
+    bool paused = false, virtualized = false;
+    instance->getPlaybackState(&state);
+    instance->getVolume(&volume, &finalVolume);
+    instance->getPaused(&paused);
+    instance->isVirtual(&virtualized);
+    FMOD::ChannelGroup *group = nullptr;
+    if (instance->getChannelGroup(&group) == FMOD_OK && group) {
+      group->getAudibility(&audibility);
+    }
+    events += fmt::format("{}\"{}\":[{},{:.3f},{:.3f},{:.4f},{},{}]", events.empty() ? "" : ",", name, int(state), volume,
+                          finalVolume, audibility, paused, virtualized);
+  }
+  auto state = Acoustics::State();
+  state.pop_back();
+  state += fmt::format(",\"fmodChannels\":{},\"fmodReal\":{},\"events\":{{{}}}}}", channels, real, events);
+  return {state.c_str()};
 }
 
 void FlightAudio::UpdateEventMatrix(RED4ext::CString emitterName, RED4ext::Matrix matrix) {
