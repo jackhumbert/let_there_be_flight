@@ -76,21 +76,21 @@ public class FlightModeAutomatic extends FlightModeStandard {
     let normal: Vector4;
     let foundGround = this.component.FindGround(normal);
     if foundGround {
-      this.hovering = ClampF(1.0 - (this.component.distance - FlightSettings.GetFloat("hoverModeMinHoverHeight")) / (FlightSettings.GetFloat("hoverModeMaxHoverHeight") - FlightSettings.GetFloat("hoverModeMinHoverHeight")), 0.0, 1.0);
+      this.hovering = ClampF(1.0 - (this.component.distance - FlightSettings.GetFloatN(n"hoverModeMinHoverHeight")) / (FlightSettings.GetFloatN(n"hoverModeMaxHoverHeight") - FlightSettings.GetFloatN(n"hoverModeMinHoverHeight")), 0.0, 1.0);
     } else {
       this.hovering = 0.0;
     }
 
     if lastHovering == 0.0 && this.hovering > 0.0 {
-      this.component.hoverHeight = MaxF(this.component.distance + this.component.lift * timeDelta * this.automaticModeLiftFactor, FlightSettings.GetFloat("hoverModeMinHoverHeight"));
+      this.component.hoverHeight = MaxF(this.component.distance + this.component.lift * timeDelta * this.automaticModeLiftFactor, FlightSettings.GetFloatN(n"hoverModeMinHoverHeight"));
     } else {
-      this.component.hoverHeight = MaxF(this.component.hoverHeight + this.component.lift * timeDelta * this.automaticModeLiftFactor, FlightSettings.GetFloat("hoverModeMinHoverHeight"));
+      this.component.hoverHeight = MaxF(this.component.hoverHeight + this.component.lift * timeDelta * this.automaticModeLiftFactor, FlightSettings.GetFloatN(n"hoverModeMinHoverHeight"));
     }
 
     let heightDifference = this.component.hoverHeight - this.component.distance;
     let idealNormal = Vector4.Interpolate(FlightUtils.Up(), normal, this.hovering);
 
-    let hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, FlightSettings.GetFloat("hoverClamp"));// / FlightSettings.GetFloat("hoverClamp");
+    let hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, FlightSettings.GetFloatN(n"hoverClamp"));// / FlightSettings.GetFloat("hoverClamp");
     let liftFactor = LerpF(this.hovering, this.component.lift - this.component.stats.d_velocity.Z * 0.1, hoverCorrection);
 
     this.UpdateWithNormalLift(timeDelta, idealNormal, liftFactor * this.automaticModeHoverFactor + (9.81000042) * this.gravityFactor);

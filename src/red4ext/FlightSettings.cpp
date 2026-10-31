@@ -34,15 +34,25 @@ RED4ext::HashMap<RED4ext::CName, float> floats;
 RED4ext::HashMap<RED4ext::CName, RED4ext::Vector3> vector3s;
 RED4ext::HashMap<RED4ext::CName, bool> bools;
 
+static const float *FindFloat(RED4ext::CName aName) {
+  return floats.allocator ? floats.Get(aName) : nullptr;
+}
+
 float FlightSettings::GetFloat(RED4ext::CString name) {
-  if (floats.allocator) {
-    auto fl = floats.Get(RED4ext::CName(name.c_str()));
-    if (fl) {
-      return *fl;
-    }
+  if (auto fl = FindFloat(RED4ext::CName(name.c_str()))) {
+    return *fl;
   }
   spdlog::warn("Could not find Float: {0}", name.c_str());
   return 0.0;
+}
+
+float FlightSettings::GetFloatN(RED4ext::CName aName) {
+  if (auto fl = FindFloat(aName)) {
+    return *fl;
+  }
+  const char *text = aName.ToString();
+  spdlog::warn("Could not find Float: {0} ({1:016x})", text ? text : "<unregistered>", aName.hash);
+  return 0.0f;
 }
 
 void FlightSettings::SetFloat(RED4ext::CString name, float value) {

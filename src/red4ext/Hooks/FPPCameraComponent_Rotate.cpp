@@ -60,7 +60,7 @@ REGISTER_FLIGHT_HOOK_HASH(char __fastcall, 2531201123, FPPCameraComponent_Rotate
 
   if (lockCamera) {
     // fpp->animFeature->additiveCameraMovementsWeight = 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone");
-    fpp->animFeature->vehicleProceduralCameraWeight = 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone");
+    fpp->animFeature->vehicleProceduralCameraWeight = 1.0 - FlightSettings::GetFloatN("lockFPPCameraForDrone");
     // fpp->animFeature->vehicleOffsetWeight = 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone");
     // fpp->animFeature->gameplayCameraPoseWeight = 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone");
     // fpp->pitchOffset = 0.0;

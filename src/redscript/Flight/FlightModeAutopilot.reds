@@ -818,6 +818,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   }
 
   private func RequestRoute(from: Vector4) -> Void {
+    this.RefreshVehicle();
     if !FlightNavMap.IsLoaded() {
       this.status = "no nav map";
       return;
@@ -1491,6 +1492,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   }
 
   public func Update(timeDelta: Float) -> Void {
+    this.RefreshVehicle();
     let stats = this.component.stats;
     let p = this.CheckedPosition(stats.d_position, timeDelta);
     let v = stats.d_velocity;
@@ -1896,9 +1898,12 @@ public class FlightModeAutopilot extends FlightModeStandard {
 
   // --- race ---------------------------------------------------------------------------------
 
-  // The car's limits (FlightVehicleModel, worked out in C++ in Navigation/Vehicle.hpp, which the
-  // planner and navplan use too), filled from the car's stats and this mode's tuning.
-  public func Vehicle() -> ref<FlightVehicleModel> {
+  // The car's limits (FlightVehicleModel, worked out in C++ in Navigation/Vehicle.hpp) filled from
+  // the car's stats and this mode's tuning by RefreshVehicle, once at the top of Update and at the
+  // start of every call that plans (so a tuning field set between frames, e.g. by LtbfBridge,
+  // reaches the plan); Vehicle() returns the model as last filled, so per-frame readers between
+  // refreshes see that frame's values.
+  public func RefreshVehicle() -> Void {
     if !IsDefined(this.vehicleModel) {
       this.vehicleModel = new FlightVehicleModel();
     }
@@ -1923,7 +1928,13 @@ public class FlightModeAutopilot extends FlightModeStandard {
     m.margin = this.raceMargin;
     m.planDecel = this.racePlanDecel;
     m.pushOver = this.droneStyle ? this.dronePushOver : this.racePushOver;
-    return m;
+  }
+
+  public func Vehicle() -> ref<FlightVehicleModel> {
+    if !IsDefined(this.vehicleModel) {
+      this.RefreshVehicle();
+    }
+    return this.vehicleModel;
   }
 
   // Air drag at speed v (FlightMode.ApplyPhysics), m/s2.
@@ -1955,7 +1966,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     if timer < this.lastCollisionTimer - 0.05 && Equals(this.status, "following") {
       ArrayPush(this.hits, new Vector4(p.X, p.Y, p.Z, this.hitAvoidRadius));
       ArrayPush(this.hitTimes, this.clock);
-      this.recovering = FlightSettings.GetFloat("collisionRecoveryDelay");
+      this.recovering = FlightSettings.GetFloatN(n"collisionRecoveryDelay");
       FlightLog.Info("[Autopilot] hit at " + FloatToStringPrec(p.X, 1) + ", " + FloatToStringPrec(p.Y, 1) + ", " + FloatToStringPrec(p.Z, 1)
         + " at " + FloatToStringPrec(Vector4.Length(v), 1) + " m/s: holding, then replanning round it");
     }
@@ -1976,6 +1987,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // line a few seconds on, then the rest of the line as it was (FlightNavMap.PlanRejoinAsync; a full
   // replan when there is no line left to rejoin, or no way back onto it).
   private func Replan(p: Vector4, v: Vector4) -> Void {
+    this.RefreshVehicle();
     let n = this.RouteSize();
     if !this.routeLine || n - this.segment < 4 {
       this.RequestRoute(p);
@@ -2023,6 +2035,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // when the route starts at the car, free to start at any speed when the route is rebuilt around
   // a car already on it (a spliced leg, a moved landing spot). Public for LtbfBridge.DroneTuning.
   public func BuildTrajectory() -> Void {
+    this.RefreshVehicle();
     if this.RouteSize() < 2 {
       return;
     }

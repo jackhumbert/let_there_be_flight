@@ -43,11 +43,11 @@ public abstract class FlightMode {
     if AbsF(angularVelocity) < 0.0001 || inertia <= 0.0 || tensor <= 0.0 {
       return damp;
     }
-    let response = FlightSettings.GetFloat("dampStabilityK") * this.component.stats.s_mass * tensor / inertia;
+    let response = FlightSettings.GetFloatN(n"dampStabilityK") * this.component.stats.s_mass * tensor / inertia;
     if response <= 0.0 {
       return damp;
     }
-    let maxGain = FlightSettings.GetFloat("dampMaxPerFrame") / response;
+    let maxGain = FlightSettings.GetFloatN(n"dampMaxPerFrame") / response;
     let gain = damp / angularVelocity;
     if gain > maxGain {
       return angularVelocity * maxGain;

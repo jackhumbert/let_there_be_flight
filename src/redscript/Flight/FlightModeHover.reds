@@ -22,7 +22,7 @@ public class FlightModeHover extends FlightModeStandard {
   public func Deactivate() {}
 
   public func Update(timeDelta: Float) -> Void {
-    this.component.hoverHeight = MaxF(FlightSettings.GetFloat("hoverModeMinHoverHeight"), this.component.hoverHeight);
+    this.component.hoverHeight = MaxF(FlightSettings.GetFloatN(n"hoverModeMinHoverHeight"), this.component.hoverHeight);
 
     // let findWater: TraceResult;
     let heightDifference = 0.0;

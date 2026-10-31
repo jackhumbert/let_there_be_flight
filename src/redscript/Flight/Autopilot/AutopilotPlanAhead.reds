@@ -26,6 +26,7 @@ public class AutopilotPlanAhead extends IScriptable {
     if !this.enabled || ap.RouteSize() >= 2 {
       return false;
     }
+    ap.RefreshVehicle();
     this.trip = FlightNavMap.PlanTripAsync(from, ap.routeGoal, ap.raceRouteHeight, ap.raceClimbCost, ap.raceMinPassage,
       ap.raceSearchWeight, ap.raceTurnCost, ap.Vehicle(), ap.hits, velocity, this.horizon, this.margin, this.minTrip);
     ap.request = this.trip;

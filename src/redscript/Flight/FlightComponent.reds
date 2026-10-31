@@ -791,8 +791,8 @@ public native class FlightComponent extends GameComponent {
     // convert to global
     torque = this.stats.d_orientation * torque;
 
-    if this.collisionTimer < FlightSettings.GetFloat("collisionRecoveryDelay") + FlightSettings.GetFloat("collisionRecoveryDuration") {
-      let collisionDampener = MinF(MaxF(0.0, (this.collisionTimer - FlightSettings.GetFloat("collisionRecoveryDelay")) / FlightSettings.GetFloat("collisionRecoveryDuration")), 1.0);
+    if this.collisionTimer < FlightSettings.GetFloatN(n"collisionRecoveryDelay") + FlightSettings.GetFloatN(n"collisionRecoveryDuration") {
+      let collisionDampener = MinF(MaxF(0.0, (this.collisionTimer - FlightSettings.GetFloatN(n"collisionRecoveryDelay")) / FlightSettings.GetFloatN(n"collisionRecoveryDuration")), 1.0);
       torque *= collisionDampener;
       force *= collisionDampener;
       this.collisionTimer += timeDelta;
@@ -1121,7 +1121,7 @@ public native class FlightComponent extends GameComponent {
 
     // all in engine\physics\collision_presets.json
     // VehicleBlocker? RagdollVehicle?
-    let lookDown = new Vector4(0.0, 0.0, -FlightSettings.GetFloat("hoverModeMaxHoverHeight") - 10.0, 0.0);
+    let lookDown = new Vector4(0.0, 0.0, -FlightSettings.GetFloatN(n"hoverModeMaxHoverHeight") - 10.0, 0.0);
     // this.sqs.SyncRaycastByCollisionGroup(fl_tire, fl_tire + lookDown, n"VehicleBlocker", findGround1, false, false);
     // this.sqs.SyncRaycastByCollisionGroup(fr_tire, fr_tire + lookDown, n"VehicleBlocker", findGround2, false, false);
     // this.sqs.SyncRaycastByCollisionGroup(bl_tire, bl_tire + lookDown, n"VehicleBlocker", findGround3, false, false);

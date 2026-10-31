@@ -52,7 +52,7 @@ public class FlightModeHoverFly extends FlightModeStandard {
     let normal: Vector4;
     let foundGround = this.component.FindGround(normal);
     if foundGround {
-      this.hovering = ClampF(1.0 - (this.component.distance - FlightSettings.GetFloat("hoverModeMinHoverHeight")) / (FlightSettings.GetFloat("hoverModeMaxHoverHeight") - FlightSettings.GetFloat("hoverModeMinHoverHeight")), 0.0, 1.0);
+      this.hovering = ClampF(1.0 - (this.component.distance - FlightSettings.GetFloatN(n"hoverModeMinHoverHeight")) / (FlightSettings.GetFloatN(n"hoverModeMaxHoverHeight") - FlightSettings.GetFloatN(n"hoverModeMinHoverHeight")), 0.0, 1.0);
     } else {
       this.hovering = 0.0;
     }
@@ -65,14 +65,14 @@ public class FlightModeHoverFly extends FlightModeStandard {
 
     // heightCorrectionFactor was tuned as metres per frame at 60 fps; kept inside the band so the
     // ground PID never chases a target the hover weighting has already faded out
-    this.component.hoverHeight = ClampF(this.component.hoverHeight + this.component.lift * this.heightCorrectionFactor * timeDelta * 60.0, FlightSettings.GetFloat("hoverModeMinHoverHeight"), FlightSettings.GetFloat("hoverModeMaxHoverHeight"));
+    this.component.hoverHeight = ClampF(this.component.hoverHeight + this.component.lift * this.heightCorrectionFactor * timeDelta * 60.0, FlightSettings.GetFloatN(n"hoverModeMinHoverHeight"), FlightSettings.GetFloatN(n"hoverModeMaxHoverHeight"));
 
     let heightDifference = this.component.hoverHeight - this.component.distance;
     let idealNormal = Vector4.Interpolate(FlightUtils.Up(), normal, this.hovering);
 
     let hoverCorrection = 0.0;
     if this.hovering > 0.0 {
-      hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, FlightSettings.GetFloat("hoverClamp"));// / FlightSettings.GetFloat("hoverClamp");
+      hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, FlightSettings.GetFloatN(n"hoverClamp"));// / FlightSettings.GetFloat("hoverClamp");
     }
 
     // Above the band there is no ground to hold, and damping vertical speed alone turns any

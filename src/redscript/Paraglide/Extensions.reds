@@ -44,9 +44,20 @@
 //   return speed * -1.00;
 // }
 
+@addField(DefaultTransition)
+public let m_ltbfCanParaglide: Bool;
+
+@addField(DefaultTransition)
+public let m_ltbfCanParaglideRead: Bool;
+
+// The flat comes from a TweakXL tweak, applied before the game loads, so it is read once per state object.
 @addMethod(DefaultTransition)
 public final func CanParaglide() -> Bool {
-  return TweakDBInterface.GetBool(TDBID.Create("player.canParaglide"), false);
+  if !this.m_ltbfCanParaglideRead {
+    this.m_ltbfCanParaglide = TweakDBInterface.GetBool(TDBID.Create("player.canParaglide"), false);
+    this.m_ltbfCanParaglideRead = true;
+  }
+  return this.m_ltbfCanParaglide;
 }
 
 @addField(LocomotionAirEvents)
@@ -111,8 +122,6 @@ protected func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scrip
       DefaultTransition.StopRumbleLoop(scriptInterface, "light");
     }
   }
-
-  FlightLog.Info("[LocomotionAirEvents] " + NameToString(this.GetStateName()) + ": " + ToString(verticalSpeed));
 
   // // slow fall if exited during flight
   if this.m_isParagliding {

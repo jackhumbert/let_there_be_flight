@@ -10,6 +10,7 @@ struct FlightSettings : RED4ext::IScriptable {
   static RED4ext::Handle<FlightSettings> GetInstance();
 
   static float GetFloat(RED4ext::CString);
+  static float GetFloatN(RED4ext::CName);
   static void SetFloat(RED4ext::CString, float);
   static RED4ext::Vector3 GetVector3(RED4ext::CString);
   static void SetVector3(RED4ext::CString, float, float, float);
@@ -31,6 +32,7 @@ struct FlightSettings : RED4ext::IScriptable {
 RTTI_DEFINE_CLASS(FlightSettings, {
   RTTI_METHOD(GetInstance);
   RTTI_METHOD(GetFloat);
+  RTTI_METHOD(GetFloatN);
   RTTI_METHOD(SetFloat);
   RTTI_METHOD(GetVector3);
   RTTI_METHOD(SetVector3);

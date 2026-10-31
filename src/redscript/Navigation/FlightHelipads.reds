@@ -52,6 +52,7 @@ public class FlightHelipadSystem extends ScriptableSystem {
   private persistent let supplied: array<CName>;   // pad ids whose supplies were collected
   private let mappins: array<NewMappinID>;         // per pad index, valid where pinned is set
   private let pinned: array<Bool>;
+  private let discoveredByPad: array<Bool>; // per pad index, from discovered: filled in Start and by Discover
   private let player: wref<PlayerPuppet>;
   private let ticking: Bool;
   public let notifications: wref<JournalNotificationQueue>; // the HUD queue that draws our toasts
@@ -93,10 +94,12 @@ public class FlightHelipadSystem extends ScriptableSystem {
     let none: NewMappinID;
     ArrayClear(this.mappins);
     ArrayClear(this.pinned);
+    ArrayClear(this.discoveredByPad);
     let i = 0;
     while i < FlightNavMap.GetHelipadCount() {
       ArrayPush(this.mappins, none);
       ArrayPush(this.pinned, false);
+      ArrayPush(this.discoveredByPad, ArrayContains(this.discovered, StringToName(FlightNavMap.GetHelipadId(i))));
       i += 1;
     }
     FlightLog.Info("[Helipads] " + ToString(ArraySize(this.discovered)) + " of " + ToString(FlightNavMap.GetHelipadCount()) + " landing pads discovered");
@@ -127,6 +130,9 @@ public class FlightHelipadSystem extends ScriptableSystem {
   }
 
   public func IsDiscovered(index: Int32) -> Bool {
+    if index >= 0 && index < ArraySize(this.discoveredByPad) {
+      return this.discoveredByPad[index];
+    }
     return ArrayContains(this.discovered, StringToName(FlightNavMap.GetHelipadId(index)));
   }
 
@@ -135,8 +141,11 @@ public class FlightHelipadSystem extends ScriptableSystem {
     let first = -1;
     for index in FlightNavMap.FindHelipadsInRange(position, this.discoverDistance) {
       let id = FlightNavMap.GetHelipadId(index);
-      if !ArrayContains(this.discovered, StringToName(id)) {
+      if !this.IsDiscovered(index) {
         ArrayPush(this.discovered, StringToName(id));
+        if index >= 0 && index < ArraySize(this.discoveredByPad) {
+          this.discoveredByPad[index] = true;
+        }
         found += 1;
         first = first < 0 ? index : first;
         FlightLog.Info("[Helipads] discovered " + id + " (" + ToString(ArraySize(this.discovered)) + " of " + ToString(FlightNavMap.GetHelipadCount()) + ")");

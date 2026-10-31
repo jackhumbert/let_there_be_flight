@@ -13,6 +13,8 @@
   - `acoustics.md`: echoes and reverb from the nav map (offline prototype).
   - `audio-native.md`: every sound in the plugin on FMOD Core: the voice system, samples, wind, echoes as voices.
   - `engine-synth.md`: the thruster sound, made in C++ on the old FMOD event's parameters.
+  - `native-ports.md`: the plan for moving the per-frame redscript (follower, force path, modes,
+    thrusters) to C++.
 - `testing.md`: driving the game for tests, the test drivers and bridge helpers.
 - `release.md`: cutting a release, Nexus Mods.
 - `game-patch.md`: what a game patch breaks, the update checklist, reverse engineering.

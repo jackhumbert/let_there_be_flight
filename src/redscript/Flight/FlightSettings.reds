@@ -16,6 +16,7 @@ enum FlightAvailability {
 public native class FlightSettings extends IScriptable {
   public native static func GetInstance() -> ref<FlightSettings>;
   public native static func GetFloat(name: String) -> Float;
+  public native static func GetFloatN(name: CName) -> Float; // the same value, looked up by name: for per-frame callers
   public native static func SetFloat(name: String, value: Float) -> Float;
   public native static func GetBool(name: String) -> Bool;
   public native static func SetBool(name: String, value: Bool) -> Bool;
