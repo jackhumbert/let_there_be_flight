@@ -286,6 +286,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let freeRoamRouteHeight: Float = 15.0;
   public let freeRoamHeightFree: Float = 8.0;
   public let freeRoamHeightWavelength: Float = 300.0;
+  // per metre flown over a building (PlanParams.overCost): legs go round buildings rather than over
+  // them (on two Dogtown legs 17 to 21% over buildings instead of 37%, the legs 3 to 14 s longer)
+  public let freeRoamOverCost: Float = 2.0;
 
   // state, public for tests (tools/ingame/ltbf_bridge.reds)
   public let status: String = "idle";
@@ -785,10 +788,13 @@ public class FlightModeAutopilot extends FlightModeStandard {
       this.gateTail = this.routeGateTail;
     }
     // from rest: a first leg at once, the rest planned while the car flies it (AutopilotPlanAhead)
-    if this.freeRoam || !this.ahead.Request(this, from, this.component.stats.d_velocity) {
-      this.request = FlightNavMap.PlanRaceAsync(from, this.routeGoal, this.freeRoam ? this.freeRoamRouteHeight : this.raceRouteHeight,
-        this.raceClimbCost, this.raceMinPassage, this.raceSearchWeight, this.raceTurnCost, this.Vehicle(), true, this.hits,
-        this.component.stats.d_velocity, this.freeRoam ? this.freeRoamHeightFree : 0.0, this.freeRoam ? this.freeRoamHeightWavelength : 0.0);
+    if this.freeRoam {
+      this.request = FlightNavMap.PlanFreeRoamAsync(from, this.routeGoal, this.freeRoamRouteHeight, this.raceClimbCost, this.raceMinPassage,
+        this.raceSearchWeight, this.raceTurnCost, this.Vehicle(), this.hits, this.component.stats.d_velocity, this.freeRoamHeightFree,
+        this.freeRoamHeightWavelength, this.freeRoamOverCost);
+    } else if !this.ahead.Request(this, from, this.component.stats.d_velocity) {
+      this.request = FlightNavMap.PlanRaceAsync(from, this.routeGoal, this.raceRouteHeight, this.raceClimbCost, this.raceMinPassage,
+        this.raceSearchWeight, this.raceTurnCost, this.Vehicle(), true, this.hits, this.component.stats.d_velocity);
     }
     this.replanTimer = 3.0;
     if ArraySize(this.route) < 2 {

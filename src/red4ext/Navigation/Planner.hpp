@@ -73,6 +73,11 @@ struct PlanParams {
   // ends at its doorway about horizon metres along and the rest is planned while the car flies
   // this; 0: all the way
   float horizon = 0.0f;
+  // flying over buildings: overCost per metre of a step whose floor is more than overHeight above
+  // the street level of its 32 m block (the lowest floor in it), so routes go round buildings
+  // rather than over them (free roam); 0: no cost
+  float overCost = 0.0f;
+  float overHeight = 10.0f;      // m
   // the line: the route evened out to points lineSpacing apart and bent as little as the free space
   // allows (least summed squared curvature), coarse to fine. Off only for a piece the caller makes
   // its line from together with what follows (PlanRejoin's connector).

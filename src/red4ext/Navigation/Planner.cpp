@@ -427,6 +427,28 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
     }
   }
 
+  // street level per 32 m block: the lowest floor in it (overCost); a block worked out once a search
+  std::unordered_map<uint64_t, float> streetLevel;
+  auto street = [&](int32_t aCx, int32_t aCy) -> float {
+    const int32_t bx = BlockOf(aCx), by = BlockOf(aCy);
+    const uint64_t k = (uint64_t(uint32_t(bx)) << 32) | uint32_t(by);
+    auto it = streetLevel.find(k);
+    if (it != streetLevel.end()) {
+      return it->second;
+    }
+    float lo = kInf;
+    for (int32_t y = by * kBlock; y < (by + 1) * kBlock; ++y) {
+      for (int32_t x = bx * kBlock; x < (bx + 1) * kBlock; ++x) {
+        const uint16_t *g;
+        if (view.Column(x, y, g) > 0) {
+          lo = std::min(lo, aMap.VoxelZ(g[0]));
+        }
+      }
+    }
+    streetLevel[k] = lo;
+    return lo;
+  };
+
   // One search, only over the columns aAllowed marks (none: anywhere). aPath gets the nodes from a
   // start seed to the goal; aLimit says the search ran out of expansions.
   auto search = [&](const Corridor *aAllowed, std::vector<uint64_t> &aPath, bool &aLimit) -> bool {
@@ -530,6 +552,9 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
           }
           float cost = turn + bearing + step * (1.0f + (std::isfinite(next.t) ? aParams.underCost : 0.0f)) +
                        ClimbCost(Preferred(next, aParams.preferredHeight) - curPreferred, aParams.climbCost, aParams.climbScale);
+          if (aParams.overCost > 0.0f && next.b > street(nx, ny) + aParams.overHeight) {
+            cost += aParams.overCost * step; // over a building
+          }
           if (headingReach > 0.0f) {
             float x, y;
             aMap.CellCentre(nx, ny, x, y);

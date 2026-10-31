@@ -185,16 +185,9 @@ int32_t FlightNavMap::PlanAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal,
 int32_t FlightNavMap::PlanRaceAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, float aPreferredHeight,
                                     float aClimbCost, float aMinPassage, float aHeuristicWeight, float aTurnCost,
                                     RED4ext::Handle<FlightVehicleModel> aVehicle, bool aDetour,
-                                    RED4ext::DynArray<RED4ext::Vector4> aAvoid, RED4ext::Vector4 aVelocity, float aHeightFree,
-                                    float aHeightWavelength) {
+                                    RED4ext::DynArray<RED4ext::Vector4> aAvoid, RED4ext::Vector4 aVelocity) {
   auto params = planParams;
   Navigation::RacePreset(params);
-  if (aHeightFree > 0.0f) {
-    params.lineHeightFree = aHeightFree;
-  }
-  if (aHeightWavelength > 0.0f) {
-    params.lineHeightWavelength = aHeightWavelength;
-  }
   // the line is shaped for the car flying it (TurnCost)
   if (aVehicle) {
     params.vehicle = aVehicle->Spec();
@@ -215,6 +208,32 @@ int32_t FlightNavMap::PlanRaceAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aG
   params.minPassage = aMinPassage;
   params.heuristicWeight = std::max(1.0f, aHeuristicWeight);
   params.turnCost = std::max(0.0f, aTurnCost);
+  return StartPlan(aStart, aGoal, params);
+}
+
+int32_t FlightNavMap::PlanFreeRoamAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, float aPreferredHeight,
+                                        float aClimbCost, float aMinPassage, float aHeuristicWeight, float aTurnCost,
+                                        RED4ext::Handle<FlightVehicleModel> aVehicle,
+                                        RED4ext::DynArray<RED4ext::Vector4> aAvoid, RED4ext::Vector4 aVelocity, float aHeightFree,
+                                        float aHeightWavelength, float aOverCost) {
+  auto params = planParams;
+  Navigation::RacePreset(params);
+  if (aVehicle) {
+    params.vehicle = aVehicle->Spec();
+  }
+  params.startVelocity = {aVelocity.X, aVelocity.Y, aVelocity.Z};
+  for (const auto &a : aAvoid) {
+    params.avoid.push_back({{a.X, a.Y, a.Z}, std::max(a.W, 1.0f), params.slotAvoidCost});
+  }
+  params.preferredHeight = aPreferredHeight;
+  params.climbCost = aClimbCost;
+  params.minPassage = aMinPassage;
+  params.heuristicWeight = std::max(1.0f, aHeuristicWeight);
+  params.turnCost = std::max(0.0f, aTurnCost);
+  params.lineHeightFree = aHeightFree;
+  params.lineHeightWavelength = aHeightWavelength;
+  params.overCost = std::max(0.0f, aOverCost);
+  params.doorways = false;
   return StartPlan(aStart, aGoal, params);
 }
 

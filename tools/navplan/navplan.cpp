@@ -64,7 +64,7 @@ const Field kFields[] = {
     F(lineOverThick), F(lineOverRise), F(lineOverGain), F(lineOverWindow), F(lineCeilingClearance), F(linePush),
     F(lineSpread), F(lineCorridorIterations), F(lineCorridorMax), F(lineCorridorMargin), F(lineCurvatureRate),
     F(lineTurnRounds), F(lineTurnWeightMax), F(lineStep), F(lineVerticalWeight), F(directMargin), F(maxCruise), F(slotDetourLoss), F(slotDetourShare), F(slotDetourLossMin), F(slotAvoidRadius),
-    F(slotAvoidCost), F(lineSettle),
+    F(slotAvoidCost), F(lineSettle), F(overCost), F(overHeight),
 };
 #undef F
 

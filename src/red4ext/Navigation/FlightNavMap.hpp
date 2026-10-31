@@ -46,13 +46,19 @@ struct FlightNavMap : RED4ext::IScriptable {
   // its info string in GetLastPlanInfo.
   static int32_t PlanAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, bool aDirect);
   // PlanAsync with the Race's route character (RacePreset), slot detours and the start velocity: the
-  // Autopilot's plan. aHeightFree / aHeightWavelength over 0 replace the line's lineHeightFree /
-  // lineHeightWavelength (free roam flies lower and follows the buildings more closely)
+  // Autopilot's plan
   static int32_t PlanRaceAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, float aPreferredHeight, float aClimbCost,
                                float aMinPassage, float aHeuristicWeight, float aTurnCost,
                                RED4ext::Handle<FlightVehicleModel> aVehicle, bool aDetour,
-                               RED4ext::DynArray<RED4ext::Vector4> aAvoid, RED4ext::Vector4 aVelocity, float aHeightFree,
-                               float aHeightWavelength);
+                               RED4ext::DynArray<RED4ext::Vector4> aAvoid, RED4ext::Vector4 aVelocity);
+  // A free roam leg: PlanRaceAsync flying lower and round buildings rather than over them: the line's
+  // lineHeightFree / lineHeightWavelength replaced (aHeightFree, aHeightWavelength), overCost per
+  // metre over a building (aOverCost), and no doorway layer (it chooses the corridor without that
+  // cost; a leg of a kilometre or so plans in under a second without it)
+  static int32_t PlanFreeRoamAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, float aPreferredHeight, float aClimbCost,
+                                   float aMinPassage, float aHeuristicWeight, float aTurnCost,
+                                   RED4ext::Handle<FlightVehicleModel> aVehicle, RED4ext::DynArray<RED4ext::Vector4> aAvoid,
+                                   RED4ext::Vector4 aVelocity, float aHeightFree, float aHeightWavelength, float aOverCost);
   // PlanRaceAsync planned ahead (Navigation/PlanAhead.hpp): a first leg aHorizon metres along the
   // doorway route (trips over aMinTrip), ready for TakePlan at once, and the rest from where the
   // car will be on it aMargin seconds after the rest's plan is expected, planned straight after on
@@ -122,6 +128,7 @@ RTTI_DEFINE_CLASS(FlightNavMap, {
   RTTI_METHOD(GetLastPlanPartial);
   RTTI_METHOD(GetLastPlanJoin);
   RTTI_METHOD(PlanTripAsync);
+  RTTI_METHOD(PlanFreeRoamAsync);
   RTTI_METHOD(IsRestReady);
   RTTI_METHOD(TakeRest);
   RTTI_METHOD(SetPlanParameters);
