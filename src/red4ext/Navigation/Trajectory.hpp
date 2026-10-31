@@ -31,6 +31,11 @@ struct TrajectoryParams {
   float rollLook = 1.5f;      // s ahead a coming turn's roll is held for (droneRollLook)
   float rollRateMax = 1.0f;   // rad/s (raceRollRateMax)
   float pitchRateMax = 1.0f;  // rad/s (racePitchRateMax)
+  // drift: in a bend the nose turns into it, the car's driftMax at driftFull sideways (none below
+  // driftStart), so the surge held pushes round the bend (Lateral counts it)
+  float driftStart = 8.0f;    // m/s2 (raceDriftStart)
+  float driftFull = 28.0f;    // m/s2 (raceDriftFull)
+  float driftRateMax = 0.5f;  // rad/s the drift is taken up and let go at most
   // room: the car strays off its line (telemetry: p99 about 5 m above 80 m/s), so where the free
   // room across the line is short the speed is capped to what leaves roomMin + roomGrow x
   // (v / roomSpeed)^2 of it, never below roomSpeedMin (a map: aMap given to BuildTrajectory)
@@ -52,10 +57,11 @@ struct TrajectorySample {
   Limit limit = Limit::Top;   // what sets the speed here
   float room = 0.0f;          // m free across the line here, the nearest of left, right, up and down (roomLook at most)
   float roomLoss = 0.0f;      // m/s the room costs here: the speed without the room's cap less the speed with it
-  // the drone's attitude: nose yaw (rad, world, along the line), body pitch (nose down when speeding
-  // up) and roll (into the turn), rad; the tilts start early enough to reach each peak at the
-  // rate limits, and a turn's roll is held from a gentler bend before it
+  // the drone's attitude: nose yaw (rad, world, the line's direction plus the drift), body pitch
+  // (nose down when speeding up) and roll (into the turn), rad; the tilts start early enough to
+  // reach each peak at the rate limits, and a turn's roll is held from a gentler bend before it
   float yaw = 0.0f, pitch = 0.0f, roll = 0.0f;
+  float drift = 0.0f;         // rad the nose is turned off the line into the bend (left > 0)
 };
 
 struct Trajectory {

@@ -43,11 +43,17 @@ def cmake_navmap():
 
 
 def vehicle_spec(name):
+    """A car in vehicles.json, optionally with fields changed: "shion+driftMax=0,margin=0.9"."""
+    name, _, changes = name.partition("+")
     with open(os.path.join(HERE, "vehicles.json")) as f:
         cars = json.load(f)
     if name not in cars:
         raise SystemExit(f"no car {name} in vehicles.json ({', '.join(k for k in cars if not k.startswith('_'))})")
-    return ",".join(f"{k}={v}" for k, v in cars[name].items())
+    spec = dict(cars[name])
+    for item in filter(None, changes.split(",")):
+        k, v = item.split("=", 1)
+        spec[k] = v
+    return ",".join(f"{k}={v}" for k, v in spec.items())
 
 
 def routes(extra, seed=1):

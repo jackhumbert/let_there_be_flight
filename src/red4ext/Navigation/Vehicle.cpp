@@ -98,7 +98,8 @@ float TopSpeed(const VehicleSpec &aSpec) {
 
 float Lateral(const VehicleSpec &aSpec) {
   if (aSpec.drone) {
-    return DroneAccel(aSpec, aSpec.sway);
+    // plus the surge held through the bend with the nose drifted into it, as a player flies it
+    return DroneAccel(aSpec, aSpec.sway) + aSpec.surge * aSpec.surgeShare * std::sin(aSpec.driftMax * kDeg);
   }
   const float g = kG * aSpec.gravityFactor;
   const float lift = g + aSpec.lift;

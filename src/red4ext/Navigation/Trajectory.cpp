@@ -307,39 +307,6 @@ Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aL
       const float body = aAngle * aParams.bodyShare, rest = aAngle - body;
       return rest > reach ? aAngle - reach : (rest < -reach ? aAngle + reach : body);
     };
-    std::vector<float> lat(n), up(n), size(n), pitch(n), roll(n);
-    std::vector<Vec3> heading(n), side(n);
-    Vec3 h{1.0f, 0.0f, 0.0f};
-    for (size_t i = 0; i < n; ++i) {
-      const float flat = std::hypot(tangent[i].x, tangent[i].y);
-      if (flat > 0.15f) { // near vertical the heading holds
-        h = {tangent[i].x / flat, tangent[i].y / flat, 0.0f};
-      }
-      heading[i] = h;
-      side[i] = {h.y, -h.x, 0.0f}; // h x up
-      auto &q = out.samples[i];
-      q.yaw = std::atan2(h.y, h.x);
-      // the thrust also holds off the air drag along the line (at 89 m/s about 13 m/s2 forward)
-      Vec3 thrust = Add(Add(q.acceleration, Mul(tangent[i], Drag(aSpec, q.speed))), Vec3{0.0f, 0.0f, g});
-      thrust.z = std::max(thrust.z, 0.3f * g); // pushing down is negative lift, not a body turned over
-      size[i] = Len(thrust);
-      up[i] = thrust.z;
-      lat[i] = Dot(thrust, side[i]);
-      const float ahead = Dot(thrust, h);
-      const float along = ahead >= 0.0f ? aSpec.surge : Decel(aSpec, q.speed) - Drag(aSpec, q.speed);
-      pitch[i] = std::clamp(bodyAngle(std::atan2(ahead, thrust.z), size[i], along), -cap, cap);
-    }
-    // a coming turn's roll held from rollLook before it (same side, or nearly level now)
-    for (size_t i = 0; i < n; ++i) {
-      float lateral = lat[i];
-      for (size_t j = i + 1; j < n && out.samples[j].t - out.samples[i].t <= aParams.rollLook; ++j) {
-        const float coming = lat[j];
-        if (std::abs(coming) > std::abs(lateral) && (coming * lateral >= 0.0f || std::abs(lateral) < 2.0f)) {
-          lateral = coming;
-        }
-      }
-      roll[i] = std::clamp(bodyAngle(std::atan2(lateral, up[i]), size[i], aSpec.sway), -cap, cap);
-    }
     // each side's lean started early enough to reach its peak at the rate limit, and let go no
     // faster: an envelope over each sign, backward (rising) then forward (falling)
     auto envelope = [&](std::vector<float> &aAngle, float aRate) {
@@ -361,6 +328,54 @@ Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aL
       }
       aAngle = result;
     };
+    std::vector<float> lat(n), up(n), size(n), pitch(n), roll(n), drift(n, 0.0f);
+    std::vector<Vec3> heading(n), side(n);
+    Vec3 h{1.0f, 0.0f, 0.0f};
+    for (size_t i = 0; i < n; ++i) {
+      const float flat = std::hypot(tangent[i].x, tangent[i].y);
+      if (flat > 0.15f) { // near vertical the heading holds
+        h = {tangent[i].x / flat, tangent[i].y / flat, 0.0f};
+      }
+      heading[i] = h;
+      // drift: the nose into the bend, by how hard the bend pulls sideways (left > 0)
+      if (aSpec.drone && aSpec.driftMax > 0.0f) {
+        const auto &q = out.samples[i];
+        const float pull = Dot(Mul(bend[i], q.speed * q.speed), Vec3{-h.y, h.x, 0.0f});
+        const float f = std::clamp((std::abs(pull) - aParams.driftStart) / std::max(aParams.driftFull - aParams.driftStart, 0.1f), 0.0f, 1.0f);
+        drift[i] = (pull >= 0.0f ? 1.0f : -1.0f) * aSpec.driftMax * 3.14159265f / 180.0f * f * f * (3.0f - 2.0f * f);
+      }
+    }
+    envelope(drift, aParams.driftRateMax);
+    for (size_t i = 0; i < n; ++i) {
+      const float c = std::cos(drift[i]), sn = std::sin(drift[i]);
+      const Vec3 h0 = heading[i];
+      h = {h0.x * c - h0.y * sn, h0.x * sn + h0.y * c, 0.0f};
+      heading[i] = h;
+      side[i] = {h.y, -h.x, 0.0f}; // h x up
+      auto &q = out.samples[i];
+      q.yaw = std::atan2(h.y, h.x);
+      q.drift = drift[i];
+      // the thrust also holds off the air drag along the line (at 89 m/s about 13 m/s2 forward)
+      Vec3 thrust = Add(Add(q.acceleration, Mul(tangent[i], Drag(aSpec, q.speed))), Vec3{0.0f, 0.0f, g});
+      thrust.z = std::max(thrust.z, 0.3f * g); // pushing down is negative lift, not a body turned over
+      size[i] = Len(thrust);
+      up[i] = thrust.z;
+      lat[i] = Dot(thrust, side[i]);
+      const float ahead = Dot(thrust, h);
+      const float along = ahead >= 0.0f ? aSpec.surge : Decel(aSpec, q.speed) - Drag(aSpec, q.speed);
+      pitch[i] = std::clamp(bodyAngle(std::atan2(ahead, thrust.z), size[i], along), -cap, cap);
+    }
+    // a coming turn's roll held from rollLook before it (same side, or nearly level now)
+    for (size_t i = 0; i < n; ++i) {
+      float lateral = lat[i];
+      for (size_t j = i + 1; j < n && out.samples[j].t - out.samples[i].t <= aParams.rollLook; ++j) {
+        const float coming = lat[j];
+        if (std::abs(coming) > std::abs(lateral) && (coming * lateral >= 0.0f || std::abs(lateral) < 2.0f)) {
+          lateral = coming;
+        }
+      }
+      roll[i] = std::clamp(bodyAngle(std::atan2(lateral, up[i]), size[i], aSpec.sway), -cap, cap);
+    }
     envelope(roll, aParams.rollRateMax);
     envelope(pitch, aParams.pitchRateMax);
     for (size_t i = 0; i < n; ++i) {

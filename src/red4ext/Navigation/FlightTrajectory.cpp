@@ -103,6 +103,11 @@ float FlightTrajectory::Roll(float aS) {
   return a.roll + (b.roll - a.roll) * t;
 }
 
+float FlightTrajectory::Drift(float aS) {
+  SAMPLE_AT(drift)
+  return a.drift + (b.drift - a.drift) * t;
+}
+
 RED4ext::CString FlightTrajectory::Limit(float aS) {
   SAMPLE_AT(limit)
   return Navigation::LimitName(t < 0.5f ? a.limit : b.limit);

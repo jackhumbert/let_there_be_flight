@@ -21,6 +21,8 @@ The limits are functions of it: `Drag`, `DroneAccel`, `TopSpeed`, `Lateral`, `Ac
   fixed 40 m/s2.
 - `surgeShare` (0.88) is fitted from telemetry: the share of the surge the car gets speeding up;
   `TopSpeed` and `Accel` use it. Refit after a change to the flight physics (`docs/history.md`).
+- Drone `Lateral` is the sway envelope plus `surge x surgeShare x sin(driftMax)`: the surge held through
+  a bend with the nose drifted into it (the trajectory plans the drift, `docs/design/trajectory.md`).
 - `pushOver` is already a planned value (the margin is in it): 21 m/s2 drone style, 15 plane style.
 
 ## Who reads it

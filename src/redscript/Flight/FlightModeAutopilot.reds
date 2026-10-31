@@ -383,6 +383,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let joinS: Float;                    // route distance of joinPoint
   public let joinPoint: Vector4;
   public let ahead: ref<AutopilotPlanAhead>;  // plan ahead: a first leg at once, the rest while flying it
+  public let surgeHold: ref<AutopilotSurge>;  // the surge held as a player holds it: drag thrust back, full where the speed is the car's
   private let cinematicCallback: ref<CallbackHandle>;
   private let cinematicContext: Bool;         // UIGameContext.CinematicCamera pushed              // rad/s
 
@@ -390,6 +391,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let self = new FlightModeAutopilot();
     self.Initialize(component);
     self.ahead = new AutopilotPlanAhead();
+    self.surgeHold = new AutopilotSurge();
     self.ClearRoute();
     return self;
   }
@@ -1374,7 +1376,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       this.telemetryFile = FlightTelemetry.Begin("autopilot", "t,x,y,z,vx,vy,vz,speed,speed2d,target,rate,cmd,off,following,maneuver,on_line,segment,"
         + "plan_x,plan_y,plan_z,cmd_fwd_x,cmd_fwd_y,cmd_fwd_z,cmd_up_x,cmd_up_y,cmd_up_z,fwd_x,fwd_y,fwd_z,up_x,up_y,up_z,"
         + "attitude_error,plan_cmd,cmd_car,up_cmd_car,plan_pitch,cmd_pitch,car_pitch,collision_timer,"
-        + "drone,cmd_tilt,car_tilt,thrust_right,thrust_fwd,thrust_up");
+        + "drone,cmd_tilt,car_tilt,thrust_right,thrust_fwd,thrust_up,surge_held,drift");
       this.telemetryClock = 0.0;
       if this.telemetryFile == 0 {
         return;
@@ -1437,6 +1439,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
     ArrayPush(row, this.thrustCmd.X);
     ArrayPush(row, this.thrustCmd.Y);
     ArrayPush(row, this.thrustCmd.Z);
+    ArrayPush(row, this.surgeHold.held ? 1.0 : 0.0);
+    ArrayPush(row, this.FollowsTrajectory() ? Rad2Deg(this.trajectory.Drift(this.closestS)) : 0.0);
     FlightTelemetry.Row(this.telemetryFile, row);
   }
 
@@ -2399,6 +2403,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
       let bend: Vector4;
       this.LineFrameOver(this.closestS + stats.d_speed * this.droneYawLead, this.lineSpan, tangent, bend);
       path = FlightModeAutopilot.Flat(tangent);
+      // turned into the bend as the trajectory plans (its drift), so the surge pushes round it
+      if this.FollowsTrajectory() && Equals(this.status, "following") {
+        let drift = this.trajectory.Drift(this.closestS + stats.d_speed * this.droneYawLead);
+        path = new Vector4(path.X * CosF(drift) - path.Y * SinF(drift), path.X * SinF(drift) + path.Y * CosF(drift), 0.0, 0.0);
+      }
       pathWeight = ClampF((Vector4.Length(path) - 0.15) / 0.35, 0.0, 1.0);
     }
     // coming down onto the spot the nose keeps to the hover heading (the landing turn's end), not
@@ -2440,7 +2449,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.headingRef = h;
     let side = Vector4.Normalize(Vector4.Cross(h, z));
     this.attAccel += (accel - this.attAccel) * ClampF(dt / this.droneTiltTime, 0.0, 1.0);
-    let thrust = this.attAccel + z * g;
+    let drag = this.surgeHold.Drag(this, stats.d_velocity);
+    let thrust = this.attAccel + drag + z * g;
     // pushing down harder than gravity is the lift's job (negative lift), not a body turned over
     thrust.Z = MaxF(thrust.Z, 0.3 * g);
     let size = Vector4.Length(thrust);
@@ -2458,7 +2468,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       // the planned tilt a moment ahead, plus what the follower's correction adds to the trajectory's
       // own acceleration (both tilts worked out the same way, so on the trajectory that is 0)
       this.attRef += (this.trajectory.Acceleration(this.closestS) - this.attRef) * ClampF(dt / this.droneTiltTime, 0.0, 1.0);
-      let thrustRef = this.attRef + z * g;
+      let thrustRef = this.attRef + drag + z * g;
       thrustRef.Z = MaxF(thrustRef.Z, 0.3 * g);
       let sizeRef = Vector4.Length(thrustRef);
       let aheadRef = Vector4.Dot(thrustRef, h);
@@ -2690,14 +2700,22 @@ public class FlightModeAutopilot extends FlightModeStandard {
     }
     torque += giveBack;
 
-    // thrust: the commanded acceleration and gravity, in the car's frame
-    let local = Quaternion.Conjugate(stats.d_orientation) * (accel + z * (9.81 * this.gravityFactor));
+    // thrust: the commanded acceleration, the drag it holds off and gravity, in the car's frame
+    let local = Quaternion.Conjugate(stats.d_orientation) * (accel + this.surgeHold.Drag(this, v) + z * (9.81 * this.gravityFactor));
     // what the player's inputs give at most: surge along the nose (reverse surge plus the brake
     // when slowing), sway across, lift (on top of hover) along the top
     let g = 9.81 * this.gravityFactor;
     local.X = ClampF(local.X, -this.standardModeSwayFactor, this.standardModeSwayFactor);
     local.Y = ClampF(local.Y, this.DragAccel(stats.d_speed) - this.RaceDecel(stats.d_speed), this.standardModeSurgeFactor);
     local.Z = ClampF(local.Z, g - this.standardModeLiftFactor, g + this.standardModeLiftFactor);
+    // where the speed is the car's to set, the surge held full along the path
+    this.surgeHold.held = this.recovering <= 0.0 && stats.d_speed > 1.0
+      && this.surgeHold.Hold(this, this.closestS + stats.d_speed * this.lineLead, stats.d_speed, this.FollowsTrajectory() && Equals(this.status, "following"));
+    if this.surgeHold.held {
+      local = this.surgeHold.Full(local, Quaternion.Conjugate(stats.d_orientation) * Vector4.Normalize(v), this.standardModeSurgeFactor);
+      local.X = ClampF(local.X, -this.standardModeSwayFactor, this.standardModeSwayFactor);
+      local.Z = ClampF(local.Z, g - this.standardModeLiftFactor, g + this.standardModeLiftFactor);
+    }
     this.force = local;
     this.thrustCmd = local;
     this.torque = torque;

@@ -18,6 +18,8 @@ public native class FlightTrajectory extends IScriptable {
   public native func Yaw(s: Float) -> Float;
   public native func Pitch(s: Float) -> Float;
   public native func Roll(s: Float) -> Float;
+  // rad the nose is turned off the line into the bend (left > 0)
+  public native func Drift(s: Float) -> Float;
   // what sets the speed at s
   public native func Limit(s: Float) -> String;
   // samples outside the car's limits, "; " between them (empty when none)

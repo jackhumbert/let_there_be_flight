@@ -32,7 +32,7 @@ struct VehicleSpec {
   // the Autopilot's race tuning (FlightModeAutopilot)
   bool drone = true;             // drone style: the body tilts to steer (droneStyle)
   float maxTilt = 55.0f;         // deg, droneMaxTilt
-  float driftMax = 20.0f;        // deg the nose turns into a bend, plane style (raceDriftMax)
+  float driftMax = 20.0f;        // deg the nose turns into a bend (raceDriftMax)
   float speedCap = 120.0f;       // m/s, raceSpeedCap (freeRoamTopSpeed in free roam)
   float margin = 0.85f;          // share of the envelope planned for (raceMargin)
   float planDecel = 18.0f;       // m/s2 braking planned at most (racePlanDecel)
@@ -53,7 +53,7 @@ float DroneAccel(const VehicleSpec &aSpec, float aThrusters);
 // Where the surge the car gets (surgeShare) meets the drag (97% of it), at most speedCap.
 float TopSpeed(const VehicleSpec &aSpec);
 // Sideways acceleration in a level turn: drone style the sway envelope, plane style the lift
-// banked into the turn plus the surge's share with the nose drifted in.
+// banked into the turn; both plus the surge's share with the nose drifted in.
 float Lateral(const VehicleSpec &aSpec);
 // Speeding up at v: the surge the car gets (surgeShare) less drag (at least 0.5).
 float Accel(const VehicleSpec &aSpec, float aSpeed);
