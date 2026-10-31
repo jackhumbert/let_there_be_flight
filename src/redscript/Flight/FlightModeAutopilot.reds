@@ -280,6 +280,12 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // m a leg's end may differ in height from where it starts (from a tower top to a street the line
   // crested and dived, and the car rolled over pushing into the dive)
   public let freeRoamMaxRise: Float = 100.0;
+  // free roam flies lower than the Race and follows the buildings more closely: the route's preferred
+  // height over the floor, and the line's lineHeightFree and lineHeightWavelength (Planner.hpp). On
+  // three legs: median 23 to 27 m over the floor instead of 40 to 59, at about the same speed.
+  public let freeRoamRouteHeight: Float = 15.0;
+  public let freeRoamHeightFree: Float = 8.0;
+  public let freeRoamHeightWavelength: Float = 300.0;
 
   // state, public for tests (tools/ingame/ltbf_bridge.reds)
   public let status: String = "idle";
@@ -779,9 +785,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
       this.gateTail = this.routeGateTail;
     }
     // from rest: a first leg at once, the rest planned while the car flies it (AutopilotPlanAhead)
-    if !this.ahead.Request(this, from, this.component.stats.d_velocity) {
-      this.request = FlightNavMap.PlanRaceAsync(from, this.routeGoal, this.raceRouteHeight, this.raceClimbCost, this.raceMinPassage, this.raceSearchWeight, this.raceTurnCost, this.Vehicle(), true, this.hits,
-        this.component.stats.d_velocity);
+    if this.freeRoam || !this.ahead.Request(this, from, this.component.stats.d_velocity) {
+      this.request = FlightNavMap.PlanRaceAsync(from, this.routeGoal, this.freeRoam ? this.freeRoamRouteHeight : this.raceRouteHeight,
+        this.raceClimbCost, this.raceMinPassage, this.raceSearchWeight, this.raceTurnCost, this.Vehicle(), true, this.hits,
+        this.component.stats.d_velocity, this.freeRoam ? this.freeRoamHeightFree : 0.0, this.freeRoam ? this.freeRoamHeightWavelength : 0.0);
     }
     this.replanTimer = 3.0;
     if ArraySize(this.route) < 2 {
@@ -937,7 +944,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // A point for the next leg to end at: freeRoamLegMin to freeRoamLegMax away from `from`, within
   // freeRoamSpread of `heading` (wider for each candidate that does not fit, at the edge of the
   // area or of the map, up to maxTurn degrees), inside freeRoamRadius of where free roam began,
-  // raceRouteHeight above the ground under open sky there.
+  // freeRoamRouteHeight above the ground under open sky there.
   private func PickFreeRoamGoal(from: Vector4, heading: Vector4, maxTurn: Float, out goal: Vector4) -> Bool {
     let base = AtanF(heading.Y, heading.X);
     let tries = 0;
@@ -951,7 +958,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
         let n = ArraySize(gaps);
         if n > 0 {
           let sky = gaps[n - 1];
-          let z = MinF(sky.X + this.raceRouteHeight, sky.Y - 5.0);
+          let z = MinF(sky.X + this.freeRoamRouteHeight, sky.Y - 5.0);
           // near the height of the leg before, until nothing like that fits; over land: past the
           // playable area's edge offshore the game puts the car back where flight was switched on
           if z > sky.X + 5.0 && sky.X >= -this.freeRoamMaxDepth && (AbsF(z - from.Z) <= this.freeRoamMaxRise || tries >= 16) {

@@ -46,11 +46,13 @@ struct FlightNavMap : RED4ext::IScriptable {
   // its info string in GetLastPlanInfo.
   static int32_t PlanAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, bool aDirect);
   // PlanAsync with the Race's route character (RacePreset), slot detours and the start velocity: the
-  // Autopilot's plan
+  // Autopilot's plan. aHeightFree / aHeightWavelength over 0 replace the line's lineHeightFree /
+  // lineHeightWavelength (free roam flies lower and follows the buildings more closely)
   static int32_t PlanRaceAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, float aPreferredHeight, float aClimbCost,
                                float aMinPassage, float aHeuristicWeight, float aTurnCost,
                                RED4ext::Handle<FlightVehicleModel> aVehicle, bool aDetour,
-                               RED4ext::DynArray<RED4ext::Vector4> aAvoid, RED4ext::Vector4 aVelocity);
+                               RED4ext::DynArray<RED4ext::Vector4> aAvoid, RED4ext::Vector4 aVelocity, float aHeightFree,
+                               float aHeightWavelength);
   // PlanRaceAsync planned ahead (Navigation/PlanAhead.hpp): a first leg aHorizon metres along the
   // doorway route (trips over aMinTrip), ready for TakePlan at once, and the rest from where the
   // car will be on it aMargin seconds after the rest's plan is expected, planned straight after on

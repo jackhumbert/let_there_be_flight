@@ -34,7 +34,8 @@ public native class FlightNavMap extends IScriptable {
   // the same search on a worker thread: poll IsPlanReady, then TakePlan once
   public native static func PlanAsync(start: Vector4, goal: Vector4, direct: Bool) -> Int32;
   // PlanAsync with the Race's route character, slot detours and the start velocity (the Autopilot's plan)
-  public native static func PlanRaceAsync(start: Vector4, goal: Vector4, preferredHeight: Float, climbCost: Float, minPassage: Float, heuristicWeight: Float, turnCost: Float, vehicle: ref<FlightVehicleModel>, detour: Bool, avoid: array<Vector4>, velocity: Vector4) -> Int32;
+  // heightFree / heightWavelength over 0 replace the line's lineHeightFree / lineHeightWavelength
+  public native static func PlanRaceAsync(start: Vector4, goal: Vector4, preferredHeight: Float, climbCost: Float, minPassage: Float, heuristicWeight: Float, turnCost: Float, vehicle: ref<FlightVehicleModel>, detour: Bool, avoid: array<Vector4>, velocity: Vector4, heightFree: Float, heightWavelength: Float) -> Int32;
   // PlanRaceAsync planned ahead (Navigation/PlanAhead.hpp): on a trip over minTrip, a first leg
   // horizon metres along the doorway route (TakePlan as usual, GetLastPlanPartial true, the rest
   // joining GetLastPlanJoin metres along it), then the rest planned on the same thread

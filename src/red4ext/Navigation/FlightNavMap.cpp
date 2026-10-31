@@ -185,9 +185,16 @@ int32_t FlightNavMap::PlanAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal,
 int32_t FlightNavMap::PlanRaceAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, float aPreferredHeight,
                                     float aClimbCost, float aMinPassage, float aHeuristicWeight, float aTurnCost,
                                     RED4ext::Handle<FlightVehicleModel> aVehicle, bool aDetour,
-                                    RED4ext::DynArray<RED4ext::Vector4> aAvoid, RED4ext::Vector4 aVelocity) {
+                                    RED4ext::DynArray<RED4ext::Vector4> aAvoid, RED4ext::Vector4 aVelocity, float aHeightFree,
+                                    float aHeightWavelength) {
   auto params = planParams;
   Navigation::RacePreset(params);
+  if (aHeightFree > 0.0f) {
+    params.lineHeightFree = aHeightFree;
+  }
+  if (aHeightWavelength > 0.0f) {
+    params.lineHeightWavelength = aHeightWavelength;
+  }
   // the line is shaped for the car flying it (TurnCost)
   if (aVehicle) {
     params.vehicle = aVehicle->Spec();
