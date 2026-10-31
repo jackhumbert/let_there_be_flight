@@ -23,7 +23,7 @@ public class AutopilotPlanAhead extends IScriptable {
   // Asks for the trip planned ahead when the car has no route to keep; false: plan it in one go.
   public func Request(ap: ref<FlightModeAutopilot>, from: Vector4, velocity: Vector4) -> Bool {
     this.Reset();
-    if !this.enabled || ArraySize(ap.route) >= 2 {
+    if !this.enabled || ap.RouteSize() >= 2 {
       return false;
     }
     this.trip = FlightNavMap.PlanTripAsync(from, ap.routeGoal, ap.raceRouteHeight, ap.raceClimbCost, ap.raceMinPassage,

@@ -292,8 +292,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
 
   // state, public for tests (tools/ingame/ltbf_bridge.reds)
   public let status: String = "idle";
-  public let route: array<Vector4>;
-  public let routeLength: array<Float>;       // route distance of each corner from the start
+  public let route: ref<FlightRoute>;         // the points and their distances from the start
   public let aheadSmooth: Float;              // m, lookahead distance (grows back smoothly)
   public let segment: Int32;
   public let request: Int32;
@@ -391,10 +390,20 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let self = new FlightModeAutopilot();
     self.Initialize(component);
     self.ahead = new AutopilotPlanAhead();
+    self.ClearRoute();
     return self;
   }
 
   public func GetDescription() -> String = "Autopilot";
+
+  public func RouteSize() -> Int32 {
+    return IsDefined(this.route) ? this.route.Size() : 0;
+  }
+
+  private func ClearRoute() -> Void {
+    let none: array<Vector4>;
+    this.route = FlightRoute.Create(none);
+  }
 
   public func Activate() -> Void {
     this.ahead.Reset();
@@ -407,7 +416,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       SetFactValue(game, n"player_in_autodrive", 1);
     }
     this.holdPosition = this.component.stats.d_position;
-    ArrayClear(this.route);
+    this.ClearRoute();
     this.request = 0;
     this.hasDestination = false;
     this.freeRoam = false;
@@ -666,7 +675,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       SetFactValue(game, n"disable_combat_events", 0);
       SetFactValue(game, n"player_in_autodrive", 0);
     }
-    ArrayClear(this.route);
+    this.ClearRoute();
     this.request = 0;
     this.freeRoam = false;
     this.requestJoin = false;
@@ -814,7 +823,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
         this.raceSearchWeight, this.raceTurnCost, this.Vehicle(), true, this.hits, this.component.stats.d_velocity);
     }
     this.replanTimer = 3.0;
-    if ArraySize(this.route) < 2 {
+    if this.RouteSize() < 2 {
       // nothing to follow meanwhile: hold here (a replan keeps following the old route)
       this.status = "planning";
       this.holdPosition = from;
@@ -850,7 +859,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       if !this.hasDestination || Vector4.Distance(target, this.destination) > 20.0 {
         this.destination = target;
         this.hasDestination = true;
-        ArrayClear(this.route);
+        this.ClearRoute();
         this.ChooseRouteGoal();
         this.RequestRoute(this.component.stats.d_position);
       }
@@ -911,22 +920,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
         // to round
         this.routeLine = this.requestRace && ArraySize(points) > 2
           && Vector4.Distance(points[0], points[ArraySize(points) - 1]) / Cast<Float>(ArraySize(points) - 1) < 10.0;
-        if this.routeLine {
-          // already smooth: no corners to round
-          this.route = points;
-        } else {
-          this.route = this.RoundCorners(points);
-        }
-        ArrayClear(this.routeLength);
-        let total = 0.0;
-        let i = 0;
-        while i < ArraySize(this.route) {
-          if i > 0 {
-            total += Vector4.Distance(this.route[i - 1], this.route[i]);
-          }
-          ArrayPush(this.routeLength, total);
-          i += 1;
-        }
+        // a line is already smooth: no corners to round
+        this.route = FlightRoute.Create(this.routeLine ? points : this.RoundCorners(points));
+        let total = this.route.Length();
         this.segment = 0;
         this.closestS = 0.0;
         this.landSlewOn = false;
@@ -981,7 +977,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.request = 0;
     this.requestJoin = false;
     this.freeRoamCentre = stats.d_position;
-    ArrayClear(this.route);
+    this.ClearRoute();
     this.holdPosition = stats.d_position;
     this.replanTimer = 0.0;
     this.status = "free roam";
@@ -1105,19 +1101,19 @@ public class FlightModeAutopilot extends FlightModeStandard {
       return;
     }
     let stats = this.component.stats;
-    let n = ArraySize(this.route);
+    let n = this.RouteSize();
     if n < 2 {
       let heading = Vector4.Length2D(stats.d_velocity) > 3.0 ? FlightModeAutopilot.Flat(stats.d_velocity) : FlightModeAutopilot.Flat(stats.d_forward);
       this.NextFreeRoamLeg(stats.d_position, heading, false);
       return;
     }
-    if !Equals(this.status, "following") || this.routeLength[n - 1] - this.closestS > this.freeRoamChainAt {
+    if !Equals(this.status, "following") || this.route.Length() - this.closestS > this.freeRoamChainAt {
       return;
     }
     // the point at that distance, not the next route point after it (a plain route's legs can be
     // a kilometre long)
     // and not before the end of a gate's straight run still ahead: the next leg would cut it off
-    let s = MinF(MaxF(this.closestS + MaxF(this.freeRoamJoinMin, stats.d_speed * this.freeRoamJoinAhead), this.gateEndS), this.routeLength[n - 1]);
+    let s = MinF(MaxF(this.closestS + MaxF(this.freeRoamJoinMin, stats.d_speed * this.freeRoamJoinAhead), this.gateEndS), this.route.Length());
     let point = this.PointAt(s);
     let back = point - this.PointAt(s - 10.0);
     let heading = Vector4.Length2D(back) > 0.1 ? FlightModeAutopilot.Flat(back) : FlightModeAutopilot.Flat(stats.d_forward);
@@ -1134,11 +1130,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
       && Vector4.Distance(points[0], points[ArraySize(points) - 1]) / Cast<Float>(ArraySize(points) - 1) < 10.0;
     let tail = line ? points : this.RoundCorners(points);
     let first = Max(this.segment - 2, 0);
-    let trimmed = this.routeLength[first];
+    let trimmed = this.route.Distance(first);
     let route: array<Vector4>;
     let i = first;
-    while i < ArraySize(this.route) && this.routeLength[i] < this.joinS - 0.5 {
-      ArrayPush(route, this.route[i]);
+    while i < this.RouteSize() && this.route.Distance(i) < this.joinS - 0.5 {
+      ArrayPush(route, this.route.Point(i));
       i += 1;
     }
     ArrayPush(route, this.joinPoint);
@@ -1151,41 +1147,17 @@ public class FlightModeAutopilot extends FlightModeStandard {
     // the legs meet at an angle: ease the points round the join towards their neighbours where
     // the map allows (a point only moves if both its segments stay clear), leaving the stretch
     // the car is on alone. The line's points are about 5 m apart.
-    let centre = route[join];
     let span = Cast<Int32>(this.freeRoamSmoothSpan / 5.0);
     let lo = Max(join - span, this.segment - first + 2);
     if this.gateEndS >= this.joinS - 1.0 {
       lo = Max(lo, join); // joined at the end of a gate's run: the run stays straight
     }
     let hi = Min(join + span, ArraySize(route) - 2);
-    let pass = 0;
-    while pass < 20 {
-      let k = lo;
-      while k <= hi {
-        if Vector4.Distance(route[k], centre) < this.freeRoamSmoothSpan {
-          let q = route[k] * 0.5 + (route[k - 1] + route[k + 1]) * 0.25;
-          if FlightNavMap.SegmentClear(route[k - 1], q) >= 1.0 && FlightNavMap.SegmentClear(q, route[k + 1]) >= 1.0 {
-            route[k] = q;
-          }
-        }
-        k += 1;
-      }
-      pass += 1;
-    }
-    this.route = route;
+    this.route = FlightRoute.Create(FlightRoute.SmoothJoin(route, join, lo, hi, this.freeRoamSmoothSpan, 20));
     this.routeLine = this.routeLine && line;
     this.segment -= first;
     this.closestS -= trimmed;
-    ArrayClear(this.routeLength);
-    let total = 0.0;
-    i = 0;
-    while i < ArraySize(this.route) {
-      if i > 0 {
-        total += Vector4.Distance(this.route[i - 1], this.route[i]);
-      }
-      ArrayPush(this.routeLength, total);
-      i += 1;
-    }
+    let total = this.route.Length();
     this.gateEndS = this.spliceGate ? total : MaxF(this.gateEndS - trimmed, 0.0);
     this.BuildTrajectory();
     FlightLog.Info("[Autopilot] next leg joined, " + FloatToStringPrec(total - this.closestS, 0) + " m ahead");
@@ -1197,55 +1169,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // the nav map; otherwise the corner stays as it was. The cut steps down (full, half, quarter)
   // until the arc is clear.
   private func RoundCorners(points: array<Vector4>) -> array<Vector4> {
-    let n = ArraySize(points);
-    let out: array<Vector4>;
-    ArrayPush(out, points[0]);
-    let i = 1;
-    while i < n - 1 {
-      let a = points[i - 1];
-      let b = points[i];
-      let c = points[i + 1];
-      let rounded = false;
-      // full cut, then half; below that the corner stays sharp: tiny arcs made for very slow
-      // corners (8 m/s), where the lookahead cutting a sharp corner flew it faster and fine
-      let cut = this.raceCornerRound;
-      let share = this.raceRoundShare;
-      let smallest = this.raceRoundMin;
-      while !rounded && cut >= smallest {
-        let d1 = MinF(share * Vector4.Distance(a, b), cut);
-        let d2 = MinF(share * Vector4.Distance(b, c), cut);
-        if d1 > 1.0 && d2 > 1.0 {
-          let q1 = b + Vector4.Normalize(a - b) * d1;
-          let q2 = b + Vector4.Normalize(c - b) * d2;
-          let arc: array<Vector4>;
-          let k = 0;
-          while k <= 8 {
-            let t = Cast<Float>(k) / 8.0;
-            ArrayPush(arc, q1 * ((1.0 - t) * (1.0 - t)) + b * (2.0 * t * (1.0 - t)) + q2 * (t * t));
-            k += 1;
-          }
-          let clear = FlightNavMap.SegmentClear(out[ArraySize(out) - 1], arc[0]) >= 1.0;
-          k = 0;
-          while clear && k < 8 {
-            clear = FlightNavMap.SegmentClear(arc[k], arc[k + 1]) >= 1.0;
-            k += 1;
-          }
-          if clear {
-            for q in arc {
-              ArrayPush(out, q);
-            }
-            rounded = true;
-          }
-        }
-        cut *= this.raceRoundStep;
-      }
-      if !rounded {
-        ArrayPush(out, b);
-      }
-      i += 1;
-    }
-    ArrayPush(out, points[n - 1]);
-    return out;
+    // full cut, then smaller; below raceRoundMin the corner stays sharp: tiny arcs made for very
+    // slow corners (8 m/s), where the lookahead cutting a sharp corner flew it faster and fine
+    return FlightRoute.RoundCorners(points, this.raceCornerRound, this.raceRoundShare, this.raceRoundMin, this.raceRoundStep);
   }
 
   // Horizontal unit heading a fraction f of the way from a to b, turning the short way round.
@@ -1296,20 +1222,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // the route's direction cornerSpan before and after it differs by more than 25 degrees (a
   // rounded corner's arc points each turn only a little, so they are judged as one bend).
   private func DistanceToSharpBend(closest: Vector4) -> Float {
-    let n = ArraySize(this.route);
-    let start = this.routeLength[this.segment + 1] - Vector4.Distance(closest, this.route[this.segment + 1]);
-    let k = this.segment + 1;
-    while k < n - 1 && this.routeLength[k] - start < 300.0 {
-      let s = this.routeLength[k];
-      let inDir = this.route[k] - this.PointAt(s - this.cornerSpan);
-      let outDir = this.PointAt(s + this.cornerSpan) - this.route[k];
-      if Vector4.Length(inDir) > 0.5 && Vector4.Length(outDir) > 0.5
-        && Vector4.Dot(Vector4.Normalize(inDir), Vector4.Normalize(outDir)) < 0.906 {
-        return s - start;
-      }
-      k += 1;
-    }
-    return 1000000.0;
+    return this.route.SharpBend(this.segment, closest, this.cornerSpan);
   }
 
   // The predicted path p + v t + accelCmd t^2 / 2 for t up to collisionHorizon is blocked on the
@@ -1339,116 +1252,35 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // of travel plus 50 m past it (by distance: rounded corners make many short segments, and a
   // count of segments fell short, so a point on the route ahead read as off it).
   private func DistanceToRoute(q: Vector4) -> Float {
-    let n = ArraySize(this.route);
-    let best = 1000000000.0;
-    let end = this.routeLength[this.segment] + this.component.stats.d_speed * this.collisionHorizon + 50.0;
-    let i = this.segment;
-    while i < n - 1 && this.routeLength[i] <= end {
-      let a = this.route[i];
-      let ab = this.route[i + 1] - a;
-      let len2 = Vector4.Dot(ab, ab);
-      let t = len2 > 0.0001 ? ClampF(Vector4.Dot(q - a, ab) / len2, 0.0, 1.0) : 0.0;
-      best = MinF(best, Vector4.Distance(q, a + ab * t));
-      i += 1;
-    }
-    return best;
+    return this.route.DistanceTo(q, this.segment, this.component.stats.d_speed * this.collisionHorizon + 50.0);
   }
 
   // Closest point on the route from the current segment on; advances the segment index.
   private func ClosestOnRoute(p: Vector4, out closest: Vector4, out distance: Float) -> Void {
-    let n = ArraySize(this.route);
-    let best = 1000000000.0;
-    let bestSegment = this.segment;
-    let i = this.segment;
-    while i < n - 1 && i <= this.segment + 12 {
-      let a = this.route[i];
-      let b = this.route[i + 1];
-      let ab = b - a;
-      let len2 = Vector4.Dot(ab, ab);
-      let t = len2 > 0.0001 ? ClampF(Vector4.Dot(p - a, ab) / len2, 0.0, 1.0) : 0.0;
-      let q = a + ab * t;
-      let d = Vector4.Distance(p, q);
-      if d < best {
-        best = d;
-        bestSegment = i;
-        closest = q;
-      }
-      i += 1;
-    }
-    this.segment = bestSegment;
-    distance = best;
+    this.segment = this.route.Nearest(p, this.segment, 12);
+    closest = this.route.Project(p, this.segment);
+    distance = Vector4.Distance(p, closest);
   }
 
   // Point `along` metres further along the route from `from` (which lies on segment this.segment).
   private func AlongRoute(from: Vector4, along: Float) -> Vector4 {
-    let n = ArraySize(this.route);
-    let p = from;
-    let left = along;
-    let i = this.segment;
-    while i < n - 1 {
-      let b = this.route[i + 1];
-      let d = Vector4.Distance(p, b);
-      if d >= left {
-        return p + Vector4.Normalize(b - p) * left;
-      }
-      left -= d;
-      p = b;
-      i += 1;
-    }
-    return this.route[n - 1];
+    return this.route.Ahead(this.segment, from, along);
   }
 
   // The route from `from` (on segment this.segment) is free on the nav map for `along` metres.
   private func RouteClear(from: Vector4, along: Float) -> Bool {
-    let n = ArraySize(this.route);
-    let p = from;
-    let left = along;
-    let i = this.segment;
-    while i < n - 1 && left > 0.0 {
-      let b = this.route[i + 1];
-      let d = Vector4.Distance(p, b);
-      let end = d > left ? p + Vector4.Normalize(b - p) * left : b;
-      if FlightNavMap.SegmentClear(p, end) < 1.0 {
-        return false;
-      }
-      left -= d;
-      p = b;
-      i += 1;
-    }
-    return true;
+    return this.route.ClearAhead(this.segment, from, along);
   }
 
   // Point at route distance s from the start (clamped to the ends).
   private func PointAt(s: Float) -> Vector4 {
-    let n = ArraySize(this.route);
-    if s <= 0.0 {
-      return this.route[0];
-    }
-    let i = 0;
-    while i < n - 1 {
-      if this.routeLength[i + 1] >= s {
-        let len = this.routeLength[i + 1] - this.routeLength[i];
-        let t = len > 0.001 ? (s - this.routeLength[i]) / len : 0.0;
-        return this.route[i] + (this.route[i + 1] - this.route[i]) * t;
-      }
-      i += 1;
-    }
-    return this.route[n - 1];
+    return this.route.At(s);
   }
 
   // Signed horizontal curvature of the route around the lookahead: the heading change between
   // the stretch just ahead and the stretch beyond the lookahead point, over the distance between.
   private func CurvatureAhead(closest: Vector4, ahead: Float) -> Float {
-    let a = this.AlongRoute(closest, 0.5 * ahead);
-    let b = this.AlongRoute(closest, ahead);
-    let c = this.AlongRoute(closest, 1.5 * ahead);
-    let d1 = new Vector4(b.X - a.X, b.Y - a.Y, 0.0, 0.0);
-    let d2 = new Vector4(c.X - b.X, c.Y - b.Y, 0.0, 0.0);
-    if Vector4.Length(d1) < 1.0 || Vector4.Length(d2) < 1.0 {
-      return 0.0;
-    }
-    let turn = Deg2Rad(Vector4.GetAngleDegAroundAxis(Vector4.Normalize(d1), Vector4.Normalize(d2), FlightUtils.Up()));
-    return -turn / (0.5 * (Vector4.Length(d1) + Vector4.Length(d2)));
+    return this.route.Turn(this.segment, closest, ahead);
   }
 
   // A line's direction at route distance s and its bend there (towards the centre, 1 / radius
@@ -1458,34 +1290,17 @@ public class FlightModeAutopilot extends FlightModeStandard {
   }
 
   private func LineFrameOver(s: Float, span: Float, out tangent: Vector4, out bend: Vector4) -> Void {
-    let a = this.PointAt(s - span);
-    let b = this.PointAt(s);
-    let c = this.PointAt(s + span);
-    let ab = b - a;
-    let bc = c - b;
-    let l1 = Vector4.Length(ab);
-    let l2 = Vector4.Length(bc);
-    tangent = Vector4.Length(c - a) > 0.01 ? Vector4.Normalize(c - a) : this.component.stats.d_forward;
-    bend = new Vector4(0.0, 0.0, 0.0, 0.0);
-    if l1 > 0.5 && l2 > 0.5 {
-      bend = (bc * (1.0 / l2) - ab * (1.0 / l1)) * (2.0 / (l1 + l2));
+    tangent = this.route.Tangent(s, span);
+    if Vector4.Length(tangent) < 0.5 {
+      tangent = this.component.stats.d_forward;
     }
+    bend = this.route.Bend(s, span);
   }
 
   // Curvature of the route over the first part of the lookahead, 3D: towards the bend's centre,
   // 1 / radius long.
   private func CurvatureVector(closest: Vector4, ahead: Float) -> Vector4 {
-    let a = this.AlongRoute(closest, 0.1 * ahead);
-    let b = this.AlongRoute(closest, 0.4 * ahead);
-    let c = this.AlongRoute(closest, 0.7 * ahead);
-    let d1 = b - a;
-    let d2 = c - b;
-    let l1 = Vector4.Length(d1);
-    let l2 = Vector4.Length(d2);
-    if l1 < 1.0 || l2 < 1.0 {
-      return new Vector4(0.0, 0.0, 0.0, 0.0);
-    }
-    return (d2 * (1.0 / l2) - d1 * (1.0 / l1)) * (2.0 / (l1 + l2));
+    return this.route.Curvature(this.segment, closest, ahead);
   }
 
   // --- control -----------------------------------------------------------------------------
@@ -1504,9 +1319,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.positionJumpTimer = 0.0;
     this.speedCmd = 0.0;
     this.speedRate = 0.0;
-    if ArraySize(this.route) > 0 || this.request != 0 {
-      ArrayClear(this.route);
-      ArrayClear(this.routeLength);
+    if this.RouteSize() > 0 || this.request != 0 {
+      this.ClearRoute();
       this.request = 0;
       this.RequestRoute(p);
     }
@@ -1568,10 +1382,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
     }
     this.telemetryClock += timeDelta;
     let stats = this.component.stats;
-    let n = ArraySize(this.route);
+    let n = this.RouteSize();
     let plan = new Vector4(0.0, 0.0, 0.0, 0.0);
     if this.segment + 1 < n {
-      plan = this.route[this.segment + 1] - this.route[this.segment];
+      plan = this.route.Point(this.segment + 1) - this.route.Point(this.segment);
     }
     let fwd = this.targetForward;
     let up = this.targetUp;
@@ -1690,15 +1504,15 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.emergencyBrake = false;
     let shaped = IsDefined(this.maneuver) && !this.maneuver.IsOverlay();
     this.overlayVelocity = new Vector4(0.0, 0.0, 0.0, 0.0);
-    let following = Equals(this.status, "following") && ArraySize(this.route) >= 2 && !shaped;
+    let following = Equals(this.status, "following") && this.RouteSize() >= 2 && !shaped;
     if following {
       let closest: Vector4;
       let offRoute: Float;
       this.ClosestOnRoute(p, closest, offRoute);
       this.offRouteNow = offRoute;
       this.closestNow = closest;
-      this.closestS = this.routeLength[this.segment] + Vector4.Distance(this.route[this.segment], closest);
-      this.remaining = this.routeLength[ArraySize(this.routeLength) - 1] - this.closestS;
+      this.closestS = this.route.Distance(this.segment) + Vector4.Distance(this.route.Point(this.segment), closest);
+      this.remaining = this.route.Length() - this.closestS;
       if this.routeLine {
         // off the line: a new trajectory from where the car is going, at most once a second
         if offRoute > this.replanOffLine && this.recovering <= 0.0 && this.replanTimer <= 2.0 && this.request == 0 {
@@ -1711,7 +1525,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       let ahead = ClampF(0.7 * stats.d_speed + 12.0, 15.0, 90.0);
       // don't aim far past the next sharp bend: a long lookahead cuts inside it, and route legs
       // graze obstacles there
-      if this.segment + 2 < ArraySize(this.route) {
+      if this.segment + 2 < this.RouteSize() {
         ahead = MinF(ahead, this.DistanceToSharpBend(closest) + this.cornerOvershoot);
       }
       target = this.AlongRoute(closest, ahead);
@@ -1819,21 +1633,21 @@ public class FlightModeAutopilot extends FlightModeStandard {
         FlightLog.Warn("[Autopilot] wedged at " + FloatToStringPrec(p.X, 1) + ", " + FloatToStringPrec(p.Y, 1) + ", " + FloatToStringPrec(p.Z, 1)
           + ": out to " + FloatToStringPrec(free.X, 1) + ", " + FloatToStringPrec(free.Y, 1) + ", " + FloatToStringPrec(free.Z, 1) + " and replanning");
         this.stuckTimer = 0.0;
-        ArrayClear(this.route);
+        this.ClearRoute();
         this.RequestRoute(free);
       }
       if this.component.isPlayerMounted {
         this.PublishProgress();
       }
-      if ArraySize(this.route) >= 2 {
+      if this.RouteSize() >= 2 {
         this.RecheckLandingSpot(timeDelta);
       }
-      if ArraySize(this.route) < 2 {
+      if this.RouteSize() < 2 {
         // the route was just cleared (wedged, replanning): nothing to arrive at this frame
       } else if this.freeRoam && this.remaining < this.arriveDistance && stats.d_speed < 3.0 {
         // the end of the route before the next leg joined: on from here (ChainFreeRoam)
-        this.holdPosition = this.route[ArraySize(this.route) - 1];
-        ArrayClear(this.route);
+        this.holdPosition = this.route.Point(this.route.Size() - 1);
+        this.ClearRoute();
         this.status = "free roam";
         FlightLog.Info("[Autopilot] free roam: end of the route, planning on from here");
       } else if this.ahead.firstLeg {
@@ -1854,7 +1668,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
           }
         }
         this.status = this.landing ? "descending" : "arrived";
-        this.holdPosition = this.landing ? this.landingSpot : this.route[ArraySize(this.route) - 1];
+        this.holdPosition = this.landing ? this.landingSpot : this.route.Point(this.route.Size() - 1);
         if this.landing {
           this.landingStartZ = p.Z;
           this.landingHeading0 = stats.d_forward2D;
@@ -1869,7 +1683,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
         } else {
           this.landSlewOn = false;
         }
-        ArrayClear(this.route);
+        this.ClearRoute();
         this.settleTimer = 0.0;
         this.touchdownTimer = 0.0;
         FlightLog.Info("[Autopilot] arrived" + (this.landing ? ", descending" : ""));
@@ -2139,7 +1953,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // line a few seconds on, then the rest of the line as it was (FlightNavMap.PlanRejoinAsync; a full
   // replan when there is no line left to rejoin, or no way back onto it).
   private func Replan(p: Vector4, v: Vector4) -> Void {
-    let n = ArraySize(this.route);
+    let n = this.RouteSize();
     if !this.routeLine || n - this.segment < 4 {
       this.RequestRoute(p);
       return;
@@ -2147,7 +1961,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let line: array<Vector4>;
     let i = this.segment;
     while i < n {
-      ArrayPush(line, this.route[i]);
+      ArrayPush(line, this.route.Point(i));
       i += 1;
     }
     this.requestRace = true;
@@ -2186,11 +2000,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // when the route starts at the car, free to start at any speed when the route is rebuilt around
   // a car already on it (a spliced leg, a moved landing spot). Public for LtbfBridge.DroneTuning.
   public func BuildTrajectory() -> Void {
-    if ArraySize(this.route) < 2 {
+    if this.RouteSize() < 2 {
       return;
     }
     let start = this.closestS < 1.0 ? this.component.stats.d_speed : 1000.0;
-    this.trajectory = FlightTrajectory.Build(this.route, this.Vehicle(), start, true);
+    this.trajectory = FlightTrajectory.Build(this.route.Points(), this.Vehicle(), start, true);
     let bad = this.trajectory.Violations();
     if StrLen(bad) > 0 {
       FlightLog.Warn("[Autopilot] trajectory outside the car's limits: " + bad);
@@ -2213,18 +2027,18 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // the last landingShiftSpan metres shifted by the same offset, eased in, each moved point free
   // on the map; false (and nothing changed) where one is not. The trajectory is rebuilt.
   private func ShiftRouteEnd(to: Vector4) -> Bool {
-    let n = ArraySize(this.route);
+    let n = this.RouteSize();
     if n < 3 {
       return false;
     }
-    let total = this.routeLength[n - 1];
-    let end = this.route[n - 1];
+    let total = this.route.Length();
+    let end = this.route.Point(n - 1);
     let offset = new Vector4(to.X - end.X, to.Y - end.Y, to.Z - this.landingSpot.Z, 0.0);
     let moved: array<Vector4>;
     let i = 0;
     while i < n {
-      let q = this.route[i];
-      let left = total - this.routeLength[i];
+      let q = this.route.Point(i);
+      let left = total - this.route.Distance(i);
       if i > this.segment + 1 && left < this.landingShiftSpan {
         let f = 1.0 - left / this.landingShiftSpan;
         f = f * f * (3.0 - 2.0 * f);
@@ -2236,18 +2050,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
       ArrayPush(moved, q);
       i += 1;
     }
-    this.route = moved;
-    ArrayClear(this.routeLength);
-    let sum = 0.0;
-    i = 0;
-    while i < n {
-      if i > 0 {
-        sum += Vector4.Distance(this.route[i - 1], this.route[i]);
-      }
-      ArrayPush(this.routeLength, sum);
-      i += 1;
-    }
-    this.routeGoal = this.route[n - 1];
+    this.route = FlightRoute.Create(moved);
+    this.routeGoal = this.route.Point(n - 1);
     this.BuildTrajectory();
     return true;
   }
@@ -2462,7 +2266,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       return "busy with " + this.maneuver.GetName();
     }
     let k = IntEnum<FlightManeuverKind>(kind);
-    let following = Equals(this.status, "following") && ArraySize(this.route) >= 2;
+    let following = Equals(this.status, "following") && this.RouteSize() >= 2;
     if (Equals(k, FlightManeuverKind.AileronRoll) || Equals(k, FlightManeuverKind.BarrelRoll)) && !following {
       return "rolls need a route to follow";
     }
@@ -2926,7 +2730,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     if this.logTimer <= 0.0 {
       this.logTimer = 1.0;
       FlightLog.Info("[Autopilot] " + this.status + (IsDefined(this.maneuver) ? " (" + this.maneuver.GetName() + " " + FloatToStringPrec(this.maneuver.time, 1) + " s)" : "")
-        + " seg " + ToString(this.segment) + "/" + ToString(ArraySize(this.route))
+        + " seg " + ToString(this.segment) + "/" + ToString(this.RouteSize())
         + " speed " + FloatToStringPrec(stats.d_speed, 1) + " target " + FloatToStringPrec(this.targetSpeed, 1)
         + " remaining " + FloatToStringPrec(this.remaining, 0) + " attitude error " + FloatToStringPrec(Rad2Deg(this.attitudeError), 1)
         + " up " + FloatToStringPrec(stats.d_up.Z, 2) + " z " + FloatToStringPrec(stats.d_position.Z, 1));
