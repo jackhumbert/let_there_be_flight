@@ -854,7 +854,7 @@ public native class FlightController extends IScriptable {
 
 
   public func SetupPositionProviders() -> Void {
-    this.sys.audio.AddSlotProviders(GetMountedVehicle(this.player));
+    this.sys.audio.SetWindowSlots(GetMountedVehicle(this.player), FlightAudio.SlotPosition(GetMountedVehicle(this.player), n"window_front_left_a"), FlightAudio.SlotPosition(GetMountedVehicle(this.player), n"window_front_right_a"));
   }
 
   // protected cb func PhysicsUpdate(evt: ref<vehicleFlightPhysicsUpdateEvent>) -> Bool {

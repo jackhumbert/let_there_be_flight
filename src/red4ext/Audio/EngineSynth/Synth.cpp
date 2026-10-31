@@ -70,7 +70,7 @@ void Synth::Svf::Run(float aIn, float &aLow, float &aBand) {
 bool ParseCharacter(const char *aText, Character &aCharacter) {
   const std::string text = aText ? aText : "";
   if (text == "fmod") {
-    aCharacter = {};
+    aCharacter = {true, true, true, true};
     return true;
   }
   if (text == "clean") {
@@ -186,6 +186,7 @@ Synth::Synth(float aSampleRate, float aPitch, uint32_t aSeed, const Tuning &aTun
     for (auto &p : a.phase) {
       p = double(Noise() * 0.5f + 0.5f);
     }
+    a.source.Init(sampleRate, aSeed, uint32_t(v));
     for (const Peak &band : kAxes[v]->eq) {
       if (band.frequency > 0) {
         a.eq[a.bands++].Peak(band.frequency * carPitch, band.gain, band.q, sampleRate);
@@ -244,6 +245,10 @@ void Synth::Control() {
     a.drive = std::clamp(c.drive(gritSpeed) + c.axisDrive(axis[v]), 0.0f, 1.0f);
     a.gain = Db(c.level(axis[v]));
     a.send = Db(c.send + tuning.level[v]);
+    if (tuning.sound != Sound::Drone) {
+      a.source.Control(tuning.sound, {a.frequency, std::abs(axis[v]), now.brake, now.damage},
+                       float(kControlSamples) / sampleRate);
+    }
     const float cutoff = c.cutoff(gritSpeed);
     a.hasLowPass = cutoff > 0;
     if (a.hasLowPass) {
@@ -295,15 +300,20 @@ void Synth::Render(float *aOut, uint32_t aFrames, float *aVoices) {
     for (int v = 0; v < 5; ++v) {
       Axis &a = axes[v];
       const AxisCurves &c = *kAxes[v];
-      const double dt[3] = {a.frequency / sampleRate, a.frequency * detuneRatio / sampleRate, a.frequency / sampleRate};
       float x = 0;
-      for (int o = 0; o < 2; ++o) {
-        x += float(2.0 * a.phase[o] - 1.0) - Blep(a.phase[o], dt[o]);
-      }
-      x = 0.5f * x + tuning.sine * float(std::sin(2.0 * std::numbers::pi * a.phase[2]));
-      for (int o = 0; o < 3; ++o) {
-        a.phase[o] += dt[o];
-        a.phase[o] -= std::floor(a.phase[o]);
+      if (tuning.sound == Sound::Drone) {
+        const double dt[3] = {a.frequency / sampleRate, a.frequency * detuneRatio / sampleRate,
+                              a.frequency / sampleRate};
+        for (int o = 0; o < 2; ++o) {
+          x += float(2.0 * a.phase[o] - 1.0) - Blep(a.phase[o], dt[o]);
+        }
+        x = 0.5f * x + tuning.sine * float(std::sin(2.0 * std::numbers::pi * a.phase[2]));
+        for (int o = 0; o < 3; ++o) {
+          a.phase[o] += dt[o];
+          a.phase[o] -= std::floor(a.phase[o]);
+        }
+      } else {
+        x = a.source.Next(tuning.sound);
       }
       x *= a.preGain;
       for (int b = 0; b < a.bands; ++b) {

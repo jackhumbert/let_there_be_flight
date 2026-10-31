@@ -9,7 +9,6 @@
 #include <RED4ext/Scripting/Natives/GameInstance.hpp>
 #include <RED4ext/Scripting/Natives/vehiclePhysicsData.hpp>
 #include <fmod.hpp>
-#include <fmod_studio.hpp>
 #include <chrono>
 #include <iostream>
 #include <RED4ext/GameOptions.hpp>
@@ -22,6 +21,7 @@
 #include <RED4ext/Scripting/Natives/Generated/Matrix.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 #include "Flight/Component.hpp"
+#include "Audio/ListenerDraw.hpp"
 #include <RED4ext/Scripting/Natives/Generated/ent/MeshComponent.hpp>
 #include <RED4ext/Scripting/Natives/UpdateManager.hpp>
 #include "Hooks/GetMatrixFromOrientation.hpp"
@@ -84,7 +84,7 @@ void PrePhysics(UpdateBucketEnum bucket, FrameInfo& frame, JobQueue& job) {
     matrix.W.Z = t.Position.z.Bits * 0.0000076293945;
     matrix.W.W = 1.0;
     // the cinematic camera's shots are around the car while the player's soundListener stays with
-    // V (the game's own listener too): hear from the camera the scripts set for those
+    // V (the game's own listener too): hear from the camera Inputs::Gather set for those
     Matrix camera;
     bool useCamera = FlightAudio::GetCameraListener(camera);
     static auto lastLog = std::chrono::steady_clock::now();
@@ -96,6 +96,7 @@ void PrePhysics(UpdateBucketEnum bucket, FrameInfo& frame, JobQueue& job) {
                     matrix.W.Z);
     }
     fs->audio->UpdateListenerMatrix(useCamera ? camera : matrix);
+    ListenerDraw::Draw(useCamera ? camera : matrix, useCamera);
     fs->audio->UpdateVolume();
   }
 }

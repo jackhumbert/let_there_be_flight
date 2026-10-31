@@ -43,6 +43,9 @@ jobs:
       id: build
       run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.config }}
 
+    - name: Unit tests
+      run: ctest --test-dir ${{ github.workspace }}/build --output-on-failure
+
     - name: Get short SHA
       run: echo "SHORT_SHA=$("${{ github.sha }}".SubString(0, 7))" >> $env:GITHUB_ENV
 

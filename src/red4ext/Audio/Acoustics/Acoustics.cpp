@@ -1,10 +1,12 @@
 #include "Acoustics.hpp"
+#include "Materials.hpp"
+#include "Occlusion.hpp"
+#include "Planes.hpp"
 #include "Reflections.hpp"
 #include "Stems.hpp"
 
 #include <fmod.hpp>
 #include <fmod_errors.h>
-#include <fmod_studio.hpp>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
@@ -24,7 +26,6 @@ namespace {
 
 using Clock = std::chrono::steady_clock;
 
-constexpr float kProbeHz = 20.0f;
 // SetCar() older than this: the car is not flying any more
 constexpr auto kStale = std::chrono::milliseconds(250);
 constexpr float kFadeSeconds = 0.05f;
@@ -43,7 +44,6 @@ struct Pose {
   RaySource rays = RaySource::None;
   LiveHits live{};
   std::array<std::string, kNearRays> liveMaterial;
-  RaySource liveSource = RaySource::None;
   Clock::time_point liveTime{};
 };
 
@@ -54,28 +54,12 @@ std::atomic<uint64_t> physxCalls{0}, physxCasts{0};
 std::atomic<float> physxGap{-1.0f};
 std::atomic<float> physxMs{0.0f}, physxMsMax{0.0f};
 
-// Reflectivity by physics material (the .physmat names the game reports, matched by prefix as
-// Physics/ScrapeAudio.cpp does): a first guess, hard and smooth surfaces high, soft and broken ones
-// low. Unknown: -1 (the Tuning defaults).
-struct MaterialReflectivity {
-  const char *prefix;
-  float reflectivity;
-};
-constexpr MaterialReflectivity kMaterialReflectivity[] = {
-    {"glass", 0.95f}, {"metal", 0.9f},  {"concrete", 0.85f}, {"stone", 0.85f},   {"brick", 0.85f},
-    {"asphalt", 0.75f}, {"plastic", 0.7f}, {"wood", 0.6f},   {"water", 0.8f},    {"dirt", 0.45f},
-    {"mud", 0.4f},    {"sand", 0.35f},  {"trash", 0.3f},     {"cardboard", 0.3f}, {"grass", 0.3f},
-    {"leaves", 0.2f}, {"foliage", 0.2f}, {"fabric", 0.2f},   {"upholstery", 0.2f},
-};
-
-float Reflectivity(const std::string &aMaterial) {
-  for (const auto &entry : kMaterialReflectivity) {
-    if (aMaterial.rfind(entry.prefix, 0) == 0) {
-      return entry.reflectivity;
-    }
-  }
-  return -1.0f;
-}
+// Planes fitted to the live hits (SetPlanes); the last fit's inlier counts and the cache's size, for State()
+std::atomic<bool> planes{true};
+std::array<int, Planes::kSides> lastInliers{};
+std::atomic<size_t> cacheSize{0};
+// the cache's clock
+const Clock::time_point kEpoch = Clock::now();
 
 // the comparison log (SetLog): one row a probe
 std::mutex logLock;
@@ -95,6 +79,7 @@ std::atomic<float> level{0.0f};
 // for State()
 std::mutex stateLock;
 Features lastFeatures{};
+Clock::time_point lastFeaturesTime{};
 Params lastParams{};
 float lastProbeMs = 0;
 // blocks rendered, those with sound coming in, and those skipped as silent
@@ -114,9 +99,9 @@ struct Instance {
   float fadeStep;
   int rate;
   bool idle = true;
-  // an event DSP's place in the stems (the bus DSP uses its scratch)
-  Stems::EventCursor stems;
-  // the test source's state and the block it writes (bus DSPs)
+  // the stems' scratch for the master DSP's block
+  std::vector<float> stemScratch;
+  // the test source's state and the block it writes
   struct {
     uint32_t phase = 0, rng = 22222;
     float envelope = 0;
@@ -126,14 +111,10 @@ struct Instance {
   std::vector<float> testBlock = std::vector<float>(size_t(1) << 16);
 };
 
-// a bus DSP's user data (an event DSP has none): which stem it records
-const char kBusDsp = 0;
-
-// The test source (SetTestSource): the bus DSPs play it in place of what reaches them, the event
-// DSPs mute the thrusters. The bus runs at the mixer's rate; an event's DSPs run at its pitch.
+// The test source (SetTestSource): the master DSP plays it in place of what reaches it, at the mixer's rate.
 std::atomic<int> testSource{0};
 // Tuning::airAbsorption for the worker's Targets (SetAirAbsorption)
-std::atomic<bool> airAbsorption{false};
+std::atomic<bool> airAbsorption{true};
 
 // clicks: a 3 ms decaying noise burst every half second; a 440 Hz sine; pink noise: Paul Kellet's
 // filter on white
@@ -175,12 +156,9 @@ void Generate(Instance &i, TestSource aKind, float *aOut, unsigned int aLength, 
   }
 }
 
-struct Attached {
-  FMOD::Studio::Bus *bus = nullptr;
-  FMOD::ChannelGroup *group = nullptr;
-  FMOD::DSP *dsp = nullptr;
-};
-std::vector<Attached> attached;
+// the master group's DSP
+FMOD::ChannelGroup *attachedGroup = nullptr;
+FMOD::DSP *attachedDsp = nullptr;
 
 bool Check(FMOD_RESULT aResult, const char *aWhat) {
   if (aResult != FMOD_OK) {
@@ -264,27 +242,24 @@ FMOD_RESULT F_CALL DspRead(FMOD_DSP_STATE *aState, float *aIn, float *aOut, unsi
                            int *aOutChannels) {
   auto &i = *static_cast<Instance *>(aState->plugindata);
   *aOutChannels = aInChannels;
-  void *userData = nullptr;
-  aState->functions->getuserdata(aState, &userData);
-  const bool bus = userData == &kBusDsp;
   const auto test = static_cast<TestSource>(testSource.load(std::memory_order_relaxed));
-  if (test != TestSource::Off && bus && size_t(aLength) * aInChannels <= i.testBlock.size()) {
+  if (test != TestSource::Off && size_t(aLength) * aInChannels <= i.testBlock.size()) {
     Generate(i, test, i.testBlock.data(), aLength, aInChannels);
     aIn = i.testBlock.data();
   }
-  Render(i, aIn, aOut, aLength, aInChannels);
-  if (test != TestSource::Off && !bus) {
-    std::memset(aOut, 0, size_t(aLength) * aInChannels * sizeof(float));
+  if (test != TestSource::Off) {
+    // the test sound's echoes; everything else LTBF plays reaches the master with its echoes already
+    // (the car's Engine and its echo voices), and would be echoed twice
+    Render(i, aIn, aOut, aLength, aInChannels);
+  } else {
+    std::memcpy(aOut, aIn, size_t(aLength) * aInChannels * sizeof(float));
+    i.idle = true;
   }
-  if (bus) {
-    if (Stems::Recording()) {
-      unsigned long long clock = 0;
-      unsigned int offset = 0, length = 0;
-      aState->functions->getclock(aState, &clock, &offset, &length);
-      Stems::AddBus(clock, aIn, aOut, aLength, aInChannels, i.rate, test != TestSource::Off, i.stems.scratch);
-    }
-  } else if (test == TestSource::Off) {
-    Stems::AddEvent(i.stems, aIn, aOut, aLength, aInChannels);
+  if (Stems::Recording()) {
+    unsigned long long clock = 0;
+    unsigned int offset = 0, length = 0;
+    aState->functions->getclock(aState, &clock, &offset, &length);
+    Stems::AddBus(clock, aIn, aOut, aLength, aInChannels, i.rate, test != TestSource::Off, i.stemScratch);
   }
   return FMOD_OK;
 }
@@ -292,8 +267,8 @@ FMOD_RESULT F_CALL DspRead(FMOD_DSP_STATE *aState, float *aIn, float *aOut, unsi
 FMOD_RESULT F_CALL DspShouldIProcess(FMOD_DSP_STATE *aState, FMOD_BOOL aInputsIdle, unsigned int, FMOD_CHANNELMASK,
                                      int, FMOD_SPEAKERMODE) {
   auto &i = *static_cast<Instance *>(aState->plugindata);
-  // on: always (in the game the buses reported idle inputs while the thrusters played); off:
-  // while the echoes and reverb still ring; always while stems record (the bus DSP keeps their time)
+  // on: always; off: while the echoes and reverb still ring; always while stems record (the DSP keeps
+  // their time)
   if (!aInputsIdle || level.load(std::memory_order_relaxed) > 0 || Stems::Recording() || testSource.load() ||
       (i.amount > 0 && i.reflections.TailLevel() > 1e-12f)) {
     return FMOD_OK;
@@ -309,6 +284,8 @@ void Run() {
   auto lastTime = Clock::now();
   bool haveLast = false;
   Tuning tuning;
+  Planes::Cache cache;
+  Clock::time_point lastCast{};
   const auto period = std::chrono::duration_cast<Clock::duration>(std::chrono::duration<float>(1.0f / kProbeHz));
   auto next = Clock::now();
   auto lastLog = next;
@@ -337,7 +314,36 @@ void Run() {
     const float drift = std::hypot(p.live.origin.x - p.position.x, p.live.origin.y - p.position.y,
                                    p.live.origin.z - p.position.z);
     const bool live = Clock::now() - p.liveTime < kLiveStale && drift < kLiveDrift;
-    const Features f = (*probe)(p.position, p.forward, p.up, live ? &p.live : nullptr);
+    Features f = (*probe)(p.position, p.forward, p.up, live ? &p.live : nullptr);
+    std::array<int, Planes::kSides> inliers{};
+    if (planes.load(std::memory_order_relaxed)) {
+      const float now = std::chrono::duration<float>(Clock::now() - kEpoch).count();
+      // each cast's hits once, though a few probes may use them
+      if (live && p.liveTime != lastCast) {
+        lastCast = p.liveTime;
+        for (int k = 0; k < kNearRays; ++k) {
+          if (p.live.distance[k] >= 0) {
+            cache.Add({p.live.position[k], p.live.normal[k], now});
+          }
+        }
+      }
+      cache.Expire(now, p.position);
+      // a fitted plane's distance and normal replace the probe's, on its side
+      float *distance[Planes::kSides] = {&f.floor, &f.ceiling, &f.left, &f.right};
+      Vec3 *outward[Planes::kSides] = {&f.floorNormal, &f.ceilingNormal, &f.leftNormal, &f.rightNormal};
+      bool *flag[Planes::kSides] = {&f.floorPlane, &f.ceilingPlane, &f.leftPlane, &f.rightPlane};
+      for (int s = 0; s < Planes::kSides; ++s) {
+        if (auto plane = cache.Fit(Planes::Side(s), p.position, f.rightDir)) {
+          const Vec3 &n = plane->normal;
+          *distance[s] = (p.position.x - plane->point.x) * n.x + (p.position.y - plane->point.y) * n.y +
+                         (p.position.z - plane->point.z) * n.z;
+          *outward[s] = {-n.x, -n.y, -n.z};
+          *flag[s] = true;
+          inliers[s] = plane->inliers;
+        }
+      }
+      cacheSize.store(cache.Size(), std::memory_order_relaxed);
+    }
     tuning.gain = p.gain;
     tuning.airAbsorption = airAbsorption.load(std::memory_order_relaxed);
     {
@@ -370,6 +376,8 @@ void Run() {
     {
       std::lock_guard guard(stateLock);
       lastFeatures = f;
+      lastInliers = inliers;
+      lastFeaturesTime = Clock::now();
       lastParams = prm;
       lastProbeMs = ms;
     }
@@ -380,7 +388,7 @@ void Run() {
         auto material = [&](int aRay) { return live && aRay >= 0 && p.live.distance[aRay] >= 0 ? p.liveMaterial[aRay] : ""; };
         std::fprintf(logFile, "%.3f,%.2f,%.2f,%.2f,%d,%d,%.3f,%.3f,%s,%.3f,%.3f,%.3f,%.3f,%s,%.3f,%.3f,%s,%.3f,%.3f\n",
                      std::chrono::duration<double>(Clock::now() - logStart).count(), p.position.x, p.position.y,
-                     p.position.z, live ? f.liveRays : -1, live ? int(p.liveSource) : 0, f.floorMap, f.floor, material(0).c_str(), f.ceilingMap,
+                     p.position.z, live ? f.liveRays : -1, live ? int(RaySource::PhysX) : 0, f.floorMap, f.floor, material(0).c_str(), f.ceilingMap,
                      f.ceiling, f.leftMap, f.left, material(f.leftRay).c_str(), f.rightMap, f.right,
                      material(f.rightRay).c_str(), f.enclosure, ms);
         std::fflush(logFile); // tests end by killing the game
@@ -418,122 +426,27 @@ FMOD_DSP_DESCRIPTION *Description() {
   return &description;
 }
 
-// DSPs inserted into event instances, by instance (the game thread starts and stops events)
-std::mutex eventsLock;
-std::unordered_map<FMOD::Studio::EventInstance *, std::vector<Attached>> events;
-
-// A DSP just before every Object Spatializer under aGroup: those hand the sound to the output as
-// a 3D object, past every bus
-void InsertBeforeObjectPans(FMOD::System *aCore, FMOD::ChannelGroup *aGroup, std::vector<Attached> &aOut) {
-  int dsps = 0;
-  aGroup->getNumDSPs(&dsps);
-  for (int i = 0; i < dsps; ++i) {
-    FMOD::DSP *dsp = nullptr;
-    FMOD_DSP_TYPE type = FMOD_DSP_TYPE_UNKNOWN;
-    if (aGroup->getDSP(i, &dsp) != FMOD_OK || dsp->getType(&type) != FMOD_OK || type != FMOD_DSP_TYPE_OBJECTPAN) {
-      continue;
-    }
-    // index 0 is the output end: one further from it is just before the spatializer
-    Attached a{nullptr, aGroup};
-    if (Check(aCore->createDSP(Description(), &a.dsp), "createDSP") && Check(aGroup->addDSP(i + 1, a.dsp), "addDSP")) {
-      aOut.push_back(a);
-      ++i;
-      ++dsps;
-    } else if (a.dsp) {
-      a.dsp->release();
-    }
-  }
-  int groups = 0;
-  aGroup->getNumGroups(&groups);
-  for (int g = 0; g < groups; ++g) {
-    FMOD::ChannelGroup *child = nullptr;
-    if (aGroup->getGroup(g, &child) == FMOD_OK) {
-      InsertBeforeObjectPans(aCore, child, aOut);
-    }
-  }
-}
-
 } // namespace
 
-FMOD::DSP *CreateDsp(FMOD::System *aCore) {
+bool Attach(FMOD::System *aCore, FMOD::ChannelGroup *aMaster) {
   FMOD::DSP *dsp = nullptr;
-  return Check(aCore->createDSP(Description(), &dsp), "createDSP") ? dsp : nullptr;
-}
-
-int AttachToEvent(FMOD::Studio::System *aStudio, FMOD::Studio::EventInstance *aInstance) {
-  FMOD::System *core = nullptr;
-  FMOD::ChannelGroup *group = nullptr;
-  // the instance's DSP graph exists once its start has gone through
-  aStudio->flushCommands();
-  if (!Check(aStudio->getCoreSystem(&core), "getCoreSystem") || !Check(aInstance->getChannelGroup(&group), "event getChannelGroup")) {
-    return 0;
-  }
-  std::vector<Attached> inserted;
-  InsertBeforeObjectPans(core, group, inserted);
-  const int count = int(inserted.size());
-  if (count) {
-    std::lock_guard guard(eventsLock);
-    auto &list = events[aInstance];
-    list.insert(list.end(), inserted.begin(), inserted.end());
-  }
-  return count;
-}
-
-void DetachFromEvent(FMOD::Studio::EventInstance *aInstance) {
-  std::vector<Attached> list;
-  {
-    std::lock_guard guard(eventsLock);
-    auto it = events.find(aInstance);
-    if (it == events.end()) {
-      return;
+  // at the output end, after the fader: the buses' volumes are in the sound already
+  const bool ok = Check(aCore->createDSP(Description(), &dsp), "createDSP") &&
+                  Check(aMaster->addDSP(FMOD_CHANNELCONTROL_DSP_HEAD, dsp), "addDSP");
+  if (!ok) {
+    if (dsp) {
+      dsp->release();
     }
-    list = std::move(it->second);
-    events.erase(it);
-  }
-  for (auto &a : list) {
-    a.group->removeDSP(a.dsp);
-    a.dsp->release();
-  }
-}
-
-bool Attach(FMOD::Studio::System *aStudio, const std::vector<std::string> &aBuses) {
-  FMOD_DSP_DESCRIPTION &description = *Description();
-  FMOD::System *core = nullptr;
-  if (!Check(aStudio->getCoreSystem(&core), "getCoreSystem")) {
     return false;
   }
-  // a bus's channel group exists once it is locked and the command has gone through
-  std::vector<FMOD::Studio::Bus *> buses;
-  for (const auto &name : aBuses) {
-    FMOD::Studio::Bus *bus = nullptr;
-    if (Check(aStudio->getBus(name.c_str(), &bus), name.c_str()) && Check(bus->lockChannelGroup(), "lockChannelGroup")) {
-      buses.push_back(bus);
-    }
-  }
-  Check(aStudio->flushCommands(), "flushCommands");
-  bool ok = buses.size() == aBuses.size();
-  for (auto *bus : buses) {
-    Attached a{bus};
-    if (Check(bus->getChannelGroup(&a.group), "getChannelGroup") && Check(core->createDSP(&description, &a.dsp), "createDSP") &&
-        // at the output end: Studio connects its events into the bus past the tail, so a DSP there
-        // heard nothing in the game; after the fader, the bus volume is in the sound already
-        Check(a.dsp->setUserData((void *)&kBusDsp), "setUserData") &&
-        Check(a.group->addDSP(FMOD_CHANNELCONTROL_DSP_HEAD, a.dsp), "addDSP")) {
-      attached.push_back(a);
-    } else {
-      if (a.dsp) {
-        a.dsp->release();
-      }
-      bus->unlockChannelGroup();
-      ok = false;
-    }
-  }
-  if (!attached.empty() && !running) {
+  attachedGroup = aMaster;
+  attachedDsp = dsp;
+  if (!running) {
     running = true;
     worker = std::thread(Run);
   }
-  spdlog::info("[Acoustics] on {} of {} buses", attached.size(), aBuses.size());
-  return ok;
+  spdlog::info("[Acoustics] on the master group");
+  return true;
 }
 
 void Detach() {
@@ -547,22 +460,12 @@ void Detach() {
   }
   level.store(0.0f);
   Stems::Stop();
-  std::vector<FMOD::Studio::EventInstance *> instances;
-  {
-    std::lock_guard guard(eventsLock);
-    for (auto &[instance, _] : events) {
-      instances.push_back(instance);
-    }
+  if (attachedDsp) {
+    attachedGroup->removeDSP(attachedDsp);
+    attachedDsp->release();
+    attachedDsp = nullptr;
+    attachedGroup = nullptr;
   }
-  for (auto *instance : instances) {
-    DetachFromEvent(instance);
-  }
-  for (auto &a : attached) {
-    a.group->removeDSP(a.dsp);
-    a.dsp->release();
-    a.bus->unlockChannelGroup();
-  }
-  attached.clear();
 }
 
 void SetCar(const Vec3 &aPosition, const Vec3 &aForward, const Vec3 &aUp, float aGain, float aInside,
@@ -607,17 +510,19 @@ bool PhysXRaysDue(const Vec3 &aCandidate, Vec3 &aPosition, Vec3 &aForward, Vec3 
 }
 
 void SetLiveHits(const Vec3 &aOrigin, const std::array<float, kNearRays> &aDistance,
-                 const std::array<std::string, kNearRays> &aMaterial, RaySource aSource) {
+                 const std::array<std::string, kNearRays> &aMaterial, const std::array<Vec3, kNearRays> &aPosition,
+                 const std::array<Vec3, kNearRays> &aNormal) {
   LiveHits hits;
   hits.origin = aOrigin;
   hits.distance = aDistance;
+  hits.position = aPosition;
+  hits.normal = aNormal;
   for (int k = 0; k < kNearRays; ++k) {
-    hits.reflectivity[k] = aDistance[k] >= 0 ? Reflectivity(aMaterial[k]) : -1.0f;
+    hits.reflectivity[k] = aDistance[k] >= 0 ? Materials::Find(aMaterial[k]).value_or(Bands{}) : Bands{};
   }
   std::lock_guard guard(poseLock);
   pose.live = hits;
   pose.liveMaterial = aMaterial;
-  pose.liveSource = aSource;
   pose.liveTime = Clock::now();
 }
 
@@ -649,9 +554,19 @@ void SetLog(const std::string &aPath) {
   spdlog::info("[Acoustics] logging to {}", aPath);
 }
 
+void SetPlanes(bool aOn) {
+  planes.store(aOn);
+  spdlog::info("[Acoustics] planes {}", aOn);
+}
+
 void SetAirAbsorption(bool aOn) {
   airAbsorption.store(aOn);
   spdlog::info("[Acoustics] air absorption {}", aOn);
+}
+
+void SetOcclusion(bool aOn) {
+  Occlusion::enabled.store(aOn);
+  spdlog::info("[Acoustics] occlusion {}", aOn);
 }
 
 void SetTestSource(TestSource aSource) {
@@ -676,34 +591,65 @@ std::string Summary() {
     rays = pose.rays;
   }
   constexpr const char *kTests[] = {"off", "clicks", "pink noise", "440 Hz sine"};
-  constexpr const char *kRays[] = {"the nav map only", "the scripts", "PhysX"};
   const int test = std::clamp(testSource.load(), 0, 3);
-  const int ray = std::clamp(int(rays), 0, 2);
   if (!fresh) {
-    return fmt::format("echoes: not flying (air absorption {}, test sound {}, stems {})", airAbsorption.load() ? "on" : "off",
-                       kTests[test], Stems::Recording() ? "recording" : "off");
+    return fmt::format("echoes: not flying (air absorption {}, planes {}, test sound {}, stems {})",
+                       airAbsorption.load() ? "on" : "off", planes.load() ? "on" : "off", kTests[test],
+                       Stems::Recording() ? "recording" : "off");
   }
-  return fmt::format("echoes {} (level {:.2f}), air absorption {}, test sound {}, near rays from {}, stems {}",
-                     gain > 0 ? "on" : "off", level.load(), airAbsorption.load() ? "on" : "off", kTests[test], kRays[ray],
+  return fmt::format("echoes {} (level {:.2f}), air absorption {}, planes {}, test sound {}, near rays from {}, stems {}",
+                     gain > 0 ? "on" : "off", level.load(), airAbsorption.load() ? "on" : "off",
+                     planes.load() ? "on" : "off", kTests[test],
+                     rays == RaySource::PhysX ? "PhysX" : "the nav map only",
                      Stems::Recording() ? "recording" : "off");
+}
+
+bool LastParams(Params &aParams) {
+  if (paramsSeq.load(std::memory_order_acquire) == 0) {
+    return false;
+  }
+  std::lock_guard guard(stateLock);
+  aParams = lastParams;
+  return true;
+}
+
+bool NewestParams(uint32_t &aSeq, Params &aParams) {
+  if (paramsSeq.load(std::memory_order_acquire) == aSeq) {
+    return false;
+  }
+  std::unique_lock guard(paramsLock, std::try_to_lock);
+  if (!guard.owns_lock()) {
+    return false;
+  }
+  aParams = params;
+  aSeq = paramsSeq.load(std::memory_order_relaxed);
+  return true;
+}
+
+float Level() {
+  return level.load(std::memory_order_relaxed);
+}
+
+bool LastFeatures(Features &aFeatures) {
+  std::lock_guard guard(stateLock);
+  if (Clock::now() - lastFeaturesTime > std::chrono::milliseconds(500)) {
+    return false;
+  }
+  aFeatures = lastFeatures;
+  return true;
 }
 
 std::string State() {
   Features f;
   Params p;
   float ms;
+  std::array<int, Planes::kSides> inliers;
   {
     std::lock_guard guard(stateLock);
     f = lastFeatures;
+    inliers = lastInliers;
     p = lastParams;
     ms = lastProbeMs;
-  }
-  size_t eventDsps = 0;
-  {
-    std::lock_guard guard(eventsLock);
-    for (auto &[_, list] : events) {
-      eventDsps += list.size();
-    }
   }
   float gain, inside;
   bool fresh;
@@ -715,15 +661,25 @@ std::string State() {
   }
   // JSON has no infinity: a miss is null
   auto num = [](float x) { return std::isfinite(x) ? fmt::format("{:.3f}", x) : std::string("null"); };
+  // per side: whether a fitted plane answers it, the hits that agree, its distance and outward normal
+  auto side = [&](bool aOn, int aInliers, float aDistance, const Vec3 &aNormal) {
+    return fmt::format("{{\"on\":{},\"inliers\":{},\"distance\":{},\"normal\":[{},{},{}]}}", aOn ? "true" : "false",
+                       aInliers, num(aDistance), num(aNormal.x), num(aNormal.y), num(aNormal.z));
+  };
+  const std::string planesJson = fmt::format(
+      "{{\"on\":{},\"cache\":{},\"floor\":{},\"ceiling\":{},\"left\":{},\"right\":{}}}", planes.load() ? "true" : "false",
+      cacheSize.load(), side(f.floorPlane, inliers[0], f.floor, f.floorNormal),
+      side(f.ceilingPlane, inliers[1], f.ceiling, f.ceilingNormal), side(f.leftPlane, inliers[2], f.left, f.leftNormal),
+      side(f.rightPlane, inliers[3], f.right, f.rightNormal));
   return fmt::format(
-      "{{\"buses\":{},\"eventDsps\":{},\"flying\":{},\"gain\":{},\"inside\":{},\"level\":{},\"probes\":{},\"probeMs\":{},"
+      "{{\"buses\":{},\"flying\":{},\"gain\":{},\"inside\":{},\"level\":{},\"probes\":{},\"probeMs\":{},"
       "\"blocks\":{},\"soundBlocks\":{},\"silentBlocks\":{},\"floor\":{},\"ceiling\":{},\"left\":{},\"right\":{},\"enclosure\":{},"
       "\"meanFreePath\":{},\"physxCalls\":{},\"physxCasts\":{},\"physxGap\":{},\"physxMs\":{},\"physxMsMax\":{},\"liveRays\":{},\"floorMap\":{},\"leftMap\":{},\"rightMap\":{},\"floorDelay\":{},\"floorGain\":{},\"leftDelay\":{},\"rightDelay\":{},"
-      "\"floorFeedback\":{},\"wallFeedback\":{},\"rt60\":{},\"wet\":{},\"testSource\":{},\"air\":{},\"stems\":{}}}",
-      attached.size(), eventDsps, fresh ? "true" : "false", num(gain), num(inside), num(level.load()), probes.load(), num(ms),
+      "\"floorFeedback\":{},\"wallFeedback\":{},\"rt60\":{},\"wet\":{},\"testSource\":{},\"air\":{},\"planes\":{},\"occlusionCasts\":{},\"stems\":{}}}",
+      attachedDsp ? 1 : 0, fresh ? "true" : "false", num(gain), num(inside), num(level.load()), probes.load(), num(ms),
       blocks.load(), soundBlocks.load(), silentBlocks.load(), num(f.floor), num(f.ceiling), num(f.left), num(f.right), num(f.enclosure),
       num(f.meanFreePath), physxCalls.load(), physxCasts.load(), num(physxGap.load()), num(physxMs.load()), num(physxMsMax.load()), f.liveRays, num(f.floorMap), num(f.leftMap), num(f.rightMap), num(p.floor.delay), num(p.floor.gain), num(p.left.delay), num(p.right.delay),
-      num(p.floorFeedback), num(p.wallFeedback), num(p.rt60), num(p.wet), testSource.load(), airAbsorption.load(), Stems::State());
+      num(p.floorFeedback), num(p.wallFeedback), num(p.rt60), num(p.wet), testSource.load(), airAbsorption.load(), planesJson, Occlusion::Casts(), Stems::State());
 }
 
 } // namespace Acoustics

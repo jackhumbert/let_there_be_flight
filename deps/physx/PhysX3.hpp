@@ -282,6 +282,7 @@ struct PxRaycastHit {
 };
 static_assert(sizeof(PxRaycastHit) == 0x40);
 static_assert(offsetof(PxRaycastHit, position) == 0x1C && offsetof(PxRaycastHit, distance) == 0x34);
+static_assert(offsetof(PxRaycastHit, normal) == 0x28);
 
 // PxHitCallback<PxRaycastHit> (PxRaycastCallback): the blocking hit in block; touches, if a buffer is
 // given, through processTouches.

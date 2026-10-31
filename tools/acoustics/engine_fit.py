@@ -1,6 +1,7 @@
 """The engine synth (tools/acoustics/engine_synth.cpp) against the FMOD event it stands in for, over one
 run's stems: the FMOD thrusters (the stems' dry track) and the synth's voices rendered from the same
-parameters (engine_synth --voices), on one timeline.
+parameters (engine_synth --voices --character fmod: the event's character, not the clean default),
+on one timeline.
 
     python tools/acoustics/engine_fit.py <stems base> <synth prefix> [--fit]
 

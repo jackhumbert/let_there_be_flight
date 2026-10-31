@@ -140,10 +140,11 @@ red4ext/plugins/let_there_be_flight/            (the whole folder)
     packed.reds
     module.reds
     inputs.xml
-    base_sounds.bank
-    base_sounds.strings.bank
+    audio/
+      brake-1.wav
+      vehicle3_off.wav
+      vehicle3_startup.wav
     fmod.dll
-    fmodstudio.dll
     readme.md
     license.md
 red4ext/plugins/let_there_be_flight_uninstall.bat
@@ -172,4 +173,4 @@ Special thanks to @psiberx for [Codeware Lib](https://github.com/psiberx/cp2077-
 
 Interested in adding flying vehicles or a similar mechanic to an existing game? Let me know!
 
-Audio system made with [FMOD Studio](https://www.fmod.com/) by Firelight Technologies Pty Ltd.
+Audio played through [FMOD](https://www.fmod.com/) by Firelight Technologies Pty Ltd.

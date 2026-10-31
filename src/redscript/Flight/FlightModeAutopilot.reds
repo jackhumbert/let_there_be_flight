@@ -746,6 +746,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     if IsDefined(this.cinematicCallback) {
       bb.UnregisterListenerBool(GetAllBlackboardDefs().UI_AutodriveData.CinematicCameraActive, this.cinematicCallback);
       this.cinematicCallback = null;
+      FlightAudio.Get().SetCinematic(false);
     }
     this.OnCinematicCameraChanged(false);
     if bb.GetBool(GetAllBlackboardDefs().UI_AutodriveData.CinematicCameraActive) {
@@ -762,6 +763,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       return true;
     }
     this.cinematicContext = active;
+    FlightAudio.Get().SetCinematic(active);
     let ui = GameInstance.GetUISystem(this.component.GetVehicle().GetGame());
     if active {
       ui.PushGameContext(UIGameContext.CinematicCamera);

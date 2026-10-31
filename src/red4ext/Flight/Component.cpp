@@ -1,5 +1,6 @@
 #include "Flight/Component.hpp"
 #include "FlightSystem.hpp"
+#include "Audio/Inputs/Gather.hpp"
 
 #include <algorithm>
 #include <cstring>
@@ -21,6 +22,7 @@ void FlightComponent::OnAttach(void* a1) {
 }
 
 void FlightComponent::OnDetach(void* a1) {
+  Gather::Forget(this->entity->entityID.hash);
   this->sys->UnregisterComponent(Handle<FlightComponent>(this));
   game::Component::OnDetach(a1);
 }
@@ -76,7 +78,7 @@ static bool GetFlightSettingsBool(RED4ext::CRTTISystem *rtti, RED4ext::CName aPr
   return data ? *reinterpret_cast<bool *>(data) : aFallback;
 }
 
-static float GetFlightSettingsFloat(RED4ext::CRTTISystem *rtti, RED4ext::CName aProperty, float aFallback) {
+float GetFlightSettingsFloat(RED4ext::CRTTISystem *rtti, RED4ext::CName aProperty, float aFallback) {
   auto cls = rtti->GetClass("FlightSettings");
   if (!cls) {
     return aFallback;
@@ -174,6 +176,8 @@ void FlightComponent::OnUpdate(float deltaTime) {
     // float delta = deltaTime;
     // args.emplace_back(CRTTISystem::Get()->GetType("Float"), &delta);
     ExecuteFunction(this, this->nativeType->GetFunction("OnUpdate"), nullptr, deltaTime);
+    // the audio inputs, from what the script just worked out
+    Gather::Component(this, deltaTime);
     if (this->teleportQuiet > 0) {
       // the vehicle's velocity reads the teleport's jump over a frame or two after it: no
       // flight forces from it

@@ -22,6 +22,8 @@
 // game or FMOD types: the plugin's generator DSP and the offline target (tools/acoustics/engine_synth.cpp)
 // both drive it. One thread.
 
+#include "Sources.hpp"
+
 #include <array>
 #include <cstdint>
 
@@ -41,24 +43,33 @@ inline constexpr const char *kVoiceNames[kVoices] = {"surge", "lift", "pitch", "
 
 // The synth's own constants: each voice's level (dB, on top of its curves), set against the FMOD
 // event's output (tools/acoustics/engine_fit.py), and the sound's character.
-// Which of the FMOD event's own effects the synth keeps; all on is the event as it is. Off, each
-// leaves its job to the acoustics or drops it:
+// Which of the FMOD event's own effects the synth keeps; all on is the event as it was. All off by
+// default ("clean"): each leaves its job to the acoustics or drops it.
 struct Character {
-  bool cone = true;       // the Cone return: up to 7 dB louder when a thruster faces the listener
-  bool distortion = true; // FMOD's three distortion stages; off, each stage's level behaviour stays
-                          // (a gain following the sound's envelope) without reshaping the wave
-  bool darkness = true;   // the Engine return's high shelf (-16 dB over 240 Hz) and 2.7 kHz low-pass;
-                          // off, a mild tilt (-4 dB over 800 Hz) and an 8 kHz low-pass
-  bool grit = true;       // speed driving the distortion and opening the low-pass; off, held where a
-                          // 40 m/s cruise has them (pitch still rises with speed)
+  bool cone = false;       // the Cone return: up to 7 dB louder when a thruster faces the listener
+  bool distortion = false; // FMOD's three distortion stages; off, each stage's level behaviour stays
+                           // (a gain following the sound's envelope) without reshaping the wave
+  bool darkness = false;   // the Engine return's high shelf (-16 dB over 240 Hz) and 2.7 kHz low-pass;
+                           // off, a mild tilt (-4 dB over 800 Hz) and an 8 kHz low-pass
+  bool grit = false;       // speed driving the distortion and opening the low-pass; off, held where a
+                           // 40 m/s cruise has them (pitch still rises with speed)
   bool operator==(const Character &) const = default;
 };
+// the character as four bits (cone, distortion, darkness, grit), for a mixer to read without a lock
+constexpr uint32_t CharacterBits(const Character &c) {
+  return uint32_t(c.cone) | uint32_t(c.distortion) << 1 | uint32_t(c.darkness) << 2 | uint32_t(c.grit) << 3;
+}
+constexpr Character CharacterFromBits(uint32_t b) {
+  return {bool(b & 1), bool(b & 2), bool(b & 4), bool(b & 8)};
+}
 // "cone=0,distortion=1,...": the names above, 0 or 1; the rest as they are. "fmod" (all on) and
 // "clean" (all off) as wholes. False on a name it does not know.
 bool ParseCharacter(const char *aText, Character &aCharacter);
 
 struct Tuning {
   Character character;
+  // what the axis voices start from (Sources.hpp)
+  Sound sound = Sound::Drone;
   // surge, lift, pitch, roll, sway, air, brake, damage, scrape
   std::array<float, kVoices> level{1, -1, 3, -3.5f, -1, -30, 10, 0, 0};
   float master = -7.2f;     // dB
@@ -75,6 +86,7 @@ public:
 
   void Set(const Inputs &aInputs);
   void SetCharacter(const Character &aCharacter);
+  void SetSound(Sound aSound) { tuning.sound = aSound; }
   // aFrames mono samples to aOut; aVoices (optional): each voice's part, aFrames x kVoices interleaved
   void Render(float *aOut, uint32_t aFrames, float *aVoices = nullptr);
 
@@ -101,6 +113,7 @@ private:
     Biquad lowPass;
     bool hasLowPass = false;
     float envelope[2] = {}; // the two distortion stages' input level, when the waves are kept clean
+    Source source;          // the other sounds than the drone
   };
   // a distortion stage, or with Character::distortion off its gain at the sound's level
   float Stage(float x, float aLevel, float &aEnvelope) const;

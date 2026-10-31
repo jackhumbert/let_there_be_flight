@@ -31,15 +31,14 @@ find_program(REDSCRIPT_CLI_EXE NAMES redscript-cli.exe PATHS "${MOD_TOOLS_DIR}" 
 find_program(CYBERPUNK_2077_EXE NAMES Cyberpunk2077.exe PATHS "${CYBERPUNK_2077_GAME_DIR}/bin/x64" CACHE DOC "Cyberpunk2077.exe Executable File")
 
 set(MOD_GAME_DIR_FMOD_FOLDER "${MOD_GAME_DIR}/red4ext/plugins/${MOD_SLUG}")
-set(LTBF_SOURCE_FMOD_DIR "${PROJECT_SOURCE_DIR}/src/fmod_studio/Build/Desktop")
 set(ZOLTAN_CLANG_EXE "C:/Users/Jack/Documents/cyberpunk/zoltan/target/release/zoltan-clang.exe")
 
-# FMOD
+# Sound files LTBF plays itself on FMOD Core channels (Audio/Samples, docs/design/audio-native.md A.3)
 
-file(GLOB LTBF_SOURCE_FMOD_FILES ${LTBF_SOURCE_FMOD_DIR}/*)
-foreach(_FILE ${LTBF_SOURCE_FMOD_FILES})
-  file(RELATIVE_PATH _TEMPFILE ${LTBF_SOURCE_FMOD_DIR} ${_FILE})
-  configure_mod_file(/src/fmod_studio/Build/Desktop/${_TEMPFILE} red4ext/plugins/${MOD_SLUG}/${_TEMPFILE})
+file(GLOB LTBF_AUDIO_FILES ${PROJECT_SOURCE_DIR}/src/audio/*.wav)
+foreach(_FILE ${LTBF_AUDIO_FILES})
+  get_filename_component(_NAME ${_FILE} NAME)
+  configure_mod_file(src/audio/${_NAME} red4ext/plugins/${MOD_SLUG}/audio/${_NAME})
 endforeach()
 
 # Autopilot nav map, baked offline by tools/navmap_bake/ from the game's collision. Too big for git, so it is a
@@ -193,6 +192,7 @@ target_link_libraries(navplan PRIVATE spdlog)
 add_executable(acoustics EXCLUDE_FROM_ALL
   tools/acoustics/acoustics.cpp
   src/red4ext/Audio/Acoustics/Probe.cpp
+  src/red4ext/Audio/Acoustics/Images.cpp
   src/red4ext/Audio/Acoustics/Reflections.cpp
   src/red4ext/Navigation/NavMap.cpp
   src/red4ext/ThirdParty/miniz/miniz_tinfl.cpp
@@ -205,7 +205,9 @@ target_link_libraries(acoustics PRIVATE spdlog)
 add_executable(engine_synth EXCLUDE_FROM_ALL
   tools/acoustics/engine_synth.cpp
   src/red4ext/Audio/EngineSynth/Synth.cpp
+  src/red4ext/Audio/EngineSynth/Sources.cpp
   src/red4ext/Audio/Acoustics/Probe.cpp
+  src/red4ext/Audio/Acoustics/Images.cpp
   src/red4ext/Audio/Acoustics/Reflections.cpp
   src/red4ext/Navigation/NavMap.cpp
   src/red4ext/ThirdParty/miniz/miniz_tinfl.cpp
@@ -214,23 +216,38 @@ target_include_directories(engine_synth PRIVATE src/red4ext)
 target_compile_features(engine_synth PRIVATE cxx_std_20)
 target_link_libraries(engine_synth PRIVATE spdlog)
 
-# the same code through FMOD with the mod's banks, a recording standing in for the thrusters
-# (tools/acoustics/fmod_check.cpp); not built by default
-add_executable(acoustics_fmod EXCLUDE_FROM_ALL
-  tools/acoustics/fmod_check.cpp
-  src/red4ext/Audio/Acoustics/Acoustics.cpp
-  src/red4ext/Audio/Acoustics/Probe.cpp
+# Unit tests for the parts of the plugin that need no game (tests/): ctest --test-dir build, or run
+# build/ltbf_tests.exe [substring]. The sources they cover are compiled in again here.
+enable_testing()
+add_executable(ltbf_tests
+  tests/main.cpp
+  tests/synth_tests.cpp
+  tests/sources_tests.cpp
+  tests/voices_tests.cpp
+  tests/samples_tests.cpp
+  tests/wind_tests.cpp
+  tests/inputs_tests.cpp
+  tests/images_tests.cpp
+  tests/planes_tests.cpp
+  tests/materials_tests.cpp
+  tests/occlusion_tests.cpp
+  tests/buses_tests.cpp
+  src/red4ext/Audio/EngineSynth/Synth.cpp
+  src/red4ext/Audio/EngineSynth/Sources.cpp
+  src/red4ext/Audio/Buses.cpp
+  src/red4ext/Audio/Voices/Pool.cpp
+  src/red4ext/Audio/Samples/Events.cpp
+  src/red4ext/Audio/Wind/Model.cpp
+  src/red4ext/Audio/Inputs/Inputs.cpp
+  src/red4ext/Audio/Acoustics/Images.cpp
+  src/red4ext/Audio/Acoustics/Materials.cpp
+  src/red4ext/Audio/Acoustics/Occlusion.cpp
+  src/red4ext/Audio/Acoustics/Planes.cpp
   src/red4ext/Audio/Acoustics/Reflections.cpp
-  src/red4ext/Audio/Acoustics/Stems.cpp
-  src/red4ext/Navigation/NavMap.cpp
-  src/red4ext/ThirdParty/miniz/miniz_tinfl.cpp
 )
-target_include_directories(acoustics_fmod PRIVATE src/red4ext)
-target_compile_features(acoustics_fmod PRIVATE cxx_std_20)
-target_link_libraries(acoustics_fmod PRIVATE spdlog FMOD)
-add_custom_command(TARGET acoustics_fmod POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PROJECT_SOURCE_DIR}/deps/fmod/lib/x64/fmod.dll
-          ${PROJECT_SOURCE_DIR}/deps/fmod/lib/x64/fmodstudio.dll $<TARGET_FILE_DIR:acoustics_fmod>)
+target_include_directories(ltbf_tests PRIVATE src/red4ext)
+target_compile_features(ltbf_tests PRIVATE cxx_std_20)
+add_test(NAME ltbf_tests COMMAND ltbf_tests)
 
 # configure_inputs(src/input_loader/let_there_be_flight.xml)
 configure_mod_file(src/input_loader/${MOD_SLUG}.xml red4ext/plugins/${MOD_SLUG}/inputs.xml)

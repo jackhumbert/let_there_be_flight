@@ -1,132 +1,74 @@
-public class FlightAudioUpdate {
-  public let speed: Float;
-  public let surge: Float;
-  public let yawDiff: Float;
-  public let lift: Float;
-  public let yaw: Float;
-  public let pitchDiff: Float;
-  public let brake: Float;
-  public let inside: Float;
-  public let damage: Float;
-  public let roll: Float;
-  public let pitch: Float;
-  public let sway: Float;
-  public let scrape: Float;
-}
-
-
 public native class FlightAudio extends IScriptable {
   // defined in red4ext part
-  public native func Start(emitterName: String, eventName: String) -> Void;
-  public native func StartWithPitch(emitterName: String, eventName: String, pitch: Float) -> Void;
-  public native func Play(eventName: String) -> Void;
-  public native func Stop(emitterName: String) -> Void;
-  // public native func Update(emitterName: String, eventLocation: Vector3, eventForward: Vector3, eventUp: Vector3, volume: Float) -> Void;
-  public native func UpdateEvent(emitterName: String, eventMatrix: Matrix, volume: Float, update: ref<FlightAudioUpdate>) -> Void;
-  public native func UpdateEventMatrix(emitterName: String, eventMatrix: Matrix) -> Void;
-  public native func UpdateListenerMatrix(matrix: Matrix) -> Void;
-  // hear from here this frame instead of the player's soundListener (the cinematic camera's shots)
-  public native func SetCameraListener(position: Vector4, forward: Vector4, up: Vector4) -> Void;
-  public native func UpdateParameter(parameterName: String, value: Float) -> Void;
-  // every playing event paused / resumed
+  // LTBF's own samples as objects at the car (docs/design/audio-native.md A.3): by the event's name,
+  // once, or looping under an id until StopLoop
+  public native func PlayOneShot(name: String, vehicle: ref<VehicleObject>) -> Void;
+  public native func StartLoop(id: String, name: String, vehicle: ref<VehicleObject>) -> Void;
+  public native func StopLoop(id: String) -> Void;
+  // the engine synth's water low-pass: 1 under water, 0 in the air
+  public native func SetWater(value: Float) -> Void;
+  // every playing sound paused / resumed
   public native func Pause() -> Void;
   public native func Resume() -> Void;
-  // each frame the player's car flies: the flying sound's echoes off the city (docs/design/acoustics.md);
-  // gain 0 = off, inside 1 = first person, raySource who casts the near rays (acousticsRaySource)
-  public native func UpdateAcoustics(carMatrix: Matrix, gain: Float, inside: Float, raySource: Int32) -> Void;
+  // the Autopilot's cinematic camera is on: the player's car is heard from outside, and from the camera
+  public native func SetCinematic(on: Bool) -> Void;
   // the echoes' state as JSON, for tests
   public native func AcousticsState() -> String;
 
-  // the near rays' directions for the car, for CastAcousticRays
-  public native func AcousticsRays(carMatrix: Matrix) -> array<Vector4>;
-  // what they hit: distance (< 0: nothing) and physics material, cast from origin
-  public native func AcousticsHits(origin: Vector4, distances: array<Float>, materials: array<CName>) -> Void;
   // the nav map's and the live distances side by side to red4ext/logs/ltbf_acoustics_<time>.csv
   public native func AcousticsLog(on: Bool) -> Void;
-  // LTBF's FMOD sound to red4ext/logs/ltbf_stems_<time>_{dry,wet,bus}.wav: the thrusters without and
+  // LTBF's sound to red4ext/logs/ltbf_stems_<time>_{dry,wet,bus}.wav: the thrusters without and
   // with the echoes, the master bus; returns the base path ("" when stopped)
   public native func AcousticsStems(on: Bool) -> String;
-  // a test sound through the echoes in place of LTBF's FMOD sound: 0 off, 1 clicks (two a second),
-  // 2 pink noise, 3 a 440 Hz sine; the thrusters are muted while it plays
+  // a test sound through the echoes in place of LTBF's sound: 0 off, 1 clicks (two a second),
+  // 2 pink noise, 3 a 440 Hz sine
   public native func AcousticsTestSource(source: Int32) -> Void;
 
-  // the engine synth in place of the thruster event vehicle3_TPP (docs/design/engine-synth.md)
-  public native func StartEngine(emitterName: String, pitch: Float) -> Void;
-  public native func UpdateEngine(emitterName: String, eventMatrix: Matrix, volume: Float, update: ref<FlightAudioUpdate>) -> Void;
+  // a thruster's engine synth (docs/design/engine-synth.md); car is
+  // the vehicle's entity hash (an NPC car's thrusters fold into one voice), player whether it is V's;
+  // the plugin updates it each frame from the vehicle (Audio/Inputs/Gather)
+  public native func StartEngine(emitterName: String, pitch: Float, car: Uint64, player: Bool) -> Void;
   public native func StopEngine(emitterName: String) -> Void;
   // its channels and cost as JSON, for tests
   public native func EngineState() -> String;
-  // which of the FMOD event's effects the synth keeps: "fmod", "clean", or any of
+  // which of the old FMOD event's effects the synth keeps: "fmod", "clean", or any of
   // "cone=0,distortion=0,darkness=0,grit=0" (1 to keep); applies at once
   public native func EngineCharacter(text: String) -> String;
-  // air absorption on the echoes and reverb
+  // what the thrusters' synth starts from: "drone" (the old loops), "bullroarer" or "fan"; applies at once
+  public native func EngineSound(name: String) -> String;
+  // the voice budget: Windows Sonic objects and thruster synth voices (1 to 64 each); returns the audio
+  // summary, or a line starting "error:"
+  public native func VoicesBudget(maxObjects: Int32, maxSynth: Int32) -> String;
+  // the voice pool as JSON: sources, who has channels, folded cars, the synth's cost
+  public native func VoicesState() -> String;
+  // the car's front windows (world positions) for the first person wind (the wind itself,
+  // docs/design/audio-native.md A.4, the plugin works out from the car each frame)
+  public native func SetWindowSlots(vehicle: ref<VehicleObject>, left: Vector4, right: Vector4) -> Void;
+  public native func WindOn(on: Bool) -> Void;
+  // the wind's state as JSON, for tests
+  public native func WindState() -> String;
+  // air absorption on the echoes and reverb (on by default; false turns it off)
   public native func AcousticsAir(on: Bool) -> Void;
-  // one line: who plays the thrusters, the synth's character and the echoes, as they are now
+  // echoes off planes fitted to the live hits (the default) or off square-on surfaces
+  public native func AcousticsPlanes(on: Bool) -> Void;
+  // NPC cars heard through buildings: a low-pass and a duck while static geometry is between (on by default)
+  public native func AcousticsOcclusion(on: Bool) -> Void;
+  // one line: the thrusters' synth, its character and the echoes, as they are now
   public native func AudioSummary() -> String;
-  // who makes the thrusters' sound: 0 the FMOD event, 1 the engine synth (not a Mod Setting yet:
-  // LtbfBridge.EngineSource for tests; takes effect when the thrusters next start)
-  public let engineSource: Int32 = 0;
 
   // the echoes on or off, and their level (not a Mod Setting yet: LtbfBridge.Acoustics for tests)
   public let acoustics: Bool = true;
   public let acousticsGain: Float = 1.0;
   // the near surfaces from the game's own collision (live raycasts) rather than the nav map alone:
-  // 0 off, 1 cast here (CastAcousticRays), 2 cast by the plugin through PhysX
+  // 0 off, 2 the plugin through PhysX
   public let acousticsRaySource: Int32 = 2;
-  public let acousticsRayRange: Float = 100.0;
-  private let acousticsRayTimer: Float;
   // the comparison log is being written (LtbfBridge.AcousticsLive)
   public let acousticsLogging: Bool;
-
-  // The near rays through the game's collision (static world, terrain, blockers: what a flying car
-  // hits), about 20 times a second while the echoes are on; the plugin uses a hit in place of the
-  // nav map's answer for that ray (a miss may only be collision not streamed in yet). Only with
-  // acousticsRaySource 1: the plugin's own PhysX casts (2) need no script time.
-  public func CastAcousticRays(carMatrix: Matrix, timeDelta: Float) -> Void {
-    if !this.acoustics || this.acousticsRaySource != 1 {
-      return;
-    }
-    this.acousticsRayTimer -= timeDelta;
-    if this.acousticsRayTimer > 0.0 {
-      return;
-    }
-    this.acousticsRayTimer = 0.05;
-    let filter: QueryFilter;
-    QueryFilter.AddGroup(filter, n"Static");
-    QueryFilter.AddGroup(filter, n"Terrain");
-    QueryFilter.AddGroup(filter, n"VehicleBlocker");
-    QueryFilter.AddGroup(filter, n"PlayerBlocker");
-    let queries = GameInstance.GetSpatialQueriesSystem(FlightSystem.GetInstance().gameInstance);
-    let origin = Matrix.GetTranslation(carMatrix);
-    let distances: array<Float>;
-    let materials: array<CName>;
-    for d in this.AcousticsRays(carMatrix) {
-      // from the edge of a car-sized ellipsoid (3 m sideways, 1.5 m up and down, as the nav map
-      // grows its solids): the query sees the car's own chassis
-      let start = 1.0 / SqrtF(PowF(SqrtF(d.X * d.X + d.Y * d.Y) / 3.0, 2.0) + PowF(d.Z / 1.5, 2.0));
-      let result: TraceResult;
-      queries.SyncRaycastByQueryFilter(origin + d * start, origin + d * this.acousticsRayRange, filter, result, false, false);
-      if TraceResult.IsValid(result) && !StrBeginsWith(NameToString(result.material), "vehicle") {
-        ArrayPush(distances, Vector4.Distance(origin, Vector4.Vector3To4(result.position)));
-        ArrayPush(materials, result.material);
-      } else {
-        ArrayPush(distances, -1.0);
-        ArrayPush(materials, n"");
-      }
-    }
-    this.AcousticsHits(origin, distances, materials);
-  }
-
 
   public static func Get() -> ref<FlightAudio> {
     return FlightSystem.GetInstance().audio;
   }
 
-  private let m_positionProviders: ref<inkHashMap>;
-  private let m_orientationProviders: ref<inkHashMap>;
-  private let m_positions: ref<inkHashMap>;
-  private let m_orientations: ref<inkHashMap>;
-  private let slots: array<CName>;
   private let uiBlackboard: wref<IBlackboard>;
   private let menuCallback: ref<CallbackHandle>;
   public let isInMenu: Bool;
@@ -162,71 +104,12 @@ public native class FlightAudio extends IScriptable {
   public static func Create() -> ref<FlightAudio> {
     let self = new FlightAudio();
 
-    self.m_positionProviders = new inkHashMap();
-    self.m_positions = new inkHashMap();
-    self.m_orientationProviders = new inkHashMap();
-    self.m_orientations = new inkHashMap();
-    self.slots = [
-      // n"steering_wheel",
-      // n"roofhatch",
-      // n"glove_box",
-      // n"Base",
-      // n"dseat_a",
-      // n"dseat_b",
-      // n"bumper_front_a",
-      // n"bumper_front_b",
-      // n"mirror_front_left",
-      // n"mirror_front_right",
-      // n"wheel_front",
-      // n"wheel_back",
-      // n"wheel_front_left",
-      // n"wheel_front_right",
-      // n"wheel_back_left",
-      // n"wheel_back_right",
-      // n"bumper_back",
-      n"window_front_left_a",
-      n"window_front_right_a"
-    ];
-
-    // if IsDefined(self.uiBlackboard) && IsDefined(self.menuCallback) {
-    //   self.uiBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UI_System.IsInMenu, self.menuCallback);
-    // }
-    // if IsDefined(self.uiGameDataBlackboard) && IsDefined(self.popupCallback) {
-    //   self.uiGameDataBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown, self.popupCallback);
-    // }
-    
     LTBF_RegisterListener(self);
 
     return self;
   }
   
   public cb func Initialize() {
-    this.m_positionProviders = new inkHashMap();
-    this.m_positions = new inkHashMap();
-    this.m_orientationProviders = new inkHashMap();
-    this.m_orientations = new inkHashMap();
-    this.slots = [
-      // n"steering_wheel",
-      // n"roofhatch",
-      // n"glove_box",
-      // n"Base",
-      // n"dseat_a",
-      // n"dseat_b",
-      // n"bumper_front_a",
-      // n"bumper_front_b",
-      // n"mirror_front_left",
-      // n"mirror_front_right",
-      // n"wheel_front",
-      // n"wheel_back",
-      // n"wheel_front_left",
-      // n"wheel_front_right",
-      // n"wheel_back_left",
-      // n"wheel_back_right",
-      // n"bumper_back",
-      n"window_front_left_a",
-      n"window_front_right_a"
-    ];
-    
     LTBF_RegisterListener(this);
   }
 
@@ -265,141 +148,10 @@ public native class FlightAudio extends IScriptable {
     this.isPopupShown = isShown;
   }
 
-  public func GetGameVolume() -> Float {
-    let gameInstance = FlightSystem.GetInstance().gameInstance;
-    // Do not check TimeSystem.IsPausedState() here: that flag is the in-game clock pause that
-    // quests and races set (Chipping In, act 2 transitions, race starts) and sometimes never clear,
-    // which left flight audio silent for the rest of the session. The real pause menu is covered by
-    // isInMenu and by FlightSystem::OnGamePaused/OnGameResumed on the native side.
-    if this.isInMenu ||
-      GameInstance.GetTimeSystem(gameInstance).IsTimeDilationActive(n"HubMenu") || 
-      GameInstance.GetTimeSystem(gameInstance).IsTimeDilationActive(n"WorldMap")
-    {
-      return 0.0;
-    }
-    let volume = 1.0;
-    let master = Cast<Float>((GameInstance.GetSettingsSystem(gameInstance).GetVar(n"/audio/volume", n"MasterVolume") as ConfigVarInt).GetValue()) / 100.0;
-    let sfx = Cast<Float>((GameInstance.GetSettingsSystem(gameInstance).GetVar(n"/audio/volume", n"SfxVolume") as ConfigVarInt).GetValue()) / 100.0;
-    volume *= master * sfx;
-
-    // might need to handle just the scanning system's dilation, and the pause menu
-    if GameInstance.GetTimeSystem(gameInstance).IsTimeDilationActive(n"radialMenu") {
-      volume *= 0.1;
-    }
-  
-    return volume;
+  // where the entity's slot is in the world
+  public static func SlotPosition(entity: ref<Entity>, slot: CName) -> Vector4 {
+    let p: Vector4;
+    IPositionProvider.CreateSlotPositionProvider(entity, slot).CalculatePosition(p);
+    return p;
   }
-
-  public func GetEngineVolume() -> Float {
-    return this.engineVolume;
-  }
-
-  public func GetWindVolume() -> Float {
-    return this.windVolume;
-  }
-
-  public func GetWarningVolume() -> Float {
-    return this.warningVolume;
-  }
-
-  public func AddSlotProvider(entity: ref<Entity>, slot: CName) {
-    this.SetPositionProvider(slot, IPositionProvider.CreateSlotPositionProvider(entity, slot));
-    // this.SetOrientationProvider(slot, IOrientationProvider.CreateEntityOrientationProvider(null, slot, entity));
-  }
-
-  public func AddSlotProviders(entity: ref<Entity>) {
-    for slot in this.slots {
-      this.SetPositionProvider(slot, IPositionProvider.CreateSlotPositionProvider(entity, slot));
-      // this.SetOrientationProvider(slot, IOrientationProvider.CreateEntityOrientationProvider(null, slot, entity));
-    }
-  }
-  
-  public func UpdateSlotProvider(slot: CName) {
-    this.UpdatePosition(slot);
-    // this.UpdateOrientation(slot);
-  }
-
-  public func UpdateSlotProviders() {
-    for slot in this.slots {
-      this.UpdateSlotProvider(slot);
-    }
-  }
-
-  // public func DrawSlotPositions(ui: ref<FlightControllerUI>) {
-  //   for slot in this.slots {
-  //     let position = this.GetPosition(slot);
-  //     ui.DrawMark(position);
-  //     ui.DrawText(position, NameToString(slot));
-  //   }
-  // }
-
-	public func UpdatePosition(name: CName) -> Void {
-		let key: Uint64 = TDBID.ToNumber(TDBID.Create(NameToString(name)));
-		if this.m_positionProviders.KeyExist(key) {
-      let position = new Vector4Wrapper();
-		  (this.m_positionProviders.Get(key) as IPositionProvider).CalculatePosition(position.vector);
-      if this.m_positions.KeyExist(key) {
-        this.m_positions.Set(key, position);
-      } else {
-        this.m_positions.Insert(key, position);
-      }
-    }
-  }
-
-	// public func UpdateOrientation(name: CName) -> Void {
-	// 	let key: Uint64 = TDBID.ToNumber(TDBID.Create(NameToString(name)));
-	// 	if this.m_orientationProviders.KeyExist(key) {
-  //     let orientation = new OrientationWrapper();
-	// 	  (this.m_orientationProviders.Get(key) as EntityOrientationProvider).CalculateOrientation(orientation.quaternion);
-  //     if this.m_orientations.KeyExist(key) {
-  //       this.m_orientations.Set(key, orientation);
-  //     } else {
-  //       this.m_orientations.Insert(key, orientation);
-  //     }
-  //   }
-	// }
-
-	public func GetPosition(name: CName) -> Vector4 {
-    let key: Uint64 = TDBID.ToNumber(TDBID.Create(NameToString(name)));
-		if this.m_positions.KeyExist(key) {
-		  return (this.m_positions.Get(key) as Vector4Wrapper).vector;
-    } else {
-      return Vector4.EmptyVector();
-    }
-  }
-
-	public func SetPositionProvider(name: CName, positionProvider: ref<IPositionProvider>) -> Void {
-		let key: Uint64 = TDBID.ToNumber(TDBID.Create(NameToString(name)));
-
-		if this.m_positionProviders.KeyExist(key) {
-			this.m_positionProviders.Set(key, positionProvider);
-		} else {
-			this.m_positionProviders.Insert(key, positionProvider);
-		}
-    this.UpdatePosition(name);
-	}
-
-	// public func SetOrientationProvider(name: CName, orientationProvider: ref<IOrientationProvider>) -> Void {
-	// 	let key: Uint64 = TDBID.ToNumber(TDBID.Create(NameToString(name)));
-
-	// 	if this.m_orientationProviders.KeyExist(key) {
-	// 		this.m_orientationProviders.Set(key, orientationProvider);
-	// 	} else {
-	// 		this.m_orientationProviders.Insert(key, orientationProvider);
-	// 	}
-  //   this.UpdateOrientation(name);
-	// }
-}
-
-public class Vector4Wrapper {
-  public let vector: Vector4;
-  public static func Create(v: Vector4) -> ref<Vector4Wrapper> {
-    let vw = new Vector4Wrapper();
-    vw.vector = v;
-    return vw;
-  }
-}
-
-public class OrientationWrapper {
-  public let quaternion: Quaternion;
 }

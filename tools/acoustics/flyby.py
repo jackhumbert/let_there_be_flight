@@ -38,7 +38,7 @@ from probe import Probe  # noqa: E402
 from render import acoustics, render  # noqa: E402
 
 NAVMAP = os.environ.get("LTBF_NAVMAP", os.path.join(paths.WORK, "heightmap", "navmap.bin"))
-ASSETS = os.path.join(paths.REPO, "src", "fmod_studio", "Assets")
+ASSETS = os.path.join(paths.REPO, "tools", "acoustics", "assets")
 PROBE_HZ = 15.0
 
 

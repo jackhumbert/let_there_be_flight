@@ -3,13 +3,14 @@
 // unspatialized as the stems' dry track sums the FMOD events, on the stems' timeline (<base>.json),
 // so the two compare sample for sample.
 //
-//   engine_synth <stems base> <out prefix> [--voices] [--tune name=dB,...] [--character text]
+//   engine_synth <stems base> <out prefix> [--voices] [--tune name=dB,...] [--character text] [--sound name]
 //                [--acoustics navmap.bin [--air]]
 //
 // Writes <prefix>.wav (stereo float, the stems' format); --voices also <prefix>_<voice>.wav (mono
 // float), each voice's part for tools/acoustics/engine_fit.py. --tune adds dB to a voice's level by
 // name (surge, lift, ..., master) and sets source (dB), sine and detune (st). --character keeps or drops
-// the FMOD event's effects (EngineSynth::ParseCharacter: fmod, clean, cone=0,...).
+// the FMOD event's effects (EngineSynth::ParseCharacter: fmod, clean, cone=0,...). --sound picks the
+// source (EngineSynth::ParseSound: drone, bullroarer, fan).
 //
 // --acoustics also writes <prefix>_wet.wav: the sum through the plugin's echoes (Reflections) along the
 // run's own path, the car's place and axes from its four thrusters' logged positions, probed in the
@@ -216,7 +217,7 @@ bool Echoes(const char *aNavmap, bool aAir, const std::vector<Row> &aRows, doubl
 
 int main(int argc, char **argv) {
   if (argc < 3) {
-    std::fprintf(stderr, "engine_synth <stems base> <out prefix> [--voices] [--tune name=dB,...] [--character text] "
+    std::fprintf(stderr, "engine_synth <stems base> <out prefix> [--voices] [--tune name=dB,...] [--character text] [--sound name] "
                          "[--acoustics navmap.bin [--air]]\n");
     return 2;
   }
@@ -234,6 +235,11 @@ int main(int argc, char **argv) {
     } else if (std::strcmp(argv[a], "--character") == 0 && a + 1 < argc) {
       if (!EngineSynth::ParseCharacter(argv[++a], tuning.character)) {
         std::fprintf(stderr, "--character %s: unknown\n", argv[a]);
+        return 2;
+      }
+    } else if (std::strcmp(argv[a], "--sound") == 0 && a + 1 < argc) {
+      if (!EngineSynth::ParseSound(argv[++a], tuning.sound)) {
+        std::fprintf(stderr, "--sound %s: unknown\n", argv[a]);
         return 2;
       }
     } else if (std::strcmp(argv[a], "--tune") == 0 && a + 1 < argc) {

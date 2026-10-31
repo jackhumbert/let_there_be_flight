@@ -38,10 +38,6 @@ public native class FlightSystem extends IGameSystem {
     this.player = player;
     this.soundListener = player.FindComponentByName(n"soundListener") as IPlacedComponent;
     this.gameInstance = player.GetGame();
-    // if !IsDefined(this.audio) {
-    //   this.audio = FlightAudio.Create();
-    //   FlightLog.Info("[FlightSystem] FlightAudio Created");
-    // }
     this.ctlr = FlightController.GetInstance();
     // this.tppCamera = player.FindComponentByName(n"vehicleTPPCamera") as vehicleTPPCameraComponent;
     // this.soundListener = this.tppCamera;

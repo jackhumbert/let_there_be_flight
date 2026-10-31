@@ -30,10 +30,11 @@ NAVMAP = os.environ.get("LTBF_NAVMAP", os.path.join(paths.WORK, "heightmap", "na
 # name, --character, air absorption
 VARIANTS = [
     ("as FMOD", "fmod", False),
-    ("no cone", "cone=0", False),
-    ("no distortion", "distortion=0", False),
-    ("no darkness", "darkness=0", False),
-    ("no grit", "grit=0", False),
+    # each FMOD effect dropped in turn (spelled out: the synth's default is clean)
+    ("no cone", "cone=0,distortion=1,darkness=1,grit=1", False),
+    ("no distortion", "cone=1,distortion=0,darkness=1,grit=1", False),
+    ("no darkness", "cone=1,distortion=1,darkness=0,grit=1", False),
+    ("no grit", "cone=1,distortion=1,darkness=1,grit=0", False),
     ("air absorption", "fmod", True),
     ("clean", "clean", False),
     ("clean + air", "clean", True),

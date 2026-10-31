@@ -99,7 +99,7 @@ void Probe::FloorCeiling(const Vec3 &aPos, float &aFloor, float &aCeiling) {
   aCeiling = std::isinf(top) ? kInf : top + map.CarHalfHeight() - aPos.z;
 }
 
-std::array<Vec3, kNearRays> Probe::NearRays(const Vec3 &aForward, const Vec3 &aUp) {
+std::array<Vec3, kNearRays> Probe::NearRays(const Vec3 &aForward, const Vec3 &aUp, float aYawOffsetDeg) {
   std::array<Vec3, kNearRays> rays;
   rays[0] = {0, 0, -1};
   rays[1] = {0, 0, 1};
@@ -113,7 +113,7 @@ std::array<Vec3, kNearRays> Probe::NearRays(const Vec3 &aForward, const Vec3 &aU
     const float base = std::atan2(side * right.y, side * right.x);
     for (float p : pitches) {
       for (float y : yaws) {
-        float a = base + y * rad, e = p * rad;
+        float a = base + (y + aYawOffsetDeg) * rad, e = p * rad;
         rays[k++] = {std::cos(e) * std::cos(a), std::cos(e) * std::sin(a), std::sin(e)};
       }
     }
@@ -122,21 +122,26 @@ std::array<Vec3, kNearRays> Probe::NearRays(const Vec3 &aForward, const Vec3 &aU
 }
 
 float Probe::Fan(const Vec3 &aOrigin, const std::array<Vec3, kNearRays> &aRays, int aFirst, const LiveHits *aLive,
-                 float &aMapNearest, float &aReflectivity, int &aRay, int &aLiveRays, Features &aFeatures) {
+                 float &aMapNearest, Bands &aReflectivity, int &aRay, int &aLiveRays, Features &aFeatures) {
   float nearest = kInf;
   aMapNearest = kInf;
-  aReflectivity = -1;
+  aReflectivity = Bands{};
   aRay = -1;
   for (int k = aFirst; k < aFirst + kFanRays; ++k) {
     float d = March(aOrigin, aRays[k]);
     aMapNearest = std::min(aMapNearest, d);
-    float reflectivity = -1;
+    Bands reflectivity;
     if (aLive && aLive->distance[k] >= 0) {
       d = aLive->distance[k];
       reflectivity = aLive->reflectivity[k];
       ++aLiveRays;
     }
     aFeatures.nearDistance[k] = d;
+    if (aLive && aLive->distance[k] >= 0) {
+      // the ray as cast (the live casts are turned a little each time)
+      aFeatures.nearDir[k] = Normalized({aLive->position[k].x - aLive->origin.x, aLive->position[k].y - aLive->origin.y,
+                                         aLive->position[k].z - aLive->origin.z});
+    }
     aFeatures.nearReflectivity[k] = reflectivity;
     if (d < nearest) {
       nearest = d;
@@ -156,6 +161,8 @@ Features Probe::operator()(const Vec3 &aPos, const Vec3 &aForward, const Vec3 &a
   const auto rays = NearRays(aForward, aUp);
   f.rightDir = {rays[2 + 7].x, rays[2 + 7].y, 0}; // the right fan's middle ray: yaw 0, pitch 0
   f.rightDir = Normalized(f.rightDir);
+  f.leftNormal = {-f.rightDir.x, -f.rightDir.y, -f.rightDir.z};
+  f.rightNormal = f.rightDir;
   FloorCeiling(aPos, f.floor, f.ceiling);
   f.floorMap = f.floor;
   f.ceilingMap = f.ceiling;
@@ -171,9 +178,9 @@ Features Probe::operator()(const Vec3 &aPos, const Vec3 &aForward, const Vec3 &a
       ++f.liveRays;
     }
   }
+  f.nearDir = rays;
   f.right = Fan(aPos, rays, 2, aLive, f.rightMap, f.rightReflectivity, f.rightRay, f.liveRays, f);
   f.left = Fan(aPos, rays, 2 + kFanRays, aLive, f.leftMap, f.leftReflectivity, f.leftRay, f.liveRays, f);
-  f.nearDir = rays;
   f.nearDistance[0] = f.floor;
   f.nearDistance[1] = f.ceiling;
   f.nearReflectivity[0] = f.floorReflectivity;

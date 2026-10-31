@@ -1,11 +1,11 @@
 # Engine synth
 
 A plain thruster sound made in C++, driven by the same parameters the FMOD event `vehicle3_TPP`
-takes, so the acoustics (`acoustics.md`) do the space round the car instead of FX baked into the
-event. Built behind a switch (`FlightAudio.engineSource`, 1 = the synth; `LtbfBridge.EngineSource`);
-the FMOD event stays the default.
+took, so the acoustics (`acoustics.md`) do the space round the car instead of FX baked into the
+event. It is the only thruster sound, on every flying car; FMOD Studio and the event are gone
+(`audio-native.md`). "What the FMOD event did" below is kept as the model's reference.
 
-## What FMOD does now
+## What the FMOD event did
 
 Each thruster (`IFlightThruster`) starts `vehicle3_TPP` with `StartWithPitch(id, ..., pitch)`, pitch
 `clamp(700 / mass + 0.5, 0.5, 1.5)`, and every frame `UpdateEvent` sets the event's 3D place, a
@@ -55,8 +55,7 @@ event's curves, one home), `Synth` (one thruster), `Channels` (the plugin's FMOD
 ## In the plugin
 
 - `FlightAudio.StartEngine(id, pitch)`, `UpdateEngine(id, matrix, volume, update)`, `StopEngine(id)`
-  take what `StartWithPitch` and `UpdateEvent` take; `IFlightThruster` calls one pair or the other by
-  `engineSource` when it starts (flight off and on to switch).
+  are fed by the plugin from each thruster (`Audio/Inputs/Gather`), not by the scripts.
 - Each thruster is a Core channel (`System::playDSP`, in the Engine bus's channel group): the synth as a
   generator DSP (stereo, the same in both, as the event's loops: the spatializer folds the pair into
   one object, 6 dB over a mono source), the acoustics DSP (`Acoustics::CreateDsp`, the echoes, at the mixer's rate: no
@@ -70,10 +69,28 @@ event's curves, one home), `Synth` (one thruster), `Channels` (the plugin's FMOD
 - Cost in game: 1.05% of a core per thruster on the mixer (4% for four), 112 us a block, worst block
   0.9 to 1.7 ms. Offline about 200 ns a thruster frame.
 
+## Sounds: what the voices start from
+
+`Tuning::sound` (`Sources.hpp`) picks each axis voice's source; the curves, EQs and gains after it
+are the same for all. Live: `LtbfBridge.EngineSound("drone" | "bullroarer" | "fan")`; offline:
+`engine_synth ... --sound name`. The research behind them: `docs/research/thruster-sound-sources.md`.
+
+- `drone` (default): the old loops, two detuned saws and a sine (below).
+- `bullroarer`: a harmonic series (-10, -10, -12, -15, -19, -23, -25 dB for k = 2..8, as measured)
+  an octave over the drone's fundamental, times each thruster's slat (up to 1.5 st either way, so a
+  car's four beat); the orbit (1.3 to 2.5 Hz with the axis held) swells it +-45% and bends its pitch
+  +-3%; the cord glides each spin down to 62% over 5 to 10 s, then stops and restarts (0.35 s);
+  braking twists faster, damage makes the orbit uneven and restarts hang; air noise 10 dB under.
+- `fan`: blade-pass at 8x the drone's fundamental with 3 harmonics (0, -5, -11, -17 dB), a shaft hum
+  (-16 dB, up to -4 with damage), turbine partials at 2.37x and 3.71x (-20 dB), each wobbling (8 cents,
+  2 dB, 0.2 to 0.25 s), a 0.25 s spool and a band of rush at 1.5x blade-pass, louder held and braking.
+
+Offline cost on the 10-31 flight: drone 1.0%, bullroarer 1.5%, fan 2.2% of a core a thruster.
+
 ## Switches: which FMOD effects to keep
 
 The event's effects were made by hand to sound like a space; with the acoustics doing that from the
-city, some work against it. `Character` (Synth.hpp) keeps or drops each, all on by default (the event):
+city, some work against it. `Character` (Synth.hpp) keeps or drops each; all off by default ("clean", Jack's pick by ear), all on is the event:
 
 - `cone`: the Cone return, up to +7 dB when a thruster faces the listener, from the camera's angle.
 - `distortion`: FMOD's three distortion stages. Off, each keeps its level behaviour as a gain following
@@ -87,7 +104,7 @@ And on the echoes, `Tuning::airAbsorption` (Reflections): each echo low-passed b
 16 kHz near, 8 kHz by 60 m, 4 kHz by 180 m), the reverb's lines at 5 kHz.
 
 In game, at once: `LtbfBridge.EngineCharacter("clean")`, `("fmod")` or `("darkness=0,grit=0")`, and
-`LtbfBridge.AcousticsAir(true)`. These and the other audio setters (`EngineSource`, `Acoustics`,
+`LtbfBridge.AcousticsAir(true)`. These and the other audio setters (`Acoustics`,
 `AcousticsLive`, `AcousticsTest`, `AcousticsStems`) answer with what they set and then the audio as the
 plugin has it (`LtbfBridge.AudioStatus`: who plays the thrusters, the character, echoes, air, test sound,
 ray source, stems), or a line starting `error:` when the input was wrong and nothing changed. Offline, for any recorded run with stems: `tools/acoustics/
@@ -104,8 +121,7 @@ nothing there (the camera behind and above, the thrusters never facing it).
 
 - The stems' `<base>_params.csv`: each thruster's parameters per frame (wall clock, id, start pitch,
   volume, position, every `FlightAudioUpdate` field, the cone angle).
-- `../cp2077_tools/mods/let_there_be_flight/axis_sweep.py`: each control held in turn, recorded with stems (`--call
-  LtbfBridge.EngineSource,1` for the synth).
+- `../cp2077_tools/mods/let_there_be_flight/axis_sweep.py`: each control held in turn, recorded with stems.
 - `tools/acoustics/engine_synth.cpp` (target `engine_synth`): a params log through the synth on the
   stems' timeline, `--voices` for each voice, `--tune` to try levels, `--character` for the switches,
   `--acoustics navmap.bin [--air]` for the echoes along the run's path.
@@ -120,5 +136,5 @@ nothing there (the camera behind and above, the thrusters never facing it).
 On the FMOD axis sweep (the inputs it was fitted on): every control held within 1.6 dB rms of the
 event, brightness close (centroids 260..1440 Hz, within about 100 Hz on most), the same lowest
 partial, loudness r 0.89. On a free roam it was not fitted on: 2.4 dB quieter, r 0.86. Left: at speed
-with nothing held FMOD is about 3 dB louder and brighter; pitch, roll and yaw centroids run low. The
-FMOD event stays the default until it is heard in game.
+with nothing held FMOD is about 3 dB louder and brighter; pitch, roll and yaw centroids run low.
+Jack approved it by ear in game and it became the only thruster sound; tuning by ear comes later.

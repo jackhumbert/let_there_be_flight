@@ -181,3 +181,6 @@ RED4EXT_ASSERT_OFFSET(FlightComponent, configuration, 0xE0);
 RED4EXT_ASSERT_OFFSET(FlightComponent, linearDamp, 0xF8);
 RED4EXT_ASSERT_OFFSET(FlightComponent, angularDamp, 0xFC);
 //char (*__kaboom)[offsetof(FlightComponent, sys] = 1;
+
+// FlightSettings' Float as Mod Settings left it in the class defaults
+float GetFlightSettingsFloat(RED4ext::CRTTISystem *rtti, RED4ext::CName aProperty, float aFallback);

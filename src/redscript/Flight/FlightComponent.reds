@@ -282,8 +282,6 @@ public native class FlightComponent extends GameComponent {
       autopilotMode.Deinitialize();
     }
 
-    this.audioUpdate = new FlightAudioUpdate();
-
     // if ArraySize(this.configuration.thrusters) == 0 {
     //   this.configuration.thrusters = IFlightThruster.CreateThrusters(this);
     // }
@@ -422,9 +420,6 @@ public native class FlightComponent extends GameComponent {
       this.SetupVehicleTPPBBListener();
       // timing marker, see docs/research/mount-stutter-analysis.md
       FlightLog.Info("[FlightComponent] OnMountingEvent done");
-      // try without wind
-      // FlightAudio.Get().Start("windLeft", "wind_TPP");
-      // FlightAudio.Get().Start("windRight", "wind_TPP");
       // this.uiControl = FlightControllerUI.Create(this.ui_info.GetGameController(), this.ui_info.GetGameController().GetRootCompoundWidget());
       // this.uiControl.Setup(this.stats);
     } else {
@@ -438,9 +433,6 @@ public native class FlightComponent extends GameComponent {
       this.sys.ctlr.Enable();
       if this.active {
         this.sys.ctlr.Activate(true);
-        // this.sys.audio.Stop("otherVehicle" + ToString(EntityID.GetHash(this.GetVehicle().GetEntityID())));
-        //this.sys.audio.Play("vehicle3_on");
-        // this.sys.audio.StartWithPitch("playerVehicle", "vehicle3_TPP", this.GetPitch());
       }
     }
     let normal: Vector4;
@@ -470,9 +462,6 @@ public native class FlightComponent extends GameComponent {
       mountChild.QueueEvent(vehicleFlight);
 
       this.UnregisterVehicleTPPBBListener();
-      // try without wind
-      // FlightAudio.Get().Stop("windLeft");
-      // FlightAudio.Get().Stop("windRight");
       // a direct seat swap mounts the next vehicle before this unmount finishes, so only clear our own entry
       if this.sys.playerComponent == this {
         this.sys.playerComponent = null;
@@ -480,8 +469,6 @@ public native class FlightComponent extends GameComponent {
       this.isPlayerMounted = false;
       if this.active {
         this.sys.ctlr.Deactivate(true);
-        // this.sys.audio.Stop("playerVehicle");
-        // this.sys.audio.StartWithPitch("otherVehicle" + ToString(EntityID.GetHash(this.GetVehicle().GetEntityID())), "vehicle3_TPP", this.GetPitch());
       }
       this.sys.ctlr.ResetInputs();
       this.sys.ctlr.Disable();
@@ -490,11 +477,6 @@ public native class FlightComponent extends GameComponent {
       FlightLog.Info("[FlightComponent] OnUnmountingEvent done");
     }
   }
-
-  // protected cb func OnVehicleHasExplodedEvent(evt: ref<VehicleHasExplodedEvent>) -> Bool {
-  //   this.sys.audio.Stop("vehicleDestroyed" + this.GetUniqueID());
-  //   this.Deactivate(true);
-  // }
 
   protected cb func OnVehicleFlightModeChangeEvent(evt: ref<VehicleFlightModeChangeEvent>) -> Bool {
     this.modes[this.mode].Deactivate();
@@ -519,11 +501,9 @@ public native class FlightComponent extends GameComponent {
 
   protected cb func OnVehicleWaterEvent(evt: ref<VehicleWaterEvent>) -> Bool {
     if evt.isInWater  {
-      // this.audioUpdate.water = 1.0;
-      FlightAudio.Get().UpdateParameter("water", 1.0);
+      FlightAudio.Get().SetWater(1.0);
     } else {
-      // this.audioUpdate.water = 0.0;
-      FlightAudio.Get().UpdateParameter("water", 0.0);
+      FlightAudio.Get().SetWater(0.0);
     }
   }
 
@@ -591,14 +571,8 @@ public native class FlightComponent extends GameComponent {
 
       if this.isPlayerMounted {
         this.sys.ctlr.Activate(silent);
-        FlightAudio.Get().Play("vehicle3_on");
-        // this.sys.audio.StartWithPitch("playerVehicle", "vehicle3_TPP", this.GetPitch());
-        // this.sys.audio.Start("leftFront", "vehicle3_TPP");
-        // this.sys.audio.Start("rightFront", "vehicle3_TPP");
-        // this.sys.audio.Start("leftRear", "vehicle3_TPP");
-        // this.sys.audio.Start("rightRear", "vehicle3_TPP");
+        FlightAudio.Get().PlayOneShot("vehicle3_on", this.GetVehicle());
       }
-      // this.sys.audio.StartWithPitch("vehicle" + this.GetUniqueID(), "vehicle3_TPP", this.GetPitch());
       this.active = true;
       this.hasUpdate = true;
 
@@ -639,7 +613,7 @@ public native class FlightComponent extends GameComponent {
   protected func OnUpdate(timeDelta: Float) -> Void {
     if this.GetVehicle().IsDestroyed() {
       if !this.isDestroyed {
-        FlightAudio.Get().Start("vehicleDestroyed" + this.GetUniqueID(), "vehicle3_destroyed");
+        FlightAudio.Get().StartLoop("vehicleDestroyed" + this.GetUniqueID(), "vehicle3_destroyed", this.GetVehicle());
         this.alarmIsPlaying = true;
         this.isDestroyed = true;
       }
@@ -662,7 +636,6 @@ public native class FlightComponent extends GameComponent {
 
     if timeDelta <= 0.0 {
       this.stats.UpdateDynamic();
-      this.UpdateAudioParams(1.0/60.0);
 
       for thruster in this.configuration.thrusters {
         thruster.Update(this.smoothForce, this.smoothTorque);
@@ -756,8 +729,7 @@ public native class FlightComponent extends GameComponent {
 
 
 
-    // process user-inputted force/torque in visuals/audio
-    this.UpdateAudioParams(timeDelta, force, torque);
+    // what the thrusters get; the plugin reads smoothForce for the sound (Audio/Inputs/Gather)
     this.smoothForce = force;
     this.smoothTorque = torque;
     for thruster in this.configuration.thrusters {
@@ -843,7 +815,7 @@ public native class FlightComponent extends GameComponent {
 
   private final func StopDestroyedAlarm() -> Void {
     if this.isDestroyed && this.hasExploded && this.alarmIsPlaying {
-      FlightAudio.Get().Stop("vehicleDestroyed" + this.GetUniqueID());
+      FlightAudio.Get().StopLoop("vehicleDestroyed" + this.GetUniqueID());
       this.alarmIsPlaying = false;
     }
   }
@@ -874,15 +846,9 @@ public native class FlightComponent extends GameComponent {
     if this.isPlayerMounted {
       this.sys.ctlr.Deactivate(silent);
       if !silent {
-        FlightAudio.Get().Play("vehicle3_off");
+        FlightAudio.Get().PlayOneShot("vehicle3_off", this.GetVehicle());
       }
-      // this.sys.audio.Stop("playerVehicle");
-      // this.sys.audio.Stop("leftFront");
-      // this.sys.audio.Stop("rightFront");
-      // this.sys.audio.Stop("leftRear");
-      // this.sys.audio.Stop("rightRear");
     }
-    // this.sys.audio.Stop("vehicle" + this.GetUniqueID());
 
     this.configuration.OnDeactivationCore();
   }
@@ -1110,131 +1076,6 @@ public native class FlightComponent extends GameComponent {
   public func ProcessImpact(impact: Float) {
     this.collisionTimer = (FlightSettings.GetFloat("collisionRecoveryDelay") + FlightSettings.GetFloat("collisionRecoveryDuration")) * (1.0 - (impact * this.GetFlightMode().collisionPenalty));
     // this.ui_info.StartGlitching(impact, FlightSettings.GetFloat("collisionRecoveryDuration") + impact);
-  }
-
-  public let audioUpdate: ref<FlightAudioUpdate>;
-
-  public func UpdateAudioParams(timeDelta: Float, force: Vector4, torque: Vector4) -> Void {
-    let ratio = 1.0;
-    if this.collisionTimer < FlightSettings.GetFloat("collisionRecoveryDelay") + FlightSettings.GetFloat("collisionRecoveryDuration") {
-      ratio = MaxF(0.0, (this.collisionTimer - FlightSettings.GetFloat("collisionRecoveryDelay")) / FlightSettings.GetFloat("collisionRecoveryDuration"));
-    }
-
-    let vehicleID = Cast<StatsObjectID>(this.GetVehicle().GetEntityID());
-    let vehHealthPercent = GameInstance.GetStatPoolsSystem(this.GetVehicle().GetGame()).GetStatPoolValue(vehicleID, gamedataStatPoolType.Health);
-    // this.audioUpdate.damage = 1.0 - MaxF(GameInstance.GetStatPoolsSystem(this.GetVehicle().GetGame()).GetStatPoolValue(Cast<StatsObjectID>(this.GetVehicle().GetEntityID()), gamedataStatPoolType.Health, false) + ratio, 1.0);
-    if this.isDestroyed {
-      this.audioUpdate.damage = 0.25;
-    } else {
-      this.audioUpdate.damage = (1.0 - (vehHealthPercent / 100.0)) * 0.2;
-    }
-    let autopilot = this.GetFlightMode() as FlightModeAutopilot;
-    if this.isPlayerMounted && IsDefined(autopilot) {
-      // The Autopilot flies without the player's inputs, which sat at zero and left the engine
-      // nearly silent at 90 m/s (2026-10-27): what it commands instead. Surge and sway from its
-      // own fields (this.surge and the rest stay the player's: the Autopilot reads them to see
-      // when the player takes over, and its own values there held it in a takeover, flying
-      // backwards out of the map), lift from its thrust against gravity (force is in the car's
-      // frame), and the turns from how the car is actually rotating (body rates, rad/s).
-      let g = 9.81 * autopilot.gravityFactor;
-      let w = this.stats.d_angularVelocity;
-      this.audioUpdate.surge = autopilot.commandSurge * ratio;
-      this.audioUpdate.sway = autopilot.commandSway * ratio;
-      this.audioUpdate.lift = ClampF((force.Z - g) / MaxF(autopilot.standardModeLiftFactor, 1.0), -1.0, 1.0) * ratio;
-      this.audioUpdate.yaw = ClampF(w.Z, -1.0, 1.0) * ratio;
-      this.audioUpdate.pitch = ClampF(w.X, -1.0, 1.0) * ratio;
-      this.audioUpdate.roll = ClampF(w.Y / 1.5, -1.0, 1.0) * ratio;
-    } else if this.isPlayerMounted {
-      // more responsive-sounding
-      this.audioUpdate.surge = this.sys.ctlr.surge.GetInput() * ratio;
-      this.audioUpdate.yaw = this.sys.ctlr.yaw.GetInput() * ratio;
-      this.audioUpdate.sway = this.sys.ctlr.sway.GetInput() * ratio;
-      if IsDefined(this.GetFlightMode() as FlightModeDrone) {
-        this.audioUpdate.lift = this.sys.ctlr.lift.GetInput() * ratio;
-        this.audioUpdate.roll = this.sys.ctlr.roll.GetInput() * ratio;
-        this.audioUpdate.pitch = this.sys.ctlr.pitch.GetInput() * ratio;
-      } else {
-        this.audioUpdate.lift = (Vector4.Dot(Vector4.Normalize(force), this.stats.d_localUp) * 0.1 + this.sys.ctlr.lift.GetInput()) * ratio;
-        this.audioUpdate.roll = this.roll * ratio;
-        this.audioUpdate.pitch = this.pitch * ratio;
-      }
-    } else {
-      this.audioUpdate.surge = this.surge * ratio;
-      this.audioUpdate.lift = (Vector4.Dot(Vector4.Normalize(force), this.stats.d_localUp) * 0.1 + this.lift) * ratio;
-      this.audioUpdate.roll = this.roll * ratio;
-      this.audioUpdate.pitch = this.pitch * ratio;
-      this.audioUpdate.yaw = this.yaw * ratio;
-    }
-    // if this.mode == 3 {
-    //   this.audioUpdate.surge *= 0.5;
-    //   this.audioUpdate.surge += this.lift * ratio * 0.5;
-    // }
-    // this.audioUpdate.lift = this.lift * ratio;
-    // this.audioUpdate.brake = this.brake;
-    this.audioUpdate.brake = MaxF(this.sys.ctlr.linearBrake.GetInput(), this.sys.ctlr.angularBrake.GetInput());
-    // this.audioUpdate.brake = Vector4.Dot(-force, this.stats.d_direction);
-
-    this.UpdateAudioParams(timeDelta);
-  }
-
-  public func UpdateAudioParams(timeDelta: Float) -> Void {
-    this.sys.audio.UpdateSlotProviders();
-
-    // let leftFrontPosition = this.sys.audio.GetPosition(n"wheel_front_left") - (this.stats.d_velocity * timeDelta);
-    // let rightFrontPosition = this.sys.audio.GetPosition(n"wheel_front_right") - (this.stats.d_velocity * timeDelta);
-    // let leftRearPosition = this.sys.audio.GetPosition(n"wheel_back_left") - (this.stats.d_velocity * timeDelta);
-    // let rightRearPosition = this.sys.audio.GetPosition(n"wheel_back_right") - (this.stats.d_velocity * timeDelta);
-
-    // try without wind
-    // let windLeftPosition = this.sys.audio.GetPosition(n"window_front_left_a"); // - (this.stats.d_velocity * timeDelta);
-    // let windRightPosition = this.sys.audio.GetPosition(n"window_front_right_a"); //- (this.stats.d_velocity * timeDelta);
-
-    // let listenerMatrix = (this.sys.player.FindComponentByName(n"soundListener") as IPlacedComponent).GetLocalToWorld();
-    // let listenerMatrix = this.sys.tppCamera.GetLocalToWorld();
-    // FlightAudio.Get().UpdateListener(Matrix.GetTranslation(listenerMatrix), Matrix.GetAxisY(listenerMatrix), Matrix.GetAxisZ(listenerMatrix));
-    // FlightAudio.Get().UpdateListener(listenerMatrix);
-
-    this.audioUpdate.speed = this.stats.d_speed;
-    this.audioUpdate.yawDiff = Vector4.GetAngleDegAroundAxis(this.stats.d_forward, this.stats.d_direction, this.stats.d_up);
-    this.audioUpdate.pitchDiff = Vector4.GetAngleDegAroundAxis(this.stats.d_forward, this.stats.d_direction, this.stats.d_right);
-
-    // engineVolume *= (ratio * 0.5 + 0.5);
-
-    // this.sys.audio.Update("leftFront", leftFrontPosition, engineVolume);
-    // this.sys.audio.Update("rightFront", rightFrontPosition, engineVolume);
-    // this.sys.audio.Update("leftRear", leftRearPosition, engineVolume);
-    // this.sys.audio.Update("rightRear", rightRearPosition, engineVolume);
-    if this.isPlayerMounted {
-      let game = this.GetVehicle().GetGame();
-      let cinematic = GameInstance.GetBlackboardSystem(game).Get(GetAllBlackboardDefs().UI_AutodriveData).GetBool(GetAllBlackboardDefs().UI_AutodriveData.CinematicCameraActive);
-      if cinematic {
-        // the cinematic camera's shots are around the car, but the player's soundListener (and the
-        // game's own listener) stays with V: hear from the camera
-        let camera = GameInstance.GetCameraSystem(game);
-        let transform: Transform;
-        if camera.GetActiveCameraWorldTransform(transform) {
-          FlightAudio.Get().SetCameraListener(transform.position, camera.GetActiveCameraForward(), camera.GetActiveCameraUp());
-        }
-      }
-      // outside for the cinematic camera's shots as for TPP (entered from FPP it kept the cabin muffle)
-      let outside = this.sys.ctlr.isTPP || cinematic;
-      this.audioUpdate.inside = outside ? MaxF(0.0, this.audioUpdate.inside - timeDelta * 4.0) : MinF(1.0, this.audioUpdate.inside + timeDelta * 4.0);
-      let audio = FlightAudio.Get();
-      let carMatrix = this.GetVehicle().GetLocalToWorld();
-      audio.UpdateAcoustics(carMatrix, audio.acoustics ? audio.acousticsGain : 0.0, this.audioUpdate.inside, audio.acousticsRaySource);
-      audio.CastAcousticRays(carMatrix, timeDelta);
-      // try without wind
-      // FlightAudio.Get().UpdateEvent("windLeft", Matrix.BuiltTranslation(windLeftPosition), 1.0, this.audioUpdate);
-      // FlightAudio.Get().UpdateEvent("windRight",  Matrix.BuiltTranslation(windRightPosition), 1.0, this.audioUpdate);
-    } else {
-      this.audioUpdate.inside = 0.0;
-    }
-    if this.active {
-      // this.sys.audio.Update("vehicle" + this.GetUniqueID(), this.GetVehicle().GetLocalToWorld(), engineVolume, this.audioUpdate);
-    }
-    if this.isDestroyed && !this.GetVehicle().GetVehicleComponent().GetPS().GetHasExploded() && this.alarmIsPlaying {
-      FlightAudio.Get().UpdateEvent("vehicleDestroyed" + this.GetUniqueID(), this.GetVehicle().GetLocalToWorld(), 1.0, this.audioUpdate);
-    }
   }
 
   private func GetUniqueID() -> String {

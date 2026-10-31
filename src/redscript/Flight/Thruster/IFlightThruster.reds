@@ -47,11 +47,6 @@ public abstract native class IFlightThruster extends IScriptable {
   public let isMotorcycle: Bool = false;
   public let isB: Bool = false;
   public let id: String;
-  public let audioUpdate: ref<FlightAudioUpdate>;
-  public let audioPitch: Float;
-  public let audioPitchSeparation: Float = 0.001;
-  // the engine synth plays this thruster (FlightAudio.engineSource when it started), not the FMOD event
-  public let engineSynth: Bool;
   public let wheelIndex: Int32;
   public let initialOrientation: Quaternion;
 
@@ -77,32 +72,22 @@ public abstract native class IFlightThruster extends IScriptable {
     }
 
     this.id = "vehicle";
-    // doesn't seem to have the data to get this here
-    // this.audioPitch = this.flightComponent.GetPitch();
     if this.isFront {
       this.id += "F";
-      // this.audioPitch *= 1.02;
     } else {
       this.id += "B";
-      // this.audioPitch *= 0.5;
-      // this.audioPitch *= 2.0;
     }
     if this.isRight {
       this.id += "R";
-      // this.audioPitch *= (1.0 + this.audioPitchSeparation);
     } else {
       this.id += "L";
-      // this.audioPitch /= (1.0 + this.audioPitchSeparation);
     }
     if this.isB {
       this.id += "B";
-      // this.audioPitch *= 0.5;
     }
     // not ready yet
     // this.id += this.flightComponent.GetUniqueID();
     this.id += FloatToString(RandRangeF(0.0, 1.0));
-    this.audioUpdate = new FlightAudioUpdate();
-  
   }
 
   public func GetLocalToWorld() -> Matrix {
@@ -195,13 +180,7 @@ public abstract native class IFlightThruster extends IScriptable {
         this.meshComponent.Toggle(true);
       }
 
-    // FlightAudio.Get().StartWithPitch(this.id, "vehicle3_TPP", this.audioPitch);
-      this.engineSynth = FlightAudio.Get().engineSource == 1;
-      if this.engineSynth {
-        FlightAudio.Get().StartEngine(this.id, this.flightComponent.GetPitch());
-      } else {
-        FlightAudio.Get().StartWithPitch(this.id, "vehicle3_TPP", this.flightComponent.GetPitch());
-      }
+      FlightAudio.Get().StartEngine(this.id, this.flightComponent.GetPitch(), Cast<Uint64>(EntityID.GetHash(this.vehicle.GetEntityID())), this.flightComponent.isPlayerMounted);
     }
   }
 
@@ -214,7 +193,7 @@ public abstract native class IFlightThruster extends IScriptable {
   public func Detach() {
     this.attached = false;
     
-    FlightAudio.Get().Stop(this.id);
+    FlightAudio.Get().StopEngine(this.id);
     
     for fx in this.fxs {
       fx.Stop();
@@ -242,11 +221,6 @@ public abstract native class IFlightThruster extends IScriptable {
       vec = Vector4.EmptyVector();
     }
     
-    let rotatedMatrix: Matrix;
-    let volume = 1.0;
-    this.audioUpdate = this.flightComponent.audioUpdate;
-    this.audioUpdate.scrape = ClampF((this.vehicle as WheeledObject).GetDampedSpringForce(this.wheelIndex) / this.vehicle.GetTotalMass(), 0.0, 1.0);
-
     if IsDefined(this.meshComponent) {
 
       let vec_og = Vector4.Vector3To4(this.meshComponent.visualScale);
@@ -288,41 +262,12 @@ public abstract native class IFlightThruster extends IScriptable {
 
       // between 0.0 & 16.0, default to 0.4
       // acc.SetInputFloat(this.GetRadiusName(), this.animRadius);
-      
-      // amount *= 0.5;
-      // this.audioUpdate.surge *= amount;
-      // this.audioUpdate.pitch *= amount;
-      // this.audioUpdate.yaw *= retroAmount;
-      // this.audioUpdate.sway *= retroAmount;
-      // this.audioUpdate.lift *= amount;
-      // this.audioUpdate.roll *= amount;
-
-      if !this.isFront {
-        volume = ClampF(this.flightComponent.stats.d_speed / 100.0, 0.0, 1.0);
-      }
-      // this.audioUpdate.pitch = retroAmount;
-      
-      let matrix = this.meshComponent.GetLocalToWorld();
-      // rotates the event cone down
-      let quat = Matrix.ToQuat(matrix) * new Quaternion(-0.707, 0.0, 0.0, 0.707);
-      rotatedMatrix = Quaternion.ToMatrix(quat);
-      rotatedMatrix.W = matrix.W;
-    }
-
-    if this.engineSynth {
-      FlightAudio.Get().UpdateEngine(this.id, rotatedMatrix, volume, this.audioUpdate);
-    } else {
-      FlightAudio.Get().UpdateEvent(this.id, rotatedMatrix, volume, this.audioUpdate);
     }
   }
 
   public func Stop() {
     if this.attached {
-      if this.engineSynth {
-        FlightAudio.Get().StopEngine(this.id);
-      } else {
-        FlightAudio.Get().Stop(this.id);
-      }
+      FlightAudio.Get().StopEngine(this.id);
       for fx in this.fxs {
         fx.Stop();
       }

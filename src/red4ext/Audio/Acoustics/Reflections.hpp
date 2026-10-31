@@ -47,7 +47,7 @@ struct Tuning {
   float jumpSeconds = 0.004f;      // a delay this far (beyond the motion) from the tap's: a new reflection
   float fadeSeconds = 0.08f;       // the crossfade to it
   float wetFrom = 0.35f;           // enclosure where the late reverb starts (full at 1)
-  bool airAbsorption = false;      // highs lost along each echo's path, and faster in the reverb
+  bool airAbsorption = true;       // highs lost along each echo's path, and faster in the reverb
   float minDelay = 0.004f;         // s
   float pan = 0.9f, panOpposite = 0.3f; // a wall's echo in its own channel and the other
 };
@@ -56,6 +56,24 @@ struct Echo {
   float delay = 0; // s, extra path over the direct sound
   float rate = 0;  // s/s, how fast the delay changes with the car moving (its Doppler shift: 1 - rate)
   float gain = 0;
+  // the surface's reflectivity per band against the mid band's (low/mid, 1, high/mid; 1: unknown)
+  float tilt[3] = {1, 1, 1};
+};
+
+// An echo's tone from its surface: the sound split at 250 Hz and 2.5 kHz by one-pole low-passes into
+// low, mid and high, each scaled by the tilt. With every tilt 1 the input passes untouched.
+struct BandSplit {
+  // implicit default: Voice is reset with `v = {}`, which cannot use an explicit constructor
+  BandSplit() : BandSplit(48000.0f) {}
+  explicit BandSplit(float aRate);
+  void Set(const float aTilt[3]);
+  float Run(float x);
+
+private:
+  float lowCoefficient, highCoefficient;
+  float tilt[3] = {1, 1, 1};
+  bool flat = true;
+  float lowState = 0, highState = 0;
 };
 
 struct Params {
@@ -65,6 +83,9 @@ struct Params {
   float floorFeedback = 0, wallFeedback = 0;
   float rt60 = 0.2f, wet = 0;
   bool air = false; // Tuning::airAbsorption
+  // where each echo is heard from (world): its image source, the scatter echoes' by side weighted by
+  // gain (the source itself when a side has none)
+  Vec3 floorImage, ceilingImage, leftImage, rightImage, scatterRightImage, scatterLeftImage;
 };
 
 // The echoes of the car's sound at aSource heard at aListener, from the features probed at aSource;
@@ -81,6 +102,14 @@ public:
   // interleaved, aChannels in and out (1 or more; channels 0 and 1 take the panning, the rest the
   // echoes' sum); the input is the direct sound, kept as it is, and the echoes are made from its mean
   void Process(const float *aIn, float *aOut, uint32_t aFrames, int aChannels);
+
+  // Process() with each part in a stream of its own, unpanned (aFrames mono samples each): the
+  // floor, ceiling, left and right echoes with their flutter, the scattered echoes by side, and the
+  // reverb's two channels at the current wet level. The input is the mono dry sound.
+  struct Streams {
+    float *floor, *ceiling, *left, *right, *scatterRight, *scatterLeft, *reverbLeft, *reverbRight;
+  };
+  void ProcessStreams(const float *aDryMono, const Streams &aStreams, uint32_t aFrames);
   void Reset();
 
   // energy of each part so far, for checking against render.py: floor, ceiling, walls, reverb, dry
@@ -92,6 +121,11 @@ public:
   float TailLevel() const { return tail; }
 
 private:
+  // one sample of every part (the engine under Process and ProcessStreams)
+  struct Sample {
+    float floor = 0, ceiling = 0, left = 0, right = 0, scatterLeft = 0, scatterRight = 0, reverbLeft = 0, reverbRight = 0;
+  };
+  Sample Tick(float aMono);
   // double: a delay of tens of thousands of samples moving a thousandth of a sample a sample would
   // stand still in float
   struct Ramp {
@@ -119,7 +153,10 @@ private:
     float level = 0; // this sample's gain
     // air absorption: a one-pole low-pass set by the echo's path (1: none), and its state
     float air = 1, airState = 0;
-    float Air(float x);
+    // then the surface's tone
+    BandSplit bands;
+    // air absorption and the surface's bands on one echo sample
+    float Filter(float x);
     bool started = false;
     // a new target: delay and rate in samples, gain, reached over aInterval samples
     void Set(double aDelay, double aRate, float aGain, int aInterval, const Reflections &aOwner);

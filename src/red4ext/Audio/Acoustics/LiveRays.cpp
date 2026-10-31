@@ -1,5 +1,6 @@
 #include "LiveRays.hpp"
 #include "Acoustics.hpp"
+#include "Occlusion.hpp"
 #include "Probe.hpp"
 
 #include "Flight/Component.hpp"
@@ -12,7 +13,9 @@
 #include <RED4ext/Scripting/Natives/physicsProxyHelper.hpp>
 #include <spdlog/spdlog.h>
 
+#include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstring>
 #include <mutex>
 #include <string>
@@ -87,6 +90,37 @@ struct SolidOnly : physx::PxQueryFilterCallback {
   }
 };
 
+// The NPC cars that hold a channel, a few a cast: one ray from the listener to each car's centre through
+// the static solid shapes (Occlusion.hpp). Blocked is a hit nearer than the car less its own size.
+// The shift moves the world to the scene, as for the near rays.
+void CastOcclusion(const physx::PxScene *aScene, float aShiftX, float aShiftY, float aShiftZ,
+                   const physx::PxQueryFilterData &aFilter, SolidOnly &aSolid) {
+  if (!Occlusion::enabled.load(std::memory_order_relaxed)) {
+    return;
+  }
+  static Occlusion::RoundRobin robin;
+  const auto listener = Occlusion::Listener();
+  for (int k : robin.Next(Occlusion::Count())) {
+    Occlusion::Target car;
+    if (!Occlusion::Slot(k, car)) {
+      continue;
+    }
+    const float dx = car.position.x - listener.x, dy = car.position.y - listener.y, dz = car.position.z - listener.z;
+    const float distance = std::sqrt(dx * dx + dy * dy + dz * dz);
+    if (distance < 1e-3f) {
+      continue;
+    }
+    const float range = std::min(distance, Occlusion::kRangeM);
+    const physx::PxVec3 from{listener.x + aShiftX, listener.y + aShiftY, listener.z + aShiftZ},
+        dir{dx / distance, dy / distance, dz / distance};
+    physx::PxRaycastCallback hit;
+    const bool blocked = aScene->raycast(from, dir, range, hit, physx::PxHitFlag_eDISTANCE, aFilter, &aSolid) &&
+                         hit.hasBlock && hit.block.distance < distance - Occlusion::kCarSizeM;
+    Occlusion::StoreBlocked(k, car.car, blocked);
+    Occlusion::CountCast();
+  }
+}
+
 } // namespace
 
 void CastLiveRays(FlightComponent *aComponent) {
@@ -120,8 +154,11 @@ void CastLiveRays(FlightComponent *aComponent) {
                  bodyPose.p.Z);
   }
   const auto t0 = std::chrono::steady_clock::now();
-  const auto rays = Probe::NearRays(forward, up);
+  // the fan turns a little each cast (-4.5, -1.5, 1.5, 4.5 degrees) so the hits cover the surfaces
+  static unsigned casts = 0;
+  const auto rays = Probe::NearRays(forward, up, (float(casts++ % 4) - 1.5f) * 3.0f);
   std::array<float, kNearRays> distance;
+  std::array<Vec3, kNearRays> position{}, normal{};
   std::array<std::string, kNearRays> material;
   // the static world only: buildings, terrain, blockers; not the car itself or traffic
   physx::PxQueryFilterData filter;
@@ -130,10 +167,15 @@ void CastLiveRays(FlightComponent *aComponent) {
   for (int k = 0; k < kNearRays; ++k) {
     physx::PxRaycastCallback hit;
     const physx::PxVec3 from{bodyPose.p.X, bodyPose.p.Y, bodyPose.p.Z}, dir{rays[k].x, rays[k].y, rays[k].z};
-    if (scene->raycast(from, dir, kRange, hit, physx::PxHitFlag_ePOSITION | physx::PxHitFlag_eDISTANCE, filter,
+    if (scene->raycast(from, dir, kRange, hit, physx::PxHitFlag_ePOSITION | physx::PxHitFlag_eNORMAL | physx::PxHitFlag_eDISTANCE, filter,
                        &solid) &&
         hit.hasBlock) {
       distance[k] = hit.block.distance;
+      // scene to world: the shift of the car's own position between the two
+      const auto &h = hit.block;
+      position[k] = {h.position.x - bodyPose.p.X + world.X, h.position.y - bodyPose.p.Y + world.Y,
+                     h.position.z - bodyPose.p.Z + world.Z};
+      normal[k] = {h.normal.x, h.normal.y, h.normal.z};
       material[k] = MaterialName(hit.block.shape);
     } else {
       distance[k] = -1.0f;
@@ -141,7 +183,8 @@ void CastLiveRays(FlightComponent *aComponent) {
     }
   }
   SetPhysXCastTime(std::chrono::duration<float, std::milli>(std::chrono::steady_clock::now() - t0).count());
-  SetLiveHits(origin, distance, material, RaySource::PhysX);
+  SetLiveHits(origin, distance, material, position, normal);
+  CastOcclusion(scene, bodyPose.p.X - world.X, bodyPose.p.Y - world.Y, bodyPose.p.Z - world.Z, filter, solid);
 }
 
 } // namespace Acoustics
