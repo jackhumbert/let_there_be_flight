@@ -32,6 +32,11 @@ public:
   void Stop(RED4ext::CString emitterName);
   void UpdateEvent(RED4ext::CString emitterName, RED4ext::Matrix matrix, float eventVolume,
                      RED4ext::Handle<RED4ext::IScriptable> update);
+  // each frame the player's car flies: its matrix, the echoes' level (0: off) and how far the view
+  // is inside the cabin (Audio/Acoustics)
+  void UpdateAcoustics(RED4ext::Matrix carMatrix, float gain, float inside);
+  // the echoes' state as JSON (Acoustics::State), for tests
+  RED4ext::CString AcousticsState();
 
 private:
   friend Descriptor;
@@ -48,5 +53,7 @@ private:
     aType->AddFunction<&FlightAudio::UpdateEvent>("UpdateEvent");
     aType->AddFunction<&FlightAudio::Pause>("Pause");
     aType->AddFunction<&FlightAudio::Resume>("Resume");
+    aType->AddFunction<&FlightAudio::UpdateAcoustics>("UpdateAcoustics");
+    aType->AddFunction<&FlightAudio::AcousticsState>("AcousticsState");
   }
 };

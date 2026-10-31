@@ -1219,6 +1219,8 @@ public native class FlightComponent extends GameComponent {
       // outside for the cinematic camera's shots as for TPP (entered from FPP it kept the cabin muffle)
       let outside = this.sys.ctlr.isTPP || cinematic;
       this.audioUpdate.inside = outside ? MaxF(0.0, this.audioUpdate.inside - timeDelta * 4.0) : MinF(1.0, this.audioUpdate.inside + timeDelta * 4.0);
+      let audio = FlightAudio.Get();
+      audio.UpdateAcoustics(this.GetVehicle().GetLocalToWorld(), audio.acoustics ? audio.acousticsGain : 0.0, this.audioUpdate.inside);
       // try without wind
       // FlightAudio.Get().UpdateEvent("windLeft", Matrix.BuiltTranslation(windLeftPosition), 1.0, this.audioUpdate);
       // FlightAudio.Get().UpdateEvent("windRight",  Matrix.BuiltTranslation(windRightPosition), 1.0, this.audioUpdate);

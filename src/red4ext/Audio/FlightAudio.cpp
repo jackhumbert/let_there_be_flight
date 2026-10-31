@@ -3,6 +3,7 @@
 #include <mutex>
 
 #include "FlightAudio.hpp"
+#include "Acoustics/Acoustics.hpp"
 #include <RED4ext/Common.hpp>
 #include <RED4ext/RTTITypes.hpp>
 #include <RED4ext/Scripting/IScriptable.hpp>
@@ -69,10 +70,14 @@ bool FlightAudio::Load(RED4ext::CGameApplication *aApp) {
 
   spdlog::info("FMOD loaded");
 
+  // the flying sound's echoes off the city; the alarms on bus:/Warning stay dry
+  Acoustics::Attach(fmod_system, {"bus:/Engine", "bus:/Wind"});
+
   return true;
 }
 
 bool FlightAudio::Unload(RED4ext::CGameApplication *aApp) {
+  Acoustics::Detach();
   stringsBank->unload();
   soundBank->unload();
   fmod_system->release();
@@ -218,6 +223,16 @@ void FlightAudio::UpdateListenerMatrix(RED4ext::Matrix matrix) {
   listenerAttributes.forward = {.x = matrix.Y.X, .y = matrix.Y.Z, .z = -matrix.Y.Y};
   ERRCHECK(fmod_system->setListenerAttributes(0, &listenerAttributes));
   ERRCHECK(fmod_system->update());
+  Acoustics::SetListener({matrix.W.X, matrix.W.Y, matrix.W.Z});
+}
+
+void FlightAudio::UpdateAcoustics(RED4ext::Matrix carMatrix, float gain, float inside) {
+  Acoustics::SetCar({carMatrix.W.X, carMatrix.W.Y, carMatrix.W.Z}, {carMatrix.Y.X, carMatrix.Y.Y, carMatrix.Y.Z},
+                    {carMatrix.Z.X, carMatrix.Z.Y, carMatrix.Z.Z}, gain, inside);
+}
+
+RED4ext::CString FlightAudio::AcousticsState() {
+  return {Acoustics::State().c_str()};
 }
 
 void FlightAudio::UpdateEventMatrix(RED4ext::CString emitterName, RED4ext::Matrix matrix) {

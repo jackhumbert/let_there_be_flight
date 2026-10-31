@@ -31,6 +31,15 @@ public native class FlightAudio extends IScriptable {
   // every playing event paused / resumed
   public native func Pause() -> Void;
   public native func Resume() -> Void;
+  // each frame the player's car flies: the flying sound's echoes off the city (docs/design/acoustics.md);
+  // gain 0 = off, inside 1 = first person
+  public native func UpdateAcoustics(carMatrix: Matrix, gain: Float, inside: Float) -> Void;
+  // the echoes' state as JSON, for tests
+  public native func AcousticsState() -> String;
+
+  // the echoes on or off, and their level (not a Mod Setting yet: LtbfBridge.Acoustics for tests)
+  public let acoustics: Bool = false;
+  public let acousticsGain: Float = 1.0;
 
 
   public static func Get() -> ref<FlightAudio> {

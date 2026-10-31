@@ -202,6 +202,23 @@ target_include_directories(acoustics PRIVATE src/red4ext)
 target_compile_features(acoustics PRIVATE cxx_std_20)
 target_link_libraries(acoustics PRIVATE spdlog)
 
+# the same code through FMOD with the mod's banks, a recording standing in for the thrusters
+# (tools/acoustics/fmod_check.cpp); not built by default
+add_executable(acoustics_fmod EXCLUDE_FROM_ALL
+  tools/acoustics/fmod_check.cpp
+  src/red4ext/Audio/Acoustics/Acoustics.cpp
+  src/red4ext/Audio/Acoustics/Probe.cpp
+  src/red4ext/Audio/Acoustics/Reflections.cpp
+  src/red4ext/Navigation/NavMap.cpp
+  src/red4ext/ThirdParty/miniz/miniz_tinfl.cpp
+)
+target_include_directories(acoustics_fmod PRIVATE src/red4ext)
+target_compile_features(acoustics_fmod PRIVATE cxx_std_20)
+target_link_libraries(acoustics_fmod PRIVATE spdlog FMOD)
+add_custom_command(TARGET acoustics_fmod POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PROJECT_SOURCE_DIR}/deps/fmod/lib/x64/fmod.dll
+          ${PROJECT_SOURCE_DIR}/deps/fmod/lib/x64/fmodstudio.dll $<TARGET_FILE_DIR:acoustics_fmod>)
+
 # configure_inputs(src/input_loader/let_there_be_flight.xml)
 configure_mod_file(src/input_loader/${MOD_SLUG}.xml red4ext/plugins/${MOD_SLUG}/inputs.xml)
 configure_redscript(src/redscript)
