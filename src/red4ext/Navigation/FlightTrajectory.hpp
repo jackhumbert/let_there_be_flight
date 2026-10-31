@@ -42,10 +42,6 @@ struct FlightTrajectory : RED4ext::IScriptable {
 
   RTTI_IMPL_TYPEINFO(FlightTrajectory);
   RTTI_IMPL_ALLOCATOR();
-
-private:
-  // the sample at or before s, and the share of the way to the next
-  size_t Find(float aS, float &aT) const;
 };
 
 RTTI_DEFINE_CLASS(FlightTrajectory, {

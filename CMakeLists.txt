@@ -181,6 +181,7 @@ add_executable(navplan EXCLUDE_FROM_ALL
   src/red4ext/Navigation/Doorways.cpp
   src/red4ext/Navigation/Vehicle.cpp
   src/red4ext/Navigation/Trajectory.cpp
+  src/red4ext/Navigation/Route.cpp
   src/red4ext/ThirdParty/miniz/miniz_tinfl.cpp
 )
 target_include_directories(navplan PRIVATE src/red4ext)
@@ -233,6 +234,8 @@ add_executable(ltbf_tests
   tests/occlusion_tests.cpp
   tests/buses_tests.cpp
   tests/vehicle_tests.cpp
+  tests/route_tests.cpp
+  tests/trajectory_tests.cpp
   src/red4ext/Audio/EngineSynth/Synth.cpp
   src/red4ext/Audio/EngineSynth/Sources.cpp
   src/red4ext/Audio/Buses.cpp
@@ -246,9 +249,14 @@ add_executable(ltbf_tests
   src/red4ext/Audio/Acoustics/Planes.cpp
   src/red4ext/Audio/Acoustics/Reflections.cpp
   src/red4ext/Navigation/Vehicle.cpp
+  src/red4ext/Navigation/Route.cpp
+  src/red4ext/Navigation/Trajectory.cpp
+  src/red4ext/Navigation/NavMap.cpp
+  src/red4ext/ThirdParty/miniz/miniz_tinfl.cpp
 )
 target_include_directories(ltbf_tests PRIVATE src/red4ext)
 target_compile_features(ltbf_tests PRIVATE cxx_std_20)
+target_link_libraries(ltbf_tests PRIVATE spdlog)
 add_test(NAME ltbf_tests COMMAND ltbf_tests)
 
 # configure_inputs(src/input_loader/let_there_be_flight.xml)

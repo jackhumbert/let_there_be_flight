@@ -77,6 +77,17 @@ Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aL
 
 const char *LimitName(TrajectorySample::Limit aLimit);
 
+// A trajectory read at a distance along the line: every field interpolated between the two samples
+// around it (the yaw the short way round, the limit of the nearer sample).
+struct TrajectoryPoint {
+  float s = 0.0f, t = 0.0f, speed = 0.0f, along = 0.0f, yaw = 0.0f, pitch = 0.0f, roll = 0.0f, drift = 0.0f;
+  Vec3 position{}, velocity{}, acceleration{};
+  TrajectorySample::Limit limit = TrajectorySample::Limit::Top;
+};
+
+// at distance s along the line, clamped to its ends, interpolated; all zero with fewer than two samples
+TrajectoryPoint SampleAt(const Trajectory &aTrajectory, float aS);
+
 // m/s lost in dips: each slowdown the car speeds up out of again (by aDip m/s or more both ways),
 // outside the last aApproach metres (the landing), summed as top less low (tools/navplan/dips.py)
 float DipLoss(const Trajectory &aTrajectory, float aApproach = 300.0f, float aDip = 5.0f);

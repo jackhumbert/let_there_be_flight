@@ -5,9 +5,7 @@
 #include <string>
 
 namespace {
-RED4ext::Vector4 Lerp(const Navigation::Vec3 &aA, const Navigation::Vec3 &aB, float aT, float aW) {
-  return {aA.x + (aB.x - aA.x) * aT, aA.y + (aB.y - aA.y) * aT, aA.z + (aB.z - aA.z) * aT, aW};
-}
+RED4ext::Vector4 ToVector(const Navigation::Vec3 &aV, float aW) { return {aV.x, aV.y, aV.z, aW}; }
 } // namespace
 
 RED4ext::Handle<FlightTrajectory> FlightTrajectory::Build(RED4ext::DynArray<RED4ext::Vector4> aRoute,
@@ -32,88 +30,48 @@ RED4ext::Handle<FlightTrajectory> FlightTrajectory::Build(RED4ext::DynArray<RED4
   return handle;
 }
 
-size_t FlightTrajectory::Find(float aS, float &aT) const {
-  const auto &q = trajectory.samples;
-  if (aS <= q.front().s) {
-    aT = 0.0f;
-    return 0;
-  }
-  if (aS >= q.back().s) {
-    aT = 0.0f;
-    return q.size() - 1;
-  }
-  auto it = std::upper_bound(q.begin(), q.end(), aS, [](float s, const Navigation::TrajectorySample &x) { return s < x.s; });
-  size_t i = size_t(it - q.begin()) - 1;
-  aT = std::clamp((aS - q[i].s) / std::max(q[i + 1].s - q[i].s, 1e-6f), 0.0f, 1.0f);
-  return i;
-}
+float FlightTrajectory::Speed(float aS) { return Navigation::SampleAt(trajectory, aS).speed; }
 
-#define SAMPLE_AT(field)                                                                                                 \
-  if (!IsValid())                                                                                                        \
-    return {};                                                                                                           \
-  float t;                                                                                                               \
-  size_t i = Find(aS, t);                                                                                                \
-  const auto &a = trajectory.samples[i];                                                                                 \
-  const auto &b = trajectory.samples[std::min(i + 1, trajectory.samples.size() - 1)];
+float FlightTrajectory::Along(float aS) { return Navigation::SampleAt(trajectory, aS).along; }
 
-float FlightTrajectory::Speed(float aS) {
-  SAMPLE_AT(speed)
-  return a.speed + (b.speed - a.speed) * t;
-}
-
-float FlightTrajectory::Along(float aS) {
-  SAMPLE_AT(along)
-  return a.along + (b.along - a.along) * t;
-}
-
-float FlightTrajectory::Time(float aS) {
-  SAMPLE_AT(t)
-  return a.t + (b.t - a.t) * t;
-}
+float FlightTrajectory::Time(float aS) { return Navigation::SampleAt(trajectory, aS).t; }
 
 RED4ext::Vector4 FlightTrajectory::Position(float aS) {
-  SAMPLE_AT(position)
-  return Lerp(a.position, b.position, t, 1.0f);
+  if (!IsValid()) {
+    return {};
+  }
+  return ToVector(Navigation::SampleAt(trajectory, aS).position, 1.0f);
 }
 
 RED4ext::Vector4 FlightTrajectory::Velocity(float aS) {
-  SAMPLE_AT(velocity)
-  return Lerp(a.velocity, b.velocity, t, 0.0f);
+  if (!IsValid()) {
+    return {};
+  }
+  return ToVector(Navigation::SampleAt(trajectory, aS).velocity, 0.0f);
 }
 
 RED4ext::Vector4 FlightTrajectory::Acceleration(float aS) {
-  SAMPLE_AT(acceleration)
-  return Lerp(a.acceleration, b.acceleration, t, 0.0f);
+  if (!IsValid()) {
+    return {};
+  }
+  return ToVector(Navigation::SampleAt(trajectory, aS).acceleration, 0.0f);
 }
 
-float FlightTrajectory::Yaw(float aS) {
-  SAMPLE_AT(yaw)
-  float d = b.yaw - a.yaw;
-  d -= 6.2831853f * std::round(d / 6.2831853f); // the short way round
-  return a.yaw + d * t;
-}
+float FlightTrajectory::Yaw(float aS) { return Navigation::SampleAt(trajectory, aS).yaw; }
 
-float FlightTrajectory::Pitch(float aS) {
-  SAMPLE_AT(pitch)
-  return a.pitch + (b.pitch - a.pitch) * t;
-}
+float FlightTrajectory::Pitch(float aS) { return Navigation::SampleAt(trajectory, aS).pitch; }
 
-float FlightTrajectory::Roll(float aS) {
-  SAMPLE_AT(roll)
-  return a.roll + (b.roll - a.roll) * t;
-}
+float FlightTrajectory::Roll(float aS) { return Navigation::SampleAt(trajectory, aS).roll; }
 
-float FlightTrajectory::Drift(float aS) {
-  SAMPLE_AT(drift)
-  return a.drift + (b.drift - a.drift) * t;
-}
+float FlightTrajectory::Drift(float aS) { return Navigation::SampleAt(trajectory, aS).drift; }
 
 RED4ext::CString FlightTrajectory::Limit(float aS) {
-  SAMPLE_AT(limit)
-  return Navigation::LimitName(t < 0.5f ? a.limit : b.limit);
+  // empty for no trajectory, as script tests the name ("top" would let the surge hold start)
+  if (!IsValid()) {
+    return {};
+  }
+  return Navigation::LimitName(Navigation::SampleAt(trajectory, aS).limit);
 }
-
-#undef SAMPLE_AT
 
 RED4ext::CString FlightTrajectory::Violations() {
   std::string out;

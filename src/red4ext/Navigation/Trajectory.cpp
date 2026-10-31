@@ -431,4 +431,48 @@ Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aL
   return out;
 }
 
+namespace {
+float LerpF(float a, float b, float t) { return a + (b - a) * t; }
+Vec3 LerpV(const Vec3 &a, const Vec3 &b, float t) {
+  return {a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t};
+}
+} // namespace
+
+TrajectoryPoint SampleAt(const Trajectory &aTrajectory, float aS) {
+  TrajectoryPoint out;
+  const auto &q = aTrajectory.samples;
+  if (q.size() < 2) {
+    return out;
+  }
+  // the sample at or before s, and the share of the way to the next
+  size_t i;
+  float t = 0.0f;
+  if (aS <= q.front().s) {
+    i = 0;
+  } else if (aS >= q.back().s) {
+    i = q.size() - 1;
+  } else {
+    auto it = std::upper_bound(q.begin(), q.end(), aS, [](float s, const TrajectorySample &x) { return s < x.s; });
+    i = size_t(it - q.begin()) - 1;
+    t = std::clamp((aS - q[i].s) / std::max(q[i + 1].s - q[i].s, 1e-6f), 0.0f, 1.0f);
+  }
+  const auto &a = q[i];
+  const auto &b = q[std::min(i + 1, q.size() - 1)];
+  out.s = std::clamp(aS, q.front().s, q.back().s);
+  out.t = LerpF(a.t, b.t, t);
+  out.speed = LerpF(a.speed, b.speed, t);
+  out.along = LerpF(a.along, b.along, t);
+  float d = b.yaw - a.yaw;
+  d -= 6.2831853f * std::round(d / 6.2831853f); // the short way round
+  out.yaw = a.yaw + d * t;
+  out.pitch = LerpF(a.pitch, b.pitch, t);
+  out.roll = LerpF(a.roll, b.roll, t);
+  out.drift = LerpF(a.drift, b.drift, t);
+  out.position = LerpV(a.position, b.position, t);
+  out.velocity = LerpV(a.velocity, b.velocity, t);
+  out.acceleration = LerpV(a.acceleration, b.acceleration, t);
+  out.limit = t < 0.5f ? a.limit : b.limit;
+  return out;
+}
+
 } // namespace Navigation

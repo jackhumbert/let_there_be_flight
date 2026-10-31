@@ -1,4 +1,5 @@
 #include "FlightRoute.hpp"
+#include "MapSpace.hpp"
 #include "NavMap.hpp"
 
 #include <algorithm>
@@ -43,17 +44,6 @@ RED4ext::DynArray<RED4ext::Vector4> ToScript(const std::vector<Vec3> &aPoints) {
 bool Clear(const Vec3 &a, const Vec3 &b) {
   return Navigation::NavMap::Get().SegmentClear(a.x, a.y, a.z, b.x, b.y, b.z) >= 1.0f;
 }
-
-// the bend from a through b to c: towards the centre, 1 / radius long (zero where a leg is no
-// longer than aShortest)
-Vec3 BendOf(const Vec3 &a, const Vec3 &b, const Vec3 &c, float aShortest) {
-  Vec3 ab = b - a, bc = c - b;
-  float l1 = Len(ab), l2 = Len(bc);
-  if (l1 <= aShortest || l2 <= aShortest) {
-    return {0.0f, 0.0f, 0.0f};
-  }
-  return (bc * (1.0f / l2) - ab * (1.0f / l1)) * (2.0f / (l1 + l2));
-}
 } // namespace
 
 RED4ext::Handle<FlightRoute> FlightRoute::Create(RED4ext::DynArray<RED4ext::Vector4> aPoints) {
@@ -61,15 +51,7 @@ RED4ext::Handle<FlightRoute> FlightRoute::Create(RED4ext::DynArray<RED4ext::Vect
   if (aPoints.size < 2) {
     return handle;
   }
-  handle->points = FromScript(aPoints);
-  handle->lengths.reserve(handle->points.size());
-  float total = 0.0f;
-  for (size_t i = 0; i < handle->points.size(); ++i) {
-    if (i > 0) {
-      total += Dist(handle->points[i - 1], handle->points[i]);
-    }
-    handle->lengths.push_back(total);
-  }
+  handle->route = Navigation::Route::Make(FromScript(aPoints));
   return handle;
 }
 
@@ -138,189 +120,52 @@ RED4ext::DynArray<RED4ext::Vector4> FlightRoute::SmoothJoin(RED4ext::DynArray<RE
   return ToScript(route);
 }
 
-RED4ext::Vector4 FlightRoute::Point(int32_t aIndex) {
-  if (points.empty()) {
-    return {0.0f, 0.0f, 0.0f, 1.0f};
-  }
-  return ToPoint(points[std::clamp(aIndex, 0, Size() - 1)]);
-}
+RED4ext::Vector4 FlightRoute::Point(int32_t aIndex) { return ToPoint(route.Point(aIndex)); }
 
-float FlightRoute::Distance(int32_t aIndex) {
-  if (lengths.empty()) {
-    return 0.0f;
-  }
-  return lengths[std::clamp(aIndex, 0, Size() - 1)];
-}
+float FlightRoute::Distance(int32_t aIndex) { return route.Distance(aIndex); }
 
-RED4ext::DynArray<RED4ext::Vector4> FlightRoute::Points() { return ToScript(points); }
+RED4ext::DynArray<RED4ext::Vector4> FlightRoute::Points() { return ToScript(route.points); }
 
 int32_t FlightRoute::Nearest(RED4ext::Vector4 aP, int32_t aFrom, int32_t aCount) {
-  Vec3 p = ToVec(aP);
-  int32_t n = Size();
-  float best = 1e9f;
-  int32_t bestSegment = aFrom;
-  for (int32_t i = std::max(aFrom, 0); i < n - 1 && i <= aFrom + aCount; ++i) {
-    Vec3 a = points[i], ab = points[i + 1] - a;
-    float len2 = Dot(ab, ab);
-    float t = len2 > 0.0001f ? std::clamp(Dot(p - a, ab) / len2, 0.0f, 1.0f) : 0.0f;
-    float d = Dist(p, a + ab * t);
-    if (d < best) {
-      best = d;
-      bestSegment = i;
-    }
-  }
-  return bestSegment;
+  return route.Nearest(ToVec(aP), aFrom, aCount);
 }
 
 RED4ext::Vector4 FlightRoute::Project(RED4ext::Vector4 aP, int32_t aSegment) {
-  int32_t n = Size();
-  if (n < 2) {
+  if (route.Size() < 2) {
     return aP;
   }
-  int32_t i = std::clamp(aSegment, 0, n - 2);
-  Vec3 p = ToVec(aP), a = points[i], ab = points[i + 1] - a;
-  float len2 = Dot(ab, ab);
-  float t = len2 > 0.0001f ? std::clamp(Dot(p - a, ab) / len2, 0.0f, 1.0f) : 0.0f;
-  return ToPoint(a + ab * t);
+  return ToPoint(route.Project(ToVec(aP), aSegment));
 }
 
 float FlightRoute::DistanceTo(RED4ext::Vector4 aQ, int32_t aSegment, float aAhead) {
-  int32_t n = Size();
-  if (n < 2) {
-    return 1e9f;
-  }
-  Vec3 q = ToVec(aQ);
-  float best = 1e9f;
-  int32_t first = std::clamp(aSegment, 0, n - 1);
-  float end = lengths[first] + aAhead;
-  for (int32_t i = first; i < n - 1 && lengths[i] <= end; ++i) {
-    Vec3 a = points[i], ab = points[i + 1] - a;
-    float len2 = Dot(ab, ab);
-    float t = len2 > 0.0001f ? std::clamp(Dot(q - a, ab) / len2, 0.0f, 1.0f) : 0.0f;
-    best = std::min(best, Dist(q, a + ab * t));
-  }
-  return best;
+  return route.DistanceTo(ToVec(aQ), aSegment, aAhead);
 }
 
-Vec3 FlightRoute::AtPoint(float aS) const {
-  if (aS <= 0.0f) {
-    return points.front();
-  }
-  // the first point at or past s; s lies on the segment ending there
-  auto it = std::lower_bound(lengths.begin() + 1, lengths.end(), aS);
-  if (it == lengths.end()) {
-    return points.back();
-  }
-  size_t i = size_t(it - lengths.begin()) - 1;
-  float len = lengths[i + 1] - lengths[i];
-  float t = len > 0.001f ? (aS - lengths[i]) / len : 0.0f;
-  return points[i] + (points[i + 1] - points[i]) * t;
-}
-
-RED4ext::Vector4 FlightRoute::At(float aS) {
-  if (points.empty()) {
-    return {0.0f, 0.0f, 0.0f, 1.0f};
-  }
-  return ToPoint(AtPoint(aS));
-}
-
-Vec3 FlightRoute::AheadPoint(int32_t aSegment, const Vec3 &aFrom, float aAlong) const {
-  int32_t n = int32_t(points.size());
-  Vec3 p = aFrom;
-  float left = aAlong;
-  for (int32_t i = std::max(aSegment, 0); i < n - 1; ++i) {
-    const Vec3 &b = points[i + 1];
-    float d = Dist(p, b);
-    if (d >= left) {
-      return p + Normalize(b - p) * left;
-    }
-    left -= d;
-    p = b;
-  }
-  return points.back();
-}
+RED4ext::Vector4 FlightRoute::At(float aS) { return ToPoint(route.At(aS)); }
 
 RED4ext::Vector4 FlightRoute::Ahead(int32_t aSegment, RED4ext::Vector4 aFrom, float aAlong) {
-  if (points.empty()) {
+  if (route.Size() == 0) {
     return aFrom;
   }
-  return ToPoint(AheadPoint(aSegment, ToVec(aFrom), aAlong));
+  return ToPoint(route.Ahead(aSegment, ToVec(aFrom), aAlong));
 }
 
 bool FlightRoute::ClearAhead(int32_t aSegment, RED4ext::Vector4 aFrom, float aAlong) {
-  int32_t n = Size();
-  Vec3 p = ToVec(aFrom);
-  float left = aAlong;
-  for (int32_t i = std::max(aSegment, 0); i < n - 1 && left > 0.0f; ++i) {
-    const Vec3 &b = points[i + 1];
-    float d = Dist(p, b);
-    Vec3 end = d > left ? p + Normalize(b - p) * left : b;
-    if (!Clear(p, end)) {
-      return false;
-    }
-    left -= d;
-    p = b;
-  }
-  return true;
+  return route.ClearAhead(aSegment, ToVec(aFrom), aAlong, Navigation::MapSpace(Navigation::NavMap::Get()));
 }
 
 float FlightRoute::Turn(int32_t aSegment, RED4ext::Vector4 aFrom, float aAhead) {
-  if (points.size() < 2) {
-    return 0.0f;
-  }
-  Vec3 from = ToVec(aFrom);
-  Vec3 a = AheadPoint(aSegment, from, 0.5f * aAhead);
-  Vec3 b = AheadPoint(aSegment, from, aAhead);
-  Vec3 c = AheadPoint(aSegment, from, 1.5f * aAhead);
-  Vec3 d1{b.x - a.x, b.y - a.y, 0.0f}, d2{c.x - b.x, c.y - b.y, 0.0f};
-  float l1 = Len(d1), l2 = Len(d2);
-  if (l1 < 1.0f || l2 < 1.0f) {
-    return 0.0f;
-  }
-  // the heading change from d1 to d2, anticlockwise seen from above positive
-  float turn = std::atan2(d1.x * d2.y - d1.y * d2.x, d1.x * d2.x + d1.y * d2.y);
-  return -turn / (0.5f * (l1 + l2));
+  return route.Turn(aSegment, ToVec(aFrom), aAhead);
 }
 
 RED4ext::Vector4 FlightRoute::Curvature(int32_t aSegment, RED4ext::Vector4 aFrom, float aAhead) {
-  if (points.size() < 2) {
-    return {0.0f, 0.0f, 0.0f, 0.0f};
-  }
-  Vec3 from = ToVec(aFrom);
-  Vec3 a = AheadPoint(aSegment, from, 0.1f * aAhead);
-  Vec3 b = AheadPoint(aSegment, from, 0.4f * aAhead);
-  Vec3 c = AheadPoint(aSegment, from, 0.7f * aAhead);
-  return ToDirection(BendOf(a, b, c, 1.0f));
+  return ToDirection(route.Curvature(aSegment, ToVec(aFrom), aAhead));
 }
 
-RED4ext::Vector4 FlightRoute::Tangent(float aS, float aSpan) {
-  if (points.size() < 2) {
-    return {0.0f, 0.0f, 0.0f, 0.0f};
-  }
-  Vec3 ac = AtPoint(aS + aSpan) - AtPoint(aS - aSpan);
-  return ToDirection(Len(ac) > 0.01f ? Normalize(ac) : Vec3{0.0f, 0.0f, 0.0f});
-}
+RED4ext::Vector4 FlightRoute::Tangent(float aS, float aSpan) { return ToDirection(route.Tangent(aS, aSpan)); }
 
-RED4ext::Vector4 FlightRoute::Bend(float aS, float aSpan) {
-  if (points.size() < 2) {
-    return {0.0f, 0.0f, 0.0f, 0.0f};
-  }
-  return ToDirection(BendOf(AtPoint(aS - aSpan), AtPoint(aS), AtPoint(aS + aSpan), 0.5f));
-}
+RED4ext::Vector4 FlightRoute::Bend(float aS, float aSpan) { return ToDirection(route.Bend(aS, aSpan)); }
 
 float FlightRoute::SharpBend(int32_t aSegment, RED4ext::Vector4 aFrom, float aSpan) {
-  int32_t n = Size();
-  if (aSegment < 0 || aSegment + 1 >= n) {
-    return 1000000.0f;
-  }
-  float start = lengths[aSegment + 1] - Dist(ToVec(aFrom), points[aSegment + 1]);
-  for (int32_t k = aSegment + 1; k < n - 1 && lengths[k] - start < 300.0f; ++k) {
-    float s = lengths[k];
-    Vec3 in = points[k] - AtPoint(s - aSpan);
-    Vec3 out = AtPoint(s + aSpan) - points[k];
-    if (Len(in) > 0.5f && Len(out) > 0.5f && Dot(Normalize(in), Normalize(out)) < 0.906f) {
-      return s - start;
-    }
-  }
-  return 1000000.0f;
+  return route.SharpBend(aSegment, ToVec(aFrom), aSpan);
 }

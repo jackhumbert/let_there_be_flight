@@ -1,11 +1,11 @@
 #pragma once
 
-// The route the Autopilot follows: its points, the distance of each from the start, and the
-// geometry the follower asks of it every frame (the point at a distance, the point some metres on
-// from the car, the bend ahead). The car's progress (the segment it is on) stays with the
-// Autopilot and is passed in.
+// The route the Autopilot follows, as script sees it: a handle over Navigation::Route (Route.hpp), which
+// holds the points and their distances and does the geometry the follower asks every frame (the point
+// at a distance, the point some metres on from the car, the bend ahead). This converts script vectors.
+// The car's progress (the segment it is on) stays with the Autopilot and is passed in.
 
-#include "Navigation/Planner.hpp"
+#include "Navigation/Route.hpp"
 
 #include <RED4ext/Scripting/IScriptable.hpp>
 #include <RED4ext/Scripting/Natives/Generated/Vector4.hpp>
@@ -14,8 +14,7 @@
 #include <vector>
 
 struct FlightRoute : RED4ext::IScriptable {
-  std::vector<Navigation::Vec3> points;
-  std::vector<float> lengths; // route distance of each point from the start
+  Navigation::Route route;
 
   // the route through `points` (empty for fewer than two)
   static RED4ext::Handle<FlightRoute> Create(RED4ext::DynArray<RED4ext::Vector4> aPoints);
@@ -30,10 +29,10 @@ struct FlightRoute : RED4ext::IScriptable {
   static RED4ext::DynArray<RED4ext::Vector4> SmoothJoin(RED4ext::DynArray<RED4ext::Vector4> aPoints, int32_t aJoin,
                                                         int32_t aLo, int32_t aHi, float aRadius, int32_t aPasses);
 
-  int32_t Size() { return int32_t(points.size()); }
+  int32_t Size() { return route.Size(); }
   RED4ext::Vector4 Point(int32_t aIndex);
   float Distance(int32_t aIndex);
-  float Length() { return lengths.empty() ? 0.0f : lengths.back(); }
+  float Length() { return route.Length(); }
   RED4ext::DynArray<RED4ext::Vector4> Points();
 
   // The segment nearest p from segment `from` over the next `count` (the car's segment advances).
@@ -64,10 +63,6 @@ struct FlightRoute : RED4ext::IScriptable {
 
   RTTI_IMPL_TYPEINFO(FlightRoute);
   RTTI_IMPL_ALLOCATOR();
-
-private:
-  Navigation::Vec3 AtPoint(float aS) const;
-  Navigation::Vec3 AheadPoint(int32_t aSegment, const Navigation::Vec3 &aFrom, float aAlong) const;
 };
 
 RTTI_DEFINE_CLASS(FlightRoute, {
