@@ -10,7 +10,7 @@ line. Code: `src/red4ext/Navigation/Vehicle.hpp/.cpp` (no game types, so navplan
 - the car, from its vehicle record (FlightStats): `mass`, `airResistance`, `brakingFriction`;
 - the flight tuning (FlightMode_Standard, FlightMode, FlightSettings): `surge`, `sway`, `lift`,
   `gravityFactor`, `brakeLinear`, `drag` (PhysX flight physics applies air drag);
-- the Autopilot's race tuning (FlightModeAutopilot): `drone`, `maxTilt`, `driftMax`, `speedCap`,
+- the Autopilot's race tuning (FlightModeAutopilot): `drone`, `maxTilt`, `brakeShare`, `driftMax`, `speedCap`,
   `margin`, `planDecel`, `pushOver`.
 
 The limits are functions of it: `Drag`, `DroneAccel`, `TopSpeed`, `Lateral`, `Accel`, `Decel`,

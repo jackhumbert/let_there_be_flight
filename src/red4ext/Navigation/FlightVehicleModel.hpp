@@ -21,6 +21,7 @@ struct FlightVehicleModel : RED4ext::IScriptable {
   bool drag = true;
   bool drone = true;
   float maxTilt = 55.0f;
+  float brakeShare = 0.25f;
   float driftMax = 20.0f;
   float speedCap = 120.0f;
   float margin = 0.85f;
@@ -41,6 +42,7 @@ struct FlightVehicleModel : RED4ext::IScriptable {
     s.drag = drag;
     s.drone = drone;
     s.maxTilt = maxTilt;
+    s.brakeShare = brakeShare;
     s.driftMax = driftMax;
     s.speedCap = speedCap;
     s.margin = margin;
@@ -75,6 +77,7 @@ RTTI_DEFINE_CLASS(FlightVehicleModel, {
   RTTI_PROPERTY(drag);
   RTTI_PROPERTY(drone);
   RTTI_PROPERTY(maxTilt);
+  RTTI_PROPERTY(brakeShare);
   RTTI_PROPERTY(driftMax);
   RTTI_PROPERTY(speedCap);
   RTTI_PROPERTY(margin);

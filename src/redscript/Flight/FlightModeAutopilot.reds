@@ -78,6 +78,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // acceleration and gravity need, and the surge and sway thrusters point the rest (half: 22.5
   // degrees of body for travelling at 45), so the thrusters keep moving
   public let droneBodyShare: Float = 0.5;
+  // slowing, the share of the tilt the body takes: less than speeding up (braking is the harder push), so
+  // the nose pulls up less than it leans forward speeding up and reverse surge does the rest
+  public let droneBrakeShare: Float = 0.25;
   public let droneMaxTilt: Float = 55.0;      // deg the body tilts at most, either axis (sets the speed envelope)
   public let droneTiltTime: Float = 0.2;      // s, smoothing of the acceleration the tilt follows
   // m/s2 bending the path downwards, in place of racePushOver: the body stays upright (DroneAttitude
@@ -1899,6 +1902,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     m.drag = settings.physxFlightPhysics;
     m.drone = this.droneStyle;
     m.maxTilt = this.droneMaxTilt;
+    m.brakeShare = this.droneBrakeShare;
     m.driftMax = this.raceDriftMax;
     m.speedCap = this.freeRoam ? this.freeRoamTopSpeed : this.raceSpeedCap;
     m.margin = this.raceMargin;
@@ -2458,12 +2462,12 @@ public class FlightModeAutopilot extends FlightModeStandard {
     // braking: reverse surge and the brake (RaceDecel), much more than forward surge
     let along = ahead >= 0.0 ? this.standardModeSurgeFactor : this.RaceDecel(stats.d_speed) - this.DragAccel(stats.d_speed);
     let cap = Deg2Rad(this.droneMaxTilt);
-    let pitch = ClampF(this.DroneBodyAngle(AtanF(ahead, thrust.Z), size, along), -cap, cap);
+    let pitch = ClampF(this.DroneBodyAngle(AtanF(ahead, thrust.Z), size, along, ahead >= 0.0 ? this.droneBodyShare : this.droneBrakeShare), -cap, cap);
     // following a route the plan's tilt, which holds the roll for the turn coming (a gentle bend then
     // a sharp one in the same direction is flown as one turn, not two); hovering and descending the
     // tilt the commanded acceleration needs
     let lateral = Vector4.Dot(thrust, side);
-    let roll = ClampF(this.DroneBodyAngle(AtanF(lateral, thrust.Z), size, this.standardModeSwayFactor), -cap, cap);
+    let roll = ClampF(this.DroneBodyAngle(AtanF(lateral, thrust.Z), size, this.standardModeSwayFactor, this.droneBodyShare), -cap, cap);
     if this.FollowsTrajectory() && Equals(this.status, "following") {
       // the planned tilt a moment ahead, plus what the follower's correction adds to the trajectory's
       // own acceleration (both tilts worked out the same way, so on the trajectory that is 0)
@@ -2473,8 +2477,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
       let sizeRef = Vector4.Length(thrustRef);
       let aheadRef = Vector4.Dot(thrustRef, h);
       let alongRef = aheadRef >= 0.0 ? this.standardModeSurgeFactor : this.RaceDecel(stats.d_speed) - this.DragAccel(stats.d_speed);
-      let pitchRef = ClampF(this.DroneBodyAngle(AtanF(aheadRef, thrustRef.Z), sizeRef, alongRef), -cap, cap);
-      let rollRef = ClampF(this.DroneBodyAngle(AtanF(Vector4.Dot(thrustRef, side), thrustRef.Z), sizeRef, this.standardModeSwayFactor), -cap, cap);
+      let pitchRef = ClampF(this.DroneBodyAngle(AtanF(aheadRef, thrustRef.Z), sizeRef, alongRef, aheadRef >= 0.0 ? this.droneBodyShare : this.droneBrakeShare), -cap, cap);
+      let rollRef = ClampF(this.DroneBodyAngle(AtanF(Vector4.Dot(thrustRef, side), thrustRef.Z), sizeRef, this.standardModeSwayFactor, this.droneBodyShare), -cap, cap);
       let sAtt = this.closestS + stats.d_speed * this.trajectoryAttitudeLead;
       pitch = ClampF(this.trajectory.Pitch(sAtt) + pitch - pitchRef, -cap, cap);
       // the plan's roll is towards (h.y, -h.x), the heading turned right; side may point the other way
@@ -2517,9 +2521,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // The body's tilt on one axis for a thrust direction `angle` from vertical: droneBodyShare of it,
   // or more where the thrusters (`thrusters` m/s2 across the body at most, raceMargin of it planned)
   // cannot point the rest of `thrust` m/s2. Sway is 5 m/s2, so turns lean mostly on the body.
-  private func DroneBodyAngle(angle: Float, thrust: Float, thrusters: Float) -> Float {
+  private func DroneBodyAngle(angle: Float, thrust: Float, thrusters: Float, share: Float) -> Float {
     let reach = AsinF(ClampF(this.raceMargin * thrusters / MaxF(thrust, 0.1), 0.0, 1.0));
-    let body = angle * this.droneBodyShare;
+    let body = angle * share;
     let rest = angle - body;
     if rest > reach {
       return angle - reach;

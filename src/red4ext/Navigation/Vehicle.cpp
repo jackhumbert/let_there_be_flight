@@ -38,6 +38,7 @@ bool VehicleSpec::Parse(const std::string &aText, std::string &aError) {
     else if (key == "gravityFactor") field = &gravityFactor;
     else if (key == "brakeLinear") field = &brakeLinear;
     else if (key == "maxTilt") field = &maxTilt;
+    else if (key == "brakeShare") field = &brakeShare;
     else if (key == "driftMax") field = &driftMax;
     else if (key == "speedCap") field = &speedCap;
     else if (key == "margin") field = &margin;
