@@ -26,11 +26,22 @@ public native class FlightNavMap extends IScriptable {
   // at cruise altitude first. Synchronous.
   public native static func Plan(start: Vector4, goal: Vector4, direct: Bool) -> array<Vector4>;
   public native static func GetLastPlanInfo() -> String;
+  // the plan TakePlan last returned is a first leg: it ends short of the goal, the rest joins it
+  // GetLastPlanJoin metres along
+  public native static func GetLastPlanPartial() -> Bool;
+  public native static func GetLastPlanJoin() -> Float;
   public native static func SetPlanParameters(preferredHeight: Float, climbCost: Float, underCost: Float, heuristicWeight: Float) -> Void;
   // the same search on a worker thread: poll IsPlanReady, then TakePlan once
   public native static func PlanAsync(start: Vector4, goal: Vector4, direct: Bool) -> Int32;
   // PlanAsync with the Race's route character, slot detours and the start velocity (the Autopilot's plan)
   public native static func PlanRaceAsync(start: Vector4, goal: Vector4, preferredHeight: Float, climbCost: Float, minPassage: Float, heuristicWeight: Float, turnCost: Float, vehicle: ref<FlightVehicleModel>, detour: Bool, avoid: array<Vector4>, velocity: Vector4) -> Int32;
+  // PlanRaceAsync planned ahead (Navigation/PlanAhead.hpp): on a trip over minTrip, a first leg
+  // horizon metres along the doorway route (TakePlan as usual, GetLastPlanPartial true, the rest
+  // joining GetLastPlanJoin metres along it), then the rest planned on the same thread
+  // (IsRestReady / TakeRest); shorter, one plan
+  public native static func PlanTripAsync(start: Vector4, goal: Vector4, preferredHeight: Float, climbCost: Float, minPassage: Float, heuristicWeight: Float, turnCost: Float, vehicle: ref<FlightVehicleModel>, avoid: array<Vector4>, velocity: Vector4, horizon: Float, margin: Float, minTrip: Float) -> Int32;
+  public native static func IsRestReady(id: Int32) -> Bool;
+  public native static func TakeRest(id: Int32) -> array<Vector4>;
   // back onto the route's line after leaving it: a connector from car (flying at velocity) to the line
   // joinAhead metres on, then the rest of line (the line from about the car's place on it); taken with
   // IsPlanReady / TakePlan like the others

@@ -1,4 +1,5 @@
 #include "FlightNavMap.hpp"
+#include "PlanAhead.hpp"
 #include "Gates.hpp"
 #include "Helipads.hpp"
 #include "NavDraw.hpp"
@@ -21,10 +22,17 @@ float Finite(float aZ) { return std::isinf(aZ) ? kSky : aZ; }
 
 Navigation::PlanParams planParams;
 std::string lastPlanInfo;
+bool lastPlanPartial = false;
+float lastPlanJoin = 0.0f;
+// s the rest of a trip planned ahead took last (eased): when its join is due
+float restSeconds = 2.0f;
 
 struct Request {
   bool ready = false;
   Navigation::PlanResult result;
+  float joinS = 0.0f;       // a first leg's join (PlanTripAsync)
+  bool restReady = false;   // its rest has been planned
+  Navigation::PlanResult rest;
 };
 bool hasTargetOverride = false;
 RED4ext::Vector4 targetOverride{};
@@ -203,6 +211,82 @@ int32_t FlightNavMap::PlanRaceAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aG
   return StartPlan(aStart, aGoal, params);
 }
 
+int32_t FlightNavMap::PlanTripAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, float aPreferredHeight, float aClimbCost,
+                                    float aMinPassage, float aHeuristicWeight, float aTurnCost,
+                                    RED4ext::Handle<FlightVehicleModel> aVehicle, RED4ext::DynArray<RED4ext::Vector4> aAvoid,
+                                    RED4ext::Vector4 aVelocity, float aHorizon, float aMargin, float aMinTrip) {
+  auto params = planParams;
+  Navigation::RacePreset(params);
+  if (aVehicle) {
+    params.vehicle = aVehicle->Spec();
+  }
+  params.startVelocity = {aVelocity.X, aVelocity.Y, aVelocity.Z};
+  for (const auto &a : aAvoid) {
+    params.avoid.push_back({{a.X, a.Y, a.Z}, std::max(a.W, 1.0f), params.slotAvoidCost});
+  }
+  params.preferredHeight = aPreferredHeight;
+  params.climbCost = aClimbCost;
+  params.minPassage = aMinPassage;
+  params.heuristicWeight = std::max(1.0f, aHeuristicWeight);
+  params.turnCost = std::max(0.0f, aTurnCost);
+  Navigation::AheadParams ahead;
+  ahead.horizon = std::max(0.0f, aHorizon);
+  ahead.margin = std::max(0.0f, aMargin);
+  ahead.minTrip = aMinTrip;
+  Navigation::Vec3 start{aStart.X, aStart.Y, aStart.Z}, goal{aGoal.X, aGoal.Y, aGoal.Z};
+  auto request = std::make_shared<Request>();
+  int32_t id;
+  {
+    std::lock_guard guard(requestsLock);
+    id = nextRequest++;
+    requests[id] = request;
+    ahead.restGuess = restSeconds;
+  }
+  std::thread([request, start, goal, params, ahead]() {
+    auto leg = Navigation::PlanFirstLeg(Navigation::NavMap::Get(), start, goal, params, ahead);
+    LogPlan(start, goal, leg.plan);
+    const bool partial = leg.plan.partial;
+    {
+      std::lock_guard guard(requestsLock);
+      request->result = leg.plan;
+      request->joinS = leg.joinS;
+      request->ready = true;
+    }
+    if (!partial) {
+      return;
+    }
+    auto rest = Navigation::PlanRest(Navigation::NavMap::Get(), leg, goal, params);
+    LogPlan(leg.joinPosition, goal, rest);
+    std::lock_guard guard(requestsLock);
+    restSeconds = 0.5f * restSeconds + 0.5f * float(rest.milliseconds / 1000.0);
+    request->rest = std::move(rest);
+    request->restReady = true;
+  }).detach();
+  return id;
+}
+
+bool FlightNavMap::IsRestReady(int32_t aId) {
+  std::lock_guard guard(requestsLock);
+  auto it = requests.find(aId);
+  return it != requests.end() && it->second->restReady;
+}
+
+RED4ext::DynArray<RED4ext::Vector4> FlightNavMap::TakeRest(int32_t aId) {
+  std::shared_ptr<Request> request;
+  {
+    std::lock_guard guard(requestsLock);
+    auto it = requests.find(aId);
+    if (it == requests.end() || !it->second->restReady) {
+      return {};
+    }
+    request = it->second;
+    requests.erase(it);
+  }
+  lastPlanInfo = request->rest.info;
+  lastPlanPartial = false;
+  return ToScript(request->rest);
+}
+
 int32_t FlightNavMap::PlanRejoinAsync(RED4ext::Vector4 aCar, RED4ext::Vector4 aVelocity, RED4ext::DynArray<RED4ext::Vector4> aLine,
                                       float aJoinAhead, RED4ext::Handle<FlightVehicleModel> aVehicle,
                                       RED4ext::DynArray<RED4ext::Vector4> aAvoid) {
@@ -273,13 +357,22 @@ RED4ext::DynArray<RED4ext::Vector4> FlightNavMap::TakePlan(int32_t aId) {
       return {};
     }
     request = it->second;
-    requests.erase(it);
+    // a first leg's request stays for its rest (TakeRest)
+    if (!request->result.partial) {
+      requests.erase(it);
+    }
   }
   lastPlanInfo = request->result.info;
+  lastPlanPartial = request->result.partial;
+  lastPlanJoin = request->joinS;
   return ToScript(request->result);
 }
 
 RED4ext::CString FlightNavMap::GetLastPlanInfo() { return {lastPlanInfo.c_str()}; }
+
+bool FlightNavMap::GetLastPlanPartial() { return lastPlanPartial; }
+
+float FlightNavMap::GetLastPlanJoin() { return lastPlanJoin; }
 
 void FlightNavMap::SetTargetOverride(RED4ext::Vector4 aTarget) {
   targetOverride = aTarget;

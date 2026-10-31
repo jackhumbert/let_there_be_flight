@@ -35,17 +35,33 @@ struct FlightNavMap : RED4ext::IScriptable {
   // the calling thread. GetLastPlanInfo describes the last call (method, length, time).
   static RED4ext::DynArray<RED4ext::Vector4> Plan(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, bool aDirect);
   static RED4ext::CString GetLastPlanInfo();
+  // the last plan TakePlan returned is a first leg (PlanTripAsync): it ends short of the goal, and the
+  // rest joins it GetLastPlanJoin metres along
+  static bool GetLastPlanPartial();
+  static float GetLastPlanJoin();
   static void SetPlanParameters(float aPreferredHeight, float aClimbCost, float aUnderCost, float aHeuristicWeight);
 
   // Same search on a worker thread: returns a request id (> 0). IsPlanReady polls it; TakePlan
   // returns the points once (empty if it failed or is unknown) and forgets the request, with
   // its info string in GetLastPlanInfo.
   static int32_t PlanAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, bool aDirect);
-  // PlanAsync with the Race's route character (RacePreset), slot detours and the start velocity: the Autopilot's plan
+  // PlanAsync with the Race's route character (RacePreset), slot detours and the start velocity: the
+  // Autopilot's plan
   static int32_t PlanRaceAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, float aPreferredHeight, float aClimbCost,
                                float aMinPassage, float aHeuristicWeight, float aTurnCost,
                                RED4ext::Handle<FlightVehicleModel> aVehicle, bool aDetour,
                                RED4ext::DynArray<RED4ext::Vector4> aAvoid, RED4ext::Vector4 aVelocity);
+  // PlanRaceAsync planned ahead (Navigation/PlanAhead.hpp): a first leg aHorizon metres along the
+  // doorway route (trips over aMinTrip), ready for TakePlan at once, and the rest from where the
+  // car will be on it aMargin seconds after the rest's plan is expected, planned straight after on
+  // the same thread: IsRestReady / TakeRest. A shorter trip is one plan, as PlanRaceAsync.
+  static int32_t PlanTripAsync(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, float aPreferredHeight, float aClimbCost,
+                               float aMinPassage, float aHeuristicWeight, float aTurnCost,
+                               RED4ext::Handle<FlightVehicleModel> aVehicle, RED4ext::DynArray<RED4ext::Vector4> aAvoid,
+                               RED4ext::Vector4 aVelocity, float aHorizon, float aMargin, float aMinTrip);
+  static bool IsRestReady(int32_t aId);
+  // the rest's line (it starts at the join), once; empty when it failed. Its info in GetLastPlanInfo.
+  static RED4ext::DynArray<RED4ext::Vector4> TakeRest(int32_t aId);
   // back onto the route's line after leaving it: a connector from aCar (flying at aVelocity) to the
   // line joinAhead metres on, then the rest of aLine (the line from about the car's place on it)
   static int32_t PlanRejoinAsync(RED4ext::Vector4 aCar, RED4ext::Vector4 aVelocity, RED4ext::DynArray<RED4ext::Vector4> aLine,
@@ -101,6 +117,11 @@ RTTI_DEFINE_CLASS(FlightNavMap, {
   RTTI_METHOD(SegmentClear);
   RTTI_METHOD(Plan);
   RTTI_METHOD(GetLastPlanInfo);
+  RTTI_METHOD(GetLastPlanPartial);
+  RTTI_METHOD(GetLastPlanJoin);
+  RTTI_METHOD(PlanTripAsync);
+  RTTI_METHOD(IsRestReady);
+  RTTI_METHOD(TakeRest);
   RTTI_METHOD(SetPlanParameters);
   RTTI_METHOD(PlanAsync);
   RTTI_METHOD(PlanRaceAsync);

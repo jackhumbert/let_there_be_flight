@@ -376,7 +376,7 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
     aMap.CellCentre(aCx, aCy, x, y);
     return aParams.heuristicWeight * std::hypot(x - goalX, y - goalY);
   };
-  const uint64_t goalKey = MakeKey(gx, gy, gg, width);
+  uint64_t goalKey = MakeKey(gx, gy, gg, width); // moved to a first leg's end (horizon)
   static const int32_t kDx[8] = {1, -1, 0, 0, 1, 1, -1, -1};
   static const int32_t kDy[8] = {0, 0, 1, -1, 1, -1, 1, -1};
   const float minOverlap = aMap.VoxelHeight();
@@ -602,7 +602,7 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
     }
     const int32_t bsx0 = BlockOf(sx0), bsy0 = BlockOf(sy0), bsx1 = BlockOf(sx1), bsy1 = BlockOf(sy1);
     auto fromStart = RegionCosts(view, costs, width, bsx0 * kBlock, bsy0 * kBlock, (bsx1 + 1) * kBlock, (bsy1 + 1) * kBlock, seeds, false);
-    const int32_t gbx = BlockOf(gx), gby = BlockOf(gy);
+    int32_t gbx = BlockOf(gx), gby = BlockOf(gy);
     auto toGoal = RegionCosts(view, costs, width, (gbx - 1) * kBlock, (gby - 1) * kBlock, (gbx + 2) * kBlock, (gby + 2) * kBlock,
                               {{goalKey, 0.0f}}, true);
 
@@ -669,6 +669,45 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
           doorRecs[to] = {ng, uint64_t(door)};
           doorOpen.push({ng + doorHeuristic(to), to});
         }
+      }
+    }
+    if (bestDoor != kNone && aParams.horizon > 0.0f) {
+      // a first leg: the goal moves to the doorway about horizon metres along the doorway route,
+      // when the real goal is well beyond it (the rest is planned while the car flies this)
+      std::vector<uint32_t> chain;
+      for (uint32_t door = bestDoor;; door = uint32_t(doorRecs[door].parent)) {
+        chain.push_back(door);
+        if (doorRecs[door].parent == door) {
+          break;
+        }
+      }
+      std::reverse(chain.begin(), chain.end());
+      float along = 0.0f;
+      Vec3 prev = aStart;
+      for (uint32_t door : chain) {
+        const auto &d = doorways.doors[door];
+        float x, y;
+        aMap.CellCentre(d.cx, d.cy, x, y);
+        const GapM gap = GapAt(view, d.cx, d.cy, d.gap);
+        const Vec3 at{x, y, std::clamp(Preferred(gap, aParams.preferredHeight), gap.b, std::min(gap.t, kTopCap) - aMap.VoxelHeight())};
+        along += Distance(prev, at);
+        prev = at;
+        if (along < aParams.horizon) {
+          continue;
+        }
+        if (Distance(at, goal) > 0.5f * aParams.horizon) {
+          gx = d.cx;
+          gy = d.cy;
+          gg = d.gap;
+          goal = at;
+          goalKey = MakeKey(gx, gy, gg, width);
+          aMap.CellCentre(gx, gy, goalX, goalY);
+          gbx = BlockOf(gx);
+          gby = BlockOf(gy);
+          bestDoor = door;
+          out.partial = true;
+        }
+        break;
       }
     }
     if (bestDoor != kNone) {
@@ -828,12 +867,14 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
   if (aParams.line && out.points.size() > 2) {
     auto lineParams = aParams;
     lineParams.lineTakeoff = lineParams.lineTakeoff && !leadIn;
+    lineParams.lineLanding = lineParams.lineLanding && !out.partial; // a first leg flies on
     auto line = Line(aMap, out.points, lineParams);
     // where the smoothing left it blocked, those stretches only are taken along the route (the
     // stretch out from under cover to the free space is blocked on the map: not counted)
     out.points = RepairLine(aMap, std::move(line), out.points, lineParams, startLeg + 5.0f, out.repaired);
-    return finish(out.repaired > 0 ? fmt::format("line ({} blocked stretch(es) taken along the route)", out.repaired).c_str()
-                                   : "line");
+    const char *what = out.partial ? "first leg" : "line";
+    return finish(out.repaired > 0 ? fmt::format("{} ({} blocked stretch(es) taken along the route)", what, out.repaired).c_str()
+                                   : what);
   }
   return finish("route");
 }

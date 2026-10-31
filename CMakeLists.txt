@@ -179,6 +179,7 @@ add_executable(navplan EXCLUDE_FROM_ALL
   src/red4ext/Navigation/Planner.cpp
   src/red4ext/Navigation/PlannerCommon.cpp
   src/red4ext/Navigation/Line.cpp
+  src/red4ext/Navigation/PlanAhead.cpp
   src/red4ext/Navigation/Doorways.cpp
   src/red4ext/Navigation/Vehicle.cpp
   src/red4ext/Navigation/Trajectory.cpp

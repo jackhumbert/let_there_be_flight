@@ -69,6 +69,10 @@ struct PlanParams {
   float legClearance = 2.0f;     // straight legs must also be free this far to either side (m), on top
                                  // of the bake's car inflation, so a follower can stray a little
   bool tryDirect = false;
+  // a first leg only (docs/design/trajectory.md step 7): when the doorway route is long, the plan
+  // ends at its doorway about horizon metres along and the rest is planned while the car flies
+  // this; 0: all the way
+  float horizon = 0.0f;
   // the line: the route evened out to points lineSpacing apart and bent as little as the free space
   // allows (least summed squared curvature), coarse to fine. Off only for a piece the caller makes
   // its line from together with what follows (PlanRejoin's connector).
@@ -152,6 +156,7 @@ struct PlanResult {
   bool direct = false;
   std::vector<Vec3> points;
   int32_t repaired = 0;           // stretches of the line its smoothing left blocked, taken along the route
+  bool partial = false;           // a first leg (PlanParams::horizon): it ends short of the goal
   uint32_t expansions = 0;
   uint32_t doorwayExpansions = 0; // of the search over doorways, not in expansions
   uint32_t doorwayBlocks = 0;     // blocks the doorway route passed

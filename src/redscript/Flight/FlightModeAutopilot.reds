@@ -101,7 +101,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let hitAvoidTime: Float = 60.0;    // s a hit is kept away from
   private let lastCollisionTimer: Float = 1000.0;
   private let recovering: Float;            // s left of the controls' damping after a hit (FlightComponent.ProcessImpact)
-  private let hits: array<Vector4>;         // x, y, z and the radius kept away from
+  public let hits: array<Vector4>;         // x, y, z and the radius kept away from
   private let hitTimes: array<Float>;
   private let clock: Float;
   public let droneYawLead: Float = 0.3;       // s along the line the nose aims (DroneAttitude)
@@ -365,18 +365,21 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let requestJoin: Bool;               // the pending plan is the next free roam leg, from joinPoint
   public let joinS: Float;                    // route distance of joinPoint
   public let joinPoint: Vector4;
+  public let ahead: ref<AutopilotPlanAhead>;  // plan ahead: a first leg at once, the rest while flying it
   private let cinematicCallback: ref<CallbackHandle>;
   private let cinematicContext: Bool;         // UIGameContext.CinematicCamera pushed              // rad/s
 
   public static func Create(component: ref<FlightComponent>) -> ref<FlightModeAutopilot> {
     let self = new FlightModeAutopilot();
     self.Initialize(component);
+    self.ahead = new AutopilotPlanAhead();
     return self;
   }
 
   public func GetDescription() -> String = "Autopilot";
 
   public func Activate() -> Void {
+    this.ahead.Reset();
     this.holdPosition = this.component.stats.d_position;
     ArrayClear(this.route);
     this.request = 0;
@@ -728,8 +731,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
       && Vector4.Distance(this.routeGoal, this.routeGateEntry) < 1.0 {
       this.gateTail = this.routeGateTail;
     }
-    this.request = FlightNavMap.PlanRaceAsync(from, this.routeGoal, this.raceRouteHeight, this.raceClimbCost, this.raceMinPassage, this.raceSearchWeight, this.raceTurnCost, this.Vehicle(), true, this.hits,
-      this.component.stats.d_velocity);
+    // from rest: a first leg at once, the rest planned while the car flies it (AutopilotPlanAhead)
+    if !this.ahead.Request(this, from, this.component.stats.d_velocity) {
+      this.request = FlightNavMap.PlanRaceAsync(from, this.routeGoal, this.raceRouteHeight, this.raceClimbCost, this.raceMinPassage, this.raceSearchWeight, this.raceTurnCost, this.Vehicle(), true, this.hits,
+        this.component.stats.d_velocity);
+    }
     this.replanTimer = 3.0;
     if ArraySize(this.route) < 2 {
       // nothing to follow meanwhile: hold here (a replan keeps following the old route)
@@ -740,6 +746,16 @@ public class FlightModeAutopilot extends FlightModeStandard {
 
   private func UpdateRoute(timeDelta: Float) -> Void {
     this.replanTimer -= timeDelta;
+    // the rest of a trip begun on a first leg: on from its join, or (late) the trip again from here
+    let rest: array<Vector4>;
+    if this.ahead.TakeRest(this, rest) {
+      if this.ahead.firstLeg {
+        this.ahead.Reset();
+        this.RequestRoute(this.component.stats.d_position);
+      } else {
+        this.SpliceRoute(rest);
+      }
+    }
     let target: Vector4;
     let has = this.CurrentDestination(target);
     if !has && !this.freeRoam && (Equals(this.status, "descending") || Equals(this.status, "landed") || Equals(this.status, "arrived")) {
@@ -843,6 +859,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
         this.gateEndS = gateLeg ? total : 0.0;
         this.status = "following";
         this.BuildTrajectory();
+        this.ahead.Taken(this);
       } else {
         this.status = "no route";
         this.holdPosition = this.component.stats.d_position;
@@ -1069,7 +1086,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     }
     this.gateEndS = this.spliceGate ? total : MaxF(this.gateEndS - trimmed, 0.0);
     this.BuildTrajectory();
-    FlightLog.Info("[Autopilot] free roam: next leg joined, " + FloatToStringPrec(total - this.closestS, 0) + " m ahead");
+    FlightLog.Info("[Autopilot] next leg joined, " + FloatToStringPrec(total - this.closestS, 0) + " m ahead");
   }
 
   // The planner's route is straight legs meeting at corners. Replace each corner with a short
@@ -1717,6 +1734,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
         ArrayClear(this.route);
         this.status = "free roam";
         FlightLog.Info("[Autopilot] free roam: end of the route, planning on from here");
+      } else if this.ahead.firstLeg {
+        // the end of a first leg, not the trip's: the rest is on its way (or asked for again)
       } else if this.landing ? this.remaining < this.landingEntry && stats.d_speed < this.landingEntrySpeed : this.remaining < this.arriveDistance && stats.d_speed < 3.0 {
         // the spot again now the cars around it have streamed in: taken, the nearest free one
         // with room (from up here a few metres across is fine; the shaft above it is open)
@@ -2135,7 +2154,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // route's end is moved to the nearest free one (ShiftRouteEnd), so the car flies into it in one
   // go rather than stopping over the taken spot and moving over.
   private func RecheckLandingSpot(timeDelta: Float) -> Void {
-    if !this.landing || this.landingPad >= 0 || this.remaining > this.landingRecheck || this.remaining < 15.0 {
+    if !this.landing || this.ahead.firstLeg || this.landingPad >= 0 || this.remaining > this.landingRecheck || this.remaining < 15.0 {
       return;
     }
     this.spotCheckTimer -= timeDelta;

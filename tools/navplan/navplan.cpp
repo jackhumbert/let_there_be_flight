@@ -18,11 +18,17 @@
 //   NAVPLAN_VEHICLE=a=1,..  the car (VehicleSpec fields by name; tools/navplan/vehicles.json names cars)
 //   NAVPLAN_LINE=<csv>     build the trajectory on this line (x,y,z columns) instead of planning one
 //   NAVPLAN_REPEAT=1        plan the line again: what a later plan costs once its doorways are known
+//   NAVPLAN_AHEAD=h,m       plan ahead (docs/design/trajectory.md step 7): a first leg of h metres
+//                           along the doorway route, the rest planned from where the car will be on it
+//                           when a full plan's time plus m seconds have passed, the two spliced; prints
+//                           "ahead {json}" (time to move, arrival against one full plan, late, dips)
+//                           and writes <prefix>_ahead.csv
 //   NAVPLAN_DOORWAY_COUNT=x0,y0,x1,y1  work out the doorways over that area instead, and save them
 //
 // Build: cmake --build build --target navplan (not part of the default build).
 
 #include "Navigation/NavMap.hpp"
+#include "Navigation/PlanAhead.hpp"
 #include "Navigation/PlannerCommon.hpp"
 #include "Navigation/Planner.hpp"
 #include "Navigation/Trajectory.hpp"
@@ -90,6 +96,46 @@ bool SetParams(PlanParams &aParams, const std::string &aText) {
         field->member);
   }
   return true;
+}
+
+// The plan-ahead sequence as the Autopilot flies it (NAVPLAN_AHEAD; Navigation/PlanAhead.hpp): the
+// first leg, the rest from its join, spliced, and the trajectory of the whole.
+struct Ahead {
+  bool ok = false, partial = false, late = false, shortLeg = false;
+  double leadMs = 0.0, restMs = 0.0;
+  float joinT = 0.0f, joinS = 0.0f, duration = 0.0f, dips = 0.0f, length = 0.0f;
+  std::vector<Navigation::Vec3> points;
+};
+
+Ahead PlanAhead(const Navigation::NavMap &aMap, Navigation::Vec3 aStart, Navigation::Vec3 aGoal, const PlanParams &aParams,
+                const Navigation::AheadParams &aAhead) {
+  Ahead out;
+  auto leg = Navigation::PlanFirstLeg(aMap, aStart, aGoal, aParams, aAhead);
+  out.leadMs = leg.plan.milliseconds;
+  out.partial = leg.plan.partial;
+  out.shortLeg = leg.shortLeg;
+  if (!leg.plan.ok || leg.plan.points.size() < 2) {
+    return out;
+  }
+  if (!leg.plan.partial) {
+    out.points = leg.plan.points;
+  } else {
+    out.joinS = leg.joinS;
+    out.joinT = leg.joinT;
+    auto rest = Navigation::PlanRest(aMap, leg, aGoal, aParams);
+    out.restMs = rest.milliseconds;
+    out.late = out.restMs / 1000.0 > out.joinT;
+    if (!rest.ok || rest.points.size() < 2) {
+      return out;
+    }
+    out.points = Navigation::SpliceRest(leg, rest);
+  }
+  out.ok = true;
+  const auto whole = Navigation::BuildTrajectory(aParams.vehicle, out.points, {}, &aMap);
+  out.duration = whole.Duration();
+  out.dips = Navigation::DipLoss(whole);
+  out.length = whole.samples.empty() ? 0.0f : whole.samples.back().s;
+  return out;
 }
 
 bool Write(const std::string &aPath, const std::vector<Navigation::Vec3> &aPoints) {
@@ -248,6 +294,24 @@ int main(int argc, char **argv) {
   }
   // the trajectory the car flies the line with (Trajectory.hpp), and its clearance
   auto trajectory = Navigation::BuildTrajectory(params.vehicle, points, {}, &map);
+  if (const char *v = std::getenv("NAVPLAN_AHEAD")) {
+    float horizon = 0.0f, margin = 1.0f;
+    std::sscanf(v, "%f,%f", &horizon, &margin);
+    Navigation::AheadParams ahead;
+    ahead.horizon = horizon;
+    ahead.margin = margin;
+    ahead.restGuess = float(milliseconds / 1000.0); // a full plan's time: the rest's is shorter
+    auto a = PlanAhead(map, start, goal, params, ahead);
+    Write(prefix + "_ahead.csv", a.points);
+    std::printf("ahead {\"ok\": %s, \"partial\": %s, \"late\": %s, \"short\": %s, \"horizon\": %.0f, \"margin\": %.2f, "
+                "\"lead_ms\": %.1f, \"rest_ms\": %.1f, \"join_t\": %.2f, \"join_s\": %.1f, \"duration\": %.2f, \"dips\": %.1f, "
+                "\"length\": %.1f, \"full_ms\": %.1f, \"full_duration\": %.2f, \"full_dips\": %.1f, "
+                "\"move_s\": %.2f, \"arrive_s\": %.2f, \"full_arrive_s\": %.2f}\n",
+                a.ok ? "true" : "false", a.partial ? "true" : "false", a.late ? "true" : "false", a.shortLeg ? "true" : "false",
+                horizon, margin, a.leadMs, a.restMs, a.joinT, a.joinS, a.duration, a.dips, a.length, milliseconds,
+                trajectory.Duration(), Navigation::DipLoss(trajectory), a.leadMs / 1000.0, a.leadMs / 1000.0 + a.duration,
+                milliseconds / 1000.0 + trajectory.Duration());
+  }
   for (const auto &v : trajectory.violations) {
     std::printf("trajectory: %s\n", v.c_str());
   }
