@@ -203,7 +203,10 @@ uint32_t NavMap::ColumnAt(int32_t aCx, int32_t aCy, const uint16_t *&aGaps) cons
   return tile->starts[col + 1] - tile->starts[col];
 }
 
-uint32_t NavMap::View::Column(int32_t aCx, int32_t aCy, const uint16_t *&aGaps) {
+uint32_t NavMap::View::Column(int32_t aCx, int32_t aCy, const uint16_t *&aGaps, bool *aHasData) {
+  if (aHasData) {
+    *aHasData = false;
+  }
   if (!map.loaded || aCx < 0 || aCy < 0 || aCx >= int32_t(map.width) || aCy >= int32_t(map.height)) {
     return 0;
   }
@@ -215,6 +218,9 @@ uint32_t NavMap::View::Column(int32_t aCx, int32_t aCy, const uint16_t *&aGaps) 
   const Tile *tile = it->second.get();
   if (!tile) {
     return 0;
+  }
+  if (aHasData) {
+    *aHasData = true;
   }
   uint32_t col = (uint32_t(aCy) % map.tileCells) * map.tileCells + (uint32_t(aCx) % map.tileCells);
   aGaps = tile->gaps + 2 * size_t(tile->starts[col]);

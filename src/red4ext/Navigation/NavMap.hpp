@@ -40,7 +40,8 @@ public:
   public:
     explicit View(const NavMap &aMap) : map(aMap) {}
     // Gaps of cell (cx, cy) as voxel index pairs (bottom, top); count 0 = blocked / no data.
-    uint32_t Column(int32_t aCx, int32_t aCy, const uint16_t *&aGaps);
+    // aHasData, if given, tells the two apart: false outside the map or in a tile with no data.
+    uint32_t Column(int32_t aCx, int32_t aCy, const uint16_t *&aGaps, bool *aHasData = nullptr);
     const NavMap &Map() const { return map; }
 
   private:

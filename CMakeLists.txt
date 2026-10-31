@@ -189,6 +189,18 @@ target_include_directories(navplan PRIVATE src/red4ext)
 target_compile_features(navplan PRIVATE cxx_std_20)
 target_link_libraries(navplan PRIVATE spdlog)
 
+# offline run of the plugin's acoustics code over Autopilot telemetry, checked against
+# tools/acoustics/flyby.py (docs/design/acoustics.md); not built by default
+add_executable(acoustics EXCLUDE_FROM_ALL
+  tools/acoustics/acoustics.cpp
+  src/red4ext/Audio/Acoustics/Probe.cpp
+  src/red4ext/Navigation/NavMap.cpp
+  src/red4ext/ThirdParty/miniz/miniz_tinfl.cpp
+)
+target_include_directories(acoustics PRIVATE src/red4ext)
+target_compile_features(acoustics PRIVATE cxx_std_20)
+target_link_libraries(acoustics PRIVATE spdlog)
+
 # configure_inputs(src/input_loader/let_there_be_flight.xml)
 configure_mod_file(src/input_loader/${MOD_SLUG}.xml red4ext/plugins/${MOD_SLUG}/inputs.xml)
 configure_redscript(src/redscript)
