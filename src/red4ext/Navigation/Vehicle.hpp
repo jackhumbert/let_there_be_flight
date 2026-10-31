@@ -73,5 +73,9 @@ float Decel(const VehicleSpec &aSpec, float aSpeed);
 float PlanDecel(const VehicleSpec &aSpec, float aSpeed);
 // Pulling the path upwards: the lift over gravity.
 float PullUp(const VehicleSpec &aSpec);
+// Drone style: the body's tilt on one axis for a thrust direction aAngle (rad) from vertical: aShare of it, or
+// more where the thrusters (aThrusters m/s2 across the body at most, margin of it planned) cannot point the rest
+// of aThrust m/s2.
+float DroneBodyAngle(const VehicleSpec &aSpec, float aAngle, float aThrust, float aThrusters, float aShare);
 
 } // namespace Navigation

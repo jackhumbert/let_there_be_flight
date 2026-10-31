@@ -2557,18 +2557,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
 
   // The body's tilt on one axis for a thrust direction `angle` from vertical: droneBodyShare of it,
   // or more where the thrusters (`thrusters` m/s2 across the body at most, raceMargin of it planned)
-  // cannot point the rest of `thrust` m/s2. Sway is 5 m/s2, so turns lean mostly on the body.
+  // cannot point the rest of `thrust` m/s2. Sway is 5 m/s2, so turns lean mostly on the body. The formula is
+  // Navigation::DroneBodyAngle (Vehicle.hpp).
   private func DroneBodyAngle(angle: Float, thrust: Float, thrusters: Float, share: Float) -> Float {
-    let reach = AsinF(ClampF(this.raceMargin * thrusters / MaxF(thrust, 0.1), 0.0, 1.0));
-    let body = angle * share;
-    let rest = angle - body;
-    if rest > reach {
-      return angle - reach;
-    }
-    if rest < -reach {
-      return angle + reach;
-    }
-    return body;
+    return this.Vehicle().DroneBodyAngle(angle, thrust, thrusters, share);
   }
 
   // Drone style's envelope: the most horizontal acceleration level flight leaves along one body

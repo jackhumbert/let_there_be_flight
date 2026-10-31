@@ -60,6 +60,9 @@ struct FlightVehicleModel : RED4ext::IScriptable {
   float Accel(float aSpeed) { return Navigation::Accel(Spec(), aSpeed); }
   float Decel(float aSpeed) { return Navigation::Decel(Spec(), aSpeed); }
   float PlanDecel(float aSpeed) { return Navigation::PlanDecel(Spec(), aSpeed); }
+  float DroneBodyAngle(float aAngle, float aThrust, float aThrusters, float aShare) {
+    return Navigation::DroneBodyAngle(Spec(), aAngle, aThrust, aThrusters, aShare);
+  }
   RED4ext::CString Describe() { return Spec().Describe().c_str(); }
 
   RTTI_IMPL_TYPEINFO(FlightVehicleModel);
@@ -93,5 +96,6 @@ RTTI_DEFINE_CLASS(FlightVehicleModel, {
   RTTI_METHOD(Accel);
   RTTI_METHOD(Decel);
   RTTI_METHOD(PlanDecel);
+  RTTI_METHOD(DroneBodyAngle);
   RTTI_METHOD(Describe);
 });

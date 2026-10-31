@@ -316,11 +316,6 @@ Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aL
   // the body's share of the thrust's tilt (more where the thrusters cannot point the rest)
   {
     const float g = kG * aSpec.gravityFactor, cap = aSpec.maxTilt * 3.14159265f / 180.0f;
-    auto bodyAngle = [&](float aAngle, float aThrust, float aThrusters, float aShare) {
-      const float reach = std::asin(std::clamp(aSpec.margin * aThrusters / std::max(aThrust, 0.1f), 0.0f, 1.0f));
-      const float body = aAngle * aShare, rest = aAngle - body;
-      return rest > reach ? aAngle - reach : (rest < -reach ? aAngle + reach : body);
-    };
     // each side's lean started early enough to reach its peak at the rate limit, and let go no
     // faster: an envelope over each sign, backward (rising) then forward (falling)
     auto envelope = [&](std::vector<float> &aAngle, float aRate) {
@@ -383,7 +378,7 @@ Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aL
       // reverse surge slows the car, as a player pulls back on the surge rather than the nose
       const float along = ahead >= 0.0f ? aSpec.surge : Decel(aSpec, q.speed) - Drag(aSpec, q.speed);
       const float share = ahead >= 0.0f ? aParams.bodyShare : aSpec.brakeShare;
-      pitch[i] = std::clamp(bodyAngle(std::atan2(ahead, thrust.z), size[i], along, share), -cap, cap);
+      pitch[i] = std::clamp(DroneBodyAngle(aSpec, std::atan2(ahead, thrust.z), size[i], along, share), -cap, cap);
     }
     // a coming turn's roll held from rollLook before it (same side, or nearly level now)
     for (size_t i = 0; i < n; ++i) {
@@ -394,7 +389,7 @@ Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aL
           lateral = coming;
         }
       }
-      roll[i] = std::clamp(bodyAngle(std::atan2(lateral, up[i]), size[i], aSpec.sway, aParams.bodyShare), -cap, cap);
+      roll[i] = std::clamp(DroneBodyAngle(aSpec, std::atan2(lateral, up[i]), size[i], aSpec.sway, aParams.bodyShare), -cap, cap);
     }
     envelope(roll, aParams.rollRateMax);
     envelope(pitch, aParams.pitchRateMax);

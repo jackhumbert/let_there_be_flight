@@ -132,4 +132,10 @@ float PlanDecel(const VehicleSpec &aSpec, float aSpeed) {
 
 float PullUp(const VehicleSpec &aSpec) { return aSpec.lift; }
 
+float DroneBodyAngle(const VehicleSpec &aSpec, float aAngle, float aThrust, float aThrusters, float aShare) {
+  const float reach = std::asin(std::clamp(aSpec.margin * aThrusters / std::max(aThrust, 0.1f), 0.0f, 1.0f));
+  const float body = aAngle * aShare, rest = aAngle - body;
+  return rest > reach ? aAngle - reach : (rest < -reach ? aAngle + reach : body);
+}
+
 } // namespace Navigation

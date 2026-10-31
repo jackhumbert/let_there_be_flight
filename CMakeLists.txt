@@ -232,6 +232,7 @@ add_executable(ltbf_tests
   tests/materials_tests.cpp
   tests/occlusion_tests.cpp
   tests/buses_tests.cpp
+  tests/vehicle_tests.cpp
   src/red4ext/Audio/EngineSynth/Synth.cpp
   src/red4ext/Audio/EngineSynth/Sources.cpp
   src/red4ext/Audio/Buses.cpp
@@ -244,6 +245,7 @@ add_executable(ltbf_tests
   src/red4ext/Audio/Acoustics/Occlusion.cpp
   src/red4ext/Audio/Acoustics/Planes.cpp
   src/red4ext/Audio/Acoustics/Reflections.cpp
+  src/red4ext/Navigation/Vehicle.cpp
 )
 target_include_directories(ltbf_tests PRIVATE src/red4ext)
 target_compile_features(ltbf_tests PRIVATE cxx_std_20)

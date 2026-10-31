@@ -36,5 +36,7 @@ public native class FlightVehicleModel extends IScriptable {
   public native func Decel(speed: Float) -> Float;
   // what a speed plan brakes at: margin of Decel, at most planDecel
   public native func PlanDecel(speed: Float) -> Float;
+  // drone style: the body's tilt on one axis for a thrust direction `angle` from vertical (Navigation::DroneBodyAngle)
+  public native func DroneBodyAngle(angle: Float, thrust: Float, thrusters: Float, share: Float) -> Float;
   public native func Describe() -> String;
 }
