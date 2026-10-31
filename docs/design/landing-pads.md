@@ -19,6 +19,15 @@ The full story with probes and measurements: `docs/archive/helipads.md`.
   discovered (saved), registered as our own map pins (`Mappins.LTBF_LandingPadMappin`, the icon from
   `tools/packaging/icons/landing_pad_icon.py`), and the first touchdown on each pad gives supplies
   (saved too).
+- Toasts (discovery, supplies): the game's "new area" notification (`notification_LocationAdded`,
+  as `JournalNotificationQueue.OnNewLocationDiscovered` pushes it on a first visit to a
+  district), with the landing pad icon. The header line ("Entering a new area", `NewQuest_txt` in
+  `quest_update.inkwidget`) says what happened ("Landing pad discovered", "Landing pad
+  supplies"), the big line is the pad's name. `FlightHelipadSystem` keeps the HUD's
+  `JournalNotificationQueue` and pushes a `FlightLandingPadToastData` onto it;
+  `NewLocationNotification` sets the icon's part name only, so our atlas and the header are set
+  one tick after the widget initializes (the compiler will not wrap `SetNotificationData`).
+  `LtbfBridge.HelipadToast` shows one for tests, `tools/ingame/helipad_toast.py` records it.
 - The Autopilot lands on a pad when the destination is one, or within `padRange` of one, on the
   pad's heading.
 

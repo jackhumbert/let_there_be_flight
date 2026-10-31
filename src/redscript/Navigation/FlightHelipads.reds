@@ -54,6 +54,7 @@ public class FlightHelipadSystem extends ScriptableSystem {
   private let pinned: array<Bool>;
   private let player: wref<PlayerPuppet>;
   private let ticking: Bool;
+  public let notifications: wref<JournalNotificationQueue>; // the HUD queue that draws our toasts
 
   public static func GetInstance(game: GameInstance) -> ref<FlightHelipadSystem> {
     return GameInstance.GetScriptableSystemsContainer(game).Get(n"FlightHelipadSystem") as FlightHelipadSystem;
@@ -131,11 +132,13 @@ public class FlightHelipadSystem extends ScriptableSystem {
 
   private func Discover(position: Vector4) -> Void {
     let found = 0;
+    let first = -1;
     for index in FlightNavMap.FindHelipadsInRange(position, this.discoverDistance) {
       let id = FlightNavMap.GetHelipadId(index);
       if !ArrayContains(this.discovered, StringToName(id)) {
         ArrayPush(this.discovered, StringToName(id));
         found += 1;
+        first = first < 0 ? index : first;
         FlightLog.Info("[Helipads] discovered " + id + " (" + ToString(ArraySize(this.discovered)) + " of " + ToString(FlightNavMap.GetHelipadCount()) + ")");
       }
     }
@@ -143,7 +146,7 @@ public class FlightHelipadSystem extends ScriptableSystem {
       this.Notify(found == 1
         ? GetLocalizedTextByKey(n"LTBF-Landing-Pad-Discovered")
         : StrReplace(GetLocalizedTextByKey(n"LTBF-Landing-Pads-Discovered"), "{count}", ToString(found)),
-        GetLocalizedTextByKey(n"LTBF-Landing-Pad-Discovered-Description"));
+        FlightHelipadSystem.Title(first));
     }
   }
 
@@ -182,20 +185,16 @@ public class FlightHelipadSystem extends ScriptableSystem {
     transactions.GiveItem(this.player, ItemID.FromTDBID(t"Items.CommonMaterial1"), this.supplyCommon);
     transactions.GiveItem(this.player, ItemID.FromTDBID(t"Items.UncommonMaterial1"), this.supplyUncommon);
     FlightLog.Info("[Helipads] supplies at " + id + " (" + ToString(ArraySize(this.supplied)) + " of " + ToString(FlightNavMap.GetHelipadCount()) + ")");
-    this.Notify(GetLocalizedTextByKey(n"LTBF-Landing-Pad-Supplies"),
-      StrReplace(GetLocalizedTextByKey(n"LTBF-Landing-Pad-Supplies-Description"), "{money}", ToString(this.supplyMoney)));
+    this.Notify(GetLocalizedTextByKey(n"LTBF-Landing-Pad-Supplies"), FlightHelipadSystem.Title(pad));
   }
 
-  // A toast like the game's location reveals, title only. It plays the warning animation and the
-  // chip malfunction jingle, so it reads as an alert; the quest-update style notification meant to
-  // replace it (title plus `text`) did not draw in game yet, see docs/archive/helipads.md section 6.
-  private func Notify(title: String, text: String) -> Void {
-    let msg: SimpleScreenMessage;
-    msg.isShown = true;
-    msg.duration = 3.0;
-    msg.message = title;
-    msg.type = SimpleMessageType.Reveal;
-    GameInstance.GetBlackboardSystem(this.GetGameInstance()).Get(GetAllBlackboardDefs().UI_Notifications).SetVariant(GetAllBlackboardDefs().UI_Notifications.WarningMessage, ToVariant(msg), true);
+  // The game's "new area" toast, drawn by the HUD's journal queue: `header` replaces its "Entering
+  // a new area" line, `title` is the big line. Before that queue has attached there is no toast,
+  // only the log line.
+  private func Notify(header: String, title: String) -> Void {
+    if IsDefined(this.notifications) {
+      this.notifications.LTBF_PushLandingPad(header, title);
+    }
   }
 
   // Register or remove pins so that exactly the pads the settings ask for have one.
@@ -253,6 +252,96 @@ public class FlightHelipadSystem extends ScriptableSystem {
     let name = FlightNavMap.GetHelipadName(index);
     return StrLen(name) > 0 ? name : GetLocalizedTextByKey(n"LTBF-Landing-Pad");
   }
+}
+
+// --- toasts --------------------------------------------------------------------------------------
+
+@wrapMethod(JournalNotificationQueue)
+protected cb func OnPlayerAttach(playerPuppet: ref<GameObject>) -> Bool {
+  FlightHelipadSystem.GetInstance(playerPuppet.GetGame()).notifications = this;
+  return wrappedMethod(playerPuppet);
+}
+
+public class FlightLandingPadToastData extends QuestUpdateNotificationViewData {
+  public let header: String;
+}
+
+// The same notification as OnNewLocationDiscovered (entering a district for the first time).
+// `text` names the UIIcon record NewLocationNotification looks up for the icon.
+@addMethod(JournalNotificationQueue)
+public func LTBF_PushLandingPad(header: String, title: String) -> Void {
+  let userData = new FlightLandingPadToastData();
+  userData.header = header;
+  userData.title = title;
+  userData.text = "LTBF_LandingPad";
+  userData.animation = n"notification_LocationAdded";
+  userData.soundEvent = n"ui_phone_sms";
+  userData.soundAction = n"OnOpen";
+  let notificationData: gameuiGenericNotificationData;
+  notificationData.time = this.m_showDuration;
+  notificationData.widgetLibraryItemName = n"notification_LocationAdded";
+  notificationData.notificationData = userData;
+  this.AddNewNotificationData(notificationData);
+}
+
+// Vanilla's SetNotificationData sets only the icon's part name, which is not in the district
+// atlas, and leaves the header (NewQuest_txt in quest_update.inkwidget) at "Entering a new area".
+// The compiler rejects wrapping SetNotificationData (an override of a native method), so a
+// callback one tick after the widget initializes sets both, once the data is in.
+public class FlightLandingPadToastCallback extends DelayCallback {
+  public let toast: wref<NewLocationNotification>;
+
+  public func Call() -> Void {
+    if IsDefined(this.toast) {
+      this.toast.LTBF_SetLandingPadLook();
+    }
+  }
+}
+
+@wrapMethod(NewLocationNotification)
+protected cb func OnInitialize() -> Bool {
+  let result = wrappedMethod();
+  let callback = new FlightLandingPadToastCallback();
+  callback.toast = this;
+  GameInstance.GetDelaySystem(GetGameInstance()).DelayCallbackNextFrame(callback);
+  return result;
+}
+
+@addMethod(NewLocationNotification)
+public func LTBF_SetLandingPadLook() -> Void {
+  let data = this.m_questNotificationData as FlightLandingPadToastData;
+  if !IsDefined(data) {
+    return;
+  }
+  let icon = FlightHelipadSystem.Icon();
+  inkImageRef.SetAtlasResource(this.districtIcon, icon.AtlasResourcePath());
+  inkImageRef.SetTexturePart(this.districtIcon, icon.AtlasPartName());
+  inkImageRef.SetAtlasResource(this.districtFluffIcon, icon.AtlasResourcePath());
+  inkImageRef.SetTexturePart(this.districtFluffIcon, icon.AtlasPartName());
+  let header = FlightFindWidget(this.GetRootCompoundWidget(), n"NewQuest_txt") as inkText;
+  if IsDefined(header) {
+    header.SetText(data.header);
+  }
+}
+
+// The first widget named `name` under `root`, depth first.
+public static func FlightFindWidget(root: wref<inkCompoundWidget>, name: CName) -> wref<inkWidget> {
+  let i = 0;
+  while i < root.GetNumChildren() {
+    let child = root.GetWidgetByIndex(i);
+    if Equals(child.GetName(), name) {
+      return child;
+    }
+    let compound = child as inkCompoundWidget;
+    if IsDefined(compound) {
+      let found = FlightFindWidget(compound, name);
+      if IsDefined(found) {
+        return found;
+      }
+    }
+    i += 1;
+  }
+  return null;
 }
 
 // --- the pins' look ------------------------------------------------------------------------------
