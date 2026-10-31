@@ -4,6 +4,7 @@
 #include <RED4ext/RED4ext.hpp>
 #include <RED4ext/Scripting/Natives/Generated/Vector3.hpp>
 #include <RED4ext/Scripting/Natives/Generated/Quaternion.hpp>
+#include <cstddef>
 #include <cstdint>
 
 // imported from PhysX3_x64.dll
@@ -60,7 +61,26 @@ public:
   virtual void setRestOffset(); // F0
   virtual float getRestOffset(); // F8
   virtual void setFlag(uint8_t flag, bool value); // 100
-  virtual bool isExclusive(); // 108
+  // 108 to 118 checked against NpShape's vtable in the game's DLL (getFlags writes one byte through
+  // the hidden return pointer)
+  virtual void setFlags(const uint8_t &flags); // 108
+  virtual struct PxShapeFlags getFlags() const; // 110
+  virtual bool isExclusive(); // 118
+};
+
+// PxShapeFlag
+enum : uint8_t {
+  PxShapeFlag_eSIMULATION_SHAPE = 1,
+  PxShapeFlag_eSCENE_QUERY_SHAPE = 2,
+  PxShapeFlag_eTRIGGER_SHAPE = 4,
+  PxShapeFlag_eVISUALIZATION = 8
+};
+
+// PxFlags<PxShapeFlag::Enum, PxU8>: returned through a hidden pointer, as its own copy constructor makes it
+struct PxShapeFlags {
+  uint8_t bits = 0;
+  PxShapeFlags() = default;
+  PxShapeFlags(const PxShapeFlags &aOther) : bits(aOther.bits) {}
 };
 
 class PxActor : public PxBase {
@@ -218,6 +238,97 @@ struct PxPhysics {
   virtual void * getPhysicsInsertionCallback();
 };
 
+// Scene queries (PhysX 3.4 PxQueryReport.h / PxQueryFiltering.h layouts).
+
+struct PxVec3 {
+  float x, y, z;
+};
+
+// PxHitFlag
+enum : uint16_t { PxHitFlag_ePOSITION = 1, PxHitFlag_eNORMAL = 2, PxHitFlag_eDISTANCE = 4 };
+// PxQueryFlag
+enum : uint16_t {
+  PxQueryFlag_eSTATIC = 1,
+  PxQueryFlag_eDYNAMIC = 2,
+  PxQueryFlag_ePREFILTER = 4,
+  PxQueryFlag_ePOSTFILTER = 8,
+  PxQueryFlag_eANY_HIT = 16,
+  PxQueryFlag_eNO_BLOCK = 32
+};
+
+struct PxFilterData {
+  uint32_t word0 = 0, word1 = 0, word2 = 0, word3 = 0;
+};
+
+struct PxQueryFilterData {
+  PxFilterData data;                                            // 00
+  uint16_t flags = PxQueryFlag_eSTATIC | PxQueryFlag_eDYNAMIC; // 10
+  // PxClientID, PX_DEFAULT_CLIENT: the query looks its behaviour flags up by it, so it must be set
+  uint8_t clientId = 0;                                         // 12
+};
+
+// As the game's build fills it (hits dumped in game: the distance at 0x34 matches the hit position);
+// there is a word between faceIndex and flags that the 3.4 headers do not show.
+struct PxRaycastHit {
+  PxRigidActor *actor;  // 00 PxActorShape
+  PxShape *shape;       // 08
+  uint32_t faceIndex;   // 10 PxQueryHit
+  uint32_t unknown14;   // 14
+  uint16_t flags;       // 18 PxLocationHit
+  PxVec3 position;      // 1C
+  PxVec3 normal;        // 28
+  float distance;       // 34
+  float u, v;           // 38 PxRaycastHit
+};
+static_assert(sizeof(PxRaycastHit) == 0x40);
+static_assert(offsetof(PxRaycastHit, position) == 0x1C && offsetof(PxRaycastHit, distance) == 0x34);
+
+// PxHitCallback<PxRaycastHit> (PxRaycastCallback): the blocking hit in block; touches, if a buffer is
+// given, through processTouches.
+struct PxRaycastCallback {
+  PxRaycastHit block{};   // 08
+  bool hasBlock = false;  // 48
+  PxRaycastHit *touches;  // 50
+  uint32_t maxNbTouches;  // 58
+  uint32_t nbTouches = 0; // 5C
+
+  PxRaycastCallback(PxRaycastHit *aTouches = nullptr, uint32_t aMaxNbTouches = 0)
+      : touches(aTouches), maxNbTouches(aMaxNbTouches) {}
+  virtual bool processTouches(const PxRaycastHit *, uint32_t) { return false; } // 00
+  virtual void finalizeQuery() {}                                                // 08
+  virtual ~PxRaycastCallback() {}                                                // 10
+};
+
+// PxQueryHitType
+enum PxQueryHitType : uint32_t { PxQueryHitType_eNONE = 0, PxQueryHitType_eTOUCH = 1, PxQueryHitType_eBLOCK = 2 };
+
+// PxQueryFilterCallback: preFilter runs per shape when the query's flags include ePREFILTER.
+struct PxQueryFilterCallback {
+  virtual PxQueryHitType preFilter(const PxFilterData &filterData, const PxShape *shape, const PxRigidActor *actor,
+                                   uint16_t &queryFlags) = 0;                           // 00
+  virtual PxQueryHitType postFilter(const PxFilterData &filterData, const void *hit) = 0; // 08
+  virtual ~PxQueryFilterCallback() {}                                                     // 10
+};
+
+// PxScene, as NpScene's vtable is laid out in the game's PhysX 3.4.2 build: slot 0 the destructor,
+// 1 release() ... 94 raycast, 95 sweep, 96 overlap. Found and re-checkable with
+// tools/physx/pxscene_vtable.py (vtable at rva 0x20caf0 in the 2.5 DLL). Only raycast is called, by
+// slot. Scene queries are what the game's vehicles run from their fixed update (wheels): call it
+// from there.
+struct PxScene {
+  static constexpr size_t kRaycastSlot = 94;
+
+  bool raycast(const PxVec3 &origin, const PxVec3 &unitDir, float distance, PxRaycastCallback &hitCall,
+               uint16_t hitFlags = PxHitFlag_ePOSITION | PxHitFlag_eNORMAL | PxHitFlag_eDISTANCE,
+               const PxQueryFilterData &filterData = {}, void *filterCall = nullptr, const void *cache = nullptr) const {
+    // PxHitFlags (PxFlags, which has its own copy constructor) goes by reference: the DLL reads the
+    // sixth argument as a pointer to the 16 bit flags
+    using Raycast = bool (*)(const PxScene *, const PxVec3 &, const PxVec3 &, float, PxRaycastCallback &,
+                             const uint16_t &, const PxQueryFilterData &, void *, const void *);
+    auto vtable = *reinterpret_cast<Raycast const *const *>(this);
+    return vtable[kRaycastSlot](this, origin, unitDir, distance, hitCall, hitFlags, filterData, filterCall, cache);
+  }
+};
 
 } // namespace physx
 

@@ -32,11 +32,24 @@ public:
   void Stop(RED4ext::CString emitterName);
   void UpdateEvent(RED4ext::CString emitterName, RED4ext::Matrix matrix, float eventVolume,
                      RED4ext::Handle<RED4ext::IScriptable> update);
-  // each frame the player's car flies: its matrix, the echoes' level (0: off) and how far the view
-  // is inside the cabin (Audio/Acoustics)
-  void UpdateAcoustics(RED4ext::Matrix carMatrix, float gain, float inside);
+  // each frame the player's car flies: its matrix, the echoes' level (0: off), how far the view is
+  // inside the cabin and who casts the near rays (Acoustics::RaySource: 0 none, 1 the scripts, 2 PhysX)
+  void UpdateAcoustics(RED4ext::Matrix carMatrix, float gain, float inside, int32_t raySource);
   // the echoes' state as JSON (Acoustics::State), for tests
   RED4ext::CString AcousticsState();
+  // the near rays' directions for the car (Acoustics::Probe::NearRays), for the scripts to cast
+  RED4ext::DynArray<RED4ext::Vector4> AcousticsRays(RED4ext::Matrix carMatrix);
+  // what they hit: distance (< 0: nothing) and physics material, cast from origin
+  void AcousticsHits(RED4ext::Vector4 origin, RED4ext::DynArray<float> distances,
+                     RED4ext::DynArray<RED4ext::CName> materials);
+  // the nav map's and the live distances side by side, a row a probe, to
+  // red4ext/logs/ltbf_acoustics_<time>.csv (on) or no more (off)
+  void AcousticsLog(bool on);
+  // LTBF's FMOD sound as stems (Acoustics::Stems) to red4ext/logs/ltbf_stems_<time>_*.wav: the base
+  // path, "" when stopped or the files could not be opened
+  RED4ext::CString AcousticsStems(bool on);
+  // a test sound in place of LTBF's FMOD sound (Acoustics::TestSource: 0 off, 1 clicks, 2 pink noise, 3 a 440 Hz sine)
+  void AcousticsTestSource(int32_t source);
 
 private:
   friend Descriptor;
@@ -55,5 +68,10 @@ private:
     aType->AddFunction<&FlightAudio::Resume>("Resume");
     aType->AddFunction<&FlightAudio::UpdateAcoustics>("UpdateAcoustics");
     aType->AddFunction<&FlightAudio::AcousticsState>("AcousticsState");
+    aType->AddFunction<&FlightAudio::AcousticsRays>("AcousticsRays");
+    aType->AddFunction<&FlightAudio::AcousticsHits>("AcousticsHits");
+    aType->AddFunction<&FlightAudio::AcousticsLog>("AcousticsLog");
+    aType->AddFunction<&FlightAudio::AcousticsStems>("AcousticsStems");
+    aType->AddFunction<&FlightAudio::AcousticsTestSource>("AcousticsTestSource");
   }
 };

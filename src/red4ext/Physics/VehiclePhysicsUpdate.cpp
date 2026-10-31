@@ -9,6 +9,7 @@
 #include "Flight/Component.hpp"
 
 #include "VehicleSpeedUnlimiter.hpp"
+#include "Audio/Acoustics/LiveRays.hpp"
 #include <queue>
 
 // void vehicle::WheelSuspensionBase::ApplyAllResistances(float)
@@ -66,6 +67,8 @@ REGISTER_FLIGHT_HOOK_HASH(uintptr_t __fastcall, 3281786499, VehicleHelperUpdate,
     }
     auto result = VehicleHelperUpdate_Original(p, deltaTime);
     p->driveHelpers.size = size;
+    // the echoes' near rays through the scene, from where the game runs its own wheel raycasts
+    Acoustics::CastLiveRays(fc);
     return result;
   } else {
     return VehicleHelperUpdate_Original(p, deltaTime);

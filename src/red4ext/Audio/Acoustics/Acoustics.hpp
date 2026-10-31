@@ -15,6 +15,7 @@
 
 #include "Probe.hpp"
 
+#include <array>
 #include <string>
 #include <vector>
 
@@ -41,11 +42,37 @@ void Detach();
 int AttachToEvent(FMOD::Studio::System *aStudio, FMOD::Studio::EventInstance *aInstance);
 void DetachFromEvent(FMOD::Studio::EventInstance *aInstance);
 
-// The player's flying car (world, z up), the echoes' level (Tuning::gain; 0 = off) and how far the
-// view is inside the cabin (0 outside .. 1 first person: the echoes drop about 10 dB).
-void SetCar(const Vec3 &aPosition, const Vec3 &aForward, const Vec3 &aUp, float aGain, float aInside);
+// Where the near rays' live hits come from.
+enum class RaySource : int32_t { None = 0, Scripts = 1, PhysX = 2 };
+
+// The player's flying car (world, z up), the echoes' level (Tuning::gain; 0 = off), how far the
+// view is inside the cabin (0 outside .. 1 first person: the echoes drop about 10 dB) and who casts
+// the near rays through the game's collision.
+void SetCar(const Vec3 &aPosition, const Vec3 &aForward, const Vec3 &aUp, float aGain, float aInside,
+            RaySource aRays);
+// For the PhysX caster (LiveRays.cpp), from any thread, with the position of a car it could cast
+// from: true and the reported car's pose when it should cast now (rays from PhysX, the car fresh and
+// within a few metres of aCandidate, the last cast at least a probe interval ago).
+bool PhysXRaysDue(const Vec3 &aCandidate, Vec3 &aPosition, Vec3 &aForward, Vec3 &aUp);
 // where the sound is heard from (world): the player's soundListener or the cinematic camera
 void SetListener(const Vec3 &aPosition);
+
+// The game's own collision along the near rays (Probe::NearRays from the car's axes), cast from
+// aOrigin: distance (< 0: nothing within the cast) and the hit's physics material. Used for a
+// probe within 200 ms and 10 m of them, in place of the nav map wherever a ray hit.
+void SetLiveHits(const Vec3 &aOrigin, const std::array<float, kNearRays> &aDistance,
+                 const std::array<std::string, kNearRays> &aMaterial, RaySource aSource);
+// how long the PhysX caster took for its last set of rays (State)
+void SetPhysXCastTime(float aMilliseconds);
+// A test sound in place of LTBF's FMOD sound, to hear the echoes on something plain: the master bus
+// DSP plays it (at the mixer's rate, not spatialized) instead of what reaches the bus, and the event
+// DSPs mute the thrusters. Off restores both.
+enum class TestSource : int32_t { Off = 0, Clicks = 1, PinkNoise = 2, Sine = 3 };
+void SetTestSource(TestSource aSource);
+
+// A CSV row a probe to aPath (empty: stop): the nav map's and the live distances side by side,
+// with the materials hit.
+void SetLog(const std::string &aPath);
 
 // JSON: on or off, the last features and Params, probe and DSP counts (for tests and the log)
 std::string State();

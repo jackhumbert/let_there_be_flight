@@ -103,7 +103,8 @@ bool SetTuning(Acoustics::Tuning &aTuning, const char *aText) {
       {"flutterFeedback", &T::flutterFeedback}, {"flutterNear", &T::flutterNear}, {"flutterFar", &T::flutterFar},
       {"wallAbsorption", &T::wallAbsorption}, {"rt60Min", &T::rt60Min}, {"rt60Max", &T::rt60Max}, {"wet", &T::wet},
       {"maxDelayRate", &T::maxDelayRate}, {"minDelay", &T::minDelay}, {"pan", &T::pan},
-      {"panOpposite", &T::panOpposite}};
+      {"panOpposite", &T::panOpposite}, {"scatter", &T::scatter}, {"jumpSeconds", &T::jumpSeconds},
+      {"fadeSeconds", &T::fadeSeconds}, {"wetFrom", &T::wetFrom}};
   std::stringstream ss(aText);
   std::string item;
   while (std::getline(ss, item, ',')) {
@@ -305,6 +306,7 @@ int main(int argc, char **argv) {
   std::fprintf(out, "t,speed,floor,ceiling,left,right,enclosure,mean_free_path\n");
   Acoustics::Probe probe(map);
   std::vector<Acoustics::Params> params; // one a probe
+  Acoustics::Vec3 last{};
   size_t i = 0;
   double spent = 0;
   for (int k = 0;; ++k) {
@@ -323,7 +325,14 @@ int main(int argc, char **argv) {
                  f.enclosure, f.meanFreePath);
     Acoustics::Vec3 listener{r.pos.x - back * r.forward.x, r.pos.y - back * r.forward.y,
                              r.pos.z - back * r.forward.z + up};
-    params.push_back(Acoustics::Targets(f, r.pos, listener, tuning));
+    // the car's velocity from probe to probe, as the plugin's worker takes it
+    Acoustics::Vec3 velocity{};
+    if (k > 0) {
+      const float hz = float(kProbeHz);
+      velocity = {(r.pos.x - last.x) * hz, (r.pos.y - last.y) * hz, (r.pos.z - last.z) * hz};
+    }
+    last = r.pos;
+    params.push_back(Acoustics::Targets(f, r.pos, listener, tuning, velocity));
   }
   std::fclose(out);
   std::printf("%zu probes, %.3f ms a probe -> %s\n", params.size(), 1000.0 * spent / double(params.size()), argv[3]);

@@ -26,9 +26,14 @@ float Clamp01(float x) {
   return std::clamp(x, 0.0f, 1.0f);
 }
 
+float Dot(const Vec3 &a, const Vec3 &b) {
+  return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
 } // namespace
 
-Params Targets(const Features &aFeatures, const Vec3 &aSource, const Vec3 &aListener, const Tuning &aTuning) {
+Params Targets(const Features &aFeatures, const Vec3 &aSource, const Vec3 &aListener, const Tuning &aTuning,
+               const Vec3 &aVelocity) {
   auto capped = [](float d, float cap) { return std::isinf(d) ? cap : std::min(d, cap); };
   const float direct = Length(aListener, aSource);
   auto echo = [&](float aDistance, Vec3 aNormal, float aReflectivity) {
@@ -37,6 +42,10 @@ Params Targets(const Features &aFeatures, const Vec3 &aSource, const Vec3 &aList
     float via = Length(aListener, image);
     Echo e;
     e.delay = (via - direct) / kSpeedOfSound;
+    // the car and listener moving at v past a still surface: the image moves at v - 2 (v.n) n, so
+    // listener minus image changes at 2 (v.n) n; the direct path stays as it is
+    const Vec3 toListener{aListener.x - image.x, aListener.y - image.y, aListener.z - image.z};
+    e.rate = via > 1e-3f ? 2 * Dot(aVelocity, aNormal) * Dot(toListener, aNormal) / via / kSpeedOfSound : 0.0f;
     // spreading relative to the dry sound heard at a few metres; nothing beyond the probe's range
     e.gain = aDistance < aTuning.range
                  ? aReflectivity * aTuning.gain * (direct + aTuning.nearDistance) / (via + aTuning.nearDistance)
@@ -46,26 +55,41 @@ Params Targets(const Features &aFeatures, const Vec3 &aSource, const Vec3 &aList
   const Vec3 &r = aFeatures.rightDir;
   const float floor = capped(aFeatures.floor, kDistanceCap), ceiling = capped(aFeatures.ceiling, kDistanceCap);
   const float left = capped(aFeatures.left, kDistanceCap), right = capped(aFeatures.right, kDistanceCap);
+  // a surface's own reflectivity where its material is known (live hits), else the defaults
+  auto known = [](float aReflectivity, float aDefault) { return aReflectivity >= 0 ? aReflectivity : aDefault; };
+  const float rFloor = known(aFeatures.floorReflectivity, aTuning.groundReflectivity);
+  const float rCeiling = known(aFeatures.ceilingReflectivity, aTuning.wallReflectivity);
+  const float rLeft = known(aFeatures.leftReflectivity, aTuning.wallReflectivity);
+  const float rRight = known(aFeatures.rightReflectivity, aTuning.wallReflectivity);
   Params p;
-  p.floor = echo(floor, {0, 0, -1}, aTuning.groundReflectivity);
-  p.ceiling = echo(ceiling, {0, 0, 1}, aTuning.wallReflectivity);
-  p.left = echo(left, {-r.x, -r.y, -r.z}, aTuning.wallReflectivity);
-  p.right = echo(right, r, aTuning.wallReflectivity);
+  p.floor = echo(floor, {0, 0, -1}, rFloor);
+  p.ceiling = echo(ceiling, {0, 0, 1}, rCeiling);
+  p.left = echo(left, {-r.x, -r.y, -r.z}, rLeft);
+  p.right = echo(right, r, rRight);
+  // back along every other fan ray that hit: the patch of wall it found, seen from the car
+  for (int k = 2; k < kNearRays; ++k) {
+    const float d = aFeatures.nearDistance[k];
+    if (k == aFeatures.leftRay || k == aFeatures.rightRay || !(d < aTuning.range)) {
+      continue;
+    }
+    p.scatter[k] = echo(d, aFeatures.nearDir[k], known(aFeatures.nearReflectivity[k], aTuning.wallReflectivity));
+    p.scatter[k].gain *= aTuning.scatter;
+  }
   // flutter only where both sides are there
   auto flutter = [&](float aApart) {
     return Clamp01((aTuning.flutterFar - aApart) / (aTuning.flutterFar - aTuning.flutterNear));
   };
-  p.floorFeedback = aTuning.flutterFeedback * std::sqrt(aTuning.wallReflectivity * aTuning.groundReflectivity) *
-                    flutter(floor + ceiling);
-  p.wallFeedback = aTuning.flutterFeedback * std::sqrt(aTuning.wallReflectivity) * flutter(left + right);
+  p.floorFeedback = aTuning.flutterFeedback * std::sqrt(rFloor * rCeiling) * flutter(floor + ceiling);
+  // the square root of the walls' mean reflectivity, as tuned (render.py: sqrt of the wall default)
+  p.wallFeedback = aTuning.flutterFeedback * std::sqrt(std::sqrt(rLeft * rRight)) * flutter(left + right);
   // Eyring with mean free path = 4V/S: open sky absorbs everything
   const float enclosure = Clamp01(aFeatures.enclosure);
   const float freePath = capped(aFeatures.meanFreePath, kFreePathCap);
   const float escape = 1 - enclosure;
   const float alpha = std::min(escape + (1 - escape) * aTuning.wallAbsorption, 0.99f);
   p.rt60 = std::clamp(0.04f * freePath / -std::log(1 - alpha), aTuning.rt60Min, aTuning.rt60Max);
-  // the lower half of the sphere is nearly always ground: only enclosure above that is room
-  p.wet = aTuning.wet * aTuning.gain * Clamp01((enclosure - 0.5f) / 0.5f);
+  // the lower half of the sphere is mostly ground: the reverb rises from a little above that
+  p.wet = aTuning.wet * aTuning.gain * Clamp01((enclosure - aTuning.wetFrom) / (1 - aTuning.wetFrom));
   return p;
 }
 
@@ -100,6 +124,66 @@ float Reflections::Line::Read(uint32_t aWrite, double aDelay) const {
   return 0.5f * at(0) + 0.25f * at(uint32_t(-1)) + 0.25f * at(1);
 }
 
+float Reflections::Line::ReadLinear(uint32_t aWrite, double aDelay) const {
+  const uint32_t whole = uint32_t(aDelay);
+  const float f = float(1.0 - (aDelay - double(whole)));
+  const uint32_t i = aWrite - whole - 1;
+  return buffer[i & mask] * (1 - f) + buffer[(i + 1) & mask] * f;
+}
+
+void Reflections::Voice::Set(double aDelay, double aRate, float aGain, int aInterval, const Reflections &aOwner) {
+  Tap &a = taps[active];
+  if (!started || a.fade <= 0 || gain.value < 1e-5) {
+    // the first, or nothing audible to move from: at once
+    taps[active] = {aDelay, aRate, 1.0f, 0.0f};
+    taps[1 - active] = {};
+    gain.To(aGain, started ? aInterval : 0);
+    if (!started) {
+      gain.Next();
+      started = true;
+    }
+    return;
+  }
+  gain.To(aGain, aInterval);
+  const double jump = aOwner.tuning.jumpSeconds * aOwner.sampleRate + std::abs(aRate) * aInterval;
+  if (std::abs(aDelay - a.delay) > jump) {
+    // another reflection: the other tap fades in at it, this one fades out where it was going
+    const float step = 1.0f / std::max(1.0f, aOwner.tuning.fadeSeconds * aOwner.sampleRate);
+    a.fadeStep = -step;
+    active = 1 - active;
+    taps[active] = {aDelay, aRate, 0.0f, step};
+    return;
+  }
+  // at its rate, steered to be where the target will be at the end of the interval
+  a.rate = (aDelay + aRate * aInterval - a.delay) / double(aInterval);
+}
+
+void Reflections::Voice::Step(double aMaxRate, double aMinDelay) {
+  level = float(gain.Next());
+  for (Tap &t : taps) {
+    if (t.fade <= 0 && t.fadeStep <= 0) {
+      continue;
+    }
+    t.delay = std::max(aMinDelay, t.delay + std::clamp(t.rate, -aMaxRate, aMaxRate));
+    if (t.fadeStep != 0) {
+      t.fade = std::clamp(t.fade + t.fadeStep, 0.0f, 1.0f);
+      if (t.fade == 0.0f || t.fade == 1.0f) {
+        t.fadeStep = 0;
+      }
+    }
+  }
+}
+
+float Reflections::Voice::Read(const Line &aLine, uint32_t aWrite, bool aWithGain, bool aSmear) const {
+  float sum = 0;
+  for (const Tap &t : taps) {
+    if (t.fade > 0) {
+      sum += t.fade * (aSmear ? aLine.Read(aWrite, t.delay) : aLine.ReadLinear(aWrite, t.delay));
+    }
+  }
+  return aWithGain ? level * sum : sum;
+}
+
 Reflections::Reflections(float aSampleRate, int aRampSamples, const Tuning &aTuning)
     : sampleRate(aSampleRate), rampSamples(aRampSamples), tuning(aTuning) {
   const uint32_t echoSize = uint32_t(kMaxDelaySeconds * sampleRate) + 4;
@@ -121,7 +205,12 @@ void Reflections::Reset() {
     std::fill(line.buffer.begin(), line.buffer.end(), 0.0f);
   }
   started = false;
-  floorSlew = ceilingSlew = leftSlew = rightSlew = -1;
+  for (Voice *v : {&floorVoice, &ceilingVoice, &leftVoice, &rightVoice}) {
+    *v = {};
+  }
+  for (Voice &v : scatterVoices) {
+    v = {};
+  }
   fdnGainAge = 0;
   energy = {};
   tail = 0;
@@ -131,36 +220,25 @@ void Reflections::SetTargets(const Params &aParams) {
   // delays in samples
   auto delay = [&](const Echo &e) { return double(std::max(e.delay, tuning.minDelay)) * sampleRate; };
   const int n = started ? rampSamples : 0;
-  floorDelay.To(delay(aParams.floor), n);
-  floorGain.To(aParams.floor.gain, n);
-  ceilingDelay.To(delay(aParams.ceiling), n);
-  ceilingGain.To(aParams.ceiling.gain, n);
-  leftDelay.To(delay(aParams.left), n);
-  leftGain.To(aParams.left.gain, n);
-  rightDelay.To(delay(aParams.right), n);
-  rightGain.To(aParams.right.gain, n);
+  auto set = [&](Voice &v, const Echo &e) { v.Set(delay(e), e.rate, e.gain, rampSamples, *this); };
+  set(floorVoice, aParams.floor);
+  set(ceilingVoice, aParams.ceiling);
+  set(leftVoice, aParams.left);
+  set(rightVoice, aParams.right);
+  for (int k = 2; k < kNearRays; ++k) {
+    set(scatterVoices[k], aParams.scatter[k]);
+  }
   floorFeedback.To(aParams.floorFeedback, n);
   wallFeedback.To(aParams.wallFeedback, n);
   rt60.To(aParams.rt60, n);
   wet.To(aParams.wet, n);
   if (!started) {
     // the first set takes effect at once
-    for (Ramp *r : {&floorDelay, &floorGain, &ceilingDelay, &ceilingGain, &leftDelay, &leftGain, &rightDelay,
-                    &rightGain, &floorFeedback, &wallFeedback, &rt60, &wet}) {
+    for (Ramp *r : {&floorFeedback, &wallFeedback, &rt60, &wet}) {
       r->Next();
     }
     started = true;
   }
-}
-
-double Reflections::Slew(double &aState, double aTarget) const {
-  if (aState < 0) {
-    aState = aTarget;
-  } else {
-    const double step = tuning.maxDelayRate; // samples per sample
-    aState += std::clamp(aTarget - aState, -step, step);
-  }
-  return aState;
 }
 
 void Reflections::Process(const float *aIn, float *aOut, uint32_t aFrames, int aChannels) {
@@ -175,18 +253,27 @@ void Reflections::Process(const float *aIn, float *aOut, uint32_t aFrames, int a
     x /= float(aChannels);
     source.buffer[write & source.mask] = x;
 
-    float a = 0, b = 0, l = 0, r = 0, revL = 0, revR = 0;
-    const double fd = Slew(floorSlew, floorDelay.Next()), cd = Slew(ceilingSlew, ceilingDelay.Next());
-    const double ld = Slew(leftSlew, leftDelay.Next()), rd = Slew(rightSlew, rightDelay.Next());
-    const float fg = float(floorGain.Next()), cg = float(ceilingGain.Next());
-    const float lg = float(leftGain.Next()), rg = float(rightGain.Next());
+    float a = 0, b = 0, l = 0, r = 0, sl = 0, sr = 0, revL = 0, revR = 0;
+    const double maxRate = tuning.maxDelayRate, minDelay = double(tuning.minDelay) * sampleRate;
+    for (Voice *v : {&floorVoice, &ceilingVoice, &leftVoice, &rightVoice}) {
+      v->Step(maxRate, minDelay);
+    }
     const float ffb = float(floorFeedback.Next()), wfb = float(wallFeedback.Next());
-    const float decay = float(rt60.Next()), send = float(wet.Next());    if (started) {
+    const float decay = float(rt60.Next()), send = float(wet.Next());
+    if (started) {
       // each side's echo, and the other side's echo bounced back off it
-      a = fg * source.Read(write, fd) + ffb * ceiling.Read(write, fd);
-      b = cg * source.Read(write, cd) + ffb * floor.Read(write, cd);
-      l = lg * source.Read(write, ld) + wfb * right.Read(write, ld);
-      r = rg * source.Read(write, rd) + wfb * left.Read(write, rd);
+      a = floorVoice.Read(source, write, true, true) + ffb * floorVoice.Read(ceiling, write, false, true);
+      b = ceilingVoice.Read(source, write, true, true) + ffb * ceilingVoice.Read(floor, write, false, true);
+      l = leftVoice.Read(source, write, true, true) + wfb * leftVoice.Read(right, write, false, true);
+      r = rightVoice.Read(source, write, true, true) + wfb * rightVoice.Read(left, write, false, true);
+      // the scattered echoes, each on its fan's side
+      for (int k = 2; k < kNearRays; ++k) {
+        Voice &v = scatterVoices[k];
+        v.Step(maxRate, minDelay);
+        if (v.level > 1e-6f) {
+          (k < 2 + kFanRays ? sr : sl) += v.Read(source, write, true, false);
+        }
+      }
 
       if (fdnGainAge-- <= 0) {
         fdnGainAge = kFdnGainSamples - 1;
@@ -216,13 +303,13 @@ void Reflections::Process(const float *aIn, float *aOut, uint32_t aFrames, int a
 
     const float mid = a + b;
     if (aChannels >= 2) {
-      out[0] = in[0] + mid + tuning.pan * l + tuning.panOpposite * r + revL;
-      out[1] = in[1] + mid + tuning.panOpposite * l + tuning.pan * r + revR;
+      out[0] = in[0] + mid + tuning.pan * (l + sl) + tuning.panOpposite * (r + sr) + revL;
+      out[1] = in[1] + mid + tuning.panOpposite * (l + sl) + tuning.pan * (r + sr) + revR;
       for (int c = 2; c < aChannels; ++c) {
-        out[c] = in[c] + mid + 0.5f * (l + r) + 0.5f * (revL + revR);
+        out[c] = in[c] + mid + 0.5f * (l + r + sl + sr) + 0.5f * (revL + revR);
       }
     } else {
-      out[0] = in[0] + mid + 0.5f * (tuning.pan + tuning.panOpposite) * (l + r) + 0.5f * (revL + revR);
+      out[0] = in[0] + mid + 0.5f * (tuning.pan + tuning.panOpposite) * (l + r + sl + sr) + 0.5f * (revL + revR);
     }
 
     energy.dry += double(x) * x;
@@ -230,7 +317,8 @@ void Reflections::Process(const float *aIn, float *aOut, uint32_t aFrames, int a
     energy.ceiling += double(b) * b;
     energy.walls += double(l + r) * (l + r);
     energy.reverb += double(revL + revR) * (revL + revR);
-    const float wetNow = mid + l + r + revL + revR;
+    energy.scatter += double(sl + sr) * (sl + sr);
+    const float wetNow = mid + l + r + sl + sr + revL + revR;
     tail += (wetNow * wetNow - tail) * tailCoefficient;
   }
 }

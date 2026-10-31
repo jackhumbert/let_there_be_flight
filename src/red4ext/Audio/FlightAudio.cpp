@@ -4,6 +4,12 @@
 
 #include "FlightAudio.hpp"
 #include "Acoustics/Acoustics.hpp"
+#include "Acoustics/Stems.hpp"
+#include "Acoustics/Probe.hpp"
+
+#include <algorithm>
+#include <array>
+#include <ctime>
 #include <RED4ext/Common.hpp>
 #include <RED4ext/RTTITypes.hpp>
 #include <RED4ext/Scripting/IScriptable.hpp>
@@ -231,9 +237,62 @@ void FlightAudio::UpdateListenerMatrix(RED4ext::Matrix matrix) {
   Acoustics::SetListener({matrix.W.X, matrix.W.Y, matrix.W.Z});
 }
 
-void FlightAudio::UpdateAcoustics(RED4ext::Matrix carMatrix, float gain, float inside) {
+void FlightAudio::UpdateAcoustics(RED4ext::Matrix carMatrix, float gain, float inside, int32_t raySource) {
   Acoustics::SetCar({carMatrix.W.X, carMatrix.W.Y, carMatrix.W.Z}, {carMatrix.Y.X, carMatrix.Y.Y, carMatrix.Y.Z},
-                    {carMatrix.Z.X, carMatrix.Z.Y, carMatrix.Z.Z}, gain, inside);
+                    {carMatrix.Z.X, carMatrix.Z.Y, carMatrix.Z.Z}, gain, inside,
+                    static_cast<Acoustics::RaySource>(raySource));
+}
+
+RED4ext::DynArray<RED4ext::Vector4> FlightAudio::AcousticsRays(RED4ext::Matrix carMatrix) {
+  RED4ext::DynArray<RED4ext::Vector4> out;
+  for (const auto &d : Acoustics::Probe::NearRays({carMatrix.Y.X, carMatrix.Y.Y, carMatrix.Y.Z},
+                                                  {carMatrix.Z.X, carMatrix.Z.Y, carMatrix.Z.Z})) {
+    out.EmplaceBack(d.x, d.y, d.z, 0.0f);
+  }
+  return out;
+}
+
+void FlightAudio::AcousticsHits(RED4ext::Vector4 origin, RED4ext::DynArray<float> distances,
+                                RED4ext::DynArray<RED4ext::CName> materials) {
+  if (distances.size != Acoustics::kNearRays || materials.size != Acoustics::kNearRays) {
+    return;
+  }
+  std::array<float, Acoustics::kNearRays> distance;
+  std::array<std::string, Acoustics::kNearRays> material;
+  for (uint32_t k = 0; k < Acoustics::kNearRays; ++k) {
+    distance[k] = distances[k];
+    material[k] = distances[k] >= 0 ? materials[k].ToString() : "";
+  }
+  Acoustics::SetLiveHits({origin.X, origin.Y, origin.Z}, distance, material, Acoustics::RaySource::Scripts);
+}
+
+namespace {
+// red4ext/logs/<aPrefix><local time>
+std::string LogPath(const char *aPrefix) {
+  auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+  std::tm local{};
+  localtime_s(&local, &now);
+  char stamp[32];
+  std::strftime(stamp, sizeof(stamp), "%Y%m%d-%H%M%S", &local);
+  return (Utils::GetRootDir() / "red4ext" / "logs" / (std::string(aPrefix) + stamp)).string();
+}
+} // namespace
+
+void FlightAudio::AcousticsLog(bool on) {
+  Acoustics::SetLog(on ? LogPath("ltbf_acoustics_") + ".csv" : "");
+}
+
+void FlightAudio::AcousticsTestSource(int32_t source) {
+  Acoustics::SetTestSource(static_cast<Acoustics::TestSource>(std::clamp(source, 0, 3)));
+}
+
+RED4ext::CString FlightAudio::AcousticsStems(bool on) {
+  if (!on) {
+    Acoustics::Stems::Stop();
+    return "";
+  }
+  const auto base = LogPath("ltbf_stems_");
+  return Acoustics::Stems::Start(base) ? base.c_str() : "";
 }
 
 RED4ext::CString FlightAudio::AcousticsState() {

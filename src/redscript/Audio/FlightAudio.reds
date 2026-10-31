@@ -32,14 +32,73 @@ public native class FlightAudio extends IScriptable {
   public native func Pause() -> Void;
   public native func Resume() -> Void;
   // each frame the player's car flies: the flying sound's echoes off the city (docs/design/acoustics.md);
-  // gain 0 = off, inside 1 = first person
-  public native func UpdateAcoustics(carMatrix: Matrix, gain: Float, inside: Float) -> Void;
+  // gain 0 = off, inside 1 = first person, raySource who casts the near rays (acousticsRaySource)
+  public native func UpdateAcoustics(carMatrix: Matrix, gain: Float, inside: Float, raySource: Int32) -> Void;
   // the echoes' state as JSON, for tests
   public native func AcousticsState() -> String;
+
+  // the near rays' directions for the car, for CastAcousticRays
+  public native func AcousticsRays(carMatrix: Matrix) -> array<Vector4>;
+  // what they hit: distance (< 0: nothing) and physics material, cast from origin
+  public native func AcousticsHits(origin: Vector4, distances: array<Float>, materials: array<CName>) -> Void;
+  // the nav map's and the live distances side by side to red4ext/logs/ltbf_acoustics_<time>.csv
+  public native func AcousticsLog(on: Bool) -> Void;
+  // LTBF's FMOD sound to red4ext/logs/ltbf_stems_<time>_{dry,wet,bus}.wav: the thrusters without and
+  // with the echoes, the master bus; returns the base path ("" when stopped)
+  public native func AcousticsStems(on: Bool) -> String;
+  // a test sound through the echoes in place of LTBF's FMOD sound: 0 off, 1 clicks (two a second),
+  // 2 pink noise, 3 a 440 Hz sine; the thrusters are muted while it plays
+  public native func AcousticsTestSource(source: Int32) -> Void;
 
   // the echoes on or off, and their level (not a Mod Setting yet: LtbfBridge.Acoustics for tests)
   public let acoustics: Bool = true;
   public let acousticsGain: Float = 1.0;
+  // the near surfaces from the game's own collision (live raycasts) rather than the nav map alone:
+  // 0 off, 1 cast here (CastAcousticRays), 2 cast by the plugin through PhysX
+  public let acousticsRaySource: Int32 = 2;
+  public let acousticsRayRange: Float = 100.0;
+  private let acousticsRayTimer: Float;
+  // the comparison log is being written (LtbfBridge.AcousticsLive)
+  public let acousticsLogging: Bool;
+
+  // The near rays through the game's collision (static world, terrain, blockers: what a flying car
+  // hits), about 20 times a second while the echoes are on; the plugin uses a hit in place of the
+  // nav map's answer for that ray (a miss may only be collision not streamed in yet). Only with
+  // acousticsRaySource 1: the plugin's own PhysX casts (2) need no script time.
+  public func CastAcousticRays(carMatrix: Matrix, timeDelta: Float) -> Void {
+    if !this.acoustics || this.acousticsRaySource != 1 {
+      return;
+    }
+    this.acousticsRayTimer -= timeDelta;
+    if this.acousticsRayTimer > 0.0 {
+      return;
+    }
+    this.acousticsRayTimer = 0.05;
+    let filter: QueryFilter;
+    QueryFilter.AddGroup(filter, n"Static");
+    QueryFilter.AddGroup(filter, n"Terrain");
+    QueryFilter.AddGroup(filter, n"VehicleBlocker");
+    QueryFilter.AddGroup(filter, n"PlayerBlocker");
+    let queries = GameInstance.GetSpatialQueriesSystem(FlightSystem.GetInstance().gameInstance);
+    let origin = Matrix.GetTranslation(carMatrix);
+    let distances: array<Float>;
+    let materials: array<CName>;
+    for d in this.AcousticsRays(carMatrix) {
+      // from the edge of a car-sized ellipsoid (3 m sideways, 1.5 m up and down, as the nav map
+      // grows its solids): the query sees the car's own chassis
+      let start = 1.0 / SqrtF(PowF(SqrtF(d.X * d.X + d.Y * d.Y) / 3.0, 2.0) + PowF(d.Z / 1.5, 2.0));
+      let result: TraceResult;
+      queries.SyncRaycastByQueryFilter(origin + d * start, origin + d * this.acousticsRayRange, filter, result, false, false);
+      if TraceResult.IsValid(result) && !StrBeginsWith(NameToString(result.material), "vehicle") {
+        ArrayPush(distances, Vector4.Distance(origin, Vector4.Vector3To4(result.position)));
+        ArrayPush(materials, result.material);
+      } else {
+        ArrayPush(distances, -1.0);
+        ArrayPush(materials, n"");
+      }
+    }
+    this.AcousticsHits(origin, distances, materials);
+  }
 
 
   public static func Get() -> ref<FlightAudio> {

@@ -1220,7 +1220,9 @@ public native class FlightComponent extends GameComponent {
       let outside = this.sys.ctlr.isTPP || cinematic;
       this.audioUpdate.inside = outside ? MaxF(0.0, this.audioUpdate.inside - timeDelta * 4.0) : MinF(1.0, this.audioUpdate.inside + timeDelta * 4.0);
       let audio = FlightAudio.Get();
-      audio.UpdateAcoustics(this.GetVehicle().GetLocalToWorld(), audio.acoustics ? audio.acousticsGain : 0.0, this.audioUpdate.inside);
+      let carMatrix = this.GetVehicle().GetLocalToWorld();
+      audio.UpdateAcoustics(carMatrix, audio.acoustics ? audio.acousticsGain : 0.0, this.audioUpdate.inside, audio.acousticsRaySource);
+      audio.CastAcousticRays(carMatrix, timeDelta);
       // try without wind
       // FlightAudio.Get().UpdateEvent("windLeft", Matrix.BuiltTranslation(windLeftPosition), 1.0, this.audioUpdate);
       // FlightAudio.Get().UpdateEvent("windRight",  Matrix.BuiltTranslation(windRightPosition), 1.0, this.audioUpdate);

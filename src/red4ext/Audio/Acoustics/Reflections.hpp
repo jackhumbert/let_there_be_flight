@@ -6,12 +6,16 @@
 //                    source), then cross feedback between the two, the second bounce taking the
 //                    other side's round trip (the flutter between parallel walls). The floor alone
 //                    is the comb that sweeps as the car climbs or dives.
+//   scatter          a weak echo back along every other near ray that hit: the rest of the walls
+//                    round the car, a cluster of arrivals that smears the pair's echoes into a decay.
 //   late reverb      an 8 line Householder feedback delay network, fixed delays, decay per sample.
 //
 // Targets() turns the probe's features and where the car and listener are into Params; Process()
-// runs per sample and ramps to new Params over one probe interval. Delays follow the geometry
-// sample by sample (fractional reads, a three tap smear) so a reflection carries its own Doppler
-// shift; their rate is capped so a ray sliding off a building edge glides.
+// runs per sample and ramps to new Params over one probe interval. Each echo is a voice of two
+// taps: its delay moves at the rate the car's velocity gives it (its Doppler shift, worked out from
+// the geometry, not from probe to probe), steered onto the next probe's distance; a distance that
+// jumps further than the motion explains (the nearest ray now on another building) is a new
+// reflection: the other tap fades in at it while the old one fades out.
 //
 // The port of tools/acoustics/render.py, which stays the reference. No game or FMOD types: the FMOD
 // DSP and the offline target (tools/acoustics/acoustics.cpp) both drive it. Process() and SetTargets()
@@ -39,23 +43,32 @@ struct Tuning {
   float rt60Min = 0.2f, rt60Max = 2.0f;
   float wet = 0.15f;               // reverb send at full enclosure
   float maxDelayRate = 0.3f;       // s/s: how fast an echo's delay may change
+  float scatter = 0.12f;           // each scattered echo against a main echo off the same surface
+  float jumpSeconds = 0.004f;      // a delay this far (beyond the motion) from the tap's: a new reflection
+  float fadeSeconds = 0.08f;       // the crossfade to it
+  float wetFrom = 0.35f;           // enclosure where the late reverb starts (full at 1)
   float minDelay = 0.004f;         // s
   float pan = 0.9f, panOpposite = 0.3f; // a wall's echo in its own channel and the other
 };
 
 struct Echo {
   float delay = 0; // s, extra path over the direct sound
+  float rate = 0;  // s/s, how fast the delay changes with the car moving (its Doppler shift: 1 - rate)
   float gain = 0;
 };
 
 struct Params {
   Echo floor, ceiling, left, right;
+  // along each near ray (Probe::NearRays order); gain 0 for the rays the main echoes use and misses
+  std::array<Echo, kNearRays> scatter{};
   float floorFeedback = 0, wallFeedback = 0;
   float rt60 = 0.2f, wet = 0;
 };
 
-// The echoes of the car's sound at aSource heard at aListener, from the features probed at aSource.
-Params Targets(const Features &aFeatures, const Vec3 &aSource, const Vec3 &aListener, const Tuning &aTuning);
+// The echoes of the car's sound at aSource heard at aListener, from the features probed at aSource;
+// aVelocity (m/s, the car's, the listener moving with it) gives each its rate.
+Params Targets(const Features &aFeatures, const Vec3 &aSource, const Vec3 &aListener, const Tuning &aTuning,
+               const Vec3 &aVelocity = {});
 
 class Reflections {
 public:
@@ -70,7 +83,7 @@ public:
 
   // energy of each part so far, for checking against render.py: floor, ceiling, walls, reverb, dry
   struct Energy {
-    double floor = 0, ceiling = 0, walls = 0, reverb = 0, dry = 0;
+    double floor = 0, ceiling = 0, walls = 0, reverb = 0, dry = 0, scatter = 0;
   };
   const Energy &Parts() const { return energy; }
   // mean square of the delay lines' recent output: a tail still ringing
@@ -90,9 +103,25 @@ private:
     uint32_t mask = 0;
     void Resize(uint32_t aMinSize);
     float Read(uint32_t aWrite, double aDelay) const; // aDelay samples before aWrite, smeared
+    float ReadLinear(uint32_t aWrite, double aDelay) const;
   };
-
-  double Slew(double &aState, double aTarget) const;
+  // one echo: two taps, one playing and one fading out after a jump
+  struct Tap {
+    double delay = 0, rate = 0; // samples, samples a sample
+    float fade = 0, fadeStep = 0;
+  };
+  struct Voice {
+    Tap taps[2];
+    int active = 0;
+    Ramp gain;
+    float level = 0; // this sample's gain
+    bool started = false;
+    // a new target: delay and rate in samples, gain, reached over aInterval samples
+    void Set(double aDelay, double aRate, float aGain, int aInterval, const Reflections &aOwner);
+    void Step(double aMaxRate, double aMinDelay);
+    // the taps' sum from aLine, times the gain or not (the flutter's second bounce)
+    float Read(const Line &aLine, uint32_t aWrite, bool aWithGain, bool aSmear) const;
+  };
 
   float sampleRate;
   int rampSamples;
@@ -101,11 +130,10 @@ private:
   std::array<Line, 8> fdn;
   std::array<uint32_t, 8> fdnDelay{};
   uint32_t write = 0;
+  Voice floorVoice, ceilingVoice, leftVoice, rightVoice;
+  std::array<Voice, kNearRays> scatterVoices;
   // ramped Params
-  Ramp floorDelay, floorGain, ceilingDelay, ceilingGain, leftDelay, leftGain, rightDelay, rightGain;
   Ramp floorFeedback, wallFeedback, rt60, wet;
-  // the delays as slewed, in samples (negative: not started)
-  double floorSlew = -1, ceilingSlew = -1, leftSlew = -1, rightSlew = -1;
   int fdnGainAge = 0;
   std::array<float, 8> fdnGain{};
   bool started = false;
