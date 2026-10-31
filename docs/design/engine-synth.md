@@ -104,7 +104,7 @@ nothing there (the camera behind and above, the thrusters never facing it).
 
 - The stems' `<base>_params.csv`: each thruster's parameters per frame (wall clock, id, start pitch,
   volume, position, every `FlightAudioUpdate` field, the cone angle).
-- `tools/ingame/axis_sweep.py`: each control held in turn, recorded with stems (`--call
+- `../cp2077_tools/mods/let_there_be_flight/axis_sweep.py`: each control held in turn, recorded with stems (`--call
   LtbfBridge.EngineSource,1` for the synth).
 - `tools/acoustics/engine_synth.cpp` (target `engine_synth`): a params log through the synth on the
   stems' timeline, `--voices` for each voice, `--tune` to try levels, `--character` for the switches,

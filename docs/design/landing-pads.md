@@ -27,7 +27,7 @@ The full story with probes and measurements: `docs/archive/helipads.md`.
   `JournalNotificationQueue` and pushes a `FlightLandingPadToastData` onto it;
   `NewLocationNotification` sets the icon's part name only, so our atlas and the header are set
   one tick after the widget initializes (the compiler will not wrap `SetNotificationData`).
-  `LtbfBridge.HelipadToast` shows one for tests, `tools/ingame/helipad_toast.py` records it.
+  `LtbfBridge.HelipadToast` shows one for tests, `../cp2077_tools/mods/let_there_be_flight/helipad_toast.py` records it.
 - The Autopilot lands on a pad when the destination is one, or within `padRange` of one, on the
   pad's heading.
 
