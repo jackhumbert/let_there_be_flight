@@ -1284,6 +1284,41 @@
      "uncovered_m2": 942
     }
    ]
+  },
+  {
+   "near": [
+    -1609,
+    -1053
+   ],
+   "box": [
+    -1639.0,
+    -1089.0,
+    52,
+    -1580.0,
+    -1017.0,
+    95
+   ],
+   "found": "by hand 2026-10-31 at (-1629.9, -1022.7, 76.0): three always drawn towers (nearAutoHideDistance 0), wall collision only below z 62; uncovered_m2 is drawn surface with no collision within 1.5 m",
+   "placements": [
+    {
+     "sector": "exterior_-7_-5_0_2",
+     "gid": "16895290343591316923",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3626003022\\wat_lch_building_d_v9.mesh",
+     "uncovered_m2": 6344
+    },
+    {
+     "sector": "exterior_-7_-5_0_2",
+     "gid": "13941446378957547034",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3626003022\\wat_lch_building_d_v9.mesh",
+     "uncovered_m2": 6260
+    },
+    {
+     "sector": "exterior_-7_-5_0_2",
+     "gid": "1413716085201021874",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3626003022\\wat_lch_building_d_v9.mesh",
+     "uncovered_m2": 4309
+    }
+   ]
   }
  ]
 }

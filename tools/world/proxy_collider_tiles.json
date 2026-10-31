@@ -1781,18 +1781,18 @@
    ],
    "streaming_distance": 382.6,
    "node_id": 1000000000010161,
-   "tris": 5287
+   "tris": 7190
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_m8.ent",
    "pos": [
     -1600.0,
     -960.0,
-    76.0
+    54.0
    ],
    "streaming_distance": 380.7,
    "node_id": 1000000000010162,
-   "tris": 6380
+   "tris": 7040
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_m7.ent",

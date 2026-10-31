@@ -59,6 +59,74 @@
       ],
       "expect": "hit",
       "note": "In game the ray hits at x -1156 (metal) once V stands next to the box: this wall is in a finest-level sector (exterior_-19_-12_0_0), which streams in only close by."
+    },
+    {
+      "name": "protein_farm_box",
+      "box": [
+        -2848.8,
+        -4146.0,
+        78,
+        -2761.4,
+        -4062.9,
+        107.6
+      ],
+      "truth": "nothing: open air over the protein farm south of the badlands catwalks (Jack, 2026-10-31, near -2848.5, -4095.2, 68.5); the farm's meshes (protein_farm_a_top / _segment, h1000) end at z 77",
+      "navmap": "not checked",
+      "cause": "hidden collider (offline, 2026-10-31): exterior_-11_-17_0_2 node 34 group 36 (nodeData 2301) actor 0, one World Static box at (-2805.13, -4104.47), yaw -37.8, 73 x 49 m, z 67.6 to 107.6: about 30 m of solid air over the farm roof",
+      "rays": [
+        [
+          -2860,
+          -4104.5,
+          95,
+          -2750,
+          -4104.5,
+          95
+        ],
+        [
+          -2860,
+          -4104.5,
+          85,
+          -2750,
+          -4104.5,
+          85
+        ]
+      ],
+      "expect": "hit",
+      "note": "Box from the actor's scale (36.47, 24.30, 20) on a unit half-size box raised 1 unit; both rays should hit near its west face, x about -2845 at y -4104.5."
+    },
+    {
+      "name": "pacifica_shore_slabs",
+      "box": [
+        -3213.1,
+        -2738.3,
+        32,
+        -3093.4,
+        -2644.0,
+        61.9
+      ],
+      "truth": "nothing above the riverbank top (z about 30) on the Pacifica shore (Jack, 2026-10-31, near -3143.3, -2646.8, 5.1); nothing drawn there has its pivot above z 35 (a pivot check, not mesh bounds)",
+      "navmap": "not checked",
+      "cause": "likely hidden collider (offline, 2026-10-31): exterior_-13_-11_0_2 node 16 groups 18 and 14 (nodeData 385 and 381), one World Static convex hull each (36 verts, scale 6.21 x 11.52 x 20), z -0.3 to 61.9, side by side; group 18 spans x -3185.7 to -3141.1, group 14 x -3141.7 to -3110.4 at y -2691.3. The rocks at the reported point (group 7) match drawn pier_c_shore_single_a rocks and the riverbank corner (group 13) matches its mesh; group 18's corner is 3 to 6 m from the point.",
+      "rays": [
+        [
+          -3223.3,
+          -2691.3,
+          45,
+          -3103.3,
+          -2691.3,
+          45
+        ],
+        [
+          -3163.3,
+          -2751.3,
+          45,
+          -3163.3,
+          -2631.3,
+          45
+        ]
+      ],
+      "expect": "hit",
+      "note": "Offline the first ray enters group 18 at x -3185.7, the second at y -2712.6. If they hit, check in game that nothing is drawn there before treating it as hidden."
     }
   ]
 }
