@@ -80,7 +80,7 @@ def align(telemetry_path, audio_path, rec, sr):
         if ok.sum() > 100:
             c = np.corrcoef(np.interp(at[ok], te, loud), v[ok])[0, 1]
             best = max(best, (c, coarse + lag))
-    print(f"audio: telemetry starts {best[1]:.2f} s into the recording (clocks {coarse:.2f}, loudness ~ speed r={best[0]:.2f})")
+    print(f"audio: telemetry starts {best[1]:.4f} s into the recording (clocks {coarse:.2f}, loudness ~ speed r={best[0]:.2f})")
     if best[0] < 0.4:
         print("audio: weak match, check it or pass --audio-at")
     return best[1]

@@ -194,6 +194,7 @@ target_link_libraries(navplan PRIVATE spdlog)
 add_executable(acoustics EXCLUDE_FROM_ALL
   tools/acoustics/acoustics.cpp
   src/red4ext/Audio/Acoustics/Probe.cpp
+  src/red4ext/Audio/Acoustics/Reflections.cpp
   src/red4ext/Navigation/NavMap.cpp
   src/red4ext/ThirdParty/miniz/miniz_tinfl.cpp
 )
