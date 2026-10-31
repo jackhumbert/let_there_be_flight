@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cmath>
 #include <numbers>
+#include <string>
 
 namespace EngineSynth {
 
@@ -64,6 +65,70 @@ void Synth::Svf::Run(float aIn, float &aLow, float &aBand) {
   ic2 = 2 * v2 - ic2;
   aLow = v2;
   aBand = v1;
+}
+
+bool ParseCharacter(const char *aText, Character &aCharacter) {
+  const std::string text = aText ? aText : "";
+  if (text == "fmod") {
+    aCharacter = {};
+    return true;
+  }
+  if (text == "clean") {
+    aCharacter = {false, false, false, false};
+    return true;
+  }
+  size_t at = 0;
+  while (at < text.size()) {
+    const size_t end = std::min(text.find(',', at), text.size());
+    const std::string item = text.substr(at, end - at);
+    at = end + 1;
+    const size_t eq = item.find('=');
+    if (eq == std::string::npos) {
+      return false;
+    }
+    const std::string name = item.substr(0, eq);
+    const bool on = item.substr(eq + 1) != "0";
+    bool *field = name == "cone"         ? &aCharacter.cone
+                  : name == "distortion" ? &aCharacter.distortion
+                  : name == "darkness"   ? &aCharacter.darkness
+                  : name == "grit"       ? &aCharacter.grit
+                                         : nullptr;
+    if (!field) {
+      return false;
+    }
+    *field = on;
+  }
+  return true;
+}
+
+float Synth::Stage(float x, float aLevel, float &aEnvelope) const {
+  if (tuning.character.distortion || aLevel <= 0) {
+    return Distort(x, aLevel);
+  }
+  // the stage's gain at the sound's level (a peak follower), applied without bending the wave
+  const float level = std::abs(x);
+  aEnvelope += (level - aEnvelope) * (level > aEnvelope ? envelopeAttack : envelopeRelease);
+  const float e = std::max(aEnvelope, 1e-6f);
+  return x * Distort(e, aLevel) / e;
+}
+
+void Synth::SetCharacter(const Character &aCharacter) {
+  if (!(aCharacter == tuning.character)) {
+    tuning.character = aCharacter;
+    insideForFilters = -1;
+  }
+}
+
+void Synth::EngineFilters() {
+  if (tuning.character.darkness) {
+    engineLowPass.LowPass(kEngineLowPass(now.inside) * carPitch, kEngineLowPassQ, sampleRate);
+    engineHighShelf.Shelf(true, kEngineHighShelf.frequency * carPitch, kEngineHighShelf.gain, kEngineHighShelf.q,
+                          sampleRate);
+  } else {
+    engineLowPass.LowPass(8000.0f, 0.707f, sampleRate);
+    engineHighShelf.Shelf(true, 800.0f, -4.0f, 0.707f, sampleRate);
+  }
+  insideForFilters = now.inside;
 }
 
 void Synth::Biquad::Peak(float aFrequency, float aGain, float aQ, float aSampleRate) {
@@ -130,8 +195,8 @@ Synth::Synth(float aSampleRate, float aPitch, uint32_t aSeed, const Tuning &aTun
   for (int b = 0; b < 3; ++b) {
     engineEq[b].Peak(kEngineEq[b].frequency * carPitch, kEngineEq[b].gain, kEngineEq[b].q, sampleRate);
   }
-  engineHighShelf.Shelf(true, kEngineHighShelf.frequency * carPitch, kEngineHighShelf.gain, kEngineHighShelf.q,
-                        sampleRate);
+  envelopeAttack = 1.0f - std::exp(-1.0f / (0.002f * sampleRate));
+  envelopeRelease = 1.0f - std::exp(-1.0f / (0.05f * sampleRate));
   engineLowShelf.Shelf(false, kEngineLowShelf.frequency * carPitch, kEngineLowShelf.gain, kEngineLowShelf.q,
                        sampleRate);
   Control();
@@ -166,6 +231,8 @@ void Synth::Control() {
   ease(now.cone, target.cone);
 
   const float speed = std::max(0.0f, now.speed);
+  // what speed drives besides pitch: the distortion and the low-pass
+  const float gritSpeed = tuning.character.grit ? speed : 40.0f;
   const float axis[5] = {now.surge, now.lift, now.pitch, now.roll, now.sway};
   const float damageSt = kDamagePitch(now.damage);
   for (int v = 0; v < 5; ++v) {
@@ -174,18 +241,20 @@ void Synth::Control() {
     const float st = c.pitch(axis[v]) + c.speedPitch(speed) + damageSt + detune;
     a.frequency = c.fundamental * carPitch * Semitones(st);
     a.preGain = Db(c.preLevel(axis[v]) + tuning.source);
-    a.drive = std::clamp(c.drive(speed) + c.axisDrive(axis[v]), 0.0f, 1.0f);
+    a.drive = std::clamp(c.drive(gritSpeed) + c.axisDrive(axis[v]), 0.0f, 1.0f);
     a.gain = Db(c.level(axis[v]));
     a.send = Db(c.send + tuning.level[v]);
-    const float cutoff = c.cutoff(speed);
+    const float cutoff = c.cutoff(gritSpeed);
     a.hasLowPass = cutoff > 0;
     if (a.hasLowPass) {
       a.lowPass.LowPass(cutoff * carPitch, 0.33f, sampleRate);
     }
   }
-  engineDrive = kEngineDrive(speed);
-  engineLowPass.LowPass(kEngineLowPass(now.inside) * carPitch, kEngineLowPassQ, sampleRate);
-  coneGain = Db(kConeSend(now.inside) + kConeLevel(now.cone));
+  engineDrive = kEngineDrive(gritSpeed);
+  if (std::abs(now.inside - insideForFilters) > 0.01f) {
+    EngineFilters();
+  }
+  coneGain = tuning.character.cone ? Db(kConeSend(now.inside) + kConeLevel(now.cone)) : 0.0f;
   yawGain = Db(kYawBand(now.yaw)) - 1.0f;
   liftGain = Db(kLiftBand(now.lift)) - 1.0f;
   yawBand.Set(540.0f * carPitch, 1.0f, sampleRate);
@@ -246,8 +315,8 @@ void Synth::Render(float *aOut, uint32_t aFrames, float *aVoices) {
         liftBand.Run(x, lLow, lBand);
         x += yawGain * yBand + liftGain * lBand;
       }
-      x = Distort(x, a.drive) * a.gain;
-      x = Distort(x, c.drive2);
+      x = Stage(x, a.drive, a.envelope[0]) * a.gain;
+      x = Stage(x, c.drive2, a.envelope[1]);
       if (a.hasLowPass) {
         x = a.lowPass.Run(x);
       }
@@ -259,7 +328,7 @@ void Synth::Render(float *aOut, uint32_t aFrames, float *aVoices) {
     for (auto &b : engineEq) {
       e = b.Run(e);
     }
-    e = Distort(e, engineDrive);
+    e = Stage(e, engineDrive, engineEnvelope);
     e = engineLowShelf.Run(engineHighShelf.Run(engineLowPass.Run(e)));
     e *= 1.0f + coneGain;
     const float returnScale = std::abs(engine) > 1e-9f ? e / engine : 0.0f;

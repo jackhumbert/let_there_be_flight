@@ -47,6 +47,7 @@ struct Tuning {
   float jumpSeconds = 0.004f;      // a delay this far (beyond the motion) from the tap's: a new reflection
   float fadeSeconds = 0.08f;       // the crossfade to it
   float wetFrom = 0.35f;           // enclosure where the late reverb starts (full at 1)
+  bool airAbsorption = false;      // highs lost along each echo's path, and faster in the reverb
   float minDelay = 0.004f;         // s
   float pan = 0.9f, panOpposite = 0.3f; // a wall's echo in its own channel and the other
 };
@@ -63,6 +64,7 @@ struct Params {
   std::array<Echo, kNearRays> scatter{};
   float floorFeedback = 0, wallFeedback = 0;
   float rt60 = 0.2f, wet = 0;
+  bool air = false; // Tuning::airAbsorption
 };
 
 // The echoes of the car's sound at aSource heard at aListener, from the features probed at aSource;
@@ -115,6 +117,9 @@ private:
     int active = 0;
     Ramp gain;
     float level = 0; // this sample's gain
+    // air absorption: a one-pole low-pass set by the echo's path (1: none), and its state
+    float air = 1, airState = 0;
+    float Air(float x);
     bool started = false;
     // a new target: delay and rate in samples, gain, reached over aInterval samples
     void Set(double aDelay, double aRate, float aGain, int aInterval, const Reflections &aOwner);
@@ -136,6 +141,9 @@ private:
   Ramp floorFeedback, wallFeedback, rt60, wet;
   int fdnGainAge = 0;
   std::array<float, 8> fdnGain{};
+  // air absorption in the reverb: each line's loop low-passed (1: none)
+  float fdnAir = 1;
+  std::array<float, 8> fdnAirState{};
   bool started = false;
   Energy energy;
   float tail = 0;

@@ -132,6 +132,8 @@ const char kBusDsp = 0;
 // The test source (SetTestSource): the bus DSPs play it in place of what reaches them, the event
 // DSPs mute the thrusters. The bus runs at the mixer's rate; an event's DSPs run at its pitch.
 std::atomic<int> testSource{0};
+// Tuning::airAbsorption for the worker's Targets (SetAirAbsorption)
+std::atomic<bool> airAbsorption{false};
 
 // clicks: a 3 ms decaying noise burst every half second; a 440 Hz sine; pink noise: Paul Kellet's
 // filter on white
@@ -337,6 +339,7 @@ void Run() {
     const bool live = Clock::now() - p.liveTime < kLiveStale && drift < kLiveDrift;
     const Features f = (*probe)(p.position, p.forward, p.up, live ? &p.live : nullptr);
     tuning.gain = p.gain;
+    tuning.airAbsorption = airAbsorption.load(std::memory_order_relaxed);
     {
       const float dt = std::chrono::duration<float>(p.carTime - lastTime).count();
       if (haveLast && dt > 0.01f) {
@@ -646,6 +649,11 @@ void SetLog(const std::string &aPath) {
   spdlog::info("[Acoustics] logging to {}", aPath);
 }
 
+void SetAirAbsorption(bool aOn) {
+  airAbsorption.store(aOn);
+  spdlog::info("[Acoustics] air absorption {}", aOn);
+}
+
 void SetTestSource(TestSource aSource) {
   testSource.store(int(aSource));
   spdlog::info("[Acoustics] test source {}", int(aSource));
@@ -655,6 +663,29 @@ void SetListener(const Vec3 &aPosition) {
   std::lock_guard guard(poseLock);
   pose.listener = aPosition;
   pose.haveListener = true;
+}
+
+std::string Summary() {
+  float gain;
+  bool fresh;
+  RaySource rays;
+  {
+    std::lock_guard guard(poseLock);
+    gain = pose.gain;
+    fresh = Clock::now() - pose.carTime < kStale;
+    rays = pose.rays;
+  }
+  constexpr const char *kTests[] = {"off", "clicks", "pink noise", "440 Hz sine"};
+  constexpr const char *kRays[] = {"the nav map only", "the scripts", "PhysX"};
+  const int test = std::clamp(testSource.load(), 0, 3);
+  const int ray = std::clamp(int(rays), 0, 2);
+  if (!fresh) {
+    return fmt::format("echoes: not flying (air absorption {}, test sound {}, stems {})", airAbsorption.load() ? "on" : "off",
+                       kTests[test], Stems::Recording() ? "recording" : "off");
+  }
+  return fmt::format("echoes {} (level {:.2f}), air absorption {}, test sound {}, near rays from {}, stems {}",
+                     gain > 0 ? "on" : "off", level.load(), airAbsorption.load() ? "on" : "off", kTests[test], kRays[ray],
+                     Stems::Recording() ? "recording" : "off");
 }
 
 std::string State() {
@@ -688,11 +719,11 @@ std::string State() {
       "{{\"buses\":{},\"eventDsps\":{},\"flying\":{},\"gain\":{},\"inside\":{},\"level\":{},\"probes\":{},\"probeMs\":{},"
       "\"blocks\":{},\"soundBlocks\":{},\"silentBlocks\":{},\"floor\":{},\"ceiling\":{},\"left\":{},\"right\":{},\"enclosure\":{},"
       "\"meanFreePath\":{},\"physxCalls\":{},\"physxCasts\":{},\"physxGap\":{},\"physxMs\":{},\"physxMsMax\":{},\"liveRays\":{},\"floorMap\":{},\"leftMap\":{},\"rightMap\":{},\"floorDelay\":{},\"floorGain\":{},\"leftDelay\":{},\"rightDelay\":{},"
-      "\"floorFeedback\":{},\"wallFeedback\":{},\"rt60\":{},\"wet\":{},\"testSource\":{},\"stems\":{}}}",
+      "\"floorFeedback\":{},\"wallFeedback\":{},\"rt60\":{},\"wet\":{},\"testSource\":{},\"air\":{},\"stems\":{}}}",
       attached.size(), eventDsps, fresh ? "true" : "false", num(gain), num(inside), num(level.load()), probes.load(), num(ms),
       blocks.load(), soundBlocks.load(), silentBlocks.load(), num(f.floor), num(f.ceiling), num(f.left), num(f.right), num(f.enclosure),
       num(f.meanFreePath), physxCalls.load(), physxCasts.load(), num(physxGap.load()), num(physxMs.load()), num(physxMsMax.load()), f.liveRays, num(f.floorMap), num(f.leftMap), num(f.rightMap), num(p.floor.delay), num(p.floor.gain), num(p.left.delay), num(p.right.delay),
-      num(p.floorFeedback), num(p.wallFeedback), num(p.rt60), num(p.wet), testSource.load(), Stems::State());
+      num(p.floorFeedback), num(p.wallFeedback), num(p.rt60), num(p.wet), testSource.load(), airAbsorption.load(), Stems::State());
 }
 
 } // namespace Acoustics

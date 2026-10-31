@@ -69,6 +69,9 @@ void SetLiveHits(const Vec3 &aOrigin, const std::array<float, kNearRays> &aDista
                  const std::array<std::string, kNearRays> &aMaterial, RaySource aSource);
 // how long the PhysX caster took for its last set of rays (State)
 void SetPhysXCastTime(float aMilliseconds);
+// Air absorption on the echoes and reverb (Tuning::airAbsorption), from the next probe.
+void SetAirAbsorption(bool aOn);
+
 // A test sound in place of LTBF's FMOD sound, to hear the echoes on something plain: the master bus
 // DSP plays it (at the mixer's rate, not spatialized) instead of what reaches the bus, and the event
 // DSPs mute the thrusters. Off restores both.
@@ -78,6 +81,10 @@ void SetTestSource(TestSource aSource);
 // A CSV row a probe to aPath (empty: stop): the nav map's and the live distances side by side,
 // with the materials hit.
 void SetLog(const std::string &aPath);
+
+// One line for people: echoes on or off and their level, air absorption, the test sound, where the
+// near rays come from, stems recording or not (as the plugin has them now, not as asked)
+std::string Summary();
 
 // JSON: on or off, the last features and Params, probe and DSP counts (for tests and the log)
 std::string State();

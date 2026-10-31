@@ -206,9 +206,14 @@ target_link_libraries(acoustics PRIVATE spdlog)
 add_executable(engine_synth EXCLUDE_FROM_ALL
   tools/acoustics/engine_synth.cpp
   src/red4ext/Audio/EngineSynth/Synth.cpp
+  src/red4ext/Audio/Acoustics/Probe.cpp
+  src/red4ext/Audio/Acoustics/Reflections.cpp
+  src/red4ext/Navigation/NavMap.cpp
+  src/red4ext/ThirdParty/miniz/miniz_tinfl.cpp
 )
 target_include_directories(engine_synth PRIVATE src/red4ext)
 target_compile_features(engine_synth PRIVATE cxx_std_20)
+target_link_libraries(engine_synth PRIVATE spdlog)
 
 # the same code through FMOD with the mod's banks, a recording standing in for the thrusters
 # (tools/acoustics/fmod_check.cpp); not built by default

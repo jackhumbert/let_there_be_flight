@@ -56,6 +56,13 @@ public native class FlightAudio extends IScriptable {
   public native func StopEngine(emitterName: String) -> Void;
   // its channels and cost as JSON, for tests
   public native func EngineState() -> String;
+  // which of the FMOD event's effects the synth keeps: "fmod", "clean", or any of
+  // "cone=0,distortion=0,darkness=0,grit=0" (1 to keep); applies at once
+  public native func EngineCharacter(text: String) -> String;
+  // air absorption on the echoes and reverb
+  public native func AcousticsAir(on: Bool) -> Void;
+  // one line: who plays the thrusters, the synth's character and the echoes, as they are now
+  public native func AudioSummary() -> String;
   // who makes the thrusters' sound: 0 the FMOD event, 1 the engine synth (not a Mod Setting yet:
   // LtbfBridge.EngineSource for tests; takes effect when the thrusters next start)
   public let engineSource: Int32 = 0;

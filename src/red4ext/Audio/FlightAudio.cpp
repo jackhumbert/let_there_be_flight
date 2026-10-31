@@ -459,3 +459,35 @@ void FlightAudio::StopEngine(RED4ext::CString emitterName) {
 RED4ext::CString FlightAudio::EngineState() {
   return EngineSynth::Channels::State().c_str();
 }
+
+RED4ext::CString FlightAudio::EngineCharacter(RED4ext::CString text) {
+  EngineSynth::Character c = EngineSynth::Channels::GetCharacter();
+  if (!EngineSynth::ParseCharacter(text.c_str(), c)) {
+    return fmt::format("error: \"{}\" not understood: fmod, clean, or cone, distortion, darkness, grit =0 or =1 "
+                       "with commas between",
+                       text.c_str())
+        .c_str();
+  }
+  EngineSynth::Channels::SetCharacter(c);
+  spdlog::info("[FlightAudio] engine character {}", text.c_str());
+  return AudioSummary();
+}
+
+void FlightAudio::AcousticsAir(bool on) {
+  Acoustics::SetAirAbsorption(on);
+}
+
+RED4ext::CString FlightAudio::AudioSummary() {
+  size_t events = 0;
+  for (const auto &[name, _] : eventMap) {
+    if (name.rfind("vehicle", 0) == 0 && name.find("Destroyed") == std::string::npos) {
+      ++events;
+    }
+  }
+  const std::string synth = EngineSynth::Channels::Summary();
+  const std::string thrusters =
+      events ? fmt::format("thrusters: FMOD event on {} ({})", events, synth.substr(synth.find("character")))
+             : (synth.rfind("synth on 0 ", 0) == 0 ? "thrusters: silent, not flying (" + synth.substr(synth.find("character")) + ")"
+                                                    : "thrusters: " + synth);
+  return (thrusters + "; " + Acoustics::Summary()).c_str();
+}

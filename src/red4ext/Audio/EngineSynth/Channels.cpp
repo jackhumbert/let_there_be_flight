@@ -57,6 +57,16 @@ FMOD::ChannelGroup *group = nullptr;
 // the synth's cost, over every block of every channel
 std::atomic<uint64_t> blocks{0}, frames{0}, nanos{0}, maxNanos{0};
 std::atomic<int> sampleRate{48000};
+// Character as bits (cone, distortion, darkness, grit), for the mixer to read without a lock
+std::atomic<uint32_t> characterBits{0xF};
+
+uint32_t Bits(const Character &c) {
+  return uint32_t(c.cone) | uint32_t(c.distortion) << 1 | uint32_t(c.darkness) << 2 | uint32_t(c.grit) << 3;
+}
+
+Character FromBits(uint32_t b) {
+  return {bool(b & 1), bool(b & 2), bool(b & 4), bool(b & 8)};
+}
 
 FMOD_RESULT F_CALL Process(FMOD_DSP_STATE *aState, unsigned int aLength, const FMOD_DSP_BUFFER_ARRAY *,
                            FMOD_DSP_BUFFER_ARRAY *aOut, FMOD_BOOL, FMOD_DSP_PROCESS_OPERATION aOperation) {
@@ -86,6 +96,7 @@ FMOD_RESULT F_CALL Process(FMOD_DSP_STATE *aState, unsigned int aLength, const F
       g->fresh = false;
     }
   }
+  g->synth->SetCharacter(FromBits(characterBits.load(std::memory_order_relaxed)));
   const auto t0 = std::chrono::steady_clock::now();
   g->synth->Render(g->mono.data(), aLength);
   for (unsigned int i = 0; i < aLength; ++i) {
@@ -258,8 +269,22 @@ void Pause(bool aPaused) {
   }
 }
 
+void SetCharacter(const Character &aCharacter) {
+  characterBits.store(Bits(aCharacter));
+}
+
+Character GetCharacter() {
+  return FromBits(characterBits.load());
+}
+
 bool Playing(const std::string &aId) {
   return thrusters.contains(aId);
+}
+
+std::string Summary() {
+  const Character c = GetCharacter();
+  return fmt::format("synth on {} thrusters, character cone={:d},distortion={:d},darkness={:d},grit={:d}",
+                     thrusters.size(), c.cone, c.distortion, c.darkness, c.grit);
 }
 
 std::string State() {
@@ -267,8 +292,11 @@ std::string State() {
   const double perBlockUs = b ? 1e-3 * double(ns) / double(b) : 0.0;
   // the share of one core a channel takes, playing in real time
   const double share = f ? double(ns) * 1e-9 * sampleRate.load() / double(f) : 0.0;
-  return fmt::format("{{\"channels\":{},\"blocks\":{},\"blockUs\":{:.1f},\"blockUsMax\":{:.1f},\"coreShare\":{:.4f}}}",
-                     thrusters.size(), b, perBlockUs, 1e-3 * double(maxNanos.load()), share);
+  const Character c = GetCharacter();
+  return fmt::format("{{\"channels\":{},\"blocks\":{},\"blockUs\":{:.1f},\"blockUsMax\":{:.1f},\"coreShare\":{:.4f},"
+                     "\"character\":\"cone={:d},distortion={:d},darkness={:d},grit={:d}\"}}",
+                     thrusters.size(), b, perBlockUs, 1e-3 * double(maxNanos.load()), share, c.cone, c.distortion,
+                     c.darkness, c.grit);
 }
 
 } // namespace EngineSynth::Channels

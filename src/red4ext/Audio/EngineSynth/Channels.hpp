@@ -38,6 +38,13 @@ void StopAll();
 void Pause(bool aPaused);
 bool Playing(const std::string &aId);
 
+// What of the FMOD event's effects every channel keeps (Synth's Character), from now on.
+void SetCharacter(const Character &aCharacter);
+Character GetCharacter();
+
+// One line for people: how many thrusters the synth plays and its character
+std::string Summary();
+
 // JSON for State(): channels, the synth's mean and longest time a block, and its share of real time
 std::string State();
 

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 
 namespace Acoustics {
 
@@ -90,6 +91,7 @@ Params Targets(const Features &aFeatures, const Vec3 &aSource, const Vec3 &aList
   p.rt60 = std::clamp(0.04f * freePath / -std::log(1 - alpha), aTuning.rt60Min, aTuning.rt60Max);
   // the lower half of the sphere is mostly ground: the reverb rises from a little above that
   p.wet = aTuning.wet * aTuning.gain * Clamp01((enclosure - aTuning.wetFrom) / (1 - aTuning.wetFrom));
+  p.air = aTuning.airAbsorption;
   return p;
 }
 
@@ -174,6 +176,14 @@ void Reflections::Voice::Step(double aMaxRate, double aMinDelay) {
   }
 }
 
+float Reflections::Voice::Air(float x) {
+  if (air >= 1.0f) {
+    return x;
+  }
+  airState += air * (x - airState);
+  return airState;
+}
+
 float Reflections::Voice::Read(const Line &aLine, uint32_t aWrite, bool aWithGain, bool aSmear) const {
   float sum = 0;
   for (const Tap &t : taps) {
@@ -204,6 +214,7 @@ void Reflections::Reset() {
   for (auto &line : fdn) {
     std::fill(line.buffer.begin(), line.buffer.end(), 0.0f);
   }
+  fdnAirState = {};
   started = false;
   for (Voice *v : {&floorVoice, &ceilingVoice, &leftVoice, &rightVoice}) {
     *v = {};
@@ -220,7 +231,20 @@ void Reflections::SetTargets(const Params &aParams) {
   // delays in samples
   auto delay = [&](const Echo &e) { return double(std::max(e.delay, tuning.minDelay)) * sampleRate; };
   const int n = started ? rampSamples : 0;
-  auto set = [&](Voice &v, const Echo &e) { v.Set(delay(e), e.rate, e.gain, rampSamples, *this); };
+  // air absorption, air and the surfaces together: about 16 kHz near, 8 kHz by a 60 m path, 4 kHz by 180 m
+  auto air = [&](const Echo &e) {
+    if (!aParams.air) {
+      return 1.0f;
+    }
+    const float path = e.delay * kSpeedOfSound + tuning.nearDistance;
+    const float cutoff = 16000.0f / (1.0f + path / 60.0f);
+    return 1.0f - std::exp(-2.0f * std::numbers::pi_v<float> * cutoff / sampleRate);
+  };
+  auto set = [&](Voice &v, const Echo &e) {
+    v.Set(delay(e), e.rate, e.gain, rampSamples, *this);
+    v.air = air(e);
+  };
+  fdnAir = aParams.air ? 1.0f - std::exp(-2.0f * std::numbers::pi_v<float> * 5000.0f / sampleRate) : 1.0f;
   set(floorVoice, aParams.floor);
   set(ceilingVoice, aParams.ceiling);
   set(leftVoice, aParams.left);
@@ -262,16 +286,16 @@ void Reflections::Process(const float *aIn, float *aOut, uint32_t aFrames, int a
     const float decay = float(rt60.Next()), send = float(wet.Next());
     if (started) {
       // each side's echo, and the other side's echo bounced back off it
-      a = floorVoice.Read(source, write, true, true) + ffb * floorVoice.Read(ceiling, write, false, true);
-      b = ceilingVoice.Read(source, write, true, true) + ffb * ceilingVoice.Read(floor, write, false, true);
-      l = leftVoice.Read(source, write, true, true) + wfb * leftVoice.Read(right, write, false, true);
-      r = rightVoice.Read(source, write, true, true) + wfb * rightVoice.Read(left, write, false, true);
+      a = floorVoice.Air(floorVoice.Read(source, write, true, true) + ffb * floorVoice.Read(ceiling, write, false, true));
+      b = ceilingVoice.Air(ceilingVoice.Read(source, write, true, true) + ffb * ceilingVoice.Read(floor, write, false, true));
+      l = leftVoice.Air(leftVoice.Read(source, write, true, true) + wfb * leftVoice.Read(right, write, false, true));
+      r = rightVoice.Air(rightVoice.Read(source, write, true, true) + wfb * rightVoice.Read(left, write, false, true));
       // the scattered echoes, each on its fan's side
       for (int k = 2; k < kNearRays; ++k) {
         Voice &v = scatterVoices[k];
         v.Step(maxRate, minDelay);
         if (v.level > 1e-6f) {
-          (k < 2 + kFanRays ? sr : sl) += v.Read(source, write, true, false);
+          (k < 2 + kFanRays ? sr : sl) += v.Air(v.Read(source, write, true, false));
         }
       }
 
@@ -291,6 +315,10 @@ void Reflections::Process(const float *aIn, float *aOut, uint32_t aFrames, int a
       const float input = x * send / std::sqrt(8.0f);
       for (int j = 0; j < 8; ++j) {
         float v = fdnGain[j] * (back[j] - 0.25f * sum) + input;
+        if (fdnAir < 1.0f) {
+          fdnAirState[j] += fdnAir * (v - fdnAirState[j]);
+          v = fdnAirState[j];
+        }
         fdn[j].buffer[write & fdn[j].mask] = v;
         (j % 2 == 0 ? revL : revR) += 0.5f * v;
       }

@@ -70,6 +70,36 @@ event's curves, one home), `Synth` (one thruster), `Channels` (the plugin's FMOD
 - Cost in game: 1.05% of a core per thruster on the mixer (4% for four), 112 us a block, worst block
   0.9 to 1.7 ms. Offline about 200 ns a thruster frame.
 
+## Switches: which FMOD effects to keep
+
+The event's effects were made by hand to sound like a space; with the acoustics doing that from the
+city, some work against it. `Character` (Synth.hpp) keeps or drops each, all on by default (the event):
+
+- `cone`: the Cone return, up to +7 dB when a thruster faces the listener, from the camera's angle.
+- `distortion`: FMOD's three distortion stages. Off, each keeps its level behaviour as a gain following
+  the sound's envelope (the same squeeze of the swings) without reshaping the wave.
+- `darkness`: the Engine return's high shelf (-16 dB over 240 Hz) and 2.7 kHz low-pass. Off: a mild
+  tilt (-4 dB over 800 Hz) and an 8 kHz low-pass, for distance and the echoes to darken instead.
+- `grit`: speed driving the distortion and opening the low-pass. Off: held at a 40 m/s cruise's
+  (pitch still follows speed).
+
+And on the echoes, `Tuning::airAbsorption` (Reflections): each echo low-passed by its path (about
+16 kHz near, 8 kHz by 60 m, 4 kHz by 180 m), the reverb's lines at 5 kHz.
+
+In game, at once: `LtbfBridge.EngineCharacter("clean")`, `("fmod")` or `("darkness=0,grit=0")`, and
+`LtbfBridge.AcousticsAir(true)`. These and the other audio setters (`EngineSource`, `Acoustics`,
+`AcousticsLive`, `AcousticsTest`, `AcousticsStems`) answer with what they set and then the audio as the
+plugin has it (`LtbfBridge.AudioStatus`: who plays the thrusters, the character, echoes, air, test sound,
+ray source, stems), or a line starting `error:` when the input was wrong and nothing changed. Offline, for any recorded run with stems: `tools/acoustics/
+engine_variants.py <run dir>` renders each variant from the run's parameter log with the echoes along its
+own path (the car's place and axes from the four thrusters' logged positions, the nav map probed 20
+times a second), at the event's loudness, as tracks of the run's video with a 10 s tour first.
+
+On the FMOD free roam (variants matched to the event's loudness): dark as the event, the dry sound's
+centroid 333 Hz and the echoes' 284; darkness off 594 and 513; clean 614 and 523; air absorption takes the
+echoes from 284 to 243 Hz (clean: 523 to 470); distortion and grit move them a little; the cone did
+nothing there (the camera behind and above, the thrusters never facing it).
+
 ## Tools
 
 - The stems' `<base>_params.csv`: each thruster's parameters per frame (wall clock, id, start pitch,
@@ -77,7 +107,9 @@ event's curves, one home), `Synth` (one thruster), `Channels` (the plugin's FMOD
 - `tools/ingame/axis_sweep.py`: each control held in turn, recorded with stems (`--call
   LtbfBridge.EngineSource,1` for the synth).
 - `tools/acoustics/engine_synth.cpp` (target `engine_synth`): a params log through the synth on the
-  stems' timeline, `--voices` for each voice, `--tune` to try levels.
+  stems' timeline, `--voices` for each voice, `--tune` to try levels, `--character` for the switches,
+  `--acoustics navmap.bin [--air]` for the echoes along the run's path.
+- `tools/acoustics/engine_variants.py`: a run's video with each switch's variant as a track.
 - `tools/acoustics/engine_fit.py`: the synth against the FMOD dry stem of the same run, per control
   held (level, centroid, lowest partial) and the loudness correlation.
 - `tools/acoustics/stems_video.py --extra synth=<render>.wav`: the render as another audio track of the

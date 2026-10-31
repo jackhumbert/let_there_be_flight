@@ -41,7 +41,24 @@ inline constexpr const char *kVoiceNames[kVoices] = {"surge", "lift", "pitch", "
 
 // The synth's own constants: each voice's level (dB, on top of its curves), set against the FMOD
 // event's output (tools/acoustics/engine_fit.py), and the sound's character.
+// Which of the FMOD event's own effects the synth keeps; all on is the event as it is. Off, each
+// leaves its job to the acoustics or drops it:
+struct Character {
+  bool cone = true;       // the Cone return: up to 7 dB louder when a thruster faces the listener
+  bool distortion = true; // FMOD's three distortion stages; off, each stage's level behaviour stays
+                          // (a gain following the sound's envelope) without reshaping the wave
+  bool darkness = true;   // the Engine return's high shelf (-16 dB over 240 Hz) and 2.7 kHz low-pass;
+                          // off, a mild tilt (-4 dB over 800 Hz) and an 8 kHz low-pass
+  bool grit = true;       // speed driving the distortion and opening the low-pass; off, held where a
+                          // 40 m/s cruise has them (pitch still rises with speed)
+  bool operator==(const Character &) const = default;
+};
+// "cone=0,distortion=1,...": the names above, 0 or 1; the rest as they are. "fmod" (all on) and
+// "clean" (all off) as wholes. False on a name it does not know.
+bool ParseCharacter(const char *aText, Character &aCharacter);
+
 struct Tuning {
+  Character character;
   // surge, lift, pitch, roll, sway, air, brake, damage, scrape
   std::array<float, kVoices> level{1, -1, 3, -3.5f, -1, -30, 10, 0, 0};
   float master = -7.2f;     // dB
@@ -57,6 +74,7 @@ public:
   Synth(float aSampleRate, float aPitch, uint32_t aSeed, const Tuning &aTuning = {});
 
   void Set(const Inputs &aInputs);
+  void SetCharacter(const Character &aCharacter);
   // aFrames mono samples to aOut; aVoices (optional): each voice's part, aFrames x kVoices interleaved
   void Render(float *aOut, uint32_t aFrames, float *aVoices = nullptr);
 
@@ -82,7 +100,11 @@ private:
     int bands = 0;
     Biquad lowPass;
     bool hasLowPass = false;
+    float envelope[2] = {}; // the two distortion stages' input level, when the waves are kept clean
   };
+  // a distortion stage, or with Character::distortion off its gain at the sound's level
+  float Stage(float x, float aLevel, float &aEnvelope) const;
+  void EngineFilters();
 
   void Control();
   float Noise();
@@ -117,7 +139,8 @@ private:
   // master
   Svf water;
   float masterGain = 0, waterCutoff = 22000;
-  float engineDrive = 0, coneGain = 0;
+  float engineDrive = 0, coneGain = 0, engineEnvelope = 0, envelopeAttack = 0, envelopeRelease = 0;
+  float insideForFilters = -1;
 };
 
 } // namespace EngineSynth

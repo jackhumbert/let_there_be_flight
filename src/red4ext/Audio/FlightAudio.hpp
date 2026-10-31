@@ -40,6 +40,14 @@ public:
   void StopEngine(RED4ext::CString emitterName);
   // the synth channels and their cost as JSON, for tests
   RED4ext::CString EngineState();
+  // which of the FMOD event's effects the synth keeps (EngineSynth::ParseCharacter: "fmod", "clean" or
+  // "cone=0,distortion=1,darkness=0,grit=1"); returns the state after, or why not
+  RED4ext::CString EngineCharacter(RED4ext::CString text);
+  // air absorption on the echoes (Acoustics::SetAirAbsorption)
+  void AcousticsAir(bool on);
+  // one line for people: who plays the thrusters (the FMOD event, the synth, nobody), the synth's
+  // character, and the echoes (Acoustics::Summary), as they are now
+  RED4ext::CString AudioSummary();
   // each frame the player's car flies: its matrix, the echoes' level (0: off), how far the view is
   // inside the cabin and who casts the near rays (Acoustics::RaySource: 0 none, 1 the scripts, 2 PhysX)
   void UpdateAcoustics(RED4ext::Matrix carMatrix, float gain, float inside, int32_t raySource);
@@ -85,5 +93,8 @@ private:
     aType->AddFunction<&FlightAudio::UpdateEngine>("UpdateEngine");
     aType->AddFunction<&FlightAudio::StopEngine>("StopEngine");
     aType->AddFunction<&FlightAudio::EngineState>("EngineState");
+    aType->AddFunction<&FlightAudio::EngineCharacter>("EngineCharacter");
+    aType->AddFunction<&FlightAudio::AcousticsAir>("AcousticsAir");
+    aType->AddFunction<&FlightAudio::AudioSummary>("AudioSummary");
   }
 };
