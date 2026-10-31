@@ -104,6 +104,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let trajectory: ref<FlightTrajectory>;
   public let trajectoryAttitudeLead: Float = 0.0;  // s ahead the planned tilt is read (the plan's tilts already start early)
   private let attRef: Vector4;                     // the trajectory's acceleration, smoothed as attAccel is
+  public let nativeAttitude: Bool = false;  // drone attitude in C++ (FlightDroneAttitude); false: DroneAttitude's script below (docs/design/native-ports.md)
+  private let attitude: ref<FlightDroneAttitude>;
   // leaving the line on a trajectory (docs/design/trajectory.md, step 5): replanned from the car's
   // state, never steered back to a point behind it
   public let replanOffLine: Float = 8.0;    // m off the line before replanning (replanDistance without a trajectory)
@@ -406,6 +408,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     self.Initialize(component);
     self.ahead = new AutopilotPlanAhead();
     self.surgeHold = new AutopilotSurge();
+    self.attitude = new FlightDroneAttitude();
     self.ClearRoute();
     return self;
   }
@@ -2413,12 +2416,33 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.bankRateNow = 0.0;
   }
 
+  // The landing turn (droneBrakeTurn): the nose keeps to the line until droneLandSlewBefore
+  // before the descent by the trajectory's clock, then turns to the landing heading. Returns the
+  // yaw wanted, wantedYaw or the turn's.
+  private func ChooseYaw(dt: Float, live: Bool, wantedYaw: Float) -> Float {
+    if this.droneBrakeTurn && this.landSlewOn && (Equals(this.status, "descending") || Equals(this.status, "landed")) {
+      // the landing turn runs on droneLandSlewDuring into the descent
+      this.landSlewDescent += dt;
+      wantedYaw = this.LandSlewYaw(MaxF(this.droneLandSlewDuring - this.landSlewDescent, 0.0), dt, this.droneYaw);
+    } else if this.droneBrakeTurn && this.FollowsTrajectory() && Equals(this.status, "following") {
+      let timeLeft = this.landing ? this.TimeToDescent() : 1000.0;
+      if this.landSlewOn || timeLeft <= this.droneLandSlewBefore {
+        wantedYaw = this.LandSlewYaw(timeLeft + this.droneLandSlewDuring, dt, live ? this.droneYaw : wantedYaw);
+      }
+    }
+    return wantedYaw;
+  }
+
   // Drone style's attitude target: the nose level, along the flight path (the heading at hover
   // speeds, blend as in FlyAerobatic), the body tilted on each axis towards the thrust direction
   // the commanded acceleration and gravity need (DroneBodyAngle). FlyAerobatic's thrust then gives
   // that acceleration in the car's frame: what the tilt leaves along the nose and across goes to
   // surge and sway, which swivel the thrusters.
   private func DroneAttitude(dt: Float, accel: Vector4, blend: Float, live: Bool, out fwd: Vector4, out up: Vector4) -> Void {
+    if this.nativeAttitude {
+      this.DroneAttitudeNative(dt, accel, blend, live, fwd, up);
+      return;
+    }
     let stats = this.component.stats;
     let z = FlightUtils.Up();
     let g = 9.81 * this.gravityFactor;
@@ -2453,19 +2477,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
       h += (Vector4.Normalize(path) * pathWeight + previous * (1.0 - pathWeight)) * blend;
     }
     h = Vector4.Length(h) > 0.1 ? Vector4.Normalize(h) : this.headingRef;
-    // the landing turn (droneBrakeTurn): the nose keeps to the line until droneLandSlewBefore
-    // before the descent by the trajectory's clock, then turns to the landing heading
     let wantedYaw = AtanF(h.Y, h.X);
-    if this.droneBrakeTurn && this.landSlewOn && (Equals(this.status, "descending") || Equals(this.status, "landed")) {
-      // the landing turn runs on droneLandSlewDuring into the descent
-      this.landSlewDescent += dt;
-      wantedYaw = this.LandSlewYaw(MaxF(this.droneLandSlewDuring - this.landSlewDescent, 0.0), dt, this.droneYaw);
-    } else if this.droneBrakeTurn && this.FollowsTrajectory() && Equals(this.status, "following") {
-      let timeLeft = this.landing ? this.TimeToDescent() : 1000.0;
-      if this.landSlewOn || timeLeft <= this.droneLandSlewBefore {
-        wantedYaw = this.LandSlewYaw(timeLeft + this.droneLandSlewDuring, dt, live ? this.droneYaw : wantedYaw);
-      }
-    }
+    wantedYaw = this.ChooseYaw(dt, live, wantedYaw);
     // the heading eased like the tilt (EaseAngle): rate and acceleration limited
     if !live {
       this.droneYaw = wantedYaw;
@@ -2544,6 +2557,68 @@ public class FlightModeAutopilot extends FlightModeStandard {
     // top towards the thrust: tilted forward is nose down, as a quadcopter speeding up
     up = Vector4.Normalize(z + h * TanF(pitch) + side * TanF(roll));
     fwd = Vector4.Normalize(FlightAttitude.Across(h, up));
+  }
+
+  // DroneAttitude in C++ (FlightDroneAttitude, Navigation/DroneAttitude.hpp): the params, the inputs and
+  // the state go in from the fields, the state comes back to them, so everything that reads them and the
+  // plane path are as with the script. The landing turn's choice stays here (ChooseYaw).
+  private func DroneAttitudeNative(dt: Float, accel: Vector4, blend: Float, live: Bool, out fwd: Vector4, out up: Vector4) -> Void {
+    let stats = this.component.stats;
+    let a = this.attitude;
+    a.droneBodyShare = this.droneBodyShare;
+    a.droneTiltTime = this.droneTiltTime;
+    a.attitudeLead = this.attitudeLead;
+    a.droneYawLead = this.droneYawLead;
+    a.lineSpan = this.lineSpan;
+    a.droneYawFrequency = this.droneYawFrequency;
+    a.droneYawRateMax = this.droneYawRateMax;
+    a.droneYawAccelMax = this.droneYawAccelMax;
+    a.racePitchFrequency = this.racePitchFrequency;
+    a.racePitchRateMax = this.racePitchRateMax;
+    a.racePitchAccelMax = this.racePitchAccelMax;
+    a.raceRollFrequency = this.raceRollFrequency;
+    a.raceRollRateMax = this.raceRollRateMax;
+    a.raceRollAccelMax = this.raceRollAccelMax;
+    a.trajectoryAttitudeLead = this.trajectoryAttitudeLead;
+    a.droneTakeoffTilt = this.droneTakeoffTilt;
+    a.droneTakeoffIn = this.droneTakeoffIn;
+    a.droneTakeoffFull = this.droneTakeoffFull;
+    a.droneTakeoffOut = this.droneTakeoffOut;
+    a.droneTakeoffLength = this.droneTakeoffLength;
+    a.dragFeedForward = this.surgeHold.dragFeedForward;
+    a.dt = dt;
+    a.blend = blend;
+    a.speed = stats.d_speed;
+    a.closestS = this.closestS;
+    a.accel = accel;
+    a.velocity = stats.d_velocity;
+    a.forward = stats.d_forward;
+    a.live = live;
+    a.onLine = this.onLine;
+    a.following = this.FollowsTrajectory() && Equals(this.status, "following");
+    a.descending = Equals(this.status, "descending") || Equals(this.status, "landed");
+    a.droneYaw = this.droneYaw;
+    a.droneYawRate = this.droneYawRate;
+    a.dronePitch = this.dronePitch;
+    a.dronePitchRate = this.dronePitchRate;
+    a.droneRoll = this.droneRoll;
+    a.droneRollRate = this.droneRollRate;
+    a.attAccel = this.attAccel;
+    a.attRef = this.attRef;
+    a.headingRef = this.headingRef;
+    let wantedYaw = this.ChooseYaw(dt, live, a.HeadingYaw(this.route, this.trajectory));
+    a.Step(wantedYaw, this.route, this.trajectory, this.Vehicle());
+    this.droneYaw = a.droneYaw;
+    this.droneYawRate = a.droneYawRate;
+    this.dronePitch = a.dronePitch;
+    this.dronePitchRate = a.dronePitchRate;
+    this.droneRoll = a.droneRoll;
+    this.droneRollRate = a.droneRollRate;
+    this.attAccel = a.attAccel;
+    this.attRef = a.attRef;
+    this.headingRef = a.headingRef;
+    fwd = a.fwd;
+    up = a.up;
   }
 
   // An angle eased towards wanted: critically damped at frequency f, its rate and acceleration
