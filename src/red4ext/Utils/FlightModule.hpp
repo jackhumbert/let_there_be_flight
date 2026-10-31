@@ -22,16 +22,27 @@ public:
   uintptr_t m_address;
   void *m_hook;
   void **m_original;
+  bool m_attached = false;
+
+  // A refused hook (wrong address after a game patch, or already hooked) stays refused, so retrying forever
+  // froze the game at startup: give up after a few tries and log it instead.
+  static constexpr int AttachAttempts = 3;
 
   virtual void Load(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) override {
     spdlog::info("Attaching {} at 0x{:X}", m_name, m_address);
-    while (!aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(this->m_address), this->m_hook, this->m_original)) {
-      spdlog::info("  trying again");
+    for (int attempt = 0; attempt < AttachAttempts && !m_attached; attempt++) {
+      m_attached = aSdk->hooking->Attach(aHandle, RED4EXT_OFFSET_TO_ADDR(this->m_address), this->m_hook, this->m_original);
+    }
+    if (!m_attached) {
+      spdlog::error("Could not attach {} at 0x{:X}", m_name, m_address);
     }
   };
 
   virtual void Unload(const RED4ext::Sdk *aSdk, RED4ext::PluginHandle aHandle) override {
-    aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(this->m_address));
+    if (m_attached) {
+      aSdk->hooking->Detach(aHandle, RED4EXT_OFFSET_TO_ADDR(this->m_address));
+      m_attached = false;
+    }
   };
 };
 
