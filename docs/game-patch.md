@@ -14,7 +14,17 @@
 3. Update `deps/red_lib` (`jack` branch) to match the SDK API level.
 4. Update `deps/input_loader` and `deps/mod_settings` to their latest main (they build in-tree against the same SDK, so they must compile with it).
 5. Update `deps/archive_xl` / `deps/tweak_xl` to the tagged release you require; bump the floors in `Main.cpp` and root `CMakeLists.txt`.
-6. Build RelWithDebInfo, `cmake --install`, launch the game, check `red4ext/logs/let_there_be_flight.log` for every hook attaching and no "trying again" loops. Test: activate flight in a car, a 6-wheel, a bike; camera; weapons; thruster detach; audio; mod settings UI.
+6. Build, install and run the smoke test, through `../cp2077_tools` only (the one way to test, `E:\src\CLAUDE.md`):
+
+   ```
+   python ../cp2077_tools/game.py run "<title>" --purpose "LTBF smoke" --install --launch --save ManualSave-191 --scripts ../cp2077_tools/mods/let_there_be_flight=let_there_be_flight --scripts ../cp2077_tools/mods/mod_settings --protect red4ext/plugins/mod_settings/user.ini -- python ../cp2077_tools/mods/let_there_be_flight/smoke.py --out <dir>
+   ```
+
+   It checks the log (every live hook attaching, the names read from the source; the dependencies; the nav map,
+   landing pads, gates and blockers loaded; no error lines). It also checks that Mod Settings lists LTBF, that `O`
+   turns flight on and off, that the Autopilot flies `ManualSave-191` to the Dogtown landing and lands, and that
+   telemetry, the landing pads and the audio answer. The flight is recorded. Then by hand: flight in a 6-wheel and a
+   bike, camera, weapons, thruster detach.
    - Unattended smoke test: launch through `game.py` (it runs `Cyberpunk2077.exe --launcher-skip -skipStartScreen` from `bin/x64`), then poll the LTBF log for `[FlightSystem] OnInitialize` (main menu reached; took ~2 min on 2026-09-13, first launch after a patch can trip the engine's 120 s watchdog and crash once). To see where a stuck main thread is: `cdb -pv -p <pid> -y "srv*;<plugin dir>" -c "~0k 30;q"` (cdb from the Windows 10 SDK debuggers; the plugin `.pdb` is installed next to the dll). Kill any leftover `scc.exe` afterwards or the next redscript install will fail with access denied.
    - To rule the plugin in or out, set `ignored = ["let_there_be_flight"]` in `red4ext/config.ini` and relaunch.
    - In-game testing without a person at the keyboard (set up 2026-10-25), see "Driving the game" below.
