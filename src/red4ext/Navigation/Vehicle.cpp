@@ -39,6 +39,7 @@ bool VehicleSpec::Parse(const std::string &aText, std::string &aError) {
     else if (key == "brakeLinear") field = &brakeLinear;
     else if (key == "maxTilt") field = &maxTilt;
     else if (key == "brakeShare") field = &brakeShare;
+    else if (key == "tiltFloor") field = &tiltFloor;
     else if (key == "driftMax") field = &driftMax;
     else if (key == "speedCap") field = &speedCap;
     else if (key == "margin") field = &margin;
@@ -105,6 +106,16 @@ float Lateral(const VehicleSpec &aSpec) {
   const float g = kG * aSpec.gravityFactor;
   const float lift = g + aSpec.lift;
   return std::sqrt(std::max(lift * lift - g * g, 1.0f)) + aSpec.surge * std::sin(aSpec.driftMax * kDeg);
+}
+
+float LateralAt(const VehicleSpec &aSpec, float aVertical) {
+  if (!aSpec.drone) {
+    return Lateral(aSpec);
+  }
+  const float g = kG * aSpec.gravityFactor;
+  const float tilt = DroneAccel(aSpec, aSpec.sway) - aSpec.sway;
+  const float left = std::clamp(aVertical / std::max(g, 0.1f), 0.0f, 1.0f);
+  return aSpec.sway + tilt * left + aSpec.surge * aSpec.surgeShare * std::sin(aSpec.driftMax * kDeg);
 }
 
 float Accel(const VehicleSpec &aSpec, float aSpeed) {

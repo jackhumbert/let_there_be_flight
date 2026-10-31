@@ -35,6 +35,8 @@ struct VehicleSpec {
   float maxTilt = 55.0f;         // deg, droneMaxTilt
   float brakeShare = 0.25f;      // share of the thrust's tilt the body takes slowing (droneBrakeShare): the nose
                                  // pulls up less than it leans speeding up, reverse surge does the rest
+  float tiltFloor = 1.0f;        // x g: the vertical the body's tilt is worked out against at least (droneTiltFloor);
+                                 // bending down, the lift pushes less or down and the thrusters take the rest
   float driftMax = 20.0f;        // deg the nose turns into a bend (raceDriftMax)
   float speedCap = 120.0f;       // m/s, raceSpeedCap (freeRoamTopSpeed in free roam)
   float margin = 0.85f;          // share of the envelope planned for (raceMargin)
@@ -58,6 +60,11 @@ float TopSpeed(const VehicleSpec &aSpec);
 // Sideways acceleration in a level turn: drone style the sway envelope, plane style the lift
 // banked into the turn; both plus the surge's share with the nose drifted in.
 float Lateral(const VehicleSpec &aSpec);
+// The same where the path also needs `vertical` m/s2 upwards from the thrust (gravity plus the bend's
+// own: less over a crest). Drone style, the body's tilt turns the car only through the lift, so its
+// share is cut to what the lift has left (none pushing over a crest, where only sway and the drifted
+// surge turn the car); plane style as Lateral.
+float LateralAt(const VehicleSpec &aSpec, float aVertical);
 // Speeding up at v: the surge the car gets (surgeShare) less drag (at least 0.5).
 float Accel(const VehicleSpec &aSpec, float aSpeed);
 // Slowing at v: full reverse surge, the brake (grows with v) and drag.

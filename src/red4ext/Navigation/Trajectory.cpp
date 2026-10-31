@@ -191,7 +191,21 @@ Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aL
       // acceleration is worked out from: over a short tight bend the radius alone ran past the limit
       const Vec3 across = Sub(bend[i], Mul(tangent[i], Dot(bend[i], tangent[i])));
       const float level = std::hypot(across.x, across.y);
-      take(i, std::sqrt(lateral / std::max(1.0f / std::max(radius[i], 1.0f), level)), Limit::Turn);
+      const float curve = std::max(1.0f / std::max(radius[i], 1.0f), level);
+      float turn = std::sqrt(lateral / curve);
+      if (bend[i].z < -1e-4f) {
+        // over a crest the lift goes into pushing over and turns the car less (LateralAt): the
+        // fastest speed whose bend fits what is left, by bisection (faster pushes over harder)
+        const float g = kG * aSpec.gravityFactor;
+        float lo = 0.0f, hi = turn;
+        for (int32_t k = 0; k < 24; ++k) {
+          const float mid = 0.5f * (lo + hi);
+          const bool fits = mid * mid * curve <= aSpec.margin * LateralAt(aSpec, g + bend[i].z * mid * mid);
+          (fits ? lo : hi) = mid;
+        }
+        turn = lo;
+      }
+      take(i, turn, Limit::Turn);
       if (bend[i].z < -1e-4f) {
         take(i, std::sqrt(aSpec.pushOver / -bend[i].z), Limit::Crest);
       } else if (bend[i].z > 1e-4f) {
@@ -357,7 +371,10 @@ Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aL
       q.drift = drift[i];
       // the thrust also holds off the air drag along the line (at 89 m/s about 13 m/s2 forward)
       Vec3 thrust = Add(Add(q.acceleration, Mul(tangent[i], Drag(aSpec, q.speed))), Vec3{0.0f, 0.0f, g});
-      thrust.z = std::max(thrust.z, 0.3f * g); // pushing down is negative lift, not a body turned over
+      // bending down (a crest), the tilt as if the lift still held the car up: the lift pushes less or
+      // down and the thrusters take the rest. Worked out against the small vertical left, a modest
+      // turn read as a thrust near horizontal and rolled the body to its cap with the lift sideways
+      thrust.z = std::max(thrust.z, aSpec.tiltFloor * g);
       size[i] = Len(thrust);
       up[i] = thrust.z;
       lat[i] = Dot(thrust, side[i]);
@@ -401,8 +418,9 @@ Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aL
     if (q.speed > out.top * 1.01f) {
       flag("speed", q.speed, out.top);
     }
-    if (q.lateral > latMax) {
-      flag("lateral", q.lateral, latMax);
+    const float latHere = LateralAt(aSpec, q.acceleration.z + kG * aSpec.gravityFactor) * 1.02f;
+    if (q.lateral > std::min(latMax, latHere)) {
+      flag("lateral", q.lateral, std::min(latMax, latHere));
     }
     if (q.along > Accel(aSpec, q.speed) * 1.05f + 0.5f) {
       flag("accel", q.along, Accel(aSpec, q.speed));

@@ -10,10 +10,10 @@ line. Code: `src/red4ext/Navigation/Vehicle.hpp/.cpp` (no game types, so navplan
 - the car, from its vehicle record (FlightStats): `mass`, `airResistance`, `brakingFriction`;
 - the flight tuning (FlightMode_Standard, FlightMode, FlightSettings): `surge`, `sway`, `lift`,
   `gravityFactor`, `brakeLinear`, `drag` (PhysX flight physics applies air drag);
-- the Autopilot's race tuning (FlightModeAutopilot): `drone`, `maxTilt`, `brakeShare`, `driftMax`, `speedCap`,
+- the Autopilot's race tuning (FlightModeAutopilot): `drone`, `maxTilt`, `brakeShare`, `tiltFloor`, `driftMax`, `speedCap`,
   `margin`, `planDecel`, `pushOver`.
 
-The limits are functions of it: `Drag`, `DroneAccel`, `TopSpeed`, `Lateral`, `Accel`, `Decel`,
+The limits are functions of it: `Drag`, `DroneAccel`, `TopSpeed`, `Lateral`, `LateralAt`, `Accel`, `Decel`,
 `PlanDecel`, `PullUp`. The speed along a line built from them is the trajectory's
 (`Navigation/Trajectory.hpp`, `docs/design/trajectory.md`).
 
@@ -24,6 +24,13 @@ The limits are functions of it: `Drag`, `DroneAccel`, `TopSpeed`, `Lateral`, `Ac
   between (30 to 70 m/s) the body leans further into a hard push and the car gets more (about 20
   m/s2), not modelled: the plan errs on the safe side there. Refit after a change to the flight
   physics or the follower (`docs/history.md`).
+- `LateralAt(vertical)`: the turn left where the path also needs `vertical` m/s2 upwards (gravity
+  plus the bend's own, less over a crest). Drone style the body's tilt turns the car only through the
+  lift, so the tilt's part scales with what the lift has left; pushing over a crest only sway and the
+  drifted surge turn the car. The trajectory solves each crest bend's speed against it.
+- `tiltFloor` (1 g): the vertical the drone body's tilt is worked out against at least. Over a crest
+  the lift pushes less or down; against the small vertical left, a modest turn read as a thrust near
+  horizontal and rolled the body to its 55 degree cap with the lift sideways.
 - Drone `Lateral` is the sway envelope plus `surge x surgeShare x sin(driftMax)`: the surge held through
   a bend with the nose drifted into it (the trajectory plans the drift, `docs/design/trajectory.md`).
 - `pushOver` is already a planned value (the margin is in it): 21 m/s2 drone style, 15 plane style.

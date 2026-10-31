@@ -7,8 +7,16 @@ public class AutopilotSurge extends IScriptable {
   public let dragFeedForward: Bool = true;
   public let fullSurge: Bool = true;
   public let slack: Float = 4.0;       // m/s over the trajectory's speed the surge is still held full
+  // s a change of the hold has to last before it is taken (braking for blocked space, a hit or
+  // leaving the line let go at once): at a sample's edge the limit and the slack flicker it frame
+  // to frame
+  public let dwell: Float = 0.3;
+  // s the commanded surge and sway are eased over for the engine sound and the thrusters' look (the
+  // thrust itself is not): a player's surge does not jump from reverse to full in a frame
+  public let audioTime: Float = 0.25;
 
   public let held: Bool;               // the surge was held full this frame
+  private let changing: Float;         // s the hold has wanted the other way
 
   // The acceleration the drag takes from the car, to be thrust back: along the velocity, m/s2.
   public func Drag(ap: ref<FlightModeAutopilot>, velocity: Vector4) -> Vector4 {
@@ -19,17 +27,32 @@ public class AutopilotSurge extends IScriptable {
     return velocity * (ap.Vehicle().Drag(speed) / speed);
   }
 
-  // Whether the surge is held full: following a trajectory on its line where the speed is set by
-  // the car (its top speed, or speeding up), the car not more than slack ahead of the speed there.
-  public func Hold(ap: ref<FlightModeAutopilot>, s: Float, speed: Float, following: Bool) -> Bool {
-    if !this.fullSurge || !following || !ap.onLine || ap.blockedAhead || ap.emergencyBrake {
-      return false;
+  // Whether the surge is held full (held): following a trajectory on its line where the speed is set
+  // by the car (its top speed, or speeding up), the car not more than slack ahead of the speed there,
+  // each change lasting dwell first. `free`: nothing forbids it (not braking for blocked space, not
+  // after a hit, on the line): when it does, it lets go at once.
+  public func Update(ap: ref<FlightModeAutopilot>, s: Float, speed: Float, free: Bool, dt: Float) -> Void {
+    if !this.fullSurge || !free || !ap.onLine || ap.blockedAhead || ap.emergencyBrake {
+      this.held = false;
+      this.changing = 0.0;
+      return;
     }
     let limit = ap.trajectory.Limit(s);
-    if !Equals(limit, "top") && !Equals(limit, "accel") {
-      return false;
+    let want = (Equals(limit, "top") || Equals(limit, "accel")) && speed < ap.trajectory.Speed(s) + this.slack;
+    if NotEquals(want, this.held) {
+      this.changing += dt;
+      if this.changing >= this.dwell {
+        this.held = want;
+        this.changing = 0.0;
+      }
+    } else {
+      this.changing = 0.0;
     }
-    return speed < ap.trajectory.Speed(s) + this.slack;
+  }
+
+  // `current` eased towards `target` over audioTime.
+  public func Ease(current: Float, target: Float, dt: Float) -> Float {
+    return current + (target - current) * ClampF(dt / MaxF(this.audioTime, 0.001), 0.0, 1.0);
   }
 
   // The thrust in the car's frame with more along the path (`path`, unit, in the car's frame) until

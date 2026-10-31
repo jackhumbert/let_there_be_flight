@@ -81,6 +81,17 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // slowing, the share of the tilt the body takes: less than speeding up (braking is the harder push), so
   // the nose pulls up less than it leans forward speeding up and reverse surge does the rest
   public let droneBrakeShare: Float = 0.25;
+  // x g: the vertical the body's tilt is worked out against at least (crests: see DroneAttitude)
+  public let droneTiltFloor: Float = 1.0;
+  // taking off: the nose leans at least droneTakeoffTilt forward while the car climbs out and speeds
+  // up at a route's start, in by droneTakeoffIn m/s, whole to droneTakeoffFull and gone by
+  // droneTakeoffOut (the climb's own thrust is near vertical and left it level; the car is at 30 m/s
+  // a second after lifting off)
+  public let droneTakeoffTilt: Float = 10.0;  // deg
+  public let droneTakeoffIn: Float = 5.0;     // m/s
+  public let droneTakeoffFull: Float = 25.0;  // m/s
+  public let droneTakeoffOut: Float = 50.0;   // m/s
+  public let droneTakeoffLength: Float = 250.0; // m along the route it applies over
   public let droneMaxTilt: Float = 55.0;      // deg the body tilts at most, either axis (sets the speed envelope)
   public let droneTiltTime: Float = 0.2;      // s, smoothing of the acceleration the tilt follows
   // m/s2 bending the path downwards, in place of racePushOver: the body stays upright (DroneAttitude
@@ -360,7 +371,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let bankRateNow: Float;
   public let pitchAngle: Float;               // rad, eased nose pitch on a line
   public let pitchRateNow: Float;             // rad/s
-  public let commandSurge: Float;             // -1..1, the thrust it commands, for the engine sound
+  public let commandSurge: Float;             // -1..1, the thrust it commands eased (AutopilotSurge.audioTime), for the engine sound
   public let commandSway: Float;
   public let dronePitch: Float;               // rad, drone style's eased body tilt forward (DroneAttitude)
   public let droneRoll: Float;                // rad, and to the right
@@ -1379,7 +1390,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       this.telemetryFile = FlightTelemetry.Begin("autopilot", "t,x,y,z,vx,vy,vz,speed,speed2d,target,rate,cmd,off,following,maneuver,on_line,segment,"
         + "plan_x,plan_y,plan_z,cmd_fwd_x,cmd_fwd_y,cmd_fwd_z,cmd_up_x,cmd_up_y,cmd_up_z,fwd_x,fwd_y,fwd_z,up_x,up_y,up_z,"
         + "attitude_error,plan_cmd,cmd_car,up_cmd_car,plan_pitch,cmd_pitch,car_pitch,collision_timer,"
-        + "drone,cmd_tilt,car_tilt,thrust_right,thrust_fwd,thrust_up,surge_held,drift");
+        + "drone,cmd_tilt,car_tilt,thrust_right,thrust_fwd,thrust_up,surge_held,drift,audio_surge");
       this.telemetryClock = 0.0;
       if this.telemetryFile == 0 {
         return;
@@ -1444,6 +1455,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     ArrayPush(row, this.thrustCmd.Z);
     ArrayPush(row, this.surgeHold.held ? 1.0 : 0.0);
     ArrayPush(row, this.FollowsTrajectory() ? Rad2Deg(this.trajectory.Drift(this.closestS)) : 0.0);
+    ArrayPush(row, this.commandSurge);
     FlightTelemetry.Row(this.telemetryFile, row);
   }
 
@@ -1903,6 +1915,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     m.drone = this.droneStyle;
     m.maxTilt = this.droneMaxTilt;
     m.brakeShare = this.droneBrakeShare;
+    m.tiltFloor = this.droneTiltFloor;
     m.driftMax = this.raceDriftMax;
     m.speedCap = this.freeRoam ? this.freeRoamTopSpeed : this.raceSpeedCap;
     m.margin = this.raceMargin;
@@ -2455,8 +2468,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.attAccel += (accel - this.attAccel) * ClampF(dt / this.droneTiltTime, 0.0, 1.0);
     let drag = this.surgeHold.Drag(this, stats.d_velocity);
     let thrust = this.attAccel + drag + z * g;
-    // pushing down harder than gravity is the lift's job (negative lift), not a body turned over
-    thrust.Z = MaxF(thrust.Z, 0.3 * g);
+    // bending down, the tilt as if the lift still held the car up (droneTiltFloor): the lift pushes less
+    // or down and the thrusters take the rest, rather than the body rolling onto its side
+    thrust.Z = MaxF(thrust.Z, this.droneTiltFloor * g);
     let size = Vector4.Length(thrust);
     let ahead = Vector4.Dot(thrust, h);
     // braking: reverse surge and the brake (RaceDecel), much more than forward surge
@@ -2473,7 +2487,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       // own acceleration (both tilts worked out the same way, so on the trajectory that is 0)
       this.attRef += (this.trajectory.Acceleration(this.closestS) - this.attRef) * ClampF(dt / this.droneTiltTime, 0.0, 1.0);
       let thrustRef = this.attRef + drag + z * g;
-      thrustRef.Z = MaxF(thrustRef.Z, 0.3 * g);
+      thrustRef.Z = MaxF(thrustRef.Z, this.droneTiltFloor * g);
       let sizeRef = Vector4.Length(thrustRef);
       let aheadRef = Vector4.Dot(thrustRef, h);
       let alongRef = aheadRef >= 0.0 ? this.standardModeSurgeFactor : this.RaceDecel(stats.d_speed) - this.DragAccel(stats.d_speed);
@@ -2486,6 +2500,14 @@ public class FlightModeAutopilot extends FlightModeStandard {
       roll = ClampF(flip * this.trajectory.Roll(sAtt) + roll - rollRef, -cap, cap);
     } else {
       this.attRef = this.attAccel;
+    }
+    // taking off: a little lean forward, as a player tips the nose into the surge
+    if this.droneTakeoffTilt > 0.0 && this.FollowsTrajectory() && Equals(this.status, "following")
+      && this.closestS < this.droneTakeoffLength && this.trajectory.Along(this.closestS) > 0.0 {
+      let into = ClampF(stats.d_speed / MaxF(this.droneTakeoffIn, 0.1), 0.0, 1.0);
+      let out = ClampF((this.droneTakeoffOut - stats.d_speed) / MaxF(this.droneTakeoffOut - this.droneTakeoffFull, 0.1), 0.0, 1.0);
+      let w = into * into * (3.0 - 2.0 * into) * out * out * (3.0 - 2.0 * out);
+      pitch = MaxF(pitch, Deg2Rad(this.droneTakeoffTilt) * w);
     }
     // eased as the plane's pitch and bank are (EasePitch, EaseBank): followed directly, the tilt
     // flicks with every change of the commanded acceleration and the car overshoots it. What the
@@ -2713,8 +2735,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
     local.Y = ClampF(local.Y, this.DragAccel(stats.d_speed) - this.RaceDecel(stats.d_speed), this.standardModeSurgeFactor);
     local.Z = ClampF(local.Z, g - this.standardModeLiftFactor, g + this.standardModeLiftFactor);
     // where the speed is the car's to set, the surge held full along the path
-    this.surgeHold.held = this.recovering <= 0.0 && stats.d_speed > 1.0
-      && this.surgeHold.Hold(this, this.closestS + stats.d_speed * this.lineLead, stats.d_speed, this.FollowsTrajectory() && Equals(this.status, "following"));
+    this.surgeHold.Update(this, this.closestS + stats.d_speed * this.lineLead, stats.d_speed,
+      this.recovering <= 0.0 && stats.d_speed > 1.0 && this.FollowsTrajectory() && Equals(this.status, "following"), timeDelta);
     if this.surgeHold.held {
       local = this.surgeHold.Full(local, Quaternion.Conjugate(stats.d_orientation) * Vector4.Normalize(v), this.standardModeSurgeFactor);
       local.X = ClampF(local.X, -this.standardModeSwayFactor, this.standardModeSwayFactor);
@@ -2725,8 +2747,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.torque = torque;
     // inputs for audio and the thrusters' look; no yaw input, ApplyPhysics damps less on an axis
     // with input and the give-back above assumes full damping
-    this.commandSurge = ClampF(local.Y / this.standardModeSurgeFactor, -1.0, 1.0);
-    this.commandSway = ClampF(local.X / this.standardModeSwayFactor, -1.0, 1.0);
+    this.commandSurge = this.surgeHold.Ease(this.commandSurge, ClampF(local.Y / this.standardModeSurgeFactor, -1.0, 1.0), timeDelta);
+    this.commandSway = this.surgeHold.Ease(this.commandSway, ClampF(local.X / this.standardModeSwayFactor, -1.0, 1.0), timeDelta);
     this.component.surge = this.commandSurge;
     this.component.sway = this.commandSway;
     this.component.yaw = 0.0;
