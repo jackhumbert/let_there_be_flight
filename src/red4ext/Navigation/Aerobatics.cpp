@@ -1,5 +1,7 @@
 #include "Aerobatics.hpp"
 
+#include "Navigation/DroneAttitude.hpp"
+
 #include <algorithm>
 #include <cmath>
 
@@ -167,6 +169,152 @@ void SampleManeuver(const Maneuver &aManeuver, float aT, F::Vec3 &aPos, F::Vec3 
     aUp = z;
   }
   aFwd = F::Normalize(aVel);
+}
+
+bool BankFrame(const F::Vec3 &aFwd, F::Vec3 &aLevel, F::Vec3 &aSide) {
+  aLevel = Across(kUp, aFwd);
+  if (F::Length(aLevel) < 0.2f)
+    return false;
+  aLevel = F::Normalize(aLevel);
+  aSide = F::Cross(aFwd, aLevel);
+  return true;
+}
+
+F::Vec3 Unsteep(const F::Vec3 &aFwd, const F::Vec3 &aHeadingRef) {
+  const float steep = ClampF((std::fabs(aFwd.z) - 0.6f) / 0.3f, 0.0f, 1.0f);
+  if (steep > 0.0f)
+    return F::Normalize(F::Add(F::Mul(aFwd, 1.0f - 0.6f * steep), F::Mul(aHeadingRef, 0.6f * steep)));
+  return aFwd;
+}
+
+F::Vec3 EaseBank(EaseState &aState, const EaseParams &aParams, float aDt, const F::Vec3 &aFwd, const F::Vec3 &aUp) {
+  F::Vec3 level, side;
+  if (!BankFrame(aFwd, level, side)) {
+    aState.bankRateNow = 0.0f;
+    return aUp;
+  }
+  const float wanted = std::atan2(F::Dot(aUp, side), F::Dot(aUp, level));
+  const float error = WrapAngle(wanted - aState.bankAngle);
+  const float f = aParams.raceRollFrequency;
+  const float accelMax = aParams.raceRollAccelMax;
+  const float rateMax = aParams.raceRollRateMax;
+  const float rollAccel = ClampF(f * f * error - 2.0f * f * aState.bankRateNow, -accelMax, accelMax);
+  aState.bankRateNow = ClampF(aState.bankRateNow + rollAccel * aDt, -rateMax, rateMax);
+  aState.bankAngle = WrapAngle(aState.bankAngle + aState.bankRateNow * aDt);
+  return F::Add(F::Mul(level, std::cos(aState.bankAngle)), F::Mul(side, std::sin(aState.bankAngle)));
+}
+
+F::Vec3 EasePitch(EaseState &aState, const EaseParams &aParams, float aDt, const F::Vec3 &aFwd, bool aOnLine,
+                  const F::Vec3 &aLineTangent, const F::Vec3 &aHeadingRef) {
+  const F::Vec3 level = F::Normalize2D(aFwd);
+  if (F::Length(level) < 0.5f) {
+    SyncPitch(aState, aFwd);
+    return aFwd;
+  }
+  float wanted = std::asin(ClampF(aFwd.z, -1.0f, 1.0f));
+  if (aOnLine) {
+    // the same steep-path rule as the nose off the line
+    const float slope = std::asin(ClampF(aLineTangent.z, -1.0f, 1.0f));
+    const F::Vec3 along =
+        Unsteep(F::Add(F::Mul(level, std::cos(slope)), F::Mul(kUp, std::sin(slope))), aHeadingRef);
+    wanted = std::asin(ClampF(along.z, -1.0f, 1.0f));
+  }
+  const float f = aParams.racePitchFrequency;
+  const float accel = ClampF(f * f * (wanted - aState.pitchAngle) - 2.0f * f * aState.pitchRateNow,
+                             -aParams.racePitchAccelMax, aParams.racePitchAccelMax);
+  aState.pitchRateNow = ClampF(aState.pitchRateNow + accel * aDt, -aParams.racePitchRateMax, aParams.racePitchRateMax);
+  aState.pitchAngle = ClampF(aState.pitchAngle + aState.pitchRateNow * aDt, -1.5f, 1.5f);
+  return F::Add(F::Mul(level, std::cos(aState.pitchAngle)), F::Mul(kUp, std::sin(aState.pitchAngle)));
+}
+
+void SyncPitch(EaseState &aState, const F::Vec3 &aFwd) {
+  aState.pitchAngle = std::asin(ClampF(aFwd.z, -1.0f, 1.0f));
+  aState.pitchRateNow = 0.0f;
+}
+
+void SyncBank(float &aBankAngle, float &aBankRateNow, const F::Vec3 &aFwd, const F::Vec3 &aUp) {
+  F::Vec3 level, side;
+  if (BankFrame(aFwd, level, side))
+    aBankAngle = std::atan2(F::Dot(aUp, side), F::Dot(aUp, level));
+  aBankRateNow = 0.0f;
+}
+
+F::Vec3 AngularImpulse(const WorldInertia &aInertia, const F::Vec3 &aA, bool &aValid) {
+  aValid = aInertia.valid;
+  if (!aInertia.valid)
+    return {0.0f, 0.0f, 0.0f};
+  const WorldInertia &m = aInertia;
+  return {m.x.x * aA.x + m.y.x * aA.y + m.z.x * aA.z, m.x.y * aA.x + m.y.y * aA.y + m.z.y * aA.z,
+          m.x.z * aA.x + m.y.z * aA.y + m.z.z * aA.z};
+}
+
+AttitudeControlOutput AttitudeControl(AttitudeControlState &aState, const AttitudeControlParams &aParams,
+                                      const F::StatsStatic &aStatic, const F::StatsState &aStats,
+                                      const AttitudeControlInput &aInput) {
+  AttitudeControlOutput out;
+  // FlyAerobatic's own floor on the frame time
+  const float dt = std::max(aInput.dt, 0.001f);
+  const F::Vec3 fwd = aInput.fwd;
+  const F::Vec3 right = F::Normalize(F::Cross(fwd, aInput.up));
+  const F::Vec3 up = F::Cross(right, fwd);
+  if (aInput.shape) {
+    // a shape sets its own attitude: carry on the bank easing from where it leaves the car
+    SyncBank(aState.bankAngle, aState.bankRateNow, fwd, up);
+  }
+
+  // rate of the target, smoothed
+  const F::Vec3 step = RotationError(aState.targetRight, aState.targetForward, aState.targetUp, right, fwd, up);
+  const F::Vec3 omega =
+      F::Mul(F::Add(F::Add(F::Mul(aState.targetRight, step.x), F::Mul(aState.targetForward, step.y)),
+                    F::Mul(aState.targetUp, step.z)),
+             1.0f / dt);
+  aState.omegaRef = F::Add(aState.omegaRef, F::Mul(F::Sub(omega, aState.omegaRef), ClampF(dt / 0.05f, 0.0f, 1.0f)));
+  aState.targetRight = right;
+  aState.targetForward = fwd;
+  aState.targetUp = up;
+
+  // angular acceleration from the error and the rate error, then the torque that gives it on each axis
+  const F::Vec3 error = RotationError(aStats.d_right, aStats.d_forward, aStats.d_up, right, fwd, up);
+  out.attitudeError = F::Length(error);
+  out.rateRef = {F::Dot(aState.omegaRef, aStats.d_right), F::Dot(aState.omegaRef, aStats.d_forward),
+                 F::Dot(aState.omegaRef, aStats.d_up)};
+  const F::Vec3 rate = aStats.d_angularVelocity;
+  const float freq = aParams.attitudeFrequency;
+  F::Vec3 alpha =
+      F::Add(F::Mul(error, freq * freq), F::Mul(F::Sub(out.rateRef, rate), 2.0f * aParams.attitudeDamping * freq));
+  if (F::Length(alpha) > aParams.maxAngularAccel)
+    alpha = F::Mul(F::Normalize(alpha), aParams.maxAngularAccel);
+  const float mass = aStatic.mass;
+  const F::Vec3 inertia = aStatic.momentOfInertia;
+  const F::Vec3 tensor = aInput.thrusterTensor;
+  bool valid;
+  const F::Vec3 impulse = AngularImpulse(aInput.inertia, F::Rotate(aStats.d_orientation, alpha), valid);
+  F::Vec3 torque;
+  if (valid) {
+    const F::Vec3 local = F::Rotate(F::Conjugate(aStats.d_orientation), impulse);
+    torque = {local.x / std::max(mass * tensor.x, 0.001f), local.y / std::max(mass * std::max(tensor.y, 1.0f), 0.001f),
+              local.z / std::max(mass * tensor.z, 0.001f)};
+  } else {
+    torque = {alpha.x * inertia.x / std::max(aParams.torqueGainPitch * mass * tensor.x, 0.001f),
+              alpha.y * inertia.y / std::max(aParams.torqueGainRoll * mass * std::max(tensor.y, 1.0f), 0.001f),
+              alpha.z * inertia.z / std::max(aParams.torqueGainYaw * mass * tensor.z, 0.001f)};
+  }
+  // ApplyPhysics damps all rotation: give back what it takes from the rotation wanted
+  F::Vec3 giveBack = F::Mul(out.rateRef, aParams.generalDampFactorAngular);
+  giveBack.z *= aParams.generalYawDampFactor;
+  if (F::Length(giveBack) > aParams.generalDampFactorAngularMax)
+    giveBack = F::Mul(F::Normalize(giveBack), aParams.generalDampFactorAngularMax);
+  out.torque = F::Add(torque, giveBack);
+
+  // thrust: the commanded acceleration, the drag it holds off and gravity, in the car's frame
+  const float g = 9.81f * aParams.gravityFactor;
+  F::Vec3 local =
+      F::Rotate(F::Conjugate(aStats.d_orientation), F::Add(F::Add(aInput.accel, aInput.drag), F::Mul(kUp, g)));
+  local.x = ClampF(local.x, -aParams.standardModeSwayFactor, aParams.standardModeSwayFactor);
+  local.y = ClampF(local.y, aInput.dragAccel - aInput.raceDecel, aParams.standardModeSurgeFactor);
+  local.z = ClampF(local.z, g - aParams.standardModeLiftFactor, g + aParams.standardModeLiftFactor);
+  out.thrust = local;
+  return out;
 }
 
 } // namespace Navigation
