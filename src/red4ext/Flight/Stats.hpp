@@ -8,13 +8,6 @@
 
 namespace Flight {
 
-// The s_ fields UpdateStatic fills in script that UpdateDynamic or its callers use.
-struct StatsStatic {
-  float mass = 0, airResistanceFactor = 0, brakingFrictionFactor = 0;
-  Vec3 momentOfInertia;
-  Vec3 centerOfMass;
-};
-
 // The d_ fields, with the script's names. All zero like a script default.
 struct StatsState {
   Vec3 d_position, d_visualPosition;

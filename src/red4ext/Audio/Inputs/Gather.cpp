@@ -2,6 +2,7 @@
 
 #include "Audio/FlightAudio.hpp"
 #include "Flight/Component.hpp"
+#include "Flight/FlightStats.hpp"
 #include "FlightThruster.hpp"
 #include "Inputs.hpp"
 
@@ -35,10 +36,8 @@ namespace {
 struct Props {
   bool ok = true;
   // FlightComponent
-  CProperty *stats, *isPlayerMounted, *isDestroyed, *collisionTimer, *surge, *lift, *roll, *pitch, *yaw, *smoothForce,
+  CProperty *isPlayerMounted, *isDestroyed, *collisionTimer, *surge, *lift, *roll, *pitch, *yaw, *smoothForce,
       *mode, *modes;
-  // FlightStats
-  CProperty *speed, *forward, *right, *up, *localUp, *direction, *angularVelocity, *velocity;
   // FlightMode, FlightModeStandard, FlightModeAutopilot
   CProperty *gravityFactor, *standardModeLiftFactor, *commandSurge, *commandSway;
   // FlightSystem, FlightController, PID
@@ -64,7 +63,6 @@ CProperty *Need(Props &p, const char *aClass, const char *aName) {
 Props Resolve() {
   Props p;
   auto rtti = CRTTISystem::Get();
-  p.stats = Need(p, "FlightComponent", "stats");
   p.isPlayerMounted = Need(p, "FlightComponent", "isPlayerMounted");
   p.isDestroyed = Need(p, "FlightComponent", "isDestroyed");
   p.collisionTimer = Need(p, "FlightComponent", "collisionTimer");
@@ -76,14 +74,6 @@ Props Resolve() {
   p.smoothForce = Need(p, "FlightComponent", "smoothForce");
   p.mode = Need(p, "FlightComponent", "mode");
   p.modes = Need(p, "FlightComponent", "modes");
-  p.speed = Need(p, "FlightStats", "d_speed");
-  p.forward = Need(p, "FlightStats", "d_forward");
-  p.right = Need(p, "FlightStats", "d_right");
-  p.up = Need(p, "FlightStats", "d_up");
-  p.localUp = Need(p, "FlightStats", "d_localUp");
-  p.direction = Need(p, "FlightStats", "d_direction");
-  p.angularVelocity = Need(p, "FlightStats", "d_angularVelocity");
-  p.velocity = Need(p, "FlightStats", "d_velocity");
   p.gravityFactor = Need(p, "FlightMode", "gravityFactor");
   p.standardModeLiftFactor = Need(p, "FlightModeStandard", "standardModeLiftFactor");
   p.commandSurge = Need(p, "FlightModeAutopilot", "commandSurge");
@@ -128,10 +118,9 @@ IScriptable *Object(CProperty *aProp, void *aOwner) {
   return aOwner ? Ref<Handle<IScriptable>>(aProp, aOwner).GetPtr() : nullptr;
 }
 
-Inputs::Vec3 Vec(CProperty *aProp, void *aOwner) {
-  const auto &v = Ref<Vector4>(aProp, aOwner);
-  return {v.X, v.Y, v.Z};
-}
+Inputs::Vec3 Vec(const Vector4 &aV) { return {aV.X, aV.Y, aV.Z}; }
+
+Inputs::Vec3 Vec(CProperty *aProp, void *aOwner) { return Vec(Ref<Vector4>(aProp, aOwner)); }
 
 // an InputPID's input, 0 when there is none
 float Input(const Props &p, CProperty *aProp, void *aController) {
@@ -243,7 +232,7 @@ void Component(FlightComponent *c, float deltaTime) {
   }
   auto vehicle = reinterpret_cast<vehicle::BaseObject *>(c->entity);
   auto audio = FlightAudio::Get();
-  auto stats = Object(p.stats, c);
+  auto stats = FlightStats::Of(c);
   auto sys = c->sys.GetPtr();
   auto ctlr = Object(p.ctlr, sys);
   if (!vehicle || !audio || !stats || !ctlr || !c->configuration) {
@@ -268,13 +257,13 @@ void Component(FlightComponent *c, float deltaTime) {
   f.drone = mode && mode->GetType()->IsA(p.drone);
   f.pilot = mounted ? (autopilot ? Inputs::Pilot::Autopilot : Inputs::Pilot::Player) : Inputs::Pilot::Npc;
 
-  f.speed = Ref<float>(p.speed, stats);
-  f.forward = Vec(p.forward, stats);
-  f.right = Vec(p.right, stats);
-  f.up = Vec(p.up, stats);
-  f.localUp = Vec(p.localUp, stats);
-  f.direction = Vec(p.direction, stats);
-  f.angularVelocity = Vec(p.angularVelocity, stats);
+  f.speed = stats->d_speed;
+  f.forward = Vec(stats->d_forward);
+  f.right = Vec(stats->d_right);
+  f.up = Vec(stats->d_up);
+  f.localUp = Vec(stats->d_localUp);
+  f.direction = Vec(stats->d_direction);
+  f.angularVelocity = Vec(stats->d_angularVelocity);
   // the force the script handed the thrusters (FlightComponent.smoothForce), the car's frame
   f.force = Vec(p.smoothForce, c);
 
@@ -322,7 +311,7 @@ void Component(FlightComponent *c, float deltaTime) {
       CameraListener();
     }
     const auto carMatrix = WorldMatrix(vehicle->worldTransform);
-    const auto &velocity = Ref<Vector4>(p.velocity, stats);
+    const auto &velocity = stats->d_velocity;
     audio->UpdateAcoustics(carMatrix, Ref<bool>(p.acoustics, audio) ? Ref<float>(p.acousticsGain, audio) : 0.0f, v.inside,
                            Ref<int32_t>(p.acousticsRaySource, audio));
     audio->UpdateWind(carMatrix, velocity, cinematic ? 2 : (tpp ? 0 : 1));
