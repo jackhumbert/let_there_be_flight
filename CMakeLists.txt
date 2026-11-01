@@ -173,6 +173,7 @@ target_link_libraries(let_there_be_flight.dll
 # (tools/navplan); not built by default
 add_executable(navplan EXCLUDE_FROM_ALL
   tools/navplan/navplan.cpp
+  tools/navplan/follow.cpp
   src/red4ext/Navigation/NavMap.cpp
   src/red4ext/Navigation/Planner.cpp
   src/red4ext/Navigation/PlannerCommon.cpp
@@ -182,6 +183,9 @@ add_executable(navplan EXCLUDE_FROM_ALL
   src/red4ext/Navigation/Vehicle.cpp
   src/red4ext/Navigation/Trajectory.cpp
   src/red4ext/Navigation/Route.cpp
+  src/red4ext/Navigation/DroneAttitude.cpp
+  src/red4ext/Navigation/Surge.cpp
+  src/red4ext/Navigation/Tracker.cpp
   src/red4ext/ThirdParty/miniz/miniz_tinfl.cpp
 )
 target_include_directories(navplan PRIVATE src/red4ext)
@@ -239,6 +243,8 @@ add_executable(ltbf_tests
   tests/attitude_tests.cpp
   tests/surge_tests.cpp
   tests/tracker_tests.cpp
+  tests/follow_tests.cpp
+  tools/navplan/follow.cpp
   src/red4ext/Audio/EngineSynth/Synth.cpp
   src/red4ext/Audio/EngineSynth/Sources.cpp
   src/red4ext/Audio/Buses.cpp

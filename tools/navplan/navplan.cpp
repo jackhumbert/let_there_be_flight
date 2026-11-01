@@ -23,14 +23,25 @@
 //                           when a full plan's time plus m seconds have passed, the two spliced; prints
 //                           "ahead {json}" (time to move, arrival against one full plan, late, dips)
 //                           and writes <prefix>_ahead.csv
+//   NAVPLAN_FOLLOW=1        fly the trajectory with the Autopilot's follower (follow.cpp, a point mass): writes
+//                           <prefix>_follow.csv (t,s,x,y,z,speed,ref_speed,lead_speed,off,ax,ay,az,pitch,
+//                           roll,yaw,held,blocked,emergency; pitch, roll and yaw in rad, ref_speed the plan's
+//                           at s, lead_speed the plan's where the tracker commands, s + speed x lineLead) and
+//                           prints "follow {json}" (arrived by the script's test, ended at the route's end,
+//                           time against the plan's, offset from the line, speed error against lead_speed,
+//                           runs off the line); with no usable route or trajectory, follow {"error": ...}
 //   NAVPLAN_DOORWAY_COUNT=x0,y0,x1,y1  work out the doorways over that area instead, and save them
 //
 // Build: cmake --build build --target navplan (not part of the default build).
 
+#include "follow.hpp"
+
+#include "Navigation/MapSpace.hpp"
 #include "Navigation/NavMap.hpp"
 #include "Navigation/PlanAhead.hpp"
 #include "Navigation/PlannerCommon.hpp"
 #include "Navigation/Planner.hpp"
+#include "Navigation/Route.hpp"
 #include "Navigation/Trajectory.hpp"
 #include "Navigation/Vehicle.hpp"
 
@@ -336,6 +347,38 @@ int main(int argc, char **argv) {
                    q.acceleration.z, q.speed, q.along, q.lateral, Navigation::LimitName(q.limit), q.yaw, q.pitch, q.roll, q.drift, q.room, q.roomLoss);
     }
     std::fclose(f);
+  }
+  if (const char *v = std::getenv("NAVPLAN_FOLLOW"); v && std::atoi(v) != 0) {
+    const auto followRoute = Navigation::Route::Make(points);
+    if (followRoute.Size() < 2 || trajectory.samples.size() < 2) {
+      std::printf("follow {\"error\": \"no usable route or trajectory (%d route points, %zu trajectory samples)\"}\n",
+                  followRoute.Size(), trajectory.samples.size());
+    } else {
+      const auto flown = Navigation::Follow(params.vehicle, followRoute, trajectory, Navigation::MapSpace(map), {});
+      if (FILE *f = std::fopen((prefix + "_follow.csv").c_str(), "w")) {
+        std::fprintf(f, "t,s,x,y,z,speed,ref_speed,lead_speed,off,ax,ay,az,pitch,roll,yaw,held,blocked,emergency\n");
+        for (const auto &q : flown.frames) {
+          std::fprintf(f, "%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d,%d,%d\n", q.t,
+                       q.s, q.p.x, q.p.y, q.p.z, q.speed, q.refSpeed, q.leadSpeed, q.off, q.accel.x, q.accel.y,
+                       q.accel.z, q.pitch, q.roll, q.yaw, q.held ? 1 : 0, q.blocked ? 1 : 0, q.emergency ? 1 : 0);
+        }
+        std::fclose(f);
+      }
+      std::string lostAt;
+      for (size_t i = 0; i < flown.lostAt.size(); ++i) {
+        char one[32];
+        std::snprintf(one, sizeof(one), "%s%.0f", i ? ", " : "", flown.lostAt[i]);
+        lostAt += one;
+      }
+      std::printf("follow {\"arrived\": %s, \"ended\": %s, \"time\": %.2f, \"ref_time\": %.2f, \"off_p50\": %.2f, "
+                  "\"off_p95\": %.2f, \"off_p99\": %.2f, \"off_max\": %.2f, \"speed_err_mean\": %.2f, "
+                  "\"speed_err_p95\": %.2f, \"speed_bias_mean\": %.2f, \"lost\": %d, \"lost_s\": [%s], "
+                  "\"replans\": %d, \"blocked\": %d, \"emergency\": %d, \"held\": %d}\n",
+                  flown.arrived ? "true" : "false", flown.ended ? "true" : "false", flown.time, trajectory.Duration(),
+                  flown.offP50, flown.offP95, flown.offP99, flown.offMax, flown.speedErrMean, flown.speedErrP95,
+                  flown.speedBiasMean, flown.lost, lostAt.c_str(), flown.replans, flown.blocked, flown.emergency,
+                  flown.held);
+    }
   }
   const float length = trajectory.samples.empty() ? 0.0f : trajectory.samples.back().s, time = trajectory.Duration();
   std::printf("metrics {\"route_ok\": %s, \"line_ok\": %s, \"repaired\": %d, \"length\": %.1f, \"time\": %.2f, "
