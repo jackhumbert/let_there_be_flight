@@ -252,6 +252,7 @@ add_executable(ltbf_tests
   tests/modes_tests.cpp
   tests/thruster_tests.cpp
   tests/aerobatics_tests.cpp
+  tests/cinematic_tests.cpp
   tools/navplan/follow.cpp
   src/red4ext/Audio/EngineSynth/Synth.cpp
   src/red4ext/Audio/EngineSynth/Sources.cpp
@@ -272,6 +273,7 @@ add_executable(ltbf_tests
   src/red4ext/Navigation/Surge.cpp
   src/red4ext/Navigation/Tracker.cpp
   src/red4ext/Navigation/Aerobatics.cpp
+  src/red4ext/Camera/Cinematic.cpp
   src/red4ext/Navigation/NavMap.cpp
   src/red4ext/Flight/Stats.cpp
   src/red4ext/Flight/Force.cpp
