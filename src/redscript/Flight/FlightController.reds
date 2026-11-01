@@ -76,7 +76,7 @@ public native class FlightController extends IScriptable {
   // the input smoothing and normalisation in C++ (StepInputs); false: UpdateInputs and FlightComponent.OnUpdate in script (docs/design/native-ports.md)
   public let nativeInputs: Bool = true;
   // the cinematic camera's aim and shot fit in C++ (FlightCinematicShot); false: FlightCinematic's script (docs/design/native-ports.md)
-  public let nativeCinematic: Bool = false;
+  public let nativeCinematic: Bool = true;
 
   private let secondCounter: Float;
 

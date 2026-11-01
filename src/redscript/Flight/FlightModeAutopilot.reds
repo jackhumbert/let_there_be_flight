@@ -107,7 +107,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let nativeAttitude: Bool = true;  // drone attitude in C++ (FlightDroneAttitude); false: DroneAttitude's script below (docs/design/native-ports.md)
   private let attitude: ref<FlightDroneAttitude>;
   public let nativeTracker: Bool = true;  // the follower in C++ (FlightTracker); false: the script in Update (docs/design/native-ports.md)
-  public let nativeAerobatics: Bool = false;  // manoeuvre geometry and the attitude torque in C++ (FlightManeuverShape, FlightAttitudeControl); false: the script in FlightAerobatics.reds and FlyAerobatic (docs/design/native-ports.md)
+  public let nativeAerobatics: Bool = true;  // manoeuvre geometry and the attitude torque in C++ (FlightManeuverShape, FlightAttitudeControl); false: the script in FlightAerobatics.reds and FlyAerobatic (docs/design/native-ports.md)
   public let attitudeControl: ref<FlightAttitudeControl>;
   private let tracker: ref<FlightTracker>;
   // leaving the line on a trajectory (docs/design/trajectory.md, step 5): replanned from the car's
