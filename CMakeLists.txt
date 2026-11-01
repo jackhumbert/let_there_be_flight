@@ -248,6 +248,7 @@ add_executable(ltbf_tests
   tests/stats_tests.cpp
   tests/force_tests.cpp
   tests/pid_tests.cpp
+  tests/controls_tests.cpp
   tools/navplan/follow.cpp
   src/red4ext/Audio/EngineSynth/Synth.cpp
   src/red4ext/Audio/EngineSynth/Sources.cpp
@@ -271,6 +272,7 @@ add_executable(ltbf_tests
   src/red4ext/Flight/Stats.cpp
   src/red4ext/Flight/Force.cpp
   src/red4ext/Flight/Pid.cpp
+  src/red4ext/Flight/Controls.cpp
   src/red4ext/ThirdParty/miniz/miniz_tinfl.cpp
 )
 target_include_directories(ltbf_tests PRIVATE src/red4ext)
