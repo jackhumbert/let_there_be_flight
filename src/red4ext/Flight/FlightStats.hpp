@@ -55,6 +55,8 @@ struct FlightStats : RED4ext::IScriptable {
 
   // the d_ fields as plain values, and back (a Vector4's W is left as it is)
   Flight::StatsState State() const;
+  // the s_ fields as plain values
+  Flight::StatsStatic Static() const;
   void SetState(const Flight::StatsState &aState);
 
   // the stats of a FlightComponent (its script field), nullptr when it has none

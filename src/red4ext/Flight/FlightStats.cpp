@@ -52,6 +52,15 @@ Flight::StatsState FlightStats::State() const {
   return s;
 }
 
+Flight::StatsStatic FlightStats::Static() const {
+  Flight::StatsStatic s;
+  s.mass = s_mass;
+  s.airResistanceFactor = s_airResistanceFactor;
+  s.brakingFrictionFactor = s_brakingFrictionFactor;
+  s.momentOfInertia = ToVec(s_momentOfInertia);
+  return s;
+}
+
 void FlightStats::SetState(const Flight::StatsState &aState) {
   Set(d_position, aState.d_position);
   Set(d_visualPosition, aState.d_visualPosition);

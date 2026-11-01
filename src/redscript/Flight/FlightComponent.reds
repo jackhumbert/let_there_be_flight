@@ -55,6 +55,8 @@ public native class FlightComponent extends GameComponent {
 
   // private let helper: ref<vehicleFlightHelper>;
   private let stats: ref<FlightStats>;
+  public let nativeForce: Bool = false;  // the force tail in C++ (FlightForce: ApplyPhysics and the scaling below); false: the script (docs/design/native-ports.md)
+  private let forceTail: ref<FlightForce>;
   public let nativeStats: Bool = true;  // FlightStats' dynamic half in C++ (FlightStats.UpdateNative, before OnUpdate); false: FlightStats.UpdateDynamic's script (docs/design/native-ports.md)
 
   public let m_interaction: ref<InteractionComponent>;
@@ -757,6 +759,11 @@ public native class FlightComponent extends GameComponent {
       // this.sys.ctlr.GetBlackboard().SignalVector4(GetAllBlackboardDefs().VehicleFlight.Position);
     }
 
+    if this.nativeForce {
+      this.NativeForceTail(force, torque, timeDelta);
+      return;
+    }
+
     // apply physics helpers
     if this.mode < ArraySize(this.modes) {
       this.modes[this.mode].ApplyPhysics(timeDelta);
@@ -811,6 +818,58 @@ public native class FlightComponent extends GameComponent {
 
     this.force += force;
     this.torque += torque;
+  }
+
+  // The force tail in C++ (FlightForce, Flight/Force.hpp): replaces FlightMode.ApplyPhysics and OnUpdate's
+  // scaling after it. The params come from FlightSettings once a frame; the mode's force, torque and linearDamp and the
+  // collision timer are written back, so every reader is as with the script. No mode overrides ApplyPhysics.
+  private final func NativeForceTail(force: Vector4, torque: Vector4, timeDelta: Float) -> Void {
+    if !IsDefined(this.forceTail) {
+      this.forceTail = new FlightForce();
+    }
+    let t = this.forceTail;
+    let fs = FlightSettings.GetInstance();
+    t.physxFlightPhysics = fs.physxFlightPhysics;
+    t.generalDampFactorAngular = fs.generalDampFactorAngular;
+    t.brakeFactorAngular = fs.brakeFactorAngular;
+    t.generalYawDampFactor = fs.generalYawDampFactor;
+    t.dampStabilityK = FlightSettings.GetFloatN(n"dampStabilityK");
+    t.dampMaxPerFrame = FlightSettings.GetFloatN(n"dampMaxPerFrame");
+    t.generalDampFactorAngularMax = fs.generalDampFactorAngularMax;
+    t.generalDampFactorLinear = fs.generalDampFactorLinear;
+    t.brakeFactorLinear = fs.brakeFactorLinear;
+    t.generalSwayWithYaw = fs.generalSwayWithYaw;
+    t.generalYawDirectionalityFactor = fs.generalYawDirectionalityFactor;
+    t.generalPitchDirectionalityFactor = fs.generalPitchDirectionalityFactor;
+    t.generalYawAeroFactor = fs.generalYawAeroFactor;
+    t.generalPitchAeroFactor = fs.generalPitchAeroFactor;
+    t.collisionRecoveryDelay = FlightSettings.GetFloatN(n"collisionRecoveryDelay");
+    t.collisionRecoveryDuration = FlightSettings.GetFloatN(n"collisionRecoveryDuration");
+
+    let applyPhysics = this.mode < ArraySize(this.modes);
+    t.dt = timeDelta;
+    t.force = force;
+    t.torque = torque;
+    t.applyPhysics = applyPhysics;
+    t.pitch = this.pitch;
+    t.roll = this.roll;
+    t.yaw = this.yaw;
+    t.linearBrake = this.linearBrake;
+    t.angularBrake = this.angularBrake;
+    t.thrusterTensor = this.thrusterTensor;
+    t.contactSpin = this.GetContactSpin();
+    t.collisionTimer = this.collisionTimer;
+    t.Step(this.stats);
+
+    if applyPhysics {
+      let m = this.modes[this.mode];
+      m.force = t.physicsForce;
+      m.torque = t.physicsTorque;
+      m.linearDamp = t.linearDamp;
+    }
+    this.collisionTimer = t.collisionTimer;
+    this.force += t.worldForce;
+    this.torque += t.worldTorque;
   }
 
   protected cb func OnVehicleFlightDeactivationEvent(evt: ref<VehicleFlightDeactivationEvent>) -> Bool {
