@@ -36,6 +36,8 @@ public native class FlightStats extends IScriptable {
   public native let d_localDirection: Vector4;
   public native let d_direction2D: Vector4;
   public native let d_localDirection2D: Vector4;
+  public native let d_pitchDeg: Float;  // nose above the horizon, degrees (the HUD)
+  public native let d_rollDeg: Float;  // roll about the forward axis, degrees (the HUD)
 
   // true when the plugin updates the dynamic half before FlightComponent.OnUpdate this frame
   public native let nativeUpdate: Bool;
@@ -109,6 +111,8 @@ public native class FlightStats extends IScriptable {
     this.d_velocity2D = this.d_direction2D * this.d_speed2D;
     this.d_visualPosition = this.d_position;
     this.d_position =  position;
+    this.d_pitchDeg = 90.0 - Vector4.GetAngleBetween(this.d_forward, FlightUtils.Up());
+    this.d_rollDeg = Vector4.GetAngleDegAroundAxis(this.d_localUp, FlightUtils.Up(), FlightUtils.Forward());
   }
 
   // what the script's own position provider gives, to compare with d_position (LtbfBridge.StatsDiff)

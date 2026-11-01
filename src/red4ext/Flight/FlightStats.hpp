@@ -45,6 +45,8 @@ struct FlightStats : RED4ext::IScriptable {
   RED4ext::Vector4 d_localDirection{};
   RED4ext::Vector4 d_direction2D{};
   RED4ext::Vector4 d_localDirection2D{};
+  float d_pitchDeg = 0.0f;
+  float d_rollDeg = 0.0f;
 
   // true when the plugin updates the dynamic half before FlightComponent.OnUpdate this frame (FlightComponent.nativeStats)
   bool nativeUpdate = false;
@@ -96,5 +98,7 @@ RTTI_DEFINE_CLASS(FlightStats, {
   RTTI_PROPERTY(d_localDirection);
   RTTI_PROPERTY(d_direction2D);
   RTTI_PROPERTY(d_localDirection2D);
+  RTTI_PROPERTY(d_pitchDeg);
+  RTTI_PROPERTY(d_rollDeg);
   RTTI_PROPERTY(nativeUpdate);
 });

@@ -49,6 +49,8 @@ Flight::StatsState FlightStats::State() const {
   s.d_localDirection = ToVec(d_localDirection);
   s.d_direction2D = ToVec(d_direction2D);
   s.d_localDirection2D = ToVec(d_localDirection2D);
+  s.d_pitchDeg = d_pitchDeg;
+  s.d_rollDeg = d_rollDeg;
   return s;
 }
 
@@ -85,6 +87,8 @@ void FlightStats::SetState(const Flight::StatsState &aState) {
   Set(d_localDirection, aState.d_localDirection);
   Set(d_direction2D, aState.d_direction2D);
   Set(d_localDirection2D, aState.d_localDirection2D);
+  d_pitchDeg = aState.d_pitchDeg;
+  d_rollDeg = aState.d_rollDeg;
 }
 
 void FlightStats::UpdateNative(RED4ext::vehicle::BaseObject *aVehicle) {

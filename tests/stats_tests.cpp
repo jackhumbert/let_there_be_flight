@@ -3,6 +3,8 @@
 
 #include "Flight/Stats.hpp"
 
+#include <cmath>
+
 using namespace Flight;
 
 namespace {
@@ -154,4 +156,57 @@ TEST(stats_update_pitched) {
   CheckVec(s.d_localVelocity, 0, 10 * h, -10 * h, kLarge);
   CheckVec(s.d_localDirection2D, 0, 1, -10 * h, kLarge);
   CheckVec(s.d_direction2D, 0, 1, 0);
+}
+
+TEST(stats_hud_level) {
+  // acos(0) times the degree constant is 90.0000025, hence the tolerance
+  StatsState s;
+  UpdateDynamic(s, Input(kIdentity, {0, 0, 0}));
+  CHECK_NEAR(s.d_pitchDeg, 0, 1e-3);
+  CHECK_NEAR(s.d_rollDeg, 0, 1e-3);
+}
+
+TEST(stats_hud_nose_up) {
+  // 30 degrees about X: forward (0, cos 30, sin 30) is 60 degrees from up, so the pitch is 30; the body up
+  // stays in the plane of the axis the roll is measured about, so the roll is 0
+  const float s15 = 0.25881905f, c15 = 0.96592583f;
+  StatsState s;
+  UpdateDynamic(s, Input({s15, 0, 0, c15}, {0, 0, 0}));
+  CHECK_NEAR(s.d_pitchDeg, 30, 1e-3);
+  CHECK_NEAR(s.d_rollDeg, 0, 1e-3);
+}
+
+TEST(stats_hud_rolled) {
+  // 20 degrees about Y (the forward axis): localUp = Rotate(Conjugate(q), Z) = (-sin 20, 0, cos 20); from it to
+  // world up, a x b = (0, sin 20, 0) points along +Y, the axis, so the angle is +20
+  const float s10 = 0.17364818f, c10 = 0.98480775f;
+  StatsState s;
+  UpdateDynamic(s, Input({0, s10, 0, c10}, {0, 0, 0}));
+  CheckVec(s.d_localUp, -0.34202014, 0, 0.93969262);
+  CHECK_NEAR(s.d_rollDeg, 20, 1e-3);
+  CHECK_NEAR(s.d_pitchDeg, 0, 1e-3);
+}
+
+TEST(stats_hud_nose_down_and_both) {
+  const float s15 = 0.25881905f, c15 = 0.96592583f, s10 = 0.17364818f, c10 = 0.98480775f;
+  const double rad = 3.14159265358979 / 180;
+  {
+    // -30 degrees about X: forward (0, cos 30, -sin 30), pitch -30; the body up is again in the axis plane
+    StatsState s;
+    UpdateDynamic(s, Input({-s15, 0, 0, c15}, {0, 0, 0}));
+    CHECK_NEAR(s.d_pitchDeg, -30, 1e-3);
+    CHECK_NEAR(s.d_rollDeg, 0, 1e-3);
+  }
+  {
+    // 30 degrees about X, then 20 about Y (q = qRoll * qPitch): forward = Ry(20) (0, cos 30, sin 30) =
+    // (sin 30 sin 20, cos 30, sin 30 cos 20), so the pitch is asin(0.5 cos 20); localUp =
+    // Rx(-30) Ry(-20) Z = (-sin 20, 0.5 cos 20, cos 30 cos 20), whose part in the plane of the Y axis is
+    // (-sin 20, cos 30 cos 20), tilted +atan(tan 20 / cos 30) from up (a x b along +Y)
+    StatsState s;
+    Quat q = Mul({0, s10, 0, c10}, {s15, 0, 0, c15});
+    UpdateDynamic(s, Input(q, {0, 0, 0}));
+    CheckVec(s.d_forward, 0.5 * std::sin(20 * rad), std::cos(30 * rad), 0.5 * std::cos(20 * rad));
+    CHECK_NEAR(s.d_pitchDeg, std::asin(0.5 * std::cos(20 * rad)) / rad, 1e-3);
+    CHECK_NEAR(s.d_rollDeg, std::atan(std::tan(20 * rad) / std::cos(30 * rad)) / rad, 1e-3);
+  }
 }

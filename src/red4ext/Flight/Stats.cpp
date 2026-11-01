@@ -34,6 +34,10 @@ void UpdateDynamic(StatsState &s, const StatsInput &in) {
 
   s.d_visualPosition = s.d_position;
   s.d_position = position;
+
+  // the two angles FlightComponent.OnUpdate writes to the VehicleFlight blackboard
+  s.d_pitchDeg = 90.0f - AngleBetweenDeg(s.d_forward, {0.0f, 0.0f, 1.0f});
+  s.d_rollDeg = AngleDegAroundAxis(s.d_localUp, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f});
 }
 
 } // namespace Flight

@@ -16,6 +16,8 @@ struct StatsState {
       d_localVelocity, d_velocity2D;
   float d_speed = 0, d_speedRatio = 0, d_speedRatioSquared = 0, d_speed2D = 0;
   Vec3 d_direction, d_localDirection, d_direction2D, d_localDirection2D;
+  // the HUD's angles, degrees: the nose above the horizon, and the roll about the forward axis
+  float d_pitchDeg = 0, d_rollDeg = 0;
 };
 
 // The s_ fields the force tail reads (FlightStats): mass, the air resistance and braking friction factors and the
