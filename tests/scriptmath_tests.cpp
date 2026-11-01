@@ -111,3 +111,45 @@ TEST(scriptmath_mul_order) {
   CHECK_NEAR(back.k, x.k, 1e-6);
   CHECK_NEAR(back.r, x.r, 1e-6);
 }
+
+TEST(scriptmath_rotate_axis) {
+  const float halfPi = 1.57079637f;
+  // right-handed: Z turned about Y goes to +X, Z turned about X goes to -Y
+  CheckVec(RotateAxis({0, 0, 1}, {0, 1, 0}, halfPi), 1, 0, 0);
+  CheckVec(RotateAxis({0, 0, 1}, {1, 0, 0}, halfPi), 0, -1, 0);
+  // angle 0 is exact
+  Vec3 v{0.3f, -0.2f, 0.9f};
+  Vec3 same = RotateAxis(v, {0, 1, 0}, 0.0f);
+  CHECK(same.x == v.x && same.y == v.y && same.z == v.z);
+  // sin 0.15 and cos 0.15
+  CheckVec(RotateAxis({0, 0, 1}, {0, 1, 0}, 0.15f), 0.149438, 0, 0.988771);
+}
+
+TEST(scriptmath_interpolate_lerp) {
+  CheckVec(Interpolate({0, 0, 1}, {1, 0, 0}, 0.25f), 0.25, 0, 0.75);
+  Vec3 a{0.3f, -0.2f, 0.9f};
+  Vec3 at0 = Interpolate(a, {5, 6, 7}, 0.0f);
+  CHECK(at0.x == a.x && at0.y == a.y && at0.z == a.z);
+  CHECK_NEAR(Lerp(0.25f, 2, 6), 3, 1e-6);
+  CHECK_NEAR(Lerp(1.0f, 2, 6), 6, 1e-6);
+}
+
+TEST(scriptmath_rotate_axis_diagonal) {
+  // Rodrigues: about n = (1, 1, 0) / sqrt 2, Z is perpendicular, so it turns to Z cos + (n x Z) sin, and
+  // n x Z = (h, -h, 0) with h = 1 / sqrt 2; a quarter turn either way
+  const float h = 0.70710678f, quarter = 1.57079633f;
+  Vec3 n{h, h, 0};
+  Vec3 a = RotateAxis({0, 0, 1}, n, quarter);
+  CHECK_NEAR(a.x, h, 1e-6);
+  CHECK_NEAR(a.y, -h, 1e-6);
+  CHECK_NEAR(a.z, 0, 1e-6);
+  Vec3 b = RotateAxis({0, 0, 1}, n, -quarter);
+  CHECK_NEAR(b.x, -h, 1e-6);
+  CHECK_NEAR(b.y, h, 1e-6);
+  CHECK_NEAR(b.z, 0, 1e-6);
+  // a vector along the axis does not move
+  Vec3 c = RotateAxis({2 * h, 2 * h, 0}, n, 1.0f);
+  CHECK_NEAR(c.x, 2 * h, 1e-6);
+  CHECK_NEAR(c.y, 2 * h, 1e-6);
+  CHECK_NEAR(c.z, 0, 1e-6);
+}

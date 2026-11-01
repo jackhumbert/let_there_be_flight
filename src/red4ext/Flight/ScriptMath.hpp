@@ -8,9 +8,14 @@
 //   (-> MathUtils::VectorUtils::GetAngleRadAroundAxis), Vector4 add / sub / scale / negate / dot / cross,
 //   Quaternion * Quaternion, Quaternion * Vector4, Quaternion.MulInverse, Quaternion.GetAxes,
 //   and the math acos at 0x20fcf0 (relative to the module base).
+// Also covered, from the scripts' use and not from the game's code: Vector4.RotateAxis, Vector4.Interpolate
+// and LerpF (below). The mode scripts call nothing else on Vector4 or Quaternion that is missing here:
+// Vector4.Length, Quaternion.Conjugate and Quaternion.GetForward (Rotate of the Y axis) are covered, and
+// AbsF, ClampF, MaxF, MinF and SqrtF are plain float maths.
 // All of them use xyz only (the dot products are dpps with mask 0x7f); W is never read or written.
 // Assumed from one reading of the code and not yet compared with a value from the game: the acos clamp,
-// the 57.2957763671875 degree constant, the 1e-8 projection guard and the sign of GetAngleDegAroundAxis.
+// the 57.2957763671875 degree constant, the 1e-8 projection guard and the sign of GetAngleDegAroundAxis,
+// and, for the three scripts' helpers, the rotation direction of RotateAxis (to check in game).
 // Use these where native code must match a script result; Navigation::V (Vec3Ops.hpp) is the
 // Navigation code's own maths, with its own thresholds.
 
@@ -118,5 +123,19 @@ inline float AngleDegAroundAxis(const Vec3 &a, const Vec3 &b, const Vec3 &aAxis)
     angle = -angle;
   return angle * kRadToDeg;
 }
+
+// Vector4.RotateAxis: angle in radians, right-handed about the axis (assumed, to check in game). The axis is
+// used as given; the callers pass a unit axis. Angle 0 returns v exactly (sin 0 = 0, cos 0 = 1). Not read from
+// the game's code: it rests on the LTBF scripts passing small radian products and expecting this direction.
+inline Vec3 RotateAxis(const Vec3 &v, const Vec3 &axis, float angle) {
+  float s = std::sin(angle * 0.5f), c = std::cos(angle * 0.5f);
+  return Rotate({axis.x * s, axis.y * s, axis.z * s, c}, v);
+}
+
+// Vector4.Interpolate: t = 0 is a, t = 1 is b. Assumed from the scripts, which smooth toward the second operand.
+inline Vec3 Interpolate(const Vec3 &a, const Vec3 &b, float t) { return Add(a, Mul(Sub(b, a), t)); }
+
+// LerpF(alpha, a, b), argument order as in the script: a + (b - a) * alpha. Assumed from the scripts, as above.
+inline float Lerp(float alpha, float a, float b) { return a + (b - a) * alpha; }
 
 } // namespace Flight
