@@ -5,6 +5,15 @@
 // (kept level, the close side shots had the car roll its roof into the lens). Every shot then aims
 // at the car's centre of mass with the horizon level, from at least MinDistance: the shots' own
 // angles were made for a level car and lost a banking one off the frame.
+// The shot maths in C++ (src/red4ext/Camera/FlightCinematicShot.cpp): the game's own WorldTransform natives are
+// called from there. OrientationFromDir and TransformPoint are the assumed conventions, for the bridge's comparison.
+public native class FlightCinematicShot extends IScriptable {
+  public static native func AimAtCar(xform: WorldTransform, centreOfMass: Vector4) -> WorldTransform;
+  public static native func FitAhead(shot: WorldTransform, offset: Vector4, scale: Float) -> Float;
+  public static native func OrientationFromDir(dir: Vector4) -> Quaternion;
+  public static native func TransformPoint(xform: WorldTransform, point: Vector4) -> Vector4;
+}
+
 public abstract class FlightCinematic {
   public static func Flying() -> Bool {
     return FlightController.GetInstance().IsActive();
@@ -21,6 +30,10 @@ public abstract class FlightCinematic {
     let com = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(context.vehicleTransform));
     if IsDefined(vehicle) {
       com = WorldPosition.ToVector4(WorldTransform.TransformPoint(context.vehicleTransform, Vector4.Vector3To4(vehicle.GetCenterOfMass())));
+    }
+    let ctlr = FlightController.GetInstance();
+    if IsDefined(ctlr) && ctlr.nativeCinematic {
+      return FlightCinematicShot.AimAtCar(xform, com);
     }
     let camera = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(xform));
     let toCar = com - camera;
@@ -147,9 +160,14 @@ public func GetRootTransform(data: CinematicCameraData) -> WorldTransform {
     // pulled back towards the shot's own place until the camera is in open air (the nav map's
     // free space): scaled out into a building, a flyby ended as it began
     let scale = ClampF(AbsF(data.vehicleSpeed) / FlightCinematic.RoadSpeed(), 1.0, 5.0);
-    while scale > 1.0 && FlightNavMap.IsLoaded()
-        && !FlightNavMap.IsFree(WorldPosition.ToVector4(WorldTransform.TransformPoint(this.GetShotSpaceTransform(data), FlightCinematic.Ahead(Transform.GetPosition(offset), scale)))) {
-      scale = MaxF(1.0, scale * 0.8);
+    let ctlr = FlightController.GetInstance();
+    if IsDefined(ctlr) && ctlr.nativeCinematic {
+      scale = FlightCinematicShot.FitAhead(this.GetShotSpaceTransform(data), Transform.GetPosition(offset), scale);
+    } else {
+      while scale > 1.0 && FlightNavMap.IsLoaded()
+          && !FlightNavMap.IsFree(WorldPosition.ToVector4(WorldTransform.TransformPoint(this.GetShotSpaceTransform(data), FlightCinematic.Ahead(Transform.GetPosition(offset), scale)))) {
+        scale = MaxF(1.0, scale * 0.8);
+      }
     }
     this.flightScale = scale;
   }
