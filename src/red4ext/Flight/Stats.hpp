@@ -18,6 +18,13 @@ struct StatsState {
   Vec3 d_direction, d_localDirection, d_direction2D, d_localDirection2D;
 };
 
+// The s_ fields the force tail reads (FlightStats): mass, the air resistance and braking friction factors and the
+// moment of inertia per axis. All zero like a script default.
+struct StatsStatic {
+  float mass = 0, airResistanceFactor = 0, brakingFrictionFactor = 0;
+  Vec3 momentOfInertia;
+};
+
 // What the script reads from the vehicle each frame. origin is the entity's world position and centerOfMass is
 // s_centerOfMass (local). The script's reset flag is never read by UpdateDynamic (its use is commented out).
 struct StatsInput {
