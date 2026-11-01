@@ -74,7 +74,7 @@ public native class FlightController extends IScriptable {
   public native let outAngularBrake: Float;
   public native func StepInputs() -> Void;
   // the input smoothing and normalisation in C++ (StepInputs); false: UpdateInputs and FlightComponent.OnUpdate in script (docs/design/native-ports.md)
-  public let nativeInputs: Bool = false;
+  public let nativeInputs: Bool = true;
 
   private let secondCounter: Float;
 
