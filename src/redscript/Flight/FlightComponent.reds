@@ -55,7 +55,7 @@ public native class FlightComponent extends GameComponent {
 
   // private let helper: ref<vehicleFlightHelper>;
   private let stats: ref<FlightStats>;
-  public let nativeStats: Bool = false;  // FlightStats' dynamic half in C++ (FlightStats.UpdateNative, before OnUpdate); false: FlightStats.UpdateDynamic's script (docs/design/native-ports.md)
+  public let nativeStats: Bool = true;  // FlightStats' dynamic half in C++ (FlightStats.UpdateNative, before OnUpdate); false: FlightStats.UpdateDynamic's script (docs/design/native-ports.md)
 
   public let m_interaction: ref<InteractionComponent>;
   public let m_healthStatPoolListener: ref<VehicleHealthStatPoolListener>;
