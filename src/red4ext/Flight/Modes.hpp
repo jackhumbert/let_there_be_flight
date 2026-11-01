@@ -7,6 +7,11 @@
 // normal and the lift force and call UpdateWithNormalLift or UpdateWithNormalDistance, so those two are all that is
 // ported here. The anti-gravity drone adds d_localUp * 9.81000042 * gravityFactor to the drone's force in its own
 // Update; that stays in its script.
+//
+// The modes: Fly (normal Up, a lift force from the lift input), Hover (the ground normal and the hover PID's height
+// difference), HoverFly (Fly and Hover blended by how far into the hover band the car is), Automatic (the same blend
+// with its own gains plus the aero and braking terms), Drone (its own Update) and Autopilot (its script). Each one
+// here is a pure function over the ground the script's FindGround left.
 
 #include "Flight/Controls.hpp"
 #include "Flight/Pid.hpp"
@@ -30,8 +35,8 @@ struct ModeOutput {
 
 // FlightModeStandard's Mod Settings and the FlightSettings values it reads, at their script defaults.
 // rollWithYaw is generalRollWithYaw, brakeFactorLinear is FlightSettings.brakeFactorLinear, pitchWithLift, pitchWithSurge,
-// hoverClamp are FlightSettings floats and gravityFactor is FlightMode's. hoverFactor, minHoverHeight and
-// maxHoverHeight are carried for the subclasses' choice of lift force and are not read here.
+// hoverClamp are FlightSettings floats and gravityFactor is FlightMode's. StandardLift and StandardDistance do not read
+// hoverFactor, minHoverHeight and maxHoverHeight; the subclass functions (HoverWeight, HoverFly, Automatic, Hover) do.
 struct StandardParams {
   float surgeFactor = 15, yawFactor = 2.5f, swayFactor = 5, pitchFactor = 3, liftFactor = 25, hoverFactor = 10,
         pitchInputAngle = 45, rollFactor = 3, rollInputAngle = 45;
@@ -56,5 +61,68 @@ struct DroneParams {
 
 // FlightModeDrone.Update.
 ModeOutput Drone(const StatsState &s, const StatsStatic &st, const Controls &c, const DroneParams &p);
+
+// FlightComponent.FindGround as the mode sees it. distance is FlightComponent.distance after the call, the last hit's
+// when nothing was found. normal is zero when nothing was found (the script's unset out parameter).
+struct Ground {
+  bool found = false;
+  float distance = 0;
+  Vec3 normal;
+};
+
+// One ground ray of FlightComponent.FindGround: valid is TraceResult.IsValid, tire is the ray's origin (the wheel
+// emitter's position), position and normal are the hit's.
+struct Hit {
+  bool valid = false;
+  Vec3 tire, position, normal;
+};
+
+// The averaging at the end of FlightComponent.FindGround, over its ray hits (the script casts four, one per wheel
+// emitter; the raycasts stay in script). The ground is found only when every hit is valid. Then the distance is the mean
+// of Distance(tire, position) and the normal is the normalised mean of the normalised hit normals. Otherwise found is
+// false, the distance stays lastDistance (FlightComponent.distance is not written) and the normal is zero. No hits
+// counts as nothing found (the script always has four).
+Ground GroundFromHits(const Hit *hits, int count, float lastDistance);
+
+// FlightModeFly.Update: normal Up; the lift input scales the lift force by dt, as the script does.
+ModeOutput Fly(const StatsState &s, const StatsStatic &st, const Controls &c, const StandardParams &p, Pid &pitchPid,
+               Pid &rollPid, float dt);
+
+// FlightModeHover.Update: hoverHeight (FlightComponent.hoverHeight) is raised to minHoverHeight; with ground the normal
+// is the ground's and the height difference is hoverHeight - distance, without it the normal is Up and the difference 0.
+// The hover PID is stepped either way.
+ModeOutput Hover(float &hoverHeight, const StatsState &s, const StatsStatic &st, const Controls &c,
+                 const StandardParams &p, const Ground &g, Pid &hoverPid, Pid &pitchPid, Pid &rollPid, float dt);
+
+// FlightModeHoverFly's Mod Settings.
+struct HoverFlyParams {
+  float altitudeHoldFactor = 1, heightDampening = 1, heightCorrectionFactor = 0.5f;
+};
+
+// FlightModeHoverFly's fields; hoverHeight is FlightComponent.hoverHeight.
+struct HoverFlyState {
+  float hovering = 1, referenceZ = 0, hoverHeight = 0;
+  bool holdingAltitude = false;
+};
+
+// FlightModeHoverFly.Update. The hover PID is stepped only while hovering is above 0.
+ModeOutput HoverFly(HoverFlyState &m, const StatsState &s, const StatsStatic &st, const Controls &c,
+                    const StandardParams &p, const HoverFlyParams &h, const Ground &g, Pid &hoverPid, Pid &pitchPid,
+                    Pid &rollPid, float dt);
+
+// FlightModeAutomatic's Mod Settings. Its lift and hover factors are its own, not Standard's.
+struct AutomaticParams {
+  float autoBrakingFactor = 3, yawDirectionality = 300, liftFactor = 25, hoverFactor = 40;
+};
+
+// FlightModeAutomatic's fields; hoverHeight is FlightComponent.hoverHeight.
+struct AutomaticState {
+  float hovering = 1, hoverHeight = 0;
+};
+
+// FlightModeAutomatic.Update. The hover PID is stepped every frame, with no ground too, on the last distance.
+ModeOutput Automatic(AutomaticState &m, const StatsState &s, const StatsStatic &st, const Controls &c,
+                     const StandardParams &p, const AutomaticParams &a, const Ground &g, Pid &hoverPid, Pid &pitchPid,
+                     Pid &rollPid, float dt);
 
 } // namespace Flight
