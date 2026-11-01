@@ -675,26 +675,37 @@ public native class FlightComponent extends GameComponent {
         this.GetVehicle().ResetQuestEnforceTransform();
         this.sys.ctlr.OnUpdate(timeDelta);
         let fc = this.sys.ctlr;
-        this.yaw = fc.yaw.GetValue();
-        this.roll = fc.roll.GetValue();
-        this.pitch = fc.pitch.GetValue();
-        this.lift = fc.lift.GetValue();
-        this.linearBrake = fc.linearBrake.GetValue();
-        this.angularBrake = fc.angularBrake.GetValue();
-        this.surge = fc.surge.GetValue();
-        this.sway = fc.sway.GetValue();
+        if !fc.nativeInputs {
+          this.yaw = fc.yaw.GetValue();
+          this.roll = fc.roll.GetValue();
+          this.pitch = fc.pitch.GetValue();
+          this.lift = fc.lift.GetValue();
+          this.linearBrake = fc.linearBrake.GetValue();
+          this.angularBrake = fc.angularBrake.GetValue();
+          this.surge = fc.surge.GetValue();
+          this.sway = fc.sway.GetValue();
 
-        let total = SqrtF(PowF(this.surge, 2.0) + PowF(this.lift, 2.0) + PowF(this.sway, 2.0));
-        if (total > 1.0) {
-          this.surge /= total;
-          this.lift /= total;
-          this.sway /= total;
-        }
-        total = SqrtF(PowF(this.yaw, 2.0) + PowF(this.roll, 2.0) + PowF(this.pitch, 2.0));
-        if (total > 1.0) {
-          this.yaw /= total;
-          this.roll /= total;
-          this.pitch /= total;
+          let total = SqrtF(PowF(this.surge, 2.0) + PowF(this.lift, 2.0) + PowF(this.sway, 2.0));
+          if (total > 1.0) {
+            this.surge /= total;
+            this.lift /= total;
+            this.sway /= total;
+          }
+          total = SqrtF(PowF(this.yaw, 2.0) + PowF(this.roll, 2.0) + PowF(this.pitch, 2.0));
+          if (total > 1.0) {
+            this.yaw /= total;
+            this.roll /= total;
+            this.pitch /= total;
+          }
+        } else {
+          this.yaw = fc.outYaw;
+          this.roll = fc.outRoll;
+          this.pitch = fc.outPitch;
+          this.lift = fc.outLift;
+          this.linearBrake = fc.outLinearBrake;
+          this.angularBrake = fc.outAngularBrake;
+          this.surge = fc.outSurge;
+          this.sway = fc.outSway;
         }
       } else {
         let v = this.GetVehicle();

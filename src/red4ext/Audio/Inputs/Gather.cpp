@@ -3,6 +3,7 @@
 #include "Audio/FlightAudio.hpp"
 #include "Flight/Component.hpp"
 #include "Flight/FlightStats.hpp"
+#include "FlightController.hpp"
 #include "FlightThruster.hpp"
 #include "Inputs.hpp"
 
@@ -40,9 +41,8 @@ struct Props {
       *mode, *modes;
   // FlightMode, FlightModeStandard, FlightModeAutopilot
   CProperty *gravityFactor, *standardModeLiftFactor, *commandSurge, *commandSway;
-  // FlightSystem, FlightController, PID
-  CProperty *ctlr, *isTPP, *inputFloat;
-  CProperty *ctlSurge, *ctlYaw, *ctlSway, *ctlLift, *ctlRoll, *ctlPitch, *linearBrake, *angularBrake;
+  // FlightSystem, FlightController
+  CProperty *ctlr, *isTPP;
   // IFlightThruster
   CProperty *isFront, *id, *wheelIndex;
   // FlightAudio
@@ -80,15 +80,6 @@ Props Resolve() {
   p.commandSway = Need(p, "FlightModeAutopilot", "commandSway");
   p.ctlr = Need(p, "FlightSystem", "ctlr");
   p.isTPP = Need(p, "FlightController", "isTPP");
-  p.ctlSurge = Need(p, "FlightController", "surge");
-  p.ctlYaw = Need(p, "FlightController", "yaw");
-  p.ctlSway = Need(p, "FlightController", "sway");
-  p.ctlLift = Need(p, "FlightController", "lift");
-  p.ctlRoll = Need(p, "FlightController", "roll");
-  p.ctlPitch = Need(p, "FlightController", "pitch");
-  p.linearBrake = Need(p, "FlightController", "linearBrake");
-  p.angularBrake = Need(p, "FlightController", "angularBrake");
-  p.inputFloat = Need(p, "PID", "inputFloat");
   p.isFront = Need(p, "IFlightThruster", "isFront");
   p.id = Need(p, "IFlightThruster", "id");
   p.wheelIndex = Need(p, "IFlightThruster", "wheelIndex");
@@ -123,10 +114,7 @@ Inputs::Vec3 Vec(const Vector4 &aV) { return {aV.X, aV.Y, aV.Z}; }
 Inputs::Vec3 Vec(CProperty *aProp, void *aOwner) { return Vec(Ref<Vector4>(aProp, aOwner)); }
 
 // an InputPID's input, 0 when there is none
-float Input(const Props &p, CProperty *aProp, void *aController) {
-  auto pid = Object(aProp, aController);
-  return pid ? Ref<float>(p.inputFloat, pid) : 0.0f;
-}
+float Input(const Handle<FlightInputPID> &aPid) { return aPid ? aPid->inputFloat : 0.0f; }
 
 // the world matrix of a placed thing: its orientation's axes (x right, y forward, z up) and its position
 Matrix WorldMatrix(const WorldTransform &aTransform) {
@@ -234,7 +222,7 @@ void Component(FlightComponent *c, float deltaTime) {
   auto audio = FlightAudio::Get();
   auto stats = FlightStats::Of(c);
   auto sys = c->sys.GetPtr();
-  auto ctlr = Object(p.ctlr, sys);
+  auto ctlr = static_cast<FlightController *>(Object(p.ctlr, sys));
   if (!vehicle || !audio || !stats || !ctlr || !c->configuration) {
     return;
   }
@@ -278,14 +266,14 @@ void Component(FlightComponent *c, float deltaTime) {
     f.roll = Ref<float>(p.roll, c);
     f.pitch = Ref<float>(p.pitch, c);
     f.yaw = Ref<float>(p.yaw, c);
-    f.ctlSurge = Input(p, p.ctlSurge, ctlr);
-    f.ctlYaw = Input(p, p.ctlYaw, ctlr);
-    f.ctlSway = Input(p, p.ctlSway, ctlr);
-    f.ctlLift = Input(p, p.ctlLift, ctlr);
-    f.ctlRoll = Input(p, p.ctlRoll, ctlr);
-    f.ctlPitch = Input(p, p.ctlPitch, ctlr);
-    f.linearBrake = Input(p, p.linearBrake, ctlr);
-    f.angularBrake = Input(p, p.angularBrake, ctlr);
+    f.ctlSurge = Input(ctlr->surge);
+    f.ctlYaw = Input(ctlr->yaw);
+    f.ctlSway = Input(ctlr->sway);
+    f.ctlLift = Input(ctlr->lift);
+    f.ctlRoll = Input(ctlr->roll);
+    f.ctlPitch = Input(ctlr->pitch);
+    f.linearBrake = Input(ctlr->linearBrake);
+    f.angularBrake = Input(ctlr->angularBrake);
     if (autopilot) {
       f.apSurge = Ref<float>(p.commandSurge, mode);
       f.apSway = Ref<float>(p.commandSway, mode);

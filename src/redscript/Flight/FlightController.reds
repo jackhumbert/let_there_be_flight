@@ -55,14 +55,26 @@ public native class FlightController extends IScriptable {
   // the toggle had been pressed (VehicleFlightActiveDecisions.ToVehicleFlightDeactivating)
   public let autopilotRequestsFlightOff: Bool;
   public let showUI: Bool;
-  public let linearBrake: ref<InputPID>;
-  public let angularBrake: ref<InputPID>;
-  public let lift: ref<InputPID>;
-  public let surge: ref<InputPID>;
-  public let roll: ref<InputPID>;
-  public let pitch: ref<InputPID>;
-  public let yaw: ref<InputPID>;
-  public let sway: ref<InputPID>;
+  public native let linearBrake: ref<InputPID>;
+  public native let angularBrake: ref<InputPID>;
+  public native let lift: ref<InputPID>;
+  public native let surge: ref<InputPID>;
+  public native let roll: ref<InputPID>;
+  public native let pitch: ref<InputPID>;
+  public native let yaw: ref<InputPID>;
+  public native let sway: ref<InputPID>;
+  // the controls after smoothing and normalisation, filled by StepInputs
+  public native let outSurge: Float;
+  public native let outLift: Float;
+  public native let outSway: Float;
+  public native let outYaw: Float;
+  public native let outRoll: Float;
+  public native let outPitch: Float;
+  public native let outLinearBrake: Float;
+  public native let outAngularBrake: Float;
+  public native func StepInputs() -> Void;
+  // the input smoothing and normalisation in C++ (StepInputs); false: UpdateInputs and FlightComponent.OnUpdate in script (docs/design/native-ports.md)
+  public let nativeInputs: Bool = false;
 
   private let secondCounter: Float;
 
@@ -842,6 +854,10 @@ public native class FlightController extends IScriptable {
   }
 
   public func UpdateInputs(timeDelta: Float) -> Void {
+    if this.nativeInputs {
+      this.StepInputs();
+      return;
+    }
     this.yaw.GetValue(timeDelta);
     this.sway.GetValue(timeDelta);
     this.roll.GetValue(timeDelta);
