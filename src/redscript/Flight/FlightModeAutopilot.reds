@@ -107,6 +107,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let nativeAttitude: Bool = true;  // drone attitude in C++ (FlightDroneAttitude); false: DroneAttitude's script below (docs/design/native-ports.md)
   private let attitude: ref<FlightDroneAttitude>;
   public let nativeTracker: Bool = true;  // the follower in C++ (FlightTracker); false: the script in Update (docs/design/native-ports.md)
+  public let nativeAerobatics: Bool = false;  // manoeuvre geometry and the attitude torque in C++ (FlightManeuverShape, FlightAttitudeControl); false: the script in FlightAerobatics.reds and FlyAerobatic (docs/design/native-ports.md)
+  public let attitudeControl: ref<FlightAttitudeControl>;
   private let tracker: ref<FlightTracker>;
   // leaving the line on a trajectory (docs/design/trajectory.md, step 5): replanned from the car's
   // state, never steered back to a point behind it
@@ -2268,7 +2270,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     if Equals(kind, FlightManeuverKind.Loop) && stats.d_speed2D > this.maneuverMaxSpeed {
       kind = FlightManeuverKind.AileronRoll;
     }
-    let reach = stats.d_speed * FlightManeuver.Create(kind, side, p, v, this.maneuverAccel, this.maneuverRollTime).duration;
+    let reach = stats.d_speed * FlightManeuver.Create(kind, side, p, v, this.maneuverAccel, this.maneuverRollTime, this.nativeAerobatics).duration;
     if this.DistanceToSharpBend(closest) > reach + 30.0 && this.remaining > reach + 100.0 && AbsF(this.curvatureAhead) < 0.004
       && this.TryManeuver(kind, side, p, closest) {
       this.stuntTimer = 0.0;
@@ -2287,7 +2289,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       || Vector4.Dot(stats.d_forward2D, Vector4.Normalize2D(stats.d_velocity)) < 0.95 {
       return false;
     }
-    let m = FlightManeuver.Create(kind, side, p, stats.d_velocity, this.maneuverAccel, this.maneuverRollTime);
+    let m = FlightManeuver.Create(kind, side, p, stats.d_velocity, this.maneuverAccel, this.maneuverRollTime, this.nativeAerobatics);
     let fits: Bool;
     if Equals(kind, FlightManeuverKind.AileronRoll) {
       fits = this.RouteClear(closest, stats.d_speed * m.duration + 10.0);
@@ -2447,6 +2449,77 @@ public class FlightModeAutopilot extends FlightModeStandard {
       return Vector4.Normalize(fwd * (1.0 - 0.6 * steep) + this.headingRef * (0.6 * steep));
     }
     return fwd;
+  }
+
+  // FlightAttitudeControl with the params and the state filled from the fields; the inputs are the caller's.
+  // AttitudeControlBack copies the state back.
+  private func AttitudeControl() -> ref<FlightAttitudeControl> {
+    if !IsDefined(this.attitudeControl) {
+      this.attitudeControl = new FlightAttitudeControl();
+    }
+    let c = this.attitudeControl;
+    let fs = FlightSettings.GetInstance();
+    c.raceRollFrequency = this.raceRollFrequency;
+    c.raceRollRateMax = this.raceRollRateMax;
+    c.raceRollAccelMax = this.raceRollAccelMax;
+    c.racePitchFrequency = this.racePitchFrequency;
+    c.racePitchRateMax = this.racePitchRateMax;
+    c.racePitchAccelMax = this.racePitchAccelMax;
+    c.attitudeFrequency = this.attitudeFrequency;
+    c.attitudeDamping = this.attitudeDamping;
+    c.maxAngularAccel = this.maxAngularAccel;
+    c.torqueGainPitch = this.torqueGainPitch;
+    c.torqueGainRoll = this.torqueGainRoll;
+    c.torqueGainYaw = this.torqueGainYaw;
+    c.generalDampFactorAngular = fs.generalDampFactorAngular;
+    c.generalYawDampFactor = fs.generalYawDampFactor;
+    c.generalDampFactorAngularMax = fs.generalDampFactorAngularMax;
+    c.standardModeSurgeFactor = this.standardModeSurgeFactor;
+    c.standardModeSwayFactor = this.standardModeSwayFactor;
+    c.standardModeLiftFactor = this.standardModeLiftFactor;
+    c.gravityFactor = this.gravityFactor;
+    c.targetRight = this.targetRight;
+    c.targetForward = this.targetForward;
+    c.targetUp = this.targetUp;
+    c.omegaRef = this.omegaRef;
+    c.bankAngle = this.bankAngle;
+    c.bankRateNow = this.bankRateNow;
+    c.pitchAngle = this.pitchAngle;
+    c.pitchRateNow = this.pitchRateNow;
+    return c;
+  }
+
+  private func AttitudeControlBack(c: ref<FlightAttitudeControl>) -> Void {
+    this.targetRight = c.targetRight;
+    this.targetForward = c.targetForward;
+    this.targetUp = c.targetUp;
+    this.omegaRef = c.omegaRef;
+    this.bankAngle = c.bankAngle;
+    this.bankRateNow = c.bankRateNow;
+    this.pitchAngle = c.pitchAngle;
+    this.pitchRateNow = c.pitchRateNow;
+  }
+
+  // EaseBank in C++: the same wanted up vector, the bank state going in and coming back through the fields.
+  private func EaseBankNative(dt: Float, fwd: Vector4, up: Vector4) -> Vector4 {
+    let c = this.AttitudeControl();
+    let eased = c.EaseBank(dt, fwd, up);
+    this.AttitudeControlBack(c);
+    return eased;
+  }
+
+  // EasePitch in C++. The line's tangent is worked out here, as in the script (LineFrameOver is a nav map query),
+  // and only on a line.
+  private func EasePitchNative(dt: Float, fwd: Vector4) -> Vector4 {
+    let tangent: Vector4;
+    if this.onLine {
+      let bend: Vector4;
+      this.LineFrameOver(this.closestS + this.component.stats.d_speed * this.ribbonLead, this.ribbonSpan, tangent, bend);
+    }
+    let c = this.AttitudeControl();
+    let eased = c.EasePitch(dt, fwd, this.onLine, tangent, this.headingRef);
+    this.AttitudeControlBack(c);
+    return eased;
   }
 
   private func SyncPitch(fwd: Vector4) -> Void {
@@ -2818,7 +2891,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       }
       fwd = Vector4.Length(fwd) > 0.1 ? Vector4.Normalize(fwd) : this.headingRef;
       // nearer level on a steep path, then eased
-      fwd = this.EasePitch(dt, this.Unsteep(fwd));
+      fwd = this.nativeAerobatics ? this.EasePitchNative(dt, this.Unsteep(fwd)) : this.EasePitch(dt, this.Unsteep(fwd));
       this.attAccel += (accel - this.attAccel) * ClampF(dt / this.raceBankTime, 0.0, 1.0);
       let bankAccel = this.attAccel;
       if this.onLine {
@@ -2847,7 +2920,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       if vertical > 0.0 && Vector4.Length(held) > 0.01 {
         u = Vector4.Normalize(u) * (1.0 - vertical) + Vector4.Normalize(held) * vertical;
       }
-      up = this.EaseBank(dt, fwd, Vector4.Normalize(u));
+      up = this.nativeAerobatics ? this.EaseBankNative(dt, fwd, Vector4.Normalize(u)) : this.EaseBank(dt, fwd, Vector4.Normalize(u));
       if IsDefined(this.maneuver) {
         if Equals(this.maneuver.kind, FlightManeuverKind.AileronRoll) {
           up = this.maneuver.RollUp(ahead, fwd, up);
@@ -2873,72 +2946,104 @@ public class FlightModeAutopilot extends FlightModeStandard {
         }
       }
     }
-    let right = Vector4.Normalize(Vector4.Cross(fwd, up));
-    up = Vector4.Cross(right, fwd);
-    if IsDefined(this.maneuver) && !this.maneuver.IsOverlay() {
-      // a shape sets its own attitude: carry on the bank easing from where it leaves the car
-      this.SyncBank(fwd, up);
-    }
-
-    // rate of the target, smoothed (it is what the car should be turning at)
-    let step = FlightAttitude.RotationError(this.targetRight, this.targetForward, this.targetUp, right, fwd, up);
-    let omega = (this.targetRight * step.X + this.targetForward * step.Y + this.targetUp * step.Z) * (1.0 / dt);
-    this.omegaRef += (omega - this.omegaRef) * ClampF(dt / 0.05, 0.0, 1.0);
-    this.targetRight = right;
-    this.targetForward = fwd;
-    this.targetUp = up;
-
-    // attitude control in the body frame: angular acceleration from the error and the rate error,
-    // then the torque that gives it on each axis
-    let error = FlightAttitude.RotationError(stats.d_right, stats.d_forward, stats.d_up, right, fwd, up);
-    this.attitudeError = Vector4.Length(error);
-    let rateRef = new Vector4(Vector4.Dot(this.omegaRef, stats.d_right), Vector4.Dot(this.omegaRef, stats.d_forward), Vector4.Dot(this.omegaRef, stats.d_up), 0.0);
-    let rate = stats.d_angularVelocity;
-    rate.W = 0.0;
-    let alpha = error * (this.attitudeFrequency * this.attitudeFrequency) + (rateRef - rate) * (2.0 * this.attitudeDamping * this.attitudeFrequency);
-    if Vector4.Length(alpha) > this.maxAngularAccel {
-      alpha = Vector4.Normalize(alpha) * this.maxAngularAccel;
-    }
-    let mass = stats.s_mass;
-    let inertia = stats.s_momentOfInertia;
-    let tensor = this.component.thrusterTensor;
-    // FlightComponent turns the mode torque into an angular impulse: x dt, x mass, x the thruster
-    // tensor per axis, into the world frame; PhysX applies it with the body's world inertia. So the
-    // torque for alpha is that inertia x alpha, back through the same steps. The per-axis gains
-    // below were measured on one car (an Archer Quartz) and are only the fallback without PhysX-owned
-    // flight (on other cars they come out too stiff and shake).
     let torque: Vector4;
-    let impulse = this.component.AngularImpulseFor(stats.d_orientation * alpha);
-    if impulse.W > 0.5 {
-      impulse.W = 0.0;
-      let localImpulse = Quaternion.Conjugate(stats.d_orientation) * impulse;
-      torque = new Vector4(
-        localImpulse.X / MaxF(mass * tensor.X, 0.001),
-        localImpulse.Y / MaxF(mass * MaxF(tensor.Y, 1.0), 0.001),
-        localImpulse.Z / MaxF(mass * tensor.Z, 0.001), 0.0);
+    let local: Vector4;
+    let g: Float;
+    let rate: Vector4;
+    let rateRef: Vector4;
+    if this.nativeAerobatics {
+      // the target frame, the torque and the thrust in C++ (Navigation::AttitudeControl)
+      let c = this.AttitudeControl();
+      c.dt = dt;
+      c.fwd = fwd;
+      c.up = up;
+      c.shape = IsDefined(this.maneuver) && !this.maneuver.IsOverlay();
+      c.accel = accel;
+      c.drag = this.surgeHold.Drag(this, v);
+      c.dragAccel = this.DragAccel(stats.d_speed);
+      c.raceDecel = this.RaceDecel(stats.d_speed);
+      c.thrusterTensor = this.component.thrusterTensor;
+      c.inertiaX = this.component.GetWorldInertiaRow(0);
+      c.inertiaY = this.component.GetWorldInertiaRow(1);
+      c.inertiaZ = this.component.GetWorldInertiaRow(2);
+      c.Step(stats);
+      this.AttitudeControlBack(c);
+      this.attitudeError = c.attitudeError;
+      torque = c.torque;
+      local = c.thrust;
+      rateRef = c.rateRef;
+      fwd = c.targetForward;
+      up = c.targetUp;
+      rate = stats.d_angularVelocity;
+      rate.W = 0.0;
+      g = 9.81 * this.gravityFactor;
     } else {
-      torque = new Vector4(
-        alpha.X * inertia.X / MaxF(this.torqueGainPitch * mass * tensor.X, 0.001),
-        alpha.Y * inertia.Y / MaxF(this.torqueGainRoll * mass * MaxF(tensor.Y, 1.0), 0.001),
-        alpha.Z * inertia.Z / MaxF(this.torqueGainYaw * mass * tensor.Z, 0.001), 0.0);
-    }
-    // ApplyPhysics damps all rotation: give back what it takes from the rotation wanted
-    let fs = FlightSettings.GetInstance();
-    let giveBack = rateRef * fs.generalDampFactorAngular;
-    giveBack.Z *= fs.generalYawDampFactor;
-    if Vector4.Length(giveBack) > fs.generalDampFactorAngularMax {
-      giveBack = Vector4.Normalize(giveBack) * fs.generalDampFactorAngularMax; // ApplyPhysics' own cap
-    }
-    torque += giveBack;
+      let right = Vector4.Normalize(Vector4.Cross(fwd, up));
+      up = Vector4.Cross(right, fwd);
+      if IsDefined(this.maneuver) && !this.maneuver.IsOverlay() {
+        // a shape sets its own attitude: carry on the bank easing from where it leaves the car
+        this.SyncBank(fwd, up);
+      }
 
-    // thrust: the commanded acceleration, the drag it holds off and gravity, in the car's frame
-    let local = Quaternion.Conjugate(stats.d_orientation) * (accel + this.surgeHold.Drag(this, v) + z * (9.81 * this.gravityFactor));
-    // what the player's inputs give at most: surge along the nose (reverse surge plus the brake
-    // when slowing), sway across, lift (on top of hover) along the top
-    let g = 9.81 * this.gravityFactor;
-    local.X = ClampF(local.X, -this.standardModeSwayFactor, this.standardModeSwayFactor);
-    local.Y = ClampF(local.Y, this.DragAccel(stats.d_speed) - this.RaceDecel(stats.d_speed), this.standardModeSurgeFactor);
-    local.Z = ClampF(local.Z, g - this.standardModeLiftFactor, g + this.standardModeLiftFactor);
+      // rate of the target, smoothed (it is what the car should be turning at)
+      let step = FlightAttitude.RotationError(this.targetRight, this.targetForward, this.targetUp, right, fwd, up);
+      let omega = (this.targetRight * step.X + this.targetForward * step.Y + this.targetUp * step.Z) * (1.0 / dt);
+      this.omegaRef += (omega - this.omegaRef) * ClampF(dt / 0.05, 0.0, 1.0);
+      this.targetRight = right;
+      this.targetForward = fwd;
+      this.targetUp = up;
+
+      // attitude control in the body frame: angular acceleration from the error and the rate error,
+      // then the torque that gives it on each axis
+      let error = FlightAttitude.RotationError(stats.d_right, stats.d_forward, stats.d_up, right, fwd, up);
+      this.attitudeError = Vector4.Length(error);
+      rateRef = new Vector4(Vector4.Dot(this.omegaRef, stats.d_right), Vector4.Dot(this.omegaRef, stats.d_forward), Vector4.Dot(this.omegaRef, stats.d_up), 0.0);
+      rate = stats.d_angularVelocity;
+      rate.W = 0.0;
+      let alpha = error * (this.attitudeFrequency * this.attitudeFrequency) + (rateRef - rate) * (2.0 * this.attitudeDamping * this.attitudeFrequency);
+      if Vector4.Length(alpha) > this.maxAngularAccel {
+        alpha = Vector4.Normalize(alpha) * this.maxAngularAccel;
+      }
+      let mass = stats.s_mass;
+      let inertia = stats.s_momentOfInertia;
+      let tensor = this.component.thrusterTensor;
+      // FlightComponent turns the mode torque into an angular impulse: x dt, x mass, x the thruster
+      // tensor per axis, into the world frame; PhysX applies it with the body's world inertia. So the
+      // torque for alpha is that inertia x alpha, back through the same steps. The per-axis gains
+      // below were measured on one car (an Archer Quartz) and are only the fallback without PhysX-owned
+      // flight (on other cars they come out too stiff and shake).
+      let impulse = this.component.AngularImpulseFor(stats.d_orientation * alpha);
+      if impulse.W > 0.5 {
+        impulse.W = 0.0;
+        let localImpulse = Quaternion.Conjugate(stats.d_orientation) * impulse;
+        torque = new Vector4(
+          localImpulse.X / MaxF(mass * tensor.X, 0.001),
+          localImpulse.Y / MaxF(mass * MaxF(tensor.Y, 1.0), 0.001),
+          localImpulse.Z / MaxF(mass * tensor.Z, 0.001), 0.0);
+      } else {
+        torque = new Vector4(
+          alpha.X * inertia.X / MaxF(this.torqueGainPitch * mass * tensor.X, 0.001),
+          alpha.Y * inertia.Y / MaxF(this.torqueGainRoll * mass * MaxF(tensor.Y, 1.0), 0.001),
+          alpha.Z * inertia.Z / MaxF(this.torqueGainYaw * mass * tensor.Z, 0.001), 0.0);
+      }
+      // ApplyPhysics damps all rotation: give back what it takes from the rotation wanted
+      let fs = FlightSettings.GetInstance();
+      let giveBack = rateRef * fs.generalDampFactorAngular;
+      giveBack.Z *= fs.generalYawDampFactor;
+      if Vector4.Length(giveBack) > fs.generalDampFactorAngularMax {
+        giveBack = Vector4.Normalize(giveBack) * fs.generalDampFactorAngularMax; // ApplyPhysics' own cap
+      }
+      torque += giveBack;
+
+      // thrust: the commanded acceleration, the drag it holds off and gravity, in the car's frame
+      local = Quaternion.Conjugate(stats.d_orientation) * (accel + this.surgeHold.Drag(this, v) + z * (9.81 * this.gravityFactor));
+      // what the player's inputs give at most: surge along the nose (reverse surge plus the brake
+      // when slowing), sway across, lift (on top of hover) along the top
+      g = 9.81 * this.gravityFactor;
+      local.X = ClampF(local.X, -this.standardModeSwayFactor, this.standardModeSwayFactor);
+      local.Y = ClampF(local.Y, this.DragAccel(stats.d_speed) - this.RaceDecel(stats.d_speed), this.standardModeSurgeFactor);
+      local.Z = ClampF(local.Z, g - this.standardModeLiftFactor, g + this.standardModeLiftFactor);
+    }
     // where the speed is the car's to set, the surge held full along the path
     // (with nativeTracker FlightTracker.Command did it this frame, with the same inputs)
     if !this.nativeTracker {

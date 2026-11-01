@@ -51,6 +51,9 @@ public native class FlightComponent extends GameComponent {
   // angular impulse (world) for a change of angular velocity (world, rad/s), with the inertia the
   // flight torque is applied with; W = 1, or W = 0 when not known (not PhysX-owned flight)
   public native func AngularImpulseFor(worldRate: Vector4) -> Vector4;
+  // row 0, 1 or 2 of the world inertia AngularImpulseFor multiplies by (X, Y, Z of the matrix); W = 1, or all 0 when
+  // it is not known
+  public native func GetWorldInertiaRow(row: Int32) -> Vector4;
   // public native func ChaseTarget() -> Void;
 
   // private let helper: ref<vehicleFlightHelper>;

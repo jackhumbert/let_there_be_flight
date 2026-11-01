@@ -94,10 +94,25 @@ public class FlightManeuver {
   public let speed: Float;       // m/s flown through the shape
   public let radius: Float;      // m: loop radius, barrel roll radius
   public let rollTime: Float;    // s of a half roll (Immelmann, split-S)
+  public let shape: ref<FlightManeuverShape>;  // the geometry in C++ when created with useNative (then the script bodies below are not run)
 
-  public static func Create(kind: FlightManeuverKind, side: Float, position: Vector4, velocity: Vector4, accel: Float, rollTime: Float) -> ref<FlightManeuver> {
+  // useNative: the shape is sized and sampled in C++ (FlightManeuverShape); false: the script below
+  public static func Create(kind: FlightManeuverKind, side: Float, position: Vector4, velocity: Vector4, accel: Float, rollTime: Float, useNative: Bool) -> ref<FlightManeuver> {
     let self = new FlightManeuver();
     self.kind = kind;
+    if useNative {
+      self.shape = new FlightManeuverShape();
+      self.shape.Create(EnumInt(kind), side, position, velocity, accel, rollTime);
+      self.side = self.shape.side;
+      self.origin = self.shape.origin;
+      self.dir = self.shape.dir;
+      self.right = self.shape.right;
+      self.speed = self.shape.speed;
+      self.radius = self.shape.radius;
+      self.rollTime = self.shape.rollTime;
+      self.duration = self.shape.duration;
+      return self;
+    }
     self.side = side >= 0.0 ? 1.0 : -1.0;
     self.origin = position;
     self.dir = Vector4.Normalize2D(velocity);
@@ -135,6 +150,9 @@ public class FlightManeuver {
 
   // Aileron roll: the up vector turned about the nose by the roll at time t.
   public func RollUp(t: Float, f: Vector4, u: Vector4) -> Vector4 {
+    if IsDefined(this.shape) {
+      return this.shape.RollUpAt(t, f, u);
+    }
     let rate: Float;
     let phi = 6.2831853 * this.Ease(t, this.duration, rate) * this.side;
     return u * CosF(phi) + Vector4.Cross(f, u) * SinF(phi);
@@ -143,6 +161,13 @@ public class FlightManeuver {
   // Barrel roll: offset from the route (a circle across the flight direction, starting and ending
   // on it), its rate of change, and the up vector (towards the circle's centre), at time t.
   public func BarrelOffset(t: Float, out offset: Vector4, out offsetVelocity: Vector4, out up: Vector4) -> Void {
+    if IsDefined(this.shape) {
+      this.shape.BarrelAt(t);
+      offset = this.shape.offset;
+      offsetVelocity = this.shape.offsetVelocity;
+      up = this.shape.up;
+      return;
+    }
     let rate: Float;
     let theta = 6.2831853 * this.Ease(t, this.duration, rate);
     let thetaRate = 6.2831853 * rate;
@@ -155,6 +180,15 @@ public class FlightManeuver {
 
   // Pitch manoeuvres: reference position, velocity, acceleration and attitude at time t.
   public func Sample(t: Float, out pos: Vector4, out vel: Vector4, out acc: Vector4, out fwd: Vector4, out up: Vector4) -> Void {
+    if IsDefined(this.shape) {
+      this.shape.SampleAt(t);
+      pos = this.shape.pos;
+      vel = this.shape.vel;
+      acc = this.shape.acc;
+      fwd = this.shape.fwd;
+      up = this.shape.up;
+      return;
+    }
     let z = FlightUtils.Up();
     let h = this.dir;
     let r = this.radius;

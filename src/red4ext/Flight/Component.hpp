@@ -14,6 +14,7 @@
 #include <RED4ext/Scripting/Natives/actionDriveChaseTarget.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/AutonomousData.hpp>
 #include "FlightConfiguration.hpp"
+#include "Navigation/Aerobatics.hpp"
 #include "IFlightSystem.hpp"
 //#include "FlightThruster.hpp"
 
@@ -153,22 +154,41 @@ public:
   // PhysX-owned flight). Lets attitude control ask for an angular acceleration on any vehicle
   // instead of a torque tuned on one (FlightModeAutopilot.FlyAerobatic).
   RED4ext::Vector4 AngularImpulseFor(RED4ext::Vector4 aRate) {
-    if (!physxOwned || !worldInertiaValid) {
+    bool valid;
+    const Flight::Vec3 impulse = Navigation::AngularImpulse(WorldInertiaRows(), {aRate.X, aRate.Y, aRate.Z}, valid);
+    return RED4ext::Vector4(impulse.x, impulse.y, impulse.z, valid ? 1.0f : 0.0f);
+  }
+
+  // Row aRow (0, 1, 2) of the world inertia, X, Y or Z, with W = 1; all 0 when AngularImpulseFor has no inertia, and
+  // for any other row. The attitude control in C++ (FlightAttitudeControl) takes the rows and does AngularImpulseFor's
+  // product itself.
+  RED4ext::Vector4 GetWorldInertiaRow(int32_t aRow) {
+    const Navigation::WorldInertia inertia = WorldInertiaRows();
+    if (!inertia.valid || aRow < 0 || aRow > 2) {
       return RED4ext::Vector4(0.0f, 0.0f, 0.0f, 0.0f);
     }
-    const auto &m = worldInertia;
-    return RED4ext::Vector4(m.X.X * aRate.X + m.Y.X * aRate.Y + m.Z.X * aRate.Z,
-                            m.X.Y * aRate.X + m.Y.Y * aRate.Y + m.Z.Y * aRate.Z,
-                            m.X.Z * aRate.X + m.Y.Z * aRate.Y + m.Z.Z * aRate.Z, 1.0f);
+    const Flight::Vec3 &row = aRow == 0 ? inertia.x : aRow == 1 ? inertia.y : inertia.z;
+    return RED4ext::Vector4(row.x, row.y, row.z, 1.0f);
   }
 
 private:
   friend Descriptor;
 
+  // the world inertia as Navigation::AngularImpulse takes it: valid only for PhysX-owned flight with a copy this frame
+  Navigation::WorldInertia WorldInertiaRows() const {
+    Navigation::WorldInertia inertia;
+    inertia.valid = physxOwned && worldInertiaValid;
+    inertia.x = {worldInertia.X.X, worldInertia.X.Y, worldInertia.X.Z};
+    inertia.y = {worldInertia.Y.X, worldInertia.Y.Y, worldInertia.Y.Z};
+    inertia.z = {worldInertia.Z.X, worldInertia.Z.Y, worldInertia.Z.Z};
+    return inertia;
+  }
+
   static void OnDescribe(Descriptor *aType, RED4ext::CRTTISystem *) {
     aType->AddFunction<&FlightComponent::ChaseTarget>("ChaseTarget");
     aType->AddFunction<&FlightComponent::GetContactSpin>("GetContactSpin");
     aType->AddFunction<&FlightComponent::AngularImpulseFor>("AngularImpulseFor");
+    aType->AddFunction<&FlightComponent::GetWorldInertiaRow>("GetWorldInertiaRow");
   }
 };
 RED4EXT_ASSERT_OFFSET(FlightComponent, sys, 0xA8);
