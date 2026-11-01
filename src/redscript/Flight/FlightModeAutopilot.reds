@@ -106,6 +106,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
   private let attRef: Vector4;                     // the trajectory's acceleration, smoothed as attAccel is
   public let nativeAttitude: Bool = true;  // drone attitude in C++ (FlightDroneAttitude); false: DroneAttitude's script below (docs/design/native-ports.md)
   private let attitude: ref<FlightDroneAttitude>;
+  public let nativeTracker: Bool = false;  // the follower in C++ (FlightTracker); false: the script in Update (docs/design/native-ports.md)
+  private let tracker: ref<FlightTracker>;
   // leaving the line on a trajectory (docs/design/trajectory.md, step 5): replanned from the car's
   // state, never steered back to a point behind it
   public let replanOffLine: Float = 8.0;    // m off the line before replanning (replanDistance without a trajectory)
@@ -409,6 +411,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     self.ahead = new AutopilotPlanAhead();
     self.surgeHold = new AutopilotSurge();
     self.attitude = new FlightDroneAttitude();
+    self.tracker = new FlightTracker();
     self.ClearRoute();
     return self;
   }
@@ -1532,118 +1535,140 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.overlayVelocity = new Vector4(0.0, 0.0, 0.0, 0.0);
     let following = Equals(this.status, "following") && this.RouteSize() >= 2 && !shaped;
     if following {
-      let closest: Vector4;
-      let offRoute: Float;
-      this.ClosestOnRoute(p, closest, offRoute);
-      this.offRouteNow = offRoute;
-      this.closestNow = closest;
-      this.closestS = this.route.Distance(this.segment) + Vector4.Distance(this.route.Point(this.segment), closest);
-      this.remaining = this.route.Length() - this.closestS;
-      if this.routeLine {
-        // off the line: a new trajectory from where the car is going, at most once a second
-        if offRoute > this.replanOffLine && this.recovering <= 0.0 && this.replanTimer <= 2.0 && this.request == 0 {
-          FlightLog.Info("[Autopilot] " + FloatToStringPrec(offRoute, 1) + " m off the line at " + FloatToStringPrec(stats.d_speed, 1) + " m/s: replanning from here");
+      if this.nativeTracker {
+        // the follower in C++ (FlightTracker): the same fields written, the replans and the route request left to the script
+        let offset = new Vector4(0.0, 0.0, 0.0, 0.0);
+        // barrel roll: aim at the route point moved round the roll's circle
+        if IsDefined(this.maneuver) && Equals(this.maneuver.kind, FlightManeuverKind.BarrelRoll) {
+          let barrelUp: Vector4;
+          this.maneuver.BarrelOffset(this.maneuver.time, offset, this.overlayVelocity, barrelUp);
+        }
+        this.FillTracker(timeDelta, p, v);
+        this.tracker.aimOffset = offset;
+        this.tracker.Track(this.route, this.trajectory, this.Vehicle());
+        this.TrackerOut();
+        target = this.tracker.target;
+        if this.tracker.replanLine {
+          FlightLog.Info("[Autopilot] " + FloatToStringPrec(this.offRouteNow, 1) + " m off the line at " + FloatToStringPrec(stats.d_speed, 1) + " m/s: replanning from here");
           this.Replan(p, v);
         }
-      } else if offRoute > this.replanDistance && this.replanTimer <= 0.0 && this.request == 0 {
-        this.RequestRoute(p);
-      }
-      let ahead = ClampF(0.7 * stats.d_speed + 12.0, 15.0, 90.0);
-      // don't aim far past the next sharp bend: a long lookahead cuts inside it, and route legs
-      // graze obstacles there
-      if this.segment + 2 < this.RouteSize() {
-        ahead = MinF(ahead, this.DistanceToSharpBend(closest) + this.cornerOvershoot);
-      }
-      target = this.AlongRoute(closest, ahead);
-      // the straight line to the aim point must be free on the nav map, or the car cuts through
-      // whatever the route bends around (a corner, the edge of a deck it passes under); pull the
-      // aim point back along the route until it is. Check from the car, or from the route when
-      // the car sits inside the map's margin (resting on or brushing a surface).
-      let from = FlightNavMap.IsFree(p) ? p : closest;
-      let tries = 0;
-      while tries < 6 && ahead > 4.0 && FlightNavMap.SegmentClear(from, target) < 1.0 {
-        ahead *= 0.6;
-        target = this.AlongRoute(closest, ahead);
-        tries += 1;
-      }
-      // pulled back at once (that is for clearance), grown back smoothly: a lookahead that jumps
-      // out again swings the aim point and the heading with it
-      if ahead < this.aheadSmooth {
-        this.aheadSmooth = ahead;
-      } else {
-        this.aheadSmooth += (ahead - this.aheadSmooth) * ClampF(timeDelta / 0.6, 0.0, 1.0);
-        ahead = this.aheadSmooth;
-        target = this.AlongRoute(closest, ahead);
-      }
-      this.curvatureAhead = this.CurvatureAhead(closest, ahead);
-      // smoothed: it steps as route points pass
-      let curvature = this.CurvatureVector(closest, ahead);
-      this.pathCurvature += (curvature - this.pathCurvature) * ClampF(timeDelta / 0.25, 0.0, 1.0);
-      // barrel roll: aim at the route point moved round the roll's circle
-      if IsDefined(this.maneuver) && Equals(this.maneuver.kind, FlightManeuverKind.BarrelRoll) {
-        let offset: Vector4;
-        let barrelUp: Vector4;
-        this.maneuver.BarrelOffset(this.maneuver.time, offset, this.overlayVelocity, barrelUp);
-        target += offset;
-      }
-      // the trajectory's speed and its rate at the car's place on the line, a moment ahead for the
-      // time the thrust takes
-      let sRef = this.closestS + stats.d_speed * this.lineLead;
-      let planned = this.FollowsTrajectory();
-      this.targetSpeed = planned ? this.trajectory.Speed(sRef) : 0.0;
-      // where the current velocity is taking the car must be free on the map; brake to stop short
-      // of the first blocked point otherwise (things the map lacks: cars, streamed-in props). Only
-      // when the car is leaving a route that is clear over the same distance: where the route
-      // itself grazes the map's margin (passing a ledge or under a deck) the velocity test fails
-      // too, and braking there stalls the car on the line
-      this.blockedAhead = false;
-      if stats.d_speed > 3.0 {
-        // the path the car is flying: velocity plus the acceleration it is commanding (turning
-        // into a bend curves the prediction with it), in three pieces over collisionHorizon
-        let travelled: Float;
-        let hit: Vector4;
-        let blockedAt = this.PredictBlocked(FlightNavMap.IsFree(p) ? p : closest, v, travelled, hit);
-        let reach = v * this.collisionHorizon;
-        // ...and only when it is actually taking the car off the route: where the route threads a
-        // tight passage or skims over an edge, a path a metre beside it clips the map's margin
-        // (which already holds the car's size), and trusting the planner's clear route there
-        // avoids a full-brake jolt for nothing
-        // (blocked space within 10 m cannot be braked for at speed, only steered away from, and
-        // came from the map's margin around the car itself on the route)
-        // (on a line, which the planner checked free all the way, only once the car has
-        // left it: at speed the straight-line prediction runs into the walls past every bend)
-        let lineHeld = this.routeLine && offRoute < this.raceOffLine;
-        if blockedAt && !lineHeld && travelled > 10.0 && this.DistanceToRoute(hit) > 2.0 && this.RouteClear(closest, Vector4.Length(reach)) {
-          let room = MaxF(travelled - 5.0, 0.0);
-          this.targetSpeed = MinF(this.targetSpeed, SqrtF(2.0 * this.raceMargin * this.RaceDecel(0.0) * room));
-          this.blockedAhead = true;
+        if this.tracker.requestRoute {
+          this.RequestRoute(p);
         }
-      }
-      this.speedCmd = this.targetSpeed;
-      this.speedRate = planned ? this.trajectory.Along(sRef) : -this.RaceDecel(stats.d_speed);
-      if this.blockedAhead {
-        // braking for blocked space: the gap from the car's speed to the blocked one closed at
-        // 2 speedGain, at most the race decel
-        let brake = MinF(MaxF(stats.d_speed - this.targetSpeed, 0.0) * 2.0 * this.speedGain, this.RaceDecel(stats.d_speed));
-        this.speedRate = MinF(this.speedRate, -brake);
-      }
-      // blocked space: braked for like any other limit while there is room to stop at brakeMax,
-      // braked hard (emergencyBrake) only when there is not and it has been blocked for a moment.
-      // At speed the 1.5 s velocity ray often pokes into geometry the route is about to bend
-      // over or around for a frame or two; braking at 40 m/s2 for those was the harshest jolt.
-      this.emergencyBrake = false;
-      // once clear again, carry on from the speed the car has
-      if !this.blockedAhead && this.blockedTimer > 0.2 {
-        this.speedCmd = MaxF(this.speedCmd, stats.d_speed);
-        this.speedRate = MaxF(this.speedRate, 0.0);
-      }
-      this.blockedTimer = this.blockedAhead ? this.blockedTimer + timeDelta : 0.0;
-      if this.blockedAhead && this.blockedTimer > 0.2 && stats.d_speed > this.targetSpeed {
-        let room = MaxF(this.targetSpeed * this.targetSpeed / (2.0 * this.brakeAccel), 0.5);
-        if stats.d_speed * stats.d_speed / (2.0 * room) > this.brakeMax {
-          this.speedCmd = this.targetSpeed;
-          this.speedRate = MinF(this.speedRate, 0.0);
-          this.emergencyBrake = true;
+      } else {
+        let closest: Vector4;
+        let offRoute: Float;
+        this.ClosestOnRoute(p, closest, offRoute);
+        this.offRouteNow = offRoute;
+        this.closestNow = closest;
+        this.closestS = this.route.Distance(this.segment) + Vector4.Distance(this.route.Point(this.segment), closest);
+        this.remaining = this.route.Length() - this.closestS;
+        if this.routeLine {
+          // off the line: a new trajectory from where the car is going, at most once a second
+          if offRoute > this.replanOffLine && this.recovering <= 0.0 && this.replanTimer <= 2.0 && this.request == 0 {
+            FlightLog.Info("[Autopilot] " + FloatToStringPrec(offRoute, 1) + " m off the line at " + FloatToStringPrec(stats.d_speed, 1) + " m/s: replanning from here");
+            this.Replan(p, v);
+          }
+        } else if offRoute > this.replanDistance && this.replanTimer <= 0.0 && this.request == 0 {
+          this.RequestRoute(p);
+        }
+        let ahead = ClampF(0.7 * stats.d_speed + 12.0, 15.0, 90.0);
+        // don't aim far past the next sharp bend: a long lookahead cuts inside it, and route legs
+        // graze obstacles there
+        if this.segment + 2 < this.RouteSize() {
+          ahead = MinF(ahead, this.DistanceToSharpBend(closest) + this.cornerOvershoot);
+        }
+        target = this.AlongRoute(closest, ahead);
+        // the straight line to the aim point must be free on the nav map, or the car cuts through
+        // whatever the route bends around (a corner, the edge of a deck it passes under); pull the
+        // aim point back along the route until it is. Check from the car, or from the route when
+        // the car sits inside the map's margin (resting on or brushing a surface).
+        let from = FlightNavMap.IsFree(p) ? p : closest;
+        let tries = 0;
+        while tries < 6 && ahead > 4.0 && FlightNavMap.SegmentClear(from, target) < 1.0 {
+          ahead *= 0.6;
+          target = this.AlongRoute(closest, ahead);
+          tries += 1;
+        }
+        // pulled back at once (that is for clearance), grown back smoothly: a lookahead that jumps
+        // out again swings the aim point and the heading with it
+        if ahead < this.aheadSmooth {
+          this.aheadSmooth = ahead;
+        } else {
+          this.aheadSmooth += (ahead - this.aheadSmooth) * ClampF(timeDelta / 0.6, 0.0, 1.0);
+          ahead = this.aheadSmooth;
+          target = this.AlongRoute(closest, ahead);
+        }
+        this.curvatureAhead = this.CurvatureAhead(closest, ahead);
+        // smoothed: it steps as route points pass
+        let curvature = this.CurvatureVector(closest, ahead);
+        this.pathCurvature += (curvature - this.pathCurvature) * ClampF(timeDelta / 0.25, 0.0, 1.0);
+        // barrel roll: aim at the route point moved round the roll's circle
+        if IsDefined(this.maneuver) && Equals(this.maneuver.kind, FlightManeuverKind.BarrelRoll) {
+          let offset: Vector4;
+          let barrelUp: Vector4;
+          this.maneuver.BarrelOffset(this.maneuver.time, offset, this.overlayVelocity, barrelUp);
+          target += offset;
+        }
+        // the trajectory's speed and its rate at the car's place on the line, a moment ahead for the
+        // time the thrust takes
+        let sRef = this.closestS + stats.d_speed * this.lineLead;
+        let planned = this.FollowsTrajectory();
+        this.targetSpeed = planned ? this.trajectory.Speed(sRef) : 0.0;
+        // where the current velocity is taking the car must be free on the map; brake to stop short
+        // of the first blocked point otherwise (things the map lacks: cars, streamed-in props). Only
+        // when the car is leaving a route that is clear over the same distance: where the route
+        // itself grazes the map's margin (passing a ledge or under a deck) the velocity test fails
+        // too, and braking there stalls the car on the line
+        this.blockedAhead = false;
+        if stats.d_speed > 3.0 {
+          // the path the car is flying: velocity plus the acceleration it is commanding (turning
+          // into a bend curves the prediction with it), in three pieces over collisionHorizon
+          let travelled: Float;
+          let hit: Vector4;
+          let blockedAt = this.PredictBlocked(FlightNavMap.IsFree(p) ? p : closest, v, travelled, hit);
+          let reach = v * this.collisionHorizon;
+          // ...and only when it is actually taking the car off the route: where the route threads a
+          // tight passage or skims over an edge, a path a metre beside it clips the map's margin
+          // (which already holds the car's size), and trusting the planner's clear route there
+          // avoids a full-brake jolt for nothing
+          // (blocked space within 10 m cannot be braked for at speed, only steered away from, and
+          // came from the map's margin around the car itself on the route)
+          // (on a line, which the planner checked free all the way, only once the car has
+          // left it: at speed the straight-line prediction runs into the walls past every bend)
+          let lineHeld = this.routeLine && offRoute < this.raceOffLine;
+          if blockedAt && !lineHeld && travelled > 10.0 && this.DistanceToRoute(hit) > 2.0 && this.RouteClear(closest, Vector4.Length(reach)) {
+            let room = MaxF(travelled - 5.0, 0.0);
+            this.targetSpeed = MinF(this.targetSpeed, SqrtF(2.0 * this.raceMargin * this.RaceDecel(0.0) * room));
+            this.blockedAhead = true;
+          }
+        }
+        this.speedCmd = this.targetSpeed;
+        this.speedRate = planned ? this.trajectory.Along(sRef) : -this.RaceDecel(stats.d_speed);
+        if this.blockedAhead {
+          // braking for blocked space: the gap from the car's speed to the blocked one closed at
+          // 2 speedGain, at most the race decel
+          let brake = MinF(MaxF(stats.d_speed - this.targetSpeed, 0.0) * 2.0 * this.speedGain, this.RaceDecel(stats.d_speed));
+          this.speedRate = MinF(this.speedRate, -brake);
+        }
+        // blocked space: braked for like any other limit while there is room to stop at brakeMax,
+        // braked hard (emergencyBrake) only when there is not and it has been blocked for a moment.
+        // At speed the 1.5 s velocity ray often pokes into geometry the route is about to bend
+        // over or around for a frame or two; braking at 40 m/s2 for those was the harshest jolt.
+        this.emergencyBrake = false;
+        // once clear again, carry on from the speed the car has
+        if !this.blockedAhead && this.blockedTimer > 0.2 {
+          this.speedCmd = MaxF(this.speedCmd, stats.d_speed);
+          this.speedRate = MaxF(this.speedRate, 0.0);
+        }
+        this.blockedTimer = this.blockedAhead ? this.blockedTimer + timeDelta : 0.0;
+        if this.blockedAhead && this.blockedTimer > 0.2 && stats.d_speed > this.targetSpeed {
+          let room = MaxF(this.targetSpeed * this.targetSpeed / (2.0 * this.brakeAccel), 0.5);
+          if stats.d_speed * stats.d_speed / (2.0 * room) > this.brakeMax {
+            this.speedCmd = this.targetSpeed;
+            this.speedRate = MinF(this.speedRate, 0.0);
+            this.emergencyBrake = true;
+          }
         }
       }
       // barely moving while it should fly: wedged against something the map doesn't know about
@@ -1792,7 +1817,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let accel = (desiredVelocity - v) * this.velocityGain;
     let jerk = this.accelJerk;
     this.onLine = following && this.routeLine;
-    if this.onLine {
+    if this.nativeTracker && following {
+      // the script's line and aim-point acceleration is skipped: FlightTracker.Command works it out below
+    } else if this.onLine {
       let tangent: Vector4;
       let bend: Vector4;
       this.LineFrame(this.closestS, tangent, bend);
@@ -1867,19 +1894,39 @@ public class FlightModeAutopilot extends FlightModeStandard {
     }
     // after a hit, while the controls are damped: hold the velocity the car has (pulled back to the
     // line it reversed towards a point it had passed), level, until the replan
-    if this.recovering > 0.0 && following {
+    if this.recovering > 0.0 && following && !this.nativeTracker {
       accel = new Vector4(0.0, 0.0, 0.0, 0.0);
       desiredVelocity = v;
     }
-    // ease changes of the acceleration itself (it is what is felt): rate-limit the command,
-    // except in an emergency stop for blocked space
-    let change = accel - this.accelCmd;
-    let maxChange = jerk * timeDelta;
-    if !this.emergencyBrake && Vector4.Length(change) > maxChange {
-      change = Vector4.Normalize(change) * maxChange;
+    if this.nativeTracker {
+      // the follower's acceleration (or, not following, the one worked out above) rate limited, and the
+      // surge hold updated with the inputs FlyAerobatic gave it
+      this.FillTracker(timeDelta, p, v);
+      this.tracker.following = following;
+      this.tracker.target = target;
+      this.tracker.overlayVelocity = this.overlayVelocity;
+      this.tracker.rawAccel = accel;
+      this.tracker.rawJerk = jerk;
+      this.tracker.rawDesiredVelocity = desiredVelocity;
+      this.tracker.surgeFree = this.recovering <= 0.0 && stats.d_speed > 1.0 && this.FollowsTrajectory() && Equals(this.status, "following");
+      this.tracker.Command(this.route, this.trajectory);
+      this.TrackerOut();
+      accel = this.accelCmd;
+      if following {
+        desiredVelocity = this.tracker.desiredVelocity;
+        this.lookahead = this.tracker.lookahead;
+      }
+    } else {
+      // ease changes of the acceleration itself (it is what is felt): rate-limit the command,
+      // except in an emergency stop for blocked space
+      let change = accel - this.accelCmd;
+      let maxChange = jerk * timeDelta;
+      if !this.emergencyBrake && Vector4.Length(change) > maxChange {
+        change = Vector4.Normalize(change) * maxChange;
+      }
+      this.accelCmd += change;
+      accel = this.accelCmd;
     }
-    this.accelCmd += change;
-    accel = this.accelCmd;
 
     // fly like a drone when slow, like a plane when fast
     let blend = ClampF((stats.d_speed - 8.0) / 17.0, 0.0, 1.0);
@@ -2559,6 +2606,82 @@ public class FlightModeAutopilot extends FlightModeStandard {
     fwd = Vector4.Normalize(FlightAttitude.Across(h, up));
   }
 
+  // The follower's params, the inputs it shares between Track and Command and the state, from the fields
+  // (the surge hold's dwell timer stays in the tracker: AutopilotSurge keeps it private).
+  private func FillTracker(dt: Float, p: Vector4, v: Vector4) -> Void {
+    let stats = this.component.stats;
+    let t = this.tracker;
+    t.replanOffLine = this.replanOffLine;
+    t.replanDistance = this.replanDistance;
+    t.cornerSpan = this.cornerSpan;
+    t.cornerOvershoot = this.cornerOvershoot;
+    t.collisionHorizon = this.collisionHorizon;
+    t.raceOffLine = this.raceOffLine;
+    t.lineLead = this.lineLead;
+    t.speedGain = this.speedGain;
+    t.brakeAccel = this.brakeAccel;
+    t.brakeMax = this.brakeMax;
+    t.velocityGain = this.velocityGain;
+    t.accelJerk = this.accelJerk;
+    t.raceJerk = this.raceJerk;
+    t.lineSpring = this.lineSpring;
+    t.lineVelocityGain = this.lineVelocityGain;
+    t.lineSpan = this.lineSpan;
+    t.trajectoryCorrectionMax = this.trajectoryCorrectionMax;
+    t.slack = this.surgeHold.slack;
+    t.dwell = this.surgeHold.dwell;
+    t.fullSurge = this.surgeHold.fullSurge;
+    t.dt = dt;
+    t.speed = stats.d_speed;
+    t.replanTimer = this.replanTimer;
+    t.position = p;
+    t.velocity = v;
+    t.forward = stats.d_forward;
+    t.routeLine = this.routeLine;
+    t.planned = this.FollowsTrajectory();
+    t.recovering = this.recovering > 0.0;
+    t.requestPending = this.request != 0;
+    t.segment = this.segment;
+    t.closestS = this.closestS;
+    t.offRouteNow = this.offRouteNow;
+    t.remaining = this.remaining;
+    t.aheadSmooth = this.aheadSmooth;
+    t.curvatureAhead = this.curvatureAhead;
+    t.blockedTimer = this.blockedTimer;
+    t.targetSpeed = this.targetSpeed;
+    t.speedCmd = this.speedCmd;
+    t.speedRate = this.speedRate;
+    t.closestNow = this.closestNow;
+    t.pathCurvature = this.pathCurvature;
+    t.accelCmd = this.accelCmd;
+    t.blockedAhead = this.blockedAhead;
+    t.emergencyBrake = this.emergencyBrake;
+    t.surgeHeld = this.surgeHold.held;
+    t.surgeChanging = this.surgeHold.changing;
+  }
+
+  // The follower's state back into the fields.
+  private func TrackerOut() -> Void {
+    let t = this.tracker;
+    this.segment = t.segment;
+    this.closestS = t.closestS;
+    this.offRouteNow = t.offRouteNow;
+    this.remaining = t.remaining;
+    this.aheadSmooth = t.aheadSmooth;
+    this.curvatureAhead = t.curvatureAhead;
+    this.blockedTimer = t.blockedTimer;
+    this.targetSpeed = t.targetSpeed;
+    this.speedCmd = t.speedCmd;
+    this.speedRate = t.speedRate;
+    this.closestNow = t.closestNow;
+    this.pathCurvature = t.pathCurvature;
+    this.accelCmd = t.accelCmd;
+    this.blockedAhead = t.blockedAhead;
+    this.emergencyBrake = t.emergencyBrake;
+    this.surgeHold.held = t.surgeHeld;
+    this.surgeHold.changing = t.surgeChanging;
+  }
+
   // DroneAttitude in C++ (FlightDroneAttitude, Navigation/DroneAttitude.hpp): the params, the inputs and
   // the state go in from the fields, the state comes back to them, so everything that reads them and the
   // plane path are as with the script. The landing turn's choice stays here (ChooseYaw).
@@ -2817,8 +2940,11 @@ public class FlightModeAutopilot extends FlightModeStandard {
     local.Y = ClampF(local.Y, this.DragAccel(stats.d_speed) - this.RaceDecel(stats.d_speed), this.standardModeSurgeFactor);
     local.Z = ClampF(local.Z, g - this.standardModeLiftFactor, g + this.standardModeLiftFactor);
     // where the speed is the car's to set, the surge held full along the path
-    this.surgeHold.Update(this, this.closestS + stats.d_speed * this.lineLead, stats.d_speed,
-      this.recovering <= 0.0 && stats.d_speed > 1.0 && this.FollowsTrajectory() && Equals(this.status, "following"), timeDelta);
+    // (with nativeTracker FlightTracker.Command did it this frame, with the same inputs)
+    if !this.nativeTracker {
+      this.surgeHold.Update(this, this.closestS + stats.d_speed * this.lineLead, stats.d_speed,
+        this.recovering <= 0.0 && stats.d_speed > 1.0 && this.FollowsTrajectory() && Equals(this.status, "following"), timeDelta);
+    }
     if this.surgeHold.held {
       local = this.surgeHold.Full(local, Quaternion.Conjugate(stats.d_orientation) * Vector4.Normalize(v), this.standardModeSurgeFactor);
       local.X = ClampF(local.X, -this.standardModeSwayFactor, this.standardModeSwayFactor);

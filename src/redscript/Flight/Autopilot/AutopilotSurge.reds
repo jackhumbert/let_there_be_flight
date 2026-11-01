@@ -16,7 +16,7 @@ public class AutopilotSurge extends IScriptable {
   public let audioTime: Float = 0.25;
 
   public let held: Bool;               // the surge was held full this frame
-  private let changing: Float;         // s the hold has wanted the other way
+  public let changing: Float;         // s the hold has wanted the other way
 
   // The acceleration the drag takes from the car, to be thrust back: along the velocity, m/s2.
   public func Drag(ap: ref<FlightModeAutopilot>, velocity: Vector4) -> Vector4 {
