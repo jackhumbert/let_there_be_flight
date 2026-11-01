@@ -107,11 +107,14 @@ def measure(prefix, metrics):
     }
 
 
-def plan(navmap, vehicle, route, params, out):
+def plan(navmap, vehicle, route, params, out, follow=False):
+    """follow: also fly the line with the follower (navplan NAVPLAN_FOLLOW); its follow line lands in m["follow"]."""
     name, a, b = route
     prefix = os.path.join(out, name)
     env = dict(os.environ, NAVPLAN_RACE="1", NAVPLAN_VEHICLE=vehicle,
                NAVPLAN_PARAMS=",".join(f"{k}={v}" for k, v in params.items()))
+    if follow:
+        env["NAVPLAN_FOLLOW"] = "1"
     try:
         r = subprocess.run([NAVPLAN, navmap, *map(str, a), *map(str, b), prefix], env=env, capture_output=True, text=True,
                            timeout=120)
@@ -120,13 +123,19 @@ def plan(navmap, vehicle, route, params, out):
     line = next((l for l in r.stdout.splitlines() if l.startswith("metrics ")), None)
     if not line or not os.path.exists(prefix + "_profile.csv"):
         return None
-    return measure(prefix, json.loads(line[len("metrics "):]))
+    m = measure(prefix, json.loads(line[len("metrics "):]))
+    if follow and m is not None:
+        flown = next((l for l in r.stdout.splitlines() if l.startswith("follow ")), None)
+        m["follow"] = json.loads(flown[len("follow "):]) if flown else None
+        if m["follow"] is not None and "error" in m["follow"]:
+            m["follow"] = None
+    return m
 
 
-def run_all(navmap, vehicle, rts, params, out, jobs):
+def run_all(navmap, vehicle, rts, params, out, jobs, follow=False):
     os.makedirs(out, exist_ok=True)
     with cf.ThreadPoolExecutor(jobs) as pool:
-        return list(pool.map(lambda r: plan(navmap, vehicle, r, params, out), rts))
+        return list(pool.map(lambda r: plan(navmap, vehicle, r, params, out, follow), rts))
 
 
 def score(m, base):

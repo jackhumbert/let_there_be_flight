@@ -1,6 +1,7 @@
 """Plan the benchmark routes (routes.json) with navplan and print one table: the line's speed lost
 in dips, bend jerk, sharpest bend, share within 3 m of blocked space, flown time and plan time per
-route. With --against, a second run (another navplan build, or other parameters) is scored against
+route, and the line flown by the follower (navplan NAVPLAN_FOLLOW: off the line p95 and p99 in m, mean
+speed error in m/s, stretches out past raceOffLine). With --against, a second run (another navplan build, or other parameters) is scored against
 the first, as tune.py scores its trials (0 = as good, lower is better). The measures and the score
 are measure.py's, shared with tune.py.
 
@@ -31,7 +32,8 @@ def parse_params(text):
 
 
 def table(rts, res, base=None):
-    print(f"{'route':10s} {'lost':>6s} {'jerk':>6s} {'sharp':>6s} {'tight%':>6s} {'time':>6s} {'ms':>6s} {'fixed':>5s}" + ("  score" if base else ""))
+    print(f"{'route':10s} {'lost':>6s} {'jerk':>6s} {'sharp':>6s} {'tight%':>6s} {'time':>6s} {'ms':>6s} {'fixed':>5s}"
+          f" {'off95':>5s} {'off99':>5s} {'spd':>5s} {'out':>4s}" + ("  score" if base else ""))
     scores = []
     for r, m in zip(rts, res):
         if not m or not m["ok"]:
@@ -40,6 +42,9 @@ def table(rts, res, base=None):
             continue
         line = (f"{r[0]:10s} {m['lost']:6.0f} {m['jerk']:6.2f} {m['sharpest']:6.1f} {m['tight']:6.1f} {m['time']:6.1f} "
                 f"{m['ms']:6.0f} {m['repaired']:5d}")
+        f = m.get("follow")
+        line += (f" {f['off_p95']:5.1f} {f['off_p99']:5.1f} {f['speed_err_mean']:5.1f} {f['lost']:4d}" if f
+                 else f" {'-':>5s} {'-':>5s} {'-':>5s} {'-':>4s}")
         if base:
             s = measure.score(m, base.get(r[0]))
             scores.append(s)
@@ -68,12 +73,14 @@ def main():
     out = args.out or tempfile.mkdtemp(prefix="bench_")
     measure.set_navplan(args.navplan)
     print(f"{measure.NAVPLAN} {args.params or ''}")
-    first = measure.run_all(navmap, vehicle, rts, parse_params(args.params), os.path.join(out, "a"), args.jobs)
+    first = measure.run_all(navmap, vehicle, rts, parse_params(args.params), os.path.join(out, "a"), args.jobs,
+                            follow=True)
     table(rts, first)
     if args.against_navplan or args.against_params is not None:
         measure.set_navplan(args.against_navplan)
         print(f"\nagainst {measure.NAVPLAN} {args.against_params or ''}")
-        second = measure.run_all(navmap, vehicle, rts, parse_params(args.against_params), os.path.join(out, "b"), args.jobs)
+        second = measure.run_all(navmap, vehicle, rts, parse_params(args.against_params), os.path.join(out, "b"),
+                                 args.jobs, follow=True)
         table(rts, second, base=dict(zip([r[0] for r in rts], first)))
     print(f"\nfiles in {out}")
 
