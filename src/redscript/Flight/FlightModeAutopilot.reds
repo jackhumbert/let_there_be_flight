@@ -106,7 +106,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
   private let attRef: Vector4;                     // the trajectory's acceleration, smoothed as attAccel is
   public let nativeAttitude: Bool = true;  // drone attitude in C++ (FlightDroneAttitude); false: DroneAttitude's script below (docs/design/native-ports.md)
   private let attitude: ref<FlightDroneAttitude>;
-  public let nativeTracker: Bool = false;  // the follower in C++ (FlightTracker); false: the script in Update (docs/design/native-ports.md)
+  public let nativeTracker: Bool = true;  // the follower in C++ (FlightTracker); false: the script in Update (docs/design/native-ports.md)
   private let tracker: ref<FlightTracker>;
   // leaving the line on a trajectory (docs/design/trajectory.md, step 5): replanned from the car's
   // state, never steered back to a point behind it
