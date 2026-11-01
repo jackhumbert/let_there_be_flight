@@ -68,9 +68,7 @@ public native class FlightComponent extends GameComponent {
 
   let hoverGroundPID: ref<PID>;
   // let hoverPID: ref<PID>;
-  // let pitchGroundPID: ref<DualPID>;
   let pitchPID: ref<PID>;
-  // let rollGroundPID: ref<DualPID>;
   let rollPID: ref<PID>;
   let aeroYawPID: ref<PID>;
   let pitchAeroPID: ref<PID>;

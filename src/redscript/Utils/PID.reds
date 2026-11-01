@@ -1,15 +1,14 @@
-public class PID {
-  private let valueFloat: Float;
-  // private let valueVector: Vector4;
-  private let inputFloat: Float;
-  // private let inputVector: Vector4;
-  private let P: Float;
-  private let I: Float;
-  private let D: Float;
-  public let integralFloat: Float;
-  // private let integralVector: Vector4;
-  private let lastErrorFloat: Float;
-  // private let lastErrorVector: Vector4;
+public native class PID extends IScriptable {
+  private native let valueFloat: Float;
+  private native let inputFloat: Float;
+  private native let P: Float;
+  private native let I: Float;
+  private native let D: Float;
+  public native let integralFloat: Float;
+  private native let lastErrorFloat: Float;
+  public native func NativeCorrection(error: Float, timeDelta: Float) -> Float;
+  public native func NativeReset(input: Float) -> Void;
+
   public static func Create(P: Float, I: Float, D: Float) -> ref<PID> {
     let instance: ref<PID> = new PID();
     instance.P = P;
@@ -26,11 +25,6 @@ public class PID {
     instance.valueFloat = initialValue;
     return instance;
   }
-  // public static func Create(P: Float, I: Float, D: Float, initialValue: Vector4) -> ref<PID> {
-  //   let instance: ref<PID> = PID.Create(P, I, D);
-  //   instance.valueVector = initialValue;
-  //   return instance;
-  // }
   public func Update(P: Float, I: Float, D: Float) -> Void {
     this.P = P;
     this.I = I;
@@ -52,9 +46,6 @@ public class PID {
   public func SetInput(input: Float) {
     this.inputFloat = input;
   }
-  // public func SetInput(input: Vector4) {
-  //   this.inputVector = input;
-  // }
   public func GetValue(timeDelta: Float) -> Float {
     let error: Float = this.inputFloat - this.valueFloat;
     this.valueFloat += this.GetCorrection(error, timeDelta);
@@ -66,47 +57,25 @@ public class PID {
   public func GetInput() -> Float {
     return this.inputFloat;
   }
-  // public func GetValue(timeDelta: Float) -> Vector4 {
-  //   let error: Vector4 = this.inputVector - this.valueVector;
-  //   this.valueVector += this.GetCorrection(error)
-  //   return this.valueVector;
-  // }
   public func GetValue(input: Float, timeDelta: Float) -> Float {
     this.SetInput(input);
     return this.GetValue(timeDelta);
   }
-  // public func GetValue(input: Vector4, timeDelta: Float) -> Vector4 {
-  //   this.SetInput(input);
-  //   return GetValue(timeDelta);
-  // }
   public func GetCorrection(error: Float, timeDelta: Float) -> Float { 
-    let derivative: Float = (error - this.lastErrorFloat) / timeDelta;
-    // if error < 0.01 || error * this.lastErrorFloat < 0.0 {
-    //   this.integralFloat = 0.0;
-    // } else {
-    this.integralFloat = ClampF(error * timeDelta + this.integralFloat, -100.0, 100.0);
-    // }
-    this.lastErrorFloat = error;
-    return this.P * error + this.I * this.integralFloat + this.D * derivative;
+    return this.NativeCorrection(error, timeDelta);
   }
-  // public func GetCorrection(error: Vector4, timeDelta: Float) -> Vector4 { 
-  //   let derivative: Vector4 = (error - this.lastErrorVector) / timeDelta;
-  //   this.integralVector = Vector4.ClampLength(error * timeDelta + this.integralVector, -100.0, 100.0);
-  //   this.lastErrorVector = error;
-  //   return this.P * error + this.I * this.integralFloat + this.D * derivative;
-  // }
   public func GetCorrectionClamped(error: Float, timeDelta: Float, clamp: Float) -> Float {
     return ClampF(this.GetCorrection(error, timeDelta), -clamp, clamp);
   }
   public func Reset(opt input: Float) -> Void {
-    this.inputFloat = input;
-    this.integralFloat = 0.0;
-    this.lastErrorFloat = 0.0;
+    this.NativeReset(input);
   }
 }
 
-public class InputPID extends PID {
-  private let P_dec: Float;
+public native class InputPID extends PID {
+  private native let P_dec: Float;
+  public native func NativeInputCorrection(error: Float) -> Float;
+
   public static func Create(P: Float, P_dec: Float) -> ref<InputPID> {
     let instance: ref<InputPID> = new InputPID();
     instance.P = P;
@@ -120,53 +89,6 @@ public class InputPID extends PID {
   }
 
   public func GetCorrection(error: Float, timeDelta: Float) -> Float { 
-    if AbsF(this.inputFloat) > AbsF(this.valueFloat) || this.inputFloat * this.valueFloat < 0.0 {
-      return this.P * error;
-    } else {
-      return this.P_dec * error;
-    }
-  }
-}
-
-public class DualPID extends PID {
-  private let P_aux: Float;
-  private let I_aux: Float;
-  private let D_aux: Float;
-  private let ratio: Float;
-  public static func Create(P: Float, I: Float, D: Float, P_aux: Float, I_aux: Float, D_aux: Float) -> ref<DualPID> {
-    let instance: ref<DualPID> = new DualPID();
-    instance.P = P;
-    instance.I = I;
-    instance.D = D;
-    instance.P_aux = P_aux;
-    instance.I_aux = I_aux;
-    instance.D_aux = D_aux;
-    instance.Reset();
-    return instance;
-  }
-  public static func Create(P: Float, I: Float, D: Float, P_aux: Float, I_aux: Float, D_aux: Float, initialValue: Float) -> ref<DualPID> {
-    let instance: ref<DualPID> = DualPID.Create(P, I, D, P_aux, I_aux, D_aux);
-    instance.valueFloat = initialValue;
-    return instance;
-  }
-  public func SetRatio(ratio: Float) {
-    this.ratio = ratio;
-  }
-  public func GetCorrection(error: Float, timeDelta: Float) -> Float { 
-    let derivative: Float = (error - this.lastErrorFloat) / timeDelta;
-    // if error < 0.01 || error * this.lastErrorFloat < 0.0 {
-    //   this.integralFloat = 0.0;
-    // } else {
-    this.integralFloat = ClampF(error * timeDelta + this.integralFloat, -100.0, 100.0) * 0.95;
-    // }
-    this.lastErrorFloat = error;
-    let pri = this.P * error + this.I * this.integralFloat + this.D * derivative;
-    let aux = this.P_aux * error + this.I_aux * this.integralFloat + this.D_aux * derivative;
-    return pri * (1.0 - this.ratio) + aux * (this.ratio);
-  }
-  public func UpdateAux(P_aux: Float, I_aux: Float, D_aux: Float) -> Void {
-    this.P_aux = P_aux;
-    this.I_aux = I_aux;
-    this.D_aux = D_aux;
+    return this.NativeInputCorrection(error);
   }
 }
