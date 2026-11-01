@@ -1,3 +1,5 @@
+* thruster sound system, cinematic mode (2026-11-?): audio doesn't sound right and doesn't feel like it comes from
+  the vehicle - double check the FMOD listener position/orientation while the cinematic camera is active
 * gamepad hold mode vs autodrive (2026-10-25): with Gamepad Toggle Requires Hold on and a GPS route set, an L3 hold
   starts vanilla autodrive at 0.5 s, then IsAutodriveActive() refuses flight at the 1.0 s hold. For now the docs say to
   move the toggle off L3. Possible fix: when a hold reaches gamepadToggleHoldTime, stop autodrive (AutoDriveSystem
@@ -12,6 +14,8 @@
 * disable crosshair in UI when using mounted weapons
 * move camera center to crosshair during driver combat
 * animate flight camera moves
+  * autopilot cinematic camera: when locked to the car, keep its attitude (do not follow the vehicle's)
+    sometimes the cinematic camera never actually triggers / changes angles even after it's engaged
 * use input contexts for flight options?
 * move input hints to inputContext classes
 * prevent thrusters from moving during photo mode

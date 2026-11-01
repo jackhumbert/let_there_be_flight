@@ -55,7 +55,8 @@ public class AutopilotSurge extends IScriptable {
       this.changing = 0.0;
     }
   }
-
+  // TODO: overfitted to the frame's target, so it ramps up and down as the hold flickers; ease
+  // towards a nearly-constant value instead (hold rate-limited over a longer window)
   // `current` eased towards `target` over audioTime.
   public func Ease(current: Float, target: Float, dt: Float) -> Float {
     return current + (target - current) * ClampF(dt / MaxF(this.audioTime, 0.001), 0.0, 1.0);

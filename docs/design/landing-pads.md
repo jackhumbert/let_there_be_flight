@@ -30,6 +30,8 @@ The full story with probes and measurements: `docs/archive/helipads.md`.
   `LtbfBridge.HelipadToast` shows one for tests, `../cp2077_tools/mods/let_there_be_flight/helipad_toast.py` records it.
 - The Autopilot lands on a pad when the destination is one, or within `padRange` of one, on the
   pad's heading.
+- A voice line on discovery or touchdown (Johnny's, or a custom recording): researched in
+  `research/pad-vo-research.md` (how the game triggers character lines, options A to D); no option picked yet.
 
 ## Visual-only pads
 
