@@ -18,6 +18,7 @@ public class FlightThrusterFront extends IFlightThruster {
     this.meshComponent.name = n"ThrusterF"; 
     this.meshComponent.SetParentTransform(n"vehicle_slots", this.slotName);
 
+    this.motionKind = 1;
     this.isFront = true;
     this.parentSlotName = n"wheel_front_spring";
     this.radiusName = n"None";
@@ -98,6 +99,7 @@ public class FlightThrusterBack extends IFlightThruster {
     this.meshComponent.name = n"ThrusterB"; 
     this.meshComponent.SetParentTransform(n"vehicle_slots", this.slotName);
 
+    this.motionKind = 2;
     this.parentSlotName = n"axel_back";
     this.radiusName = n"None";
     this.deviationName = n"None";

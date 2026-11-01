@@ -15,17 +15,17 @@ public abstract native class IFlightThruster extends IScriptable {
   @runtimeProperty("offset", "0xB0")
   public native let attached: Bool;
 
+  public native func SetupMotion() -> Bool;
+  public native func UpdateNative(force: Vector4, torque: Vector4) -> Bool;
+  public native func MotionState() -> String;
+
+  public let motionKind: Int32 = 0; // Flight::ThrusterShape: 0 car, 1 bike front, 2 bike back (set at Create)
+
   public let parentSlotName: CName;
   public let radiusName: CName;
   public let deviationName: CName;
 
   public let fxs: array<ref<IFlightThrusterFX>>;
-
-  // public let mainResRef: ResRef = r"user\\jackhumbert\\effects\\ion_thruster.effect";
-  // public let mainFxRes: FxResource;
-  // public let retroResRef: ResRef = r"user\\jackhumbert\\effects\\retro_thruster.effect";
-  // public let retroFxRes: FxResource;
-  
   public let bone: Float = 0.0;
   public let boneLerpAmount: Float = 0.25;
   public let maxThrusterAnglePitch: Float = 90.0;
@@ -34,12 +34,8 @@ public abstract native class IFlightThruster extends IScriptable {
   public let thrusterAngleAllowance: Float = 15.0;
   public let ogComponents: array<ref<IComponent>>;
   public let componentSizeArray: array<Vector3>;
-  // public let mainFx: ref<FxInstance>;
-  // public let mainThrusterFactor: Float = 0.05;
   public let mainThrusterYawFactor: Float = 0.5;
   public let hasRetroThruster: Bool = true;
-  // public let retroFx: ref<FxInstance>;
-  // public let retroThrusterFactor: Float = 0.1;
   public let force: Vector4;
   public let torque: Vector4;
   public let isRight: Bool = false;
@@ -65,7 +61,6 @@ public abstract native class IFlightThruster extends IScriptable {
       this.meshComponent.Toggle(false);
       this.initialOrientation = this.meshComponent.GetLocalOrientation();
       this.meshComponent.SetLocalOrientation(this.initialOrientation * EulerAngles.ToQuat(this.GetEulerAngles()));
-      // this.meshComponent.SetLocalOrientation(EulerAngles.ToQuat(this.GetEulerAngles()));
     } else {
       FlightLog.Warn("[IFlightThruster] OnSetup: thruster " + NameToString(this.slotName) + " has no mesh component");
       this.initialOrientation = new Quaternion(0.0, 0.0, 0.0, 1.0);
@@ -85,8 +80,6 @@ public abstract native class IFlightThruster extends IScriptable {
     if this.isB {
       this.id += "B";
     }
-    // not ready yet
-    // this.id += this.flightComponent.GetUniqueID();
     this.id += FloatToString(RandRangeF(0.0, 1.0));
   }
 
@@ -182,6 +175,8 @@ public abstract native class IFlightThruster extends IScriptable {
 
       FlightAudio.Get().StartEngine(this.id, this.flightComponent.GetPitch(), Cast<Uint64>(EntityID.GetHash(this.vehicle.GetEntityID())), this.flightComponent.isPlayerMounted);
     }
+
+    this.SetupMotion();
   }
 
   let forceThreshold: Float = 10.0;
@@ -202,6 +197,10 @@ public abstract native class IFlightThruster extends IScriptable {
 
   public func Update(force: Vector4, torque: Vector4) {
     if !this.attached {
+      return;
+    }
+
+    if this.flightComponent.nativeThrusters && this.UpdateNative(force, torque) {
       return;
     }
 
@@ -227,7 +226,6 @@ public abstract native class IFlightThruster extends IScriptable {
 
       this.meshComponent.visualScale = Vector4.Vector4To3(Vector4.Interpolate(vec_og, vec, 0.1));
       this.meshComponent.SetLocalOrientation(Quaternion.Slerp(this.meshComponent.GetLocalOrientation(), this.initialOrientation * EulerAngles.ToQuat(this.GetEulerAngles()), 0.1));
-      // this.meshComponent.SetLocalOrientation(Quaternion.Slerp(this.meshComponent.GetLocalOrientation(), EulerAngles.ToQuat(this.GetEulerAngles()), 0.1));
 
       // scale FX to how much "work" the thruster is actually doing
       let amount = Vector4.Dot(Quaternion.GetUp(this.meshComponent.GetLocalOrientation()), this.force);
@@ -235,33 +233,20 @@ public abstract native class IFlightThruster extends IScriptable {
       for fx in this.fxs {
         amount += fx.UpdateGetDisplacement();
       }
-
       // -4, 4 / -10, 10
       let animDeviationCenter = 0.0;
 
       // how much thrusters move opposite of the force effect
       let animDeviationScale = 0.025;
 
-      // 0, 16
-      // let animRadiusCenter = 1.0;
-      // let animRadiusScale = -1.0;
-
-      // this.bone = LerpF(this.boneLerpAmount, this.bone, -animScale + ClampF(amount, -1.0, 1.0) * animScale);
+      // the deviation input takes -4 to 4 (or -10 to 10); the radius input, no longer driven, took 0.0 to 16.0 and defaults to 0.4
       this.animDeviation = LerpF(this.boneLerpAmount, this.animDeviation, animDeviationCenter + amount * animDeviationScale);
-      // this.animDeviation = animDeviationCenter + amount * animDeviationScale;
-      // this.animRadius = animRadiusCenter + amount * animRadiusScale;
-      // AnimationControllerComponent.SetInputFloatToReplicate(this.vehicle, this.deviationName, this.animDeviation);
-      // AnimationControllerComponent.SetInputFloatToReplicate(this.vehicle, this.GetRadiusName(), this.animRadius);
 
       let acc = this.flightComponent.FindComponentByName(n"AnimationController") as AnimationControllerComponent;
       if IsDefined(acc) {
         // between -4.0 & 4.0
         acc.SetInputFloat(this.deviationName, this.animDeviation);
       }
-      // AnimationControllerComponent.SetInputFloat(this.vehicle, this.deviationName, this.animDeviation);
-
-      // between 0.0 & 16.0, default to 0.4
-      // acc.SetInputFloat(this.GetRadiusName(), this.animRadius);
     }
   }
 

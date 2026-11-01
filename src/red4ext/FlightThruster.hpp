@@ -3,7 +3,11 @@
 #include <RED4ext/Common.hpp>
 #include "Engine/RTTIClass.hpp"
 #include "Flight/Component.hpp"
+#include "Flight/Thruster.hpp"
 #include <RED4ext/Scripting/Natives/Generated/ent/MeshComponent.hpp>
+#include <RED4ext/Scripting/Natives/Generated/Vector4.hpp>
+
+#include <array>
 
 struct FlightComponent;
 
@@ -21,6 +25,32 @@ public:
   RED4ext::Handle<RED4ext::ent::MeshComponent> meshComponent;
   RED4ext::WeakHandle<RED4ext::vehicle::BaseObject> vehicle;
   bool attached = true;
+
+  // Called by the script at the end of Start(): resolves the game's natives and the script fields once, fills the
+  // thruster's parameters and finds the animation controller. False (and the script path runs) when anything is
+  // missing or the effects do not fit.
+  bool SetupMotion();
+
+  // IFlightThruster.Update in C++ (Flight::Thruster*), called from the script when FlightComponent.nativeThrusters
+  // is on. False without doing anything when SetupMotion has not succeeded; the script then runs its own path.
+  bool UpdateNative(RED4ext::Vector4 aForce, RED4ext::Vector4 aTorque);
+
+  // JSON of what SetupMotion resolved, for the A/B: {"ready","multiply","findOnEntity","fx","anim"}
+  RED4ext::CString MotionState();
+
+  // not RTTI properties: C++-only members appended to the struct after `attached`. The scripts never see them; the
+  // fields the script declares itself live after sizeof(IFlightThruster)
+  struct FxSlot {
+    Flight::ThrusterFxKind kind = Flight::ThrusterFxKind::Base;
+    RED4ext::WeakHandle<RED4ext::IScriptable> instance;
+  };
+  static constexpr size_t kMaxFx = 4;
+  Flight::ThrusterParams params;
+  std::array<FxSlot, kMaxFx> fxSlots;
+  uint32_t fxCount = 0;
+  RED4ext::WeakHandle<RED4ext::IScriptable> animationController;
+  bool motionReady = false;
+
 private:
   friend Descriptor;
   static void OnRegister(Descriptor *aType) {
@@ -29,7 +59,11 @@ private:
     // aType->flags.isAlwaysTransient = true;
   }
 
-  static void OnDescribe(Descriptor *aType, RED4ext::CRTTISystem *) {}
+  static void OnDescribe(Descriptor *aType, RED4ext::CRTTISystem *) {
+    aType->AddFunction<&IFlightThruster::SetupMotion>("SetupMotion");
+    aType->AddFunction<&IFlightThruster::UpdateNative>("UpdateNative");
+    aType->AddFunction<&IFlightThruster::MotionState>("MotionState");
+  }
 };
 RED4EXT_ASSERT_OFFSET(IFlightThruster, flightComponent, 0x40);
 RED4EXT_ASSERT_OFFSET(IFlightThruster, boneName, 0x50);
