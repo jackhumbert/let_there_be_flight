@@ -11,6 +11,17 @@ public class AutopilotSurge extends IScriptable {
   // leaving the line let go at once): at a sample's edge the limit and the slack flicker it frame
   // to frame
   public let dwell: Float = 0.3;
+  // s the demand the command follows, against audioTime for a deep drop: the raw target saws between
+  // full and about half every 1.5 s at the hold's slack boundary (the car rides above the plan
+  // speed, the hold lets go, the drag pulls it back under), and the follower's bend corrections
+  // wobble it; a level averaged over this sits nearly constant (0.83 to 0.88 against 2.65/s of
+  // ramps over 1.0, in game)
+  public let audioWindow: Float = 3.0;
+  // share of full the demand has to fall below the command before it follows at once, over
+  // `audioTime`: braking for blocked space, a hit, off the line. The boundary cycle's dips reach
+  // 0.45 below full at most, so only braking crosses this
+  public let audioJump: Float = 0.6;
+
   // s the commanded surge and sway are eased over for the engine sound and the thrusters' look (the
   // thrust itself is not): a player's surge does not jump from reverse to full in a frame
   public let audioTime: Float = 0.25;
@@ -55,11 +66,14 @@ public class AutopilotSurge extends IScriptable {
       this.changing = 0.0;
     }
   }
-  // TODO: overfitted to the frame's target, so it ramps up and down as the hold flickers; ease
-  // towards a nearly-constant value instead (hold rate-limited over a longer window)
-  // `current` eased towards `target` over audioTime.
+ 
+  // `current` eased toward `target`: over `audioWindow` (the hold's boundary cycle and the bend
+  // corrections average out, so the engine sound reads a level), except a demand fallen further than
+  // `audioJump` below it follows at once over `audioTime`: braking for blocked space, a hit, off the
+  // line. Rises always follow the window: thrust coming back is not urgent.
   public func Ease(current: Float, target: Float, dt: Float) -> Float {
-    return current + (target - current) * ClampF(dt / MaxF(this.audioTime, 0.001), 0.0, 1.0);
+    let time = target < current - this.audioJump ? this.audioTime : this.audioWindow;
+    return current + (target - current) * ClampF(dt / MaxF(time, 0.001), 0.0, 1.0);
   }
 
   // The thrust in the car's frame with more along the path (`path`, unit, in the car's frame) until
