@@ -1,0 +1,24 @@
+{
+  "_doc": "Hidden colliders blockers.py's preset scan does not find (World Static and the like), listed by hand; blockers.py export adds them to src/navigation/blockers.txt. One entry per actor (preset and bounds: its shapes', which the nav map bake, spans.py bin --removed, leaves out; check no other triangle of that preset in the sector lies inside them), checked first with collision_at.py --case <case> --actors (sector, stored position bits) and the case's rays.",
+  "actors": [
+    {
+      "case": "badlands_long_wall",
+      "sector": "exterior_-2_-4_0_4.streamingsector",
+      "bits": [
+        -261780032,
+        -540217920,
+        8936488
+      ],
+      "preset": "World Static",
+      "bounds": [
+        -2002.83,
+        -4133.6,
+        62.01,
+        -1728.88,
+        -3785.54,
+        108.18
+      ],
+      "what": "node 215 group 0 (nodeData 326) actor 0: a World Static box 429 x 14 x 46 m, z 62 to 108, between the module rows and the yard south of the badlands"
+    }
+  ]
+}

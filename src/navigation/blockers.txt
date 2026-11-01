@@ -557,6 +557,8 @@ A -27013346 -793903360 16181190
 A -24394370 -793860416 16193922
 A -21789106 -793910784 16191038
 A -19203480 -794198784 16212604
+S base\worlds\03_night_city\_compiled\default\exterior_-2_-4_0_4.streamingsector
+A -261780032 -540217920 8936488
 S base\worlds\03_night_city\_compiled\default\exterior_-31_-49_1_0.streamingsector
 A -254418432 -406835840 12381046
 S base\worlds\03_night_city\_compiled\default\exterior_-32_-8_0_0.streamingsector

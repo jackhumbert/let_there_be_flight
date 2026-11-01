@@ -102,6 +102,28 @@ def drop_removed(name, tris, preset_names, preset, removed):
     return tris[~drop], preset[~drop]
 
 
+def hand_removed(path):
+    """Per sector: (preset names, bounds) of the hidden colliders listed by hand
+    (tools/world/hidden_colliders.json), which the plugin moves away like the blockers."""
+    out = collections.defaultdict(list)
+    for a in json.load(open(path))["actors"]:
+        out[a["sector"].replace(".streamingsector", "")].append(({a["preset"], str(fnv1a64(a["preset"]))}, a["bounds"]))
+    return out
+
+
+def drop_hand(name, tris, preset_names, preset, hand):
+    """The triangles minus those of a hand-listed actor: its preset, every vertex inside its
+    shapes' bounds (checked to hold only that actor's triangles when it was listed)."""
+    if name not in hand:
+        return tris, preset
+    drop = np.zeros(len(tris), bool)
+    for names, b in hand[name]:
+        lo, hi = np.array(b[:3]) - 0.1, np.array(b[3:]) + 0.1
+        match = np.array([n in names for n in preset_names])[preset]
+        drop |= match & np.all(tris.min(1) >= lo, 1) & np.all(tris.max(1) <= hi, 1)
+    return tris[~drop], preset[~drop]
+
+
 def cmd_bin(args):
     meta = json.load(open(os.path.join(args.terrain_dir, "meta.json")))
     if meta["cell"] != args.cell:
@@ -145,12 +167,14 @@ def cmd_bin(args):
         if f.endswith(".npz") and not f.endswith(".terrain.npz")
     ) + list(args.extra)
     removed = removed_blockers(args.removed, args.blocker_scan) if args.removed else {}
+    hand = hand_removed(args.hand) if args.removed else {}
     dropped = 0
     for k, f in enumerate(files):
         d = np.load(f)
         names = [str(n) for n in d["preset_names"]]
         keep = np.array([lookup.get(n, {"blocks_vehicles": True})["blocks_vehicles"] for n in names])
         all_tris, all_preset = drop_removed(os.path.basename(f)[:-4], d["tris"], names, d["preset"], removed)
+        all_tris, all_preset = drop_hand(os.path.basename(f)[:-4], all_tris, names, all_preset, hand)
         dropped += len(d["tris"]) - len(all_tris)
         tris = all_tris[keep[all_preset]]
         if not len(tris):
@@ -457,6 +481,8 @@ def main():
     b.add_argument("--presets", required=True)
     b.add_argument("--removed", help="src/navigation/blockers.txt: leave out the blockers the plugin moves away")
     b.add_argument("--blocker-scan", help="blockers.py scan output (with --removed)")
+    b.add_argument("--hand", default=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "world", "hidden_colliders.json"),
+                   help="hidden colliders listed by hand, left out with --removed")
     b.add_argument("--terrain-dir", required=True)
     b.add_argument("-o", "--out", required=True)
     b.add_argument("--cell", type=float, default=2.0)

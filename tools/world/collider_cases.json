@@ -127,6 +127,74 @@
       ],
       "expect": "hit",
       "note": "Offline the first ray enters group 18 at x -3185.7, the second at y -2712.6. If they hit, check in game that nothing is drawn there before treating it as hidden."
+    },
+    {
+      "name": "stadium_supports_north",
+      "box": [
+        -1216.2,
+        -1697.9,
+        96.8,
+        -1126.7,
+        -1618.9,
+        149.3
+      ],
+      "truth": "nothing: open air north of the Pacifica stadium (Jack, 2026-10-31, at -1174.819, -1691.700, 97.078); no node in the sectors round it is placed above z 66 within 80 m (a pivot check: catwalks at z 62 to 66)",
+      "navmap": "blocked (the bake takes colliders.npz)",
+      "cause": "LTBF's own proxy collider (offline, 2026-10-31): no game collision in the box, only colliders.npz triangles from stadium_supports_a_mproxy.mesh (exterior_-3_-5_0_3 nodeData 104, gid 1270655967675935631, audit row 109396). The proxy hides within 207 m (nearAutoHideDistance) and nothing full-detail is placed there, so up close nothing is drawn but the collider stays. The audit kept 94,180 of its 123,422 m2 (z 67 to 162), in blocks round the stadium; this block is 11,600 m2, its neighbours to the west (-1252 to -1204, 6,900 m2) and north-west (-1415 to -1315, 17,500 m2) and the east one (x -1072 to -1007, y -1929 to -1778, 16,400 m2) also stand clear of any game collision.",
+      "rays": [
+        [
+          -1170,
+          -1720,
+          110,
+          -1170,
+          -1600,
+          110
+        ],
+        [
+          -1170,
+          -1720,
+          100,
+          -1170,
+          -1600,
+          100
+        ]
+      ],
+      "expect": "clear",
+      "note": "Was hit (LTBF's collider, its south face at y about -1698) before build --drawn left the stadium supports proxy's undrawn triangles out (2026-10-31); clear since."
+    },
+    {
+      "name": "badlands_long_wall",
+      "box": [
+        -2002.8,
+        -4133.6,
+        62.0,
+        -1728.9,
+        -3785.5,
+        108.2
+      ],
+      "truth": "nothing: open air between the rows of modules to the north-west and the yard to the south-east (Jack, 2026-10-31, at -1914.194, -4002.941, 76.787); the drawn things there have collision only up to z 78",
+      "navmap": "not checked",
+      "cause": "hidden collider (offline, 2026-10-31): exterior_-2_-4_0_4 node 215 group 0 (nodeData 326) actor 0, stored at (-1997.22, -4121.54, 68.18), one World Static convex box 429.3 x 14.1 x 46.2 m, z 62.0 to 108.2, from (-1997, -4129) to (-1735, -3790): a wall about 40 m above the ground. Not a blocker preset, so blockers.py does not list it. The reported point is 4.65 m off its north-west face; the trimesh collision there (exterior_-8_-16_0_2 node 38, exterior_-15_-32_0_1 node 32) is roofs at z 67.6 to 77.9.",
+      "rays": [
+        [
+          -1922.1,
+          -3996.8,
+          85,
+          -1886.5,
+          -4024.3,
+          85
+        ],
+        [
+          -1889.6,
+          -3941.2,
+          100,
+          -1842.1,
+          -3977.9,
+          100
+        ]
+      ],
+      "expect": "clear",
+      "note": "Was hit before: offline the rays enter its north-west face 14.7 and 23.0 m from their start (the first at about -1910.5, -4005.8). Moved away by the plugin since 2026-10-31 (tools/world/hidden_colliders.json), so clear. The box is the wall's bounds, so the offline listing also takes in the real collision of the modules and the yard round it."
     }
   ]
 }

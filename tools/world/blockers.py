@@ -249,7 +249,8 @@ def report(args):
 def export(args):
     """Write the plugin's table (src/red4ext/Navigation/Blockers): per sector, the stored
     positions of the blocker actors to move away. Only actors whose every shape is a blocker or
-    query-only, so real walls in the same group stay; minus the --exclude boxes (map edges)."""
+    query-only, so real walls in the same group stay; minus the --exclude boxes (map edges);
+    plus the hidden colliders listed by hand (--hand, hidden_colliders.json)."""
     boxes = [tuple(float(v) for v in b.split(",")) for b in args.exclude]
     per_sector = collections.defaultdict(list)
     skipped = collections.Counter()
@@ -268,6 +269,9 @@ def export(args):
                     skipped["no position bits (rescan)"] += 1
                 else:
                     per_sector[sector].append(b["bits"])
+    for a in json.load(open(args.hand))["actors"]:
+        if a["bits"] not in per_sector[a["sector"]]:
+            per_sector[a["sector"]].append(a["bits"])
     lines = [
         "# Let There Be Flight: invisible vehicle blockers to move away when their sector loads.",
         "# Written by tools/world/blockers.py export; S = sector path, A = actor position as",
@@ -287,6 +291,8 @@ def main():
     e.add_argument("out")
     e.add_argument("-o", "--output", required=True)
     e.add_argument("--exclude", action="append", default=[], help="x0,y0,x1,y1 box to leave alone (repeatable)")
+    e.add_argument("--hand", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "hidden_colliders.json"),
+                   help="hidden colliders listed by hand, added to the table")
     s = sub.add_parser("scan")
     s.add_argument("--sectors", required=True)
     s.add_argument("-o", "--out", required=True)

@@ -18,6 +18,18 @@ Steps:
            collision that audit counted as covered: a surface under the top real surface of its
            column counts as covered there), their triangles inside each entry's box not within --tol
            of real collision -> forced.npz, for build --force.
+  detail   For the kept placements whose proxy hides up close (nearAutoHideDistance > 0): what
+           the game draws up close round their triangles (--margin), from the exterior sectors
+           whose grid cell meets them: mesh nodes (mesh and transform), instanced groups (world
+           box), proxies that never hide, and entities (listed only) -> detail.json. Not by
+           proxyMeshId: big buildings' full detail is not linked to their proxy's gid.
+  drawn    Export those meshes (as export), place them and mark the kept triangles (uncovered
+           and forced) with nothing drawn within --tol up close: a proxy that hides with no
+           full-detail geometry there leaves a collider in open air (the Pacifica stadium
+           supports, 2026-10-31). An entity's meshes are in its template, so the space within
+           --entity-radius of its pivot counts as drawn, and a proxy with an entity of its
+           mesh's name round it (the ferris wheel) is that entity's stand-in, kept whole. Writes undrawn.npz (masks) and
+           drawn.json (per placement).
   build    Cut the kept triangles (and with --force the forced ones) into --tile m tiles, cook each tile's triangles (PhysX 3.4,
            tools/packaging/physx_cook) relative to the tile centre and write one collider entity per tile
            (.ent WolvenKit JSON, entColliderComponent with one physicsColliderMesh) plus
@@ -27,7 +39,9 @@ Steps:
   python proxy_colliders.py export W\\proxycol --raw <unbundled proxy meshes>
   python proxy_colliders.py audit W\\proxycol --tris <sectors.py output> --city x0,y0,x1,y1
       [--preview W\\proxycol\\audit.png]
-  python proxy_colliders.py build W\\proxycol --entities <out dir> [--tile 128]
+  python proxy_colliders.py detail W\\proxycol --sectors <raw ep1 _compiled\\default>
+  python proxy_colliders.py drawn W\\proxycol --raw <unbundled meshes>
+  python proxy_colliders.py build W\\proxycol --entities <out dir> [--tile 128] [--force] [--drawn]
 """
 
 import argparse
@@ -75,7 +89,7 @@ def _mesh_of(node, inner, d):
         n = inner[i]
     else:
         n = node
-    mesh = n.get("mesh", {}).get("DepotPath", {}).get("$value")
+    mesh = (n.get("mesh") or {}).get("DepotPath", {}).get("$value")
     extra = {k: n[k] for k in ("nearAutoHideDistance", "forcedAutoHideDistance") if k in n}
     return mesh, extra
 
@@ -156,7 +170,11 @@ def cmd_scan(args):
 
 def cmd_export(args):
     rows = json.load(open(os.path.join(args.work, "placements.json")))
-    depots = sorted({r["mesh"] for r in rows})
+    export_meshes(args, sorted({r["mesh"] for r in rows}))
+
+
+def export_meshes(args, depots):
+    """Unbundle the meshes missing from --raw and export each to <work>/glb (glb_path)."""
     raw = args.raw
     missing = [d for d in depots if not os.path.exists(os.path.join(raw, d))]
     if missing:
@@ -476,6 +494,241 @@ def cmd_audit(args):
         preview(tris[m], box, args.preview)
 
 
+# ------------------------------------------------------------------------------- detail, drawn
+
+ENTITY_TYPES = ("worldEntityNode", "worldDeviceNode", "worldDestructibleEntityNode")
+CELL = 16.0  # m, the x y cells detail and drawn look round the kept triangles in
+
+
+def _targets(work):
+    """The placements and, per kept placement (uncovered or forced) whose proxy hides up close,
+    {row: {"uncovered": triangle indices, "forced": ...}}."""
+    rows = json.load(open(os.path.join(work, "placements.json")))
+    out = collections.defaultdict(dict)
+    for k in ("uncovered", "forced"):
+        path = os.path.join(work, k + ".npz")
+        if not os.path.exists(path):
+            continue
+        owner = np.load(path)["owner"]
+        for i in np.unique(owner).tolist():
+            if rows[i].get("nearAutoHideDistance", 0) > 0:
+                out[i][k] = np.nonzero(owner == i)[0]
+    return rows, out
+
+
+def _target_cells(work, targets, margin):
+    """Per target row: the CELL m x y cells its kept triangles reach, grown by margin."""
+    kept = {k: np.load(os.path.join(work, k + ".npz"))["tris"] for k in ("uncovered", "forced")
+            if os.path.exists(os.path.join(work, k + ".npz"))}
+    grow = int(math.ceil(margin / CELL))
+    ring = [(a, b) for a in range(-grow, grow + 1) for b in range(-grow, grow + 1)]
+    cells = {}
+    for i, parts in targets.items():
+        p = sample(np.concatenate([kept[k][s] for k, s in parts.items()]).astype(np.float64), CELL / 2)[0]
+        core = set(map(tuple, np.unique(np.floor(p[:, :2] / CELL).astype(np.int64), axis=0).tolist()))
+        cells[i] = {(x + a, y + b) for x, y in core for a, b in ring}
+    return cells
+
+
+def _cells_of(x0, y0, x1, y1):
+    """The CELL m cells an x y box covers (a box over 32 x 32 cells: its centre's only)."""
+    cx0, cy0, cx1, cy1 = (int(math.floor(v / CELL)) for v in (x0, y0, x1, y1))
+    if (cx1 - cx0 + 1) * (cy1 - cy0 + 1) > 1024:
+        return [(int(math.floor((x0 + x1) / 2 / CELL)), int(math.floor((y0 + y1) / 2 / CELL)))]
+    return [(x, y) for x in range(cx0, cx1 + 1) for y in range(cy0, cy1 + 1)]
+
+
+def detail_json(path, sector, cells):
+    """What the game draws up close in this sector with its pivot (an instanced group: its box)
+    in one of the cells: mesh nodes, instanced groups, proxies that never hide, and the entities
+    (their meshes are in the template, so listed, not placed)."""
+    rc = json.load(open(path, encoding="utf-8"))["Data"]["RootChunk"]
+    nodes = rc["nodes"]
+    out = []
+
+    def inside(x0, y0, x1, y1):
+        return any(c in cells for c in _cells_of(x0, y0, x1, y1))
+
+    for d in rc["nodeData"]["Data"]:
+        node = nodes[int(d["nodeIdx"])]["Data"]
+        t = node["$type"]
+        tr = d["transform"]
+        pos = [tr["position"][c] for c in "XYZ"]
+        if t in ENTITY_TYPES:
+            tpl = (node.get("entityTemplate") or {}).get("DepotPath", {}).get("$value")
+            if tpl and inside(pos[0], pos[1], pos[0], pos[1]):
+                out.append(dict(sector=sector, type=t, entity=tpl, pos=pos))
+            continue
+        if t == "worldTerrainProxyMeshNode" or "Occluder" in t:  # occluders cull, they are never drawn
+            continue
+        buf = node.get("buffer")
+        inner = buf.get("Data", {}).get("InnerNodes") if isinstance(buf, dict) else None
+        mesh, extra = _mesh_of(node, inner, d)
+        if not mesh or not str(mesh).endswith(".mesh"):
+            continue
+        hide = extra.get("nearAutoHideDistance", node.get("nearAutoHideDistance", 0)) or 0
+        if t in PROXY_TYPES and hide > 0:  # hidden up close: not what is seen there
+            continue
+        row = dict(sector=sector, type=t, mesh=mesh, gid=d["proxyMeshId"]["hash"])
+        if t == "worldInstancedMeshNode":  # the instances' transforms are cooked; the group's box is enough
+            b = inner[int(d["instanceIndex"])]["groupWorldBoundingBox"]
+            row["box"] = [b["Min"][c] for c in "XYZ"] + [b["Max"][c] for c in "XYZ"]
+            if not inside(row["box"][0], row["box"][1], row["box"][3], row["box"][4]):
+                continue
+        else:
+            if not inside(pos[0], pos[1], pos[0], pos[1]):
+                continue
+            row.update(pos=pos, quat=[tr["orientation"][c] for c in ("i", "j", "k", "r")],
+                       scale=[d["scale"][c] for c in "XYZ"])
+        out.append(row)
+    return out
+
+
+def detail_batch(wolvenkit, files, cells):
+    tmp = tempfile.mkdtemp(prefix="pd_")
+    try:
+        subprocess.run([wolvenkit, "cr2w", "-s", *files, "-o", tmp, "-v", "Minimal"],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+        out, bad = [], []
+        for f in files:
+            name = os.path.basename(f)
+            try:
+                out += detail_json(os.path.join(tmp, name + ".json"), name[: -len(".streamingsector")], cells)
+            except Exception as err:
+                bad.append((name, repr(err)[:80]))
+        return out, bad
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def cmd_detail(args):
+    _, targets = _targets(args.work)
+    cells = frozenset().union(*_target_cells(args.work, targets, args.margin).values())
+    # the sectors whose grid cell (64 m at level 0, doubling per level) holds one of the cells, or is next to one
+    pat = re.compile(r"^exterior_(-?\d+)_(-?\d+)_-?\d+_(\d+)\.streamingsector$")
+    near, files = {}, []
+    for f in sorted(os.listdir(args.sectors)):
+        m = pat.match(f)
+        if not m:
+            continue
+        x, y, level = int(m[1]), int(m[2]), int(m[3])
+        if level not in near:
+            k = 64.0 * 2 ** level / CELL
+            own = {(int(math.floor(cx / k)), int(math.floor(cy / k))) for cx, cy in cells}
+            near[level] = {(a + dx, b + dy) for a, b in own for dx in (-1, 0, 1) for dy in (-1, 0, 1)}
+        if (x, y) in near[level]:
+            files.append(os.path.join(args.sectors, f))
+    batches = [files[i : i + BATCH] for i in range(0, len(files), BATCH)]
+    print(f"{len(targets)} hiding placements, {len(cells)} cells; {len(files)} sectors in {len(batches)} batches",
+          file=sys.stderr)
+    rows, bad, done = [], [], 0
+    with ProcessPoolExecutor(args.jobs) as pool:
+        futs = [pool.submit(detail_batch, args.wolvenkit, b, cells) for b in batches]
+        for f in as_completed(futs):
+            r, b = f.result()
+            rows += r
+            bad += b
+            done += 1
+            if done % 10 == 0:
+                print(f"{done}/{len(batches)} batches, {len(rows)} nodes", file=sys.stderr)
+    rows.sort(key=lambda r: (r["sector"], r["type"]))
+    json.dump(rows, open(os.path.join(args.work, "detail.json"), "w"))
+    print(f"{len(rows)} nodes drawn up close ({sum('entity' in r for r in rows)} entities, "
+          f"{len({r['mesh'] for r in rows if 'pos' in r and 'mesh' in r})} meshes to place), "
+          f"{len(bad)} sectors failed: {bad[:5]}", file=sys.stderr)
+
+
+def cmd_drawn(args):
+    from scipy import ndimage
+
+    rows, targets = _targets(args.work)
+    cells = _target_cells(args.work, targets, args.margin)
+    detail = json.load(open(os.path.join(args.work, "detail.json")))
+    export_meshes(args, sorted({r["mesh"] for r in detail if "mesh" in r and "pos" in r}))
+    by_cell = collections.defaultdict(list)
+    for j, r in enumerate(detail):
+        b = r.get("box") or [*r["pos"], *r["pos"]]
+        for c in _cells_of(b[0], b[1], b[3], b[4]):
+            by_cell[c].append(j)
+    voxel, reach = args.voxel, max(1, int(math.ceil(args.tol / args.voxel)))
+    kept = {k: np.load(os.path.join(args.work, k + ".npz"))["tris"] for k in ("uncovered", "forced")
+            if os.path.exists(os.path.join(args.work, k + ".npz"))}
+    undrawn = {k: np.zeros(len(t), bool) for k, t in kept.items()}
+    voxels, held, no_glb = {}, 0, 0  # per detail row: the voxels it draws in (a bounded cache)
+
+    def drawn_voxels(j):
+        nonlocal held, no_glb
+        if j not in voxels:
+            r = detail[j]
+            if "box" in r:
+                b = r["box"]
+                axes = [np.arange(b[c], b[c + 3] + voxel, voxel) for c in range(3)]
+                p = np.stack(np.meshgrid(*axes, indexing="ij"), -1).reshape(-1, 3)
+            else:
+                w = _placed(args.work, r)
+                no_glb += w is None
+                p = np.zeros((0, 3)) if w is None else sample(w, voxel * 0.75)[0]
+            if held > 50_000_000:
+                voxels.clear()
+                held = 0
+            voxels[j] = np.unique(np.floor(p / voxel).astype(np.int32), axis=0)
+            held += len(voxels[j])
+        return voxels[j]
+
+    report = []
+    # nearby placements one after another, so the cache serves them
+    for i, parts in sorted(targets.items(), key=lambda t: tuple(np.floor(np.asarray(rows[t[0]]["pos"][:2]) / 512))):
+        tris = np.concatenate([kept[k][s] for k, s in parts.items()]).astype(np.float64)
+        near = sorted({j for c in cells[i] for j in by_cell.get(c, ())})
+        p = tris.reshape(-1, 3)
+        lo = np.floor(p.min(0) / voxel).astype(np.int64) - reach - 1
+        hi = np.floor(p.max(0) / voxel).astype(np.int64) + reach + 1
+        grid = np.zeros(tuple(hi - lo + 1), bool)
+        er = int(math.ceil(args.entity_radius / voxel))
+        ball = np.array([(a, b, c) for a in range(-er, er + 1) for b in range(-er, er + 1) for c in range(-er, er + 1)
+                         if a * a + b * b + c * c <= er * er], np.int64)
+        for j in near:
+            if "entity" in detail[j]:  # its meshes are in the template: the space round its pivot counts
+                v = np.floor(np.asarray(detail[j]["pos"]) / voxel).astype(np.int64) + ball
+            else:
+                v = drawn_voxels(j).astype(np.int64)
+            v = v[np.all((v >= lo) & (v <= hi), axis=1)]
+            grid[tuple((v - lo).T)] = True
+        solid = ndimage.binary_dilation(grid, np.ones((3, 3, 3), bool), iterations=reach)
+        q, which = sample(tris, voxel * 0.75)
+        v = np.clip(np.floor(q / voxel).astype(np.int64) - lo, 0, np.array(grid.shape) - 1)
+        hit = np.zeros(len(tris), bool)
+        hit[which[solid[tuple(v.T)]]] = True
+        # an entity named as the proxy mesh (ferris_wheel.ent, ferris_wheel.mesh) is drawn in its place, all of it
+        stem = os.path.basename(rows[i]["mesh"].replace("\\", "/"))[: -len(".mesh")]
+        stand_in = any(os.path.basename(detail[j]["entity"].replace("\\", "/"))[: -len(".ent")] == stem
+                       for j in near if "entity" in detail[j])
+        if stand_in:
+            hit[:] = True
+        k0 = 0
+        for k, s in parts.items():
+            undrawn[k][s[~hit[k0 : k0 + len(s)]]] = True
+            k0 += len(s)
+        area = tri_area(tris)
+        ents = sorted({os.path.basename(detail[j]["entity"].replace("\\", "/")) for j in near if "entity" in detail[j]})
+        report.append(dict(row=i, kinds=sorted(parts), gid=str(rows[i]["gid"]), mesh=rows[i]["mesh"],
+                           sector=rows[i]["sector"], pos=rows[i]["pos"], hide=rows[i]["nearAutoHideDistance"],
+                           drawn_nodes=sum("entity" not in detail[j] for j in near),
+                           kept_area=round(float(area.sum()), 1), undrawn_area=round(float(area[~hit].sum()), 1),
+                           entities=ents))
+    np.savez(os.path.join(args.work, "undrawn.npz"), **undrawn)
+    report.sort(key=lambda r: -r["undrawn_area"])
+    json.dump(dict(placements=report), open(os.path.join(args.work, "drawn.json"), "w"), indent=1)
+    total = sum(r["kept_area"] for r in report)
+    gone = sum(r["undrawn_area"] for r in report)
+    print(f"{len(report)} hiding placements, {total / 1e6:.3f} km2 kept, {gone / 1e6:.3f} km2 with nothing "
+          f"drawn within {args.tol} m up close; {no_glb} drawn meshes without a glb", file=sys.stderr)
+    for r in report[:30]:
+        print(f"  {r['undrawn_area']:9.0f} of {r['kept_area']:9.0f} m2  hide {r['hide']:6.0f}  "
+              f"{r['drawn_nodes']:6d} drawn  {os.path.basename(r['mesh'].replace(chr(92), '/'))}  "
+              f"{[round(v) for v in r['pos']]}  {len(r['entities'])} entities", file=sys.stderr)
+
+
 # --------------------------------------------------------------------------------------- build
 
 
@@ -545,8 +798,14 @@ def cmd_build(args):
 
     d = np.load(os.path.join(args.work, "uncovered.npz"))
     tris = d["tris"]
+    undrawn = np.load(os.path.join(args.work, "undrawn.npz")) if args.drawn else None
+    if undrawn is not None:
+        tris = tris[~undrawn["uncovered"]]
     if args.force:
-        tris = np.concatenate([tris, np.load(os.path.join(args.work, "forced.npz"))["tris"]])
+        forced = np.load(os.path.join(args.work, "forced.npz"))["tris"]
+        if undrawn is not None and "forced" in undrawn:
+            forced = forced[~undrawn["forced"]]
+        tris = np.concatenate([tris, forced])
     # the same triangles for the nav map bake (spans.py bin --extra)
     np.savez(os.path.join(args.work, "colliders.npz"), tris=tris, preset=np.zeros(len(tris), np.uint16),
              preset_names=np.array(["World Static"]))
@@ -661,9 +920,25 @@ def main():
     p.add_argument("work")
     p.add_argument("--list", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "proxy_collider_force.json"))
     p.add_argument("--tol", type=float, default=4.0, help="a surface within this of real collision is covered (m)")
+    p = sub.add_parser("detail")
+    p.add_argument("work")
+    p.add_argument("--sectors", required=True)
+    p.add_argument("--margin", type=float, default=50.0, help="nodes with their pivot this far round the kept triangles (m)")
+    p.add_argument("--jobs", type=int, default=10)
+    p.add_argument("--wolvenkit", default=DEFAULT_WOLVENKIT)
+    p = sub.add_parser("drawn")
+    p.add_argument("work")
+    p.add_argument("--raw", required=True)
+    p.add_argument("--voxel", type=float, default=2.0)
+    p.add_argument("--tol", type=float, default=4.0, help="a triangle within this of drawn geometry stays (m)")
+    p.add_argument("--margin", type=float, default=50.0, help="as detail")
+    p.add_argument("--entity-radius", type=float, default=15.0, help="an entity counts as drawn this far round its pivot (m)")
+    p.add_argument("--jobs", type=int, default=8)
+    p.add_argument("--wolvenkit", default=DEFAULT_WOLVENKIT)
     p = sub.add_parser("build")
     p.add_argument("work")
     p.add_argument("--force", action="store_true", help="add forced.npz (the force step)")
+    p.add_argument("--drawn", action="store_true", help="leave out the triangles undrawn.npz marks (the drawn step)")
     p.add_argument("--entities", required=True, help="output folder for the .ent.json files")
     p.add_argument("--tiles", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "proxy_collider_tiles.json"))
     p.add_argument("--depot", default=r"user\jackhumbert\entities")
@@ -672,7 +947,7 @@ def main():
     p.add_argument("--node-id", type=int, default=1000000000010000)
     args = ap.parse_args()
     {"scan": cmd_scan, "export": cmd_export, "solid": cmd_solid, "audit": cmd_audit,
-     "force": cmd_force, "build": cmd_build}[args.cmd](args)
+     "force": cmd_force, "detail": cmd_detail, "drawn": cmd_drawn, "build": cmd_build}[args.cmd](args)
 
 
 if __name__ == "__main__":

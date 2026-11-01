@@ -106,7 +106,9 @@ python proxy_colliders.py export P --raw W\proxywork\raw
 python proxy_colliders.py solid P --tris W\sectors --presets W\presets_table.json
 python proxy_colliders.py audit P --terrain W\terrain2 --city=-3000,-3500,1600,3800
 python proxy_colliders.py force P          # tools/world/proxy_collider_force.json: buildings audit missed
-python proxy_colliders.py build P --entities P\ents --force
+python proxy_colliders.py detail P --sectors W\raw\ep1\base\worlds\03_night_city\_compiled\default
+python proxy_colliders.py drawn P --raw W\proxywork\raw   # nothing drawn up close where a proxy hides
+python proxy_colliders.py build P --entities P\ents --force --drawn
 $CLI cr2w -d P\ents\*.ent.json -o ..\..\src\wolvenkit\source\archive\user\jackhumbert\entities   # in batches of ~40
 python pad_sector.py
 python ..\pack_archive.py

@@ -6,14 +6,22 @@ Jack's goal: the city should be flyable as it looks. Two sides to it:
   invisible vehicle blockers in the streaming sectors; the list ships as `src/navigation/blockers.txt`
   and `hidden_nodes.txt`, and the plugin moves them out of the world as sectors load
   (`src/red4ext/Navigation/Blockers.cpp`, the `StreamingSector_OnPostLoad` hook). The bake leaves them
-  out too (`tools/navmap_bake/spans.py`). `tools/world/sector_edits_2.5.json` holds the older
-  invisible wall removals ported to 2.5.
+  out too (`tools/navmap_bake/spans.py`). Hidden colliders with other presets (a World Static wall
+  nothing draws) are listed by hand in `tools/world/hidden_colliders.json`, which the export adds to
+  `blockers.txt` and the bake leaves out by preset and bounds. `tools/world/sector_edits_2.5.json`
+  holds the older invisible wall removals ported to 2.5.
 - Collision is added where the game draws something solid but gives it none: proxy-only geometry
   (for example the raised complex at (-1600, -680), 150 to 350 m up). `tools/world/proxy_colliders.py`
   cuts the proxy meshes not covered by real collision, terrain or a finer proxy into one collider
   entity per 128 m tile (548 tiles), cooked with `tools/packaging/physx_cook`, placed by
   `tools/pads/pad_sector.py` from `tools/world/proxy_collider_tiles.json`. The bake takes the same
   triangles so the Autopilot does not plan through them. Steps: `tools/navmap_bake/README.md`.
+- A proxy is only what the game draws from afar when it hides up close (`nearAutoHideDistance` above
+  0; 208 of the 1,489 placements with colliders). There a collider triangle needs something drawn
+  up close within 4 m (a mesh node, an instanced group, a proxy that never hides, an entity's pivot
+  within 15 m, or an entity of the proxy's name), else it is a hidden collider of our own: the
+  Pacifica stadium supports proxy left 87,000 m2 of solid air round the stadium. `proxy_colliders.py
+  detail` and `drawn` find them and `build --drawn` leaves them out (0.10 of 1.01 km2).
 
 To see what the planner treats as solid along a route: draw it in game
 (`tools/ingame/debug_draw/ltbf_draw.reds`, `fly_route.py --draw --draw-solid` for the map as
