@@ -1,7 +1,10 @@
 #include "FlightStats.hpp"
 
+#include "Utils/Utils.hpp"
+
 #include <RED4ext/CName.hpp>
 #include <RED4ext/RTTISystem.hpp>
+#include <RED4ext/Scripting/Natives/vehiclePhysicsData.hpp>
 
 namespace {
 Flight::Vec3 ToVec(const RED4ext::Vector4 &aV) { return {aV.X, aV.Y, aV.Z}; }
@@ -73,6 +76,88 @@ void FlightStats::SetState(const Flight::StatsState &aState) {
   Set(d_localDirection, aState.d_localDirection);
   Set(d_direction2D, aState.d_direction2D);
   Set(d_localDirection2D, aState.d_localDirection2D);
+}
+
+void FlightStats::UpdateNative(RED4ext::vehicle::BaseObject *aVehicle) {
+  // the natives the script's UpdateDynamic calls, resolved once (GetFunction searches the parent classes)
+  struct Natives {
+    RED4ext::CBaseFunction *orientation = nullptr;
+    RED4ext::CBaseFunction *position = nullptr;
+    RED4ext::CBaseFunction *angularVelocity = nullptr;
+    RED4ext::CBaseFunction *linearVelocity = nullptr;
+    RED4ext::CBaseFunction *calculatePosition = nullptr;
+    RED4ext::CProperty *positionProvider = nullptr;
+  };
+  static const Natives natives = [] {
+    Natives n;
+    auto rtti = RED4ext::CRTTISystem::Get();
+    if (auto cls = rtti->GetClass("vehicleBaseObject")) {
+      n.orientation = cls->GetFunction("GetWorldOrientation");
+      n.position = cls->GetFunction("GetWorldPosition");
+      n.angularVelocity = cls->GetFunction("GetAngularVelocity");
+      n.linearVelocity = cls->GetFunction("GetLinearVelocity");
+    }
+    if (auto cls = rtti->GetClass("IPositionProvider")) {
+      n.calculatePosition = cls->GetFunction("CalculatePosition");
+    }
+    if (auto cls = rtti->GetClass("FlightStats")) {
+      n.positionProvider = cls->GetProperty("ipp");
+    }
+    return n;
+  }();
+
+  // on a failure the previous state stays and the script updates the stats this frame
+  auto fail = [this] { nativeUpdate = false; };
+  if (!natives.orientation || !natives.position || !natives.angularVelocity || !natives.linearVelocity) {
+    LTBF_WARN_ONCE("[FlightStats] a vehicle native for the stats was not found; the script updates the stats");
+    fail();
+    return;
+  }
+
+  Flight::StatsInput in;
+  RED4ext::Quaternion orientation{};
+  RED4ext::Vector3 angularVelocity{};
+  RED4ext::Vector4 velocity{};
+  if (!RED4ext::ExecuteFunction(aVehicle, natives.orientation, &orientation) ||
+      !RED4ext::ExecuteFunction(aVehicle, natives.angularVelocity, &angularVelocity) ||
+      !RED4ext::ExecuteFunction(aVehicle, natives.linearVelocity, &velocity)) {
+    LTBF_WARN_ONCE("[FlightStats] a vehicle native for the stats failed; the script updates the stats");
+    fail();
+    return;
+  }
+  in.orientation = ToQuat(orientation);
+  in.worldAngularVelocity = {angularVelocity.X, angularVelocity.Y, angularVelocity.Z};
+  in.velocity = ToVec(velocity);
+
+  // the position: the script's own provider when it can be called (the centre of mass is already in it), else
+  // the entity's position with the centre of mass applied by the pure code
+  RED4ext::Vector4 position{};
+  bool fromProvider = false;
+  if (natives.calculatePosition && natives.positionProvider) {
+    auto &provider = *natives.positionProvider->GetValuePtr<RED4ext::Handle<RED4ext::IScriptable>>(this);
+    if (provider) {
+      uint64_t result = 0; // CalculatePosition's Bool
+      fromProvider = RED4ext::ExecuteFunction(provider.GetPtr(), natives.calculatePosition, &result, position);
+      if (!fromProvider) {
+        LTBF_WARN_ONCE("[FlightStats] the position provider failed; the script updates the stats");
+        fail();
+        return;
+      }
+    }
+  }
+  if (!fromProvider) {
+    if (!RED4ext::ExecuteFunction(aVehicle, natives.position, &position)) {
+      LTBF_WARN_ONCE("[FlightStats] GetWorldPosition failed; the script updates the stats");
+      fail();
+      return;
+    }
+    in.centerOfMass = {s_centerOfMass.X, s_centerOfMass.Y, s_centerOfMass.Z};
+  }
+  in.origin = ToVec(position);
+
+  auto state = State();
+  Flight::UpdateDynamic(state, in);
+  SetState(state);
 }
 
 FlightStats *FlightStats::Of(RED4ext::IScriptable *aComponent) {

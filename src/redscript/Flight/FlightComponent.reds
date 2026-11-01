@@ -55,6 +55,7 @@ public native class FlightComponent extends GameComponent {
 
   // private let helper: ref<vehicleFlightHelper>;
   private let stats: ref<FlightStats>;
+  public let nativeStats: Bool = false;  // FlightStats' dynamic half in C++ (FlightStats.UpdateNative, before OnUpdate); false: FlightStats.UpdateDynamic's script (docs/design/native-ports.md)
 
   public let m_interaction: ref<InteractionComponent>;
   public let m_healthStatPoolListener: ref<VehicleHealthStatPoolListener>;
@@ -610,6 +611,16 @@ public native class FlightComponent extends GameComponent {
     }
   }
 
+  // Exactly one of the two updates the stats each frame: the plugin's, before OnUpdate, when nativeUpdate was
+  // set last frame, else the script's. The plugin reads nativeUpdate before the next OnUpdate, and a new
+  // FlightStats (Activate) starts false, so its first frame is the script's.
+  private final func UpdateStats() -> Void {
+    if !this.stats.nativeUpdate {
+      this.stats.UpdateDynamic();
+    }
+    this.stats.nativeUpdate = this.nativeStats;
+  }
+
   protected func OnUpdate(timeDelta: Float) -> Void {
     if this.GetVehicle().IsDestroyed() {
       if !this.isDestroyed {
@@ -635,7 +646,7 @@ public native class FlightComponent extends GameComponent {
     }
 
     if timeDelta <= 0.0 {
-      this.stats.UpdateDynamic();
+      this.UpdateStats();
 
       for thruster in this.configuration.thrusters {
         thruster.Update(this.smoothForce, this.smoothTorque);
@@ -703,7 +714,7 @@ public native class FlightComponent extends GameComponent {
       this.sway = 0.0;
     }
 
-    this.stats.UpdateDynamic();
+    this.UpdateStats();
 
     let force = new Vector4(0.0, 0.0, 0.0, 0.0);
     let torque = new Vector4(0.0, 0.0, 0.0, 0.0);

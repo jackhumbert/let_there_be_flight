@@ -1,6 +1,7 @@
 #include "Flight/Component.hpp"
 #include "FlightSystem.hpp"
 #include "Audio/Inputs/Gather.hpp"
+#include "Flight/FlightStats.hpp"
 
 #include <algorithm>
 #include <cstring>
@@ -172,6 +173,15 @@ void FlightComponent::OnUpdate(float deltaTime) {
       helper.Unlock();
     }*/
     vehicle->ForceEnablePhysics();
+    // the stats' dynamic half, when the plugin owns it (FlightComponent.nativeStats); the script
+    // returns before its own update in the photo mode, so this does too
+    if (auto stats = FlightStats::Of(this); stats && stats->nativeUpdate) {
+      bool photoMode = false;
+      Gather::Call("gamePhotoModeSystem", "IsPhotoModeActive", &photoMode);
+      if (!photoMode) {
+        stats->UpdateNative(vehicle);
+      }
+    }
     // StackArgs_t args;
     // float delta = deltaTime;
     // args.emplace_back(CRTTISystem::Get()->GetType("Float"), &delta);

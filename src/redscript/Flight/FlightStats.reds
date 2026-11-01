@@ -37,6 +37,9 @@ public native class FlightStats extends IScriptable {
   public native let d_direction2D: Vector4;
   public native let d_localDirection2D: Vector4;
 
+  // true when the plugin updates the dynamic half before FlightComponent.OnUpdate this frame
+  public native let nativeUpdate: Bool;
+
   private let reset: Bool;
   private let ipp: ref<IPositionProvider>;
   private let iop: ref<IOrientationProvider>;
@@ -106,5 +109,25 @@ public native class FlightStats extends IScriptable {
     this.d_velocity2D = this.d_direction2D * this.d_speed2D;
     this.d_visualPosition = this.d_position;
     this.d_position =  position;
+  }
+
+  // what the script's own position provider gives, to compare with d_position (LtbfBridge.StatsDiff)
+  public func ScriptPosition() -> Vector4 {
+    let p: Vector4;
+    this.ipp.CalculatePosition(p);
+    return p;
+  }
+
+  // The local angular velocity as UpdateDynamic works it out from the vehicle now, without writing a field (the
+  // bridge's StatsDiff compares d_angularVelocity with it). Read with the car parked or hovering still for an
+  // exact comparison: in motion the values differ by up to a frame's motion, because the script values are read
+  // later in the frame. With nativeStats off the d_ fields are the script's from earlier in the frame, so the
+  // difference is near 0, not exactly 0.
+  public func ScriptAngularVelocity() -> Vector4 {
+    return Quaternion.Conjugate(this.vehicle.GetWorldOrientation()) * Vector4.Vector3To4(this.vehicle.GetAngularVelocity());
+  }
+
+  public func ScriptVelocity() -> Vector4 {
+    return this.vehicle.GetLinearVelocity();
   }
 }

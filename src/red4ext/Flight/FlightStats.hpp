@@ -6,6 +6,7 @@
 #include "Flight/Stats.hpp"
 
 #include <RED4ext/Scripting/IScriptable.hpp>
+#include <RED4ext/Scripting/Natives/vehicleBaseObject.hpp>
 #include <RED4ext/Scripting/Natives/Generated/Quaternion.hpp>
 #include <RED4ext/Scripting/Natives/Generated/Vector3.hpp>
 #include <RED4ext/Scripting/Natives/Generated/Vector4.hpp>
@@ -44,6 +45,13 @@ struct FlightStats : RED4ext::IScriptable {
   RED4ext::Vector4 d_localDirection{};
   RED4ext::Vector4 d_direction2D{};
   RED4ext::Vector4 d_localDirection2D{};
+
+  // true when the plugin updates the dynamic half before FlightComponent.OnUpdate this frame (FlightComponent.nativeStats)
+  bool nativeUpdate = false;
+
+  // Flight::UpdateDynamic from the vehicle's state, read through the natives the script's UpdateDynamic calls (the
+  // current pose). If one cannot be called it warns once, leaves the state and clears nativeUpdate.
+  void UpdateNative(RED4ext::vehicle::BaseObject *aVehicle);
 
   // the d_ fields as plain values, and back (a Vector4's W is left as it is)
   Flight::StatsState State() const;
@@ -86,4 +94,5 @@ RTTI_DEFINE_CLASS(FlightStats, {
   RTTI_PROPERTY(d_localDirection);
   RTTI_PROPERTY(d_direction2D);
   RTTI_PROPERTY(d_localDirection2D);
+  RTTI_PROPERTY(nativeUpdate);
 });
