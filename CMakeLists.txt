@@ -244,6 +244,7 @@ add_executable(ltbf_tests
   tests/surge_tests.cpp
   tests/tracker_tests.cpp
   tests/follow_tests.cpp
+  tests/scriptmath_tests.cpp
   tools/navplan/follow.cpp
   src/red4ext/Audio/EngineSynth/Synth.cpp
   src/red4ext/Audio/EngineSynth/Sources.cpp
