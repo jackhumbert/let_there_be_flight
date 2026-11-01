@@ -92,6 +92,19 @@ public class FlightModeDrone extends FlightMode {
   public func GetDescription() -> String = "Drone";
 
   public func Update(timeDelta: Float) -> Void {
+      if this.component.nativeModes {
+        let k = this.Control(timeDelta);
+        k.droneModeLiftFactor = this.droneModeLiftFactor;
+        k.droneModePitchFactor = this.droneModePitchFactor;
+        k.droneModeRollFactor = this.droneModeRollFactor;
+        k.droneModeSurgeFactor = this.droneModeSurgeFactor;
+        k.droneModeYawFactor = this.droneModeYawFactor;
+        k.droneModeSwayFactor = this.droneModeSwayFactor;
+        k.Drone(this.component.stats);
+        this.force = k.force;
+        this.torque = k.torque;
+        return;
+      }
       let velocityDamp: Vector4 = this.component.stats.d_localVelocity * this.component.linearBrake * FlightSettings.GetInstance().brakeFactorLinear * this.component.stats.s_brakingFrictionFactor;   
       // let velocityDamp: Vector4;
       let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetInstance().brakeFactorAngular * this.component.stats.s_brakingFrictionFactor;

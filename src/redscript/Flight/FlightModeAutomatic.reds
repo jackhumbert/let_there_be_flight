@@ -75,6 +75,24 @@ public class FlightModeAutomatic extends FlightModeStandard {
     let lastHovering = this.hovering;
     let normal: Vector4;
     let foundGround = this.component.FindGround(normal);
+    if this.component.nativeModes {
+      let k = this.StandardControl(timeDelta);
+      k.automaticModeAutoBrakingFactor = this.automaticModeAutoBrakingFactor;
+      k.automaticModeYawDirectionality = this.automaticModeYawDirectionality;
+      k.automaticModeLiftFactor = this.automaticModeLiftFactor;
+      k.automaticModeHoverFactor = this.automaticModeHoverFactor;
+      k.foundGround = foundGround;
+      k.distance = this.component.distance;
+      k.normal = normal;
+      k.hoverHeight = this.component.hoverHeight;
+      k.hovering = this.hovering;
+      k.Automatic(this.component.stats, this.component.hoverGroundPID, this.component.pitchPID, this.component.rollPID);
+      this.hovering = k.hovering;
+      this.component.hoverHeight = k.hoverHeight;
+      this.force = k.force;
+      this.torque = k.torque;
+      return;
+    }
     if foundGround {
       this.hovering = ClampF(1.0 - (this.component.distance - FlightSettings.GetFloatN(n"hoverModeMinHoverHeight")) / (FlightSettings.GetFloatN(n"hoverModeMaxHoverHeight") - FlightSettings.GetFloatN(n"hoverModeMinHoverHeight")), 0.0, 1.0);
     } else {

@@ -82,13 +82,48 @@ public abstract class FlightModeStandard extends FlightMode {
     LTBF_UnregisterListener(this);
   }
 
+  // Control plus the Standard params and the values UpdateWithNormalLift and UpdateWithNormalDistance read.
+  protected final func StandardControl(timeDelta: Float) -> ref<FlightModeControl> {
+    let k = this.Control(timeDelta);
+    k.standardModeSurgeFactor = this.standardModeSurgeFactor;
+    k.standardModeYawFactor = this.standardModeYawFactor;
+    k.standardModeSwayFactor = this.standardModeSwayFactor;
+    k.standardModePitchFactor = this.standardModePitchFactor;
+    k.standardModeLiftFactor = this.standardModeLiftFactor;
+    k.standardModeHoverFactor = this.standardModeHoverFactor;
+    k.standardModePitchInputAngle = this.standardModePitchInputAngle;
+    k.standardModeRollFactor = this.standardModeRollFactor;
+    k.standardModeRollInputAngle = this.standardModeRollInputAngle;
+    k.generalRollWithYaw = FlightSettings.GetInstance().generalRollWithYaw;
+    k.pitchWithLift = FlightSettings.GetFloatN(n"pitchWithLift");
+    k.pitchWithSurge = FlightSettings.GetFloatN(n"pitchWithSurge");
+    k.hoverClamp = FlightSettings.GetFloatN(n"hoverClamp");
+    k.hoverModeMinHoverHeight = FlightSettings.GetFloatN(n"hoverModeMinHoverHeight");
+    k.hoverModeMaxHoverHeight = FlightSettings.GetFloatN(n"hoverModeMaxHoverHeight");
+    return k;
+  }
+
   protected func UpdateWithNormalDistance(timeDelta: Float, normal: Vector4, heightDifference: Float) -> Void {
+    if this.component.nativeModes {
+      let k = this.StandardControl(timeDelta);
+      k.StandardDistance(this.component.stats, this.component.hoverGroundPID, this.component.pitchPID, this.component.rollPID, normal, heightDifference);
+      this.force = k.force;
+      this.torque = k.torque;
+      return;
+    }
     let hoverCorrection = this.component.hoverGroundPID.GetCorrectionClamped(heightDifference, timeDelta, FlightSettings.GetFloatN(n"hoverClamp"));// / FlightSettings.GetFloat("hoverClamp");
     let liftForce: Float = hoverCorrection * this.standardModeLiftFactor + (9.81000042) * this.gravityFactor;
     this.UpdateWithNormalLift(timeDelta, normal, liftForce);
   }
 
   protected func UpdateWithNormalLift(timeDelta: Float, normal: Vector4, liftForce: Float) -> Void {
+    if this.component.nativeModes {
+      let k = this.StandardControl(timeDelta);
+      k.StandardLift(this.component.stats, this.component.pitchPID, this.component.rollPID, normal, liftForce);
+      this.force = k.force;
+      this.torque = k.torque;
+      return;
+    }
     let pitchCorrection: Float = 0.0;
     let rollCorrection: Float = 0.0;
 

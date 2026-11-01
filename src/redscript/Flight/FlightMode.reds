@@ -9,6 +9,9 @@ public abstract class FlightMode {
 
   public let gravityFactor: Float;
 
+  // the mode controllers' maths in C++ (FlightComponent.nativeModes), created on first use
+  protected let control: ref<FlightModeControl>;
+
   public let usesRightStickInput: Bool;
   public let collisionPenalty: Float;
 
@@ -36,6 +39,28 @@ public abstract class FlightMode {
   public func GetDescription() -> String;
 
   public func Update(timeDelta: Float) -> Void;
+
+  // The native mode controller with this frame's controls, the brake factors and gravityFactor filled in; the mode adds
+  // its own params and calls the maths.
+  protected final func Control(timeDelta: Float) -> ref<FlightModeControl> {
+    if !IsDefined(this.control) {
+      this.control = new FlightModeControl();
+    }
+    let k = this.control;
+    k.dt = timeDelta;
+    k.surge = this.component.surge;
+    k.lift = this.component.lift;
+    k.sway = this.component.sway;
+    k.yaw = this.component.yaw;
+    k.roll = this.component.roll;
+    k.pitch = this.component.pitch;
+    k.linearBrake = this.component.linearBrake;
+    k.angularBrake = this.component.angularBrake;
+    k.brakeFactorLinear = FlightSettings.GetInstance().brakeFactorLinear;
+    k.brakeFactorAngular = FlightSettings.GetInstance().brakeFactorAngular;
+    k.gravityFactor = this.gravityFactor;
+    return k;
+  }
 
   // Limits one axis of the angular damping torque so it cannot remove more than
   // dampMaxPerFrame of that axis' angular velocity in a single frame.
