@@ -20,7 +20,9 @@
 * move input hints to inputContext classes
 * prevent thrusters from moving during photo mode
 * parachute
-* summon flying vehicle
+* summon flying vehicle: working (the spawn is LTBF's own RequestNewVehicle call at an `IsFree` spot, the
+  Autopilot flies it to the pad and lands; all seven test stages true 2026-11-01, `docs/design/vehicle-summon.md`,
+  `docs/history.md`). Still open: the landed car's enterability, the vanilla-summon negative re-run on a pad-less spot.
 
 -15_-16_0_1 1450 - CriticalCollisionNode_017: Uk12 == 1
 related to safe areas? how are those defined

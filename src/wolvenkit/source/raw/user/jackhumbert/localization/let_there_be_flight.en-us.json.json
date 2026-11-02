@@ -900,6 +900,26 @@
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Pad-Summon",
+              "femaleVariant": "Fly Summoned Vehicles to Pads"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Pad-Summon-Description",
+              "femaleVariant": "On or near a landing pad, a summoned vehicle takes off and flies to the pad with the Autopilot and lands on it, instead of driving up in traffic."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Pad-Summon-Range",
+              "femaleVariant": "Pad Summon Range"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Pad-Summon-Range-Description",
+              "femaleVariant": "How close to a landing pad (beyond its own radius) you have to be for a summon to fly the vehicle there."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "LTBF-Landing-Pad",
               "femaleVariant": "AV Landing Pad"
             },

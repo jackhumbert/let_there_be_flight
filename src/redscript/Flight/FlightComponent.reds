@@ -360,6 +360,18 @@ public native class FlightComponent extends GameComponent {
     return this.modes[this.mode];
   }
 
+  // The Autopilot mode in this component's list (FlightSummonSystem flies a summoned vehicle
+  // without the player), -1 when it is not in the list.
+  public func GetAutopilotModeIndex() -> Int32 {
+    let i = 0;
+    for mode in this.modes {
+      if IsDefined(mode as FlightModeAutopilot) {
+        return i;
+      }
+      i += 1;
+    }
+    return -1;
+  }
   // Skips the Autopilot mode, which is reached through the autodrive hold (FlightController).
   public func GetNextFlightMode(direction: Int32) -> ref<FlightMode> {
     let count = ArraySize(this.modes);

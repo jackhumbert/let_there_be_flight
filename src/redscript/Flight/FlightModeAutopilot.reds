@@ -318,6 +318,13 @@ public class FlightModeAutopilot extends FlightModeStandard {
   public let request: Int32;
   public let destination: Vector4;
   public let hasDestination: Bool;
+  // a summon set this flight's goal directly (FlightSummonSystem, docs/design/vehicle-summon.md):
+  // read first in CurrentDestination, this flight only (the summon clears it when done)
+  public let externalDestination: Vector4;
+  public let hasExternalDestination: Bool;
+  // the landing spot's horizontal offset from a pad's deck centre (the pad summon keeps the
+  // descent clear of V standing on the pad; the summon system keeps it inside radius - 5 m)
+  public let padLandingOffset: Vector4;
   public let holdPosition: Vector4;
   public let lookahead: Vector4;
   public let targetSpeed: Float;
@@ -442,6 +449,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.holdPosition = this.component.stats.d_position;
     this.ClearRoute();
     this.request = 0;
+    this.hasExternalDestination = false;
+    this.padLandingOffset = new Vector4(0.0, 0.0, 0.0, 0.0);
     this.hasDestination = false;
     this.freeRoam = false;
     this.requestJoin = false;
@@ -673,9 +682,12 @@ public class FlightModeAutopilot extends FlightModeStandard {
     if this.landAtDestination {
       this.landingPad = this.FindLandingPad(this.destination);
       if this.landingPad >= 0 {
-        // the pad's deck is checked against the map when the pads are found; the spot is where a
-        // resting car's centre sits, as for a spot found on the map
         let deck = FlightNavMap.GetHelipadPosition(this.landingPad);
+        // the pad's deck is checked against the map when the pads are found; the spot is where a
+        // resting car's centre sits, as for a spot found on the map; a pad summon's offset puts the
+        // spot across the deck from V standing on it (FlightSummonSystem keeps it inside the pad)
+        deck.X += this.padLandingOffset.X;
+        deck.Y += this.padLandingOffset.Y;
         this.landingSpot = new Vector4(deck.X, deck.Y, deck.Z + FlightNavMap.GetCarHalfHeight(), 1.0);
         top = deck.Z + FlightNavMap.GetHelipadClearance(this.landingPad);
         this.landing = true;
@@ -822,6 +834,12 @@ public class FlightModeAutopilot extends FlightModeStandard {
   }
 
   private func CurrentDestination(out target: Vector4) -> Bool {
+    // a pad summon set this flight's goal directly (FlightSummonSystem): it wins over the tracked
+    // pin and FlightNavMap's override for this flight, and is cleared when the summon is done
+    if this.hasExternalDestination {
+      target = this.externalDestination;
+      return true;
+    }
     return FlightModeAutopilot.GetDestination(this.component.GetVehicle().GetGame(), target);
   }
 
@@ -1509,7 +1527,12 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.UpdateRoute(timeDelta);
     this.WatchHits(timeDelta, p, v);
 
-    if this.PlayerInput() {
+    // an unmounted flight reads the game's drive-sim inputs as if a driver were pressing them
+    // (the component's pump), so the takeover's drive is "player input" for as long as it is
+    // alive - and it never stops by itself: the summon's own flight must not hold altitude on
+    // it or the follow/descent never runs (the freeze at remaining 145, the climb and the
+    // orbit of the 2026-11-01 runs)
+    if this.PlayerInput() && !this.hasExternalDestination {
       this.overrideTimer = this.overrideHold;
     }
     if this.overrideTimer > 0.0 {

@@ -8,6 +8,7 @@
   - `vehicle-limits.md`: the car's limits (VehicleSpec) and who reads them.
   - `navmap.md`: the baked nav map, how it is made and shipped.
   - `city-collision.md`: hidden colliders removed, proxy colliders added.
+  - `vehicle-summon.md`: the pad summon (a summoned vehicle flies the Autopilot to the pad).
   - `landing-pads.md`: pads, pins, supplies, real decks for visual-only pads.
   - `physx-flight.md`: the experimental PhysX-owned flight physics.
   - `acoustics.md`: echoes and reverb from the nav map (offline prototype).
