@@ -76,7 +76,7 @@ public class FlightSummonSystem extends ScriptableSystem {
   public let stallProgress: Float = 5.0;      // m closer that counts as progress
   public let arrivedLevel: Float = 6.0;       // m of height between V and an arrived car: another level (case 4)
   public let arrivedFar: Float = 80.0;        // m (2D) from V an arrived car is too far (vanilla stops 40 m off on a street)
-  public let groundKeepClear: Float = 5.0;    // m (2D) a car landing next to V keeps from V
+  public let groundKeepClear: Float = 4.0;    // m (2D) from V a landing car's centre stays (a car is 2.5 m half-long)
 
   // the flight this system owns (empty between summons); public for tests (ltbf_bridge.reds)
   public let summoning: Bool;
@@ -551,7 +551,7 @@ public class FlightSummonSystem extends ScriptableSystem {
     if Equals(mode.status, "arrived") {
       // the descent was held up over the pad (something solid the map lacks): leave it hovering
       // rather than dropping it, the summon is failed as far as vanilla is concerned
-      this.ReleaseAirborne(mode, "the vehicle would not land on the pad");
+      this.ReleaseAirborne(mode, "the vehicle would not land at " + this.Where());
       return;
     }
     if this.planningTimer > this.planningTime {
@@ -649,6 +649,22 @@ public class FlightSummonSystem extends ScriptableSystem {
       this.Reset();
       return;
     }
+    // next to V, there has to be room to land (with no spot the Autopilot would fly to V's own point
+    // and hover there): checked before the car leaves the ground
+    let ground = this.target;
+    if this.pad < 0 && !this.GroundSpot(mode, ground) {
+      if NotEquals(this.reason, "no spawn") {
+        // vanilla's car: better where vanilla left it than in the air
+        FlightLog.Info("[Summon] no room to land next to V: vanilla's car left where it is");
+        this.Reset();
+        return;
+      }
+      // our spawn, in the air out from V, with nowhere to put it: rare (no free column on any floor
+      // under V); flight off drops it from the spawn height
+      FlightLog.Warn("[Summon] no room to land on any floor under V: the spawned car is left as it is");
+      this.Reset();
+      return;
+    }
     vehicle.ForceEnablePhysics();
     vehicle.EndActions();
     component.Activate(true);
@@ -660,9 +676,9 @@ public class FlightSummonSystem extends ScriptableSystem {
       mode.externalDestination = FlightNavMap.GetHelipadPosition(this.pad);
       mode.padLandingOffset = this.LandingOffset(this.pad);
     } else {
-      // on the ground next to V: the mode's own landing spot search around where V stood (a metre
-      // up: V's feet are under the bake's floor, which is where a resting car's centre sits), off V
-      mode.externalDestination = this.target + new Vector4(0.0, 0.0, 1.0, 0.0);
+      // on the ground next to V: the mode's own landing spot search around the level GroundSpot
+      // found room on (V's, else one under V for a car of our own spawn), off V
+      mode.externalDestination = ground;
       mode.landingKeepClear = this.target;
       mode.landingKeepClearRadius = this.groundKeepClear;
     }
@@ -675,6 +691,35 @@ public class FlightSummonSystem extends ScriptableSystem {
     this.flightTimer = 0.0;
     this.planningTimer = 0.0;
     FlightLog.Info("[Summon] flight engaged on the summoned vehicle, autopilot flying to " + this.Where() + " (" + this.reason + ")");
+  }
+
+  // Where a car without a pad lands: the mode's landing spot search a metre over where V stood (V's
+  // feet are under the bake's floor, which is where a resting car's centre sits), kept groundKeepClear
+  // off V. With no room on V's level, a car of this system's own spawn (case 1: no other car exists)
+  // tries each floor under V, nearest first: the street below beats no car. `at` comes back as the
+  // destination to fly to.
+  private func GroundSpot(mode: ref<FlightModeAutopilot>, out at: Vector4) -> Bool {
+    let spot: Vector4;
+    let v = this.target;
+    at = v + new Vector4(0.0, 0.0, 1.0, 0.0);
+    if mode.FindGroundSpot(at, v, this.groundKeepClear, spot) {
+      return true;
+    }
+    if NotEquals(this.reason, "no spawn") {
+      return false;
+    }
+    let floors = FlightNavMap.GetGaps(v);
+    let i = ArraySize(floors) - 1;
+    while i >= 0 {
+      let below = new Vector4(v.X, v.Y, floors[i].X + 1.0, 1.0);
+      if floors[i].X < v.Z - 3.0 && mode.FindGroundSpot(below, v, this.groundKeepClear, spot) {
+        FlightLog.Info("[Summon] no room to land on V's level: landing " + FloatToStringPrec(v.Z - floors[i].X, 0) + " m below V");
+        at = below;
+        return true;
+      }
+      i -= 1;
+    }
+    return false;
   }
 
   // The landing spot's offset from the deck centre: across the deck from V, at least 4 m from V's

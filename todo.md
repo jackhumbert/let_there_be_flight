@@ -23,7 +23,7 @@
 * summon flying vehicle: working (the spawn is LTBF's own RequestNewVehicle call at an `IsFree` spot, the
   Autopilot flies it to the pad and lands; all seven test stages true 2026-11-01, `docs/design/vehicle-summon.md`,
   `docs/history.md`). Still open: the landed car's enterability. The fallback (a summon that cannot drive to V
-  flies, section 6 of the design doc) works; case 4 still wants a roof the garage spawns below.
+  flies, section 6 of the design doc) works; cases 1 and 4 seen natively, 2 and 3 only forced.
 
 -15_-16_0_1 1450 - CriticalCollisionNode_017: Uk12 == 1
 related to safe areas? how are those defined

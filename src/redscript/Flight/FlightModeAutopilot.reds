@@ -519,6 +519,20 @@ public class FlightModeAutopilot extends FlightModeStandard {
       || this.FindLandingSpotWithRoom(target, 6.0, spot, top);
   }
 
+  // FindLandingSpot with a keep-clear point, for a caller deciding before the flight whether there
+  // is room to land at all (FlightSummonSystem: next to V). The mode's own keep-clear is left as it was.
+  public func FindGroundSpot(target: Vector4, keepClear: Vector4, keepRadius: Float, out spot: Vector4) -> Bool {
+    let savedPoint = this.landingKeepClear;
+    let savedRadius = this.landingKeepClearRadius;
+    this.landingKeepClear = keepClear;
+    this.landingKeepClearRadius = keepRadius;
+    let top: Float;
+    let found = this.FindLandingSpot(target, spot, top);
+    this.landingKeepClear = savedPoint;
+    this.landingKeepClearRadius = savedRadius;
+    return found;
+  }
+
   private func FindLandingSpotWithRoom(target: Vector4, room: Float, out spot: Vector4, out top: Float) -> Bool {
     let gap: Vector2;
     if !FlightModeAutopilot.GapAt(target, gap) || target.Z - gap.X > 4.0 {
