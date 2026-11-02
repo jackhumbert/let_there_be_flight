@@ -325,6 +325,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // the landing spot's horizontal offset from a pad's deck centre (the pad summon keeps the
   // descent clear of V standing on the pad; the summon system keeps it inside radius - 5 m)
   public let padLandingOffset: Vector4;
+  // a landing spot found on the map stays this far (m, 2D) from landingKeepClear: a summon that
+  // lands next to V on the ground (FlightSummonSystem) keeps the car off V; 0 = no such point
+  public let landingKeepClear: Vector4;
+  public let landingKeepClearRadius: Float;
   public let holdPosition: Vector4;
   public let lookahead: Vector4;
   public let targetSpeed: Float;
@@ -451,6 +455,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.request = 0;
     this.hasExternalDestination = false;
     this.padLandingOffset = new Vector4(0.0, 0.0, 0.0, 0.0);
+    this.landingKeepClearRadius = 0.0;
     this.hasDestination = false;
     this.freeRoam = false;
     this.requestJoin = false;
@@ -531,7 +536,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
         let g: Vector2;
         if FlightModeAutopilot.GapAt(c, g) && AbsF(g.X - level) < 3.0 && g.Y - g.X > room && this.IsFlat(c, g.X)
           && this.ShaftClear(c, g.X, room) && !this.SpotTaken(new Vector4(c.X, c.Y, g.X, 1.0))
-          && this.SpotSupported(new Vector4(c.X, c.Y, g.X, 1.0)) {
+          && this.SpotSupported(new Vector4(c.X, c.Y, g.X, 1.0))
+          && (this.landingKeepClearRadius <= 0.0 || Vector4.Distance2D(c, this.landingKeepClear) >= this.landingKeepClearRadius) {
           let d = Vector4.DistanceSquared2D(c, target);
           if d < best {
             best = d;

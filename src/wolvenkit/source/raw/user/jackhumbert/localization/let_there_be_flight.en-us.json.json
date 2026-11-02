@@ -920,6 +920,16 @@
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Summon-Fallback",
+              "femaleVariant": "Fly Summons That Cannot Drive"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Summon-Fallback-Description",
+              "femaleVariant": "When a summoned vehicle cannot be driven to you (on a roof, off the roads, stuck on the way, or left on another level), it flies the rest of the way and lands next to you."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "LTBF-Landing-Pad",
               "femaleVariant": "AV Landing Pad"
             },

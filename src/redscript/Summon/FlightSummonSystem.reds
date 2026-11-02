@@ -1,8 +1,8 @@
 // Pad summon (docs/design/vehicle-summon.md): with V on or near a landing pad, a summoned
 // vehicle takes off and flies to the pad with the Autopilot, and lands on it, instead of
-// vanilla's road summon. Away from pads, with the setting off, or for a vehicle whose record
-// this system does not know, vanilla's own summon runs untouched (it refuses at a pad without
-// a summon spot - a false return, no car, no crash).
+// vanilla's road summon. Away from pads vanilla's own summon runs, and the fallback below only
+// steps in when it cannot bring the car to V (it refuses at a pad without a summon spot - no
+// car, no crash).
 //
 // Why the spawn is ours (docs, section 4): the vanilla summon's spawn-point search is tied to
 // road-side summon spots, so at a pad it refuses; the record-path summon native crashes the
@@ -21,6 +21,15 @@
 // engages the Autopilot on it with the pad as this flight's destination, watches the flight and
 // lands it; the completion closes vanilla's state (Arrived, the SummonFinishedEvent to the
 // vehicle's component for its arrival effects) when the game has not already.
+//
+// The fallback (docs/design/vehicle-summon.md section 6): anywhere else, vanilla's summon runs and
+// the tick watches it. When it cannot bring the car to V, the car flies the rest of the way and
+// lands next to V on the ground (the Autopilot's own landing spot search, kept clear of V):
+//   1. no car at all: the summon was pressed (not on cooldown) and nothing came of it - the
+//      garage found no place to spawn it (a high roof); spawned here as at a pad, out from V
+//   2. PathfindingFailed: the garage spawned the car but found no traffic lane to drive it on
+//   3. EnRoute, but the car has not got closer to V for stallTime
+//   4. Arrived, but far from V: the drive's target is the road nearest V, a level below V on a roof
 
 public class FlightSummonTickCallback extends DelayCallback {
   public let system: wref<FlightSummonSystem>;
@@ -48,6 +57,12 @@ public class FlightSummonSystem extends ScriptableSystem {
   @runtimeProperty("ModSettings.max", "200.0")
   public let padSummonRange: Float = 60.0;    // m beyond a pad's radius V counts as near it
 
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Landing-Pads")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Summon-Fallback")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Summon-Fallback-Description")
+  public let summonFallbackEnabled: Bool = true;
+
   // tuning, not in Mod Settings
   public let tickInterval: Float = 2.0;       // s between ticks (paused with the game)
   public let spawnWaitTicks: Int32 = 5;       // ticks (10 s) to look for the spawned vehicle
@@ -56,11 +71,19 @@ public class FlightSummonSystem extends ScriptableSystem {
   public let planningTime: Float = 30.0;      // s of the autopilot without a route before giving up
   public let flightTime: Float = 180.0;       // s of the whole summon flight at most
   public let deckMaxDrop: Float = 15.0;       // m of deck height difference for V counting as near
+  public let noSpawnTime: Float = 4.0;        // s after a summon press with nothing from the garage (case 1)
+  public let stallTime: Float = 12.0;         // s EnRoute without getting closer to V (case 3)
+  public let stallProgress: Float = 5.0;      // m closer that counts as progress
+  public let arrivedLevel: Float = 6.0;       // m of height between V and an arrived car: another level (case 4)
+  public let arrivedFar: Float = 80.0;        // m (2D) from V an arrived car is too far (vanilla stops 40 m off on a street)
+  public let groundKeepClear: Float = 5.0;    // m (2D) a car landing next to V keeps from V
 
   // the flight this system owns (empty between summons); public for tests (ltbf_bridge.reds)
   public let summoning: Bool;
   public let engaged: Bool;
   public let pad: Int32;                      // the pad being flown to, -1 when none
+  public let target: Vector4;                 // with no pad: where V stood, the car lands next to it
+  public let reason: String;                  // why this summon flies: "pad" or the fallback's case
   public let vehicle: wref<VehicleObject>;
   private let ticking: Bool;
   private let vehicleID: EntityID;
@@ -71,6 +94,17 @@ public class FlightSummonSystem extends ScriptableSystem {
   private let tries: Int32;
   private let flightTimer: Float;
   private let planningTimer: Float;
+  // the vanilla summon being watched (the fallback)
+  private let pressPending: Bool;             // a summon press whose outcome is not known yet
+  private let pressAge: Float;
+  private let pressRecord: TweakDBID;
+  private let pressState: Int32;
+  private let pressID: EntityID;
+  private let pressPos: Vector4;
+  private let watchID: EntityID;              // the car seen with this summon, none between summons
+  private let watchBest: Float;               // its closest yet to V, m
+  private let watchStall: Float;              // s since it last got stallProgress closer
+  private let lastState: Int32;
 
   public static func GetInstance(game: GameInstance) -> ref<FlightSummonSystem> {
     return GameInstance.GetScriptableSystemsContainer(game).Get(n"FlightSummonSystem") as FlightSummonSystem;
@@ -127,7 +161,7 @@ public class FlightSummonSystem extends ScriptableSystem {
     bb.SetUint(this.SummonData().SummonState, Cast<Uint32>(EnumInt<vehicleSummonState>(state)), true);
   }
 
-  private func SummonedID() -> EntityID {
+  public func SummonedID() -> EntityID {
     let bb = this.SummonBB();
     if !IsDefined(bb) {
       let none: EntityID;
@@ -204,7 +238,9 @@ public class FlightSummonSystem extends ScriptableSystem {
     // hand the record over (the wheel wrap this.PickedRecord(), the bridge the resolved one).
     let spot: Vector4;
     let yaw: Float;
-    if !this.PickSpawnSpot(pad, player.GetWorldPosition(), spot, yaw) {
+    let padYaw = Deg2Rad(FlightNavMap.GetHelipadYaw(pad));
+    let padSide = new Vector4(-SinF(padYaw), CosF(padYaw), 0.0, 0.0);
+    if !this.PickSpawnSpot(FlightNavMap.GetHelipadPosition(pad), padSide, player.GetWorldPosition(), spot, yaw) {
       FlightLog.Warn("[Summon] no free air to spawn the vehicle in around pad " + FlightNavMap.GetHelipadId(pad)
         + ": leaving the summon to vanilla");
       return false;
@@ -220,11 +256,14 @@ public class FlightSummonSystem extends ScriptableSystem {
     // the spawned vehicle's EntityID is not returned by the spawn; the system's tick finds it
     // (the machine's blackboard id, else the record's vehicle nearest the spot)
     this.pad = pad;
+    this.reason = "pad";
     this.awaitingSpawnTicks = 0;
     this.pendingTicks = 0;
     this.tries = 0;
     this.flightTimer = 0.0;
     this.planningTimer = 0.0;
+    this.pressPending = false;
+    this.ClearWatch();
     FlightLog.Info("[Summon] spawn at " + FloatToStringPrec(spot.X, 1) + ", " + FloatToStringPrec(spot.Y, 1) + ", "
       + FloatToStringPrec(spot.Z, 1) + " yaw " + FloatToStringPrec(yaw, 0) + ": the Autopilot flies it to pad "
       + FlightNavMap.GetHelipadId(pad));
@@ -239,27 +278,195 @@ public class FlightSummonSystem extends ScriptableSystem {
     }
     if this.summoning {
       this.TickSummon();
-    } else if this.IsState(this.State(), vehicleSummonState.EnRoute) {
-      // a summon this system did not start (a quest's, another mod's): the same engagement if the
-      // pad gate passes
-      this.OnForeignCandidate();
+    } else if this.IsState(this.State(), vehicleSummonState.EnRoute) && this.OnForeignCandidate() {
+      // a summon this system did not start (vanilla's, a quest's), EnRoute near a pad: flown there
+    } else {
+      this.TickWatch();
     }
+    this.lastState = this.State();
     this.Schedule();
+  }
+
+  // --- the fallback: watching vanilla's summon ------------------------------------------------------
+
+  // The summon wraps, after vanilla's own call: what the summon looked like before it, so the tick
+  // can tell whether the garage did anything (case 1). Only for a press vanilla acted on (not on
+  // cooldown: the wraps make vanilla's own check).
+  public func NoteSummonPressed(record: TweakDBID, state: Int32, id: EntityID) -> Void {
+    if !this.summonFallbackEnabled || this.summoning {
+      return;
+    }
+    this.pressPending = true;
+    this.pressAge = 0.0;
+    this.pressRecord = record;
+    this.pressState = state;
+    this.pressID = id;
+    let car = GameInstance.FindEntityByID(this.GetGameInstance(), id) as VehicleObject;
+    this.pressPos = IsDefined(car) ? car.GetWorldPosition() : new Vector4(0.0, 0.0, 0.0, 0.0);
+  }
+
+  // The summon blackboard and the summoned car against V, every tick between flights.
+  private func TickWatch() -> Void {
+    if !this.summonFallbackEnabled || !FlightNavMap.IsLoaded() {
+      this.pressPending = false;
+      return;
+    }
+    let game = this.GetGameInstance();
+    let player = GetPlayer(game);
+    if !IsDefined(player) {
+      return;
+    }
+    let state = this.State();
+    let id = this.SummonedID();
+    let car = GameInstance.FindEntityByID(game, id) as VehicleObject;
+    let v = player.GetWorldPosition();
+    // a re-summon of a car already out moves it without a new state: its place is checked once
+    let placed = false;
+
+    if this.pressPending {
+      this.pressAge += this.tickInterval;
+      let moved = IsDefined(car) && Vector4.Distance(car.GetWorldPosition(), this.pressPos) > 5.0;
+      if state != this.pressState || NotEquals(id, this.pressID) || moved {
+        // the garage answered: a new car, a new state, or the same car put somewhere else
+        this.pressPending = false;
+        placed = moved && state == this.pressState;
+      } else if this.pressAge >= this.noSpawnTime {
+        // case 1: nothing at all
+        this.pressPending = false;
+        let none: TweakDBID;
+        if this.NearPad(v) < 0 && NotEquals(this.pressRecord, none) {
+          FlightLog.Info("[Summon] nothing from the garage " + FloatToStringPrec(this.pressAge, 0) + " s after the summon: flying the car in");
+          this.FlySummonToGround(game, this.pressRecord, "no spawn");
+        }
+        return;
+      }
+    }
+
+    if !IsDefined(car) || !this.IsFlyableVehicle(car) {
+      this.ClearWatch();
+      return;
+    }
+    if this.IsState(state, vehicleSummonState.EnRoute) {
+      // case 3: on the way, but not getting closer
+      let separation = Vector4.Distance(car.GetWorldPosition(), v);
+      if NotEquals(id, this.watchID) {
+        this.watchID = id;
+        this.watchBest = separation;
+        this.watchStall = 0.0;
+      } else if separation < this.watchBest - this.stallProgress {
+        this.watchBest = separation;
+        this.watchStall = 0.0;
+      } else {
+        this.watchStall += this.tickInterval;
+        if this.watchStall >= this.stallTime && !this.CloseEnough(car, v) {
+          this.TakeOver(car, "stalled " + FloatToStringPrec(separation, 0) + " m from V for "
+            + FloatToStringPrec(this.watchStall, 0) + " s");
+        }
+      }
+      return;
+    }
+    // the ends only as they happen: a PathfindingFailed or Arrived left from an earlier summon is not
+    // this one's
+    let changed = state != this.lastState;
+    if changed && this.IsState(state, vehicleSummonState.PathfindingFailed) {
+      // case 2
+      this.TakeOver(car, "no path for the drive");
+    } else if (changed || placed) && this.IsState(state, vehicleSummonState.Arrived) && !this.CloseEnough(car, v) {
+      // case 4
+      let p = car.GetWorldPosition();
+      this.TakeOver(car, "arrived " + FloatToStringPrec(Vector4.Distance2D(p, v), 0) + " m away, "
+        + FloatToStringPrec(p.Z - v.Z, 1) + " m of height");
+    }
+    this.ClearWatch();
+  }
+
+  // where vanilla would have left it anyway: on V's level, no further off than its own street
+  // summons stop
+  private func CloseEnough(car: ref<VehicleObject>, v: Vector4) -> Bool {
+    let p = car.GetWorldPosition();
+    return AbsF(p.Z - v.Z) < this.arrivedLevel && Vector4.Distance2D(p, v) < this.arrivedFar;
+  }
+
+  private func ClearWatch() -> Void {
+    let none: EntityID;
+    this.watchID = none;
+    this.watchBest = 0.0;
+    this.watchStall = 0.0;
+  }
+
+  // A vanilla summon's car taken over: flown to the pad V is near, else landed next to V.
+  private func TakeOver(car: ref<VehicleObject>, why: String) -> Void {
+    let v = GetPlayer(this.GetGameInstance()).GetWorldPosition();
+    this.summoning = true;
+    this.engaged = false;
+    this.vehicle = car;
+    this.vehicleID = car.GetEntityID();
+    let none: TweakDBID;
+    this.recordID = none;
+    this.pad = this.NearPad(v);
+    this.target = v;
+    this.padSpot = this.pad >= 0 ? FlightNavMap.GetHelipadPosition(this.pad) : v;
+    this.reason = why;
+    this.awaitingSpawnTicks = 0;
+    this.pendingTicks = 0;
+    this.tries = 0;
+    this.flightTimer = 0.0;
+    this.planningTimer = 0.0;
+    this.pressPending = false;
+    this.ClearWatch();
+    FlightLog.Info("[Summon] vanilla's summon " + why + ": flying it to " + this.Where());
+  }
+
+  // Case 1: the record spawned out from V as at a pad (no pad here), and landed next to V.
+  public func FlySummonToGround(game: GameInstance, aRecord: TweakDBID, why: String) -> Bool {
+    let player = GetPlayer(game);
+    if !IsDefined(player) {
+      return false;
+    }
+    let v = player.GetWorldPosition();
+    let spot: Vector4;
+    let yaw: Float;
+    if !this.PickSpawnSpot(v, player.GetWorldForward(), v, spot, yaw) {
+      FlightLog.Warn("[Summon] no free air to spawn the vehicle in around V");
+      return false;
+    }
+    if !FlightCarSummon.SpawnVehicleAt(aRecord, spot.X, spot.Y, spot.Z, yaw) {
+      FlightLog.Warn("[Summon] the spawn request was refused");
+      return false;
+    }
+    this.summoning = true;
+    this.engaged = false;
+    this.padSpot = spot;
+    this.vehicle = null;
+    this.recordID = aRecord;
+    this.pad = -1;
+    this.target = v;
+    this.reason = why;
+    this.awaitingSpawnTicks = 0;
+    this.pendingTicks = 0;
+    this.tries = 0;
+    this.flightTimer = 0.0;
+    this.planningTimer = 0.0;
+    this.pressPending = false;
+    this.ClearWatch();
+    FlightLog.Info("[Summon] spawn at " + FloatToStringPrec(spot.X, 1) + ", " + FloatToStringPrec(spot.Y, 1) + ", "
+      + FloatToStringPrec(spot.Z, 1) + " yaw " + FloatToStringPrec(yaw, 0) + ": the Autopilot flies it to V (" + why + ")");
+    return true;
   }
 
   // A vanilla summon this system did not spawn went EnRoute near a pad (the machine's own
   // confirmation): take it over, one tick later as for the spawn flow.
-  private func OnForeignCandidate() -> Void {
+  private func OnForeignCandidate() -> Bool {
     if !this.padSummonEnabled || !FlightNavMap.IsLoaded() {
-      return;
+      return false;
     }
     let player = GetPlayer(this.GetGameInstance());
     if !IsDefined(player) {
-      return;
+      return false;
     }
     let pad = this.NearPad(player.GetWorldPosition());
     if pad < 0 {
-      return;
+      return false;
     }
     this.summoning = true;
     this.engaged = false;
@@ -273,8 +480,12 @@ public class FlightSummonSystem extends ScriptableSystem {
     this.tries = 0;
     this.flightTimer = 0.0;
     this.planningTimer = 0.0;
+    this.reason = "pad";
+    this.pressPending = false;
+    this.ClearWatch();
     FlightLog.Info("[Summon] foreign summon EnRoute near a landing pad (pad " + FlightNavMap.GetHelipadId(pad)
       + "): taking it over");
+    return true;
   }
 
   private func TickSummon() -> Void {
@@ -445,8 +656,16 @@ public class FlightSummonSystem extends ScriptableSystem {
     // standing on it (the mode's ChooseRouteGoal applies the offset). Set after Activate: the
     // mode's Activate clears these fields, and its first Update (next frame) is when they are
     // first read.
-    mode.externalDestination = FlightNavMap.GetHelipadPosition(this.pad);
-    mode.padLandingOffset = this.LandingOffset(this.pad);
+    if this.pad >= 0 {
+      mode.externalDestination = FlightNavMap.GetHelipadPosition(this.pad);
+      mode.padLandingOffset = this.LandingOffset(this.pad);
+    } else {
+      // on the ground next to V: the mode's own landing spot search around where V stood (a metre
+      // up: V's feet are under the bake's floor, which is where a resting car's centre sits), off V
+      mode.externalDestination = this.target + new Vector4(0.0, 0.0, 1.0, 0.0);
+      mode.landingKeepClear = this.target;
+      mode.landingKeepClearRadius = this.groundKeepClear;
+    }
     mode.hasExternalDestination = true;
     // the activate-time free-roam decision pre-dates these fields; free roam would fly the car
     // out to its own legs and never look at the destination again (the 2026-11-01 run's 1631 m
@@ -455,7 +674,7 @@ public class FlightSummonSystem extends ScriptableSystem {
     this.engaged = true;
     this.flightTimer = 0.0;
     this.planningTimer = 0.0;
-    FlightLog.Info("[Summon] flight engaged on the summoned vehicle, autopilot flying to pad " + FlightNavMap.GetHelipadId(this.pad));
+    FlightLog.Info("[Summon] flight engaged on the summoned vehicle, autopilot flying to " + this.Where() + " (" + this.reason + ")");
   }
 
   // The landing spot's offset from the deck centre: across the deck from V, at least 4 m from V's
@@ -485,17 +704,14 @@ public class FlightSummonSystem extends ScriptableSystem {
     return dir * distance;
   }
 
-  // Where the vehicle appears: spawnDistance out from the pad at spawnHeight over its deck,
-  // facing it, in a column the nav map holds free. The direction is away from V and from V's own
-  // facing (the vehicle flies in from ahead), widened when a direction is inside something the
-  // map does not know.
-  private func PickSpawnSpot(pad: Int32, playerPos: Vector4, out spot: Vector4, out yaw: Float) -> Bool {
-    let deck = FlightNavMap.GetHelipadPosition(pad);
+  // Where the vehicle appears: spawnDistance out from `deck` (a pad's, or where V stands) at
+  // spawnHeight over it, facing it, in a column the nav map holds free. The direction is away from
+  // V across the pad, or `side` when V is at the centre (the pad's own side, V's facing), widened
+  // when a direction is inside something the map does not know.
+  private func PickSpawnSpot(deck: Vector4, side: Vector4, playerPos: Vector4, out spot: Vector4, out yaw: Float) -> Bool {
     let away = FlightModeAutopilot.Flat(deck - playerPos);
     if Vector4.Length2D(away) < 0.5 {
-      // V at the deck centre: the pad's own heading, to one side
-      let padYaw = Deg2Rad(FlightNavMap.GetHelipadYaw(pad));
-      away = new Vector4(-SinF(padYaw), CosF(padYaw), 0.0, 0.0);
+      away = Vector4.Normalize(FlightModeAutopilot.Flat(side));
     } else {
       away = Vector4.Normalize(away);
     }
@@ -559,7 +775,7 @@ public class FlightSummonSystem extends ScriptableSystem {
   // arrival (its blackboard state and SummonFinishedEvent, to its VehicleComponent handler) only
   // when the native has not already done it at the spawn.
   private func Complete(component: ref<FlightComponent>, mode: ref<FlightModeAutopilot>) -> Void {
-    FlightLog.Info("[Summon] landed on pad " + FlightNavMap.GetHelipadId(this.pad) + ", completing the summon");
+    FlightLog.Info("[Summon] landed at " + this.Where() + ", completing the summon");
     this.ClearSummonFields(mode);
     if IsDefined(component) && component.active {
       mode.Deactivate();
@@ -622,7 +838,12 @@ public class FlightSummonSystem extends ScriptableSystem {
       mode.externalDestination = new Vector4(0.0, 0.0, 0.0, 0.0);
       mode.hasExternalDestination = false;
       mode.padLandingOffset = new Vector4(0.0, 0.0, 0.0, 0.0);
+      mode.landingKeepClearRadius = 0.0;
     }
+  }
+
+  private func Where() -> String {
+    return this.pad >= 0 ? "pad " + FlightNavMap.GetHelipadId(this.pad) : "V";
   }
 
   // Ownership only (the summon is gone or was never ours); the vehicle keeps whatever state it has
@@ -633,6 +854,7 @@ public class FlightSummonSystem extends ScriptableSystem {
     this.vehicle = null;
     this.vehicleID = none;
     this.pad = -1;
+    this.reason = "";
     this.recordID = t""; // an empty record, the none case
     this.awaitingSpawnTicks = 0;
     this.pendingTicks = 0;
@@ -673,7 +895,20 @@ public func SummonActiveVehicle(force: Bool) -> Void {
       return;
     }
   }
+  // vanilla's own summon; the fallback watches what comes of it (vanilla's cooldown check: a press
+  // on cooldown summons nothing, and that is no failure)
+  let summons = force || !GameInstance.GetVehicleSystem(game).IsActivePlayerVehicleOnCooldown(this.GetActiveVehicleType());
+  let state = -1;
+  let id: EntityID;
+  if IsDefined(system) {
+    state = system.State();
+    id = system.SummonedID();
+  }
   wrappedMethod(force);
+  if IsDefined(system) && summons {
+    let active = GameInstance.GetVehicleSystem(game).GetActivePlayerVehicle(this.GetActiveVehicleType());
+    system.NoteSummonPressed(active.recordID, state, id);
+  }
 }
 
 // The record summon (SummonVehicle(force, type, vehicle, spawnOnlyOnValidRoad), the raw script;
@@ -694,5 +929,15 @@ public func SummonVehicle(force: Bool, type: gamedataVehicleType, vehicle: Tweak
       return;
     }
   }
+  let summons = force || !GameInstance.GetVehicleSystem(game).IsPlayerVehicleOnCooldown(type, vehicle);
+  let state = -1;
+  let id: EntityID;
+  if IsDefined(system) {
+    state = system.State();
+    id = system.SummonedID();
+  }
   wrappedMethod(force, type, vehicle, spawnOnlyOnValidRoad);
+  if IsDefined(system) && summons {
+    system.NoteSummonPressed(vehicle, state, id);
+  }
 }
