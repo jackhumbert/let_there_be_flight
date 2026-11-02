@@ -559,6 +559,9 @@ public native class FlightComponent extends GameComponent {
     // this.GetVehicle().ScheduleAppearanceChange(this.GetVehicle().GetCurrentAppearanceName());
     if !this.active {
       this.stats = FlightStats.Create(this.GetVehicle());
+      // OnMountingEvent sets it too, but a car flown with nobody in it (the pad summon) never gets
+      // one: a zero tensor scales the pitch and yaw torque, damping included, to nothing
+      this.thrusterTensor = this.configuration.GetThrusterTensor();
       // this.sys.ctlr.ui.Setup(this.stats);
 
       this.SetupTires();
