@@ -37,7 +37,10 @@ with questSpawner_NodeType and a scene acquires with acquisitionPlan spawner), "
 (worldAISpotNode, "workspot": a pose a quest puts an NPC into with questUseWorkspotNodeDefinition),
 "trigger_area" (worldTriggerAreaNode with a questTriggerNotifier_Quest, "size" [x, y] in the pad
 frame around "local", "base" the floor of the box below the node and "height": what a phase's
-questTriggerCondition waits on).
+questTriggerCondition waits on). And "vehicle_spawner" (worldPopulationSpawnerNode, "record" a Vehicle
+record and "appearance": a car a quest switches on with questSpawner_NodeType and waits on with this
+ref, copied from sq025's {sq025_spwn_archer_crash} in quest_2b8eefa405219ddd: spawnOnStart 0,
+alwaysSpawned default false, nodeFlags FLAG_AllowForceStreamIn, FLAG_Quest; see VEHICLE_SPAWNER).
 
 Lessons (2026-10-27): a second sector of our own with its own descriptor in the same block never
 loaded (not even at a spot where the same nodes worked), so all pads share this sector; the
@@ -103,7 +106,11 @@ TRIGGER_NOTIFIER = {"$type": "questTriggerNotifier_Quest", "excludeChannels": 0,
                     "isEnabled": 1}
 NODE_FLAGS = {"npc_spawner": "FLAG_AllowForceStreamIn, FLAG_IsInterior, FLAG_Quest",
               "ai_spot": "FLAG_AllowForceStreamIn, FLAG_IsInterior, FLAG_Quest",
-              "trigger_area": "FLAG_AllowForceStreamIn, FLAG_Quest"}
+              "trigger_area": "FLAG_AllowForceStreamIn, FLAG_Quest",
+              "vehicle_spawner": "FLAG_AllowForceStreamIn, FLAG_Quest"}
+# A quest's car (sq025's {sq025_spwn_archer_crash}, quest_2b8eefa405219ddd, read 2026-11-03 with WolvenKit 10): the
+# same node class as NPC_SPAWNER, isVehicle 0 as in every vanilla car spawner, but not kept spawned when out of range
+VEHICLE_SPAWNER = dict(NPC_SPAWNER, alwaysSpawned="default__false_")
 
 
 def cname(v):
@@ -130,6 +137,10 @@ def quest_node(q, name, pad_yaw):
                                                                      "$value": q["record"]},
                     appearanceName=cname(q.get("appearance", "default")),
                     spawnOnStart=1 if q.get("spawn_on_start") else 0)
+    if q["kind"] == "vehicle_spawner":
+        return dict(VEHICLE_SPAWNER, debugName=debug, objectRecordId={"$type": "TweakDBID", "$storage": "string",
+                                                                         "$value": q["record"]},
+                    appearanceName=cname(q.get("appearance", "default")), spawnOnStart=0)
     if q["kind"] == "ai_spot":
         spot = dict(AI_ACTION_SPOT, resource={"DepotPath": {"$type": "ResourcePath", "$storage": "string",
                                                              "$value": q["workspot"]}, "Flags": "Soft"})
@@ -147,7 +158,11 @@ def quest_node(q, name, pad_yaw):
 def is_pad(node):
     d = node["Data"]
     if d.get("$type") == "worldPopulationSpawnerNode":
-        return str(d.get("debugName", {}).get("$value", "")).startswith(SPAWNER_PREFIX)
+        # ours are the vehicle spawners and the quest's NPC spawners; the Watson pad's car spawner stays. Testing the
+        # vehicle prefix alone kept every old NPC spawner, so each rebuild added one more Ezra spawner to the sector
+        # (three by 2026-11-03, beside a stray spawnOnStart test one: a second Ezra in the bay, quest probe r20)
+        name = str(d.get("debugName", {}).get("$value", ""))
+        return name.startswith(SPAWNER_PREFIX) or name.startswith(QUEST_PREFIX)
     if d.get("$type") == "worldStaticDecalNode":
         return str(d.get("debugName", {}).get("$value", "")).startswith(DECAL_PREFIX)
     if str(d.get("debugName", {}).get("$value", "")).startswith(QUEST_PREFIX):

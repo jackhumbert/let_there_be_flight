@@ -3814,6 +3814,157 @@
       ],
       "yaw": 0.0,
       "streaming_distance": 800.0
+    },
+    {
+      "ref": "$/mod/let_there_be_flight/hangar_badlands/#ltbf_badlands_scene_anchor",
+      "kind": "scene_marker",
+      "pad": "hangar",
+      "note": "the origin of every scene staged in the Badlands hangar (sceneLocation): the bay floor's middle, facing the hangar's +Y, as the city hangar's",
+      "local": [
+        0.0,
+        0.0,
+        0.95
+      ],
+      "yaw": 0.0,
+      "streaming_distance": 3000.0
+    },
+    {
+      "ref": "$/mod/let_there_be_flight/hangar_badlands/#ltbf_badlands_spot_inventor_table",
+      "kind": "spawn_marker",
+      "pad": "hangar",
+      "note": "the inventor at the assembly table, facing it (the table's +Y edge; workspot generic__stand_table_lean_front_tool__fix__01)",
+      "local": [
+        7.5,
+        -5.75,
+        0.95
+      ],
+      "yaw": 180.0,
+      "streaming_distance": 3000.0
+    },
+    {
+      "ref": "$/mod/let_there_be_flight/hangar_badlands/#ltbf_badlands_spot_v",
+      "kind": "spawn_marker",
+      "pad": "hangar",
+      "note": "V in the bay facing the inventor at the table",
+      "local": [
+        4.5,
+        -3.5,
+        0.95
+      ],
+      "yaw": -126.86989764584402,
+      "streaming_distance": 3000.0
+    },
+    {
+      "ref": "$/mod/let_there_be_flight/hangar_badlands/#ltbf_badlands_cut_cam",
+      "kind": "camera",
+      "pad": "hangar",
+      "note": "a scene's cut camera (scneventsCameraEvent cameraRef): head height by the table, on the inventor's head",
+      "local": [
+        9.8,
+        -4.8,
+        2.65
+      ],
+      "aim": [
+        7.5,
+        -5.75,
+        2.5
+      ],
+      "streaming_distance": 400.0
+    },
+    {
+      "ref": "$/mod/let_there_be_flight/hangar_badlands/#ltbf_badlands_npc_inventor",
+      "kind": "npc_spawner",
+      "pad": "hangar",
+      "note": "the inventor (Goddard, \"Goddy\"), spawned by his quest (questSpawner_NodeType Activate) and kept while it is active; the scenes acquire him from here (acquisitionPlan spawner), so there is only ever one",
+      "record": "Character.ltbf_goddy",
+      "appearance": "citizen__default_ma_citizen_default_4",
+      "local": [
+        7.5,
+        -5.75,
+        0.95
+      ],
+      "yaw": 180.0,
+      "streaming_distance": 400.0
+    },
+    {
+      "ref": "$/mod/let_there_be_flight/hangar_badlands/#ltbf_badlands_ws_inventor_table",
+      "kind": "ai_spot",
+      "pad": "hangar",
+      "note": "the inventor's pose at the assembly table, where the quest puts him (questUseWorkspotNodeDefinition workspotNode)",
+      "workspot": "base\\workspots\\common\\table\\generic__stand_table_lean_front_tool__fix__01.workspot",
+      "local": [
+        7.5,
+        -5.75,
+        0.95
+      ],
+      "yaw": 180.0,
+      "streaming_distance": 400.0
+    },
+    {
+      "ref": "$/mod/let_there_be_flight/hangar_badlands/#ltbf_badlands_tr_bay",
+      "kind": "trigger_area",
+      "pad": "hangar",
+      "note": "the bay: the whole floor inside the walls, floor to below the deck (questTriggerCondition IsInside)",
+      "size": [
+        23.0,
+        14.0
+      ],
+      "base": -0.5,
+      "height": 5.5,
+      "local": [
+        0.0,
+        0.0,
+        0.95
+      ],
+      "yaw": 0.0,
+      "streaming_distance": 400.0
+    },
+    {
+      "ref": "$/mod/let_there_be_flight/hangar_badlands/#ltbf_badlands_tr_site",
+      "kind": "trigger_area",
+      "pad": "hangar",
+      "note": "the hangar and its yard, the test car's spot included: V has arrived (the bay alone would miss a V who goes straight to the car)",
+      "size": [
+        60.0,
+        50.0
+      ],
+      "base": -3.0,
+      "height": 15.0,
+      "local": [
+        0.0,
+        -5.0,
+        0.4
+      ],
+      "yaw": 0.0,
+      "streaming_distance": 400.0
+    },
+    {
+      "ref": "$/mod/let_there_be_flight/hangar_badlands/#ltbf_badlands_spot_car",
+      "kind": "spawn_marker",
+      "pad": "hangar",
+      "note": "the inventor's test car: outside, 5.5 m off the south wall and 8 m east of V's door, along the wall (forward +X). Not in the bay: the bay has no ground-level vehicle door, so a car there leaves only by air through the roof hatch, which opens for a car already in flight just under it (FlightHangar.reds); a launch from outside needs nothing opened",
+      "local": [
+        6.0,
+        -13.0,
+        0.5
+      ],
+      "yaw": -90.0,
+      "streaming_distance": 400.0
+    },
+    {
+      "ref": "$/mod/let_there_be_flight/hangar_badlands/#ltbf_badlands_veh_test_car",
+      "kind": "vehicle_spawner",
+      "pad": "hangar",
+      "note": "the test car itself: sq025's {sq025_spwn_archer_crash} shape (spawnOnStart 0, alwaysSpawned default false, FLAG_AllowForceStreamIn, FLAG_Quest), switched on by his quest once streamed (questSpawner_NodeType Activate, then questVehicleSpawned_ConditionType EntityReferenced on this ref) and off at its end; V's mount is waited on with this ref as parentRef (sq025_01_hook node 337). A plain Thorton Colby pickup, not the Little Mule (Vehicle.v_standard25_thorton_colby_nomad, sold at the Sunset Motel)",
+      "record": "Vehicle.v_standard25_thorton_colby_pickup",
+      "appearance": "default",
+      "local": [
+        6.0,
+        -13.0,
+        0.5
+      ],
+      "yaw": -90.0,
+      "streaming_distance": 400.0
     }
   ]
 }
