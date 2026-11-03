@@ -448,6 +448,7 @@ public native class FlightComponent extends GameComponent {
   protected cb func OnVehicleFinishedMountingEvent(evt: ref<VehicleFinishedMountingEvent>) -> Bool {
     if evt.character.IsPlayer() && evt.isMounting {
       FlightLog.Info("[FlightComponent] OnVehicleFinishedMountingEvent: " + this.GetVehicle().GetDisplayName());
+      this.sys.ctlr.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.ExitedWhileActive, false, true);
       this.sys.ctlr.Enable();
       if this.active {
         this.sys.ctlr.Activate(true);

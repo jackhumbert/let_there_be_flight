@@ -19,7 +19,7 @@
 * use input contexts for flight options?
 * move input hints to inputContext classes
 * prevent thrusters from moving during photo mode
-* parachute
+* parachute (paraglide): shelved code found, phase 0 done, plan in `docs/design/paraglide.md`
 * summon flying vehicle: working (the spawn is LTBF's own RequestNewVehicle call at an `IsFree` spot, the
   Autopilot flies it to the pad and lands; all seven test stages true 2026-11-01, `docs/design/vehicle-summon.md`,
   `docs/history.md`). Still open: the landed car's enterability. The fallback (a summon that cannot drive to V

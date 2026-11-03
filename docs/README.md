@@ -10,6 +10,7 @@
   - `city-collision.md`: hidden colliders removed, proxy colliders added.
   - `vehicle-summon.md`: the pad summon (a summoned vehicle flies the Autopilot to the pad).
   - `landing-pads.md`: pads, pins, supplies, real decks for visual-only pads.
+  - `paraglide.md`: the shelved glider for leaving a car in flight, and the plan to finish it.
   - `physx-flight.md`: the experimental PhysX-owned flight physics.
   - `acoustics.md`: echoes and reverb from the nav map (offline prototype).
   - `audio-native.md`: every sound in the plugin on FMOD Core: the voice system, samples, wind, echoes as voices.

@@ -1,49 +1,3 @@
-// @wrapMethod(LocomotionAirDecisions)
-// protected const func ToDeathLand(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-//   let landingType: Int32;
-//   if !this.IsTouchingGround(scriptInterface) {
-//     return false;
-//   };
-//   landingType = this.GetLandingType(stateContext);
-//   if landingType == EnumInt(LandingType.Death) {
-//     return true;
-//   };
-//   return false;
-// }
-
-// @wrapMethod(LocomotionAirDecisions)
-// protected const func ToDeathLand(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-//   let deathLandingHeight: StateResultFloat;
-//   let playerPosition: Vector4;
-//   if !this.IsTouchingGround(scriptInterface) {
-//     return false;
-//   };
-//   deathLandingHeight = stateContext.GetPermanentFloatParameter(n"DeathLandingHeight");
-//   playerPosition = DefaultTransition.GetPlayerPosition(scriptInterface);
-//   if deathLandingHeight.valid {
-//     if deathLandingHeight.value > playerPosition.Z {
-//       return true;
-//     };
-//   } else {
-//     return true;
-//   };
-//   return false;
-// }
-
-// func GetFallingSpeedBasedOnHeight(const scriptInterface: ref<StateGameScriptInterface>, height: Float) -> Float {
-//   let acc: Float;
-//   let speed: Float;
-//   if height <= 0.00 {
-//     return 0.00;
-//   };
-//   acc = AbsF(this.GetStaticFloatParameterDefault("upwardsGravity", this.GetStaticFloatParameterDefault("defaultGravity", -16.00)));
-//   speed = 0.00;
-//   if acc != 0.00 {
-//     speed = acc * SqrtF((2.00 * height) / acc);
-//   };
-//   return speed * -1.00;
-// }
-
 @addField(DefaultTransition)
 public let m_ltbfCanParaglide: Bool;
 
@@ -230,13 +184,32 @@ protected func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scrip
   this.SetAudioParameter(n"RTPC_Landing_Type", Cast<Float>(EnumInt(landingType)), scriptInterface);
 }
 
-// eventually should be triggered by putting away parachute
-// @wrapMethod(StandEvents)
-// public func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-//   wrappedMethod(stateContext, scriptInterface);
-//   // reset exited-while-active once we're on the ground
-//   FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.ExitedWhileActive, false, true);
-// }
+// ExitedWhileActive lasts from leaving a car in flight until V lands. Every air state enters through
+// LocomotionAirEvents.OnEnter and every ground state (landings included) through
+// LocomotionGroundEvents.OnEnter, where vanilla also resets its jump and air dodge counts. Leaving a
+// car passes through a ground state before V falls, so only a ground state after an air state clears
+// it. The landing type was already decided by the air state.
+@wrapMethod(LocomotionAirEvents)
+public func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
+  wrappedMethod(stateContext, scriptInterface);
+  let ctlr = FlightController.GetInstance();
+  if IsDefined(ctlr) && ctlr.GetBlackboard().GetBool(GetAllBlackboardDefs().VehicleFlight.ExitedWhileActive) {
+    stateContext.SetPermanentBoolParameter(n"ltbfAirborneAfterFlightExit", true, true);
+  }
+}
+
+@wrapMethod(LocomotionGroundEvents)
+public func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
+  wrappedMethod(stateContext, scriptInterface);
+  let airborne = stateContext.GetPermanentBoolParameter(n"ltbfAirborneAfterFlightExit");
+  if airborne.valid && airborne.value {
+    stateContext.RemovePermanentBoolParameter(n"ltbfAirborneAfterFlightExit");
+    let ctlr = FlightController.GetInstance();
+    if IsDefined(ctlr) {
+      ctlr.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.ExitedWhileActive, false, true);
+    }
+  }
+}
 
 @wrapMethod(FallEvents)
 protected func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
