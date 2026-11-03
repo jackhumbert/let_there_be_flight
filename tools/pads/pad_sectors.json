@@ -1,5 +1,5 @@
 {
-  "comment": "Our pad entities placed in the world by pad_sector.py (docs/archive/helipads.md, step 8). sector: our sector that holds them (a second sector of our own with its own descriptor did not load, so they share this one). base_box: the descriptor box the sector's other nodes need (the Watson car spawners). pads: one per visual-only pad, the part entities (pad_entity.py, one per 100 meshes) at the proxy's transform; streaming_distance as far as the hidden proxy drew (its forcedAutoHideDistance); node_id: globalNodeId of the first part, the next ones count up. spawners: vehicle spawners (pad_sector.py), a fresh car on every load.",
+  "comment": "Our pad entities placed in the world by pad_sector.py (docs/archive/helipads.md, step 8). sector: our sector that holds them (a second sector of our own with its own descriptor did not load, so they share this one). base_box: the descriptor box the sector's other nodes need (the Watson car spawners). pads: one per visual-only pad, the part entities (pad_entity.py, one per 100 meshes) at the proxy's transform; streaming_distance as far as the hidden proxy drew (its forcedAutoHideDistance); node_id: globalNodeId of the first part, the next ones count up. spawners: vehicle spawners (pad_sector.py), a fresh car on every load. quest_nodes: named nodes a quest or scene addresses by NodeRef (docs/design/hangar.md, Quest nodes), in their pad's frame.",
   "sector": "user\\jackhumbert\\sectors\\helipad_vehicles.streamingsector",
   "block": "user\\jackhumbert\\all.streamingblock",
   "colliders": "../world/proxy_collider_tiles.json",
@@ -3708,6 +3708,64 @@
       ],
       "node_id": 1000000000002052,
       "hangar": "hangar_city"
+    }
+  ],
+  "quest_nodes": [
+    {
+      "ref": "$/mod/let_there_be_flight/hangar_city/#ltbf_hangar_scene_anchor",
+      "kind": "scene_marker",
+      "pad": "hangar_city",
+      "note": "the origin of every scene staged in the city hangar (sceneLocation): the bay floor's middle, facing the hangar's +Y, so a spawnOffset or workspot localTransform is the hangar frame less the floor height. Streams far so a scene that starts with V across the city (a holocall) still finds it",
+      "local": [
+        0.0,
+        0.0,
+        0.95
+      ],
+      "yaw": 0.0,
+      "streaming_distance": 3000.0
+    },
+    {
+      "ref": "$/mod/let_there_be_flight/hangar_city/#ltbf_hangar_spot_inventor_table",
+      "kind": "spawn_marker",
+      "pad": "hangar_city",
+      "note": "the inventor at the assembly table, facing it (the table's +Y edge; workspot generic__stand_table_lean_front_tool__fix__01)",
+      "local": [
+        7.5,
+        -5.75,
+        0.95
+      ],
+      "yaw": 180.0,
+      "streaming_distance": 3000.0
+    },
+    {
+      "ref": "$/mod/let_there_be_flight/hangar_city/#ltbf_hangar_spot_v",
+      "kind": "spawn_marker",
+      "pad": "hangar_city",
+      "note": "V in the bay facing the inventor at the table",
+      "local": [
+        4.5,
+        -3.5,
+        0.95
+      ],
+      "yaw": -126.86989764584402,
+      "streaming_distance": 3000.0
+    },
+    {
+      "ref": "$/mod/let_there_be_flight/hangar_city/#ltbf_hangar_cut_cam",
+      "kind": "camera",
+      "pad": "hangar_city",
+      "note": "a scene's cut camera (scneventsCameraEvent cameraRef): head height by the table, on the inventor's head",
+      "local": [
+        9.8,
+        -4.8,
+        2.65
+      ],
+      "aim": [
+        7.5,
+        -5.75,
+        2.5
+      ],
+      "streaming_distance": 800.0
     }
   ]
 }

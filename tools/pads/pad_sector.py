@@ -22,6 +22,16 @@ debugName "[LTBF decal] <material>" (hangar_build.py fills them from the hangar'
 "colliders" (optional): a tiles file from proxy_colliders.py build (relative to this folder), one
 collider entity per tile (collision for proxy-only buildings), placed unrotated at its "pos".
 
+"quest_nodes" (optional): named nodes a quest or scene addresses by NodeRef (docs/design/hangar.md,
+"Quest nodes"), each {"ref": "$/mod/let_there_be_flight/<place>/#<name>", "kind", "pad": the
+entry whose frame "local" [x, y, z] is in (+Y the pad's forward, z up from its origin), "yaw" (in
+that frame) or "aim" (a point in that frame the node faces), "streaming_distance"}. Kinds are the
+vanilla shapes: "scene_marker" (worldStaticMarkerNode + scnSceneMarker, what a scene's
+sceneLocation names), "spawn_marker" (worldStaticMarkerNode + worldSpawnPointMarker, a spot for
+an actor or V), "camera" (worldEntityNode of engine/scenesystem/camera.ent, what a scene's
+scneventsCameraEvent cuts to). globalNodeId is FNV1a64 of the ref with '#' removed, as the game
+hashes a NodeRef; the refs also go into the sector's nodeRefs, as vanilla registers its names.
+
 Lessons (2026-10-27): a second sector of our own with its own descriptor in the same block never
 loaded (not even at a spot where the same nodes worked), so all pads share this sector; the
 descriptor box gates loading, so it must cover every node.
@@ -55,6 +65,10 @@ def cli(wk, *args):
 
 SPAWNER_PREFIX = "[LTBF spawner] "  # debugName of the vehicle spawners this tool adds
 DECAL_PREFIX = "[LTBF decal] "      # and of its decals
+QUEST_PREFIX = "[LTBF quest] "      # and of its quest nodes
+CAMERA_ENT = r"engine\scenesystem\camera.ent"
+MARKER_DATA = {"scene_marker": {"$type": "scnSceneMarker", "markers": [], "workspotMarkers": []},
+               "spawn_marker": {"$type": "worldSpawnPointMarker", "type": 0}}
 
 
 def is_pad(node):
@@ -63,6 +77,8 @@ def is_pad(node):
         return str(d.get("debugName", {}).get("$value", "")).startswith(SPAWNER_PREFIX)
     if d.get("$type") == "worldStaticDecalNode":
         return str(d.get("debugName", {}).get("$value", "")).startswith(DECAL_PREFIX)
+    if str(d.get("debugName", {}).get("$value", "")).startswith(QUEST_PREFIX):
+        return True
     return d.get("$type") == "worldEntityNode" and \
         str(d.get("entityTemplate", {}).get("DepotPath", {}).get("$value", "")).startswith(PAD_PREFIX)
 
@@ -96,6 +112,41 @@ def decal_node(dc):
     if "surfaceType" in dc:
         node["surfaceType"] = dc["surfaceType"]
     return node
+
+
+def fnv1a64(text):
+    h = 14695981039346656037
+    for b in text.encode():
+        h = ((h ^ b) * 1099511628211) % (1 << 64)
+    return h
+
+
+def node_id(ref):
+    """worldGlobalNodeID of a NodeRef: FNV1a64 of it with '#' removed (questkit community.node_id)."""
+    return fnv1a64(ref.replace("#", ""))
+
+
+def quest_nodes(cfg):
+    """The "quest_nodes" entries in world space: (entry, (x, y, z), quaternion (i, j, k, r))."""
+    pads = {p["pad"]: p for p in cfg["pads"]}
+    out = []
+    for q in cfg.get("quest_nodes", []):
+        pad = pads[q["pad"]]
+        c, s = math.cos(math.radians(pad["yaw"])), math.sin(math.radians(pad["yaw"]))
+
+        def world(p):
+            return (pad["pos"][0] + p[0] * c - p[1] * s, pad["pos"][1] + p[0] * s + p[1] * c, pad["pos"][2] + p[2])
+        pos = world(q["local"])
+        if "aim" in q:
+            # entity forward is +Y: turn about Z to face the point, then pitch about X
+            t = world(q["aim"])
+            dx, dy, dz = (t[k] - pos[k] for k in range(3))
+            yaw, pitch = math.atan2(-dx, dy), math.atan2(dz, math.hypot(dx, dy))
+        else:
+            yaw, pitch = math.radians(pad["yaw"] + q.get("yaw", 0.0)), 0.0
+        cz, sz, cx, sx = math.cos(yaw / 2), math.sin(yaw / 2), math.cos(pitch / 2), math.sin(pitch / 2)
+        out.append((q, pos, (cz * sx, sz * sx, sz * cx, cz * cx)))
+    return out
 
 
 def renumber_handles(doc):
@@ -170,6 +221,27 @@ def build_sector(doc, cfg):
         d["scale"] = {"$type": "Vector3", "X": dc["scale"][0], "Y": dc["scale"][1], "Z": dc["scale"][2]}
         kept_data.append(d)
         kept.append(n_)
+    refs = []
+    for q, pos, quat in quest_nodes(cfg):
+        name = q["ref"].rsplit("#", 1)[-1]
+        if q["kind"] == "camera":
+            n_ = copy.deepcopy(template_node)
+            n_["Data"]["entityTemplate"]["DepotPath"]["$value"] = CAMERA_ENT
+            n_["Data"]["debugName"]["$value"] = QUEST_PREFIX + name
+        else:
+            n_ = {"HandleId": "0", "Data": {
+                "$type": "worldStaticMarkerNode",
+                "data": {"HandleId": "0", "Data": copy.deepcopy(MARKER_DATA[q["kind"]])},
+                "debugName": {"$type": "CName", "$storage": "string", "$value": QUEST_PREFIX + name},
+                "isEnabled": 1, "isHostOnly": 0, "isVisibleInGame": 1, "proxyScale": None,
+                "sourcePrefabHash": "0", "tag": "None", "tagExt": "None",
+                "tags": {"$type": "redTagList", "tags": []}}}
+        d = place(template_data, *pos, 0.0, node_id(q["ref"]), q["streaming_distance"], len(kept))
+        d["transform"]["orientation"].update(i=quat[0], j=quat[1], k=quat[2], r=quat[3])
+        kept_data.append(d)
+        kept.append(n_)
+        refs.append({"$type": "NodeRef", "$storage": "string", "$value": q["ref"]})
+    rc["nodeRefs"] = refs
     rc["nodes"] = kept
     rc["nodeData"]["Data"] = kept_data
     rc["persistentNodes"] = copy.deepcopy(kept_data)
@@ -187,7 +259,8 @@ def colliders(cfg):
 
 def fit_block(doc, cfg):
     (x0, y0, z0), (x1, y1, z1) = cfg["base_box"]
-    for pad in cfg["pads"] + cfg.get("spawners", []) + colliders(cfg):
+    spots = [{"pos": pos, "streaming_distance": q["streaming_distance"]} for q, pos, _ in quest_nodes(cfg)]
+    for pad in cfg["pads"] + cfg.get("spawners", []) + colliders(cfg) + spots:
         x, y, z = pad["pos"]
         r = pad.get("streaming_distance", 100.0)
         x0, y0, z0 = min(x0, x - r), min(y0, y - r), min(z0, z - r)
