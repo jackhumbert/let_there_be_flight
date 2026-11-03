@@ -1,17 +1,29 @@
 #include <fmod_errors.h>
 
 #include "FlightSystem.hpp"
+#ifdef __APPLE__
+#include <cstdlib>
+#endif
 
 #include <RED4ext/Common.hpp>
 #include <RED4ext/RTTITypes.hpp>
 #include <RED4ext/Scripting/Natives/Generated/Vector4.hpp>
 #include <RED4ext/Scripting/Natives/ScriptGameInstance.hpp>
+#ifdef __APPLE__
+// LTBF R41: the macOS SDK has GameInstance (GameEngine.hpp) and the update registration API (SystemUpdate.hpp); the fork's
+// GameInstance.hpp, UpdateManager.hpp and GameOptions.hpp redefine them.
+#include <RED4ext/GameEngine.hpp>
+#include <RED4ext/SystemUpdate.hpp>
+#else
 #include <RED4ext/Scripting/Natives/GameInstance.hpp>
+#endif
 #include <RED4ext/Scripting/Natives/vehiclePhysicsData.hpp>
 #include <fmod.hpp>
 #include <fmod_studio.hpp>
 #include <iostream>
+#ifndef __APPLE__
 #include <RED4ext/GameOptions.hpp>
+#endif
 
 
 #include "Flight/Log.hpp"
@@ -22,10 +34,27 @@
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 #include "Flight/Component.hpp"
 #include <RED4ext/Scripting/Natives/Generated/ent/MeshComponent.hpp>
+#ifndef __APPLE__
 #include <RED4ext/Scripting/Natives/UpdateManager.hpp>
+#endif
 #include "Hooks/GetMatrixFromOrientation.hpp"
 
 using namespace RED4ext;
+
+#ifdef __APPLE__
+// LTBF R41: the fork's GameSystemData (its GameInstance.hpp, not used on macOS). R40 checked the layout on macOS: name +0, the four
+// bools +8..+0xB, 0x10 per row (GetGameSystemsData pair).
+namespace RED4ext {
+struct GameSystemData {
+  CName name;
+  bool inPreview;
+  bool inSingleplayer;
+  bool onClient;
+  bool onServer;
+};
+static_assert(sizeof(GameSystemData) == 0x10, "GameSystemData");
+} // namespace RED4ext
+#endif
 
 // These can be found in strings via their variable names
 // 1.61hf1 RVA: 0x484F4A8
@@ -54,7 +83,19 @@ using namespace RED4ext;
 //}
 
 Handle<FlightSystem> FlightSystem::GetInstance() {
+#ifdef __APPLE__
+  // LTBF R41: CGameEngine is not mapped on macOS. Codeware captures the GameInstance (its constructor hook) and exports it.
+  using GameInstanceFn = GameInstance *(*)();
+  static auto s_gameInstance = reinterpret_cast<GameInstanceFn>(dlsym(RTLD_DEFAULT, "codeware_mac_game_instance"));
+  auto gameInstance = s_gameInstance ? s_gameInstance() : nullptr;
+  if (!gameInstance) {
+    LtbfMac::SkipOnce("codeware_mac_game_instance", "FlightSystem::GetInstance (no GameInstance from Codeware yet)");
+    return Handle<FlightSystem>();
+  }
+  auto fs = (FlightSystem *)gameInstance->GetSystem(FlightSystem::GetRTTIType());
+#else
   auto fs = (FlightSystem *)CGameEngine::Get()->framework->gameInstance->GetSystem(FlightSystem::GetRTTIType());
+#endif
   return Handle<FlightSystem>(fs);
 }
 
@@ -91,6 +132,13 @@ void UpdateComponents(UpdateBucketEnum bucket, FrameInfo& frame, JobQueue& job) 
   auto rtti = CRTTISystem::Get();
   auto fcc = FlightComponent::GetRTTIType();
   auto fs = FlightSystem::GetInstance();
+#ifdef __APPLE__
+  // LTBF R43 (macOS, diagnostics): LTBF_MAC_DIAG=1 shows that the bucket update registered in OnRegisterUpdates really runs.
+  static const bool s_macDiag = std::getenv("LTBF_MAC_DIAG") != nullptr;
+  static uint32_t s_macCalls = 0;
+  if (s_macDiag && (s_macCalls++ % 600) == 0)
+    spdlog::info("[ltbf][fs] UpdateComponents call {} ({} registered components)", s_macCalls, fs->flightComponents.size());
+#endif
   
   fs->flightComponentsMutex.LockShared();
   for (auto& [_, wh] : fs->flightComponents) {
@@ -248,10 +296,17 @@ void FlightSystem::OnGameResumed() {
   this->audio->Resume();
 }
 
+#ifdef __APPLE__
+game::SaveLock FlightSystem::IsSavingLocked(bool a2) {
+  spdlog::info("[FlightSystem] IsSavingLocked!");
+  return game::IGameSystem::IsSavingLocked(a2);
+}
+#else
 void* FlightSystem::IsSavingLocked(game::SaveLock* aLock, bool a2) {
   spdlog::info("[FlightSystem] IsSavingLocked!");
   return game::IGameSystem::IsSavingLocked(aLock, a2);
 }
+#endif
 
 void FlightSystem::OnStreamingWorldLoaded(world::RuntimeScene* aScene, uint64_t a2, const JobGroup& aJobGroup) {
   spdlog::info("[FlightSystem] OnStreamingWorldLoaded!");
@@ -273,14 +328,27 @@ void FlightSystem::sub_198() {
   spdlog::info("[FlightSystem] sub_198!");
 }
 
+#ifdef __APPLE__
+void FlightSettingsMacSetupOnce();
+#endif
+
 void FlightSystem::OnInitialize(const JobHandle& aJob) {
   spdlog::info("[FlightSystem] OnInitialize!");
+#ifdef __APPLE__
+  // LTBF R42a: the FlightSettings setup the Windows build runs in the Running game state (no game-state callbacks on macOS).
+  FlightSettingsMacSetupOnce();
+#endif
   this->audio = Handle<FlightAudio>((FlightAudio *)FlightAudio::GetRTTIType()->CreateInstance(true));
   auto func = FlightAudio::GetRTTIType()->GetFunction("Initialize");
   if (func) {
     ExecuteFunction(this->audio, func, nullptr);
   } else {
+#ifdef __APPLE__
+    // LTBF R41: no MessageBox on macOS; the log line is the report.
+    spdlog::error("[FlightSystem] The scripts needed for Let There Be Flight could not be loaded - was Redscript compilation successful?");
+#else
     MessageBoxW(nullptr, L"The scripts needed for Let There Be Flight could not be loaded - was Redscript compilation successful?", L"Let There Be Flight Redscript Error", MB_SYSTEMMODAL | MB_ICONERROR);
+#endif
   }
 }
 

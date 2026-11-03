@@ -41,3 +41,4 @@ private:
     aType->AddFunction<&FlightAudio::UpdateEvent>("UpdateEvent");
   }
 };
+LTBF_FORCE_RTTI_REGISTRAR(FlightAudio) // LTBF R41: macOS, see Engine/RTTIRegistrar.hpp

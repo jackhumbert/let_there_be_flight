@@ -11,20 +11,86 @@
 #include "VehicleSpeedUnlimiter.hpp"
 #include <queue>
 
+#ifdef __APPLE__
+#include <cmath>
+#include <cstdlib>
+#include "MacLayout.hpp"
+// LTBF R41: the physics structs' parent pointer, drive helpers and bike fields are at other offsets on macOS (macos/MacLayout.hpp).
+#define LTBF_PHYSICS_PARENT(physics) \
+  (LtbfMac::Layout::At<RED4ext::vehicle::BaseObject *>((physics), LtbfMac::Layout::Physics_parent))
+#define LTBF_DRIVE_HELPERS_SIZE(physics) \
+  (LtbfMac::Layout::At<uint32_t>((physics), LtbfMac::Layout::WheeledPhysics_driveHelpers + 0xC))
+
+// WheeledPhysics::ApplyAirResistance is inlined on macOS (inside ProcessAirResistance 0x1392998, block 0x13929F8-0x1392A94). This is
+// that block: the same 0.01 threshold and global flag byte, drag = coefficient x -1.2 x |v|^2 along v, added to the rigid body's
+// force times the step (AddForce 0x1359090 is `force += vector`), and |drag| stored to [[this+0xF0]+0x5D0]+0xEC.
+static void MacApplyAirResistance(RED4ext::vehicle::WheeledPhysics *self, RED4ext::vehicle::PhysicsData *physicsData,
+                                  const RED4ext::Vector3 &velocity, float deltaTime) {
+  const float speedSquared = velocity.X * velocity.X + velocity.Y * velocity.Y + velocity.Z * velocity.Z;
+  const auto flag = *reinterpret_cast<const uint8_t *>(LtbfMac::ImageBase() + LtbfMac::Layout::AirResistanceFlagRva);
+  if (!(speedSquared > 0.01f) || flag == 0)
+    return;
+  RED4ext::Vector3 direction = velocity;
+  const float speed = std::sqrt(speedSquared);
+  if (speed != 0.0f) {
+    direction.X /= speed;
+    direction.Y /= speed;
+    direction.Z /= speed;
+  }
+  const float magnitude =
+      LtbfMac::Layout::At<float>(self, LtbfMac::Layout::WheeledPhysics_airDragCoefficient) * -1.2f * speedSquared;
+  const RED4ext::Vector3 drag{direction.X * magnitude, direction.Y * magnitude, direction.Z * magnitude};
+  physicsData->force.X += drag.X * deltaTime;
+  physicsData->force.Y += drag.Y * deltaTime;
+  physicsData->force.Z += drag.Z * deltaTime;
+  auto vehicle = LtbfMac::Layout::At<uint8_t *>(self, LtbfMac::Layout::WheeledPhysics_vehicle);
+  auto stats = vehicle ? *reinterpret_cast<uint8_t **>(vehicle + 0x5D0) : nullptr;
+  if (stats) {
+    *reinterpret_cast<float *>(stats + 0xEC) = std::sqrt(drag.X * drag.X + drag.Y * drag.Y + drag.Z * drag.Z);
+  }
+}
+#else
+#define LTBF_PHYSICS_PARENT(physics) ((physics)->parent)
+#define LTBF_DRIVE_HELPERS_SIZE(physics) ((physics)->driveHelpers.size)
+#endif
+
 // void vehicle::WheelSuspensionBase::ApplyAllResistances(float)
 REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 2526549425, ProcessAirResistance, 
     RED4ext::vehicle::WheeledPhysics *self, float deltaTime) {
-  auto physicsData = self->parent->physicsData;
+  auto physicsData = LTBF_PHYSICS_PARENT(self)->physicsData;
   auto velocity = physicsData->velocity;
   auto X = velocity.X;
   auto Y = velocity.Y;
   auto Z = velocity.Z;
   auto speedSquared = (float)((float)(X * X) + (float)(Y * Y)) + (float)(Z * Z);
   // only need to apply air resistance when speed is >= 100.0
+#ifdef __APPLE__
+  if (!std::isinf(speedSquared) && speedSquared >= 10000.0) {
+    MacApplyAirResistance(self, physicsData, velocity, deltaTime);
+    self->ApplyLowSpeedResistances(velocity, deltaTime);
+  }
+  // LTBF R43 (macOS, diagnostics): L6-L9 show a flying car that rises and turns but barely moves forward. With LTBF_MAC_DIAG=1, log
+  // what the game's own resistance pass does to the velocity of a flying car, about once a second.
+  static const bool s_macDiag = std::getenv("LTBF_MAC_DIAG") != nullptr;
+  static uint32_t s_macCalls = 0;
+  auto *macFc = s_macDiag ? FlightComponent::Get(LTBF_PHYSICS_PARENT(self)) : nullptr;
+  if (macFc && macFc->active && (s_macCalls++ % 60) == 0) {
+    auto before = physicsData->velocity;
+    auto forceBefore = physicsData->force;
+    ProcessAirResistance_Original(self, deltaTime);
+    auto after = physicsData->velocity;
+    spdlog::info("[ltbf][phys] resistances: velocity ({:.3f},{:.3f},{:.3f}) -> ({:.3f},{:.3f},{:.3f}), force ({:.1f},{:.1f},{:.1f}) -> "
+                 "({:.1f},{:.1f},{:.1f}), dt={}",
+                 before.X, before.Y, before.Z, after.X, after.Y, after.Z, forceBefore.X, forceBefore.Y, forceBefore.Z,
+                 physicsData->force.X, physicsData->force.Y, physicsData->force.Z, deltaTime);
+    return;
+  }
+#else
   if (_fdclass(speedSquared) != 1 && speedSquared >= 10000.0) {
     self->ApplyAirResistance(velocity, deltaTime);
     self->ApplyLowSpeedResistances(velocity, deltaTime);
   }
+#endif
   ProcessAirResistance_Original(self, deltaTime);
 }
 
@@ -58,14 +124,14 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 611586815, ApplyForceAtPosition,
 
 // void vehicle::WheelSuspensionBase::FixedUpdate_PostSolve(float)
 REGISTER_FLIGHT_HOOK_HASH(uintptr_t __fastcall, 3281786499, VehicleHelperUpdate, RED4ext::vehicle::WheeledPhysics *p, float deltaTime) {
-  auto fc = FlightComponent::Get(p->parent);
+  auto fc = FlightComponent::Get(LTBF_PHYSICS_PARENT(p));
   if (fc) {
-    auto size = p->driveHelpers.size;
+    auto size = LTBF_DRIVE_HELPERS_SIZE(p);
     if (fc->active) {
-      p->driveHelpers.size = 0;
+      LTBF_DRIVE_HELPERS_SIZE(p) = 0;
     }
     auto result = VehicleHelperUpdate_Original(p, deltaTime);
-    p->driveHelpers.size = size;
+    LTBF_DRIVE_HELPERS_SIZE(p) = size;
     return result;
   } else {
     return VehicleHelperUpdate_Original(p, deltaTime);
@@ -96,20 +162,30 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1414536155, VehicleUpdateOrientationW
 
 REGISTER_FLIGHT_HOOK_HASH(uintptr_t __fastcall, 2879787320, CarSuspension_AnimationUpdate, RED4ext::vehicle::CarPhysics *a1,
                      float timeDelta) {
-  auto fc = FlightComponent::Get(a1->parent);
+  auto fc = FlightComponent::Get(LTBF_PHYSICS_PARENT(a1));
   if (fc) {
     auto rtti = RED4ext::CRTTISystem::Get();
     auto fcc = rtti->GetClass("FlightComponent");
     auto rollProp = fcc->GetProperty("roll");
     if (fc->active) {
-      a1->parent->input.turnInput = rollProp->GetValue<float>(fc);
+      LTBF_PHYSICS_PARENT(a1)->input.turnInput = rollProp->GetValue<float>(fc);
     }
   }
   return CarSuspension_AnimationUpdate_Original(a1, timeDelta);
 }
 
 REGISTER_FLIGHT_HOOK_HASH(uintptr_t __fastcall, 3191280029, BikeSuspension_AnimationUpdate, RED4ext::vehicle::BikePhysics *a1, float timeDelta) {
-  auto fc = FlightComponent::Get(a1->parent);
+  auto fc = FlightComponent::Get(LTBF_PHYSICS_PARENT(a1));
+#ifdef __APPLE__
+  // LTBF R41: turnRate 0xDC and tiltControlEnabled 0xE08 on macOS (R41b; Windows 0xF4 and 0xE20)
+  if (fc && fc->active) {
+    LTBF_PHYSICS_PARENT(a1)->input.turnInput = 0.0;
+    LtbfMac::Layout::At<float>(a1, LtbfMac::Layout::WheeledPhysics_turnRate) = 0.0;
+    LtbfMac::Layout::At<uint8_t>(a1, LtbfMac::Layout::BikePhysics_tiltControlEnabled) = 0;
+  } else {
+    LtbfMac::Layout::At<uint8_t>(a1, LtbfMac::Layout::BikePhysics_tiltControlEnabled) = 1;
+  }
+#else
   if (fc && fc->active) {
     a1->parent->input.turnInput = 0.0;
     a1->turnRate = 0.0;
@@ -117,6 +193,7 @@ REGISTER_FLIGHT_HOOK_HASH(uintptr_t __fastcall, 3191280029, BikeSuspension_Anima
   } else {
     a1->tiltControlEnabled = 1;
   }
+#endif
   auto og = BikeSuspension_AnimationUpdate_Original(a1, timeDelta);
   // UpdateAnimValueForCName(a1->parent3, "throttle", 0.0);
   return og;
@@ -318,8 +395,8 @@ REGISTER_FLIGHT_HOOK_HASH(uintptr_t __fastcall, 3191280029, BikeSuspension_Anima
 REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1989218322, RollFactorTorqueThing,
     uint64_t *a1, float a2) {
   auto physics = (RED4ext::vehicle::WheeledPhysics *)a1[2];
-  if (physics->parent) {
-    auto fc = FlightComponent::Get(physics->parent);
+  if (LTBF_PHYSICS_PARENT(physics)) {
+    auto fc = FlightComponent::Get(LTBF_PHYSICS_PARENT(physics));
     if (fc && fc->active) {
       return;
     }
@@ -331,10 +408,10 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1989218322, RollFactorTorqueThing,
 // void vehicle::WheelSuspensionBase::ApplyAntiSwaybarForce(vehicle::CarWheel, vehicle::CarWheel, float, math::Transform const &)
 REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 2268865059, FourWheelTorque,
     RED4ext::vehicle::WheeledPhysics *physics, unsigned __int8 rearWheelIndex, unsigned __int8 frontWheelIndex, float a4, RED4ext::Transform *transform) {
-  if (physics->parent) {
-    auto fc = FlightComponent::Get(physics->parent);
+  if (LTBF_PHYSICS_PARENT(physics)) {
+    auto fc = FlightComponent::Get(LTBF_PHYSICS_PARENT(physics));
     if (fc && fc->active) {
-      vehicle::PhysicsStructUpdate(physics->parent->physicsData);
+      vehicle::PhysicsStructUpdate(LTBF_PHYSICS_PARENT(physics)->physicsData);
       return;
     }
   }

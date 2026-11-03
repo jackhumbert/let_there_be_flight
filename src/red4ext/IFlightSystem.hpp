@@ -21,3 +21,4 @@ private:
 
   static void OnDescribe(Descriptor *aType, RED4ext::CRTTISystem *) {}
 };
+LTBF_FORCE_RTTI_REGISTRAR(IFlightSystem) // LTBF R41: macOS, see Engine/RTTIRegistrar.hpp

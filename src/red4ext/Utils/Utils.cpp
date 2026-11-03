@@ -7,9 +7,14 @@
 void Utils::CreateLogger()
 {
     auto rootDir = GetRootDir();
+#ifdef __APPLE__
+    // LTBF R41: UTF-8 paths (spdlog uses narrow file names on macOS).
+    spdlog::filename_t logFile = (rootDir / "red4ext" / "logs" / "let_there_be_flight.log").string();
+#else
     auto red4extDir = rootDir / L"red4ext";
     auto logsDir = red4extDir / L"logs";
     spdlog::filename_t logFile = (logsDir / L"let_there_be_flight.log");
+#endif
 
     auto console = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     auto file = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFile, true);
@@ -25,6 +30,10 @@ void Utils::CreateLogger()
 
 std::filesystem::path Utils::GetRootDir()
 {
+#ifdef __APPLE__
+    // LTBF R41: the game root from the plugin path (dladdr), not from the executable (Cyberpunk2077.app/Contents/MacOS).
+    return LtbfMac::RootDir();
+#else
     constexpr auto pathLength = MAX_PATH + 1;
 
     // Try to get the executable path until we can fit the length of the path.
@@ -47,6 +56,7 @@ std::filesystem::path Utils::GetRootDir()
                        .parent_path(); // Resolve to game root directory.
 
     return rootDir;
+#endif
 }
 
 std::wstring Utils::ToWString(const char* aText)

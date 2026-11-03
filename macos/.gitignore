@@ -1,0 +1,3 @@
+# LTBF R41: macOS build folders and logs
+build*/
+*.log

@@ -1,4 +1,5 @@
 #include "EntityAddComponent.hpp"
+#include "Utils/PlatformLayout.hpp"
 #include "Flight/Component.hpp"
 #include "FlightSystem.hpp"
 #include "FlightWeapons.hpp"
@@ -377,7 +378,7 @@ void EntityAddWorldWidgetComponent(RED4ext::IScriptable *aContext, RED4ext::CSta
   mc->visualScale.X = 10.0;
 
   auto mcHandle = RED4ext::Handle<RED4ext::ent::MeshComponent>(mc);
-  ent->componentsStorage.components.EmplaceBack(mcHandle);
+  ent->componentsStorage.components.EmplaceBack(LTBF_AS_COMPONENT_HANDLE(mcHandle));
 
   // WorldWidgetComponent
   auto wwc = (RED4ext::WorldWidgetComponent *)rtti->GetClass("WorldWidgetComponent")->CreateInstance(true);
@@ -390,7 +391,7 @@ void EntityAddWorldWidgetComponent(RED4ext::IScriptable *aContext, RED4ext::CSta
   wwc->meshTargetBinding = RED4ext::Handle<RED4ext::world::ui::MeshTargetBinding>(mtb);
 
   auto wwcHandle = RED4ext::Handle<RED4ext::WorldWidgetComponent>(wwc);
-  ent->componentsStorage.components.EmplaceBack(wwcHandle);
+  ent->componentsStorage.components.EmplaceBack(LTBF_AS_COMPONENT_HANDLE(wwcHandle));
 
   if (aOut) {
     *aOut = true;

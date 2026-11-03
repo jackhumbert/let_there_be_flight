@@ -25,6 +25,8 @@ public:
 private:
   friend Descriptor;
 };
+LTBF_FORCE_RTTI_REGISTRAR(FlightComponentPS) // LTBF R41: macOS, see Engine/RTTIRegistrar.hpp
+
 
 class FlightComponent : public Engine::RTTIClass<FlightComponent, RED4ext::game::Component> {
 public:
@@ -142,6 +144,8 @@ private:
     aType->AddFunction<&FlightComponent::GetContactSpin>("GetContactSpin");
   }
 };
+LTBF_FORCE_RTTI_REGISTRAR(FlightComponent) // LTBF R41: macOS, see Engine/RTTIRegistrar.hpp
+
 RED4EXT_ASSERT_OFFSET(FlightComponent, sys, 0xA8);
 RED4EXT_ASSERT_OFFSET(FlightComponent, active, 0xB8);
 RED4EXT_ASSERT_OFFSET(FlightComponent, hasUpdate, 0xB9);

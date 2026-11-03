@@ -19,8 +19,17 @@ struct InkWidget : RED4ext::ink::Widget {
   bool SetBlurDimension(RED4ext::CName effectName, RED4ext::ink::EBlurDimension blurDimension) {
     bool found = false;
     for (auto& effect : this->effects) {
+#ifdef __APPLE__
+      // LTBF R41: ink::IEffect::GetEffectType is vtable slot 0xE0 on macOS (0xD8 on Windows, R40) and the macOS SDK declares no
+      // virtuals for it; the class test below is the same check (only inkBoxBlurEffect returns BoxBlur). The Windows line also
+      // casts the Handle's own address to the effect, which writes into the array; macOS uses the instance.
+      static auto *s_boxBlur = RED4ext::CRTTISystem::Get()->GetClass("inkBoxBlurEffect");
+      if (effect && effect->GetType() == s_boxBlur && effect->effectName == effectName) {
+        auto blurEffect = reinterpret_cast<RED4ext::ink::BoxBlurEffect*>(effect.GetPtr());
+#else
       if (effect->GetEffectType() == RED4ext::ink::EffectType::BoxBlur && effect->effectName == effectName) {
         auto blurEffect = reinterpret_cast<RED4ext::ink::BoxBlurEffect*>(&effect);
+#endif
         blurEffect->blurDimension = blurDimension;
         found = true;
       }

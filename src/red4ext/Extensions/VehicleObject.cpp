@@ -44,7 +44,12 @@ public:
   
   inline RED4ext::Quaternion GetWeaponPlaceholderOrientation(int index) {
     if (index >= 0 && Utils::LooksLikeDynArray(this->weapons, 64) && this->weapons.size > (uint32_t)index && this->weapons[index].weaponObject) {
+#ifdef __APPLE__
+      // LTBF R41: the fork's Entity::placeholder (0xB0) is the macOS SDK's Entity::transformComponent (same field)
+      auto ph = (RED4ext::ent::PlaceholderComponent *)this->weapons[index].weaponObject.GetPtr()->transformComponent;
+#else
       auto ph = (RED4ext::ent::PlaceholderComponent *)this->weapons[index].weaponObject.GetPtr()->placeholder;
+#endif
       if (ph) {
         return ph->worldTransform.Orientation;
       }
@@ -178,3 +183,4 @@ private:
     aType->AddFunction<&VehicleObject::ResetQuestEnforceTransform>("ResetQuestEnforceTransform");
   }
 };
+LTBF_FORCE_RTTI_REGISTRAR(VehicleObject) // LTBF R41: macOS, see Engine/RTTIRegistrar.hpp

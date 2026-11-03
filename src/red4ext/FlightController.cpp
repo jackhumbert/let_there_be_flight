@@ -5,7 +5,7 @@
 #include "stdafx.hpp"
 #include <RED4ext/RTTISystem.hpp>
 
-RED4ext::Handle<FlightController> handle;
+static RED4ext::Handle<FlightController> handle; // LTBF R41: static (Itanium mangling has no type in a variable name, so two globals named handle collide)
 
 RED4ext::Handle<FlightController> FlightController::GetInstance() { 
   if (!handle.instance) {

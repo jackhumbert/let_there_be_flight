@@ -7,6 +7,33 @@
 #include <RED4ext/Scripting/Natives/Generated/game/FPPCameraComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/anim/AnimFeature_FPPCamera.hpp>
 
+#ifdef __APPLE__
+#include "MacLayout.hpp"
+
+// LTBF R41: FPPCameraComponent.animFeature (Handle instance at 0x360, same as Windows, R41b) is an AnimFeature_FPPCamera. The offset
+// of vehicleProceduralCameraWeight inside it (Windows +0xEC) is not checked on macOS (LTBF_MAC_TODO_R41b_FPPAnimFeature_...), so
+// the value is set through the class's reflected property; if the property is not found the write is skipped with a one-time log.
+static void MacSetProceduralCameraWeight(RED4ext::game::FPPCameraComponent *aFpp, float aWeight) {
+  auto feature = LtbfMac::Layout::At<RED4ext::IScriptable *>(aFpp, LtbfMac::Layout::FPPCamera_animFeature);
+  if (!feature)
+    return;
+  if constexpr (LtbfMac::Layout::FPPAnimFeature_vehicleProceduralCameraWeight >= 0) {
+    LtbfMac::Layout::At<float>(feature, LtbfMac::Layout::FPPAnimFeature_vehicleProceduralCameraWeight) = aWeight;
+    return;
+  }
+  static RED4ext::CProperty *s_property = []() -> RED4ext::CProperty * {
+    auto cls = RED4ext::CRTTISystem::Get()->GetClass("AnimFeature_FPPCamera");
+    return cls ? cls->GetProperty("vehicleProceduralCameraWeight") : nullptr;
+  }();
+  if (!s_property) {
+    LtbfMac::SkipOnce("LTBF_MAC_TODO_R41b_FPPAnimFeature_vehicleProceduralCameraWeight",
+                      "FPP camera weight while flying (AnimFeature_FPPCamera.vehicleProceduralCameraWeight not found)");
+    return;
+  }
+  s_property->SetValue<float>(feature, aWeight);
+}
+#endif
+
 /// @hash 2531201123
 // char __fastcall FPPCameraUpdate(RED4ext::game::FPPCameraComponent *fpp, float deltaTime, float deltaYaw,
                                 // float deltaPitch, float deltaYawExternal, float deltaPitchExternal, char a7);
@@ -43,7 +70,11 @@ REGISTER_FLIGHT_HOOK_HASH(char __fastcall, 2531201123, FPPCameraUpdate, RED4ext:
   if (lockCamera) {
     // fpp->pitchInput = 0.0;
     // fpp->yawInput = 0.0;
+#ifdef __APPLE__
+    LtbfMac::Layout::At<float>(fpp, LtbfMac::Layout::FPPCamera_yawOffset) = 0.0; // LTBF R41: 0x42C on both (R41b)
+#else
     fpp->yawOffset = 0.0;
+#endif
     // fpp->headingLocked = true;
     // fpp->sensitivityMultX = 0.0;
     // fpp->sensitivityMultY = 0.0;
@@ -60,18 +91,28 @@ REGISTER_FLIGHT_HOOK_HASH(char __fastcall, 2531201123, FPPCameraUpdate, RED4ext:
 
   if (lockCamera) {
     // fpp->animFeature->additiveCameraMovementsWeight = 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone");
+#ifdef __APPLE__
+    MacSetProceduralCameraWeight(fpp, 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone"));
+#else
     fpp->animFeature->vehicleProceduralCameraWeight = 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone");
+#endif
     // fpp->animFeature->vehicleOffsetWeight = 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone");
     // fpp->animFeature->gameplayCameraPoseWeight = 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone");
     // fpp->pitchOffset = 0.0;
     // fpp->yawOffset = 0.0;
+#ifndef __APPLE__
     auto vehicle = *(RED4ext::vehicle::BaseObject **)&fpp->entity;
+#endif
     // if (vehicle->physics) {
     //   vehicle->physics->customTiltTarget = 0.0;
     // }
 
   } else {
+#ifdef __APPLE__
+    MacSetProceduralCameraWeight(fpp, 1.0);
+#else
     fpp->animFeature->vehicleProceduralCameraWeight = 1.0;
+#endif
   }
   return og;
 }

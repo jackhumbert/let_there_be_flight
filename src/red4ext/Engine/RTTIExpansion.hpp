@@ -15,7 +15,7 @@ public:
     RED4ext::CClassStaticFunction* AddFunction(RTTIStaticFunction<R, TR> aFunc, const char* aName,
                                                RED4ext::CBaseFunction::Flags aFlags = {})
     {
-        const auto* ptr = reinterpret_cast<RED4ext::ScriptingFunction_t<R>>(aFunc);
+        auto* ptr = reinterpret_cast<RED4ext::ScriptingFunction_t<R>>(aFunc);
         auto* func = RED4ext::CClassStaticFunction::Create(this, aName, aName, ptr, aFlags);
 
         RED4ext::CClass::RegisterFunction(func);
@@ -28,7 +28,7 @@ public:
     RED4ext::CClassStaticFunction* AddFunction(RTTIMemberFunction<C, R, TR> aFunc, const char* aName,
                                                RED4ext::CBaseFunction::Flags aFlags = {})
     {
-        const auto* ptr = reinterpret_cast<RED4ext::ScriptingFunction_t<R>>(aFunc);
+        auto* ptr = reinterpret_cast<RED4ext::ScriptingFunction_t<R>>(aFunc);
         auto* func = RED4ext::CClassFunction::Create(this, aName, aName, ptr, aFlags);
 
         RED4ext::CClass::RegisterFunction(func);
@@ -40,7 +40,7 @@ public:
     requires detail::IsFunctionPtr<decltype(AFunc)>
     RED4ext::CClassFunction* AddFunction(const char* aName, RED4ext::CBaseFunction::Flags aFlags = {})
     {
-        const auto* ptr = WrapScriptableFunction<AFunc>();
+        auto* ptr = WrapScriptableFunction<AFunc>();
 
         RED4ext::CClassFunction* func;
         if constexpr (detail::IsMemberFunctionPtr<decltype(AFunc)>)
