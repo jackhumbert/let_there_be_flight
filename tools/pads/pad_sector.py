@@ -31,17 +31,26 @@ sceneLocation names), "spawn_marker" (worldStaticMarkerNode + worldSpawnPointMar
 an actor or V), "camera" (worldEntityNode of engine/scenesystem/camera.ent, what a scene's
 scneventsCameraEvent cuts to). globalNodeId is FNV1a64 of the ref with '#' removed, as the game
 hashes a NodeRef; the refs also go into the sector's nodeRefs, as vanilla registers its names.
+Three more kinds, each a copy of a vanilla quest sector's node (see NPC_SPAWNER, AI_SPOT, TRIGGER):
+"npc_spawner" (worldPopulationSpawnerNode, "record" and "appearance": a character a quest spawns
+with questSpawner_NodeType and a scene acquires with acquisitionPlan spawner), "ai_spot"
+(worldAISpotNode, "workspot": a pose a quest puts an NPC into with questUseWorkspotNodeDefinition),
+"trigger_area" (worldTriggerAreaNode with a questTriggerNotifier_Quest, "size" [x, y] in the pad
+frame around "local", "base" the floor of the box below the node and "height": what a phase's
+questTriggerCondition waits on).
 
 Lessons (2026-10-27): a second sector of our own with its own descriptor in the same block never
 loaded (not even at a spot where the same nodes worked), so all pads share this sector; the
 descriptor box gates loading, so it must cover every node.
 """
 import argparse
+import base64
 import copy
 import json
 import math
 import os
 import shutil
+import struct
 import subprocess
 import tempfile
 
@@ -69,6 +78,70 @@ QUEST_PREFIX = "[LTBF quest] "      # and of its quest nodes
 CAMERA_ENT = r"engine\scenesystem\camera.ent"
 MARKER_DATA = {"scene_marker": {"$type": "scnSceneMarker", "markers": [], "workspotMarkers": []},
                "spawn_marker": {"$type": "worldSpawnPointMarker", "type": 0}}
+# The vanilla nodes the "npc_spawner", "ai_spot" and "trigger_area" kinds copy, field for field, with their nodeFlags:
+# sq031's Pandora (quest_391f62c0081c7717.streamingsector, {sq031_pandora}: a story character a quest switches on, never
+# spawned on load, kept spawned while active) and her spots ({sq031_ws_cassious_before_tattoo}), and a street story's
+# start trigger (quest_5058fcdcd903a9d5, {mws_arr_07_tr_starter}). Read 2026-11-03 with WolvenKit 10.
+NPC_SPAWNER = {"$type": "worldPopulationSpawnerNode", "alwaysSpawned": "true_", "isHostOnly": 0, "isVehicle": 0,
+               "isVisibleInGame": 1, "prefetchAppearance": 0, "proxyScale": None, "sourcePrefabHash": "0",
+               "spawnInView": "default__true_", "spawnOnStart": 0, "tag": "None", "tagExt": "None"}
+AI_SPOT = {"$type": "worldAISpotNode", "crowdBlacklist": {"$type": "redTagList", "tags": []},
+           "crowdWhitelist": {"$type": "redTagList", "tags": []}, "disableBumps": 0, "isHostOnly": 0,
+           "isVisibleInGame": 1, "isWorkspotInfinite": 1, "isWorkspotStatic": 0,
+           "lookAtTarget": {"$type": "NodeRef", "$storage": "uint64", "$value": "0"}, "markings": [],
+           "proxyScale": None, "sourcePrefabHash": "0", "spotDef": None, "tag": "None", "tagExt": "None",
+           "useCrowdBlacklist": 0, "useCrowdWhitelist": 0}
+AI_ACTION_SPOT = {"$type": "AIActionSpot", "ActorBodytypeE3": "Undefined", "clippingSpaceOrientation": 180,
+                  "clippingSpaceRange": 120, "enabledWhenMasterOccupied": 0,
+                  "masterNodeRef": {"$type": "NodeRef", "$storage": "uint64", "$value": "0"}, "snapToGround": 0,
+                  "useClippingSpace": 0}
+TRIGGER = {"$type": "worldTriggerAreaNode", "color": {"$type": "Color", "Alpha": 128, "Blue": 160, "Green": 160,
+                                                      "Red": 255},
+           "isHostOnly": 0, "isVisibleInGame": 1, "proxyScale": None, "sourcePrefabHash": "0", "tag": "None",
+           "tagExt": "None"}
+TRIGGER_NOTIFIER = {"$type": "questTriggerNotifier_Quest", "excludeChannels": 0, "includeChannels": "TC_Default",
+                    "isEnabled": 1}
+NODE_FLAGS = {"npc_spawner": "FLAG_AllowForceStreamIn, FLAG_IsInterior, FLAG_Quest",
+              "ai_spot": "FLAG_AllowForceStreamIn, FLAG_IsInterior, FLAG_Quest",
+              "trigger_area": "FLAG_AllowForceStreamIn, FLAG_Quest"}
+
+
+def cname(v):
+    return {"$type": "CName", "$storage": "string", "$value": v}
+
+
+def outline(corners, base, height):
+    """AreaShapeOutline: what the game reads is the buffer, a uint32 corner count, one Vector4 (x, y, z, 1) per corner
+    in the node's own space (z the floor of the box), then the height, little-endian float32 ({mws_arr_07_tr_starter}:
+    corners at z -474.8, height 645.4; questkit area.outline). `points` is vanilla's unit square."""
+    raw = struct.pack("<I", len(corners))
+    for x, y in corners:
+        raw += struct.pack("<4f", x, y, base, 1.0)
+    raw += struct.pack("<f", height)
+    return {"$type": "AreaShapeOutline", "buffer": base64.b64encode(raw).decode("ascii"), "height": float(height),
+            "points": [{"$type": "Vector3", "X": x, "Y": y, "Z": 0} for x, y in ((-1, -1), (1, -1), (1, 1), (-1, 1))]}
+
+
+def quest_node(q, name, pad_yaw):
+    """The node of a quest_nodes entry of the kinds copied from vanilla (NPC_SPAWNER, AI_SPOT, TRIGGER)."""
+    debug = cname(QUEST_PREFIX + name)
+    if q["kind"] == "npc_spawner":
+        return dict(NPC_SPAWNER, debugName=debug, objectRecordId={"$type": "TweakDBID", "$storage": "string",
+                                                                     "$value": q["record"]},
+                    appearanceName=cname(q.get("appearance", "default")),
+                    spawnOnStart=1 if q.get("spawn_on_start") else 0)
+    if q["kind"] == "ai_spot":
+        spot = dict(AI_ACTION_SPOT, resource={"DepotPath": {"$type": "ResourcePath", "$storage": "string",
+                                                             "$value": q["workspot"]}, "Flags": "Soft"})
+        return dict(AI_SPOT, debugName=debug, spot={"HandleId": "0", "Data": spot})
+    if q["kind"] == "trigger_area":
+        # the box's corners in the pad frame, turned into world axes: the node itself stays unrotated, as vanilla's
+        hx, hy = q["size"][0] / 2.0, q["size"][1] / 2.0
+        c, s = math.cos(math.radians(pad_yaw)), math.sin(math.radians(pad_yaw))
+        corners = [(x * c - y * s, x * s + y * c) for x, y in ((-hx, -hy), (hx, -hy), (hx, hy), (-hx, hy))]
+        return dict(TRIGGER, debugName=debug, notifiers=[{"HandleId": "0", "Data": dict(TRIGGER_NOTIFIER)}],
+                    outline={"HandleId": "0", "Data": outline(corners, q.get("base", 0.0), q["height"])})
+    raise SystemExit(f"quest node {name}: unknown kind {q['kind']}")
 
 
 def is_pad(node):
@@ -222,12 +295,15 @@ def build_sector(doc, cfg):
         kept_data.append(d)
         kept.append(n_)
     refs = []
+    pads = {p["pad"]: p for p in cfg["pads"]}
     for q, pos, quat in quest_nodes(cfg):
         name = q["ref"].rsplit("#", 1)[-1]
         if q["kind"] == "camera":
             n_ = copy.deepcopy(template_node)
             n_["Data"]["entityTemplate"]["DepotPath"]["$value"] = CAMERA_ENT
             n_["Data"]["debugName"]["$value"] = QUEST_PREFIX + name
+        elif q["kind"] in NODE_FLAGS:
+            n_ = {"HandleId": "0", "Data": quest_node(q, name, pads[q["pad"]]["yaw"])}
         else:
             n_ = {"HandleId": "0", "Data": {
                 "$type": "worldStaticMarkerNode",
@@ -238,6 +314,10 @@ def build_sector(doc, cfg):
                 "tags": {"$type": "redTagList", "tags": []}}}
         d = place(template_data, *pos, 0.0, node_id(q["ref"]), q["streaming_distance"], len(kept))
         d["transform"]["orientation"].update(i=quat[0], j=quat[1], k=quat[2], r=quat[3])
+        if q["kind"] in NODE_FLAGS:
+            d["nodeFlags"] = NODE_FLAGS[q["kind"]]
+            if q["kind"] == "trigger_area":
+                d["transform"]["orientation"].update(i=0, j=0, k=0, r=1)
         kept_data.append(d)
         kept.append(n_)
         refs.append({"$type": "NodeRef", "$storage": "string", "$value": q["ref"]})

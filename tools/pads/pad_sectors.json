@@ -3766,6 +3766,54 @@
         2.5
       ],
       "streaming_distance": 800.0
+    },
+    {
+      "ref": "$/mod/let_there_be_flight/hangar_city/#ltbf_hangar_npc_inventor",
+      "kind": "npc_spawner",
+      "pad": "hangar_city",
+      "note": "the inventor (Ezra Vance), spawned by his quest (questSpawner_NodeType Activate) and kept while it is active; the scenes acquire him from here (acquisitionPlan spawner), so there is only ever one. The record ships with the quest (TweakXL); the kit checks its quest's Character against record and appearance here",
+      "record": "Character.ltbf_ezra_vance",
+      "appearance": "citizen__default_ma_citizen_default_4",
+      "local": [
+        7.5,
+        -5.75,
+        0.95
+      ],
+      "yaw": 180.0,
+      "streaming_distance": 800.0
+    },
+    {
+      "ref": "$/mod/let_there_be_flight/hangar_city/#ltbf_hangar_ws_inventor_table",
+      "kind": "ai_spot",
+      "pad": "hangar_city",
+      "note": "the inventor's pose at the assembly table, where the quest puts him (questUseWorkspotNodeDefinition workspotNode)",
+      "workspot": "base\\workspots\\common\\table\\generic__stand_table_lean_front_tool__fix__01.workspot",
+      "local": [
+        7.5,
+        -5.75,
+        0.95
+      ],
+      "yaw": 180.0,
+      "streaming_distance": 800.0
+    },
+    {
+      "ref": "$/mod/let_there_be_flight/hangar_city/#ltbf_hangar_tr_bay",
+      "kind": "trigger_area",
+      "pad": "hangar_city",
+      "note": "the bay: the whole floor inside the walls, floor to below the deck. A phase waits on V in it with questTriggerCondition IsInside",
+      "size": [
+        23.0,
+        14.0
+      ],
+      "base": -0.5,
+      "height": 5.5,
+      "local": [
+        0.0,
+        0.0,
+        0.95
+      ],
+      "yaw": 0.0,
+      "streaming_distance": 800.0
     }
   ]
 }
