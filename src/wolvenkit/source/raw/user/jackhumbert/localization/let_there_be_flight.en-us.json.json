@@ -950,6 +950,16 @@
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "LTBF-Hangar",
+              "femaleVariant": "Salt Flat Hangar"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "LTBF-Hangar-Description",
+              "femaleVariant": "A workshop out on the salt flat, with a landing deck for a roof."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "LTBF-Landing-Pad-Supplies",
               "femaleVariant": "Landing pad supplies"
             },

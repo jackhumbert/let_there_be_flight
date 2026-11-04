@@ -6,27 +6,6 @@
 S base\worlds\03_night_city\_compiled\default\exterior_-3_0_0_3.streamingsector
 N 8040860436745735587 -1212.96021 81.1298828
 
-# The inventor's hangar (docs/archive/helipads.md section 9): the desert scrub clusters (worldFoliageNode,
-# no globalNodeId, so id 0 and matched by x y alone) within 40 m of it, which grew through its floor;
-# the ground round it is bare.
-S base\worlds\03_night_city\_compiled\default\exterior_6_-5_0_2.streamingsector
-N 0 1740.80029 -1242.05591
-N 0 1739.28149 -1245.08203
-N 0 1744.83105 -1243.90601
-N 0 1741.4978 -1247.30859
-N 0 1759.17773 -1202.8208
-N 0 1759.61133 -1202.14014
-N 0 1746.67029 -1224.05176
-N 0 1748.57861 -1207.78809
-N 0 1744.7981 -1210.44263
-N 0 1744.73267 -1232.93164
-N 0 1753.71484 -1212.50171
-N 0 1704.35156 -1235.90039
-N 0 1722.58008 -1216.66675
-N 0 1735.10474 -1229.65527
-N 0 1749.9519 -1222.27808
-N 0 1737.84155 -1231.77344
-N 0 1737.79895 -1243.73999
-N 0 1743.15344 -1216.21875
-N 0 1744.81616 -1243.63464
-N 0 1737.02441 -1231.57324
+# The inventor's hangar (docs/design/hangar.md): nothing. Its first site (1735, -1215) had 20 desert scrub
+# clusters within 40 m that grew through its floor and were hidden here; the site it moved to on 2026-11-03,
+# (1996, -1376), has no foliage cluster within 45 m.

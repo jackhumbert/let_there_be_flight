@@ -18,13 +18,22 @@
   "pads": [
     {
       "pad": "hangar",
-      "note": "the inventor's hangar (docs/archive/helipads.md section 9; tools/kitbash/hangar_build.py), on bare salt flat in the Badlands; z is the floor origin, terrain 58.21 .. 58.46 under it",
+      "note": "the inventor's hangar (docs/archive/helipads.md section 9; tools/kitbash/hangar_build.py), on bare salt flat in the Badlands; z is the floor origin, terrain 52.66 .. 52.88 under the shell (terrain raster); moved here from (1735, -1215) on 2026-11-03, clear of sq004's world boundary (docs/design/hangar.md)",
       "pos": [
-        1735.0,
-        -1215.0,
-        58.05
+        1996.0,
+        -1376.0,
+        52.57
       ],
       "yaw": 0.0,
+      "map_pin": {
+        "id": "hangar_badlands",
+        "note": "the permanent map pin, on V's door (the quest kit's DOOR, cp2077_tools quest/kit/hangar.py)",
+        "local": [
+          -3.0,
+          -8.6,
+          0.4
+        ]
+      },
       "streaming_distance": 400.0,
       "node_id": 1000000000000300,
       "entities": [
@@ -41,9 +50,9 @@
       "pad": "hangar_hatch",
       "note": "its roof hatch, at the deck top (floor origin + 7.175); FlightHangar.reds opens it for a car in flight",
       "pos": [
-        1735.0,
-        -1215.0,
-        65.225
+        1996.0,
+        -1376.0,
+        59.745
       ],
       "yaw": 0.0,
       "streaming_distance": 400.0,
@@ -90,2022 +99,6 @@
   ],
   "spawners": [],
   "decals": [
-    {
-      "material": "base\\surfaces\\textures\\decals\\industrial\\industrial_numbers_sequence_c.mi",
-      "scale": [
-        0.369987994,
-        0.102182999,
-        0.0739979967
-      ],
-      "alpha": 1,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 0,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 1,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1723.859,
-        -1217.249,
-        59.440999999999995
-      ],
-      "quat": [
-        -0.06164203364993731,
-        0.7044148256705705,
-        0.7044148256705705,
-        -0.06164203364993731
-      ],
-      "node_id": 1000000000001000
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\wetness\\puddle_rough_a_dirty.mi",
-      "scale": [
-        1.55341792,
-        1.87763822,
-        0.0417234302
-      ],
-      "alpha": 1,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 3,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 1,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1726.389,
-        -1218.012,
-        59.064
-      ],
-      "quat": [
-        -0.0023504229406640844,
-        0.0011016723650886411,
-        0.9233449846208621,
-        -0.38396251771820117
-      ],
-      "node_id": 1000000000001001
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dirt_o.mi",
-      "scale": [
-        5.56247282,
-        2.01904726,
-        0.10767255
-      ],
-      "alpha": 0.382021993,
-      "normalThreshold": 38.2191772,
-      "roughnessScale": 1.46067405,
-      "orderNo": 0,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 8,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1725.891,
-        -1219.412,
-        59.044999999999995
-      ],
-      "quat": [
-        0.003985253818767382,
-        0.0018469629124592624,
-        -0.8034126034638118,
-        -0.5954058300692899
-      ],
-      "node_id": 1000000000001002
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dirt_o_dark.mi",
-      "scale": [
-        2.98672152,
-        1.664711,
-        0.100000001
-      ],
-      "alpha": 1,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 0,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 1,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1723.92,
-        -1220.347,
-        59.04
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        0.8855055794392265,
-        -0.4646285522091814
-      ],
-      "node_id": 1000000000001003
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
-      "scale": [
-        3.07507634,
-        2.97749186,
-        0.241523936
-      ],
-      "alpha": 0.790323019,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 1,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1723.745,
-        -1216.163,
-        59.028999999999996
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        0.9957718108974567,
-        -0.09185599930325733
-      ],
-      "node_id": 1000000000001004
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
-      "scale": [
-        3.92510724,
-        3.14008832,
-        0.303994507
-      ],
-      "alpha": 0.995670974,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1724.567,
-        -1219.513,
-        59.062
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        -0.12773530448744397,
-        -0.9918084773889061
-      ],
-      "node_id": 1000000000001005
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
-      "scale": [
-        3.07507634,
-        2.97749186,
-        0.241523936
-      ],
-      "alpha": 0.790323019,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 2,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 1,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1724.425,
-        -1220.524,
-        59.028999999999996
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        0.908292095462963,
-        0.4183363925652417
-      ],
-      "node_id": 1000000000001006
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
-      "scale": [
-        3.07507634,
-        2.97749186,
-        0.241523936
-      ],
-      "alpha": 0.790323019,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 2,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 1,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1724.551,
-        -1218.531,
-        59.028999999999996
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        0.577435418332215,
-        0.8164360961597057
-      ],
-      "node_id": 1000000000001007
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dirt_a.mi",
-      "scale": [
-        1.8808459,
-        0.931258559,
-        0.219651461
-      ],
-      "alpha": 0.191010997,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 0,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1723.44,
-        -1217.304,
-        61.922999999999995
-      ],
-      "quat": [
-        0.5657822985782607,
-        -0.4354568619513305,
-        0.4258904143086576,
-        -0.555773202090565
-      ],
-      "node_id": 1000000000001008
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dirt_a.mi",
-      "scale": [
-        1.81248283,
-        0.615875423,
-        0.219651461
-      ],
-      "alpha": 0.213483006,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 0,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1723.343,
-        -1217.282,
-        61.446
-      ],
-      "quat": [
-        0.5657822985782607,
-        -0.4354568619513305,
-        0.4258904143086576,
-        -0.555773202090565
-      ],
-      "node_id": 1000000000001009
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
-      "scale": [
-        0.850444436,
-        0.824552476,
-        0.0735579506
-      ],
-      "alpha": 0.269663006,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 1,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1723.659,
-        -1216.477,
-        60.019999999999996
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        -0.12773530448744397,
-        -0.9918084773889061
-      ],
-      "node_id": 1000000000001010
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dirt_a.mi",
-      "scale": [
-        1.81248283,
-        1.22837341,
-        0.219651461
-      ],
-      "alpha": 0.393258005,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 0,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1723.901,
-        -1219.026,
-        61.773999999999994
-      ],
-      "quat": [
-        0.5657822985782607,
-        -0.4354568619513305,
-        0.4258904143086576,
-        -0.555773202090565
-      ],
-      "node_id": 1000000000001011
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
-      "scale": [
-        1.83445048,
-        1.4675616,
-        0.144874439
-      ],
-      "alpha": 0.596773982,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 0,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 1,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1723.602,
-        -1218.101,
-        60.102
-      ],
-      "quat": [
-        0.09293787267847264,
-        -0.721622269190745,
-        -0.08762891496532405,
-        -0.6804007722746941
-      ],
-      "node_id": 1000000000001012
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
-      "scale": [
-        2.3120296,
-        1.84962511,
-        0.179063722
-      ],
-      "alpha": 0.995670974,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 1,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1726.076,
-        -1216.234,
-        59.007999999999996
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        -0.12773530448744397,
-        -0.9918084773889061
-      ],
-      "node_id": 1000000000001013
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\lettering\\entropy\\entropy_01_letter_m_black.mi",
-      "scale": [
-        0.300000012,
-        0.300000012,
-        1.0
-      ],
-      "alpha": 1,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 0,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 4,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1741.883,
-        -1210.21,
-        60.241
-      ],
-      "quat": [
-        0.614102,
-        0.35054,
-        0.299252,
-        0.640662
-      ],
-      "node_id": 1000000000001014
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\colors\\white_a.mi",
-      "scale": [
-        3.37861323,
-        0.394981414,
-        0.400000006
-      ],
-      "alpha": 0.741572976,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 2,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1723.956,
-        -1209.433,
-        60.745999999999995
-      ],
-      "quat": [
-        -0.0976182124631465,
-        0.7003362337566864,
-        -0.7003362337566864,
-        0.0976182124631465
-      ],
-      "node_id": 1000000000001015
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\brands\\thorton_01.mi",
-      "scale": [
-        0.943488359,
-        0.350985587,
-        0.300000012
-      ],
-      "alpha": 0.674157023,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1723.833,
-        -1209.465,
-        60.742999999999995
-      ],
-      "quat": [
-        -0.6930028293290007,
-        -0.14052615905232735,
-        -0.14052615905232735,
-        -0.6930028293290007
-      ],
-      "node_id": 1000000000001016
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\gravel_patch_01a.mi",
-      "scale": [
-        2.67716169,
-        2.67716098,
-        0.0500000007
-      ],
-      "alpha": 0.861110985,
-      "normalThreshold": 90,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1725.366,
-        -1210.269,
-        59.010999999999996
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        -0.689224757797121,
-        -0.7245475699445137
-      ],
-      "node_id": 1000000000001017
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\gravel_patch_01a.mi",
-      "scale": [
-        2.67716169,
-        2.67716098,
-        0.100000001
-      ],
-      "alpha": 0.861110985,
-      "normalThreshold": 90,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1727.29,
-        -1209.138,
-        58.985
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        -0.6892240506903398,
-        -0.724548277051295
-      ],
-      "node_id": 1000000000001018
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\colors\\white_a.mi",
-      "scale": [
-        3.44008279,
-        0.394981414,
-        0.5
-      ],
-      "alpha": 0.741572976,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 2,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1727.377,
-        -1208.121,
-        60.745999999999995
-      ],
-      "quat": [
-        -0.0976182124631465,
-        0.7003362337566864,
-        -0.7003362337566864,
-        0.0976182124631465
-      ],
-      "node_id": 1000000000001019
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
-      "scale": [
-        3.2210741,
-        3.60165977,
-        0.155375585
-      ],
-      "alpha": 1,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 0,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 4,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1727.788,
-        -1207.934,
-        59.525999999999996
-      ],
-      "quat": [
-        -0.4107180241047379,
-        -0.5738249311074765,
-        -0.41305006226909113,
-        0.575695935650496
-      ],
-      "node_id": 1000000000001020
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\brands\\at_ak_02.mi",
-      "scale": [
-        1.17666781,
-        0.212895229,
-        0.0588038117
-      ],
-      "alpha": 0.674157023,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1725.136,
-        -1209.457,
-        60.909
-      ],
-      "quat": [
-        -0.7018063087547732,
-        -0.08641976236949506,
-        -0.08641976236949506,
-        -0.7018063087547732
-      ],
-      "node_id": 1000000000001021
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\brands\\high_octane_01.mi",
-      "scale": [
-        1.03415608,
-        0.517078042,
-        0.200000003
-      ],
-      "alpha": 0.674157023,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1726.261,
-        -1208.53,
-        60.76
-      ],
-      "quat": [
-        -0.7018063087547732,
-        -0.08641976236949506,
-        -0.08641976236949506,
-        -0.7018063087547732
-      ],
-      "node_id": 1000000000001022
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\brands\\high_octane_02.mi",
-      "scale": [
-        1.69830644,
-        0.488691002,
-        0.189020216
-      ],
-      "alpha": 0.674157023,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1727.534,
-        -1208.038,
-        60.76
-      ],
-      "quat": [
-        -0.6973494147129544,
-        -0.11706082051865174,
-        -0.11706082051865174,
-        -0.6973494147129544
-      ],
-      "node_id": 1000000000001023
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\brands\\ruf_tread_01.mi",
-      "scale": [
-        0.872092187,
-        0.436046094,
-        0.16865775
-      ],
-      "alpha": 0.674157023,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1728.579,
-        -1208.156,
-        61.205
-      ],
-      "quat": [
-        -0.8291562400464705,
-        -0.13918689880876006,
-        -0.08963002715608204,
-        -0.5339405731146492
-      ],
-      "node_id": 1000000000001024
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dirt_c_dark.mi",
-      "scale": [
-        1.46587682,
-        0.812702656,
-        0.0500000007
-      ],
-      "alpha": 0.479041994,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 2,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1727.098,
-        -1208.998,
-        59.775
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        0.13942448668723878,
-        0.9902323363736414
-      ],
-      "node_id": 1000000000001025
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\brands\\ruf_tread_01.mi",
-      "scale": [
-        0.872092187,
-        0.436046094,
-        0.16865775
-      ],
-      "alpha": 0.674157023,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1728.504,
-        -1208.182,
-        61.205
-      ],
-      "quat": [
-        -0.8291569471532516,
-        -0.13918619170197882,
-        -0.08963002715608204,
-        -0.5339405731146492
-      ],
-      "node_id": 1000000000001026
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\colors\\white_a.mi",
-      "scale": [
-        2.48659396,
-        0.394981414,
-        0.400000006
-      ],
-      "alpha": 0.741572976,
-      "normalThreshold": 0,
-      "roughnessScale": 1,
-      "orderNo": 2,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1727.165,
-        -1212.065,
-        60.745999999999995
-      ],
-      "quat": [
-        0.407736,
-        0.577712,
-        -0.577712,
-        -0.407736
-      ],
-      "node_id": 1000000000001027
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\colors\\white_a.mi",
-      "scale": [
-        3.44008279,
-        0.394981414,
-        0.5
-      ],
-      "alpha": 0.741572976,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 2,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1728.581,
-        -1215.882,
-        60.745999999999995
-      ],
-      "quat": [
-        0.426188,
-        0.564237,
-        -0.564237,
-        -0.426188
-      ],
-      "node_id": 1000000000001028
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\industrial\\industrial_barcode_small.mi",
-      "scale": [
-        0.94486928,
-        0.192342639,
-        3.0
-      ],
-      "alpha": 1,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 0,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1728.268,
-        -1211.291,
-        59.428999999999995
-      ],
-      "quat": [
-        -0.417733,
-        -0.570526,
-        -0.570524,
-        -0.417734
-      ],
-      "node_id": 1000000000001029
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\wetness\\puddle_rough_a_dirty.mi",
-      "scale": [
-        4.0,
-        4.0,
-        0.25
-      ],
-      "alpha": 1,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 2,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1723.346,
-        -1215.004,
-        59.023999999999994
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        0.689051,
-        -0.724713
-      ],
-      "node_id": 1000000000001030
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\industrial\\industrial_barcode_small.mi",
-      "scale": [
-        0.94486928,
-        0.192342639,
-        3.0
-      ],
-      "alpha": 1,
-      "normalThreshold": 42.2448997,
-      "roughnessScale": 1,
-      "orderNo": 0,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1728.884,
-        -1211.823,
-        59.683
-      ],
-      "quat": [
-        -0.10949,
-        -0.687394,
-        0.117677,
-        -0.708275
-      ],
-      "node_id": 1000000000001031
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
-      "scale": [
-        1.47740722,
-        1.47740686,
-        0.0320636481
-      ],
-      "alpha": 1,
-      "normalThreshold": 90,
-      "roughnessScale": 1,
-      "orderNo": 2,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1727.633,
-        -1215.287,
-        59.821999999999996
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        0.999969,
-        0.007934
-      ],
-      "node_id": 1000000000001032
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\gravel_patch_01a.mi",
-      "scale": [
-        2.0,
-        2.0,
-        0.100000001
-      ],
-      "alpha": 0.964071989,
-      "normalThreshold": 90,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1727.35,
-        -1216.128,
-        58.977
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        0.88737,
-        -0.461058
-      ],
-      "node_id": 1000000000001033
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\gravel_patch_01a.mi",
-      "scale": [
-        2.64291525,
-        2.64291525,
-        0.132145762
-      ],
-      "alpha": 0.544910014,
-      "normalThreshold": 90,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1726.235,
-        -1213.654,
-        58.977
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        0.88737,
-        -0.461058
-      ],
-      "node_id": 1000000000001034
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dirt_c_dark.mi",
-      "scale": [
-        1.13187289,
-        0.622808516,
-        0.0500000007
-      ],
-      "alpha": 0.487179011,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 0,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1727.612,
-        -1214.061,
-        60.11
-      ],
-      "quat": [
-        0.584133,
-        -0.398482,
-        -0.398482,
-        0.584133
-      ],
-      "node_id": 1000000000001035
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\industrial\\industrial_barcode_small_white.mi",
-      "scale": [
-        0.619078517,
-        0.14598611,
-        0.115914933
-      ],
-      "alpha": 0.521008015,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 0,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1726.389,
-        -1211.93,
-        60.521
-      ],
-      "quat": [
-        -0.390856,
-        -0.589264,
-        0.589264,
-        0.390856
-      ],
-      "node_id": 1000000000001036
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\industrial\\industrial_markings_b_white.mi",
-      "scale": [
-        0.994486451,
-        0.102602504,
-        0.115914933
-      ],
-      "alpha": 0.521008015,
-      "normalThreshold": 51.4285736,
-      "roughnessScale": 1,
-      "orderNo": 0,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1726.331,
-        -1211.772,
-        59.053999999999995
-      ],
-      "quat": [
-        -0.390856,
-        -0.589264,
-        0.589264,
-        0.390856
-      ],
-      "node_id": 1000000000001037
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dirt_c_dark.mi",
-      "scale": [
-        1.05970573,
-        0.335345507,
-        0.0500000007
-      ],
-      "alpha": 0.602648973,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 0,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1727.362,
-        -1215.473,
-        59.809999999999995
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        0.840657,
-        0.541569
-      ],
-      "node_id": 1000000000001038
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dirt_c_dark.mi",
-      "scale": [
-        1.35422587,
-        0.550572634,
-        0.0500000007
-      ],
-      "alpha": 0.602648973,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 0,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1727.67,
-        -1215.326,
-        59.802
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        0.829261,
-        0.558861
-      ],
-      "node_id": 1000000000001039
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\brands\\at_ak_02.mi",
-      "scale": [
-        0.872092187,
-        0.436046094,
-        0.16865775
-      ],
-      "alpha": 0.674157023,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1729.026,
-        -1217.082,
-        60.76
-      ],
-      "quat": [
-        -0.575874,
-        0.410328,
-        0.410328,
-        -0.575874
-      ],
-      "node_id": 1000000000001040
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\brands\\high_octane_02.mi",
-      "scale": [
-        1.69802654,
-        0.488691002,
-        0.189020216
-      ],
-      "alpha": 0.674157023,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1728.682,
-        -1216.095,
-        60.76
-      ],
-      "quat": [
-        -0.575874,
-        0.410328,
-        0.410328,
-        -0.575874
-      ],
-      "node_id": 1000000000001041
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\brands\\ruf_tread_01.mi",
-      "scale": [
-        1.03415608,
-        0.517078042,
-        0.200000003
-      ],
-      "alpha": 0.674157023,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1727.38,
-        -1212.65,
-        60.794
-      ],
-      "quat": [
-        -0.566872,
-        0.422677,
-        0.422677,
-        -0.566872
-      ],
-      "node_id": 1000000000001042
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\brands\\high_octane_02.mi",
-      "scale": [
-        0.836064756,
-        0.170512021,
-        0.116661593
-      ],
-      "alpha": 0.674157023,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1726.97,
-        -1211.35,
-        60.623
-      ],
-      "quat": [
-        -0.566872,
-        0.422677,
-        0.422677,
-        -0.566872
-      ],
-      "node_id": 1000000000001043
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\brands\\high_octane_01.mi",
-      "scale": [
-        1.03415608,
-        0.517078042,
-        0.200000003
-      ],
-      "alpha": 0.674157023,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1728.172,
-        -1214.766,
-        60.76
-      ],
-      "quat": [
-        -0.55736,
-        0.435144,
-        0.435144,
-        -0.55736
-      ],
-      "node_id": 1000000000001044
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\brands\\ruf_tread_01.mi",
-      "scale": [
-        1.38315165,
-        0.710394263,
-        0.150000006
-      ],
-      "alpha": 1,
-      "normalThreshold": 53.6974792,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1728.592,
-        -1217.903,
-        61.028
-      ],
-      "quat": [
-        0.70169,
-        0.109919,
-        0.107421,
-        0.695708
-      ],
-      "node_id": 1000000000001045
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
-      "scale": [
-        0.823179245,
-        0.823179066,
-        0.0178651698
-      ],
-      "alpha": 1,
-      "normalThreshold": 90,
-      "roughnessScale": 1,
-      "orderNo": 2,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1726.714,
-        -1213.442,
-        59.937999999999995
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        0.484095,
-        -0.875016
-      ],
-      "node_id": 1000000000001046
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\industrial\\industrial_barcode_small.mi",
-      "scale": [
-        0.768643975,
-        0.156469285,
-        3.0
-      ],
-      "alpha": 1,
-      "normalThreshold": 42.2448997,
-      "roughnessScale": 1,
-      "orderNo": 0,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1728.499,
-        -1211.398,
-        60.363
-      ],
-      "quat": [
-        0.006455,
-        0.014485,
-        0.115428,
-        -0.993189
-      ],
-      "node_id": 1000000000001047
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
-      "scale": [
-        10.3654442,
-        11.5901737,
-        0.550000012
-      ],
-      "alpha": 1,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 7,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1733.741,
-        -1220.624,
-        59.163
-      ],
-      "quat": [
-        -0.022553877892726126,
-        0.023802628468301567,
-        -0.2753813217195385,
-        0.960775682082972
-      ],
-      "node_id": 1000000000001048
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
-      "scale": [
-        6.73067141,
-        7.52593327,
-        0.324668735
-      ],
-      "alpha": 1,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 0,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 3,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1738.597,
-        -1219.566,
-        59.504999999999995
-      ],
-      "quat": [
-        -0.4107187312115191,
-        -0.5738242240006952,
-        -0.41305006226909113,
-        0.575695935650496
-      ],
-      "node_id": 1000000000001049
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\gravel_patch_01a.mi",
-      "scale": [
-        2.67716169,
-        2.67716098,
-        0.100000001
-      ],
-      "alpha": 0.682635009,
-      "normalThreshold": 90,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1737.753,
-        -1220.95,
-        58.983
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        -0.6892240506903398,
-        -0.724548277051295
-      ],
-      "node_id": 1000000000001050
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\gravel_patch_01a.mi",
-      "scale": [
-        2.67716169,
-        2.67716098,
-        0.100000001
-      ],
-      "alpha": 0.724551022,
-      "normalThreshold": 90,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1736.106,
-        -1221.791,
-        58.983
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        -0.6896136665267735,
-        0.7241770459911719
-      ],
-      "node_id": 1000000000001051
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\gravel_patch_01a.mi",
-      "scale": [
-        2.67716169,
-        2.67716098,
-        0.100000001
-      ],
-      "alpha": 0.861110985,
-      "normalThreshold": 90,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1739.807,
-        -1220.749,
-        58.983
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        -0.6892240506903398,
-        -0.724548277051295
-      ],
-      "node_id": 1000000000001052
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dirt_c_dark.mi",
-      "scale": [
-        1.22533321,
-        0.679341912,
-        0.0898303241
-      ],
-      "alpha": 0.479041994,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 2,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1737.989,
-        -1220.424,
-        59.940999999999995
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        0.13942448668723878,
-        0.9902323363736414
-      ],
-      "node_id": 1000000000001053
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
-      "scale": [
-        0.758783519,
-        0.758783519,
-        0.0322931185
-      ],
-      "alpha": 0.666666985,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 2,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1736.527,
-        -1221.151,
-        59.422
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        0.7683846548441738,
-        -0.6399882055163205
-      ],
-      "node_id": 1000000000001054
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
-      "scale": [
-        1.17483771,
-        1.17483771,
-        0.0500000007
-      ],
-      "alpha": 0.666666985,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 2,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1736.231,
-        -1221.354,
-        59.863
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        0.9211777023365254,
-        0.38914207489039276
-      ],
-      "node_id": 1000000000001055
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\colors\\white_a.mi",
-      "scale": [
-        1.9752146,
-        0.394981414,
-        0.400000006
-      ],
-      "alpha": 0.741572976,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 2,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1737.231,
-        -1208.808,
-        60.646
-      ],
-      "quat": [
-        -0.7003362337566864,
-        -0.0976182124631465,
-        0.0976182124631465,
-        0.7003362337566864
-      ],
-      "node_id": 1000000000001056
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\gravel_patch_01a.mi",
-      "scale": [
-        2.67716169,
-        2.67716098,
-        0.100000001
-      ],
-      "alpha": 0.75,
-      "normalThreshold": 90,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1732.671,
-        -1208.81,
-        58.876999999999995
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        -0.689224757797121,
-        -0.7245475699445137
-      ],
-      "node_id": 1000000000001057
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\colors\\white_a.mi",
-      "scale": [
-        2.22237611,
-        0.394981414,
-        0.200000003
-      ],
-      "alpha": 0.741572976,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 2,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1737.091,
-        -1208.863,
-        60.646
-      ],
-      "quat": [
-        -0.7003362337566864,
-        -0.0976182124631465,
-        0.0976182124631465,
-        0.7003362337566864
-      ],
-      "node_id": 1000000000001058
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
-      "scale": [
-        1.09832311,
-        1.09832311,
-        0.0839798674
-      ],
-      "alpha": 1,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 2,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1737.575,
-        -1208.076,
-        59.745999999999995
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        -0.5986868055339954,
-        0.8009829845636548
-      ],
-      "node_id": 1000000000001059
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\colors\\white_a.mi",
-      "scale": [
-        1.72618628,
-        0.394981414,
-        0.400000006
-      ],
-      "alpha": 0.741572976,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 2,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1732.371,
-        -1210.449,
-        60.646
-      ],
-      "quat": [
-        -0.7003362337566864,
-        -0.0976182124631465,
-        0.0976182124631465,
-        0.7003362337566864
-      ],
-      "node_id": 1000000000001060
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\gravel_patch_01a.mi",
-      "scale": [
-        2.67716169,
-        2.67716098,
-        0.100000001
-      ],
-      "alpha": 0.838322997,
-      "normalThreshold": 90,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1734.14,
-        -1208.449,
-        58.901999999999994
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        0.30144810610119943,
-        -0.953482582741814
-      ],
-      "node_id": 1000000000001061
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\colors\\white_a.mi",
-      "scale": [
-        1.72618628,
-        0.394981414,
-        0.364603251
-      ],
-      "alpha": 0.741572976,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 2,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1734.086,
-        -1209.925,
-        60.646
-      ],
-      "quat": [
-        -0.7003362337566864,
-        -0.0976182124631465,
-        0.0976182124631465,
-        0.7003362337566864
-      ],
-      "node_id": 1000000000001062
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
-      "scale": [
-        1.17483771,
-        1.17483771,
-        0.0199999996
-      ],
-      "alpha": 0.666666985,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 2,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1732.162,
-        -1209.994,
-        60.065999999999995
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        0.4425456074327256,
-        0.8967457488329678
-      ],
-      "node_id": 1000000000001063
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
-      "scale": [
-        1.17483771,
-        1.17483771,
-        0.0898303241
-      ],
-      "alpha": 0.666666985,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 2,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1734.631,
-        -1209.536,
-        60.412
-      ],
-      "quat": [
-        -0.5520425067130248,
-        0.4418696133499112,
-        0.5520425067130248,
-        0.4418696133499112
-      ],
-      "node_id": 1000000000001064
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\brands\\ruf_tread_01.mi",
-      "scale": [
-        1.03415608,
-        0.517078042,
-        0.200000003
-      ],
-      "alpha": 0.674157023,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1732.088,
-        -1210.546,
-        60.674
-      ],
-      "quat": [
-        0.08641976236949506,
-        -0.7018063087547732,
-        -0.7018063087547732,
-        0.08641976236949506
-      ],
-      "node_id": 1000000000001065
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\brands\\high_octane_01.mi",
-      "scale": [
-        0.574565589,
-        0.287282795,
-        0.11111778
-      ],
-      "alpha": 0.674157023,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1732.61,
-        -1210.356,
-        60.741
-      ],
-      "quat": [
-        0.08641976236949506,
-        -0.7018063087547732,
-        -0.7018063087547732,
-        0.08641976236949506
-      ],
-      "node_id": 1000000000001066
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\brands\\high_octane_02.mi",
-      "scale": [
-        0.74985832,
-        0.130508751,
-        0.145018414
-      ],
-      "alpha": 0.674157023,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1732.608,
-        -1210.356,
-        60.547999999999995
-      ],
-      "quat": [
-        0.08641976236949506,
-        -0.7018063087547732,
-        -0.7018063087547732,
-        0.08641976236949506
-      ],
-      "node_id": 1000000000001067
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\brands\\high_octane_01.mi",
-      "scale": [
-        0.727941573,
-        0.363970786,
-        0.140779838
-      ],
-      "alpha": 0.674157023,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1736.588,
-        -1208.584,
-        61.12
-      ],
-      "quat": [
-        0.11726093173772756,
-        -0.8492423152728554,
-        -0.5079699552552297,
-        0.08369033019411501
-      ],
-      "node_id": 1000000000001068
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\brands\\ruf_tread_01.mi",
-      "scale": [
-        0.859042287,
-        0.429521143,
-        0.166133985
-      ],
-      "alpha": 0.674157023,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1737.391,
-        -1208.346,
-        61.102
-      ],
-      "quat": [
-        0.13721194956890598,
-        -0.8452789817643049,
-        -0.5029473757884616,
-        0.11713435962389515
-      ],
-      "node_id": 1000000000001069
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\brands\\high_octane_01.mi",
-      "scale": [
-        1.03415608,
-        0.517078042,
-        0.200000003
-      ],
-      "alpha": 0.674157023,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 1,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1734.395,
-        -1209.8,
-        60.66
-      ],
-      "quat": [
-        0.08641976236949506,
-        -0.7018063087547732,
-        -0.7018063087547732,
-        0.08641976236949506
-      ],
-      "node_id": 1000000000001070
-    },
-    {
-      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
-      "scale": [
-        1.17483771,
-        1.17483771,
-        0.0898303241
-      ],
-      "alpha": 0.666666985,
-      "normalThreshold": 1,
-      "roughnessScale": 1,
-      "orderNo": 2,
-      "normalsBlendingMode": "AlphaBlending",
-      "surfaceType": "ROT_Static",
-      "diffuseColorScaleIndex": 0,
-      "decalRenderMode": "DRM_AllStatic",
-      "pos": [
-        1735.175,
-        -1208.503,
-        59.738
-      ],
-      "quat": [
-        0.0,
-        0.0,
-        0.7807052833995682,
-        0.6248985468057995
-      ],
-      "node_id": 1000000000001071
-    },
     {
       "pid": "roadhouse_bench#0:decal:industrial_numbers_sequence_c@4.05,-6.85,0.19",
       "material": "base\\surfaces\\textures\\decals\\industrial\\industrial_numbers_sequence_c.mi",
@@ -3695,6 +1688,2166 @@
       ],
       "node_id": 1000000000002052,
       "hangar": "hangar_city"
+    },
+    {
+      "pid": "roadhouse_bench#0:decal:industrial_numbers_sequence_c@4.05,-6.85,0.19",
+      "material": "base\\surfaces\\textures\\decals\\industrial\\industrial_numbers_sequence_c.mi",
+      "scale": [
+        0.369987994,
+        0.102182999,
+        0.0739979967
+      ],
+      "alpha": 1,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 0,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 1,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1984.859,
+        -1378.249,
+        53.961
+      ],
+      "quat": [
+        -0.06164203364993731,
+        0.7044148256705705,
+        0.7044148256705705,
+        -0.06164203364993731
+      ],
+      "node_id": 1000000000001000,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "roadhouse_bench#0:decal:puddle_rough_a_dirty@4.81,-4.32,-0.19",
+      "material": "base\\surfaces\\textures\\decals\\wetness\\puddle_rough_a_dirty.mi",
+      "scale": [
+        1.55341792,
+        1.87763822,
+        0.0417234302
+      ],
+      "alpha": 1,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 3,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 1,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1987.389,
+        -1379.012,
+        53.584
+      ],
+      "quat": [
+        -0.0023504229406640844,
+        0.0011016723650886411,
+        0.9233449846208621,
+        -0.38396251771820117
+      ],
+      "node_id": 1000000000001001,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "roadhouse_bench#0:decal:dirt_o@6.21,-4.82,-0.20",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dirt_o.mi",
+      "scale": [
+        5.56247282,
+        2.01904726,
+        0.10767255
+      ],
+      "alpha": 0.382021993,
+      "normalThreshold": 38.2191772,
+      "roughnessScale": 1.46067405,
+      "orderNo": 0,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 8,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1986.891,
+        -1380.412,
+        53.565
+      ],
+      "quat": [
+        0.003985253818767382,
+        0.0018469629124592624,
+        -0.8034126034638118,
+        -0.5954058300692899
+      ],
+      "node_id": 1000000000001002,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "roadhouse_bench#0:decal:dirt_o_dark@7.15,-6.79,-0.21",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dirt_o_dark.mi",
+      "scale": [
+        2.98672152,
+        1.664711,
+        0.100000001
+      ],
+      "alpha": 1,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 0,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 1,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1984.92,
+        -1381.347,
+        53.56
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        0.8855055794392265,
+        -0.4646285522091814
+      ],
+      "node_id": 1000000000001003,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "roadhouse_bench#0:decal:dust_patch_01_dark@2.96,-6.96,-0.22",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
+      "scale": [
+        3.07507634,
+        2.97749186,
+        0.241523936
+      ],
+      "alpha": 0.790323019,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 1,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1984.745,
+        -1377.163,
+        53.549
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        0.9957718108974567,
+        -0.09185599930325733
+      ],
+      "node_id": 1000000000001004,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "roadhouse_bench#0:decal:dust_patch_01_dark@6.31,-6.14,-0.19",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
+      "scale": [
+        3.92510724,
+        3.14008832,
+        0.303994507
+      ],
+      "alpha": 0.995670974,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1985.567,
+        -1380.513,
+        53.582
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        -0.12773530448744397,
+        -0.9918084773889061
+      ],
+      "node_id": 1000000000001005,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "roadhouse_bench#0:decal:dust_patch_01_dark@7.32,-6.29,-0.22",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
+      "scale": [
+        3.07507634,
+        2.97749186,
+        0.241523936
+      ],
+      "alpha": 0.790323019,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 2,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 1,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1985.425,
+        -1381.524,
+        53.549
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        0.908292095462963,
+        0.4183363925652417
+      ],
+      "node_id": 1000000000001006,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "roadhouse_bench#0:decal:dust_patch_01_dark@5.33,-6.16,-0.22",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
+      "scale": [
+        3.07507634,
+        2.97749186,
+        0.241523936
+      ],
+      "alpha": 0.790323019,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 2,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 1,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1985.551,
+        -1379.531,
+        53.549
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        0.577435418332215,
+        0.8164360961597057
+      ],
+      "node_id": 1000000000001007,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "roadhouse_bench#0:decal:dirt_a@4.10,-7.27,2.67",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dirt_a.mi",
+      "scale": [
+        1.8808459,
+        0.931258559,
+        0.219651461
+      ],
+      "alpha": 0.191010997,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 0,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1984.44,
+        -1378.304,
+        56.443
+      ],
+      "quat": [
+        0.5657822985782607,
+        -0.4354568619513305,
+        0.4258904143086576,
+        -0.555773202090565
+      ],
+      "node_id": 1000000000001008,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "roadhouse_bench#0:decal:dirt_a@4.08,-7.37,2.20",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dirt_a.mi",
+      "scale": [
+        1.81248283,
+        0.615875423,
+        0.219651461
+      ],
+      "alpha": 0.213483006,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 0,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1984.343,
+        -1378.282,
+        55.966
+      ],
+      "quat": [
+        0.5657822985782607,
+        -0.4354568619513305,
+        0.4258904143086576,
+        -0.555773202090565
+      ],
+      "node_id": 1000000000001009,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "roadhouse_bench#0:decal:dust_patch_01_dark@3.28,-7.05,0.77",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
+      "scale": [
+        0.850444436,
+        0.824552476,
+        0.0735579506
+      ],
+      "alpha": 0.269663006,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 1,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1984.659,
+        -1377.477,
+        54.54
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        -0.12773530448744397,
+        -0.9918084773889061
+      ],
+      "node_id": 1000000000001010,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "roadhouse_bench#0:decal:dirt_a@5.83,-6.81,2.52",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dirt_a.mi",
+      "scale": [
+        1.81248283,
+        1.22837341,
+        0.219651461
+      ],
+      "alpha": 0.393258005,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 0,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1984.901,
+        -1380.026,
+        56.294
+      ],
+      "quat": [
+        0.5657822985782607,
+        -0.4354568619513305,
+        0.4258904143086576,
+        -0.555773202090565
+      ],
+      "node_id": 1000000000001011,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "roadhouse_bench#0:decal:dust_patch_01_dark@4.90,-7.11,0.85",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
+      "scale": [
+        1.83445048,
+        1.4675616,
+        0.144874439
+      ],
+      "alpha": 0.596773982,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 0,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 1,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1984.602,
+        -1379.101,
+        54.622
+      ],
+      "quat": [
+        0.09293787267847264,
+        -0.721622269190745,
+        -0.08762891496532405,
+        -0.6804007722746941
+      ],
+      "node_id": 1000000000001012,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "roadhouse_bench#0:decal:dust_patch_01_dark@3.03,-4.63,-0.24",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
+      "scale": [
+        2.3120296,
+        1.84962511,
+        0.179063722
+      ],
+      "alpha": 0.995670974,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 1,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1987.076,
+        -1377.234,
+        53.528
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        -0.12773530448744397,
+        -0.9918084773889061
+      ],
+      "node_id": 1000000000001013,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "living_corner#0:decal:entropy_01_letter_m_black@-0.72,10.49,2.34",
+      "material": "base\\surfaces\\textures\\decals\\lettering\\entropy\\entropy_01_letter_m_black.mi",
+      "scale": [
+        0.300000012,
+        0.300000012,
+        1.0
+      ],
+      "alpha": 1,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 0,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 4,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        2002.883,
+        -1371.21,
+        54.761
+      ],
+      "quat": [
+        0.614102,
+        0.35054,
+        0.299252,
+        0.640662
+      ],
+      "node_id": 1000000000001014,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_electronics#0:decal:white_a@-0.23,3.04,2.10",
+      "material": "base\\surfaces\\textures\\decals\\colors\\white_a.mi",
+      "scale": [
+        3.37861323,
+        0.394981414,
+        0.400000006
+      ],
+      "alpha": 0.741572976,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 2,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1984.956,
+        -1370.433,
+        55.266
+      ],
+      "quat": [
+        -0.0976182124631465,
+        0.7003362337566864,
+        -0.7003362337566864,
+        0.0976182124631465
+      ],
+      "node_id": 1000000000001015,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_electronics#0:decal:thorton_01@-0.27,3.17,2.09",
+      "material": "base\\surfaces\\textures\\decals\\brands\\thorton_01.mi",
+      "scale": [
+        0.943488359,
+        0.350985587,
+        0.300000012
+      ],
+      "alpha": 0.674157023,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1984.833,
+        -1370.465,
+        55.263
+      ],
+      "quat": [
+        -0.6930028293290007,
+        -0.14052615905232735,
+        -0.14052615905232735,
+        -0.6930028293290007
+      ],
+      "node_id": 1000000000001016,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_electronics#0:decal:gravel_patch_01a@-1.07,1.63,0.36",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\gravel_patch_01a.mi",
+      "scale": [
+        2.67716169,
+        2.67716098,
+        0.0500000007
+      ],
+      "alpha": 0.861110985,
+      "normalThreshold": 90,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1986.366,
+        -1371.269,
+        53.531
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        -0.689224757797121,
+        -0.7245475699445137
+      ],
+      "node_id": 1000000000001017,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_electronics#0:decal:gravel_patch_01a@0.06,-0.29,0.34",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\gravel_patch_01a.mi",
+      "scale": [
+        2.67716169,
+        2.67716098,
+        0.100000001
+      ],
+      "alpha": 0.861110985,
+      "normalThreshold": 90,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1988.29,
+        -1370.138,
+        53.505
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        -0.6892240506903398,
+        -0.724548277051295
+      ],
+      "node_id": 1000000000001018,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_electronics#0:decal:white_a@1.08,-0.38,2.10",
+      "material": "base\\surfaces\\textures\\decals\\colors\\white_a.mi",
+      "scale": [
+        3.44008279,
+        0.394981414,
+        0.5
+      ],
+      "alpha": 0.741572976,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 2,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1988.377,
+        -1369.121,
+        55.266
+      ],
+      "quat": [
+        -0.0976182124631465,
+        0.7003362337566864,
+        -0.7003362337566864,
+        0.0976182124631465
+      ],
+      "node_id": 1000000000001019,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_electronics#0:decal:dust_patch_01_dark@1.27,-0.79,0.88",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
+      "scale": [
+        3.2210741,
+        3.60165977,
+        0.155375585
+      ],
+      "alpha": 1,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 0,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 4,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1988.788,
+        -1368.934,
+        54.046
+      ],
+      "quat": [
+        -0.4107180241047379,
+        -0.5738249311074765,
+        -0.41305006226909113,
+        0.575695935650496
+      ],
+      "node_id": 1000000000001020,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_electronics#0:decal:at_ak_02@-0.26,1.86,2.26",
+      "material": "base\\surfaces\\textures\\decals\\brands\\at_ak_02.mi",
+      "scale": [
+        1.17666781,
+        0.212895229,
+        0.0588038117
+      ],
+      "alpha": 0.674157023,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1986.136,
+        -1370.457,
+        55.429
+      ],
+      "quat": [
+        -0.7018063087547732,
+        -0.08641976236949506,
+        -0.08641976236949506,
+        -0.7018063087547732
+      ],
+      "node_id": 1000000000001021,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_electronics#0:decal:high_octane_01@0.67,0.74,2.11",
+      "material": "base\\surfaces\\textures\\decals\\brands\\high_octane_01.mi",
+      "scale": [
+        1.03415608,
+        0.517078042,
+        0.200000003
+      ],
+      "alpha": 0.674157023,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1987.261,
+        -1369.53,
+        55.28
+      ],
+      "quat": [
+        -0.7018063087547732,
+        -0.08641976236949506,
+        -0.08641976236949506,
+        -0.7018063087547732
+      ],
+      "node_id": 1000000000001022,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_electronics#0:decal:high_octane_02@1.16,-0.53,2.11",
+      "material": "base\\surfaces\\textures\\decals\\brands\\high_octane_02.mi",
+      "scale": [
+        1.69830644,
+        0.488691002,
+        0.189020216
+      ],
+      "alpha": 0.674157023,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1988.534,
+        -1369.038,
+        55.28
+      ],
+      "quat": [
+        -0.6973494147129544,
+        -0.11706082051865174,
+        -0.11706082051865174,
+        -0.6973494147129544
+      ],
+      "node_id": 1000000000001023,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_electronics#0:decal:ruf_tread_01@1.04,-1.58,2.56",
+      "material": "base\\surfaces\\textures\\decals\\brands\\ruf_tread_01.mi",
+      "scale": [
+        0.872092187,
+        0.436046094,
+        0.16865775
+      ],
+      "alpha": 0.674157023,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1989.579,
+        -1369.156,
+        55.725
+      ],
+      "quat": [
+        -0.8291562400464705,
+        -0.13918689880876006,
+        -0.08963002715608204,
+        -0.5339405731146492
+      ],
+      "node_id": 1000000000001024,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_electronics#0:decal:dirt_c_dark@0.20,-0.10,1.12",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dirt_c_dark.mi",
+      "scale": [
+        1.46587682,
+        0.812702656,
+        0.0500000007
+      ],
+      "alpha": 0.479041994,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 2,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1988.098,
+        -1369.998,
+        54.295
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        0.13942448668723878,
+        0.9902323363736414
+      ],
+      "node_id": 1000000000001025,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_electronics#0:decal:ruf_tread_01@1.02,-1.50,2.56",
+      "material": "base\\surfaces\\textures\\decals\\brands\\ruf_tread_01.mi",
+      "scale": [
+        0.872092187,
+        0.436046094,
+        0.16865775
+      ],
+      "alpha": 0.674157023,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1989.504,
+        -1369.182,
+        55.725
+      ],
+      "quat": [
+        -0.8291569471532516,
+        -0.13918619170197882,
+        -0.08963002715608204,
+        -0.5339405731146492
+      ],
+      "node_id": 1000000000001026,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_fabrication#0:decal:white_a@-17.14,-2.37,2.10",
+      "material": "base\\surfaces\\textures\\decals\\colors\\white_a.mi",
+      "scale": [
+        2.48659396,
+        0.394981414,
+        0.400000006
+      ],
+      "alpha": 0.741572976,
+      "normalThreshold": 0,
+      "roughnessScale": 1,
+      "orderNo": 2,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1988.165,
+        -1373.065,
+        55.266
+      ],
+      "quat": [
+        0.407736,
+        0.577712,
+        -0.577712,
+        -0.407736
+      ],
+      "node_id": 1000000000001027,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_fabrication#0:decal:white_a@-15.72,-6.18,2.10",
+      "material": "base\\surfaces\\textures\\decals\\colors\\white_a.mi",
+      "scale": [
+        3.44008279,
+        0.394981414,
+        0.5
+      ],
+      "alpha": 0.741572976,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 2,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1989.581,
+        -1376.882,
+        55.266
+      ],
+      "quat": [
+        0.426188,
+        0.564237,
+        -0.564237,
+        -0.426188
+      ],
+      "node_id": 1000000000001028,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_fabrication#0:decal:industrial_barcode_small@-16.03,-1.59,0.78",
+      "material": "base\\surfaces\\textures\\decals\\industrial\\industrial_barcode_small.mi",
+      "scale": [
+        0.94486928,
+        0.192342639,
+        3.0
+      ],
+      "alpha": 1,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 0,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1989.268,
+        -1372.291,
+        53.949
+      ],
+      "quat": [
+        -0.417733,
+        -0.570526,
+        -0.570524,
+        -0.417734
+      ],
+      "node_id": 1000000000001029,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_fabrication#0:decal:puddle_rough_a_dirty@-20.95,-5.30,0.37",
+      "material": "base\\surfaces\\textures\\decals\\wetness\\puddle_rough_a_dirty.mi",
+      "scale": [
+        4.0,
+        4.0,
+        0.25
+      ],
+      "alpha": 1,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 2,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1984.346,
+        -1376.004,
+        53.544
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        0.689051,
+        -0.724713
+      ],
+      "node_id": 1000000000001030,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_fabrication#0:decal:industrial_barcode_small@-15.42,-2.12,1.03",
+      "material": "base\\surfaces\\textures\\decals\\industrial\\industrial_barcode_small.mi",
+      "scale": [
+        0.94486928,
+        0.192342639,
+        3.0
+      ],
+      "alpha": 1,
+      "normalThreshold": 42.2448997,
+      "roughnessScale": 1,
+      "orderNo": 0,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1989.884,
+        -1372.823,
+        54.203
+      ],
+      "quat": [
+        -0.10949,
+        -0.687394,
+        0.117677,
+        -0.708275
+      ],
+      "node_id": 1000000000001031,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_fabrication#0:decal:dust_patch_01_dark@-16.67,-5.59,1.17",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
+      "scale": [
+        1.47740722,
+        1.47740686,
+        0.0320636481
+      ],
+      "alpha": 1,
+      "normalThreshold": 90,
+      "roughnessScale": 1,
+      "orderNo": 2,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1988.633,
+        -1376.287,
+        54.342
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        0.999969,
+        0.007934
+      ],
+      "node_id": 1000000000001032,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_fabrication#0:decal:gravel_patch_01a@-16.95,-6.43,0.33",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\gravel_patch_01a.mi",
+      "scale": [
+        2.0,
+        2.0,
+        0.100000001
+      ],
+      "alpha": 0.964071989,
+      "normalThreshold": 90,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1988.35,
+        -1377.128,
+        53.497
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        0.88737,
+        -0.461058
+      ],
+      "node_id": 1000000000001033,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_fabrication#0:decal:gravel_patch_01a@-18.07,-3.95,0.33",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\gravel_patch_01a.mi",
+      "scale": [
+        2.64291525,
+        2.64291525,
+        0.132145762
+      ],
+      "alpha": 0.544910014,
+      "normalThreshold": 90,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1987.235,
+        -1374.654,
+        53.497
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        0.88737,
+        -0.461058
+      ],
+      "node_id": 1000000000001034,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_fabrication#0:decal:dirt_c_dark@-16.69,-4.36,1.46",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dirt_c_dark.mi",
+      "scale": [
+        1.13187289,
+        0.622808516,
+        0.0500000007
+      ],
+      "alpha": 0.487179011,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 0,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1988.612,
+        -1375.061,
+        54.63
+      ],
+      "quat": [
+        0.584133,
+        -0.398482,
+        -0.398482,
+        0.584133
+      ],
+      "node_id": 1000000000001035,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_fabrication#0:decal:industrial_barcode_small_white@-17.91,-2.23,1.87",
+      "material": "base\\surfaces\\textures\\decals\\industrial\\industrial_barcode_small_white.mi",
+      "scale": [
+        0.619078517,
+        0.14598611,
+        0.115914933
+      ],
+      "alpha": 0.521008015,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 0,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1987.389,
+        -1372.93,
+        55.041
+      ],
+      "quat": [
+        -0.390856,
+        -0.589264,
+        0.589264,
+        0.390856
+      ],
+      "node_id": 1000000000001036,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_fabrication#0:decal:industrial_markings_b_white@-17.97,-2.07,0.40",
+      "material": "base\\surfaces\\textures\\decals\\industrial\\industrial_markings_b_white.mi",
+      "scale": [
+        0.994486451,
+        0.102602504,
+        0.115914933
+      ],
+      "alpha": 0.521008015,
+      "normalThreshold": 51.4285736,
+      "roughnessScale": 1,
+      "orderNo": 0,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1987.331,
+        -1372.772,
+        53.574
+      ],
+      "quat": [
+        -0.390856,
+        -0.589264,
+        0.589264,
+        0.390856
+      ],
+      "node_id": 1000000000001037,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_fabrication#0:decal:dirt_c_dark@-16.94,-5.77,1.16",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dirt_c_dark.mi",
+      "scale": [
+        1.05970573,
+        0.335345507,
+        0.0500000007
+      ],
+      "alpha": 0.602648973,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 0,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1988.362,
+        -1376.473,
+        54.33
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        0.840657,
+        0.541569
+      ],
+      "node_id": 1000000000001038,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_fabrication#0:decal:dirt_c_dark@-16.63,-5.63,1.15",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dirt_c_dark.mi",
+      "scale": [
+        1.35422587,
+        0.550572634,
+        0.0500000007
+      ],
+      "alpha": 0.602648973,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 0,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1988.67,
+        -1376.326,
+        54.322
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        0.829261,
+        0.558861
+      ],
+      "node_id": 1000000000001039,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_fabrication#0:decal:at_ak_02@-15.27,-7.38,2.11",
+      "material": "base\\surfaces\\textures\\decals\\brands\\at_ak_02.mi",
+      "scale": [
+        0.872092187,
+        0.436046094,
+        0.16865775
+      ],
+      "alpha": 0.674157023,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1990.026,
+        -1378.082,
+        55.28
+      ],
+      "quat": [
+        -0.575874,
+        0.410328,
+        0.410328,
+        -0.575874
+      ],
+      "node_id": 1000000000001040,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_fabrication#0:decal:high_octane_02@-15.62,-6.39,2.11",
+      "material": "base\\surfaces\\textures\\decals\\brands\\high_octane_02.mi",
+      "scale": [
+        1.69802654,
+        0.488691002,
+        0.189020216
+      ],
+      "alpha": 0.674157023,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1989.682,
+        -1377.095,
+        55.28
+      ],
+      "quat": [
+        -0.575874,
+        0.410328,
+        0.410328,
+        -0.575874
+      ],
+      "node_id": 1000000000001041,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_fabrication#0:decal:ruf_tread_01@-16.92,-2.95,2.14",
+      "material": "base\\surfaces\\textures\\decals\\brands\\ruf_tread_01.mi",
+      "scale": [
+        1.03415608,
+        0.517078042,
+        0.200000003
+      ],
+      "alpha": 0.674157023,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1988.38,
+        -1373.65,
+        55.314
+      ],
+      "quat": [
+        -0.566872,
+        0.422677,
+        0.422677,
+        -0.566872
+      ],
+      "node_id": 1000000000001042,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_fabrication#0:decal:high_octane_02@-17.33,-1.65,1.97",
+      "material": "base\\surfaces\\textures\\decals\\brands\\high_octane_02.mi",
+      "scale": [
+        0.836064756,
+        0.170512021,
+        0.116661593
+      ],
+      "alpha": 0.674157023,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1987.97,
+        -1372.35,
+        55.143
+      ],
+      "quat": [
+        -0.566872,
+        0.422677,
+        0.422677,
+        -0.566872
+      ],
+      "node_id": 1000000000001043,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_fabrication#0:decal:high_octane_01@-16.13,-5.07,2.11",
+      "material": "base\\surfaces\\textures\\decals\\brands\\high_octane_01.mi",
+      "scale": [
+        1.03415608,
+        0.517078042,
+        0.200000003
+      ],
+      "alpha": 0.674157023,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1989.172,
+        -1375.766,
+        55.28
+      ],
+      "quat": [
+        -0.55736,
+        0.435144,
+        0.435144,
+        -0.55736
+      ],
+      "node_id": 1000000000001044,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_fabrication#0:decal:ruf_tread_01@-15.71,-8.20,2.38",
+      "material": "base\\surfaces\\textures\\decals\\brands\\ruf_tread_01.mi",
+      "scale": [
+        1.38315165,
+        0.710394263,
+        0.150000006
+      ],
+      "alpha": 1,
+      "normalThreshold": 53.6974792,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1989.592,
+        -1378.903,
+        55.548
+      ],
+      "quat": [
+        0.70169,
+        0.109919,
+        0.107421,
+        0.695708
+      ],
+      "node_id": 1000000000001045,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_fabrication#0:decal:dust_patch_01_dark@-17.59,-3.74,1.29",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
+      "scale": [
+        0.823179245,
+        0.823179066,
+        0.0178651698
+      ],
+      "alpha": 1,
+      "normalThreshold": 90,
+      "roughnessScale": 1,
+      "orderNo": 2,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1987.714,
+        -1374.442,
+        54.458
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        0.484095,
+        -0.875016
+      ],
+      "node_id": 1000000000001046,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_fabrication#0:decal:industrial_barcode_small@-15.80,-1.70,1.71",
+      "material": "base\\surfaces\\textures\\decals\\industrial\\industrial_barcode_small.mi",
+      "scale": [
+        0.768643975,
+        0.156469285,
+        3.0
+      ],
+      "alpha": 1,
+      "normalThreshold": 42.2448997,
+      "roughnessScale": 1,
+      "orderNo": 0,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1989.499,
+        -1372.398,
+        54.883
+      ],
+      "quat": [
+        0.006455,
+        0.014485,
+        0.115428,
+        -0.993189
+      ],
+      "node_id": 1000000000001047,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_mechanic#0:decal:dust_patch_01_dark@-2.02,10.16,0.51",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
+      "scale": [
+        10.3654442,
+        11.5901737,
+        0.550000012
+      ],
+      "alpha": 1,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 7,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1994.741,
+        -1381.624,
+        53.683
+      ],
+      "quat": [
+        -0.022553877892726126,
+        0.023802628468301567,
+        -0.2753813217195385,
+        0.960775682082972
+      ],
+      "node_id": 1000000000001048,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_mechanic#0:decal:dust_patch_01_dark@-0.97,5.30,0.85",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
+      "scale": [
+        6.73067141,
+        7.52593327,
+        0.324668735
+      ],
+      "alpha": 1,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 0,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 3,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1999.597,
+        -1380.566,
+        54.025
+      ],
+      "quat": [
+        -0.4107187312115191,
+        -0.5738242240006952,
+        -0.41305006226909113,
+        0.575695935650496
+      ],
+      "node_id": 1000000000001049,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_mechanic#0:decal:gravel_patch_01a@-2.35,6.15,0.33",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\gravel_patch_01a.mi",
+      "scale": [
+        2.67716169,
+        2.67716098,
+        0.100000001
+      ],
+      "alpha": 0.682635009,
+      "normalThreshold": 90,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1998.753,
+        -1381.95,
+        53.503
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        -0.6892240506903398,
+        -0.724548277051295
+      ],
+      "node_id": 1000000000001050,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_mechanic#0:decal:gravel_patch_01a@-3.19,7.79,0.33",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\gravel_patch_01a.mi",
+      "scale": [
+        2.67716169,
+        2.67716098,
+        0.100000001
+      ],
+      "alpha": 0.724551022,
+      "normalThreshold": 90,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1997.106,
+        -1382.791,
+        53.503
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        -0.6896136665267735,
+        0.7241770459911719
+      ],
+      "node_id": 1000000000001051,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_mechanic#0:decal:gravel_patch_01a@-2.15,4.09,0.33",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\gravel_patch_01a.mi",
+      "scale": [
+        2.67716169,
+        2.67716098,
+        0.100000001
+      ],
+      "alpha": 0.861110985,
+      "normalThreshold": 90,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        2000.807,
+        -1381.749,
+        53.503
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        -0.6892240506903398,
+        -0.724548277051295
+      ],
+      "node_id": 1000000000001052,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_mechanic#0:decal:dirt_c_dark@-1.82,5.91,1.29",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dirt_c_dark.mi",
+      "scale": [
+        1.22533321,
+        0.679341912,
+        0.0898303241
+      ],
+      "alpha": 0.479041994,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 2,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1998.989,
+        -1381.424,
+        54.461
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        0.13942448668723878,
+        0.9902323363736414
+      ],
+      "node_id": 1000000000001053,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_mechanic#0:decal:dust_patch_01_dark@-2.55,7.37,0.77",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
+      "scale": [
+        0.758783519,
+        0.758783519,
+        0.0322931185
+      ],
+      "alpha": 0.666666985,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 2,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1997.527,
+        -1382.151,
+        53.942
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        0.7683846548441738,
+        -0.6399882055163205
+      ],
+      "node_id": 1000000000001054,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_mechanic#0:decal:dust_patch_01_dark@-2.75,7.67,1.21",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
+      "scale": [
+        1.17483771,
+        1.17483771,
+        0.0500000007
+      ],
+      "alpha": 0.666666985,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 2,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1997.231,
+        -1382.354,
+        54.383
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        0.9211777023365254,
+        0.38914207489039276
+      ],
+      "node_id": 1000000000001055,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_butcher#0:decal:white_a@-9.41,-4.93,2.10",
+      "material": "base\\surfaces\\textures\\decals\\colors\\white_a.mi",
+      "scale": [
+        1.9752146,
+        0.394981414,
+        0.400000006
+      ],
+      "alpha": 0.741572976,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 2,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1998.231,
+        -1369.808,
+        55.166
+      ],
+      "quat": [
+        -0.7003362337566864,
+        -0.0976182124631465,
+        0.0976182124631465,
+        0.7003362337566864
+      ],
+      "node_id": 1000000000001056,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_butcher#0:decal:gravel_patch_01a@-9.41,-0.37,0.33",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\gravel_patch_01a.mi",
+      "scale": [
+        2.67716169,
+        2.67716098,
+        0.100000001
+      ],
+      "alpha": 0.75,
+      "normalThreshold": 90,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1993.671,
+        -1369.81,
+        53.397
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        -0.689224757797121,
+        -0.7245475699445137
+      ],
+      "node_id": 1000000000001057,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_butcher#0:decal:white_a@-9.46,-4.79,2.10",
+      "material": "base\\surfaces\\textures\\decals\\colors\\white_a.mi",
+      "scale": [
+        2.22237611,
+        0.394981414,
+        0.200000003
+      ],
+      "alpha": 0.741572976,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 2,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1998.091,
+        -1369.863,
+        55.166
+      ],
+      "quat": [
+        -0.7003362337566864,
+        -0.0976182124631465,
+        0.0976182124631465,
+        0.7003362337566864
+      ],
+      "node_id": 1000000000001058,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_butcher#0:decal:dust_patch_01_dark@-8.68,-5.28,1.20",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
+      "scale": [
+        1.09832311,
+        1.09832311,
+        0.0839798674
+      ],
+      "alpha": 1,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 2,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1998.575,
+        -1369.076,
+        54.266
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        -0.5986868055339954,
+        0.8009829845636548
+      ],
+      "node_id": 1000000000001059,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_butcher#0:decal:white_a@-11.05,-0.07,2.10",
+      "material": "base\\surfaces\\textures\\decals\\colors\\white_a.mi",
+      "scale": [
+        1.72618628,
+        0.394981414,
+        0.400000006
+      ],
+      "alpha": 0.741572976,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 2,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1993.371,
+        -1371.449,
+        55.166
+      ],
+      "quat": [
+        -0.7003362337566864,
+        -0.0976182124631465,
+        0.0976182124631465,
+        0.7003362337566864
+      ],
+      "node_id": 1000000000001060,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_butcher#0:decal:gravel_patch_01a@-9.05,-1.84,0.35",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\gravel_patch_01a.mi",
+      "scale": [
+        2.67716169,
+        2.67716098,
+        0.100000001
+      ],
+      "alpha": 0.838322997,
+      "normalThreshold": 90,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1995.14,
+        -1369.449,
+        53.422
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        0.30144810610119943,
+        -0.953482582741814
+      ],
+      "node_id": 1000000000001061,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_butcher#0:decal:white_a@-10.53,-1.79,2.10",
+      "material": "base\\surfaces\\textures\\decals\\colors\\white_a.mi",
+      "scale": [
+        1.72618628,
+        0.394981414,
+        0.364603251
+      ],
+      "alpha": 0.741572976,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 2,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1995.086,
+        -1370.925,
+        55.166
+      ],
+      "quat": [
+        -0.7003362337566864,
+        -0.0976182124631465,
+        0.0976182124631465,
+        0.7003362337566864
+      ],
+      "node_id": 1000000000001062,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_butcher#0:decal:dust_patch_01_dark@-10.59,0.14,1.52",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
+      "scale": [
+        1.17483771,
+        1.17483771,
+        0.0199999996
+      ],
+      "alpha": 0.666666985,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 2,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1993.162,
+        -1370.994,
+        54.586
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        0.4425456074327256,
+        0.8967457488329678
+      ],
+      "node_id": 1000000000001063,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_butcher#0:decal:dust_patch_01_dark@-10.14,-2.33,1.86",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
+      "scale": [
+        1.17483771,
+        1.17483771,
+        0.0898303241
+      ],
+      "alpha": 0.666666985,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 2,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1995.631,
+        -1370.536,
+        54.932
+      ],
+      "quat": [
+        -0.5520425067130248,
+        0.4418696133499112,
+        0.5520425067130248,
+        0.4418696133499112
+      ],
+      "node_id": 1000000000001064,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_butcher#0:decal:ruf_tread_01@-11.15,0.21,2.12",
+      "material": "base\\surfaces\\textures\\decals\\brands\\ruf_tread_01.mi",
+      "scale": [
+        1.03415608,
+        0.517078042,
+        0.200000003
+      ],
+      "alpha": 0.674157023,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1993.088,
+        -1371.546,
+        55.194
+      ],
+      "quat": [
+        0.08641976236949506,
+        -0.7018063087547732,
+        -0.7018063087547732,
+        0.08641976236949506
+      ],
+      "node_id": 1000000000001065,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_butcher#0:decal:high_octane_01@-10.96,-0.31,2.19",
+      "material": "base\\surfaces\\textures\\decals\\brands\\high_octane_01.mi",
+      "scale": [
+        0.574565589,
+        0.287282795,
+        0.11111778
+      ],
+      "alpha": 0.674157023,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1993.61,
+        -1371.356,
+        55.261
+      ],
+      "quat": [
+        0.08641976236949506,
+        -0.7018063087547732,
+        -0.7018063087547732,
+        0.08641976236949506
+      ],
+      "node_id": 1000000000001066,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_butcher#0:decal:high_octane_02@-10.96,-0.31,2.00",
+      "material": "base\\surfaces\\textures\\decals\\brands\\high_octane_02.mi",
+      "scale": [
+        0.74985832,
+        0.130508751,
+        0.145018414
+      ],
+      "alpha": 0.674157023,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1993.608,
+        -1371.356,
+        55.068
+      ],
+      "quat": [
+        0.08641976236949506,
+        -0.7018063087547732,
+        -0.7018063087547732,
+        0.08641976236949506
+      ],
+      "node_id": 1000000000001067,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_butcher#0:decal:high_octane_01@-9.18,-4.29,2.57",
+      "material": "base\\surfaces\\textures\\decals\\brands\\high_octane_01.mi",
+      "scale": [
+        0.727941573,
+        0.363970786,
+        0.140779838
+      ],
+      "alpha": 0.674157023,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1997.588,
+        -1369.584,
+        55.64
+      ],
+      "quat": [
+        0.11726093173772756,
+        -0.8492423152728554,
+        -0.5079699552552297,
+        0.08369033019411501
+      ],
+      "node_id": 1000000000001068,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_butcher#0:decal:ruf_tread_01@-8.95,-5.09,2.55",
+      "material": "base\\surfaces\\textures\\decals\\brands\\ruf_tread_01.mi",
+      "scale": [
+        0.859042287,
+        0.429521143,
+        0.166133985
+      ],
+      "alpha": 0.674157023,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1998.391,
+        -1369.346,
+        55.622
+      ],
+      "quat": [
+        0.13721194956890598,
+        -0.8452789817643049,
+        -0.5029473757884616,
+        0.11713435962389515
+      ],
+      "node_id": 1000000000001069,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_butcher#0:decal:high_octane_01@-10.40,-2.10,2.11",
+      "material": "base\\surfaces\\textures\\decals\\brands\\high_octane_01.mi",
+      "scale": [
+        1.03415608,
+        0.517078042,
+        0.200000003
+      ],
+      "alpha": 0.674157023,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 1,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1995.395,
+        -1370.8,
+        55.18
+      ],
+      "quat": [
+        0.08641976236949506,
+        -0.7018063087547732,
+        -0.7018063087547732,
+        0.08641976236949506
+      ],
+      "node_id": 1000000000001070,
+      "hangar": "hangar"
+    },
+    {
+      "pid": "camp_butcher#0:decal:dust_patch_01_dark@-9.10,-2.88,1.19",
+      "material": "base\\surfaces\\textures\\decals\\dirt\\dust_patch_01_dark.mi",
+      "scale": [
+        1.17483771,
+        1.17483771,
+        0.0898303241
+      ],
+      "alpha": 0.666666985,
+      "normalThreshold": 1,
+      "roughnessScale": 1,
+      "orderNo": 2,
+      "normalsBlendingMode": "AlphaBlending",
+      "surfaceType": "ROT_Static",
+      "diffuseColorScaleIndex": 0,
+      "decalRenderMode": "DRM_AllStatic",
+      "pos": [
+        1996.175,
+        -1369.503,
+        54.258
+      ],
+      "quat": [
+        0.0,
+        0.0,
+        0.7807052833995682,
+        0.6248985468057995
+      ],
+      "node_id": 1000000000001071,
+      "hangar": "hangar"
     }
   ],
   "quest_nodes": [
