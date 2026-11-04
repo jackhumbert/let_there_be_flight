@@ -34,6 +34,19 @@
           0.4
         ]
       },
+      "world_map": {
+        "note": "the hangar on the world map's 3D city (pad_worldmap.py): a box the shell's size, 24 x 15 m, ground to the deck's ledge",
+        "local": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "size": [
+          24.0,
+          15.0,
+          7.2
+        ]
+      },
       "streaming_distance": 400.0,
       "node_id": 1000000000000300,
       "entities": [

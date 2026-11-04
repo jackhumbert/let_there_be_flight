@@ -46,6 +46,9 @@ alwaysSpawned default false, nodeFlags FLAG_AllowForceStreamIn, FLAG_Quest; see 
 the map there; written to src/redscript/Navigation/FlightHangarSites.reds (write_pins), which
 FlightHangarPins (FlightHangarPins.reds) registers.
 
+"world_map" (optional, on a pad entry): {"size": [x, y, z], "local"}, a box of that size on the world map's 3D
+city, written by pad_worldmap.py (which this runs) into an ArchiveXL patch of the map's entity.
+
 Lessons (2026-10-27): a second sector of our own with its own descriptor in the same block never
 loaded (not even at a spot where the same nodes worked), so all pads share this sector; the
 descriptor box gates loading, so it must cover every node.
@@ -65,6 +68,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/, for common
 from common import paths  # noqa: E402
+
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
