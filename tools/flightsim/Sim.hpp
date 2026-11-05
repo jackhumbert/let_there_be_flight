@@ -136,10 +136,35 @@ public:
   // recorded FindGround) or, without one, the terrain's.
   Frame Advance(const Flight::Controls &aControls, const Flight::Ground *aGround, float aDt);
 
+  // A mode computed outside the Sim (the Autopilot, Trip.hpp) flying the body. Observe updates the stats from the
+  // body as it is now and returns them, for the mode to read; AdvanceMode then takes the mode's force and torque
+  // (car frame, as ModeOutput) and the input fields it left for the force tail, through the tail and the body as
+  // Advance does. No ground is found: the mode casts its own rays.
+  const Flight::StatsState &Observe();
+  Frame AdvanceMode(const Flight::ModeOutput &aMode, const Flight::Controls &aControls, float aDt);
+  // A contact with something solid (a box the terrain does not hold): the body moved by aPush (world), its velocity
+  // into the surface (aNormal, world, unit, out of the solid) taken away, and with aImpact > 0 (0..1) a hit:
+  // ProcessImpact's recovery timer, as Knock sets it.
+  void Collide(Vec3 aPush, Vec3 aNormal, float aImpact);
+  // The car's statics as the force tail reads them (mass, drag, inertia, thrusters), filled by Place.
+  const Flight::StatsStatic &Statics() const { return statics; }
+  const Car &Vehicle() const { return car; }
+  Vec3 Position() const { return position; }
+  Vec3 Velocity() const { return velocity; }
+  Vec3 AngularVelocity() const { return angularVelocity; } // world, rad/s
+  Flight::Quat Orientation() const { return orientation; }
+  // FlightComponent.collisionTimer: it drops on a hit (Knock, Collide) and counts back up
+  float CollisionTimer() const { return collisionTimer; }
+  // rad/s2 per unit of mode torque on each body axis, as the body answers (angularGain x responseError)
+  Vec3 Response() const;
+
   const Frame &Last() const { return last; }
 
 private:
   Flight::Ground FindGround();
+  // the force tail and the body for the mode's output, from the stats already updated
+  Frame Tail(const Flight::ModeOutput &aMode, const Flight::Controls &aControls, const Flight::Ground &aGround, float aDt);
+  void FillInertia(float aDt);
 
   Car car;
   Terrain terrain;

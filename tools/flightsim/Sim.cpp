@@ -158,6 +158,9 @@ void Sim::Place(Vec3 aPosition, float aHeadingDeg, Vec3 aVelocity) {
   statics.mass = car.mass;
   statics.airResistanceFactor = car.airResistance;
   statics.brakingFrictionFactor = car.brakingFriction;
+  statics.dragArea = car.cda;
+  statics.thrusters = car.thrusters;
+  FillInertia(1.0f / 60.0f);
   hover = {{}, hoverPid};
   pitch = {{}, pitchPid};
   roll = {{}, rollPid};
@@ -263,15 +266,49 @@ Frame Sim::Advance(const Controls &c, const Ground *aGround, float aDt) {
     break;
   }
 
+  return Tail(m, c, g, aDt);
+}
+
+void Sim::FillInertia(float aDt) {
+  const Vec3 tensor = car.tensor;
   // CapDamping reads mass x tensor / inertia as the share of a damping gain the body loses per frame (over
   // dampStabilityK); a surveyed car gives it its own, otherwise the inertia is chosen so that share is gain x dt
-  Vec3 tensor = car.tensor;
   if (car.inertia.x > 0.0f)
     statics.momentOfInertia = car.inertia;
   else
     statics.momentOfInertia = {car.mass * tensor.x * force.dampStabilityK / (car.angularGain.x * aDt),
                                car.mass * tensor.y * force.dampStabilityK / (car.angularGain.y * aDt),
                                car.mass * tensor.z * force.dampStabilityK / (car.angularGain.z * aDt)};
+}
+
+Vec3 Sim::Response() const {
+  return {car.angularGain.x * car.responseError.x, car.angularGain.y * car.responseError.y,
+          car.angularGain.z * car.responseError.z};
+}
+
+const StatsState &Sim::Observe() {
+  UpdateDynamic(stats, {orientation, position, {}, angularVelocity, velocity});
+  return stats;
+}
+
+Frame Sim::AdvanceMode(const ModeOutput &aMode, const Controls &aControls, float aDt) {
+  return Tail(aMode, aControls, Ground{}, aDt);
+}
+
+void Sim::Collide(Vec3 aPush, Vec3 aNormal, float aImpact) {
+  position = Add(position, aPush);
+  const float into = Dot(velocity, aNormal);
+  if (into < 0.0f)
+    velocity = Sub(velocity, Mul(aNormal, into));
+  if (aImpact > 0.0f)
+    collisionTimer = (force.collisionRecoveryDelay + force.collisionRecoveryDuration) * (1.0f - std::min(aImpact, 1.0f) * 0.5f);
+  last.position = position;
+  last.velocity = velocity;
+}
+
+Frame Sim::Tail(const ModeOutput &m, const Controls &c, const Ground &g, float aDt) {
+  FillInertia(aDt);
+  const Vec3 tensor = car.tensor;
   ForceInput fi;
   fi.dt = aDt;
   fi.force = m.force;

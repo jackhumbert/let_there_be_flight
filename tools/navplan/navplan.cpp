@@ -23,20 +23,25 @@
 //                           when a full plan's time plus m seconds have passed, the two spliced; prints
 //                           "ahead {json}" (time to move, arrival against one full plan, late, dips)
 //                           and writes <prefix>_ahead.csv
-//   NAVPLAN_FOLLOW=1        fly the trajectory with the Autopilot's follower (follow.cpp, a point mass): writes
-//                           <prefix>_follow.csv (t,s,x,y,z,speed,ref_speed,lead_speed,off,ax,ay,az,pitch,
-//                           roll,yaw,held,blocked,emergency; pitch, roll and yaw in rad, ref_speed the plan's
-//                           at s, lead_speed the plan's where the tracker commands, s + speed x lineLead) and
-//                           prints "follow {json}" (arrived by the script's test, ended at the route's end,
-//                           time against the plan's, offset from the line, speed error against lead_speed,
-//                           runs off the line); with no usable route or trajectory, follow {"error": ...}
+//   NAVPLAN_TRIP=1          fly the whole trip as the game would (tools/flightsim/Trip.hpp): the Autopilot's own C++
+//                           from rest at start, planning its own routes (each plan handed over 0.5 s after it is
+//                           asked for, NAVPLAN_TRIP_DELAY s overrides), on flightsim's rigid body with the force tail,
+//                           landing at goal; the car from tools/flightsim/vehicles.tsv with NAVPLAN_VEHICLE's mass,
+//                           airResistance and brakingFriction (NAVPLAN_TRIP_CAR names one instead); the pads and gates
+//                           from src/navigation. NAVPLAN_TRIP_SEED, NAVPLAN_TRIP_KNOCK=remaining,spin x,y,z,
+//                           velocity x,y,z (a knock once that much route is left), NAVPLAN_TRIP_LOG=1 keeps the
+//                           Autopilot's log. Writes <prefix>_trip.csv (Trip.hpp's WriteTripCsv) and prints
+//                           "trip {json}" (TripJson: landed, time, off the line, speed error, landing error,
+//                           touchdown speed, replans, rays, Step time, plans pending; the car, the plan delay, and
+//                           the trip checks broken, CheckTrip)
 //   NAVPLAN_DOORWAY_COUNT=x0,y0,x1,y1  work out the doorways over that area instead, and save them
 //
 // Build: cmake --build build --target navplan (not part of the default build).
 
-#include "follow.hpp"
+#include "../flightsim/Trip.hpp"
 
-#include "Navigation/MapSpace.hpp"
+#include "Navigation/Gates.hpp"
+#include "Navigation/Helipads.hpp"
 #include "Navigation/NavMap.hpp"
 #include "Navigation/PlanAhead.hpp"
 #include "Navigation/PlannerCommon.hpp"
@@ -186,6 +191,26 @@ float Clearance(const Navigation::NavMap &aMap, float aX, float aY, float aZ) {
     }
   }
   return best;
+}
+
+// The car a trip flies (NAVPLAN_TRIP): NAVPLAN_TRIP_CAR names one in tools/flightsim/vehicles.tsv, else the first
+// with the spec's mass, airResistance and brakingFriction (the three numbers the Autopilot reads), else a generic
+// car with those three
+FlightSim::Car TripCar(const Navigation::VehicleSpec &aSpec) {
+  const auto cars = FlightSim::LoadCars(std::string(LTBF_SOURCE_DIR) + "/tools/flightsim/vehicles.tsv");
+  const char *name = std::getenv("NAVPLAN_TRIP_CAR");
+  for (const auto &c : cars) {
+    if (name ? c.name == name
+             : std::fabs(c.mass - aSpec.mass) < 0.5f && std::fabs(c.airResistance - aSpec.airResistance) < 1e-3f &&
+                   std::fabs(c.brakingFriction - aSpec.brakingFriction) < 1e-3f) {
+      return c;
+    }
+  }
+  FlightSim::Car generic;
+  generic.mass = aSpec.mass;
+  generic.airResistance = aSpec.airResistance;
+  generic.brakingFriction = aSpec.brakingFriction;
+  return generic;
 }
 
 } // namespace
@@ -349,37 +374,65 @@ int main(int argc, char **argv) {
     }
     std::fclose(f);
   }
-  if (const char *v = std::getenv("NAVPLAN_FOLLOW"); v && std::atoi(v) != 0) {
-    const auto followRoute = Navigation::Route::Make(points);
-    if (followRoute.Size() < 2 || trajectory.samples.size() < 2) {
-      std::printf("follow {\"error\": \"no usable route or trajectory (%d route points, %zu trajectory samples)\"}\n",
-                  followRoute.Size(), trajectory.samples.size());
-    } else {
-      const auto flown = Navigation::Follow(params.vehicle, followRoute, trajectory, Navigation::MapSpace(map), {});
-      if (FILE *f = std::fopen((prefix + "_follow.csv").c_str(), "w")) {
-        std::fprintf(f, "t,s,x,y,z,speed,ref_speed,lead_speed,off,ax,ay,az,pitch,roll,yaw,held,blocked,emergency\n");
-        for (const auto &q : flown.frames) {
-          std::fprintf(f, "%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%.3f,%d,%d,%d\n", q.t,
-                       q.s, q.p.x, q.p.y, q.p.z, q.speed, q.refSpeed, q.leadSpeed, q.off, q.accel.x, q.accel.y,
-                       q.accel.z, q.pitch, q.roll, q.yaw, q.held ? 1 : 0, q.blocked ? 1 : 0, q.emergency ? 1 : 0);
+  if (const char *v = std::getenv("NAVPLAN_TRIP"); v && std::atoi(v) != 0) {
+    // the whole trip from rest at start to landed at goal, the Autopilot planning its own routes
+    FlightSim::TripSetup setup;
+    setup.car = TripCar(params.vehicle);
+    setup.start = start;
+    // a map pin is on the ground: the goal dropped to the floor under it (the bottom of its gap), unless
+    // NAVPLAN_TRIP_GROUND=0 keeps it where it is (a point in the air is hovered at, not landed on)
+    setup.destination = goal;
+    if (!std::getenv("NAVPLAN_TRIP_GROUND") || std::atoi(std::getenv("NAVPLAN_TRIP_GROUND")) != 0) {
+      for (const auto &g : map.GetGaps(goal.x, goal.y)) {
+        if (g.bottom <= goal.z + 1.0f && goal.z < g.top) {
+          setup.destination.z = g.bottom;
         }
-        std::fclose(f);
       }
-      std::string lostAt;
-      for (size_t i = 0; i < flown.lostAt.size(); ++i) {
-        char one[32];
-        std::snprintf(one, sizeof(one), "%s%.0f", i ? ", " : "", flown.lostAt[i]);
-        lostAt += one;
-      }
-      std::printf("follow {\"arrived\": %s, \"ended\": %s, \"time\": %.2f, \"ref_time\": %.2f, \"off_p50\": %.2f, "
-                  "\"off_p95\": %.2f, \"off_p99\": %.2f, \"off_max\": %.2f, \"speed_err_mean\": %.2f, "
-                  "\"speed_err_p95\": %.2f, \"speed_bias_mean\": %.2f, \"lost\": %d, \"lost_s\": [%s], "
-                  "\"replans\": %d, \"blocked\": %d, \"emergency\": %d, \"held\": %d}\n",
-                  flown.arrived ? "true" : "false", flown.ended ? "true" : "false", flown.time, trajectory.Duration(),
-                  flown.offP50, flown.offP95, flown.offP99, flown.offMax, flown.speedErrMean, flown.speedErrP95,
-                  flown.speedBiasMean, flown.lost, lostAt.c_str(), flown.replans, flown.blocked, flown.emergency,
-                  flown.held);
     }
+    // FlightNavMap's planParams with NAVPLAN_PARAMS (the Race's preset goes on top, as RaceParams puts it)
+    if (const char *p = std::getenv("NAVPLAN_PARAMS"); p && !SetParams(setup.planBase, p)) {
+      return 2;
+    }
+    // each plan handed over 0.5 s after it is asked for (the game plans on a thread meanwhile): a fixed delay, so a
+    // trip flies the same whatever the machine's speed
+    setup.planDelay = 0.5f;
+    if (const char *d = std::getenv("NAVPLAN_TRIP_DELAY")) {
+      setup.planDelay = std::strtof(d, nullptr);
+    }
+    if (const char *seed = std::getenv("NAVPLAN_TRIP_SEED")) {
+      setup.seed = std::strtoull(seed, nullptr, 10);
+    }
+    if (const char *knock = std::getenv("NAVPLAN_TRIP_KNOCK")) {
+      FlightSim::TripKnock k;
+      std::sscanf(knock, "%f,%f,%f,%f,%f,%f,%f", &k.atRemaining, &k.bodySpin.x, &k.bodySpin.y, &k.bodySpin.z,
+                  &k.velocity.x, &k.velocity.y, &k.velocity.z);
+      setup.knocks.push_back(k);
+    }
+    setup.maxTime = 2.0f * trajectory.Duration() + 120.0f;
+    Navigation::Helipads pads;
+    Navigation::Gates gates;
+    pads.Load(std::string(LTBF_SOURCE_DIR) + "/src/navigation/helipads.tsv");
+    gates.Load(std::string(LTBF_SOURCE_DIR) + "/src/navigation/gates.tsv");
+    if (!std::getenv("NAVPLAN_TRIP_LOG")) {
+      spdlog::set_level(spdlog::level::warn); // the Autopilot's once a second lines
+    }
+    FlightSim::Trip trip(map, pads.All(), gates.All(), setup);
+    const auto flown = trip.Run();
+    spdlog::set_level(spdlog::level::info);
+    FlightSim::WriteTripCsv(prefix + "_trip.csv", flown);
+    std::string json = FlightSim::TripJson(flown);
+    json.pop_back();
+    std::string car = setup.car.name;
+    std::replace(car.begin(), car.end(), '"', '\'');
+    json += ", \"car\": \"" + car + "\", \"destination_z\": " + std::to_string(setup.destination.z) +
+            ", \"plan_delay\": " + std::to_string(setup.planDelay) + ", \"broken\": [";
+    FlightSim::TripLimits limits;
+    limits.startClear = 6.0f;
+    const auto broken = FlightSim::CheckTrip(flown, setup.params, limits);
+    for (size_t i = 0; i < broken.size(); ++i) {
+      json += (i ? ", \"" : "\"") + broken[i] + "\"";
+    }
+    std::printf("trip %s]}\n", json.c_str());
   }
   const float length = trajectory.samples.empty() ? 0.0f : trajectory.samples.back().s, time = trajectory.Duration();
   std::printf("metrics {\"route_ok\": %s, \"line_ok\": %s, \"repaired\": %d, \"length\": %.1f, \"time\": %.2f, "

@@ -172,12 +172,29 @@ target_link_libraries(let_there_be_flight.dll
     TweakXL
 )
 
-# offline route planner on navmap.bin with the plugin's planner, for tuning and plotting routes
-# (tools/navplan); not built by default
+# offline route planner on navmap.bin with the plugin's planner, for tuning and plotting routes, and whole
+# Autopilot trips flown on it (tools/navplan, NAVPLAN_TRIP); not built by default
 add_executable(navplan EXCLUDE_FROM_ALL
   tools/navplan/navplan.cpp
-  tools/navplan/follow.cpp
+  tools/flightsim/Sim.cpp
+  tools/flightsim/Trip.cpp
+  src/red4ext/Flight/Stats.cpp
   src/red4ext/Flight/Force.cpp
+  src/red4ext/Flight/Pid.cpp
+  src/red4ext/Flight/Controls.cpp
+  src/red4ext/Flight/Modes.cpp
+  src/red4ext/Flight/DeveloperSettings.cpp
+  src/red4ext/Navigation/World.cpp
+  src/red4ext/Navigation/Plans.cpp
+  src/red4ext/Navigation/Helipads.cpp
+  src/red4ext/Navigation/Gates.cpp
+  src/red4ext/Navigation/AutopilotParams.cpp
+  src/red4ext/Navigation/Landing.cpp
+  src/red4ext/Navigation/Aerobatics.cpp
+  src/red4ext/Navigation/Autopilot.cpp
+  src/red4ext/Navigation/AutopilotRoute.cpp
+  src/red4ext/Navigation/AutopilotFreeRoam.cpp
+  src/red4ext/Navigation/AutopilotDescent.cpp
   src/red4ext/Navigation/NavMap.cpp
   src/red4ext/Navigation/Planner.cpp
   src/red4ext/Navigation/PlannerCommon.cpp
@@ -195,6 +212,8 @@ add_executable(navplan EXCLUDE_FROM_ALL
 target_include_directories(navplan PRIVATE src/red4ext)
 target_compile_features(navplan PRIVATE cxx_std_20)
 target_link_libraries(navplan PRIVATE spdlog)
+# NAVPLAN_TRIP reads the fleet (tools/flightsim/vehicles.tsv), the pads and the gates (src/navigation)
+target_compile_definitions(navplan PRIVATE LTBF_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 # Hover & Fly flown offline on the plugin's mode, input and force code, scenario by scenario
 # (tools/flightsim, docs/design/hover-fly-feel.md); not built by default
@@ -282,9 +301,11 @@ add_executable(ltbf_tests
   tests/autopilot_params_tests.cpp
   tests/landing_tests.cpp
   tests/autopilot_tests.cpp
+  tests/autopilot_trip_tests.cpp
   tools/navplan/follow.cpp
   tools/flightsim/Sim.cpp
   tools/flightsim/Scenarios.cpp
+  tools/flightsim/Trip.cpp
   src/red4ext/Audio/EngineSynth/Synth.cpp
   src/red4ext/Audio/EngineSynth/Sources.cpp
   src/red4ext/Audio/Buses.cpp

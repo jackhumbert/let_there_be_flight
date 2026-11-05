@@ -93,7 +93,9 @@ int32_t PlanQueue::Trip(Vec3 aStart, Vec3 aGoal, const PlanParams &aParams, Ahea
   const int32_t id = Add(request);
   {
     std::lock_guard guard(lock);
-    aAhead.restGuess = restSeconds;
+    // offline the rest comes the modelled delay after the first leg, whatever the planning took: so the join is
+    // planned for that, and a simulated trip does not hang on the machine's speed
+    aAhead.restGuess = threaded ? restSeconds : delay;
   }
   Run([this, request, aStart, aGoal, aParams, aAhead]() {
     auto leg = PlanFirstLeg(map, aStart, aGoal, aParams, aAhead);
