@@ -77,6 +77,8 @@ struct FlightNavMap : RED4ext::IScriptable {
                                  RED4ext::DynArray<RED4ext::Vector4> aAvoid);
   static bool IsPlanReady(int32_t aId);
   static RED4ext::DynArray<RED4ext::Vector4> TakePlan(int32_t aId);
+  // forgets a request no longer wanted: a plan never taken is freed
+  static void DropPlan(int32_t aId);
 
   // Destination override for the autopilot (testing, or other mods): wins over the GPS target.
   static void SetTargetOverride(RED4ext::Vector4 aTarget);
@@ -137,6 +139,7 @@ RTTI_DEFINE_CLASS(FlightNavMap, {
   RTTI_METHOD(PlanRejoinAsync);
   RTTI_METHOD(IsPlanReady);
   RTTI_METHOD(TakePlan);
+  RTTI_METHOD(DropPlan);
   RTTI_METHOD(SetTargetOverride);
   RTTI_METHOD(ClearTargetOverride);
   RTTI_METHOD(HasTargetOverride);

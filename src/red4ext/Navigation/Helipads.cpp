@@ -1,4 +1,5 @@
 #include "Helipads.hpp"
+#include "World.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -72,37 +73,10 @@ bool Helipads::Load(const std::filesystem::path &aPath) {
   return true;
 }
 
-int32_t Helipads::Nearest(float aX, float aY, float aMaxDistance) const {
-  int32_t best = -1;
-  float bestDistance = aMaxDistance * aMaxDistance;
-  for (size_t i = 0; i < pads.size(); ++i) {
-    float dx = pads[i].x - aX, dy = pads[i].y - aY;
-    float d = dx * dx + dy * dy;
-    if (d <= bestDistance) {
-      bestDistance = d;
-      best = int32_t(i);
-    }
-  }
-  return best;
-}
+int32_t Helipads::Nearest(float aX, float aY, float aMaxDistance) const { return NearestPad(pads, aX, aY, aMaxDistance); }
 
 std::vector<int32_t> Helipads::InRange(float aX, float aY, float aRadius) const {
-  std::vector<std::pair<float, int32_t>> found;
-  float range = aRadius * aRadius;
-  for (size_t i = 0; i < pads.size(); ++i) {
-    float dx = pads[i].x - aX, dy = pads[i].y - aY;
-    float d = dx * dx + dy * dy;
-    if (d <= range) {
-      found.emplace_back(d, int32_t(i));
-    }
-  }
-  std::sort(found.begin(), found.end());
-  std::vector<int32_t> out;
-  out.reserve(found.size());
-  for (const auto &[d, i] : found) {
-    out.push_back(i);
-  }
-  return out;
+  return PadsInRange(pads, aX, aY, aRadius);
 }
 
 } // namespace Navigation

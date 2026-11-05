@@ -1,4 +1,5 @@
 #include "Gates.hpp"
+#include "World.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -72,22 +73,7 @@ bool Gates::Load(const std::filesystem::path &aPath) {
 }
 
 std::vector<int32_t> Gates::InRange(float aX, float aY, float aRadius) const {
-  std::vector<std::pair<float, int32_t>> found;
-  float range = aRadius * aRadius;
-  for (size_t i = 0; i < gates.size(); ++i) {
-    float dx = gates[i].x - aX, dy = gates[i].y - aY;
-    float d = dx * dx + dy * dy;
-    if (d <= range) {
-      found.emplace_back(d, int32_t(i));
-    }
-  }
-  std::sort(found.begin(), found.end());
-  std::vector<int32_t> out;
-  out.reserve(found.size());
-  for (const auto &[d, i] : found) {
-    out.push_back(i);
-  }
-  return out;
+  return GatesInRange(gates, aX, aY, aRadius);
 }
 
 } // namespace Navigation

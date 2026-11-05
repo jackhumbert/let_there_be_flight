@@ -444,6 +444,14 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.route = FlightRoute.Create(none);
   }
 
+  // the plan asked for is no longer wanted: freed if it was never taken
+  private func DropRequest() -> Void {
+    if this.request > 0 {
+      FlightNavMap.DropPlan(this.request);
+    }
+    this.request = 0;
+  }
+
   public func Activate() -> Void {
     this.ahead.Reset();
     let target: Vector4;
@@ -456,7 +464,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     }
     this.holdPosition = this.component.stats.d_position;
     this.ClearRoute();
-    this.request = 0;
+    this.DropRequest();
     this.hasExternalDestination = false;
     this.padLandingOffset = new Vector4(0.0, 0.0, 0.0, 0.0);
     this.landingKeepClearRadius = 0.0;
@@ -736,7 +744,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       SetFactValue(game, n"player_in_autodrive", 0);
     }
     this.ClearRoute();
-    this.request = 0;
+    this.DropRequest();
     this.freeRoam = false;
     this.requestJoin = false;
     this.status = "idle";
@@ -1022,7 +1030,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       this.freeRoamChosen = false;
       this.freeRoam = false;
       this.hasDestination = false;
-      this.request = 0;
+      this.DropRequest();
       this.requestJoin = false;
       this.ahead.Reset();
       this.PublishFreeRoamUI();
@@ -1031,7 +1039,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
       this.freeRoamChosen = true;
       this.hasDestination = false;
       this.landing = false;
-      this.request = 0;
+      this.DropRequest();
       this.ahead.Reset();
       FlightLog.Info("[Autopilot] free roam on");
     }
@@ -1043,7 +1051,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.hasDestination = false;
     this.landing = false;
     this.landingPad = -1;
-    this.request = 0;
+    this.DropRequest();
     this.requestJoin = false;
     this.freeRoamCentre = stats.d_position;
     this.ClearRoute();
@@ -1390,7 +1398,7 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.speedRate = 0.0;
     if this.RouteSize() > 0 || this.request != 0 {
       this.ClearRoute();
-      this.request = 0;
+      this.DropRequest();
       this.RequestRoute(p);
     }
   }

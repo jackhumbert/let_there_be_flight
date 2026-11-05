@@ -3,8 +3,12 @@
 #include "check.hpp"
 
 #include <cstring>
+#include <spdlog/sinks/null_sink.h>
+#include <spdlog/spdlog.h>
 
 int main(int argc, char **argv) {
+  // the shared spdlog build has no default logger (the plugin installs its own): code under test logs to nothing
+  spdlog::set_default_logger(spdlog::null_logger_mt("tests"));
   const char *filter = argc > 1 ? argv[1] : nullptr;
   int failed = 0, ran = 0;
   for (const auto &test : Check::Tests()) {

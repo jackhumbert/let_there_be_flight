@@ -17,6 +17,9 @@ public class AutopilotPlanAhead extends IScriptable {
   public func Reset() -> Void {
     this.firstLeg = false;
     this.waiting = false;
+    if this.trip > 0 {
+      FlightNavMap.DropPlan(this.trip);
+    }
     this.trip = 0;
   }
 

@@ -51,6 +51,8 @@ public native class FlightNavMap extends IScriptable {
   public native static func PlanRejoinAsync(car: Vector4, velocity: Vector4, line: array<Vector4>, joinAhead: Float, vehicle: ref<FlightVehicleModel>, avoid: array<Vector4>) -> Int32;
   public native static func IsPlanReady(id: Int32) -> Bool;
   public native static func TakePlan(id: Int32) -> array<Vector4>;
+  // forgets a request no longer wanted: a plan never taken is freed
+  public native static func DropPlan(id: Int32) -> Void;
   // autopilot destination override (testing, other mods); wins over the GPS target
   public native static func SetTargetOverride(target: Vector4) -> Void;
   public native static func ClearTargetOverride() -> Void;

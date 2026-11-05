@@ -277,6 +277,8 @@ add_executable(ltbf_tests
   tests/feel_tests.cpp
   tests/aero_tests.cpp
   tests/settings_tests.cpp
+  tests/world_tests.cpp
+  tests/plans_tests.cpp
   tools/navplan/follow.cpp
   tools/flightsim/Sim.cpp
   tools/flightsim/Scenarios.cpp
@@ -301,6 +303,13 @@ add_executable(ltbf_tests
   src/red4ext/Navigation/Aerobatics.cpp
   src/red4ext/Camera/Cinematic.cpp
   src/red4ext/Navigation/NavMap.cpp
+  src/red4ext/Navigation/World.cpp
+  src/red4ext/Navigation/Plans.cpp
+  src/red4ext/Navigation/Planner.cpp
+  src/red4ext/Navigation/PlannerCommon.cpp
+  src/red4ext/Navigation/Line.cpp
+  src/red4ext/Navigation/PlanAhead.cpp
+  src/red4ext/Navigation/Doorways.cpp
   src/red4ext/Flight/Stats.cpp
   src/red4ext/Flight/Force.cpp
   src/red4ext/Flight/Pid.cpp
