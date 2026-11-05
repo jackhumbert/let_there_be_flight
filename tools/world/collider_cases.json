@@ -195,6 +195,32 @@
       ],
       "expect": "clear",
       "note": "Was hit before: offline the rays enter its north-west face 14.7 and 23.0 m from their start (the first at about -1910.5, -4005.8). Moved away by the plugin since 2026-10-31 (tools/world/hidden_colliders.json), so clear. The box is the wall's bounds, so the offline listing also takes in the real collision of the modules and the yard round it."
+    },
+    {
+      "name": "southwest_world_static_86",
+      "box": [
+        -2886,
+        -3049,
+        70,
+        -2875,
+        -3037,
+        87
+      ],
+      "truth": "an invisible collider just below (-2880.529, -3042.979, 86.195): Jack, 2026-11-05; which of the two actors below, and its top, not yet checked in game",
+      "navmap": "not checked",
+      "cause": "two World Static convex meshes reach into the box (collision_at.py --actors, bake_2026-10-26): exterior_-12_-13_0_2 node 31 group 35 (nodeData 2430) actor 0 at (-2916.39, -3088.65, 46.89), bounds -2956.1,-3134.5,45.2 to -2873.4,-3032.8,88.3, the likelier one (its top near the point); exterior_-12_-12_0_2 node 32 group 8 (nodeData 1379) actor 3 at (-2872.05, -3028.53, 42.35), bounds -2884.0,-3041.4,42.2 to -2858.9,-3022.2,82.6",
+      "rays": [
+        [
+          -2880.529,
+          -3042.979,
+          90,
+          -2880.529,
+          -3042.979,
+          70
+        ]
+      ],
+      "expect": "hit",
+      "note": "the ray straight down through the point: it should hit a little under z 86.2. Not yet in hidden_colliders.json: confirm the actor in game first (cp2077_tools mods/let_there_be_flight/check_collider.py --case southwest_world_static_86)."
     }
   ]
 }
