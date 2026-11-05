@@ -57,6 +57,9 @@ struct Car {
   Vec3 cda;
   float dragK = Flight::kShapeDragK;
   float thrusters = 0; // vehicles.tsv; 0: unknown, the thrust stays today's
+  // the body's gravity against the 9.81 the modes hold up: an imbalance they have to correct (flightsim --set
+  // gravity=0.95; in game the car rose while braking in Hover & Fly, 2026-11-05)
+  float gravityScale = 1.0f;
 };
 
 // Ground height at (x, y); return -infinity for none (a ray that hits nothing).

@@ -17,7 +17,8 @@
 // --replay flies a game recording's pieces offline and prints the game's numbers beside the simulator's (Replay.hpp);
 // with --csv, both traces go to <dir>/replay.csv.
 //
-// --set changes the tuning: mass, airResistance, brakingFriction, gainX/Y/Z, torqueDelay; Standard's surge, yaw,
+// --set changes the tuning: mass, airResistance, brakingFriction, gainX/Y/Z, torqueDelay, gravity (the body's
+// gravity against what the modes hold up); Standard's surge, yaw,
 // sway, pitch, lift, hover, pitchAngle, roll, rollAngle, rollWithYaw, hoverClamp, minHover, maxHover; Hover & Fly's
 // altitudeHold, heightDampening, heightCorrection; the physics' dampAngular, dampAngularMax, yawDamp,
 // yawDirectionality, pitchDirectionality. --csv writes each run's frames to <dir>/<scenario>.csv.
@@ -50,6 +51,7 @@ std::map<std::string, float *> Knobs(Setup &s) {
       {"errX", &s.car.responseError.x},
       {"errY", &s.car.responseError.y},
       {"errZ", &s.car.responseError.z},
+      {"gravity", &s.car.gravityScale},
       {"a.attitudeP", &s.assistParams.attitudeP},
       {"a.attitudeD", &s.assistParams.attitudeD},
       {"a.maxYawRate", &s.assistParams.maxYawRate},

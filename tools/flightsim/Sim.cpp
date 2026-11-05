@@ -333,7 +333,7 @@ Frame Sim::Tail(const ModeOutput &m, const Controls &c, const Ground &g, float a
 
   // the body: linear
   Vec3 accel = Mul(fo.worldForce, 1.0f / (aDt * car.mass));
-  accel.z -= kGravity;
+  accel.z -= kGravity * car.gravityScale;
   velocity = Add(velocity, Mul(accel, aDt));
   velocity = Mul(velocity, 1.0f / (1.0f + fo.linearDamp * aDt));
   position = Add(position, Mul(velocity, aDt));

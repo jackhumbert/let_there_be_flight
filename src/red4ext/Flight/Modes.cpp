@@ -229,8 +229,9 @@ ModeOutput HoverFlyAssist(HoverFlyState &m, const StatsState &s, const StatsStat
   float hover = clamp(a.hoverP * (m.hoverHeight - g.distance) - a.hoverD * vz, -p.liftFactor, p.liftFactor);
   float az = Lerp(m.hovering, fly, hover);
 
-  // the brake scales what the mode asks for, not the gravity it holds up (as HoverFly's liftFactor)
-  Vec3 accel = Mul(Add(Add(Mul(fwd, af), Mul(right, as)), Mul(kUp, az)), 1.0f - c.linearBrake);
+  // the brake scales the travel the mode asks for; the height stays held (HoverFly's brake scales its height terms
+  // too, so in game the car rose while braking: whatever the game's vertical balance lacks, nothing corrected it)
+  Vec3 accel = Add(Mul(Add(Mul(fwd, af), Mul(right, as)), 1.0f - c.linearBrake), Mul(kUp, az));
   accel.z += kGravity * p.gravityFactor;
   out.force = Rotate(toBody, accel);
   out.force = Sub(out.force, Mul(s.d_localVelocity, c.linearBrake * p.brakeFactorLinear * st.brakingFrictionFactor));

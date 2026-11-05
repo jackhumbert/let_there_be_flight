@@ -490,6 +490,42 @@ const std::map<std::string, Scenario> &Scenarios() {
          f.Add("max_tilt", f.Max(hold, f.End(), Tilt), "deg");
          return f.run;
        }},
+      // the brake (linear and angular, as the brake key gives them) held 4 s: hovering 3 m up, at rest 30 m up, and
+      // flying at speed 30 m up; the height it gains or loses in each (Jack: holding the brake, the car rises)
+      {"brake_hold",
+       [](const Setup &s) {
+         Keys brake;
+         brake.linearBrake = 1.0f;
+         brake.angularBrake = 1.0f;
+         auto rise = [&](Flown &f, size_t from) {
+           float z0 = f.At(from).position.z;
+           return f.Max(from, f.End(), [&](const Frame &x) { return x.position.z - z0; });
+         };
+         auto sink = [&](Flown &f, size_t from) {
+           float z0 = f.At(from).position.z;
+           return f.Max(from, f.End(), [&](const Frame &x) { return z0 - x.position.z; });
+         };
+         Flown low = Hovering("brake_hold", s);
+         size_t b = low.Hold(brake, 4.0f);
+         Flown high = Hovering("brake_hold", s);
+         high.sim.Place({0, 0, 30.0f}, 0.0f);
+         high.Settle(4.0f);
+         size_t bh = high.Hold(brake, 4.0f);
+         Flown fast = Hovering("brake_hold", s);
+         fast.sim.Place({0, 0, 30.0f}, 0.0f);
+         fast.Settle(4.0f);
+         fast.Hold(Surge(1.0f), 4.0f);
+         size_t bf = fast.Hold(brake, 4.0f);
+         low.Add("hover_rise", rise(low, b), "m");
+         low.Add("hover_sink", sink(low, b), "m");
+         low.Add("high_rise", rise(high, bh), "m");
+         low.Add("high_sink", sink(high, bh), "m");
+         low.Add("fast_speed_at_brake", Speed2D(fast.At(bf - 1)), "m/s");
+         low.Add("fast_rise", rise(fast, bf), "m");
+         low.Add("fast_sink", sink(fast, bf), "m");
+         low.Add("fast_speed_after_4s", Speed2D(fast.At(fast.End() - 1)), "m/s");
+         return low.run;
+       }},
       // Drone: hold pitch, roll or yaw 3 s, then let go
       {"drone_pitch", [](const Setup &s) { return DroneSpin("drone_pitch", s, 0); }},
       {"drone_roll", [](const Setup &s) { return DroneSpin("drone_roll", s, 1); }},
