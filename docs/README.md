@@ -5,10 +5,16 @@
 - `design/`: how each subsystem works now, edited in place when it changes.
   - `autopilot.md`: the Autopilot flight mode, a flight from engage to landing, tuning.
   - `planner.md`: route search, doorways, the line's passes and repair, navplan.
+  - `hover-fly-feel.md`: how Hover & Fly should feel (the draft spec), the offline simulator that
+    measures it (`tools/flightsim`), and what the mode does today.
+  - `hover-fly-native.md`: plan, not built: the Hover & Fly redesign as the first flight mode written wholly in
+    C++, its Mod Settings registered from C++.
+  - `settings-audit.md`: proposal, not built: every Mod Setting, what it changes, and a smaller player-facing set.
   - `vehicle-limits.md`: the car's limits (VehicleSpec) and who reads them.
   - `navmap.md`: the baked nav map, how it is made and shipped.
   - `city-collision.md`: hidden colliders removed, proxy colliders added.
   - `vehicle-summon.md`: the pad summon (a summoned vehicle flies the Autopilot to the pad).
+  - `summon-edge-hover.md`: plan, not built: a summon with no room to land waits at the roof's edge, driver door to V.
   - `landing-pads.md`: pads, pins, supplies, real decks for visual-only pads.
   - `paraglide.md`: the shelved glider for leaving a car in flight, and the plan to finish it.
   - `physx-flight.md`: the experimental PhysX-owned flight physics.
