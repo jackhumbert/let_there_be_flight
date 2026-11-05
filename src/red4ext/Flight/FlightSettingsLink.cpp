@@ -9,8 +9,10 @@
 #include "Flight/Settings.hpp"
 #include "stdafx.hpp"
 
+#include <algorithm>
 #include <functional>
 #include <memory>
+#include <string>
 #include <ModSettings/ModSettings.hpp>
 #include <windows.h>
 
@@ -69,11 +71,17 @@ bool Register() {
       v.minValue.f32 = s.min;
       v.maxValue.f32 = s.max;
     }
-    const bool isBool = s.isBool;
     v.callback = std::make_shared<ModSettings::runtime_class_callback_t>(
-        [isBool](RED4ext::CName aCategory, RED4ext::CName aProperty, ModSettings::ModVariableType aValue) {
-          // a Bool's value is the union's first byte (Mod Settings hands the accepted value's bytes as the union)
-          const float value = isBool ? (aValue.b ? 1.0f : 0.0f) : aValue.f32;
+        [](RED4ext::CName aCategory, RED4ext::CName aProperty, ModSettings::ModVariableType aValue) {
+          // Mod Settings keeps runtime callbacks per class and calls each with every variable of the class
+          // (ModClass::NotifyListeners), so the type comes from the property handed in, not from this variable. A
+          // Bool's value is the union's first byte (the accepted value's bytes as the union).
+          const std::string name = aProperty.ToString();
+          const auto &table = Flight::AutopilotSettingsTable();
+          auto it = std::find_if(table.begin(), table.end(), [&](const auto &aS) { return name == aS.name; });
+          if (it == table.end())
+            return;
+          const float value = it->isBool ? (aValue.b ? 1.0f : 0.0f) : aValue.f32;
           if (Flight::SetAutopilotSetting(Flight::AutopilotPlayer(), aProperty.ToString(), value))
             spdlog::info("[Settings] {}.{} = {}", Flight::kAutopilotSettingsClass, aProperty.ToString(), value);
         });

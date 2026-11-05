@@ -161,6 +161,12 @@ void FlightComponent::OnUpdate(float deltaTime) {
       std::memset(runtime + 0xB0, 0, 12);
       std::memset(runtime + 0xC8, 0, 12);
     }
+    // the modes start over from the stats (the Autopilot plans from d_position), which this frame's update below
+    // has not refreshed yet: still the old place's (the Autopilot planned from there and held the jump off,
+    // 2026-11-05)
+    if (auto stats = FlightStats::Of(this); stats && stats->nativeUpdate) {
+      stats->UpdateNative(vehicle);
+    }
     ExecuteFunction(this, this->nativeType->GetFunction("OnTeleported"), nullptr);
   }
   if (this->hasUpdate) {

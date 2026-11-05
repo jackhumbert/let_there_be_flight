@@ -355,7 +355,9 @@ void Autopilot::WatchHits(float aDt, const Vec3 &aP, const Vec3 &aV) {
 void Autopilot::Replan(const Vec3 &aP, const Vec3 &aV) {
   RefreshVehicle();
   const int32_t n = RouteSize();
-  if (!routeLine || n - tracker.segment < 4) {
+  // a first leg still waiting for its rest ends short of the goal, and a rejoin taken would drop the rest
+  // (AheadTaken): the trip again from here (in game a teleport mid-leg "arrived" 100 m up at the leg's end, 2026-11-05)
+  if (!routeLine || n - tracker.segment < 4 || ahead.firstLeg) {
     RequestRoute(aP);
     return;
   }
