@@ -590,6 +590,31 @@
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Hover-And-Fly",
+              "femaleVariant": "Hover & Fly"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Hover-And-Fly-Turn-Speed",
+              "femaleVariant": "Turn Speed (deg/s)"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Hover-And-Fly-Turn-Speed-Desc",
+              "femaleVariant": "How fast the car turns while you hold a turn key."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Hover-And-Fly-Climb-Speed",
+              "femaleVariant": "Climb and Descent Speed (m/s)"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Hover-And-Fly-Climb-Speed-Desc",
+              "femaleVariant": "How fast the car climbs or descends while you hold the lift keys."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Hover-And-Fly-Height-Dampening",
               "femaleVariant": "Hover & Fly Height Dampening"
             },
@@ -972,6 +997,21 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "LTBF-Landing-Pad-Discovered-Description",
               "femaleVariant": "Added to the map. Track it, then hold the autodrive key while flying: the Autopilot lands on it."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "LTBF-Shard-Goddard-Stars-Title",
+              "femaleVariant": "Aiming at the Stars"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "LTBF-Shard-Goddard-Stars-Description",
+              "femaleVariant": "A worn shard, kept on the shelf by the sofa."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "LTBF-Shard-Goddard-Stars-Body",
+              "femaleVariant": "How many more years I shall be able to work on the problem, I do not know; I hope, as long as I live. There can be no thought of finishing, for \"aiming at the stars\", both literally and figuratively, is a problem to occupy generations, so that no matter how much progress one makes, there is always the thrill of just beginning.\n\n- Robert H. Goddard, in a letter to H. G. Wells, 1932"
             }
           ]
         }

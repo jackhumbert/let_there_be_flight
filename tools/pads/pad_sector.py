@@ -41,6 +41,10 @@ questTriggerCondition waits on). And "vehicle_spawner" (worldPopulationSpawnerNo
 record and "appearance": a car a quest switches on with questSpawner_NodeType and waits on with this
 ref, copied from sq025's {sq025_spwn_archer_crash} in quest_2b8eefa405219ddd: spawnOnStart 0,
 alwaysSpawned default false, nodeFlags FLAG_AllowForceStreamIn, FLAG_Quest; see VEHICLE_SPAWNER).
+And "shard" (worldEntityNode of the vanilla shard case, "item" an Items record of src/tweaks/shards.yaml: a shard
+the player takes or reads in place), a copy of a vanilla shard on a desk with its ShardCaseContainer instance data
+whole (shard_case.json). The name is what makes it load at all (an unnamed gameplay node in a mod sector does not:
+the quest kit's shard-playbook.md), and its globalNodeId keeps the looted state in the save.
 
 "map_pin" (optional, on a pad entry): {"id", "local": [x, y, z] in the pad's frame}, a permanent pin on
 the map there; written to src/redscript/Navigation/FlightHangarSites.reds (write_pins), which
@@ -119,6 +123,7 @@ NODE_FLAGS = {"npc_spawner": "FLAG_AllowForceStreamIn, FLAG_IsInterior, FLAG_Que
 # A quest's car (sq025's {sq025_spwn_archer_crash}, quest_2b8eefa405219ddd, read 2026-11-03 with WolvenKit 10): the
 # same node class as NPC_SPAWNER, isVehicle 0 as in every vanilla car spawner, but not kept spawned when out of range
 VEHICLE_SPAWNER = dict(NPC_SPAWNER, alwaysSpawned="default__false_")
+SHARD_CASE = os.path.join(HERE, "shard_case.json")  # the vanilla shard node the "shard" kind copies
 
 
 def cname(v):
@@ -325,6 +330,15 @@ def build_sector(doc, cfg):
             n_ = copy.deepcopy(template_node)
             n_["Data"]["entityTemplate"]["DepotPath"]["$value"] = CAMERA_ENT
             n_["Data"]["debugName"]["$value"] = QUEST_PREFIX + name
+        elif q["kind"] == "shard":
+            case = json.load(open(SHARD_CASE, encoding="utf-8"))
+            n_ = copy.deepcopy(template_node)
+            n_["Data"]["entityTemplate"]["DepotPath"]["$value"] = case["entityTemplate"]
+            n_["Data"]["appearanceName"]["$value"] = case["appearanceName"]
+            n_["Data"]["debugName"]["$value"] = QUEST_PREFIX + name
+            n_["Data"]["instanceData"] = copy.deepcopy(case["instanceData"])
+            chunk = n_["Data"]["instanceData"]["Data"]["buffer"]["Data"]["Chunks"][0]
+            chunk["itemTDBID"]["$value"] = q["item"]
         elif q["kind"] in NODE_FLAGS:
             n_ = {"HandleId": "0", "Data": quest_node(q, name, pads[q["pad"]]["yaw"])}
         else:
@@ -341,6 +355,8 @@ def build_sector(doc, cfg):
             d["nodeFlags"] = NODE_FLAGS[q["kind"]]
             if q["kind"] == "trigger_area":
                 d["transform"]["orientation"].update(i=0, j=0, k=0, r=1)
+        elif q["kind"] == "shard":
+            d["nodeFlags"] = case["nodeFlags"]
         kept_data.append(d)
         kept.append(n_)
         refs.append({"$type": "NodeRef", "$storage": "string", "$value": q["ref"]})

@@ -4118,6 +4118,20 @@
       ],
       "yaw": -90.0,
       "streaming_distance": 400.0
+    },
+    {
+      "ref": "$/mod/let_there_be_flight/hangar_badlands/#ltbf_badlands_shard_stars",
+      "kind": "shard",
+      "pad": "hangar",
+      "note": "Goddy's copy of Robert Goddard's 1932 letter to H. G. Wells, for the player to find (src/tweaks/shards.yaml): lying on the lowest board of the living corner's wall shelf by the sofa (poor_furniture_shelf_a at (8.02, 5.65, 1.642), its top 1.662, 0.71 m over the bay floor), at the board's middle, turned a little off its edge",
+      "item": "Items.ltbf_goddard_stars_shard",
+      "local": [
+        8.214,
+        5.574,
+        1.665
+      ],
+      "yaw": -96.0,
+      "streaming_distance": 50.0
     }
   ]
 }

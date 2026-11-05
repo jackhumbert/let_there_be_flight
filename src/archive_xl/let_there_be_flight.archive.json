@@ -1,4 +1,7 @@
 {
+  "journal": [
+    "user\\jackhumbert\\journal\\ltbf_shards.journal"
+  ],
   "localization": {
     "onscreens": {
       "en-us": "user\\jackhumbert\\localization\\let_there_be_flight.en-us.json",
