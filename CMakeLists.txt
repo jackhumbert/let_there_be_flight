@@ -279,6 +279,7 @@ add_executable(ltbf_tests
   tests/settings_tests.cpp
   tests/world_tests.cpp
   tests/plans_tests.cpp
+  tests/autopilot_params_tests.cpp
   tools/navplan/follow.cpp
   tools/flightsim/Sim.cpp
   tools/flightsim/Scenarios.cpp
@@ -305,6 +306,7 @@ add_executable(ltbf_tests
   src/red4ext/Navigation/NavMap.cpp
   src/red4ext/Navigation/World.cpp
   src/red4ext/Navigation/Plans.cpp
+  src/red4ext/Navigation/AutopilotParams.cpp
   src/red4ext/Navigation/Planner.cpp
   src/red4ext/Navigation/PlannerCommon.cpp
   src/red4ext/Navigation/Line.cpp
