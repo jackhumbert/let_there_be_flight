@@ -1,0 +1,48 @@
+#pragma once
+
+// The beginner's situations Hover & Fly is measured on, and Drone's (its spin per axis, lift, surge and angular brake),
+// each a scripted input over a small world, and the numbers each one is judged by (docs/design/hover-fly-feel.md). The
+// feel tests (tests/feel_tests.cpp) and the flightsim tool (flightsim.cpp) both run these.
+
+#include "Sim.hpp"
+
+#include <string>
+#include <vector>
+
+namespace FlightSim {
+
+struct Metric {
+  std::string name;
+  float value;
+  std::string unit;
+};
+
+struct Run {
+  std::string name;
+  std::vector<Frame> frames;
+  std::vector<Metric> metrics;
+  float Get(const std::string &aName) const;
+};
+
+// The tuning a run is flown with: the mod's defaults unless changed.
+struct Setup {
+  Car car;
+  Flight::StandardParams standard;
+  Flight::HoverFlyParams hoverFly;
+  Flight::ForceParams force;
+  Mode mode = Mode::HoverFly;
+  bool shapeDrag = false;
+  float thrustStrength = 0.0f, thrustPerThruster = 6000.0f;
+  Flight::HoverFlyAssistParams assistParams;
+  Flight::DroneParams drone;
+  Flight::DroneAssistParams droneAssist;
+  float dt = 1.0f / 60.0f;
+};
+
+// Every scenario's name, or the ones for one kind of mode: Drone's (drone_*) for the drone modes, the rest for Hover &
+// Fly's. Any scenario can be flown in any mode.
+std::vector<std::string> ScenarioNames();
+std::vector<std::string> ScenarioNames(Mode aMode);
+Run RunScenario(const std::string &aName, const Setup &aSetup = {});
+
+} // namespace FlightSim

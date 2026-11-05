@@ -1,5 +1,7 @@
 #include "FlightModeControl.hpp"
 
+#include "Flight/DeveloperSettings.hpp"
+
 namespace {
 Flight::Vec3 ToVec(const RED4ext::Vector4 &aV) { return {aV.X, aV.Y, aV.Z}; }
 RED4ext::Vector4 ToDirection(const Flight::Vec3 &aV) { return {aV.x, aV.y, aV.z, 0.0f}; }
@@ -20,7 +22,12 @@ void Store(const RED4ext::Handle<FlightPID> &aPid, const Flight::Pid &aValue) {
 }
 } // namespace
 
-Flight::StandardParams FlightModeControl::Standard() const {
+float FlightModeControl::Thrust(const Flight::StatsStatic &aStatic, float aReference) {
+  const auto &dev = Flight::Developer();
+  return Flight::ThrustScale(aStatic.thrusters, aStatic.mass, dev.thrustPerThruster, aReference, dev.thrustStrength);
+}
+
+Flight::StandardParams FlightModeControl::Standard(const Flight::StatsStatic &aStatic) const {
   Flight::StandardParams p;
   p.surgeFactor = standardModeSurgeFactor;
   p.yawFactor = standardModeYawFactor;
@@ -39,6 +46,9 @@ Flight::StandardParams FlightModeControl::Standard() const {
   p.minHoverHeight = hoverModeMinHoverHeight;
   p.maxHoverHeight = hoverModeMaxHoverHeight;
   p.gravityFactor = gravityFactor;
+  const float thrust = Thrust(aStatic, standardModeSurgeFactor);
+  p.surgeFactor *= thrust;
+  p.swayFactor *= thrust;
   return p;
 }
 
@@ -75,7 +85,7 @@ void FlightModeControl::StandardLift(RED4ext::Handle<FlightStats> aStats, RED4ex
     return;
   }
   Flight::Pid pitchPid = Load(aPitchPid), rollPid = Load(aRollPid);
-  SetOutput(Flight::StandardLift(aStats->State(), aStats->Static(), Controls(), Standard(), pitchPid, rollPid,
+  SetOutput(Flight::StandardLift(aStats->State(), aStats->Static(), Controls(), Standard(aStats->Static()), pitchPid, rollPid,
                                  ToVec(aNormal), aLiftForce, dt));
   Store(aPitchPid, pitchPid);
   Store(aRollPid, rollPid);
@@ -89,7 +99,7 @@ void FlightModeControl::StandardDistance(RED4ext::Handle<FlightStats> aStats, RE
     return;
   }
   Flight::Pid hoverPid = Load(aHoverPid), pitchPid = Load(aPitchPid), rollPid = Load(aRollPid);
-  SetOutput(Flight::StandardDistance(aStats->State(), aStats->Static(), Controls(), Standard(), hoverPid, pitchPid,
+  SetOutput(Flight::StandardDistance(aStats->State(), aStats->Static(), Controls(), Standard(aStats->Static()), hoverPid, pitchPid,
                                      rollPid, ToVec(aNormal), aHeightDifference, dt));
   Store(aHoverPid, hoverPid);
   Store(aPitchPid, pitchPid);
@@ -112,7 +122,7 @@ void FlightModeControl::HoverFly(RED4ext::Handle<FlightStats> aStats, RED4ext::H
   m.hoverHeight = hoverHeight;
   m.holdingAltitude = holdingAltitude;
   Flight::Pid hoverPid = Load(aHoverPid), pitchPid = Load(aPitchPid), rollPid = Load(aRollPid);
-  SetOutput(Flight::HoverFly(m, aStats->State(), aStats->Static(), Controls(), Standard(), h, GroundOf(), hoverPid,
+  SetOutput(Flight::HoverFly(m, aStats->State(), aStats->Static(), Controls(), Standard(aStats->Static()), h, GroundOf(), hoverPid,
                              pitchPid, rollPid, dt));
   hovering = m.hovering;
   referenceZ = m.referenceZ;
@@ -138,7 +148,7 @@ void FlightModeControl::Automatic(RED4ext::Handle<FlightStats> aStats, RED4ext::
   m.hovering = hovering;
   m.hoverHeight = hoverHeight;
   Flight::Pid hoverPid = Load(aHoverPid), pitchPid = Load(aPitchPid), rollPid = Load(aRollPid);
-  SetOutput(Flight::Automatic(m, aStats->State(), aStats->Static(), Controls(), Standard(), a, GroundOf(), hoverPid,
+  SetOutput(Flight::Automatic(m, aStats->State(), aStats->Static(), Controls(), Standard(aStats->Static()), a, GroundOf(), hoverPid,
                               pitchPid, rollPid, dt));
   hovering = m.hovering;
   hoverHeight = m.hoverHeight;
@@ -159,6 +169,9 @@ void FlightModeControl::Drone(RED4ext::Handle<FlightStats> aStats) {
   p.surgeFactor = droneModeSurgeFactor;
   p.yawFactor = droneModeYawFactor;
   p.swayFactor = droneModeSwayFactor;
+  const float thrust = Thrust(aStats->Static(), droneModeSurgeFactor);
+  p.surgeFactor *= thrust;
+  p.swayFactor *= thrust;
   p.brakeFactorLinear = brakeFactorLinear;
   p.brakeFactorAngular = brakeFactorAngular;
   SetOutput(Flight::Drone(aStats->State(), aStats->Static(), Controls(), p));

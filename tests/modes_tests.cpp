@@ -834,3 +834,12 @@ TEST(modes_ground_from_hits_cancelling_normals) {
   CHECK_NEAR(g.distance, 3, kTol);
   CheckVec(g.normal, 0, 0, 0, kTol);
 }
+
+TEST(ground_ray_layout) {
+  // FindGround's rays (FlightComponent.reds, native FlightGround): straight down from the wheel emitter, the max hover
+  // height plus 10 m long
+  const Vec3 end = GroundRayEnd({3.0f, -2.0f, 41.5f}, 7.0f);
+  CHECK_NEAR(end.x, 3.0f, 0.0f);
+  CHECK_NEAR(end.y, -2.0f, 0.0f);
+  CHECK_NEAR(end.z, 41.5f - 17.0f, 1e-5f);
+}

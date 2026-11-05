@@ -1,5 +1,7 @@
 #include "Vehicle.hpp"
 
+#include "Flight/Force.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -45,6 +47,12 @@ bool VehicleSpec::Parse(const std::string &aText, std::string &aError) {
     else if (key == "margin") field = &margin;
     else if (key == "planDecel") field = &planDecel;
     else if (key == "pushOver") field = &pushOver;
+    else if (key == "cdaFront") field = &cdaFront;
+    else if (key == "cdaTop") field = &cdaTop;
+    else if (key == "dragK") field = &dragK;
+    else if (key == "thrusters") field = &thrusters;
+    else if (key == "thrustStrength") field = &thrustStrength;
+    else if (key == "thrustPerThruster") field = &thrustPerThruster;
     else if (key == "drag") {
       drag = value != 0.0f;
       continue;
@@ -68,11 +76,55 @@ std::string VehicleSpec::Describe() const {
   return text;
 }
 
+namespace {
+// Drag force per (m/s)^2: the shape's (0.5 rho K CdA, rho 1.2) when the car has one, else airResistance's
+float DragArea(const VehicleSpec &aSpec) {
+  return aSpec.cdaFront > 0.0f ? 0.5f * 1.2f * aSpec.dragK * aSpec.cdaFront : 1.2f * aSpec.airResistance;
+}
+} // namespace
+
 float Drag(const VehicleSpec &aSpec, float aSpeed) {
   if (!aSpec.drag || aSpec.mass <= 0.0f) {
     return 0.0f;
   }
-  return 1.2f * aSpec.airResistance * aSpeed * aSpeed / aSpec.mass;
+  return DragArea(aSpec) * aSpeed * aSpeed / aSpec.mass;
+}
+
+namespace {
+// DragArea along a path at aSlope
+float DragAreaAt(const VehicleSpec &aSpec, float aSlope) {
+  if (!aSpec.drone || aSpec.cdaFront <= 0.0f || aSpec.cdaTop <= 0.0f) {
+    return DragArea(aSpec);
+  }
+  const float s2 = std::min(aSlope * aSlope, 1.0f);
+  return 0.5f * 1.2f * aSpec.dragK * (aSpec.cdaFront * (1.0f - s2) + aSpec.cdaTop * s2);
+}
+} // namespace
+
+float DragAt(const VehicleSpec &aSpec, float aSpeed, float aSlope) {
+  if (!aSpec.drag || aSpec.mass <= 0.0f) {
+    return 0.0f;
+  }
+  return DragAreaAt(aSpec, aSlope) * aSpeed * aSpeed / aSpec.mass;
+}
+
+float AccelAt(const VehicleSpec &aSpec, float aSpeed, float aSlope) {
+  return std::max(aSpec.surge * aSpec.surgeShare - DragAt(aSpec, aSpeed, aSlope), 0.5f);
+}
+
+float TopAt(const VehicleSpec &aSpec, float aSlope) {
+  const float k = aSpec.drag ? DragAreaAt(aSpec, aSlope) / std::max(aSpec.mass, 1.0f) : 0.0f;
+  const float push = aSpec.surge * aSpec.surgeShare;
+  return std::min(k > 0.0f ? 0.97f * std::sqrt(push / k) : aSpec.speedCap, TopSpeed(aSpec));
+}
+
+VehicleSpec Effective(const VehicleSpec &aSpec) {
+  VehicleSpec s = aSpec;
+  const float scale = Flight::ThrustScale(s.thrusters, s.mass, s.thrustPerThruster, s.surge, s.thrustStrength);
+  s.surge *= scale;
+  s.sway *= scale;
+  s.thrustStrength = 0.0f;
+  return s;
 }
 
 float DroneAccel(const VehicleSpec &aSpec, float aThrusters) {
@@ -91,7 +143,7 @@ float DroneAccel(const VehicleSpec &aSpec, float aThrusters) {
 }
 
 float TopSpeed(const VehicleSpec &aSpec) {
-  const float k = aSpec.drag ? 1.2f * aSpec.airResistance / std::max(aSpec.mass, 1.0f) : 0.0f;
+  const float k = aSpec.drag ? DragArea(aSpec) / std::max(aSpec.mass, 1.0f) : 0.0f;
   // (drone style was DroneAccel(surge): 120 m/s, while the car levels off at 89 to 91)
   const float push = aSpec.surge * aSpec.surgeShare;
   const float top = k > 0.0f ? std::sqrt(push / k) : aSpec.speedCap;
@@ -116,6 +168,36 @@ float LateralAt(const VehicleSpec &aSpec, float aVertical) {
   const float tilt = DroneAccel(aSpec, aSpec.sway) - aSpec.sway;
   const float left = std::clamp(aVertical / std::max(g, 0.1f), 0.0f, 1.0f);
   return aSpec.sway + tilt * left + aSpec.surge * aSpec.surgeShare * std::sin(aSpec.driftMax * kDeg);
+}
+
+namespace {
+// The drifted nose's share of a bend: the surge (or what the drag leaves of it) along a nose turned driftMax in
+float DriftShare(const VehicleSpec &aSpec, float aSurge) {
+  return std::max(aSurge, 0.0f) * std::sin(aSpec.driftMax * kDeg);
+}
+} // namespace
+
+float Lateral(const VehicleSpec &aSpec, float aSpeed) {
+  if (!aSpec.drone) {
+    return Lateral(aSpec);
+  }
+  return DroneAccel(aSpec, aSpec.sway) + DriftShare(aSpec, aSpec.surge * aSpec.surgeShare - Drag(aSpec, aSpeed));
+}
+
+float LateralAt(const VehicleSpec &aSpec, float aVertical, float aSpeed) {
+  if (!aSpec.drone) {
+    return Lateral(aSpec);
+  }
+  const float g = kG * aSpec.gravityFactor;
+  const float tilt = DroneAccel(aSpec, aSpec.sway) - aSpec.sway;
+  const float left = std::clamp(aVertical / std::max(g, 0.1f), 0.0f, 1.0f);
+  return aSpec.sway + tilt * left + DriftShare(aSpec, aSpec.surge * aSpec.surgeShare - Drag(aSpec, aSpeed));
+}
+
+float FlownTop(const VehicleSpec &aSpec) {
+  const float k = aSpec.drag ? DragArea(aSpec) / std::max(aSpec.mass, 1.0f) : 0.0f;
+  const float push = aSpec.surge * aSpec.surgeShare;
+  return std::min(k > 0.0f ? std::sqrt(push / k) : aSpec.speedCap, aSpec.speedCap);
 }
 
 float Accel(const VehicleSpec &aSpec, float aSpeed) {

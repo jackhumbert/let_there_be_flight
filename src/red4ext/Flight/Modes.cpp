@@ -72,6 +72,8 @@ float HoverWeight(const Ground &g, const StandardParams &p) {
 }
 } // namespace
 
+Vec3 GroundRayEnd(Vec3 aTire, float aMaxHoverHeight) { return {aTire.x, aTire.y, aTire.z - aMaxHoverHeight - 10.0f}; }
+
 Ground GroundFromHits(const Hit *hits, int count, float lastDistance) {
   Ground g;
   g.distance = lastDistance;
@@ -152,6 +154,99 @@ ModeOutput HoverFly(HoverFlyState &m, const StatsState &s, const StatsStatic &st
   liftFactor *= (1.0f - c.linearBrake);
 
   return StandardLift(s, st, c, p, pitchPid, rollPid, idealNormal, liftFactor + kGravity * p.gravityFactor, dt);
+}
+
+Vec3 TorqueResponse(const StatsStatic &st, Vec3 t) {
+  auto axis = [&](float gain, float tensor, float inertia) { return inertia > 0.0f ? gain * st.mass * tensor / inertia : 0.0f; };
+  return {axis(kEngineTorqueGain.x, t.x, st.momentOfInertia.x), axis(kEngineTorqueGain.y, std::fmax(t.y, 1.0f), st.momentOfInertia.y),
+          axis(kEngineTorqueGain.z, t.z, st.momentOfInertia.z)};
+}
+
+ModeOutput HoverFlyAssist(HoverFlyState &m, const StatsState &s, const StatsStatic &st, const Controls &c,
+                          const StandardParams &p, const HoverFlyAssistParams &a, const Ground &g, Vec3 response,
+                          float dt) {
+  auto clamp = [](float x, float lo, float hi) { return std::fmin(std::fmax(x, lo), hi); };
+  Quat toBody = Conjugate(s.d_orientation);
+
+  // the hover band, as HoverFly enters it
+  float lastHovering = m.hovering;
+  m.hovering = HoverWeight(g, p);
+  if (lastHovering == 0.0f && m.hovering > 0.0f)
+    m.hoverHeight = g.distance;
+  m.hoverHeight = clamp(m.hoverHeight + c.lift * a.maxClimbRate * dt, p.minHoverHeight, p.maxHoverHeight);
+
+  // attitude: the rotation (body frame) taking the body's up to the target up
+  Vec3 targetUp = Normalize(Interpolate(kUp, g.found ? g.normal : kUp, m.hovering));
+  Vec3 t = Rotate(toBody, targetUp);
+  Vec3 axis{-t.y, t.x, 0.0f}; // (0, 0, 1) x t
+  float sinAngle = Length(axis);
+  float angle = std::atan2(sinAngle, t.z);
+  Vec3 tilt = sinAngle > 1e-6f ? Mul(axis, std::fmin(angle, a.attitudeLimit) / sinAngle) : Vec3{};
+  // the inputs tilt the target the way StandardLift's input angles do (pitch about -X, roll about +Y)
+  tilt.x -= c.pitch * p.pitchInputAngle * (3.14159265f / 180.0f);
+  tilt.y += c.roll * p.rollInputAngle * (3.14159265f / 180.0f);
+  Vec3 w = s.d_angularVelocity;
+  Vec3 alpha;
+  alpha.x = (a.attitudeP * tilt.x - a.attitudeD * w.x) * (1.0f - c.angularBrake);
+  alpha.y = (a.attitudeP * tilt.y - a.attitudeD * w.y) * (1.0f - c.angularBrake);
+
+  // yaw: a rate about world up (StandardLift's sign: positive yaw input turns the body negatively about up)
+  Vec3 up = s.d_localUp;
+  float yawRate = Dot(w, up);
+  // at speed, no faster than the sideways grip can turn the velocity with the nose (80% of it)
+  float yawLimit = std::fmin(a.maxYawRate, 0.8f * a.maxSideGrip / std::fmax(s.d_speed2D, 1.0f));
+  alpha = Add(alpha, Mul(up, a.yawP * (-c.yaw * yawLimit - yawRate)));
+
+  // the angular acceleration as mode torque, axis by axis
+  ModeOutput out;
+  out.torque = {response.x > 0.0f ? alpha.x / response.x : 0.0f, response.y > 0.0f ? alpha.y / response.y : 0.0f,
+                response.z > 0.0f ? alpha.z / response.z : 0.0f};
+
+  // travel: along the level forward and right
+  Vec3 fwd = s.d_forward2D;
+  Vec3 right{fwd.y, -fwd.x, 0.0f};
+  float vf = Dot(s.d_velocity, fwd), vs = Dot(s.d_velocity, right);
+  float af = c.surge * p.surgeFactor - (1.0f - std::fabs(c.surge)) * clamp(a.brake * vf, -a.maxBrake, a.maxBrake);
+  float as = c.sway * p.swayFactor - (1.0f - std::fabs(c.sway)) * clamp(a.sideBrake * vs, -a.maxSideGrip, a.maxSideGrip);
+
+  // height
+  float z = s.d_position.z, vz = s.d_velocity.z;
+  float fly;
+  if (std::fabs(c.lift) > 0.01f || m.hovering > 0.0f) {
+    m.holdingAltitude = false;
+    fly = a.climbP * (c.lift * a.maxClimbRate - vz);
+  } else if (!m.holdingAltitude) {
+    // let go: stop the climb or sink, then hold where it stopped
+    fly = -a.climbP * vz;
+    if (std::fabs(vz) < 0.3f) {
+      m.holdingAltitude = true;
+      m.referenceZ = z;
+    }
+  } else {
+    fly = a.holdP * (m.referenceZ - z) - a.holdD * vz;
+  }
+  fly = clamp(fly, -p.liftFactor, p.liftFactor);
+  float hover = clamp(a.hoverP * (m.hoverHeight - g.distance) - a.hoverD * vz, -p.liftFactor, p.liftFactor);
+  float az = Lerp(m.hovering, fly, hover);
+
+  // the brake scales what the mode asks for, not the gravity it holds up (as HoverFly's liftFactor)
+  Vec3 accel = Mul(Add(Add(Mul(fwd, af), Mul(right, as)), Mul(kUp, az)), 1.0f - c.linearBrake);
+  accel.z += kGravity * p.gravityFactor;
+  out.force = Rotate(toBody, accel);
+  out.force = Sub(out.force, Mul(s.d_localVelocity, c.linearBrake * p.brakeFactorLinear * st.brakingFrictionFactor));
+  return out;
+}
+
+ModeOutput DroneAssist(const StatsState &s, const StatsStatic &st, const Controls &c, const DroneParams &p,
+                       const DroneAssistParams &a, Vec3 response) {
+  ModeOutput out = Drone(s, st, c, p);
+  // the rate each input asks for, with Drone's signs: pitch and yaw turn the body negatively about X and Z
+  float keep = 1.0f - c.angularBrake;
+  Vec3 target{-c.pitch * a.maxRate.x * keep, c.roll * a.maxRate.y * keep, -c.yaw * a.maxRate.z * keep};
+  Vec3 alpha = Mul(Sub(target, s.d_angularVelocity), a.rateP);
+  out.torque = {response.x > 0.0f ? alpha.x / response.x : 0.0f, response.y > 0.0f ? alpha.y / response.y : 0.0f,
+                response.z > 0.0f ? alpha.z / response.z : 0.0f};
+  return out;
 }
 
 ModeOutput Automatic(AutomaticState &m, const StatsState &s, const StatsStatic &st, const Controls &c,

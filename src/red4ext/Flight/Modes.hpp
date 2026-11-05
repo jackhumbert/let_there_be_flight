@@ -84,6 +84,9 @@ struct Hit {
 // counts as nothing found (the script always has four).
 Ground GroundFromHits(const Hit *hits, int count, float lastDistance);
 
+// Where one of FindGround's rays ends: straight down from its wheel emitter aTire, maxHoverHeight + 10 m.
+Vec3 GroundRayEnd(Vec3 aTire, float aMaxHoverHeight);
+
 // FlightModeFly.Update: normal Up; the lift input scales the lift force by dt, as the script does.
 ModeOutput Fly(const StatsState &s, const StatsStatic &st, const Controls &c, const StandardParams &p, Pid &pitchPid,
                Pid &rollPid, float dt);
@@ -109,6 +112,68 @@ struct HoverFlyState {
 ModeOutput HoverFly(HoverFlyState &m, const StatsState &s, const StatsStatic &st, const Controls &c,
                     const StandardParams &p, const HoverFlyParams &h, const Ground &g, Pid &hoverPid, Pid &pitchPid,
                     Pid &rollPid, float dt);
+
+// Hover & Fly redesigned for beginners (docs/design/hover-fly-feel.md): every control asks for a speed, and letting
+// go of everything brings the car to rest, level, where it was let go. Not called by the game yet: flown in
+// tools/flightsim against the spec first.
+// - attitude: PD on the rotation from the body's up to the target up (world up blended to the ground normal by
+//   hovering, tilted by the pitch and roll inputs), so it holds at any tilt, upside down too, and has no integral to
+//   wind up while a collision's recovery has the torque scaled down;
+// - yaw: a turn rate about world up (yaw x maxYawRate), not a torque about the body's own up; at speed no faster
+//   than the sideways grip can turn the velocity with it;
+// - travel: surge and sway accelerate along the level forward and right; let go, the speed along each brakes to 0,
+//   the sideways part harder, so the velocity follows the nose through a turn;
+// - height: lift asks for a vertical speed (lift x maxClimbRate); let go, the car stops and holds that height. In the
+//   hover band the hover height moves at the same rate, and the height error is damped on the vertical speed, not
+//   on the change of the ground distance (a 1.5 m step under the car kicked the PID's D term at 92 m/s2).
+//
+// The attitude and yaw terms ask for an angular acceleration and divide it by the car's own response
+// (TorqueResponse): over the surveyed cars that response spans about 30 times on each axis, so no fixed torque gain
+// suits them all.
+struct HoverFlyAssistParams {
+  float attitudeP = 25, attitudeD = 8;   // rad/s2 per rad of tilt, per rad/s of tilting
+  float attitudeLimit = 1.2f;            // rad of tilt error the P term counts at most
+  float maxYawRate = 1.57f, yawP = 8;    // rad/s at full yaw input; rad/s2 per rad/s off it
+  float brake = 1.5f, sideBrake = 3;    // 1/s: the share of the speed along forward, and across, braked a second
+  float maxBrake = 12, maxSideGrip = 25; // m/s2 the braking gives at most, along and across (the grip in a turn)
+  float maxClimbRate = 8, climbP = 5;    // m/s at full lift input; m/s2 per m/s off it
+  float holdP = 4, holdD = 4;            // the height hold: m/s2 per m off, per m/s of vertical speed
+  float hoverP = 6, hoverD = 5;          // the hover band: m/s2 per m off the hover height, per m/s
+};
+
+// The body's rad/s2 of angular acceleration per unit of mode torque x mass x thruster tensor / inertia (FlightComponent
+// scales the mode torque by mass and tensor, PhysX divides by the inertia), per body axis: X pitch, Y roll, Z yaw.
+// Yaw 0.95 is TorqueProbe's on an Archer Quartz (2026-10-26) and agrees with a Shion MZ1 recording (2.57 rad/s2 per
+// unit measured, 2.65 from the Kyokotsu's survey numbers). Pitch 1.13 is fitted to that recording (TorqueProbe's 2.6
+// was the first frames only). Roll 0.24 is fitted to the C++ Hover & Fly's roll holds in game on a Shion MZ1, a
+// Bratsk and a Kusanagi (2026-11-05: they overshot 45 deg to 49 to 54 deg, which the simulator gives at 0.4 to 0.55 of
+// TorqueProbe's 0.52).
+constexpr Vec3 kEngineTorqueGain{1.13f, 0.24f, 0.95f};
+
+// A car's rad/s2 per unit of mode torque on each body axis: kEngineTorqueGain x mass x tensor / inertia, with the
+// tensor's Y kept at 1 or more as the force tail keeps it. Zero on an axis with no inertia.
+Vec3 TorqueResponse(const StatsStatic &st, Vec3 thrusterTensor);
+
+// The redesigned Hover & Fly. m's fields mean what they do for HoverFly (referenceZ is the held height, captured
+// once the car has stopped climbing or sinking). response is TorqueResponse's.
+ModeOutput HoverFlyAssist(HoverFlyState &m, const StatsState &s, const StatsStatic &st, const Controls &c,
+                          const StandardParams &p, const HoverFlyAssistParams &a, const Ground &g, Vec3 response,
+                          float dt);
+
+// Drone mode made car-independent, a proposal (docs/design/hover-fly-feel.md, "Drone across the fleet"); not called
+// by the game. Drone's torque is input x factor, so a held key spins a car at a rate that grows with its own response
+// (TorqueResponse spans about 30 times over the fleet) until PhysX's 7 rad/s cap. Here each of pitch, roll and yaw asks
+// for a body rate instead (input x maxRate, the angular brake slowing it to 0), and the torque is the angular
+// acceleration that closes the gap divided by the car's response, as HoverFlyAssist does. Let go, every rate goes to
+// 0. The force is Drone's: it is an acceleration already (the force tail scales it by mass).
+struct DroneAssistParams {
+  Vec3 maxRate{3.0f, 3.0f, 2.5f}; // rad/s at full input: pitch (X), roll (Y), yaw (Z)
+  float rateP = 10;               // rad/s2 per rad/s off the rate asked for
+};
+
+// DroneAssist: Drone's force, the rate command's torque. response is TorqueResponse's.
+ModeOutput DroneAssist(const StatsState &s, const StatsStatic &st, const Controls &c, const DroneParams &p,
+                       const DroneAssistParams &a, Vec3 response);
 
 // FlightModeAutomatic's Mod Settings. Its lift and hover factors are its own, not Standard's.
 struct AutomaticParams {

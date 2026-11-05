@@ -1,0 +1,31 @@
+# The flight modes, in the order the controller cycles them (the first is the one flight starts in): FlightMode
+# classes by name, C++ or redscript (src/red4ext/Flight/Mode.hpp). Each joins a car's list when its Mod Settings switch
+# is on (FlightMode.IsEnabled).
+#
+# A mod adds a mode with its own yaml in r6/tweaks. TweakXL reads r6/tweaks before the tweaks LTBF registers, so the
+# flat's type is given and the change goes under $value (TweakXL applies array changes after every file's values):
+#
+#   FlightModes.classes:
+#     $type: array:CName
+#     $value:
+#       - !append-once MyFlightMode
+#
+# or swaps one for its subclass (one that overrides the hooks OnUpdate, Description, ...), first in the list:
+#
+#   FlightModes.classes:
+#     $type: array:CName
+#     $value:
+#       - !remove FlightModeHoverFly
+#       - !prepend-once GentleHoverFly
+#
+# (checked in game with !append-once: cp2077_tools/mods/let_there_be_flight/native_mode_probe.yaml)
+FlightModes.classes:
+  $type: array:CName
+  $value:
+    - FlightModeHoverFly
+    - FlightModeHover
+    - FlightModeAutomatic
+    - FlightModeFly
+    - FlightModeDroneAntiGravity
+    - FlightModeDrone
+    - FlightModeAutopilot

@@ -17,6 +17,8 @@ public native class FlightAttitudeControl extends IScriptable {
   public native let generalDampFactorAngular: Float;
   public native let generalYawDampFactor: Float;
   public native let generalDampFactorAngularMax: Float;
+  public native let dampStabilityK: Float;
+  public native let dampMaxPerFrame: Float;
   public native let standardModeSurgeFactor: Float;
   public native let standardModeSwayFactor: Float;
   public native let standardModeLiftFactor: Float;

@@ -21,9 +21,21 @@ public native class FlightVehicleModel extends IScriptable {
   public native let margin: Float;          // raceMargin
   public native let planDecel: Float;       // m/s2, racePlanDecel
   public native let pushOver: Float;        // m/s2, dronePushOver / racePushOver
+  // the car's measured shape and thrust (FlightStats.s_dragArea.Y, s_thrusters); they count as far as the
+  // developer settings shapeDrag and thrustStrength turn them on
+  public native let cdaFront: Float;        // m2
+  public native let cdaSide: Float;         // m2
+  public native let cdaTop: Float;          // m2
+  public native let thrusters: Float;
 
   // air drag at speed v, m/s2
   public native func Drag(speed: Float) -> Float;
+  // what the air takes from the car at that velocity (world), m/s2, to thrust back: with the developer setting
+  // shapeDrag the shape's drag on each body axis of the car turned by orientation, else Drag along the velocity
+  public native func DragVector(velocity: Vector4, orientation: Quaternion) -> Vector4;
+  // surge and sway as the car flies them: scaled by its thrust (developer setting thrustStrength)
+  public native func Surge() -> Float;
+  public native func Sway() -> Float;
   // drone style: the most horizontal acceleration with `thrusters` m/s2 across the tilted body
   public native func DroneAccel(thrusters: Float) -> Float;
   // where full surge meets the drag, at most speedCap

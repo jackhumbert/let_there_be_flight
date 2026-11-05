@@ -45,6 +45,9 @@ struct FollowFrame {
   // accel: the car's net acceleration this frame; thrust: the thrust acceleration after the surge, sway and
   // lift clamps (and the surge hold), world frame, m/s2 (gravity and the drag it holds off included)
   Vec3 p{}, v{}, accel{}, thrust{};
+  // want, got: the thrust in the target's frame (x right, y nose, z top, m/s2) the controller asked for, and what
+  // the sway, surge and lift clamps (and the surge hold) let through: where they differ, a limit bound
+  Vec3 want{}, got{};
   bool held = false, blocked = false, emergency = false;
 };
 

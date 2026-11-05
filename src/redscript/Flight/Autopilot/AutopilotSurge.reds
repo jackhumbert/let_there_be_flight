@@ -29,13 +29,13 @@ public class AutopilotSurge extends IScriptable {
   public let held: Bool;               // the surge was held full this frame
   public let changing: Float;         // s the hold has wanted the other way
 
-  // The acceleration the drag takes from the car, to be thrust back: along the velocity, m/s2.
+  // The acceleration the drag takes from the car, to be thrust back, m/s2: along the velocity, or with the developer
+  // setting shapeDrag on each axis of the car as it is turned now (FlightVehicleModel.DragVector).
   public func Drag(ap: ref<FlightModeAutopilot>, velocity: Vector4) -> Vector4 {
-    let speed = Vector4.Length(velocity);
-    if !this.dragFeedForward || speed < 0.5 {
+    if !this.dragFeedForward {
       return new Vector4(0.0, 0.0, 0.0, 0.0);
     }
-    return velocity * (ap.Vehicle().Drag(speed) / speed);
+    return ap.Vehicle().DragVector(velocity, ap.component.stats.d_orientation);
   }
 
   // Whether the surge is held full (held): following a trajectory on its line where the speed is set

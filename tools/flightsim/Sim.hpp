@@ -1,0 +1,170 @@
+#pragma once
+
+// Hover & Fly and Drone flown offline: the plugin's own mode, input and force code (Flight/Controls, Stats, Modes,
+// Force) on a rigid body over a height field, so a mode's feel can be measured and kept from regressing without the
+// game.
+//
+// What is the game's code and what is a model:
+// - the input smoothing (StepControls), the stats (UpdateDynamic), the mode (HoverFly, Drone, ...) and the force tail
+//   (ForceTail: ApplyPhysics, the mass and tensor scaling) are the plugin's functions, called as the game calls them;
+// - FindGround is modelled: four rays straight down from the wheel points, as FlightComponent.FindGround casts them,
+//   averaged with GroundFromHits; the world is a height field;
+// - the body is modelled: the linear part integrates the tail's world force as an acceleration (FlightComponent
+//   scales it by mass and PhysX divides it out) plus gravity and PhysX's linear damping; the angular part applies the
+//   mode torque times a per-axis gain measured in game (TorqueProbe, Archer Quartz hovering, 2026-10-28: about
+//   1.25 rad/s2 per unit of mode torque on each axis, answering two frames late at 32 fps);
+// - the ground contact is a stop: the body's bottom never goes below the ground, downward speed is removed.
+
+#include "Flight/Controls.hpp"
+#include "Flight/Force.hpp"
+#include "Flight/Modes.hpp"
+
+#include <deque>
+#include <functional>
+#include <string>
+#include <vector>
+
+namespace FlightSim {
+
+using Flight::Vec3;
+
+// The car. The defaults are a mid-size car (Navigation/Vehicle.hpp's VehicleSpec) with a Shion MZ1's torque response,
+// fitted to a Hover & Fly recording (hoverfly_check, flightsim --replay, 2026-11-04): pitch 3.0 and yaw 2.57 rad/s2
+// per unit of mode torque, 30 ms late. Roll is not fitted yet: 1.2 is the Archer's (TorqueProbe CSV of 2026-10-28).
+// A surveyed car (vehicles.tsv) sets inertia and tensor, and its gain is Flight::TorqueResponse's.
+struct Car {
+  std::string name = "generic";
+  float mass = 1500.0f;
+  float airResistance = 2.0f;   // s_airResistanceFactor
+  float brakingFriction = 1.4f; // s_brakingFrictionFactor
+  // rad/s2 of body angular acceleration per unit of mode torque (body X right, Y forward, Z up)
+  Vec3 angularGain{3.0f, 1.2f, 2.57f};
+  // s_momentOfInertia and FlightComponent.thrusterTensor; zero inertia means unknown, and CapDamping is then given
+  // the inertia that matches angularGain
+  Vec3 inertia, tensor{1, 1, 1};
+  float torqueDelay = 0.03f; // s the body answers the torque late
+  // how far the body's real response is off angularGain, per axis: the controllers are given angularGain, the body
+  // answers angularGain x this (for robustness runs: flightsim --set errX=2)
+  Vec3 responseError{1, 1, 1};
+  // rad/s the body never spins faster than: PhysX's default max angular velocity (a held turn in game levels off at
+  // 7.1 rad/s, hoverfly_check on a Shion MZ1, 2026-11-04)
+  float maxAngularSpeed = 7.0f;
+  // the wheel emitters FindGround casts from, relative to the centre of mass (body frame), and the body's bottom
+  float wheelX = 0.8f, wheelY = 1.4f, wheelZ = -0.3f;
+  float bottom = -0.6f;
+  // the chassis collision shape's drag area per body axis (m2: X side, Y front, Z top; aero.py, vehicles.tsv), and
+  // the fleet-wide factor on it (docs/research/2026-11-04-aero-drag.md); zero: unknown, today's drag stays
+  Vec3 cda;
+  float dragK = Flight::kShapeDragK;
+  float thrusters = 0; // vehicles.tsv; 0: unknown, the thrust stays today's
+};
+
+// Ground height at (x, y); return -infinity for none (a ray that hits nothing).
+using Terrain = std::function<float(float x, float y)>;
+
+// The raw inputs as the keys or sticks give them, -1..1, before the input smoothing.
+struct Keys {
+  float surge = 0, lift = 0, sway = 0, yaw = 0, roll = 0, pitch = 0, linearBrake = 0, angularBrake = 0;
+};
+
+// One frame, after the step.
+struct Frame {
+  float t = 0;
+  Vec3 position, velocity;
+  float headingDeg = 0, pitchDeg = 0, rollDeg = 0;
+  float tiltDeg = 0; // the body's up from the world's: 0 level, 180 upside down
+  Vec3 angularVelocity; // body, rad/s
+  Flight::Controls controls;
+  bool foundGround = false;
+  float groundDistance = 0, groundHeight = 0;
+  float hovering = 0, hoverHeight = 0, referenceZ = 0;
+  bool holdingAltitude = false;
+  bool contact = false;
+  float impactSpeed = 0; // m/s of downward speed the ground stopped this frame
+};
+
+// The mode flown.
+enum class Mode {
+  HoverFly,         // Flight::HoverFly, today's Hover & Fly
+  Assist,           // Flight::HoverFlyAssist, its redesign
+  Drone,            // Flight::Drone
+  AntiGravityDrone, // Drone plus FlightModeDroneAntiGravity's d_localUp x 9.81 x gravityFactor (its script's own line)
+  DroneAssist,      // Flight::DroneAssist, Drone with a rate command per axis (a proposal)
+};
+// The command line's names (flightsim --mode): hoverfly, assist, drone, agdrone, droneassist. ParseMode returns false
+// for a name it does not know.
+const char *ModeName(Mode aMode);
+bool ParseMode(const std::string &aName, Mode &aMode);
+inline bool IsDrone(Mode aMode) { return aMode == Mode::Drone || aMode == Mode::AntiGravityDrone || aMode == Mode::DroneAssist; }
+
+class Sim {
+public:
+  Sim(Car aCar, Terrain aTerrain);
+
+  // The tuning, at the mod's defaults; change before Place.
+  Flight::StandardParams standard;
+  Flight::HoverFlyParams hoverFly;
+  Flight::ForceParams force;
+  Mode mode = Mode::HoverFly;
+  // shape drag (Flight::ShapeDragAccel from the car's cda) in place of today's airResistanceFactor drag
+  bool shapeDrag = false;
+  // surge and sway scaled by each car's thrust (Flight::ThrustScale): 0 today's, 1 by its thrusters alone
+  float thrustStrength = 0.0f, thrustPerThruster = 6000.0f;
+  Flight::HoverFlyAssistParams assistParams;
+  Flight::DroneParams drone;
+  Flight::DroneAssistParams droneAssist;
+  Flight::PidGains hoverPid{1.0f, 0.005f, 0.5f}, pitchPid{1.0f, 0.2f, 0.05f}, rollPid{1.0f, 0.5f, 0.0f};
+
+  // Puts the car at rest, level, at position with the nose to headingDeg (0 = +Y, clockwise) and engages the mode
+  // (FlightModeHoverFly.Activate). velocity starts it moving.
+  void Place(Vec3 aPosition, float aHeadingDeg, Vec3 aVelocity = {});
+  Frame Step(const Keys &aKeys, float aDt);
+
+  // A recorded state to fly on from (flightsim --replay): the body, and the mode's fields as the game had them.
+  struct State {
+    Vec3 position, velocity, forward, right, angularVelocity; // angular velocity in the body frame
+    float hovering = 0, hoverHeight = 0, referenceZ = 0, groundDistance = 0;
+    bool holdingAltitude = false;
+  };
+  void SetState(const State &aState);
+  // A collision as the mode sees one: the body's spin (body frame) and velocity change at once, the spin counted as
+  // the world's (FlightComponent.contactSpin, which ApplyPhysics leaves undamped, decaying over
+  // kContactSpinDecay), and FlightComponent.ProcessImpact's recovery timer for an impact of 0..1 (the grid's
+  // biggest desiredChange). The contact itself (shapes, friction, more hits) is not modelled.
+  void Knock(Vec3 aBodySpin, Vec3 aVelocity, float aImpact);
+  // One frame on controls already smoothed, as the game's FlightComponent holds them, over the ground given (the
+  // recorded FindGround) or, without one, the terrain's.
+  Frame Advance(const Flight::Controls &aControls, const Flight::Ground *aGround, float aDt);
+
+  const Frame &Last() const { return last; }
+
+private:
+  Flight::Ground FindGround();
+
+  Car car;
+  Terrain terrain;
+  Flight::ControlAxes axes;
+  Flight::StatsState stats;
+  Flight::StatsStatic statics;
+  Flight::HoverFlyState hoverFlyState;
+  Flight::Pid hover, pitch, roll;
+  float lastDistance = 0;
+  float collisionTimer = 10.0f;
+  Vec3 contactSpin; // world, rad/s
+  float t = 0;
+
+  Vec3 position, velocity, angularVelocity; // world; position is the centre of mass
+  Flight::Quat orientation{0, 0, 0, 1};
+  std::deque<Vec3> torqueQueue; // body torque waiting for the delay
+  Frame last;
+};
+
+// A flat world at height h.
+Terrain Flat(float aHeight = 0.0f);
+
+// The cars of a survey table (tab-separated, a header line, one car a line; columns: record, name, type, mass,
+// airResistance, brakingFriction, inertiaX, inertiaY, inertiaZ, tensorX, tensorY, tensorZ, wheelX, wheelY, wheelZ,
+// bottom), each with its angular gain worked out (Flight::TorqueResponse). Empty when the file cannot be read; bad lines are skipped.
+std::vector<Car> LoadCars(const std::string &aPath);
+
+} // namespace FlightSim

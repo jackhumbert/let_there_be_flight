@@ -1,9 +1,12 @@
-public abstract class FlightMode {
+// Native (Flight/Mode.hpp): the base of the C++ modes too. A C++ mode runs through Activate, Deactivate, Update and
+// GetDescription below; a mod extends one by overriding the hooks (OnActivate, OnDeactivate, OnUpdate, Description),
+// which the C++ calls after its own step. The redscript modes override Activate and the rest directly, as before.
+public abstract native class FlightMode extends IScriptable {
   protected let sys: ref<FlightSystem>;
   protected let component: ref<FlightComponent>;
 
-  public let force: Vector4;
-  public let torque: Vector4;
+  public native let force: Vector4;
+  public native let torque: Vector4;
   public let linearDamp: Float;
   public let angularDamp: Float;
 
@@ -29,16 +32,43 @@ public abstract class FlightMode {
 
   public func Deinitialize() -> Void;
 
-  public func Activate() -> Void;
-  public func Deactivate() -> Void;
+  // Whether the mode joins the car's mode list (its Mod Settings switch); the list is TweakDB's FlightModes.classes
+  public func IsEnabled() -> Bool = true;
+
+  public func Activate() -> Void {
+    this.NativeActivate();
+  }
+  public func Deactivate() -> Void {
+    this.NativeDeactivate();
+  }
   // the car was teleported (FlightComponent.OnTeleported): start over where it is now (the heights
   // and positions a mode holds are the old place's)
   public func Teleported() -> Void {
     this.Activate();
   }
-  public func GetDescription() -> String;
+  public func GetDescription() -> String = this.NativeDescription();
 
-  public func Update(timeDelta: Float) -> Void;
+  public func Update(timeDelta: Float) -> Void {
+    this.NativeUpdate(timeDelta);
+  }
+
+  // A C++ mode's steps, each followed by the hook below when the class overrides it (Flight/Mode.hpp)
+  public final native func NativeActivate() -> Void;
+  public final native func NativeDeactivate() -> Void;
+  public final native func NativeUpdate(timeDelta: Float) -> Void;
+  public final native func NativeDescription() -> String;
+
+  // The mode list: TweakDB's FlightModes.classes, and a new instance of a FlightMode class by name (C++ or redscript;
+  // null for a name that is not a concrete FlightMode class)
+  public static native func ModeClasses() -> array<CName>;
+  public static native func Instantiate(className: CName) -> ref<FlightMode>;
+
+  // Hooks for a mod extending a C++ mode: called after its own step (force and torque already set by it), or in
+  // place of its name (Description).
+  protected func OnActivate() -> Void;
+  protected func OnDeactivate() -> Void;
+  protected func OnUpdate(timeDelta: Float) -> Void;
+  protected func Description() -> String = "";
 
   // The native mode controller with this frame's controls, the brake factors and gravityFactor filled in; the mode adds
   // its own params and calls the maths.

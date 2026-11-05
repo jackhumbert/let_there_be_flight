@@ -60,6 +60,8 @@ Flight::StatsStatic FlightStats::Static() const {
   s.airResistanceFactor = s_airResistanceFactor;
   s.brakingFrictionFactor = s_brakingFrictionFactor;
   s.momentOfInertia = ToVec(s_momentOfInertia);
+  s.dragArea = ToVec(s_dragArea);
+  s.thrusters = s_thrusters;
   return s;
 }
 

@@ -5,13 +5,10 @@ public class FlightModeHover extends FlightModeStandard {
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Hover-Mode-Enabled")
   public let enabled: Bool = false;
 
-  public static func Create(component: ref<FlightComponent>) -> ref<FlightModeHover> {
-    let self = new FlightModeHover();
-    self.Initialize(component);
-    return self;
-  }
 
   public func GetDescription() -> String = "Hover";
+
+  public func IsEnabled() -> Bool = this.enabled;
 
   public func Activate() -> Void {
     let normal: Vector4;

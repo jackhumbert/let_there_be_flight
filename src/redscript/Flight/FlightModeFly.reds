@@ -8,13 +8,10 @@ public class FlightModeFly extends FlightModeStandard {
   public func Activate() {}
   public func Deactivate() {}
 
-  public static func Create(component: ref<FlightComponent>) -> ref<FlightModeFly> {
-    let self = new FlightModeFly();
-    self.Initialize(component);
-    return self;
-  }
 
   public func GetDescription() -> String = "Fly";
+
+  public func IsEnabled() -> Bool = this.enabled;
 
   public func Update(timeDelta: Float) -> Void {
     let idealNormal = FlightUtils.Up();

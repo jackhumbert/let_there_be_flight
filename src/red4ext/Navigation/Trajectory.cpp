@@ -192,20 +192,28 @@ Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aL
       const Vec3 across = Sub(bend[i], Mul(tangent[i], Dot(bend[i], tangent[i])));
       const float level = std::hypot(across.x, across.y);
       const float curve = std::max(1.0f / std::max(radius[i], 1.0f), level);
-      float turn = std::sqrt(lateral / curve);
-      if (bend[i].z < -1e-4f) {
-        // over a crest the lift goes into pushing over and turns the car less (LateralAt): the
-        // fastest speed whose bend fits what is left, by bisection (faster pushes over harder)
-        const float g = kG * aSpec.gravityFactor;
-        float lo = 0.0f, hi = turn;
+      // the fastest speed whose bend fits, by bisection under the speed-free bound: the drifted nose turns the car
+      // only with the surge the drag leaves at that speed, over a crest the lift goes into pushing over and turns the
+      // car less (LateralAt), and at the car's top speed the surge hold flies it at FlownTop, past the plan's top, so
+      // a bend that fits only at the plan's top is a bend limit (and the hold stays off in it)
+      const float g = kG * aSpec.gravityFactor;
+      const float flownTop = FlownTop(aSpec);
+      float lo = 0.0f, hi = std::sqrt(lateral / curve);
+      auto fits = [&](float aSpeed) {
+        const float flown = aSpeed >= out.top - 0.01f ? std::max(aSpeed, flownTop) : aSpeed;
+        return flown * flown * curve <= aSpec.margin * LateralAt(aSpec, g + bend[i].z * flown * flown, flown);
+      };
+      if (!fits(std::min(hi, out.top))) {
         for (int32_t k = 0; k < 24; ++k) {
           const float mid = 0.5f * (lo + hi);
-          const bool fits = mid * mid * curve <= aSpec.margin * LateralAt(aSpec, g + bend[i].z * mid * mid);
-          (fits ? lo : hi) = mid;
+          (fits(mid) ? lo : hi) = mid;
         }
-        turn = lo;
+        hi = lo;
       }
+      const float turn = hi;
       take(i, turn, Limit::Turn);
+      // a climb or a dive meets the air with the roof (DragAt): its own top speed
+      take(i, TopAt(aSpec, tangent[i].z), Limit::Top);
       if (bend[i].z < -1e-4f) {
         take(i, std::sqrt(aSpec.pushOver / -bend[i].z), Limit::Crest);
       } else if (bend[i].z > 1e-4f) {
@@ -273,7 +281,7 @@ Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aL
       const float ds = s[i] - s[i - 1], r = std::min(radius[i], radius[i - 1]), vv = v[i - 1];
       const float use = std::min(vv * vv / std::max(r, 1.0f) / std::max(lateral, 1.0f), 1.0f);
       const float grip = std::max(std::sqrt(1.0f - use * use), aParams.brakeGripMin);
-      const float up = std::sqrt(vv * vv + 2.0f * Accel(aSpec, vv) * grip * ds);
+      const float up = std::sqrt(vv * vv + 2.0f * AccelAt(aSpec, vv, tangent[i - 1].z) * grip * ds);
       if (up < v[i]) {
         v[i] = up;
         why[i] = Limit::Accel;
@@ -365,7 +373,7 @@ Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aL
       q.yaw = std::atan2(h.y, h.x);
       q.drift = drift[i];
       // the thrust also holds off the air drag along the line (at 89 m/s about 13 m/s2 forward)
-      Vec3 thrust = Add(Add(q.acceleration, Mul(tangent[i], Drag(aSpec, q.speed))), Vec3{0.0f, 0.0f, g});
+      Vec3 thrust = Add(Add(q.acceleration, Mul(tangent[i], DragAt(aSpec, q.speed, tangent[i].z))), Vec3{0.0f, 0.0f, g});
       // bending down (a crest), the tilt as if the lift still held the car up: the lift pushes less or
       // down and the thrusters take the rest. Worked out against the small vertical left, a modest
       // turn read as a thrust near horizontal and rolled the body to its cap with the lift sideways
@@ -376,7 +384,7 @@ Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aL
       const float ahead = Dot(thrust, h);
       // slowing, the body takes brakeShare: the nose pulls up less than it leans speeding up and
       // reverse surge slows the car, as a player pulls back on the surge rather than the nose
-      const float along = ahead >= 0.0f ? aSpec.surge : Decel(aSpec, q.speed) - Drag(aSpec, q.speed);
+      const float along = ahead >= 0.0f ? aSpec.surge : Decel(aSpec, q.speed) - DragAt(aSpec, q.speed, tangent[i].z);
       const float share = ahead >= 0.0f ? aParams.bodyShare : aSpec.brakeShare;
       pitch[i] = std::clamp(DroneBodyAngle(aSpec, std::atan2(ahead, thrust.z), size[i], along, share), -cap, cap);
     }
@@ -413,12 +421,12 @@ Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aL
     if (q.speed > out.top * 1.01f) {
       flag("speed", q.speed, out.top);
     }
-    const float latHere = LateralAt(aSpec, q.acceleration.z + kG * aSpec.gravityFactor) * 1.02f;
+    const float latHere = LateralAt(aSpec, q.acceleration.z + kG * aSpec.gravityFactor, q.speed) * 1.02f;
     if (q.lateral > std::min(latMax, latHere)) {
       flag("lateral", q.lateral, std::min(latMax, latHere));
     }
     if (q.along > Accel(aSpec, q.speed) * 1.05f + 0.5f) {
-      flag("accel", q.along, Accel(aSpec, q.speed));
+      flag("accel", q.along, Accel(aSpec, q.speed)); // level drag: the most a sample can speed up
     }
     if (-q.along > Decel(aSpec, q.speed) * 1.05f + 0.5f) {
       flag("decel", -q.along, Decel(aSpec, q.speed));

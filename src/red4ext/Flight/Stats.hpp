@@ -21,10 +21,13 @@ struct StatsState {
 };
 
 // The s_ fields the force tail reads (FlightStats): mass, the air resistance and braking friction factors and the
-// moment of inertia per axis. All zero like a script default.
+// moment of inertia per axis. All zero like a script default. dragArea (CdA per body axis, m2, Flight::DragAreaOf) and
+// thrusters (how many the car flies on) are measured when flight starts, 0 until then or when unknown.
 struct StatsStatic {
   float mass = 0, airResistanceFactor = 0, brakingFrictionFactor = 0;
   Vec3 momentOfInertia;
+  Vec3 dragArea;
+  float thrusters = 0;
 };
 
 // What the script reads from the vehicle each frame. origin is the entity's world position and centerOfMass is

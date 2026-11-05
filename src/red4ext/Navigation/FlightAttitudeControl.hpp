@@ -28,6 +28,8 @@ struct FlightAttitudeControl : RED4ext::IScriptable {
   float generalDampFactorAngular = 2.0f;
   float generalYawDampFactor = 1.0f;
   float generalDampFactorAngularMax = 3.5f;
+  float dampStabilityK = 0.19f;
+  float dampMaxPerFrame = 1.0f;
   float standardModeSurgeFactor = 15.0f;
   float standardModeSwayFactor = 5.0f;
   float standardModeLiftFactor = 25.0f;
@@ -99,6 +101,8 @@ RTTI_DEFINE_CLASS(FlightAttitudeControl, {
   RTTI_PROPERTY(generalDampFactorAngular);
   RTTI_PROPERTY(generalYawDampFactor);
   RTTI_PROPERTY(generalDampFactorAngularMax);
+  RTTI_PROPERTY(dampStabilityK);
+  RTTI_PROPERTY(dampMaxPerFrame);
   RTTI_PROPERTY(standardModeSurgeFactor);
   RTTI_PROPERTY(standardModeSwayFactor);
   RTTI_PROPERTY(standardModeLiftFactor);

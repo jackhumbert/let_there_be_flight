@@ -79,6 +79,7 @@ struct AttitudeControlParams {
   float attitudeFrequency = 5.0f, attitudeDamping = 0.8f, maxAngularAccel = 20.0f;
   float torqueGainPitch = 2.0f, torqueGainRoll = 0.5f, torqueGainYaw = 0.9f;
   float generalDampFactorAngular = 2.0f, generalYawDampFactor = 1.0f, generalDampFactorAngularMax = 3.5f;
+  float dampStabilityK = 0.19f, dampMaxPerFrame = 1.0f; // FlightSettings', for CapDamping in the give-back
   float standardModeSurgeFactor = 15.0f, standardModeSwayFactor = 5.0f, standardModeLiftFactor = 25.0f;
   float gravityFactor = 1.0f;
 };

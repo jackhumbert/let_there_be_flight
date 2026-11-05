@@ -7,6 +7,8 @@
 //
 // No game types: navplan builds this without the game.
 
+#include "Flight/Force.hpp"
+
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -43,6 +45,17 @@ struct VehicleSpec {
   float planDecel = 18.0f;       // m/s2 braking planned at most (racePlanDecel)
   float pushOver = 21.0f;        // m/s2 bending the path downwards, as planned (margin already in: dronePushOver;
                                  // racePushOver 15 plane style)
+  // the car's shape and thrust (docs/research/2026-11-04-aero-drag.md; the game does not pass them yet, and the
+  // defaults keep today's model): the chassis shape's frontal drag area (m2, tools/flightsim/vehicles.tsv cdaY;
+  // 0: airResistance's drag) with Flight::kShapeDragK, and the thrusters that scale surge and sway in Effective
+  float cdaFront = 0.0f;
+  // the roof's drag area (m2, vehicles.tsv cdaZ; 0: none): drone style the body stays near level, so a climb or a
+  // dive meets the air with it (DragAt)
+  float cdaTop = 0.0f;
+  float dragK = Flight::kShapeDragK;
+  float thrusters = 0.0f;        // 0: unknown, surge and sway stay as set
+  float thrustStrength = 0.0f;   // Flight::ThrustScale's strength: 0 today's thrust, 1 by the thrusters alone
+  float thrustPerThruster = 6000.0f; // N
 
   // "key=value,..." with the field names above (bools 0/1); unknown keys are errors. For navplan
   // (NAVPLAN_VEHICLE) and tools/navplan/vehicles.json.
@@ -52,6 +65,16 @@ struct VehicleSpec {
 
 // Air drag at speed v, m/s2 (FlightMode.ApplyPhysics).
 float Drag(const VehicleSpec &aSpec, float aSpeed);
+// The same along a path climbing or diving at aSlope (its direction's vertical part, -1 to 1): drone style with a
+// roof area the air meets the near-level body's front and roof in the path's proportions (cdaFront cos2 + cdaTop
+// sin2), so a 45 deg climb costs the Shion 8 times the drag of level flight; otherwise Drag.
+float DragAt(const VehicleSpec &aSpec, float aSpeed, float aSlope);
+// Accel and TopSpeed on such a path (TopAt: where the surge meets DragAt, 97% of it, at most TopSpeed).
+float AccelAt(const VehicleSpec &aSpec, float aSpeed, float aSlope);
+float TopAt(const VehicleSpec &aSpec, float aSlope);
+// The spec with surge and sway scaled by the car's thrust (Flight::ThrustScale over thrusters, mass and
+// thrustStrength), and thrustStrength 0 so it is not scaled twice. Build a car's spec, then this, once.
+VehicleSpec Effective(const VehicleSpec &aSpec);
 // Drone style: the most horizontal acceleration level flight leaves along one body axis with
 // `thrusters` m/s2 across it, the body tilted at most maxTilt and the lift holding the car up.
 float DroneAccel(const VehicleSpec &aSpec, float aThrusters);
@@ -65,6 +88,13 @@ float Lateral(const VehicleSpec &aSpec);
 // share is cut to what the lift has left (none pushing over a crest, where only sway and the drifted
 // surge turn the car); plane style as Lateral.
 float LateralAt(const VehicleSpec &aSpec, float aVertical);
+// The same at a speed: the drifted nose's share counts only the surge the drag leaves at aSpeed (near top speed
+// the surge all goes into holding it; counting it anyway put the heavy, low-thrust cars off the line in turns).
+// The speed-free forms above are their upper bound.
+float Lateral(const VehicleSpec &aSpec, float aSpeed);
+float LateralAt(const VehicleSpec &aSpec, float aVertical, float aSpeed);
+// The speed full surge holds (the surge hold flies at it, past TopSpeed's 97%), at most speedCap.
+float FlownTop(const VehicleSpec &aSpec);
 // Speeding up at v: the surge the car gets (surgeShare) less drag (at least 0.5).
 float Accel(const VehicleSpec &aSpec, float aSpeed);
 // Slowing at v: full reverse surge, the brake (grows with v) and drag.

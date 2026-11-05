@@ -12,6 +12,9 @@ public native class FlightStats extends IScriptable {
   public native let s_forwardWeightTransferFactor: Float;
   public native let s_brakingFrictionFactor: Float;
   public native let s_airResistanceFactor: Float;
+  // measured by the configuration when flight starts (FlightStats.hpp): CdA per body axis, m2, and the thrusters
+  public native let s_dragArea: Vector4;
+  public native let s_thrusters: Float;
 
   public native let d_position: Vector4;
   public native let d_visualPosition: Vector4;

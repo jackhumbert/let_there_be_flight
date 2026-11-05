@@ -20,6 +20,10 @@ struct FlightStats : RED4ext::IScriptable {
   float s_airResistanceFactor = 0.0f;
   RED4ext::Vector3 s_centerOfMass{};
   RED4ext::Vector4 s_momentOfInertia{};
+  // set by IFlightConfiguration when flight starts (Flight::StatsStatic): the drag area per body axis (CdA, m2) from
+  // the chassis collision shape, 0 when it could not be measured, and the thrusters attached
+  RED4ext::Vector4 s_dragArea{};
+  float s_thrusters = 0.0f;
 
   // set by UpdateDynamic
   RED4ext::Vector4 d_position{};
@@ -72,6 +76,8 @@ RTTI_DEFINE_CLASS(FlightStats, {
   RTTI_PROPERTY(s_mass);
   RTTI_PROPERTY(s_centerOfMass);
   RTTI_PROPERTY(s_momentOfInertia);
+  RTTI_PROPERTY(s_dragArea);
+  RTTI_PROPERTY(s_thrusters);
   RTTI_PROPERTY(s_forwardWeightTransferFactor);
   RTTI_PROPERTY(s_brakingFrictionFactor);
   RTTI_PROPERTY(s_airResistanceFactor);

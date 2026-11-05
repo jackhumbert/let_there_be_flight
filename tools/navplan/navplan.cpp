@@ -253,6 +253,7 @@ int main(int argc, char **argv) {
       std::fprintf(stderr, "NAVPLAN_VEHICLE: %s\n", error.c_str());
       return 2;
     }
+    params.vehicle = Navigation::Effective(params.vehicle); // its thrust, when thrusters and thrustStrength are set
   }
   std::printf("vehicle %s\n", params.vehicle.Describe().c_str());
   // as the Autopilot plans it: with its retries when the first search fails; or a line given as a

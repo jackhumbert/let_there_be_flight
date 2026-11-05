@@ -20,10 +20,12 @@ import os
 import statistics
 import subprocess
 import sys
-import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import measure  # noqa: E402
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "common"))
+import paths  # noqa: E402
 from measure import cmake_navmap, routes, vehicle_spec  # noqa: E402
 
 
@@ -46,13 +48,13 @@ def main():
     ap.add_argument("--margins", default="0.5,1,2")
     ap.add_argument("--routes", type=int, default=20, help="helipad routes on top of the benchmark ones")
     ap.add_argument("--jobs", type=int, default=6)
-    ap.add_argument("--out", help="folder for navplan's files and sweep.json (default: a temporary one)")
+    ap.add_argument("--out", help="folder for navplan's files and sweep.json (default: a new one in paths.TMP, D:/cp2077_work/tmp)")
     ap.add_argument("--navmap")
     ap.add_argument("--vehicle", default="shion")
     args = ap.parse_args()
     navmap = args.navmap or cmake_navmap()
     vehicle = vehicle_spec(args.vehicle)
-    out = args.out or tempfile.mkdtemp(prefix="ahead_")
+    out = args.out or paths.scratch("ahead_")
     os.makedirs(out, exist_ok=True)
     rts = routes(args.routes)
     settings = [(float(h), float(m)) for h in args.horizons.split(",") for m in args.margins.split(",")]

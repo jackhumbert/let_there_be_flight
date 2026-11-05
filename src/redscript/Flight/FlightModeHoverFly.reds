@@ -27,12 +27,13 @@ public class FlightModeHoverFly extends FlightModeStandard {
   @runtimeProperty("ModSettings.max", "5.0")
   public let heightCorrectionFactor: Float = 0.5;
 
-  public static func Create(component: ref<FlightComponent>) -> ref<FlightModeHoverFly> {
-    let self = new FlightModeHoverFly();
-    self.Initialize(component);
-    self.hovering = 1.0;
-    return self;
+
+  public func Initialize(component: ref<FlightComponent>) -> Void {
+    super.Initialize(component);
+    this.hovering = 1.0;
   }
+
+  public func IsEnabled() -> Bool = this.enabled;
 
   public func Activate() -> Void {
     let normal: Vector4;

@@ -82,7 +82,6 @@ Vehicle.$(v):
   $instances:
     - { v: VehicleDestructionParamsAlvarado }
     - { v: VehicleDestructionParamsAlvaradoHearse }
-    - { v: VehicleDestructionParamsBratsk }
     - { v: VehicleDestructionParamsHellhound }
   detachableParts:
     - !append
@@ -121,6 +120,83 @@ Vehicle.$(v):
       gridCells: [ 6 ]
       threshold: 0.999
       components: [ n"ThrusterFRB" ]
+
+# the Bratsk U4020's: the six-wheel front's six (FlightConfiguration.cpp, SixWheelCarFlightConfiguration) and the
+# extended truck's three more rear axles (TwelveWheelCarFlightConfiguration), which use the same record
+Vehicle.VehicleDestructionParamsBratsk:
+  detachableParts:
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterFL"
+      gridCells: [ 4 ]
+      threshold: 0.999
+      components: [ n"ThrusterFL" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterFR"
+      gridCells: [ 5 ]
+      threshold: 0.999
+      components: [ n"ThrusterFR" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterBR"
+      gridCells: [ 0 ]
+      threshold: 0.999
+      components: [ n"ThrusterBR" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterBL"
+      gridCells: [ 1 ]
+      threshold: 0.999
+      components: [ n"ThrusterBL" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterFLB"
+      gridCells: [ 3 ]
+      threshold: 0.999
+      components: [ n"ThrusterFLB" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterFRB"
+      gridCells: [ 6 ]
+      threshold: 0.999
+      components: [ n"ThrusterFRB" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterBLB"
+      gridCells: [ 2 ]
+      threshold: 0.999
+      components: [ n"ThrusterBLB" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterBRB"
+      gridCells: [ 7 ]
+      threshold: 0.999
+      components: [ n"ThrusterBRB" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterBLC"
+      gridCells: [ 2 ]
+      threshold: 0.999
+      components: [ n"ThrusterBLC" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterBRC"
+      gridCells: [ 7 ]
+      threshold: 0.999
+      components: [ n"ThrusterBRC" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterBLD"
+      gridCells: [ 1 ]
+      threshold: 0.999
+      components: [ n"ThrusterBLD" ]
+    - !append
+      $type: VehicleDetachablePart
+      name: n"ThrusterBRD"
+      gridCells: [ 0 ]
+      threshold: 0.999
+      components: [ n"ThrusterBRD" ]
 
 Vehicle.$(v):
   $instances:

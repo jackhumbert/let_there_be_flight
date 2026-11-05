@@ -92,6 +92,7 @@ FollowResult Follow(const VehicleSpec &aSpec, const Route &aRoute, const Traject
     const Vec3 w = Add(Add(aCmd, DragFeedForward(aSpec, v, aParams.attitude.dragFeedForward)), Vec3{0.0f, 0.0f, g});
     auto local = [&](const Vec3 &aVec) { return Vec3{Dot(aVec, right), Dot(aVec, fwd), Dot(aVec, up)}; };
     Vec3 th = local(w);
+    const Vec3 want = th;
     th.x = Clamp(th.x, -aSpec.sway, aSpec.sway);
     th.y = Clamp(th.y, Navigation::Drag(aSpec, speed) - Decel(aSpec, speed), aSpec.surge);
     th.z = Clamp(th.z, g - aSpec.lift, g + aSpec.lift);
@@ -108,7 +109,8 @@ FollowResult Follow(const VehicleSpec &aSpec, const Route &aRoute, const Traject
     const Vec3 thrust = Add(Add(Mul(right, th.x), Mul(fwd, th.y)), Mul(up, th.z));
     Vec3 a = Sub(thrust, Vec3{0.0f, 0.0f, g});
     if (aSpec.drag && speed > 1e-3f) {
-      a = Sub(a, Mul(Mul(v, 1.0f / speed), Navigation::Drag(aSpec, speed)));
+      // the roof's share on a climb or a dive (DragAt), as the game's shape drag gives it to a near-level body
+      a = Sub(a, Mul(Mul(v, 1.0f / speed), Navigation::DragAt(aSpec, speed, v.z / speed)));
     }
 
     FollowFrame f;
@@ -125,6 +127,8 @@ FollowResult Follow(const VehicleSpec &aSpec, const Route &aRoute, const Traject
     f.v = v;
     f.accel = a;
     f.thrust = thrust;
+    f.want = want;
+    f.got = th;
     f.held = state.surge.held;
     f.blocked = state.blockedAhead;
     f.emergency = state.emergencyBrake;

@@ -30,11 +30,18 @@ public class FlightThrusterFront extends IFlightThruster {
     let comp: ref<IComponent>;
     ArrayClear(this.ogComponents);
 
-    comp = this.flightComponent.FindComponentByName(n"axel_f_01");
+    comp = this.flightComponent.FindComponentByName(n"axle_f_01");
     if IsDefined(comp) {
       ArrayPush(this.ogComponents, comp);
     }
     let comps = this.vehicle.GetComponentsUsingSlot(n"wheel_front_rot_set");
+    for c in comps {
+      if !ArrayContains(this.ogComponents, c) {
+        ArrayPush(this.ogComponents, c);
+      }
+    }
+    // the Kusanagi hangs its front rim on wheel_front (tools/flightsim/thruster_slots.py)
+    comps = this.vehicle.GetComponentsUsingSlot(n"wheel_front");
     for c in comps {
       if !ArrayContains(this.ogComponents, c) {
         ArrayPush(this.ogComponents, c);
@@ -100,7 +107,7 @@ public class FlightThrusterBack extends IFlightThruster {
     this.meshComponent.SetParentTransform(n"vehicle_slots", this.slotName);
 
     this.motionKind = 2;
-    this.parentSlotName = n"axel_back";
+    this.parentSlotName = n"axle_back";
     this.radiusName = n"None";
     this.deviationName = n"None";
     return this;
@@ -120,7 +127,7 @@ public class FlightThrusterBack extends IFlightThruster {
         ArrayPush(this.ogComponents, comp);
       }
     }
-    let comps = this.vehicle.GetComponentsUsingSlot(n"axel_back_wheel");
+    let comps = this.vehicle.GetComponentsUsingSlot(n"axle_back_wheel");
     for c in comps {
       if !ArrayContains(this.ogComponents, c) {
         ArrayPush(this.ogComponents, c);

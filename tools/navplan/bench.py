@@ -15,12 +15,14 @@ to compare a change against the build before it.
 import argparse
 import os
 import sys
-import tempfile
 
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import measure  # noqa: E402
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "common"))
+import paths  # noqa: E402
 
 
 def parse_params(text):
@@ -56,7 +58,7 @@ def table(rts, res, base=None):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--out", help="folder for navplan's files (default: a temporary one)")
+    ap.add_argument("--out", help="folder for navplan's files (default: a new one in paths.TMP, D:/cp2077_work/tmp)")
     ap.add_argument("--navmap", help="default: LTBF_NAVMAP_FILE in build/CMakeCache.txt")
     ap.add_argument("--navplan", help="navplan.exe (default build/navplan.exe)")
     ap.add_argument("--vehicle", default="shion", help="a car in vehicles.json")
@@ -70,7 +72,7 @@ def main():
     navmap = args.navmap or measure.cmake_navmap()
     vehicle = measure.vehicle_spec(args.vehicle)
     rts = measure.routes(args.routes)
-    out = args.out or tempfile.mkdtemp(prefix="bench_")
+    out = args.out or paths.scratch("bench_")
     measure.set_navplan(args.navplan)
     print(f"{measure.NAVPLAN} {args.params or ''}")
     first = measure.run_all(navmap, vehicle, rts, parse_params(args.params), os.path.join(out, "a"), args.jobs,

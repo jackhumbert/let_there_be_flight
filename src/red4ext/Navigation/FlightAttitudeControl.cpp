@@ -36,6 +36,8 @@ Navigation::AttitudeControlParams FlightAttitudeControl::Params() const {
   p.generalDampFactorAngular = generalDampFactorAngular;
   p.generalYawDampFactor = generalYawDampFactor;
   p.generalDampFactorAngularMax = generalDampFactorAngularMax;
+  p.dampStabilityK = dampStabilityK;
+  p.dampMaxPerFrame = dampMaxPerFrame;
   p.standardModeSurgeFactor = standardModeSurgeFactor;
   p.standardModeSwayFactor = standardModeSwayFactor;
   p.standardModeLiftFactor = standardModeLiftFactor;

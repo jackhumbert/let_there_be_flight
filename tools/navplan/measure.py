@@ -104,6 +104,7 @@ def measure(prefix, metrics):
         "time": metrics["time"],
         "height": float(p[:, 2].mean()),
         "ms": metrics["ms"],
+        "top": metrics.get("top", 0.0),  # the trajectory's top speed, m/s
     }
 
 

@@ -48,17 +48,14 @@ public class FlightModeAutomatic extends FlightModeStandard {
   protected let hovering: Float;
   protected let referenceZ: Float;
 
-  public static func Create(component: ref<FlightComponent>) -> ref<FlightModeAutomatic> {
-    let self = new FlightModeAutomatic();
-    self.Initialize(component);
-    self.hovering = 1.0;
-    return self;
-  }
 
   public func Initialize(component: ref<FlightComponent>) -> Void {
     super.Initialize(component);
     this.collisionPenalty = 1.0;
+    this.hovering = 1.0;
   }
+
+  public func IsEnabled() -> Bool = this.enabled;
 
   public func Activate() -> Void {
     let normal: Vector4;

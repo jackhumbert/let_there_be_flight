@@ -245,47 +245,28 @@ public native class FlightComponent extends GameComponent {
     this.distance = 0.0;
     this.hoverHeight = FlightSettings.GetFloat("defaultHoverHeight");
 
-    let hoverFlyMode = FlightModeHoverFly.Create(this);
-    if hoverFlyMode.enabled {
-      ArrayPush(this.modes, hoverFlyMode);
-    } else {
-      hoverFlyMode.Deinitialize();
+    // the modes, in the order the controller cycles them: the classes TweakDB's FlightModes.classes names
+    // (src/tweaks/flight_modes.yaml; a mod appends its own or swaps one for its subclass), each made by name in C++
+    // and kept when its Mod Settings switch is on
+    let classes = FlightMode.ModeClasses();
+    if Equals(FlightDeveloperSettings.Get("nativeModeProbe"), "true") {
+      ArrayPush(classes, n"FlightModeNativeProbe"); // the native mode spike, last, for a developer only
     }
-    let hoverMode = FlightModeHover.Create(this);
-    if hoverMode.enabled {
-      ArrayPush(this.modes, hoverMode);
-    } else {
-      hoverMode.Deinitialize();
-    }
-    let automaticMode = FlightModeAutomatic.Create(this);
-    if automaticMode.enabled {
-      ArrayPush(this.modes, automaticMode);
-    } else {
-      automaticMode.Deinitialize();
-    }
-    let flyMode = FlightModeFly.Create(this);
-    if flyMode.enabled {
-      ArrayPush(this.modes, flyMode);
-    } else {
-      flyMode.Deinitialize();
-    }
-    let agDroneMode = FlightModeDroneAntiGravity.Create(this);
-    if agDroneMode.agEnabled {
-      ArrayPush(this.modes, agDroneMode);
-    } else {
-      agDroneMode.Deinitialize();
-    }
-    let droneMode = FlightModeDrone.Create(this);
-    if droneMode.enabled {
-      ArrayPush(this.modes, droneMode);
-    } else {
-      droneMode.Deinitialize();
-    }
-    let autopilotMode = FlightModeAutopilot.Create(this);
-    if autopilotMode.enabled {
-      ArrayPush(this.modes, autopilotMode);
-    } else {
-      autopilotMode.Deinitialize();
+    let assist = Equals(FlightDeveloperSettings.Get("assistHoverFly"), "true");
+    for className in classes {
+      // the C++ Hover & Fly in its place, for a developer until it replaces it (docs/design/hover-fly-native.md)
+      let name = assist && Equals(className, n"FlightModeHoverFly") ? n"FlightModeHoverFlyAssist" : className;
+      let mode = FlightMode.Instantiate(name);
+      if IsDefined(mode) {
+        mode.Initialize(this);
+        if mode.IsEnabled() {
+          ArrayPush(this.modes, mode);
+        } else {
+          mode.Deinitialize();
+        }
+      } else {
+        FlightLog.Warn("[FlightComponent] FlightModes.classes names " + NameToString(name) + ", which is not a FlightMode class");
+      }
     }
 
     // if ArraySize(this.configuration.thrusters) == 0 {

@@ -53,11 +53,6 @@ public class FlightModeDrone extends FlightMode {
   @runtimeProperty("ModSettings.max", "200")
   public let droneModeSwayFactor: Float = 15.0;
 
-  public static func Create(component: ref<FlightComponent>) -> ref<FlightModeDrone> {
-    let self = new FlightModeDrone();
-    self.Initialize(component);
-    return self;
-  }
 
   public func Initialize(component: ref<FlightComponent>) -> Void {
     super.Initialize(component);
@@ -68,6 +63,8 @@ public class FlightModeDrone extends FlightMode {
   public func Deinitialize() -> Void {
     LTBF_UnregisterListener(this);
   }
+
+  public func IsEnabled() -> Bool = this.enabled;
 
   public func Activate() -> Void {
     // let camera = this.component.sys.player.GetFPPCameraComponent();

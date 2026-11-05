@@ -12,6 +12,10 @@
 #include <RedLib.hpp>
 
 struct FlightModeControl : RED4ext::IScriptable {
+  // Flight::ThrustScale for the car with the developer settings' thrustStrength and thrustPerThruster, against
+  // aReference m/s2 (1 at strength 0, or with no thrusters measured)
+  static float Thrust(const Flight::StatsStatic &aStatic, float aReference);
+
   // params (the mode's and FlightSettings' fields of the same name, defaults as Flight::StandardParams, AutomaticParams,
   // HoverFlyParams and DroneParams)
   float standardModeSurgeFactor = 15.0f;
@@ -92,7 +96,8 @@ struct FlightModeControl : RED4ext::IScriptable {
   RTTI_IMPL_ALLOCATOR();
 
 private:
-  Flight::StandardParams Standard() const;
+  // the params, surge and sway scaled by the car's thrust (Thrust)
+  Flight::StandardParams Standard(const Flight::StatsStatic &aStatic) const;
   Flight::Controls Controls() const;
   Flight::Ground GroundOf() const;
   void SetOutput(const Flight::ModeOutput &aOut);

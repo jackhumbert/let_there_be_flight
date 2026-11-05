@@ -1,5 +1,6 @@
 #include "Aerobatics.hpp"
 
+#include "Flight/Force.hpp"
 #include "Navigation/DroneAttitude.hpp"
 
 #include <algorithm>
@@ -299,11 +300,17 @@ AttitudeControlOutput AttitudeControl(AttitudeControlState &aState, const Attitu
               alpha.y * inertia.y / std::max(aParams.torqueGainRoll * mass * std::max(tensor.y, 1.0f), 0.001f),
               alpha.z * inertia.z / std::max(aParams.torqueGainYaw * mass * tensor.z, 0.001f)};
   }
-  // ApplyPhysics damps all rotation: give back what it takes from the rotation wanted
-  F::Vec3 giveBack = F::Mul(out.rateRef, aParams.generalDampFactorAngular);
-  giveBack.z *= aParams.generalYawDampFactor;
-  if (F::Length(giveBack) > aParams.generalDampFactorAngularMax)
-    giveBack = F::Mul(F::Normalize(giveBack), aParams.generalDampFactorAngularMax);
+  // ApplyPhysics damps the rotation: give back exactly what it takes from the rotation wanted, its CapDamping per
+  // axis included (without it, on the cars the cap cuts, the give-back outweighed the damping and the attitude
+  // overshot by up to 20 deg, 2026-11-04). No inputs and no angular brake while the Autopilot flies. A hit is
+  // untouched: ApplyPhysics still leaves the contact spin undamped and the recovery still fades this torque.
+  F::ForceParams damping;
+  damping.generalDampFactorAngular = aParams.generalDampFactorAngular;
+  damping.generalYawDampFactor = aParams.generalYawDampFactor;
+  damping.generalDampFactorAngularMax = aParams.generalDampFactorAngularMax;
+  damping.dampStabilityK = aParams.dampStabilityK;
+  damping.dampMaxPerFrame = aParams.dampMaxPerFrame;
+  const F::Vec3 giveBack = F::AngularDamping(damping, aStatic, out.rateRef, 0.0f, 0.0f, 0.0f, 0.0f, tensor);
   out.torque = F::Add(torque, giveBack);
 
   // thrust: the commanded acceleration, the drag it holds off and gravity, in the car's frame

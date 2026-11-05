@@ -8,9 +8,16 @@
 
 namespace Flight {
 
-// The FlightSettings the force tail reads, with the script's names and defaults.
+// The fleet-wide factor on the shape's drag: 4.42 keeps the vanilla fleet's median top speed at today's 103 m/s
+// (tools/flightsim, 2026-11-04).
+constexpr float kShapeDragK = 4.42f;
+
+// The FlightSettings the force tail reads, with the script's names and defaults; shapeDrag and dragK are the developer
+// settings (Flight::DeveloperSettings) of the same names.
 struct ForceParams {
   bool physxFlightPhysics = true;
+  bool shapeDrag = false;
+  float dragK = kShapeDragK;
   float generalDampFactorAngular = 2.0f, brakeFactorAngular = 1.0f, generalYawDampFactor = 1.0f;
   float dampStabilityK = 0.19f, dampMaxPerFrame = 1.0f, generalDampFactorAngularMax = 3.5f;
   float generalDampFactorLinear = 0.0f, brakeFactorLinear = 1.0f;
@@ -45,6 +52,25 @@ struct ForceOutput {
 // FlightMode.CapDamping: limits one axis of the damping so it removes at most dampMaxPerFrame of that axis'
 // angular velocity in a frame. A negative gain is not capped.
 float CapDamping(float damp, float angularVelocity, float tensor, float inertia, float mass, const ForceParams &p);
+
+// Air drag from the vehicle's shape (docs/research/2026-11-04-aero-drag.md; not used by the game yet): on each body
+// axis i, -dragArea_i |v| v_i / mass, an acceleration in the body frame. dragArea is 0.5 rho K CdA per axis (N per
+// (m/s)^2): the chassis collision shape's area across that axis times a drag coefficient for the body class, and K
+// one fleet-wide factor (about 4.1 keeps a mid-size car's top speed). Sideways, where the area is 2 to 4 times the
+// front, it pushes a slide back toward the nose.
+Vec3 ShapeDragAccel(Vec3 localVelocity, Vec3 dragArea, float mass);
+
+// How much a car's surge and sway are scaled for its thrust (not used by the game yet): the thrust its thrusters give
+// (count x perThruster newtons) over its mass, against the acceleration every car gets today (reference, m/s2),
+// raised to strength (0: today, every car the same; 1: by its thrusters alone, a 300 kg bike 3 times a mid-size car,
+// an 8 t truck a third). 1 with no thrusters or no mass.
+float ThrustScale(float thrusters, float mass, float perThruster, float reference, float strength);
+
+// The angular damping ApplyPhysics takes from a spin (body frame): the damping factor plus the angular brake, off on an
+// axis while its input is held, the yaw factor, CapDamping per axis and the generalDampFactorAngularMax cap. The
+// Autopilot gives back exactly this at the rate it wants (Navigation::AttitudeControl), so the two cancel on every car.
+Vec3 AngularDamping(const ForceParams &p, const StatsStatic &st, Vec3 spin, float pitch, float roll, float yaw,
+                    float angularBrake, Vec3 thrusterTensor);
 
 // FlightMode.ApplyPhysics. The aero side terms use the unflipped velocity direction, as the script does.
 void ApplyPhysics(const ForceParams &p, const StatsStatic &st, const StatsState &s, const ForceInput &in,

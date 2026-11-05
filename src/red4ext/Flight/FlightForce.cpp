@@ -1,5 +1,7 @@
 #include "FlightForce.hpp"
 
+#include "Flight/DeveloperSettings.hpp"
+
 namespace {
 Flight::Vec3 ToVec(const RED4ext::Vector4 &aV) { return {aV.X, aV.Y, aV.Z}; }
 RED4ext::Vector4 ToDirection(const Flight::Vec3 &aV) { return {aV.x, aV.y, aV.z, 0.0f}; }
@@ -8,6 +10,8 @@ RED4ext::Vector4 ToDirection(const Flight::Vec3 &aV) { return {aV.x, aV.y, aV.z,
 Flight::ForceParams FlightForce::Params() const {
   Flight::ForceParams p;
   p.physxFlightPhysics = physxFlightPhysics;
+  p.shapeDrag = Flight::Developer().shapeDrag;
+  p.dragK = Flight::Developer().dragK;
   p.generalDampFactorAngular = generalDampFactorAngular;
   p.brakeFactorAngular = brakeFactorAngular;
   p.generalYawDampFactor = generalYawDampFactor;

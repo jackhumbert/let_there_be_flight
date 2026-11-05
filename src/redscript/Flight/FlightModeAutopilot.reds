@@ -99,6 +99,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
   // (standardModeLiftFactor - g) of lift downwards, 25 m/s2, planned at raceMargin
   public let dronePushOver: Float = 21.0;
   private let vehicleModel: ref<FlightVehicleModel>;
+  // surge and sway as this car flies them (FlightVehicleModel.Surge, Sway: scaled by its thrust), set by RefreshVehicle
+  private let surgeMax: Float = 15.0;
+  private let swayMax: Float = 5.0;
   // the route's trajectory (FlightTrajectory, docs/design/trajectory.md): the speeds, the speed's
   // rate and the body tilt the car flies
   public let trajectory: ref<FlightTrajectory>;
@@ -418,16 +421,17 @@ public class FlightModeAutopilot extends FlightModeStandard {
   private let cinematicCallback: ref<CallbackHandle>;
   private let cinematicContext: Bool;         // UIGameContext.CinematicCamera pushed              // rad/s
 
-  public static func Create(component: ref<FlightComponent>) -> ref<FlightModeAutopilot> {
-    let self = new FlightModeAutopilot();
-    self.Initialize(component);
-    self.ahead = new AutopilotPlanAhead();
-    self.surgeHold = new AutopilotSurge();
-    self.attitude = new FlightDroneAttitude();
-    self.tracker = new FlightTracker();
-    self.ClearRoute();
-    return self;
+
+  public func Initialize(component: ref<FlightComponent>) -> Void {
+    super.Initialize(component);
+    this.ahead = new AutopilotPlanAhead();
+    this.surgeHold = new AutopilotSurge();
+    this.attitude = new FlightDroneAttitude();
+    this.tracker = new FlightTracker();
+    this.ClearRoute();
   }
+
+  public func IsEnabled() -> Bool = this.enabled;
 
   public func GetDescription() -> String = "Autopilot";
 
@@ -2023,6 +2027,12 @@ public class FlightModeAutopilot extends FlightModeStandard {
     m.margin = this.raceMargin;
     m.planDecel = this.racePlanDecel;
     m.pushOver = this.droneStyle ? this.dronePushOver : this.racePushOver;
+    m.cdaFront = stats.s_dragArea.Y;
+    m.cdaSide = stats.s_dragArea.X;
+    m.cdaTop = stats.s_dragArea.Z;
+    m.thrusters = stats.s_thrusters;
+    this.surgeMax = m.Surge();
+    this.swayMax = m.Sway();
   }
 
   public func Vehicle() -> ref<FlightVehicleModel> {
@@ -2517,8 +2527,10 @@ public class FlightModeAutopilot extends FlightModeStandard {
     c.generalDampFactorAngular = fs.generalDampFactorAngular;
     c.generalYawDampFactor = fs.generalYawDampFactor;
     c.generalDampFactorAngularMax = fs.generalDampFactorAngularMax;
-    c.standardModeSurgeFactor = this.standardModeSurgeFactor;
-    c.standardModeSwayFactor = this.standardModeSwayFactor;
+    c.dampStabilityK = FlightSettings.GetFloatN(n"dampStabilityK");
+    c.dampMaxPerFrame = FlightSettings.GetFloatN(n"dampMaxPerFrame");
+    c.standardModeSurgeFactor = this.surgeMax;
+    c.standardModeSwayFactor = this.swayMax;
     c.standardModeLiftFactor = this.standardModeLiftFactor;
     c.gravityFactor = this.gravityFactor;
     c.targetRight = this.targetRight;
@@ -2665,14 +2677,14 @@ public class FlightModeAutopilot extends FlightModeStandard {
     let size = Vector4.Length(thrust);
     let ahead = Vector4.Dot(thrust, h);
     // braking: reverse surge and the brake (RaceDecel), much more than forward surge
-    let along = ahead >= 0.0 ? this.standardModeSurgeFactor : this.RaceDecel(stats.d_speed) - this.DragAccel(stats.d_speed);
+    let along = ahead >= 0.0 ? this.surgeMax : this.RaceDecel(stats.d_speed) - this.DragAccel(stats.d_speed);
     let cap = Deg2Rad(this.droneMaxTilt);
     let pitch = ClampF(this.DroneBodyAngle(AtanF(ahead, thrust.Z), size, along, ahead >= 0.0 ? this.droneBodyShare : this.droneBrakeShare), -cap, cap);
     // following a route the plan's tilt, which holds the roll for the turn coming (a gentle bend then
     // a sharp one in the same direction is flown as one turn, not two); hovering and descending the
     // tilt the commanded acceleration needs
     let lateral = Vector4.Dot(thrust, side);
-    let roll = ClampF(this.DroneBodyAngle(AtanF(lateral, thrust.Z), size, this.standardModeSwayFactor, this.droneBodyShare), -cap, cap);
+    let roll = ClampF(this.DroneBodyAngle(AtanF(lateral, thrust.Z), size, this.swayMax, this.droneBodyShare), -cap, cap);
     if this.FollowsTrajectory() && Equals(this.status, "following") {
       // the planned tilt a moment ahead, plus what the follower's correction adds to the trajectory's
       // own acceleration (both tilts worked out the same way, so on the trajectory that is 0)
@@ -2681,9 +2693,9 @@ public class FlightModeAutopilot extends FlightModeStandard {
       thrustRef.Z = MaxF(thrustRef.Z, this.droneTiltFloor * g);
       let sizeRef = Vector4.Length(thrustRef);
       let aheadRef = Vector4.Dot(thrustRef, h);
-      let alongRef = aheadRef >= 0.0 ? this.standardModeSurgeFactor : this.RaceDecel(stats.d_speed) - this.DragAccel(stats.d_speed);
+      let alongRef = aheadRef >= 0.0 ? this.surgeMax : this.RaceDecel(stats.d_speed) - this.DragAccel(stats.d_speed);
       let pitchRef = ClampF(this.DroneBodyAngle(AtanF(aheadRef, thrustRef.Z), sizeRef, alongRef, aheadRef >= 0.0 ? this.droneBodyShare : this.droneBrakeShare), -cap, cap);
-      let rollRef = ClampF(this.DroneBodyAngle(AtanF(Vector4.Dot(thrustRef, side), thrustRef.Z), sizeRef, this.standardModeSwayFactor, this.droneBodyShare), -cap, cap);
+      let rollRef = ClampF(this.DroneBodyAngle(AtanF(Vector4.Dot(thrustRef, side), thrustRef.Z), sizeRef, this.swayMax, this.droneBodyShare), -cap, cap);
       let sAtt = this.closestS + stats.d_speed * this.trajectoryAttitudeLead;
       pitch = ClampF(this.trajectory.Pitch(sAtt) + pitch - pitchRef, -cap, cap);
       // the plan's roll is towards (h.y, -h.x), the heading turned right; side may point the other way
@@ -3069,10 +3081,14 @@ public class FlightModeAutopilot extends FlightModeStandard {
           alpha.Y * inertia.Y / MaxF(this.torqueGainRoll * mass * MaxF(tensor.Y, 1.0), 0.001),
           alpha.Z * inertia.Z / MaxF(this.torqueGainYaw * mass * tensor.Z, 0.001), 0.0);
       }
-      // ApplyPhysics damps all rotation: give back what it takes from the rotation wanted
+      // ApplyPhysics damps the rotation: give back exactly what it takes from the rotation wanted, its CapDamping per
+      // axis included (as Navigation::AttitudeControl does through Flight::AngularDamping)
       let fs = FlightSettings.GetInstance();
       let giveBack = rateRef * fs.generalDampFactorAngular;
       giveBack.Z *= fs.generalYawDampFactor;
+      giveBack.X = this.CapDamping(giveBack.X, rateRef.X, tensor.X, inertia.X);
+      giveBack.Y = this.CapDamping(giveBack.Y, rateRef.Y, MaxF(tensor.Y, 1.0), inertia.Y);
+      giveBack.Z = this.CapDamping(giveBack.Z, rateRef.Z, tensor.Z, inertia.Z);
       if Vector4.Length(giveBack) > fs.generalDampFactorAngularMax {
         giveBack = Vector4.Normalize(giveBack) * fs.generalDampFactorAngularMax; // ApplyPhysics' own cap
       }
@@ -3083,8 +3099,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
       // what the player's inputs give at most: surge along the nose (reverse surge plus the brake
       // when slowing), sway across, lift (on top of hover) along the top
       g = 9.81 * this.gravityFactor;
-      local.X = ClampF(local.X, -this.standardModeSwayFactor, this.standardModeSwayFactor);
-      local.Y = ClampF(local.Y, this.DragAccel(stats.d_speed) - this.RaceDecel(stats.d_speed), this.standardModeSurgeFactor);
+      local.X = ClampF(local.X, -this.swayMax, this.swayMax);
+      local.Y = ClampF(local.Y, this.DragAccel(stats.d_speed) - this.RaceDecel(stats.d_speed), this.surgeMax);
       local.Z = ClampF(local.Z, g - this.standardModeLiftFactor, g + this.standardModeLiftFactor);
     }
     // where the speed is the car's to set, the surge held full along the path
@@ -3094,8 +3110,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
         this.recovering <= 0.0 && stats.d_speed > 1.0 && this.FollowsTrajectory() && Equals(this.status, "following"), timeDelta);
     }
     if this.surgeHold.held {
-      local = this.surgeHold.Full(local, Quaternion.Conjugate(stats.d_orientation) * Vector4.Normalize(v), this.standardModeSurgeFactor);
-      local.X = ClampF(local.X, -this.standardModeSwayFactor, this.standardModeSwayFactor);
+      local = this.surgeHold.Full(local, Quaternion.Conjugate(stats.d_orientation) * Vector4.Normalize(v), this.surgeMax);
+      local.X = ClampF(local.X, -this.swayMax, this.swayMax);
       local.Z = ClampF(local.Z, g - this.standardModeLiftFactor, g + this.standardModeLiftFactor);
     }
     this.force = local;
@@ -3103,8 +3119,8 @@ public class FlightModeAutopilot extends FlightModeStandard {
     this.torque = torque;
     // inputs for audio and the thrusters' look; no yaw input, ApplyPhysics damps less on an axis
     // with input and the give-back above assumes full damping
-    this.commandSurge = this.surgeHold.Ease(this.commandSurge, ClampF(local.Y / this.standardModeSurgeFactor, -1.0, 1.0), timeDelta);
-    this.commandSway = this.surgeHold.Ease(this.commandSway, ClampF(local.X / this.standardModeSwayFactor, -1.0, 1.0), timeDelta);
+    this.commandSurge = this.surgeHold.Ease(this.commandSurge, ClampF(local.Y / this.surgeMax, -1.0, 1.0), timeDelta);
+    this.commandSway = this.surgeHold.Ease(this.commandSway, ClampF(local.X / this.swayMax, -1.0, 1.0), timeDelta);
     this.component.surge = this.commandSurge;
     this.component.sway = this.commandSway;
     this.component.yaw = 0.0;

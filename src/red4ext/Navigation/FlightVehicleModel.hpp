@@ -2,10 +2,16 @@
 
 // The Autopilot's handle on the car's limits (Navigation/Vehicle.hpp): FlightModeAutopilot fills the
 // fields from the car's stats and its tuning (UpdateVehicleModel) and asks it for the limits, and
-// FlightNavMap.PlanRaceAsync hands it to the planner, so both plan with the same car.
+// FlightNavMap.PlanRaceAsync hands it to the planner, so both plan with the same car. The car's measured drag area
+// and thrusters (FlightStats.s_dragArea, s_thrusters) count only as far as the developer settings turn them on
+// (shapeDrag, thrustStrength), as they do for the flying: Spec is the effective car (Navigation::Effective).
 
+#include "Flight/DeveloperSettings.hpp"
+#include "Flight/Force.hpp"
 #include "Vehicle.hpp"
 #include <RED4ext/Scripting/IScriptable.hpp>
+#include <RED4ext/Scripting/Natives/Generated/Quaternion.hpp>
+#include <RED4ext/Scripting/Natives/Generated/Vector4.hpp>
 #include <RedLib.hpp>
 
 struct FlightVehicleModel : RED4ext::IScriptable {
@@ -28,6 +34,10 @@ struct FlightVehicleModel : RED4ext::IScriptable {
   float margin = 0.85f;
   float planDecel = 18.0f;
   float pushOver = 21.0f;
+  float cdaFront = 0.0f;  // FlightStats.s_dragArea.Y
+  float cdaSide = 0.0f;   // FlightStats.s_dragArea.X
+  float cdaTop = 0.0f;    // FlightStats.s_dragArea.Z
+  float thrusters = 0.0f; // FlightStats.s_thrusters
 
   Navigation::VehicleSpec Spec() const {
     Navigation::VehicleSpec s;
@@ -50,10 +60,39 @@ struct FlightVehicleModel : RED4ext::IScriptable {
     s.margin = margin;
     s.planDecel = planDecel;
     s.pushOver = pushOver;
-    return s;
+    const auto &dev = Flight::Developer();
+    s.cdaFront = dev.shapeDrag ? cdaFront : 0.0f;
+    s.cdaTop = dev.shapeDrag ? cdaTop : 0.0f;
+    s.dragK = dev.dragK;
+    s.thrusters = thrusters;
+    s.thrustStrength = dev.thrustStrength;
+    s.thrustPerThruster = dev.thrustPerThruster;
+    return Navigation::Effective(s);
   }
 
   float Drag(float aSpeed) { return Navigation::Drag(Spec(), aSpeed); }
+  // The acceleration the air takes from the car at aVelocity (world), as ApplyPhysics takes it, as a world vector along
+  // which to thrust it back: with shapeDrag the shape's drag on each body axis (the car turned by aOrientation, so a
+  // slide or a climb costs what it does in game), else Drag along the velocity.
+  RED4ext::Vector4 DragVector(RED4ext::Vector4 aVelocity, RED4ext::Quaternion aOrientation) {
+    const Flight::Vec3 v{aVelocity.X, aVelocity.Y, aVelocity.Z};
+    const float speed = Flight::Length(v);
+    if (speed < 0.5f)
+      return {};
+    const auto &dev = Flight::Developer();
+    Flight::Vec3 out;
+    if (dev.shapeDrag && cdaFront > 0.0f && mass > 0.0f) {
+      const Flight::Quat q{aOrientation.i, aOrientation.j, aOrientation.k, aOrientation.r};
+      const Flight::Vec3 area = Flight::Mul(Flight::Vec3{cdaSide, cdaFront, cdaTop}, 0.5f * 1.2f * dev.dragK);
+      out = Flight::Neg(Flight::Rotate(q, Flight::ShapeDragAccel(Flight::Rotate(Flight::Conjugate(q), v), area, mass)));
+    } else {
+      out = Flight::Mul(v, Drag(speed) / speed);
+    }
+    return {out.x, out.y, out.z, 0.0f};
+  }
+  // surge and sway as the car flies them (scaled by its thrust)
+  float Surge() { return Spec().surge; }
+  float Sway() { return Spec().sway; }
   float DroneAccel(float aThrusters) { return Navigation::DroneAccel(Spec(), aThrusters); }
   float TopSpeed() { return Navigation::TopSpeed(Spec()); }
   float Lateral() { return Navigation::Lateral(Spec()); }
@@ -89,7 +128,14 @@ RTTI_DEFINE_CLASS(FlightVehicleModel, {
   RTTI_PROPERTY(margin);
   RTTI_PROPERTY(planDecel);
   RTTI_PROPERTY(pushOver);
+  RTTI_PROPERTY(cdaFront);
+  RTTI_PROPERTY(cdaSide);
+  RTTI_PROPERTY(cdaTop);
+  RTTI_PROPERTY(thrusters);
   RTTI_METHOD(Drag);
+  RTTI_METHOD(DragVector);
+  RTTI_METHOD(Surge);
+  RTTI_METHOD(Sway);
   RTTI_METHOD(DroneAccel);
   RTTI_METHOD(TopSpeed);
   RTTI_METHOD(Lateral);

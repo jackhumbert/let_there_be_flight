@@ -35,6 +35,9 @@ public:
   static constexpr int32_t maxTrackedShapes = 16;
   physx::PxShape *attachedShapes[maxTrackedShapes] = {};
   int32_t attachedShapeCount = 0;
+  // the chassis collision shape's drag area (CdA per body axis, m2), measured once (MeasureCharacter)
+  RED4ext::Vector4 dragArea{};
+  bool dragAreaMeasured = false;
 
   void Setup(RED4ext::vehicle::BaseObject * vehicle);
   void AddSlots(RED4ext::ent::SlotComponent* slotComponent);
@@ -58,6 +61,9 @@ public:
   void RemoveColliders();
   bool IsTrackedShape(physx::PxShape *shape) const;
   void TrackShape(physx::PxShape *shape);
+  // fills the flight component's stats with the drag area (measured the first time the chassis shape is loaded) and
+  // the thrusters attached (FlightStats.s_dragArea, s_thrusters)
+  void MeasureCharacter();
   void OnActivationCore();
   void OnDeactivationCore();
 

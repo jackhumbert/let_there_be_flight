@@ -9,6 +9,8 @@
 #include <RED4ext/Scripting/Natives/physicsProxyHelper.hpp>
 #include <RED4ext/Scripting/Natives/physicsPhysicalSystemProxy.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/HardTransformBinding.hpp>
+#include "Flight/ChassisShape.hpp"
+#include "Flight/FlightStats.hpp"
 
 using namespace RED4ext;
 
@@ -62,6 +64,10 @@ CClass* IFlightConfiguration::GetConfigurationClass(ent::Entity* entity) {
           if (pt->slotName == "wheel_back_left_b") {
             isSixWheeler |= 2;
           }
+          // the third and fourth rear axles: only the Bratsk U4020 extended has them in vanilla
+          if (pt->slotName == "wheel_back_left_c") {
+            isSixWheeler |= 4;
+          }
         }
       }
     }
@@ -73,7 +79,18 @@ CClass* IFlightConfiguration::GetConfigurationClass(ent::Entity* entity) {
 
   auto configurationCls = rtti->GetClassByScriptName(className);
   if (!configurationCls) {
-    if (isSixWheeler & 1) {
+    // every axle gets its thrusters (tools/flightsim/thruster_slots.py checks each vanilla rig against these)
+    if (isSixWheeler & 4) {
+      configurationCls = rtti->GetClassByScriptName("CustomTwelveWheelCarFlightConfiguration");
+      if (!configurationCls) {
+        configurationCls = rtti->GetClassByScriptName("TwelveWheelCarFlightConfiguration");
+      }
+    } else if (isSixWheeler == 3) {
+      configurationCls = rtti->GetClassByScriptName("CustomEightWheelCarFlightConfiguration");
+      if (!configurationCls) {
+        configurationCls = rtti->GetClassByScriptName("EightWheelCarFlightConfiguration");
+      }
+    } else if (isSixWheeler & 1) {
       configurationCls = rtti->GetClassByScriptName("CustomSixWheelCarFlightConfiguration");
       if (!configurationCls) {
         configurationCls = rtti->GetClassByScriptName("SixWheelCarFlightConfiguration");
@@ -267,8 +284,45 @@ void IFlightConfiguration::AddColliders() {
   }
 }
 
+void IFlightConfiguration::MeasureCharacter() {
+  auto flightComponent = this->component.Lock();
+  if (!flightComponent || !flightComponent->entity)
+    return;
+  auto stats = FlightStats::Of(flightComponent.GetPtr());
+  if (!stats)
+    return;
+  float thrusters = 0.0f;
+  for (auto const &thruster : this->thrusters)
+    if (thruster && thruster->attached)
+      thrusters += 1.0f;
+  stats->s_thrusters = thrusters;
+
+  if (!this->dragAreaMeasured) {
+    auto rtti = CRTTISystem::Get();
+    auto chassis = EntityExt::From(flightComponent->entity)->FindComponent<vehicle::ChassisComponent>();
+    std::vector<Flight::ShapePiece> pieces;
+    std::string why;
+    if (Flight::ChassisPieces(chassis, pieces, why)) {
+      const bool bike = flightComponent->entity->IsOfClass(rtti->GetClass("vehicleBikeBaseObject"));
+      const Flight::Vec3 areas = Flight::SilhouetteAreas(pieces);
+      const float height = Flight::ShapeHeight(pieces);
+      const Flight::Vec3 cda = Flight::DragAreaOf(areas, height, bike);
+      this->dragArea = Vector4(cda.x, cda.y, cda.z, 0.0f);
+      this->dragAreaMeasured = true;
+      spdlog::info("[FlightConfiguration] drag area {:.2f} {:.2f} {:.2f} m2 (silhouette {:.2f} {:.2f} {:.2f} m2, {:.2f} m "
+                   "tall, {} pieces{}), {} thrusters",
+                   cda.x, cda.y, cda.z, areas.x, areas.y, areas.z, height, pieces.size(), bike ? ", a bike" : "",
+                   thrusters);
+    } else {
+      spdlog::info("[FlightConfiguration] no drag area yet: {}", why);
+    }
+  }
+  stats->s_dragArea = this->dragArea;
+}
+
 void IFlightConfiguration::OnActivationCore() {
   this->AddColliders();
+  this->MeasureCharacter();
   ExecuteFunction(this, this->nativeType->GetFunction("OnActivation"), nullptr);
 }
 

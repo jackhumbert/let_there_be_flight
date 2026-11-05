@@ -687,6 +687,11 @@ public class FlightSummonSystem extends ScriptableSystem {
     // out to its own legs and never look at the destination again (the 2026-11-01 run's 1631 m
     // route)
     mode.freeRoamChosen = false;
+    // and turn onto the pad heading at approach speed, before the sink, not with it: the
+    // descent's own z-blend rotates the target yaw over the whole sink (~5 deg/s) and the
+    // hovering car never follows it - the 2026-11-01 run12's touchdown was ~90 degrees of yaw
+    // off the pad heading
+    mode.droneBrakeTurn = true;
     this.engaged = true;
     this.flightTimer = 0.0;
     this.planningTimer = 0.0;

@@ -62,7 +62,7 @@ Vec3 DragFeedForward(const VehicleSpec &aSpec, const Vec3 &aVelocity, bool aOn) 
   if (!aOn || speed < 0.5f) {
     return {0.0f, 0.0f, 0.0f};
   }
-  return V::Mul(aVelocity, Drag(aSpec, speed) / speed);
+  return V::Mul(aVelocity, DragAt(aSpec, speed, aVelocity.z / speed) / speed);
 }
 
 float DroneHeadingYaw(const AttitudeState &aState, const AttitudeParams &aParams, const AttitudeInput &aInput,

@@ -157,6 +157,9 @@ find_package(ArchiveXL)
 mod_require(ArchiveXL 1.28.3 NOTE "optional on game 2.5+")
 find_package(TweakXL)
 
+# Mod Settings' C++ API (its Variable struct; AddVariable is looked up at runtime: Flight/FlightSettingsLink.cpp)
+target_include_directories(let_there_be_flight.dll PRIVATE deps/mod_settings/include)
+
 target_link_libraries(let_there_be_flight.dll
   PUBLIC
     Detours
@@ -174,6 +177,7 @@ target_link_libraries(let_there_be_flight.dll
 add_executable(navplan EXCLUDE_FROM_ALL
   tools/navplan/navplan.cpp
   tools/navplan/follow.cpp
+  src/red4ext/Flight/Force.cpp
   src/red4ext/Navigation/NavMap.cpp
   src/red4ext/Navigation/Planner.cpp
   src/red4ext/Navigation/PlannerCommon.cpp
@@ -191,6 +195,22 @@ add_executable(navplan EXCLUDE_FROM_ALL
 target_include_directories(navplan PRIVATE src/red4ext)
 target_compile_features(navplan PRIVATE cxx_std_20)
 target_link_libraries(navplan PRIVATE spdlog)
+
+# Hover & Fly flown offline on the plugin's mode, input and force code, scenario by scenario
+# (tools/flightsim, docs/design/hover-fly-feel.md); not built by default
+add_executable(flightsim EXCLUDE_FROM_ALL
+  tools/flightsim/flightsim.cpp
+  tools/flightsim/Sim.cpp
+  tools/flightsim/Scenarios.cpp
+  tools/flightsim/Replay.cpp
+  src/red4ext/Flight/Stats.cpp
+  src/red4ext/Flight/Force.cpp
+  src/red4ext/Flight/Pid.cpp
+  src/red4ext/Flight/Controls.cpp
+  src/red4ext/Flight/Modes.cpp
+)
+target_include_directories(flightsim PRIVATE src/red4ext)
+target_compile_features(flightsim PRIVATE cxx_std_20)
 
 # offline run of the plugin's acoustics code over Autopilot telemetry, checked against
 # tools/acoustics/flyby.py (docs/design/acoustics.md); not built by default
@@ -244,6 +264,7 @@ add_executable(ltbf_tests
   tests/surge_tests.cpp
   tests/tracker_tests.cpp
   tests/follow_tests.cpp
+  tests/autopilot_fleet_tests.cpp
   tests/scriptmath_tests.cpp
   tests/stats_tests.cpp
   tests/force_tests.cpp
@@ -253,7 +274,12 @@ add_executable(ltbf_tests
   tests/thruster_tests.cpp
   tests/aerobatics_tests.cpp
   tests/cinematic_tests.cpp
+  tests/feel_tests.cpp
+  tests/aero_tests.cpp
+  tests/settings_tests.cpp
   tools/navplan/follow.cpp
+  tools/flightsim/Sim.cpp
+  tools/flightsim/Scenarios.cpp
   src/red4ext/Audio/EngineSynth/Synth.cpp
   src/red4ext/Audio/EngineSynth/Sources.cpp
   src/red4ext/Audio/Buses.cpp
@@ -281,12 +307,20 @@ add_executable(ltbf_tests
   src/red4ext/Flight/Controls.cpp
   src/red4ext/Flight/Modes.cpp
   src/red4ext/Flight/Thruster.cpp
+  src/red4ext/Flight/Aero.cpp
+  src/red4ext/Flight/DeveloperSettings.cpp
+  src/red4ext/Flight/Settings.cpp
   src/red4ext/ThirdParty/miniz/miniz_tinfl.cpp
 )
 target_include_directories(ltbf_tests PRIVATE src/red4ext)
 target_compile_features(ltbf_tests PRIVATE cxx_std_20)
 target_link_libraries(ltbf_tests PRIVATE spdlog)
+# feel_tests reads the fleet from tools/flightsim/vehicles.tsv
+target_compile_definitions(ltbf_tests PRIVATE LTBF_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 add_test(NAME ltbf_tests COMMAND ltbf_tests)
+# every vanilla car and bike's rig has the bones and wheel slots its thrusters need (tools/flightsim/thruster_slots.py)
+find_package(Python3 COMPONENTS Interpreter)
+add_test(NAME thruster_slots COMMAND ${Python3_EXECUTABLE} -I "${CMAKE_CURRENT_SOURCE_DIR}/tools/flightsim/thruster_slots.py")
 
 # configure_inputs(src/input_loader/let_there_be_flight.xml)
 configure_mod_file(src/input_loader/${MOD_SLUG}.xml red4ext/plugins/${MOD_SLUG}/inputs.xml)
