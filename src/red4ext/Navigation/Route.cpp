@@ -219,4 +219,69 @@ float Route::SharpBend(int32_t aSegment, const Vec3 &aFrom, float aSpan) const {
   return 1000000.0f;
 }
 
+std::vector<Vec3> RoundCorners(const std::vector<Vec3> &aPoints, float aCut, float aShare, float aSmallest,
+                               float aStep, const Space &aSpace) {
+  const size_t n = aPoints.size();
+  if (n < 3) {
+    return aPoints;
+  }
+  auto clear = [&](const Vec3 &a, const Vec3 &b) { return aSpace.SegmentClear(a, b) >= 1.0f; };
+  std::vector<Vec3> out{aPoints[0]};
+  for (size_t i = 1; i + 1 < n; ++i) {
+    const Vec3 &a = aPoints[i - 1], &b = aPoints[i], &c = aPoints[i + 1];
+    bool rounded = false;
+    // full cut, then smaller; below the smallest the corner stays sharp
+    for (float cut = aCut; !rounded && cut >= aSmallest && aStep < 1.0f; cut *= aStep) {
+      float d1 = std::min(aShare * Dist(a, b), cut);
+      float d2 = std::min(aShare * Dist(b, c), cut);
+      if (d1 <= 1.0f || d2 <= 1.0f) {
+        continue;
+      }
+      Vec3 q1 = b + Normalize(a - b) * d1;
+      Vec3 q2 = b + Normalize(c - b) * d2;
+      Vec3 arc[9];
+      for (int k = 0; k <= 8; ++k) {
+        float t = float(k) / 8.0f;
+        arc[k] = q1 * ((1.0f - t) * (1.0f - t)) + b * (2.0f * t * (1.0f - t)) + q2 * (t * t);
+      }
+      bool ok = clear(out.back(), arc[0]);
+      for (int k = 0; ok && k < 8; ++k) {
+        ok = clear(arc[k], arc[k + 1]);
+      }
+      if (ok) {
+        out.insert(out.end(), std::begin(arc), std::end(arc));
+        rounded = true;
+      }
+    }
+    if (!rounded) {
+      out.push_back(b);
+    }
+  }
+  out.push_back(aPoints[n - 1]);
+  return out;
+}
+
+std::vector<Vec3> SmoothJoin(std::vector<Vec3> aPoints, int32_t aJoin, int32_t aLo, int32_t aHi, float aRadius,
+                             int32_t aPasses, const Space &aSpace) {
+  const int32_t n = int32_t(aPoints.size());
+  if (aJoin < 0 || aJoin >= n) {
+    return aPoints;
+  }
+  auto clear = [&](const Vec3 &a, const Vec3 &b) { return aSpace.SegmentClear(a, b) >= 1.0f; };
+  const Vec3 centre = aPoints[aJoin];
+  const int32_t lo = std::max(aLo, 1);
+  const int32_t hi = std::min(aHi, n - 2);
+  for (int32_t pass = 0; pass < aPasses; ++pass) {
+    for (int32_t k = lo; k <= hi; ++k) {
+      if (Dist(aPoints[k], centre) < aRadius) {
+        Vec3 q = aPoints[k] * 0.5f + (aPoints[k - 1] + aPoints[k + 1]) * 0.25f;
+        if (clear(aPoints[k - 1], q) && clear(q, aPoints[k + 1])) {
+          aPoints[k] = q;
+        }
+      }
+    }
+  }
+  return aPoints;
+}
+
 } // namespace Navigation

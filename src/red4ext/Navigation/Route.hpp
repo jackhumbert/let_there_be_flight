@@ -52,4 +52,18 @@ struct Route {
   float SharpBend(int32_t aSegment, const Vec3 &aFrom, float aSpan) const;
 };
 
+// The planner's straight legs with each corner replaced by a quadratic Bezier arc of nine points, cut
+// back min(aShare of each leg, aCut) metres; where the arc is not clear in aSpace the cut steps down by
+// aStep until it is, and below aSmallest the corner stays sharp. Fewer than three points come back as
+// they are. (FlightRoute.RoundCorners; the Autopilot's RoundCorners passes raceCornerRound,
+// raceRoundShare, raceRoundMin and raceRoundStep.)
+std::vector<Vec3> RoundCorners(const std::vector<Vec3> &aPoints, float aCut, float aShare, float aSmallest,
+                               float aStep, const Space &aSpace);
+// Two legs joined at index aJoin eased into each other: aPasses times, each point aLo..aHi (at least 1,
+// at most the last but one) within aRadius of the join point moves halfway to its neighbours' middle
+// where both its segments stay clear in aSpace. An aJoin outside the points leaves them as they are.
+// (FlightRoute.SmoothJoin.)
+std::vector<Vec3> SmoothJoin(std::vector<Vec3> aPoints, int32_t aJoin, int32_t aLo, int32_t aHi, float aRadius,
+                             int32_t aPasses, const Space &aSpace);
+
 } // namespace Navigation

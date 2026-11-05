@@ -30,6 +30,10 @@ struct World : Space {
   // a ray against the static world, terrain and vehicle blockers: true and the first hit's position
   // when it hits. Where the world has not streamed in, nothing is hit.
   virtual bool GroundRay(const Vec3 &aFrom, const Vec3 &aTo, Vec3 &aHit) const = 0;
+  // the nav map is loaded (FlightNavMap.IsLoaded): without it the Autopilot plans nothing ("no nav map")
+  virtual bool Loaded() const { return true; }
+  // the nav map behind the world, for the trajectory's room caps (FlightTrajectory.Build); nullptr: none
+  virtual const NavMap *Map() const { return nullptr; }
 };
 
 // The first gap of aP's column whose top is above aP (the one aP is in, or the next one up), as the
@@ -65,6 +69,8 @@ struct MapWorld : World {
   const std::vector<Gate> &GateList() const override { return gates; }
   bool VehicleRay(const Vec3 &aFrom, const Vec3 &aTo) const override;
   bool GroundRay(const Vec3 &aFrom, const Vec3 &aTo, Vec3 &aHit) const override;
+  bool Loaded() const override { return map.IsLoaded(); }
+  const NavMap *Map() const override { return map.IsLoaded() ? &map : nullptr; }
 
   const NavMap &map;
   const std::vector<Helipad> &pads;
