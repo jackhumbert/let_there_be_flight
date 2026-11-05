@@ -10,6 +10,7 @@
 #include <RedLib.hpp>
 
 #include "FlightVehicleModel.hpp"
+#include "Plans.hpp"
 
 struct FlightNavMap : RED4ext::IScriptable {
   static bool IsLoaded();
@@ -79,6 +80,11 @@ struct FlightNavMap : RED4ext::IScriptable {
   static RED4ext::DynArray<RED4ext::Vector4> TakePlan(int32_t aId);
   // forgets a request no longer wanted: a plan never taken is freed
   static void DropPlan(int32_t aId);
+
+  // For C++ (FlightModeAutopilot): the queue the plans above run on (threaded, a static) and the planner's base params
+  // SetPlanParameters sets, which the Autopilot's plans start from.
+  static Navigation::PlanQueue &Queue();
+  static const Navigation::PlanParams &PlanBase();
 
   // Destination override for the autopilot (testing, or other mods): wins over the GPS target.
   static void SetTargetOverride(RED4ext::Vector4 aTarget);

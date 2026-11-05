@@ -1,4 +1,5 @@
-// The Autopilot's tuning in C++ (src/red4ext/Navigation/AutopilotParams): the same defaults as the script's fields.
+// The Autopilot's tuning in C++ (src/red4ext/Navigation/AutopilotParams): the same defaults as the script's fields
+// (FlightModeAutopilot.reds at c3e24ab, the last commit with the script mode: tests/autopilot_script_defaults.txt).
 #include "check.hpp"
 
 #include "Navigation/AutopilotParams.hpp"
@@ -14,7 +15,7 @@ using namespace Navigation;
 namespace {
 // the script's `let name: Type = value;` defaults, by name
 std::unordered_map<std::string, std::string> ScriptDefaults() {
-  std::ifstream in(LTBF_SOURCE_DIR "/src/redscript/Flight/FlightModeAutopilot.reds");
+  std::ifstream in(LTBF_SOURCE_DIR "/tests/autopilot_script_defaults.txt");
   std::stringstream text;
   text << in.rdbuf();
   std::unordered_map<std::string, std::string> out;
@@ -34,7 +35,7 @@ TEST(autopilot_params_defaults) {
   for (const auto &r : AutopilotParamTable()) {
     auto it = script.find(r.name);
     if (it == script.end()) {
-      std::printf("  %s: not in FlightModeAutopilot.reds\n", r.name);
+      std::printf("  %s: not in the script's fields\n", r.name);
       CHECK(it != script.end());
       continue;
     }

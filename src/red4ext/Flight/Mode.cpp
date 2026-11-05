@@ -11,8 +11,9 @@
 
 namespace {
 // the hooks FlightMode.reds declares, by index
-constexpr std::array<const char *, 4> kHooks = {"OnActivate", "OnDeactivate", "OnUpdate", "Description"};
-enum { kActivate, kDeactivate, kUpdate, kDescription };
+constexpr std::array<const char *, 7> kHooks = {"OnActivate", "OnDeactivate", "OnUpdate",    "Description",
+                                                "OnInitialize", "Enabled",    "OnTeleported"};
+enum { kActivate, kDeactivate, kUpdate, kDescription, kInitialize, kEnabled, kTeleported };
 } // namespace
 
 RED4ext::CClassFunction *FlightMode::Hook(int aIndex) {
@@ -32,6 +33,33 @@ RED4ext::CClassFunction *FlightMode::Hook(int aIndex) {
     it = hooks.emplace(cls, found).first;
   }
   return it->second[aIndex];
+}
+
+void FlightMode::NativeInitialize() {
+  OnInitializeNative();
+  if (auto *f = Hook(kInitialize))
+    RED4ext::ExecuteFunction(this, f, nullptr);
+}
+
+bool FlightMode::NativeIsEnabled() {
+  if (auto *f = Hook(kEnabled)) {
+    bool out = true;
+    if (RED4ext::ExecuteFunction(this, f, &out))
+      return out;
+  }
+  return IsEnabledNative();
+}
+
+void FlightMode::OnTeleportedNative() {
+  // the object's Activate as redscript would call it (this.Activate()): a redscript override, or FlightMode's
+  if (auto *f = GetType()->GetFunction("Activate"))
+    RED4ext::ExecuteFunction(this, f, nullptr);
+}
+
+void FlightMode::NativeTeleported() {
+  OnTeleportedNative();
+  if (auto *f = Hook(kTeleported))
+    RED4ext::ExecuteFunction(this, f, nullptr);
 }
 
 void FlightMode::NativeActivate() {

@@ -1,9 +1,12 @@
 // Developer settings (Flight/DeveloperSettings.hpp): the table of names, ranges and parsing.
 #include "Flight/DeveloperSettings.hpp"
 
+#include "Navigation/AutopilotParams.hpp"
+
 #include <algorithm>
 #include <cctype>
 #include <charconv>
+#include <cmath>
 #include <cstdio>
 
 namespace Flight {
@@ -53,6 +56,68 @@ std::string Number(float aValue) {
   return text;
 }
 
+bool ParseFlag(const std::string &aValue, bool &aFlag) {
+  if (aValue == "true" || aValue == "1" || aValue == "on") {
+    aFlag = true;
+  } else if (aValue == "false" || aValue == "0" || aValue == "off") {
+    aFlag = false;
+  } else {
+    return false;
+  }
+  return true;
+}
+
+// "autopilot.<name>": the AutopilotParams field's kind, false for a name it does not have
+bool AutopilotField(const std::string &aName, const Navigation::AutopilotParamRef *&aRef) {
+  const std::string prefix = kAutopilotPrefix;
+  if (aName.rfind(prefix, 0) != 0) {
+    return false;
+  }
+  const std::string field = aName.substr(prefix.size());
+  for (const auto &r : Navigation::AutopilotParamTable()) {
+    if (field == r.name) {
+      aRef = &r;
+      return true;
+    }
+  }
+  return false;
+}
+
+bool SetAutopilotOverride(DeveloperSettings &aSettings, const std::string &aName, const std::string &aValue,
+                          std::string &aMessage) {
+  const Navigation::AutopilotParamRef *ref = nullptr;
+  if (!AutopilotField(aName, ref)) {
+    aMessage = "unknown developer setting '" + aName + "'";
+    return false;
+  }
+  float number = 0.0f;
+  bool flag = false;
+  if (ref->b && ParseFlag(aValue, flag)) {
+    number = flag ? 1.0f : 0.0f;
+  } else {
+    const auto [end, error] = std::from_chars(aValue.data(), aValue.data() + aValue.size(), number);
+    if (error != std::errc() || end != aValue.data() + aValue.size() || !std::isfinite(number)) {
+      aMessage = aName + ": '" + aValue + "' is not " + (ref->b ? "true or false" : "a number");
+      return false;
+    }
+  }
+  if (ref->i) {
+    number = float(std::lround(number));
+  } else if (ref->b) {
+    number = number != 0.0f ? 1.0f : 0.0f;
+  }
+  const std::string field = aName.substr(std::string(kAutopilotPrefix).size());
+  auto it = std::find_if(aSettings.autopilot.begin(), aSettings.autopilot.end(),
+                         [&](const auto &aEntry) { return aEntry.first == field; });
+  if (it != aSettings.autopilot.end()) {
+    it->second = number;
+  } else {
+    aSettings.autopilot.emplace_back(field, number);
+  }
+  ++aSettings.autopilotGeneration;
+  return true;
+}
+
 } // namespace
 
 DeveloperSettings &Developer() {
@@ -63,6 +128,9 @@ DeveloperSettings &Developer() {
 bool SetDeveloperSetting(DeveloperSettings &aSettings, const std::string &aName, const std::string &aValue,
                          std::string &aMessage) {
   aMessage.clear();
+  if (Trim(aName).rfind(kAutopilotPrefix, 0) == 0) {
+    return SetAutopilotOverride(aSettings, Trim(aName), Lower(Trim(aValue)), aMessage);
+  }
   const Entry *e = Find(Trim(aName));
   if (!e) {
     aMessage = "unknown developer setting '" + Trim(aName) + "'";
@@ -70,11 +138,7 @@ bool SetDeveloperSetting(DeveloperSettings &aSettings, const std::string &aName,
   }
   const std::string value = Lower(Trim(aValue));
   if (e->flag) {
-    if (value == "true" || value == "1" || value == "on") {
-      aSettings.*e->flag = true;
-    } else if (value == "false" || value == "0" || value == "off") {
-      aSettings.*e->flag = false;
-    } else {
+    if (!ParseFlag(value, aSettings.*e->flag)) {
       aMessage = std::string(e->name) + ": '" + aValue + "' is not true or false";
       return false;
     }
@@ -95,6 +159,19 @@ bool SetDeveloperSetting(DeveloperSettings &aSettings, const std::string &aName,
 }
 
 bool GetDeveloperSetting(const DeveloperSettings &aSettings, const std::string &aName, std::string &aValue) {
+  const Navigation::AutopilotParamRef *ref = nullptr;
+  if (AutopilotField(Trim(aName), ref)) {
+    // the override, or the code default when there is none
+    const Navigation::AutopilotParams defaults;
+    float value = ref->f ? defaults.*ref->f : ref->i ? float(defaults.*ref->i) : (defaults.*ref->b ? 1.0f : 0.0f);
+    for (const auto &[name, number] : aSettings.autopilot) {
+      if (name == ref->name) {
+        value = number;
+      }
+    }
+    aValue = ref->b ? (value != 0.0f ? "true" : "false") : Number(value);
+    return true;
+  }
   const Entry *e = Find(Trim(aName));
   if (!e)
     return false;
@@ -134,6 +211,11 @@ std::vector<std::string> ChangedDeveloperSettings(const DeveloperSettings &aSett
     GetDeveloperSetting(defaults, e.name, initial);
     if (value != initial)
       out.push_back(std::string(e.name) + " = " + value);
+  }
+  for (const auto &[name, number] : aSettings.autopilot) {
+    std::string value;
+    GetDeveloperSetting(aSettings, kAutopilotPrefix + name, value);
+    out.push_back(kAutopilotPrefix + name + " = " + value);
   }
   return out;
 }

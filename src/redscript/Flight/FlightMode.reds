@@ -1,6 +1,7 @@
-// Native (Flight/Mode.hpp): the base of the C++ modes too. A C++ mode runs through Activate, Deactivate, Update and
-// GetDescription below; a mod extends one by overriding the hooks (OnActivate, OnDeactivate, OnUpdate, Description),
-// which the C++ calls after its own step. The redscript modes override Activate and the rest directly, as before.
+// Native (Flight/Mode.hpp): the base of the C++ modes too. A C++ mode runs through Initialize, IsEnabled, Activate,
+// Deactivate, Teleported, Update and GetDescription below; a mod extends one by overriding the hooks (OnInitialize,
+// Enabled, OnActivate, OnDeactivate, OnTeleported, OnUpdate, Description), which the C++ calls after its own step (or in
+// place of its answer: Enabled, Description). The redscript modes override Activate and the rest directly, as before.
 public abstract native class FlightMode extends IScriptable {
   protected let sys: ref<FlightSystem>;
   protected let component: ref<FlightComponent>;
@@ -28,12 +29,13 @@ public abstract native class FlightMode extends IScriptable {
     this.sys = component.sys;
     // this.gravityFactor = 2.885;
     this.gravityFactor = 1.0;
+    this.NativeInitialize();
   }
 
   public func Deinitialize() -> Void;
 
   // Whether the mode joins the car's mode list (its Mod Settings switch); the list is TweakDB's FlightModes.classes
-  public func IsEnabled() -> Bool = true;
+  public func IsEnabled() -> Bool = this.NativeIsEnabled();
 
   public func Activate() -> Void {
     this.NativeActivate();
@@ -42,9 +44,9 @@ public abstract native class FlightMode extends IScriptable {
     this.NativeDeactivate();
   }
   // the car was teleported (FlightComponent.OnTeleported): start over where it is now (the heights
-  // and positions a mode holds are the old place's)
+  // and positions a mode holds are the old place's). By default the C++ calls this object's Activate (Flight/Mode.hpp).
   public func Teleported() -> Void {
-    this.Activate();
+    this.NativeTeleported();
   }
   public func GetDescription() -> String = this.NativeDescription();
 
@@ -53,8 +55,11 @@ public abstract native class FlightMode extends IScriptable {
   }
 
   // A C++ mode's steps, each followed by the hook below when the class overrides it (Flight/Mode.hpp)
+  public final native func NativeInitialize() -> Void;
+  public final native func NativeIsEnabled() -> Bool;
   public final native func NativeActivate() -> Void;
   public final native func NativeDeactivate() -> Void;
+  public final native func NativeTeleported() -> Void;
   public final native func NativeUpdate(timeDelta: Float) -> Void;
   public final native func NativeDescription() -> String;
 
@@ -64,9 +69,12 @@ public abstract native class FlightMode extends IScriptable {
   public static native func Instantiate(className: CName) -> ref<FlightMode>;
 
   // Hooks for a mod extending a C++ mode: called after its own step (force and torque already set by it), or in
-  // place of its name (Description).
+  // place of its answer (Enabled, Description).
+  protected func OnInitialize() -> Void;
+  protected func Enabled() -> Bool = true;
   protected func OnActivate() -> Void;
   protected func OnDeactivate() -> Void;
+  protected func OnTeleported() -> Void;
   protected func OnUpdate(timeDelta: Float) -> Void;
   protected func Description() -> String = "";
 

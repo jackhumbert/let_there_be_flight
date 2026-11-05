@@ -302,6 +302,7 @@ add_executable(ltbf_tests
   tests/landing_tests.cpp
   tests/autopilot_tests.cpp
   tests/autopilot_trip_tests.cpp
+  tests/autopilot_shell_tests.cpp
   tools/navplan/follow.cpp
   tools/flightsim/Sim.cpp
   tools/flightsim/Scenarios.cpp
@@ -335,6 +336,7 @@ add_executable(ltbf_tests
   src/red4ext/Navigation/AutopilotRoute.cpp
   src/red4ext/Navigation/AutopilotFreeRoam.cpp
   src/red4ext/Navigation/AutopilotDescent.cpp
+  src/red4ext/Navigation/AutopilotTelemetry.cpp
   src/red4ext/Navigation/Planner.cpp
   src/red4ext/Navigation/PlannerCommon.cpp
   src/red4ext/Navigation/Line.cpp

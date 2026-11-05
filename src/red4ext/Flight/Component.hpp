@@ -160,7 +160,7 @@ public:
   }
 
   // Row aRow (0, 1, 2) of the world inertia, X, Y or Z, with W = 1; all 0 when AngularImpulseFor has no inertia, and
-  // for any other row. The attitude control in C++ (FlightAttitudeControl) takes the rows and does AngularImpulseFor's
+  // for any other row. The Autopilot's attitude control (FlightModeAutopilot) takes the rows and does AngularImpulseFor's
   // product itself.
   RED4ext::Vector4 GetWorldInertiaRow(int32_t aRow) {
     const Navigation::WorldInertia inertia = WorldInertiaRows();

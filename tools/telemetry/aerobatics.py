@@ -1,6 +1,6 @@
 """Summarise and plot the Autopilot's aerobatics telemetry ([AutopilotA] lines in the LTBF log).
 
-Switch telemetry on (python ../cp2077_tools/bridge.py call LtbfBridge.Aerobatics true 0 -1 0 1 does it), fly, then:
+Switch telemetry on (python ../cp2077_tools/bridge.py call LtbfBridge.Telemetry true), fly, then:
 
     python tools/telemetry/aerobatics.py [let_there_be_flight.log or an extract ...]
     python tools/telemetry/aerobatics.py before=run1.log after=run2.log --plot runs.png

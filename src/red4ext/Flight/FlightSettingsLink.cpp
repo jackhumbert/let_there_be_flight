@@ -1,7 +1,9 @@
 // The player's settings (Flight/Settings.hpp) registered with Mod Settings from C++: AddVariable is looked up in
 // mod_settings.dll at plugin load (LTBF does not link it, Mod Settings is optional), and each variable's callback
-// writes Flight::Player(). Mod Settings calls it once with the saved value when it registers the variable, and again
-// whenever the player changes it.
+// writes Flight::Player() or Flight::AutopilotPlayer(). Mod Settings calls it once with the saved value when it
+// registers the variable (when the game's scripts are loaded), and again whenever the player changes it. Mod Settings
+// keys a saved value by the class and property names given here ([className] propertyName = value in its user.ini,
+// mod_settings ModSettings.cpp WriteToFile), as it does a script field's by its class and field name.
 #include "Flight/FlightSettingsLink.hpp"
 
 #include "Flight/Settings.hpp"
@@ -25,7 +27,7 @@ bool Register() {
   // Mod Settings keeps the pointers until the game's scripts are loaded: the variables live as long as the plugin
   static std::vector<ModSettings::Variable> variables;
   variables.clear();
-  variables.reserve(Flight::PlayerSettingsTable().size());
+  variables.reserve(Flight::PlayerSettingsTable().size() + Flight::AutopilotSettingsTable().size());
   uint32_t order = 0;
   for (const auto &s : Flight::PlayerSettingsTable()) {
     ModSettings::Variable v{};
@@ -45,6 +47,35 @@ bool Register() {
         [](RED4ext::CName aCategory, RED4ext::CName aProperty, ModSettings::ModVariableType aValue) {
           if (Flight::SetPlayerSetting(Flight::Player(), aProperty.ToString(), aValue.f32))
             spdlog::info("[Settings] {} = {}", aProperty.ToString(), aValue.f32);
+        });
+    variables.push_back(v);
+  }
+  order = 0;
+  for (const auto &s : Flight::AutopilotSettingsTable()) {
+    ModSettings::Variable v{};
+    v.modName = Flight::kPlayerSettingsMod;
+    v.className = Flight::kAutopilotSettingsClass;
+    v.categoryName = s.category;
+    v.propertyName = s.name;
+    v.type = s.isBool ? "Bool" : "Float";
+    v.displayName = s.displayName;
+    v.description = s.description;
+    v.order = order++;
+    if (s.isBool) {
+      v.defaultValue.b = s.defaultValue != 0.0f;
+    } else {
+      v.defaultValue.f32 = s.defaultValue;
+      v.stepValue.f32 = s.step;
+      v.minValue.f32 = s.min;
+      v.maxValue.f32 = s.max;
+    }
+    const bool isBool = s.isBool;
+    v.callback = std::make_shared<ModSettings::runtime_class_callback_t>(
+        [isBool](RED4ext::CName aCategory, RED4ext::CName aProperty, ModSettings::ModVariableType aValue) {
+          // a Bool's value is the union's first byte (Mod Settings hands the accepted value's bytes as the union)
+          const float value = isBool ? (aValue.b ? 1.0f : 0.0f) : aValue.f32;
+          if (Flight::SetAutopilotSetting(Flight::AutopilotPlayer(), aProperty.ToString(), value))
+            spdlog::info("[Settings] {}.{} = {}", Flight::kAutopilotSettingsClass, aProperty.ToString(), value);
         });
     variables.push_back(v);
   }

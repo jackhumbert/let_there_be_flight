@@ -2,7 +2,7 @@
 
 // What the Autopilot asks of the world (docs/design/native-ports.md, M6): free space (Space), the
 // nav map's columns, the landing pads and gates, and the two engine rays its landing checks cast.
-// In the game the nav map and the engine answer it (MapWorld, rays from FlightWorld); offline and in
+// In the game the nav map and the engine answer it (FlightWorld: MapWorld with the rays cast through the engine); offline and in
 // tests the nav map or boxes do.
 
 #include "Gates.hpp"
@@ -32,7 +32,7 @@ struct World : Space {
   virtual bool GroundRay(const Vec3 &aFrom, const Vec3 &aTo, Vec3 &aHit) const = 0;
   // the nav map is loaded (FlightNavMap.IsLoaded): without it the Autopilot plans nothing ("no nav map")
   virtual bool Loaded() const { return true; }
-  // the nav map behind the world, for the trajectory's room caps (FlightTrajectory.Build); nullptr: none
+  // the nav map behind the world, for the trajectory's room caps (BuildTrajectory); nullptr: none
   virtual const NavMap *Map() const { return nullptr; }
 };
 

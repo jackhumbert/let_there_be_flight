@@ -1,11 +1,12 @@
 #pragma once
 
 // The Autopilot as pure C++ (docs/design/native-ports.md, M6 steps 4b to 4e): everything
-// FlightModeAutopilot.reds does each frame and on its events, over a World (free space, the nav map's
-// columns, pads, gates and the landing rays), a PlanQueue (the route plans) and an Rng (the free roam
-// picks). The game mode (step 6) and the offline simulation (step 5) both drive it: each frame they
-// gather an AutopilotInput, call Step, apply the force and torque, write the input fields back into
-// the component and do what the events ask (ExitAutopilot, flight off, the HUD, notifications).
+// FlightModeAutopilot.reds (the script mode, at c3e24ab) did each frame and on its events, over a World
+// (free space, the nav map's columns, pads, gates and the landing rays), a PlanQueue (the route plans)
+// and an Rng (the free roam picks). The game mode (step 6) and the offline simulation (step 5) both drive
+// it: each frame they gather an AutopilotInput, call Step, apply the force and torque, write the input
+// fields back into the component and do what the events ask (ExitAutopilot, flight off, the HUD,
+// notifications).
 //
 // Faithful to the script's native paths (nativeTracker, nativeAttitude, nativeAerobatics on, drone
 // style): the same decisions, numbers, order and log lines, the fields under the script's names
@@ -165,8 +166,13 @@ public:
   // The route's trajectory built again for this car (the script's public BuildTrajectory, for
   // LtbfBridge.DroneTuning after it changes the tuning).
   void BuildTrajectory(const AutopilotInput &aIn);
+  // The car's limits filled again from aIn (the script's public RefreshVehicle, for LtbfBridge's readers of them).
+  void RefreshVehicle(const AutopilotInput &aIn);
   // The events gathered since the last Step, cleared (for a method called between frames).
   AutopilotEvents TakeEvents();
+  // Whether Step would hold off aPosition this frame as a jump further than the car could have flown (CheckedPosition):
+  // the position the frame flies from is then lastPosition. For the telemetry row the shell writes before Step.
+  bool JumpHeldOff(const Vec3 &aPosition, float aSpeed, float aDt) const;
 
   int32_t RouteSize() const { return route.Size(); }
   // a trajectory to follow (every route gets one)

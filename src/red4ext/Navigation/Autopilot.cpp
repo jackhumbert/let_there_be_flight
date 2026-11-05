@@ -1,6 +1,6 @@
 // The Autopilot's lifecycle and its frame: Activate, Deactivate, Teleported, the car's limits, Step (the
 // script's Update: the override, the follower, the state machine) and FlyAerobatic's drone path.
-// FlightModeAutopilot.reds line numbers name what each part ports.
+// FlightModeAutopilot.reds line numbers (at c3e24ab, the last commit with the script mode) name what each part ports.
 
 #include "Autopilot.hpp"
 
@@ -64,10 +64,14 @@ bool Autopilot::PlayerInput() const {
          std::fabs(c.sway) > 0.15f || c.linearBrake > 0.15f;
 }
 
+bool Autopilot::JumpHeldOff(const Vec3 &aPosition, float aSpeed, float aDt) const {
+  const float reach = std::max(aSpeed, 20.0f) * std::max(aDt, 0.02f) * 3.0f + 10.0f;
+  return Distance(aPosition, lastPosition) > reach && positionJumpTimer < params.positionJumpHold;
+}
+
 // CheckedPosition (1410): a jump further than the car could have flown held off for up to positionJumpHold
 Vec3 Autopilot::CheckedPosition(const Vec3 &aPosition, float aDt) {
-  const float reach = std::max(in->stats.d_speed, 20.0f) * std::max(aDt, 0.02f) * 3.0f + 10.0f;
-  if (Distance(aPosition, lastPosition) > reach && positionJumpTimer < params.positionJumpHold) {
+  if (JumpHeldOff(aPosition, in->stats.d_speed, aDt)) {
     if (positionJumpTimer == 0.0f) {
       spdlog::warn("[Autopilot] position jumped {:.0f} m to {:.1f}, {:.1f}, {:.1f}: held off",
                    Distance(aPosition, lastPosition), aPosition.x, aPosition.y, aPosition.z);
@@ -139,6 +143,12 @@ Vec3 Autopilot::SurgeDrag(const Vec3 &aVelocity) const {
 void Autopilot::BuildTrajectory(const AutopilotInput &aIn) {
   in = &aIn;
   BuildTrajectory();
+  in = nullptr;
+}
+
+void Autopilot::RefreshVehicle(const AutopilotInput &aIn) {
+  in = &aIn;
+  RefreshVehicle();
   in = nullptr;
 }
 
@@ -291,7 +301,7 @@ AutopilotOutput Autopilot::Step(const AutopilotInput &aIn) {
   trackerParams.surge.slack = surgeHold.slack;
   trackerParams.surge.dwell = surgeHold.dwell;
   if (following) {
-    // the follower (FlightTracker.Track): the replans and the route request are the Autopilot's
+    // the follower (Navigation::Track): the replans and the route request are the Autopilot's
     TrackInput track;
     track.dt = timeDelta;
     track.position = p;
@@ -585,7 +595,7 @@ void Autopilot::FlyAerobatic(float aTimeDelta, const Vec3 &aAccel, const Vec3 &a
   attitudeError = c.attitudeError;
   Flight::Vec3 local = c.thrust;
   const float g = 9.81f * in->standard.gravityFactor;
-  // where the speed is the car's to set, the surge held full along the path (FlightTracker.Command decided it)
+  // where the speed is the car's to set, the surge held full along the path (Navigation::Command decided it)
   if (tracker.surge.held) {
     const Flight::Vec3 path = Flight::Rotate(Flight::Conjugate(stats.d_orientation), Flight::Normalize(stats.d_velocity));
     if (!(path.y < 0.2f || local.y >= surgeMax)) {

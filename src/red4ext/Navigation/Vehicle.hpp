@@ -1,7 +1,7 @@
 #pragma once
 
 // The car's limits, worked out in one place from its stats and the flight tuning: the planner
-// (Planner.cpp), the Autopilot in game (FlightVehicleModel, FlightModeAutopilot.reds) and the
+// (Planner.cpp), the Autopilot in game (FlightModeAutopilot, FlightVehicleModel for script) and the
 // offline tools (navplan, tools/navplan/vehicles.json) all read them from here
 // (docs/design/vehicle-limits.md).
 //

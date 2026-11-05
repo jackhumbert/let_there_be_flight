@@ -3,9 +3,11 @@
 // FlightMode as a native class (docs/design/hover-fly-native.md): the base of every flight mode, C++ or redscript.
 //
 // A C++ mode is a subclass overriding the C++ virtuals below. Redscript reaches it through the base's own functions:
-// FlightMode.reds' Activate, Deactivate, Update and GetDescription call NativeActivate, NativeDeactivate, NativeUpdate
-// and NativeDescription, which run the C++ step and then the redscript hook (OnActivate, OnDeactivate, OnUpdate,
-// Description) when the object's class overrides it. So a mod extends a C++ mode in redscript by overriding the hooks,
+// FlightMode.reds' Initialize, IsEnabled, Activate, Deactivate, Teleported, Update and GetDescription call
+// NativeInitialize, NativeIsEnabled, NativeActivate, NativeDeactivate, NativeTeleported, NativeUpdate and
+// NativeDescription, which run the C++ step and then the redscript hook (OnInitialize, OnActivate, OnDeactivate,
+// OnTeleported, OnUpdate) when the object's class overrides it, or the hook in place of the C++ answer (Enabled,
+// Description). So a mod extends a C++ mode in redscript by overriding the hooks,
 // and no redscript call has to find a C++ override (the step 1 spike, 2026-11-05: redscript calling a function that a
 // native subclass overrode by name reached another function). The redscript modes that still override Update and the
 // rest themselves work as before.
@@ -23,17 +25,27 @@ struct FlightMode : RED4ext::IScriptable {
   RED4ext::Vector4 torque{};
 
   // a C++ mode's own steps
+  // after FlightMode.Initialize has set the component (FlightComponent.OnGameAttach, before IsEnabled)
+  virtual void OnInitializeNative() {}
+  // whether the mode joins the car's mode list (its Mod Settings switch)
+  virtual bool IsEnabledNative() { return true; }
   virtual void OnActivateNative() {}
   virtual void OnDeactivateNative() {}
   virtual void OnUpdateNative(float aTimeDelta) {}
   virtual RED4ext::CString DescriptionNative() { return ""; }
+  // the car was teleported: by default the mode starts over where it is, through the object's Activate called by name
+  // (a redscript mode's own Activate, or FlightMode's, which runs the C++ one), as FlightMode.reds' Teleported did
+  virtual void OnTeleportedNative();
 
   // the C++ step, then the class's redscript hook if it overrides one
+  void NativeInitialize();
   void NativeActivate();
   void NativeDeactivate();
+  void NativeTeleported();
   void NativeUpdate(float aTimeDelta);
-  // the class's Description hook if it overrides it, else the C++ one
+  // the class's Description (Enabled) hook if it overrides it, else the C++ one
   RED4ext::CString NativeDescription();
+  bool NativeIsEnabled();
 
   // The mode list: TweakDB's FlightModes.classes (src/tweaks/flight_modes.yaml), and a new instance of a FlightMode
   // class by name, C++ or redscript, made as the flight configurations are (CreateInstance, ConstructCls); an empty
@@ -53,8 +65,11 @@ RTTI_DEFINE_CLASS(FlightMode, {
   RTTI_ABSTRACT();
   RTTI_PROPERTY(force);
   RTTI_PROPERTY(torque);
+  RTTI_METHOD(NativeInitialize);
+  RTTI_METHOD(NativeIsEnabled);
   RTTI_METHOD(NativeActivate);
   RTTI_METHOD(NativeDeactivate);
+  RTTI_METHOD(NativeTeleported);
   RTTI_METHOD(NativeUpdate);
   RTTI_METHOD(NativeDescription);
   RTTI_METHOD(ModeClasses);

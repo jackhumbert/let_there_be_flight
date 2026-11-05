@@ -6,7 +6,9 @@
 
 #include "Flight/Force.hpp"
 
+#include <cstdint>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace Flight {
@@ -25,10 +27,19 @@ struct DeveloperSettings {
   bool nativeModeProbe = false;
   // the C++ Hover & Fly (FlightModeHoverFlyAssist) in Hover & Fly's place, for cars attached after it is set
   bool assistHoverFly = false;
+  // The Autopilot's tuning (Navigation::AutopilotParams) by field name, set as "autopilot.<name>" (a Bool as
+  // true/false/1/0/on/off, an Int32 rounded), in the order set, a name set again keeping its place. Each
+  // FlightModeAutopilot writes them over its tuning when it is set up, when it is engaged and when
+  // autopilotGeneration changes.
+  std::vector<std::pair<std::string, float>> autopilot;
+  uint32_t autopilotGeneration = 0;
 };
 
 // The instance the plugin reads: the code defaults until LoadDeveloperSettings or SetDeveloperSetting change it.
 DeveloperSettings &Developer();
+
+// The prefix of an Autopilot tuning override's name ("autopilot.raceRouteHeight").
+constexpr const char *kAutopilotPrefix = "autopilot.";
 
 // One setting by its field name, from text: a bool takes true/false/1/0/on/off, a float a number. An unknown name or a
 // value that does not parse leaves the setting and returns false; a number out of the setting's range is clamped. In

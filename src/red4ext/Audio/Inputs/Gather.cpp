@@ -2,6 +2,7 @@
 
 #include "Audio/FlightAudio.hpp"
 #include "Flight/Component.hpp"
+#include "Flight/FlightModeAutopilot.hpp"
 #include "Flight/FlightStats.hpp"
 #include "FlightController.hpp"
 #include "FlightThruster.hpp"
@@ -39,8 +40,8 @@ struct Props {
   // FlightComponent
   CProperty *isPlayerMounted, *isDestroyed, *collisionTimer, *surge, *lift, *roll, *pitch, *yaw, *smoothForce,
       *mode, *modes;
-  // FlightMode, FlightModeStandard, FlightModeAutopilot
-  CProperty *gravityFactor, *standardModeLiftFactor, *commandSurge, *commandSway;
+  // FlightMode (the Autopilot's commands and lift factor are its native fields, FlightModeAutopilot.hpp)
+  CProperty *gravityFactor;
   // FlightSystem, FlightController
   CProperty *ctlr, *isTPP;
   // IFlightThruster
@@ -75,9 +76,6 @@ Props Resolve() {
   p.mode = Need(p, "FlightComponent", "mode");
   p.modes = Need(p, "FlightComponent", "modes");
   p.gravityFactor = Need(p, "FlightMode", "gravityFactor");
-  p.standardModeLiftFactor = Need(p, "FlightModeStandard", "standardModeLiftFactor");
-  p.commandSurge = Need(p, "FlightModeAutopilot", "commandSurge");
-  p.commandSway = Need(p, "FlightModeAutopilot", "commandSway");
   p.ctlr = Need(p, "FlightSystem", "ctlr");
   p.isTPP = Need(p, "FlightController", "isTPP");
   p.isFront = Need(p, "IFlightThruster", "isFront");
@@ -275,10 +273,12 @@ void Component(FlightComponent *c, float deltaTime) {
     f.linearBrake = Input(ctlr->linearBrake);
     f.angularBrake = Input(ctlr->angularBrake);
     if (autopilot) {
-      f.apSurge = Ref<float>(p.commandSurge, mode);
-      f.apSway = Ref<float>(p.commandSway, mode);
+      // the native mode (FlightModeAutopilot.hpp), or a redscript subclass of it
+      const auto *ap = static_cast<const FlightModeAutopilot *>(mode);
+      f.apSurge = ap->ap.commandSurge;
+      f.apSway = ap->ap.commandSway;
       f.gravityFactor = Ref<float>(p.gravityFactor, mode);
-      f.standardModeLiftFactor = Ref<float>(p.standardModeLiftFactor, mode);
+      f.standardModeLiftFactor = ap->standardModeLiftFactor;
     }
   }
 

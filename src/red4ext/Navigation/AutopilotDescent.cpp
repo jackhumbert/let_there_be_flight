@@ -1,7 +1,7 @@
 // The Autopilot's hold, descent and yaw (docs/design/native-ports.md, M6 step 4d): the velocity wanted
 // off the route (holding, sinking onto the landing spot, settling onto the wheels), the heading turned
 // with the height lost, and the landing turn (LandSlewYaw) the nose makes into the descent.
-// FlightModeAutopilot.reds line numbers name what each part ports.
+// FlightModeAutopilot.reds line numbers (at c3e24ab) name what each part ports.
 
 #include "Autopilot.hpp"
 

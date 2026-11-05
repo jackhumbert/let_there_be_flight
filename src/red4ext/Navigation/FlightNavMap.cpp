@@ -39,11 +39,6 @@ RED4ext::DynArray<RED4ext::Vector4> ToScript(const Navigation::PlanResult &aResu
   return out;
 }
 
-// the Autopilot's plan requests, each planned on a thread of its own
-Navigation::PlanQueue &Queue() {
-  static Navigation::PlanQueue queue(Navigation::NavMap::Get(), true);
-  return queue;
-}
 
 std::vector<Navigation::AvoidSpot> ToAvoid(const RED4ext::DynArray<RED4ext::Vector4> &aAvoid) {
   std::vector<Navigation::AvoidSpot> out;
@@ -178,6 +173,14 @@ float FlightNavMap::GetCeiling(RED4ext::Vector4 aPosition) {
 float FlightNavMap::SegmentClear(RED4ext::Vector4 aFrom, RED4ext::Vector4 aTo) {
   return Navigation::NavMap::Get().SegmentClear(aFrom.X, aFrom.Y, aFrom.Z, aTo.X, aTo.Y, aTo.Z);
 }
+
+// the Autopilot's plan requests, each planned on a thread of its own
+Navigation::PlanQueue &FlightNavMap::Queue() {
+  static Navigation::PlanQueue queue(Navigation::NavMap::Get(), true);
+  return queue;
+}
+
+const Navigation::PlanParams &FlightNavMap::PlanBase() { return planParams; }
 
 RED4ext::DynArray<RED4ext::Vector4> FlightNavMap::Plan(RED4ext::Vector4 aStart, RED4ext::Vector4 aGoal, bool aDirect) {
   auto params = planParams;
