@@ -149,7 +149,7 @@ struct ScriptTransform {
   Quaternion orientation;
 };
 
-// hear from the cinematic camera (the player's soundListener stays with V)
+// hear from the active camera: third person and the cinematic camera (the player's soundListener stays with V)
 void CameraListener() {
   ScriptTransform transform{};
   bool active = false;
@@ -293,9 +293,12 @@ void Component(FlightComponent *c, float deltaTime) {
     values[entity] = v;
   }
 
-  // the player's car: the cinematic camera's listener, the echoes and the wind
+  // the player's car: the camera's listener outside the car, the echoes and the wind
   if (mounted) {
-    if (cinematic) {
+    if (cinematic || tpp) {
+      // third person hears from the camera, as most third-person games do: the player's soundListener stays with V
+      // but turns with the camera, so orbiting it swung the thrusters round a listener sitting among them (Jack,
+      // 2026-11-05). The voices' linear-squared rolloff over 100 m makes the camera's few metres back about 1 dB.
       CameraListener();
     }
     const auto carMatrix = WorldMatrix(vehicle->worldTransform);

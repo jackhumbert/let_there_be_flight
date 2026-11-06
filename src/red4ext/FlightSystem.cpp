@@ -83,8 +83,8 @@ void PrePhysics(UpdateBucketEnum bucket, FrameInfo& frame, JobQueue& job) {
     matrix.W.Y = t.Position.y.Bits * 0.0000076293945;
     matrix.W.Z = t.Position.z.Bits * 0.0000076293945;
     matrix.W.W = 1.0;
-    // the cinematic camera's shots are around the car while the player's soundListener stays with
-    // V (the game's own listener too): hear from the camera Inputs::Gather set for those
+    // in third person and the cinematic camera's shots the player's soundListener stays with V (the game's own
+    // listener too): hear from the camera Inputs::Gather set for those
     Matrix camera;
     bool useCamera = FlightAudio::GetCameraListener(camera);
     static auto lastLog = std::chrono::steady_clock::now();
