@@ -135,6 +135,12 @@ public:
   const Energy &Parts() const { return energy; }
   // mean square of the delay lines' recent output: a tail still ringing
   float TailLevel() const { return tail; }
+  // times a sample came out not a number and everything started again from silence (Reset)
+  uint64_t Resets() const { return resets; }
+  const char *ResetPart() const { return resetPart; }
+  // Params refused for a value not a number, and the last one's field
+  uint64_t BadParams() const { return badParams; }
+  const char *BadParam() const { return badParam; }
 
 private:
   // one sample of every part (the engine under Process and ProcessStreams)
@@ -205,6 +211,8 @@ private:
   bool started = false;
   Energy energy;
   float tail = 0;
+  uint64_t resets = 0, badParams = 0;
+  const char *resetPart = "", *badParam = "";
 };
 
 } // namespace Acoustics

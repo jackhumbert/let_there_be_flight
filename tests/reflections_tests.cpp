@@ -214,3 +214,45 @@ TEST(reflections_quarters_carry_the_bed) {
   std::printf("  quarters against the bed: %.2f\n", quarters / bed);
   CHECK(quarters / bed > 0.7 && quarters / bed < 1.4);
 }
+
+TEST(reflections_into_a_tunnel_stays_finite) {
+  // outside (the large network) into a tunnel (the small one alone): the size ramps to 0, and a ramp can end a
+  // rounding below it; under the large network's square root that filled the lines with NaN and silenced the bus
+  // (2026-11-05, in game under a pier). Swept over where the size starts, as which starts round below 0 is chance.
+  const float rate = 48000.0f;
+  const int interval = 2400;
+  const Tuning t;
+  Features tunnel = Street();
+  tunnel.floor = 0.9f;
+  tunnel.ceiling = 4.9f;
+  tunnel.right = 1.0f;
+  tunnel.left = 7.5f;
+  tunnel.enclosure = 0.99f;
+  tunnel.meanFreePath = 7.5f;
+  std::vector<float> dry(interval, 0.1f), s[8], q[kQuarters];
+  for (auto &v : s) {
+    v.assign(interval, 0.0f);
+  }
+  for (auto &v : q) {
+    v.assign(interval, 0.0f);
+  }
+  int bad = 0;
+  for (int i = 0; i < 100; ++i) {
+    Reflections r(rate, interval);
+    Features outside = Street();
+    outside.meanFreePath = 8.5f + 0.173f * i;
+    for (int step = 0; step < 6; ++step) {
+      r.SetTargets(Targets(step < 3 ? outside : tunnel, {0, 0, 1}, {4, 6, 4}, t));
+      r.ProcessStreams(dry.data(), {s[0].data(), s[1].data(), s[2].data(), s[3].data(), s[4].data(), s[5].data(),
+                                    s[6].data(), s[7].data(), {q[0].data(), q[1].data(), q[2].data(), q[3].data()}},
+                       interval);
+    }
+    bool finite = r.Resets() == 0;
+    for (float v : s[6]) {
+      finite = finite && std::isfinite(v);
+    }
+    bad += finite ? 0 : 1;
+  }
+  std::printf("  %d of 100 starts went bad\n", bad);
+  CHECK(bad == 0);
+}

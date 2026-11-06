@@ -315,6 +315,26 @@ void Reflections::Reset() {
 }
 
 void Reflections::SetTargets(const Params &aParams) {
+  // a target not a number would poison the lines: refused, and which one kept (Engine::State)
+  auto finite = [](const Echo &e) { return std::isfinite(e.delay) && std::isfinite(e.rate) && std::isfinite(e.gain); };
+  const char *bad = !finite(aParams.floor) ? "floor" : !finite(aParams.ceiling) ? "ceiling"
+                    : !finite(aParams.left) ? "left" : !finite(aParams.right) ? "right" : nullptr;
+  for (int k = 2; !bad && k < kNearRays; ++k) {
+    bad = finite(aParams.scatter[k]) ? nullptr : "scatter";
+  }
+  for (int q = 0; !bad && q < kQuarters; ++q) {
+    bad = !finite(aParams.distant[q]) ? "distant" : !std::isfinite(aParams.tail[q]) ? "tail" : nullptr;
+  }
+  if (!bad) {
+    bad = !std::isfinite(aParams.floorFeedback) || !std::isfinite(aParams.wallFeedback) ? "feedback"
+          : !std::isfinite(aParams.rt60) || !std::isfinite(aParams.rt60High) ? "rt60"
+          : !std::isfinite(aParams.wet) ? "wet" : !std::isfinite(aParams.size) ? "size" : nullptr;
+  }
+  if (bad) {
+    ++badParams;
+    badParam = bad;
+    return;
+  }
   // delays in samples
   auto delay = [&](const Echo &e) { return double(std::max(e.delay, tuning.minDelay)) * sampleRate; };
   const int n = started ? rampSamples : 0;
@@ -370,7 +390,9 @@ Reflections::Sample Reflections::Tick(float x) {
   }
   const float ffb = float(floorFeedback.Next()), wfb = float(wallFeedback.Next());
   const float decay = float(rt60.Next()), decayHigh = float(rt60High.Next()), send = float(wet.Next());
-  const float large01 = float(size.Next());
+  // clamped: a ramp to 0 can end a rounding below it, and the large network's share is its square root (a NaN there
+  // filled the networks and silenced the Engine bus driving into a tunnel, 2026-11-05)
+  const float large01 = std::clamp(float(size.Next()), 0.0f, 1.0f);
   std::array<float, kQuarters> distant{}, tailOut{}, tailAmp{};
   for (int q = 0; q < kQuarters; ++q) {
     tailAmp[q] = float(tailRamps[q].Next());
@@ -459,6 +481,15 @@ Reflections::Sample Reflections::Tick(float x) {
   }
   energy.distant += double(farSum) * farSum;
   const float wetNow = a + b + l + r + sl + sr + revL + revR + farSum;
+  if (!std::isfinite(wetNow)) {
+    // anything not a number would stay in the delay lines and silence the bus: start again from silence, keeping
+    // which part went first
+    ++resets;
+    resetPart = !std::isfinite(a + b) ? "floor or ceiling" : !std::isfinite(l + r) ? "walls"
+                : !std::isfinite(sl + sr) ? "scatter" : !std::isfinite(farSum) ? "distant" : "reverb";
+    Reset();
+    return {};
+  }
   tail += (wetNow * wetNow - tail) * (1.0f - std::exp(-1.0f / (0.05f * sampleRate)));
   Sample out{a, b, l, r, sl, sr, revL, revR};
   out.distant = distant;

@@ -202,6 +202,7 @@ void FlightAudio::UpdateVolume() {
 
 void FlightAudio::SetWater(float value) {
   water = value;
+  spdlog::info("[FlightAudio] the player's car {} the water", value > 0.5f ? "is in" : "is out of");
 }
 
 void FlightAudio::Pause() {

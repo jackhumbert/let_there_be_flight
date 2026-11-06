@@ -454,10 +454,15 @@ std::string State() {
     }
   }
   const uint64_t sb = streamBlocks.load();
+  // the mixer's count, read here as it stands (a debug figure)
+  const uint64_t resets = mixer ? mixer->reflections.Resets() : 0;
   return fmt::format("{{\"running\":{},\"slots\":{},\"dryUnderruns\":{},\"dryOverruns\":{},\"echoUnderruns\":{},"
-                     "\"echoOverruns\":{},\"streamUs\":{:.1f}}}",
+                     "\"echoOverruns\":{},\"streamUs\":{:.1f},\"reverbResets\":{},\"resetPart\":\"{}\","
+                     "\"badParams\":{},\"badParam\":\"{}\"}}",
                      mixer ? "true" : "false", used, dryUnderruns, dryOverruns, echoUnderruns, echoOverruns,
-                     sb ? 1e-3 * double(streamNanos.load()) / double(sb) : 0.0);
+                     sb ? 1e-3 * double(streamNanos.load()) / double(sb) : 0.0, resets,
+                     mixer ? mixer->reflections.ResetPart() : "", mixer ? mixer->reflections.BadParams() : 0,
+                     mixer ? mixer->reflections.BadParam() : "");
 }
 
 } // namespace Acoustics::Engine

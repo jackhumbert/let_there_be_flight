@@ -497,6 +497,10 @@ public native class FlightComponent extends GameComponent {
   }
 
   protected cb func OnVehicleWaterEvent(evt: ref<VehicleWaterEvent>) -> Bool {
+    // the player's car only: the low-pass is the player's thrusters' (any car's event used to set it)
+    if !this.isPlayerMounted {
+      return false;
+    }
     if evt.isInWater  {
       FlightAudio.Get().SetWater(1.0);
     } else {
