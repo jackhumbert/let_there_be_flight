@@ -287,8 +287,10 @@ Frame Sim::Step(const Keys &aKeys, float aDt) {
 }
 
 Frame Sim::Advance(const Controls &c, const Ground *aGround, float aDt) {
-  // FlightComponent.OnUpdate: stats, the mode, the force tail
-  UpdateDynamic(stats, {orientation, position, {}, angularVelocity, velocity});
+  // FlightComponent.OnUpdate: stats, the mode, the force tail; the velocity as the game reads it (Car::velocityLag)
+  Vec3 seen = velocity;
+  seen.z -= car.velocityLag * kGravity * std::max(aDt, 1.0f / 60.0f);
+  UpdateDynamic(stats, {orientation, position, {}, angularVelocity, seen});
   Ground g = aGround ? *aGround : FindGround();
   if (aGround)
     lastDistance = g.distance;

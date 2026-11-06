@@ -73,6 +73,7 @@ std::map<std::string, float *> Knobs(Setup &s) {
       {"errY", &s.car.responseError.y},
       {"errZ", &s.car.responseError.z},
       {"gravity", &s.car.gravityScale},
+      {"velocityLag", &s.car.velocityLag},
       {"a.attitudeP", &s.assistParams.attitudeP},
       {"a.attitudeD", &s.assistParams.attitudeD},
       {"a.maxYawRate", &s.assistParams.maxYawRate},
@@ -139,11 +140,12 @@ void WriteCsv(const std::string &aPath, const Run &aRun) {
 } // namespace
 
 // A car of the table with the --set values that are not the table's: the response error (errX..), the drag factor,
-// the gravity scale and the torque delay apply to every car flown.
+// the gravity scale, the velocity lag and the torque delay apply to every car flown.
 Car FromTable(Car aTable, const Car &aSet) {
   aTable.responseError = aSet.responseError;
   aTable.dragK = aSet.dragK;
   aTable.gravityScale = aSet.gravityScale;
+  aTable.velocityLag = aSet.velocityLag;
   aTable.torqueDelay = aSet.torqueDelay;
   return aTable;
 }
