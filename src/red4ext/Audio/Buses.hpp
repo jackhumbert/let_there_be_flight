@@ -13,7 +13,11 @@ struct Volumes {
   float game = 1, engine = 1, wind = 0.6f, warning = 0.5f;
 };
 
-// the bus's setting times the game's (FlightAudio::UpdateVolume's formula)
+// the Engine bus raised over its setting (Jack, 2026-11-05: the thrusters 3 dB louder); the limiters after the
+// fader still hold its peaks at their ceiling
+inline constexpr float kEngineGainDb = 3.0f;
+
+// the bus's setting times the game's (FlightAudio::UpdateVolume's formula), the Engine bus's raised by kEngineGainDb
 float BusVolume(Bus aBus, const Volumes &aVolumes);
 
 struct Limiter {
