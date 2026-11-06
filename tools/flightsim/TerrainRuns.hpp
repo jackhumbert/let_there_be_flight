@@ -43,7 +43,10 @@ std::vector<Surface> Surfaces(const Colliders &aWorld, float aX, float aY);
 
 // The ground along a line as the car would follow it: from the start's surface (the topmost, or the one at or under
 // aZ0), each kStep the ground cast from kFollowAbove over the last one down, cut at the first wall (a ray from the
-// last ground to the next point hits at any of kWallHeights over the ground: where the car's body is).
+// last ground to the next point hits at any of kWallHeights over the ground, where the car's body is, along the line
+// or kWallSide to either side of it, the widest car's half width). A start with something within kWallSide either
+// side of it is no line (usable 0): a car does not fit there (in game a car placed in a 1.5 m gap between a fence and
+// a billboard stuck on its side, 2026-11-06).
 struct Profile {
   struct Point {
     float s = 0, z = 0;
@@ -66,6 +69,7 @@ struct Profile {
 };
 constexpr float kStep = 0.5f, kFollowAbove = 2.5f;
 constexpr float kWallHeights[] = {0.5f, 1.0f, 2.0f};
+constexpr float kWallSide = 1.6f;
 Profile GroundProfile(const Colliders &aWorld, Vec3 aA, Vec3 aB,
                       float aZ0 = std::numeric_limits<float>::quiet_NaN());
 
@@ -82,7 +86,8 @@ std::vector<Line> SampleLines(const Colliders &aWorld, const std::string &aRegio
 // up a surface's normal is for the nose running into it to be rising ground (45 degrees), not a wall
 constexpr float kWallLift = 1.0f, kGroundNormalZ = 0.7f;
 
-// One line flown at aSpeed (m/s) holding aHover m over the ground (Hover & Fly's hover height, from the wheel
+// One line flown at aSpeed (m/s) holding aHover m over the ground (0: the height flight on from the ground gives the
+// car, its resting height held at least at the lowest hover height) (Hover & Fly's hover height, from the wheel
 // emitters): placed level at the start, already at speed along the line. The frames and the metrics (named
 // <metric>, units m, m/s, m/s2, m/s3, deg, s): speed; the height's error (the mode's own: ground distance against hover
 // height; RMS, p95, and p95 of the air over it and of the sink under it apart); lag (s the car's height trails the

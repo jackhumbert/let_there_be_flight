@@ -224,6 +224,7 @@ add_executable(flightsim EXCLUDE_FROM_ALL
   tools/flightsim/Colliders.cpp
   tools/flightsim/Scenarios.cpp
   tools/flightsim/TerrainRuns.cpp
+  tools/flightsim/TerrainCheck.cpp
   tools/flightsim/Replay.cpp
   src/red4ext/Flight/Stats.cpp
   src/red4ext/Flight/Force.cpp
@@ -317,6 +318,8 @@ add_executable(ltbf_tests
   tools/flightsim/Colliders.cpp
   tools/flightsim/Scenarios.cpp
   tools/flightsim/TerrainRuns.cpp
+  tools/flightsim/TerrainCheck.cpp
+  tools/flightsim/Replay.cpp
   tools/flightsim/Trip.cpp
   src/red4ext/Audio/EngineSynth/Synth.cpp
   src/red4ext/Audio/EngineSynth/Sources.cpp

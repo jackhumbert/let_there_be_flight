@@ -1,66 +1,63 @@
 # Lines Hover & Fly is flown along offline (flightsim --terrain; TerrainRuns.hpp, docs/design/hover-fly-terrain.md).
 # Drawn by flightsim --sample <region> 8 --length 160 --min-length 80 --seed 1 in each region of terrain_regions.tsv;
 # lines picked by hand go at the end. Columns: name, region, x0, y0, x1, y1, z0 (start surface; empty: topmost), tags.
-cc_1	cc	-1844.02	-979.92	-1831.21	-820.44	7.48	steps,drop,crest,dip,rough
-cc_2	cc	-1690.88	-880.50	-1812.90	-905.20	8.58	slope,kerbs
-cc_3	cc	-1709.92	-1002.22	-1718.24	-883.51	9.00	slope,kerbs,steps,drop,crest,dip
-cc_4	cc	-1826.11	-896.86	-1891.39	-805.23	7.76	kerbs
-cc_5	cc	-1681.38	-788.73	-1684.57	-948.70	90.55	slope,kerbs,crest,dip,rough,gaps
-cc_6	cc	-1834.56	-836.88	-1958.73	-865.83	7.68	
-cc_7	cc	-1825.70	-921.08	-1741.25	-947.55	7.81	slope,kerbs,steps,drop,crest,dip,rough,terrain
-cc_8	cc	-1817.38	-870.03	-1672.27	-937.42	7.48	kerbs,gaps
-east_1	east	-1114.15	-1382.25	-1084.32	-1306.95	195.36	slope,kerbs,steps,drop,dip,rough
-east_2	east	-942.64	-1304.33	-1028.77	-1276.53	12.91	slope,kerbs,steps,crest,dip,rough
-east_3	east	-1091.85	-1380.57	-994.07	-1342.29	153.00	slope,kerbs,steps,drop,crest,dip,rough
-east_4	east	-1120.83	-1383.88	-1054.30	-1262.98	28.77	kerbs
-east_5	east	-1174.37	-1370.72	-1181.12	-1210.87	-0.78	slope,kerbs,crest,dip,rough,terrain
-east_6	east	-1042.82	-1292.88	-1002.89	-1210.55	19.90	slope
-east_7	east	-1189.96	-1201.83	-1072.07	-1206.81	4.90	slope,kerbs,steps,drop,crest,dip,rough,terrain
-east_8	east	-983.78	-1159.22	-985.48	-1245.21	16.58	slope,kerbs,steps,drop,dip,rough
-dogtown_1	dogtown	-1751.42	-2346.43	-1798.03	-2432.64	39.51	slope,kerbs,steps
-dogtown_2	dogtown	-1776.76	-2366.92	-1824.08	-2433.28	39.75	kerbs
-dogtown_3	dogtown	-1807.87	-2560.28	-1727.07	-2554.59	39.70	kerbs
-dogtown_4	dogtown	-1895.30	-2514.19	-1858.33	-2442.12	35.19	slope,kerbs,dip
-dogtown_5	dogtown	-1755.32	-2352.66	-1725.91	-2430.27	39.50	slope,kerbs,steps,drop,crest,dip,rough
-dogtown_6	dogtown	-1905.75	-2486.53	-1824.14	-2459.41	35.19	slope,kerbs,steps,drop,crest,rough
-dogtown_7	dogtown	-1786.33	-2312.84	-1753.15	-2419.29	34.40	flat,dip,rough,gaps
-north_1	north	-1380.84	783.76	-1241.86	704.48	191.64	slope,kerbs,crest,dip,rough,gaps
-north_2	north	-1381.77	603.15	-1302.88	463.95	4.64	slope,gaps
-north_3	north	-1302.18	609.77	-1174.67	575.65	307.92	steps,drop,crest,dip
-north_4	north	-1250.59	609.53	-1333.02	605.98	307.92	flat
-north_5	north	-1350.63	747.47	-1373.69	624.62	191.64	flat
-north_6	north	-1367.80	729.87	-1363.01	624.48	196.62	steps,drop,crest,dip,rough
-north_7	north	-1277.64	551.34	-1292.25	694.59	4.41	slope,kerbs
-north_8	north	-1311.15	547.37	-1363.92	619.04	266.59	slope,steps,drop,crest,dip,rough
-west_1	west	-2622.95	-512.92	-2647.15	-416.41	7.83	kerbs
-west_2	west	-2529.53	-433.18	-2612.75	-494.72	12.10	slope,kerbs,steps,drop,crest,dip,rough,terrain
-west_3	west	-2666.84	-480.52	-2691.98	-322.51	-0.94	slope,kerbs,steps,crest,dip,rough,terrain
-west_4	west	-2656.86	-526.00	-2700.83	-372.17	-0.92	slope,kerbs,steps,crest,dip,terrain
-west_5	west	-2676.26	-502.13	-2708.01	-345.31	-0.98	slope,kerbs,steps,crest,dip,terrain
-west_6	west	-2614.54	-307.18	-2542.12	-409.67	2.86	slope,kerbs,steps,crest,dip,rough,terrain
-west_7	west	-2531.04	-494.02	-2611.26	-445.99	2.78	slope,kerbs,steps,drop,crest,dip,rough,terrain
-west_8	west	-2614.29	-356.03	-2540.10	-413.76	2.09	slope,kerbs,steps,dip,rough,terrain
-badlands_rock_1	badlands_rock	936.55	-226.01	988.25	-74.59	23.79	slope,kerbs,crest,dip,rough,terrain
-badlands_rock_2	badlands_rock	1012.38	-59.49	967.71	-213.13	61.24	slope,kerbs,crest,dip,rough,terrain
-badlands_rock_3	badlands_rock	1125.06	-180.59	1050.92	-38.81	25.40	slope,kerbs,crest,dip,rough,terrain
-badlands_rock_4	badlands_rock	941.47	-116.56	1082.42	-40.84	40.64	slope,kerbs,crest,dip,rough,terrain
-badlands_rock_5	badlands_rock	963.78	-53.66	1042.47	-192.97	56.85	slope,kerbs,crest,dip,rough,terrain
-badlands_rock_6	badlands_rock	1125.18	-187.11	1039.01	-52.29	24.58	slope,kerbs,crest,dip,rough,terrain
-badlands_rock_7	badlands_rock	1039.19	-74.27	1055.00	-233.48	48.77	slope,kerbs,crest,dip,rough,terrain
-badlands_rock_8	badlands_rock	1095.14	-82.79	937.58	-110.64	34.62	slope,kerbs,crest,dip,rough,terrain
-badlands_hills_1	badlands_hills	737.44	-185.65	698.30	-30.51	13.37	slope,crest,dip,rough,terrain
-badlands_hills_2	badlands_hills	760.41	-106.88	881.48	-211.48	18.25	slope,kerbs,crest,dip,rough,terrain
-badlands_hills_3	badlands_hills	769.94	-69.81	764.30	-229.71	27.24	slope,kerbs,crest,dip,rough,terrain
-badlands_hills_4	badlands_hills	842.00	-126.19	683.42	-104.89	27.73	slope,kerbs,crest,dip,rough,terrain
-badlands_hills_5	badlands_hills	894.94	-61.38	847.24	-214.10	40.82	slope,kerbs,crest,dip,rough,terrain
-badlands_hills_6	badlands_hills	696.93	-43.66	736.02	-198.81	25.03	slope,kerbs,crest,dip,rough,terrain
-badlands_hills_7	badlands_hills	888.88	-218.71	757.25	-127.76	20.66	slope,kerbs,crest,dip,rough,terrain
-badlands_hills_8	badlands_hills	722.26	-51.31	862.00	-129.25	26.08	slope,kerbs,crest,dip,rough,terrain
-badlands_high_1	badlands_high	2764.43	1603.92	2652.72	1489.38	240.77	slope,kerbs,crest,dip,rough,terrain
-badlands_high_2	badlands_high	2628.85	1444.46	2788.31	1457.56	233.29	slope,kerbs,crest,dip,rough,terrain
-badlands_high_3	badlands_high	2612.45	1615.04	2676.36	1468.36	221.85	slope,kerbs,crest,dip,rough,terrain
-badlands_high_4	badlands_high	2808.17	1613.20	2681.56	1515.37	252.84	slope,kerbs,crest,dip,rough,terrain
-badlands_high_5	badlands_high	2806.28	1609.71	2777.60	1452.30	252.05	slope,kerbs,crest,dip,rough,terrain
-badlands_high_6	badlands_high	2655.02	1568.65	2814.99	1565.74	212.29	slope,kerbs,crest,dip,rough,terrain
-badlands_high_7	badlands_high	2631.51	1614.54	2635.83	1454.60	222.12	slope,kerbs,crest,dip,rough,terrain
-badlands_high_8	badlands_high	2714.01	1651.31	2800.48	1516.68	237.05	slope,kerbs,crest,dip,rough,terrain
+cc_1	cc	-1844.02	-979.92	-1833.09	-843.86	7.48	
+cc_2	cc	-1690.88	-880.50	-1811.43	-904.90	8.58	slope,kerbs
+cc_3	cc	-1681.38	-788.73	-1684.57	-948.70	90.55	slope,kerbs,crest,dip,rough,gaps
+cc_4	cc	-1834.56	-836.88	-1952.89	-864.47	7.68	
+cc_5	cc	-1817.38	-870.03	-1690.86	-928.79	7.48	kerbs
+cc_6	cc	-1846.79	-865.76	-1776.04	-915.52	7.48	kerbs
+cc_7	cc	-1842.86	-981.41	-1853.11	-826.25	7.49	kerbs
+cc_8	cc	-1678.10	-981.25	-1678.41	-821.25	25.23	slope,steps,drop,crest,dip,rough,gaps
+east_1	east	-1115.54	-1397.15	-1051.00	-1346.56	152.91	slope,kerbs,steps,drop,crest,rough
+east_2	east	-1062.23	-1401.63	-1081.35	-1304.49	153.03	kerbs,steps,drop,crest,dip,rough
+east_3	east	-1083.63	-1415.55	-998.13	-1378.96	153.00	kerbs,steps,drop,crest,rough,gaps
+east_4	east	-1007.00	-1141.58	-968.31	-1233.25	29.20	
+east_5	east	-1082.37	-1376.93	-1002.83	-1273.48	153.00	slope,kerbs,steps,drop,crest,dip,rough
+east_6	east	-1048.38	-1411.69	-995.05	-1341.68	153.03	slope,kerbs,steps,drop,crest,dip,rough
+east_7	east	-925.84	-1310.75	-954.57	-1153.35	13.14	kerbs
+east_8	east	-1010.57	-1409.56	-1127.71	-1377.32	153.03	kerbs,steps,drop,crest,dip,rough
+dogtown_1	dogtown	-1786.33	-2312.84	-1754.04	-2416.43	34.40	flat,dip,rough,gaps
+dogtown_2	dogtown	-1900.36	-2520.86	-1848.20	-2439.08	35.16	slope
+dogtown_3	dogtown	-1803.26	-2326.90	-1843.01	-2443.82	16.96	gaps
+dogtown_4	dogtown	-1781.61	-2560.44	-1691.18	-2536.68	39.71	
+north_1	north	-1380.84	783.76	-1275.30	723.56	191.64	kerbs,crest,dip,rough,gaps
+north_2	north	-1302.18	609.77	-1215.72	586.64	307.92	flat
+north_3	north	-1250.59	609.53	-1333.02	605.98	307.92	flat
+north_4	north	-1350.63	747.47	-1373.60	625.11	191.64	flat
+north_5	north	-1367.80	729.87	-1363.01	624.48	196.62	steps,drop,crest,dip,rough
+north_6	north	-1277.64	551.34	-1292.25	694.59	4.41	slope,kerbs
+north_7	north	-1279.14	486.45	-1303.66	622.26	4.20	kerbs
+north_8	north	-1378.11	759.00	-1351.14	682.62	191.64	flat
+west_1	west	-2633.10	-525.59	-2645.44	-443.00	7.73	
+west_2	west	-2628.00	-493.83	-2632.55	-333.89	7.83	flat
+west_3	west	-2626.94	-311.60	-2645.01	-415.03	7.82	
+west_4	west	-2620.06	-317.24	-2629.07	-401.76	2.35	slope,kerbs,crest,dip,terrain
+west_5	west	-2518.14	-310.66	-2486.00	-461.78	1.59	flat,gaps
+west_6	west	-2638.99	-502.96	-2626.26	-403.27	7.73	
+west_7	west	-2632.24	-459.44	-2641.54	-299.72	7.73	
+west_8	west	-2629.13	-370.27	-2641.49	-529.79	7.83	
+badlands_rock_1	badlands_rock	1125.06	-180.59	1080.35	-95.08	25.40	slope,kerbs,crest,terrain
+badlands_rock_2	badlands_rock	1114.81	-151.16	1031.90	-109.03	30.15	slope,rough,terrain
+badlands_rock_3	badlands_rock	1125.91	-223.53	1114.49	-144.35	19.63	slope,rough,terrain
+badlands_rock_4	badlands_rock	1137.28	-176.12	1058.81	-115.77	24.73	slope,dip,terrain
+badlands_rock_5	badlands_rock	1122.39	-227.80	1116.50	-130.47	19.17	slope,kerbs,crest,terrain
+badlands_rock_6	badlands_rock	977.51	-49.15	1069.77	-55.85	60.93	slope,kerbs,crest,rough,terrain
+badlands_rock_7	badlands_rock	943.67	-57.11	1031.64	-84.04	51.26	slope,crest,rough,terrain
+badlands_rock_8	badlands_rock	1106.48	-192.44	1096.15	-89.96	24.26	slope,kerbs,crest,dip,rough,terrain
+badlands_hills_1	badlands_hills	737.44	-185.65	698.66	-31.96	13.37	slope,kerbs,crest,dip,rough,terrain
+badlands_hills_2	badlands_hills	891.42	-173.52	777.47	-135.91	26.70	slope,kerbs,crest,rough,terrain
+badlands_hills_3	badlands_hills	682.88	-165.58	749.89	-110.10	11.82	slope,kerbs,crest,dip,rough,terrain
+badlands_hills_4	badlands_hills	873.87	-214.73	801.15	-138.98	24.94	slope,crest,dip,rough,terrain
+badlands_hills_5	badlands_hills	733.29	-83.48	685.05	-236.03	22.03	slope,crest,dip,rough,terrain
+badlands_hills_6	badlands_hills	715.53	-233.28	700.45	-84.04	12.50	slope,kerbs,crest,dip,rough,terrain
+badlands_hills_7	badlands_hills	883.49	-209.78	734.43	-189.01	23.27	slope,kerbs,crest,dip,rough,terrain
+badlands_hills_8	badlands_hills	689.11	-227.18	847.04	-201.56	8.55	slope,kerbs,crest,dip,rough,terrain
+badlands_high_1	badlands_high	2729.75	1442.52	2669.35	1521.59	245.40	slope,crest,rough,terrain
+badlands_high_2	badlands_high	2716.74	1466.09	2768.84	1537.63	254.54	slope,kerbs,crest,dip,rough,terrain
+badlands_high_3	badlands_high	2813.10	1525.86	2729.65	1493.50	251.46	slope,crest,dip,rough,terrain
+badlands_high_4	badlands_high	2750.45	1495.98	2700.85	1572.87	258.16	slope,kerbs,crest,rough,terrain
+badlands_high_5	badlands_high	2749.14	1471.07	2751.94	1556.53	251.36	slope,crest,rough,terrain
+badlands_high_6	badlands_high	2788.80	1466.21	2760.23	1576.06	241.80	slope,kerbs,crest,dip,rough,terrain
+badlands_high_7	badlands_high	2778.81	1481.20	2731.63	1571.64	249.83	slope,kerbs,crest,rough,terrain
+badlands_high_8	badlands_high	2821.04	1533.54	2685.11	1449.14	249.84	slope,crest,dip,rough,terrain

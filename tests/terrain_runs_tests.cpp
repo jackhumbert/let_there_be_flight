@@ -2,6 +2,7 @@
 // ground profile and its tags, the sampler, the driver, a run's metrics and its stop at a wall, on worlds built here.
 #include "check.hpp"
 
+#include "../tools/flightsim/TerrainCheck.hpp"
 #include "../tools/flightsim/TerrainRuns.hpp"
 
 #include <cmath>
@@ -154,4 +155,55 @@ TEST(terrain_run_stops_at_wall) {
   Run r = FlyLine(Assist(), walled, l, GroundProfile(open, l.a, l.b), 40.0f / 3.6f, 1.0f);
   CHECK(r.Get("blocked") == 1.0f);
   CHECK(r.frames.back().position.y < 65.0f);
+}
+
+TEST(terrain_ground_check_finds_missing_collision) {
+  // a recording over a floor at 0 whose rays found a 0.6 m box the region lacks under one wheel, and nothing under
+  // another (water, in game): both are listed where they are; the rest agree to the centimetre
+  Colliders c;
+  Square(c, -100, -100, 100, 100, 0.0f);
+  c.Build();
+  TerrainRecording rec;
+  for (int i = 0; i < 20; ++i) {
+    Recorded row;
+    row.position = {0, float(i), 1.0f};
+    row.forward = {0, 1, 0};
+    row.right = {1, 0, 0};
+    rec.rows.push_back(row);
+    std::array<RecordedRay, 4> rays{};
+    const Vec3 offsets[4] = {{-0.8f, 1.4f, -0.3f}, {0.8f, 1.4f, -0.3f}, {-0.8f, -1.4f, -0.3f}, {0.8f, -1.4f, -0.3f}};
+    for (int k = 0; k < 4; ++k) {
+      Vec3 o = Flight::Add(row.position, offsets[k]);
+      rays[k] = {o, {o.x, o.y, k == 1 ? 0.6f : 0.0f}, {0, 0, 1}, k != 3};
+    }
+    rec.rays.push_back(rays);
+  }
+  GroundReport g = GroundCheck(rec, c, Car{});
+  CHECK(g.rays == 80);
+  CHECK(g.both == 60);
+  CHECK(g.regionOnly == 20);
+  CHECK_NEAR(g.dzP50, 0.0f, 1e-3f);
+  CHECK_NEAR(g.dzMax, 0.6f, 1e-3f);
+  CHECK(!g.spots.empty());
+  CHECK_NEAR(g.wheel.x, 0.8f, 1e-3f);
+  CHECK_NEAR(g.wheel.y, 1.4f, 1e-3f);
+  CHECK_NEAR(g.wheel.z, -0.3f, 1e-3f);
+  // the generic car's bottom (-0.6) 1 m over the floor at its centre: 0.4 m clear, never touching
+  CHECK_NEAR(g.gameClearanceMin, 0.4f, 1e-3f);
+  CHECK(g.gameTouches == 0);
+}
+
+TEST(terrain_profile_needs_a_car_wide_gap) {
+  // two walls 2 m apart along the line from 50 m on: the line is cut where the gap starts, not run through it, and a
+  // line starting in the gap is none
+  Colliders c;
+  Square(c, -500, -500, 500, 500, 0.0f);
+  for (float x : {-1.0f, 1.0f}) {
+    c.Add({x, 50, 0}, {x, 150, 0}, {x, 150, 3});
+    c.Add({x, 50, 0}, {x, 150, 3}, {x, 50, 3});
+  }
+  c.Build();
+  Profile p = GroundProfile(c, {0, 0, 0}, {0, 150, 0});
+  CHECK(p.usable < 50.0f && p.usable > 45.0f);
+  CHECK(GroundProfile(c, {0, 60, 0}, {0, 150, 0}).usable == 0.0f);
 }

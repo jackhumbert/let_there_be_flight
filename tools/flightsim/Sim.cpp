@@ -114,6 +114,7 @@ std::vector<Car> LoadCars(const std::string &aPath) {
     auto num = [&](size_t i) { return std::strtof(col[i].c_str(), nullptr); };
     Car c;
     c.name = col[1].empty() ? col[0] : col[1];
+    c.record = col[0];
     c.mass = num(3);
     c.airResistance = num(4);
     c.brakingFriction = num(5) < 0.001f ? 1.4f : num(5); // FlightStats.UpdateStatic: bikes read 0

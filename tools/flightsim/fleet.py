@@ -5,7 +5,7 @@
                                     [--mode hoverfly|assist|drone|agdrone|droneassist] [--assist]
 
     python -P -E tools/flightsim/fleet.py --terrain [tools/flightsim/terrain_runs.tsv] [--only <line or tag part>]
-                                          [--speeds 40,80,130] [--hover 1] [--mode ...] [--set ...]
+                                          [--speeds 40,80,130] [--hover 0] [--mode ...] [--set ...]
                                           [--save runs.tsv | --from runs.tsv] [--worst 5]
 
 --mode is flightsim's: the mode flown, and without scenario names that mode's scenarios (drone_* for the drone modes).
@@ -184,7 +184,8 @@ def main():
                     help="fly the lines of a runs file over real ground instead of the scenarios")
     ap.add_argument("--only", default="", help="--terrain: the lines whose name or tags hold this")
     ap.add_argument("--speeds", default="40,80,130", help="--terrain: km/h")
-    ap.add_argument("--hover", type=float, default=1.0, help="--terrain: the hover height, m")
+    ap.add_argument("--hover", type=float, default=0.0,
+                    help="--terrain: the hover height, m; 0: each car's from flight on at rest (TerrainRuns.hpp)")
     ap.add_argument("--save", default="", help="--terrain: keep the runs here")
     ap.add_argument("--from", dest="from_", default="", help="--terrain: sum up runs --save kept, without flying")
     ap.add_argument("scenarios", nargs="*")

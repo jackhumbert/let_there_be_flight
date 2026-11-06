@@ -38,6 +38,7 @@ using Flight::Vec3;
 // A surveyed car (vehicles.tsv) sets inertia and tensor, and its gain is Flight::TorqueResponse's.
 struct Car {
   std::string name = "generic";
+  std::string record; // vehicles.tsv's first record of the car (empty when not from the table)
   float mass = 1500.0f;
   float airResistance = 2.0f;   // s_airResistanceFactor
   float brakingFriction = 1.4f; // s_brakingFrictionFactor

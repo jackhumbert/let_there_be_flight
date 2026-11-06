@@ -6,9 +6,11 @@
 //
 //   flightsim --replay <ltbf_hoverfly_*.csv> [--mode <Hover & Fly's mode index>] [--vehicles <tsv> --match <car>]
 //
-//   flightsim --terrain <terrain_runs.tsv> [--only <line name or tag part>] [--speeds 40,80,130] [--hover 1]
+//   flightsim --terrain <terrain_runs.tsv> [--only <line name or tag part>] [--speeds 40,80,130] [--hover 0]
 //             [--regions <dir>] [--vehicles <tsv> [--match <car>]] [--mode ...] [--set ...] [--csv <dir>]
 //   flightsim --sample <region> <count> [--length 200] [--min-length 100] [--seed 1] [--regions <dir>]
+//   flightsim --ground-check <ltbf_terrain_*.csv> --region <name> [--vehicles <tsv> --match <car or record>]
+//   flightsim --replay <ltbf_terrain_*.csv> --region <name> [--window 3] [--vehicles <tsv> --match <car or record>]
 //
 // --mode picks the mode flown (Sim.hpp's Mode), today's Hover & Fly by default; without scenario names it flies that
 // kind of mode's scenarios (the drone_* ones for the drone modes). --assist is --mode assist: the redesigned
@@ -21,11 +23,16 @@
 // --replay flies a game recording's pieces offline and prints the game's numbers beside the simulator's (Replay.hpp);
 // with --csv, both traces go to <dir>/replay.csv.
 // --terrain flies each line of a runs file over its region's collision (TerrainRuns.hpp; the redesign, --mode assist,
-// unless --mode says otherwise) at each speed (km/h) and hover height (m), one car or every car of --vehicles, and
-// prints a tab-separated table, a run a row: car, line, km/h, the line's usable length and tags, the metrics.
+// unless --mode says otherwise) at each speed (km/h) and hover height (m; 0, the default: each car's from flight on
+// at rest), one car or every car of --vehicles, and prints a tab-separated table, a run a row: car, line, km/h, the
+// line's usable length and tags, the metrics.
 // --sample prints <count> random lines in a region, tagged by their ground, as rows for a runs file. Regions are
 // <regions>/<name>.ltbfregion (region_pack.py --regions), by default %LTBF_WORK%/flightsim_regions
 // (D:/cp2077_work/build/flightsim_regions without it).
+// --ground-check casts the rays of a game recording of the terrain runs (cp2077_tools' terrain_check.py) again
+// through the region and prints where they agree and where not (TerrainCheck.hpp); --replay with --region flies
+// the recording in windows of --window s over the region's collision (the redesign unless --mode says otherwise).
+// --match takes a car's name or its vehicles.tsv record.
 //
 // --set changes the tuning: mass, airResistance, brakingFriction, gainX/Y/Z, torqueDelay, gravity (the body's
 // gravity against what the modes hold up); Standard's surge, yaw,
@@ -35,6 +42,7 @@
 
 #include "Replay.hpp"
 #include "Scenarios.hpp"
+#include "TerrainCheck.hpp"
 #include "TerrainRuns.hpp"
 
 #include <cstdio>
@@ -130,6 +138,16 @@ void WriteCsv(const std::string &aPath, const Run &aRun) {
 }
 } // namespace
 
+// A car of the table with the --set values that are not the table's: the response error (errX..), the drag factor,
+// the gravity scale and the torque delay apply to every car flown.
+Car FromTable(Car aTable, const Car &aSet) {
+  aTable.responseError = aSet.responseError;
+  aTable.dragK = aSet.dragK;
+  aTable.gravityScale = aSet.gravityScale;
+  aTable.torqueDelay = aSet.torqueDelay;
+  return aTable;
+}
+
 std::string RegionsDir() {
   const char *work = std::getenv("LTBF_WORK");
   return std::string(work ? work : "D:/cp2077_work/build") + "/flightsim_regions";
@@ -173,11 +191,8 @@ int FlyTerrain(const std::string &aRuns, const std::string &aRegions, const std:
     }
     for (const Car &car : aCars) {
       Setup s = aSetup;
-      if (!car.name.empty() || aCars.size() > 1) {
-        s.car = car;
-        s.car.responseError = aSetup.car.responseError;
-        s.car.dragK = aSetup.car.dragK;
-      }
+      if (!car.name.empty() || aCars.size() > 1)
+        s.car = FromTable(car, aSetup.car);
       for (float kmh : aSpeeds) {
         Run run = FlyLine(s, *world, line, profile, kmh / 3.6f, aHover);
         if (!header) {
@@ -208,9 +223,10 @@ int FlyTerrain(const std::string &aRuns, const std::string &aRegions, const std:
 int main(int argc, char **argv) {
   Setup setup;
   auto knobs = Knobs(setup);
-  std::string csv, vehicles, match, replay, terrain, only, sample, regions = RegionsDir();
+  std::string csv, vehicles, match, replay, terrain, only, sample, groundCheck, region, regions = RegionsDir();
+  float window = 3.0f;
   std::vector<float> speeds{40.0f, 80.0f, 130.0f};
-  float hover = 1.0f, length = 200.0f, minLength = 100.0f;
+  float hover = 0.0f, length = 200.0f, minLength = 100.0f;
   int sampleCount = 0;
   uint32_t seed = 1;
   bool modeGiven = false;
@@ -222,6 +238,12 @@ int main(int argc, char **argv) {
     } else if (!std::strcmp(argv[i], "--sample") && i + 2 < argc) {
       sample = argv[++i];
       sampleCount = std::atoi(argv[++i]);
+    } else if (!std::strcmp(argv[i], "--ground-check") && i + 1 < argc) {
+      groundCheck = argv[++i];
+    } else if (!std::strcmp(argv[i], "--region") && i + 1 < argc) {
+      region = argv[++i];
+    } else if (!std::strcmp(argv[i], "--window") && i + 1 < argc) {
+      window = std::strtof(argv[++i], nullptr);
     } else if (!std::strcmp(argv[i], "--regions") && i + 1 < argc) {
       regions = argv[++i];
     } else if (!std::strcmp(argv[i], "--only") && i + 1 < argc) {
@@ -303,14 +325,53 @@ int main(int argc, char **argv) {
   if (names.empty())
     names = ScenarioNames(setup.mode);
 
-  if (!vehicles.empty() && !replay.empty()) {
-    // the car the recording was flown in
+  if (!vehicles.empty() && (!replay.empty() || !groundCheck.empty())) {
+    // the car the recording was flown in, by name or by record
     for (const Car &car : LoadCars(vehicles))
-      if (!match.empty() && car.name.find(match) != std::string::npos) {
-        const Vec3 error = setup.car.responseError; // --set errX.. apply to the replayed car too
-        setup.car = car;
-        setup.car.responseError = error;
+      if (!match.empty() && (car.name.find(match) != std::string::npos || car.record == match)) {
+        setup.car = FromTable(car, setup.car);
       }
+  }
+  if (!groundCheck.empty()) {
+    const Colliders *world = Region(regions, region);
+    TerrainRecording rec = LoadTerrainRecording(groundCheck);
+    if (!world || rec.rays.empty()) {
+      std::fprintf(stderr, "no region %s or no rays in %s\n", region.c_str(), groundCheck.c_str());
+      return 2;
+    }
+    GroundReport g = GroundCheck(rec, *world, setup.car);
+    std::printf("%d rays: both hit %d, the game only %d, the region only %d, neither %d\n", g.rays, g.both, g.gameOnly,
+                g.regionOnly, g.neither);
+    std::printf("where both hit: |dz| p50 %.3f m, p95 %.3f m, max %.2f m; normals apart p95 %.1f deg\n", g.dzP50, g.dzP95,
+                g.dzMax, g.normalP95);
+    std::printf("the game's car against the region: lowest clearance %.2f m, %d touches, %d frames in touch\n",
+                g.gameClearanceMin, g.gameTouches, g.gameTouchFrames);
+    std::printf("wheel emitters on the recorded body: |x| %.3f |y| %.3f z %.3f (%s in the table: %.3f %.3f %.3f)\n",
+                g.wheel.x, g.wheel.y, g.wheel.z, setup.car.name.c_str(), setup.car.wheelX, setup.car.wheelY,
+                setup.car.wheelZ);
+    std::printf("where they disagree (2 m cells; z NaN: no hit):\n%9s %9s %8s %8s %5s\n", "x", "y", "game z", "region z",
+                "rays");
+    for (const auto &s : g.spots)
+      std::printf("%9.1f %9.1f %8.2f %8.2f %5d\n", s.x, s.y, s.gameZ, s.regionZ, s.rays);
+    return 0;
+  }
+  if (!replay.empty() && !region.empty()) {
+    const Colliders *world = Region(regions, region);
+    TerrainRecording rec = LoadTerrainRecording(replay);
+    if (!world || rec.rows.empty()) {
+      std::fprintf(stderr, "no region %s or no rows in %s\n", region.c_str(), replay.c_str());
+      return 2;
+    }
+    if (!modeGiven && setup.mode == Mode::HoverFly)
+      setup.mode = Mode::Assist;
+    std::printf("car %s, %zu rows, %.0f s windows over %s\n%7s %5s | %7s %7s | %7s | %15s | %s\n", setup.car.name.c_str(),
+                rec.rows.size(), window, region.c_str(), "start", "len", "dz rms", "dz max", "dist rms", "vz m/s g/s",
+                "sim touches");
+    for (const TerrainPiece &p :
+         TerrainReplay(rec, *world, setup, hoverFlyMode, window, csv.empty() ? "" : csv + "/terrain_replay.csv"))
+      std::printf("%7.2f %5.2f | %7.2f %7.2f | %8.2f | %7.2f %7.2f | %d\n", p.start, p.length, p.heightRms, p.heightMax,
+                  p.distanceRms, p.gameClimb, p.simClimb, p.simContacts);
+    return 0;
   }
   if (!replay.empty()) {
     std::vector<Recorded> rows = LoadRecording(replay);
@@ -340,9 +401,7 @@ int main(int argc, char **argv) {
       if (!match.empty() && car.name.find(match) == std::string::npos)
         continue;
       Setup s = setup;
-      s.car = car;
-      s.car.responseError = setup.car.responseError; // --set errX.. apply to every car
-      s.car.dragK = setup.car.dragK;
+      s.car = FromTable(car, setup.car);
       std::vector<Run> runs;
       for (const std::string &name : names)
         runs.push_back(RunScenario(name, s));

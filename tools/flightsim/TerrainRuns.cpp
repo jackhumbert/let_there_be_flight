@@ -108,12 +108,26 @@ Profile GroundProfile(const Colliders &aWorld, Vec3 aA, Vec3 aB, float aZ0) {
     return p;
   p.points.push_back({0.0f, h.position.z, true, h.kind});
   float z = h.position.z;
+  // the car's width: rays along each side as well as the middle, and none of the start's sides in something
+  const Vec3 side{d.y * kWallSide, -d.x * kWallSide, 0.0f};
+  for (float above : kWallHeights)
+    for (float k : {-1.0f, 1.0f})
+      if (aWorld.Ray({aA.x, aA.y, z + above}, {aA.x + k * side.x, aA.y + k * side.y, z + above}, h))
+        return p; // usable 0: the start is in a gap narrower than a car
   p.usable = p.length;
   for (float s = kStep; s <= p.length; s += kStep) {
     Vec3 prev = Flight::Add(aA, Mul(d, s - kStep)), next = Flight::Add(aA, Mul(d, s));
     bool wall = false;
     for (float above : kWallHeights)
-      wall = wall || aWorld.Ray({prev.x, prev.y, z + above}, {next.x, next.y, z + above}, h);
+      for (float k : {-1.0f, 0.0f, 1.0f}) {
+        // along the line at each side and the middle, and across from the middle to each side (a wall beside the
+        // line, parallel to it, is crossed only by these)
+        wall = wall || aWorld.Ray({prev.x + k * side.x, prev.y + k * side.y, z + above},
+                                  {next.x + k * side.x, next.y + k * side.y, z + above}, h);
+        if (k != 0.0f)
+          wall = wall || aWorld.Ray({next.x, next.y, z + above},
+                                    {next.x + k * side.x, next.y + k * side.y, z + above}, h);
+      }
     if (wall) {
       p.usable = s - kStep;
       break;
@@ -204,7 +218,7 @@ std::vector<Line> SampleLines(const Colliders &aWorld, const std::string &aRegio
   Vec3 lo = aWorld.Min(), hi = aWorld.Max();
   std::uniform_real_distribution<float> ux(lo.x + kSampleInset, hi.x - kSampleInset),
       uy(lo.y + kSampleInset, hi.y - kSampleInset), ua(0.0f, 2.0f * 3.14159265f), u01(0.0f, 1.0f);
-  for (int tries = 0; tries < aCount * 100 && int(lines.size()) < aCount; ++tries) {
+  for (int tries = 0; tries < aCount * 400 && int(lines.size()) < aCount; ++tries) {
     Vec3 a{ux(rng), uy(rng), 0.0f};
     float angle = ua(rng);
     Vec3 b{a.x + std::sin(angle) * aLength, a.y + std::cos(angle) * aLength, 0.0f};
@@ -249,7 +263,12 @@ Run FlyLine(const Setup &aSetup, const Colliders &aWorld, const Line &aLine, con
   Sim sim(aSetup.car, Flat(-1e9f));
   Configure(sim, aSetup);
   sim.groundRay = RayOn(aWorld);
-  // the wheel emitters aHover over the start's ground
+  // the wheel emitters aHover over the start's ground; 0: where flight on from the ground puts them, the car's resting
+  // height (its emitters over its tyres' bottom) held at least at the lowest hover height (FlightComponent's hover
+  // height when the band is entered; in game a Shion took 1.0, a Galena 1.2, 2026-11-06)
+  if (aHover <= 0.0f)
+    aHover = std::clamp(aSetup.car.wheelZ - aSetup.car.bottom, aSetup.standard.minHoverHeight,
+                        aSetup.standard.maxHoverHeight);
   sim.Place({aLine.a.x, aLine.a.y, aProfile.points[0].z + aHover - aSetup.car.wheelZ}, heading, Mul(dir, aSpeed));
 
   float lead = 1.0f, limit = aProfile.usable / std::max(aSpeed, 1.0f) * 2.0f + 10.0f;
