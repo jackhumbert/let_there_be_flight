@@ -56,3 +56,7 @@ contacts and material friction in one place.
   (`dampStabilityK`, calibrated against the integrator) may need retuning in this mode.
 - NPC vehicles can still be put to sleep by `SuspensionBase::UpdateSleeping` (bit 0x10).
 - The chassis-contact workarounds in the same file only run when the mode is off.
+- The RigidBody's velocity is what the scripts read (`GetLinearVelocity`), and the fixed steps still add gravity
+  and the wheel solve to it: `IntegrateMotion` puts PhysX's velocities back after each step (until 2026-11-06 the
+  vertical speed read a step of gravity low and the modes' damping lifted the car; `docs/history.md`).
+- The wheels' suspension runs but moves nothing: only the chassis collider touches the ground.

@@ -168,11 +168,17 @@ ModeOutput HoverFlyAssist(HoverFlyState &m, const StatsState &s, const StatsStat
   auto clamp = [](float x, float lo, float hi) { return std::fmin(std::fmax(x, lo), hi); };
   Quat toBody = Conjugate(s.d_orientation);
 
-  // the hover band, as HoverFly enters it
-  float lastHovering = m.hovering;
+  // the hover band, as HoverFly enters it; a moment without ground (a ray through a seam in the collision, off a
+  // kerb's edge) is not leaving it: the hover height crept up 0.1 to 0.25 m a time on such frames, taken again at
+  // the next frame's distance (in game, 2026-11-06)
   m.hovering = HoverWeight(g, p);
-  if (lastHovering == 0.0f && m.hovering > 0.0f)
-    m.hoverHeight = g.distance;
+  if (m.hovering > 0.0f) {
+    if (m.outOfBand >= kRegainHoverHeight)
+      m.hoverHeight = g.distance;
+    m.outOfBand = 0.0f;
+  } else {
+    m.outOfBand += dt;
+  }
   m.hoverHeight = clamp(m.hoverHeight + c.lift * a.maxClimbRate * dt, p.minHoverHeight, p.maxHoverHeight);
 
   // attitude: the rotation (body frame) taking the body's up to the target up

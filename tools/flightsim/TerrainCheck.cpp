@@ -53,14 +53,15 @@ TerrainRecording LoadTerrainRecording(const std::string &aPath) {
 GroundReport GroundCheck(const TerrainRecording &aRecording, const Colliders &aRegion, const Car &aCar, float aDz,
                          size_t aSpots) {
   GroundReport g;
-  // the car's underside points, body frame: the tyres, and the chassis's profile (the centre at the bottom without)
-  std::vector<Vec3> under;
-  for (float sx : {-1.0f, 1.0f})
-    for (float sy : {-1.0f, 1.0f})
-      under.push_back({sx * aCar.wheelX, sy * aCar.wheelY, aCar.bottom});
-  if (aCar.underside.empty())
+  // the car's underside points, body frame, as Sim::Underside takes them: the chassis's profile, the wheel box at the
+  // bottom without one
+  std::vector<Vec3> under = aCar.underside;
+  if (under.empty()) {
+    for (float sx : {-1.0f, 1.0f})
+      for (float sy : {-1.0f, 1.0f})
+        under.push_back({sx * aCar.wheelX, sy * aCar.wheelY, aCar.bottom});
     under.push_back({0, 0, aCar.bottom});
-  under.insert(under.end(), aCar.underside.begin(), aCar.underside.end());
+  }
   g.gameClearanceMin = kClearanceReach;
   bool touching = false;
   std::vector<float> dz, angle;

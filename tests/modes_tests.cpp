@@ -843,3 +843,33 @@ TEST(ground_ray_layout) {
   CHECK_NEAR(end.y, -2.0f, 0.0f);
   CHECK_NEAR(end.z, 41.5f - 17.0f, 1e-5f);
 }
+
+TEST(modes_hover_fly_assist_keeps_hover_height_through_a_gap) {
+  // hovering 1 m up, the ground lost for a frame (a ray through a seam) and found again 0.3 m lower: the hover height
+  // stays; lost for 0.6 s, the band is entered anew at the distance then
+  HoverFlyState m;
+  m.hoverHeight = 1.0f;
+  const StatsState s = Level();
+  const StatsStatic st = Static();
+  const Controls c;
+  const StandardParams p;
+  const HoverFlyAssistParams a;
+  const Vec3 response{1, 1, 1};
+  Ground ground;
+  ground.found = true;
+  ground.distance = 1.0f;
+  ground.normal = {0, 0, 1};
+  Ground none;
+  none.found = false;
+  Ground lower = ground;
+  lower.distance = 1.3f;
+  const float dt = 1.0f / 60.0f;
+  HoverFlyAssist(m, s, st, c, p, a, ground, response, dt);
+  HoverFlyAssist(m, s, st, c, p, a, none, response, dt);
+  HoverFlyAssist(m, s, st, c, p, a, lower, response, dt);
+  CHECK_NEAR(m.hoverHeight, 1.0f, kTol);
+  for (int i = 0; i < 36; ++i)
+    HoverFlyAssist(m, s, st, c, p, a, none, response, dt);
+  HoverFlyAssist(m, s, st, c, p, a, lower, response, dt);
+  CHECK_NEAR(m.hoverHeight, 1.3f, kTol);
+}

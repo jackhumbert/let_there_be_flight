@@ -122,6 +122,10 @@ public:
   RED4ext::Vector3 pendingAngularImpulse{0.0f, 0.0f, 0.0f};
   // PhysX time consumed since the last PushToPhysX
   float physxFrameDt = 0.0f;
+  // the velocities SyncFromPhysX copied from PhysX this frame, put back on the RigidBody after each fixed step
+  RED4ext::Vector3 physxLinear{0.0f, 0.0f, 0.0f};
+  RED4ext::Vector3 physxAngular{0.0f, 0.0f, 0.0f};
+  bool physxCopied = false; // SyncFromPhysX took the PhysX-owned path this frame
   // angular velocity (world) the world gave the vehicle through contacts, decaying; flight
   // damping ignores it so collisions tumble physically while inputs stay damped
   RED4ext::Vector3 contactSpin{0.0f, 0.0f, 0.0f};

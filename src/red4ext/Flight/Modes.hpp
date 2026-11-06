@@ -106,6 +106,7 @@ struct HoverFlyParams {
 struct HoverFlyState {
   float hovering = 1, referenceZ = 0, hoverHeight = 0;
   bool holdingAltitude = false;
+  float outOfBand = 0; // s the ground has been out of the hover band (HoverFlyAssist)
 };
 
 // FlightModeHoverFly.Update. The hover PID is stepped only while hovering is above 0.
@@ -155,7 +156,9 @@ constexpr Vec3 kEngineTorqueGain{1.13f, 0.24f, 0.95f};
 Vec3 TorqueResponse(const StatsStatic &st, Vec3 thrusterTensor);
 
 // The redesigned Hover & Fly. m's fields mean what they do for HoverFly (referenceZ is the held height, captured
-// once the car has stopped climbing or sinking). response is TorqueResponse's.
+// once the car has stopped climbing or sinking), except that the hover height is taken from the ground again only
+// when the band is entered after kRegainHoverHeight s out of it. response is TorqueResponse's.
+constexpr float kRegainHoverHeight = 0.5f;
 ModeOutput HoverFlyAssist(HoverFlyState &m, const StatsState &s, const StatsStatic &st, const Controls &c,
                           const StandardParams &p, const HoverFlyAssistParams &a, const Ground &g, Vec3 response,
                           float dt);

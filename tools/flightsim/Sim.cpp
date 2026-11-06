@@ -186,12 +186,15 @@ Sim::Clearance Sim::Underside() const {
       u.bodyY = aBody.y;
     }
   };
-  // the tyres: the game still runs the wheels' suspension in flight (WheelSuspensionBase_FixedUpdate_PostSolve)
-  for (float sx : {-1.0f, 1.0f})
-    for (float sy : {-1.0f, 1.0f})
-      touch({sx * car.wheelX, sy * car.wheelY, car.bottom});
-  if (car.underside.empty())
+  // the chassis's underside: with the PhysX-owned flight physics (the default) PhysX moves the car and only its
+  // chassis collider touches; the wheels' suspension still runs on the RigidBody, whose velocity nothing moves with
+  // (Physics/ChassisContacts.cpp). Without a profile, the box under the wheel emitters at the bottom stands in.
+  if (car.underside.empty()) {
+    for (float sx : {-1.0f, 1.0f})
+      for (float sy : {-1.0f, 1.0f})
+        touch({sx * car.wheelX, sy * car.wheelY, car.bottom});
     touch({0, 0, car.bottom});
+  }
   for (Vec3 p : car.underside)
     touch(p);
   return u;

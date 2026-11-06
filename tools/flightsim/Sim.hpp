@@ -69,8 +69,8 @@ struct Car {
   // gravity=0.95; in game the car rose while braking in Hover & Fly, 2026-11-05)
   float gravityScale = 1.0f;
   // 1: the vertical speed the mode reads is a frame of gravity low, as in game with the PhysX-owned flight physics
-  // (g x the frame, 1/60 s at least: the recorded vz against the height's change, 24 flights, 2026-11-06); 0: the
-  // body's own (flightsim --set velocityLag=1)
+  // until the fix of 2026-11-06 (g x the frame, 1/60 s at least: the recorded vz against the height's change, 24
+  // flights); 0: the body's own, as the game reads it since (flightsim --set velocityLag=1, for older recordings)
   float velocityLag = 0.0f;
 };
 
@@ -187,9 +187,9 @@ public:
 
 private:
   Flight::Ground FindGround();
-  // with groundRay: the clearance under the underside's points (the tyres, at the four wheel emitters at the bottom,
-  // and the chassis's underside, or the centre at the bottom without one), each cast from the centre's height down to
-  // kClearanceReach under it: the lowest, negative when the ground is above it, where it is and the rays cast
+  // with groundRay: the clearance under the underside's points (the chassis's underside; without one, the four wheel
+  // emitters and the centre at the bottom), each cast from the centre's height down to kClearanceReach under it: the
+  // lowest, negative when the ground is above it, where it is and the rays cast
   struct Clearance {
     float clearance = 0, bodyY = 0;
     int rays = 0;

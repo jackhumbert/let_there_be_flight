@@ -80,7 +80,8 @@ Vector3 Mul(const RED4ext::Matrix &m, const Vector3 &v) {
 // resting, skidding and crashing behave natively. The game has no such mode (even wrecks keep
 // the RigidBody integrator), so it is built from the three sync points:
 //   SyncFromPhysX   copy the PhysX pose and velocity into the RigidBody (not the delta)
-//   IntegrateMotion skipped, the RigidBody no longer moves the vehicle
+//   IntegrateMotion skipped, the RigidBody no longer moves the vehicle; its velocity is put back to
+//                   PhysX's (the fixed step's gravity left in it read as a sink)
 //   PushToPhysX     write the PhysX velocity: current + LTBF thrust impulse + gravity * dt,
 //                   instead of the velocity that chases the RigidBody pose
 // The tracking velocities in the synchronizer are kept equal to what PhysX has, so switching
@@ -208,6 +209,9 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 547299556, PhysXSynchronizer_SyncFrom
     rb->angularVelocity = Vector3(av.X, av.Y, av.Z);
     rb->force = Vector3();
     rb->torque = Vector3();
+    owner->physxLinear = rb->velocity;
+    owner->physxAngular = rb->angularVelocity;
+    owner->physxCopied = true;
     SetTracking(self, rb->velocity, rb->angularVelocity);
     // PushToPhysX only runs on frames with a physics step (60 Hz), this runs every frame: add up
     // the time so gravity covers all of it, not just the last frame (above 60 fps that left about
@@ -219,6 +223,7 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 547299556, PhysXSynchronizer_SyncFrom
   if (owner) {
     owner->contactSpin = Vector3();
     owner->physxFrameDt = 0.0f;
+    owner->physxCopied = false;
   }
   auto v0 = rb ? rb->velocity : Vector3();
   auto w0 = rb ? rb->angularVelocity : Vector3();
@@ -284,7 +289,15 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 2021199885, RigidBody_IntegrateMotion
                           float deltaTime) {
   auto fc = GetActiveFlightComponent(rb);
   if (fc && fc->physxOwned) {
-    // PhysX moves the vehicle; the pose comes back in SyncFromPhysX
+    // PhysX moves the vehicle; the pose comes back in SyncFromPhysX. The step's gravity and wheel solve have changed
+    // the RigidBody's velocity, which nothing moves with now (PushToPhysX writes from PhysX's own), but the scripts
+    // read it (GetLinearVelocity): put PhysX's back. Left in, the vertical speed read a step of gravity low, 0.16 m/s
+    // at 60 fps, and every mode's damping lifted the car against a sink that was not there (Hover & Fly hovered
+    // 0.14 m over its hover height; 24 in-game flights, docs/design/hover-fly-terrain.md, 2026-11-06)
+    if (fc->physxCopied) {
+      rb->velocity = fc->physxLinear;
+      rb->angularVelocity = fc->physxAngular;
+    }
     return;
   }
   if (fc && fc->framesSinceSupport <= kSupportFrames) {
