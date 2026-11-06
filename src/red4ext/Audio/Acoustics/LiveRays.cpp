@@ -4,6 +4,7 @@
 #include "Probe.hpp"
 
 #include "Flight/Component.hpp"
+#include "Flight/DeveloperSettings.hpp"
 #include <PhysX3.hpp>
 
 #include <RED4ext/CNamePool.hpp>
@@ -180,6 +181,20 @@ void CastLiveRays(FlightComponent *aComponent) {
     } else {
       distance[k] = -1.0f;
       material[k].clear();
+    }
+  }
+  // the developer setting acousticsRays past the near rays: a Fibonacci sphere turned a little each cast, cast and
+  // looked up as the near rays are, then dropped (what more rays would cost)
+  const int extra = int(Flight::Developer().acousticsRays) - kNearRays;
+  for (int i = 0; i < extra; ++i) {
+    const float z = 1.0f - 2.0f * (i + 0.5f) / extra, r = std::sqrt(std::max(0.0f, 1.0f - z * z));
+    const float a = 2.39996323f * (i + 0.5f) + 0.37f * float(casts % 17);
+    physx::PxRaycastCallback hit;
+    const physx::PxVec3 from{bodyPose.p.X, bodyPose.p.Y, bodyPose.p.Z}, dir{r * std::cos(a), r * std::sin(a), z};
+    if (scene->raycast(from, dir, kRange, hit, physx::PxHitFlag_ePOSITION | physx::PxHitFlag_eNORMAL | physx::PxHitFlag_eDISTANCE, filter,
+                       &solid) &&
+        hit.hasBlock) {
+      MaterialName(hit.block.shape);
     }
   }
   SetPhysXCastTime(std::chrono::duration<float, std::milli>(std::chrono::steady_clock::now() - t0).count());

@@ -27,6 +27,7 @@ const Entry kEntries[] = {
     {"thrustPerThruster", nullptr, &DeveloperSettings::thrustPerThruster, 100.0f, 100000.0f},
     {"nativeModeProbe", &DeveloperSettings::nativeModeProbe, nullptr, 0.0f, 0.0f},
     {"assistHoverFly", &DeveloperSettings::assistHoverFly, nullptr, 0.0f, 0.0f},
+    {"acousticsRays", nullptr, &DeveloperSettings::acousticsRays, 0.0f, 4096.0f},
 };
 
 const Entry *Find(const std::string &aName) {
