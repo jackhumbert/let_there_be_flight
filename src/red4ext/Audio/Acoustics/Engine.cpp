@@ -75,8 +75,8 @@ struct Mixer {
   uint32_t seq = 0;
   float amount = 0;
   bool idle = true;
-  // floor, ceiling, left, right, scatter right, scatter left, reverb left, reverb right
-  std::array<std::vector<float>, 8> streams;
+  // floor, ceiling, left, right, scatter right, scatter left, reverb left, reverb right (the stems'), the quarters
+  std::array<std::vector<float>, 8 + kQuarters> streams;
   std::vector<float> dry, mono, fade, stereoDry, stereoWet;
   Stems::EventCursor stems;
 };
@@ -196,7 +196,8 @@ FMOD_RESULT F_CALL BedProcess(FMOD_DSP_STATE *aState, unsigned int aLength, cons
   if (running) {
     const auto t0 = std::chrono::steady_clock::now();
     m->reflections.ProcessStreams(dry, {s[0].data(), s[1].data(), s[2].data(), s[3].data(), s[4].data(), s[5].data(),
-                                        s[6].data(), s[7].data()}, n);
+                                        s[6].data(), s[7].data(), {s[8].data(), s[9].data(), s[10].data(), s[11].data()}},
+                                  n);
     streamNanos.fetch_add(uint64_t(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - t0).count()),
                           std::memory_order_relaxed);
     streamBlocks.fetch_add(1, std::memory_order_relaxed);
@@ -216,23 +217,22 @@ FMOD_RESULT F_CALL BedProcess(FMOD_DSP_STATE *aState, unsigned int aLength, cons
       std::fill(stream.begin(), stream.begin() + n, 0.0f);
     }
   }
+  // the echo voices' streams: the six echoes, then the quarters (past the reverb's two channels)
   for (int k = 0; k < kEchoes; ++k) {
-    m->echoes[k].ring.Write(s[k].data(), n);
+    m->echoes[k].ring.Write(s[k < 6 ? k : k + 2].data(), n);
   }
-  for (uint32_t i = 0; i < n; ++i) {
-    out[2 * i] = s[6][i];
-    out[2 * i + 1] = s[7][i];
-  }
+  std::memset(out, 0, 2 * n * sizeof(float));
 
   // the stems: the dry sum, and the dry sum with the echoes and the reverb panned as Reflections does
   if (Stems::Recording()) {
     const Tuning &t = m->tuning;
     float *sd = m->stereoDry.data(), *sw = m->stereoWet.data();
     for (uint32_t i = 0; i < n; ++i) {
-      const float mid = s[0][i] + s[1][i], l = s[2][i] + s[5][i], r = s[3][i] + s[4][i];
+      const float mid = s[0][i] + s[1][i] + s[8][i] + s[9][i] + s[10][i] + s[11][i], l = s[2][i] + s[5][i],
+                  r = s[3][i] + s[4][i];
       sd[2 * i] = sd[2 * i + 1] = dry[i];
-      sw[2 * i] = dry[i] + mid + t.pan * l + t.panOpposite * r + s[6][i];
-      sw[2 * i + 1] = dry[i] + mid + t.panOpposite * l + t.pan * r + s[7][i];
+      sw[2 * i] = dry[i] + mid + t.pan * l + t.panOpposite * r;
+      sw[2 * i + 1] = dry[i] + mid + t.panOpposite * l + t.pan * r;
     }
   }
   Stems::AddEvent(m->stems, m->stereoDry.data(), m->stereoWet.data(), n, 2);
@@ -404,12 +404,18 @@ void Frame(const Voices::Vec3 &aListener) {
     Vec3 image;
     float gain;
   };
+  // a quarter's loudness for the pool's ranking: its distant echo and its share of the reverb's send
+  auto quarter = [&](int q) { return Placed{p.quarterImage[q], p.distant[q].gain + 0.5f * p.wet * p.tail[q]}; };
   const Placed placed[kEchoes] = {{p.floorImage, p.floor.gain},
                                   {p.ceilingImage, p.ceiling.gain},
                                   {p.leftImage, p.left.gain},
                                   {p.rightImage, p.right.gain},
                                   {p.scatterRightImage, scatterRight},
-                                  {p.scatterLeftImage, scatterLeft}};
+                                  {p.scatterLeftImage, scatterLeft},
+                                  quarter(0),
+                                  quarter(1),
+                                  quarter(2),
+                                  quarter(3)};
   for (int k = 0; k < kEchoes; ++k) {
     const Vec3 &image = placed[k].image;
     // facing the listener, up the world's

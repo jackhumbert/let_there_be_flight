@@ -14,6 +14,7 @@
 #include "Navigation/NavMap.hpp"
 
 #include <array>
+#include <limits>
 #include <vector>
 #include <optional>
 
@@ -26,6 +27,16 @@ struct Vec3 {
 // The near rays, in NearRays() order: straight down, straight up, the right fan, the left fan.
 constexpr int kFanRays = 15; // 5 yaws x 3 pitches, each side
 constexpr int kNearRays = 2 + 2 * kFanRays;
+
+// The quarters of the horizon round the car (world +x, +y, -x, -y), for the late reverb's directions and the distant
+// echoes (Probe::Quarters).
+constexpr int kQuarters = 4;
+struct Quarter {
+  float share = 0;                                          // its rays that hit within range, by weight
+  float farDistance = std::numeric_limits<float>::infinity(); // m: its facade, 20 to 200 m out (inf: none)
+  Vec3 farDir{};                                            // unit, horizontal: the way to it
+  float farCoherence = 0;                                   // its rays on that facade (within 15%), by weight
+};
 
 // Distances in metres to the real surfaces; +infinity: nothing within range.
 struct Features {
@@ -45,6 +56,8 @@ struct Features {
   // live sphere: the two above are the map's)
   float enclosureMap = 0, meanFreePathMap = 0;
   int sphereLive = -1;
+  // the sphere (live where cast) by quarter of the horizon
+  std::array<Quarter, kQuarters> quarters{};
   int leftRay = -1, rightRay = -1; // the nearest ray of each fan (NearRays index)
   // each surface's outward normal (unit, away from the car): square on from the probe, the fitted
   // plane's where one was found (floorPlane ...: the distance above is that plane's too)
@@ -96,6 +109,10 @@ public:
   // the warp's exponent at a speed: 1 (uniform) at rest, down to 0.35 (a third of the rays within about 40 degrees
   // of ahead) from 60 m/s
   static float SphereBias(float aSpeed);
+  // the quarters of the horizon from a sphere's rays: aDir (unit, world), aDistance (inf or < 0: a miss), aWeight (each
+  // ray's share; empty: equal). Rays steeper than 50 degrees belong to no quarter.
+  static std::array<Quarter, kQuarters> Quarters(const std::vector<Vec3> &aDir, const std::vector<float> &aDistance,
+                                                 const std::vector<float> &aWeight);
 
   // aForward and aUp: the car's axes (world, z up). aLive, if given, answers the near rays it hit;
   // the nav map answers the rest (a live miss may only be collision not streamed in yet).

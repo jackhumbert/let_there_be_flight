@@ -274,6 +274,7 @@ add_executable(ltbf_tests
   tests/images_tests.cpp
   tests/planes_tests.cpp
   tests/probe_tests.cpp
+  tests/reflections_tests.cpp
   tests/materials_tests.cpp
   tests/occlusion_tests.cpp
   tests/buses_tests.cpp

@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <numbers>
+#include <utility>
 
 namespace Acoustics {
 
@@ -12,6 +13,10 @@ namespace {
 
 constexpr float kSpeedOfSound = 343.0f;
 constexpr float kFdnMs[8] = {29.7f, 37.1f, 41.1f, 43.7f, 53.3f, 59.9f, 67.1f, 73.3f};
+// the small network: an underpass, a narrow street (mutually prime-ish, a quarter of the large one's)
+constexpr float kFdnSmallMs[8] = {7.3f, 9.1f, 10.7f, 11.9f, 13.7f, 15.1f, 17.3f, 19.9f};
+// the quarters' axes (Probe::Quarters' order)
+constexpr Vec3 kQuarterAxis[kQuarters] = {{1, 0, 0}, {0, 1, 0}, {-1, 0, 0}, {0, -1, 0}};
 // the probe's caps: a miss counts as a surface this far away
 constexpr float kDistanceCap = 250.0f;
 constexpr float kFreePathCap = 200.0f;
@@ -90,12 +95,55 @@ Params Targets(const Features &aFeatures, const Vec3 &aSource, const Vec3 &aList
   p.floorFeedback = aTuning.flutterFeedback * std::sqrt(rFloor * rCeiling) * flutter(floor + ceiling);
   // the square root of the walls' mean reflectivity, as tuned (render.py: sqrt of the wall default)
   p.wallFeedback = aTuning.flutterFeedback * std::sqrt(std::sqrt(rLeft * rRight)) * flutter(left + right);
-  // Eyring with mean free path = 4V/S: open sky absorbs everything
+  // Eyring with mean free path = 4V/S: open sky absorbs everything. Two bands: the surfaces' lows (and mids) and
+  // highs from the materials the near rays hit (their tilt against the mid band; 1 unknown), the highs also lost to
+  // the air along the path (Sabine's 4mV: m l against -ln(1 - alpha))
   const float enclosure = Clamp01(aFeatures.enclosure);
   const float freePath = capped(aFeatures.meanFreePath, kFreePathCap);
   const float escape = 1 - enclosure;
-  const float alpha = std::min(escape + (1 - escape) * aTuning.wallAbsorption, 0.99f);
+  double lowTilt = 0, highTilt = 0;
+  int tilts = 0;
+  auto addTilt = [&](const Bands &aBands) {
+    if (aBands.mid > 0) {
+      lowTilt += aBands.low / aBands.mid;
+      highTilt += aBands.high / aBands.mid;
+      ++tilts;
+    }
+  };
+  for (const Bands *b : {&aFeatures.floorReflectivity, &aFeatures.ceilingReflectivity, &aFeatures.leftReflectivity,
+                         &aFeatures.rightReflectivity}) {
+    addTilt(*b);
+  }
+  for (int k = 2; k < kNearRays; ++k) {
+    addTilt(aFeatures.nearReflectivity[k]);
+  }
+  auto absorption = [&](double aTilt) {
+    const float reflect = std::clamp(float((1 - aTuning.wallAbsorption) * aTilt), 0.0f, 0.99f);
+    return std::min(escape + (1 - escape) * (1 - reflect), 0.99f);
+  };
+  const float alpha = absorption(tilts ? lowTilt / tilts : 1.0);
+  const float alphaHigh = absorption(tilts ? highTilt / tilts : 1.0);
   p.rt60 = std::clamp(0.04f * freePath / -std::log(1 - alpha), aTuning.rt60Min, aTuning.rt60Max);
+  const float airLoss = aTuning.airAbsorption ? aTuning.highAir * freePath : 0.0f;
+  p.rt60High = std::clamp(0.04f * freePath / (-std::log(1 - alphaHigh) + airLoss), aTuning.rt60Min, p.rt60);
+  p.size = Clamp01((freePath - aTuning.smallFreePath) / (aTuning.largeFreePath - aTuning.smallFreePath));
+  // the tail by quarter, as enclosed as each is (equal with nothing anywhere)
+  float shares = 0;
+  for (const Quarter &q : aFeatures.quarters) {
+    shares += q.share;
+  }
+  for (int q = 0; q < kQuarters; ++q) {
+    const float w = shares > 0 ? aFeatures.quarters[q].share / shares : 1.0f / kQuarters;
+    p.tail[q] = 2 * std::sqrt(w);
+    // the quarter's facade: an echo off it, seen square on; with none, a point that way for its tail
+    const Quarter &quarter = aFeatures.quarters[q];
+    const Vec3 &axis = kQuarterAxis[q];
+    p.quarterImage[q] = {aSource.x + 30 * axis.x, aSource.y + 30 * axis.y, aSource.z};
+    if (!std::isinf(quarter.farDistance) && quarter.farCoherence > 0) {
+      p.distant[q] = echo(quarter.farDistance, quarter.farDir, Bands{aTuning.wallReflectivity}, p.quarterImage[q]);
+      p.distant[q].gain *= aTuning.distant * quarter.farCoherence;
+    }
+  }
   // the lower half of the sphere is mostly ground: the reverb rises from a little above that
   p.wet = aTuning.wet * aTuning.gain * Clamp01((enclosure - aTuning.wetFrom) / (1 - aTuning.wetFrom));
   p.air = aTuning.airAbsorption;
@@ -230,8 +278,10 @@ Reflections::Reflections(float aSampleRate, int aRampSamples, const Tuning &aTun
     line->Resize(echoSize);
   }
   for (int j = 0; j < 8; ++j) {
-    fdnDelay[j] = uint32_t(std::lround(kFdnMs[j] * 1e-3f * sampleRate));
-    fdn[j].Resize(fdnDelay[j] + 1);
+    for (auto [net, ms] : {std::pair{&small, kFdnSmallMs[j]}, std::pair{&large, kFdnMs[j]}}) {
+      net->delay[j] = uint32_t(std::lround(ms * 1e-3f * sampleRate));
+      net->lines[j].Resize(net->delay[j] + 1);
+    }
   }
   Reset();
 }
@@ -240,16 +290,22 @@ void Reflections::Reset() {
   for (Line *line : {&source, &floor, &ceiling, &left, &right}) {
     std::fill(line->buffer.begin(), line->buffer.end(), 0.0f);
   }
-  for (auto &line : fdn) {
-    std::fill(line.buffer.begin(), line.buffer.end(), 0.0f);
+  for (Fdn *net : {&small, &large}) {
+    for (auto &line : net->lines) {
+      std::fill(line.buffer.begin(), line.buffer.end(), 0.0f);
+    }
+    net->state = {};
   }
-  fdnAirState = {};
   started = false;
   for (Voice *v : {&floorVoice, &ceilingVoice, &leftVoice, &rightVoice}) {
     *v = {};
     v->bands = BandSplit(sampleRate);
   }
   for (Voice &v : scatterVoices) {
+    v = {};
+    v.bands = BandSplit(sampleRate);
+  }
+  for (Voice &v : farVoices) {
     v = {};
     v.bands = BandSplit(sampleRate);
   }
@@ -276,7 +332,6 @@ void Reflections::SetTargets(const Params &aParams) {
     v.air = air(e);
     v.bands.Set(e.tilt);
   };
-  fdnAir = aParams.air ? 1.0f - std::exp(-2.0f * std::numbers::pi_v<float> * 5000.0f / sampleRate) : 1.0f;
   set(floorVoice, aParams.floor);
   set(ceilingVoice, aParams.ceiling);
   set(leftVoice, aParams.left);
@@ -284,14 +339,23 @@ void Reflections::SetTargets(const Params &aParams) {
   for (int k = 2; k < kNearRays; ++k) {
     set(scatterVoices[k], aParams.scatter[k]);
   }
+  for (int q = 0; q < kQuarters; ++q) {
+    set(farVoices[q], aParams.distant[q]);
+    tailRamps[q].To(aParams.tail[q], n);
+  }
   floorFeedback.To(aParams.floorFeedback, n);
   wallFeedback.To(aParams.wallFeedback, n);
   rt60.To(aParams.rt60, n);
+  rt60High.To(aParams.rt60High, n);
   wet.To(aParams.wet, n);
+  size.To(aParams.size, n);
   if (!started) {
     // the first set takes effect at once
-    for (Ramp *r : {&floorFeedback, &wallFeedback, &rt60, &wet}) {
+    for (Ramp *r : {&floorFeedback, &wallFeedback, &rt60, &rt60High, &wet, &size}) {
       r->Next();
+    }
+    for (Ramp &r : tailRamps) {
+      r.Next();
     }
     started = true;
   }
@@ -305,10 +369,16 @@ Reflections::Sample Reflections::Tick(float x) {
     v->Step(maxRate, minDelay);
   }
   const float ffb = float(floorFeedback.Next()), wfb = float(wallFeedback.Next());
-  const float decay = float(rt60.Next()), send = float(wet.Next());
+  const float decay = float(rt60.Next()), decayHigh = float(rt60High.Next()), send = float(wet.Next());
+  const float large01 = float(size.Next());
+  std::array<float, kQuarters> distant{}, tailOut{}, tailAmp{};
+  for (int q = 0; q < kQuarters; ++q) {
+    tailAmp[q] = float(tailRamps[q].Next());
+  }
   if (started) {
-    // each side's echo, and the other side's echo bounced back off it
-    a = floorVoice.Filter(floorVoice.Read(source, write, true, true) + ffb * floorVoice.Read(ceiling, write, false, true));
+    // each side's echo, and the other side's echo bounced back off it; the floor's read unsmeared, so its echo and
+    // the direct sound comb as they do near the ground
+    a = floorVoice.Filter(floorVoice.Read(source, write, true, false) + ffb * floorVoice.Read(ceiling, write, false, true));
     b = ceilingVoice.Filter(ceilingVoice.Read(source, write, true, true) + ffb * ceilingVoice.Read(floor, write, false, true));
     l = leftVoice.Filter(leftVoice.Read(source, write, true, true) + wfb * leftVoice.Read(right, write, false, true));
     r = rightVoice.Filter(rightVoice.Read(source, write, true, true) + wfb * rightVoice.Read(left, write, false, true));
@@ -321,28 +391,54 @@ Reflections::Sample Reflections::Tick(float x) {
       }
     }
 
+    // the distant echoes, one a quarter
+    for (int q = 0; q < kQuarters; ++q) {
+      Voice &v = farVoices[q];
+      v.Step(maxRate, minDelay);
+      if (v.level > 1e-6f) {
+        distant[q] = v.Filter(v.Read(source, write, true, true));
+      }
+    }
+
     if (fdnGainAge-- <= 0) {
       fdnGainAge = kFdnGainSamples - 1;
+      // each line's loop: the lows' and the highs' gain over its delay, as a one-pole between them
       const float t = std::max(decay, 0.05f) * sampleRate;
-      for (int j = 0; j < 8; ++j) {
-        fdnGain[j] = std::pow(10.0f, -3.0f * float(fdnDelay[j]) / t);
+      const float tHigh = std::max(std::min(decayHigh, decay), 0.05f) * sampleRate;
+      for (Fdn *net : {&small, &large}) {
+        for (int j = 0; j < 8; ++j) {
+          const float low = std::pow(10.0f, -3.0f * float(net->delay[j]) / t);
+          const float high = std::pow(10.0f, -3.0f * float(net->delay[j]) / tHigh);
+          net->low[j] = low;
+          net->pole[j] = (low - high) / (low + high);
+        }
       }
     }
-    float back[8], sum = 0;
-    for (int j = 0; j < 8; ++j) {
-      back[j] = fdn[j].buffer[(write - fdnDelay[j]) & fdn[j].mask];
-      sum += back[j];
-    }
-    // Householder: v - (2 / 8) sum(v)
+    // the input shared between the two networks by the space's size, at equal power
     const float input = x * send / std::sqrt(8.0f);
-    for (int j = 0; j < 8; ++j) {
-      float v = fdnGain[j] * (back[j] - 0.25f * sum) + input;
-      if (fdnAir < 1.0f) {
-        fdnAirState[j] += fdnAir * (v - fdnAirState[j]);
-        v = fdnAirState[j];
+    std::array<float, 8> lines{};
+    for (auto [net, share] : {std::pair{&small, std::sqrt(1 - large01)}, std::pair{&large, std::sqrt(large01)}}) {
+      float back[8], sum = 0;
+      for (int j = 0; j < 8; ++j) {
+        back[j] = net->lines[j].buffer[(write - net->delay[j]) & net->lines[j].mask];
+        sum += back[j];
       }
-      fdn[j].buffer[write & fdn[j].mask] = v;
-      (j % 2 == 0 ? revL : revR) += 0.5f * v;
+      for (int j = 0; j < 8; ++j) {
+        // Householder: v - (2 / 8) sum(v), through the loop filter, then the input
+        const float loop = back[j] - 0.25f * sum;
+        net->state[j] = net->pole[j] * net->state[j] + net->low[j] * (1 - net->pole[j]) * loop;
+        const float v = net->state[j] + share * input;
+        net->lines[j].buffer[write & net->lines[j].mask] = v;
+        lines[j] += v;
+      }
+    }
+    for (int j = 0; j < 8; ++j) {
+      (j % 2 == 0 ? revL : revR) += 0.5f * lines[j];
+    }
+    // each quarter's tail: two of the lines, as enclosed as the quarter is. The lines all take the same input, so the
+    // old bed's four-line sums added partly in phase: sqrt(2) a pair keeps the tail as loud (reflections_tests)
+    for (int q = 0; q < kQuarters; ++q) {
+      tailOut[q] = tailAmp[q] * 0.70710678f * (lines[q] + lines[q + 4]);
     }
   }
   floor.buffer[write & floor.mask] = a;
@@ -357,9 +453,17 @@ Reflections::Sample Reflections::Tick(float x) {
   energy.walls += double(l + r) * (l + r);
   energy.reverb += double(revL + revR) * (revL + revR);
   energy.scatter += double(sl + sr) * (sl + sr);
-  const float wetNow = a + b + l + r + sl + sr + revL + revR;
+  float farSum = 0;
+  for (float v : distant) {
+    farSum += v;
+  }
+  energy.distant += double(farSum) * farSum;
+  const float wetNow = a + b + l + r + sl + sr + revL + revR + farSum;
   tail += (wetNow * wetNow - tail) * (1.0f - std::exp(-1.0f / (0.05f * sampleRate)));
-  return {a, b, l, r, sl, sr, revL, revR};
+  Sample out{a, b, l, r, sl, sr, revL, revR};
+  out.distant = distant;
+  out.tail = tailOut;
+  return out;
 }
 
 void Reflections::Process(const float *aIn, float *aOut, uint32_t aFrames, int aChannels) {
@@ -372,7 +476,11 @@ void Reflections::Process(const float *aIn, float *aOut, uint32_t aFrames, int a
     }
     x /= float(aChannels);
     const Sample p = Tick(x);
-    const float mid = p.floor + p.ceiling, l = p.left, r = p.right, sl = p.scatterLeft, sr = p.scatterRight;
+    float farSum = 0;
+    for (float v : p.distant) {
+      farSum += v;
+    }
+    const float mid = p.floor + p.ceiling + farSum, l = p.left, r = p.right, sl = p.scatterLeft, sr = p.scatterRight;
     if (aChannels >= 2) {
       out[0] = in[0] + mid + tuning.pan * (l + sl) + tuning.panOpposite * (r + sr) + p.reverbLeft;
       out[1] = in[1] + mid + tuning.panOpposite * (l + sl) + tuning.pan * (r + sr) + p.reverbRight;
@@ -397,6 +505,11 @@ void Reflections::ProcessStreams(const float *aDryMono, const Streams &aStreams,
     aStreams.scatterLeft[s] = p.scatterLeft;
     aStreams.reverbLeft[s] = p.reverbLeft;
     aStreams.reverbRight[s] = p.reverbRight;
+    for (int q = 0; q < kQuarters; ++q) {
+      if (aStreams.quarter[q]) {
+        aStreams.quarter[q][s] = p.distant[q] + p.tail[q];
+      }
+    }
   }
 }
 

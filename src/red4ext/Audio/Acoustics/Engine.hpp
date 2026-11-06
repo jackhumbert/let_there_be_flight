@@ -7,13 +7,14 @@
 //   bed             a generator DSP in the Engine group, never paused while the player flies. It
 //                   renders the player's thruster synths (the slots), writes each to its dry ring and
 //                   adds it to the dry sum, runs Reflections::ProcessStreams on the sum, and writes
-//                   each echo stream to an echo ring. Its own output is the late reverb, a plain
-//                   stereo bed.
+//                   each echo stream to an echo ring. Its own output is silent: the late reverb leaves
+//                   by quarter of the horizon with the distant echoes.
 //   thrusters       a slot's generator DSP (EngineSynth/Channels) reads its dry ring and is placed by
 //                   the voice pool as before.
-//   echo voices     six generator DSPs reading the echo rings, registered with the voice pool at the
+//   echo voices     ten generator DSPs reading the echo rings, registered with the voice pool at the
 //                   image sources (Params::*Image) with no rolloff: the spreading is in the echo's
-//                   gain, the Doppler in its delay rate.
+//                   gain, the Doppler in its delay rate. The last four are the quarters of the horizon:
+//                   each its distant echo and its share of the late reverb (Params::quarterImage).
 //
 // The rings run one mixer block behind (their prefill), the dry and the echoes alike, so the echoes'
 // delays against the thrusters stay exact. NPC cars have no echoes.
@@ -22,6 +23,7 @@
 // never wait on a lock or allocate.
 
 #include "Audio/EngineSynth/Synth.hpp"
+#include "Audio/Acoustics/Probe.hpp"
 #include "Audio/Voices/Voices.hpp"
 
 #include <cstdint>
@@ -36,8 +38,8 @@ namespace Acoustics::Engine {
 
 // player thruster slots
 inline constexpr int kSlots = 8;
-// the echo voices: floor, ceiling, left, right, scatter right, scatter left
-inline constexpr int kEchoes = 6;
+// the echo voices: floor, ceiling, left, right, scatter right, scatter left, and the four quarters
+inline constexpr int kEchoes = 6 + kQuarters;
 // the channels' own gain, the same as the thrusters' (Channels), so the echoes sit against the dry
 // sound as Reflections sets them (docs/history.md)
 inline constexpr float kChannelGainDb = 4.7f;

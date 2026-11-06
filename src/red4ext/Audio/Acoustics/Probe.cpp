@@ -121,6 +121,70 @@ std::array<Vec3, kNearRays> Probe::NearRays(const Vec3 &aForward, const Vec3 &aU
   return rays;
 }
 
+std::array<Quarter, kQuarters> Probe::Quarters(const std::vector<Vec3> &aDir, const std::vector<float> &aDistance,
+                                               const std::vector<float> &aWeight) {
+  constexpr float kFarMin = 20.0f, kFarMax = 200.0f, kSteep = 0.766f; // sin 50 degrees
+  struct Ray {
+    float distance, weight;
+    Vec3 dir;
+  };
+  std::array<std::vector<Ray>, kQuarters> rays;
+  std::array<double, kQuarters> total{}, hit{};
+  const size_t n = std::min(aDir.size(), aDistance.size());
+  for (size_t i = 0; i < n; ++i) {
+    const Vec3 &d = aDir[i];
+    if (std::fabs(d.z) > kSteep) {
+      continue;
+    }
+    // +x, +y, -x, -y: the quarter whose axis is nearest
+    const int q = std::fabs(d.x) >= std::fabs(d.y) ? (d.x >= 0 ? 0 : 2) : (d.y >= 0 ? 1 : 3);
+    const float w = i < aWeight.size() ? aWeight[i] : 1.0f;
+    total[q] += w;
+    const float r = aDistance[i];
+    if (r >= 0 && !std::isinf(r)) {
+      hit[q] += w;
+      if (r >= kFarMin && r <= kFarMax) {
+        rays[q].push_back({r, w, d});
+      }
+    }
+  }
+  std::array<Quarter, kQuarters> out{};
+  for (int q = 0; q < kQuarters; ++q) {
+    Quarter &o = out[q];
+    o.share = total[q] > 0 ? float(hit[q] / total[q]) : 0.0f;
+    auto &distant = rays[q];
+    if (distant.empty() || total[q] <= 0) {
+      continue;
+    }
+    // the facade: the weighted median distance, and the rays within 15% of it
+    std::sort(distant.begin(), distant.end(), [](const Ray &a, const Ray &b) { return a.distance < b.distance; });
+    double sum = 0, half = 0;
+    for (const Ray &r : distant) {
+      sum += r.weight;
+    }
+    float median = distant.back().distance;
+    for (const Ray &r : distant) {
+      half += r.weight;
+      if (half >= sum / 2) {
+        median = r.distance;
+        break;
+      }
+    }
+    double on = 0;
+    Vec3 dir{};
+    for (const Ray &r : distant) {
+      if (std::fabs(r.distance - median) <= 0.15f * median) {
+        on += r.weight;
+        dir = {dir.x + r.weight * r.dir.x, dir.y + r.weight * r.dir.y, 0};
+      }
+    }
+    o.farDistance = median;
+    o.farDir = Normalized(dir);
+    o.farCoherence = float(on / total[q]);
+  }
+  return out;
+}
+
 float Probe::SphereBias(float aSpeed) { return std::clamp(1.0f - aSpeed / 92.0f, 0.35f, 1.0f); }
 
 void Probe::SphereRays(int aCount, const Vec3 &aAhead, float aSpeed, float aTurn, std::vector<Vec3> &aDir,
@@ -227,12 +291,17 @@ Features Probe::operator()(const Vec3 &aPos, const Vec3 &aForward, const Vec3 &a
   f.enclosureMap = f.enclosure = float(hits) / kSphereRays;
   f.meanFreePathMap = f.meanFreePath = hits ? float(sum / hits) : kInf;
   if (!aLive || aLive->sphereDistance.empty()) {
+    const std::vector<Vec3> dirs(sphere.begin(), sphere.end());
+    const std::vector<float> distances(mapDistance.begin(), mapDistance.end());
+    f.quarters = Quarters(dirs, distances, {});
     return f;
   }
   // the live sphere: a hit as cast; a miss may be collision not streamed in yet, so it takes the nav map's answer
   // for the nearest of its rays, as the near rays keep the map's on a miss
   const size_t n = std::min(aLive->sphereDistance.size(), aLive->sphereDir.size());
   const bool weighted = aLive->sphereWeight.size() >= n;
+  // each ray as answered (live, or the map's nearest on a miss), for the quarters
+  std::vector<float> answered(n, kInf);
   double total = 0, hitWeight = 0, weightedSum = 0;
   f.sphereLive = 0;
   for (size_t i = 0; i < n; ++i) {
@@ -257,8 +326,10 @@ Features Probe::operator()(const Vec3 &aPos, const Vec3 &aForward, const Vec3 &a
     if (!std::isinf(d) && d >= 0) {
       hitWeight += w;
       weightedSum += w * d;
+      answered[i] = d;
     }
   }
+  f.quarters = Quarters(aLive->sphereDir, answered, weighted ? aLive->sphereWeight : std::vector<float>{});
   if (total > 0) {
     f.enclosure = float(hitWeight / total);
     f.meanFreePath = hitWeight > 0 ? float(weightedSum / hitWeight) : kInf;
