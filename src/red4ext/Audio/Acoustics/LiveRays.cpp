@@ -21,6 +21,7 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <vector>
 #include <windows.h>
 
 namespace Acoustics {
@@ -183,22 +184,40 @@ void CastLiveRays(FlightComponent *aComponent) {
       material[k].clear();
     }
   }
-  // the developer setting acousticsRays past the near rays: a Fibonacci sphere turned a little each cast, cast and
-  // looked up as the near rays are, then dropped (what more rays would cost)
-  const int extra = int(Flight::Developer().acousticsRays) - kNearRays;
-  for (int i = 0; i < extra; ++i) {
-    const float z = 1.0f - 2.0f * (i + 0.5f) / extra, r = std::sqrt(std::max(0.0f, 1.0f - z * z));
-    const float a = 2.39996323f * (i + 0.5f) + 0.37f * float(casts % 17);
+  // the live sphere: the developer setting acousticsRays past the near rays, bunched where the car is going (its
+  // velocity from cast to cast), for the enclosure and the mean free path (Probe::SphereRays)
+  static Vec3 lastWorld{};
+  static auto lastTime = std::chrono::steady_clock::time_point{};
+  const Vec3 here{world.X, world.Y, world.Z};
+  const float dt = lastTime == std::chrono::steady_clock::time_point{}
+                       ? 0.0f
+                       : std::chrono::duration<float>(t0 - lastTime).count();
+  Vec3 velocity{};
+  if (dt > 0.0f && dt < 0.5f) {
+    velocity = {(here.x - lastWorld.x) / dt, (here.y - lastWorld.y) / dt, (here.z - lastWorld.z) / dt};
+  }
+  lastWorld = here;
+  lastTime = t0;
+  float speed = std::sqrt(velocity.x * velocity.x + velocity.y * velocity.y + velocity.z * velocity.z);
+  if (speed > 300.0f) {
+    speed = 0.0f; // a teleport is not a speed
+  }
+  const Vec3 ahead = speed > 1.0f ? Vec3{velocity.x / speed, velocity.y / speed, velocity.z / speed} : forward;
+  static std::vector<Vec3> sphereDir;
+  static std::vector<float> sphereWeight, sphereDistance;
+  Probe::SphereRays(std::max(int(Flight::Developer().acousticsRays) - kNearRays, 0), ahead, speed, 0.37f * float(casts % 17),
+                    sphereDir, sphereWeight);
+  sphereDistance.resize(sphereDir.size());
+  for (size_t i = 0; i < sphereDir.size(); ++i) {
     physx::PxRaycastCallback hit;
-    const physx::PxVec3 from{bodyPose.p.X, bodyPose.p.Y, bodyPose.p.Z}, dir{r * std::cos(a), r * std::sin(a), z};
-    if (scene->raycast(from, dir, kRange, hit, physx::PxHitFlag_ePOSITION | physx::PxHitFlag_eNORMAL | physx::PxHitFlag_eDISTANCE, filter,
-                       &solid) &&
-        hit.hasBlock) {
-      MaterialName(hit.block.shape);
-    }
+    const physx::PxVec3 from{bodyPose.p.X, bodyPose.p.Y, bodyPose.p.Z}, dir{sphereDir[i].x, sphereDir[i].y, sphereDir[i].z};
+    sphereDistance[i] = scene->raycast(from, dir, Probe::kMaxDistance, hit, physx::PxHitFlag_eDISTANCE, filter, &solid) &&
+                                hit.hasBlock
+                            ? hit.block.distance
+                            : -1.0f;
   }
   SetPhysXCastTime(std::chrono::duration<float, std::milli>(std::chrono::steady_clock::now() - t0).count());
-  SetLiveHits(origin, distance, material, position, normal);
+  SetLiveHits(origin, distance, material, position, normal, sphereDir, sphereDistance, sphereWeight);
   CastOcclusion(scene, bodyPose.p.X - world.X, bodyPose.p.Y - world.Y, bodyPose.p.Z - world.Z, filter, solid);
 }
 

@@ -511,12 +511,16 @@ bool PhysXRaysDue(const Vec3 &aCandidate, Vec3 &aPosition, Vec3 &aForward, Vec3 
 
 void SetLiveHits(const Vec3 &aOrigin, const std::array<float, kNearRays> &aDistance,
                  const std::array<std::string, kNearRays> &aMaterial, const std::array<Vec3, kNearRays> &aPosition,
-                 const std::array<Vec3, kNearRays> &aNormal) {
+                 const std::array<Vec3, kNearRays> &aNormal, const std::vector<Vec3> &aSphereDir,
+                 const std::vector<float> &aSphereDistance, const std::vector<float> &aSphereWeight) {
   LiveHits hits;
   hits.origin = aOrigin;
   hits.distance = aDistance;
   hits.position = aPosition;
   hits.normal = aNormal;
+  hits.sphereDir = aSphereDir;
+  hits.sphereDistance = aSphereDistance;
+  hits.sphereWeight = aSphereWeight;
   for (int k = 0; k < kNearRays; ++k) {
     hits.reflectivity[k] = aDistance[k] >= 0 ? Materials::Find(aMaterial[k]).value_or(Bands{}) : Bands{};
   }
@@ -673,11 +677,11 @@ std::string State() {
       side(f.rightPlane, inliers[3], f.right, f.rightNormal));
   return fmt::format(
       "{{\"buses\":{},\"flying\":{},\"gain\":{},\"inside\":{},\"level\":{},\"probes\":{},\"probeMs\":{},"
-      "\"blocks\":{},\"soundBlocks\":{},\"silentBlocks\":{},\"floor\":{},\"ceiling\":{},\"left\":{},\"right\":{},\"enclosure\":{},"
+      "\"blocks\":{},\"soundBlocks\":{},\"silentBlocks\":{},\"floor\":{},\"ceiling\":{},\"left\":{},\"right\":{},\"enclosure\":{},\"enclosureMap\":{},\"meanFreePathMap\":{},\"sphereLive\":{},"
       "\"meanFreePath\":{},\"physxCalls\":{},\"physxCasts\":{},\"physxGap\":{},\"physxMs\":{},\"physxMsMax\":{},\"liveRays\":{},\"floorMap\":{},\"leftMap\":{},\"rightMap\":{},\"floorDelay\":{},\"floorGain\":{},\"leftDelay\":{},\"rightDelay\":{},"
       "\"floorFeedback\":{},\"wallFeedback\":{},\"rt60\":{},\"wet\":{},\"testSource\":{},\"air\":{},\"planes\":{},\"occlusionCasts\":{},\"stems\":{}}}",
       attachedDsp ? 1 : 0, fresh ? "true" : "false", num(gain), num(inside), num(level.load()), probes.load(), num(ms),
-      blocks.load(), soundBlocks.load(), silentBlocks.load(), num(f.floor), num(f.ceiling), num(f.left), num(f.right), num(f.enclosure),
+      blocks.load(), soundBlocks.load(), silentBlocks.load(), num(f.floor), num(f.ceiling), num(f.left), num(f.right), num(f.enclosure), num(f.enclosureMap), num(f.meanFreePathMap), f.sphereLive,
       num(f.meanFreePath), physxCalls.load(), physxCasts.load(), num(physxGap.load()), num(physxMs.load()), num(physxMsMax.load()), f.liveRays, num(f.floorMap), num(f.leftMap), num(f.rightMap), num(p.floor.delay), num(p.floor.gain), num(p.left.delay), num(p.right.delay),
       num(p.floorFeedback), num(p.wallFeedback), num(p.rt60), num(p.wet), testSource.load(), airAbsorption.load(), planesJson, Occlusion::Casts(), Stems::State());
 }

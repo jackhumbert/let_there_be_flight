@@ -273,6 +273,7 @@ add_executable(ltbf_tests
   tests/inputs_tests.cpp
   tests/images_tests.cpp
   tests/planes_tests.cpp
+  tests/probe_tests.cpp
   tests/materials_tests.cpp
   tests/occlusion_tests.cpp
   tests/buses_tests.cpp
@@ -318,6 +319,7 @@ add_executable(ltbf_tests
   src/red4ext/Audio/Acoustics/Materials.cpp
   src/red4ext/Audio/Acoustics/Occlusion.cpp
   src/red4ext/Audio/Acoustics/Planes.cpp
+  src/red4ext/Audio/Acoustics/Probe.cpp
   src/red4ext/Audio/Acoustics/Reflections.cpp
   src/red4ext/Navigation/Vehicle.cpp
   src/red4ext/Navigation/Route.cpp

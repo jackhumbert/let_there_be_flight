@@ -14,6 +14,7 @@
 #include "Navigation/NavMap.hpp"
 
 #include <array>
+#include <vector>
 #include <optional>
 
 namespace Acoustics {
@@ -40,6 +41,10 @@ struct Features {
   Bands floorReflectivity, ceilingReflectivity, leftReflectivity, rightReflectivity;
   int liveRays = 0;
   float floorMap = 0, ceilingMap = 0, leftMap = 0, rightMap = 0;
+  // the nav map's own enclosure and mean free path (its 48 rays), and how many of the live sphere's rays hit (-1: no
+  // live sphere: the two above are the map's)
+  float enclosureMap = 0, meanFreePathMap = 0;
+  int sphereLive = -1;
   int leftRay = -1, rightRay = -1; // the nearest ray of each fan (NearRays index)
   // each surface's outward normal (unit, away from the car): square on from the probe, the fitted
   // plane's where one was found (floorPlane ...: the distance above is that plane's too)
@@ -60,6 +65,13 @@ struct LiveHits {
   std::array<float, kNearRays> distance;
   std::array<Bands, kNearRays> reflectivity;
   std::array<Vec3, kNearRays> position, normal;
+  // the live sphere (the developer setting acousticsRays past the near rays): each ray's direction and distance to the
+  // hit (< 0: none within Probe::kMaxDistance), for the enclosure and the mean free path
+  std::vector<Vec3> sphereDir;
+  std::vector<float> sphereDistance;
+  // each ray's share of the sphere (SphereRays: the rays bunch where the car is going, each weighed back by how
+  // densely its part is sampled); empty: all equal
+  std::vector<float> sphereWeight;
 };
 
 class Probe {
@@ -74,6 +86,16 @@ public:
   // ray by that much (the down and up rays stay): the live casts rotate it so successive casts find
   // different spots of a surface.
   static std::array<Vec3, kNearRays> NearRays(const Vec3 &aForward, const Vec3 &aUp, float aYawOffsetDeg = 0);
+
+  // aCount directions over the sphere for the live casts, bunched towards aAhead (unit; the car's velocity) more the
+  // faster aSpeed (m/s): a Fibonacci sphere whose cosine to aAhead is warped, uniform at rest. aTurn (radians) turns
+  // it about aAhead so successive casts sample between each other. aWeight: each ray's share of the sphere (its
+  // band's area over the uniform share; they add up to aCount), so a weighted mean over the rays is the whole sphere's.
+  static void SphereRays(int aCount, const Vec3 &aAhead, float aSpeed, float aTurn, std::vector<Vec3> &aDir,
+                         std::vector<float> &aWeight);
+  // the warp's exponent at a speed: 1 (uniform) at rest, down to 0.35 (a third of the rays within about 40 degrees
+  // of ahead) from 60 m/s
+  static float SphereBias(float aSpeed);
 
   // aForward and aUp: the car's axes (world, z up). aLive, if given, answers the near rays it hit;
   // the nav map answers the rest (a live miss may only be collision not streamed in yet).

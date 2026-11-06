@@ -54,10 +54,13 @@ void SetListener(const Vec3 &aPosition);
 // The game's own collision along the near rays (Probe::NearRays from the car's axes), cast from
 // aOrigin: distance (< 0: nothing within the cast) and the hit's physics material. Used for a
 // probe within 200 ms and 10 m of them, in place of the nav map wherever a ray hit.
-// Also each hit's position (world) and surface normal, for the planes (Planes.hpp).
+// Also each hit's position (world) and surface normal, for the planes (Planes.hpp), and the live sphere's directions
+// and distances and weights (LiveHits::sphereDir, sphereDistance, sphereWeight; empty: none) for the enclosure and the
+// mean free path.
 void SetLiveHits(const Vec3 &aOrigin, const std::array<float, kNearRays> &aDistance,
                  const std::array<std::string, kNearRays> &aMaterial, const std::array<Vec3, kNearRays> &aPosition,
-                 const std::array<Vec3, kNearRays> &aNormal);
+                 const std::array<Vec3, kNearRays> &aNormal, const std::vector<Vec3> &aSphereDir = {},
+                 const std::vector<float> &aSphereDistance = {}, const std::vector<float> &aSphereWeight = {});
 // how long the PhysX caster took for its last set of rays (State)
 void SetPhysXCastTime(float aMilliseconds);
 // Echoes off planes fitted to the live hits of the last second (on by default); off, the nav map's and

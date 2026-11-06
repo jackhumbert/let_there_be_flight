@@ -28,9 +28,9 @@ struct DeveloperSettings {
   // the C++ Hover & Fly (FlightModeHoverFlyAssist) in Hover & Fly's place, for cars attached after it is set
   bool assistHoverFly = false;
   // PhysX rays the acoustics cast each time (Audio/Acoustics/LiveRays.cpp, 20 a second): the first 32 are the near
-  // rays the echoes use; any past them go over a sphere round the car and are cast, timed and dropped, to measure what
-  // more rays would cost (docs/design/acoustics.md, "How many rays")
-  float acousticsRays = 32.0f;
+  // rays the echoes use; the rest the live sphere, bunched where the car is going, for the reverb's enclosure and mean
+  // free path (Probe::SphereRays; docs/design/acoustics.md, "How many rays"). 32: the nav map's sphere alone.
+  float acousticsRays = 1024.0f;
   // The Autopilot's tuning (Navigation::AutopilotParams) by field name, set as "autopilot.<name>" (a Bool as
   // true/false/1/0/on/off, an Int32 rounded), in the order set, a name set again keeping its place. Each
   // FlightModeAutopilot writes them over its tuning when it is set up, when it is engaged and when

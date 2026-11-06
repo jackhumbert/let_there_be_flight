@@ -121,6 +121,35 @@ std::array<Vec3, kNearRays> Probe::NearRays(const Vec3 &aForward, const Vec3 &aU
   return rays;
 }
 
+float Probe::SphereBias(float aSpeed) { return std::clamp(1.0f - aSpeed / 92.0f, 0.35f, 1.0f); }
+
+void Probe::SphereRays(int aCount, const Vec3 &aAhead, float aSpeed, float aTurn, std::vector<Vec3> &aDir,
+                       std::vector<float> &aWeight) {
+  aDir.resize(std::max(aCount, 0));
+  aWeight.resize(aDir.size());
+  // a frame with aAhead as its z axis
+  const Vec3 z = Normalized(aAhead);
+  const Vec3 helper = std::fabs(z.z) < 0.9f ? Vec3{0, 0, 1} : Vec3{1, 0, 0};
+  const Vec3 x = Normalized({helper.y * z.z - helper.z * z.y, helper.z * z.x - helper.x * z.z, helper.x * z.y - helper.y * z.x});
+  const Vec3 y{z.y * x.z - z.z * x.y, z.z * x.x - z.x * x.z, z.x * x.y - z.y * x.x};
+  const float a = SphereBias(aSpeed);
+  const float golden = std::numbers::pi_v<float> * (3.0f - std::sqrt(5.0f));
+  for (int i = 0; i < aCount; ++i) {
+    // t uniform over the sphere's cosine; c = 2 t^a - 1 bunches the rays towards c = 1 (ahead) for a < 1. Each ray
+    // stands for its band of t, which c maps to a band of the sphere whose area is its width in c: that width over the
+    // uniform 2 / aCount is the ray's weight, and the weights add up to aCount
+    const float t = 1.0f - (i + 0.5f) / aCount;
+    const float c = 2.0f * std::pow(t, a) - 1.0f;
+    const float tHigh = 1.0f - float(i) / aCount, tLow = 1.0f - float(i + 1) / aCount;
+    const float band = 2.0f * (std::pow(tHigh, a) - std::pow(std::max(tLow, 0.0f), a));
+    const float r = std::sqrt(std::max(0.0f, 1.0f - c * c));
+    const float phi = golden * (i + 0.5f) + aTurn;
+    const float lx = r * std::cos(phi), ly = r * std::sin(phi);
+    aDir[i] = {lx * x.x + ly * y.x + c * z.x, lx * x.y + ly * y.y + c * z.y, lx * x.z + ly * y.z + c * z.z};
+    aWeight[i] = band * aCount / 2.0f;
+  }
+}
+
 float Probe::Fan(const Vec3 &aOrigin, const std::array<Vec3, kNearRays> &aRays, int aFirst, const LiveHits *aLive,
                  float &aMapNearest, Bands &aReflectivity, int &aRay, int &aLiveRays, Features &aFeatures) {
   float nearest = kInf;
@@ -185,17 +214,55 @@ Features Probe::operator()(const Vec3 &aPos, const Vec3 &aForward, const Vec3 &a
   f.nearDistance[1] = f.ceiling;
   f.nearReflectivity[0] = f.floorReflectivity;
   f.nearReflectivity[1] = f.ceilingReflectivity;
+  std::array<float, kSphereRays> mapDistance;
   int hits = 0;
   double sum = 0;
-  for (const auto &d : sphere) {
-    float r = March(aPos, d);
-    if (!std::isinf(r)) {
+  for (int i = 0; i < kSphereRays; ++i) {
+    mapDistance[i] = March(aPos, sphere[i]);
+    if (!std::isinf(mapDistance[i])) {
       ++hits;
-      sum += r;
+      sum += mapDistance[i];
     }
   }
-  f.enclosure = float(hits) / kSphereRays;
-  f.meanFreePath = hits ? float(sum / hits) : kInf;
+  f.enclosureMap = f.enclosure = float(hits) / kSphereRays;
+  f.meanFreePathMap = f.meanFreePath = hits ? float(sum / hits) : kInf;
+  if (!aLive || aLive->sphereDistance.empty()) {
+    return f;
+  }
+  // the live sphere: a hit as cast; a miss may be collision not streamed in yet, so it takes the nav map's answer
+  // for the nearest of its rays, as the near rays keep the map's on a miss
+  const size_t n = std::min(aLive->sphereDistance.size(), aLive->sphereDir.size());
+  const bool weighted = aLive->sphereWeight.size() >= n;
+  double total = 0, hitWeight = 0, weightedSum = 0;
+  f.sphereLive = 0;
+  for (size_t i = 0; i < n; ++i) {
+    const double w = weighted ? aLive->sphereWeight[i] : 1.0;
+    total += w;
+    float d = aLive->sphereDistance[i];
+    if (d >= 0 && d <= kMaxDistance) {
+      ++f.sphereLive;
+    } else {
+      const Vec3 &dir = aLive->sphereDir[i];
+      int nearest = 0;
+      float best = -2.0f;
+      for (int k = 0; k < kSphereRays; ++k) {
+        const float dot = dir.x * sphere[k].x + dir.y * sphere[k].y + dir.z * sphere[k].z;
+        if (dot > best) {
+          best = dot;
+          nearest = k;
+        }
+      }
+      d = mapDistance[nearest];
+    }
+    if (!std::isinf(d) && d >= 0) {
+      hitWeight += w;
+      weightedSum += w * d;
+    }
+  }
+  if (total > 0) {
+    f.enclosure = float(hitWeight / total);
+    f.meanFreePath = hitWeight > 0 ? float(weightedSum / hitWeight) : kInf;
+  }
   return f;
 }
 
