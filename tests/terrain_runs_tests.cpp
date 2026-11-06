@@ -109,6 +109,8 @@ TEST(terrain_driver_holds_line_and_speed) {
   CHECK(r.Get("contacts") == 0.0f);
   CHECK(r.Get("blocked") == 0.0f);
   CHECK(r.Get("height_p95") < 0.1f);
+  CHECK(std::isnan(r.Get("lag"))); // nothing to follow
+  CHECK(r.Get("pitch_wobble") < 1.0f);
   float off = 0.0f;
   for (const Frame &f : r.frames)
     off = std::max(off, std::fabs(f.position.x - f.position.y) / std::sqrt(2.0f));
@@ -133,6 +135,9 @@ TEST(terrain_ramp_followed) {
   const Frame &end = r.frames.back();
   CHECK(end.position.y > 190.0f);
   CHECK_NEAR(end.groundDistance, end.hoverHeight, 0.3f);
+  // it follows the ramp late, but not by seconds, and pitched with the ramp is no wobble
+  CHECK(r.Get("lag") > 0.0f && r.Get("lag") < 1.5f);
+  CHECK(r.Get("pitch_wobble") < 3.0f);
 }
 
 TEST(terrain_run_stops_at_wall) {

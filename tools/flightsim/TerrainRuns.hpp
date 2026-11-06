@@ -9,8 +9,8 @@
 // it; empty for the topmost), tags (comma-separated, what the ground is: Profile::Tags).
 //
 // The Sim models height only: nothing stops the car sideways. A line is flown only up to its first wall (the
-// profile's usable length), and a run stops (blocked) if its nose runs through anything at the centre's height in a
-// frame, or the contact lifts the car more than kWallLift in one.
+// profile's usable length), and a run stops (blocked) if its nose runs through anything half a metre over its
+// underside in a frame, or the contact lifts the car more than kWallLift in one.
 
 #include "Colliders.hpp"
 #include "Scenarios.hpp"
@@ -84,12 +84,15 @@ constexpr float kWallLift = 1.0f, kGroundNormalZ = 0.7f;
 
 // One line flown at aSpeed (m/s) holding aHover m over the ground (Hover & Fly's hover height, from the wheel
 // emitters): placed level at the start, already at speed along the line. The frames and the metrics (named
-// <metric>, units m, m/s, m/s2, deg, s): speed, the height's error (the mode's own: ground distance against hover
-// height, RMS and p95), the underside's clearance (min, p05), contacts (count, time, worst impact, and where the
-// first touch of each was: front, middle, back), the vertical acceleration (max, RMS, contact frames left out), pitch
-// and roll (RMS), the times the nose ran into rising ground (nose_hits: the underside's contact does not see the
-// front's face), rays a frame, the metres flown and whether a wall stopped it. The first second is left out of all but
-// the last two.
+// <metric>, units m, m/s, m/s2, m/s3, deg, s): speed; the height's error (the mode's own: ground distance against hover
+// height; RMS, p95, and p95 of the air over it and of the sink under it apart); lag (s the car's height trails the
+// profile's ground under it, the delay that lines them up best, up to 1.5 s; NaN where the ground changes by under
+// 0.3 m); the underside's clearance (min, p05); contacts (count, a touch already on at the start counted, time, worst
+// impact, and where the first touch of each was: front, middle, back); the vertical acceleration (max, RMS) and jerk
+// (p95), contact frames left out; pitch_wobble (RMS of the pitch against the profile's slope over the wheelbase) and
+// roll_wobble (RMS of the roll off its own 1 s running mean); the times the nose ran into rising ground (nose_hits:
+// the underside's contact does not see the front's face); rays a frame; the metres flown and whether a wall stopped
+// it. The first second is left out of all but the last two.
 Run FlyLine(const Setup &aSetup, const Colliders &aWorld, const Line &aLine, const Profile &aProfile, float aSpeed,
             float aHover);
 

@@ -22,7 +22,8 @@ Where each number comes from:
 Records on CDPR's stand-in drive model (PLACEHOLDER_DRIVE_MODELS: AVs, drones, props) are left out.
 --aero adds, from aero.py's aero.tsv, each car's drag area per body axis (cdaX side, cdaY front, cdaZ top, m2) and
 its chassis box and underside profile from the centre of mass (boxMinX .. boxMaxZ, m; underside, the lowest point per
-square, as aero.underside() writes it: the ground contact, docs/design/hover-fly-terrain.md); empty for the three cars
+square, as aero.underside() writes it: the ground contact, docs/design/hover-fly-terrain.md) and its body class (body:
+sport, standard, suv, truck, bike or other, from its chassis shape's folder, aero.body_class); empty for the three cars
 with no chassis shape.
 """
 
@@ -35,9 +36,9 @@ from collections import defaultdict
 HERE = os.path.dirname(os.path.abspath(__file__))
 COLUMNS = ["record", "name", "type", "mass", "airResistance", "brakingFriction", "inertiaX", "inertiaY", "inertiaZ",
            "tensorX", "tensorY", "tensorZ", "wheelX", "wheelY", "wheelZ", "bottom", "thrusters", "records",
-           "cdaX", "cdaY", "cdaZ", "boxMinX", "boxMaxX", "boxMinY", "boxMaxY", "boxMinZ", "boxMaxZ", "underside"]
+           "cdaX", "cdaY", "cdaZ", "boxMinX", "boxMaxX", "boxMinY", "boxMaxY", "boxMinZ", "boxMaxZ", "underside", "body"]
 # from aero.py's table (--aero), empty without: the chassis shape's drag area per body axis (m2: side, front, top), its
-# box and its underside
+# box, its underside and its body class (aero.tsv's class)
 AERO = ["cdaX", "cdaY", "cdaZ", "boxMinX", "boxMaxX", "boxMinY", "boxMaxY", "boxMinZ", "boxMaxZ", "underside"]
 GEOMETRY = ["tensorX", "tensorY", "tensorZ", "wheelX", "wheelY", "wheelZ", "bottom", "thrusters"]
 NONE = ("", "0x0000000000000000", "None", "NULL")
@@ -156,6 +157,7 @@ def main():
     for r in rows:
         a = aero.get(r["record"], {})
         r.update({c: a.get(c, "") for c in AERO})
+        r["body"] = a.get("class", "")
     with open(args.out, "w", encoding="utf-8", newline="\n") as f:
         f.write("\t".join(COLUMNS) + "\n")
         for r in rows:

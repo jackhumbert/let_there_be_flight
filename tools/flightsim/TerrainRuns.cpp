@@ -256,12 +256,17 @@ Run FlyLine(const Setup &aSetup, const Colliders &aWorld, const Line &aLine, con
   float look = std::max(12.0f, 0.8f * aSpeed);
   bool blocked = false;
   // how far ahead of the centre the nose is: the underside's front, the front wheels without one
-  float reach = aSetup.car.wheelY;
-  for (Vec3 u : aSetup.car.underside)
+  // and the height its ray runs at: half a metre over the underside's lowest point (the tyres without one), so what
+  // it meets is something the body would, and a kerb under that is the contact's
+  float reach = aSetup.car.wheelY, low = aSetup.car.bottom;
+  for (Vec3 u : aSetup.car.underside) {
     reach = std::max(reach, u.y);
+    low = std::min(low, u.z);
+  }
+  float noseUp = low + 0.5f;
   auto nose = [&](const Frame &aFrame) {
     float h = aFrame.headingDeg / kDeg;
-    return Flight::Add(aFrame.position, Vec3{std::sin(h) * reach, std::cos(h) * reach, 0.0f});
+    return Flight::Add(aFrame.position, Vec3{std::sin(h) * reach, std::cos(h) * reach, noseUp});
   };
   Frame last = sim.Last();
   float surgeHeld = 0.0f;
@@ -289,8 +294,8 @@ Run FlyLine(const Setup &aSetup, const Colliders &aWorld, const Line &aLine, con
     Vec3 before = nose(now);
     last = sim.Step(k, aSetup.dt);
     run.frames.push_back(last);
-    // the nose ran through something at the centre's height: rising ground (its face up) is the front touching it,
-    // anything steeper a wall; or the contact lifted the car onto a wall
+    // the nose ran through something half a metre over the underside: rising ground (its face up) is the front
+    // touching it, anything steeper a wall; or the contact lifted the car onto a wall
     Colliders::Hit h;
     bool noseHit = aWorld.Ray(before, nose(last), h);
     if (noseHit && h.normal.z >= kGroundNormalZ)
@@ -302,33 +307,90 @@ Run FlyLine(const Setup &aSetup, const Colliders &aWorld, const Line &aLine, con
     }
   }
 
+  // the profile's ground at s along the line (linear between its points), and its pitch over the wheelbase
+  auto groundAt = [&](float aS) {
+    const auto &pts = aProfile.points;
+    float k = std::clamp(aS / kStep, 0.0f, float(pts.size() - 1));
+    size_t i = std::min(size_t(k), pts.size() - 1), j = std::min(i + 1, pts.size() - 1);
+    return pts[i].z + (pts[j].z - pts[i].z) * (k - float(i));
+  };
+  auto along = [&](const Frame &aFrame) { return Dot(Sub(Flat2(aFrame.position), Flat2(aLine.a)), dir); };
+  float base = std::max(aSetup.car.wheelY, 0.5f);
+
   // the metrics, after the lead
-  std::vector<float> height, clear, accel, pitch, roll, speeds;
+  std::vector<float> height, over, under, clear, accel, jerk, pitchOff, roll, speeds;
   int contacts = 0, front = 0, middle = 0, back = 0;
   float contactTime = 0, impact = 0, accelMax = 0, rays = 0;
   size_t from = std::min(run.frames.size(), size_t(lead / aSetup.dt)), counted = 0;
   float frontY = 0.5f * aSetup.car.wheelY;
+  float lastAccel = std::numeric_limits<float>::quiet_NaN();
   for (size_t i = from; i < run.frames.size(); ++i) {
     const Frame &f = run.frames[i];
     ++counted;
     speeds.push_back(std::hypot(f.velocity.x, f.velocity.y));
-    if (f.foundGround)
-      height.push_back(f.groundDistance - f.hoverHeight);
+    if (f.foundGround) {
+      float e = f.groundDistance - f.hoverHeight;
+      height.push_back(e);
+      over.push_back(std::max(e, 0.0f));
+      under.push_back(std::max(-e, 0.0f));
+    }
     clear.push_back(f.clearance);
-    pitch.push_back(f.pitchDeg);
-    roll.push_back(f.rollDeg);
+    float s = along(f);
+    float groundPitch = std::atan2(groundAt(s + base) - groundAt(s - base), 2.0f * base) * kDeg;
+    pitchOff.push_back(f.pitchDeg - groundPitch);
+    // roll off its own running mean over a second: the rocking, not a held lean on a side slope
+    size_t half = size_t(0.5f / aSetup.dt), lo = i > half ? i - half : 0,
+           hi = std::min(run.frames.size() - 1, i + half);
+    double mean = 0.0;
+    for (size_t k = lo; k <= hi; ++k)
+      mean += run.frames[k].rollDeg;
+    roll.push_back(f.rollDeg - float(mean / (hi - lo + 1)));
     rays += float(f.rays);
     if (f.contact) {
       contactTime += aSetup.dt;
       impact = std::max(impact, f.impactSpeed);
-      if (i == 0 || !run.frames[i - 1].contact) {
+      if (i == from || !run.frames[i - 1].contact) {
         ++contacts;
         (f.clearanceY > frontY ? front : f.clearanceY < -frontY ? back : middle)++;
       }
+      lastAccel = std::numeric_limits<float>::quiet_NaN();
     } else if (i > 0) {
       float a = (f.velocity.z - run.frames[i - 1].velocity.z) / aSetup.dt;
       accel.push_back(a);
       accelMax = std::max(accelMax, std::fabs(a));
+      if (std::isfinite(lastAccel))
+        jerk.push_back(std::fabs(a - lastAccel) / aSetup.dt);
+      lastAccel = a;
+    }
+  }
+  // lag: how late the car's height follows the ground under it, the delay (up to 1.5 s) that best lines the two up;
+  // not measured (NaN) where the ground under the run changes by less than 0.3 m
+  float lag = std::numeric_limits<float>::quiet_NaN();
+  if (run.frames.size() > from + 2) {
+    std::vector<float> zc, zg;
+    for (size_t i = from; i < run.frames.size(); ++i) {
+      zc.push_back(run.frames[i].position.z);
+      zg.push_back(groundAt(along(run.frames[i])));
+    }
+    auto [gmin, gmax] = std::minmax_element(zg.begin(), zg.end());
+    if (*gmax - *gmin >= 0.3f) {
+      float best = std::numeric_limits<float>::infinity();
+      int maxShift = int(1.5f / aSetup.dt);
+      for (int k = 0; k <= maxShift && size_t(k) + 10 < zc.size(); ++k) {
+        // the car at i against the ground k frames before: the offset taken out
+        double sum = 0.0, sum2 = 0.0;
+        size_t n = zc.size() - k;
+        for (size_t i = k; i < zc.size(); ++i) {
+          double d = zc[i] - zg[i - k];
+          sum += d;
+          sum2 += d * d;
+        }
+        float var = float(sum2 / n - (sum / n) * (sum / n));
+        if (var < best) {
+          best = var;
+          lag = float(k) * aSetup.dt;
+        }
+      }
     }
   }
   std::vector<float> absHeight;
@@ -341,6 +403,9 @@ Run FlyLine(const Setup &aSetup, const Colliders &aWorld, const Line &aLine, con
   add("speed", mean, "m/s");
   add("height_rms", Rms(height), "m");
   add("height_p95", Percentile(absHeight, 0.95f), "m");
+  add("height_over_p95", Percentile(over, 0.95f), "m");
+  add("height_under_p95", Percentile(under, 0.95f), "m");
+  add("lag", lag, "s");
   add("clear_min", clear.empty() ? 0.0f : *std::min_element(clear.begin(), clear.end()), "m");
   add("clear_p05", Percentile(clear, 0.05f), "m");
   add("contacts", float(contacts), "");
@@ -351,8 +416,9 @@ Run FlyLine(const Setup &aSetup, const Colliders &aWorld, const Line &aLine, con
   add("contacts_back", float(back), "");
   add("accel_max", accelMax, "m/s2");
   add("accel_rms", Rms(accel), "m/s2");
-  add("pitch_rms", Rms(pitch), "deg");
-  add("roll_rms", Rms(roll), "deg");
+  add("jerk_p95", Percentile(jerk, 0.95f), "m/s3");
+  add("pitch_wobble", Rms(pitchOff), "deg");
+  add("roll_wobble", Rms(roll), "deg");
   int noses = 0;
   for (size_t k = 0; k < noseHits.size(); ++k)
     noses += noseHits[k] >= from && (k == 0 || noseHits[k - 1] + 1 != noseHits[k]);
