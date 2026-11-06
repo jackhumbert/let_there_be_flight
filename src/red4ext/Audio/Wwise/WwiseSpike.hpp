@@ -1,10 +1,9 @@
 #pragma once
 
-// Step 0 of docs/design/wwise-audio.md: one tone through the game's Wwise, to answer the plan's open questions before
-// anything is built on it. The game's Audio Input source plugin asks a callback for each playing sound's samples; the
-// game sets that callback for REDmod's sounds. This finds the setter by its bytes, keeps the game's callbacks, puts
-// ours in front (our playing ID gets a sine, every other ID goes to the game's), registers a game object of ours and
-// posts one of mod.bnk's events on it. Everything else is reached through the exe's exported AK:: functions by name.
+// Step 0 of docs/design/wwise-audio.md, kept as the first in-game test of the Wwise path: a tone through the game's
+// Wwise. It plays through the step 1 pieces (Link installs the Relay, which hands our playing ID's buffers to a sine
+// and passes every other ID to the game's callbacks) on a game object of ours, from one of mod.bnk's events or from
+// LTBF's own bank (Bank, loaded by LoadOurBank: ltbf_spike_3d positioned with no attenuation, ltbf_spike_2d).
 // For the bridge only (WwiseSpike.Start and the rest); nothing calls it otherwise.
 
 #include <RED4ext/Scripting/IScriptable.hpp>
@@ -16,6 +15,8 @@ struct WwiseSpike : RED4ext::IScriptable {
   static RED4ext::CString Start(RED4ext::CString aEvent, float aFrequency, float aGain);
   // loads a bank from a file (LoadBankMemoryCopy): for mod.bnk when the game has not loaded it
   static RED4ext::CString LoadBank(RED4ext::CString aPath);
+  // builds LTBF's bank of the spike's two sounds and loads it (once)
+  static RED4ext::CString LoadOurBank();
   // our game object at (x, y, z) facing (fx, fy, fz), in Wwise's axes (y up: the game's x, z, y)
   static RED4ext::CString Place(float aX, float aY, float aZ, float aFx, float aFy, float aFz);
   // our object heard by a listener of ours at (x, y, z) facing (fx, fy, fz) in Wwise's axes, or (aOurs false) by the
@@ -34,6 +35,7 @@ struct WwiseSpike : RED4ext::IScriptable {
 RTTI_DEFINE_CLASS(WwiseSpike, {
   RTTI_METHOD(Start);
   RTTI_METHOD(LoadBank);
+  RTTI_METHOD(LoadOurBank);
   RTTI_METHOD(Place);
   RTTI_METHOD(Listen);
   RTTI_METHOD(State);
