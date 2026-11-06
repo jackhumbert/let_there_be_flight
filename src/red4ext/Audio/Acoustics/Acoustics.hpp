@@ -30,9 +30,12 @@ namespace Acoustics {
 // probes per second: the worker's rate, and so the ramp a new Params takes to reach
 inline constexpr float kProbeHz = 20.0f;
 
-// A DSP on the master group, at its output end (the buses' volumes are in the sound it gets, so they scale
-// the echoes too). False if the DSP could not be set up (logged).
+// Under FMOD: a DSP on the master group, at its output end (the buses' volumes are in the sound it gets, so they scale
+// the echoes too). False if the DSP could not be set up (logged). Starts the worker.
 bool Attach(FMOD::System *aCore, FMOD::ChannelGroup *aMaster);
+// Under Wwise: the test source as a 2D stereo voice of its own (Audio/Out), the bus stem silent (the engine's bed
+// keeps the stems' time). Starts the worker.
+bool AttachVoice();
 // Before the FMOD system is released: stops the worker and removes the DSP.
 void Detach();
 

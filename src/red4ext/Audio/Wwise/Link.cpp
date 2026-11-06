@@ -121,6 +121,20 @@ bool KeepRelayInstalled() {
   return true;
 }
 
+void UninstallRelay() {
+  if (!state.installed) {
+    return;
+  }
+  // straight into the globals: the setter refuses a null callback, and without REDmod sounds the game's are null
+  const Callbacks passed = TheRelay().Passed();
+  auto *g = reinterpret_cast<uintptr_t *>(state.globals);
+  g[0] = reinterpret_cast<uintptr_t>(passed.execute);
+  g[1] = reinterpret_cast<uintptr_t>(passed.format);
+  g[2] = reinterpret_cast<uintptr_t>(passed.gain);
+  state.installed = false;
+  spdlog::info("[Wwise] relay uninstalled, the game's callbacks back");
+}
+
 RelayInstall RelayInstalled() {
   return state;
 }

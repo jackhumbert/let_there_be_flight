@@ -1,11 +1,17 @@
 #include "Bank.hpp"
 
+#include <bit>
 #include <cstring>
 #include <string>
 
 namespace Wwise::Bank {
 
 namespace {
+
+// the attenuation's property ID on a Sound, and the spread's place among an attenuation's parameters (mod.bnk's: dry,
+// game wet, user wet, low-pass, high-pass, spread, focus)
+constexpr uint8_t kAttenuationProp = 0x55;
+constexpr int kSpreadParam = 5;
 
 struct Writer {
   std::vector<uint8_t> bytes;
@@ -67,18 +73,22 @@ Writer SoundBody(const Sound &aSound, const Ids &aIds) {
   w.U32(aSound.bus);
   w.U32(aSound.parent);
   w.U8(0); // priority bits
-  w.U8(uint32_t(aSound.props.size()));
-  for (const Prop &prop : aSound.props) {
+  std::vector<Prop> props(aSound.props.begin(), aSound.props.end());
+  if (aSound.spread) {
+    props.push_back({kAttenuationProp, aSound.spread});
+  }
+  w.U8(uint32_t(props.size()));
+  for (const Prop &prop : props) {
     w.U8(prop.id);
   }
-  for (const Prop &prop : aSound.props) {
+  for (const Prop &prop : props) {
     w.U32(prop.value);
   }
   w.U8(0); // ranged properties
   // positioning: overridden here, listener-relative routing; 3D bits: spatialised by position and orientation (2),
   // or not at all; the attenuation (8) off unless asked for
   w.U8(0x03);
-  w.U8((aSound.positioned ? 0x02 : 0x00) | (aSound.attenuated ? 0x08 : 0x00));
+  w.U8((aSound.positioned ? 0x02 : 0x00) | (aSound.attenuated || aSound.spread ? 0x08 : 0x00));
   // aux: none of the game's sends and no user sends (1), or the game's and one user send (0x0b, as mod_sfx_street);
   // no reflections bus
   if (aSound.aux) {
@@ -98,6 +108,27 @@ Writer SoundBody(const Sound &aSound, const Ids &aIds) {
   w.U8(0); // state properties
   w.U8(0); // state groups
   w.U16(0); // RTPCs
+  return w;
+}
+
+// the attenuation: its first two flags as mod.bnk's (01 00), each of its 19 parameters' curve (0xff none; 0xfe past
+// the ones it has, as mod.bnk's), the curves, no RTPCs
+Writer SpreadBody(const Spread &aSpread) {
+  Writer w;
+  w.U8(1);
+  w.U8(0);
+  for (int k = 0; k < 19; ++k) {
+    w.U8(k == kSpreadParam ? 0 : k < 7 ? 0xff : 0xfe);
+  }
+  w.U8(1);
+  w.U8(0); // the spread's scaling: none
+  w.U16(uint32_t(aSpread.points.size()));
+  for (const CurvePoint &p : aSpread.points) {
+    w.U32(std::bit_cast<uint32_t>(p.distance));
+    w.U32(std::bit_cast<uint32_t>(p.value));
+    w.U32(4); // linear to the next
+  }
+  w.U16(0);
   return w;
 }
 
@@ -138,7 +169,7 @@ Ids IdsFor(std::string_view aEvent) {
   return {Fnv1(name), Fnv1(name + "/play"), Fnv1(name + "/sound"), Fnv1(name + "/input")};
 }
 
-std::vector<uint8_t> Build(std::string_view aBank, std::span<const Sound> aSounds) {
+std::vector<uint8_t> Build(std::string_view aBank, std::span<const Sound> aSounds, std::span<const Spread> aSpreads) {
   const AkUniqueID bank = Fnv1(aBank);
   Writer header;
   header.U32(kVersion);
@@ -151,6 +182,9 @@ std::vector<uint8_t> Build(std::string_view aBank, std::span<const Sound> aSound
 
   Writer objects;
   uint32_t count = 0;
+  for (const Spread &spread : aSpreads) {
+    Put(objects, count, kAttenuation, Fnv1(spread.name), SpreadBody(spread));
+  }
   for (const Sound &sound : aSounds) {
     const Ids ids = IdsFor(sound.event);
     Put(objects, count, kFxCustom, ids.input, Input());

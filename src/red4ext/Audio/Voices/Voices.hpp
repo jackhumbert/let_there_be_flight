@@ -1,40 +1,29 @@
 #pragma once
 
-// LTBF's 3D sounds in FMOD through one pool (Pool.hpp, docs/design/audio-native.md A.2): each sound
-// is a Core channel that registers here, with an Object Spatializer added on the pool's say-so. Each
-// game frame ranks them; the ones that win a Windows Sonic object play, the rest are paused (a paused
-// channel's generator is not processed, so a thruster synth that loses costs nothing).
+// LTBF's 3D sounds through one pool (Pool.hpp, docs/design/audio-native.md A.2): each sound is a voice of the audio
+// backend (Audio/Out) that registers here. Each game frame ranks them; the ones that win a voice play, the rest are
+// paused (a paused voice's generator is not run, so a thruster synth that loses costs nothing).
 //
 // Game thread only. The mixer is not touched.
 
+#include "Audio/Out/Out.hpp"
 #include "Pool.hpp"
 
 #include <string>
 
-namespace FMOD {
-class Channel;
-class System;
-} // namespace FMOD
-
 namespace Voices {
 
-// a place and axes in the game's world (z up)
-struct Pose {
-  Vec3 position, right, forward, up;
-  // the listener's velocity, for Doppler
-  Vec3 velocity;
-};
+// a place and axes in the game's world (z up), and the listener's velocity
+using Pose = Out::Pose;
 
-void Init(FMOD::System *aSystem);
-
-// Adds the Object Spatializer to the channel and starts it paused. aBaseGain is the channel's own
-// gain, under the voice's fade. False if FMOD refused (logged).
-bool Register(uint64_t aId, Kind aKind, uint64_t aCar, bool aSynth, FMOD::Channel *aChannel, float aBaseGain,
+// The voice (paused, as Out::Play makes it) ranked from now on; its owner keeps it, and Unregisters it before it goes.
+// aBaseGain is the voice's own gain, under the pool's fade; aMinDistance and aMaxDistance the rolloff's range, the
+// same as the voice's Out::Options. False for a null voice.
+bool Register(uint64_t aId, Kind aKind, uint64_t aCar, bool aSynth, Out::Voice *aVoice, float aBaseGain,
               float aMinDistance = 0, float aMaxDistance = 100);
 // each frame: where the sound is and how loud, before rolloff
 void Move(uint64_t aId, const Vec3 &aPosition, const Vec3 &aForward, const Vec3 &aUp, float aLoudness,
           const Vec3 &aVelocity = {});
-// Removes and releases the spatializer; the owner stops the channel after.
 void Unregister(uint64_t aId);
 
 // once a game frame, with the listener and the seconds since the last: ranks, then plays and pauses

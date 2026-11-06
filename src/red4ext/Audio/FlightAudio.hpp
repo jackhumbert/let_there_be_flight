@@ -4,16 +4,11 @@
 #include <RED4ext/Scripting/IScriptable.hpp>
 #include "Engine/RTTIClass.hpp"
 #include "Buses.hpp"
-#include "FmodHelper.hpp"
 #include "Inputs/Inputs.hpp"
 #include <RED4ext/Scripting/Natives/Generated/Matrix.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 
 #include <string>
-
-namespace FMOD {
-class ChannelGroup;
-} // namespace FMOD
 
 class FlightAudio : public Engine::RTTIClass<FlightAudio, RED4ext::IScriptable> {
 public:
@@ -21,14 +16,12 @@ public:
   static bool Unload(RED4ext::CGameApplication *aApp);
 
   // each frame, from FlightSystem's PrePhysics: the buses' volumes (the mod's settings against the game's, which
-  // it reads 4 times a second) and the one coreSystem->update() of the frame
+  // it reads 4 times a second) and the audio backend's frame (Audio/Out)
   void UpdateVolume();
   void Pause();
   void Resume();
 
   static FlightAudio* Get();
-  // a bus's channel group in the plugin's own FMOD Core system (docs/design/audio-native.md B.5)
-  static FMOD::ChannelGroup *Group(Buses::Bus aBus);
 
   // A listener Inputs::Gather sets each frame in place of the player's soundListener component: the
   // cinematic camera's (its shots are around the car, the component stays with V, FlightComponent).

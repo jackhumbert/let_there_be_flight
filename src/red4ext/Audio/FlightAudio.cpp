@@ -13,6 +13,8 @@
 #include "EngineSynth/Channels.hpp"
 #include "Inputs/Gather.hpp"
 #include "Inputs/Inputs.hpp"
+#include "Out/Backend.hpp"
+#include "Out/Out.hpp"
 #include "Samples/Samples.hpp"
 #include "Voices/Voices.hpp"
 #include "Wind/Wind.hpp"
@@ -28,28 +30,11 @@
 #include <RED4ext/Scripting/Natives/Generated/Matrix.hpp>
 #include <RED4ext/Scripting/Natives/ScriptGameInstance.hpp>
 
+#include "Flight/DeveloperSettings.hpp"
 #include "Utils/Utils.hpp"
 #include "stdafx.hpp"
-#include <fmod.hpp>
-#include <fmod_errors.h>
 #include "FlightSystem.hpp"
 
-#define ERRCHECK(_result) ERRCHECK_fn(_result, __FILE__, __LINE__)
-
-static bool ERRCHECK_fn(FMOD_RESULT result, const char *file, int line) {
-  if (result != FMOD_OK) {
-    spdlog::error("{0}({1}): FMOD error {2} - {3}", file, line, result, FMOD_ErrorString(result));
-    return false;
-  }
-  return true;
-}
-
-// The plugin's own FMOD Core system and its three buses as channel groups under the master
-// (docs/design/audio-native.md B.5), the Engine group's and the master's limiters
-static FMOD::System *coreSystem = nullptr;
-static FMOD::ChannelGroup *busGroups[3] = {};
-static FMOD::DSP *engineLimiter = nullptr, *masterLimiter = nullptr;
-static FMOD_3D_ATTRIBUTES listenerAttributes = {{0}};
 // the water low-pass's input (SetWater), for the engine synth
 static float water = 0.0f;
 
@@ -57,90 +42,30 @@ FlightAudio* FlightAudio::Get() {
   return FlightSystem::FlightSystem::GetInstance()->audio;
 }
 
-FMOD::ChannelGroup *FlightAudio::Group(Buses::Bus aBus) {
-  return busGroups[int(aBus)];
-}
-
-// an FMOD_DSP_TYPE_LIMITER at the head of aGroup, set from aLimiter; null if FMOD refused (logged)
-static FMOD::DSP *AddLimiter(FMOD::ChannelGroup *aGroup, const Buses::Limiter &aLimiter) {
-  FMOD::DSP *dsp = nullptr;
-  if (!ERRCHECK(coreSystem->createDSPByType(FMOD_DSP_TYPE_LIMITER, &dsp))) {
-    return nullptr;
-  }
-  if (!ERRCHECK(dsp->setParameterFloat(FMOD_DSP_LIMITER_CEILING, aLimiter.ceilingDb)) ||
-      !ERRCHECK(dsp->setParameterFloat(FMOD_DSP_LIMITER_RELEASETIME, aLimiter.releaseMs)) ||
-      !ERRCHECK(aGroup->addDSP(FMOD_CHANNELCONTROL_DSP_HEAD, dsp))) {
-    dsp->release();
-    return nullptr;
-  }
-  return dsp;
-}
-
 bool FlightAudio::Load(RED4ext::CGameApplication *aApp) {
-  if (!ERRCHECK(FMOD::System_Create(&coreSystem))) {
-    coreSystem = nullptr;
+  // the backend for the session (docs/design/wwise-audio.md); Wwise falls back to FMOD when it cannot install
+  if (!Out::Init(Flight::Developer().wwiseAudio ? Out::Backend::Wwise : Out::Backend::Fmod)) {
     return false;
   }
-  ERRCHECK(coreSystem->setSoftwareFormat(0, FMOD_SPEAKERMODE_STEREO, 0));
-
-  // Due to a bug in WinSonic on Windows, FMOD initialization may fail on some machines.
-  // If you get the error "FMOD error 51 - Error initializing output device", try using
-  // a different output type such as FMOD_OUTPUTTYPE_AUTODETECT
-  ERRCHECK(coreSystem->setOutput(FMOD_OUTPUTTYPE_AUTODETECT));
-  if (!ERRCHECK(coreSystem->init(1024, FMOD_INIT_3D_RIGHTHANDED, nullptr))) {
-    coreSystem->release();
-    coreSystem = nullptr;
-    return false;
+  Samples::Load(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "audio");
+  Wind::Init();
+  if (Out::Current() == Out::Backend::Fmod) {
+    // on the master group: the stems' bus track, and the test source with its echoes (the rest has its echoes from
+    // the car's Engine already); the master's limiter goes after it on the first frame
+    Acoustics::Attach(Out::FmodSystem(), Out::FmodMaster());
+  } else {
+    Acoustics::AttachVoice();
   }
-
-  FMOD::ChannelGroup *master = nullptr;
-  ERRCHECK(coreSystem->getMasterChannelGroup(&master));
-  constexpr const char *kNames[3] = {"Engine", "Wind", "Warning"};
-  for (int i = 0; i < 3; ++i) {
-    ERRCHECK(coreSystem->createChannelGroup(kNames[i], &busGroups[i]));
-    ERRCHECK(master->addGroup(busGroups[i]));
-  }
-  engineLimiter = AddLimiter(Group(Buses::Bus::Engine), Buses::LimiterFor(false));
-
-  spdlog::info("FMOD loaded");
-
-  Samples::Load(coreSystem, Group(Buses::Bus::Engine), Group(Buses::Bus::Warning),
-                Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "audio");
-
-  Wind::Init(coreSystem, Group(Buses::Bus::Wind));
-
-  // on the master group: the stems' bus track, and the test source with its echoes (the rest has its
-  // echoes from the car's Engine already)
-  Acoustics::Attach(coreSystem, master);
-  // after the echoes, last before the output
-  masterLimiter = AddLimiter(master, Buses::LimiterFor(true));
-
   return true;
 }
 
 bool FlightAudio::Unload(RED4ext::CGameApplication *aApp) {
+  // every voice before the backend
   EngineSynth::Channels::StopAll();
-  Samples::StopAll();
+  Samples::Unload();
   Wind::Shutdown();
   Acoustics::Detach();
-  if (masterLimiter) {
-    FMOD::ChannelGroup *master = nullptr;
-    coreSystem->getMasterChannelGroup(&master);
-    master->removeDSP(masterLimiter);
-    masterLimiter->release();
-    masterLimiter = nullptr;
-  }
-  if (engineLimiter) {
-    Group(Buses::Bus::Engine)->removeDSP(engineLimiter);
-    engineLimiter->release();
-    engineLimiter = nullptr;
-  }
-  for (auto &group : busGroups) {
-    group = nullptr;
-  }
-  coreSystem->release();
-  coreSystem = nullptr;
-
+  Out::Shutdown();
   return true;
 }
 
@@ -170,9 +95,6 @@ static void ReadVolumeSetting(const char *aName, int &aValue) {
 }
 
 void FlightAudio::UpdateVolume() {
-  if (!coreSystem) {
-    return;
-  }
   using Clock = std::chrono::steady_clock;
   static Clock::time_point lastRefresh{};
   const auto now = Clock::now();
@@ -191,13 +113,16 @@ void FlightAudio::UpdateVolume() {
   auto cls = FlightAudio::GetRTTIType();
   auto setting = [&](const char *aName) { return *cls->GetProperty(aName)->GetValuePtr<float>(this); };
   const bool inMenu = *cls->GetProperty("isInMenu")->GetValuePtr<bool>(this);
-  const float gameVolume = Inputs::GameVolume(inMenu, dilationHub, dilationMap, dilationRadial, volumeMaster, volumeSfx);
+  // under Wwise the game's master and SFX volumes act on LTBF's voices already (they are under its SFX bus)
+  const bool included = Out::GameVolumeIncluded();
+  const float gameVolume = Inputs::GameVolume(inMenu, dilationHub, dilationMap, dilationRadial,
+                                              included ? 100 : volumeMaster, included ? 100 : volumeSfx);
   const Buses::Volumes volumes{gameVolume, setting("engineVolume"), setting("windVolume"), setting("warningVolume")};
   for (auto bus : {Buses::Bus::Engine, Buses::Bus::Wind, Buses::Bus::Warning}) {
-    ERRCHECK(Group(bus)->setVolume(Buses::BusVolume(bus, volumes)));
+    Out::SetBusVolume(bus, Buses::BusVolume(bus, volumes));
   }
-  // the one FMOD update a frame
-  ERRCHECK(coreSystem->update());
+  // the backend's frame: FMOD's one update, Wwise's voices started and stopped
+  Out::Update();
 }
 
 void FlightAudio::SetWater(float value) {
@@ -206,16 +131,12 @@ void FlightAudio::SetWater(float value) {
 }
 
 void FlightAudio::Pause() {
-  FMOD::ChannelGroup *master = nullptr;
-  ERRCHECK(coreSystem->getMasterChannelGroup(&master));
-  ERRCHECK(master->setPaused(true));
+  Out::SetPaused(true);
   Voices::Pause(true);
 }
 
 void FlightAudio::Resume() {
-  FMOD::ChannelGroup *master = nullptr;
-  ERRCHECK(coreSystem->getMasterChannelGroup(&master));
-  ERRCHECK(master->setPaused(false));
+  Out::SetPaused(false);
   Voices::Pause(false);
 }
 
@@ -227,15 +148,14 @@ static Voices::Vec3 listenerVelocity;
 static Voices::Vec3 windowLeft, windowRight;
 
 // FMOD's Event Cone Angle: degrees between the event's forward and the way to the listener (0 facing
-// it, 180 facing away)
-static float ConeAngle(const FMOD_3D_ATTRIBUTES &aEvent, const FMOD_3D_ATTRIBUTES &aListener) {
-  const float x = aListener.position.x - aEvent.position.x, y = aListener.position.y - aEvent.position.y,
-              z = aListener.position.z - aEvent.position.z;
+// it, 180 facing away), in the game's world
+static float ConeAngle(const Voices::Vec3 &aPosition, const Voices::Vec3 &aForward, const Voices::Vec3 &aListener) {
+  const float x = aListener.x - aPosition.x, y = aListener.y - aPosition.y, z = aListener.z - aPosition.z;
   const float length = std::sqrt(x * x + y * y + z * z);
   if (length < 1e-4f) {
     return 0.0f;
   }
-  const auto &f = aEvent.forward;
+  const auto &f = aForward;
   const float c = (x * f.x + y * f.y + z * f.z) / length;
   return std::acos(std::clamp(c, -1.0f, 1.0f)) * 57.29578f;
 }
@@ -290,9 +210,6 @@ bool FlightAudio::Cinematic() {
 }
 
 void FlightAudio::UpdateListenerMatrix(RED4ext::Matrix matrix) {
-  listenerAttributes.position = {.x = matrix.W.X, .y = matrix.W.Z, .z = -matrix.W.Y};
-  listenerAttributes.up = {.x = matrix.Z.X, .y = matrix.Z.Z, .z = -matrix.Z.Y};
-  listenerAttributes.forward = {.x = matrix.Y.X, .y = matrix.Y.Z, .z = -matrix.Y.Y};
   listenerFrame = {{matrix.W.X, matrix.W.Y, matrix.W.Z},
                    {matrix.X.X, matrix.X.Y, matrix.X.Z},
                    {matrix.Y.X, matrix.Y.Y, matrix.Y.Z},
@@ -318,10 +235,8 @@ void FlightAudio::UpdateListenerMatrix(RED4ext::Matrix matrix) {
   }
   lastListener = listenerFrame.position;
   haveListener = true;
-  // FMOD's Doppler takes the listener's velocity
-  listenerAttributes.velocity = {.x = listenerVelocity.x, .y = listenerVelocity.z, .z = -listenerVelocity.y};
-  ERRCHECK(coreSystem->set3DListenerAttributes(0, &listenerAttributes.position, &listenerAttributes.velocity,
-                                               &listenerAttributes.forward, &listenerAttributes.up));
+  listenerFrame.velocity = listenerVelocity;
+  Out::SetListener(listenerFrame);
   Samples::Frame(dt);
   Wind::Tick();
   // the echo voices go to their image sources before the pool ranks them
@@ -367,23 +282,24 @@ RED4ext::CString FlightAudio::AcousticsStems(bool on) {
 }
 
 RED4ext::CString FlightAudio::AcousticsState() {
-  // and what FMOD is playing: channels (real ones mixed)
-  int channels = 0, real = 0;
-  coreSystem->getChannelsPlaying(&channels, &real);
+  // and what the backend is playing (FMOD's channels; Wwise's voices and relay)
   auto state = Acoustics::State();
   state.pop_back();
-  state += fmt::format(",\"fmodChannels\":{},\"fmodReal\":{}}}", channels, real);
-  return {state.c_str()};
+  std::string out = Out::State();
+  state += ",\"out\":" + out;
+  if (out.find("\"fmodChannels\"") != std::string::npos) {
+    // the FMOD figures where tests read them before
+    out.erase(0, out.find("\"fmodChannels\""));
+    out.pop_back();
+    state += "," + out;
+  }
+  return {(state + "}").c_str()};
 }
 
 void FlightAudio::UpdateThruster(const std::string &aId, const Inputs::Values &aValues, float aVolume,
                                  const Inputs::Vec3 &aPosition, const Inputs::Axes &aCone) {
-  // FMOD's axes: x right, y up, -z forward, from the game's z up and y forward
-  FMOD_3D_ATTRIBUTES attributes{};
-  attributes.position = {.x = aPosition.x, .y = aPosition.z, .z = -aPosition.y};
-  attributes.forward = {.x = aCone.forward.x, .y = aCone.forward.z, .z = -aCone.forward.y};
-  attributes.up = {.x = aCone.up.x, .y = aCone.up.z, .z = -aCone.up.y};
-  const float cone = ConeAngle(attributes, listenerAttributes);
+  const float cone = ConeAngle({aPosition.x, aPosition.y, aPosition.z}, {aCone.forward.x, aCone.forward.y, aCone.forward.z},
+                               listenerFrame.position);
   if (!EngineSynth::Channels::Playing(aId)) {
     return;
   }
@@ -407,7 +323,7 @@ void FlightAudio::UpdateThruster(const std::string &aId, const Inputs::Values &a
 void FlightAudio::StartEngine(RED4ext::CString emitterName, float pitch, uint64_t car, bool player) {
   spdlog::info("[FlightAudio] Starting the engine synth: {} with pitch: {}", emitterName.c_str(), pitch);
   startPitch[emitterName.c_str()] = pitch;
-  EngineSynth::Channels::Start(coreSystem, Group(Buses::Bus::Engine), emitterName.c_str(), pitch, car, player);
+  EngineSynth::Channels::Start(emitterName.c_str(), pitch, car, player);
 }
 
 void FlightAudio::StopEngine(RED4ext::CString emitterName) {
@@ -522,5 +438,7 @@ RED4ext::CString FlightAudio::AudioSummary() {
   const std::string thrusters = synth.rfind("synth on 0 ", 0) == 0
                                     ? "thrusters: silent, not flying (" + synth.substr(synth.find("character")) + ")"
                                     : "thrusters: " + synth;
-  return (thrusters + "; " + Acoustics::Summary() + "; " + Voices::Summary() + "; " + Wind::Summary()).c_str();
+  return (thrusters + "; " + Acoustics::Summary() + "; " + Voices::Summary() + "; " + Wind::Summary() + "; " +
+          Out::Summary())
+      .c_str();
 }

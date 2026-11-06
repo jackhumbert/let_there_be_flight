@@ -1,9 +1,8 @@
 #include "Channels.hpp"
 
 #include "Audio/Acoustics/Engine.hpp"
+#include "Audio/Out/Out.hpp"
 
-#include <fmod.hpp>
-#include <fmod_errors.h>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
@@ -20,14 +19,6 @@ namespace EngineSynth::Channels {
 
 namespace {
 
-bool Check(FMOD_RESULT aResult, const char *aWhat) {
-  if (aResult != FMOD_OK) {
-    spdlog::error("[EngineSynth] {}: FMOD error {} - {}", aWhat, int(aResult), FMOD_ErrorString(aResult));
-    return false;
-  }
-  return true;
-}
-
 // what the generator DSP plays: the synth and the newest inputs from the game thread, or for the
 // player's thrusters the dry sound of the acoustics engine's slot (Acoustics/Engine), which renders it
 struct Generator {
@@ -41,15 +32,12 @@ struct Generator {
 
 struct Thruster {
   std::unique_ptr<Generator> generator;
-  FMOD::DSP *source = nullptr;
-  FMOD::Channel *channel = nullptr;
+  std::unique_ptr<Out::Voice> out;
   // the thruster in the voice pool
   uint64_t voice = 0;
 };
 
 std::unordered_map<std::string, Thruster> thrusters;
-FMOD::System *core = nullptr;
-FMOD::ChannelGroup *group = nullptr;
 // the synth's cost, over every block of every channel
 std::atomic<uint64_t> blocks{0}, frames{0}, nanos{0}, maxNanos{0};
 std::atomic<int> sampleRate{48000};
@@ -57,33 +45,16 @@ std::atomic<int> sampleRate{48000};
 std::atomic<uint32_t> characterBits{CharacterBits(Character{})};
 std::atomic<uint32_t> soundIndex{uint32_t(Tuning{}.sound)};
 
-FMOD_RESULT F_CALL Process(FMOD_DSP_STATE *aState, unsigned int aLength, const FMOD_DSP_BUFFER_ARRAY *,
-                           FMOD_DSP_BUFFER_ARRAY *aOut, FMOD_BOOL, FMOD_DSP_PROCESS_OPERATION aOperation) {
-  void *userData = nullptr;
-  aState->functions->getuserdata(aState, &userData);
-  auto *g = static_cast<Generator *>(userData);
-  if (aOperation == FMOD_DSP_PROCESS_QUERY) {
-    // a generator, stereo with the same sound in both as the event's loops: the spatializer folds the
-    // channels into one object (a mono source came out 6 dB under the event), and the echoes pan
-    // their walls left and right
-    if (aOut) {
-      aOut->speakermode = FMOD_SPEAKERMODE_STEREO;
-      aOut->buffernumchannels[0] = 2;
-      aOut->bufferchannelmask[0] = FMOD_CHANNELMASK_STEREO;
-    }
-    return FMOD_OK;
+// the generator: the synth, or the slot's dry sound
+void Render(void *aUser, float *aOut, uint32_t aFrames, uint32_t) {
+  auto *g = static_cast<Generator *>(aUser);
+  if (g->slot >= 0 && aFrames <= g->mono.size()) {
+    Acoustics::Engine::ReadDry(g->slot, aOut, aFrames);
+    return;
   }
-  float *out = aOut->buffers[0];
-  if (g && g->slot >= 0 && aLength <= g->mono.size()) {
-    Acoustics::Engine::ReadDry(g->slot, g->mono.data(), aLength);
-    for (unsigned int i = 0; i < aLength; ++i) {
-      out[2 * i] = out[2 * i + 1] = g->mono[i];
-    }
-    return FMOD_OK;
-  }
-  if (!g || !g->synth || aLength > g->mono.size()) {
-    std::memset(out, 0, 2 * aLength * sizeof(float));
-    return FMOD_OK;
+  if (!g->synth || aFrames > g->mono.size()) {
+    std::memset(aOut, 0, aFrames * sizeof(float));
+    return;
   }
   {
     std::unique_lock guard(g->lock, std::try_to_lock);
@@ -95,42 +66,20 @@ FMOD_RESULT F_CALL Process(FMOD_DSP_STATE *aState, unsigned int aLength, const F
   g->synth->SetCharacter(CharacterFromBits(characterBits.load(std::memory_order_relaxed)));
   g->synth->SetSound(Sound(soundIndex.load(std::memory_order_relaxed)));
   const auto t0 = std::chrono::steady_clock::now();
-  g->synth->Render(g->mono.data(), aLength);
-  for (unsigned int i = 0; i < aLength; ++i) {
-    out[2 * i] = out[2 * i + 1] = g->mono[i];
-  }
+  g->synth->Render(aOut, aFrames);
   const uint64_t ns = uint64_t(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - t0).count());
   blocks.fetch_add(1, std::memory_order_relaxed);
-  frames.fetch_add(aLength, std::memory_order_relaxed);
+  frames.fetch_add(aFrames, std::memory_order_relaxed);
   nanos.fetch_add(ns, std::memory_order_relaxed);
   if (ns > maxNanos.load(std::memory_order_relaxed)) {
     maxNanos.store(ns, std::memory_order_relaxed);
   }
-  return FMOD_OK;
-}
-
-FMOD_DSP_DESCRIPTION *Description() {
-  static FMOD_DSP_DESCRIPTION description = [] {
-    FMOD_DSP_DESCRIPTION d{};
-    d.pluginsdkversion = FMOD_PLUGIN_SDK_VERSION;
-    std::strncpy(d.name, "LTBF engine synth", sizeof(d.name) - 1);
-    d.version = 1;
-    d.numinputbuffers = 0;
-    d.numoutputbuffers = 1;
-    d.process = Process;
-    return d;
-  }();
-  return &description;
 }
 
 void Release(Thruster &t) {
-  if (t.channel) {
-    t.channel->stop();
-  }
-  if (t.source) {
-    t.source->release();
-  }
-  // the engine lets go of the slot once the channel no longer reads it
+  // the voice first: once it is gone its generator is not run again
+  t.out.reset();
+  // the engine lets go of the slot once the voice no longer reads it
   if (t.generator && t.generator->slot >= 0) {
     Acoustics::Engine::Release(t.generator->slot);
   }
@@ -139,33 +88,31 @@ void Release(Thruster &t) {
 
 } // namespace
 
-bool Start(FMOD::System *aCore, FMOD::ChannelGroup *aGroup, const std::string &aId, float aPitch, uint64_t aCar,
-           bool aPlayer) {
+bool Start(const std::string &aId, float aPitch, uint64_t aCar, bool aPlayer) {
   Stop(aId);
-  core = aCore;
-  group = aGroup;
-  Voices::Init(core);
-  int rate = 48000;
-  core->getSoftwareFormat(&rate, nullptr, nullptr);
+  const int rate = Out::Rate();
   sampleRate.store(rate);
   Thruster t;
   t.generator = std::make_unique<Generator>();
   const uint32_t seed = uint32_t(std::hash<std::string>()(aId));
-  // the player's thrusters share the acoustics engine; a ninth, or an engine FMOD refused, plays its own
-  // synth like an NPC car's
-  if (aPlayer && Acoustics::Engine::Start(core, group)) {
+  // the player's thrusters share the acoustics engine; a ninth, or an engine the backend refused, plays its own synth
+  // like an NPC car's
+  if (aPlayer && Acoustics::Engine::Start()) {
     t.generator->slot = Acoustics::Engine::Acquire(aPitch, seed);
   }
   if (t.generator->slot < 0) {
     t.generator->synth = std::make_unique<Synth>(float(rate), aPitch, seed);
   }
-  bool ok = Check(core->createDSP(Description(), &t.source), "createDSP") &&
-            Check(t.source->setUserData(t.generator.get()), "setUserData") &&
-            Check(core->playDSP(t.source, group, true, &t.channel), "playDSP");
+  Out::Options options;
+  options.bus = Buses::Bus::Engine;
+  // an NPC car's sound is low-passed while blocked
+  options.lowpass = !aPlayer;
+  options.name = aPlayer ? "LTBF thruster" : "LTBF NPC thruster";
+  t.out = Out::Play(Render, t.generator.get(), options);
   t.voice = std::hash<std::string>()(aId);
-  ok = ok && Voices::Register(t.voice, aPlayer ? Voices::Kind::PlayerThruster : Voices::Kind::NpcThruster,
-                              aPlayer ? 0 : aCar, true, t.channel,
-                              std::pow(10.0f, Acoustics::Engine::kChannelGainDb / 20.0f));
+  const bool ok = t.out && Voices::Register(t.voice, aPlayer ? Voices::Kind::PlayerThruster : Voices::Kind::NpcThruster,
+                                            aPlayer ? 0 : aCar, true, t.out.get(),
+                                            std::pow(10.0f, Acoustics::Engine::kChannelGainDb / 20.0f));
   if (!ok) {
     Release(t);
     return false;
@@ -173,18 +120,7 @@ bool Start(FMOD::System *aCore, FMOD::ChannelGroup *aGroup, const std::string &a
   static bool once = false;
   if (!once) {
     once = true;
-    int n = 0;
-    t.channel->getNumDSPs(&n);
-    std::string chain;
-    for (int i = 0; i < n; ++i) {
-      FMOD::DSP *dsp = nullptr;
-      char name[33] = {};
-      if (t.channel->getDSP(i, &dsp) == FMOD_OK) {
-        dsp->getInfo(name, nullptr, nullptr, nullptr, nullptr);
-      }
-      chain += fmt::format("{}{}", i ? " <- " : "", name);
-    }
-    spdlog::info("[EngineSynth] channel chain (output first): {} <- synth, at {} Hz", chain, rate);
+    spdlog::info("[EngineSynth] thruster voices at {} Hz ({})", rate, Out::Summary());
   }
   thrusters[aId] = std::move(t);
   return true;

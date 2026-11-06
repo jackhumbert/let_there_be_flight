@@ -5,6 +5,8 @@
 #include "Reflections.hpp"
 #include "Stems.hpp"
 
+#include "Audio/Out/Out.hpp"
+
 #include <fmod.hpp>
 #include <fmod_errors.h>
 #include <spdlog/spdlog.h>
@@ -277,6 +279,15 @@ FMOD_RESULT F_CALL DspShouldIProcess(FMOD_DSP_STATE *aState, FMOD_BOOL aInputsId
   return FMOD_ERR_DSP_SILENCE;
 }
 
+void Run();
+
+void StartWorker() {
+  if (!running) {
+    running = true;
+    worker = std::thread(Run);
+  }
+}
+
 void Run() {
   std::optional<Probe> probe;
   // the car's velocity from probe to probe (for the echoes' Doppler shifts), smoothed
@@ -441,15 +452,57 @@ bool Attach(FMOD::System *aCore, FMOD::ChannelGroup *aMaster) {
   }
   attachedGroup = aMaster;
   attachedDsp = dsp;
-  if (!running) {
-    running = true;
-    worker = std::thread(Run);
-  }
+  StartWorker();
   spdlog::info("[Acoustics] on the master group");
   return true;
 }
 
+namespace {
+
+// Under Wwise there is no master to sit on: the test source is a 2D stereo voice of its own, with its echoes (the
+// rest has its echoes from the car's Engine already, as under FMOD)
+std::unique_ptr<Instance> testInstance;
+std::unique_ptr<Out::Voice> testVoice;
+
+void TestRender(void *aUser, float *aOut, uint32_t aFrames, uint32_t aChannels) {
+  auto &i = *static_cast<Instance *>(aUser);
+  const auto test = static_cast<TestSource>(testSource.load(std::memory_order_relaxed));
+  const size_t samples = size_t(aFrames) * 2;
+  if (test == TestSource::Off || aChannels != 2 || 2 * samples > i.testBlock.size()) {
+    std::memset(aOut, 0, size_t(aFrames) * aChannels * sizeof(float));
+    return;
+  }
+  // interleaved in testBlock's halves as the master DSP has it, then apart into aOut's channels
+  float *in = i.testBlock.data(), *out = in + samples;
+  Generate(i, test, in, aFrames, 2);
+  Render(i, in, out, aFrames, 2);
+  for (uint32_t k = 0; k < aFrames; ++k) {
+    aOut[k] = out[2 * k];
+    aOut[aFrames + k] = out[2 * k + 1];
+  }
+}
+
+} // namespace
+
+bool AttachVoice() {
+  testInstance = std::make_unique<Instance>(float(Out::Rate()));
+  Out::Options options;
+  options.positioned = false;
+  options.channels = 2;
+  options.name = "LTBF test source";
+  testVoice = Out::Play(TestRender, testInstance.get(), options);
+  if (testVoice) {
+    testVoice->SetVolume(1.0f);
+    testVoice->SetPaused(testSource.load() == int(TestSource::Off));
+  }
+  StartWorker();
+  spdlog::info("[Acoustics] the test source as a voice of its own");
+  return testVoice != nullptr;
+}
+
 void Detach() {
+  testVoice.reset();
+  testInstance.reset();
   {
     std::lock_guard guard(wakeLock);
     running = false;
@@ -575,6 +628,9 @@ void SetOcclusion(bool aOn) {
 
 void SetTestSource(TestSource aSource) {
   testSource.store(int(aSource));
+  if (testVoice) {
+    testVoice->SetPaused(aSource == TestSource::Off);
+  }
   spdlog::info("[Acoustics] test source {}", int(aSource));
 }
 

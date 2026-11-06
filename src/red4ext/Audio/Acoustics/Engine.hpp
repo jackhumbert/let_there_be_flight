@@ -4,20 +4,21 @@
 // car's echoes are made, from the dry sum of its thrusters, and played by voices at the echoes'
 // image sources.
 //
-//   bed             a generator DSP in the Engine group, never paused while the player flies. It
+//   bed             a 2D voice (Audio/Out) in the Engine bus, never paused while the player flies. It
 //                   renders the player's thruster synths (the slots), writes each to its dry ring and
 //                   adds it to the dry sum, runs Reflections::ProcessStreams on the sum, and writes
 //                   each echo stream to an echo ring. Its own output is silent: the late reverb leaves
 //                   by quarter of the horizon with the distant echoes.
-//   thrusters       a slot's generator DSP (EngineSynth/Channels) reads its dry ring and is placed by
-//                   the voice pool as before.
-//   echo voices     ten generator DSPs reading the echo rings, registered with the voice pool at the
+//   thrusters       a slot's voice (EngineSynth/Channels) reads its dry ring and is placed by the voice
+//                   pool as before.
+//   echo voices     ten voices reading the echo rings, registered with the voice pool at the
 //                   image sources (Params::*Image) with no rolloff: the spreading is in the echo's
 //                   gain, the Doppler in its delay rate. The last four are the quarters of the horizon:
 //                   each its distant echo and its share of the late reverb (Params::quarterImage).
 //
 // The rings run one mixer block behind (their prefill), the dry and the echoes alike, so the echoes'
-// delays against the thrusters stay exact. NPC cars have no echoes.
+// delays against the thrusters stay exact, whichever of the bed and the voices the backend runs first in a block.
+// NPC cars have no echoes.
 //
 // Game thread: Start, Acquire, Update, Release, Frame, Stop. Mixer thread: the bed and ReadDry; they
 // never wait on a lock or allocate.
@@ -29,11 +30,6 @@
 #include <cstdint>
 #include <string>
 
-namespace FMOD {
-class ChannelGroup;
-class System;
-} // namespace FMOD
-
 namespace Acoustics::Engine {
 
 // player thruster slots
@@ -44,9 +40,9 @@ inline constexpr int kEchoes = 6 + kQuarters;
 // sound as Reflections sets them (docs/history.md)
 inline constexpr float kChannelGainDb = 4.7f;
 
-// Creates the bed and the echo voices in aGroup (the Engine bus's); once, later calls do nothing.
-// False if FMOD refused (logged).
-bool Start(FMOD::System *aCore, FMOD::ChannelGroup *aGroup);
+// Creates the bed and the echo voices in the Engine bus; once, later calls do nothing. False if the backend refused
+// (logged).
+bool Start();
 // Stops them and frees the slots.
 void Stop();
 

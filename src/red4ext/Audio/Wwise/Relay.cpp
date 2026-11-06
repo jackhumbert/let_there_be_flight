@@ -1,5 +1,7 @@
 #include "Relay.hpp"
 
+#include <thread>
+
 namespace Wwise {
 
 namespace {
@@ -39,31 +41,43 @@ void Relay::Unbind(AkPlayingID aId) {
   }
   for (Slot &slot : slots) {
     AkPlayingID id = aId;
-    if (slot.id.compare_exchange_strong(id, 0, std::memory_order_acq_rel)) {
-      slot.source.store(nullptr, std::memory_order_release);
+    if (slot.id.compare_exchange_strong(id, 0)) {
+      // the audio thread found the ID before it went: wait for it to leave the source (one block's render at most)
+      while (slot.busy.load()) {
+        std::this_thread::yield();
+      }
+      slot.source.store(nullptr);
     }
   }
 }
 
-Source *Relay::Find(AkPlayingID aId) const {
+Relay::Slot *Relay::Enter(AkPlayingID aId) {
   if (aId == 0) {
     return nullptr;
   }
-  for (const Slot &slot : slots) {
-    if (slot.id.load(std::memory_order_acquire) == aId) {
-      return slot.source.load(std::memory_order_acquire);
+  for (Slot &slot : slots) {
+    if (slot.id.load() != aId) {
+      continue;
     }
+    // busy first, then the ID again: Unbind clears the ID first, then waits for busy to clear
+    slot.busy.store(true);
+    if (slot.id.load() == aId) {
+      return &slot;
+    }
+    slot.busy.store(false);
+    return nullptr;
   }
   return nullptr;
 }
 
 void Relay::Execute(AkPlayingID aId, AkAudioBuffer *aBuffer) {
-  if (Source *source = Find(aId)) {
+  if (Slot *slot = Enter(aId)) {
     ours.fetch_add(1, std::memory_order_relaxed);
     const uint32_t n = aBuffer->uMaxFrames, channels = aBuffer->channelConfig & 0xFF;
     frames.store(n, std::memory_order_relaxed);
     config.store(aBuffer->channelConfig, std::memory_order_relaxed);
-    source->Render(aBuffer->pData, n, channels ? channels : 1);
+    slot->source.load()->Render(aBuffer->pData, n, channels ? channels : 1);
+    Leave(slot);
     aBuffer->uValidFrames = uint16_t(n);
     aBuffer->eState = AK_DataReady;
     return;
@@ -83,11 +97,12 @@ void Relay::Execute(AkPlayingID aId, AkAudioBuffer *aBuffer) {
 }
 
 void Relay::Format(AkPlayingID aId, AkAudioFormat &aFormat) {
-  if (const Source *source = Find(aId)) {
+  if (Slot *slot = Enter(aId)) {
     formats.fetch_add(1, std::memory_order_relaxed);
     aFormat.sampleRate = rate.load(std::memory_order_relaxed);
-    aFormat.channelConfig = ChannelConfig(source->Channels());
+    aFormat.channelConfig = ChannelConfig(slot->source.load()->Channels());
     aFormat.bits = kFloatBits;
+    Leave(slot);
     return;
   }
   if (passing > 0) {
@@ -101,7 +116,11 @@ void Relay::Format(AkPlayingID aId, AkAudioFormat &aFormat) {
 
 float Relay::Gain(AkPlayingID aId) {
   // our gain is in our samples
-  if (Find(aId) || passing > 0) {
+  if (Slot *slot = Enter(aId)) {
+    Leave(slot);
+    return 1.0f;
+  }
+  if (passing > 0) {
     return 1.0f;
   }
   if (const GainFn fn = passGain.load(std::memory_order_relaxed)) {

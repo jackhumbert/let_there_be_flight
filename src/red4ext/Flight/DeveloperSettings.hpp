@@ -29,6 +29,9 @@ struct DeveloperSettings {
   // rays the echoes use; the rest the live sphere, bunched where the car is going, for the reverb's enclosure and mean
   // free path (Probe::SphereRays; docs/design/acoustics.md, "How many rays"). 32: the nav map's sphere alone.
   float acousticsRays = 1024.0f;
+  // LTBF's sound through the game's Wwise (Audio/Out, docs/design/wwise-audio.md), the default since step 7; false for
+  // its own FMOD as before. Read once, when the plugin loads (developer.ini). FMOD plays when Wwise cannot start.
+  bool wwiseAudio = true;
   // The Autopilot's tuning (Navigation::AutopilotParams) by field name, set as "autopilot.<name>" (a Bool as
   // true/false/1/0/on/off, an Int32 rounded), in the order set, a name set again keeping its place. Each
   // FlightModeAutopilot writes them over its tuning when it is set up, when it is engaged and when

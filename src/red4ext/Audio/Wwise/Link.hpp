@@ -37,6 +37,9 @@ struct Link {
 bool InstallRelay(std::string &aWhy);
 // once a frame: ours back in if the game (or a mod) set its own after us; true when it put them back
 bool KeepRelayInstalled();
+// the callbacks we found (the game's, or none) written back into the globals, so Wwise's audio thread does not call
+// into the plugin once it is unloaded; nothing after this reaches Wwise from the relay
+void UninstallRelay();
 
 struct RelayInstall {
   bool installed = false;

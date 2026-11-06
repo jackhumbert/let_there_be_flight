@@ -1,7 +1,5 @@
 #include "Wind.hpp"
 
-#include <fmod.hpp>
-#include <fmod_errors.h>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
@@ -10,6 +8,7 @@
 #include <cstring>
 #include <memory>
 #include <mutex>
+#include <vector>
 
 namespace Wind {
 
@@ -29,18 +28,12 @@ constexpr float kAheadMetres = 2.0f;
 constexpr float kCarDb = -6.0f;
 constexpr float kStale = 0.25f;
 
-bool Check(FMOD_RESULT aResult, const char *aWhat) {
-  if (aResult != FMOD_OK) {
-    spdlog::error("[Wind] {}: FMOD error {} - {}", aWhat, int(aResult), FMOD_ErrorString(aResult));
-    return false;
-  }
-  return true;
-}
-
-// what a generator DSP plays: the noise, and the newest params from the game thread
+// what a voice plays: the noise, and the newest params from the game thread
 struct Generator {
   Generator(float aRate, uint32_t aSeed) : render(aRate, aSeed) {}
   Render render;
+  // the renderer's stereo (the same in both) for one block
+  std::vector<float> stereo = std::vector<float>(2 * 8192);
   std::mutex lock;
   Params params;
   bool fresh = false;
@@ -48,8 +41,7 @@ struct Generator {
 
 struct Channel {
   std::unique_ptr<Generator> generator;
-  FMOD::DSP *source = nullptr;
-  FMOD::Channel *channel = nullptr;
+  std::unique_ptr<Out::Voice> out;
   uint64_t voice = 0;
 };
 
@@ -57,7 +49,6 @@ Channel channels[2];
 Model model;
 // one wind field for the city round the listener
 Field field(31);
-FMOD::System *core = nullptr;
 bool ready = false;
 bool active = false;
 Clock::time_point lastUpdate, lastFrame;
@@ -66,24 +57,11 @@ View lastView = View::Tpp;
 Params lastParams;
 float lastWind = 0, lastSigma = 0, lastStir = 0;
 
-FMOD_RESULT F_CALL Process(FMOD_DSP_STATE *aState, unsigned int aLength, const FMOD_DSP_BUFFER_ARRAY *,
-                           FMOD_DSP_BUFFER_ARRAY *aOut, FMOD_BOOL, FMOD_DSP_PROCESS_OPERATION aOperation) {
-  void *userData = nullptr;
-  aState->functions->getuserdata(aState, &userData);
-  auto *g = static_cast<Generator *>(userData);
-  if (aOperation == FMOD_DSP_PROCESS_QUERY) {
-    // stereo with the same sound in both, as the engine synth's: the spatializer folds it into one object
-    if (aOut) {
-      aOut->speakermode = FMOD_SPEAKERMODE_STEREO;
-      aOut->buffernumchannels[0] = 2;
-      aOut->bufferchannelmask[0] = FMOD_CHANNELMASK_STEREO;
-    }
-    return FMOD_OK;
-  }
-  float *out = aOut->buffers[0];
-  if (!g) {
-    std::memset(out, 0, 2 * aLength * sizeof(float));
-    return FMOD_OK;
+void Generate(void *aUser, float *aOut, uint32_t aFrames, uint32_t) {
+  auto *g = static_cast<Generator *>(aUser);
+  if (aFrames * 2 > g->stereo.size()) {
+    std::memset(aOut, 0, aFrames * sizeof(float));
+    return;
   }
   {
     std::unique_lock guard(g->lock, std::try_to_lock);
@@ -92,34 +70,17 @@ FMOD_RESULT F_CALL Process(FMOD_DSP_STATE *aState, unsigned int aLength, const F
       g->fresh = false;
     }
   }
-  g->render.Process(out, aLength);
-  return FMOD_OK;
-}
-
-FMOD_DSP_DESCRIPTION *Description() {
-  static FMOD_DSP_DESCRIPTION description = [] {
-    FMOD_DSP_DESCRIPTION d{};
-    d.pluginsdkversion = FMOD_PLUGIN_SDK_VERSION;
-    std::strncpy(d.name, "LTBF wind", sizeof(d.name) - 1);
-    d.version = 1;
-    d.numinputbuffers = 0;
-    d.numoutputbuffers = 1;
-    d.process = Process;
-    return d;
-  }();
-  return &description;
+  g->render.Process(g->stereo.data(), aFrames);
+  for (uint32_t i = 0; i < aFrames; ++i) {
+    aOut[i] = g->stereo[2 * i];
+  }
 }
 
 void Release(Channel &c) {
   if (c.voice) {
     Voices::Unregister(c.voice);
   }
-  if (c.channel) {
-    c.channel->stop();
-  }
-  if (c.source) {
-    c.source->release();
-  }
+  c.out.reset();
   c = {};
 }
 
@@ -176,28 +137,25 @@ void Silence() {
 
 } // namespace
 
-bool Init(FMOD::System *aCore, FMOD::ChannelGroup *group) {
+bool Init() {
   Shutdown();
-  core = aCore;
-  Voices::Init(core);
-  int rate = 48000;
-  core->getSoftwareFormat(&rate, nullptr, nullptr);
+  const int rate = Out::Rate();
+  Out::Options options;
+  options.bus = Buses::Bus::Wind;
+  options.name = "LTBF wind";
   for (int i = 0; i < 2; ++i) {
     Channel &c = channels[i];
     c.generator = std::make_unique<Generator>(float(rate), 11 + i);
+    c.out = Out::Play(Generate, c.generator.get(), options);
     c.voice = kVoiceId + uint64_t(i);
-    const bool ok = Check(core->createDSP(Description(), &c.source), "createDSP") &&
-                    Check(c.source->setUserData(c.generator.get()), "setUserData") &&
-                    Check(core->playDSP(c.source, group, true, &c.channel), "playDSP") &&
-                    Voices::Register(c.voice, Voices::Kind::Wind, 0, false, c.channel, 1.0f, 0.0f, 100.0f);
-    if (!ok) {
+    if (!c.out || !Voices::Register(c.voice, Voices::Kind::Wind, 0, false, c.out.get(), 1.0f, 0.0f, 100.0f)) {
       c.voice = 0;
       Shutdown();
       return false;
     }
   }
   ready = true;
-  spdlog::info("[Wind] two channels in the Wind group at {} Hz", rate);
+  spdlog::info("[Wind] two voices in the Wind bus at {} Hz", rate);
   return true;
 }
 

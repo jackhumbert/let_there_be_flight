@@ -1,9 +1,8 @@
 #pragma once
 
-// The engine synth in FMOD (docs/design/engine-synth.md): each thruster a Core channel playing a
-// generator DSP (Synth, the same in both channels of a stereo pair as the event's loops) and the
-// channel's fader, in the Engine bus's channel group so its volume applies. The Object Spatializer and
-// whether the channel plays at all are the voice pool's (Audio/Voices). The player's thrusters do not
+// The engine synth's voices (docs/design/engine-synth.md): each thruster a voice of the audio backend (Audio/Out)
+// playing a generator (Synth) in the Engine bus. Where it is and whether it plays at all are the voice pool's
+// (Audio/Voices). The player's thrusters do not
 // render: their synths run in the acoustics engine (Acoustics/Engine), which hands each generator its dry
 // sound and makes the echoes from their sum; an NPC car's thrusters render their own and have no echoes.
 // No event pitch: the car's pitch is the synth's.
@@ -16,22 +15,15 @@
 
 #include <string>
 
-namespace FMOD {
-class ChannelGroup;
-class System;
-} // namespace FMOD
-
 namespace EngineSynth::Channels {
 
 using Vec3 = Voices::Vec3;
 // a place and axes in the game's world (z up)
 using Frame = Voices::Pose;
 
-// A thruster's channel in aGroup (the Engine group), by id; aPitch the car's; aCar the entity it belongs
-// to (an NPC car's thrusters fold into one voice), aPlayer whether it is the player's. False if FMOD
-// refused (logged).
-bool Start(FMOD::System *aCore, FMOD::ChannelGroup *aGroup, const std::string &aId, float aPitch, uint64_t aCar,
-           bool aPlayer);
+// A thruster's voice, by id; aPitch the car's; aCar the entity it belongs to (an NPC car's thrusters fold into one
+// voice), aPlayer whether it is the player's. False if the backend refused (logged).
+bool Start(const std::string &aId, float aPitch, uint64_t aCar, bool aPlayer);
 // each frame: the thruster's frame (its facing as forward) and its inputs
 void Update(const std::string &aId, const Frame &aThruster, const Inputs &aInputs);
 void Stop(const std::string &aId);

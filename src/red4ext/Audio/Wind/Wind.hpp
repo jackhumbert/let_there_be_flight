@@ -1,7 +1,7 @@
 #pragma once
 
-// The wind in FMOD (docs/design/audio-native.md A.4): two Core channels playing a generator DSP
-// (Render, the model's noise) in the Wind bus's channel group, each a voice in the pool (Audio/Voices).
+// The wind (docs/design/audio-native.md A.4): two voices of the audio backend (Audio/Out) playing a generator
+// (Render, the model's noise) in the Wind bus, each a voice in the pool (Audio/Voices).
 // First person puts one at each window so the air comes from the side it does; third person has one
 // ahead of the listener along the car's velocity; the cinematic camera has the camera's own wind and
 // the car's, which Doppler sweeps as it passes.
@@ -14,11 +14,6 @@
 
 #include <atomic>
 #include <string>
-
-namespace FMOD {
-class System;
-class ChannelGroup;
-} // namespace FMOD
 
 namespace Wind {
 
@@ -38,8 +33,8 @@ struct Inputs {
   float wallDistance = std::numeric_limits<float>::infinity();
 };
 
-// the two channels in the Wind group; false if FMOD refused (logged)
-bool Init(FMOD::System *aCore, FMOD::ChannelGroup *aGroup);
+// the two voices in the Wind bus; false if the backend refused (logged)
+bool Init();
 void Shutdown();
 
 // each frame the player's car flies

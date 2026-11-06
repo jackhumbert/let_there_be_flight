@@ -1,12 +1,12 @@
 #include "Engine.hpp"
 
 #include "Acoustics.hpp"
+#include "Audio/Out/Mix.hpp"
+#include "Audio/Out/Out.hpp"
 #include "Audio/Voices/Ring.hpp"
 #include "Reflections.hpp"
 #include "Stems.hpp"
 
-#include <fmod.hpp>
-#include <fmod_errors.h>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
@@ -45,13 +45,14 @@ struct Slot {
   EngineSynth::Inputs inputs;
   bool fresh = false;
   Ring dry{kRingSize, kPrefill};
+  // this block's sound, written to the ring once the bus limiter has had its say (Wwise)
+  std::vector<float> block = std::vector<float>(kBlock);
+  bool rendered = false;
 };
 
 struct EchoVoice {
   Ring ring{kRingSize, kPrefill};
-  std::vector<float> mono = std::vector<float>(kBlock);
-  FMOD::DSP *dsp = nullptr;
-  FMOD::Channel *channel = nullptr;
+  std::unique_ptr<Out::Voice> out;
   bool registered = false;
 };
 
@@ -60,7 +61,7 @@ struct Mixer {
     for (auto &s : streams) {
       s.assign(kBlock, 0.0f);
     }
-    for (auto *v : {&dry, &mono, &fade, &stereoDry, &stereoWet}) {
+    for (auto *v : {&dry, &mono, &fade, &stereoDry, &stereoWet, &stereoZero, &bus, &limit}) {
       v->assign(kBlock * 2, 0.0f);
     }
   }
@@ -69,15 +70,20 @@ struct Mixer {
   std::array<EchoVoice, kEchoes> echoes;
   Reflections reflections;
   Tuning tuning;
-  FMOD::DSP *bedDsp = nullptr;
-  FMOD::Channel *bedChannel = nullptr;
+  std::unique_ptr<Out::Voice> bed;
+  // the backend is Wwise: the bed keeps the stems' clock (FMOD's master DSP does it there)
+  bool wwise = false;
+  uint64_t clock = 0;
   // the bed's state (mixer thread)
   uint32_t seq = 0;
   float amount = 0;
   bool idle = true;
   // floor, ceiling, left, right, scatter right, scatter left, reverb left, reverb right (the stems'), the quarters
   std::array<std::vector<float>, 8 + kQuarters> streams;
-  std::vector<float> dry, mono, fade, stereoDry, stereoWet;
+  std::vector<float> dry, mono, fade, stereoDry, stereoWet, stereoZero, stemScratch;
+  // Wwise: the Engine bus's sum as the voices will play it, and the limiter's gain on it
+  std::vector<float> bus, limit;
+  Out::Limiter limiter;
   Stems::EventCursor stems;
 };
 
@@ -89,14 +95,6 @@ std::atomic<uint64_t> blocks{0}, frames{0}, nanos{0}, maxNanos{0};
 // the bed's time for the echoes and the reverb (ProcessStreams), and its blocks
 std::atomic<uint64_t> streamBlocks{0}, streamNanos{0};
 
-bool Check(FMOD_RESULT aResult, const char *aWhat) {
-  if (aResult != FMOD_OK) {
-    spdlog::error("[Engine] {}: FMOD error {} - {}", aWhat, int(aResult), FMOD_ErrorString(aResult));
-    return false;
-  }
-  return true;
-}
-
 // a ring read by a DSP that may have been paused while its writer went on: what is more than a block
 // beyond the prefill is stale and dropped
 void ReadCaughtUp(Ring &aRing, float *aOut, uint32_t aFrames) {
@@ -107,29 +105,12 @@ void ReadCaughtUp(Ring &aRing, float *aOut, uint32_t aFrames) {
   aRing.Read(aOut, aFrames);
 }
 
-// both outputs of a generator: stereo, the same sound in both
-void QueryStereo(FMOD_DSP_BUFFER_ARRAY *aOut) {
-  if (aOut) {
-    aOut->speakermode = FMOD_SPEAKERMODE_STEREO;
-    aOut->buffernumchannels[0] = 2;
-    aOut->bufferchannelmask[0] = FMOD_CHANNELMASK_STEREO;
-  }
-}
-
-// The bed: the slots' synths, the engine on their sum, the rings.
-FMOD_RESULT F_CALL BedProcess(FMOD_DSP_STATE *aState, unsigned int aLength, const FMOD_DSP_BUFFER_ARRAY *,
-                              FMOD_DSP_BUFFER_ARRAY *aOut, FMOD_BOOL, FMOD_DSP_PROCESS_OPERATION aOperation) {
-  if (aOperation == FMOD_DSP_PROCESS_QUERY) {
-    QueryStereo(aOut);
-    return FMOD_OK;
-  }
-  void *userData = nullptr;
-  aState->functions->getuserdata(aState, &userData);
-  auto *m = static_cast<Mixer *>(userData);
-  float *out = aOut->buffers[0];
+// The bed: the slots' synths, the engine on their sum, the rings. Its own output is silent.
+void BedRender(void *aUser, float *aOut, uint32_t aLength, uint32_t aChannels) {
+  auto *m = static_cast<Mixer *>(aUser);
+  std::memset(aOut, 0, size_t(aLength) * aChannels * sizeof(float));
   if (!m || aLength > kBlock) {
-    std::memset(out, 0, 2 * aLength * sizeof(float));
-    return FMOD_OK;
+    return;
   }
   const uint32_t n = aLength;
   float *dry = m->dry.data(), *mono = m->mono.data();
@@ -139,6 +120,7 @@ FMOD_RESULT F_CALL BedProcess(FMOD_DSP_STATE *aState, unsigned int aLength, cons
   const EngineSynth::Character character = EngineSynth::CharacterFromBits(characterBits.load(std::memory_order_relaxed));
   const auto sound = EngineSynth::Sound(soundIndex.load(std::memory_order_relaxed));
   for (Slot &s : m->slots) {
+    s.rendered = false;
     int state = s.state.load(std::memory_order_acquire);
     if (state == Free) {
       continue;
@@ -162,7 +144,9 @@ FMOD_RESULT F_CALL BedProcess(FMOD_DSP_STATE *aState, unsigned int aLength, cons
     s.synth->SetCharacter(character);
     s.synth->SetSound(sound);
     const auto t0 = std::chrono::steady_clock::now();
-    s.synth->Render(mono, n);
+    s.synth->Render(s.block.data(), n);
+    s.rendered = true;
+    mono = s.block.data();
     const uint64_t ns =
         uint64_t(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - t0).count());
     blocks.fetch_add(1, std::memory_order_relaxed);
@@ -171,7 +155,6 @@ FMOD_RESULT F_CALL BedProcess(FMOD_DSP_STATE *aState, unsigned int aLength, cons
     if (ns > maxNanos.load(std::memory_order_relaxed)) {
       maxNanos.store(ns, std::memory_order_relaxed);
     }
-    s.dry.Write(mono, n);
     for (uint32_t i = 0; i < n; ++i) {
       dry[i] += mono[i];
     }
@@ -217,12 +200,6 @@ FMOD_RESULT F_CALL BedProcess(FMOD_DSP_STATE *aState, unsigned int aLength, cons
       std::fill(stream.begin(), stream.begin() + n, 0.0f);
     }
   }
-  // the echo voices' streams: the six echoes, then the quarters (past the reverb's two channels)
-  for (int k = 0; k < kEchoes; ++k) {
-    m->echoes[k].ring.Write(s[k < 6 ? k : k + 2].data(), n);
-  }
-  std::memset(out, 0, 2 * n * sizeof(float));
-
   // the stems: the dry sum, and the dry sum with the echoes and the reverb panned as Reflections does
   if (Stems::Recording()) {
     const Tuning &t = m->tuning;
@@ -235,80 +212,94 @@ FMOD_RESULT F_CALL BedProcess(FMOD_DSP_STATE *aState, unsigned int aLength, cons
       sw[2 * i + 1] = dry[i] + mid + t.panOpposite * l + t.pan * r;
     }
   }
+  // Under Wwise, the Engine group's limiter (FMOD has it on the group): on the sum the thruster and echo voices will
+  // play (their gain, FMOD's fold, the bus's volume), its gain on everything they read. Without it the thrusters were
+  // 5 dB over FMOD's in flight (docs/history.md).
+  if (m->wwise) {
+    const float gain = 2.0f * std::pow(10.0f, kChannelGainDb / 20.0f) * Out::BusVolume(Buses::Bus::Engine);
+    float *bus = m->bus.data(), *limit = m->limit.data();
+    for (uint32_t i = 0; i < n; ++i) {
+      float sum = dry[i];
+      for (int k = 0; k < kEchoes; ++k) {
+        sum += s[k < 6 ? k : k + 2][i];
+      }
+      bus[i] = gain * sum;
+    }
+    const Buses::Limiter l = Buses::LimiterFor(false);
+    m->limiter.Process(bus, limit, n, float(m->rate), l.ceilingDb, l.releaseMs);
+    for (Slot &slot : m->slots) {
+      if (slot.rendered) {
+        for (uint32_t i = 0; i < n; ++i) {
+          slot.block[i] *= limit[i];
+        }
+      }
+    }
+    for (int k = 0; k < kEchoes; ++k) {
+      float *stream = s[k < 6 ? k : k + 2].data();
+      for (uint32_t i = 0; i < n; ++i) {
+        stream[i] *= limit[i];
+      }
+    }
+  }
+  // the rings: each thruster's, and the echo voices' streams (the six echoes, then the quarters, past the reverb's two
+  // channels)
+  for (Slot &slot : m->slots) {
+    if (slot.rendered) {
+      slot.dry.Write(slot.block.data(), n);
+    }
+  }
+  for (int k = 0; k < kEchoes; ++k) {
+    m->echoes[k].ring.Write(s[k < 6 ? k : k + 2].data(), n);
+  }
+
+  if (m->wwise && Stems::Recording()) {
+    // no master DSP under Wwise: the bed's blocks are the stems' timeline, and the bus stem is silent
+    Stems::AddBus(m->clock, m->stereoZero.data(), m->stereoZero.data(), n, 2, m->rate, false, m->stemScratch);
+  }
+  m->clock += n;
   Stems::AddEvent(m->stems, m->stereoDry.data(), m->stereoWet.data(), n, 2);
-  return FMOD_OK;
 }
 
-// An echo voice: its ring, in both channels.
-FMOD_RESULT F_CALL EchoProcess(FMOD_DSP_STATE *aState, unsigned int aLength, const FMOD_DSP_BUFFER_ARRAY *,
-                               FMOD_DSP_BUFFER_ARRAY *aOut, FMOD_BOOL, FMOD_DSP_PROCESS_OPERATION aOperation) {
-  if (aOperation == FMOD_DSP_PROCESS_QUERY) {
-    QueryStereo(aOut);
-    return FMOD_OK;
+// An echo voice: its ring.
+void EchoRender(void *aUser, float *aOut, uint32_t aLength, uint32_t) {
+  auto *echo = static_cast<EchoVoice *>(aUser);
+  if (aLength > kBlock) {
+    std::memset(aOut, 0, aLength * sizeof(float));
+    return;
   }
-  void *userData = nullptr;
-  aState->functions->getuserdata(aState, &userData);
-  auto *echo = static_cast<EchoVoice *>(userData);
-  float *out = aOut->buffers[0];
-  if (!echo || aLength > kBlock) {
-    std::memset(out, 0, 2 * aLength * sizeof(float));
-    return FMOD_OK;
-  }
-  ReadCaughtUp(echo->ring, echo->mono.data(), aLength);
-  for (unsigned int i = 0; i < aLength; ++i) {
-    out[2 * i] = out[2 * i + 1] = echo->mono[i];
-  }
-  return FMOD_OK;
-}
-
-FMOD_DSP_DESCRIPTION Description(const char *aName, FMOD_DSP_PROCESS_CALLBACK aProcess) {
-  FMOD_DSP_DESCRIPTION d{};
-  d.pluginsdkversion = FMOD_PLUGIN_SDK_VERSION;
-  std::strncpy(d.name, aName, sizeof(d.name) - 1);
-  d.version = 1;
-  d.numinputbuffers = 0;
-  d.numoutputbuffers = 1;
-  d.process = aProcess;
-  return d;
-}
-
-// a generator DSP playing in aGroup, userdata aData; paused when aPaused
-bool Play(FMOD::System *aCore, FMOD_DSP_DESCRIPTION *aDescription, void *aData, FMOD::ChannelGroup *aGroup, bool aPaused,
-          FMOD::DSP *&aDsp, FMOD::Channel *&aChannel) {
-  return Check(aCore->createDSP(aDescription, &aDsp), "createDSP") && Check(aDsp->setUserData(aData), "setUserData") &&
-         Check(aCore->playDSP(aDsp, aGroup, aPaused, &aChannel), "playDSP");
-}
-
-void ReleaseDsp(FMOD::DSP *&aDsp, FMOD::Channel *&aChannel) {
-  if (aChannel) {
-    aChannel->stop();
-    aChannel = nullptr;
-  }
-  if (aDsp) {
-    aDsp->release();
-    aDsp = nullptr;
-  }
+  ReadCaughtUp(echo->ring, aOut, aLength);
 }
 
 } // namespace
 
-bool Start(FMOD::System *aCore, FMOD::ChannelGroup *aGroup) {
+bool Start() {
   if (mixer) {
     return true;
   }
-  Voices::Init(aCore);
-  int rate = 48000;
-  aCore->getSoftwareFormat(&rate, nullptr, nullptr);
+  const int rate = Out::Rate();
   auto m = std::make_unique<Mixer>(rate);
-  static FMOD_DSP_DESCRIPTION bed = Description("LTBF engine bed", BedProcess);
-  static FMOD_DSP_DESCRIPTION echo = Description("LTBF echo", EchoProcess);
+  m->wwise = Out::Current() == Out::Backend::Wwise;
   const float gain = std::pow(10.0f, kChannelGainDb / 20.0f);
-  bool ok = Play(aCore, &bed, m.get(), aGroup, false, m->bedDsp, m->bedChannel) &&
-            Check(m->bedChannel->setVolume(gain), "setVolume");
+  Out::Options bed;
+  bed.positioned = false;
+  bed.name = "LTBF engine bed";
+  m->bed = Out::Play(BedRender, m.get(), bed);
+  bool ok = m->bed != nullptr;
+  if (ok) {
+    m->bed->SetVolume(gain);
+    // never paused while the player flies
+    m->bed->SetPaused(false);
+  }
+  Out::Options echo;
+  // no rolloff: the range is far past any listener distance, the spreading is in the echo's gain
+  echo.minDistance = kEchoMin;
+  echo.maxDistance = kEchoMax;
+  echo.name = "LTBF echo";
   for (int k = 0; ok && k < kEchoes; ++k) {
     EchoVoice &e = m->echoes[k];
-    ok = Play(aCore, &echo, &e, aGroup, true, e.dsp, e.channel) &&
-         Voices::Register(kEchoId + uint64_t(k), Voices::Kind::PlayerEcho, 0, false, e.channel, gain, kEchoMin, kEchoMax);
+    e.out = Out::Play(EchoRender, &e, echo);
+    ok = e.out && Voices::Register(kEchoId + uint64_t(k), Voices::Kind::PlayerEcho, 0, false, e.out.get(), gain,
+                                   kEchoMin, kEchoMax);
     e.registered = ok;
   }
   if (!ok) {
@@ -316,9 +307,9 @@ bool Start(FMOD::System *aCore, FMOD::ChannelGroup *aGroup) {
       if (m->echoes[k].registered) {
         Voices::Unregister(kEchoId + uint64_t(k));
       }
-      ReleaseDsp(m->echoes[k].dsp, m->echoes[k].channel);
+      m->echoes[k].out.reset();
     }
-    ReleaseDsp(m->bedDsp, m->bedChannel);
+    m->bed.reset();
     return false;
   }
   mixer = std::move(m);
@@ -332,9 +323,9 @@ void Stop() {
   }
   for (int k = 0; k < kEchoes; ++k) {
     Voices::Unregister(kEchoId + uint64_t(k));
-    ReleaseDsp(mixer->echoes[k].dsp, mixer->echoes[k].channel);
+    mixer->echoes[k].out.reset();
   }
-  ReleaseDsp(mixer->bedDsp, mixer->bedChannel);
+  mixer->bed.reset();
   mixer.reset();
 }
 

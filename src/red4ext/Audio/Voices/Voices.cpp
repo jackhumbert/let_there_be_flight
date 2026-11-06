@@ -3,8 +3,6 @@
 #include "Audio/Acoustics/Occlusion.hpp"
 #include "Audio/EngineSynth/Channels.hpp"
 
-#include <fmod.hpp>
-#include <fmod_errors.h>
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
@@ -21,10 +19,7 @@ struct Entry {
   Kind kind;
   uint64_t car;
   bool synth;
-  FMOD::Channel *channel;
-  FMOD::DSP *pan;
-  // an NPC car's low-pass for its occlusion (null for the rest)
-  FMOD::DSP *lowpass;
+  Out::Voice *voice;
   float baseGain, minDistance, maxDistance;
   Vec3 position, forward, up, velocity;
   float loudness = 0;
@@ -41,7 +36,6 @@ struct Row {
   bool holds;
 };
 
-FMOD::System *core = nullptr;
 std::unordered_map<uint64_t, Entry> entries;
 Pool pool;
 bool paused = false;
@@ -50,30 +44,12 @@ std::vector<uint64_t> foldedCars;
 // per NPC car, how blocked it is: 0 open .. 1 behind static geometry (Acoustics/Occlusion.hpp)
 std::map<uint64_t, float> occlusion;
 
-bool Check(FMOD_RESULT aResult, const char *aWhat) {
-  if (aResult != FMOD_OK) {
-    spdlog::error("[Voices] {}: FMOD error {} - {}", aWhat, int(aResult), FMOD_ErrorString(aResult));
-    return false;
-  }
-  return true;
-}
-
 float Dot(const Vec3 &a, const Vec3 &b) {
   return a.x * b.x + a.y * b.y + a.z * b.z;
 }
 
 Vec3 Minus(const Vec3 &a, const Vec3 &b) {
   return {a.x - b.x, a.y - b.y, a.z - b.z};
-}
-
-// in the listener's own axes, FMOD's right-handed way (x right, y up, z back) as the system is set up
-FMOD_VECTOR Relative(const Vec3 &aVector, const Pose &aListener) {
-  return {Dot(aVector, aListener.right), Dot(aVector, aListener.up), -Dot(aVector, aListener.forward)};
-}
-
-// the game's world (z up) as FlightAudio hands it to FMOD
-FMOD_VECTOR World(const Vec3 &v) {
-  return {v.x, v.z, -v.y};
 }
 
 const char *KindName(Kind aKind) {
@@ -148,47 +124,14 @@ void UpdateOcclusion(const std::vector<Voice> &aVoices, const Pose &aListener, f
 
 } // namespace
 
-void Init(FMOD::System *aSystem) {
-  core = aSystem;
-}
-
-bool Register(uint64_t aId, Kind aKind, uint64_t aCar, bool aSynth, FMOD::Channel *aChannel, float aBaseGain,
+bool Register(uint64_t aId, Kind aKind, uint64_t aCar, bool aSynth, Out::Voice *aVoice, float aBaseGain,
               float aMinDistance, float aMaxDistance) {
   Unregister(aId);
-  FMOD::DSP *pan = nullptr;
-  // the Object Spatializer with a linear-squared rolloff over the source's own range
-  const bool ok =
-      Check(core->createDSPByType(FMOD_DSP_TYPE_OBJECTPAN, &pan), "createDSPByType") &&
-      Check(pan->setParameterInt(FMOD_DSP_OBJECTPAN_3D_ROLLOFF, FMOD_DSP_PAN_3D_ROLLOFF_LINEARSQUARED), "rolloff") &&
-      Check(pan->setParameterBool(FMOD_DSP_OBJECTPAN_OVERRIDE_RANGE, true), "override range") &&
-      Check(pan->setParameterFloat(FMOD_DSP_OBJECTPAN_3D_MIN_DISTANCE, aMinDistance), "min distance") &&
-      Check(pan->setParameterFloat(FMOD_DSP_OBJECTPAN_3D_MAX_DISTANCE, aMaxDistance), "max distance") &&
-      Check(pan->setParameterInt(FMOD_DSP_OBJECTPAN_3D_EXTENT_MODE, FMOD_DSP_PAN_3D_EXTENT_MODE_OFF), "extent") &&
-      Check(aChannel->addDSP(FMOD_CHANNELCONTROL_DSP_HEAD, pan), "addDSP pan") &&
-      Check(aChannel->setPaused(true), "setPaused");
-  if (!ok) {
-    if (pan) {
-      aChannel->removeDSP(pan);
-      pan->release();
-    }
+  if (!aVoice) {
     return false;
   }
-  // an NPC car's sound is low-passed while blocked: at the tail, after the generator and before the fader
-  // and the object pan
-  FMOD::DSP *lowpass = nullptr;
-  if (aKind == Kind::NpcThruster) {
-    const bool added =
-        Check(core->createDSPByType(FMOD_DSP_TYPE_LOWPASS_SIMPLE, &lowpass), "createDSPByType lowpass") &&
-        Check(lowpass->setParameterFloat(FMOD_DSP_LOWPASS_SIMPLE_CUTOFF, Acoustics::Occlusion::kOpenHz), "cutoff") &&
-        Check(aChannel->addDSP(FMOD_CHANNELCONTROL_DSP_TAIL, lowpass), "addDSP lowpass");
-    if (!added) {
-      if (lowpass) {
-        lowpass->release();
-        lowpass = nullptr;
-      }
-    }
-  }
-  entries[aId] = {aKind, aCar, aSynth, aChannel, pan, lowpass, aBaseGain, aMinDistance, aMaxDistance, {}, {}, {}, {}, 0.0f};
+  aVoice->SetPaused(true);
+  entries[aId] = {aKind, aCar, aSynth, aVoice, aBaseGain, aMinDistance, aMaxDistance, {}, {}, {}, {}, 0.0f};
   return true;
 }
 
@@ -207,18 +150,7 @@ void Move(uint64_t aId, const Vec3 &aPosition, const Vec3 &aForward, const Vec3 
 }
 
 void Unregister(uint64_t aId) {
-  const auto it = entries.find(aId);
-  if (it == entries.end()) {
-    return;
-  }
-  // a DSP still on a channel is not released: off first
-  it->second.channel->removeDSP(it->second.pan);
-  it->second.pan->release();
-  if (it->second.lowpass) {
-    it->second.channel->removeDSP(it->second.lowpass);
-    it->second.lowpass->release();
-  }
-  entries.erase(it);
+  entries.erase(aId);
 }
 
 void Frame(const Pose &aListener, float aDt) {
@@ -242,7 +174,7 @@ void Frame(const Pose &aListener, float aDt) {
       foldedCars.push_back(e.car);
     }
     if (!v.holdsChannel) {
-      e.channel->setPaused(true);
+      e.voice->SetPaused(true);
       continue;
     }
     float duck = 1.0f;
@@ -250,25 +182,14 @@ void Frame(const Pose &aListener, float aDt) {
       const auto o = occlusion.find(e.car);
       const float amount = o == occlusion.end() ? 0.0f : o->second;
       duck = std::pow(10.0f, Acoustics::Occlusion::DuckDb(amount) / 20.0f);
-      if (e.lowpass) {
-        e.lowpass->setParameterFloat(FMOD_DSP_LOWPASS_SIMPLE_CUTOFF, Acoustics::Occlusion::CutoffHz(amount));
-      }
+      e.voice->SetLowpass(Acoustics::Occlusion::CutoffHz(amount));
     }
-    e.channel->setVolume(e.baseGain * v.fade * v.gain * duck);
-    FMOD_DSP_PARAMETER_3DATTRIBUTES_MULTI attributes{};
-    attributes.numlisteners = 1;
-    attributes.weight[0] = 1.0f;
-    attributes.relative[0].position = Relative(Minus(v.position, listener), aListener);
-    attributes.relative[0].forward = Relative(e.forward, aListener);
-    attributes.relative[0].up = Relative(e.up, aListener);
-    attributes.relative[0].velocity = Relative(Minus(e.velocity, aListener.velocity), aListener);
-    attributes.absolute.position = World(v.position);
-    attributes.absolute.forward = World(e.forward);
-    attributes.absolute.up = World(e.up);
-    attributes.absolute.velocity = World(e.velocity);
-    e.pan->setParameterData(FMOD_DSP_OBJECTPAN_3D_POSITION, &attributes, sizeof(attributes));
+    e.voice->SetVolume(e.baseGain * v.fade * v.gain * duck);
+    const Vec3 d = Minus(v.position, listener);
+    const float distance = std::sqrt(Dot(d, d));
+    e.voice->Place({v.position, e.forward, e.up, e.velocity, aListener, Rolloff(distance, e.minDistance, e.maxDistance)});
     if (!paused) {
-      e.channel->setPaused(false);
+      e.voice->SetPaused(false);
     }
   }
 }
@@ -277,7 +198,7 @@ void Pause(bool aPaused) {
   paused = aPaused;
   if (paused) {
     for (auto &[_, e] : entries) {
-      e.channel->setPaused(true);
+      e.voice->SetPaused(true);
     }
   }
 }

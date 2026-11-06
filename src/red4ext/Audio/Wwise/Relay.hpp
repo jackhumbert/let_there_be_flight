@@ -17,7 +17,7 @@
 namespace Wwise {
 
 // one of our sounds. Called on Wwise's audio thread, so it must not lock or allocate; it must outlive its binding
-// (Unbind it, then stop its playing ID, before it goes).
+// (Unbind returns once the audio thread is out of it, so it may go after that).
 struct Source {
   virtual ~Source() = default;
   virtual uint32_t Channels() const { return 1; }
@@ -33,10 +33,10 @@ struct Callbacks {
 
 class Relay {
 public:
-  static constexpr int kSlots = 64;
+  static constexpr int kSlots = 128;
 
   // aSource answers aId from now on; false if aId is 0 or every slot is taken. Bind and Unbind from one thread (the
-  // game's); the audio thread only reads.
+  // game's); the audio thread only reads. Unbind waits for a call into the source under way to end.
   bool Bind(AkPlayingID aId, Source *aSource);
   void Unbind(AkPlayingID aId);
 
@@ -58,12 +58,15 @@ public:
   Stats Read() const;
 
 private:
-  Source *Find(AkPlayingID aId) const;
-
   struct Slot {
     std::atomic<AkPlayingID> id{0};
     std::atomic<Source *> source{nullptr};
+    // the audio thread is in the source
+    std::atomic<bool> busy{false};
   };
+  // the slot bound to aId, marked busy (Leave it after), or null
+  Slot *Enter(AkPlayingID aId);
+  static void Leave(Slot *aSlot) { aSlot->busy.store(false); }
   Slot slots[kSlots];
   std::atomic<ExecuteFn> passExecute{nullptr};
   std::atomic<FormatFn> passFormat{nullptr};

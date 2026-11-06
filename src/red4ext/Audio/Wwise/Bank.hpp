@@ -24,7 +24,20 @@ inline constexpr uint32_t kProject = 476;
 // the "sfx" bus: mod_sfx_street's output, under the game's SFX volume (the spike: the SFX volume at 0 silenced it)
 inline constexpr AkUniqueID kSfxBus = 393239870;
 
-enum Type : uint8_t { kSound = 2, kAction = 3, kEvent = 4, kFxCustom = 17 };
+enum Type : uint8_t { kSound = 2, kAction = 3, kEvent = 4, kAttenuation = 14, kFxCustom = 17 };
+
+// a point of an attenuation curve: the distance (m) and the value (spread: percent), linear to the next
+struct CurvePoint {
+  float distance, value;
+};
+
+// An attenuation that only spreads: no volume, filter or focus curve, so the loudness stays ours; the spread (how
+// much of the speakers the sound covers, 100% all of them) over distance. Wwise pans a point source with no spread
+// hard to one side (step 1: 75 dB between the channels at 6 m): mod_sfx_street's own spread is the one taken.
+struct Spread {
+  std::string_view name; // its ID is Fnv1(name)
+  std::span<const CurvePoint> points;
+};
 
 // a property of a node (AkPropBundle): its ID and its value's 32 bits (a float's, or an ID)
 struct Prop {
@@ -43,7 +56,12 @@ struct Sound {
   std::span<const Prop> props = {};
   bool attenuated = false;
   AkUniqueID aux = 0;
+  // a Spread's ID (Fnv1 of its name), written as the attenuation property with the attenuation on; 0: none
+  AkUniqueID spread = 0;
 };
+
+// mod_sfx_street's spread: all the speakers within 1.7 m, a quarter at 6.8 m, a point from 30 m
+inline constexpr CurvePoint kStreetSpread[] = {{0.0f, 100.0f}, {1.745f, 100.0f}, {6.766f, 25.46f}, {30.0f, 0.0f}};
 
 // the IDs of a sound's objects, from its event's name (the event's is what PostEvent takes, as GetIDFromString gives)
 struct Ids {
@@ -51,7 +69,7 @@ struct Ids {
 };
 Ids IdsFor(std::string_view aEvent);
 
-std::vector<uint8_t> Build(std::string_view aBank, std::span<const Sound> aSounds);
+std::vector<uint8_t> Build(std::string_view aBank, std::span<const Sound> aSounds, std::span<const Spread> aSpreads = {});
 
 // a bank read back: its header and its objects, ok when every size added up
 struct Object {
