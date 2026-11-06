@@ -16,6 +16,7 @@
 #include <ArchiveXL.hpp>
 #include <TweakXL.hpp>
 #include "GameModFolders.hpp"
+#include "Audio/Wwise/WwiseSpike.hpp"
 #include "Flight/FlightDeveloperSettings.hpp"
 #include "Flight/FlightSettingsLink.hpp"
 #include "Navigation/Blockers.hpp"
