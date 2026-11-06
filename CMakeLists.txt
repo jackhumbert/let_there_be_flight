@@ -305,6 +305,7 @@ add_executable(ltbf_tests
   tests/autopilot_tests.cpp
   tests/autopilot_trip_tests.cpp
   tests/autopilot_shell_tests.cpp
+  tests/wwise_tests.cpp
   tools/navplan/follow.cpp
   tools/flightsim/Sim.cpp
   tools/flightsim/Scenarios.cpp
@@ -322,6 +323,11 @@ add_executable(ltbf_tests
   src/red4ext/Audio/Acoustics/Planes.cpp
   src/red4ext/Audio/Acoustics/Probe.cpp
   src/red4ext/Audio/Acoustics/Reflections.cpp
+  src/red4ext/Audio/Wwise/Axes.cpp
+  src/red4ext/Audio/Wwise/Bank.cpp
+  src/red4ext/Audio/Wwise/Ids.cpp
+  src/red4ext/Audio/Wwise/Pattern.cpp
+  src/red4ext/Audio/Wwise/Relay.cpp
   src/red4ext/Navigation/Vehicle.cpp
   src/red4ext/Navigation/Route.cpp
   src/red4ext/Navigation/Trajectory.cpp
