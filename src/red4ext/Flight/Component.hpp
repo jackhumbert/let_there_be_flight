@@ -126,6 +126,9 @@ public:
   RED4ext::Vector3 physxLinear{0.0f, 0.0f, 0.0f};
   RED4ext::Vector3 physxAngular{0.0f, 0.0f, 0.0f};
   bool physxCopied = false; // SyncFromPhysX took the PhysX-owned path this frame
+  // the chassis body (physx::PxRigidDynamic) whose depenetration speed flight capped, and its own (UpdateDepenetration)
+  void *depenetrationBody = nullptr;
+  float depenetrationOwn = 0.0f;
   // angular velocity (world) the world gave the vehicle through contacts, decaying; flight
   // damping ignores it so collisions tumble physically while inputs stay damped
   RED4ext::Vector3 contactSpin{0.0f, 0.0f, 0.0f};
@@ -147,6 +150,10 @@ public:
   float groundMaterialFriction = 1.0f;
 
   RED4ext::Vector4 GetContactSpin() { return RED4ext::Vector4(contactSpin.X, contactSpin.Y, contactSpin.Z, 0.0f); }
+
+  // While flight owns the chassis body (physxOwned), its depenetration speed is capped at the developer setting
+  // maxDepenetration (0: left as PhysX has it); its own is put back when flight lets go or the body changes.
+  void UpdateDepenetration();
 
   // the body's world inertia tensor as PhysX-owned flight applies the flight torque with it (copied
   // each frame in Physics/ChassisContacts.cpp PushToPhysX)

@@ -187,9 +187,10 @@ public:
 
 private:
   Flight::Ground FindGround();
-  // with groundRay: the clearance under the underside's points (the chassis's underside; without one, the four wheel
-  // emitters and the centre at the bottom), each cast from the centre's height down to kClearanceReach under it: the
-  // lowest, negative when the ground is above it, where it is and the rays cast
+  // with groundRay: the clearance under the underside's points (the thruster spheres as the tyres at the four wheel
+  // emitters at the bottom, and the chassis's underside, or the centre at the bottom without one), each cast from the
+  // centre's height down to kClearanceReach under it: the lowest, negative when the ground is above it, where it is and
+  // the rays cast
   struct Clearance {
     float clearance = 0, bodyY = 0;
     int rays = 0;

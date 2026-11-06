@@ -225,6 +225,7 @@ add_executable(flightsim EXCLUDE_FROM_ALL
   tools/flightsim/Scenarios.cpp
   tools/flightsim/TerrainRuns.cpp
   tools/flightsim/TerrainCheck.cpp
+  tools/flightsim/Seams.cpp
   tools/flightsim/Replay.cpp
   src/red4ext/Flight/Stats.cpp
   src/red4ext/Flight/Force.cpp

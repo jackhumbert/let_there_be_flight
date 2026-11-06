@@ -66,7 +66,8 @@ public native class FlightModeControl extends IScriptable {
   public native func HoverFly(stats: ref<FlightStats>, hoverPID: ref<PID>, pitchPID: ref<PID>, rollPID: ref<PID>) -> Void;
   public native func Automatic(stats: ref<FlightStats>, hoverPID: ref<PID>, pitchPID: ref<PID>, rollPID: ref<PID>) -> Void;
   // FlightModeDrone.Update
-  public native func Drone(stats: ref<FlightStats>) -> Void;
+  // component: the mode's FlightComponent, for Drone's skid just over the ground (Flight::DroneSkid)
+  public native func Drone(stats: ref<FlightStats>, component: ref<IScriptable>) -> Void;
 
   // Vector4.RotateAxis, Vector4.Interpolate and LerpF as the native code computes them, to compare with the game's own
   public native static func RotateAxis(v: Vector4, axis: Vector4, angle: Float) -> Vector4;

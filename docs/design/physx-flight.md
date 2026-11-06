@@ -59,4 +59,10 @@ contacts and material friction in one place.
 - The RigidBody's velocity is what the scripts read (`GetLinearVelocity`), and the fixed steps still add gravity
   and the wheel solve to it: `IntegrateMotion` puts PhysX's velocities back after each step (until 2026-11-06 the
   vertical speed read a step of gravity low and the modes' damping lifted the car; `docs/history.md`).
-- The wheels' suspension runs but moves nothing: only the chassis collider touches the ground.
+- The wheels' suspension runs but moves nothing. What touches the ground is the chassis collider and LTBF's thruster
+  spheres (0.4 m, at the thruster slots where the wheels were, `FlightConfiguration::AddColliders`), which hold a car
+  at rest about where its tyres would.
+- Where two of the city's meshes meet flush (roads are 10.4 m pieces end to end) PhysX pushes a car sliding over the
+  joint up: Drone was thrown 0.1 to 0.3 m every joint at 40 km/h. Drone's skid (`Flight::DroneSkid`, developer
+  setting `droneSkid`) holds a car just over the ground 3 cm off it; capping the chassis body's depenetration speed
+  (`maxDepenetration`, `FlightComponent::UpdateDepenetration`) is there, off by default (`docs/history.md`).

@@ -1,6 +1,13 @@
 #include "FlightModeControl.hpp"
 
+#include "Flight/Component.hpp"
 #include "Flight/DeveloperSettings.hpp"
+#include "Flight/FlightGround.hpp"
+#include "FlightConfiguration.hpp"
+
+#include <RED4ext/RTTISystem.hpp>
+
+float GetFlightSettingsFloat(RED4ext::CRTTISystem *rtti, RED4ext::CName aProperty, float aFallback);
 
 namespace {
 Flight::Vec3 ToVec(const RED4ext::Vector4 &aV) { return {aV.X, aV.Y, aV.Z}; }
@@ -19,6 +26,35 @@ Flight::Pid Load(const RED4ext::Handle<FlightPID> &aPid) {
 void Store(const RED4ext::Handle<FlightPID> &aPid, const Flight::Pid &aValue) {
   if (aPid)
     aPid->SetState(aValue.state);
+}
+
+// Drone's skid (Flight::DroneSkid) for the car of aComponent, as a body-frame acceleration: the car's clearance is the
+// ground's distance under the wheel emitters (their rays' mean) less the emitters' height over its lowest point (the
+// configuration's, in the vehicle's frame: the chassis shape's, or LTBF's thruster spheres', which the car rests on).
+// The shortest ray in place of the mean made the car bob 0.6 to 1.5 m at 40 km/h (2026-11-06). Nothing before the
+// chassis shape is measured, or without ground.
+Flight::Vec3 Skid(const Flight::StatsState &aState, float aLift, FlightComponent *aComponent) {
+  const float clearance = Flight::Developer().droneSkid;
+  if (clearance <= 0.0f || !aComponent || !aComponent->configuration || !aComponent->configuration->dragAreaMeasured)
+    return {};
+  auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aComponent->entity);
+  if (!vehicle)
+    return {};
+  const float maxHover = GetFlightSettingsFloat(RED4ext::CRTTISystem::Get(), "hoverModeMaxHoverHeight", 7.0f);
+  Flight::Vec3 emitters;
+  const Flight::Ground g = FlightGroundNative::Find(aComponent, maxHover, &emitters);
+  if (!g.found)
+    return {};
+  const auto origin = vehicle->worldTransform.Position.AsVector4();
+  const auto &o = vehicle->worldTransform.Orientation;
+  const Flight::Vec3 up = Flight::Rotate(Flight::Quat{o.i, o.j, o.k, o.r}, {0.0f, 0.0f, 1.0f});
+  const float emittersOverBottom =
+      Flight::Dot(Flight::Sub(emitters, {origin.X, origin.Y, origin.Z}), up) -
+      std::min(aComponent->configuration->chassisBottom, aComponent->configuration->colliderBottom);
+  Flight::DroneSkidParams k;
+  k.clearance = clearance;
+  const float a = Flight::DroneSkid(g.distance - emittersOverBottom, aState.d_velocity.z, aState.d_up.z, aLift, k);
+  return Flight::Rotate(Flight::Conjugate(aState.d_orientation), {0.0f, 0.0f, a});
 }
 } // namespace
 
@@ -157,7 +193,7 @@ void FlightModeControl::Automatic(RED4ext::Handle<FlightStats> aStats, RED4ext::
   Store(aRollPid, rollPid);
 }
 
-void FlightModeControl::Drone(RED4ext::Handle<FlightStats> aStats) {
+void FlightModeControl::Drone(RED4ext::Handle<FlightStats> aStats, RED4ext::Handle<RED4ext::IScriptable> aComponent) {
   if (!aStats) {
     SetOutput({});
     return;
@@ -174,7 +210,9 @@ void FlightModeControl::Drone(RED4ext::Handle<FlightStats> aStats) {
   p.swayFactor *= thrust;
   p.brakeFactorLinear = brakeFactorLinear;
   p.brakeFactorAngular = brakeFactorAngular;
-  SetOutput(Flight::Drone(aStats->State(), aStats->Static(), Controls(), p));
+  Flight::ModeOutput out = Flight::Drone(aStats->State(), aStats->Static(), Controls(), p);
+  out.force = Flight::Add(out.force, Skid(aStats->State(), lift, static_cast<FlightComponent *>(aComponent.GetPtr())));
+  SetOutput(out);
 }
 
 RED4ext::Vector4 FlightModeControl::RotateAxis(RED4ext::Vector4 aV, RED4ext::Vector4 aAxis, float aAngle) {

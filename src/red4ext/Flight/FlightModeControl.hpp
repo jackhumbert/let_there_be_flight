@@ -85,7 +85,8 @@ struct FlightModeControl : RED4ext::IScriptable {
                 RED4ext::Handle<FlightPID> aPitchPid, RED4ext::Handle<FlightPID> aRollPid);
   void Automatic(RED4ext::Handle<FlightStats> aStats, RED4ext::Handle<FlightPID> aHoverPid,
                  RED4ext::Handle<FlightPID> aPitchPid, RED4ext::Handle<FlightPID> aRollPid);
-  void Drone(RED4ext::Handle<FlightStats> aStats);
+  // aComponent: the mode's FlightComponent, for Drone's skid (Flight::DroneSkid)
+  void Drone(RED4ext::Handle<FlightStats> aStats, RED4ext::Handle<RED4ext::IScriptable> aComponent);
 
   // Flight/ScriptMath on the script's types, to compare with the game's own in game
   static RED4ext::Vector4 RotateAxis(RED4ext::Vector4 aV, RED4ext::Vector4 aAxis, float aAngle);

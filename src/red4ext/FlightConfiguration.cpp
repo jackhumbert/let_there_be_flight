@@ -250,6 +250,7 @@ void IFlightConfiguration::AddColliders() {
         if (index != -1) {
           slot->GetLocalSlotTransformFromIndex(index, &transform);
           collider->localToBody.position = transform.position - chassis->localTransform.Position.AsVector4();
+          this->colliderBottom = std::min(this->colliderBottom, transform.position.Z - radius);
           collider->localToBody.orientation = Quaternion(0.0, 0.0, 0.0, 1.0);
             
           auto shape = (physx::PxShape *) collider->CreatePxShape(&unk140, nullptr, 1, nullptr);
@@ -306,6 +307,10 @@ void IFlightConfiguration::MeasureCharacter() {
       const bool bike = flightComponent->entity->IsOfClass(rtti->GetClass("vehicleBikeBaseObject"));
       const Flight::Vec3 areas = Flight::SilhouetteAreas(pieces);
       const float height = Flight::ShapeHeight(pieces);
+      this->chassisBottom = 1e9f;
+      for (const auto &piece : pieces)
+        for (const Flight::Vec3 &v : piece)
+          this->chassisBottom = std::min(this->chassisBottom, v.z);
       const Flight::Vec3 cda = Flight::DragAreaOf(areas, height, bike);
       this->dragArea = Vector4(cda.x, cda.y, cda.z, 0.0f);
       this->dragAreaMeasured = true;

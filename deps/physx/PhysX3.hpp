@@ -157,8 +157,10 @@ struct PxRigidBody : PxRigidActor
   virtual bool getRigidBodyFlags();
   virtual bool setMinCCDAdvanceCoefficient();
   virtual bool getMinCCDAdvanceCoefficient();
-  virtual bool setMaxDepenetrationVelocity();
-  virtual bool getMaxDepenetrationVelocity();
+  // 0x190 and 0x198 in the game's 3.4.2 build: the getter returns the body's max penetration bias negated (checked
+  // by disassembly against attachShape's slot, 0xB8, 2026-11-06)
+  virtual void setMaxDepenetrationVelocity(float maxDepenVel);
+  virtual float getMaxDepenetrationVelocity() const;
   virtual bool setMaxContactImpulse();
   virtual void getMaxContactImpulse();
 };

@@ -32,6 +32,14 @@ struct DeveloperSettings {
   // LTBF's sound through the game's Wwise (Audio/Out, docs/design/wwise-audio.md), the default since step 7; false for
   // its own FMOD as before. Read once, when the plugin loads (developer.ini). FMOD plays when Wwise cannot start.
   bool wwiseAudio = true;
+  // Ground contacts in flight (docs/history.md, 2026-11-06): where two road meshes meet flush PhysX still pushes at the
+  // joint and throws a car sliding over it. maxDepenetration: m/s the chassis body is pushed out of the ground at
+  // most while flight owns it (PxRigidBody::setMaxDepenetrationVelocity; 0 leaves PhysX's own, unbounded). droneSkid:
+  // m Drone holds the chassis off the ground just over it (Flight::DroneSkid; 0 lets it rest on the ground). The cap is
+  // off by default: in game it took Drone's launches over joints from 7.6 to 5.2 a slide, the skid alone to 2.8, and
+  // the two together to 3.4; with it on, one car placed on a road did not stay on it (not looked into).
+  float maxDepenetration = 0.0f;
+  float droneSkid = 0.03f;
   // The Autopilot's tuning (Navigation::AutopilotParams) by field name, set as "autopilot.<name>" (a Bool as
   // true/false/1/0/on/off, an Int32 rounded), in the order set, a name set again keeping its place. Each
   // FlightModeAutopilot writes them over its tuning when it is set up, when it is engaged and when

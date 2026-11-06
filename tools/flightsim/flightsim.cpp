@@ -9,6 +9,7 @@
 //   flightsim --terrain <terrain_runs.tsv> [--only <line name or tag part>] [--speeds 40,80,130] [--hover 0]
 //             [--regions <dir>] [--vehicles <tsv> [--match <car>]] [--mode ...] [--set ...] [--csv <dir>]
 //   flightsim --sample <region> <count> [--length 200] [--min-length 100] [--seed 1] [--regions <dir>]
+//   flightsim --seams <region> [--csv <dir>]
 //   flightsim --ground-check <ltbf_terrain_*.csv> --region <name> [--vehicles <tsv> --match <car or record>]
 //   flightsim --replay <ltbf_terrain_*.csv> --region <name> [--window 3] [--vehicles <tsv> --match <car or record>]
 //
@@ -33,6 +34,8 @@
 // through the region and prints where they agree and where not (TerrainCheck.hpp); --replay with --region flies
 // the recording in windows of --window s over the region's collision (the redesign unless --mode says otherwise).
 // --match takes a car's name or its vehicles.tsv record.
+// --seams lists where a region's drivable ground meets without a shared edge (Seams.hpp): how many, how big a step
+// or gap, and with --csv every one in <dir>/seams_<region>.tsv.
 //
 // --set changes the tuning: mass, airResistance, brakingFriction, gainX/Y/Z, torqueDelay, gravity (the body's
 // gravity against what the modes hold up); Standard's surge, yaw,
@@ -42,6 +45,7 @@
 
 #include "Replay.hpp"
 #include "Scenarios.hpp"
+#include "Seams.hpp"
 #include "TerrainCheck.hpp"
 #include "TerrainRuns.hpp"
 
@@ -225,7 +229,7 @@ int FlyTerrain(const std::string &aRuns, const std::string &aRegions, const std:
 int main(int argc, char **argv) {
   Setup setup;
   auto knobs = Knobs(setup);
-  std::string csv, vehicles, match, replay, terrain, only, sample, groundCheck, region, regions = RegionsDir();
+  std::string csv, vehicles, match, replay, terrain, only, sample, groundCheck, region, seams, regions = RegionsDir();
   float window = 3.0f;
   std::vector<float> speeds{40.0f, 80.0f, 130.0f};
   float hover = 0.0f, length = 200.0f, minLength = 100.0f;
@@ -240,6 +244,8 @@ int main(int argc, char **argv) {
     } else if (!std::strcmp(argv[i], "--sample") && i + 2 < argc) {
       sample = argv[++i];
       sampleCount = std::atoi(argv[++i]);
+    } else if (!std::strcmp(argv[i], "--seams") && i + 1 < argc) {
+      seams = argv[++i];
     } else if (!std::strcmp(argv[i], "--ground-check") && i + 1 < argc) {
       groundCheck = argv[++i];
     } else if (!std::strcmp(argv[i], "--region") && i + 1 < argc) {
@@ -299,6 +305,41 @@ int main(int argc, char **argv) {
     } else {
       names.push_back(argv[i]);
     }
+  }
+  if (!seams.empty()) {
+    const Colliders *world = Region(regions, seams);
+    if (!world)
+      return 2;
+    std::vector<Seam> found = FindSeams(*world);
+    // by the size of the step a car meets crossing it, either way
+    const float bins[] = {0.002f, 0.005f, 0.01f, 0.02f, 0.05f, 0.1f, 0.25f};
+    int counts[8] = {}, gaps = 0;
+    double metres[8] = {};
+    for (const Seam &s : found) {
+      int b = 0;
+      while (b < 7 && std::fabs(s.step) >= bins[b])
+        ++b;
+      ++counts[b];
+      metres[b] += s.length;
+      gaps += s.gap > 0.0f;
+    }
+    std::printf("%s: %zu seams on drivable ground (%d with a gap)\n", seams.c_str(), found.size(), gaps);
+    const char *labels[] = {"under 2 mm", "2 to 5 mm", "5 to 10 mm", "1 to 2 cm", "2 to 5 cm", "5 to 10 cm",
+                            "10 to 25 cm", "25 cm on"};
+    for (int b = 0; b < 8; ++b)
+      std::printf("  step %-12s %7d seams, %8.0f m of edge\n", labels[b], counts[b], metres[b]);
+    if (!csv.empty()) {
+      std::string path = csv + "/seams_" + seams + ".tsv";
+      if (FILE *out = std::fopen(path.c_str(), "w")) {
+        std::fprintf(out, "x\ty\tz\toutx\touty\tlength\tstep\tgap\tinside\toutside\n");
+        for (const Seam &s : found)
+          std::fprintf(out, "%.2f\t%.2f\t%.3f\t%.3f\t%.3f\t%.3f\t%.4f\t%.3f\t%d\t%d\n", s.at.x, s.at.y, s.at.z, s.out.x,
+                       s.out.y, s.length, s.step, s.gap, int(s.inside), int(s.outside));
+        std::fclose(out);
+        std::printf("written %s\n", path.c_str());
+      }
+    }
+    return 0;
   }
   if (!sample.empty()) {
     const Colliders *world = Region(regions, sample);

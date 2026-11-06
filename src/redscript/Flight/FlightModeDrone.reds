@@ -97,7 +97,7 @@ public class FlightModeDrone extends FlightMode {
         k.droneModeSurgeFactor = this.droneModeSurgeFactor;
         k.droneModeYawFactor = this.droneModeYawFactor;
         k.droneModeSwayFactor = this.droneModeSwayFactor;
-        k.Drone(this.component.stats);
+        k.Drone(this.component.stats, this.component);
         this.force = k.force;
         this.torque = k.torque;
         return;

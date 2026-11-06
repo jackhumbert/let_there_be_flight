@@ -873,3 +873,22 @@ TEST(modes_hover_fly_assist_keeps_hover_height_through_a_gap) {
   HoverFlyAssist(m, s, st, c, p, a, lower, response, dt);
   CHECK_NEAR(m.hoverHeight, 1.3f, kTol);
 }
+
+TEST(modes_drone_skid) {
+  // resting on the ground (clearance 0) it lifts by more than gravity; at the clearance, still, it holds gravity
+  // exactly; above the band, tilted past minUp, with lift down held, or set to 0, nothing
+  const DroneSkidParams k;
+  CHECK(DroneSkid(0.0f, 0.0f, 1.0f, 0.0f, k) > kGravity);
+  CHECK_NEAR(DroneSkid(k.clearance, 0.0f, 1.0f, 0.0f, k), kGravity, kLoose);
+  CHECK_NEAR(DroneSkid(k.clearance + k.band + 0.01f, 0.0f, 1.0f, 0.0f, k), 0.0f, kTol);
+  CHECK_NEAR(DroneSkid(0.0f, 0.0f, 0.5f, 0.0f, k), 0.0f, kTol);
+  CHECK_NEAR(DroneSkid(0.0f, 0.0f, 1.0f, -1.0f, k), 0.0f, kTol);
+  DroneSkidParams off = k;
+  off.clearance = 0.0f;
+  CHECK_NEAR(DroneSkid(0.0f, 0.0f, 1.0f, 0.0f, off), 0.0f, kTol);
+  // never pulls down, and no more than maxAccel up
+  CHECK_NEAR(DroneSkid(k.clearance + 0.1f, 5.0f, 1.0f, 0.0f, k), 0.0f, kTol);
+  CHECK(DroneSkid(-0.5f, -10.0f, 1.0f, 0.0f, k) <= k.maxAccel + kTol);
+  // half lift down, half the hold
+  CHECK_NEAR(DroneSkid(k.clearance, 0.0f, 1.0f, -0.5f, k), 0.5f * kGravity, kLoose);
+}

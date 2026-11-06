@@ -62,6 +62,18 @@ struct DroneParams {
 // FlightModeDrone.Update.
 ModeOutput Drone(const StatsState &s, const StatsStatic &st, const Controls &c, const DroneParams &p);
 
+// Drone's skid: just over the ground, a soft spring holds the chassis clearance m off it, so a car let down onto a
+// road does not slide on it. Where two road meshes meet flush PhysX still pushes at the joint, and a chassis dragged
+// over joints was thrown up 0.1 to 0.3 m each 10 m (docs/history.md, 2026-11-06). It fades in over band m above the
+// clearance, only lifts (gravity fed forward, so it holds at the clearance), gives way as lift down is held (the car
+// lands), and does nothing past minUp of tilt (body up's world z) or at a clearance of 0.
+struct DroneSkidParams {
+  float clearance = 0.03f, band = 0.15f, p = 60.0f, d = 12.0f, maxAccel = 2.0f * 9.81f, minUp = 0.8f;
+};
+// The world-up acceleration (m/s2) to add: aClearance is the chassis's lowest point over the ground (m), aVerticalSpeed
+// the body's (world z, m/s), aBodyUpZ its up's world z, aLift the lift control (-1..1).
+float DroneSkid(float aClearance, float aVerticalSpeed, float aBodyUpZ, float aLift, const DroneSkidParams &k);
+
 // FlightComponent.FindGround as the mode sees it. distance is FlightComponent.distance after the call, the last hit's
 // when nothing was found. normal is zero when nothing was found (the script's unset out parameter).
 struct Ground {

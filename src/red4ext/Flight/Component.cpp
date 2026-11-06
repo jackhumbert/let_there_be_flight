@@ -3,6 +3,11 @@
 #include "Audio/Inputs/Gather.hpp"
 #include "Flight/FlightStats.hpp"
 
+#include "Flight/DeveloperSettings.hpp"
+
+#include <PhysX3.hpp>
+#include <RED4ext/Scripting/Natives/physicsPhysicalSystemProxy.hpp>
+#include <RED4ext/Scripting/Natives/physicsProxyHelper.hpp>
 #include <algorithm>
 #include <cstring>
 #include <RED4ext/Scripting/Natives/vehiclePhysicsData.hpp>
@@ -202,6 +207,7 @@ void FlightComponent::OnUpdate(float deltaTime) {
       this->torque = Vector4();
     }
     this->physxOwned = this->active && GetFlightSettingsBool(rtti, "physxFlightPhysics", true);
+    this->UpdateDepenetration();
     this->groundFriction = GetFlightSettingsFloat(rtti, "groundFriction", 0.1f);
     if (this->physxOwned) {
       // applied straight to the PhysX body in the PushToPhysX hook
@@ -214,4 +220,30 @@ void FlightComponent::OnUpdate(float deltaTime) {
     this->force = Vector4();
     this->torque = Vector4();
   }
+}
+
+void FlightComponent::UpdateDepenetration() {
+  // the chassis's PhysX body, as the acoustics' live rays find it (Audio/Acoustics/LiveRays.cpp)
+  physx::PxRigidDynamic *body = nullptr;
+  if (this->chassis) {
+    RED4ext::physics::ProxyHelper lock(this->chassis->proxyID, &this->chassis->sharedMutex);
+    auto proxy = (RED4ext::physics::PhysicalSystemProxy *)RED4ext::physics::ProxyID::GetProxy(this->chassis->proxyID);
+    if (proxy && proxy->bodies.size > 0)
+      body = (physx::PxRigidDynamic *)proxy->bodies.entries[0];
+  }
+  const float cap = Flight::Developer().maxDepenetration;
+  const bool want = this->physxOwned && body && cap > 0.0f;
+  auto capped = static_cast<physx::PxRigidDynamic *>(this->depenetrationBody);
+  if (capped && (!want || capped != body)) {
+    // a body that is gone is not touched again
+    if (capped == body)
+      capped->setMaxDepenetrationVelocity(this->depenetrationOwn);
+    this->depenetrationBody = nullptr;
+  }
+  if (want && this->depenetrationBody != body) {
+    this->depenetrationOwn = body->getMaxDepenetrationVelocity();
+    this->depenetrationBody = body;
+  }
+  if (want)
+    body->setMaxDepenetrationVelocity(cap); // each frame: the developer setting may have changed
 }

@@ -43,6 +43,14 @@ public:
   bool Ray(Vec3 aFrom, Vec3 aTo, Hit &aHit) const;
 
   size_t Size() const { return tris.size(); }
+  // Triangle i's corners and kind.
+  void Triangle(size_t aIndex, Vec3 &aA, Vec3 &aB, Vec3 &aC, Kind &aKind) const {
+    const Tri &t = tris[aIndex];
+    aA = t.a;
+    aB = Flight::Add(t.a, t.e1);
+    aC = Flight::Add(t.a, t.e2);
+    aKind = t.kind;
+  }
   Vec3 Min() const { return lo; }
   Vec3 Max() const { return hi; }
 

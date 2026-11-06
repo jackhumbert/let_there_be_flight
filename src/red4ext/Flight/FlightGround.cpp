@@ -54,7 +54,8 @@ const Calls &Resolve() {
 
 } // namespace
 
-Flight::Ground FlightGroundNative::Find(RED4ext::IScriptable *aComponent, float aMaxHoverHeight) {
+Flight::Ground FlightGroundNative::Find(RED4ext::IScriptable *aComponent, float aMaxHoverHeight,
+                                        Flight::Vec3 *aEmitters) {
   const Calls &c = Resolve();
   if (!c.ok || !aComponent) {
     LTBF_WARN_ONCE("[FlightGround] a FlightComponent field or an engine function was not found: no native ground");
@@ -82,6 +83,11 @@ Flight::Ground FlightGroundNative::Find(RED4ext::IScriptable *aComponent, float 
     RED4ext::ExecuteFunction(RED4ext::ScriptInstance(nullptr), c.isValid, &valid, result);
     hits[i] = {valid, origin, {result.position.X, result.position.Y, result.position.Z},
                {result.normal.X, result.normal.Y, result.normal.Z}};
+  }
+  if (aEmitters) {
+    *aEmitters = {};
+    for (const Flight::Hit &h : hits)
+      *aEmitters = Flight::Add(*aEmitters, Flight::Mul(h.tire, 0.25f));
   }
   const Flight::Ground g = Flight::GroundFromHits(hits, 4, distance);
   if (g.found)

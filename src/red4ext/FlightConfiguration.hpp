@@ -38,6 +38,11 @@ public:
   // the chassis collision shape's drag area (CdA per body axis, m2), measured once (MeasureCharacter)
   RED4ext::Vector4 dragArea{};
   bool dragAreaMeasured = false;
+  // the chassis collision shape's lowest point, z in the vehicle's frame (m), measured with it (Drone's skid)
+  float chassisBottom = 0.0f;
+  // the lowest point of the thrusters' sphere colliders (AddColliders), z in the vehicle's frame (m): the car rests and
+  // slides on them; 1e9 before any is attached
+  float colliderBottom = 1e9f;
 
   void Setup(RED4ext::vehicle::BaseObject * vehicle);
   void AddSlots(RED4ext::ent::SlotComponent* slotComponent);

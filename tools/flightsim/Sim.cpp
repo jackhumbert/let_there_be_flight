@@ -186,15 +186,15 @@ Sim::Clearance Sim::Underside() const {
       u.bodyY = aBody.y;
     }
   };
-  // the chassis's underside: with the PhysX-owned flight physics (the default) PhysX moves the car and only its
-  // chassis collider touches; the wheels' suspension still runs on the RigidBody, whose velocity nothing moves with
-  // (Physics/ChassisContacts.cpp). Without a profile, the box under the wheel emitters at the bottom stands in.
-  if (car.underside.empty()) {
-    for (float sx : {-1.0f, 1.0f})
-      for (float sy : {-1.0f, 1.0f})
-        touch({sx * car.wheelX, sy * car.wheelY, car.bottom});
+  // what PhysX holds the car on: LTBF's thruster spheres (0.4 m, at the thruster slots where the wheels were,
+  // FlightConfiguration::AddColliders), taken as the tyres' bottom at the four wheel emitters (in game a Shion at rest
+  // in Drone had its emitters 0.87 m up, its tyres' height: 2026-11-06), and the chassis's underside, or the centre at
+  // the bottom without one
+  for (float sx : {-1.0f, 1.0f})
+    for (float sy : {-1.0f, 1.0f})
+      touch({sx * car.wheelX, sy * car.wheelY, car.bottom});
+  if (car.underside.empty())
     touch({0, 0, car.bottom});
-  }
   for (Vec3 p : car.underside)
     touch(p);
   return u;

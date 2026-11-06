@@ -62,6 +62,17 @@ ModeOutput Drone(const StatsState &s, const StatsStatic &st, const Controls &c, 
   return out;
 }
 
+float DroneSkid(float aClearance, float aVerticalSpeed, float aBodyUpZ, float aLift, const DroneSkidParams &k) {
+  if (k.clearance <= 0.0f || aBodyUpZ < k.minUp || !std::isfinite(aClearance))
+    return 0.0f;
+  const float w = std::fmin(std::fmax((k.clearance + k.band - aClearance) / k.band, 0.0f), 1.0f);
+  if (w <= 0.0f)
+    return 0.0f;
+  const float hold = 1.0f - std::fmin(std::fmax(-aLift, 0.0f), 1.0f);
+  const float a = w * kGravity + k.p * (k.clearance - aClearance) - k.d * aVerticalSpeed;
+  return std::fmin(std::fmax(a, 0.0f), k.maxAccel) * hold;
+}
+
 namespace {
 // The weight HoverFly and Automatic compute: 1 at minHoverHeight, 0 at maxHoverHeight, 0 without ground.
 float HoverWeight(const Ground &g, const StandardParams &p) {
