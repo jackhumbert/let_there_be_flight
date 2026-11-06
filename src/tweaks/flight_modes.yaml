@@ -15,14 +15,14 @@
 #   FlightModes.classes:
 #     $type: array:CName
 #     $value:
-#       - !remove FlightModeHoverFly
+#       - !remove FlightModeHoverFlyAssist
 #       - !prepend-once GentleHoverFly
 #
 # (checked in game with !append-once: cp2077_tools/mods/let_there_be_flight/native_mode_probe.yaml)
 FlightModes.classes:
   $type: array:CName
   $value:
-    - FlightModeHoverFly
+    - FlightModeHoverFlyAssist
     - FlightModeHover
     - FlightModeAutomatic
     - FlightModeFly

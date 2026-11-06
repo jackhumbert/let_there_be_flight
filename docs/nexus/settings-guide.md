@@ -68,7 +68,7 @@ cycling modes with Next Mode / Prev Mode.
 
 | Setting | Default | What it does |
 |---|---|---|
-| Hover & Fly Enabled | On | The default mode: hovers near the ground and flies freely further up, blending between the two (see "Standard (Non-Drone) Mode" below). |
+| Hover & Fly Enabled | On | The default mode: hovers near the ground and flies freely further up, blending between the two (see "Hover & Fly" below). |
 | Drone Mode Enabled | On | The other enabled-by-default mode: point-and-fly with the right stick for pitch/roll, independent of ground distance (see "Drone Mode" below). |
 | Automatic Mode Enabled | Off | Ground-following hover that auto-brakes and manages height for you (see "Automatic Mode" below). |
 | Fly Mode Enabled | Off | Pure free-flight variant of the standard-mode physics, without the hover-near-ground blending that Hover & Fly does. |
@@ -77,8 +77,9 @@ cycling modes with Next Mode / Prev Mode.
 
 ## Standard (Non-Drone) Mode
 
-These apply to Fly, Hover, and Hover & Fly (all three extend the same
-`FlightModeStandard` base and share these factors).
+These apply to Fly, Hover and Automatic (all three extend the same `FlightModeStandard` base and share these
+factors). Hover & Fly has its own settings since it was rebuilt in C++ (below); the Autopilot uses these factors when you
+take over from it, if one of those three modes is enabled.
 
 | Setting | Default | Range | What it does |
 |---|---|---|---|
@@ -89,15 +90,20 @@ These apply to Fly, Hover, and Hover & Fly (all three extend the same
 | Roll Factor | 3.0 | 0 to 20, step 0.5 | Multiplier on the roll auto-level correction torque. |
 | Pitch Input Angle | 45.0 | 0 to 90, step 5 | Maximum pitch angle, in degrees, that full pitch input asks the auto-level system to hold. |
 | Roll Input Angle | 45.0 | 0 to 90, step 5 | Maximum roll angle, in degrees, that full roll input asks the auto-level system to hold. |
-| Lift Factor | 25.0 | 1 to 500, step 1 | Vertical thrust multiplier from the lift input while in free-flight (used by Fly, and by Hover & Fly when it is in "flying" territory rather than hovering near ground). |
-| Hover Factor | 10.0 | 1 to 500, step 1 | Gain on the ground-following hover correction (used by Hover, and by Hover & Fly when it is in "hovering" territory near the ground). |
+| Lift Factor | 25.0 | 1 to 500, step 1 | Vertical thrust multiplier from the lift input while in free-flight (used by Fly). |
+| Hover Factor | 10.0 | 1 to 500, step 1 | Gain on the ground-following hover correction (used by Hover). |
 
-Two more only apply to Hover & Fly specifically:
+## Hover & Fly
+
+Hover & Fly holds the car level and at its height by itself: a held key asks for a turn rate or a climb rate, and
+letting go holds what it has. Holding the brake stops the car where it is, height held.
 
 | Setting | Default | Range | What it does |
 |---|---|---|---|
-| Hover And Fly Height Dampening | 1.0 | 0 to 100, step 0.25 | Damps vertical velocity while blending between hover and free flight; higher values resist bobbing. |
-| Hover And Fly Height Correction | 0.5 | 0 to 5, step 0.01 | How quickly the lift input changes the held hover height while near the ground. |
+| Turn Speed (deg/s) | 90 | 30 to 180, step 10 | How fast the car turns while you hold a turn key. |
+| Climb and Descent Speed (m/s) | 8 | 2 to 20, step 1 | How fast the car climbs or descends while you hold the lift keys. |
+
+The old Hover And Fly Height Dampening and Height Correction settings are gone with the old mode.
 
 ## Automatic Mode
 

@@ -26,7 +26,6 @@ const Entry kEntries[] = {
     {"thrustStrength", nullptr, &DeveloperSettings::thrustStrength, 0.0f, 1.0f},
     {"thrustPerThruster", nullptr, &DeveloperSettings::thrustPerThruster, 100.0f, 100000.0f},
     {"nativeModeProbe", &DeveloperSettings::nativeModeProbe, nullptr, 0.0f, 0.0f},
-    {"assistHoverFly", &DeveloperSettings::assistHoverFly, nullptr, 0.0f, 0.0f},
     {"acousticsRays", nullptr, &DeveloperSettings::acousticsRays, 0.0f, 4096.0f},
 };
 

@@ -29,7 +29,7 @@ bool Register() {
   // Mod Settings keeps the pointers until the game's scripts are loaded: the variables live as long as the plugin
   static std::vector<ModSettings::Variable> variables;
   variables.clear();
-  variables.reserve(Flight::PlayerSettingsTable().size() + Flight::AutopilotSettingsTable().size());
+  variables.reserve(Flight::PlayerSettingsTable().size() + 1 + Flight::AutopilotSettingsTable().size());
   uint32_t order = 0;
   for (const auto &s : Flight::PlayerSettingsTable()) {
     ModSettings::Variable v{};
@@ -49,6 +49,27 @@ bool Register() {
         [](RED4ext::CName aCategory, RED4ext::CName aProperty, ModSettings::ModVariableType aValue) {
           if (Flight::SetPlayerSetting(Flight::Player(), aProperty.ToString(), aValue.f32))
             spdlog::info("[Settings] {} = {}", aProperty.ToString(), aValue.f32);
+        });
+    variables.push_back(v);
+  }
+  {
+    // Hover & Fly's switch, alone in its class (Mod Settings calls a class's callbacks with each of its variables)
+    ModSettings::Variable v{};
+    v.modName = Flight::kPlayerSettingsMod;
+    v.className = Flight::kHoverFlyEnabledClass;
+    v.categoryName = Flight::kHoverFlyEnabledCategory;
+    v.propertyName = Flight::kHoverFlyEnabledName;
+    v.type = "Bool";
+    v.displayName = Flight::kHoverFlyEnabledDisplayName;
+    v.description = "";
+    v.order = 0;
+    v.defaultValue.b = true;
+    v.callback = std::make_shared<ModSettings::runtime_class_callback_t>(
+        [](RED4ext::CName aCategory, RED4ext::CName aProperty, ModSettings::ModVariableType aValue) {
+          if (aProperty.ToString() != std::string(Flight::kHoverFlyEnabledName))
+            return;
+          Flight::Player().hoverFlyEnabled = aValue.b;
+          spdlog::info("[Settings] {}.{} = {}", Flight::kHoverFlyEnabledClass, Flight::kHoverFlyEnabledName, aValue.b);
         });
     variables.push_back(v);
   }

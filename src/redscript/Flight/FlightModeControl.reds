@@ -61,7 +61,8 @@ public native class FlightModeControl extends IScriptable {
   // FlightModeStandard.UpdateWithNormalLift and UpdateWithNormalDistance; set force and torque
   public native func StandardLift(stats: ref<FlightStats>, pitchPID: ref<PID>, rollPID: ref<PID>, normal: Vector4, liftForce: Float) -> Void;
   public native func StandardDistance(stats: ref<FlightStats>, hoverPID: ref<PID>, pitchPID: ref<PID>, rollPID: ref<PID>, normal: Vector4, heightDifference: Float) -> Void;
-  // FlightModeHoverFly.Update and FlightModeAutomatic.Update after FindGround; they write the in/out fields back
+  // FlightModeAutomatic.Update after FindGround (HoverFly: the script Hover & Fly's, deleted 2026-11-05, no caller); they
+  // write the in/out fields back
   public native func HoverFly(stats: ref<FlightStats>, hoverPID: ref<PID>, pitchPID: ref<PID>, rollPID: ref<PID>) -> Void;
   public native func Automatic(stats: ref<FlightStats>, hoverPID: ref<PID>, pitchPID: ref<PID>, rollPID: ref<PID>) -> Void;
   // FlightModeDrone.Update

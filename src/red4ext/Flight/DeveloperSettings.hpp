@@ -25,8 +25,6 @@ struct DeveloperSettings {
   float thrustPerThruster = 6000.0f;
   // the native mode spike (FlightModeNativeProbe) appended to the mode list of cars attached after it is set
   bool nativeModeProbe = false;
-  // the C++ Hover & Fly (FlightModeHoverFlyAssist) in Hover & Fly's place, for cars attached after it is set
-  bool assistHoverFly = false;
   // PhysX rays the acoustics cast each time (Audio/Acoustics/LiveRays.cpp, 20 a second): the first 32 are the near
   // rays the echoes use; the rest the live sphere, bunched where the car is going, for the reverb's enclosure and mean
   // free path (Probe::SphereRays; docs/design/acoustics.md, "How many rays"). 32: the nav map's sphere alone.

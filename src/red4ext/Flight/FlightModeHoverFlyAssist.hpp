@@ -5,11 +5,12 @@
 // the maths reads: the component's stats, controls, thruster tensor and hover height (script fields, by name), the
 // ground (FlightGroundNative, the script's rays in C++), the car's torque response (Flight::TorqueResponse) and the
 // player's two settings (Flight::Player: turn and climb speed). The rest of HoverFlyAssistParams are the code defaults
-// (developer settings when they need changing). Until it replaces Hover & Fly (step 7) it takes Hover & Fly's place in
-// the list only with the developer setting assistHoverFly.
+// (developer settings when they need changing). It is Hover & Fly since step 7 (the first class in FlightModes.classes,
+// src/tweaks/flight_modes.yaml), switched on and off by Hover & Fly's Mod Setting (Flight::Player().hoverFlyEnabled).
 
 #include "Flight/Mode.hpp"
 #include "Flight/Modes.hpp"
+#include "Flight/Settings.hpp"
 
 struct FlightModeHoverFlyAssist : FlightMode {
   Flight::HoverFlyState state;
@@ -20,7 +21,8 @@ struct FlightModeHoverFlyAssist : FlightMode {
 
   void OnActivateNative() override;
   void OnUpdateNative(float aTimeDelta) override;
-  RED4ext::CString DescriptionNative() override { return "Hover & Fly (new)"; }
+  bool IsEnabledNative() override { return Flight::Player().hoverFlyEnabled; }
+  RED4ext::CString DescriptionNative() override { return "Hover & Fly"; }
 
   RTTI_IMPL_TYPEINFO(FlightModeHoverFlyAssist);
   RTTI_IMPL_ALLOCATOR();

@@ -252,11 +252,8 @@ public native class FlightComponent extends GameComponent {
     if Equals(FlightDeveloperSettings.Get("nativeModeProbe"), "true") {
       ArrayPush(classes, n"FlightModeNativeProbe"); // the native mode spike, last, for a developer only
     }
-    let assist = Equals(FlightDeveloperSettings.Get("assistHoverFly"), "true");
     for className in classes {
-      // the C++ Hover & Fly in its place, for a developer until it replaces it (docs/design/hover-fly-native.md)
-      let name = assist && Equals(className, n"FlightModeHoverFly") ? n"FlightModeHoverFlyAssist" : className;
-      let mode = FlightMode.Instantiate(name);
+      let mode = FlightMode.Instantiate(className);
       if IsDefined(mode) {
         mode.Initialize(this);
         if mode.IsEnabled() {
@@ -265,7 +262,7 @@ public native class FlightComponent extends GameComponent {
           mode.Deinitialize();
         }
       } else {
-        FlightLog.Warn("[FlightComponent] FlightModes.classes names " + NameToString(name) + ", which is not a FlightMode class");
+        FlightLog.Warn("[FlightComponent] FlightModes.classes names " + NameToString(className) + ", which is not a FlightMode class");
       }
     }
 

@@ -1,6 +1,6 @@
-// The redesigned Hover & Fly in C++ (Flight/FlightModeHoverFlyAssist.hpp); a mod extends it through FlightMode's hooks.
+// Hover & Fly, in C++ (Flight/FlightModeHoverFlyAssist.hpp); a mod extends it through FlightMode's hooks.
 public native class FlightModeHoverFlyAssist extends FlightMode {
-  // its state as FlightModeHoverFly names it (read only)
+  // its state, as the script Hover & Fly named it (read only)
   public native let hovering: Float;
   public native let referenceZ: Float;
   public native let holdingAltitude: Bool;

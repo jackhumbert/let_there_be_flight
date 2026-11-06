@@ -36,3 +36,14 @@ TEST(settings_callback_writes) {
   CHECK_NEAR(s.hoverFlyClimbRate, 20.0f, 0.0f);
   CHECK(!SetPlayerSetting(s, "noSuchSetting", 1.0f));
 }
+
+TEST(settings_hover_fly_switch_key) {
+  // Hover & Fly's switch registered where the script mode had it (FlightModeHoverFly.reds, deleted 2026-11-05:
+  // `enabled`, category UI-Settings-Flight-Mode-Settings, UI-Settings-Hover-And-Fly-Enabled, on by default), so a
+  // value saved in Mod Settings' user.ini ([FlightModeHoverFly] enabled) still applies
+  CHECK(std::string(kHoverFlyEnabledClass) == "FlightModeHoverFly");
+  CHECK(std::string(kHoverFlyEnabledName) == "enabled");
+  CHECK(std::string(kHoverFlyEnabledCategory) == "UI-Settings-Flight-Mode-Settings");
+  CHECK(std::string(kHoverFlyEnabledDisplayName) == "UI-Settings-Hover-And-Fly-Enabled");
+  CHECK(PlayerSettings{}.hoverFlyEnabled);
+}

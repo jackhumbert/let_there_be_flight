@@ -7,7 +7,7 @@
   - `planner.md`: route search, doorways, the line's passes and repair, navplan.
   - `hover-fly-feel.md`: how Hover & Fly should feel (the draft spec), the offline simulator that
     measures it (`tools/flightsim`), and what the mode does today.
-  - `hover-fly-native.md`: plan, not built: the Hover & Fly redesign as the first flight mode written wholly in
+  - `hover-fly-native.md`: built: the Hover & Fly redesign as the first flight mode written wholly in
     C++, its Mod Settings registered from C++.
   - `settings-audit.md`: proposal, not built: every Mod Setting, what it changes, and a smaller player-facing set.
   - `vehicle-limits.md`: the car's limits (VehicleSpec) and who reads them.

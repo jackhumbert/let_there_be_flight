@@ -14,6 +14,8 @@ struct PlayerSettings {
   // Hover & Fly (the C++ mode): how fast a held turn turns, deg/s, and a held climb or descent climbs, m/s
   float hoverFlyTurnRate = 90.0f;
   float hoverFlyClimbRate = 8.0f;
+  // Hover & Fly in the cars' mode lists (IsEnabled), the switch FlightModeHoverFly.reds had
+  bool hoverFlyEnabled = true;
 };
 
 // The instance the modes read, written by Mod Settings' callbacks.
@@ -38,6 +40,13 @@ constexpr const char *kPlayerSettingsCategory = "UI-Settings-Hover-And-Fly";
 // Writes the value Mod Settings gives for a variable into aSettings, clamped to its range; false for a name not in the
 // table.
 bool SetPlayerSetting(PlayerSettings &aSettings, const std::string &aName, float aValue);
+
+// Hover & Fly's switch (PlayerSettings::hoverFlyEnabled), registered under the class and name the script mode had it,
+// so the value players saved ([FlightModeHoverFly] enabled) carries over to the C++ mode.
+constexpr const char *kHoverFlyEnabledClass = "FlightModeHoverFly";
+constexpr const char *kHoverFlyEnabledName = "enabled";
+constexpr const char *kHoverFlyEnabledCategory = "UI-Settings-Flight-Mode-Settings";
+constexpr const char *kHoverFlyEnabledDisplayName = "UI-Settings-Hover-And-Fly-Enabled";
 
 // The Autopilot's Mod Settings (FlightModeAutopilot): registered from C++ under the class name the script registered
 // them under, with the same names, categories, keys, defaults and ranges, so the values players saved in Mod Settings'
