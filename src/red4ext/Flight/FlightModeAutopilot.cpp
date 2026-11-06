@@ -36,9 +36,6 @@ struct Props {
   CProperty *controls[8] = {};
   CProperty *tensor = nullptr, *isPlayerMounted = nullptr, *collisionTimer = nullptr, *pitchPid = nullptr,
             *rollPid = nullptr, *modes = nullptr;
-  // FlightModeStandard's Mod Settings: surge, yaw, sway, pitch, lift, hover, pitch input angle, roll, roll input angle
-  RED4ext::CClass *standard = nullptr;
-  CProperty *standardFields[9] = {};
   // FlightSettings' instance fields (the script read FlightSettings.GetInstance().<name>)
   CProperty *physx = nullptr, *brakeLinear = nullptr, *brakeAngular = nullptr, *dampAngular = nullptr,
             *yawDamp = nullptr, *dampMax = nullptr, *rollWithYaw = nullptr;
@@ -52,7 +49,6 @@ const Props &GetProps() {
     auto mode = rtti->GetClass("FlightMode");
     auto component = rtti->GetClass("FlightComponent");
     auto settings = rtti->GetClass("FlightSettings");
-    p.standard = rtti->GetClass("FlightModeStandard");
     if (!mode || !component) {
       return p;
     }
@@ -70,14 +66,6 @@ const Props &GetProps() {
     p.pitchPid = component->GetProperty("pitchPID");
     p.rollPid = component->GetProperty("rollPID");
     p.modes = component->GetProperty("modes");
-    if (p.standard) {
-      const char *names[9] = {"standardModeSurgeFactor", "standardModeYawFactor",       "standardModeSwayFactor",
-                              "standardModePitchFactor", "standardModeLiftFactor",      "standardModeHoverFactor",
-                              "standardModePitchInputAngle", "standardModeRollFactor", "standardModeRollInputAngle"};
-      for (int i = 0; i < 9; ++i) {
-        p.standardFields[i] = p.standard->GetProperty(names[i]);
-      }
-    }
     if (settings) {
       p.physx = settings->GetProperty("physxFlightPhysics");
       p.brakeLinear = settings->GetProperty("brakeFactorLinear");
@@ -242,24 +230,11 @@ bool FlightModeAutopilot::Gather(Navigation::AutopilotInput &aIn, Frame &aFrame)
   f.shapeDrag = Flight::Developer().shapeDrag;
   f.dragK = Flight::Developer().dragK;
 
-  // the Standard factors: the script mode inherited FlightModeStandard's Mod Settings, so they are read from a
-  // FlightModeStandard in this car's list (Mod Settings writes them on each); the defaults without one
+  // the Standard factors the car model and the player's takeover use: the code's own (Flight::StandardParams), not the
+  // Standard modes' Mod Settings (Jack, 2026-11-05: the Autopilot's car should not change with another mode's sliders;
+  // until then it read them from the first FlightModeStandard in the car's list)
   auto &s = aIn.standard;
   s = {};
-  if (p.standard) {
-    const auto &modes = Field<RED4ext::DynArray<RED4ext::Handle<RED4ext::IScriptable>>>(p.modes, c);
-    for (uint32_t i = 0; i < modes.size; ++i) {
-      auto *m = modes.entries[i].GetPtr();
-      if (m && m->GetType()->IsA(p.standard)) {
-        float *fields[9] = {&s.surgeFactor, &s.yawFactor,  &s.swayFactor,      &s.pitchFactor,   &s.liftFactor,
-                            &s.hoverFactor, &s.pitchInputAngle, &s.rollFactor, &s.rollInputAngle};
-        for (int k = 0; k < 9; ++k) {
-          *fields[k] = FieldOr<float>(p.standardFields[k], m, *fields[k]);
-        }
-        break;
-      }
-    }
-  }
   s.rollWithYaw = FieldOr<float>(p.rollWithYaw, settings, s.rollWithYaw);
   s.pitchWithLift = FlightSettings::GetFloatN("pitchWithLift");
   s.pitchWithSurge = FlightSettings::GetFloatN("pitchWithSurge");

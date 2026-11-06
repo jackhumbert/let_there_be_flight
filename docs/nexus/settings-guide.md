@@ -78,8 +78,8 @@ cycling modes with Next Mode / Prev Mode.
 ## Standard (Non-Drone) Mode
 
 These apply to Fly, Hover and Automatic (all three extend the same `FlightModeStandard` base and share these
-factors). Hover & Fly has its own settings since it was rebuilt in C++ (below); the Autopilot uses these factors when you
-take over from it, if one of those three modes is enabled.
+factors). Hover & Fly has its own settings since it was rebuilt in C++ (below), and the Autopilot its own built-in
+values.
 
 | Setting | Default | Range | What it does |
 |---|---|---|---|
