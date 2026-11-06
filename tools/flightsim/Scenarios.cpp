@@ -31,16 +31,7 @@ struct Flown {
 
   Flown(const std::string &aName, const Setup &aSetup, Terrain aTerrain)
       : setup(aSetup), sim(aSetup.car, std::move(aTerrain)) {
-    sim.standard = aSetup.standard;
-    sim.hoverFly = aSetup.hoverFly;
-    sim.force = aSetup.force;
-    sim.shapeDrag = aSetup.shapeDrag;
-    sim.thrustStrength = aSetup.thrustStrength;
-    sim.thrustPerThruster = aSetup.thrustPerThruster;
-    sim.mode = aSetup.mode;
-    sim.assistParams = aSetup.assistParams;
-    sim.drone = aSetup.drone;
-    sim.droneAssist = aSetup.droneAssist;
+    Configure(sim, aSetup);
     run.name = aName;
   }
 
@@ -608,6 +599,19 @@ const std::map<std::string, Scenario> &Scenarios() {
   return scenarios;
 }
 } // namespace
+
+void Configure(Sim &aSim, const Setup &aSetup) {
+  aSim.standard = aSetup.standard;
+  aSim.hoverFly = aSetup.hoverFly;
+  aSim.force = aSetup.force;
+  aSim.shapeDrag = aSetup.shapeDrag;
+  aSim.thrustStrength = aSetup.thrustStrength;
+  aSim.thrustPerThruster = aSetup.thrustPerThruster;
+  aSim.mode = aSetup.mode;
+  aSim.assistParams = aSetup.assistParams;
+  aSim.drone = aSetup.drone;
+  aSim.droneAssist = aSetup.droneAssist;
+}
 
 float Run::Get(const std::string &aName) const {
   for (const Metric &m : metrics)

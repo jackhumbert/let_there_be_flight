@@ -26,6 +26,9 @@ drag F = 1.2 airResistanceFactor v^2 (FlightMode.ApplyPhysics) as a CdA, and the
 (budget with real drag and a smaller force per thruster gives the same speeds: only force / K matters.)
 Speeds are uncapped and without TopSpeed's 0.97 (Navigation/Vehicle.cpp caps at speedCap, 120 m/s by default).
 Finally a rough flat turn per named car under each drag model, with and without the yaw directionality redirect.
+For the ground contact (docs/design/hover-fly-terrain.md), also the chassis box and its underside profile (the
+lowest point per 0.5 m square, `underside()`), from the drive model's centre of mass as vehicles.tsv's wheel offsets
+and bottom are; tweak_physics.py --aero carries them into vehicles.tsv.
 Writes <out> (one row per fleet row) and prints the comparison.
 """
 
@@ -255,6 +258,53 @@ def fit(pieces, ax, ay, az):
     return out
 
 
+UNDER_CELL = 0.5   # m, the underside profile's cell
+UNDER_STEP = 0.1   # m, the samples inside a cell
+
+
+def underside(pieces, com):
+    """The chassis box and the underside profile, from the centre of mass (body frame: X right, Y forward, Z up).
+    The profile is the lowest point of the pieces in each UNDER_CELL square of the footprint, sampled every UNDER_STEP:
+    "cell,x0,y0,nx,ny:z,z,..." row by row along Y from the back, x0/y0 the first cell's corner, an empty z where no
+    piece is over the square. Each piece is convex: its lowest point over (x, y) is the highest of its downward
+    facing facets' planes there, inside when that is under the lowest upward one."""
+    from scipy.spatial import ConvexHull, QhullError
+    com = np.asarray(com, float)
+    pts = [p - com for p in pieces]
+    a = np.concatenate(pts)
+    lo, hi = a.min(axis=0), a.max(axis=0)
+    nx, ny = int(math.ceil((hi[0] - lo[0]) / UNDER_CELL - 1e-6)), int(math.ceil((hi[1] - lo[1]) / UNDER_CELL - 1e-6))
+    sub = int(round(UNDER_CELL / UNDER_STEP))
+    xs = lo[0] + (np.arange(nx * sub + 1)) * (UNDER_CELL / sub)
+    ys = lo[1] + (np.arange(ny * sub + 1)) * (UNDER_CELL / sub)
+    X, Y = np.meshgrid(np.minimum(xs, hi[0]), np.minimum(ys, hi[1]))
+    low = np.full(X.shape, np.inf)
+    for p in pts:
+        try:
+            eq = ConvexHull(p).equations
+        except QhullError:
+            eq = ConvexHull(p, qhull_options="QJ").equations
+        zlo, zhi, inside = np.full(X.shape, -np.inf), np.full(X.shape, np.inf), np.ones(X.shape, bool)
+        for nxf, nyf, nzf, d in eq:
+            plane = nxf * X + nyf * Y + d
+            if nzf < -1e-6:
+                zlo = np.maximum(zlo, -plane / nzf)
+            elif nzf > 1e-6:
+                zhi = np.minimum(zhi, -plane / nzf)
+            else:
+                inside &= plane <= 1e-6
+        inside &= zlo <= zhi + 1e-6
+        low = np.where(inside, np.minimum(low, zlo), low)
+    cells = []
+    for j in range(ny):
+        for i in range(nx):
+            z = low[j * sub:(j + 1) * sub + 1, i * sub:(i + 1) * sub + 1].min()
+            cells.append(f"{z:.3f}" if np.isfinite(z) else "")
+    profile = f"{UNDER_CELL:g},{lo[0]:.3f},{lo[1]:.3f},{nx},{ny}:" + ",".join(cells)
+    return {"boxMinX": lo[0], "boxMaxX": hi[0], "boxMinY": lo[1], "boxMaxY": hi[1], "boxMinZ": lo[2],
+            "boxMaxZ": hi[2], "underside": profile}
+
+
 def label(row, template_path):
     n = row["name"]
     if not n or n.startswith("0x") or n.startswith("LocKey"):
@@ -318,7 +368,8 @@ def main():
     with open(args.vehicles, encoding="utf-8") as f:
         fleet = list(csv.DictReader(f, delimiter="\t"))
 
-    shapes, measured, rows, skipped = {}, {}, [], {}
+    drive = {**read(os.path.join(args.dump, "drive_models.tsv")), **read(os.path.join(args.dump, "bike_drive_models.tsv"))}
+    shapes, measured, unders, rows, skipped = {}, {}, {}, [], {}
     for row in fleet:
         v = tweak.get(row["record"])
         path = paths.get(v["entityTemplatePath"]) if v else None
@@ -351,14 +402,20 @@ def main():
             m["width"], m["length"], m["height"] = (hi - lo).tolist()
             measured[key] = m
         m = measured[key]
+        dm = v.get("vehDriveModelData", "")
+        dm = dm if dm not in NONE else v.get("bikeDriveModelData", "")
+        com = [float(c) for c in drive[dm]["center_of_mass_offset"].split(",")[:3]] if dm in drive else [0.0] * 3
+        ukey = key + (tuple(com),)
+        if ukey not in unders:
+            unders[ukey] = underside(sh.pieces, com)
         cls = body_class(sh.source)
         cdf, cds, cdt = CD[cls]
         mass, af = float(row["mass"]), float(row["airResistance"])
         r = {"record": row["record"], "name": label(row, path), "type": row["type"], "template": basename(path),
              "phys": basename(sh.source) if "\\" in sh.source else sh.source, "class": cls,
              "pieces": len(sh.pieces), "mass": mass, "airResistance": af,
-             "thrusters": int(float(row["thrusters"])), "records": int(row["records"]), **m,
-             "wheelX": float(row["wheelX"]), "wheelY": float(row["wheelY"]),
+             "thrusters": int(float(row["thrusters"])), "records": int(row["records"]), **m, **unders[ukey],
+             "wheelX": float(row["wheelX"]), "wheelY": float(row["wheelY"]), "bottom": float(row["bottom"]),
              "cdFront": cdf, "cdSide": cds, "cdTop": cdt}
         r["cdaX"], r["cdaY"], r["cdaZ"] = cds * m["areaX"], cdf * m["areaY"], cdt * m["areaZ"]
         if cls == "bike":
@@ -388,7 +445,8 @@ def main():
             "areaZ"] + [f"yaw{y}" for y in YAWS] + [
             "fitMax", "fitRms", "fitRms1.5", "fitMax1.5", "bestP", "cdFront", "cdSide", "cdTop", "cdaX", "cdaY", "cdaZ",
             "cdaToday", "cdImplied",
-            "vToday", "vShape", "vScaled", "vBudget", "accelBudget"]
+            "vToday", "vShape", "vScaled", "vBudget", "accelBudget",
+            "boxMinX", "boxMaxX", "boxMinY", "boxMaxY", "boxMinZ", "boxMaxZ", "underside"]
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
     with open(args.out, "w", encoding="utf-8", newline="\n") as f:
         f.write("\t".join(cols) + "\n")
@@ -408,6 +466,24 @@ def main():
 
     named = [(n, pick(s)) for n, s in NAMED]
     named = [(n, r) for n, r in named if r]
+    print("\nunderside, m from the centre of mass: the chassis's lowest point against the tyres' (bottom); the")
+    print("overhangs past the wheel emitters, front and back; the lowest point between the axles")
+    print(f"  {'car':24} {'chassis':>7} {'tyres':>6} {'clear':>6} {'front':>6} {'back':>6} {'mid':>6}")
+
+    def mid_low(r):
+        cell, x0, y0, nx, ny = r["underside"].split(":")[0].split(",")
+        zs = r["underside"].split(":")[1].split(",")
+        cell, y0, nx, ny = float(cell), float(y0), int(nx), int(ny)
+        z = [float(zs[j * nx + i]) for j in range(ny) for i in range(nx)
+             if zs[j * nx + i] and abs(y0 + (j + 0.5) * cell) < r["wheelY"]]
+        return min(z) if z else float("nan")
+
+    for n, r in named:
+        print(f"  {n:24} {r['boxMinZ']:7.2f} {r['bottom']:6.2f} {r['boxMinZ'] - r['bottom']:6.2f} "
+              f"{r['boxMaxY'] - r['wheelY']:6.2f} {-r['boxMinY'] - r['wheelY']:6.2f} {mid_low(r):6.2f}")
+    clear = [r["boxMinZ"] - r["bottom"] for r in rows]
+    print(f"  chassis over the tyres' bottom, fleet: min {min(clear):.2f}, median {statistics.median(clear):.2f}, "
+          f"max {max(clear):.2f}; under the tyres on {sum(c < 0 for c in clear)} of {len(rows)}")
     print("\nchecks: collider width against the wheel track, length against the wheelbase")
     print(f"  {'car':24} {'width':>6} {'track':>6} {'length':>6} {'wbase':>6} {'height':>6}")
     for n, r in named:

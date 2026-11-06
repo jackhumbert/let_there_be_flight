@@ -39,6 +39,9 @@ struct Setup {
   float dt = 1.0f / 60.0f;
 };
 
+// A Sim given the setup's tuning (everything but the car, which the Sim is made with).
+void Configure(Sim &aSim, const Setup &aSetup);
+
 // Every scenario's name, or the ones for one kind of mode: Drone's (drone_*) for the drone modes, the rest for Hover &
 // Fly's. Any scenario can be flown in any mode.
 std::vector<std::string> ScenarioNames();

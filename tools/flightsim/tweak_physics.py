@@ -20,8 +20,10 @@ Where each number comes from:
   some broken off) gives only its inertia.
 --todo lists one record for each physical car still missing a measurement, for vehicle_survey.py --records.
 Records on CDPR's stand-in drive model (PLACEHOLDER_DRIVE_MODELS: AVs, drones, props) are left out.
---aero adds each car's drag area per body axis from aero.py's aero.tsv (cdaX side, cdaY front, cdaZ top, m2; empty
-for the three cars with no chassis shape).
+--aero adds, from aero.py's aero.tsv, each car's drag area per body axis (cdaX side, cdaY front, cdaZ top, m2) and
+its chassis box and underside profile from the centre of mass (boxMinX .. boxMaxZ, m; underside, the lowest point per
+square, as aero.underside() writes it: the ground contact, docs/design/hover-fly-terrain.md); empty for the three cars
+with no chassis shape.
 """
 
 import argparse
@@ -33,8 +35,10 @@ from collections import defaultdict
 HERE = os.path.dirname(os.path.abspath(__file__))
 COLUMNS = ["record", "name", "type", "mass", "airResistance", "brakingFriction", "inertiaX", "inertiaY", "inertiaZ",
            "tensorX", "tensorY", "tensorZ", "wheelX", "wheelY", "wheelZ", "bottom", "thrusters", "records",
-           "cdaX", "cdaY", "cdaZ"]
-# the chassis shape's drag area per body axis (m2: side, front, top), from aero.py's table (--aero); empty without
+           "cdaX", "cdaY", "cdaZ", "boxMinX", "boxMaxX", "boxMinY", "boxMaxY", "boxMinZ", "boxMaxZ", "underside"]
+# from aero.py's table (--aero), empty without: the chassis shape's drag area per body axis (m2: side, front, top), its
+# box and its underside
+AERO = ["cdaX", "cdaY", "cdaZ", "boxMinX", "boxMaxX", "boxMinY", "boxMaxY", "boxMinZ", "boxMaxZ", "underside"]
 GEOMETRY = ["tensorX", "tensorY", "tensorZ", "wheelX", "wheelY", "wheelZ", "bottom", "thrusters"]
 NONE = ("", "0x0000000000000000", "None", "NULL")
 # The stand-in drive model CDPR gives vehicles that are never driven: 1300 kg, inertia 0,0,0, air resistance 0.35
@@ -76,7 +80,7 @@ def main():
     ap.add_argument("--geometry", default="")
     ap.add_argument("-o", "--out", default=os.path.join(HERE, "vehicles.tsv"))
     ap.add_argument("--todo", default="")
-    ap.add_argument("--aero", default="", help="aero.py's aero.tsv: each car's drag area per body axis")
+    ap.add_argument("--aero", default="", help="aero.py's aero.tsv: each car's drag area per body axis, box and underside")
     args = ap.parse_args()
 
     vehicles = read(os.path.join(args.dump, "vehicles.tsv"))
@@ -151,7 +155,7 @@ def main():
     aero = read(args.aero) if args.aero else {}
     for r in rows:
         a = aero.get(r["record"], {})
-        r.update({c: a.get(c, "") for c in ("cdaX", "cdaY", "cdaZ")})
+        r.update({c: a.get(c, "") for c in AERO})
     with open(args.out, "w", encoding="utf-8", newline="\n") as f:
         f.write("\t".join(COLUMNS) + "\n")
         for r in rows:

@@ -9,6 +9,8 @@
     measures it (`tools/flightsim`), and what the mode does today.
   - `hover-fly-native.md`: built: the Hover & Fly redesign as the first flight mode written wholly in
     C++, its Mod Settings registered from C++.
+  - `hover-fly-terrain.md`: in progress: Hover & Fly keeping close over any ground without touching it, measured
+    offline on the city's collision (`Colliders`, `region_pack.py`) over every car.
   - `settings-audit.md`: proposal, not built: every Mod Setting, what it changes, and a smaller player-facing set.
   - `vehicle-limits.md`: the car's limits (VehicleSpec) and who reads them.
   - `navmap.md`: the baked nav map, how it is made and shipped.

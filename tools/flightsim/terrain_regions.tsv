@@ -1,0 +1,11 @@
+# The boxes of the city's collision Hover & Fly is flown over offline (docs/design/hover-fly-terrain.md, step 4).
+# region_pack.py --regions packs each into <name>.ltbfregion (20 m margin); flightsim --sample draws lines in them.
+# name	x0	y0	x1	y1	what
+cc	-1950	-1000	-1710	-760	the city centre's streets and plazas (navplan routes cc2dog and via start here)
+east	-1190	-1380	-950	-1140	a street east of the city centre (route dog's start)
+dogtown	-1897	-2566	-1657	-2326	Dogtown round its landing pad (route dog's goal)
+north	-1420	480	-1180	720	north of the centre (route ns's start)
+west	-2720	-520	-2480	-280	the west side (route we's start)
+badlands_rock	912	-256	1152	-16	Badlands rock just east of the city: the nav map's steepest open ground near it
+badlands_hills	672	-256	912	-16	rolling Badlands hills beside it, no cliffs
+badlands_high	2592	1424	2832	1664	high rocky ground further out

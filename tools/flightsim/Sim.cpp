@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <cstdlib>
 #include <fstream>
 #include <limits>
@@ -62,6 +63,23 @@ bool ParseMode(const std::string &aName, Mode &aMode) {
   return false;
 }
 
+std::vector<Vec3> ParseUnderside(const std::string &aText) {
+  // "cell,x0,y0,nx,ny:z,z,...", row by row along Y, an empty z where nothing is over the square
+  std::vector<Vec3> points;
+  float cell = 0, x0 = 0, y0 = 0;
+  int nx = 0, ny = 0;
+  size_t colon = aText.find(':');
+  if (colon == std::string::npos ||
+      std::sscanf(aText.substr(0, colon).c_str(), "%f,%f,%f,%d,%d", &cell, &x0, &y0, &nx, &ny) != 5)
+    return points;
+  std::stringstream zs(aText.substr(colon + 1));
+  std::string z;
+  for (int k = 0; k < nx * ny && std::getline(zs, z, ','); ++k)
+    if (!z.empty())
+      points.push_back({x0 + (float(k % nx) + 0.5f) * cell, y0 + (float(k / nx) + 0.5f) * cell, std::strtof(z.c_str(), nullptr)});
+  return points;
+}
+
 Terrain Flat(float aHeight) {
   return [aHeight](float, float) { return aHeight; };
 }
@@ -71,8 +89,8 @@ std::vector<Car> LoadCars(const std::string &aPath) {
   std::ifstream in(aPath);
   std::string line;
   std::getline(in, line); // header
-  // optional columns, by name: the shape drag areas (tweak_physics.py --aero)
-  int cdaX = -1, cdaY = -1, cdaZ = -1;
+  // optional columns, by name: the shape drag areas and the underside (tweak_physics.py --aero)
+  int cdaX = -1, cdaY = -1, cdaZ = -1, under = -1;
   {
     std::stringstream hs(line);
     std::string name;
@@ -82,6 +100,7 @@ std::vector<Car> LoadCars(const std::string &aPath) {
       cdaX = name == "cdaX" ? i : cdaX;
       cdaY = name == "cdaY" ? i : cdaY;
       cdaZ = name == "cdaZ" ? i : cdaZ;
+      under = name == "underside" ? i : under;
     }
   }
   while (std::getline(in, line)) {
@@ -108,6 +127,8 @@ std::vector<Car> LoadCars(const std::string &aPath) {
     c.thrusters = col.size() > 16 ? num(16) : 0.0f;
     if (cdaY >= 0 && size_t(std::max({cdaX, cdaY, cdaZ})) < col.size())
       c.cda = {num(cdaX), num(cdaY), num(cdaZ)};
+    if (under >= 0 && size_t(under) < col.size())
+      c.underside = ParseUnderside(col[under]);
     if (c.mass <= 0.0f || c.inertia.x <= 0.0f || c.inertia.y <= 0.0f || c.inertia.z <= 0.0f)
       continue;
     StatsStatic st;
@@ -131,9 +152,14 @@ Ground Sim::FindGround() {
   for (float sx : {-1.0f, 1.0f})
     for (float sy : {-1.0f, 1.0f}) {
       Vec3 tire = Add(position, Rotate(orientation, {sx * car.wheelX, sy * car.wheelY, car.wheelZ}));
-      float h = terrain(tire.x, tire.y);
       Hit &hit = hits[n++];
       hit.tire = tire;
+      if (groundRay) {
+        hit.valid = groundRay(tire, {tire.x, tire.y, tire.z - reach}, hit.position, hit.normal);
+        ++rays;
+        continue;
+      }
+      float h = terrain(tire.x, tire.y);
       hit.valid = std::isfinite(h) && tire.z - h <= reach && tire.z >= h;
       hit.position = {tire.x, tire.y, h};
       hit.normal = {0, 0, 1};
@@ -141,6 +167,33 @@ Ground Sim::FindGround() {
   Ground g = GroundFromHits(hits, n, lastDistance);
   lastDistance = g.distance;
   return g;
+}
+
+Sim::Clearance Sim::Underside() const {
+  Clearance u;
+  u.clearance = kClearanceReach;
+  auto touch = [&](Vec3 aBody) {
+    Vec3 point = Add(position, Rotate(orientation, aBody));
+    Vec3 from{point.x, point.y, std::max(position.z, point.z)};
+    Vec3 hit, normal;
+    // from the centre's height, so a ledge the body has already sunk into is still found, and the ground the rays
+    // see above the car (a ceiling) is not
+    ++u.rays;
+    if (groundRay(from, {point.x, point.y, point.z - kClearanceReach}, hit, normal) &&
+        point.z - hit.z < u.clearance) {
+      u.clearance = point.z - hit.z;
+      u.bodyY = aBody.y;
+    }
+  };
+  // the tyres: the game still runs the wheels' suspension in flight (WheelSuspensionBase_FixedUpdate_PostSolve)
+  for (float sx : {-1.0f, 1.0f})
+    for (float sy : {-1.0f, 1.0f})
+      touch({sx * car.wheelX, sy * car.wheelY, car.bottom});
+  if (car.underside.empty())
+    touch({0, 0, car.bottom});
+  for (Vec3 p : car.underside)
+    touch(p);
+  return u;
 }
 
 void Sim::Place(Vec3 aPosition, float aHeadingDeg, Vec3 aVelocity) {
@@ -360,10 +413,28 @@ Frame Sim::Tail(const ModeOutput &m, const Controls &c, const Ground &g, float a
 
   // the ground: a stop under the body's lowest point
   Frame f;
-  float ground = terrain(position.x, position.y);
-  if (std::isfinite(ground) && position.z + car.bottom < ground) {
+  float depth = 0.0f;
+  float ground = -std::numeric_limits<float>::infinity();
+  if (groundRay) {
+    Clearance u = Underside();
+    depth = -u.clearance;
+    f.clearance = u.clearance;
+    f.clearanceY = u.bodyY;
+    f.rays = rays + u.rays + 1;
+    Vec3 hit, normal;
+    if (groundRay(position, {position.x, position.y, position.z - 1000.0f}, hit, normal))
+      ground = hit.z;
+  } else {
+    ground = terrain(position.x, position.y);
+    if (std::isfinite(ground)) {
+      depth = ground - (position.z + car.bottom);
+      f.clearance = std::min(-depth, kClearanceReach);
+    }
+  }
+  rays = 0;
+  if (depth > 0.0f) {
     f.contact = true;
-    position.z = ground - car.bottom;
+    position.z += depth;
     if (velocity.z < 0.0f) {
       f.impactSpeed = -velocity.z;
       velocity.z = 0.0f;

@@ -6,6 +6,10 @@
 //
 //   flightsim --replay <ltbf_hoverfly_*.csv> [--mode <Hover & Fly's mode index>] [--vehicles <tsv> --match <car>]
 //
+//   flightsim --terrain <terrain_runs.tsv> [--only <line name or tag part>] [--speeds 40,80,130] [--hover 1]
+//             [--regions <dir>] [--vehicles <tsv> [--match <car>]] [--mode ...] [--set ...] [--csv <dir>]
+//   flightsim --sample <region> <count> [--length 200] [--min-length 100] [--seed 1] [--regions <dir>]
+//
 // --mode picks the mode flown (Sim.hpp's Mode), today's Hover & Fly by default; without scenario names it flies that
 // kind of mode's scenarios (the drone_* ones for the drone modes). --assist is --mode assist: the redesigned
 // controller (Flight::HoverFlyAssist), whose a.* settings take --set too, as DroneAssist's d.* do. A number after
@@ -16,6 +20,12 @@
 // --vehicles flies every car of a survey table (LoadCars in Sim.hpp) and prints a tab-separated table, a car a row.
 // --replay flies a game recording's pieces offline and prints the game's numbers beside the simulator's (Replay.hpp);
 // with --csv, both traces go to <dir>/replay.csv.
+// --terrain flies each line of a runs file over its region's collision (TerrainRuns.hpp; the redesign, --mode assist,
+// unless --mode says otherwise) at each speed (km/h) and hover height (m), one car or every car of --vehicles, and
+// prints a tab-separated table, a run a row: car, line, km/h, the line's usable length and tags, the metrics.
+// --sample prints <count> random lines in a region, tagged by their ground, as rows for a runs file. Regions are
+// <regions>/<name>.ltbfregion (region_pack.py --regions), by default %LTBF_WORK%/flightsim_regions
+// (D:/cp2077_work/build/flightsim_regions without it).
 //
 // --set changes the tuning: mass, airResistance, brakingFriction, gainX/Y/Z, torqueDelay, gravity (the body's
 // gravity against what the modes hold up); Standard's surge, yaw,
@@ -25,11 +35,14 @@
 
 #include "Replay.hpp"
 #include "Scenarios.hpp"
+#include "TerrainRuns.hpp"
 
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <map>
+#include <memory>
+#include <sstream>
 #include <string>
 
 using namespace FlightSim;
@@ -117,14 +130,117 @@ void WriteCsv(const std::string &aPath, const Run &aRun) {
 }
 } // namespace
 
+std::string RegionsDir() {
+  const char *work = std::getenv("LTBF_WORK");
+  return std::string(work ? work : "D:/cp2077_work/build") + "/flightsim_regions";
+}
+
+// the region files, each loaded once
+const Colliders *Region(const std::string &aDir, const std::string &aName) {
+  static std::map<std::string, std::unique_ptr<Colliders>> loaded;
+  auto &slot = loaded[aName];
+  if (!slot) {
+    auto c = std::make_unique<Colliders>();
+    std::string error;
+    if (!c->Load(aDir + "/" + aName + ".ltbfregion", &error)) {
+      std::fprintf(stderr, "%s\n", error.c_str());
+      return nullptr;
+    }
+    slot = std::move(c);
+  }
+  return slot.get();
+}
+
+int FlyTerrain(const std::string &aRuns, const std::string &aRegions, const std::string &aOnly,
+            const std::vector<float> &aSpeeds, float aHover, const Setup &aSetup, const std::vector<Car> &aCars,
+            const std::string &aCsv) {
+  std::vector<Line> lines = LoadLines(aRuns);
+  if (lines.empty()) {
+    std::fprintf(stderr, "no lines in %s\n", aRuns.c_str());
+    return 2;
+  }
+  bool header = false;
+  for (const Line &line : lines) {
+    if (!aOnly.empty() && line.name.find(aOnly) == std::string::npos && line.tags.find(aOnly) == std::string::npos)
+      continue;
+    const Colliders *world = Region(aRegions, line.region);
+    if (!world)
+      return 2;
+    Profile profile = GroundProfile(*world, line.a, line.b, line.z0);
+    if (profile.usable < 10.0f) {
+      std::fprintf(stderr, "%s: under 10 m to fly before a wall, left out\n", line.name.c_str());
+      continue;
+    }
+    for (const Car &car : aCars) {
+      Setup s = aSetup;
+      if (!car.name.empty() || aCars.size() > 1) {
+        s.car = car;
+        s.car.responseError = aSetup.car.responseError;
+        s.car.dragK = aSetup.car.dragK;
+      }
+      for (float kmh : aSpeeds) {
+        Run run = FlyLine(s, *world, line, profile, kmh / 3.6f, aHover);
+        if (!header) {
+          // the line's ground (Profile), then the run's metrics
+          std::printf("car\tline\tkmh\tusable\ttags\tslope\tstep_max\tkerbs\tsteps\tdrops\tbump\tcrest\tdip\tterrain"
+                      "\tgaps");
+          for (const Metric &m : run.metrics)
+            std::printf("\t%s", m.name.c_str());
+          std::printf("\n");
+          header = true;
+        }
+        std::printf("%s\t%s\t%.0f\t%.0f\t%s\t%.3g\t%.3g\t%d\t%d\t%d\t%.3g\t%.3g\t%.3g\t%.2f\t%.2f",
+                    s.car.name.empty() ? "car" : s.car.name.c_str(), line.name.c_str(), kmh, profile.usable,
+                    line.tags.c_str(), profile.slopeP95, profile.stepMax, profile.kerbs, profile.steps, profile.drops,
+                    profile.bumpRms, profile.crest, profile.dip, profile.terrain, profile.gaps);
+        for (const Metric &m : run.metrics)
+          std::printf("\t%.3g", m.value);
+        std::printf("\n");
+        std::fflush(stdout);
+        if (!aCsv.empty())
+          WriteCsv(aCsv + "/" + run.name + ".csv", run);
+      }
+    }
+  }
+  return 0;
+}
+
 int main(int argc, char **argv) {
   Setup setup;
   auto knobs = Knobs(setup);
-  std::string csv, vehicles, match, replay;
+  std::string csv, vehicles, match, replay, terrain, only, sample, regions = RegionsDir();
+  std::vector<float> speeds{40.0f, 80.0f, 130.0f};
+  float hover = 1.0f, length = 200.0f, minLength = 100.0f;
+  int sampleCount = 0;
+  uint32_t seed = 1;
+  bool modeGiven = false;
   int hoverFlyMode = 0;
   std::vector<std::string> names;
   for (int i = 1; i < argc; ++i) {
-    if (!std::strcmp(argv[i], "--assist")) {
+    if (!std::strcmp(argv[i], "--terrain") && i + 1 < argc) {
+      terrain = argv[++i];
+    } else if (!std::strcmp(argv[i], "--sample") && i + 2 < argc) {
+      sample = argv[++i];
+      sampleCount = std::atoi(argv[++i]);
+    } else if (!std::strcmp(argv[i], "--regions") && i + 1 < argc) {
+      regions = argv[++i];
+    } else if (!std::strcmp(argv[i], "--only") && i + 1 < argc) {
+      only = argv[++i];
+    } else if (!std::strcmp(argv[i], "--speeds") && i + 1 < argc) {
+      speeds.clear();
+      std::stringstream ss(argv[++i]);
+      std::string v;
+      while (std::getline(ss, v, ','))
+        speeds.push_back(std::strtof(v.c_str(), nullptr));
+    } else if (!std::strcmp(argv[i], "--hover") && i + 1 < argc) {
+      hover = std::strtof(argv[++i], nullptr);
+    } else if (!std::strcmp(argv[i], "--length") && i + 1 < argc) {
+      length = std::strtof(argv[++i], nullptr);
+    } else if (!std::strcmp(argv[i], "--min-length") && i + 1 < argc) {
+      minLength = std::strtof(argv[++i], nullptr);
+    } else if (!std::strcmp(argv[i], "--seed") && i + 1 < argc) {
+      seed = uint32_t(std::strtoul(argv[++i], nullptr, 10));
+    } else if (!std::strcmp(argv[i], "--assist")) {
       setup.mode = Mode::Assist;
     } else if (!std::strcmp(argv[i], "--shape-drag")) {
       setup.shapeDrag = true;
@@ -132,6 +248,7 @@ int main(int argc, char **argv) {
       replay = argv[++i];
     } else if (!std::strcmp(argv[i], "--mode") && i + 1 < argc) {
       const char *v = argv[++i];
+      modeGiven = true;
       if (*v >= '0' && *v <= '9') {
         hoverFlyMode = std::atoi(v);
       } else if (!ParseMode(v, setup.mode)) {
@@ -158,6 +275,30 @@ int main(int argc, char **argv) {
     } else {
       names.push_back(argv[i]);
     }
+  }
+  if (!sample.empty()) {
+    const Colliders *world = Region(regions, sample);
+    if (!world)
+      return 2;
+    for (const Line &l : SampleLines(*world, sample, sampleCount, length, minLength, seed))
+      std::printf("%s\n", FormatLine(l).c_str());
+    return 0;
+  }
+  if (!terrain.empty()) {
+    if (!modeGiven && setup.mode == Mode::HoverFly)
+      setup.mode = Mode::Assist;
+    std::vector<Car> cars{setup.car};
+    if (!vehicles.empty()) {
+      cars.clear();
+      for (const Car &car : LoadCars(vehicles))
+        if (match.empty() || car.name.find(match) != std::string::npos)
+          cars.push_back(car);
+      if (cars.empty()) {
+        std::fprintf(stderr, "no cars in %s\n", vehicles.c_str());
+        return 2;
+      }
+    }
+    return FlyTerrain(terrain, regions, only, speeds, hover, setup, cars, csv);
   }
   if (names.empty())
     names = ScenarioNames(setup.mode);

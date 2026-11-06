@@ -14,7 +14,11 @@
 //   mode torque times a per-axis gain measured in game (TorqueProbe, Archer Quartz hovering, 2026-10-28: about
 //   1.25 rad/s2 per unit of mode torque on each axis, answering two frames late at 32 fps);
 // - the ground contact is a stop: the body's bottom never goes below the ground, downward speed is removed.
+// With groundRay set (the city's collision, Colliders.hpp; docs/design/hover-fly-terrain.md) FindGround's rays and
+// the contact go through it instead of the height field: the hit's own normal, overpasses and ledges, and the
+// underside's corners as well as its centre.
 
+#include "Colliders.hpp"
 #include "Flight/Controls.hpp"
 #include "Flight/Force.hpp"
 #include "Flight/Modes.hpp"
@@ -52,6 +56,9 @@ struct Car {
   // the wheel emitters FindGround casts from, relative to the centre of mass (body frame), and the body's bottom
   float wheelX = 0.8f, wheelY = 1.4f, wheelZ = -0.3f;
   float bottom = -0.6f;
+  // the chassis's underside (aero.py, vehicles.tsv's underside): its lowest point in each square of the footprint,
+  // body frame from the centre of mass, for the contact with groundRay; empty: the wheel box at the bottom stands in
+  std::vector<Vec3> underside;
   // the chassis collision shape's drag area per body axis (m2: X side, Y front, Z top; aero.py, vehicles.tsv), and
   // the fleet-wide factor on it (docs/research/2026-11-04-aero-drag.md); zero: unknown, today's drag stays
   Vec3 cda;
@@ -84,7 +91,15 @@ struct Frame {
   bool holdingAltitude = false;
   bool contact = false;
   float impactSpeed = 0; // m/s of downward speed the ground stopped this frame
+  // m from the underside's lowest point to the ground under it (kClearanceReach at most; negative: sunk in, before the
+  // contact lifted it), and that point's place along the body (body Y, m: + front); with groundRay, rays cast this
+  // frame (FindGround's, the underside's and the one under the centre)
+  float clearance = 0, clearanceY = 0;
+  int rays = 0;
 };
+
+// m below the underside the contact's rays look for the ground (Frame::clearance's cap)
+constexpr float kClearanceReach = 3.0f;
 
 // The mode flown.
 enum class Mode {
@@ -117,6 +132,8 @@ public:
   Flight::DroneParams drone;
   Flight::DroneAssistParams droneAssist;
   Flight::PidGains hoverPid{1.0f, 0.005f, 0.5f}, pitchPid{1.0f, 0.2f, 0.05f}, rollPid{1.0f, 0.5f, 0.0f};
+  // the ground as rays (RayOn a Colliders) in place of the terrain; empty: the terrain
+  GroundRay groundRay;
 
   // Puts the car at rest, level, at position with the nose to headingDeg (0 = +Y, clockwise) and engages the mode
   // (FlightModeHoverFly.Activate). velocity starts it moving.
@@ -165,6 +182,14 @@ public:
 
 private:
   Flight::Ground FindGround();
+  // with groundRay: the clearance under the underside's points (the tyres, at the four wheel emitters at the bottom,
+  // and the chassis's underside, or the centre at the bottom without one), each cast from the centre's height down to
+  // kClearanceReach under it: the lowest, negative when the ground is above it, where it is and the rays cast
+  struct Clearance {
+    float clearance = 0, bodyY = 0;
+    int rays = 0;
+  };
+  Clearance Underside() const;
   // the force tail and the body for the mode's output, from the stats already updated
   Frame Tail(const Flight::ModeOutput &aMode, const Flight::Controls &aControls, const Flight::Ground &aGround, float aDt);
   void FillInertia(float aDt);
@@ -177,6 +202,7 @@ private:
   Flight::HoverFlyState hoverFlyState;
   Flight::Pid hover, pitch, roll;
   float lastDistance = 0;
+  int rays = 0; // FindGround's this frame
   float collisionTimer = 10.0f;
   Vec3 contactSpin; // world, rad/s
   float t = 0;
@@ -194,5 +220,9 @@ Terrain Flat(float aHeight = 0.0f);
 // airResistance, brakingFriction, inertiaX, inertiaY, inertiaZ, tensorX, tensorY, tensorZ, wheelX, wheelY, wheelZ,
 // bottom), each with its angular gain worked out (Flight::TorqueResponse). Empty when the file cannot be read; bad lines are skipped.
 std::vector<Car> LoadCars(const std::string &aPath);
+
+// vehicles.tsv's underside column ("cell,x0,y0,nx,ny:z,z,...", aero.underside()) as body points, each square's centre
+// at its lowest z; empty when it cannot be read.
+std::vector<Vec3> ParseUnderside(const std::string &aText);
 
 } // namespace FlightSim

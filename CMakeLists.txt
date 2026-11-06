@@ -177,6 +177,7 @@ target_link_libraries(let_there_be_flight.dll
 add_executable(navplan EXCLUDE_FROM_ALL
   tools/navplan/navplan.cpp
   tools/flightsim/Sim.cpp
+  tools/flightsim/Colliders.cpp
   tools/flightsim/Trip.cpp
   src/red4ext/Flight/Stats.cpp
   src/red4ext/Flight/Force.cpp
@@ -220,7 +221,9 @@ target_compile_definitions(navplan PRIVATE LTBF_SOURCE_DIR="${CMAKE_CURRENT_SOUR
 add_executable(flightsim EXCLUDE_FROM_ALL
   tools/flightsim/flightsim.cpp
   tools/flightsim/Sim.cpp
+  tools/flightsim/Colliders.cpp
   tools/flightsim/Scenarios.cpp
+  tools/flightsim/TerrainRuns.cpp
   tools/flightsim/Replay.cpp
   src/red4ext/Flight/Stats.cpp
   src/red4ext/Flight/Force.cpp
@@ -297,6 +300,8 @@ add_executable(ltbf_tests
   tests/cinematic_tests.cpp
   tests/feel_tests.cpp
   tests/aero_tests.cpp
+  tests/colliders_tests.cpp
+  tests/terrain_runs_tests.cpp
   tests/settings_tests.cpp
   tests/world_tests.cpp
   tests/plans_tests.cpp
@@ -308,7 +313,9 @@ add_executable(ltbf_tests
   tests/wwise_tests.cpp
   tools/navplan/follow.cpp
   tools/flightsim/Sim.cpp
+  tools/flightsim/Colliders.cpp
   tools/flightsim/Scenarios.cpp
+  tools/flightsim/TerrainRuns.cpp
   tools/flightsim/Trip.cpp
   src/red4ext/Audio/EngineSynth/Synth.cpp
   src/red4ext/Audio/EngineSynth/Sources.cpp
