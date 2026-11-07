@@ -5,8 +5,9 @@
 // that blocks vehicles less what the plugin moves away, LTBF's proxy colliders, and the terrain as triangles); tests
 // build worlds in memory with Add.
 //
-// Region file, little endian: "LTBFREG1", uint32 version 1, uint32 triangle count n, float32 bounds x0 y0 z0 x1 y1
-// z1, n x 9 float32 (corners a, b, c), n uint8 kinds (Kind).
+// Region file, little endian: "LTBFREG1", uint32 version (1 or 2), uint32 triangle count n, float32 bounds x0 y0 z0 x1
+// y1 z1, n x 9 float32 (corners a, b, c), n uint8 kinds (Kind), and in version 2 n uint32 mesh ids (which of the game's
+// PhysX geometries the triangle belongs to; region_pack.py). Version 1 gives every triangle mesh 0.
 //
 // The rays hit both faces of a triangle, and the normal faces the ray's start.
 
@@ -34,7 +35,7 @@ public:
   // Reads a region file and builds the grid; false, and aError says why, when it cannot.
   bool Load(const std::string &aPath, std::string *aError = nullptr);
   // A triangle for a world built in memory; Build before casting.
-  void Add(Vec3 aA, Vec3 aB, Vec3 aC, Kind aKind = Collision);
+  void Add(Vec3 aA, Vec3 aB, Vec3 aC, Kind aKind = Collision, uint32_t aMesh = 0);
   // Bins the triangles on a grid of aCell m squares (each in every square its bounds touch).
   void Build(float aCell = 4.0f);
 
@@ -51,6 +52,7 @@ public:
     aC = Flight::Add(t.a, t.e2);
     aKind = t.kind;
   }
+  uint32_t Mesh(size_t aIndex) const { return tris[aIndex].mesh; }
   Vec3 Min() const { return lo; }
   Vec3 Max() const { return hi; }
 
@@ -58,6 +60,7 @@ private:
   struct Tri {
     Vec3 a, e1, e2; // a corner and the two edges from it
     Kind kind;
+    uint32_t mesh;
   };
   std::vector<Tri> tris;
   Vec3 lo, hi;

@@ -60,6 +60,9 @@ struct Car {
   // the chassis's underside (aero.py, vehicles.tsv's underside): its lowest point in each square of the footprint,
   // body frame from the centre of mass, for the contact with groundRay; empty: the wheel box at the bottom stands in
   std::vector<Vec3> underside;
+  // the chassis collision shape's bounds, body frame from the centre of mass (aero.py, vehicles.tsv's boxMin/Max);
+  // zero when unknown
+  Vec3 boxMin, boxMax;
   // the chassis collision shape's drag area per body axis (m2: X side, Y front, Z top; aero.py, vehicles.tsv), and
   // the fleet-wide factor on it (docs/research/2026-11-04-aero-drag.md); zero: unknown, today's drag stays
   Vec3 cda;
@@ -106,6 +109,21 @@ struct Frame {
 // m below the underside the contact's rays look for the ground (Frame::clearance's cap)
 constexpr float kClearanceReach = 3.0f;
 
+// The body moved by something else (PhysX, PhysXWorld.hpp) in place of the Sim's own integration and contact: given the
+// force (N) and torque (N m) on it this step (world, without gravity), its linear damping (1/s) and its spin cap, it
+// moves the body and leaves where it is, how it moves and how many contact points it had.
+struct BodyStepIn {
+  float dt = 0;
+  Vec3 force, torque;
+  float linearDamping = 0, maxAngularSpeed = 0;
+};
+struct BodyStepOut {
+  Vec3 position, velocity, angularVelocity; // world
+  Flight::Quat orientation;
+  int contactPoints = 0;
+};
+using BodyStep = std::function<void(const BodyStepIn &, BodyStepOut &)>;
+
 // The mode flown.
 enum class Mode {
   HoverFly,         // Flight::HoverFly, today's Hover & Fly
@@ -139,6 +157,25 @@ public:
   Flight::PidGains hoverPid{1.0f, 0.005f, 0.5f}, pitchPid{1.0f, 0.2f, 0.05f}, rollPid{1.0f, 0.5f, 0.0f};
   // the ground as rays (RayOn a Colliders) in place of the terrain; empty: the terrain
   GroundRay groundRay;
+  // Drone's skid as FlightModeControl.cpp's Skid adds it: the clearance it holds the car's lowest point at (m; 0 off),
+  // and with skidPerThruster 1 at each wheel emitter from its own ray (Flight::DroneSkidPoints) instead of once through
+  // the centre of mass from the rays' mean (Flight::DroneSkid)
+  float skid = 0.0f, skidPerThruster = 0.0f;
+  float skidTurn = Flight::DroneSkidParams{}.turn; // DroneSkidParams::turn
+  // 1: the ground contact at points, each an impulse where it touches so a corner down turns the body, with friction,
+  // in place of the stop under the lowest point: the thruster spheres' bottoms at the four wheel emitters (unless
+  // sphereContacts is 0, as the developer setting thrusterContacts off) and the chassis's underside
+  float pointContact = 0.0f, sphereContacts = 1.0f;
+  float contactFriction = 0.5f; // the points' Coulomb friction
+  // set: the body is moved by it (PhysX), not by the Sim; the rays still read the ground for the frame's clearance
+  BodyStep bodyStep;
+  // the thruster spheres' radius (FlightConfiguration::AddColliders, the developer setting thrusterRadius): their
+  // centres stay put, so their bottom is the table's (taken at 0.4 m, the game's) raised by 0.4 less this
+  float sphereRadius = 0.4f;
+  // over 0: the thruster colliders are boxes over the pods' sides and top, open this far up from the pods' bottom
+  // (the developer setting thrusterOpenBottom): the skid holds the pods' bottom as drawn (0.245 m under the spheres'
+  // centres) over the ground, and the boxes' bottom corners are what touches
+  float openBottom = 0.0f;
 
   // Puts the car at rest, level, at position with the nose to headingDeg (0 = +Y, clockwise) and engages the mode
   // (FlightModeHoverFly.Activate). velocity starts it moving.
@@ -187,6 +224,14 @@ public:
 
 private:
   Flight::Ground FindGround();
+  // the skid's force and torque (body frame, as ModeOutput) from FindGround's last rays
+  Flight::ModeOutput Skid(const Flight::Controls &aControls, const Flight::Ground &aGround) const;
+  // pointContact's impulses after the body moved; fills the frame's contact, clearance and impact speed
+  void ContactPoints(Frame &aFrame, float aDt);
+  // the frame's time, pose, angles and the mode's state, after the body has moved; aGround the ground under the centre
+  // (minus infinity: cast for it)
+  Frame Finish(Frame &aFrame, const Flight::Controls &aControls, const Flight::Ground &aGround, float aDt,
+               float aGroundUnder = -std::numeric_limits<float>::infinity());
   // with groundRay: the clearance under the underside's points (the thruster spheres as the tyres at the four wheel
   // emitters at the bottom, and the chassis's underside, or the centre at the bottom without one), each cast from the
   // centre's height down to kClearanceReach under it: the lowest, negative when the ground is above it, where it is and
@@ -209,6 +254,7 @@ private:
   Flight::Pid hover, pitch, roll;
   float lastDistance = 0;
   int rays = 0; // FindGround's this frame
+  Flight::Hit lastHits[4]; // FindGround's rays in its order: left back, left front, right back, right front
   float collisionTimer = 10.0f;
   Vec3 contactSpin; // world, rad/s
   float t = 0;

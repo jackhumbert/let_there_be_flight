@@ -14,6 +14,8 @@ using namespace Flight;
 
 namespace {
 constexpr float kPi = 3.14159265f;
+// the thruster pod as drawn about its centre (engine_corpo.mesh's bounds, FlightConfiguration::AddColliders)
+constexpr float kPodHalfX = 0.33f, kPodHalfY = 0.36f, kPodHalfHeight = 0.245f;
 
 Quat AxisAngle(Vec3 aAxis, float aAngle) {
   float s = std::sin(aAngle * 0.5f);
@@ -90,7 +92,7 @@ std::vector<Car> LoadCars(const std::string &aPath) {
   std::string line;
   std::getline(in, line); // header
   // optional columns, by name: the shape drag areas and the underside (tweak_physics.py --aero)
-  int cdaX = -1, cdaY = -1, cdaZ = -1, under = -1;
+  int cdaX = -1, cdaY = -1, cdaZ = -1, under = -1, box = -1;
   {
     std::stringstream hs(line);
     std::string name;
@@ -101,6 +103,7 @@ std::vector<Car> LoadCars(const std::string &aPath) {
       cdaY = name == "cdaY" ? i : cdaY;
       cdaZ = name == "cdaZ" ? i : cdaZ;
       under = name == "underside" ? i : under;
+      box = name == "boxMinX" ? i : box;
     }
   }
   while (std::getline(in, line)) {
@@ -130,6 +133,11 @@ std::vector<Car> LoadCars(const std::string &aPath) {
       c.cda = {num(cdaX), num(cdaY), num(cdaZ)};
     if (under >= 0 && size_t(under) < col.size())
       c.underside = ParseUnderside(col[under]);
+    // boxMinX, boxMaxX, boxMinY, boxMaxY, boxMinZ, boxMaxZ, side by side
+    if (box >= 0 && size_t(box + 5) < col.size() && !col[box].empty()) {
+      c.boxMin = {num(box), num(box + 2), num(box + 4)};
+      c.boxMax = {num(box + 1), num(box + 3), num(box + 5)};
+    }
     if (c.mass <= 0.0f || c.inertia.x <= 0.0f || c.inertia.y <= 0.0f || c.inertia.z <= 0.0f)
       continue;
     StatsStatic st;
@@ -163,11 +171,49 @@ Ground Sim::FindGround() {
       float h = terrain(tire.x, tire.y);
       hit.valid = std::isfinite(h) && tire.z - h <= reach && tire.z >= h;
       hit.position = {tire.x, tire.y, h};
-      hit.normal = {0, 0, 1};
+      // the height field's own slope there
+      const float e = 0.05f;
+      const float dx = (terrain(tire.x + e, tire.y) - terrain(tire.x - e, tire.y)) / (2.0f * e);
+      const float dy = (terrain(tire.x, tire.y + e) - terrain(tire.x, tire.y - e)) / (2.0f * e);
+      hit.normal = std::isfinite(dx + dy) ? Normalize({-dx, -dy, 1.0f}) : Vec3{0, 0, 1};
     }
   Ground g = GroundFromHits(hits, n, lastDistance);
   lastDistance = g.distance;
+  for (int i = 0; i < 4; ++i)
+    lastHits[i] = hits[i];
   return g;
+}
+
+ModeOutput Sim::Skid(const Controls &aControls, const Ground &aGround) const {
+  DroneSkidParams k;
+  k.clearance = skid;
+  k.turn = skidTurn;
+  // the emitters' height over the lowest point, as the configuration measures it: the thruster spheres' bottom or the
+  // chassis's underside, whichever is lower
+  float lowest = car.bottom + 0.4f - (openBottom > 0.0f ? kPodHalfHeight : sphereRadius);
+  for (Vec3 u : car.underside)
+    lowest = std::min(lowest, u.z);
+  const float over = car.wheelZ - lowest;
+  ModeOutput out;
+  if (!aGround.found)
+    return out;
+  if (skidPerThruster > 0.5f) {
+    SkidPoint points[4];
+    int n = 0;
+    for (float sx : {-1.0f, 1.0f})
+      for (float sy : {-1.0f, 1.0f}) {
+        const Hit &h = lastHits[n];
+        points[n].offset = {sx * car.wheelX, sy * car.wheelY, car.wheelZ};
+        points[n].clearance = Length(Sub(h.position, h.tire)) - over;
+        points[n].normal = Normalize(h.normal);
+        ++n;
+      }
+    return DroneSkidPoints(points, 4, stats, statics, car.angularGain, aControls.lift, k);
+  }
+  const float a = DroneSkid(aGround.distance - over, ClosingSpeed(stats.d_velocity, aGround.normal), stats.d_up.z,
+                            aControls.lift, k);
+  out.force = Rotate(Conjugate(stats.d_orientation), {0.0f, 0.0f, a});
+  return out;
 }
 
 Sim::Clearance Sim::Underside() const {
@@ -324,6 +370,11 @@ Frame Sim::Advance(const Controls &c, const Ground *aGround, float aDt) {
     m = DroneAssist(stats, statics, c, dp, droneAssist, car.angularGain);
     break;
   }
+  if (skid > 0.0f && IsDrone(mode)) {
+    const ModeOutput s = Skid(c, g);
+    m.force = Add(m.force, s.force);
+    m.torque = Add(m.torque, s.torque);
+  }
 
   return Tail(m, c, g, aDt);
 }
@@ -338,6 +389,108 @@ void Sim::FillInertia(float aDt) {
     statics.momentOfInertia = {car.mass * tensor.x * force.dampStabilityK / (car.angularGain.x * aDt),
                                car.mass * tensor.y * force.dampStabilityK / (car.angularGain.y * aDt),
                                car.mass * tensor.z * force.dampStabilityK / (car.angularGain.z * aDt)};
+}
+
+void Sim::ContactPoints(Frame &aFrame, float aDt) {
+  std::vector<Vec3> body;
+  if (sphereContacts > 0.5f)
+    for (float sx : {-1.0f, 1.0f})
+      for (float sy : {-1.0f, 1.0f}) {
+        if (openBottom <= 0.0f) {
+          body.push_back({sx * car.wheelX, sy * car.wheelY, car.bottom + 0.4f - sphereRadius});
+          continue;
+        }
+        // the box's bottom corners: the pod's footprint, openBottom over the pod's bottom
+        const float z = car.bottom + 0.4f - kPodHalfHeight + openBottom;
+        for (float cx : {-kPodHalfX, kPodHalfX})
+          for (float cy : {-kPodHalfY, kPodHalfY})
+            body.push_back({sx * car.wheelX + cx, sy * car.wheelY + cy, z});
+      }
+  if (car.underside.empty())
+    body.push_back({0, 0, car.bottom});
+  for (Vec3 p : car.underside)
+    body.push_back(p);
+  // the ground under each point and how deep the point is in it
+  struct Touch {
+    Vec3 r, n;
+    float depth, impulse = 0.0f;
+  };
+  std::vector<Touch> touching;
+  float lowest = kClearanceReach, lowestY = 0.0f;
+  for (Vec3 b : body) {
+    const Vec3 r = Rotate(orientation, b);
+    const Vec3 p = Add(position, r);
+    float gz = -std::numeric_limits<float>::infinity();
+    Vec3 n{0, 0, 1};
+    if (groundRay) {
+      Vec3 hit, normal;
+      ++rays;
+      if (groundRay({p.x, p.y, std::max(position.z, p.z)}, {p.x, p.y, p.z - kClearanceReach}, hit, normal)) {
+        gz = hit.z;
+        n = normal.z > 0.0f ? Normalize(normal) : Vec3{0, 0, 1};
+      }
+    } else {
+      gz = terrain(p.x, p.y);
+    }
+    if (!std::isfinite(gz))
+      continue;
+    const float clearance = p.z - gz;
+    if (clearance < lowest) {
+      lowest = clearance;
+      lowestY = b.y;
+    }
+    if (clearance < 0.0f)
+      touching.push_back({r, n, -clearance});
+  }
+  aFrame.clearance = std::min(lowest, kClearanceReach);
+  aFrame.clearanceY = lowestY;
+  if (touching.empty())
+    return;
+  aFrame.contact = true;
+  // the inverse inertia in the world frame: the body's per-axis inertia turned with it
+  const Vec3 inertia = statics.momentOfInertia;
+  auto invInertia = [&](Vec3 v) {
+    Vec3 b = Rotate(Conjugate(orientation), v);
+    b = {inertia.x > 0 ? b.x / inertia.x : 0.0f, inertia.y > 0 ? b.y / inertia.y : 0.0f,
+         inertia.z > 0 ? b.z / inertia.z : 0.0f};
+    return Rotate(orientation, b);
+  };
+  const float invMass = 1.0f / car.mass;
+  float impact = 0.0f, deepest = 0.0f;
+  for (const Touch &t : touching) {
+    impact = std::max(impact, -Dot(Add(velocity, Cross(angularVelocity, t.r)), t.n));
+    deepest = std::max(deepest, t.depth);
+  }
+  // sequential impulses: each point pushed out along its normal (a little of its depth as a bias), never pulled, then
+  // its friction, bounded by the push so far
+  for (int iteration = 0; iteration < 8; ++iteration)
+    for (Touch &t : touching) {
+      const Vec3 v = Add(velocity, Cross(angularVelocity, t.r));
+      const float vn = Dot(v, t.n);
+      const float bias = 0.2f * t.depth / aDt;
+      const Vec3 rn = Cross(t.r, t.n);
+      const float k = invMass + Dot(Cross(invInertia(rn), t.r), t.n);
+      float j = (bias - vn) / k;
+      const float total = std::max(t.impulse + j, 0.0f);
+      j = total - t.impulse;
+      t.impulse = total;
+      velocity = Add(velocity, Mul(t.n, j * invMass));
+      angularVelocity = Add(angularVelocity, invInertia(Mul(rn, j)));
+      const Vec3 v2 = Add(velocity, Cross(angularVelocity, t.r));
+      const Vec3 slide = Sub(v2, Mul(t.n, Dot(v2, t.n)));
+      const float speed = Length(slide);
+      if (speed > 1e-4f && t.impulse > 0.0f) {
+        const Vec3 dir = Mul(slide, 1.0f / speed);
+        const Vec3 rt = Cross(t.r, dir);
+        const float kt = invMass + Dot(Cross(invInertia(rt), t.r), dir);
+        const float jt = std::min(speed / kt, contactFriction * t.impulse / 8.0f);
+        velocity = Sub(velocity, Mul(dir, jt * invMass));
+        angularVelocity = Sub(angularVelocity, invInertia(Mul(rt, jt)));
+      }
+    }
+  // what the bias has not taken out yet: half the deepest point's depth, straight up
+  position.z += 0.5f * deepest;
+  aFrame.impactSpeed = std::max(impact, 0.0f);
 }
 
 Vec3 Sim::Response() const {
@@ -392,10 +545,12 @@ Frame Sim::Tail(const ModeOutput &m, const Controls &c, const Ground &g, float a
 
   // the body: linear
   Vec3 accel = Mul(fo.worldForce, 1.0f / (aDt * car.mass));
-  accel.z -= kGravity * car.gravityScale;
-  velocity = Add(velocity, Mul(accel, aDt));
-  velocity = Mul(velocity, 1.0f / (1.0f + fo.linearDamp * aDt));
-  position = Add(position, Mul(velocity, aDt));
+  if (!bodyStep) {
+    accel.z -= kGravity * car.gravityScale;
+    velocity = Add(velocity, Mul(accel, aDt));
+    velocity = Mul(velocity, 1.0f / (1.0f + fo.linearDamp * aDt));
+    position = Add(position, Mul(velocity, aDt));
+  }
 
   // the body: angular, the torque answered late
   Vec3 bodyTorque = Add(m.torque, fo.physicsTorque);
@@ -408,6 +563,33 @@ Frame Sim::Tail(const ModeOutput &m, const Controls &c, const Ground &g, float a
   }
   Vec3 bodyAccel{applied.x * car.angularGain.x * car.responseError.x, applied.y * car.angularGain.y * car.responseError.y,
                  applied.z * car.angularGain.z * car.responseError.z};
+  if (bodyStep) {
+    // the solver moves the body: the force without gravity (it has its own), the torque as the body's inertia gives it
+    // that angular acceleration
+    const Vec3 inertia = statics.momentOfInertia;
+    BodyStepIn in;
+    in.dt = aDt;
+    in.force = Mul(accel, car.mass);
+    in.torque = Rotate(orientation, {bodyAccel.x * inertia.x, bodyAccel.y * inertia.y, bodyAccel.z * inertia.z});
+    in.linearDamping = fo.linearDamp;
+    in.maxAngularSpeed = car.maxAngularSpeed;
+    BodyStepOut out;
+    bodyStep(in, out);
+    position = out.position;
+    velocity = out.velocity;
+    angularVelocity = out.angularVelocity;
+    orientation = out.orientation;
+    Frame f;
+    if (groundRay) {
+      Clearance u = Underside();
+      f.clearance = u.clearance;
+      f.clearanceY = u.bodyY;
+      f.rays = rays + u.rays;
+    }
+    rays = 0;
+    f.contact = out.contactPoints > 0;
+    return Finish(f, c, g, aDt);
+  }
   angularVelocity = Add(angularVelocity, Mul(Rotate(orientation, bodyAccel), aDt));
   float w = Length(angularVelocity);
   if (w > car.maxAngularSpeed) {
@@ -417,11 +599,20 @@ Frame Sim::Tail(const ModeOutput &m, const Controls &c, const Ground &g, float a
   if (w > 1e-6f)
     orientation = NormalizeQ(Mul(AxisAngle(Mul(angularVelocity, 1.0f / w), w * aDt), orientation));
 
-  // the ground: a stop under the body's lowest point
+  // the ground: a stop under the body's lowest point, or impulses at the points touching
   Frame f;
   float depth = 0.0f;
   float ground = -std::numeric_limits<float>::infinity();
-  if (groundRay) {
+  if (pointContact > 0.5f) {
+    ContactPoints(f, aDt);
+    if (groundRay) {
+      Vec3 hit, normal;
+      if (groundRay(position, {position.x, position.y, position.z - 1000.0f}, hit, normal))
+        ground = hit.z;
+    } else {
+      ground = terrain(position.x, position.y);
+    }
+  } else if (groundRay) {
     Clearance u = Underside();
     depth = -u.clearance;
     f.clearance = u.clearance;
@@ -438,7 +629,7 @@ Frame Sim::Tail(const ModeOutput &m, const Controls &c, const Ground &g, float a
     }
   }
   rays = 0;
-  if (depth > 0.0f) {
+  if (pointContact <= 0.5f && depth > 0.0f) {
     f.contact = true;
     position.z += depth;
     if (velocity.z < 0.0f) {
@@ -447,6 +638,18 @@ Frame Sim::Tail(const ModeOutput &m, const Controls &c, const Ground &g, float a
     }
   }
 
+  return Finish(f, c, g, aDt, ground);
+}
+
+Frame Sim::Finish(Frame &f, const Controls &c, const Ground &g, float aDt, float aGround) {
+  float ground = aGround;
+  if (!std::isfinite(ground) && groundRay) {
+    Vec3 hit, normal;
+    if (groundRay(position, {position.x, position.y, position.z - 1000.0f}, hit, normal))
+      ground = hit.z;
+  } else if (!std::isfinite(ground) && terrain) {
+    ground = terrain(position.x, position.y);
+  }
   t += aDt;
   f.t = t;
   f.position = position;

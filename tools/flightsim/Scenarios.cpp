@@ -225,6 +225,69 @@ Run DroneSpin(const std::string &aName, const Setup &s, int aAxis) {
   return f.run;
 }
 
+// Drone's skid over the ground: the setup with the skid on (3 cm, the developer setting's default, unless set) and the
+// contact at points, so a corner down turns the car as the game's contact does.
+Setup SkidSetup(const Setup &s) {
+  Setup k = s;
+  if (k.skid <= 0.0f)
+    k.skid = 0.03f;
+  k.pointContact = 1.0f;
+  return k;
+}
+
+// A body pitched aPitch and rolled aRoll (deg), as Sim::SetState takes it, at aPosition, still.
+Sim::State Tilted(Vec3 aPosition, float aPitch, float aRoll) {
+  const float p = aPitch / kDeg, r = aRoll / kDeg;
+  Sim::State st;
+  st.position = aPosition;
+  st.forward = {0.0f, std::cos(p), std::sin(p)};
+  const Vec3 level = Flight::Normalize(Flight::Cross(st.forward, {0, 0, 1}));
+  const Vec3 up = Flight::Cross(level, st.forward);
+  st.right = Flight::Add(Flight::Mul(level, std::cos(r)), Flight::Mul(up, -std::sin(r)));
+  return st;
+}
+
+// The skid's metrics after a run from frame from: the tilt at the end and when it came to stay under 2 degrees, the
+// lowest point's clearance at the end (m) and over the run, and the contact frames.
+void SkidMetrics(Flown &f, size_t from) {
+  const Frame &end = f.At(f.End() - 1);
+  f.Add("tilt_end", end.tiltDeg, "deg");
+  f.Add("level_time", f.SettleTime(from, [](const Frame &x) { return x.tiltDeg < 2.0f; }), "s");
+  f.Add("clearance_end", end.clearance, "m");
+  f.Add("min_clearance", f.Min(from, f.End(), [](const Frame &x) { return x.clearance; }), "m");
+  float touching = 0.0f;
+  for (size_t i = from; i < f.End(); ++i)
+    touching += f.At(i).contact ? 1.0f : 0.0f;
+  f.Add("contact_frames", touching, "");
+  f.Add("max_tilt", f.Max(from, f.End(), [](const Frame &x) { return x.tiltDeg; }), "deg");
+  f.Add("finite", AllFinite(f), "");
+}
+
+// Drives along +Y at aSpeed (m/s): the terrain driver's surge, proportional and integral; nothing else held.
+void Drive(Flown &f, float aSpeed, float aSeconds) {
+  float held = 0.0f;
+  int n = static_cast<int>(std::lround(aSeconds / f.setup.dt));
+  for (int i = 0; i < n; ++i) {
+    const Frame &last = f.run.frames.empty() ? f.sim.Last() : f.run.frames.back();
+    const float speed = std::hypot(last.velocity.x, last.velocity.y);
+    held = std::clamp(held + 0.5f * (aSpeed - speed) * f.setup.dt, -1.0f, 1.0f);
+    f.run.frames.push_back(f.sim.Step(Surge(std::clamp(0.3f * (aSpeed - speed) + held, -1.0f, 1.0f)), f.setup.dt));
+  }
+}
+
+// A road climbing as road_grade does (terrain_runs.tsv): planes folding every 2.9 m, the grade going up 0.8 % a fold
+// from flat to 3.2 % from y = 10 m, then holding.
+Terrain Folds() {
+  return [](float, float y) {
+    float z = 0.0f, grade = 0.0f;
+    for (float at = 0.0f; at < y; at += 2.9f) {
+      grade = at >= 10.0f ? std::min(grade + 0.008f, 0.032f) : 0.0f;
+      z += grade * std::min(2.9f, y - at);
+    }
+    return z;
+  };
+}
+
 using Scenario = std::function<Run(const Setup &)>;
 
 const std::map<std::string, Scenario> &Scenarios() {
@@ -595,6 +658,41 @@ const std::map<std::string, Scenario> &Scenarios() {
          braked.Add("finite", AllFinite(braked) * AllFinite(free), "");
          return braked.run;
        }},
+      // Drone's skid: set down on flat ground pitched 10 and rolled 20 degrees, a hand's width up, hands off 8 s:
+      // whether it comes back level and how long that takes (the Bratsk stayed rolled 20 degrees in game, 2026-11-06)
+      {"drone_skid_tilt",
+       [](const Setup &s) {
+         Setup k = SkidSetup(s);
+         Flown f("drone_skid_tilt", k, Flat());
+         f.sim.Place({0, 0, 2.0f}, 0.0f);
+         f.sim.SetState(Tilted({0, 0, -k.car.bottom + 0.6f}, 10.0f, 20.0f));
+         size_t from = f.Hold({}, 8.0f);
+         SkidMetrics(f, from);
+         return f.run;
+       }},
+      // Drone's skid: dropped level from a metre over flat ground, hands off 5 s: how it lands and where it settles
+      {"drone_skid_drop",
+       [](const Setup &s) {
+         Setup k = SkidSetup(s);
+         Flown f("drone_skid_drop", k, Flat());
+         f.sim.Place({0, 0, -k.car.bottom + 1.0f}, 0.0f);
+         size_t from = f.Hold({}, 5.0f);
+         SkidMetrics(f, from);
+         f.Add("impact", f.Max(from, f.End(), [](const Frame &x) { return x.impactSpeed; }), "m/s");
+         return f.run;
+       }},
+      // Drone's skid: driven at 40 km/h up a road folding as road_grade does, from rest on it
+      {"drone_skid_grade",
+       [](const Setup &s) {
+         Setup k = SkidSetup(s);
+         Flown f("drone_skid_grade", k, Folds());
+         f.sim.Place({0, 0, -k.car.bottom + k.skid}, 0.0f);
+         f.Hold({}, 2.0f);
+         size_t from = f.End();
+         Drive(f, 40.0f / 3.6f, 6.0f);
+         SkidMetrics(f, from);
+         return f.run;
+       }},
   };
   return scenarios;
 }
@@ -611,6 +709,13 @@ void Configure(Sim &aSim, const Setup &aSetup) {
   aSim.assistParams = aSetup.assistParams;
   aSim.drone = aSetup.drone;
   aSim.droneAssist = aSetup.droneAssist;
+  aSim.skid = aSetup.skid;
+  aSim.skidPerThruster = aSetup.skidPerThruster;
+  aSim.skidTurn = aSetup.skidTurn;
+  aSim.sphereRadius = aSetup.sphereRadius;
+  aSim.openBottom = aSetup.openBottom;
+  aSim.pointContact = aSetup.pointContact;
+  aSim.sphereContacts = aSetup.sphereContacts;
 }
 
 float Run::Get(const std::string &aName) const {

@@ -82,16 +82,17 @@ def removed_blockers(listing, scan_dir):
     return out
 
 
-def drop_removed(name, tris, preset_names, preset, removed):
+def drop_removed(name, tris, preset_names, preset, removed, *extra):
     """The triangles minus the blocker shapes the plugin moves away in this sector: all of its
     blocker-preset triangles when every blocker actor there is moved, else those nearest a moved
-    actor. Without this the planner kept avoiding blockers that are gone in game (2026-10-29)."""
+    actor. Without this the planner kept avoiding blockers that are gone in game (2026-10-29).
+    Any extra per-triangle arrays come back filtered the same way, after preset."""
     if name not in removed:
-        return tris, preset
+        return (tris, preset) + extra
     actors, bits = removed[name]
     blocker = np.array([n in BLOCKER_PRESETS for n in preset_names])[preset]
     if not blocker.any():
-        return tris, preset
+        return (tris, preset) + extra
     drop = blocker.copy()
     if actors and not all(a in bits for a, _ in actors):
         pos = np.array([p for _, p in actors], np.float64)
@@ -99,7 +100,7 @@ def drop_removed(name, tris, preset_names, preset, removed):
         centre = tris[blocker].mean(axis=1)
         nearest = np.argmin(((centre[:, None, :] - pos[None, :, :]) ** 2).sum(-1), axis=1)
         drop[blocker] = gone[nearest]
-    return tris[~drop], preset[~drop]
+    return (tris[~drop], preset[~drop]) + tuple(e[~drop] for e in extra)
 
 
 def hand_removed(path):
@@ -111,17 +112,18 @@ def hand_removed(path):
     return out
 
 
-def drop_hand(name, tris, preset_names, preset, hand):
+def drop_hand(name, tris, preset_names, preset, hand, *extra):
     """The triangles minus those of a hand-listed actor: its preset, every vertex inside its
-    shapes' bounds (checked to hold only that actor's triangles when it was listed)."""
+    shapes' bounds (checked to hold only that actor's triangles when it was listed). Any extra
+    per-triangle arrays come back filtered the same way, after preset."""
     if name not in hand:
-        return tris, preset
+        return (tris, preset) + extra
     drop = np.zeros(len(tris), bool)
     for names, b in hand[name]:
         lo, hi = np.array(b[:3]) - 0.1, np.array(b[3:]) + 0.1
         match = np.array([n in names for n in preset_names])[preset]
         drop |= match & np.all(tris.min(1) >= lo, 1) & np.all(tris.max(1) <= hi, 1)
-    return tris[~drop], preset[~drop]
+    return (tris[~drop], preset[~drop]) + tuple(e[~drop] for e in extra)
 
 
 def cmd_bin(args):

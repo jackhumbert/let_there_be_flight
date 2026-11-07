@@ -10,7 +10,10 @@ World vertex = actor.pos + actor.rot * (scale * (shape.pos + shape.rot * v)).
 WolvenKit 10 (first version that reads 2.5 sectors) serializes each sector to JSON; we keep
 only the collision and delete the JSON. Output per sector: <name>.npz with
 tris (N, 3, 3) float32 world positions, preset (N,) uint16 index into preset_names (collision
-preset CName: the name when WolvenKit resolves it, else the decimal hash).
+preset CName: the name when WolvenKit resolves it, else the decimal hash), shape (N,) uint32: which
+shape of the sector the triangle came from, counted in order. A shape is one PhysX geometry: PhysX
+knows a triangle's neighbours within one, not across two (flightsim's PhysXWorld adds each as its own
+mesh).
 Terrain (worldTerrainCollisionNode, sector levels 2 to 6) is a PhysX height field instead:
 <name>.terrain.npz holds xform (n, 15: rotation 3x3, position, rowScale, heightScale,
 columnScale) and per node h<i> (rows, cols) int16 samples and hole<i> masks.
@@ -230,6 +233,11 @@ def process_json(path, geometry):
     return node_types, missing, tris, presets, terrain, building_proxies(rc)
 
 
+def shape_ids(tris):
+    """A triangle's shape: tris holds one array per shape, in order."""
+    return np.concatenate([np.full(len(t), i, np.uint32) for i, t in enumerate(tris)])
+
+
 _geometry = None
 
 
@@ -268,6 +276,7 @@ def run_batch(wolvenkit, files, out_dir):
                         [np.full(n, lookup[p], np.uint16) for p, n in presets]
                     ),
                     preset_names=np.array(names),
+                    shape=shape_ids(tris),
                 )
             if terrain:
                 arrays = {"xform": np.stack([x for x, _, _ in terrain])}

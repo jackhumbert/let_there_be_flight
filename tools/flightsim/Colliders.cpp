@@ -33,25 +33,30 @@ bool Colliders::Load(const std::string &aPath, std::string *aError) {
   f.read(reinterpret_cast<char *>(bounds), sizeof(bounds));
   if (!f || std::memcmp(magic, "LTBFREG1", 8) != 0)
     return fail("not a region file");
-  if (version != 1)
-    return fail("region file version is not 1");
+  if (version != 1 && version != 2)
+    return fail("region file version is not 1 or 2");
   std::vector<float> corners(size_t(n) * 9);
   std::vector<uint8_t> kinds(n);
+  std::vector<uint32_t> meshes(n, 0);
   f.read(reinterpret_cast<char *>(corners.data()), std::streamsize(corners.size() * sizeof(float)));
   f.read(reinterpret_cast<char *>(kinds.data()), std::streamsize(kinds.size()));
+  if (version >= 2)
+    f.read(reinterpret_cast<char *>(meshes.data()), std::streamsize(meshes.size() * sizeof(uint32_t)));
   if (!f)
     return fail("cut short");
   tris.clear();
   tris.reserve(n);
   for (uint32_t i = 0; i < n; ++i) {
     const float *c = &corners[size_t(i) * 9];
-    Add({c[0], c[1], c[2]}, {c[3], c[4], c[5]}, {c[6], c[7], c[8]}, Kind(kinds[i]));
+    Add({c[0], c[1], c[2]}, {c[3], c[4], c[5]}, {c[6], c[7], c[8]}, Kind(kinds[i]), meshes[i]);
   }
   Build();
   return true;
 }
 
-void Colliders::Add(Vec3 aA, Vec3 aB, Vec3 aC, Kind aKind) { tris.push_back({aA, Sub(aB, aA), Sub(aC, aA), aKind}); }
+void Colliders::Add(Vec3 aA, Vec3 aB, Vec3 aC, Kind aKind, uint32_t aMesh) {
+  tris.push_back({aA, Sub(aB, aA), Sub(aC, aA), aKind, aMesh});
+}
 
 void Colliders::Build(float aCell) {
   cell = aCell;

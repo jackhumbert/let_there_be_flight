@@ -1,8 +1,9 @@
 #pragma once
 
-// The beginner's situations Hover & Fly is measured on, and Drone's (its spin per axis, lift, surge and angular brake),
-// each a scripted input over a small world, and the numbers each one is judged by (docs/design/hover-fly-feel.md). The
-// feel tests (tests/feel_tests.cpp) and the flightsim tool (flightsim.cpp) both run these.
+// The beginner's situations Hover & Fly is measured on, and Drone's (its spin per axis, lift, surge and angular brake,
+// and its skid over the ground: drone_skid_*), each a scripted input over a small world, and the numbers each one is
+// judged by (docs/design/hover-fly-feel.md). The feel tests (tests/feel_tests.cpp) and the flightsim tool
+// (flightsim.cpp) both run these.
 
 #include "Sim.hpp"
 
@@ -36,6 +37,9 @@ struct Setup {
   Flight::HoverFlyAssistParams assistParams;
   Flight::DroneParams drone;
   Flight::DroneAssistParams droneAssist;
+  // Drone's skid and the ground contact at points (Sim's fields of these names; 0 or 1 for the switches)
+  float skid = 0.0f, skidPerThruster = 0.0f, pointContact = 0.0f, sphereContacts = 1.0f;
+  float skidTurn = Flight::DroneSkidParams{}.turn, sphereRadius = 0.4f, openBottom = 0.0f;
   float dt = 1.0f / 60.0f;
 };
 

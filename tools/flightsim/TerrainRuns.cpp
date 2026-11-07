@@ -250,7 +250,7 @@ std::vector<Line> SampleLines(const Colliders &aWorld, const std::string &aRegio
 }
 
 Run FlyLine(const Setup &aSetup, const Colliders &aWorld, const Line &aLine, const Profile &aProfile, float aSpeed,
-            float aHover) {
+            float aHover, const std::function<void(Sim &)> &aAttach) {
   Run run;
   char name[128];
   std::snprintf(name, sizeof(name), "%s@%.0f", aLine.name.c_str(), aSpeed * 3.6f);
@@ -270,6 +270,8 @@ Run FlyLine(const Setup &aSetup, const Colliders &aWorld, const Line &aLine, con
     aHover = std::clamp(aSetup.car.wheelZ - aSetup.car.bottom, aSetup.standard.minHoverHeight,
                         aSetup.standard.maxHoverHeight);
   sim.Place({aLine.a.x, aLine.a.y, aProfile.points[0].z + aHover - aSetup.car.wheelZ}, heading, Mul(dir, aSpeed));
+  if (aAttach)
+    aAttach(sim);
 
   float lead = 1.0f, limit = aProfile.usable / std::max(aSpeed, 1.0f) * 2.0f + 10.0f;
   float look = std::max(12.0f, 0.8f * aSpeed);
@@ -307,6 +309,13 @@ Run FlyLine(const Setup &aSetup, const Colliders &aWorld, const Line &aLine, con
     float speed = std::hypot(last.velocity.x, last.velocity.y);
     surgeHeld = std::clamp(surgeHeld + 0.5f * (aSpeed - speed) * aSetup.dt, -1.0f, 1.0f);
     k.surge = std::clamp(0.3f * (aSpeed - speed) + surgeHeld, -1.0f, 1.0f);
+    if (IsDrone(aSetup.mode)) {
+      // on the line with sway: a spring on the distance off it and a damper on the speed across it, along the right
+      const float h = last.headingDeg / kDeg;
+      const Vec3 right{std::cos(h), -std::sin(h), 0.0f};
+      const Vec3 off = Sub(Sub(Flat2(p), Flat2(aLine.a)), Mul(dir, s));
+      k.sway = std::clamp(-(0.4f * Dot(off, right) + 0.6f * Dot(Flat2(last.velocity), right)), -1.0f, 1.0f);
+    }
     float z = p.z;
     Frame now = last;
     now.position = p;

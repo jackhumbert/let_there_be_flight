@@ -16,9 +16,11 @@ What the car's rays hit in game, from the nav map bake's inputs (tools/navmap_ba
   tunnel mouth's hole does not show the coarse terrain through it). The diagonal is always the same one: the
   tessellation flag PhysX keeps per sample is not in the bake.
 
-The region file (Colliders.hpp reads it): "LTBFREG1", uint32 version 1, uint32 triangle count n, float32 bounds
+The region file (Colliders.hpp reads it): "LTBFREG1", uint32 version 2, uint32 triangle count n, float32 bounds
 x0 y0 z0 x1 y1 z1, then n x 9 float32 (the corners a, b, c), then n uint8 kinds (0 collision, 1 terrain, 2 LTBF's
-proxy colliders). Little endian.
+proxy colliders), then n uint32 mesh ids: which PhysX geometry of the game the triangle belongs to (a sector's shape,
+from sectors.py's shape array; a terrain height field; the proxy colliders all one), for flightsim's PhysXWorld,
+which adds each as its own mesh as the game does. Sectors baked before shape ids get one id each. Little endian.
 """
 
 import argparse
@@ -56,30 +58,43 @@ def in_box(tris, lo, hi):
 
 
 def collision(args, lo, hi):
-    """The sector triangles a vehicle collides with, in the box, less what the plugin moves away."""
+    """The sector triangles a vehicle collides with, in the box, less what the plugin moves away, and each one's mesh
+    id: the sector's place in the bounds table above bit 20, its shape below."""
     lookup = load_lookup(args.presets)
     bounds = json.load(open(os.path.join(args.sectors, "_bounds.json")))  # collision_at.py writes it
     removed = removed_blockers(args.removed, args.blocker_scan) if args.removed else {}
     hand = hand_removed(args.hand) if args.removed else {}
-    out = []
-    for stem, b in bounds.items():
+    out, ids = [], []
+    for k, (stem, b) in enumerate(bounds.items()):
         if b[3] < lo[0] or b[0] > hi[0] or b[4] < lo[1] or b[1] > hi[1]:
             continue
-        d = np.load(os.path.join(args.sectors, stem + ".npz"))
+        path = os.path.join(args.sectors, stem + ".npz")
+        if not os.path.exists(path):
+            continue
+        d = np.load(path)
         names = [str(n) for n in d["preset_names"]]
         keep = np.array([lookup.get(n, {"blocks_vehicles": True})["blocks_vehicles"] for n in names])
-        tris, preset = drop_removed(stem, d["tris"], names, d["preset"], removed)
-        tris, preset = drop_hand(stem, tris, names, preset, hand)
-        tris = tris[keep[preset]]
-        out.append(tris[in_box(tris, lo, hi)])
-    return np.concatenate(out) if out else np.zeros((0, 3, 3), np.float32)
+        shape = d["shape"] if "shape" in d.files else np.zeros(len(d["tris"]), np.uint32)
+        mesh = (np.uint32(k + 1) << np.uint32(20)) | (shape.astype(np.uint32) & np.uint32(0xFFFFF))
+        tris, preset, mesh = drop_removed(stem, d["tris"], names, d["preset"], removed, mesh)
+        tris, preset, mesh = drop_hand(stem, tris, names, preset, hand, mesh)
+        sel = keep[preset]
+        tris, mesh = tris[sel], mesh[sel]
+        box = in_box(tris, lo, hi)
+        out.append(tris[box])
+        ids.append(mesh[box])
+    if not out:
+        return np.zeros((0, 3, 3), np.float32), np.zeros(0, np.uint32)
+    return np.concatenate(out), np.concatenate(ids)
 
 
 def proxies(path, lo, hi):
+    """LTBF's proxy colliders in the box, one mesh id for all of them."""
     if not path or not os.path.exists(path):
-        return np.zeros((0, 3, 3), np.float32)
+        return np.zeros((0, 3, 3), np.float32), np.zeros(0, np.uint32)
     tris = np.load(path)["tris"]
-    return tris[in_box(tris, lo, hi)]
+    tris = tris[in_box(tris, lo, hi)]
+    return tris, np.full(len(tris), 0xE0000000, np.uint32)
 
 
 def field_points(xform, heights):
@@ -94,7 +109,7 @@ def field_points(xform, heights):
 
 
 def terrain(sectors, lo, hi):
-    """The terrain in the box as triangles, the finest level winning."""
+    """The terrain in the box as triangles, the finest level winning, and each one's mesh id (its height field's)."""
     fields = []  # (level, xy min, xy max, points, holes)
     for f in os.listdir(sectors):
         m = re.match(r"exterior_-?\d+_-?\d+_-?\d+_(\d+)\.terrain\.npz$", f)
@@ -111,8 +126,8 @@ def terrain(sectors, lo, hi):
             if fmax[0] < lo[0] or fmin[0] > hi[0] or fmax[1] < lo[1] or fmin[1] > hi[1]:
                 continue
             fields.append((int(m.group(1)), fmin, fmax, field_points(xform, h), d[f"hole{i}"]))
-    out = []
-    for level, fmin, fmax, p, holes in fields:
+    out, ids = [], []
+    for field, (level, fmin, fmax, p, holes) in enumerate(fields):
         a, b, c, e = p[:-1, :-1], p[1:, :-1], p[:-1, 1:], p[1:, 1:]
         quads = np.stack([a, b, c, e], axis=2).reshape(-1, 4, 3)
         keep = ~holes[:-1, :-1].ravel()
@@ -124,21 +139,26 @@ def terrain(sectors, lo, hi):
                 keep &= ~(np.all(centre >= omin, 1) & np.all(centre <= omax, 1))
         q = quads[keep]
         out.append(np.concatenate([q[:, [0, 1, 2]], q[:, [1, 3, 2]]]))
-    return np.concatenate(out).astype(np.float32) if out else np.zeros((0, 3, 3), np.float32)
+        ids.append(np.full(2 * len(q), 0xF0000000 | field, np.uint32))
+    if not out:
+        return np.zeros((0, 3, 3), np.float32), np.zeros(0, np.uint32)
+    return np.concatenate(out).astype(np.float32), np.concatenate(ids)
 
 
 def write(path, parts):
-    tris = np.concatenate([t for t, _ in parts]).astype("<f4")
-    kinds = np.concatenate([np.full(len(t), k, np.uint8) for t, k in parts])
+    tris = np.concatenate([t for (t, _), _ in parts]).astype("<f4")
+    kinds = np.concatenate([np.full(len(t), k, np.uint8) for (t, _), k in parts])
+    meshes = np.concatenate([m for (_, m), _ in parts]).astype("<u4")
     p = tris.reshape(-1, 3)
     bounds = np.concatenate([p.min(0), p.max(0)]) if len(p) else np.zeros(6)
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
     with open(path, "wb") as f:
         f.write(b"LTBFREG1")
-        f.write(struct.pack("<II", 1, len(tris)))
+        f.write(struct.pack("<II", 2, len(tris)))
         f.write(struct.pack("<6f", *bounds))
         f.write(tris.tobytes())
         f.write(kinds.tobytes())
+        f.write(meshes.tobytes())
 
 
 def main():
@@ -178,7 +198,8 @@ def pack(args, box, out):
     parts = [(collision(args, lo, hi), COLLISION), (terrain(args.sectors, lo, hi), TERRAIN),
              (proxies(args.proxy, lo, hi), PROXY_KIND)]
     write(out, parts)
-    counts = ", ".join(f"{n} {len(t)}" for (t, _), n in zip(parts, ("collision", "terrain", "proxy")))
+    counts = ", ".join(f"{n} {len(t)} ({len(np.unique(m))} meshes)"
+                       for ((t, m), _), n in zip(parts, ("collision", "terrain", "proxy")))
     print(f"{out}: {counts} triangles, {os.path.getsize(out) / 1e6:.1f} MB")
 
 

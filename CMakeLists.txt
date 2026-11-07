@@ -235,6 +235,15 @@ add_executable(flightsim EXCLUDE_FROM_ALL
 )
 target_include_directories(flightsim PRIVATE src/red4ext)
 target_compile_features(flightsim PRIVATE cxx_std_20)
+# the game's own PhysX for flightsim --physx-joint (tools/flightsim/PhysXWorld.hpp): NVIDIA's PhysX 3.4 headers, the
+# game's DLLs loaded at run time from its bin/x64
+set(LTBF_PHYSX34 "D:/cp2077_work/tools/physx34" CACHE PATH "PhysX-3.4 checkout (its PhysX_3.4/Include and PxShared/include)")
+if(EXISTS "${LTBF_PHYSX34}/PhysX_3.4/Include/PxPhysicsAPI.h")
+  target_sources(flightsim PRIVATE tools/flightsim/PhysXWorld.cpp tools/flightsim/PhysXCheck.cpp)
+  target_include_directories(flightsim PRIVATE "${LTBF_PHYSX34}/PhysX_3.4/Include" "${LTBF_PHYSX34}/PxShared/include")
+  target_compile_definitions(flightsim PRIVATE LTBF_PHYSX LTBF_GAME_BIN="${CYBERPUNK_2077_GAME_DIR}/bin/x64" NOMINMAX
+                             WIN32_LEAN_AND_MEAN)
+endif()
 
 # offline run of the plugin's acoustics code over Autopilot telemetry, checked against
 # tools/acoustics/flyby.py (docs/design/acoustics.md); not built by default

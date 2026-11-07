@@ -12,6 +12,8 @@
 //   flightsim --seams <region> [--csv <dir>]
 //   flightsim --ground-check <ltbf_terrain_*.csv> --region <name> [--vehicles <tsv> --match <car or record>]
 //   flightsim --replay <ltbf_terrain_*.csv> --region <name> [--window 3] [--vehicles <tsv> --match <car or record>]
+//   flightsim --physx-joint [--pcm] [--open-bottom <m>] [--lift <m>]
+//   flightsim --terrain ... --physx [--pcm]
 //
 // --mode picks the mode flown (Sim.hpp's Mode), today's Hover & Fly by default; without scenario names it flies that
 // kind of mode's scenarios (the drone_* ones for the drone modes). --assist is --mode assist: the redesigned
@@ -36,6 +38,11 @@
 // --match takes a car's name or its vehicles.tsv record.
 // --seams lists where a region's drivable ground meets without a shared edge (Seams.hpp): how many, how big a step
 // or gap, and with --csv every one in <dir>/seams_<region>.tsv.
+// --physx-joint slides a Shion-sized body over flush mesh joints in the game's own PhysX (PhysXCheck.hpp; built when
+// the PhysX 3.4 headers are there, LTBF_PHYSX34): --pcm with PCM contacts, --open-bottom with the thrusters as boxes
+// open that far up, --lift held that far over resting. --physx with --terrain flies each line on the game's PhysX:
+// the line's ground within 30 m as one PhysX mesh per mesh id of the region (region_pack.py, version 2), the car its
+// thruster spheres (or boxes, --set openBottom; none with --set sphereContacts=0) and its chassis box.
 //
 // --set changes the tuning: mass, airResistance, brakingFriction, gainX/Y/Z, torqueDelay, gravity (the body's
 // gravity against what the modes hold up); Standard's surge, yaw,
@@ -43,12 +50,20 @@
 // altitudeHold, heightDampening, heightCorrection; the physics' dampAngular, dampAngularMax, yawDamp,
 // yawDirectionality, pitchDirectionality. --csv writes each run's frames to <dir>/<scenario>.csv.
 
+#ifdef LTBF_PHYSX
+#include "PhysXCheck.hpp"
+#include "PhysXWorld.hpp"
+
+#include <unordered_map>
+#endif
 #include "Replay.hpp"
 #include "Scenarios.hpp"
 #include "Seams.hpp"
 #include "TerrainCheck.hpp"
 #include "TerrainRuns.hpp"
 
+#include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -101,6 +116,13 @@ std::map<std::string, float *> Knobs(Setup &s) {
       {"drone.surge", &s.drone.surgeFactor},
       {"drone.yaw", &s.drone.yawFactor},
       {"drone.sway", &s.drone.swayFactor},
+      {"skid", &s.skid},
+      {"skidPerThruster", &s.skidPerThruster},
+      {"skidTurn", &s.skidTurn},
+      {"sphereRadius", &s.sphereRadius},
+      {"openBottom", &s.openBottom},
+      {"pointContact", &s.pointContact},
+      {"sphereContacts", &s.sphereContacts},
       {"surge", &s.standard.surgeFactor},
       {"yaw", &s.standard.yawFactor},
       {"sway", &s.standard.swayFactor},
@@ -175,9 +197,78 @@ const Colliders *Region(const std::string &aDir, const std::string &aName) {
   return slot.get();
 }
 
+#ifdef LTBF_PHYSX
+// The line's ground within 30 m in PhysX, a mesh per mesh id, and the Sim's car body handed to it.
+std::function<void(Sim &)> PhysXBody(const Colliders &aWorld, const Line &aLine, const PhysXOptions &aOptions) {
+  return [&aWorld, aLine, aOptions](Sim &aSim) {
+    std::string error;
+    PhysXOptions options = aOptions;
+    const Car &car = aSim.Vehicle();
+    options.gravity = 9.81f * car.gravityScale;
+    std::shared_ptr<PhysXWorld> px(PhysXWorld::Create(LTBF_GAME_BIN, options, error).release());
+    if (!px) {
+      std::fprintf(stderr, "%s\n", error.c_str());
+      return;
+    }
+    const Vec3 a = aLine.a, d = Flight::Sub(aLine.b, aLine.a);
+    const float len2 = std::max(d.x * d.x + d.y * d.y, 1e-6f);
+    std::unordered_map<uint32_t, std::vector<Vec3>> meshes;
+    for (size_t i = 0; i < aWorld.Size(); ++i) {
+      Vec3 p0, p1, p2;
+      Colliders::Kind kind;
+      aWorld.Triangle(i, p0, p1, p2, kind);
+      const Vec3 c{(p0.x + p1.x + p2.x) / 3.0f, (p0.y + p1.y + p2.y) / 3.0f, 0.0f};
+      const float t = std::clamp(((c.x - a.x) * d.x + (c.y - a.y) * d.y) / len2, 0.0f, 1.0f);
+      if (std::hypot(c.x - (a.x + d.x * t), c.y - (a.y + d.y * t)) > 30.0f)
+        continue;
+      auto &m = meshes[aWorld.Mesh(i)];
+      m.insert(m.end(), {p0, p1, p2});
+    }
+    for (auto &[id, corners] : meshes)
+      px->AddMesh(corners);
+    // the thruster pods (spheres of the table's bottom, or the boxes over the pods' sides and top), the chassis box
+    std::vector<PhysXWorld::Shape> shapes;
+    if (aSim.sphereContacts > 0.5f)
+      for (float sx : {-1.0f, 1.0f})
+        for (float sy : {-1.0f, 1.0f}) {
+          PhysXWorld::Shape s;
+          const float centre = car.bottom + 0.4f;
+          if (aSim.openBottom > 0.0f) {
+            s.box = true;
+            s.halfExtents = {0.33f, 0.36f, (0.49f - aSim.openBottom) * 0.5f};
+            s.center = {sx * car.wheelX, sy * car.wheelY, centre + aSim.openBottom * 0.5f};
+          } else {
+            s.radius = aSim.sphereRadius;
+            s.center = {sx * car.wheelX, sy * car.wheelY, centre};
+          }
+          shapes.push_back(s);
+        }
+    if (car.boxMax.x > car.boxMin.x) {
+      PhysXWorld::Shape box;
+      box.box = true;
+      box.center = Flight::Mul(Flight::Add(car.boxMin, car.boxMax), 0.5f);
+      box.halfExtents = Flight::Mul(Flight::Sub(car.boxMax, car.boxMin), 0.5f);
+      shapes.push_back(box);
+    }
+    px->SetBody(car.mass, aSim.Statics().momentOfInertia, shapes, aSim.Position(), aSim.Orientation(), aSim.Velocity(),
+                aSim.AngularVelocity());
+    std::fprintf(stderr, "%s: %zu PhysX meshes, %zu shapes on the car\n", aLine.name.c_str(), px->Meshes(),
+                 shapes.size());
+    aSim.bodyStep = [px](const BodyStepIn &in, BodyStepOut &out) {
+      px->Step(in.dt, in.force, in.torque, in.linearDamping, in.maxAngularSpeed);
+      out.position = px->Position();
+      out.orientation = px->Orientation();
+      out.velocity = px->Velocity();
+      out.angularVelocity = px->AngularVelocity();
+      out.contactPoints = px->ContactPoints();
+    };
+  };
+}
+#endif
+
 int FlyTerrain(const std::string &aRuns, const std::string &aRegions, const std::string &aOnly,
             const std::vector<float> &aSpeeds, float aHover, const Setup &aSetup, const std::vector<Car> &aCars,
-            const std::string &aCsv) {
+            const std::string &aCsv, bool aPhysX, bool aPcm) {
   std::vector<Line> lines = LoadLines(aRuns);
   if (lines.empty()) {
     std::fprintf(stderr, "no lines in %s\n", aRuns.c_str());
@@ -200,7 +291,20 @@ int FlyTerrain(const std::string &aRuns, const std::string &aRegions, const std:
       if (!car.name.empty() || aCars.size() > 1)
         s.car = FromTable(car, aSetup.car);
       for (float kmh : aSpeeds) {
-        Run run = FlyLine(s, *world, line, profile, kmh / 3.6f, aHover);
+        std::function<void(Sim &)> attach;
+#ifdef LTBF_PHYSX
+        PhysXOptions options;
+        options.pcm = aPcm;
+        if (aPhysX)
+          attach = PhysXBody(*world, line, options);
+#else
+        (void)aPcm;
+        if (aPhysX) {
+          std::fprintf(stderr, "built without the PhysX 3.4 headers (LTBF_PHYSX34)\n");
+          return 2;
+        }
+#endif
+        Run run = FlyLine(s, *world, line, profile, kmh / 3.6f, aHover, attach);
         if (!header) {
           // the line's ground (Profile), then the run's metrics
           std::printf("car\tline\tkmh\tusable\ttags\tslope\tstep_max\tkerbs\tsteps\tdrops\tbump\tcrest\tdip\tterrain"
@@ -238,8 +342,24 @@ int main(int argc, char **argv) {
   bool modeGiven = false;
   int hoverFlyMode = 0;
   std::vector<std::string> names;
+  bool physxJoint = false, physx = false, pcm = false;
+#ifdef LTBF_PHYSX
+  PhysXJointSetup joint;
+#endif
   for (int i = 1; i < argc; ++i) {
-    if (!std::strcmp(argv[i], "--terrain") && i + 1 < argc) {
+    if (!std::strcmp(argv[i], "--physx-joint")) {
+      physxJoint = true;
+    } else if (!std::strcmp(argv[i], "--physx")) {
+      physx = true;
+#ifdef LTBF_PHYSX
+    } else if (!std::strcmp(argv[i], "--pcm")) {
+      joint.pcm = pcm = true;
+    } else if (!std::strcmp(argv[i], "--open-bottom") && i + 1 < argc) {
+      joint.openBottom = std::strtof(argv[++i], nullptr);
+    } else if (!std::strcmp(argv[i], "--lift") && i + 1 < argc) {
+      joint.lift = std::strtof(argv[++i], nullptr);
+#endif
+    } else if (!std::strcmp(argv[i], "--terrain") && i + 1 < argc) {
       terrain = argv[++i];
     } else if (!std::strcmp(argv[i], "--sample") && i + 2 < argc) {
       sample = argv[++i];
@@ -306,6 +426,15 @@ int main(int argc, char **argv) {
       names.push_back(argv[i]);
     }
   }
+  if (physxJoint) {
+#ifdef LTBF_PHYSX
+    return PhysXJointCheck(LTBF_GAME_BIN, joint);
+#else
+    std::fprintf(stderr, "built without the PhysX 3.4 headers (LTBF_PHYSX34)
+");
+    return 2;
+#endif
+  }
   if (!seams.empty()) {
     const Colliders *world = Region(regions, seams);
     if (!world)
@@ -363,7 +492,7 @@ int main(int argc, char **argv) {
         return 2;
       }
     }
-    return FlyTerrain(terrain, regions, only, speeds, hover, setup, cars, csv);
+    return FlyTerrain(terrain, regions, only, speeds, hover, setup, cars, csv, physx, pcm);
   }
   if (names.empty())
     names = ScenarioNames(setup.mode);

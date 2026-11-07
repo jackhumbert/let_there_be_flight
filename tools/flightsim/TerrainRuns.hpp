@@ -16,6 +16,7 @@
 #include "Scenarios.hpp"
 
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <string>
 #include <vector>
@@ -97,8 +98,10 @@ constexpr float kWallLift = 1.0f, kGroundNormalZ = 0.7f;
 // (p95), contact frames left out; pitch_wobble (RMS of the pitch against the profile's slope over the wheelbase) and
 // roll_wobble (RMS of the roll off its own 1 s running mean); the times the nose ran into rising ground (nose_hits:
 // the underside's contact does not see the front's face); rays a frame; the metres flown and whether a wall stopped
-// it. The first second is left out of all but the last two.
+// it. The first second is left out of all but the last two. In the drone modes the driver also holds the car on the
+// line with sway, as the game's TerrainDriver does with hold. aAttach, when given, is called with the Sim once the car
+// is placed (flightsim --physx hands its body to PhysX there).
 Run FlyLine(const Setup &aSetup, const Colliders &aWorld, const Line &aLine, const Profile &aProfile, float aSpeed,
-            float aHover);
+            float aHover, const std::function<void(Sim &)> &aAttach = {});
 
 } // namespace FlightSim
