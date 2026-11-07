@@ -5,6 +5,10 @@
 // for its surface, spawned through the game's FxSystem where it begins and moved with the car every frame, so the
 // trail is laid along the slide; its loops are broken when the scrape ends.
 
+#include "Flight/Scrape.hpp"
+
+#include <cstdint>
+
 namespace RED4ext::vehicle {
 struct BaseObject;
 }
@@ -14,5 +18,8 @@ namespace ScrapeEffects {
 
 // Steps the component's scrapes and moves, starts and ends their effects; ends them all when flight is off.
 void Update(FlightComponent *aComponent, RED4ext::vehicle::BaseObject *aVehicle, float aDt);
+
+// The surface of a physics material by its CName's hash (Flight::SurfaceOf its name), cached; None for none (0).
+Flight::Surface SurfaceOfMaterial(uint64_t aMaterial);
 
 } // namespace ScrapeEffects

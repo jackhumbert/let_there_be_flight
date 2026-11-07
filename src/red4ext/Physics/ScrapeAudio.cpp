@@ -1,6 +1,7 @@
 #include "Utils/FlightModule.hpp"
 #include "Flight/Component.hpp"
 #include "Flight/Scrape.hpp"
+#include "Physics/ScrapeEffects.hpp"
 #include <RED4ext/Scripting/Natives/vehicleAcoustics.hpp>
 #include <RED4ext/Scripting/Natives/vehicleBaseObject.hpp>
 #include <RED4ext/Scripting/Natives/vehiclePhysics.hpp>
@@ -127,19 +128,6 @@ void Tally(RED4ext::CName aMaterial, float aSpeed, float aImpulse, const RED4ext
   }
 }
 
-// a material's surface, cached by its hash
-Flight::Surface SurfaceOfMaterial(RED4ext::CName aMaterial) {
-  static std::mutex lock;
-  static std::unordered_map<uint64_t, Flight::Surface> cache;
-  std::lock_guard<std::mutex> _(lock);
-  auto it = cache.find(aMaterial.hash);
-  if (it != cache.end())
-    return it->second;
-  const Flight::Surface s = Flight::SurfaceOf(aMaterial.ToString());
-  cache.emplace(aMaterial.hash, s);
-  return s;
-}
-
 // a contact point in the vehicle's frame, from the rigid body pose
 RED4ext::Vector3 ToLocal(const RED4ext::vehicle::BaseObject *aSelf, const RED4ext::Vector3 &aWorld) {
   const auto &xform = aSelf->physicsData->currentTransform;
@@ -205,7 +193,7 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1399724886, BaseObject_NotifyContacts
     c.normal = {nn.X, nn.Y, nn.Z};
     c.slide = slide;
     c.impulse = impulse;
-    c.surface = SurfaceOfMaterial(other);
+    c.surface = ScrapeEffects::SurfaceOfMaterial(other.hash);
     fc->scrapes.Add(c, Flight::ScrapeParams{});
   }
   if (!physics || physics->sleepTimer != 1.0f || impulse >= kVanillaImpulseGate) {

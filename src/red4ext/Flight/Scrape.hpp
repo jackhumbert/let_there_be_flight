@@ -76,23 +76,29 @@ private:
 };
 
 // A thruster's skid as the Drone skid found it this frame (FlightModeControl's Skid): the ground under it (world),
-// the ground's normal, how far the thruster's bottom is off it (m) and how fast the thruster moves along it (m/s).
+// the ground's normal, how far the thruster's bottom is off it (m), how fast the thruster moves along it (m/s) and
+// what the ground is (its ray's physics material).
 struct SkidContact {
   bool valid = false;
   Vec3 ground, normal;
   float clearance = 0.0f, slide = 0.0f;
+  Surface surface = Surface::Hard;
 };
 
 struct SkidScrapeParams {
   float touch = 0.06f;    // m of clearance or less that touches the ground
   float minSlide = 1.0f;  // m/s the ground point must slide to scrape
-  float hold = 0.15f;     // s a scrape is held after its thruster lifts off or stops
+  // s a scrape is held after its thruster lifts off or stops: on rough ground (the Badlands) a thruster touched for
+  // half a second at a time, and held 0.15 s each touch began a new trail, too short to see
+  float hold = 0.4f;
 };
 
-// A thruster scraping the ground: where (the ground under it, world), the ground's normal and how fast it slides.
+// A thruster scraping the ground: where (the ground under it, world), the ground's normal, how fast it slides and on
+// what. Onto another surface it is a new scrape (a new id), so its effects change with the ground.
 struct SkidScrape {
   bool active = false;
   uint32_t id = 0;  // new for each scrape, so an effect can follow it
+  Surface surface = Surface::Hard;
   Vec3 ground, normal;
   float slide = 0.0f;  // m/s along the ground
   float since = 0.0f;  // s since it last touched and slid

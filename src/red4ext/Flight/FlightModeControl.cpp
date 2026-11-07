@@ -3,6 +3,7 @@
 #include "Flight/Component.hpp"
 #include "Flight/DeveloperSettings.hpp"
 #include "Flight/FlightGround.hpp"
+#include "Physics/ScrapeEffects.hpp"
 #include "FlightConfiguration.hpp"
 
 #include <RED4ext/RTTISystem.hpp>
@@ -78,8 +79,11 @@ Flight::ModeOutput Skid(const Flight::StatsState &aState, const Flight::StatsSta
       const Flight::Vec3 v = Flight::Add(
           aState.d_velocity, Flight::Rotate(aState.d_orientation, Flight::Cross(aState.d_angularVelocity, points[i].offset)));
       const Flight::Vec3 along = Flight::Sub(v, Flight::Mul(points[i].normal, Flight::Dot(v, points[i].normal)));
+      // what the ground is, by its ray's material (a hit without one scrapes as hard ground, as before)
+      const Flight::Surface surface =
+          hits[i].material ? ScrapeEffects::SurfaceOfMaterial(hits[i].material) : Flight::Surface::Hard;
       aComponent->skidContacts[i] = {hits[i].valid, hits[i].position, points[i].normal, points[i].clearance,
-                                     Flight::Length(along)};
+                                     Flight::Length(along), surface};
     }
     aComponent->skidContactsAge = 0.0f;
     aClearance = 0.25f * (points[0].clearance + points[1].clearance + points[2].clearance + points[3].clearance);

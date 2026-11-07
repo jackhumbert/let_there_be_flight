@@ -41,6 +41,11 @@ TEST(scrape_surfaces) {
   CHECK(SurfaceOf("character_flesh.physmat") == Surface::None);
   CHECK(SurfaceOf("") == Surface::None);
   CHECK(SurfaceOf("something_new.physmat") == Surface::Hard);
+  // seen in the city's collision (cp2077_tools surface_survey.py, 2026-11-07)
+  CHECK(SurfaceOf("plexiglass.physmat") == Surface::Glass);
+  CHECK(SurfaceOf("neon.physmat") == Surface::Glass);
+  CHECK(SurfaceOf("fabrics.physmat") == Surface::Soft);
+  CHECK(SurfaceOf("carpet.physmat") == Surface::Soft);
 }
 
 TEST(scrape_held_between_bursts) {
@@ -124,7 +129,7 @@ TEST(scrape_skid_thrusters) {
   // lifted off, held a moment, then let go
   frame(x += 8.0f * kDt, 0.2f);
   CHECK(front.active && front.id == id);
-  for (int i = 0; i < 12; ++i)
+  for (int i = 0; i < 30; ++i)
     frame(x += 8.0f * kDt, 0.2f);
   CHECK(!front.active);
   // resting on the ground without sliding is no scrape
@@ -148,4 +153,25 @@ TEST(scrape_skid_bike_one_mark_per_tyre) {
   for (const SkidScrape &k : s)
     active += k.active ? 1 : 0;
   CHECK(active == 2);
+}
+
+TEST(scrape_skid_surface_change) {
+  // a thruster sliding from the road onto a metal plate: a new scrape (its effects change), and on no surface (water)
+  // none at all
+  SkidScrapes s;
+  SkidContact c[SkidScrapes::kThrusters];
+  c[0].valid = true;
+  c[0].normal = {0, 0, 1};
+  c[0].slide = 8.0f;
+  s.Step(c, kDt, {});
+  const SkidScrape &k = *s.begin();
+  CHECK(k.active && k.surface == Surface::Hard);
+  const uint32_t road = k.id;
+  c[0].surface = Surface::Metal;
+  s.Step(c, kDt, {});
+  CHECK(k.active && k.surface == Surface::Metal && k.id != road);
+  c[0].surface = Surface::None;
+  for (int i = 0; i < 30; ++i)
+    s.Step(c, kDt, {});
+  CHECK(!k.active);
 }

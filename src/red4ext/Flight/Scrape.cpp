@@ -16,6 +16,8 @@ constexpr Prefix kPrefixes[] = {
     {"default_material", Surface::Hard}, {"asphalt", Surface::Hard},   {"concrete", Surface::Hard},
     {"stone", Surface::Hard},            {"brick", Surface::Hard},     {"tiles", Surface::Hard},
     {"plaster", Surface::Hard},          {"ceramic", Surface::Hard},   {"glass", Surface::Glass},
+    {"plexiglass", Surface::Glass},      {"neon", Surface::Glass},     {"fabrics", Surface::Soft},
+    {"carpet", Surface::Soft},
     {"wood", Surface::Wood},             {"plastic", Surface::Soft},   {"dirt", Surface::Soft},
     {"sand", Surface::Soft},             {"grass", Surface::Soft},     {"mud", Surface::Soft},
     {"trash", Surface::Soft},            {"cardboard", Surface::Soft}, {"upholstery", Surface::Soft},
@@ -125,10 +127,12 @@ void SkidScrapes::Step(const SkidContact (&aContacts)[kThrusters], float aDt, co
     bool repeat = false;
     for (int j = 0; j < i; ++j)
       repeat = repeat || (aContacts[j].valid && Length(Sub(aContacts[j].ground, c.ground)) < 0.05f);
-    if (c.valid && !repeat && c.clearance <= aParams.touch && c.slide >= aParams.minSlide) {
-      if (!s.active) {
+    if (c.valid && !repeat && c.surface != Surface::None && c.clearance <= aParams.touch &&
+        c.slide >= aParams.minSlide) {
+      if (!s.active || s.surface != c.surface) {
         s.active = true;
         s.id = nextId++;
+        s.surface = c.surface;
       }
       s.ground = c.ground;
       s.normal = c.normal;

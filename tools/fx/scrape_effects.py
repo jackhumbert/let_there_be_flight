@@ -11,8 +11,11 @@ for byte). The plugin spawns them per scrape (src/red4ext/Physics/ScrapeEffects.
   each, transparent between) and scrape_trail_n.xbm (their normals, so the gouges catch the light). The decal paints texture x particle colour x DiffuseColor over the ground
   at the texture's alpha (the shader in the game's cache), so the texture's brightness sets how light the mark can be;
   its normal map is tangent space in R and G, scaled by NormalStrength and written with the same alpha.
+- scrape_trail_metal: the same, drawn from scrape_trail_metal_d.xbm: the gouges with a wide dark scuff along each, so
+  they show on a light metal plate. scrape_trail_soft: the hard trail tinted to a dark furrow of turned earth.
 - scrape_sparks_hard, scrape_sparks_metal, scrape_sparks_glass: the vanilla scratch sparks, every emitter's birth rate
-  scaled (metal the most).
+  scaled (metal the most, and hotter).
+- scrape_dust_soft: the vanilla concrete scratch with its sparks off and its dust tan, thicker and more of it.
 The new files are tracked with git add -f (source/archive is gitignored, its files tracked).
 """
 
@@ -36,18 +39,21 @@ OUT = REPO / "src" / "wolvenkit" / "source" / "archive" / "user" / "jackhumbert"
 OUT_DEPOT = "user\\jackhumbert\\effects\\"
 SKID = "base\\fx\\vehicles\\_wheels\\skid_marks\\sport\\v_skid_mark_s_m_01"
 SPARKS = "base\\fx\\vehicles\\_damage\\scratches\\car_scratches_sparks"
+CONCRETE = "base\\fx\\vehicles\\_damage\\scratches\\car_scratches_concrete"
 SKID_TEX = "base\\fx\\_textures\\vehicles\\fx_skid_marks_radial_sport_1x2_d"
 NORMAL_TEMPLATE = "base\\fx\\_textures\\decals\\impact_holes\\fx_bullet_hole_concrete_01_2x2_n"
 SCRATCH_TEX = "user\\jackhumbert\\effects\\scrape_trail_d"
+SCRATCH_METAL_TEX = "user\\jackhumbert\\effects\\scrape_trail_metal_d"
 SCRATCH_NORMAL = "user\\jackhumbert\\effects\\scrape_trail_n"
 TRAIL_MATERIAL = "base\\materials\\trail_decal_normal_color.mt"
 
 
-def draw_scratch(path, normal_path, seed=7):
+def draw_scratch(path, normal_path=None, seed=7, rim=(165, 1.15, 0.35, 0.7), fill=222.0):
     """The trail textures: 512 square, two frames stacked (the skid mark's 1x2 layout: the trail runs along U, V
     crosses it). Each frame is a thruster's corners scraping: two deep gouges near the edges and a hairline beside each,
     transparent between, every one tiling along U. They are cut into a height field too, and its slopes are the
-    normal map."""
+    normal map (written when normal_path is given). rim is the gouges' rims: their colour, centre and half width (in
+    gouge widths from the gouge's middle) and alpha; fill the colour under alpha 0."""
     import numpy as np
     from PIL import Image
 
@@ -70,7 +76,7 @@ def draw_scratch(path, normal_path, seed=7):
         h = np.zeros((half, size))
         # the colour under alpha 0 too: filtering and the mips average colour without alpha, so a grey there (and dark
         # rims) bled into the gouges, and from a car's distance they read darker than the road
-        col = np.full((half, size, 3), 222.0)
+        col = np.full((half, size, 3), float(fill))
         # a thruster's two corners, near the trail's edges: each a deep gouge (bright where cut through, a little darker
         # along its rims) with a hairline beside it, and nothing between them
         for centre, width in ((rng.uniform(0.17, 0.23), 0.03), (rng.uniform(0.77, 0.83), 0.034),
@@ -80,10 +86,10 @@ def draw_scratch(path, normal_path, seed=7):
             strength = np.clip(0.85 + 0.6 * tiling_noise(6), 0, 1)
             d = np.abs(v[:, None] - centre - wander[None, :]) / width
             g = np.clip(1 - d, 0, 1) ** 0.6 * strength[None, :]
-            rim = np.clip(1 - np.abs(d - 1.15) / 0.35, 0, 1) * strength[None, :]
-            col = col * (1 - rim[..., None]) + 165 * rim[..., None]
+            r = np.clip(1 - np.abs(d - rim[1]) / rim[2], 0, 1) * strength[None, :]
+            col = col * (1 - r[..., None]) + rim[0] * r[..., None]
             col = col * (1 - g[..., None]) + rng.uniform(215, 235) * g[..., None]
-            a = np.maximum(a, np.maximum(g, 0.7 * rim))
+            a = np.maximum(a, np.maximum(g, rim[3] * r))
             # cut in, with a burr thrown up beside it
             burr = np.clip(1 - np.abs(d - 1.4) / 0.6, 0, 1) * strength[None, :]
             h += -g + 0.35 * burr
@@ -93,6 +99,8 @@ def draw_scratch(path, normal_path, seed=7):
         height[rows] = h
     img = np.dstack([rgb, alpha * 255]).clip(0, 255).astype("uint8")
     Image.fromarray(img, "RGBA").save(path)
+    if not normal_path:
+        return
     # slopes per pixel to a tangent-space normal in R (along U) and G (along V); flat is 128
     dv, du = np.gradient(height)
     nx, ny = -du * 2.5, -dv * 2.5
@@ -106,7 +114,8 @@ def build_textures(cli10, raw, work):
     """Draws the trail textures and imports each over a vanilla one with the settings it needs: the colour over the
     skid mark's (DXT5, gamma), the normals over a bullet hole's (BC5 normal map, linear)."""
     tex_raw, arch = work / "tex_raw", work / "tex_archive"
-    pairs = [(SCRATCH_TEX, SKID_TEX), (SCRATCH_NORMAL, NORMAL_TEMPLATE)]
+    pairs = [(SCRATCH_TEX, SKID_TEX), (SCRATCH_METAL_TEX, SKID_TEX), (SCRATCH_NORMAL, NORMAL_TEMPLATE)]
+    colours = (SCRATCH_TEX, SCRATCH_METAL_TEX)
 
     def local(depot):
         return depot.replace("\\", os.sep)
@@ -116,30 +125,34 @@ def build_textures(cli10, raw, work):
             (d / local(ours)).parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(raw / f"{template}.xbm", arch / f"{local(ours)}.xbm")
     draw_scratch(tex_raw / f"{local(SCRATCH_TEX)}.png", tex_raw / f"{local(SCRATCH_NORMAL)}.png")
+    # metal: the same gouges (one normal map for both), bright where cut with a wide dark scuff along each (paint and
+    # grime dragged along), so they show on a light plate where the light trail did not
+    draw_scratch(tex_raw / f"{local(SCRATCH_METAL_TEX)}.png", rim=(55, 1.6, 0.8, 0.85), fill=200.0)
     # exits 3 ("no buffers found to rebuild") even when it imported: check the files instead
     subprocess.run([str(cli10), "import", str(tex_raw), "-k", "-o", str(arch)], stdout=subprocess.DEVNULL)
     for ours, template in pairs:
         out = arch / f"{local(ours)}.xbm"
         if out.read_bytes() == (raw / f"{template}.xbm").read_bytes():
             sys.exit(f"texture import changed nothing: {ours}")
-    # the colour's data written again, not premultiplied (bc3.py: the import's premultiply darkened the gouges)
-    colour = arch / f"{local(SCRATCH_TEX)}.xbm"
-    js = work / "tex_json"
-    js.mkdir(parents=True, exist_ok=True)
-    subprocess.run([str(cli10), "cr2w", "-s", str(colour), "-o", str(js)], check=True, stdout=subprocess.DEVNULL)
+    # the colours' data written again, not premultiplied (bc3.py: the import's premultiply darkened the gouges)
     from PIL import Image
     import numpy as np
-    rgba = np.asarray(Image.open(tex_raw / f"{local(SCRATCH_TEX)}.png").convert("RGBA"))
-    bc3.replace_data(js / f"{colour.name}.json", rgba)
-    subprocess.run([str(cli10), "cr2w", "-d", str(js / f"{colour.name}.json"), "-o", str(colour.parent)], check=True,
-                   stdout=subprocess.DEVNULL)
+    js = work / "tex_json"
+    js.mkdir(parents=True, exist_ok=True)
+    for tex in colours:
+        colour = arch / f"{local(tex)}.xbm"
+        subprocess.run([str(cli10), "cr2w", "-s", str(colour), "-o", str(js)], check=True, stdout=subprocess.DEVNULL)
+        rgba = np.asarray(Image.open(tex_raw / f"{local(tex)}.png").convert("RGBA"))
+        bc3.replace_data(js / f"{colour.name}.json", rgba)
+        subprocess.run([str(cli10), "cr2w", "-d", str(js / f"{colour.name}.json"), "-o", str(colour.parent)],
+                       check=True, stdout=subprocess.DEVNULL)
     for ours, _ in pairs:
         out = arch / f"{local(ours)}.xbm"
         shutil.copyfile(out, OUT / out.name)
         print(f"{ours}.xbm")
 
 
-def trail(color, size, life, normal_strength):
+def trail(color, size, life, normal_strength, texture=SCRATCH_TEX):
     def edit(node):
         t = node.get("$type") if isinstance(node, dict) else None
         if t == "CMaterialInstance":
@@ -149,7 +162,7 @@ def trail(color, size, life, normal_strength):
                 if "DiffuseColor" in v:
                     v["DiffuseColor"].update({"Red": color[0], "Green": color[1], "Blue": color[2], "Alpha": color[3]})
                 if "DiffuseTexture" in v:
-                    v["DiffuseTexture"]["DepotPath"]["$value"] = f"{SCRATCH_TEX}.xbm"
+                    v["DiffuseTexture"]["DepotPath"]["$value"] = f"{texture}.xbm"
             values.append({"$type": "rRef:ITexture", "NormalTexture": {
                 "DepotPath": {"$type": "ResourcePath", "$storage": "string", "$value": f"{SCRATCH_NORMAL}.xbm"},
                 "Flags": "Default"}})
@@ -174,13 +187,54 @@ def birth(scale):
     return edit
 
 
+def emitters(**kinds):
+    """An edit per kind of emitter, told apart by its material's texture: sparks (the spark streaks), smoke (the
+    puffs) and chunks (the mesh debris): kinds=dict(sparks=(birth scale, {material value: new value}), ...). Birth and
+    material values are what an effect keeps unbaked; its size and colour curves are baked into each emitter's render
+    blob."""
+    def kind_of(emitter):
+        text = json.dumps(emitter.get("localMaterialInstance", {}).get("Data", {}).get("values", []))
+        if "sparks" in text:
+            return "sparks"
+        if "smoke" in text:
+            return "smoke"
+        return "chunks"
+
+    def edit(node):
+        if not (isinstance(node, dict) and node.get("$type") == "CParticleEmitter"):
+            return
+        kind = kinds.get(kind_of(node))
+        if not kind:
+            return
+        scale, values = kind
+        for lod in node.get("lods", []):
+            data = lod.get("birthRate", {}).get("Data", {})
+            if data.get("$type") == "CEvaluatorFloatConst":
+                data["value"] = data["value"] * scale
+        for v in node.get("localMaterialInstance", {}).get("Data", {}).get("values", []):
+            for name, value in values.items():
+                if name in v:
+                    if isinstance(value, tuple):
+                        v[name].update({"Red": value[0], "Green": value[1], "Blue": value[2], "Alpha": 255})
+                    else:
+                        v[name] = value
+    return edit
+
+
 # name: (vanilla source without extension, edit)
 EFFECTS = {
     "scrape_trail_hard": (SKID, trail((235, 232, 225, 255), 1.0, 45.0, 1.0)),
-    "scrape_trail_metal": (SKID, trail((225, 230, 240, 255), 0.8, 45.0, 1.0)),
+    "scrape_trail_metal": (SKID, trail((235, 238, 245, 255), 0.8, 45.0, 1.0, SCRATCH_METAL_TEX)),
+    # soft ground (dirt, sand, mud): a dark furrow of turned earth
+    "scrape_trail_soft": (SKID, trail((95, 78, 60, 255), 1.4, 30.0, 0.6)),
     "scrape_sparks_hard": (SPARKS, birth(1.3)),
-    "scrape_sparks_metal": (SPARKS, birth(2.5)),
+    # metal: many more sparks and hotter ones (the blackbody shader's Temperature), so they read by day
+    "scrape_sparks_metal": (SPARKS, emitters(sparks=(3.0, {"Temperature": 80.0}))),
     "scrape_sparks_glass": (SPARKS, birth(0.35)),
+    # soft ground: the concrete scratch's dust, tan, thicker and more of it, with fewer clods and no sparks
+    "scrape_dust_soft": (CONCRETE, emitters(sparks=(0.0, {}), chunks=(0.6, {}),
+                                            smoke=(6.0, {"LightSmoke": (200, 176, 142), "DarkSmoke": (140, 118, 92),
+                                                         "maxAlpha": 0.75}))),
 }
 
 

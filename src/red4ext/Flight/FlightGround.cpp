@@ -83,7 +83,7 @@ Flight::Ground FlightGroundNative::Find(RED4ext::IScriptable *aComponent, float 
     bool valid = false;
     RED4ext::ExecuteFunction(RED4ext::ScriptInstance(nullptr), c.isValid, &valid, result);
     hits[i] = {valid, origin, {result.position.X, result.position.Y, result.position.Z},
-               {result.normal.X, result.normal.Y, result.normal.Z}};
+               {result.normal.X, result.normal.Y, result.normal.Z}, result.material.hash};
   }
   if (aEmitters) {
     *aEmitters = {};

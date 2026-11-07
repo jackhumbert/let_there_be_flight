@@ -9,6 +9,7 @@
 #include <RED4ext/Scripting/Natives/Generated/game/FxResource.hpp>
 #include <RED4ext/Scripting/Natives/vehicleBaseObject.hpp>
 #include <cmath>
+#include <mutex>
 #include <unordered_map>
 
 namespace {
@@ -31,7 +32,7 @@ SurfaceFx EffectsOf(Flight::Surface aSurface) {
   case Flight::Surface::Wood:
     return {R"(base\fx\vehicles\_damage\scratches\car_scratches_wood.effect)", ""};
   case Flight::Surface::Soft:
-    return {R"(base\fx\vehicles\_damage\scratches\car_scratches_concrete.effect)", ""};
+    return {R"(user\jackhumbert\effects\scrape_dust_soft.effect)", R"(user\jackhumbert\effects\scrape_trail_soft.effect)"};
   case Flight::Surface::None:
     break;
   }
@@ -139,6 +140,20 @@ void End(Handle<IScriptable> &aFx) {
 }
 } // namespace
 
+Flight::Surface ScrapeEffects::SurfaceOfMaterial(uint64_t aMaterial) {
+  if (!aMaterial)
+    return Flight::Surface::None;
+  static std::mutex lock;
+  static std::unordered_map<uint64_t, Flight::Surface> cache;
+  std::lock_guard<std::mutex> _(lock);
+  auto it = cache.find(aMaterial);
+  if (it != cache.end())
+    return it->second;
+  const Flight::Surface s = Flight::SurfaceOf(RED4ext::CName(aMaterial).ToString());
+  cache.emplace(aMaterial, s);
+  return s;
+}
+
 void ScrapeEffects::Update(FlightComponent *aComponent, RED4ext::vehicle::BaseObject *aVehicle, float aDt) {
   const Flight::ScrapeParams params;
   auto it = gLive.find(aComponent);
@@ -181,6 +196,10 @@ void ScrapeEffects::Update(FlightComponent *aComponent, RED4ext::vehicle::BaseOb
       Live l;
       l.sparks = Spawn(system, fx.sparks, aAt);
       l.trail = Spawn(system, fx.trail, aTrailAt);
+      // one line a scrape, where it begins: which surface, and whether its effects spawned
+      spdlog::info("[ScrapeFx] scrape {:#x} on {}: sparks {}, trail {}", aId, Flight::SurfaceName(aSurface),
+                   *fx.sparks ? (l.sparks ? "spawned" : "failed") : "none",
+                   *fx.trail ? (l.trail ? "spawned" : "failed") : "none");
       found = live.emplace(aId, std::move(l)).first;
     } else {
       Move(found->second.sparks, aAt);
@@ -188,10 +207,10 @@ void ScrapeEffects::Update(FlightComponent *aComponent, RED4ext::vehicle::BaseOb
     }
     found->second.seen = true;
   };
-  // each touching thruster marks the ground right under it; the skid's ground is the road, a hard surface
+  // each touching thruster marks the ground right under it, with the effects of the ground its ray hit
   for (const Flight::SkidScrape &s : aComponent->skidScrapes)
     if (s.active)
-      follow(s.id, Flight::Surface::Hard, OnGround(aVehicle, s.ground, s.normal),
+      follow(s.id, s.surface, OnGround(aVehicle, s.ground, s.normal),
              OnGround(aVehicle, s.ground, s.normal, kTrailTurn));
   for (const Flight::Scrape &s : aComponent->scrapes) {
     // the ground under the car is the thrusters' while the skid runs; the rest (kerbs, walls) stays the game's contacts

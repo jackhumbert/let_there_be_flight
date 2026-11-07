@@ -121,10 +121,11 @@ struct Ground {
 };
 
 // One ground ray of FlightComponent.FindGround: valid is TraceResult.IsValid, tire is the ray's origin (the wheel
-// emitter's position), position and normal are the hit's.
+// emitter's position), position and normal are the hit's, material its physics material (the CName's hash; 0 unknown).
 struct Hit {
   bool valid = false;
   Vec3 tire, position, normal;
+  uint64_t material = 0;
 };
 
 // The averaging at the end of FlightComponent.FindGround, over its ray hits (the script casts four, one per wheel
