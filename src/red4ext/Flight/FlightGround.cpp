@@ -73,10 +73,11 @@ Flight::Ground FlightGroundNative::Find(RED4ext::IScriptable *aComponent, float 
     RED4ext::Matrix m{};
     RED4ext::ExecuteFunction(tire->GetPtr(), c.localToWorld, &m);
     const Flight::Vec3 origin{m.W.X, m.W.Y, m.W.Z};
-    const Flight::Vec3 end = Flight::GroundRayEnd(origin, aMaxHoverHeight);
-    RED4ext::Vector4 start4{origin.x, origin.y, origin.z, 1.0f}, end4{end.x, end.y, end.z, 1.0f};
+    const Flight::Vec3 start = Flight::GroundRayStart(origin), end = Flight::GroundRayEnd(origin, aMaxHoverHeight);
+    RED4ext::Vector4 start4{start.x, start.y, start.z, 1.0f}, end4{end.x, end.y, end.z, 1.0f};
     RED4ext::physics::TraceResult result{};
-    bool staticOnly = false, dynamicOnly = false, hitAny = false;
+    // the static world only: started over a bike's emitters a ray otherwise hits the bike itself (Flight::GroundRayStart)
+    bool staticOnly = true, dynamicOnly = false, hitAny = false;
     RED4ext::physics::QueryFilter filter = c.filter;
     RED4ext::ExecuteFunction(sqs->GetPtr(), c.raycast, &hitAny, start4, end4, filter, result, staticOnly, dynamicOnly);
     bool valid = false;

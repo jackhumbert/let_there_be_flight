@@ -1,7 +1,9 @@
 #pragma once
 
 // FlightComponent.FindGround in C++ (docs/design/hover-fly-native.md, step 3): the same four rays, one straight down
-// from each wheel emitter (Flight::GroundRayEnd), through the same engine calls the script makes
+// from each wheel emitter (Flight::GroundRayEnd) but starting over it and seeing only the static world
+// (Flight::GroundRayStart, so a bike's emitters under the road's surface still find it; the script's start at the
+// emitters and see cars too), through the same engine calls the script makes
 // (gameSpatialQueriesSystem.SyncRaycastByQueryFilter with VehicleBlocker and Water, TraceResult.IsValid), averaged by
 // Flight::GroundFromHits. It reads the component's script fields by name (fl_tire, fr_tire, bl_tire, br_tire, sqs,
 // distance) and, as the script does, writes distance only when the ground is found.

@@ -7,6 +7,8 @@
 
 #include <RED4ext/RTTISystem.hpp>
 
+#include <limits>
+
 float GetFlightSettingsFloat(RED4ext::CRTTISystem *rtti, RED4ext::CName aProperty, float aFallback);
 
 namespace {
@@ -33,9 +35,11 @@ void Store(const RED4ext::Handle<FlightPID> &aPid, const Flight::Pid &aValue) {
 // the chassis shape's, or LTBF's thruster spheres', which the car rests on). By default each emitter, where a thruster
 // is, is a skid point of its own (Flight::DroneSkidPoints); with droneSkidPerThruster off, the rays' mean holds the car
 // once through its centre of mass (Flight::DroneSkid). Holding the shortest ray instead of the mean made the car bob
-// 0.6 to 1.5 m at 40 km/h. Nothing before the chassis shape is measured, or without ground.
+// 0.6 to 1.5 m at 40 km/h. Nothing before the chassis shape is measured, or without ground. aClearance gets the
+// clearance (the points' mean), infinity without one.
 Flight::ModeOutput Skid(const Flight::StatsState &aState, const Flight::StatsStatic &aStatic, float aLift,
-                        FlightComponent *aComponent) {
+                        FlightComponent *aComponent, float &aClearance) {
+  aClearance = std::numeric_limits<float>::infinity();
   const float clearance = Flight::Developer().droneSkid;
   if (clearance <= 0.0f || !aComponent || !aComponent->configuration || !aComponent->configuration->dragAreaMeasured)
     return {};
@@ -55,6 +59,8 @@ Flight::ModeOutput Skid(const Flight::StatsState &aState, const Flight::StatsSta
   const float bottom = std::min(aComponent->configuration->chassisBottom, aComponent->configuration->colliderBottom);
   Flight::DroneSkidParams k;
   k.clearance = clearance;
+  static RED4ext::CClass *bikeClass = RED4ext::CRTTISystem::Get()->GetClass("vehicleBikeBaseObject");
+  k.floor = bikeClass && vehicle->GetType()->IsA(bikeClass);
   Flight::ModeOutput out;
   static RED4ext::CProperty *tensorField = [] {
     auto component = RED4ext::CRTTISystem::Get()->GetClass("FlightComponent");
@@ -66,14 +72,23 @@ Flight::ModeOutput Skid(const Flight::StatsState &aState, const Flight::StatsSta
     for (int i = 0; i < 4; ++i) {
       const float overBottom = Flight::Dot(Flight::Sub(hits[i].tire, o3), up) - bottom;
       points[i].offset = Flight::Rotate(toBody, Flight::Sub(hits[i].tire, aState.d_position));
-      points[i].clearance = Flight::Length(Flight::Sub(hits[i].position, hits[i].tire)) - overBottom;
+      points[i].clearance = hits[i].tire.z - hits[i].position.z - overBottom;
       points[i].normal = Flight::Normalize(hits[i].normal);
+      // where the thruster's scrape marks go (Physics/ScrapeEffects.cpp), and how fast it slides along the ground
+      const Flight::Vec3 v = Flight::Add(
+          aState.d_velocity, Flight::Rotate(aState.d_orientation, Flight::Cross(aState.d_angularVelocity, points[i].offset)));
+      const Flight::Vec3 along = Flight::Sub(v, Flight::Mul(points[i].normal, Flight::Dot(v, points[i].normal)));
+      aComponent->skidContacts[i] = {hits[i].valid, hits[i].position, points[i].normal, points[i].clearance,
+                                     Flight::Length(along)};
     }
+    aComponent->skidContactsAge = 0.0f;
+    aClearance = 0.25f * (points[0].clearance + points[1].clearance + points[2].clearance + points[3].clearance);
     const auto &t = *tensorField->GetValuePtr<RED4ext::Vector4>(aComponent);
     return Flight::DroneSkidPoints(points, 4, aState, aStatic, Flight::TorqueResponse(aStatic, {t.X, t.Y, t.Z}), aLift,
                                    k);
   }
   const float emittersOverBottom = Flight::Dot(Flight::Sub(emitters, o3), up) - bottom;
+  aClearance = g.distance - emittersOverBottom;
   const float a = Flight::DroneSkid(g.distance - emittersOverBottom, Flight::ClosingSpeed(aState.d_velocity, g.normal),
                                     aState.d_up.z, aLift, k);
   out.force = Flight::Rotate(Flight::Conjugate(aState.d_orientation), {0.0f, 0.0f, a});
@@ -234,10 +249,16 @@ void FlightModeControl::Drone(RED4ext::Handle<FlightStats> aStats, RED4ext::Hand
   p.brakeFactorLinear = brakeFactorLinear;
   p.brakeFactorAngular = brakeFactorAngular;
   Flight::ModeOutput out = Flight::Drone(aStats->State(), aStats->Static(), Controls(), p);
+  float clearance;
   const Flight::ModeOutput skid =
-      Skid(aStats->State(), aStats->Static(), lift, static_cast<FlightComponent *>(aComponent.GetPtr()));
+      Skid(aStats->State(), aStats->Static(), lift, static_cast<FlightComponent *>(aComponent.GetPtr()), clearance);
   out.force = Flight::Add(out.force, skid.force);
   out.torque = Flight::Add(out.torque, skid.torque);
+  // lift down at the ground presses lightly, so the car slides (Flight::GroundedLift)
+  Flight::DroneSkidParams k;
+  k.clearance = Flight::Developer().droneSkid;
+  const float push = Controls().lift * p.liftFactor;
+  out.force.z += Flight::GroundedLift(push, clearance, k) - push;
   SetOutput(out);
 }
 

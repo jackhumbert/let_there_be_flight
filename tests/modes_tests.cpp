@@ -806,7 +806,7 @@ TEST(modes_ground_from_hits_none) {
 }
 
 TEST(modes_ground_from_hits_one) {
-  // distance = |(0,0,7) - (0,0,10)| = 3; the normal (0, 0, 2) is normalised to (0, 0, 1)
+  // distance = 10 - 7 = 3; the normal (0, 0, 2) is normalised to (0, 0, 1)
   Hit h = MakeHit({0, 0, 10}, {0, 0, 7}, {0, 0, 2});
   Ground g = GroundFromHits(&h, 1, 99);
   CHECK(g.found);
@@ -815,12 +815,12 @@ TEST(modes_ground_from_hits_one) {
 }
 
 TEST(modes_ground_from_hits_four) {
-  // distances: (0,0,10)->(0,0,8) 2; (1,0,10)->(1,0,6) 4; (0,0,10)->(3,0,6) sqrt(9 + 16) = 5; (0,0,10)->(0,0,9) 1; the
-  // mean is 12 / 4 = 3. Normals are normalised first, whatever their length: (0,0,5) -> (0,0,1), (3,0,4) -> (0.6,0,0.8),
+  // heights over the hits (the rays are straight down): (0,0,10)->(0,0,8) 2; (1,0,10)->(1,0,6) 4; (3,0,10)->(3,0,5) 5;
+  // (0,0,10)->(0,0,9) 1; the mean is 12 / 4 = 3. Normals are normalised first, whatever their length: (0,0,5) -> (0,0,1), (3,0,4) -> (0.6,0,0.8),
   // (0,-3,4) -> (0,-0.6,0.8), (0,0,0.3) -> (0,0,1). Their sum is (0.6, -0.6, 3.6), mean (0.15, -0.15, 0.9), length
   // sqrt(0.0225 + 0.0225 + 0.81) = 0.924662, normalised (0.162221, -0.162221, 0.973329).
   Hit hits[4] = {MakeHit({0, 0, 10}, {0, 0, 8}, {0, 0, 5}), MakeHit({1, 0, 10}, {1, 0, 6}, {3, 0, 4}),
-                 MakeHit({0, 0, 10}, {3, 0, 6}, {0, -3, 4}), MakeHit({0, 0, 10}, {0, 0, 9}, {0, 0, 0.3f})};
+                 MakeHit({3, 0, 10}, {3, 0, 5}, {0, -3, 4}), MakeHit({0, 0, 10}, {0, 0, 9}, {0, 0, 0.3f})};
   Ground g = GroundFromHits(hits, 4, 99);
   CHECK(g.found);
   CHECK_NEAR(g.distance, 3, kTol);
@@ -838,12 +838,24 @@ TEST(modes_ground_from_hits_cancelling_normals) {
 }
 
 TEST(ground_ray_layout) {
-  // FindGround's rays (FlightComponent.reds, native FlightGround): straight down from the wheel emitter, the max hover
-  // height plus 10 m long
+  // FindGround's rays (FlightComponent.reds, native FlightGround): straight down from just over the wheel emitter to
+  // the max hover height plus 10 m under it
+  const Vec3 start = GroundRayStart({3.0f, -2.0f, 41.5f});
+  CHECK_NEAR(start.x, 3.0f, 0.0f);
+  CHECK_NEAR(start.y, -2.0f, 0.0f);
+  CHECK_NEAR(start.z, 41.5f + kGroundRayRise, 1e-5f);
   const Vec3 end = GroundRayEnd({3.0f, -2.0f, 41.5f}, 7.0f);
   CHECK_NEAR(end.x, 3.0f, 0.0f);
   CHECK_NEAR(end.y, -2.0f, 0.0f);
   CHECK_NEAR(end.z, 41.5f - 17.0f, 1e-5f);
+}
+
+TEST(modes_ground_from_hits_above_the_emitters) {
+  // a bike's emitters at the bottom of its tyres, 0.3 m under the road collider's surface: found, 0.3 m below it
+  Hit hits[2] = {MakeHit({0, 1, 7.36f}, {0, 1, 7.66f}, kUp), MakeHit({0, -1, 7.36f}, {0, -1, 7.66f}, kUp)};
+  Ground g = GroundFromHits(hits, 2, 0);
+  CHECK(g.found);
+  CHECK_NEAR(g.distance, -0.3f, 1e-4f);
 }
 
 TEST(modes_hover_fly_assist_keeps_hover_height_through_a_gap) {
@@ -893,6 +905,54 @@ TEST(modes_drone_skid) {
   CHECK(DroneSkid(-0.5f, -10.0f, 1.0f, 0.0f, k) <= k.maxAccel + kTol);
   // half lift down, half the hold
   CHECK_NEAR(DroneSkid(k.clearance, 0.0f, 1.0f, -0.5f, k), 0.5f * kGravity, kLoose);
+}
+
+TEST(modes_drone_skid_floor) {
+  // the skid as a bike's only floor: lift down does not let it go, and it holds the bike pressed at GroundedLift's press
+  // a little under its clearance, short of maxAccel
+  DroneSkidParams k;
+  k.floor = true;
+  CHECK_NEAR(DroneSkid(k.clearance, 0.0f, 1.0f, -1.0f, k), kGravity, kLoose);
+  const float pressed = k.clearance - k.press / k.p;
+  CHECK_NEAR(DroneSkid(pressed, 0.0f, 1.0f, -1.0f, k), kGravity + k.press, kLoose);
+  CHECK(kGravity + k.press < k.maxAccel);
+}
+
+TEST(modes_drone_skid_floor_upright) {
+  // a bike's two points on its centreline, rolled 20 degrees with its top to the right (+ about its forward): the floor
+  // rolls it back (- about forward), harder while still rolling over; away from the ground, or as a car, it does not
+  DroneSkidParams k;
+  k.floor = true;
+  StatsState s;
+  const float half = 0.5f * 20.0f * 3.14159265f / 180.0f;
+  s.d_orientation = {0, std::sin(half), 0, std::cos(half)};
+  s.d_up = Rotate(s.d_orientation, kUp);
+  StatsStatic st;
+  st.mass = 380;
+  st.momentOfInertia = {100, 40, 100};
+  const Vec3 response{1, 1, 1};
+  SkidPoint points[2] = {SkidPoint{{0, 0.8f, 0}, k.clearance}, SkidPoint{{0, -0.8f, 0}, k.clearance}};
+  const ModeOutput still = DroneSkidPoints(points, 2, s, st, response, -1.0f, k);
+  CHECK(still.torque.y < 0.0f);
+  s.d_angularVelocity = {0, 1.0f, 0};
+  const ModeOutput rolling = DroneSkidPoints(points, 2, s, st, response, -1.0f, k);
+  CHECK(rolling.torque.y < still.torque.y);
+  points[0].clearance = points[1].clearance = 1.0f;
+  CHECK_NEAR(DroneSkidPoints(points, 2, s, st, response, -1.0f, k).torque.y, 0.0f, kTol);
+  points[0].clearance = points[1].clearance = k.clearance;
+  k.floor = false;
+  CHECK_NEAR(DroneSkidPoints(points, 2, s, st, response, 0.0f, k).torque.y, 0.0f, kTol);
+}
+
+TEST(modes_grounded_lift) {
+  // far from the ground lift down is kept; at the ground it is held to press, between the two it fades; lift up and a
+  // light push are never touched
+  const DroneSkidParams k;
+  CHECK_NEAR(GroundedLift(-40.0f, 5.0f, k), -40.0f, kTol);
+  CHECK_NEAR(GroundedLift(-40.0f, 0.0f, k), -k.press, kLoose);
+  CHECK_NEAR(GroundedLift(-40.0f, k.clearance + 0.5f * k.band, k), 0.5f * (-40.0f - k.press), kLoose);
+  CHECK_NEAR(GroundedLift(30.0f, 0.0f, k), 30.0f, kTol);
+  CHECK_NEAR(GroundedLift(-2.0f, 0.0f, k), -2.0f, kTol);
 }
 
 TEST(modes_drone_skid_points) {

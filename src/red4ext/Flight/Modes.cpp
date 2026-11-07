@@ -68,9 +68,16 @@ float DroneSkid(float aClearance, float aVerticalSpeed, float aBodyUpZ, float aL
   const float w = std::fmin(std::fmax((k.clearance + k.band - aClearance) / k.band, 0.0f), 1.0f);
   if (w <= 0.0f)
     return 0.0f;
-  const float hold = 1.0f - std::fmin(std::fmax(-aLift, 0.0f), 1.0f);
+  const float hold = k.floor ? 1.0f : 1.0f - std::fmin(std::fmax(-aLift, 0.0f), 1.0f);
   const float a = w * kGravity + k.p * (k.clearance - aClearance) - k.d * aVerticalSpeed;
   return std::fmin(std::fmax(a, 0.0f), k.maxAccel) * hold;
+}
+
+float GroundedLift(float aLiftAccel, float aClearance, const DroneSkidParams &k) {
+  if (aLiftAccel >= -k.press || !std::isfinite(aClearance))
+    return aLiftAccel;
+  const float w = std::fmin(std::fmax((k.clearance + k.band - aClearance) / k.band, 0.0f), 1.0f);
+  return aLiftAccel + w * (-k.press - aLiftAccel);
 }
 
 float ClosingSpeed(Vec3 aVelocity, Vec3 aGroundNormal) {
@@ -101,6 +108,14 @@ ModeOutput DroneSkidPoints(const SkidPoint *aPoints, int aCount, const StatsStat
   };
   out.torque = {axis(moment.x, st.momentOfInertia.x, aResponse.x), axis(moment.y, st.momentOfInertia.y, aResponse.y),
                 axis(moment.z, st.momentOfInertia.z, aResponse.z)};
+  if (k.floor && aResponse.y > 0.0f && s.d_up.z >= k.minUp) {
+    // upright while within the band: the roll about the body's forward (+ is the top to the right) back to level
+    float closeness = 0.0f;
+    for (int i = 0; i < aCount; ++i)
+      closeness = std::fmax(closeness, std::fmin(std::fmax((k.clearance + k.band - aPoints[i].clearance) / k.band, 0.0f), 1.0f));
+    const float roll = std::atan2(-up.x, up.z);
+    out.torque.y += closeness * -(k.uprightP * roll + k.uprightD * s.d_angularVelocity.y) / aResponse.y;
+  }
   return out;
 }
 
@@ -113,6 +128,8 @@ float HoverWeight(const Ground &g, const StandardParams &p) {
   return std::fmin(std::fmax(w, 0.0f), 1.0f);
 }
 } // namespace
+
+Vec3 GroundRayStart(Vec3 aTire) { return {aTire.x, aTire.y, aTire.z + kGroundRayRise}; }
 
 Vec3 GroundRayEnd(Vec3 aTire, float aMaxHoverHeight) { return {aTire.x, aTire.y, aTire.z - aMaxHoverHeight - 10.0f}; }
 
@@ -128,7 +145,8 @@ Ground GroundFromHits(const Hit *hits, int count, float lastDistance) {
   float distanceSum = 0.0f;
   Vec3 normalSum;
   for (int i = 0; i < count; ++i) {
-    distanceSum += Length(Sub(hits[i].position, hits[i].tire));
+    // the rays are straight down, so the height over the hit is the ray's length when the ground is under the emitter
+    distanceSum += hits[i].tire.z - hits[i].position.z;
     normalSum = Add(normalSum, Normalize(hits[i].normal));
   }
   float n = static_cast<float>(count);

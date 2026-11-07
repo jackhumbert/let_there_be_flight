@@ -71,6 +71,13 @@ ModeOutput Drone(const StatsState &s, const StatsStatic &st, const Controls &c, 
 // about 12 rad/s, too fast for the body's 30 ms late answer: a roll wobble grew at 40 km/h in flightsim.
 struct DroneSkidParams {
   float clearance = 0.03f, band = 0.15f, p = 60.0f, d = 12.0f, maxAccel = 2.0f * 9.81f, minUp = 0.8f, turn = 0.25f;
+  float press = 0.5f * 9.81f; // GroundedLift's
+  // the skid is the vehicle's only floor: lift down does not let it go, and near the ground it holds the vehicle upright
+  // (DroneSkidPoints). A car's chassis rests on the road when the skid lets go, and its four points hold it level; a
+  // bike's chassis does not collide with the road and its two points are on its centreline: let go it sank 0.3 m into
+  // the road, and steered on the road it banked 33 degrees, and both bounced it along the road collider's joints.
+  bool floor = false;
+  float uprightP = 40.0f, uprightD = 8.0f; // 1/s2 per rad of roll, 1/s: the floor's hold upright
 };
 // The world-up acceleration (m/s2) to add: aClearance is the chassis's lowest point over the ground (m), aVerticalSpeed
 // how fast it closes on the ground (ClosingSpeed; m/s, + away), aBodyUpZ its up's world z, aLift the lift control
@@ -89,6 +96,12 @@ struct SkidPoint {
   float clearance = 0.0f;
   Vec3 normal{0.0f, 0.0f, 1.0f}; // the ground's under it
 };
+
+// Lift down near the ground: Drone pushes the car down at its lift factor times the input (40 m/s2 at full), and on the
+// road that push only pressed it harder into it; friction grew with it and a car set down at 10 m/s stopped dead within
+// a second. Within the skid's band the push fades to press (m/s2), so a car set down slides along. aLiftAccel is the
+// lift's push (m/s2 along the body's up, - down), aClearance the skid's; returns the push kept.
+float GroundedLift(float aLiftAccel, float aClearance, const DroneSkidParams &k);
 
 // The skid at each of aCount points (the thrusters, where FindGround's rays start) instead of one through the centre of
 // mass: each carries 1 / aCount of the car and pushes up where it is by DroneSkid of its own clearance and its own
@@ -116,11 +129,18 @@ struct Hit {
 
 // The averaging at the end of FlightComponent.FindGround, over its ray hits (the script casts four, one per wheel
 // emitter; the raycasts stay in script). The ground is found only when every hit is valid. Then the distance is the mean
-// of Distance(tire, position) and the normal is the normalised mean of the normalised hit normals. Otherwise found is
+// of the emitters' heights over their hits (below 0 where the ground is above an emitter) and the normal is the
+// normalised mean of the normalised hit normals. Otherwise found is
 // false, the distance stays lastDistance (FlightComponent.distance is not written) and the normal is zero. No hits
 // counts as nothing found (the script always has four).
 Ground GroundFromHits(const Hit *hits, int count, float lastDistance);
 
+// Where one of FindGround's rays starts: kGroundRayRise straight up from its wheel emitter aTire. A bike's emitters sit
+// at the bottom of its tyres, 0.14 m under the road collider's surface as it sits, and rays cast from there found no
+// ground: the Drone skid did not run and lift held down pinned the bike to the road. Started higher they would hit the
+// bike itself, so the native rays see only the static world (FlightGround.cpp).
+inline constexpr float kGroundRayRise = 0.5f; // m
+Vec3 GroundRayStart(Vec3 aTire);
 // Where one of FindGround's rays ends: straight down from its wheel emitter aTire, maxHoverHeight + 10 m.
 Vec3 GroundRayEnd(Vec3 aTire, float aMaxHoverHeight);
 
