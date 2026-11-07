@@ -48,6 +48,9 @@ struct Frame {
 struct Values {
   float speed = 0, surge = 0, yawDiff = 0, lift = 0, yaw = 0, pitchDiff = 0, brake = 0, inside = 0, damage = 0,
         roll = 0, pitch = 0, sway = 0, scrape = 0;
+  // the synth's only, not FlightAudioUpdate's (kNames): the scrape's surface (Flight::Surface) and slide (m/s)
+  int scrapeSurface = 0;
+  float scrapeSlide = 0;
 };
 
 // the stems' params.csv header, in the order of Values
@@ -74,8 +77,6 @@ void Update(const Frame &f, Values &v);
 
 // a front thruster is always at full, the others come in with speed
 float ThrusterVolume(bool front, float speed);
-// the thruster's damped spring force per car mass, 0 to 1
-float Scrape(float dampedSpringForce, float totalMass);
 
 struct Axes {
   Vec3 right, forward, up;

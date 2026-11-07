@@ -14,6 +14,7 @@
 #include <RED4ext/Scripting/Natives/actionDriveChaseTarget.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/AutonomousData.hpp>
 #include "FlightConfiguration.hpp"
+#include "Flight/Scrape.hpp"
 #include "Navigation/Aerobatics.hpp"
 #include "IFlightSystem.hpp"
 //#include "FlightThruster.hpp"
@@ -152,6 +153,14 @@ public:
   int32_t teleportQuiet = 0;
   // friction multiplier of the last ground material touched, see Physics/ScrapeAudio.cpp
   float groundMaterialFriction = 1.0f;
+  // the car's scrapes, held between the contacts' bursts (Physics/ScrapeAudio.cpp feeds them, Physics/ScrapeEffects.cpp
+  // steps them and drives their effects)
+  Flight::ScrapeTracker scrapes;
+  // the Drone skid's contacts at each thruster (Flight/FlightModeControl.cpp's Skid writes them; s since it last did,
+  // counted by Physics/ScrapeEffects.cpp) and the thrusters' scrapes made from them
+  Flight::SkidContact skidContacts[Flight::SkidScrapes::kThrusters];
+  float skidContactsAge = 1e9f;
+  Flight::SkidScrapes skidScrapes;
 
   RED4ext::Vector4 GetContactSpin() { return RED4ext::Vector4(contactSpin.X, contactSpin.Y, contactSpin.Z, 0.0f); }
 

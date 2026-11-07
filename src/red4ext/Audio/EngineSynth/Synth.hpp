@@ -33,6 +33,9 @@ namespace EngineSynth {
 struct Inputs {
   float speed = 0, surge = 0, lift = 0, pitch = 0, roll = 0, sway = 0, yaw = 0;
   float brake = 0, damage = 0, inside = 0, scrape = 0, water = 0;
+  // the scrape's surface (Flight::Surface as a number; 0: none known, the voice as before) and its slide (m/s)
+  int scrapeSurface = 0;
+  float scrapeSlide = 0;
   float cone = 90; // FMOD's Event Cone Angle, degrees: the thruster's facing against the way to the listener
   float volume = 1;
 };
@@ -146,9 +149,9 @@ private:
   // damage
   double whirlPhase = 0;
   float whirlFrequency = 0, whirlGain = 0;
-  // scrape
+  // scrape: clicks (each a decaying burst) and a noise bed through one band, per surface (ScrapeProfile)
   Svf scrapeBand;
-  float scrapeGain = 0, scrapeRate = 0, click = 0;
+  float scrapeGain = 0, scrapeRate = 0, click = 0, scrapeDecay = 0.995f, scrapeBed = 0;
   // master
   Svf water;
   float masterGain = 0, waterCutoff = 22000;

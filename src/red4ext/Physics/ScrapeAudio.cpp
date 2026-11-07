@@ -1,5 +1,7 @@
 #include "Utils/FlightModule.hpp"
 #include "Flight/Component.hpp"
+#include "Flight/Scrape.hpp"
+#include <RED4ext/Scripting/Natives/vehicleAcoustics.hpp>
 #include <RED4ext/Scripting/Natives/vehicleBaseObject.hpp>
 #include <RED4ext/Scripting/Natives/vehiclePhysics.hpp>
 #include <RED4ext/Scripting/Natives/vehiclePhysicsData.hpp>
@@ -81,6 +83,77 @@ float MaterialFriction(RED4ext::CName material) {
   return friction;
 }
 
+// What a flying car scrapes (docs/design/scrape-effects.md, step 1), summed over 2 s per material and logged: the
+// contacts, how many the vanilla gate let through, the slide speed and impulse at most, where on the car (its own
+// frame: the lowest and highest point, the widest from the centre line) and how much the contact faced up. The
+// game's scrape loop is logged when it changes.
+struct ScrapeTally {
+  uint32_t contacts = 0, vanilla = 0;
+  float maxSpeed = 0, maxImpulse = 0, minZ = 1e9f, maxZ = -1e9f, maxSide = 0, normalUp = 0;
+};
+std::mutex gTallyLock;
+std::unordered_map<uint64_t, std::pair<std::string, ScrapeTally>> gTally;
+int64_t gTallyStart = 0;
+uint64_t gLastLoop = 0;
+
+void Tally(RED4ext::CName aMaterial, float aSpeed, float aImpulse, const RED4ext::Vector3 &aLocal, float aNormalUp,
+           bool aVanilla) {
+  std::lock_guard<std::mutex> _(gTallyLock);
+  auto now = std::chrono::steady_clock::now().time_since_epoch().count();
+  if (gTallyStart == 0)
+    gTallyStart = now;
+  auto &entry = gTally[aMaterial.hash];
+  if (entry.first.empty())
+    entry.first = aMaterial.ToString();
+  ScrapeTally &t = entry.second;
+  ++t.contacts;
+  t.vanilla += aVanilla ? 1 : 0;
+  t.maxSpeed = std::max(t.maxSpeed, aSpeed);
+  t.maxImpulse = std::max(t.maxImpulse, aImpulse);
+  t.minZ = std::min(t.minZ, aLocal.Z);
+  t.maxZ = std::max(t.maxZ, aLocal.Z);
+  t.maxSide = std::max(t.maxSide, std::fabs(aLocal.X));
+  t.normalUp += aNormalUp;
+  if (now - gTallyStart > 2'000'000'000LL) {
+    for (auto &[hash, e] : gTally) {
+      const ScrapeTally &x = e.second;
+      spdlog::info("[ScrapeLog] '{}': {} contacts ({} past the vanilla gate), slide {:.1f} m/s, impulse {:.0f} at most; "
+                   "on the car z {:.2f}..{:.2f}, {:.2f} off the centre line; facing up {:.2f}",
+                   e.first, x.contacts, x.vanilla, x.maxSpeed, x.maxImpulse, x.minZ, x.maxZ, x.maxSide,
+                   x.normalUp / std::max<uint32_t>(x.contacts, 1));
+    }
+    gTally.clear();
+    gTallyStart = now;
+  }
+}
+
+// a material's surface, cached by its hash
+Flight::Surface SurfaceOfMaterial(RED4ext::CName aMaterial) {
+  static std::mutex lock;
+  static std::unordered_map<uint64_t, Flight::Surface> cache;
+  std::lock_guard<std::mutex> _(lock);
+  auto it = cache.find(aMaterial.hash);
+  if (it != cache.end())
+    return it->second;
+  const Flight::Surface s = Flight::SurfaceOf(aMaterial.ToString());
+  cache.emplace(aMaterial.hash, s);
+  return s;
+}
+
+// a contact point in the vehicle's frame, from the rigid body pose
+RED4ext::Vector3 ToLocal(const RED4ext::vehicle::BaseObject *aSelf, const RED4ext::Vector3 &aWorld) {
+  const auto &xform = aSelf->physicsData->currentTransform;
+  float px = aWorld.X - static_cast<float>(xform.Position.x.Bits) / 131072.0f;
+  float py = aWorld.Y - static_cast<float>(xform.Position.y.Bits) / 131072.0f;
+  float pz = aWorld.Z - static_cast<float>(xform.Position.z.Bits) / 131072.0f;
+  const auto &q = xform.Orientation;
+  // rotate by the conjugate quaternion: v' = v + 2w(-u x v) + 2(-u x (-u x v)), u = (i, j, k)
+  float ux = -q.i, uy = -q.j, uz = -q.k, w = q.r;
+  float cx = uy * pz - uz * py, cy = uz * px - ux * pz, cz = ux * py - uy * px;
+  return RED4ext::Vector3(px + 2.0f * (w * cx + uy * cz - uz * cy), py + 2.0f * (w * cy + uz * cx - ux * cz),
+                          pz + 2.0f * (w * cz + ux * cy - uy * cx));
+}
+
 // NotifyContacts' gate: awake vehicles ignore contacts below this summed impulse
 constexpr float kVanillaImpulseGate = 100.0f;
 // vehicle::Audio* and vehicle::FX* in vehicle::BaseObject (the SDK's acoustics/effects:
@@ -115,6 +188,26 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1399724886, BaseObject_NotifyContacts
   // only what the vanilla gate dropped; everything else already went through NotifyContacts
   auto physics = self->physics;
   float impulse = *reinterpret_cast<const float *>(contact + kContactImpulse);
+  if (self->physicsData) {
+    auto at = *reinterpret_cast<const RED4ext::Vector3 *>(contact + kContactPosition);
+    auto nn = *reinterpret_cast<const RED4ext::Vector3 *>(contact + kContactNormal);
+    auto v = self->physicsData->velocity;
+    float along = v.X * nn.X + v.Y * nn.Y + v.Z * nn.Z;
+    float sx = v.X - nn.X * along, sy = v.Y - nn.Y * along, sz = v.Z - nn.Z * along;
+    auto other = *reinterpret_cast<const RED4ext::CName *>(contact + kContactMaterials + 8 * (isFirst ? 1 : 0));
+    const float slide = std::sqrt(sx * sx + sy * sy + sz * sz);
+    const RED4ext::Vector3 local = ToLocal(self, at);
+    Tally(other, slide, impulse, local, std::fabs(nn.Z),
+          !physics || physics->sleepTimer != 1.0f || impulse >= kVanillaImpulseGate);
+    // the car's scrapes (Flight::ScrapeTracker): every world contact, whatever the vanilla gate does with it
+    Flight::ScrapeContact c;
+    c.local = {local.X, local.Y, local.Z};
+    c.normal = {nn.X, nn.Y, nn.Z};
+    c.slide = slide;
+    c.impulse = impulse;
+    c.surface = SurfaceOfMaterial(other);
+    fc->scrapes.Add(c, Flight::ScrapeParams{});
+  }
   if (!physics || physics->sleepTimer != 1.0f || impulse >= kVanillaImpulseGate) {
     return;
   }
@@ -144,6 +237,16 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1399724886, BaseObject_NotifyContacts
   RED4ext::IHookable::StaticHook<void, 2085232259>(audio, &position, &noNormal,
                                                     static_cast<const RED4ext::vehicle::BaseObject *>(nullptr), speed,
                                                     material);
+  // the game's scrape loop, logged when it changes
+  if (self->acoustics) {
+    auto loop = self->acoustics->scrapingLoopStart;
+    std::lock_guard<std::mutex> _(gTallyLock);
+    if (loop.hash != gLastLoop) {
+      gLastLoop = loop.hash;
+      spdlog::info("[ScrapeLog] scrape loop now '{}' (on '{}', slide {:.1f} m/s, timer {:.2f})", loop.ToString(),
+                   material.ToString(), speed, self->acoustics->scrapingTimer);
+    }
+  }
 
   // Sparks and ground scratch decals, through the vehicle's own fxCollision table (material ->
   // impact/scratch particles and decals). Called once per frame per contact this keeps the

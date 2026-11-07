@@ -102,10 +102,6 @@ float ThrusterVolume(bool front, float speed) {
   return front ? 1.0f : Clamp(speed / 100.0f, 0, 1);
 }
 
-float Scrape(float dampedSpringForce, float totalMass) {
-  return totalMass > 0 ? Clamp(dampedSpringForce / totalMass, 0, 1) : 0;
-}
-
 Axes ConeAxes(const Axes &mesh) {
   return {mesh.right, {-mesh.up.x, -mesh.up.y, -mesh.up.z}, mesh.forward};
 }
@@ -123,6 +119,8 @@ EngineSynth::Inputs ToSynth(const Values &v, float volume, float water, float co
   in.damage = v.damage;
   in.inside = v.inside;
   in.scrape = v.scrape;
+  in.scrapeSurface = v.scrapeSurface;
+  in.scrapeSlide = v.scrapeSlide;
   in.volume = volume;
   in.water = water;
   in.cone = cone;

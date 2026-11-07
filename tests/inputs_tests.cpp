@@ -205,13 +205,10 @@ TEST(inputs_cone_axes) {
   CHECK_NEAR(cone.up.z, up.z, 1e-5);
 }
 
-TEST(inputs_thruster_volume_scrape) {
+TEST(inputs_thruster_volume) {
   CHECK_NEAR(ThrusterVolume(false, 50), 0.5, 1e-5);
   CHECK_NEAR(ThrusterVolume(false, 150), 1, 1e-5);
   CHECK_NEAR(ThrusterVolume(true, 0), 1, 1e-5);
-  CHECK_NEAR(Scrape(500, 1000), 0.5, 1e-5);
-  CHECK_NEAR(Scrape(5000, 1000), 1, 1e-5);
-  CHECK_NEAR(Scrape(1, 0), 0, 1e-5);
 }
 
 TEST(inputs_game_volume) {

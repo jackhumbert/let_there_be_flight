@@ -306,6 +306,7 @@ add_executable(ltbf_tests
   tests/pid_tests.cpp
   tests/controls_tests.cpp
   tests/modes_tests.cpp
+  tests/scrape_tests.cpp
   tests/thruster_tests.cpp
   tests/aerobatics_tests.cpp
   tests/cinematic_tests.cpp
@@ -379,6 +380,7 @@ add_executable(ltbf_tests
   src/red4ext/Flight/Pid.cpp
   src/red4ext/Flight/Controls.cpp
   src/red4ext/Flight/Modes.cpp
+  src/red4ext/Flight/Scrape.cpp
   src/red4ext/Flight/Thruster.cpp
   src/red4ext/Flight/Aero.cpp
   src/red4ext/Flight/DeveloperSettings.cpp

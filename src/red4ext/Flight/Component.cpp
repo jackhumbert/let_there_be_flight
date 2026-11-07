@@ -4,6 +4,7 @@
 #include "Flight/FlightStats.hpp"
 
 #include "Flight/DeveloperSettings.hpp"
+#include "Physics/ScrapeEffects.hpp"
 #include "FlightConfiguration.hpp"
 
 #include <PhysX3.hpp>
@@ -210,6 +211,7 @@ void FlightComponent::OnUpdate(float deltaTime) {
     this->physxOwned = this->active && GetFlightSettingsBool(rtti, "physxFlightPhysics", true);
     this->UpdateDepenetration();
     this->UpdateThrusterContacts();
+    ScrapeEffects::Update(this, vehicle, deltaTime);
     this->groundFriction = GetFlightSettingsFloat(rtti, "groundFriction", 0.1f);
     if (this->physxOwned) {
       // applied straight to the PhysX body in the PushToPhysX hook

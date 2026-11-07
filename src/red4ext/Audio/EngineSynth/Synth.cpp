@@ -227,6 +227,8 @@ void Synth::Control() {
   ease(now.damage, target.damage);
   ease(now.inside, target.inside);
   ease(now.scrape, target.scrape);
+  ease(now.scrapeSlide, target.scrapeSlide);
+  now.scrapeSurface = target.scrapeSurface;
   ease(now.water, target.water);
   ease(now.volume, target.volume);
   ease(now.cone, target.cone);
@@ -279,9 +281,16 @@ void Synth::Control() {
   whirlFrequency = kWhirlFundamental * Semitones(kWhirlPitch(speed));
   whirlGain = Db(kDamageLevel(now.damage) + kWhirlVolume + tuning.level[Damage]);
 
-  scrapeGain = Db(kScrapeLevel(now.scrape) + kScrapeSpeedLevel(speed) + kScrapeSend + tuning.level[Scrape]);
-  scrapeRate = (20.0f + 200.0f * now.scrape) * Semitones(kScrapePitch(speed)) / sampleRate;
-  scrapeBand.Set(1650.0f * Semitones(kScrapePitch(speed)), 1.5f, sampleRate);
+  // the surface's sound, its pitch rising with the slide (with the car's speed when no surface is known)
+  const ScrapeProfile &scrape = ScrapeProfileOf(now.scrapeSurface);
+  const float scrapePitch = now.scrapeSurface ? Semitones(kScrapeSlidePitch(now.scrapeSlide)) : Semitones(kScrapePitch(speed));
+  const float scrapeSpeed = now.scrapeSurface ? now.scrapeSlide : speed;
+  scrapeGain = Db(kScrapeLevel(now.scrape) + kScrapeSpeedLevel(scrapeSpeed) + kScrapeSend + scrape.level +
+                  tuning.level[Scrape]);
+  scrapeRate = (scrape.rate + scrape.rateFull * now.scrape) * scrapePitch / sampleRate;
+  scrapeBand.Set(std::min(scrape.band * scrapePitch, 0.45f * sampleRate), scrape.q, sampleRate);
+  scrapeDecay = scrape.decay;
+  scrapeBed = scrape.bed;
 
   masterGain = Db(kInsideLevel(now.inside) + tuning.master) * std::max(0.0f, now.volume);
   waterCutoff = kWaterCutoff(now.water);
@@ -380,9 +389,9 @@ void Synth::Render(float *aOut, uint32_t aFrames, float *aVoices) {
       if (Noise() * 0.5f + 0.5f < scrapeRate) {
         click = 1.0f;
       }
-      click *= 0.995f;
+      click *= scrapeDecay;
       float low, band;
-      scrapeBand.Run(white * click, low, band);
+      scrapeBand.Run(white * (click + scrapeBed), low, band);
       part[Scrape] = scrapeGain * band;
     }
     float sum = 0;

@@ -163,25 +163,6 @@ void CameraListener() {
   }
 }
 
-// the vehicle's total mass and a wheel's damped spring force, through the game's natives
-float TotalMass(const Props &p, vehicle::BaseObject *aVehicle) {
-  float mass = 0.0f;
-  auto func = p.vehicle->GetFunction("GetTotalMass");
-  if (func) {
-    ExecuteFunction(aVehicle, func, &mass);
-  }
-  return mass;
-}
-
-float SpringForce(const Props &p, vehicle::BaseObject *aVehicle, int32_t aWheel) {
-  float force = 0.0f;
-  auto func = p.wheeled->GetFunction("GetDampedSpringForce");
-  if (func && aVehicle->GetType()->IsA(p.wheeled)) {
-    ExecuteFunction(aVehicle, func, &force, aWheel);
-  }
-  return force;
-}
-
 // one Values per component, by its entity
 std::mutex valuesLock;
 std::unordered_map<uint64_t, Inputs::Values> values;
@@ -309,20 +290,33 @@ void Component(FlightComponent *c, float deltaTime) {
   }
 
   // the thrusters
-  float mass = -1.0f;
   for (auto &handle : c->configuration->thrusters) {
     auto thruster = handle.GetPtr();
     if (!thruster || !thruster->attached || !thruster->meshComponent) {
       continue;
     }
     const bool front = Ref<bool>(p.isFront, thruster);
-    const int32_t wheel = Ref<int32_t>(p.wheelIndex, thruster);
-    if (mass < 0.0f) {
-      mass = TotalMass(p, vehicle);
-    }
     Inputs::Values thrusterValues = v;
-    thrusterValues.scrape = Inputs::Scrape(SpringForce(p, vehicle, wheel), mass);
     const auto mesh = WorldMatrix(thruster->meshComponent->worldTransform);
+    // the car's scrapes (Flight::ScrapeTracker): the one that sounds most here, fading out 3 m from the thruster
+    thrusterValues.scrape = 0.0f;
+    {
+      const auto &wt = vehicle->worldTransform;
+      const auto &q = wt.Orientation;
+      const auto origin = wt.Position.AsVector4();
+      for (const Flight::Scrape &s : c->scrapes) {
+        if (!s.active)
+          continue;
+        const Flight::Vec3 o = Flight::Rotate(Flight::Quat{q.i, q.j, q.k, q.r}, s.local);
+        const float dx = origin.X + o.x - mesh.W.X, dy = origin.Y + o.y - mesh.W.Y, dz = origin.Z + o.z - mesh.W.Z;
+        const float closeness = std::max(0.0f, 1.0f - std::sqrt(dx * dx + dy * dy + dz * dz) / 3.0f);
+        if (s.intensity * closeness > thrusterValues.scrape) {
+          thrusterValues.scrape = s.intensity * closeness;
+          thrusterValues.scrapeSurface = static_cast<int>(s.surface);
+          thrusterValues.scrapeSlide = s.slide;
+        }
+      }
+    }
     FlightAudio::UpdateThruster(Ref<CString>(p.id, thruster).c_str(), thrusterValues,
                                 Inputs::ThrusterVolume(front, f.speed), {mesh.W.X, mesh.W.Y, mesh.W.Z},
                                 Inputs::ConeAxes(Axes(mesh)));
