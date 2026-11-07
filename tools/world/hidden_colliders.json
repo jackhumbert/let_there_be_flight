@@ -19,6 +19,25 @@
         108.18
       ],
       "what": "node 215 group 0 (nodeData 326) actor 0: a World Static box 429 x 14 x 46 m, z 62 to 108, between the module rows and the yard south of the badlands"
+    },
+    {
+      "case": "southwest_world_static_86",
+      "sector": "exterior_-12_-13_0_2.streamingsector",
+      "bits": [
+        -382256864,
+        -404835872,
+        6145446
+      ],
+      "preset": "World Static",
+      "bounds": [
+        -2956.06,
+        -3134.51,
+        45.23,
+        -2873.38,
+        -3032.81,
+        88.3
+      ],
+      "what": "node 31 group 35 (nodeData 2430) actor 0: a World Static box 118 x 12.4 x 40 m, z 45 to 85.2 (north-east end) and 88.3 (south-west end), along a protein farm row whose drawn meshes end at z 72. Bounds check fails: 1,214 other World Static triangles of the farm (z 53 to 69) lie inside these bounds, so the bake's preset and bounds rule would drop them too"
     }
   ]
 }
