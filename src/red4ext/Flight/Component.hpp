@@ -129,6 +129,10 @@ public:
   // the chassis body (physx::PxRigidDynamic) whose depenetration speed flight capped, and its own (UpdateDepenetration)
   void *depenetrationBody = nullptr;
   float depenetrationOwn = 0.0f;
+  // flight has turned the thruster spheres' simulation off (UpdateThrusterContacts); their contact and rest offsets
+  // have been logged once
+  bool thrusterContactsOff = false;
+  bool thrusterOffsetsLogged = false;
   // angular velocity (world) the world gave the vehicle through contacts, decaying; flight
   // damping ignores it so collisions tumble physically while inputs stay damped
   RED4ext::Vector3 contactSpin{0.0f, 0.0f, 0.0f};
@@ -154,6 +158,11 @@ public:
   // While flight owns the chassis body (physxOwned), its depenetration speed is capped at the developer setting
   // maxDepenetration (0: left as PhysX has it); its own is put back when flight lets go or the body changes.
   void UpdateDepenetration();
+
+  // While flight owns the chassis body, LTBF's thruster spheres (FlightConfiguration::AddColliders) take no contacts
+  // when the developer setting thrusterContacts is off, as the game's wheels take none: they are queries under
+  // springs. They are back on when flight lets go. Logs every chassis shape's contact and rest offset once.
+  void UpdateThrusterContacts();
 
   // the body's world inertia tensor as PhysX-owned flight applies the flight torque with it (copied
   // each frame in Physics/ChassisContacts.cpp PushToPhysX)

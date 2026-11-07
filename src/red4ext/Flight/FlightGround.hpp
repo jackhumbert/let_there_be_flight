@@ -15,8 +15,10 @@
 namespace FlightGroundNative {
 
 // The ground under aComponent (a FlightComponent); not found when a field or an engine function is missing (warned
-// once) or any ray misses. aEmitters, when given, gets the four wheel emitters' mean position (world), the rays' start.
-Flight::Ground Find(RED4ext::IScriptable *aComponent, float aMaxHoverHeight, Flight::Vec3 *aEmitters = nullptr);
+// once) or any ray misses. aEmitters, when given, gets the four wheel emitters' mean position (world), the rays' start;
+// aHits each ray, its emitter and its hit (world: front left, front right, back left, back right).
+Flight::Ground Find(RED4ext::IScriptable *aComponent, float aMaxHoverHeight, Flight::Vec3 *aEmitters = nullptr,
+                    Flight::Hit *aHits = nullptr);
 
 } // namespace FlightGroundNative
 

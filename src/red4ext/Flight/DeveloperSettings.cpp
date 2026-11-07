@@ -30,6 +30,10 @@ const Entry kEntries[] = {
     {"wwiseAudio", &DeveloperSettings::wwiseAudio, nullptr, 0.0f, 0.0f},
     {"maxDepenetration", nullptr, &DeveloperSettings::maxDepenetration, 0.0f, 100.0f},
     {"droneSkid", nullptr, &DeveloperSettings::droneSkid, 0.0f, 0.5f},
+    {"thrusterContacts", &DeveloperSettings::thrusterContacts, nullptr, 0.0f, 0.0f},
+    {"thrusterRadius", nullptr, &DeveloperSettings::thrusterRadius, 0.05f, 1.0f},
+    {"thrusterOpenBottom", nullptr, &DeveloperSettings::thrusterOpenBottom, 0.0f, 0.4f},
+    {"droneSkidPerThruster", &DeveloperSettings::droneSkidPerThruster, nullptr, 0.0f, 0.0f},
 };
 
 const Entry *Find(const std::string &aName) {

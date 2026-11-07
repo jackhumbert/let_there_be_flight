@@ -28,12 +28,14 @@ void Store(const RED4ext::Handle<FlightPID> &aPid, const Flight::Pid &aValue) {
     aPid->SetState(aValue.state);
 }
 
-// Drone's skid (Flight::DroneSkid) for the car of aComponent, as a body-frame acceleration: the car's clearance is the
-// ground's distance under the wheel emitters (their rays' mean) less the emitters' height over its lowest point (the
-// configuration's, in the vehicle's frame: the chassis shape's, or LTBF's thruster spheres', which the car rests on).
-// The shortest ray in place of the mean made the car bob 0.6 to 1.5 m at 40 km/h (2026-11-06). Nothing before the
-// chassis shape is measured, or without ground.
-Flight::Vec3 Skid(const Flight::StatsState &aState, float aLift, FlightComponent *aComponent) {
+// Drone's skid for the car of aComponent, as a body-frame force and mode torque. A clearance is a ray's distance to
+// the ground less its wheel emitter's height over the car's lowest point (the configuration's, in the vehicle's frame:
+// the chassis shape's, or LTBF's thruster spheres', which the car rests on). By default each emitter, where a thruster
+// is, is a skid point of its own (Flight::DroneSkidPoints); with droneSkidPerThruster off, the rays' mean holds the car
+// once through its centre of mass (Flight::DroneSkid). Holding the shortest ray instead of the mean made the car bob
+// 0.6 to 1.5 m at 40 km/h. Nothing before the chassis shape is measured, or without ground.
+Flight::ModeOutput Skid(const Flight::StatsState &aState, const Flight::StatsStatic &aStatic, float aLift,
+                        FlightComponent *aComponent) {
   const float clearance = Flight::Developer().droneSkid;
   if (clearance <= 0.0f || !aComponent || !aComponent->configuration || !aComponent->configuration->dragAreaMeasured)
     return {};
@@ -42,19 +44,40 @@ Flight::Vec3 Skid(const Flight::StatsState &aState, float aLift, FlightComponent
     return {};
   const float maxHover = GetFlightSettingsFloat(RED4ext::CRTTISystem::Get(), "hoverModeMaxHoverHeight", 7.0f);
   Flight::Vec3 emitters;
-  const Flight::Ground g = FlightGroundNative::Find(aComponent, maxHover, &emitters);
+  Flight::Hit hits[4];
+  const Flight::Ground g = FlightGroundNative::Find(aComponent, maxHover, &emitters, hits);
   if (!g.found)
     return {};
   const auto origin = vehicle->worldTransform.Position.AsVector4();
   const auto &o = vehicle->worldTransform.Orientation;
   const Flight::Vec3 up = Flight::Rotate(Flight::Quat{o.i, o.j, o.k, o.r}, {0.0f, 0.0f, 1.0f});
-  const float emittersOverBottom =
-      Flight::Dot(Flight::Sub(emitters, {origin.X, origin.Y, origin.Z}), up) -
-      std::min(aComponent->configuration->chassisBottom, aComponent->configuration->colliderBottom);
+  const Flight::Vec3 o3{origin.X, origin.Y, origin.Z};
+  const float bottom = std::min(aComponent->configuration->chassisBottom, aComponent->configuration->colliderBottom);
   Flight::DroneSkidParams k;
   k.clearance = clearance;
-  const float a = Flight::DroneSkid(g.distance - emittersOverBottom, aState.d_velocity.z, aState.d_up.z, aLift, k);
-  return Flight::Rotate(Flight::Conjugate(aState.d_orientation), {0.0f, 0.0f, a});
+  Flight::ModeOutput out;
+  static RED4ext::CProperty *tensorField = [] {
+    auto component = RED4ext::CRTTISystem::Get()->GetClass("FlightComponent");
+    return component ? component->GetProperty("thrusterTensor") : nullptr;
+  }();
+  if (Flight::Developer().droneSkidPerThruster && tensorField) {
+    const Flight::Quat toBody = Flight::Conjugate(aState.d_orientation);
+    Flight::SkidPoint points[4];
+    for (int i = 0; i < 4; ++i) {
+      const float overBottom = Flight::Dot(Flight::Sub(hits[i].tire, o3), up) - bottom;
+      points[i].offset = Flight::Rotate(toBody, Flight::Sub(hits[i].tire, aState.d_position));
+      points[i].clearance = Flight::Length(Flight::Sub(hits[i].position, hits[i].tire)) - overBottom;
+      points[i].normal = Flight::Normalize(hits[i].normal);
+    }
+    const auto &t = *tensorField->GetValuePtr<RED4ext::Vector4>(aComponent);
+    return Flight::DroneSkidPoints(points, 4, aState, aStatic, Flight::TorqueResponse(aStatic, {t.X, t.Y, t.Z}), aLift,
+                                   k);
+  }
+  const float emittersOverBottom = Flight::Dot(Flight::Sub(emitters, o3), up) - bottom;
+  const float a = Flight::DroneSkid(g.distance - emittersOverBottom, Flight::ClosingSpeed(aState.d_velocity, g.normal),
+                                    aState.d_up.z, aLift, k);
+  out.force = Flight::Rotate(Flight::Conjugate(aState.d_orientation), {0.0f, 0.0f, a});
+  return out;
 }
 } // namespace
 
@@ -211,7 +234,10 @@ void FlightModeControl::Drone(RED4ext::Handle<FlightStats> aStats, RED4ext::Hand
   p.brakeFactorLinear = brakeFactorLinear;
   p.brakeFactorAngular = brakeFactorAngular;
   Flight::ModeOutput out = Flight::Drone(aStats->State(), aStats->Static(), Controls(), p);
-  out.force = Flight::Add(out.force, Skid(aStats->State(), lift, static_cast<FlightComponent *>(aComponent.GetPtr())));
+  const Flight::ModeOutput skid =
+      Skid(aStats->State(), aStats->Static(), lift, static_cast<FlightComponent *>(aComponent.GetPtr()));
+  out.force = Flight::Add(out.force, skid.force);
+  out.torque = Flight::Add(out.torque, skid.torque);
   SetOutput(out);
 }
 

@@ -73,6 +73,37 @@ float DroneSkid(float aClearance, float aVerticalSpeed, float aBodyUpZ, float aL
   return std::fmin(std::fmax(a, 0.0f), k.maxAccel) * hold;
 }
 
+float ClosingSpeed(Vec3 aVelocity, Vec3 aGroundNormal) {
+  return aGroundNormal.z > 0.1f ? Dot(aVelocity, aGroundNormal) / aGroundNormal.z : aVelocity.z;
+}
+
+ModeOutput DroneSkidPoints(const SkidPoint *aPoints, int aCount, const StatsState &s, const StatsStatic &st,
+                           Vec3 aResponse, float aLift, const DroneSkidParams &k) {
+  ModeOutput out;
+  if (aCount <= 0)
+    return out;
+  const Quat toBody = Conjugate(s.d_orientation);
+  const Vec3 up = Rotate(toBody, kUp); // world up in the body frame
+  const float share = 1.0f / static_cast<float>(aCount);
+  float lift = 0.0f;
+  Vec3 moment; // the points' moment about the centre of mass per unit of the car's mass (body frame)
+  for (int i = 0; i < aCount; ++i) {
+    const Vec3 r = aPoints[i].offset;
+    const Vec3 pointVelocity = Add(s.d_velocity, Rotate(s.d_orientation, Cross(s.d_angularVelocity, r)));
+    const float a =
+        DroneSkid(aPoints[i].clearance, ClosingSpeed(pointVelocity, aPoints[i].normal), s.d_up.z, aLift, k) * share;
+    lift += a;
+    moment = Add(moment, Cross(r, Mul(up, a)));
+  }
+  out.force = Mul(up, lift);
+  auto axis = [&](float m, float inertia, float response) {
+    return inertia > 0.0f && response > 0.0f ? k.turn * st.mass * m / inertia / response : 0.0f;
+  };
+  out.torque = {axis(moment.x, st.momentOfInertia.x, aResponse.x), axis(moment.y, st.momentOfInertia.y, aResponse.y),
+                axis(moment.z, st.momentOfInertia.z, aResponse.z)};
+  return out;
+}
+
 namespace {
 // The weight HoverFly and Automatic compute: 1 at minHoverHeight, 0 at maxHoverHeight, 0 without ground.
 float HoverWeight(const Ground &g, const StandardParams &p) {

@@ -4,6 +4,8 @@
 
 #include "Flight/Modes.hpp"
 
+#include <array>
+
 using namespace Flight;
 
 namespace {
@@ -891,4 +893,42 @@ TEST(modes_drone_skid) {
   CHECK(DroneSkid(-0.5f, -10.0f, 1.0f, 0.0f, k) <= k.maxAccel + kTol);
   // half lift down, half the hold
   CHECK_NEAR(DroneSkid(k.clearance, 0.0f, 1.0f, -0.5f, k), 0.5f * kGravity, kLoose);
+}
+
+TEST(modes_drone_skid_points) {
+  // four corners at one clearance: DroneSkid's lift through the centre, no torque; a corner lower than the others
+  // pushes harder and turns the car off it (front low: nose up, +X; left low: left up, +Y)
+  const DroneSkidParams k;
+  StatsState s;
+  s.d_orientation = {0, 0, 0, 1};
+  s.d_up = {0, 0, 1};
+  StatsStatic st;
+  st.mass = 1600;
+  st.momentOfInertia = {2551, 817, 2896};
+  const Vec3 response{1, 1, 1};
+  auto corners = [](float fl, float fr, float bl, float br) {
+    return std::array<SkidPoint, 4>{SkidPoint{{-1.1f, 1.7f, 0}, fl}, SkidPoint{{1.1f, 1.7f, 0}, fr},
+                                    SkidPoint{{-1.1f, -1.7f, 0}, bl}, SkidPoint{{1.1f, -1.7f, 0}, br}};
+  };
+  const auto even = corners(0.05f, 0.05f, 0.05f, 0.05f);
+  ModeOutput out = DroneSkidPoints(even.data(), 4, s, st, response, 0.0f, k);
+  CHECK_NEAR(out.force.z, DroneSkid(0.05f, 0.0f, 1.0f, 0.0f, k), kLoose);
+  CHECK_NEAR(Length(out.torque), 0.0f, kLoose);
+  const auto front = corners(0.0f, 0.0f, 0.05f, 0.05f);
+  out = DroneSkidPoints(front.data(), 4, s, st, response, 0.0f, k);
+  CHECK(out.torque.x > 0.0f);
+  CHECK_NEAR(out.torque.y, 0.0f, kLoose);
+  const auto left = corners(0.0f, 0.05f, 0.0f, 0.05f);
+  out = DroneSkidPoints(left.data(), 4, s, st, response, 0.0f, k);
+  CHECK(out.torque.y > 0.0f);
+  CHECK_NEAR(out.torque.x, 0.0f, kLoose);
+  // a corner rising (the car pitching nose up) is damped there: less push at the front than at rest
+  StatsState pitching = s;
+  pitching.d_angularVelocity = {1.0f, 0, 0};
+  out = DroneSkidPoints(even.data(), 4, pitching, st, response, 0.0f, k);
+  CHECK(out.torque.x < 0.0f);
+  // none at all with lift down held or above the band
+  CHECK_NEAR(Length(DroneSkidPoints(front.data(), 4, s, st, response, -1.0f, k).force), 0.0f, kTol);
+  const auto high = corners(0.5f, 0.5f, 0.5f, 0.5f);
+  CHECK_NEAR(Length(DroneSkidPoints(high.data(), 4, s, st, response, 0.0f, k).force), 0.0f, kTol);
 }

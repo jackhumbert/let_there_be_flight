@@ -32,14 +32,25 @@ struct DeveloperSettings {
   // LTBF's sound through the game's Wwise (Audio/Out, docs/design/wwise-audio.md), the default since step 7; false for
   // its own FMOD as before. Read once, when the plugin loads (developer.ini). FMOD plays when Wwise cannot start.
   bool wwiseAudio = true;
-  // Ground contacts in flight (docs/history.md, 2026-11-06): where two road meshes meet flush PhysX still pushes at the
-  // joint and throws a car sliding over it. maxDepenetration: m/s the chassis body is pushed out of the ground at
-  // most while flight owns it (PxRigidBody::setMaxDepenetrationVelocity; 0 leaves PhysX's own, unbounded). droneSkid:
-  // m Drone holds the chassis off the ground just over it (Flight::DroneSkid; 0 lets it rest on the ground). The cap is
-  // off by default: in game it took Drone's launches over joints from 7.6 to 5.2 a slide, the skid alone to 2.8, and
-  // the two together to 3.4; with it on, one car placed on a road did not stay on it (not looked into).
+  // Ground contacts in flight (docs/history.md, 2026-11-06): where two road meshes meet flush PhysX pushes a shape
+  // sliding over the joint and throws the car. maxDepenetration: m/s the chassis body is pushed out of the ground at
+  // most while flight owns it (PxRigidBody::setMaxDepenetrationVelocity; 0 leaves PhysX's own, unbounded; off: with
+  // it on, one car placed on a road did not stay on it). droneSkid: m Drone holds the car's lowest point off the
+  // ground just over it (0 lets it rest on the ground); droneSkidPerThruster: at each thruster from its own ray
+  // (Flight::DroneSkidPoints, which levels the car), false once through the centre of mass from the rays' mean
+  // (Flight::DroneSkid, which left cars resting tilted).
   float maxDepenetration = 0.0f;
   float droneSkid = 0.03f;
+  bool droneSkidPerThruster = true;
+  // The thrusters' colliders (FlightConfiguration::AddColliders), taken when flight comes on. thrusterOpenBottom: m;
+  // over 0, a box over each pod's sides and top (the pods drawn, engine_corpo.mesh), open this far up from the pod's
+  // bottom, so the road under it is not touched while walls and kerbs are; 0, a sphere of thrusterRadius m (0.4 hangs
+  // 15 to 17 cm under the pods drawn). A sphere sliding over a road joint was thrown, a box open at the bottom was not
+  // (in game and in flightsim on the game's PhysX). thrusterContacts off: the thruster colliders take no contacts while
+  // flight owns the chassis body (FlightComponent::UpdateThrusterContacts), the chassis alone touches.
+  float thrusterOpenBottom = 0.15f;
+  float thrusterRadius = 0.4f;
+  bool thrusterContacts = true;
   // The Autopilot's tuning (Navigation::AutopilotParams) by field name, set as "autopilot.<name>" (a Bool as
   // true/false/1/0/on/off, an Int32 rounded), in the order set, a name set again keeping its place. Each
   // FlightModeAutopilot writes them over its tuning when it is set up, when it is engaged and when

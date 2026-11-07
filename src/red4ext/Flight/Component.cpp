@@ -4,6 +4,7 @@
 #include "Flight/FlightStats.hpp"
 
 #include "Flight/DeveloperSettings.hpp"
+#include "FlightConfiguration.hpp"
 
 #include <PhysX3.hpp>
 #include <RED4ext/Scripting/Natives/physicsPhysicalSystemProxy.hpp>
@@ -208,6 +209,7 @@ void FlightComponent::OnUpdate(float deltaTime) {
     }
     this->physxOwned = this->active && GetFlightSettingsBool(rtti, "physxFlightPhysics", true);
     this->UpdateDepenetration();
+    this->UpdateThrusterContacts();
     this->groundFriction = GetFlightSettingsFloat(rtti, "groundFriction", 0.1f);
     if (this->physxOwned) {
       // applied straight to the PhysX body in the PushToPhysX hook
@@ -246,4 +248,35 @@ void FlightComponent::UpdateDepenetration() {
   }
   if (want)
     body->setMaxDepenetrationVelocity(cap); // each frame: the developer setting may have changed
+}
+
+void FlightComponent::UpdateThrusterContacts() {
+  if (!this->chassis || !this->configuration)
+    return;
+  const bool off = this->physxOwned && !Flight::Developer().thrusterContacts;
+  if (off == this->thrusterContactsOff && this->thrusterOffsetsLogged)
+    return;
+  RED4ext::physics::ProxyHelper helper(this->chassis->proxyID, &this->chassis->sharedMutex);
+  auto proxy = (RED4ext::physics::PhysicalSystemProxy *)RED4ext::physics::ProxyID::GetProxy(this->chassis->proxyID);
+  if (!proxy || proxy->bodies.size == 0 || !proxy->bodies.entries[0])
+    return;
+  auto body = (physx::PxRigidDynamic *)proxy->bodies.entries[0];
+  physx::PxShape *shapes[64];
+  const auto count = body->getShapes(shapes, 64, 0);
+  if (!this->thrusterOffsetsLogged) {
+    for (uint32_t i = 0; i < count; ++i)
+      spdlog::info("[FlightComponent] chassis shape {}{}: contact offset {:.3f} m, rest offset {:.3f} m", i,
+                   this->configuration->IsTrackedShape(shapes[i]) ? " (thruster sphere)" : "",
+                   shapes[i]->getContactOffset(), shapes[i]->getRestOffset());
+    this->thrusterOffsetsLogged = true;
+  }
+  if (off == this->thrusterContactsOff)
+    return;
+  helper.mutex->Lock();
+  for (uint32_t i = 0; i < count; ++i)
+    if (this->configuration->IsTrackedShape(shapes[i]))
+      helper.SetSimulationShape(!off, 0, i);
+  helper.UpdateProxyCache();
+  helper.Unlock();
+  this->thrusterContactsOff = off;
 }

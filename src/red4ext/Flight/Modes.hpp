@@ -67,12 +67,37 @@ ModeOutput Drone(const StatsState &s, const StatsStatic &st, const Controls &c, 
 // over joints was thrown up 0.1 to 0.3 m each 10 m (docs/history.md, 2026-11-06). It fades in over band m above the
 // clearance, only lifts (gravity fed forward, so it holds at the clearance), gives way as lift down is held (the car
 // lands), and does nothing past minUp of tilt (body up's world z) or at a clearance of 0.
+// turn: the share of the points' moment DroneSkidPoints turns the car with. The springs at full stiffness turn it at
+// about 12 rad/s, too fast for the body's 30 ms late answer: a roll wobble grew at 40 km/h in flightsim.
 struct DroneSkidParams {
-  float clearance = 0.03f, band = 0.15f, p = 60.0f, d = 12.0f, maxAccel = 2.0f * 9.81f, minUp = 0.8f;
+  float clearance = 0.03f, band = 0.15f, p = 60.0f, d = 12.0f, maxAccel = 2.0f * 9.81f, minUp = 0.8f, turn = 0.25f;
 };
 // The world-up acceleration (m/s2) to add: aClearance is the chassis's lowest point over the ground (m), aVerticalSpeed
-// the body's (world z, m/s), aBodyUpZ its up's world z, aLift the lift control (-1..1).
+// how fast it closes on the ground (ClosingSpeed; m/s, + away), aBodyUpZ its up's world z, aLift the lift control
+// (-1..1).
 float DroneSkid(float aClearance, float aVerticalSpeed, float aBodyUpZ, float aLift, const DroneSkidParams &k);
+
+// A point's vertical speed off the ground under it (m/s, + away): its velocity along the ground's normal, as height.
+// The world's vertical speed alone made the skid sag 0.2 s x the climb rate up a slope (7 cm at 40 km/h on 3.4 %,
+// more than its clearance: the car dragged its thruster spheres up road_grade in flightsim).
+float ClosingSpeed(Vec3 aVelocity, Vec3 aGroundNormal);
+
+// One point the skid holds off the ground: where it is from the centre of mass (body frame, m) and its clearance there
+// (m; the ground under it less its height over the car's lowest point).
+struct SkidPoint {
+  Vec3 offset;
+  float clearance = 0.0f;
+  Vec3 normal{0.0f, 0.0f, 1.0f}; // the ground's under it
+};
+
+// The skid at each of aCount points (the thrusters, where FindGround's rays start) instead of one through the centre of
+// mass: each carries 1 / aCount of the car and pushes up where it is by DroneSkid of its own clearance and its own
+// vertical speed (the body's plus the spin's there). On level ground at an even clearance it is DroneSkid exactly, no
+// torque; a corner nearer the ground pushes harder and turns the car off it, as springs under each corner would.
+// The force is a body-frame acceleration, the torque mode torque (the angular acceleration over TorqueResponse's
+// aResponse, axis by axis).
+ModeOutput DroneSkidPoints(const SkidPoint *aPoints, int aCount, const StatsState &s, const StatsStatic &st,
+                           Vec3 aResponse, float aLift, const DroneSkidParams &k);
 
 // FlightComponent.FindGround as the mode sees it. distance is FlightComponent.distance after the call, the last hit's
 // when nothing was found. normal is zero when nothing was found (the script's unset out parameter).

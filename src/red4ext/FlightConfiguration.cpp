@@ -1,7 +1,10 @@
 #include "FlightConfiguration.hpp"
+#include "Flight/DeveloperSettings.hpp"
 #include <RED4ext/Memory/Allocators.hpp>
 #include <PhysX3.hpp>
 #include <RED4ext/Scripting/Natives/Generated/physics/ColliderSphere.hpp>
+#include <RED4ext/Scripting/Natives/Generated/physics/ColliderBox.hpp>
+#include <algorithm>
 #include <RED4ext/Scripting/Natives/Generated/physics/SimulationFilter.hpp>
 #include <RED4ext/Scripting/Natives/Generated/physics/QueryFilter.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ent/SlotComponent.hpp>
@@ -240,9 +243,22 @@ void IFlightConfiguration::AddColliders() {
     for (auto const &thruster: this->thrusters) {
       if (thruster && thruster->attached) {
         Handle<physics::ICollider> collider;
-        float radius = 0.4;
-        physics::ColliderSphere::createHandleWithRadius(&collider, &radius);
-        // collider.refCount->IncRef();
+        float radius = Flight::Developer().thrusterRadius;
+        // the pod as drawn (engine_corpo.mesh's bounds, about the slot): with thrusterOpenBottom a box over its sides and
+        // top, open that far up from its bottom, so the road under it is not touched while the skid holds the pod's
+        // bottom over it, and walls and kerbs still are; otherwise a sphere of thrusterRadius
+        constexpr float kPodHalfX = 0.33f, kPodHalfY = 0.36f, kPodBottom = -0.245f, kPodTop = 0.245f;
+        const float open = std::clamp(Flight::Developer().thrusterOpenBottom, 0.0f, kPodTop - kPodBottom - 0.05f);
+        float lift = 0.0f, bottom = -radius;
+        if (open > 0.0f) {
+          auto box = reinterpret_cast<physics::ColliderBox *>(rtti->GetClass("physicsColliderBox")->CreateInstance(true));
+          collider = Handle<physics::ICollider>(box);
+          box->halfExtents = Vector3(kPodHalfX, kPodHalfY, (kPodTop - kPodBottom - open) * 0.5f);
+          lift = (kPodTop + kPodBottom + open) * 0.5f;
+          bottom = kPodBottom;
+        } else {
+          physics::ColliderSphere::createHandleWithRadius(&collider, &radius);
+        }
 
         collider->material = "vehicle_chassis.physmat";
 
@@ -250,7 +266,9 @@ void IFlightConfiguration::AddColliders() {
         if (index != -1) {
           slot->GetLocalSlotTransformFromIndex(index, &transform);
           collider->localToBody.position = transform.position - chassis->localTransform.Position.AsVector4();
-          this->colliderBottom = std::min(this->colliderBottom, transform.position.Z - radius);
+          collider->localToBody.position.Z += lift;
+          // the skid holds the pod's bottom as drawn (or the sphere's) over the ground
+          this->colliderBottom = std::min(this->colliderBottom, transform.position.Z + bottom);
           collider->localToBody.orientation = Quaternion(0.0, 0.0, 0.0, 1.0);
             
           auto shape = (physx::PxShape *) collider->CreatePxShape(&unk140, nullptr, 1, nullptr);
