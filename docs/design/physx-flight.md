@@ -62,7 +62,10 @@ contacts and material friction in one place.
 - The wheels' suspension runs but moves nothing. What touches the ground is the chassis collider and LTBF's thruster
   spheres (0.4 m, at the thruster slots where the wheels were, `FlightConfiguration::AddColliders`), which hold a car
   at rest about where its tyres would.
-- Where two of the city's meshes meet flush (roads are 10.4 m pieces end to end) PhysX pushes a car sliding over the
-  joint up: Drone was thrown 0.1 to 0.3 m every joint at 40 km/h. Drone's skid (`Flight::DroneSkid`, developer
-  setting `droneSkid`) holds a car just over the ground 3 cm off it; capping the chassis body's depenetration speed
-  (`maxDepenetration`, `FlightComponent::UpdateDepenetration`) is there, off by default (`docs/history.md`).
+- Where two of the city's meshes meet flush (roads are 10.4 m pieces end to end) PhysX pushes a shape sliding over
+  the joint up: Drone was thrown 0.1 to 0.3 m every joint at 40 km/h. Nothing of the car should slide on the road: the
+  thrusters' colliders are boxes over the pods' sides and top, open 15 cm at the bottom (`thrusterOpenBottom`), and
+  Drone's skid holds the pods' bottom 3 cm over the road at each thruster from its own ray (`Flight::DroneSkidPoints`),
+  as the game's wheels are queries under springs, not shapes on the road. Capping the chassis body's depenetration
+  speed (`maxDepenetration`) and taking the thruster colliders' contacts away (`thrusterContacts`) are there, off by
+  default. flightsim flies it on the game's own PhysX (`flightsim --physx`; `docs/history.md`).
