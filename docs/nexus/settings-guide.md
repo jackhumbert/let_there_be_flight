@@ -188,7 +188,7 @@ rest:
   changed in the XML.
 - **No gamepad stick rebinding.** The sticks are bound in the input XML with no `overridableUI`; inverting pitch,
   roll or yaw still needs an XML edit (lift has Invert Lift).
-- **The menu's order** depends on Mod Settings: today it lists Flight Modes first and the rows inside a category in
-  its own order, not as the tables above have them.
+- **The menu's order** depends on Mod Settings: up to 0.2.28 it lists Flight Modes first and the rows inside a
+  category in its own order; the next Mod Settings release lists them as the tables above have them.
 - **Handling's Loose and Tight** were tuned in the offline simulator over every surveyed vehicle, not yet in game.
 - **Spanish** has no text for the new settings yet.
