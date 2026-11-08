@@ -50,6 +50,7 @@ int Tier(Kind aKind) {
   case Kind::PlayerThruster:
   case Kind::PlayerSample:
   case Kind::Wind:
+  case Kind::PlayerScrape:
     return 0;
   case Kind::PlayerEcho:
     return 1;

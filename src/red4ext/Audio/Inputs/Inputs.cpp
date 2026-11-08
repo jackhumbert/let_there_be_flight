@@ -118,9 +118,6 @@ EngineSynth::Inputs ToSynth(const Values &v, float volume, float water, float co
   in.brake = v.brake;
   in.damage = v.damage;
   in.inside = v.inside;
-  in.scrape = v.scrape;
-  in.scrapeSurface = v.scrapeSurface;
-  in.scrapeSlide = v.scrapeSlide;
   in.volume = volume;
   in.water = water;
   in.cone = cone;

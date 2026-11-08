@@ -26,4 +26,7 @@ Flight::Surface SurfaceOfMaterial(uint64_t aMaterial);
 // ground.
 float FrictionOfMaterial(uint64_t aMaterial);
 
+// A physics material's repeating features (Flight::PeriodOf its name), cached; none for none (0).
+Flight::Period PeriodOfMaterial(uint64_t aMaterial);
+
 } // namespace ScrapeEffects

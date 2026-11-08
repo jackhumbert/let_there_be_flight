@@ -40,6 +40,9 @@ public:
   bool dragAreaMeasured = false;
   // the chassis collision shape's lowest point, z in the vehicle's frame (m), measured with it (Drone's skid)
   float chassisBottom = 0.0f;
+  // the chassis collision shape's extent (m: across, along, up), measured with it (the scrape's chassis resonances);
+  // zero before
+  RED4ext::Vector3 chassisSize = RED4ext::Vector3(0.0f, 0.0f, 0.0f);
   // the lowest point of the thrusters' sphere colliders (AddColliders), z in the vehicle's frame (m): the car rests and
   // slides on them; 1e9 before any is attached
   float colliderBottom = 1e9f;

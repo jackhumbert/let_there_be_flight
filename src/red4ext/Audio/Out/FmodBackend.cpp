@@ -185,8 +185,8 @@ public:
       return false;
     }
     Check(core->getMasterChannelGroup(&master), "getMasterChannelGroup");
-    constexpr const char *kNames[3] = {"Engine", "Wind", "Warning"};
-    for (int i = 0; i < 3; ++i) {
+    constexpr const char *kNames[Buses::kBusCount] = {"Engine", "Wind", "Warning", "Scrape"};
+    for (int i = 0; i < Buses::kBusCount; ++i) {
       Check(core->createChannelGroup(kNames[i], &groups[i]), "createChannelGroup");
       Check(master->addGroup(groups[i]), "addGroup");
     }
@@ -273,7 +273,7 @@ private:
     return dsp;
   }
 
-  FMOD::ChannelGroup *groups[3] = {};
+  FMOD::ChannelGroup *groups[Buses::kBusCount] = {};
   FMOD::DSP *engineLimiter = nullptr, *masterLimiter = nullptr;
   int rate = 48000;
 };

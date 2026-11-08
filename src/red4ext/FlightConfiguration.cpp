@@ -326,9 +326,14 @@ void IFlightConfiguration::MeasureCharacter() {
       const Flight::Vec3 areas = Flight::SilhouetteAreas(pieces);
       const float height = Flight::ShapeHeight(pieces);
       this->chassisBottom = 1e9f;
+      Flight::Vec3 low{1e9f, 1e9f, 1e9f}, high{-1e9f, -1e9f, -1e9f};
       for (const auto &piece : pieces)
-        for (const Flight::Vec3 &v : piece)
+        for (const Flight::Vec3 &v : piece) {
           this->chassisBottom = std::min(this->chassisBottom, v.z);
+          low = {std::min(low.x, v.x), std::min(low.y, v.y), std::min(low.z, v.z)};
+          high = {std::max(high.x, v.x), std::max(high.y, v.y), std::max(high.z, v.z)};
+        }
+      this->chassisSize = Vector3(high.x - low.x, high.y - low.y, high.z - low.z);
       const Flight::Vec3 cda = Flight::DragAreaOf(areas, height, bike);
       this->dragArea = Vector4(cda.x, cda.y, cda.z, 0.0f);
       this->dragAreaMeasured = true;

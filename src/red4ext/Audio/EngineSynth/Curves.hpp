@@ -151,13 +151,13 @@ inline constexpr float kWhirlFundamental = 392.0f;
 inline constexpr float kWhirlVolume = 7.0f;
 
 // Scrape: its level by its intensity (0..1, mostly the press: Flight::ScrapeParams) and by its slide (m/s; the car's
-// speed when no surface is known); they add. The voice itself is some 16 dB quieter at a crawl than at 6 m/s (less
-// texture, fewer impacts), so the slide's curve lifts a crawl rather than lowering it: a skid at rest load is about
-// 5 dB under its 6 m/s level at 1 m/s and 8 dB under at 0.1 m/s, not some 50.
+// speed when no surface is known); they add. The voice itself is some 16 dB quieter at a crawl than at 6 m/s on hard
+// ground (less texture, fewer impacts), so the slide's curve lifts a crawl rather than lowering it: on concrete at a
+// skid's rest load a crawl at 0.1 m/s or a slide at 1 m/s is 2 to 3 dB under its 6 m/s level.
 inline constexpr Curve kScrapeLevel{{0, -60}, {0.1f, -24}, {0.4f, -9}, {1, 0}};
-inline constexpr Curve kScrapeSpeedLevel{{0, 9}, {1, 5}, {3, 1.5f}, {6, 0}};
-// so a scrape at 6 m/s keeps its level
-inline constexpr float kScrapeSend = -7.9f;
+inline constexpr Curve kScrapeSpeedLevel{{0, 15}, {1, 8}, {3, 2.5f}, {6, 0}};
+// the scrape's place in the mix: 9 dB under where it was set against the engine (it sat over it)
+inline constexpr float kScrapeSend = -16.9f;
 // each surface's sound is its ScrapeModel (Scrape.hpp)
 
 // the event's master: the cabin view's level, the water low-pass

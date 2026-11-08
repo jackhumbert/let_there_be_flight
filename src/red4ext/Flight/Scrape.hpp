@@ -13,14 +13,24 @@
 namespace Flight {
 
 // What a surface does under a scraping car: a scratch and sparks (Hard, Metal), sparks without a scratch (Glass),
-// splinters (Wood), dust (Soft).
-enum class Surface : uint8_t { None, Hard, Metal, Glass, Wood, Soft };
+// splinters (Wood), dust and a rut (Soft: dirt, sand, mud), torn turf and a streak of flattened grass (Grass). The
+// engine synth's scrape models are in this order (EngineSynth::ScrapeModelOf).
+enum class Surface : uint8_t { None, Hard, Metal, Glass, Wood, Soft, Grass };
 
 // The surface of a .physmat name the game reports, by prefix. Roads are default_material (and sometimes asphalt);
 // kerbs, rails and street furniture metal_hollow, metal_painted; other cars metal_car_*, plastic_car_*. None for a
 // character or the car's own chassis.
 Surface SurfaceOf(std::string_view aPhysmat);
 const char *SurfaceName(Surface aSurface);
+
+// A surface's repeating features under a scrape, by its .physmat name: their spacing along the slide (m) and how hard
+// each strikes against a grit impact (EngineSynth::ScrapeInputs::period): a grating's bars, a railing's posts, tiles,
+// planks, bricks, a concrete road's slab joints. None (0) for a surface without (asphalt, dirt, the default). The
+// spacings are the usual ones of such things, not read from the world's meshes.
+struct Period {
+  float spacing = 0.0f, strength = 0.0f;
+};
+Period PeriodOf(std::string_view aPhysmat);
 
 // One contact as the game reports it: where on the car (its frame), the surface's normal (world), the slide speed
 // along the surface (m/s), the contact's impulse and the load it puts on the car (its push as a share of the car's
@@ -29,10 +39,13 @@ struct ScrapeContact {
   Vec3 local, normal;
   float slide = 0.0f, impulse = 0.0f, load = 0.0f;
   Surface surface = Surface::None;
+  uint64_t material = 0; // the physics material's CName hash, for the log
 };
 
 struct ScrapeParams {
-  float hold = 0.3f;        // s a scrape is held after its last contact
+  // s a scrape is held after its last contact; a scrape of one contact so far is an impact (a hit on a lamp post),
+  // held impactHold: held as long, a hit rang on as a scrape
+  float hold = 0.3f, impactHold = 0.08f;
   // m/s a contact must slide to scrape (barely moving: a crawl scrapes as surely as a skid); it fades in over fadeIn
   // m/s above that. A slow scrape is no quieter for being slow: the loudness is mostly the press, the slide adding the
   // rest (slowShare of full at a crawl)
@@ -53,13 +66,15 @@ struct Scrape {
   uint32_t id = 0;     // new for each scrape, so an effect can follow it
   Vec3 local, normal;  // where on the car (its frame), the surface's normal (world)
   Surface surface = Surface::None;
+  uint64_t material = 0; // the last contact's physics material (CName hash)
   float slide = 0.0f;      // m/s, the last contact's
   float load = 0.0f;       // the last contacts' load (a share of the car's weight; the most of a frame's)
   float target = 0.0f;     // the intensity the last contact asked for
   float intensity = 0.0f;  // 0..1, smoothed
   float since = 0.0f;      // s since the last contact
   float age = 0.0f;        // s since it began
-  // in contact: from a contact until the game reports its pair lost or the hold runs out (its effects show only then)
+  uint32_t contacts = 0;   // how many contacts it has had (one: an impact so far)
+  // in contact: from a contact until its hold runs out (its effects show only then)
   bool touching = false;
 };
 
@@ -83,9 +98,6 @@ public:
   // Each frame: every scrape's slide is its point's now (SlideAt), not its last contact's, which come in bursts and
   // held the sound's speed while the car slowed or spun.
   void Follow(const Vec3 &aVelocity, const Vec3 &aSpin, const Quat &aOrientation);
-  // The game reported a pair of aSurface lost (the car left it): its scrapes stop touching and fade now, not after
-  // the hold.
-  void Release(Surface aSurface, const ScrapeParams &aParams);
   // Ends the frame: each scrape's intensity moves toward its contact's, held for hold after the last contact, then
   // falls; a scrape faded out ends.
   void Step(float aDt, const ScrapeParams &aParams);
@@ -111,6 +123,7 @@ struct SkidContact {
   float clearance = 0.0f, slide = 0.0f;
   Surface surface = Surface::Hard;
   float load = 0.0f;
+  uint64_t material = 0; // the ray's physics material (CName hash; 0 none)
 };
 
 struct SkidScrapeParams {
@@ -124,6 +137,8 @@ struct SkidScrapeParams {
   float fullSlide = 12.0f;  // m/s
   float fullLoad = 0.5f, lightShare = 0.25f;
   float fadeIn = 0.05f, slowShare = 0.75f;
+  // a thruster outside the skid (TouchLoad): carrying fullLoad sunk sinkForFull m into the ground under touch
+  float sinkForFull = 0.1f;
   float rise = 25.0f, fall = 12.0f;  // 1/s (fall: as ScrapeParams')
   // s a scrape's effects stay after its thruster last touched: they bridge a rough road's short hops, and end over a
   // longer one (shown that long they were left in the air)
@@ -136,6 +151,7 @@ struct SkidScrape {
   bool active = false;
   uint32_t id = 0;  // new for each scrape, so an effect can follow it
   Surface surface = Surface::Hard;
+  uint64_t material = 0; // its ground's physics material (CName hash)
   Vec3 ground, normal;
   float slide = 0.0f;      // m/s along the ground
   float load = 0.0f;       // the share of the car's weight it carries
@@ -162,30 +178,9 @@ private:
   uint32_t nextId = 0x80000000u;
 };
 
-// The car's scrapes heard as one voice (Audio/Inputs/Gather.cpp): played from each thruster near it, every scrape of
-// a skid was four voices from four places at once, which combed. The mix has the loudest's surface and slide, all of
-// them together for its loudness (their power summed, at most 1), and sits where they are, weighted by loudness.
-struct ScrapeMix {
-  bool any = false;
-  Vec3 at;
-  float intensity = 0.0f, slide = 0.0f;
-  Surface surface = Surface::None;
-};
-class ScrapeMixer {
-public:
-  void Add(const Vec3 &aAt, float aIntensity, Surface aSurface, float aSlide);
-  ScrapeMix Result() const;
-
-private:
-  ScrapeMix loudest;
-  Vec3 weighted;
-  float power = 0.0f, weight = 0.0f;
-};
-
-// The emitter (of aCount, world) a sound at aAt plays from: aCurrent, the one it played from last, until another is
-// aMargin m nearer than it (so a scrape between two thrusters does not hop from one to the other), else the nearest;
-// -1 without emitters.
-int ChooseEmitter(const Vec3 &aAt, const Vec3 *aEmitters, int aCount, int aCurrent, float aMargin);
+// A thruster's load where the Drone skid does not carry it (any other mode): from how far it sinks under the touch
+// line into the ground, none at touch, the skid's full load sunk sinkForFull.
+float TouchLoad(float aClearance, const SkidScrapeParams &aParams);
 
 // Which of a trail's three depths (0 light, 1 as drawn, 2 deep; tools/fx/scrape_effects.py's DEPTHS) a scrape lays,
 // by its press (ScrapeFxInputs.press, 0..1): the band it is in, moved only once the press has been past the band's

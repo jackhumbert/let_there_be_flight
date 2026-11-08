@@ -39,7 +39,7 @@ class WwiseVoice;
 
 // what the audio thread reads of the backend
 struct Shared {
-  std::atomic<float> bus[3] = {1.0f, 1.0f, 1.0f};
+  std::atomic<float> bus[Buses::kBusCount] = {1.0f, 1.0f, 1.0f, 1.0f};
   std::atomic<bool> paused{false};
   std::atomic<uint32_t> rate{48000};
 };

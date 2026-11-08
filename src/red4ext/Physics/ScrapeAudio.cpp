@@ -99,7 +99,6 @@ struct ScrapeTally {
   uint32_t contacts = 0, vanilla = 0;
   float maxSpeed = 0, maxImpulse = 0, minZ = 1e9f, maxZ = -1e9f, maxSide = 0, normalUp = 0;
 };
-std::atomic<uint32_t> gLost{0}; // contact pairs reported lost, logged with the tally
 std::mutex gTallyLock;
 std::unordered_map<uint64_t, std::pair<std::string, ScrapeTally>> gTally;
 int64_t gTallyStart = 0;
@@ -131,7 +130,6 @@ void Tally(RED4ext::CName aMaterial, float aSpeed, float aImpulse, const RED4ext
                    e.first, x.contacts, x.vanilla, x.maxSpeed, x.maxImpulse, x.minZ, x.maxZ, x.maxSide,
                    x.normalUp / std::max<uint32_t>(x.contacts, 1));
     }
-    spdlog::info("[ScrapeLog] {} contact pairs lost", gLost.exchange(0));
     gTally.clear();
     gTallyStart = now;
   }
@@ -184,11 +182,8 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1399724886, BaseObject_NotifyContacts
   if (!fc || !fc->active) {
     return;
   }
+  // a pair reported lost: never seen here (the game does not pass them on), so a scrape ends by its hold
   if (contact[kContactState] == kContactLost) {
-    // the car left that surface: its scrapes end now (their sound fades, their effects stop where they are)
-    auto material = *reinterpret_cast<const RED4ext::CName *>(contact + kContactMaterials + 8 * (isFirst ? 1 : 0));
-    fc->scrapes.Release(ScrapeEffects::SurfaceOfMaterial(material.hash), Flight::ScrapeParams{});
-    ++gLost;
     return;
   }
   // per-material ground friction (and a one-time log line per new material)
@@ -219,6 +214,7 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1399724886, BaseObject_NotifyContacts
     // the push as a share of the car's weight: the impulse is over one physics step
     c.load = impulse * self->physicsData->inverseMass / (kGravity * kContactStep);
     c.surface = ScrapeEffects::SurfaceOfMaterial(other.hash);
+    c.material = other.hash;
     fc->scrapes.Add(c, Flight::ScrapeParams{});
   }
   if (!physics || physics->sleepTimer != 1.0f || impulse >= kVanillaImpulseGate) {

@@ -1,7 +1,12 @@
 #include "FlightGround.hpp"
 
+#include "Flight/Component.hpp"
+#include "FlightConfiguration.hpp"
+#include "Physics/ScrapeEffects.hpp"
 #include "Utils/Utils.hpp"
 #include "stdafx.hpp"
+
+#include <RED4ext/Scripting/Natives/vehicleBaseObject.hpp>
 
 #include <RED4ext/RTTISystem.hpp>
 #include <RED4ext/Scripting/Natives/Generated/Matrix.hpp>
@@ -53,6 +58,44 @@ const Calls &Resolve() {
 }
 
 } // namespace
+
+bool FlightGroundNative::Touches(FlightComponent *aComponent, const Flight::StatsState &aState,
+                                 const Flight::Hit (&aHits)[4], Flight::SkidPoint *aPoints) {
+  if (!aComponent || !aComponent->configuration || !aComponent->configuration->dragAreaMeasured)
+    return false;
+  auto vehicle = reinterpret_cast<RED4ext::vehicle::BaseObject *>(aComponent->entity);
+  if (!vehicle)
+    return false;
+  const auto origin = vehicle->worldTransform.Position.AsVector4();
+  const auto &o = vehicle->worldTransform.Orientation;
+  const Flight::Vec3 up = Flight::Rotate(Flight::Quat{o.i, o.j, o.k, o.r}, {0.0f, 0.0f, 1.0f});
+  const Flight::Vec3 o3{origin.X, origin.Y, origin.Z};
+  const float bottom = std::min(aComponent->configuration->chassisBottom, aComponent->configuration->colliderBottom);
+  const Flight::Quat toBody = Flight::Conjugate(aState.d_orientation);
+  for (int i = 0; i < 4; ++i) {
+    const Flight::Hit &h = aHits[i];
+    Flight::SkidPoint p;
+    const float overBottom = Flight::Dot(Flight::Sub(h.tire, o3), up) - bottom;
+    p.offset = Flight::Rotate(toBody, Flight::Sub(h.tire, aState.d_position));
+    p.clearance = h.tire.z - h.position.z - overBottom;
+    p.normal = Flight::Normalize(h.normal);
+    // where the thruster's scrape marks go (Physics/ScrapeEffects.cpp), and how fast it slides along the ground
+    const Flight::Vec3 v = Flight::Add(aState.d_velocity,
+                                       Flight::Rotate(aState.d_orientation, Flight::Cross(aState.d_angularVelocity, p.offset)));
+    const Flight::Vec3 along = Flight::Sub(v, Flight::Mul(p.normal, Flight::Dot(v, p.normal)));
+    // what the ground is, by its ray's material (a hit without one scrapes as hard ground)
+    const Flight::Surface surface = h.material ? ScrapeEffects::SurfaceOfMaterial(h.material) : Flight::Surface::Hard;
+    Flight::SkidContact &c = aComponent->skidContacts[i];
+    const float load = c.load;
+    c = {h.valid, h.position, p.normal, p.clearance, Flight::Length(along), surface};
+    c.load = load;
+    c.material = h.material;
+    if (aPoints)
+      aPoints[i] = p;
+  }
+  aComponent->skidContactsAge = 0.0f;
+  return true;
+}
 
 Flight::Ground FlightGroundNative::Find(RED4ext::IScriptable *aComponent, float aMaxHoverHeight,
                                         Flight::Vec3 *aEmitters, Flight::Hit *aHits) {

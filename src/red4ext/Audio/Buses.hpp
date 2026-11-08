@@ -6,7 +6,10 @@
 
 namespace Buses {
 
-enum class Bus { Engine, Wind, Warning };
+// Scrape: the thrusters' scrapes, at the Engine slider's level but in a group of their own, without the Engine
+// group's limiter (a loud engine ducked the scrape with it)
+enum class Bus { Engine, Wind, Warning, Scrape };
+inline constexpr int kBusCount = 4;
 
 // the Mod Settings sliders (each bus) and the game's own volume (Inputs::GameVolume)
 struct Volumes {

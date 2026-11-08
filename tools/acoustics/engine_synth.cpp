@@ -88,9 +88,6 @@ bool ReadParams(const std::string &aPath, std::vector<Row> &aRows) {
       else if (n == "brake") i.brake = v;
       else if (n == "damage") i.damage = v;
       else if (n == "inside") i.inside = v;
-      else if (n == "scrape") i.scrape = v;
-      else if (n == "scrapeSurface") i.scrapeSurface = int(v);
-      else if (n == "scrapeSlide") i.scrapeSlide = v;
       else if (n == "water") i.water = v;
       else if (n == "cone") i.cone = v;
     }

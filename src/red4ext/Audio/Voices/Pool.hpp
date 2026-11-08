@@ -18,7 +18,7 @@ struct Vec3 {
   float x = 0, y = 0, z = 0;
 };
 
-enum class Kind : uint8_t { PlayerThruster, PlayerSample, Wind, PlayerEcho, NpcThruster, Sample };
+enum class Kind : uint8_t { PlayerThruster, PlayerSample, Wind, PlayerEcho, NpcThruster, Sample, PlayerScrape };
 
 // under Windows Sonic's dynamic object limit
 inline constexpr int kMaxObjects = 16;

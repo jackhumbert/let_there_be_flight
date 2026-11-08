@@ -11,6 +11,7 @@
 #include "Acoustics/Stems.hpp"
 #include "Buses.hpp"
 #include "EngineSynth/Channels.hpp"
+#include "EngineSynth/ScrapeChannels.hpp"
 #include "Inputs/Gather.hpp"
 #include "Inputs/Inputs.hpp"
 #include "Out/Backend.hpp"
@@ -62,6 +63,7 @@ bool FlightAudio::Load(RED4ext::CGameApplication *aApp) {
 bool FlightAudio::Unload(RED4ext::CGameApplication *aApp) {
   // every voice before the backend
   EngineSynth::Channels::StopAll();
+  EngineSynth::ScrapeChannels::StopAll();
   Samples::Unload();
   Wind::Shutdown();
   Acoustics::Detach();
@@ -118,7 +120,7 @@ void FlightAudio::UpdateVolume() {
   const float gameVolume = Inputs::GameVolume(inMenu, dilationHub, dilationMap, dilationRadial,
                                               included ? 100 : volumeMaster, included ? 100 : volumeSfx);
   const Buses::Volumes volumes{gameVolume, setting("engineVolume"), setting("windVolume"), setting("warningVolume")};
-  for (auto bus : {Buses::Bus::Engine, Buses::Bus::Wind, Buses::Bus::Warning}) {
+  for (auto bus : {Buses::Bus::Engine, Buses::Bus::Wind, Buses::Bus::Warning, Buses::Bus::Scrape}) {
     Out::SetBusVolume(bus, Buses::BusVolume(bus, volumes));
   }
   // the backend's frame: FMOD's one update, Wwise's voices started and stopped
@@ -324,10 +326,14 @@ void FlightAudio::StartEngine(RED4ext::CString emitterName, float pitch, uint64_
   spdlog::info("[FlightAudio] Starting the engine synth: {} with pitch: {}", emitterName.c_str(), pitch);
   startPitch[emitterName.c_str()] = pitch;
   EngineSynth::Channels::Start(emitterName.c_str(), pitch, car, player);
+  // the player's thrusters scrape in voices of their own
+  if (player)
+    EngineSynth::ScrapeChannels::Start(emitterName.c_str());
 }
 
 void FlightAudio::StopEngine(RED4ext::CString emitterName) {
   EngineSynth::Channels::Stop(emitterName.c_str());
+  EngineSynth::ScrapeChannels::Stop(emitterName.c_str());
 }
 
 RED4ext::CString FlightAudio::EngineState() {

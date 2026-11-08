@@ -68,26 +68,13 @@ Flight::ModeOutput Skid(const Flight::StatsState &aState, const Flight::StatsSta
     return component ? component->GetProperty("thrusterTensor") : nullptr;
   }();
   if (Flight::Developer().droneSkidPerThruster && tensorField) {
-    const Flight::Quat toBody = Flight::Conjugate(aState.d_orientation);
     Flight::SkidPoint points[4];
-    for (int i = 0; i < 4; ++i) {
-      const float overBottom = Flight::Dot(Flight::Sub(hits[i].tire, o3), up) - bottom;
-      points[i].offset = Flight::Rotate(toBody, Flight::Sub(hits[i].tire, aState.d_position));
-      points[i].clearance = hits[i].tire.z - hits[i].position.z - overBottom;
-      points[i].normal = Flight::Normalize(hits[i].normal);
-      // where the thruster's scrape marks go (Physics/ScrapeEffects.cpp), and how fast it slides along the ground
-      const Flight::Vec3 v = Flight::Add(
-          aState.d_velocity, Flight::Rotate(aState.d_orientation, Flight::Cross(aState.d_angularVelocity, points[i].offset)));
-      const Flight::Vec3 along = Flight::Sub(v, Flight::Mul(points[i].normal, Flight::Dot(v, points[i].normal)));
-      // what the ground is, by its ray's material (a hit without one scrapes as hard ground, as before)
-      const Flight::Surface surface =
-          hits[i].material ? ScrapeEffects::SurfaceOfMaterial(hits[i].material) : Flight::Surface::Hard;
-      aComponent->skidContacts[i] = {hits[i].valid, hits[i].position, points[i].normal, points[i].clearance,
-                                     Flight::Length(along), surface};
-      // the ground's grip on it: Ground Friction times the material's (as the chassis's against PhysX contacts)
+    if (!FlightGroundNative::Touches(aComponent, aState, hits, points))
+      return {};
+    // the ground's grip on each: Ground Friction times the material's (as the chassis's against PhysX contacts)
+    for (int i = 0; i < 4; ++i)
       points[i].friction = aComponent->groundFriction * ScrapeEffects::FrictionOfMaterial(hits[i].material);
-    }
-    aComponent->skidContactsAge = 0.0f;
+    aComponent->skidRanAge = 0.0f;
     static bool frictionLogged = false;
     if (!frictionLogged && points[0].friction > 0.0f) {
       frictionLogged = true;

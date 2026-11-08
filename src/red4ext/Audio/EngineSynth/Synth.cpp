@@ -176,9 +176,8 @@ float Synth::Biquad::Run(float x) {
 }
 
 Synth::Synth(float aSampleRate, float aPitch, uint32_t aSeed, const Tuning &aTuning)
-    : sampleRate(aSampleRate), carPitch(aPitch), tuning(aTuning), rng(aSeed * 2654435761u + 12345u), scrape(aSeed) {
+    : sampleRate(aSampleRate), carPitch(aPitch), tuning(aTuning), rng(aSeed * 2654435761u + 12345u) {
   rng = rng ? rng : 1;
-  scrape.Prepare(sampleRate);
   detune = tuning.spread * (2.0f * (float(Noise() * 0.5f + 0.5f)) - 1.0f);
   smooth = 1.0f - std::exp(-float(kControlSamples) / (kSmoothSeconds * sampleRate));
   // the event's pitch moves everything in it, its EQs too
@@ -227,9 +226,6 @@ void Synth::Control() {
   ease(now.brake, target.brake);
   ease(now.damage, target.damage);
   ease(now.inside, target.inside);
-  ease(now.scrape, target.scrape);
-  ease(now.scrapeSlide, target.scrapeSlide);
-  now.scrapeSurface = target.scrapeSurface;
   ease(now.water, target.water);
   ease(now.volume, target.volume);
   ease(now.cone, target.cone);
@@ -281,13 +277,6 @@ void Synth::Control() {
 
   whirlFrequency = kWhirlFundamental * Semitones(kWhirlPitch(speed));
   whirlGain = Db(kDamageLevel(now.damage) + kWhirlVolume + tuning.level[Damage]);
-
-  // the surface's sound, driven by the slide (by the car's speed when no surface is known)
-  const float scrapeSpeed = now.scrapeSurface ? now.scrapeSlide : speed;
-  scrapeGain = now.scrape > 0.001f ? Db(kScrapeLevel(now.scrape) + kScrapeSpeedLevel(scrapeSpeed) + kScrapeSend +
-                                        ScrapeModelOf(now.scrapeSurface).level + tuning.level[Scrape])
-                                   : 0.0f;
-  scrape.Set(now.scrapeSurface, scrapeSpeed, now.scrape);
 
   masterGain = Db(kInsideLevel(now.inside) + tuning.master) * std::max(0.0f, now.volume);
   waterCutoff = kWaterCutoff(now.water);
@@ -380,9 +369,6 @@ void Synth::Render(float *aOut, uint32_t aFrames, float *aVoices) {
       whirlPhase -= std::floor(whirlPhase);
       const double w = 2.0 * std::numbers::pi * whirlPhase;
       part[Damage] = whirlGain * float(0.6 * std::sin(w) + 0.3 * std::sin(2 * w) + 0.1 * std::sin(3 * w));
-    }
-    if (scrapeGain > 1e-5f) {
-      part[Scrape] = scrapeGain * scrape.Next();
     }
     float sum = 0;
     for (int v = 0; v < kVoices; ++v) {

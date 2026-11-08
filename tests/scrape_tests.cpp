@@ -39,6 +39,8 @@ TEST(scrape_surfaces) {
   CHECK(SurfaceOf("glass.physmat") == Surface::Glass);
   CHECK(SurfaceOf("wood_hollow.physmat") == Surface::Wood);
   CHECK(SurfaceOf("dirt.physmat") == Surface::Soft);
+  CHECK(SurfaceOf("grass.physmat") == Surface::Grass);
+  CHECK(SurfaceOf("mud.physmat") == Surface::Soft);
   CHECK(SurfaceOf("vehicle_chassis.physmat") == Surface::None);
   CHECK(SurfaceOf("character_flesh.physmat") == Surface::None);
   CHECK(SurfaceOf("") == Surface::None);
@@ -273,63 +275,38 @@ TEST(scrape_tracker_keeps_load) {
   CHECK_NEAR(t.Loudest()->load, 0.2f, 1e-6f);
 }
 
-TEST(scrape_released_when_lost) {
-  // the game reports the pair lost: the scrape stops touching at once (its effects end) and fades out within a few
-  // tenths of a second, not after the hold; a scrape of another surface goes on
-  ScrapeTracker t;
+TEST(scrape_impact_short) {
+  // one contact is an impact (a lamp post): it lets go after impactHold and is gone within a few tenths of a second;
+  // a contact renewed is a scrape and held the full hold
   const ScrapeParams p;
-  t.Add(Contact({0, 0, 0}, 6.0f), p);
-  t.Add(Contact({0, 3, 0}, 6.0f, Surface::Metal), p);
-  for (int i = 0; i < 10; ++i)
-    t.Step(kDt, p);
-  t.Release(Surface::Hard, p);
-  const Scrape *hard = nullptr, *metal = nullptr;
-  for (const Scrape &s : t)
-    if (s.active)
-      (s.surface == Surface::Hard ? hard : metal) = &s;
-  CHECK(hard && !hard->touching);
-  CHECK(metal && metal->touching);
-  for (int i = 0; i < 24; ++i)
-    t.Step(kDt, p);
-  int hardLeft = 0;
-  for (const Scrape &s : t)
-    hardLeft += s.active && s.surface == Surface::Hard ? 1 : 0;
-  CHECK(hardLeft == 0);
+  ScrapeTracker hit;
+  hit.Add(Contact({0, 2, 0}, 10.0f, Surface::Metal), p);
+  for (int i = 0; i < int(p.impactHold / kDt) + 2; ++i)
+    hit.Step(kDt, p);
+  CHECK(hit.Loudest() && !hit.Loudest()->touching);
+  for (int i = 0; i < 20; ++i)
+    hit.Step(kDt, p);
+  CHECK(!hit.Loudest());
+  ScrapeTracker scrape;
+  scrape.Add(Contact({0, 2, 0}, 10.0f), p);
+  scrape.Step(kDt, p);
+  scrape.Add(Contact({0, 2, 0}, 10.0f), p);
+  for (int i = 0; i < int(p.impactHold / kDt) + 2; ++i)
+    scrape.Step(kDt, p);
+  CHECK(scrape.Loudest() && scrape.Loudest()->touching);
   // untouched past the hold it stops touching too
-  ScrapeTracker u;
-  u.Add(Contact({0, 0, 0}, 6.0f), p);
   for (int i = 0; i < int(p.hold / kDt) + 2; ++i)
-    u.Step(kDt, p);
-  CHECK(!u.Loudest() || !u.Loudest()->touching);
+    scrape.Step(kDt, p);
+  CHECK(!scrape.Loudest() || !scrape.Loudest()->touching);
 }
 
-TEST(scrape_mix_one_voice) {
-  // two thrusters scraping: one voice, louder than either (their power summed), with the louder one's surface and
-  // slide, sitting between them nearer the louder
-  ScrapeMixer m;
-  m.Add({-1, 2, 0}, 0.6f, Surface::Metal, 9.0f);
-  m.Add({1, 2, 0}, 0.3f, Surface::Hard, 4.0f);
-  const ScrapeMix mix = m.Result();
-  CHECK(mix.any);
-  CHECK_NEAR(mix.intensity, std::sqrt(0.36f + 0.09f), 1e-5f);
-  CHECK(mix.surface == Surface::Metal);
-  CHECK_NEAR(mix.slide, 9.0f, 1e-6f);
-  CHECK_NEAR(mix.at.x, -1.0f / 3.0f, 1e-5f);
-  CHECK(!ScrapeMixer().Result().any);
-  // four loud ones at once are still at most full
-  ScrapeMixer four;
-  for (int i = 0; i < 4; ++i)
-    four.Add({0, 0, 0}, 0.9f, Surface::Hard, 6.0f);
-  CHECK_NEAR(four.Result().intensity, 1.0f, 1e-6f);
-}
-
-TEST(scrape_emitter_holds) {
-  // the voice stays at its thruster until another is half a metre nearer
-  const Vec3 thrusters[4] = {{-1, 2, 0}, {1, 2, 0}, {-1, -2, 0}, {1, -2, 0}};
-  CHECK(ChooseEmitter({0.1f, 2, 0}, thrusters, 4, -1, 0.5f) == 1);
-  CHECK(ChooseEmitter({0.1f, 2, 0}, thrusters, 4, 0, 0.5f) == 0);
-  CHECK(ChooseEmitter({0.4f, 2, 0}, thrusters, 4, 0, 0.5f) == 1);
-  CHECK(ChooseEmitter({0, 0, 0}, thrusters, 0, 0, 0.5f) == -1);
+TEST(scrape_touch_load) {
+  // a thruster outside the skid: no load at the touch line or above it, the full load sunk sinkForFull under it
+  const SkidScrapeParams p;
+  CHECK_NEAR(TouchLoad(p.touch + 0.1f, p), 0.0f, 1e-6f);
+  CHECK_NEAR(TouchLoad(p.touch, p), 0.0f, 1e-6f);
+  CHECK_NEAR(TouchLoad(p.touch - 0.5f * p.sinkForFull, p), 0.5f * p.fullLoad, 1e-5f);
+  CHECK_NEAR(TouchLoad(p.touch - 2.0f * p.sinkForFull, p), p.fullLoad, 1e-6f);
 }
 
 TEST(scrape_trail_depth) {
@@ -355,4 +332,14 @@ TEST(scrape_trail_depth) {
   for (int i = 0; i < 20; ++i)
     d.Step(0.1f, kDt);
   CHECK(d.band == 0);
+}
+
+TEST(scrape_periods) {
+  // a grating's bars, a railing's posts, a concrete road's joints; none on asphalt or dirt
+  CHECK_NEAR(PeriodOf("metal_catwalk.physmat").spacing, 0.04f, 1e-6f);
+  CHECK(PeriodOf("metal_hollow.physmat").spacing > 1.0f);
+  CHECK(PeriodOf("concrete.physmat").spacing > 2.0f);
+  CHECK_NEAR(PeriodOf("asphalt.physmat").spacing, 0.0f, 1e-6f);
+  CHECK_NEAR(PeriodOf("dirt.physmat").spacing, 0.0f, 1e-6f);
+  CHECK_NEAR(PeriodOf("").strength, 0.0f, 1e-6f);
 }

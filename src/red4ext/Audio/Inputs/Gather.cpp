@@ -1,6 +1,8 @@
 #include "Gather.hpp"
 
+#include "Audio/EngineSynth/ScrapeChannels.hpp"
 #include "Audio/FlightAudio.hpp"
+#include "Physics/ScrapeEffects.hpp"
 #include "Flight/Component.hpp"
 #include "Flight/FlightModeAutopilot.hpp"
 #include "Flight/FlightStats.hpp"
@@ -33,9 +35,6 @@ using namespace RED4ext;
 namespace Gather {
 
 namespace {
-// m another thruster must be nearer a car's scrapes than the one they play from before they move to it
-constexpr float kScrapeEmitterMargin = 0.5f;
-
 
 // the script classes' fields, found once
 struct Props {
@@ -300,6 +299,8 @@ void Component(FlightComponent *c, float deltaTime) {
     bool front = false;
     float scrape = 0.0f, scrapeSlide = 0.0f;
     int scrapeSurface = 0;
+    uint64_t scrapeMaterial = 0;
+    Flight::Vec3 scrapeAt;
   };
   Emitter emitters[kMaxThrusters];
   Flight::Vec3 at[kMaxThrusters];
@@ -316,46 +317,54 @@ void Component(FlightComponent *c, float deltaTime) {
     at[count++] = {e.mesh.W.X, e.mesh.W.Y, e.mesh.W.Z};
   }
   // the car's scrapes, the game's contacts (Flight::ScrapeTracker) and the skid's at the thrusters
-  // (Flight::SkidScrapes), as one voice (Flight::ScrapeMixer) from one thruster (Flight::ChooseEmitter): a scrape
-  // heard from each thruster near it, and the skid's four at once, were one sound from emitters a metre or two
-  // apart, which combed and swept as the car moved past the listener
+  // (Flight::SkidScrapes): each sounds from its nearest thruster's scrape voice (ScrapeChannels, the player's car),
+  // placed where it scrapes; a thruster plays the loudest it has
   {
     const auto &wt = vehicle->worldTransform;
     const auto &q = wt.Orientation;
     const auto origin = wt.Position.AsVector4();
-    Flight::ScrapeMixer mixer;
+    auto give = [&](const Flight::Vec3 &aAt, float aIntensity, Flight::Surface aSurface, float aSlide,
+                    uint64_t aMaterial) {
+      const int i = Flight::NearestEmitter(aAt, at, count);
+      if (i >= 0 && aIntensity > emitters[i].scrape) {
+        emitters[i].scrape = aIntensity;
+        emitters[i].scrapeSurface = static_cast<int>(aSurface);
+        emitters[i].scrapeSlide = aSlide;
+        emitters[i].scrapeMaterial = aMaterial;
+        emitters[i].scrapeAt = aAt;
+      }
+    };
     for (const Flight::Scrape &s : c->scrapes) {
       if (!s.active)
         continue;
       const Flight::Vec3 o = Flight::Rotate(Flight::Quat{q.i, q.j, q.k, q.r}, s.local);
-      mixer.Add({origin.X + o.x, origin.Y + o.y, origin.Z + o.z}, s.intensity, s.surface, s.slide);
+      give({origin.X + o.x, origin.Y + o.y, origin.Z + o.z}, s.intensity, s.surface, s.slide, s.material);
     }
     for (const Flight::SkidScrape &s : c->skidScrapes)
       if (s.active)
-        mixer.Add(s.ground, s.intensity, s.surface, s.slide);
-    const Flight::ScrapeMix mix = mixer.Result();
-    static std::mutex ownerLock;
-    static std::unordered_map<uint64_t, int> owners; // the thruster each car's scrape played from last
-    std::lock_guard ownerGuard(ownerLock);
-    auto &owner = owners.try_emplace(entity, -1).first->second;
-    if (mix.any) {
-      owner = Flight::ChooseEmitter(mix.at, at, count, owner, kScrapeEmitterMargin);
-      if (owner >= 0) {
-        emitters[owner].scrape = mix.intensity;
-        emitters[owner].scrapeSurface = static_cast<int>(mix.surface);
-        emitters[owner].scrapeSlide = mix.slide;
-      }
-    }
+        give(s.ground, s.intensity, s.surface, s.slide, s.material);
   }
+  // the car's chassis, for the resonances its scrapes ring
+  EngineSynth::Chassis chassis;
+  if (c->configuration->chassisSize.X > 0.0f)
+    chassis = {c->configuration->chassisSize.X, c->configuration->chassisSize.Y, c->configuration->chassisSize.Z,
+               stats->s_mass};
   for (int i = 0; i < count; ++i) {
     const Emitter &e = emitters[i];
-    Inputs::Values thrusterValues = v;
-    thrusterValues.scrape = e.scrape;
-    thrusterValues.scrapeSurface = e.scrapeSurface;
-    thrusterValues.scrapeSlide = e.scrapeSlide;
-    FlightAudio::UpdateThruster(Ref<CString>(p.id, e.thruster).c_str(), thrusterValues,
-                                Inputs::ThrusterVolume(e.front, f.speed), {e.mesh.W.X, e.mesh.W.Y, e.mesh.W.Z},
+    const std::string id = Ref<CString>(p.id, e.thruster).c_str();
+    FlightAudio::UpdateThruster(id, v, Inputs::ThrusterVolume(e.front, f.speed), {e.mesh.W.X, e.mesh.W.Y, e.mesh.W.Z},
                                 Inputs::ConeAxes(Axes(e.mesh)));
+    EngineSynth::ScrapeInputs scrape;
+    scrape.intensity = e.scrape;
+    scrape.slide = e.scrapeSlide;
+    scrape.surface = e.scrapeSurface;
+    const Flight::Period period = ScrapeEffects::PeriodOfMaterial(e.scrapeMaterial);
+    scrape.period = period.spacing;
+    scrape.periodStrength = period.strength;
+    scrape.inside = v.inside;
+    scrape.chassis = chassis;
+    const Flight::Vec3 where = e.scrape > 0.0f ? e.scrapeAt : at[i];
+    EngineSynth::ScrapeChannels::Update(id, {where.x, where.y, where.z}, scrape);
   }
 }
 

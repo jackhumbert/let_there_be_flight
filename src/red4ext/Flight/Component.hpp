@@ -160,6 +160,9 @@ public:
   // counted by Physics/ScrapeEffects.cpp) and the thrusters' scrapes made from them
   Flight::SkidContact skidContacts[Flight::SkidScrapes::kThrusters];
   float skidContactsAge = 1e9f;
+  // s since the Drone skid last found them (it carries each thruster's load); past a moment the scrapes find the
+  // thrusters' touches themselves (Physics/ScrapeEffects.cpp), in any mode
+  float skidRanAge = 1e9f;
   Flight::SkidScrapes skidScrapes;
 
   RED4ext::Vector4 GetContactSpin() { return RED4ext::Vector4(contactSpin.X, contactSpin.Y, contactSpin.Z, 0.0f); }

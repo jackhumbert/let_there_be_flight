@@ -249,7 +249,6 @@ TEST(inputs_to_synth) {
   CHECK_NEAR(in.brake, 8, 0);
   CHECK_NEAR(in.damage, 9, 0);
   CHECK_NEAR(in.inside, 10, 0);
-  CHECK_NEAR(in.scrape, 11, 0);
   CHECK_NEAR(in.volume, 0.25, 0);
   CHECK_NEAR(in.water, 0.75, 0);
   CHECK_NEAR(in.cone, 120, 0);

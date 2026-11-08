@@ -14,7 +14,6 @@
 //   air          pink noise band-passed, opening with thrust and speed
 //   brake        two bands of hiss, the high one following brake, tremolo faster with speed
 //   damage       a whirl that rises with speed, and the voices' pitch up with damage
-//   scrape       a thruster dragged along a surface (ScrapeVoice), by the scrape's intensity, surface and slide
 //   master       the cabin view's level, the water low-pass, the event's volume; the Engine return
 //                louder when the thruster faces the listener (FMOD's Cone return)
 //
@@ -22,7 +21,6 @@
 // game or FMOD types: the plugin's generator DSP and the offline target (tools/acoustics/engine_synth.cpp)
 // both drive it. One thread.
 
-#include "Scrape.hpp"
 #include "Sources.hpp"
 
 #include <array>
@@ -33,17 +31,14 @@ namespace EngineSynth {
 // FlightAudioUpdate's fields as FMOD gets them, and the event's volume
 struct Inputs {
   float speed = 0, surge = 0, lift = 0, pitch = 0, roll = 0, sway = 0, yaw = 0;
-  float brake = 0, damage = 0, inside = 0, scrape = 0, water = 0;
-  // the scrape's surface (Flight::Surface as a number; 0: none known, the voice as before) and its slide (m/s)
-  int scrapeSurface = 0;
-  float scrapeSlide = 0;
+  float brake = 0, damage = 0, inside = 0, water = 0;
   float cone = 90; // FMOD's Event Cone Angle, degrees: the thruster's facing against the way to the listener
   float volume = 1;
 };
 
-enum Voice { Surge, Lift, Pitch, Roll, Sway, Air, Brake, Damage, Scrape, kVoices };
+enum Voice { Surge, Lift, Pitch, Roll, Sway, Air, Brake, Damage, kVoices };
 inline constexpr const char *kVoiceNames[kVoices] = {"surge", "lift", "pitch", "roll", "sway",
-                                                     "air",   "brake", "damage", "scrape"};
+                                                     "air",   "brake", "damage"};
 
 // The synth's own constants: each voice's level (dB, on top of its curves), set against the FMOD
 // event's output (tools/acoustics/engine_fit.py), and the sound's character.
@@ -74,8 +69,8 @@ struct Tuning {
   Character character;
   // what the axis voices start from (Sources.hpp)
   Sound sound = Sound::Drone;
-  // surge, lift, pitch, roll, sway, air, brake, damage, scrape
-  std::array<float, kVoices> level{1, -1, 3, -3.5f, -1, -30, 10, 0, 0};
+  // surge, lift, pitch, roll, sway, air, brake, damage
+  std::array<float, kVoices> level{1, -1, 3, -3.5f, -1, -30, 10, 0};
   float master = -7.2f;     // dB
   float source = -6.0f;     // dB: the oscillators' level, as the loops' into the chain
   float detune = 0.07f;     // st between the two saws
@@ -150,9 +145,6 @@ private:
   // damage
   double whirlPhase = 0;
   float whirlFrequency = 0, whirlGain = 0;
-  // scrape: a contact's texture, grit, stick-slip and grains ringing the surface's and the thruster pod's resonances
-  ScrapeVoice scrape;
-  float scrapeGain = 0;
   // master
   Svf water;
   float masterGain = 0, waterCutoff = 22000;

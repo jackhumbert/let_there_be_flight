@@ -18,7 +18,7 @@ import sys
 import numpy as np
 from scipy.optimize import nnls
 
-VOICES = ["surge", "lift", "pitch", "roll", "sway", "air", "brake", "damage", "scrape"]
+VOICES = ["surge", "lift", "pitch", "roll", "sway", "air", "brake", "damage"]
 HOP = 0.05
 
 

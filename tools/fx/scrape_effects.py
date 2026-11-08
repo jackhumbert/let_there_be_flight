@@ -12,10 +12,13 @@ for byte). The plugin spawns them per scrape (src/red4ext/Physics/ScrapeEffects.
   at the texture's alpha (the shader in the game's cache), so the texture's brightness sets how light the mark can be;
   its normal map is tangent space in R and G, scaled by NormalStrength and written with the same alpha.
 - scrape_trail_metal: the same, drawn from scrape_trail_metal_d.xbm: the gouges with a wide dark scuff along each, so
-  they show on a light metal plate. scrape_trail_soft: the hard trail tinted to a dark furrow of turned earth.
+  they show on a light metal plate.
 - scrape_sparks_hard, scrape_sparks_metal, scrape_sparks_glass: the vanilla scratch sparks, every emitter's birth rate
   scaled (metal the most, and hotter).
 - scrape_dust_soft: the vanilla concrete scratch with its sparks off and its dust tan, thicker and more of it.
+- scrape_trail_soft: a rut, not a gouge (scrape_rut_d.xbm, scrape_rut_n.xbm): a trough of damp earth with berms of
+  turned soil either side. scrape_trail_grass: a streak of flattened turf torn to earth now and then
+  (scrape_grass_d.xbm). scrape_turf_grass: the game's tyre spray on grass, driven by the scrape (tyre()).
 - The sparks and the dust take the scrape's inputs (INPUTS, driven()): their emission scales with its force, their
   velocity and size follow its speed and press. The trails come in three depths each (DEPTHS: _light, as named,
   _deep), picked by its press: a parameter on a trail changed the whole line already laid.
@@ -48,6 +51,10 @@ NORMAL_TEMPLATE = "base\\fx\\_textures\\decals\\impact_holes\\fx_bullet_hole_con
 SCRATCH_TEX = "user\\jackhumbert\\effects\\scrape_trail_d"
 SCRATCH_METAL_TEX = "user\\jackhumbert\\effects\\scrape_trail_metal_d"
 SCRATCH_NORMAL = "user\\jackhumbert\\effects\\scrape_trail_n"
+SOFT_TEX = "user\\jackhumbert\\effects\\scrape_rut_d"
+SOFT_NORMAL = "user\\jackhumbert\\effects\\scrape_rut_n"
+GRASS_TEX = "user\\jackhumbert\\effects\\scrape_grass_d"
+GRASS_TYRE = "base\\fx\\vehicles\\_wheels\\_surface_fx\\grass\\v_tire_grass_m_01"
 TRAIL_MATERIAL = "base\\materials\\trail_decal_normal_color.mt"
 
 
@@ -113,12 +120,115 @@ def draw_scratch(path, normal_path=None, seed=7, rim=(165, 1.15, 0.35, 0.7), fil
     Image.fromarray(n.clip(0, 255).astype("uint8"), "RGBA").save(normal_path)
 
 
+def tiling_noise_2d(rng, half, size, terms):
+    """Noise over a frame (half rows across the trail, size columns along it) that tiles along U: a sum of waves, each
+    a whole number of times along U. terms: (along, across, amplitude) per wave, along an int, across in cycles."""
+    import numpy as np
+    u = np.arange(size)[None, :] / size
+    v = np.arange(half)[:, None] / half
+    out = np.zeros((half, size))
+    for along, across, amp in terms:
+        out += amp * np.sin(2 * np.pi * (along * u + across * v + rng.random()))
+    return out / max(1e-6, sum(abs(a) for _, _, a in terms))
+
+
+def normals_from(height, path, gain=2.5):
+    """A height field's slopes as a tangent-space normal map in R (along U) and G (along V); flat is 128."""
+    import numpy as np
+    from PIL import Image
+    size = height.shape[0]
+    dv, du = np.gradient(height)
+    nx, ny = -du * gain, -dv * gain
+    length = np.maximum(1.0, np.hypot(nx, ny) / 0.9)
+    nx, ny = nx / length, ny / length
+    n = np.dstack([128 + 127 * nx, 128 + 127 * ny, np.zeros((size, size)), np.full((size, size), 255.0)])
+    Image.fromarray(n.clip(0, 255).astype("uint8"), "RGBA").save(path)
+
+
+def draw_rut(path, normal_path, seed=11):
+    """Soft ground (dirt, sand, mud): a pod dragged through it ploughs a rut, not a gouge. A broad trough of dark,
+    damp turned earth with soft edges, and a berm of drier, lighter soil thrown up along each side, broken into clods;
+    every part tiles along U. Its height field (trough down, berms up, clods) is the normal map. The skid mark's 1x2
+    layout, as draw_scratch."""
+    import numpy as np
+    from PIL import Image
+
+    rng = np.random.default_rng(seed)
+    size, half = 512, 256
+    rgb = np.zeros((size, size, 3))
+    alpha = np.zeros((size, size))
+    height = np.zeros((size, size))
+    v = np.arange(half)[:, None] / half
+    for frame in range(2):
+        wander = 0.02 * tiling_noise_2d(rng, 1, size, [(1, 0, 1), (2, 0, 0.5), (3, 0, 0.3)])
+        off = np.abs(v - 0.5 - wander)
+        grain = tiling_noise_2d(rng, half, size, [(f, rng.uniform(4, 30), 1 / (1 + i)) for i, f in
+                                                 enumerate((3, 5, 8, 13, 21, 34))])
+        # lumps at every angle (few waves made diagonal ticks)
+        clods = np.clip(tiling_noise_2d(rng, half, size, [(int(rng.integers(6, 30)), rng.uniform(-24, 24), 1.0)
+                                                         for _ in range(14)]) * 2.4 - 0.25, 0, 1)
+        trough = np.clip(1 - (off / 0.28) ** 2, 0, 1)
+        berm = np.clip(1 - np.abs(off - 0.37) / 0.11, 0, 1) ** 1.2
+        # damp earth in the trough, drier soil on the berms, darker clods over them
+        col = np.full((half, size, 3), (100.0, 82.0, 62.0))
+        floor = np.array((72.0, 57.0, 42.0))[None, None, :] + 14.0 * grain[..., None]
+        bank = np.array((138.0, 114.0, 86.0))[None, None, :] + 18.0 * grain[..., None]
+        col = col * (1 - trough[..., None]) + floor * trough[..., None]
+        col = col * (1 - berm[..., None]) + bank * berm[..., None]
+        lump = (clods * berm)[..., None]
+        col = col * (1 - 0.6 * lump) + np.array((62.0, 49.0, 36.0)) * 0.6 * lump
+        a = np.clip(np.maximum(0.9 * trough ** 0.5, 0.75 * berm) * (0.85 + 0.15 * grain), 0, 1)
+        h = -trough + 0.55 * berm + 0.2 * grain * (trough + berm) + 0.35 * clods * berm
+        rows = slice(frame * half, (frame + 1) * half)
+        rgb[rows], alpha[rows], height[rows] = col, a, h
+    Image.fromarray(np.dstack([rgb, alpha * 255]).clip(0, 255).astype("uint8"), "RGBA").save(path)
+    normals_from(height, normal_path, gain=3.0)
+
+
+def draw_grass(path, seed=23):
+    """Grass: a pod dragged over turf flattens it rather than cutting it. A broad, soft-edged band of grass laid along
+    the slide (fine streaks along U: the blades bent one way, light where they catch the sky, dark where crushed),
+    with the turf torn through to earth under the pod's two corners now and then; every part tiles along U. Drawn in
+    colour, so the trail's own colour is near white."""
+    import numpy as np
+    from PIL import Image
+
+    rng = np.random.default_rng(seed)
+    size, half = 512, 256
+    rgb = np.zeros((size, size, 3))
+    alpha = np.zeros((size, size))
+    v = np.arange(half)[:, None] / half
+    for frame in range(2):
+        wander = 0.015 * tiling_noise_2d(rng, 1, size, [(1, 0, 1), (2, 0, 0.6)])
+        off = np.abs(v - 0.5 - wander)
+        band = np.clip(1 - (off / 0.36) ** 4, 0, 1)
+        # blades: many thin waves across, few along, so they run with the slide
+        blades = tiling_noise_2d(rng, half, size, [(rng.integers(1, 5), rng.uniform(40, 130), 1.0) for _ in range(9)])
+        patches = tiling_noise_2d(rng, half, size, [(f, rng.uniform(2, 8), 1.0) for f in (2, 3, 5)])
+        sheen = np.clip(0.5 + 0.9 * blades, 0, 1)[..., None]
+        laid = np.array((38.0, 56.0, 24.0)) * (1 - sheen) + np.array((150.0, 166.0, 96.0)) * sheen
+        laid = laid * (0.9 + 0.12 * patches[..., None])
+        col = np.full((half, size, 3), (88.0, 104.0, 58.0))
+        col = col * (1 - band[..., None]) + laid * band[..., None]
+        a = band * np.clip(0.68 + 0.2 * np.abs(blades) + 0.1 * patches, 0, 1)
+        # torn through to earth under the pod's corners, here and there along the trail
+        for centre in (rng.uniform(0.26, 0.3), rng.uniform(0.7, 0.74)):
+            along = np.clip(tiling_noise_2d(rng, 1, size, [(f, 0, 1.0 / f) for f in (1, 2, 3)]) * 2.2 + 0.2, 0, 1)
+            tear = np.clip(1 - np.abs(v - centre - wander) / 0.055, 0, 1) ** 0.6 * along
+            col = col * (1 - tear[..., None]) + np.array((84.0, 66.0, 48.0)) * tear[..., None]
+            a = np.maximum(a, 0.9 * tear)
+        rows = slice(frame * half, (frame + 1) * half)
+        rgb[rows], alpha[rows] = col, a
+    Image.fromarray(np.dstack([rgb, alpha * 255]).clip(0, 255).astype("uint8"), "RGBA").save(path)
+
+
 def build_textures(cli10, raw, work):
     """Draws the trail textures and imports each over a vanilla one with the settings it needs: the colour over the
     skid mark's (DXT5, gamma), the normals over a bullet hole's (BC5 normal map, linear)."""
     tex_raw, arch = work / "tex_raw", work / "tex_archive"
-    pairs = [(SCRATCH_TEX, SKID_TEX), (SCRATCH_METAL_TEX, SKID_TEX), (SCRATCH_NORMAL, NORMAL_TEMPLATE)]
-    colours = (SCRATCH_TEX, SCRATCH_METAL_TEX)
+    pairs = [(SCRATCH_TEX, SKID_TEX), (SCRATCH_METAL_TEX, SKID_TEX), (SCRATCH_NORMAL, NORMAL_TEMPLATE),
+             (SOFT_TEX, SKID_TEX), (SOFT_NORMAL, NORMAL_TEMPLATE), (GRASS_TEX, SKID_TEX)]
+    colours = (SCRATCH_TEX, SCRATCH_METAL_TEX, SOFT_TEX, GRASS_TEX)
 
     def local(depot):
         return depot.replace("\\", os.sep)
@@ -131,6 +241,8 @@ def build_textures(cli10, raw, work):
     # metal: the same gouges (one normal map for both), bright where cut with a wide dark scuff along each (paint and
     # grime dragged along), so they show on a light plate where the light trail did not
     draw_scratch(tex_raw / f"{local(SCRATCH_METAL_TEX)}.png", rim=(55, 1.6, 0.8, 0.85), fill=200.0)
+    draw_rut(tex_raw / f"{local(SOFT_TEX)}.png", tex_raw / f"{local(SOFT_NORMAL)}.png")
+    draw_grass(tex_raw / f"{local(GRASS_TEX)}.png")
     # exits 3 ("no buffers found to rebuild") even when it imported: check the files instead
     subprocess.run([str(cli10), "import", str(tex_raw), "-k", "-o", str(arch)], stdout=subprocess.DEVNULL)
     for ours, template in pairs:
@@ -155,7 +267,7 @@ def build_textures(cli10, raw, work):
         print(f"{ours}.xbm")
 
 
-def trail(color, size, life, normal_strength, texture=SCRATCH_TEX):
+def trail(color, size, life, normal_strength, texture=SCRATCH_TEX, normal=SCRATCH_NORMAL):
     def edit(node):
         t = node.get("$type") if isinstance(node, dict) else None
         if t == "CMaterialInstance":
@@ -167,7 +279,7 @@ def trail(color, size, life, normal_strength, texture=SCRATCH_TEX):
                 if "DiffuseTexture" in v:
                     v["DiffuseTexture"]["DepotPath"]["$value"] = f"{texture}.xbm"
             values.append({"$type": "rRef:ITexture", "NormalTexture": {
-                "DepotPath": {"$type": "ResourcePath", "$storage": "string", "$value": f"{SCRATCH_NORMAL}.xbm"},
+                "DepotPath": {"$type": "ResourcePath", "$storage": "string", "$value": f"{normal}.xbm"},
                 "Flags": "Default"}})
             values.append({"$type": "Float", "NormalStrength": normal_strength})
         elif t == "CParticleInitializerSize":
@@ -268,19 +380,46 @@ def driven(inner, velocity=((0.0, 0.5), (1.0, 1.6)), size=((0.0, 0.7), (1.0, 1.4
 DEPTHS = (("_light", 0.65, 0.55, 0.6), ("", 1.0, 1.0, 1.0), ("_deep", 1.4, 1.0, 1.4))
 
 
-def trails(name, color, size, life, normal_strength, texture=SCRATCH_TEX):
+def trails(name, color, size, life, normal_strength, texture=SCRATCH_TEX, normal=SCRATCH_NORMAL):
     """The trail called name at each depth (DEPTHS): {name + suffix: (SKID, edit)}."""
     return {name + suffix: (SKID, trail((color[0], color[1], color[2], round(color[3] * alpha)), size * width, life,
-                                        normal_strength * normals, texture))
+                                        normal_strength * normals, texture, normal))
             for suffix, width, alpha, normals in DEPTHS}
+
+
+# the game's tyre effects' inputs, and the scrape's that stand for them
+TYRE_INPUTS = {"veh_wheel_angular_speed": "scrape_speed", "veh_speed": "scrape_speed", "veh_total_slip": "scrape_press",
+               "veh_lat_slip": "scrape_press", "veh_long_slip": "scrape_press"}
+
+
+def tyre(inner=lambda node: None):
+    """A tyre surface effect (made to run under a sliding wheel, its emission, velocity and size curves of the wheel's
+    speed and slip, 0..1) driven by the scrape instead: its inputs renamed to the scrape's (TYRE_INPUTS), the curves
+    kept."""
+    def edit(node):
+        inner(node)
+        if not isinstance(node, dict):
+            return
+        if node.get("$type") == "worldEffect":
+            node["inputParameterNames"] = [cname(n) for n in INPUTS]
+        elif node.get("$type", "").startswith("effectEffectParameterEvaluator"):
+            name = node["inputParameterOverride"]["$value"]
+            if name in TYRE_INPUTS:
+                node["inputParameterOverride"] = cname(TYRE_INPUTS[name])
+    return edit
 
 
 # name: (vanilla source without extension, edit)
 EFFECTS = {
     **trails("scrape_trail_hard", (235, 232, 225, 255), 1.0, 45.0, 1.0),
     **trails("scrape_trail_metal", (235, 238, 245, 255), 0.8, 45.0, 1.0, SCRATCH_METAL_TEX),
-    # soft ground (dirt, sand, mud): a dark furrow of turned earth
-    **trails("scrape_trail_soft", (95, 78, 60, 255), 1.4, 30.0, 0.6),
+    # soft ground (dirt, sand, mud): a rut ploughed through it, berms of turned soil either side (draw_rut)
+    **trails("scrape_trail_soft", (235, 235, 235, 255), 1.4, 30.0, 0.8, SOFT_TEX, SOFT_NORMAL),
+    # grass: a streak of flattened turf, torn to earth under the pod's corners (draw_grass), on the rut's normals,
+    # faintly
+    **trails("scrape_trail_grass", (235, 235, 235, 255), 1.5, 40.0, 0.25, GRASS_TEX, SOFT_NORMAL),
+    # grass: the game's own spray of grass and earth from a tyre spinning on turf, by the scrape's speed and press
+    "scrape_turf_grass": (GRASS_TYRE, tyre()),
     "scrape_sparks_hard": (SPARKS, driven(birth(1.3))),
     # metal: many more sparks and hotter ones (the blackbody shader's Temperature), so they read by day
     "scrape_sparks_metal": (SPARKS, driven(emitters(sparks=(3.0, {"Temperature": 80.0})))),

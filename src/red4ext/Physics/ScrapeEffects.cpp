@@ -1,6 +1,8 @@
 #include "Physics/ScrapeEffects.hpp"
 
 #include "Flight/Component.hpp"
+#include "Flight/FlightGround.hpp"
+#include "Flight/FlightStats.hpp"
 #include "Flight/Scrape.hpp"
 #include "stdafx.hpp"
 
@@ -12,6 +14,8 @@
 #include <cmath>
 #include <mutex>
 #include <unordered_map>
+
+float GetFlightSettingsFloat(RED4ext::CRTTISystem *rtti, RED4ext::CName aProperty, float aFallback);
 
 namespace {
 using RED4ext::Handle;
@@ -38,6 +42,8 @@ SurfaceFx EffectsOf(Flight::Surface aSurface) {
     return {R"(base\fx\vehicles\_damage\scratches\car_scratches_wood.effect)", {"", "", ""}};
   case Flight::Surface::Soft:
     return {R"(user\jackhumbert\effects\scrape_dust_soft.effect)", LTBF_TRAIL("scrape_trail_soft")};
+  case Flight::Surface::Grass:
+    return {R"(user\jackhumbert\effects\scrape_turf_grass.effect)", LTBF_TRAIL("scrape_trail_grass")};
   case Flight::Surface::None:
     break;
   }
@@ -86,6 +92,24 @@ IScriptable *FxSystem() {
     if (auto system = gameInstance->GetSystem(cls))
       return system;
   return nullptr;
+}
+
+// The thrusters' touches when the Drone skid is not finding them (every other mode): the same four rays, each
+// thruster's load from how far it sinks into the ground (Flight::TouchLoad). Without it a thruster dragged along the
+// road in any mode but Drone made no sound and no mark: its box is open at the bottom and takes no contact there.
+void FeelThrusters(FlightComponent *aComponent) {
+  auto stats = FlightStats::Of(aComponent);
+  if (!stats)
+    return;
+  const float maxHover = GetFlightSettingsFloat(RED4ext::CRTTISystem::Get(), "hoverModeMaxHoverHeight", 7.0f);
+  Flight::Hit hits[4];
+  if (!FlightGroundNative::Find(aComponent, maxHover, nullptr, hits).found)
+    return;
+  if (!FlightGroundNative::Touches(aComponent, stats->State(), hits))
+    return;
+  const Flight::SkidScrapeParams params;
+  for (Flight::SkidContact &c : aComponent->skidContacts)
+    c.load = Flight::TouchLoad(c.clearance, params);
 }
 
 // The trail's ribbon spans its effect's up: spawned turned as the car is, it stood on edge and drew a line on the
@@ -174,6 +198,20 @@ Flight::Surface ScrapeEffects::SurfaceOfMaterial(uint64_t aMaterial) {
   return s;
 }
 
+Flight::Period ScrapeEffects::PeriodOfMaterial(uint64_t aMaterial) {
+  if (!aMaterial)
+    return {};
+  static std::mutex lock;
+  static std::unordered_map<uint64_t, Flight::Period> cache;
+  std::lock_guard<std::mutex> _(lock);
+  auto it = cache.find(aMaterial);
+  if (it != cache.end())
+    return it->second;
+  const Flight::Period p = Flight::PeriodOf(RED4ext::CName(aMaterial).ToString());
+  cache.emplace(aMaterial, p);
+  return p;
+}
+
 void ScrapeEffects::Update(FlightComponent *aComponent, RED4ext::vehicle::BaseObject *aVehicle, float aDt) {
   const Flight::ScrapeParams params;
   auto it = gLive.find(aComponent);
@@ -196,7 +234,10 @@ void ScrapeEffects::Update(FlightComponent *aComponent, RED4ext::vehicle::BaseOb
                                {q.i, q.j, q.k, q.r});
   }
   aComponent->scrapes.Step(aDt, params);
-  // the skid's contacts while it runs (it may run less often than this, so they are kept a moment)
+  aComponent->skidRanAge += aDt;
+  if (aComponent->skidRanAge >= 0.25f)
+    FeelThrusters(aComponent);
+  // the thrusters' contacts (the skid may run less often than this, so they are kept a moment)
   aComponent->skidContactsAge += aDt;
   const bool skid = aComponent->skidContactsAge < 0.25f;
   static const Flight::SkidContact kNone[Flight::SkidScrapes::kThrusters];
@@ -214,7 +255,7 @@ void ScrapeEffects::Update(FlightComponent *aComponent, RED4ext::vehicle::BaseOb
   auto &live = gLive[aComponent];
   for (auto &[id, l] : live)
     l.seen = false;
-  auto follow = [&](uint32_t aId, Flight::Surface aSurface, const RED4ext::WorldTransform &aAt,
+  auto follow = [&](uint32_t aId, Flight::Surface aSurface, uint64_t aMaterial, const RED4ext::WorldTransform &aAt,
                     const RED4ext::WorldTransform &aTrailAt, const Flight::ScrapeFxInputs &aIn) {
     const SurfaceFx fx = EffectsOf(aSurface);
     auto found = live.find(aId);
@@ -225,8 +266,10 @@ void ScrapeEffects::Update(FlightComponent *aComponent, RED4ext::vehicle::BaseOb
       l.depth.Step(aIn.press, aDt);
       const char *trail = fx.trail[l.depth.band];
       l.trail = Spawn(system, trail, aTrailAt);
-      // one line a scrape, where it begins: which surface, and whether its effects spawned
-      spdlog::info("[ScrapeFx] scrape {:#x} on {}: sparks {}, trail {} (depth {})", aId, Flight::SurfaceName(aSurface),
+      // one line a scrape, where it begins: which surface and physics material (none: the skid's ray had none, and
+      // it scrapes as hard ground), and whether its effects spawned
+      spdlog::info("[ScrapeFx] scrape {:#x} on {} ('{}'): sparks {}, trail {} (depth {})", aId,
+                   Flight::SurfaceName(aSurface), aMaterial ? RED4ext::CName(aMaterial).ToString() : "none",
                    *fx.sparks ? (l.sparks ? "spawned" : "failed") : "none",
                    *trail ? (l.trail ? "spawned" : "failed") : "none", l.depth.band);
       found = live.emplace(aId, std::move(l)).first;
@@ -249,7 +292,8 @@ void ScrapeEffects::Update(FlightComponent *aComponent, RED4ext::vehicle::BaseOb
   // effects show while it touches (a thruster bridging a short hop), and end where it left the ground
   for (const Flight::SkidScrape &s : aComponent->skidScrapes)
     if (s.active && s.since <= skidParams.effectsBridge)
-      follow(s.id, s.surface, OnGround(aVehicle, s.ground, s.normal), OnGround(aVehicle, s.ground, s.normal, kTrailTurn),
+      follow(s.id, s.surface, s.material, OnGround(aVehicle, s.ground, s.normal),
+             OnGround(aVehicle, s.ground, s.normal, kTrailTurn),
              Flight::FxInputsOf(s.intensity, s.load, skidParams.fullLoad, s.slide, skidParams.fullSlide));
   for (const Flight::Scrape &s : aComponent->scrapes) {
     // the ground under the car is the thrusters' while the skid runs; the rest (kerbs, walls) stays the game's contacts.
@@ -257,7 +301,7 @@ void ScrapeEffects::Update(FlightComponent *aComponent, RED4ext::vehicle::BaseOb
     // along in the air
     if (!s.active || !s.touching || (skid && s.normal.z > 0.7f))
       continue;
-    follow(s.id, s.surface, At(aVehicle, s.local), At(aVehicle, s.local, kTrailTurn),
+    follow(s.id, s.surface, s.material, At(aVehicle, s.local), At(aVehicle, s.local, kTrailTurn),
            Flight::FxInputsOf(s.intensity, s.load, params.fullLoad, s.slide, params.fullSlide));
   }
   for (auto l = live.begin(); l != live.end();) {

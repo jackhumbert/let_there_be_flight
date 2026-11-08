@@ -19,7 +19,7 @@ constexpr Prefix kPrefixes[] = {
     {"plexiglass", Surface::Glass},      {"neon", Surface::Glass},     {"fabrics", Surface::Soft},
     {"carpet", Surface::Soft},
     {"wood", Surface::Wood},             {"plastic", Surface::Soft},   {"dirt", Surface::Soft},
-    {"sand", Surface::Soft},             {"grass", Surface::Soft},     {"mud", Surface::Soft},
+    {"sand", Surface::Soft},             {"grass", Surface::Grass},     {"mud", Surface::Soft},
     {"trash", Surface::Soft},            {"cardboard", Surface::Soft}, {"upholstery", Surface::Soft},
     {"leather", Surface::Soft},          {"soft", Surface::Soft},      {"water", Surface::None},
 };
@@ -46,6 +46,26 @@ Surface SurfaceOf(std::string_view aPhysmat) {
   return aPhysmat.empty() ? Surface::None : Surface::Hard;
 }
 
+namespace {
+struct PeriodPrefix {
+  const char *name;
+  Period period;
+};
+// first match wins
+constexpr PeriodPrefix kPeriods[] = {
+    {"metal_catwalk", {0.04f, 1.0f}}, {"metal_grate", {0.04f, 1.0f}}, {"metal_grating", {0.04f, 1.0f}},
+    {"metal_fence", {0.1f, 0.8f}},    {"metal_hollow", {1.5f, 2.0f}}, {"tiles", {0.3f, 0.6f}},
+    {"wood", {0.15f, 0.6f}},          {"brick", {0.07f, 0.4f}},       {"concrete", {4.0f, 1.0f}},
+};
+} // namespace
+
+Period PeriodOf(std::string_view aPhysmat) {
+  for (const PeriodPrefix &p : kPeriods)
+    if (aPhysmat.rfind(p.name, 0) == 0)
+      return p.period;
+  return {};
+}
+
 const char *SurfaceName(Surface aSurface) {
   switch (aSurface) {
   case Surface::Hard:
@@ -58,6 +78,8 @@ const char *SurfaceName(Surface aSurface) {
     return "wood";
   case Surface::Soft:
     return "soft";
+  case Surface::Grass:
+    return "grass";
   case Surface::None:
     break;
   }
@@ -83,12 +105,14 @@ void ScrapeTracker::Add(const ScrapeContact &aContact, const ScrapeParams &aPara
   if (best) {
     best->local = aContact.local;
     best->normal = aContact.normal;
+    best->material = aContact.material;
     best->slide = aContact.slide;
     // several contacts a frame: the hardest
     best->load = best->since == 0.0f ? std::fmax(best->load, aContact.load) : aContact.load;
     best->target = best->since == 0.0f ? std::fmax(best->target, target) : target;
     best->since = 0.0f;
     best->touching = true;
+    ++best->contacts;
     return;
   }
   // a new scrape: in a free slot, else in the weakest's
@@ -108,10 +132,12 @@ void ScrapeTracker::Add(const ScrapeContact &aContact, const ScrapeParams &aPara
   slot->local = aContact.local;
   slot->normal = aContact.normal;
   slot->surface = aContact.surface;
+  slot->material = aContact.material;
   slot->slide = aContact.slide;
   slot->load = aContact.load;
   slot->target = target;
   slot->touching = true;
+  slot->contacts = 1;
 }
 
 float SlideAt(const Vec3 &aVelocity, const Vec3 &aSpin, const Quat &aOrientation, const Vec3 &aLocal,
@@ -148,7 +174,7 @@ void ScrapeTracker::Step(float aDt, const ScrapeParams &aParams) {
     if (!s.active)
       continue;
     s.age += aDt;
-    const bool held = s.since <= aParams.hold;
+    const bool held = s.since <= (s.contacts > 1 ? aParams.hold : aParams.impactHold);
     const float goal = held ? s.target : 0.0f;
     const float rate = goal > s.intensity ? aParams.rise : aParams.fall;
     s.intensity += (goal - s.intensity) * (1.0f - std::exp(-rate * aDt));
@@ -160,44 +186,10 @@ void ScrapeTracker::Step(float aDt, const ScrapeParams &aParams) {
   }
 }
 
-void ScrapeTracker::Release(Surface aSurface, const ScrapeParams &aParams) {
-  for (Scrape &s : scrapes)
-    if (s.active && s.surface == aSurface) {
-      s.touching = false;
-      s.since = std::fmax(s.since, aParams.hold + 1e-3f);
-    }
-}
-
-void ScrapeMixer::Add(const Vec3 &aAt, float aIntensity, Surface aSurface, float aSlide) {
-  if (!(aIntensity > 0.0f))
-    return;
-  if (!loudest.any || aIntensity > loudest.intensity) {
-    loudest.any = true;
-    loudest.intensity = aIntensity;
-    loudest.surface = aSurface;
-    loudest.slide = aSlide;
-  }
-  power += aIntensity * aIntensity;
-  weighted = Flight::Add(weighted, Mul(aAt, aIntensity));
-  weight += aIntensity;
-}
-
-ScrapeMix ScrapeMixer::Result() const {
-  ScrapeMix m = loudest;
-  if (!m.any)
-    return m;
-  m.intensity = Clamp01(std::sqrt(power));
-  m.at = Mul(weighted, 1.0f / weight);
-  return m;
-}
-
-int ChooseEmitter(const Vec3 &aAt, const Vec3 *aEmitters, int aCount, int aCurrent, float aMargin) {
-  const int nearest = NearestEmitter(aAt, aEmitters, aCount);
-  if (nearest < 0 || aCurrent < 0 || aCurrent >= aCount || aCurrent == nearest)
-    return nearest;
-  const float toCurrent = Length(Sub(aEmitters[aCurrent], aAt));
-  const float toNearest = Length(Sub(aEmitters[nearest], aAt));
-  return toNearest + aMargin < toCurrent ? nearest : aCurrent;
+float TouchLoad(float aClearance, const SkidScrapeParams &aParams) {
+  if (!(aParams.sinkForFull > 0.0f) || !std::isfinite(aClearance))
+    return 0.0f;
+  return aParams.fullLoad * Clamp01((aParams.touch - aClearance) / aParams.sinkForFull);
 }
 
 void ScrapeTracker::Clear() {
@@ -222,6 +214,7 @@ void SkidScrapes::Step(const SkidContact (&aContacts)[kThrusters], float aDt, co
       }
       s.ground = c.ground;
       s.normal = c.normal;
+      s.material = c.material;
       s.slide = c.slide;
       s.load = c.load;
       s.since = 0.0f;
