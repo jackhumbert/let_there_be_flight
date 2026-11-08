@@ -19,6 +19,7 @@ public native class FlightForce extends IScriptable {
   public native let generalPitchAeroFactor: Float;
   public native let collisionRecoveryDelay: Float;
   public native let collisionRecoveryDuration: Float;
+  public native let handling: Int32; // FlightSettings.handling: Loose and Tight replace the handling values above
 
   // inputs, this frame
   public native let dt: Float;

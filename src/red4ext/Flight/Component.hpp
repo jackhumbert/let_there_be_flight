@@ -236,3 +236,5 @@ RED4EXT_ASSERT_OFFSET(FlightComponent, angularDamp, 0xFC);
 
 // FlightSettings' Float as Mod Settings left it in the class defaults
 float GetFlightSettingsFloat(RED4ext::CRTTISystem *rtti, RED4ext::CName aProperty, float aFallback);
+// The same for a Bool field.
+bool GetFlightSettingsBool(RED4ext::CRTTISystem *rtti, RED4ext::CName aProperty, bool aFallback);

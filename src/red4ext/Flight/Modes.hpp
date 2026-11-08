@@ -1,17 +1,14 @@
 #pragma once
 
-// FlightModeStandard.UpdateWithNormalLift / UpdateWithNormalDistance and FlightModeDrone.Update as pure code, for the
-// native mode controllers. The script is the truth: the products keep its operand order and the same float32 steps.
+// The flight modes' maths as pure code, over the ground FindGround left.
 //
-// FlightModeStandard has no Update of its own: its subclasses (Fly, Hover, HoverFly, Automatic, Autopilot) choose the
-// normal and the lift force and call UpdateWithNormalLift or UpdateWithNormalDistance, so those two are all that is
-// ported here. The anti-gravity drone adds d_localUp * 9.81000042 * gravityFactor to the drone's force in its own
-// Update; that stays in its script.
-//
-// The modes: Fly (normal Up, a lift force from the lift input), Hover (the ground normal and the hover PID's height
-// difference), HoverFly (Fly and Hover blended by how far into the hover band the car is), Automatic (the same blend
-// with its own gains plus the aero and braking terms), Drone (its own Update) and Autopilot (its script). Each one
-// here is a pure function over the ground the script's FindGround left.
+// - Standard (FlightModeStandard, C++): the mode flight starts in, the Hover & Fly redesign
+//   (docs/design/settings-audit.md). Every control asks for a speed; let go, the car comes to rest, level, where it was. Hover and
+//   Fly (behind Extra Flight Modes) are Standard with the hover band always on or always off (HoverBand).
+// - AttitudeLift: the old standard modes' attitude PIDs and lift (the deleted script
+//   FlightModeStandard.UpdateWithNormalLift), kept as the Autopilot's manual flight. The script was the truth: the products keep its
+//   operand order and the same float32 steps.
+// - Drone (FlightModeDrone.Update; the anti-gravity drone adds d_localUp * 9.81000042 * gravityFactor in its script).
 
 #include "Flight/Controls.hpp"
 #include "Flight/Pid.hpp"
@@ -33,10 +30,10 @@ struct ModeOutput {
   Vec3 force, torque;
 };
 
-// FlightModeStandard's Mod Settings and the FlightSettings values it reads, at their script defaults.
-// rollWithYaw is generalRollWithYaw, brakeFactorLinear is FlightSettings.brakeFactorLinear, pitchWithLift, pitchWithSurge,
-// hoverClamp are FlightSettings floats and gravityFactor is FlightMode's. StandardLift and StandardDistance do not read
-// hoverFactor, minHoverHeight and maxHoverHeight; the subclass functions (HoverWeight, HoverFly, Automatic, Hover) do.
+// The standard factors, at the defaults the old script FlightModeStandard's Mod Settings had (developer values now):
+// Standard reads surge, sway, lift, the input angles, the hover band, brakeFactorLinear and gravityFactor;
+// AttitudeLift (the Autopilot) the rest too. rollWithYaw is FlightSettings.generalRollWithYaw, pitchWithLift,
+// pitchWithSurge and hoverClamp are FlightSettings floats and gravityFactor is FlightMode's.
 struct StandardParams {
   float surgeFactor = 15, yawFactor = 2.5f, swayFactor = 5, pitchFactor = 3, liftFactor = 25, hoverFactor = 10,
         pitchInputAngle = 45, rollFactor = 3, rollInputAngle = 45;
@@ -44,14 +41,10 @@ struct StandardParams {
   float hoverClamp = 10, minHoverHeight = 1, maxHoverHeight = 7, gravityFactor = 1;
 };
 
-// UpdateWithNormalLift. A PID is stepped only while its offset is under 120 degrees; otherwise its correction is 0 and
-// its state is left alone.
-ModeOutput StandardLift(const StatsState &s, const StatsStatic &st, const Controls &c, const StandardParams &p,
+// The script's UpdateWithNormalLift, the Autopilot's manual flight. A PID is stepped only while its offset is under 120
+// degrees; otherwise its correction is 0 and its state is left alone.
+ModeOutput AttitudeLift(const StatsState &s, const StatsStatic &st, const Controls &c, const StandardParams &p,
                         Pid &pitchPid, Pid &rollPid, Vec3 normal, float liftForce, float dt);
-
-// UpdateWithNormalDistance: the hover PID's clamped correction times liftFactor, plus gravity, as the lift force.
-ModeOutput StandardDistance(const StatsState &s, const StatsStatic &st, const Controls &c, const StandardParams &p,
-                            Pid &hoverPid, Pid &pitchPid, Pid &rollPid, Vec3 normal, float heightDifference, float dt);
 
 // FlightModeDrone's Mod Settings and FlightSettings.brakeFactorLinear / brakeFactorAngular.
 struct DroneParams {
@@ -157,36 +150,15 @@ Vec3 GroundRayStart(Vec3 aTire);
 // Where one of FindGround's rays ends: straight down from its wheel emitter aTire, maxHoverHeight + 10 m.
 Vec3 GroundRayEnd(Vec3 aTire, float aMaxHoverHeight);
 
-// FlightModeFly.Update: normal Up; the lift input scales the lift force by dt, as the script does.
-ModeOutput Fly(const StatsState &s, const StatsStatic &st, const Controls &c, const StandardParams &p, Pid &pitchPid,
-               Pid &rollPid, float dt);
-
-// FlightModeHover.Update: hoverHeight (FlightComponent.hoverHeight) is raised to minHoverHeight; with ground the normal
-// is the ground's and the height difference is hoverHeight - distance, without it the normal is Up and the difference 0.
-// The hover PID is stepped either way.
-ModeOutput Hover(float &hoverHeight, const StatsState &s, const StatsStatic &st, const Controls &c,
-                 const StandardParams &p, const Ground &g, Pid &hoverPid, Pid &pitchPid, Pid &rollPid, float dt);
-
-// FlightModeHoverFly's Mod Settings.
-struct HoverFlyParams {
-  float altitudeHoldFactor = 1, heightDampening = 1, heightCorrectionFactor = 0.5f;
-};
-
-// FlightModeHoverFly's fields; hoverHeight is FlightComponent.hoverHeight.
-struct HoverFlyState {
+// Standard's fields; hoverHeight is FlightComponent.hoverHeight.
+struct StandardState {
   float hovering = 1, referenceZ = 0, hoverHeight = 0;
   bool holdingAltitude = false;
-  float outOfBand = 0; // s the ground has been out of the hover band (HoverFlyAssist)
+  float outOfBand = 0; // s the ground has been out of the hover band
 };
 
-// FlightModeHoverFly.Update. The hover PID is stepped only while hovering is above 0.
-ModeOutput HoverFly(HoverFlyState &m, const StatsState &s, const StatsStatic &st, const Controls &c,
-                    const StandardParams &p, const HoverFlyParams &h, const Ground &g, Pid &hoverPid, Pid &pitchPid,
-                    Pid &rollPid, float dt);
-
-// Hover & Fly redesigned for beginners (docs/design/hover-fly-feel.md): every control asks for a speed, and letting
-// go of everything brings the car to rest, level, where it was let go. Not called by the game yet: flown in
-// tools/flightsim against the spec first.
+// Standard (Hover & Fly redesigned for beginners, docs/design/hover-fly-feel.md): every control asks for a speed, and
+// letting go of everything brings the car to rest, level, where it was let go.
 // - attitude: PD on the rotation from the body's up to the target up (world up blended to the ground normal by
 //   hovering, tilted by the pitch and roll inputs), so it holds at any tilt, upside down too, and has no integral to
 //   wind up while a collision's recovery has the torque scaled down;
@@ -201,7 +173,7 @@ ModeOutput HoverFly(HoverFlyState &m, const StatsState &s, const StatsStatic &st
 // The attitude and yaw terms ask for an angular acceleration and divide it by the car's own response
 // (TorqueResponse): over the surveyed cars that response spans about 30 times on each axis, so no fixed torque gain
 // suits them all.
-struct HoverFlyAssistParams {
+struct StandardGains {
   float attitudeP = 25, attitudeD = 8;   // rad/s2 per rad of tilt, per rad/s of tilting
   float attitudeLimit = 1.2f;            // rad of tilt error the P term counts at most
   float maxYawRate = 1.57f, yawP = 8;    // rad/s at full yaw input; rad/s2 per rad/s off it
@@ -225,19 +197,25 @@ constexpr Vec3 kEngineTorqueGain{1.13f, 0.24f, 0.95f};
 // tensor's Y kept at 1 or more as the force tail keeps it. Zero on an axis with no inertia.
 Vec3 TorqueResponse(const StatsStatic &st, Vec3 thrusterTensor);
 
-// The redesigned Hover & Fly. m's fields mean what they do for HoverFly (referenceZ is the held height, captured
-// once the car has stopped climbing or sinking), except that the hover height is taken from the ground again only
-// when the band is entered after kRegainHoverHeight s out of it. response is TorqueResponse's.
+// How Standard follows the ground. Blend (Standard): by how far into the hover band [minHoverHeight, maxHoverHeight]
+// the car is, 1 at the bottom, 0 at the top and without ground. Always (Hover): wherever the rays find ground, at any
+// height, so a car above the band sinks into it. Never (Fly): the ground is ignored and the height is held.
+enum class HoverBand { Blend, Always, Never };
+
+// Standard. hovering is the hover weight, hoverHeight the height over the ground it holds in the band (lift moves
+// it), referenceZ the height held out of it, captured once the car has stopped climbing or sinking. The hover height
+// is taken from the ground again only when the band is entered after kRegainHoverHeight s out of it. response is
+// TorqueResponse's.
 constexpr float kRegainHoverHeight = 0.5f;
-ModeOutput HoverFlyAssist(HoverFlyState &m, const StatsState &s, const StatsStatic &st, const Controls &c,
-                          const StandardParams &p, const HoverFlyAssistParams &a, const Ground &g, Vec3 response,
-                          float dt);
+ModeOutput Standard(StandardState &m, const StatsState &s, const StatsStatic &st, const Controls &c,
+                    const StandardParams &p, const StandardGains &a, const Ground &g, Vec3 response, float dt,
+                    HoverBand band = HoverBand::Blend);
 
 // Drone mode made car-independent, a proposal (docs/design/hover-fly-feel.md, "Drone across the fleet"); not called
 // by the game. Drone's torque is input x factor, so a held key spins a car at a rate that grows with its own response
 // (TorqueResponse spans about 30 times over the fleet) until PhysX's 7 rad/s cap. Here each of pitch, roll and yaw asks
 // for a body rate instead (input x maxRate, the angular brake slowing it to 0), and the torque is the angular
-// acceleration that closes the gap divided by the car's response, as HoverFlyAssist does. Let go, every rate goes to
+// acceleration that closes the gap divided by the car's response, as Standard does. Let go, every rate goes to
 // 0. The force is Drone's: it is an acceleration already (the force tail scales it by mass).
 struct DroneAssistParams {
   Vec3 maxRate{3.0f, 3.0f, 2.5f}; // rad/s at full input: pitch (X), roll (Y), yaw (Z)
@@ -247,20 +225,5 @@ struct DroneAssistParams {
 // DroneAssist: Drone's force, the rate command's torque. response is TorqueResponse's.
 ModeOutput DroneAssist(const StatsState &s, const StatsStatic &st, const Controls &c, const DroneParams &p,
                        const DroneAssistParams &a, Vec3 response);
-
-// FlightModeAutomatic's Mod Settings. Its lift and hover factors are its own, not Standard's.
-struct AutomaticParams {
-  float autoBrakingFactor = 3, yawDirectionality = 300, liftFactor = 25, hoverFactor = 40;
-};
-
-// FlightModeAutomatic's fields; hoverHeight is FlightComponent.hoverHeight.
-struct AutomaticState {
-  float hovering = 1, hoverHeight = 0;
-};
-
-// FlightModeAutomatic.Update. The hover PID is stepped every frame, with no ground too, on the last distance.
-ModeOutput Automatic(AutomaticState &m, const StatsState &s, const StatsStatic &st, const Controls &c,
-                     const StandardParams &p, const AutomaticParams &a, const Ground &g, Pid &hoverPid, Pid &pitchPid,
-                     Pid &rollPid, float dt);
 
 } // namespace Flight

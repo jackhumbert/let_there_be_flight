@@ -6,7 +6,8 @@
 //   bounds are the fleet's spread as measured on 2026-11-04, a little widened, so a change that makes the slowest
 //   car slower or the longest coast longer turns this red.
 // - DroneAssist (the proposal): the same rate on every car.
-// - HoverFlyAssist (the Hover & Fly redesign): the draft spec's bounds, on every car.
+// - Standard (the Hover & Fly redesign): the draft spec's bounds, on every car, at each Handling choice (Loose, Default
+//   and Tight replace the force tail's handling values, Flight/Handling.hpp).
 #include "check.hpp"
 
 #include "../tools/flightsim/Scenarios.hpp"
@@ -29,9 +30,9 @@ const std::vector<Car> &Fleet() {
   return cars;
 }
 
-// Every car through the scenarios named, in the mode given: runs[car][scenario]. The cars are shared out over the
-// cores.
-std::vector<std::vector<Run>> FlyFleet(Mode aMode, const std::vector<std::string> &aNames) {
+// Every car through the scenarios named, in the mode given, at a Handling choice (Flight::Handling, Default unless
+// given): runs[car][scenario]. The cars are shared out over the cores.
+std::vector<std::vector<Run>> FlyFleet(Mode aMode, const std::vector<std::string> &aNames, float aHandling = 1.0f) {
   const std::vector<Car> &cars = Fleet();
   std::vector<std::vector<Run>> runs(cars.size());
   unsigned workers = std::max(1u, std::min(16u, std::thread::hardware_concurrency()));
@@ -42,6 +43,7 @@ std::vector<std::vector<Run>> FlyFleet(Mode aMode, const std::vector<std::string
         Setup s;
         s.car = cars[i];
         s.mode = aMode;
+        s.handling = aHandling;
         for (const std::string &name : aNames) {
           Run r = RunScenario(name, s);
           r.frames.clear(); // only the metrics are checked
@@ -161,10 +163,12 @@ TEST(feel_drone_assist_fleet) {
   BOUNDS(runs, "drone_angular_brake", "stop_time_brake", 0, 0.3f);
 }
 
-TEST(feel_hoverfly_assist_fleet) {
-  // the draft spec (docs/design/hover-fly-feel.md), on HoverFlyAssist
-  auto runs = FlyFleet(Mode::Assist, {"yaw_hold", "knock_roll_yaw", "knock_pitch_yaw", "tilt_recovery",
-                                      "tilt_recovery_yaw", "knock_low", "surge_turn", "climb_short", "climb_long"});
+namespace {
+// The draft spec (docs/design/hover-fly-feel.md) on Standard at one Handling choice.
+void StandardSpec(float aHandling) {
+  auto runs = FlyFleet(Mode::Standard, {"yaw_hold", "knock_roll_yaw", "knock_pitch_yaw", "tilt_recovery",
+                                      "tilt_recovery_yaw", "knock_low", "surge_turn", "climb_short", "climb_long"},
+                       aHandling);
   // hold a turn: a steady 85 to 95 deg/s
   BOUNDS(runs, "yaw_hold", "yaw_rate_1s", 85, 95);
   BOUNDS(runs, "yaw_hold", "yaw_rate_3s", 85, 95);
@@ -184,3 +188,10 @@ TEST(feel_hoverfly_assist_fleet) {
   BOUNDS(runs, "climb_short", "overshoot_after_release", -2, 2);
   BOUNDS(runs, "climb_long", "overshoot_after_release", -2, 2);
 }
+} // namespace
+
+TEST(feel_standard_fleet) { StandardSpec(1.0f); }
+
+TEST(feel_handling_loose) { StandardSpec(0.0f); }
+
+TEST(feel_handling_tight) { StandardSpec(2.0f); }

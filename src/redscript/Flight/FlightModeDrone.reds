@@ -2,57 +2,43 @@ public class FlightModeDrone extends FlightMode {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Mode-Settings")
+  @runtimeProperty("ModSettings.category.order", "3")
+  @runtimeProperty("ModSettings.order", "3")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Drone-Mode-Enabled")
   public let enabled: Bool = true;
 
+  // Scales the three turn factors below.
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Lift-Factor")
-  @runtimeProperty("ModSettings.step", "0.5")
-  @runtimeProperty("ModSettings.min", "0")
-  @runtimeProperty("ModSettings.max", "200")
-  public let droneModeLiftFactor: Float = 40.0;
-  
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Pitch-Factor")
-  @runtimeProperty("ModSettings.step", "0.1")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "200")
-  public let droneModePitchFactor: Float = 5.0;
-  
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Roll-Factor")
-  @runtimeProperty("ModSettings.step", "0.1")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "200")
-  public let droneModeRollFactor: Float = 8.0;
-  
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Surge-Factor")
-  @runtimeProperty("ModSettings.step", "0.5")
-  @runtimeProperty("ModSettings.min", "0")
-  @runtimeProperty("ModSettings.max", "200")
-  public let droneModeSurgeFactor: Float = 15.0;
-  
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Yaw-Factor")
-  @runtimeProperty("ModSettings.step", "0.1")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "200")
-  public let droneModeYawFactor: Float = 5.0;
-  
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Drone-Mode")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Sway-Factor")
-  @runtimeProperty("ModSettings.step", "0.5")
-  @runtimeProperty("ModSettings.min", "0")
-  @runtimeProperty("ModSettings.max", "200")
-  public let droneModeSwayFactor: Float = 15.0;
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Mode-Settings")
+  @runtimeProperty("ModSettings.category.order", "3")
+  @runtimeProperty("ModSettings.order", "4")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Drone-Turn-Speed")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Drone-Turn-Speed-Description")
+  @runtimeProperty("ModSettings.step", "0.05")
+  @runtimeProperty("ModSettings.min", "0.25")
+  @runtimeProperty("ModSettings.max", "3.0")
+  public let droneTurnSpeed: Float = 1.0;
 
+  // Scales the three thrust factors below.
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Mode-Settings")
+  @runtimeProperty("ModSettings.category.order", "3")
+  @runtimeProperty("ModSettings.order", "5")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Drone-Thrust")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Drone-Thrust-Description")
+  @runtimeProperty("ModSettings.step", "0.05")
+  @runtimeProperty("ModSettings.min", "0.25")
+  @runtimeProperty("ModSettings.max", "3.0")
+  public let droneThrust: Float = 1.0;
+
+  // Developer values (no longer Mod Settings, docs/design/settings-audit.md): thrust, m/s2 at full input, and
+  // turn, torque per unit of input. Drone Thrust and Drone Turn Speed scale them.
+  public let droneModeLiftFactor: Float = 40.0;
+  public let droneModePitchFactor: Float = 5.0;
+  public let droneModeRollFactor: Float = 8.0;
+  public let droneModeSurgeFactor: Float = 15.0;
+  public let droneModeYawFactor: Float = 5.0;
+  public let droneModeSwayFactor: Float = 15.0;
 
   public func Initialize(component: ref<FlightComponent>) -> Void {
     super.Initialize(component);
@@ -91,38 +77,38 @@ public class FlightModeDrone extends FlightMode {
   public func Update(timeDelta: Float) -> Void {
       if this.component.nativeModes {
         let k = this.Control(timeDelta);
-        k.droneModeLiftFactor = this.droneModeLiftFactor;
-        k.droneModePitchFactor = this.droneModePitchFactor;
-        k.droneModeRollFactor = this.droneModeRollFactor;
-        k.droneModeSurgeFactor = this.droneModeSurgeFactor;
-        k.droneModeYawFactor = this.droneModeYawFactor;
-        k.droneModeSwayFactor = this.droneModeSwayFactor;
+        k.droneModeLiftFactor = this.droneModeLiftFactor * this.droneThrust;
+        k.droneModePitchFactor = this.droneModePitchFactor * this.droneTurnSpeed;
+        k.droneModeRollFactor = this.droneModeRollFactor * this.droneTurnSpeed;
+        k.droneModeSurgeFactor = this.droneModeSurgeFactor * this.droneThrust;
+        k.droneModeYawFactor = this.droneModeYawFactor * this.droneTurnSpeed;
+        k.droneModeSwayFactor = this.droneModeSwayFactor * this.droneThrust;
         k.Drone(this.component.stats, this.component);
         this.force = k.force;
         this.torque = k.torque;
         return;
       }
-      let velocityDamp: Vector4 = this.component.stats.d_localVelocity * this.component.linearBrake * FlightSettings.GetInstance().brakeFactorLinear * this.component.stats.s_brakingFrictionFactor;   
+      let velocityDamp: Vector4 = this.component.stats.d_localVelocity * this.component.linearBrake * FlightSettings.GetInstance().LinearBrake() * this.component.stats.s_brakingFrictionFactor;   
       // let velocityDamp: Vector4;
-      let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetInstance().brakeFactorAngular * this.component.stats.s_brakingFrictionFactor;
+      let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetInstance().AngularBrake() * this.component.stats.s_brakingFrictionFactor;
       // let angularDamp: Vector4;
 
       this.force = new Vector4(0.0, 0.0, 0.0, 0.0);
       // lift
-      this.force += FlightUtils.Up() * this.component.lift * this.droneModeLiftFactor;
+      this.force += FlightUtils.Up() * this.component.lift * this.droneModeLiftFactor * this.droneThrust;
       // surge
-      this.force += FlightUtils.Forward() * this.component.surge * this.droneModeSurgeFactor;
+      this.force += FlightUtils.Forward() * this.component.surge * this.droneModeSurgeFactor * this.droneThrust;
       // sway
-      this.force += FlightUtils.Right() * this.component.sway * this.droneModeSwayFactor;
+      this.force += FlightUtils.Right() * this.component.sway * this.droneModeSwayFactor * this.droneThrust;
       // directional brake
       this.force -= velocityDamp;
 
       this.torque = new Vector4(0.0, 0.0, 0.0, 0.0);
       // pitch correction
-      this.torque.X = -(this.component.pitch * this.droneModePitchFactor + angularDamp.X);
+      this.torque.X = -(this.component.pitch * this.droneModePitchFactor * this.droneTurnSpeed + angularDamp.X);
       // roll correction
-      this.torque.Y = (this.component.roll * this.droneModeRollFactor - angularDamp.Y);
+      this.torque.Y = (this.component.roll * this.droneModeRollFactor * this.droneTurnSpeed - angularDamp.Y);
       // yaw correction
-      this.torque.Z = -(this.component.yaw * this.droneModeYawFactor + angularDamp.Z);
+      this.torque.Z = -(this.component.yaw * this.droneModeYawFactor * this.droneTurnSpeed + angularDamp.Z);
   }
 }

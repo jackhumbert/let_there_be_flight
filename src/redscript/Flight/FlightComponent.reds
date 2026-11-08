@@ -31,17 +31,24 @@ public native class FlightComponent extends GameComponent {
   public native let angularDamp: Float;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Quickhacks")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Enabled")
+  @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")
+  @runtimeProperty("ModSettings.category.order", "1")
+  @runtimeProperty("ModSettings.order", "2")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Flight-Quickhacks-Enabled")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Flight-Quickhacks-Enabled-Description")
   public let isQuickHackable: Bool = true;
 
+  // A flying vehicle V is not in explodes when a hit changes one of its damage grid's cells by more than this
+  // (OnGridDestruction; a cell's change is 0 to 1, so 1 is never).
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Crashes")
+  @runtimeProperty("ModSettings.category.order", "4")
+  @runtimeProperty("ModSettings.order", "0")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Explosion-Threshold")
   @runtimeProperty("ModSettings.description", "UI-Settings-Explosion-Threshold-Description")
   @runtimeProperty("ModSettings.step", "0.05")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "100.0")
+  @runtimeProperty("ModSettings.min", "0.05")
+  @runtimeProperty("ModSettings.max", "1.0")
   public let explosionThreshold: Float = 0.5;
 
   public native func ChaseTarget(target: wref<GameObject>) -> Void;
@@ -61,7 +68,7 @@ public native class FlightComponent extends GameComponent {
   public let nativeForce: Bool = true;  // the force tail in C++ (FlightForce: ApplyPhysics and the scaling below); false: the script (docs/design/native-ports.md)
   public let nativeThrusters: Bool = true;  // the thrusters' animation in C++ (IFlightThruster.UpdateNative); false: IFlightThruster.Update's script (docs/design/native-ports.md)
   private let forceTail: ref<FlightForce>;
-  public let nativeModes: Bool = true;  // the mode controllers' maths in C++ (FlightModeControl: the standard base, Hover & Fly, Automatic, Drone); false: the script (docs/design/native-ports.md)
+  public let nativeModes: Bool = true;  // the mode controllers' maths in C++ (FlightModeControl: Drone; Standard, Hover and Fly are C++ modes); false: Drone's script (docs/design/native-ports.md)
   public let nativeStats: Bool = true;  // FlightStats' dynamic half in C++ (FlightStats.UpdateNative, before OnUpdate); false: FlightStats.UpdateDynamic's script (docs/design/native-ports.md)
 
   public let m_interaction: ref<InteractionComponent>;
@@ -838,13 +845,13 @@ public native class FlightComponent extends GameComponent {
     let fs = FlightSettings.GetInstance();
     t.physxFlightPhysics = fs.physxFlightPhysics;
     t.generalDampFactorAngular = fs.generalDampFactorAngular;
-    t.brakeFactorAngular = fs.brakeFactorAngular;
+    t.brakeFactorAngular = fs.AngularBrake();
     t.generalYawDampFactor = fs.generalYawDampFactor;
     t.dampStabilityK = FlightSettings.GetFloatN(n"dampStabilityK");
     t.dampMaxPerFrame = FlightSettings.GetFloatN(n"dampMaxPerFrame");
     t.generalDampFactorAngularMax = fs.generalDampFactorAngularMax;
     t.generalDampFactorLinear = fs.generalDampFactorLinear;
-    t.brakeFactorLinear = fs.brakeFactorLinear;
+    t.brakeFactorLinear = fs.LinearBrake();
     t.generalSwayWithYaw = fs.generalSwayWithYaw;
     t.generalYawDirectionalityFactor = fs.generalYawDirectionalityFactor;
     t.generalPitchDirectionalityFactor = fs.generalPitchDirectionalityFactor;
@@ -852,6 +859,7 @@ public native class FlightComponent extends GameComponent {
     t.generalPitchAeroFactor = fs.generalPitchAeroFactor;
     t.collisionRecoveryDelay = FlightSettings.GetFloatN(n"collisionRecoveryDelay");
     t.collisionRecoveryDuration = FlightSettings.GetFloatN(n"collisionRecoveryDuration");
+    t.handling = EnumInt(fs.handling);
 
     let applyPhysics = this.mode < ArraySize(this.modes);
     t.dt = timeDelta;

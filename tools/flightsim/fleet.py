@@ -2,7 +2,7 @@
 
     python tools/flightsim/fleet.py [--vehicles tools/flightsim/vehicles.tsv] [--flightsim build/flightsim.exe]
                                     [--metric yaw_hold.yaw_rate_3s]... [--worst 8] [--csv out.csv]
-                                    [--mode hoverfly|assist|drone|agdrone|droneassist] [--assist]
+                                    [--mode standard|hover|fly|drone|agdrone|droneassist] [--assist]
 
     python -P -E tools/flightsim/fleet.py --terrain [tools/flightsim/terrain_runs.tsv] [--only <line or tag part>]
                                           [--speeds 40,80,130] [--hover 0] [--mode ...] [--set ...]
@@ -176,7 +176,7 @@ def main():
     ap.add_argument("--metric", action="append", default=[], help="scenario.metric to report (default: all)")
     ap.add_argument("--worst", type=int, default=5, help="cars to name at each end")
     ap.add_argument("--csv", default="", help="write every distinct car's metrics here")
-    ap.add_argument("--assist", action="store_true", help="fly the redesigned controller (flightsim --assist)")
+    ap.add_argument("--assist", action="store_true", help="fly Standard (flightsim --assist; Standard is the default)")
     ap.add_argument("--mode", default="", help="the mode flown (flightsim --mode)")
     ap.add_argument("--shape-drag", action="store_true", help="drag from each car's shape (flightsim --shape-drag)")
     ap.add_argument("--set", action="append", default=[], help="name=value, passed to flightsim --set")

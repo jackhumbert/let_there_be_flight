@@ -1,7 +1,8 @@
 // The player's Mod Settings for the C++ modes (src/red4ext/Flight/Settings): the variables Mod Settings is given, and
-// the callback's writes.
+// the callback's writes; and Handling's sets (Flight/Handling.hpp).
 #include "check.hpp"
 
+#include "Flight/Handling.hpp"
 #include "Flight/Settings.hpp"
 
 #include <set>
@@ -24,26 +25,82 @@ TEST(settings_table) {
     CHECK(s.defaultValue >= s.min && s.defaultValue <= s.max);
     CHECK(defaults.*s.field == s.defaultValue);
   }
-  CHECK_NEAR(defaults.hoverFlyTurnRate, 90.0f, 0.0f);
-  CHECK_NEAR(defaults.hoverFlyClimbRate, 8.0f, 0.0f);
+  CHECK_NEAR(defaults.standardTurnRate, 90.0f, 0.0f);
+  CHECK_NEAR(defaults.standardClimbRate, 8.0f, 0.0f);
 }
 
 TEST(settings_callback_writes) {
   PlayerSettings s;
   CHECK(SetPlayerSetting(s, "hoverFlyTurnRate", 120.0f));
-  CHECK_NEAR(s.hoverFlyTurnRate, 120.0f, 0.0f);
+  CHECK_NEAR(s.standardTurnRate, 120.0f, 0.0f);
   CHECK(SetPlayerSetting(s, "hoverFlyClimbRate", 50.0f)); // out of range: clamped
-  CHECK_NEAR(s.hoverFlyClimbRate, 20.0f, 0.0f);
+  CHECK_NEAR(s.standardClimbRate, 20.0f, 0.0f);
   CHECK(!SetPlayerSetting(s, "noSuchSetting", 1.0f));
 }
 
-TEST(settings_hover_fly_switch_key) {
-  // Hover & Fly's switch registered where the script mode had it (FlightModeHoverFly.reds, deleted 2026-11-05:
-  // `enabled`, category UI-Settings-Flight-Mode-Settings, UI-Settings-Hover-And-Fly-Enabled, on by default), so a
-  // value saved in Mod Settings' user.ini ([FlightModeHoverFly] enabled) still applies
-  CHECK(std::string(kHoverFlyEnabledClass) == "FlightModeHoverFly");
-  CHECK(std::string(kHoverFlyEnabledName) == "enabled");
-  CHECK(std::string(kHoverFlyEnabledCategory) == "UI-Settings-Flight-Mode-Settings");
-  CHECK(std::string(kHoverFlyEnabledDisplayName) == "UI-Settings-Hover-And-Fly-Enabled");
-  CHECK(PlayerSettings{}.hoverFlyEnabled);
+TEST(settings_standard_switch_key) {
+  // Standard's switch registered where the script Hover & Fly had it (the deleted FlightModeHoverFly.reds:
+  // `enabled`), so a value saved in Mod Settings' user.ini ([FlightModeHoverFly] enabled) still applies; its turn and
+  // climb speed keep Hover & Fly's keys ([LTBF_HoverFly] hoverFlyTurnRate, hoverFlyClimbRate) the same way. All three
+  // are in the Flight Modes category, first.
+  CHECK(std::string(kStandardEnabledClass) == "FlightModeHoverFly");
+  CHECK(std::string(kStandardEnabledName) == "enabled");
+  CHECK(std::string(kFlightModesCategory) == "UI-Settings-Flight-Mode-Settings");
+  CHECK(std::string(kStandardEnabledDisplayName) == "UI-Settings-Standard-Enabled");
+  CHECK(std::string(kPlayerSettingsClass) == "LTBF_HoverFly");
+  CHECK(PlayerSettings{}.standardEnabled);
+  const auto &table = PlayerSettingsTable();
+  CHECK(table.size() == 2 && std::string(table[0].name) == "hoverFlyTurnRate" && table[0].order == 1 &&
+        std::string(table[1].name) == "hoverFlyClimbRate" && table[1].order == 2);
+}
+
+TEST(settings_handling_default_keeps_the_developer_values) {
+  // Default (and a number that is no choice) leaves the force tail's values as the developer set them
+  ForceParams p;
+  p.generalDampFactorAngular = 7.0f;
+  p.generalYawDirectionalityFactor = 9.0f;
+  p.brakeFactorLinear = 2.0f;
+  for (int32_t h : {static_cast<int32_t>(Handling::Default), 5, -1}) {
+    const ForceParams q = WithHandling(p, h);
+    CHECK_NEAR(q.generalDampFactorAngular, 7.0f, 0.0f);
+    CHECK_NEAR(q.generalYawDirectionalityFactor, 9.0f, 0.0f);
+    CHECK_NEAR(q.brakeFactorLinear, 2.0f, 0.0f);
+  }
+  // the code's defaults are FlightSettings' (HandlingFactors and ForceParams agree)
+  const HandlingFactors d;
+  const ForceParams f;
+  CHECK_NEAR(d.generalDampFactorAngular, f.generalDampFactorAngular, 0.0f);
+  CHECK_NEAR(d.generalDampFactorAngularMax, f.generalDampFactorAngularMax, 0.0f);
+  CHECK_NEAR(d.generalPitchDirectionalityFactor, f.generalPitchDirectionalityFactor, 0.0f);
+  CHECK_NEAR(d.generalYawDirectionalityFactor, f.generalYawDirectionalityFactor, 0.0f);
+  CHECK_NEAR(d.generalYawDampFactor, f.generalYawDampFactor, 0.0f);
+}
+
+TEST(settings_handling_loose_and_tight) {
+  // Loose damps less and turns the velocity less than Default; Tight more; neither touches the brakes, the linear
+  // damping (the top speed) or the rest
+  ForceParams p;
+  p.brakeFactorAngular = 3.0f;
+  const ForceParams loose = WithHandling(p, static_cast<int32_t>(Handling::Loose));
+  const ForceParams tight = WithHandling(p, static_cast<int32_t>(Handling::Tight));
+  CHECK(loose.generalDampFactorAngular < p.generalDampFactorAngular &&
+        p.generalDampFactorAngular < tight.generalDampFactorAngular);
+  CHECK(loose.generalYawDirectionalityFactor < p.generalYawDirectionalityFactor &&
+        p.generalYawDirectionalityFactor < tight.generalYawDirectionalityFactor);
+  CHECK(loose.generalDampFactorAngularMax < tight.generalDampFactorAngularMax);
+  CHECK_NEAR(tight.generalDampFactorLinear, p.generalDampFactorLinear, 0.0f);
+  CHECK_NEAR(loose.generalDampFactorLinear, p.generalDampFactorLinear, 0.0f);
+  CHECK_NEAR(loose.brakeFactorAngular, 3.0f, 0.0f);
+  CHECK_NEAR(tight.brakeFactorAngular, 3.0f, 0.0f);
+  CHECK_NEAR(tight.collisionRecoveryDelay, p.collisionRecoveryDelay, 0.0f);
+  // Standard: Loose brakes and grips less, Tight more; Default leaves the gains; the turn and climb are not handling
+  const StandardGains g;
+  const StandardGains gl = WithHandling(g, static_cast<int32_t>(Handling::Loose));
+  const StandardGains gt = WithHandling(g, static_cast<int32_t>(Handling::Tight));
+  const StandardGains gd = WithHandling(g, static_cast<int32_t>(Handling::Default));
+  CHECK(gl.brake < g.brake && g.brake < gt.brake && gl.sideBrake < g.sideBrake && g.sideBrake < gt.sideBrake);
+  CHECK_NEAR(gd.brake, g.brake, 0.0f);
+  CHECK_NEAR(gd.sideBrake, g.sideBrake, 0.0f);
+  CHECK_NEAR(gt.maxYawRate, g.maxYawRate, 0.0f);
+  CHECK_NEAR(gt.maxClimbRate, g.maxClimbRate, 0.0f);
 }

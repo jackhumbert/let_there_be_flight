@@ -22,7 +22,7 @@ void Square(Colliders &aC, float aX0, float aY0, float aX1, float aY1, float aZ,
 
 // the generic car flown hands off for aSeconds from aStart in the redesign; the last frame
 Frame HandsOff(Sim &aSim, Vec3 aStart, float aSeconds) {
-  aSim.mode = Mode::Assist;
+  aSim.mode = Mode::Standard;
   aSim.Place(aStart, 0.0f);
   Frame f;
   for (int i = 0; i < int(aSeconds * 60.0f); ++i)
@@ -140,7 +140,7 @@ TEST(colliders_sim_underside_corner_on_ledge) {
   c.Build();
   Sim sim(car, Flat(-1e9f));
   sim.groundRay = RayOn(c);
-  sim.mode = Mode::Assist;
+  sim.mode = Mode::Standard;
   float z0 = 0.2f - car.bottom;
   sim.Place({0, 0, z0}, 0.0f);
   Frame f = sim.Step({}, 1.0f / 60.0f);
@@ -181,7 +181,7 @@ TEST(colliders_sim_underside_front_overhang) {
   auto first = [&](const Car &aCar) {
     Sim sim(aCar, Flat(-1e9f));
     sim.groundRay = RayOn(c);
-    sim.mode = Mode::Assist;
+    sim.mode = Mode::Standard;
     sim.Place({0, 0, z0}, 0.0f);
     return sim.Step({}, 1.0f / 60.0f);
   };

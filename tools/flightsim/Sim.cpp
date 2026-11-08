@@ -1,5 +1,7 @@
 #include "Sim.hpp"
 
+#include "Flight/Handling.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -42,10 +44,12 @@ void Feed(ControlAxes &a, const Keys &k) {
 
 const char *ModeName(Mode aMode) {
   switch (aMode) {
-  case Mode::HoverFly:
-    return "hoverfly";
-  case Mode::Assist:
-    return "assist";
+  case Mode::Standard:
+    return "standard";
+  case Mode::Hover:
+    return "hover";
+  case Mode::Fly:
+    return "fly";
   case Mode::Drone:
     return "drone";
   case Mode::AntiGravityDrone:
@@ -57,7 +61,11 @@ const char *ModeName(Mode aMode) {
 }
 
 bool ParseMode(const std::string &aName, Mode &aMode) {
-  for (Mode m : {Mode::HoverFly, Mode::Assist, Mode::Drone, Mode::AntiGravityDrone, Mode::DroneAssist})
+  if (aName == "assist" || aName == "hoverfly") {
+    aMode = Mode::Standard;
+    return true;
+  }
+  for (Mode m : {Mode::Standard, Mode::Hover, Mode::Fly, Mode::Drone, Mode::AntiGravityDrone, Mode::DroneAssist})
     if (aName == ModeName(m)) {
       aMode = m;
       return true;
@@ -273,14 +281,14 @@ void Sim::Place(Vec3 aPosition, float aHeadingDeg, Vec3 aVelocity) {
   UpdateDynamic(stats, in);
   UpdateDynamic(stats, in);
 
-  // FlightModeHoverFly.Create and Activate
-  hoverFlyState = {};
-  hoverFlyState.hovering = 1.0f;
-  hoverFlyState.referenceZ = stats.d_position.z;
-  hoverFlyState.holdingAltitude = false;
+  // FlightModeStandard.OnActivateNative
+  standardState = {};
+  standardState.hovering = 1.0f;
+  standardState.referenceZ = stats.d_position.z;
+  standardState.holdingAltitude = false;
   PidReset(hover.state);
   Ground g = FindGround();
-  hoverFlyState.hoverHeight = std::clamp(g.distance, standard.minHoverHeight, standard.maxHoverHeight);
+  standardState.hoverHeight = std::clamp(g.distance, standard.minHoverHeight, standard.maxHoverHeight);
   last = {};
   last.position = position;
   last.velocity = velocity;
@@ -308,10 +316,10 @@ void Sim::SetState(const State &aState) {
   }
   orientation = NormalizeQ(q);
   angularVelocity = Rotate(orientation, aState.angularVelocity);
-  hoverFlyState.hovering = aState.hovering;
-  hoverFlyState.hoverHeight = aState.hoverHeight;
-  hoverFlyState.referenceZ = aState.referenceZ;
-  hoverFlyState.holdingAltitude = aState.holdingAltitude;
+  standardState.hovering = aState.hovering;
+  standardState.hoverHeight = aState.hoverHeight;
+  standardState.referenceZ = aState.referenceZ;
+  standardState.holdingAltitude = aState.holdingAltitude;
   lastDistance = aState.groundDistance;
   torqueQueue.clear();
   UpdateDynamic(stats, {orientation, position, {}, angularVelocity, velocity});
@@ -353,11 +361,14 @@ Frame Sim::Advance(const Controls &c, const Ground *aGround, float aDt) {
   dp.swayFactor *= thrust;
   ModeOutput m;
   switch (mode) {
-  case Mode::HoverFly:
-    m = HoverFly(hoverFlyState, stats, statics, c, sp, hoverFly, g, hover, pitch, roll, aDt);
-    break;
-  case Mode::Assist:
-    m = HoverFlyAssist(hoverFlyState, stats, statics, c, sp, assistParams, g, car.angularGain, aDt);
+  case Mode::Standard:
+  case Mode::Hover:
+  case Mode::Fly:
+    m = Flight::Standard(standardState, stats, statics, c, sp, WithHandling(standardGains, handling), g,
+                         car.angularGain, aDt,
+                         mode == Mode::Hover ? HoverBand::Always
+                         : mode == Mode::Fly ? HoverBand::Never
+                                             : HoverBand::Blend);
     break;
   case Mode::Drone:
   case Mode::AntiGravityDrone:
@@ -536,7 +547,7 @@ Frame Sim::Tail(const ModeOutput &m, const Controls &c, const Ground &g, float a
   contactSpin = Mul(contactSpin, std::exp(-aDt / 0.5f));
   fi.contactSpin = contactSpin;
   // the shape's drag in ApplyPhysics, as in game with the developer setting shapeDrag
-  ForceParams tail = force;
+  ForceParams tail = WithHandling(force, handling);
   tail.shapeDrag = shapeDrag;
   tail.dragK = car.dragK;
   statics.dragArea = car.cda;
@@ -665,10 +676,10 @@ Frame Sim::Finish(Frame &f, const Controls &c, const Ground &g, float aDt, float
   f.foundGround = g.found;
   f.groundDistance = g.distance;
   f.groundHeight = std::isfinite(ground) ? ground : 0.0f;
-  f.hovering = hoverFlyState.hovering;
-  f.hoverHeight = hoverFlyState.hoverHeight;
-  f.referenceZ = hoverFlyState.referenceZ;
-  f.holdingAltitude = hoverFlyState.holdingAltitude;
+  f.hovering = standardState.hovering;
+  f.hoverHeight = standardState.hoverHeight;
+  f.referenceZ = standardState.referenceZ;
+  f.holdingAltitude = standardState.holdingAltitude;
   last = f;
   return f;
 }

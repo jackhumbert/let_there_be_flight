@@ -1,16 +1,18 @@
-#include "FlightModeHoverFlyAssist.hpp"
+#include "FlightModeStandard.hpp"
+
+#include "Flight/Component.hpp"
 
 #include "Flight/FlightGround.hpp"
 #include "Flight/FlightModeControl.hpp"
 #include "Flight/FlightStats.hpp"
+#include "Flight/Handling.hpp"
 #include "Flight/Settings.hpp"
+#include "FlightSettings.hpp"
 #include "Utils/Utils.hpp"
 #include "stdafx.hpp"
 
 #include <RED4ext/RTTISystem.hpp>
 #include <algorithm>
-
-float GetFlightSettingsFloat(RED4ext::CRTTISystem *rtti, RED4ext::CName aProperty, float aFallback);
 
 namespace {
 
@@ -52,7 +54,7 @@ struct Frame {
 Frame Gather(FlightMode *aMode) {
   const Fields &f = Resolve();
   if (!f.ok) {
-    LTBF_WARN_ONCE("[FlightModeHoverFlyAssist] a FlightMode or FlightComponent field was not found: the mode does nothing");
+    LTBF_WARN_ONCE("[FlightModeStandard] a FlightMode or FlightComponent field was not found: the mode does nothing");
     return {};
   }
   auto handle = f.component->GetValuePtr<RED4ext::Handle<RED4ext::IScriptable>>(aMode);
@@ -66,7 +68,9 @@ Flight::StandardParams Params(const Flight::StatsStatic &aStatic) {
   Flight::StandardParams p;
   p.minHoverHeight = GetFlightSettingsFloat(rtti, "hoverModeMinHoverHeight", p.minHoverHeight);
   p.maxHoverHeight = GetFlightSettingsFloat(rtti, "hoverModeMaxHoverHeight", p.maxHoverHeight);
-  p.brakeFactorLinear = GetFlightSettingsFloat(rtti, "brakeFactorLinear", p.brakeFactorLinear);
+  // the brake times Brake Strength, as FlightSettings.LinearBrake gives it
+  p.brakeFactorLinear = GetFlightSettingsFloat(rtti, "brakeFactorLinear", p.brakeFactorLinear) *
+                        GetFlightSettingsFloat(rtti, "brakeStrength", 1.0f);
   const float thrust = FlightModeControl::Thrust(aStatic, p.surgeFactor);
   p.surgeFactor *= thrust;
   p.swayFactor *= thrust;
@@ -75,12 +79,12 @@ Flight::StandardParams Params(const Flight::StatsStatic &aStatic) {
 
 } // namespace
 
-void FlightModeHoverFlyAssist::OnActivateNative() {
+void FlightModeStandard::OnActivateNative() {
   const Frame fr = Gather(this);
   if (!fr.component || !fr.stats)
     return;
   const Flight::StandardParams p = Params(fr.stats->Static());
-  // as FlightModeHoverFly.Activate: hold the height the car is at, hover at the ground's distance inside the band
+  // hold the height the car is at, hover at the ground's distance inside the band
   state = {};
   state.referenceZ = fr.stats->d_position.Z;
   const Flight::Ground g = FlightGroundNative::Find(fr.component, p.maxHoverHeight);
@@ -89,7 +93,7 @@ void FlightModeHoverFlyAssist::OnActivateNative() {
   hoverHeight = state.hoverHeight = std::clamp(distance, p.minHoverHeight, p.maxHoverHeight);
 }
 
-void FlightModeHoverFlyAssist::OnUpdateNative(float aTimeDelta) {
+void FlightModeStandard::OnUpdateNative(float aTimeDelta) {
   const Frame fr = Gather(this);
   if (!fr.component || !fr.stats)
     return;
@@ -102,17 +106,45 @@ void FlightModeHoverFlyAssist::OnUpdateNative(float aTimeDelta) {
   const Flight::StatsStatic st = fr.stats->Static();
   const Flight::StandardParams p = Params(st);
 
-  Flight::HoverFlyAssistParams a;
-  a.maxYawRate = Flight::Player().hoverFlyTurnRate * 3.14159265f / 180.0f;
-  a.maxClimbRate = Flight::Player().hoverFlyClimbRate;
+  Flight::StandardGains a;
+  a.maxYawRate = Flight::Player().standardTurnRate * 3.14159265f / 180.0f;
+  a.maxClimbRate = Flight::Player().standardClimbRate;
 
   const Flight::Ground g = FlightGroundNative::Find(fr.component, p.maxHoverHeight);
   const Flight::Vec3 response = Flight::TorqueResponse(st, {t.X, t.Y, t.Z});
-  const Flight::ModeOutput out = Flight::HoverFlyAssist(state, fr.stats->State(), st, c, p, a, g, response, aTimeDelta);
+  a = Flight::WithHandling(a, FlightSettingsHandling());
+  const Flight::ModeOutput out = Flight::Standard(state, fr.stats->State(), st, c, p, a, g, response, aTimeDelta, Band());
   force = {out.force.x, out.force.y, out.force.z, 0.0f};
   torque = {out.torque.x, out.torque.y, out.torque.z, 0.0f};
   *f.hoverHeight->GetValuePtr<float>(fr.component) = state.hoverHeight;
   hovering = state.hovering;
   referenceZ = state.referenceZ;
   holdingAltitude = state.holdingAltitude;
+}
+
+int32_t FlightSettingsHandling() {
+  // FlightSettings.handling on the instance Mod Settings writes (a redscript enum: its size from its type)
+  static RED4ext::CProperty *field = [] {
+    auto cls = RED4ext::CRTTISystem::Get()->GetClass("FlightSettings");
+    return cls ? cls->GetProperty("handling") : nullptr;
+  }();
+  static FlightSettings *settings = FlightSettings::GetInstance().GetPtr();
+  const int32_t fallback = static_cast<int32_t>(Flight::Handling::Default);
+  if (!field || !field->type || !settings)
+    return fallback;
+  const void *data = field->GetValuePtr<void>(settings);
+  switch (field->type->GetSize()) {
+  case 1:
+    return *static_cast<const int8_t *>(data);
+  case 4:
+    return *static_cast<const int32_t *>(data);
+  case 8:
+    return static_cast<int32_t>(*static_cast<const int64_t *>(data));
+  default:
+    return fallback;
+  }
+}
+
+bool ExtraFlightModesEnabled() {
+  return GetFlightSettingsBool(RED4ext::CRTTISystem::Get(), "extraModesEnabled", false);
 }

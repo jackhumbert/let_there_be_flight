@@ -1,6 +1,6 @@
 // Hover & Fly and Drone flown offline (Sim.hpp): runs the scenarios (Scenarios.hpp) and prints each one's numbers.
 //
-//   flightsim [--mode hoverfly|assist|drone|agdrone|droneassist] [--dt 0.0333] [--csv <dir>] [--set name=value]...
+//   flightsim [--mode standard|hover|fly|drone|agdrone|droneassist] [--dt 0.0333] [--csv <dir>] [--set name=value]...
 //             [scenario]...
 //   flightsim --vehicles <vehicles.tsv> [--match <name part>] [--mode ...] [--set ...] [scenario]...
 //
@@ -15,9 +15,9 @@
 //   flightsim --physx-joint [--pcm] [--open-bottom <m>] [--lift <m>]
 //   flightsim --terrain ... --physx [--pcm]
 //
-// --mode picks the mode flown (Sim.hpp's Mode), today's Hover & Fly by default; without scenario names it flies that
-// kind of mode's scenarios (the drone_* ones for the drone modes). --assist is --mode assist: the redesigned
-// controller (Flight::HoverFlyAssist), whose a.* settings take --set too, as DroneAssist's d.* do. A number after
+// --mode picks the mode flown (Sim.hpp's Mode), Standard by default; without scenario names it flies that kind of
+// mode's scenarios (the drone_* ones for the drone modes). Standard's gains (Flight::StandardGains) take --set as a.*,
+// as DroneAssist's d.* do; --assist is --mode standard, kept for older command lines. A number after
 // --mode is the recording's mode index for --replay.
 // --shape-drag flies Flight::ShapeDragAccel from each car's drag areas (vehicles.tsv's cdaX, cdaY, cdaZ) in place of
 // today's airResistanceFactor drag; --set dragK=<k> scales it (4.1 by default). --set thrust=<0..1> scales each car's
@@ -93,19 +93,19 @@ std::map<std::string, float *> Knobs(Setup &s) {
       {"errZ", &s.car.responseError.z},
       {"gravity", &s.car.gravityScale},
       {"velocityLag", &s.car.velocityLag},
-      {"a.attitudeP", &s.assistParams.attitudeP},
-      {"a.attitudeD", &s.assistParams.attitudeD},
-      {"a.maxYawRate", &s.assistParams.maxYawRate},
-      {"a.yawP", &s.assistParams.yawP},
-      {"a.brake", &s.assistParams.brake},
-      {"a.sideBrake", &s.assistParams.sideBrake},
-      {"a.maxBrake", &s.assistParams.maxBrake},
-      {"a.maxClimbRate", &s.assistParams.maxClimbRate},
-      {"a.climbP", &s.assistParams.climbP},
-      {"a.holdP", &s.assistParams.holdP},
-      {"a.holdD", &s.assistParams.holdD},
-      {"a.hoverP", &s.assistParams.hoverP},
-      {"a.hoverD", &s.assistParams.hoverD},
+      {"a.attitudeP", &s.standardGains.attitudeP},
+      {"a.attitudeD", &s.standardGains.attitudeD},
+      {"a.maxYawRate", &s.standardGains.maxYawRate},
+      {"a.yawP", &s.standardGains.yawP},
+      {"a.brake", &s.standardGains.brake},
+      {"a.sideBrake", &s.standardGains.sideBrake},
+      {"a.maxBrake", &s.standardGains.maxBrake},
+      {"a.maxClimbRate", &s.standardGains.maxClimbRate},
+      {"a.climbP", &s.standardGains.climbP},
+      {"a.holdP", &s.standardGains.holdP},
+      {"a.holdD", &s.standardGains.holdD},
+      {"a.hoverP", &s.standardGains.hoverP},
+      {"a.hoverD", &s.standardGains.hoverD},
       {"d.maxPitchRate", &s.droneAssist.maxRate.x},
       {"d.maxRollRate", &s.droneAssist.maxRate.y},
       {"d.maxYawRate", &s.droneAssist.maxRate.z},
@@ -116,6 +116,7 @@ std::map<std::string, float *> Knobs(Setup &s) {
       {"drone.surge", &s.drone.surgeFactor},
       {"drone.yaw", &s.drone.yawFactor},
       {"drone.sway", &s.drone.swayFactor},
+      {"handling", &s.handling},
       {"skid", &s.skid},
       {"skidPerThruster", &s.skidPerThruster},
       {"skidTurn", &s.skidTurn},
@@ -136,9 +137,6 @@ std::map<std::string, float *> Knobs(Setup &s) {
       {"hoverClamp", &s.standard.hoverClamp},
       {"minHover", &s.standard.minHoverHeight},
       {"maxHover", &s.standard.maxHoverHeight},
-      {"altitudeHold", &s.hoverFly.altitudeHoldFactor},
-      {"heightDampening", &s.hoverFly.heightDampening},
-      {"heightCorrection", &s.hoverFly.heightCorrectionFactor},
       {"dampAngular", &s.force.generalDampFactorAngular},
       {"dampAngularMax", &s.force.generalDampFactorAngularMax},
       {"yawDamp", &s.force.generalYawDampFactor},
@@ -339,7 +337,6 @@ int main(int argc, char **argv) {
   float hover = 0.0f, length = 200.0f, minLength = 100.0f;
   int sampleCount = 0;
   uint32_t seed = 1;
-  bool modeGiven = false;
   int hoverFlyMode = 0;
   std::vector<std::string> names;
   bool physxJoint = false, physx = false, pcm = false;
@@ -391,14 +388,13 @@ int main(int argc, char **argv) {
     } else if (!std::strcmp(argv[i], "--seed") && i + 1 < argc) {
       seed = uint32_t(std::strtoul(argv[++i], nullptr, 10));
     } else if (!std::strcmp(argv[i], "--assist")) {
-      setup.mode = Mode::Assist;
+      setup.mode = Mode::Standard;
     } else if (!std::strcmp(argv[i], "--shape-drag")) {
       setup.shapeDrag = true;
     } else if (!std::strcmp(argv[i], "--replay") && i + 1 < argc) {
       replay = argv[++i];
     } else if (!std::strcmp(argv[i], "--mode") && i + 1 < argc) {
       const char *v = argv[++i];
-      modeGiven = true;
       if (*v >= '0' && *v <= '9') {
         hoverFlyMode = std::atoi(v);
       } else if (!ParseMode(v, setup.mode)) {
@@ -479,8 +475,6 @@ int main(int argc, char **argv) {
     return 0;
   }
   if (!terrain.empty()) {
-    if (!modeGiven && setup.mode == Mode::HoverFly)
-      setup.mode = Mode::Assist;
     std::vector<Car> cars{setup.car};
     if (!vehicles.empty()) {
       cars.clear();
@@ -534,8 +528,6 @@ int main(int argc, char **argv) {
       std::fprintf(stderr, "no region %s or no rows in %s\n", region.c_str(), replay.c_str());
       return 2;
     }
-    if (!modeGiven && setup.mode == Mode::HoverFly)
-      setup.mode = Mode::Assist;
     std::printf("car %s, %zu rows, %.0f s windows over %s\n%7s %5s | %7s %7s | %7s | %15s | %s\n", setup.car.name.c_str(),
                 rec.rows.size(), window, region.c_str(), "start", "len", "dz rms", "dz max", "dist rms", "vz m/s g/s",
                 "sim touches");

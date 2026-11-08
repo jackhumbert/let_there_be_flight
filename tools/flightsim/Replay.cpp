@@ -96,13 +96,12 @@ std::vector<Piece> Replay(const std::vector<Recorded> &aRows, const Setup &aSetu
       continue;
     Sim sim(aSetup.car, Flat());
     sim.standard = aSetup.standard;
-    sim.hoverFly = aSetup.hoverFly;
     sim.force = aSetup.force;
     sim.shapeDrag = aSetup.shapeDrag;
     sim.thrustStrength = aSetup.thrustStrength;
     sim.thrustPerThruster = aSetup.thrustPerThruster;
     sim.mode = aSetup.mode;
-    sim.assistParams = aSetup.assistParams;
+    sim.standardGains = aSetup.standardGains;
     sim.drone = aSetup.drone;
     sim.droneAssist = aSetup.droneAssist;
     const Recorded &r0 = aRows[a];

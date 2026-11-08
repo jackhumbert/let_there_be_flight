@@ -700,15 +700,15 @@ const std::map<std::string, Scenario> &Scenarios() {
 
 void Configure(Sim &aSim, const Setup &aSetup) {
   aSim.standard = aSetup.standard;
-  aSim.hoverFly = aSetup.hoverFly;
   aSim.force = aSetup.force;
   aSim.shapeDrag = aSetup.shapeDrag;
   aSim.thrustStrength = aSetup.thrustStrength;
   aSim.thrustPerThruster = aSetup.thrustPerThruster;
   aSim.mode = aSetup.mode;
-  aSim.assistParams = aSetup.assistParams;
+  aSim.standardGains = aSetup.standardGains;
   aSim.drone = aSetup.drone;
   aSim.droneAssist = aSetup.droneAssist;
+  aSim.handling = static_cast<int>(aSetup.handling);
   aSim.skid = aSetup.skid;
   aSim.skidPerThruster = aSetup.skidPerThruster;
   aSim.skidTurn = aSetup.skidTurn;

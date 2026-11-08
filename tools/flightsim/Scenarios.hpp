@@ -29,15 +29,15 @@ struct Run {
 struct Setup {
   Car car;
   Flight::StandardParams standard;
-  Flight::HoverFlyParams hoverFly;
   Flight::ForceParams force;
-  Mode mode = Mode::HoverFly;
+  Mode mode = Mode::Standard;
   bool shapeDrag = false;
   float thrustStrength = 0.0f, thrustPerThruster = 6000.0f;
-  Flight::HoverFlyAssistParams assistParams;
+  Flight::StandardGains standardGains;
   Flight::DroneParams drone;
   Flight::DroneAssistParams droneAssist;
   // Drone's skid and the ground contact at points (Sim's fields of these names; 0 or 1 for the switches)
+  float handling = 1.0f; // Sim::handling
   float skid = 0.0f, skidPerThruster = 0.0f, pointContact = 0.0f, sphereContacts = 1.0f;
   float skidTurn = Flight::DroneSkidParams{}.turn, sphereRadius = 0.4f, openBottom = 0.0f;
   float dt = 1.0f / 60.0f;

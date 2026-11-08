@@ -93,6 +93,7 @@ public native class FlightController extends IScriptable {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Key-Bindings")
+  @runtimeProperty("ModSettings.category.order", "8")
   @runtimeProperty("ModSettings.displayName", "Input-Hint-Flight-Toggle")
   public let vehicleFlight: EInputKey = EInputKey.IK_O;
 
@@ -101,86 +102,99 @@ public native class FlightController extends IScriptable {
   // binding is how you turn the L3 flight toggle off.
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Key-Bindings")
+  @runtimeProperty("ModSettings.category.order", "8")
   @runtimeProperty("ModSettings.displayName", "Input-Hint-Flight-Toggle-Pad")
   public let vehicleFlightPad: EInputKey = EInputKey.IK_Pad_LeftThumb;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Key-Bindings")
+  @runtimeProperty("ModSettings.category.order", "8")
   @runtimeProperty("ModSettings.displayName", "Input-Hint-Yaw-Left")
   public let vehicleFlightYawLeft: EInputKey = EInputKey.IK_A;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Key-Bindings")
+  @runtimeProperty("ModSettings.category.order", "8")
   @runtimeProperty("ModSettings.displayName", "Input-Hint-Yaw-Right")
   public let vehicleFlightYawRight: EInputKey = EInputKey.IK_D;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Key-Bindings")
+  @runtimeProperty("ModSettings.category.order", "8")
   @runtimeProperty("ModSettings.displayName", "Input-Hint-Pitch-Forward")
   public let vehicleFlightPitchForward: EInputKey = EInputKey.IK_L;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Key-Bindings")
+  @runtimeProperty("ModSettings.category.order", "8")
   @runtimeProperty("ModSettings.displayName", "Input-Hint-Pitch-Backward")
   public let vehicleFlightPitchBackward: EInputKey = EInputKey.IK_Period;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Key-Bindings")
+  @runtimeProperty("ModSettings.category.order", "8")
   @runtimeProperty("ModSettings.displayName", "Input-Hint-Roll-Left")
   public let vehicleFlightRollLeft: EInputKey = EInputKey.IK_Slash;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Key-Bindings")
+  @runtimeProperty("ModSettings.category.order", "8")
   @runtimeProperty("ModSettings.displayName", "Input-Hint-Roll-Right")
   public let vehicleFlightRollRight: EInputKey = EInputKey.IK_Comma;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Key-Bindings")
+  @runtimeProperty("ModSettings.category.order", "8")
   @runtimeProperty("ModSettings.displayName", "Input-Hint-Lift-Up")
   public let vehicleFlightLiftUp: EInputKey = EInputKey.IK_Space;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Key-Bindings")
+  @runtimeProperty("ModSettings.category.order", "8")
   @runtimeProperty("ModSettings.displayName", "Input-Hint-Lift-Down")
   public let vehicleFlightLiftDown: EInputKey = EInputKey.IK_LControl;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Key-Bindings")
+  @runtimeProperty("ModSettings.category.order", "8")
   @runtimeProperty("ModSettings.displayName", "Input-Hint-Sway-Left")
   public let vehicleFlightSwayLeft: EInputKey = EInputKey.IK_Left;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Key-Bindings")
+  @runtimeProperty("ModSettings.category.order", "8")
   @runtimeProperty("ModSettings.displayName", "Input-Hint-Sway-Right")
   public let vehicleFlightSwayRight: EInputKey = EInputKey.IK_Right;
 
+  // Both brakes (Flight_LinearBrake and Flight_AngularBrake carry this overridableUI tag, and Mod Settings moves every
+  // mapping with it). It replaced vehicleFlightLinearBrake and vehicleFlightAngularBrake.
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Key-Bindings")
-  @runtimeProperty("ModSettings.displayName", "Input-Hint-Linear-Brake")
-  public let vehicleFlightLinearBrake: EInputKey = EInputKey.IK_C;
+  @runtimeProperty("ModSettings.category.order", "8")
+  @runtimeProperty("ModSettings.displayName", "Input-Hint-Brake")
+  public let vehicleFlightBrake: EInputKey = EInputKey.IK_C;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Key-Bindings")
-  @runtimeProperty("ModSettings.displayName", "Input-Hint-Angular-Brake")
-  public let vehicleFlightAngularBrake: EInputKey = EInputKey.IK_C;
-
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Key-Bindings")
+  @runtimeProperty("ModSettings.category.order", "8")
   @runtimeProperty("ModSettings.displayName", "Input-Hint-Flight-Options")
   public let vehicleFlightOptions: EInputKey = EInputKey.IK_R;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Key-Bindings")
+  @runtimeProperty("ModSettings.category.order", "8")
   @runtimeProperty("ModSettings.displayName", "Input-Hint-Next-Mode")
   public let vehicleFlightModeSwitchForward: EInputKey = EInputKey.IK_G;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Key-Bindings")
+  @runtimeProperty("ModSettings.category.order", "8")
   @runtimeProperty("ModSettings.displayName", "Input-Hint-Prev-Mode")
-  public let vehicleFlightModeSwitchBackward: EInputKey = EInputKey.IK_None;
+  public let vehicleFlightModeSwitchBackward: EInputKey = EInputKey.IK_J; // as the input xml binds it
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Key-Bindings")
+  @runtimeProperty("ModSettings.category.order", "8")
   @runtimeProperty("ModSettings.displayName", "Input-Hint-Toggle-UI")
   public let vehicleFlightUIToggle: EInputKey = EInputKey.IK_Y;
 
@@ -452,7 +466,7 @@ public native class FlightController extends IScriptable {
     evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Pitch", n"Pitch"),                       this.FlightControlsShown() && !this.showOptions && (usesRightStick || this.usingKB));
     evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Roll", n"Roll"),                         this.FlightControlsShown() && !this.showOptions && (usesRightStick || this.usingKB));
     evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Lift", n"Lift"),                         this.FlightControlsShown() && !this.showOptions);
-    evt.AddInputHint(FlightController.CreateInputHint(this.LinearBrakeHintLabel(), n"Flight_LinearBrake"),  this.FlightControlsShown() && !this.showOptions);
+    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Brake", n"Flight_LinearBrake"),           this.FlightControlsShown() && !this.showOptions);
     evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Angular-Brake", n"Flight_AngularBrake"), this.FlightControlsShown() && !this.showOptions && this.usingKB);
     evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Flight-Options", n"Flight_Options"),     this.FlightControlsShown() && !this.showOptions);
 
@@ -522,12 +536,6 @@ public native class FlightController extends IScriptable {
 
   private func FlightToggleHintLabel() -> CName {
     return this.active ? n"Input-Hint-Disable-Flight" : n"Input-Hint-Enable-Flight";
-  }
-
-  // Both brakes are on C (keyboard) / A (pad) by default and only one of the two hints shows, so
-  // it reads "Brake" unless the keyboard angular brake was rebound.
-  private func LinearBrakeHintLabel() -> CName {
-    return this.usingKB && EnumInt(this.vehicleFlightLinearBrake) != EnumInt(this.vehicleFlightAngularBrake) ? n"Input-Hint-Linear-Brake" : n"Input-Hint-Brake";
   }
 
   private func AutopilotHintLabel() -> CName {

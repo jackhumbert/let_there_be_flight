@@ -14,8 +14,11 @@ public class FlightUIVehicleHealthStatPoolListener extends CustomValueStatPoolsL
 public class hudFlightController extends inkHUDGameController {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-UI-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Enabled")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Hud-And-Sound")
+  @runtimeProperty("ModSettings.category.order", "7")
+  @runtimeProperty("ModSettings.order", "0")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Show-Flight-Hud")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Show-Flight-Hud-Description")
   public let enabled: Bool = true;
 
   // Read from the class default by Entity_Initialize (C++). On: the flight hud
@@ -23,10 +26,7 @@ public class hudFlightController extends inkHUDGameController {
   // session. Off: the pre-0.3.19 behaviour, one FlightHUD WidgetHudComponent per vehicle,
   // which makes the engine rebuild the entire HUD on every mount and unmount.
   // Takes effect for entities spawned after the change, so reload a save to flip it.
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-UI-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Hud-Attached-To-Player")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Hud-Attached-To-Player-Description")
+  // a developer value, not a Mod Setting (docs/design/settings-audit.md)
   public let attachToPlayer: Bool = true;
 
   private let m_Date: inkTextRef;

@@ -1,5 +1,6 @@
-// Modes (src/red4ext/Flight/Modes.hpp): FlightModeStandard.UpdateWithNormalLift / UpdateWithNormalDistance and
-// FlightModeDrone.Update. Expected values are worked by hand from the scripts.
+// Modes (src/red4ext/Flight/Modes.hpp): AttitudeLift (the script FlightModeStandard.UpdateWithNormalLift, now the
+// Autopilot's manual flight), FlightModeDrone.Update and Standard with its hover bands. Expected values are worked by
+// hand from the scripts.
 #include "check.hpp"
 
 #include "Flight/Modes.hpp"
@@ -42,27 +43,27 @@ void CheckVec(const Vec3 &v, double x, double y, double z, double tol) {
 }
 } // namespace
 
-TEST(modes_standard_level) {
+TEST(modes_attitude_lift_level) {
   Pid pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  ModeOutput o = StandardLift(Level(), Static(), Controls{}, StandardParams{}, pitch, roll, kUp, 9.81f, 0.5f);
+  ModeOutput o = AttitudeLift(Level(), Static(), Controls{}, StandardParams{}, pitch, roll, kUp, 9.81f, 0.5f);
   CheckVec(o.force, 0, 0, 9.81, kTol);
   CheckVec(o.torque, 0, 0, 0, kTol);
 }
 
-TEST(modes_standard_tilted_normal) {
+TEST(modes_attitude_lift_tilted_normal) {
   // the normal is 30 degrees toward the forward axis: pitchOffNormal = 90 - 60 = 30, error 1/3. With gains
   // {1, 0.2, 0.05} and dt 0.5 the correction is 0.3333 + 0.2 * (1/3 * 0.5) + 0.05 * (1/3 / 0.5) = 0.4, times
   // pitchFactor 3 = 1.2. The roll projection (onto the plane of the forward axis) is along Z, 90 degrees from the
   // right axis, so rollOffNormal is 0.
   Pid pitch = Gains(1, 0.2f, 0.05f), roll = Gains(1, 0.5f, 0);
   ModeOutput o =
-      StandardLift(Level(), Static(), Controls{}, StandardParams{}, pitch, roll, {0, 0.5f, 0.8660254f}, 9.81f, 0.5f);
+      AttitudeLift(Level(), Static(), Controls{}, StandardParams{}, pitch, roll, {0, 0.5f, 0.8660254f}, 9.81f, 0.5f);
   CHECK_NEAR(o.torque.x, -1.2, kLoose);
   CHECK_NEAR(o.torque.y, 0, kLoose);
   CHECK_NEAR(o.torque.z, 0, kLoose);
 }
 
-TEST(modes_standard_inputs) {
+TEST(modes_attitude_lift_inputs) {
   // pitchOffInput 0.5 * 45 = 22.5 and rollOffInput 0.4 * 45 = 18, so the PIDs (P only) see 0.25 and 0.2: times the
   // factor 3 and (1 - angularBrake 0.5), pitch 0.375 and roll 0.3. Yaw: -((0.2 - 18 * 22.5 / 1800) * 2.5) = 0.0625.
   // Force: lift 9.81; surge 1 * 15 forward; sway -1 * 5 right; the damping {2, 4, 0} * 0.5 is subtracted.
@@ -79,12 +80,12 @@ TEST(modes_standard_inputs) {
   StandardParams p;
   p.rollWithYaw = 0;
   Pid pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  ModeOutput o = StandardLift(s, Static(), c, p, pitch, roll, kUp, 9.81f, 0.5f);
+  ModeOutput o = AttitudeLift(s, Static(), c, p, pitch, roll, kUp, 9.81f, 0.5f);
   CheckVec(o.torque, -0.375, 0.3, 0.0625, kTol);
   CheckVec(o.force, -6, 13, 9.81, kTol);
 }
 
-TEST(modes_standard_gate) {
+TEST(modes_attitude_lift_gate) {
   // the normal along the forward axis: pitchOffNormal 90, plus 45 from the input is 135, not under 120. The pitch PID
   // is not stepped (its lastError stays) and its correction is 0. The roll projection is a zero vector, so the angle
   // is 90 and rollOffNormal 0: the roll PID is stepped, its lastError 0.3 becoming the error 0.
@@ -93,26 +94,26 @@ TEST(modes_standard_gate) {
   Pid pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
   pitch.state.lastError = 0.3f;
   roll.state.lastError = 0.3f;
-  ModeOutput o = StandardLift(Level(), Static(), c, StandardParams{}, pitch, roll, {0, 1, 0}, 9.81f, 0.5f);
+  ModeOutput o = AttitudeLift(Level(), Static(), c, StandardParams{}, pitch, roll, {0, 1, 0}, 9.81f, 0.5f);
   CHECK(pitch.state.lastError == 0.3f);
   CHECK(roll.state.lastError == 0.0f);
   CheckVec(o.torque, 0, 0, 0, kTol);
 }
 
-TEST(modes_standard_roll_with_yaw) {
+TEST(modes_attitude_lift_roll_with_yaw) {
   // yaw 1 turns the normal 0.15 rad about the forward axis: n = (sin 0.15, 0, cos 0.15) = (0.149438, 0, 0.988771), its
   // angle from the right axis is 81.405633 degrees, rollOffNormal 8.594367, error 0.0954930, times 3 = 0.286479.
   // The sign of torque.y rests on the RotateAxis direction assumed in ScriptMath (right-handed).
   Controls c;
   c.yaw = 1.0f;
   Pid pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  ModeOutput o = StandardLift(Level(), Static(), c, StandardParams{}, pitch, roll, kUp, 9.81f, 0.5f);
+  ModeOutput o = AttitudeLift(Level(), Static(), c, StandardParams{}, pitch, roll, kUp, 9.81f, 0.5f);
   CHECK_NEAR(o.torque.y, 0.286479, kLoose);
   CHECK_NEAR(o.torque.z, -2.5, kLoose);
   CHECK_NEAR(o.torque.x, 0, kLoose);
 }
 
-TEST(modes_standard_pitch_with_lift_and_surge) {
+TEST(modes_attitude_lift_pitch_with_lift_and_surge) {
   // the direction is along the forward axis, so Dot(forward, direction) = 1. lift 0.5 * pitchWithLift 0.4 = 0.2 rad and
   // surge 0.5 * pitchWithSurge 0.2 = 0.1 rad, both about the right axis: Up turned 0.3 rad is (0, -sin 0.3, cos 0.3).
   // Its angle from the forward axis is 90 + 17.1887 degrees, so pitchOffNormal = -17.1887, error -0.190986, times 3
@@ -127,7 +128,7 @@ TEST(modes_standard_pitch_with_lift_and_surge) {
   p.pitchWithLift = 0.4f;
   p.pitchWithSurge = 0.2f;
   Pid pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  ModeOutput o = StandardLift(s, Static(), c, p, pitch, roll, kUp, 9.81f, 0.5f);
+  ModeOutput o = AttitudeLift(s, Static(), c, p, pitch, roll, kUp, 9.81f, 0.5f);
   CHECK_NEAR(o.torque.x, 0.572958, kLoose);
   CHECK_NEAR(o.torque.y, 0, kLoose);
   CHECK_NEAR(o.force.y, 7.5, kTol);
@@ -136,32 +137,11 @@ TEST(modes_standard_pitch_with_lift_and_surge) {
   // 0.1 * 57.29578 / 90 * 3 = 0.190986
   s.d_direction = {1, 0, 0};
   Pid pitch2 = Gains(1, 0, 0), roll2 = Gains(1, 0, 0);
-  ModeOutput o2 = StandardLift(s, Static(), c, p, pitch2, roll2, kUp, 9.81f, 0.5f);
+  ModeOutput o2 = AttitudeLift(s, Static(), c, p, pitch2, roll2, kUp, 9.81f, 0.5f);
   CHECK_NEAR(o2.torque.x, 0.190986, kLoose);
 }
 
-TEST(modes_standard_distance) {
-  // hoverPid {1, 0.005, 0.5}, error 2, dt 0.5: P 2, I 0.005 * (2 * 0.5) = 0.005, D 0.5 * (2 / 0.5) = 2, so 4.005;
-  // 4.005 * liftFactor 25 + 9.81 = 109.935
-  Pid hover = Gains(1, 0.005f, 0.5f), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  ModeOutput o = StandardDistance(Level(), Static(), Controls{}, StandardParams{}, hover, pitch, roll, kUp, 2.0f, 0.5f);
-  CHECK_NEAR(o.force.z, 109.935, kLoose);
-
-  // error 20 on a fresh PID: 20 + 0.05 + 20 = 40.05, clamped to hoverClamp 10: 10 * 25 + 9.81
-  Pid hover2 = Gains(1, 0.005f, 0.5f);
-  ModeOutput o2 =
-      StandardDistance(Level(), Static(), Controls{}, StandardParams{}, hover2, pitch, roll, kUp, 20.0f, 0.5f);
-  CHECK_NEAR(o2.force.z, 259.81, kLoose);
-
-  // gravityFactor scales only the gravity term: error 0 and gravityFactor 2 give 2 * 9.81
-  Pid hover3 = Gains(1, 0.005f, 0.5f);
-  StandardParams p;
-  p.gravityFactor = 2.0f;
-  ModeOutput o3 = StandardDistance(Level(), Static(), Controls{}, p, hover3, pitch, roll, kUp, 0.0f, 0.5f);
-  CHECK_NEAR(o3.force.z, 2 * 9.81000042, kLoose);
-}
-
-TEST(modes_standard_turned_body) {
+TEST(modes_attitude_lift_turned_body) {
   Controls c;
   c.surge = 1.0f;
   {
@@ -173,7 +153,7 @@ TEST(modes_standard_turned_body) {
     s.d_up = {0, -0.5f, 0.8660254f};
     s.d_localUp = {0, 0.5f, 0.8660254f};
     Pid pitch = Gains(1, 0.2f, 0.05f), roll = Gains(1, 0, 0);
-    ModeOutput o = StandardLift(s, Static(), c, StandardParams{}, pitch, roll, kUp, 9.81f, 0.5f);
+    ModeOutput o = AttitudeLift(s, Static(), c, StandardParams{}, pitch, roll, kUp, 9.81f, 0.5f);
     CHECK_NEAR(o.torque.x, -1.2, kLoose);
     CHECK_NEAR(o.torque.y, 0, kLoose);
     CheckVec(o.force, 0, 9.81 * 0.5 + 15, 9.81 * 0.8660254, kLoose);
@@ -186,7 +166,7 @@ TEST(modes_standard_turned_body) {
     s.d_right = {0, 1, 0};
     Pid pitch = Gains(1, 0.2f, 0.05f), roll = Gains(1, 0, 0);
     ModeOutput o =
-        StandardLift(s, Static(), Controls{}, StandardParams{}, pitch, roll, {-0.5f, 0, 0.8660254f}, 9.81f, 0.5f);
+        AttitudeLift(s, Static(), Controls{}, StandardParams{}, pitch, roll, {-0.5f, 0, 0.8660254f}, 9.81f, 0.5f);
     CHECK_NEAR(o.torque.x, -1.2, kLoose);
     CHECK_NEAR(o.torque.y, 0, kLoose);
   }
@@ -198,7 +178,7 @@ TEST(modes_standard_turned_body) {
     s.d_right = {0, 1, 0};
     Pid pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
     ModeOutput o =
-        StandardLift(s, Static(), Controls{}, StandardParams{}, pitch, roll, {0, 0.5f, 0.8660254f}, 9.81f, 0.5f);
+        AttitudeLift(s, Static(), Controls{}, StandardParams{}, pitch, roll, {0, 0.5f, 0.8660254f}, 9.81f, 0.5f);
     CHECK_NEAR(o.torque.x, 0, kLoose);
     CHECK_NEAR(o.torque.y, 1.0, kLoose);
   }
@@ -235,7 +215,7 @@ TEST(modes_drone) {
   CheckVec(o2.torque, -1.75, -1.7, -5.25, kTol);
 }
 
-TEST(modes_standard_distinct_factors) {
+TEST(modes_attitude_lift_distinct_factors) {
   // every factor its own value, so a swapped pair moves a result. Level, normal Up (both normal offsets 0):
   // pitchOff = 0.5 * 40 = 20, error 20/90, times pitchFactor 2 = 0.444444, halved by angularBrake 0.5: torque.x
   // -0.222222; rollOff = 0.4 * 50 = 20, times rollFactor 4 = 0.888889, halved: torque.y 0.444444; yaw:
@@ -264,12 +244,12 @@ TEST(modes_standard_distinct_factors) {
   c.linearBrake = 0.5f;
   c.angularBrake = 0.5f;
   Pid pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  ModeOutput o = StandardLift(s, st, c, p, pitch, roll, kUp, 9.81f, 0.5f);
+  ModeOutput o = AttitudeLift(s, st, c, p, pitch, roll, kUp, 9.81f, 0.5f);
   CheckVec(o.torque, -0.222222, 0.444444, 0.0666667, kLoose);
   CheckVec(o.force, -10, 5, 9.81, kLoose);
 }
 
-TEST(modes_standard_gate_negative) {
+TEST(modes_attitude_lift_gate_negative) {
   // the normal along -forward: 90 - 180 = -90, plus the input -45 is -135, past -120 too: the pitch PID is not
   // stepped; the roll projection is again a zero vector, so the roll PID is
   Controls c;
@@ -277,19 +257,10 @@ TEST(modes_standard_gate_negative) {
   Pid pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
   pitch.state.lastError = 0.3f;
   roll.state.lastError = 0.3f;
-  ModeOutput o = StandardLift(Level(), Static(), c, StandardParams{}, pitch, roll, {0, -1, 0}, 9.81f, 0.5f);
+  ModeOutput o = AttitudeLift(Level(), Static(), c, StandardParams{}, pitch, roll, {0, -1, 0}, 9.81f, 0.5f);
   CHECK(pitch.state.lastError == 0.3f);
   CHECK(roll.state.lastError == 0.0f);
   CheckVec(o.torque, 0, 0, 0, kTol);
-}
-
-TEST(modes_standard_hover_clamp) {
-  // hoverClamp is the mode's own, not the PIDs' 10: 40.05 clamped to 5 gives 5 * 25 + 9.81
-  StandardParams p;
-  p.hoverClamp = 5;
-  Pid hover = Gains(1, 0.005f, 0.5f), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  ModeOutput o = StandardDistance(Level(), Static(), Controls{}, p, hover, pitch, roll, kUp, 20.0f, 0.5f);
-  CHECK_NEAR(o.force.z, 134.81, kLoose);
 }
 
 TEST(modes_drone_distinct_factors) {
@@ -314,476 +285,10 @@ TEST(modes_drone_distinct_factors) {
 }
 
 namespace {
-// The hover tests use the StandardParams defaults unless stated (min 1, max 7, liftFactor 25, hoverFactor 10, hoverClamp 10,
-// gravity 1) and PIDs {1, 0, 0} with zero state.
+// Ground under the car, and none.
 Ground Found(float distance, Vec3 normal) { return Ground{true, distance, normal}; }
 Ground NotFound(float distance) { return Ground{false, distance, Vec3{}}; }
 } // namespace
-
-TEST(modes_hoverfly_band) {
-  // distance 4 in the band 1..7: hovering 1 - 3/6 = 0.5 (was 0.5, no reset); no lift input, hoverHeight stays 5; diff 1,
-  // hc 1; fly = 0 - (-2) * 1 = 2; lf = 2 + (1 * 10 - 2) * 0.5 = 6, plus gravity
-  HoverFlyState m;
-  m.hovering = 0.5f;
-  m.hoverHeight = 5;
-  StatsState s = Level();
-  s.d_velocity.z = -2;
-  s.d_position.z = 10;
-  Pid hover = Gains(1, 0, 0), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  ModeOutput o = HoverFly(m, s, Static(), Controls{}, StandardParams{}, HoverFlyParams{}, Found(4, kUp), hover, pitch,
-                          roll, 0.5f);
-  CHECK_NEAR(m.hovering, 0.5, kTol);
-  CHECK_NEAR(m.hoverHeight, 5, kTol);
-  CHECK(!m.holdingAltitude);
-  CHECK_NEAR(o.force.z, 15.81, kTol);
-  CHECK_NEAR(hover.state.lastError, 1, kTol);
-}
-
-TEST(modes_hoverfly_enter_band) {
-  // from hovering 0 into the band at distance 6: hovering 1 - 5/6; the target jumps to the distance and the PID is reset
-  // (integral and lastError 0), then stepped on the error 0, so the hover correction is 0 and only gravity is left
-  HoverFlyState m;
-  m.hovering = 0;
-  m.hoverHeight = 2;
-  Pid hover = Gains(1, 0.005f, 0.5f), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  hover.state.lastError = 5;
-  hover.state.integral = 3;
-  ModeOutput o = HoverFly(m, Level(), Static(), Controls{}, StandardParams{}, HoverFlyParams{}, Found(6, kUp), hover,
-                          pitch, roll, 0.5f);
-  CHECK_NEAR(m.hovering, 0.1666667, kTol);
-  CHECK_NEAR(m.hoverHeight, 6, kTol);
-  CHECK(hover.state.integral == 0.0f);
-  CHECK(hover.state.lastError == 0.0f);
-  CHECK_NEAR(o.force.z, 9.81, kTol);
-}
-
-TEST(modes_hoverfly_hold) {
-  // no ground, hovering 0: the PID is not stepped. Holding starts at z 100 + vz 2 / heightDampening 1 = 102; fly = -2 +
-  // clamp((102 - 100) * 1) = 0, so the force is gravity alone. A second call keeps the reference: -0.5 + 1 = 0.5
-  HoverFlyState m;
-  m.hovering = 0;
-  m.hoverHeight = 3;
-  StatsState s = Level();
-  s.d_position.z = 100;
-  s.d_velocity.z = 2;
-  Pid hover = Gains(1, 0, 0), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  hover.state.lastError = 0.7f;
-  ModeOutput o = HoverFly(m, s, Static(), Controls{}, StandardParams{}, HoverFlyParams{}, NotFound(2), hover, pitch,
-                          roll, 0.5f);
-  CHECK(m.holdingAltitude);
-  CHECK_NEAR(m.referenceZ, 102, kTol);
-  CHECK_NEAR(o.force.z, 9.81, kTol);
-  CHECK(hover.state.lastError == 0.7f);
-  CheckVec(o.torque, 0, 0, 0, kTol);
-  s.d_position.z = 101;
-  s.d_velocity.z = 0.5f;
-  o = HoverFly(m, s, Static(), Controls{}, StandardParams{}, HoverFlyParams{}, NotFound(2), hover, pitch, roll, 0.5f);
-  CHECK_NEAR(m.referenceZ, 102, kTol);
-  CHECK_NEAR(o.force.z, 10.31, kTol);
-}
-
-TEST(modes_hoverfly_lift_brake) {
-  // lift 1 at dt 1/60 moves the target by heightCorrectionFactor 0.5; fly = 1 * 25, halved by the linear brake, plus
-  // gravity: 12.5 + 9.81
-  HoverFlyState m;
-  m.hovering = 0;
-  m.hoverHeight = 3;
-  Controls c;
-  c.lift = 1;
-  c.linearBrake = 0.5f;
-  Pid hover = Gains(1, 0, 0), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  ModeOutput o = HoverFly(m, Level(), Static(), c, StandardParams{}, HoverFlyParams{}, NotFound(2), hover, pitch, roll,
-                          1.0f / 60.0f);
-  CHECK_NEAR(m.hoverHeight, 3.5, kTol);
-  CHECK(!m.holdingAltitude);
-  CHECK_NEAR(o.force.z, 22.31, kTol);
-}
-
-TEST(modes_hoverfly_distinct) {
-  // every value its own: min 2, max 10, liftFactor 20, hoverFactor 3, hoverClamp 4, gravity 0.5; altitudeHold 2,
-  // heightDampening 4, heightCorrection 0.25; hover PID P 12.
-  // In the band: distance 6, hovering 1 - 4/8 = 0.5. lift 0.2 moves the target 0.2 * 0.25 * 0.5 * 60 = 1.5, 5 to 6.5;
-  // diff 0.5, hc 6 clamped to 4. vz 1.5: fly = 0.2 * 20 - 1.5 * 4 = -2; lf = -2 + (4 * 3 + 2) * 0.5 = 5; force.z =
-  // 5 + 9.81 * 0.5 = 9.905.
-  // No ground: hovering 0, z 50, vz 2: reference 50 + 2 / 4 = 50.5; fly = -2 * 4 + (0.5 * 2) = -7; force.z =
-  // -7 + 4.905 = -2.095.
-  StandardParams p;
-  p.minHoverHeight = 2;
-  p.maxHoverHeight = 10;
-  p.liftFactor = 20;
-  p.hoverFactor = 3;
-  p.hoverClamp = 4;
-  p.gravityFactor = 0.5f;
-  HoverFlyParams h;
-  h.altitudeHoldFactor = 2;
-  h.heightDampening = 4;
-  h.heightCorrectionFactor = 0.25f;
-  Controls c;
-  c.lift = 0.2f;
-  StatsState s = Level();
-  s.d_velocity.z = 1.5f;
-  HoverFlyState m;
-  m.hovering = 0.3f;
-  m.hoverHeight = 5;
-  Pid hover = Gains(12, 0, 0), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  ModeOutput o = HoverFly(m, s, Static(), c, p, h, Found(6, kUp), hover, pitch, roll, 0.5f);
-  CHECK_NEAR(m.hovering, 0.5, kTol);
-  CHECK_NEAR(m.hoverHeight, 6.5, kTol);
-  CHECK_NEAR(o.force.z, 9.905, kTol);
-
-  HoverFlyState n;
-  n.hovering = 0;
-  n.hoverHeight = 4;
-  s.d_position.z = 50;
-  s.d_velocity.z = 2;
-  o = HoverFly(n, s, Static(), Controls{}, p, h, NotFound(6), hover, pitch, roll, 0.5f);
-  CHECK(n.holdingAltitude);
-  CHECK_NEAR(n.referenceZ, 50.5, kTol);
-  CHECK_NEAR(o.force.z, -2.095, kTol);
-}
-
-TEST(modes_automatic_aero) {
-  // hovering 1, target at the distance: no hover force, gravity only. surge 1 gives forward 15. aeroFactor 0.8,
-  // yawDirectionality 0.5 * 300 = 150, directionFactor |-0.6| = 0.6: forward += 0.6 * 150 * 0.8 = 72 on y;
-  // -localDirection * 72 = (-43.2, -57.6). x -43.2, y 15 + 72 - 57.6 = 29.4
-  AutomaticState m;
-  m.hovering = 1;
-  m.hoverHeight = 1;
-  StatsState s = Level();
-  s.d_direction = {0.6f, 0.8f, 0};
-  s.d_localDirection = {0.6f, 0.8f, 0};
-  s.d_speedRatio = 0.5f;
-  Controls c;
-  c.surge = 1;
-  Pid hover = Gains(1, 0, 0), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  ModeOutput o = Automatic(m, s, Static(), c, StandardParams{}, AutomaticParams{}, Found(1, kUp), hover, pitch, roll,
-                           0.5f);
-  CheckVec(o.force, -43.2, 29.4, 9.81, kLoose);
-}
-
-TEST(modes_automatic_braking) {
-  // surge 0.5: forward 7.5; braking (1 - 0.5) * 3 * 1 = 1.5 times localVelocity (2, 4, 6) takes (3, 6) off x and y,
-  // not z
-  AutomaticState m;
-  m.hovering = 1;
-  m.hoverHeight = 1;
-  StatsState s = Level();
-  s.d_localVelocity = {2, 4, 6};
-  Controls c;
-  c.surge = 0.5f;
-  Pid hover = Gains(1, 0, 0), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  ModeOutput o = Automatic(m, s, Static(), c, StandardParams{}, AutomaticParams{}, Found(1, kUp), hover, pitch, roll,
-                           0.5f);
-  CheckVec(o.force, -3, 1.5, 9.81, kLoose);
-}
-
-TEST(modes_automatic_no_ground) {
-  // no ground: hovering 0, target 3 against the stale distance 2: diff 1, the PID is stepped (lastError 1).
-  // lf = Lerp(0, 0 - (-20) * 0.1, 1) = 2, times hoverFactor 40 plus gravity
-  AutomaticState m;
-  m.hovering = 0;
-  m.hoverHeight = 3;
-  StatsState s = Level();
-  s.d_velocity.z = -20;
-  Pid hover = Gains(1, 0, 0), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  ModeOutput o = Automatic(m, s, Static(), Controls{}, StandardParams{}, AutomaticParams{}, NotFound(2), hover, pitch,
-                           roll, 0.5f);
-  CHECK_NEAR(hover.state.lastError, 1, kTol);
-  CHECK_NEAR(o.force.z, 89.81, kLoose);
-}
-
-TEST(modes_automatic_enter_band) {
-  // from hovering 0 into the band at distance 4: hovering 0.5; the target is the distance plus 1 * 0.1 * 25
-  AutomaticState m;
-  m.hovering = 0;
-  m.hoverHeight = 0;
-  Controls c;
-  c.lift = 1;
-  Pid hover = Gains(1, 0, 0), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  Automatic(m, Level(), Static(), c, StandardParams{}, AutomaticParams{}, Found(4, kUp), hover, pitch, roll, 0.1f);
-  CHECK_NEAR(m.hovering, 0.5, kTol);
-  CHECK_NEAR(m.hoverHeight, 6.5, kTol);
-}
-
-TEST(modes_automatic_distinct) {
-  // min 2, max 6, gravity 0.5; autoBraking 2, yawDirectionality 100, liftFactor 10, hoverFactor 20; braking friction 1.5.
-  // distance 4: hovering 1 - 2/4 = 0.5. lift 0.5 at dt 0.5 moves the target -1 + 0.5 * 0.5 * 10 = 1.5, raised to the
-  // minimum 2; diff -2, hc -2. vz 3: lf = Lerp(0.5, 0.5 - 0.3, -2) = 0.2 + (-2.2) * 0.5 = -0.9; force.z =
-  // -0.9 * 20 + 4.905 = -13.095.
-  // surge 0.25 gives y 3.75. speedRatio 0.4, direction (0.6, 0.8, 0), localDirection (0.8, 0.6, 0): aero 0.8, yd 40,
-  // df 0.6; forward += 0.6 * 40 * 0.8 = 19.2 on y; -localDirection * 19.2 = (-15.36, -11.52). Braking
-  // 0.75 * 2 * 1.5 = 2.25 times localVelocity (4, 2, 7) = (9, 4.5): x -15.36 - 9 = -24.36, y 3.75 + 19.2 - 11.52 - 4.5 =
-  // 6.93.
-  StandardParams p;
-  p.minHoverHeight = 2;
-  p.maxHoverHeight = 6;
-  p.gravityFactor = 0.5f;
-  AutomaticParams a;
-  a.autoBrakingFactor = 2;
-  a.yawDirectionality = 100;
-  a.liftFactor = 10;
-  a.hoverFactor = 20;
-  StatsStatic st = Static();
-  st.brakingFrictionFactor = 1.5f;
-  StatsState s = Level();
-  s.d_velocity.z = 3;
-  s.d_direction = {0.6f, 0.8f, 0};
-  s.d_localDirection = {0.8f, 0.6f, 0};
-  s.d_speedRatio = 0.4f;
-  s.d_localVelocity = {4, 2, 7};
-  Controls c;
-  c.lift = 0.5f;
-  c.surge = 0.25f;
-  AutomaticState m;
-  m.hovering = 0.5f;
-  m.hoverHeight = -1;
-  Pid hover = Gains(1, 0, 0), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  ModeOutput o = Automatic(m, s, st, c, p, a, Found(4, kUp), hover, pitch, roll, 0.5f);
-  CHECK_NEAR(m.hoverHeight, 2, kTol);
-  CheckVec(o.force, -24.36, 6.93, -13.095, kLoose);
-}
-
-TEST(modes_fly) {
-  // lift 0.5 at dt 0.5 with liftFactor 20 and gravity 0.5: 20 * 0.5 * 0.5 + 4.905, level
-  StandardParams p;
-  p.liftFactor = 20;
-  p.gravityFactor = 0.5f;
-  Controls c;
-  c.lift = 0.5f;
-  Pid pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  ModeOutput o = Fly(Level(), Static(), c, p, pitch, roll, 0.5f);
-  CheckVec(o.force, 0, 0, 9.905, kTol);
-  CheckVec(o.torque, 0, 0, 0, kTol);
-}
-
-TEST(modes_hover) {
-  // ground at 3 with the normal 30 degrees toward forward; the target 0.2 is raised to the minimum 1: diff -2, hc -2,
-  // lift force -2 * 25 + 9.81 = -40.19 along the car's up; the pitch error 1/3 gives torque.x -(1/3 * 3) = -1
-  float hoverHeight = 0.2f;
-  Pid hover = Gains(1, 0, 0), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  ModeOutput o = Hover(hoverHeight, Level(), Static(), Controls{}, StandardParams{}, Found(3, {0, 0.5f, 0.8660254f}),
-                       hover, pitch, roll, 0.5f);
-  CHECK_NEAR(hoverHeight, 1, kTol);
-  CHECK_NEAR(o.force.z, -40.19, kLoose);
-  CHECK_NEAR(o.torque.x, -1, kLoose);
-
-  // no ground: normal Up, difference 0, the PID is still stepped (lastError 0.7 becomes 0)
-  hover.state.lastError = 0.7f;
-  o = Hover(hoverHeight, Level(), Static(), Controls{}, StandardParams{}, NotFound(3), hover, pitch, roll, 0.5f);
-  CHECK(hover.state.lastError == 0.0f);
-  CheckVec(o.force, 0, 0, 9.81, kTol);
-}
-
-TEST(modes_hoverfly_normal_blend) {
-  // Defaults: min 1, max 7. distance 5.5: hovering 1 - 4.5/6 = 0.25 (was 0.25, no reset). The ground normal is (0, 1, 0)
-  // (horizontal, to make the blend easy to read): Interpolate(Up, n, 0.25) = Up + (n - Up) * 0.25 = (0, 0.25, 0.75).
-  // Its angle from the forward axis is atan(0.75 / 0.25) = 71.565051 degrees, so pitchOffNormal = 18.434949, error
-  // 0.204833, times pitchFactor 3 (PID P 1) = 0.614498: torque.x -0.614498. Swapped arguments would blend with 0.75
-  // and give a pitchOffNormal of 71.57 instead. The roll projection is along Z: rollOffNormal 0, torque.y 0.
-  HoverFlyState m;
-  m.hovering = 0.25f;
-  m.hoverHeight = 5.5f;
-  Pid hover = Gains(1, 0, 0), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  ModeOutput o = HoverFly(m, Level(), Static(), Controls{}, StandardParams{}, HoverFlyParams{}, Found(5.5f, {0, 1, 0}),
-                          hover, pitch, roll, 0.5f);
-  CHECK_NEAR(m.hovering, 0.25, kTol);
-  CHECK_NEAR(o.torque.x, -0.614498, kLoose);
-  CHECK_NEAR(o.torque.y, 0, kLoose);
-}
-
-TEST(modes_hoverfly_lerp_quarter) {
-  // hovering 0.25 (distance 5.5), hoverHeight 6 stays 6: diff 0.5, hc 0.5. vz -2, no lift, hovering above 0 so not
-  // holding: fly = 0 * 25 - (-2) * 1 = 2. lf = Lerp(0.25, 2, 0.5 * 10) = 2 + (5 - 2) * 0.25 = 2.75 (swapped it would be
-  // 5 + (2 - 5) * 0.25 = 4.25), plus gravity: 12.56.
-  HoverFlyState m;
-  m.hovering = 0.25f;
-  m.hoverHeight = 6;
-  StatsState s = Level();
-  s.d_velocity.z = -2;
-  Pid hover = Gains(1, 0, 0), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  ModeOutput o = HoverFly(m, s, Static(), Controls{}, StandardParams{}, HoverFlyParams{}, Found(5.5f, kUp), hover, pitch,
-                          roll, 0.5f);
-  CHECK_NEAR(o.force.z, 12.56, kTol);
-}
-
-TEST(modes_hoverfly_weight_clamp) {
-  // Found(0.5): below minHoverHeight 1, the weight 1 - (0.5 - 1)/6 = 1.0833 clamps to 1. hoverHeight 3 stays 3 (clamped
-  // to 1..7), diff 2.5, hc 2.5, vz 0: fly 0; lf = Lerp(1, 0, 2.5 * 10) = 25 (unclamped 27.08), force.z 34.81. The
-  // normal (0, 1, 0) at weight 1 is used whole: along the forward axis, pitchOffNormal 90, error 1, torque.x -3.
-  {
-    HoverFlyState m;
-    m.hovering = 1;
-    m.hoverHeight = 3;
-    Pid hover = Gains(1, 0, 0), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-    ModeOutput o = HoverFly(m, Level(), Static(), Controls{}, StandardParams{}, HoverFlyParams{}, Found(0.5f, {0, 1, 0}),
-                            hover, pitch, roll, 0.5f);
-    CHECK_NEAR(m.hovering, 1, kTol);
-    CHECK_NEAR(o.force.z, 34.81, kLoose);
-    CHECK_NEAR(o.torque.x, -3, kLoose);
-  }
-  // Found(9): above maxHoverHeight 7, the weight 1 - 8/6 = -0.333 clamps to 0 (from hovering 1, so no reset). The PID is
-  // not stepped (lastError 0.7 stays); the normal is Up whatever the ground's, torque 0. Lift 0.2 moves the target
-  // 0.2 * 0.5 * 0.5 * 60 = 3, 3 to 6, and is above 0.01 so no altitude hold: fly = 0.2 * 25 = 5, lf = Lerp(0, 5, 0) = 5
-  // (unclamped it would be 5 + (0 - 5) * -0.333 = 6.667), force.z = 14.81.
-  {
-    HoverFlyState m;
-    m.hovering = 1;
-    m.hoverHeight = 3;
-    Controls c;
-    c.lift = 0.2f;
-    Pid hover = Gains(1, 0, 0), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-    hover.state.lastError = 0.7f;
-    ModeOutput o = HoverFly(m, Level(), Static(), c, StandardParams{}, HoverFlyParams{}, Found(9, {0, 1, 0}), hover, pitch,
-                            roll, 0.5f);
-    CHECK_NEAR(m.hovering, 0, kTol);
-    CHECK_NEAR(m.hoverHeight, 6, kTol);
-    CHECK(hover.state.lastError == 0.7f);
-    CHECK_NEAR(o.force.z, 14.81, kLoose);
-    CheckVec(o.torque, 0, 0, 0, kLoose);
-  }
-}
-
-TEST(modes_hoverfly_holding_reset) {
-  // A lift input above 0.01 ends the hold. z 40, a stale referenceZ 50, no ground, hovering 0: fly = 0.5 * 25 - 0 =
-  // 12.5, no hold term (kept it would add clamp(10) = 10), force.z = 12.5 + 9.81 = 22.31.
-  {
-    HoverFlyState m;
-    m.hovering = 0;
-    m.hoverHeight = 3;
-    m.holdingAltitude = true;
-    m.referenceZ = 50;
-    StatsState s = Level();
-    s.d_position.z = 40;
-    Controls c;
-    c.lift = 0.5f;
-    Pid hover = Gains(1, 0, 0), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-    ModeOutput o = HoverFly(m, s, Static(), c, StandardParams{}, HoverFlyParams{}, NotFound(2), hover, pitch, roll, 0.5f);
-    CHECK(!m.holdingAltitude);
-    CHECK_NEAR(o.force.z, 22.31, kTol);
-  }
-  // Being in the band ends it too: distance 4 as in modes_hoverfly_band (fly 2, lf 6, force.z 15.81), z 40, stale
-  // referenceZ 50 and no lift; kept, the hold would add 10.
-  {
-    HoverFlyState m;
-    m.hovering = 0.5f;
-    m.hoverHeight = 5;
-    m.holdingAltitude = true;
-    m.referenceZ = 50;
-    StatsState s = Level();
-    s.d_position.z = 40;
-    s.d_velocity.z = -2;
-    Pid hover = Gains(1, 0, 0), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-    ModeOutput o = HoverFly(m, s, Static(), Controls{}, StandardParams{}, HoverFlyParams{}, Found(4, kUp), hover, pitch,
-                            roll, 0.5f);
-    CHECK(!m.holdingAltitude);
-    CHECK_NEAR(o.force.z, 15.81, kTol);
-  }
-}
-
-TEST(modes_hoverfly_hold_clamp) {
-  // liftFactor 20 and altitudeHoldFactor 2, holding (kept: no lift, no ground, hovering 0), vz 0, z 40, so the fly term
-  // is only the hold term. referenceZ 100: (100 - 40) * 2 = 120 clamps to +20, force.z 29.81. referenceZ 0: -80 clamps
-  // to -20, force.z -10.19. referenceZ 45: 10 is inside the clamp, 19.81.
-  StandardParams p;
-  p.liftFactor = 20;
-  HoverFlyParams h;
-  h.altitudeHoldFactor = 2;
-  StatsState s = Level();
-  s.d_position.z = 40;
-  const float refs[3] = {100, 0, 45};
-  const double expected[3] = {29.81, -10.19, 19.81};
-  for (int i = 0; i < 3; ++i) {
-    HoverFlyState m;
-    m.hovering = 0;
-    m.hoverHeight = 3;
-    m.holdingAltitude = true;
-    m.referenceZ = refs[i];
-    Pid hover = Gains(1, 0, 0), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-    ModeOutput o = HoverFly(m, s, Static(), Controls{}, p, h, NotFound(2), hover, pitch, roll, 0.5f);
-    CHECK(m.holdingAltitude);
-    CHECK_NEAR(m.referenceZ, refs[i], kTol);
-    CHECK_NEAR(o.force.z, expected[i], kLoose);
-  }
-}
-
-TEST(modes_hoverfly_zero_dampening) {
-  // heightDampening 0: the hold starts at referenceZ = z with no vz / 0 (z 100, vz 2). fly = 0 - 2 * 0 + clamp(0) = 0,
-  // force.z is gravity alone.
-  HoverFlyParams h;
-  h.heightDampening = 0;
-  HoverFlyState m;
-  m.hovering = 0;
-  m.hoverHeight = 3;
-  StatsState s = Level();
-  s.d_position.z = 100;
-  s.d_velocity.z = 2;
-  Pid hover = Gains(1, 0, 0), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  ModeOutput o = HoverFly(m, s, Static(), Controls{}, StandardParams{}, h, NotFound(2), hover, pitch, roll, 0.5f);
-  CHECK(m.holdingAltitude);
-  CHECK_NEAR(m.referenceZ, 100, kTol);
-  CHECK_NEAR(o.force.z, 9.81, kTol);
-}
-
-TEST(modes_automatic_normal_blend) {
-  // As modes_hoverfly_normal_blend: distance 5.5, hovering 0.25, normal (0, 1, 0) blended to (0, 0.25, 0.75), torque.x
-  // -0.614498 (pitchOffNormal 18.434949, error 0.204833, times 3).
-  AutomaticState m;
-  m.hovering = 0.25f;
-  m.hoverHeight = 5.5f;
-  Pid hover = Gains(1, 0, 0), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  ModeOutput o = Automatic(m, Level(), Static(), Controls{}, StandardParams{}, AutomaticParams{}, Found(5.5f, {0, 1, 0}),
-                           hover, pitch, roll, 0.5f);
-  CHECK_NEAR(m.hovering, 0.25, kTol);
-  CHECK_NEAR(o.torque.x, -0.614498, kLoose);
-  CHECK_NEAR(o.torque.y, 0, kLoose);
-}
-
-TEST(modes_automatic_lerp_quarter) {
-  // hovering 0.25 (distance 5.5), hoverHeight 6 stays 6: diff 0.5, hc 0.5. vz -20: the fly term is 0 - (-20) * 0.1 = 2.
-  // lf = Lerp(0.25, 2, 0.5) = 2 + (0.5 - 2) * 0.25 = 1.625 (swapped 0.875); times hoverFactor 40 = 65, plus gravity 74.81.
-  AutomaticState m;
-  m.hovering = 0.25f;
-  m.hoverHeight = 6;
-  StatsState s = Level();
-  s.d_velocity.z = -20;
-  Pid hover = Gains(1, 0, 0), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-  ModeOutput o = Automatic(m, s, Static(), Controls{}, StandardParams{}, AutomaticParams{}, Found(5.5f, kUp), hover, pitch,
-                           roll, 0.5f);
-  CHECK_NEAR(o.force.z, 74.81, kLoose);
-}
-
-TEST(modes_automatic_weight_clamp) {
-  // Found(0.5): weight 1.0833 clamps to 1. hoverHeight 3 stays 3: diff 2.5, hc 2.5; vz 0: lf = Lerp(1, 0, 2.5) = 2.5
-  // (unclamped 2.708), times hoverFactor 40 plus gravity = 109.81. The normal (0, 1, 0) is used whole: torque.x -3.
-  {
-    AutomaticState m;
-    m.hovering = 1;
-    m.hoverHeight = 3;
-    Pid hover = Gains(1, 0, 0), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-    ModeOutput o = Automatic(m, Level(), Static(), Controls{}, StandardParams{}, AutomaticParams{},
-                             Found(0.5f, {0, 1, 0}), hover, pitch, roll, 0.5f);
-    CHECK_NEAR(m.hovering, 1, kTol);
-    CHECK_NEAR(o.force.z, 109.81, kLoose);
-    CHECK_NEAR(o.torque.x, -3, kLoose);
-  }
-  // Found(9): weight -0.333 clamps to 0. The target stays 3: diff 3 - 9 = -6, and the PID is stepped regardless (hovering
-  // 0 with ground, lastError -6, hc -6). vz -20: lf = Lerp(0, 2, -6) = 2 (unclamped 2 + (-6 - 2) * -0.333 = 4.667), times
-  // 40 plus gravity = 89.81. The normal is Up whatever the ground's: torque 0.
-  {
-    AutomaticState m;
-    m.hovering = 1;
-    m.hoverHeight = 3;
-    StatsState s = Level();
-    s.d_velocity.z = -20;
-    Pid hover = Gains(1, 0, 0), pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0);
-    ModeOutput o = Automatic(m, s, Static(), Controls{}, StandardParams{}, AutomaticParams{}, Found(9, {0, 1, 0}), hover,
-                             pitch, roll, 0.5f);
-    CHECK_NEAR(m.hovering, 0, kTol);
-    CHECK_NEAR(hover.state.lastError, -6, kTol);
-    CHECK_NEAR(o.force.z, 89.81, kLoose);
-    CheckVec(o.torque, 0, 0, 0, kLoose);
-  }
-}
 
 namespace {
 Hit MakeHit(Vec3 tire, Vec3 position, Vec3 normal) { return Hit{true, tire, position, normal}; }
@@ -858,16 +363,16 @@ TEST(modes_ground_from_hits_above_the_emitters) {
   CHECK_NEAR(g.distance, -0.3f, 1e-4f);
 }
 
-TEST(modes_hover_fly_assist_keeps_hover_height_through_a_gap) {
+TEST(modes_standard_keeps_hover_height_through_a_gap) {
   // hovering 1 m up, the ground lost for a frame (a ray through a seam) and found again 0.3 m lower: the hover height
   // stays; lost for 0.6 s, the band is entered anew at the distance then
-  HoverFlyState m;
+  StandardState m;
   m.hoverHeight = 1.0f;
   const StatsState s = Level();
   const StatsStatic st = Static();
   const Controls c;
   const StandardParams p;
-  const HoverFlyAssistParams a;
+  const StandardGains a;
   const Vec3 response{1, 1, 1};
   Ground ground;
   ground.found = true;
@@ -878,14 +383,68 @@ TEST(modes_hover_fly_assist_keeps_hover_height_through_a_gap) {
   Ground lower = ground;
   lower.distance = 1.3f;
   const float dt = 1.0f / 60.0f;
-  HoverFlyAssist(m, s, st, c, p, a, ground, response, dt);
-  HoverFlyAssist(m, s, st, c, p, a, none, response, dt);
-  HoverFlyAssist(m, s, st, c, p, a, lower, response, dt);
+  Standard(m, s, st, c, p, a, ground, response, dt);
+  Standard(m, s, st, c, p, a, none, response, dt);
+  Standard(m, s, st, c, p, a, lower, response, dt);
   CHECK_NEAR(m.hoverHeight, 1.0f, kTol);
   for (int i = 0; i < 36; ++i)
-    HoverFlyAssist(m, s, st, c, p, a, none, response, dt);
-  HoverFlyAssist(m, s, st, c, p, a, lower, response, dt);
+    Standard(m, s, st, c, p, a, none, response, dt);
+  Standard(m, s, st, c, p, a, lower, response, dt);
   CHECK_NEAR(m.hoverHeight, 1.3f, kTol);
+}
+
+TEST(modes_standard_hover_bands) {
+  // the hover weight by band, the car level and still, the PIDs' defaults (StandardParams: band 1 to 7 m)
+  const StatsState s = Level();
+  const StatsStatic st = Static();
+  const Controls c;
+  const StandardParams p;
+  const StandardGains a;
+  const Vec3 response{1, 1, 1};
+  const float dt = 1.0f / 60.0f;
+  auto weight = [&](HoverBand band, Ground g) {
+    StandardState m;
+    m.hoverHeight = 2.0f;
+    Standard(m, s, st, c, p, a, g, response, dt, band);
+    return m.hovering;
+  };
+  // Standard (Blend): 1 at the band's bottom, 0.5 halfway, 0 at the top and above it, 0 without ground
+  CHECK_NEAR(weight(HoverBand::Blend, Found(1, kUp)), 1.0, kTol);
+  CHECK_NEAR(weight(HoverBand::Blend, Found(4, kUp)), 0.5, kTol);
+  CHECK_NEAR(weight(HoverBand::Blend, Found(20, kUp)), 0.0, kTol);
+  CHECK_NEAR(weight(HoverBand::Blend, NotFound(4)), 0.0, kTol);
+  // Hover (Always): 1 on any ground found, 20 m up too
+  CHECK_NEAR(weight(HoverBand::Always, Found(4, kUp)), 1.0, kTol);
+  CHECK_NEAR(weight(HoverBand::Always, Found(20, kUp)), 1.0, kTol);
+  CHECK_NEAR(weight(HoverBand::Always, NotFound(4)), 0.0, kTol);
+  // Fly (Never): 0, the ground ignored
+  CHECK_NEAR(weight(HoverBand::Never, Found(1, kUp)), 0.0, kTol);
+  CHECK_NEAR(weight(HoverBand::Never, Found(4, kUp)), 0.0, kTol);
+}
+
+TEST(modes_standard_hover_sinks_into_the_band) {
+  // Hover 20 m over the ground: the hover height is the band's top (7 m), so the car is pushed down; Standard there
+  // holds its height (no push) and Fly at 4 m too
+  const StatsState s = Level();
+  const StatsStatic st = Static();
+  const Controls c;
+  const StandardParams p;
+  const StandardGains a;
+  const Vec3 response{1, 1, 1};
+  const float dt = 1.0f / 60.0f;
+  StandardState hover;
+  hover.outOfBand = kRegainHoverHeight;
+  const ModeOutput h = Standard(hover, s, st, c, p, a, Found(20, kUp), response, dt, HoverBand::Always);
+  CHECK_NEAR(hover.hoverHeight, p.maxHoverHeight, kTol);
+  CHECK(h.force.z < kGravity - 1.0f);
+  StandardState standard;
+  standard.holdingAltitude = true; // held where it is
+  const ModeOutput d = Standard(standard, s, st, c, p, a, Found(20, kUp), response, dt, HoverBand::Blend);
+  CHECK_NEAR(d.force.z, kGravity, kLoose);
+  StandardState fly;
+  fly.holdingAltitude = true;
+  const ModeOutput f = Standard(fly, s, st, c, p, a, Found(4, kUp), response, dt, HoverBand::Never);
+  CHECK_NEAR(f.force.z, kGravity, kLoose);
 }
 
 TEST(modes_drone_skid) {

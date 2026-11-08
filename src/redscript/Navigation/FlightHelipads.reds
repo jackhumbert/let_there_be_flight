@@ -29,12 +29,16 @@ public class FlightHelipadTickCallback extends DelayCallback {
 public class FlightHelipadSystem extends ScriptableSystem {
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Landing-Pads")
+  @runtimeProperty("ModSettings.category.order", "6")
+  @runtimeProperty("ModSettings.order", "0")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Landing-Pads-Show")
   @runtimeProperty("ModSettings.description", "UI-Settings-Landing-Pads-Show-Description")
   public let showOnMap: Bool = true;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Landing-Pads")
+  @runtimeProperty("ModSettings.category.order", "6")
+  @runtimeProperty("ModSettings.order", "1")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Landing-Pads-Discovered")
   @runtimeProperty("ModSettings.description", "UI-Settings-Landing-Pads-Discovered-Description")
   public let onlyDiscovered: Bool = true;

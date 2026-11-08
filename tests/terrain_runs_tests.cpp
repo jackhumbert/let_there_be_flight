@@ -31,7 +31,7 @@ Line Along(float aY0, float aY1) {
 
 Setup Assist() {
   Setup s;
-  s.mode = Mode::Assist;
+  s.mode = Mode::Standard;
   return s;
 }
 } // namespace

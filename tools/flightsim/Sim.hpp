@@ -5,7 +5,7 @@
 // game.
 //
 // What is the game's code and what is a model:
-// - the input smoothing (StepControls), the stats (UpdateDynamic), the mode (HoverFly, Drone, ...) and the force tail
+// - the input smoothing (StepControls), the stats (UpdateDynamic), the mode (Standard, Drone, ...) and the force tail
 //   (ForceTail: ApplyPhysics, the mass and tensor scaling) are the plugin's functions, called as the game calls them;
 // - FindGround is modelled: four rays straight down from the wheel points, as FlightComponent.FindGround casts them,
 //   averaged with GroundFromHits; the world is a height field;
@@ -126,14 +126,15 @@ using BodyStep = std::function<void(const BodyStepIn &, BodyStepOut &)>;
 
 // The mode flown.
 enum class Mode {
-  HoverFly,         // Flight::HoverFly, today's Hover & Fly
-  Assist,           // Flight::HoverFlyAssist, its redesign
+  Standard,         // Flight::Standard (the Hover & Fly redesign), the hover band blended
+  Hover,            // Standard, the hover band always on (FlightModeHover)
+  Fly,              // Standard, the ground ignored (FlightModeFly)
   Drone,            // Flight::Drone
   AntiGravityDrone, // Drone plus FlightModeDroneAntiGravity's d_localUp x 9.81 x gravityFactor (its script's own line)
   DroneAssist,      // Flight::DroneAssist, Drone with a rate command per axis (a proposal)
 };
-// The command line's names (flightsim --mode): hoverfly, assist, drone, agdrone, droneassist. ParseMode returns false
-// for a name it does not know.
+// The command line's names (flightsim --mode): standard, hover, fly, drone, agdrone, droneassist; assist and hoverfly
+// are taken for standard (its older names). ParseMode returns false for a name it does not know.
 const char *ModeName(Mode aMode);
 bool ParseMode(const std::string &aName, Mode &aMode);
 inline bool IsDrone(Mode aMode) { return aMode == Mode::Drone || aMode == Mode::AntiGravityDrone || aMode == Mode::DroneAssist; }
@@ -144,14 +145,13 @@ public:
 
   // The tuning, at the mod's defaults; change before Place.
   Flight::StandardParams standard;
-  Flight::HoverFlyParams hoverFly;
   Flight::ForceParams force;
-  Mode mode = Mode::HoverFly;
+  Mode mode = Mode::Standard;
   // shape drag (Flight::ShapeDragAccel from the car's cda) in place of today's airResistanceFactor drag
   bool shapeDrag = false;
   // surge and sway scaled by each car's thrust (Flight::ThrustScale): 0 today's, 1 by its thrusters alone
   float thrustStrength = 0.0f, thrustPerThruster = 6000.0f;
-  Flight::HoverFlyAssistParams assistParams;
+  Flight::StandardGains standardGains;
   Flight::DroneParams drone;
   Flight::DroneAssistParams droneAssist;
   Flight::PidGains hoverPid{1.0f, 0.005f, 0.5f}, pitchPid{1.0f, 0.2f, 0.05f}, rollPid{1.0f, 0.5f, 0.0f};
@@ -160,6 +160,9 @@ public:
   // Drone's skid as FlightModeControl.cpp's Skid adds it: the clearance it holds the car's lowest point at (m; 0 off),
   // and with skidPerThruster 1 at each wheel emitter from its own ray (Flight::DroneSkidPoints) instead of once through
   // the centre of mass from the rays' mean (Flight::DroneSkid)
+  // the player's Handling (Flight::Handling: 0 Loose, 1 Default, 2 Tight), put over force and standardGains as the
+  // plugin does
+  int handling = 1;
   float skid = 0.0f, skidPerThruster = 0.0f;
   float skidTurn = Flight::DroneSkidParams{}.turn; // DroneSkidParams::turn
   // 1: the ground contact at points, each an impulse where it touches so a corner down turns the body, with friction,
@@ -178,7 +181,7 @@ public:
   float openBottom = 0.0f;
 
   // Puts the car at rest, level, at position with the nose to headingDeg (0 = +Y, clockwise) and engages the mode
-  // (FlightModeHoverFly.Activate). velocity starts it moving.
+  // (FlightModeStandard.OnActivateNative). velocity starts it moving.
   void Place(Vec3 aPosition, float aHeadingDeg, Vec3 aVelocity = {});
   Frame Step(const Keys &aKeys, float aDt);
 
@@ -250,7 +253,7 @@ private:
   Flight::ControlAxes axes;
   Flight::StatsState stats;
   Flight::StatsStatic statics;
-  Flight::HoverFlyState hoverFlyState;
+  Flight::StandardState standardState;
   Flight::Pid hover, pitch, roll;
   float lastDistance = 0;
   int rays = 0; // FindGround's this frame

@@ -78,8 +78,8 @@ public abstract native class FlightMode extends IScriptable {
   protected func OnUpdate(timeDelta: Float) -> Void;
   protected func Description() -> String = "";
 
-  // The native mode controller with this frame's controls, the brake factors and gravityFactor filled in; the mode adds
-  // its own params and calls the maths.
+  // The native mode controller with this frame's controls and the brake factors (Brake Strength applied) filled in; the
+  // mode adds its own params and calls the maths.
   protected final func Control(timeDelta: Float) -> ref<FlightModeControl> {
     if !IsDefined(this.control) {
       this.control = new FlightModeControl();
@@ -94,9 +94,8 @@ public abstract native class FlightMode extends IScriptable {
     k.pitch = this.component.pitch;
     k.linearBrake = this.component.linearBrake;
     k.angularBrake = this.component.angularBrake;
-    k.brakeFactorLinear = FlightSettings.GetInstance().brakeFactorLinear;
-    k.brakeFactorAngular = FlightSettings.GetInstance().brakeFactorAngular;
-    k.gravityFactor = this.gravityFactor;
+    k.brakeFactorLinear = FlightSettings.GetInstance().LinearBrake();
+    k.brakeFactorAngular = FlightSettings.GetInstance().AngularBrake();
     return k;
   }
 
@@ -134,7 +133,7 @@ public abstract native class FlightMode extends IScriptable {
     // plugin measures how much spin contacts (ground, walls, impacts) gave the vehicle, so a
     // tip-over or crash tumbles physically while inputs and free flight stay damped.
     let spin = this.component.stats.d_angularVelocity - Quaternion.Conjugate(this.component.stats.d_orientation) * this.component.GetContactSpin();
-    let angularDamp: Vector4 = spin * (fs.generalDampFactorAngular + this.component.angularBrake * fs.brakeFactorAngular * this.component.stats.s_brakingFrictionFactor);
+    let angularDamp: Vector4 = spin * (fs.generalDampFactorAngular + this.component.angularBrake * fs.AngularBrake() * this.component.stats.s_brakingFrictionFactor);
 
     // angularDamp += this.component.stats.d_angularAcceleration;
     
@@ -180,7 +179,7 @@ public abstract native class FlightMode extends IScriptable {
     }
 
     // this.angularDamp = fs.generalDampFactorAngular * ClampF(angularDamp, 0.0, 1.0) + this.component.angularBrake * fs.brakeFactorAngular;
-    this.linearDamp = fs.generalDampFactorLinear + this.component.linearBrake * fs.brakeFactorLinear;
+    this.linearDamp = fs.generalDampFactorLinear + this.component.linearBrake * fs.LinearBrake();
 
     // this.lastAngularDamp = angularDamp;
 

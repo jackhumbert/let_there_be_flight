@@ -243,12 +243,12 @@
 
 	<mapping name="Flight_LinearBrake" type="Axis">
 		<button id="IK_Pad_A_CROSS" val="1.0" />
-		<button id="IK_C" val="1.0" overridableUI="vehicleFlightLinearBrake" />
+		<button id="IK_C" val="1.0" overridableUI="vehicleFlightBrake" />
 	</mapping>
 
 	<mapping name="Flight_AngularBrake" type="Axis">
 		<button id="IK_Pad_A_CROSS" val="1.0" />
-		<button id="IK_C" val="1.0" overridableUI="vehicleFlightAngularBrake"  />
+		<button id="IK_C" val="1.0" overridableUI="vehicleFlightBrake"  />
 	</mapping>
 
 	<mapping name="Flight_SurgePos" type="Axis" >

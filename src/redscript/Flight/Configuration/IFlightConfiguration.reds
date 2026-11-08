@@ -30,8 +30,11 @@ public abstract native class IFlightConfiguration extends IScriptable {
   public let type: FlightVehicleType = FlightVehicleType.Corpo;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Crashes")
+  @runtimeProperty("ModSettings.category.order", "4")
+  @runtimeProperty("ModSettings.order", "1")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Detachable-Thrusters")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Detachable-Thrusters-Description")
   public let areThrustersDetachable: Bool = true;
 
   public let percentageAttached: Float = 1.0;

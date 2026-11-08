@@ -30,17 +30,16 @@ bool Register() {
   static std::vector<ModSettings::Variable> variables;
   variables.clear();
   variables.reserve(Flight::PlayerSettingsTable().size() + 1 + Flight::AutopilotSettingsTable().size());
-  uint32_t order = 0;
   for (const auto &s : Flight::PlayerSettingsTable()) {
     ModSettings::Variable v{};
     v.modName = Flight::kPlayerSettingsMod;
     v.className = Flight::kPlayerSettingsClass;
-    v.categoryName = Flight::kPlayerSettingsCategory;
+    v.categoryName = Flight::kFlightModesCategory;
     v.propertyName = s.name;
     v.type = "Float";
     v.displayName = s.displayName;
     v.description = s.description;
-    v.order = order++;
+    v.order = s.order;
     v.defaultValue.f32 = s.defaultValue;
     v.stepValue.f32 = s.step;
     v.minValue.f32 = s.min;
@@ -53,37 +52,36 @@ bool Register() {
     variables.push_back(v);
   }
   {
-    // Hover & Fly's switch, alone in its class (Mod Settings calls a class's callbacks with each of its variables)
+    // Standard's switch, alone in its class (Mod Settings calls a class's callbacks with each of its variables)
     ModSettings::Variable v{};
     v.modName = Flight::kPlayerSettingsMod;
-    v.className = Flight::kHoverFlyEnabledClass;
-    v.categoryName = Flight::kHoverFlyEnabledCategory;
-    v.propertyName = Flight::kHoverFlyEnabledName;
+    v.className = Flight::kStandardEnabledClass;
+    v.categoryName = Flight::kFlightModesCategory;
+    v.propertyName = Flight::kStandardEnabledName;
     v.type = "Bool";
-    v.displayName = Flight::kHoverFlyEnabledDisplayName;
-    v.description = "";
+    v.displayName = Flight::kStandardEnabledDisplayName;
+    v.description = Flight::kStandardEnabledDescription;
     v.order = 0;
     v.defaultValue.b = true;
     v.callback = std::make_shared<ModSettings::runtime_class_callback_t>(
         [](RED4ext::CName aCategory, RED4ext::CName aProperty, ModSettings::ModVariableType aValue) {
-          if (aProperty.ToString() != std::string(Flight::kHoverFlyEnabledName))
+          if (aProperty.ToString() != std::string(Flight::kStandardEnabledName))
             return;
-          Flight::Player().hoverFlyEnabled = aValue.b;
-          spdlog::info("[Settings] {}.{} = {}", Flight::kHoverFlyEnabledClass, Flight::kHoverFlyEnabledName, aValue.b);
+          Flight::Player().standardEnabled = aValue.b;
+          spdlog::info("[Settings] {}.{} = {}", Flight::kStandardEnabledClass, Flight::kStandardEnabledName, aValue.b);
         });
     variables.push_back(v);
   }
-  order = 0;
   for (const auto &s : Flight::AutopilotSettingsTable()) {
     ModSettings::Variable v{};
     v.modName = Flight::kPlayerSettingsMod;
     v.className = Flight::kAutopilotSettingsClass;
-    v.categoryName = s.category;
+    v.categoryName = Flight::kFlightModesCategory;
     v.propertyName = s.name;
     v.type = s.isBool ? "Bool" : "Float";
     v.displayName = s.displayName;
     v.description = s.description;
-    v.order = order++;
+    v.order = s.order;
     if (s.isBool) {
       v.defaultValue.b = s.defaultValue != 0.0f;
     } else {

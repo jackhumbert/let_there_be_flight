@@ -16,21 +16,6 @@ namespace {
 Flight::Vec3 ToVec(const RED4ext::Vector4 &aV) { return {aV.X, aV.Y, aV.Z}; }
 RED4ext::Vector4 ToDirection(const Flight::Vec3 &aV) { return {aV.x, aV.y, aV.z, 0.0f}; }
 
-// A PID as the pure code takes it; a null handle is a zero PID (correction 0), which is not written back.
-Flight::Pid Load(const RED4ext::Handle<FlightPID> &aPid) {
-  Flight::Pid p;
-  if (aPid) {
-    p.state = aPid->State();
-    p.gains = aPid->Gains();
-  }
-  return p;
-}
-
-void Store(const RED4ext::Handle<FlightPID> &aPid, const Flight::Pid &aValue) {
-  if (aPid)
-    aPid->SetState(aValue.state);
-}
-
 // Drone's skid for the car of aComponent, as a body-frame force and mode torque. A clearance is a ray's distance to
 // the ground less its wheel emitter's height over the car's lowest point (the configuration's, in the vehicle's frame:
 // the chassis shape's, or LTBF's thruster spheres', which the car rests on). By default each emitter, where a thruster
@@ -105,31 +90,6 @@ float FlightModeControl::Thrust(const Flight::StatsStatic &aStatic, float aRefer
   return Flight::ThrustScale(aStatic.thrusters, aStatic.mass, dev.thrustPerThruster, aReference, dev.thrustStrength);
 }
 
-Flight::StandardParams FlightModeControl::Standard(const Flight::StatsStatic &aStatic) const {
-  Flight::StandardParams p;
-  p.surgeFactor = standardModeSurgeFactor;
-  p.yawFactor = standardModeYawFactor;
-  p.swayFactor = standardModeSwayFactor;
-  p.pitchFactor = standardModePitchFactor;
-  p.liftFactor = standardModeLiftFactor;
-  p.hoverFactor = standardModeHoverFactor;
-  p.pitchInputAngle = standardModePitchInputAngle;
-  p.rollFactor = standardModeRollFactor;
-  p.rollInputAngle = standardModeRollInputAngle;
-  p.rollWithYaw = generalRollWithYaw;
-  p.pitchWithLift = pitchWithLift;
-  p.pitchWithSurge = pitchWithSurge;
-  p.brakeFactorLinear = brakeFactorLinear;
-  p.hoverClamp = hoverClamp;
-  p.minHoverHeight = hoverModeMinHoverHeight;
-  p.maxHoverHeight = hoverModeMaxHoverHeight;
-  p.gravityFactor = gravityFactor;
-  const float thrust = Thrust(aStatic, standardModeSurgeFactor);
-  p.surgeFactor *= thrust;
-  p.swayFactor *= thrust;
-  return p;
-}
-
 Flight::Controls FlightModeControl::Controls() const {
   Flight::Controls c;
   c.surge = surge;
@@ -143,96 +103,9 @@ Flight::Controls FlightModeControl::Controls() const {
   return c;
 }
 
-Flight::Ground FlightModeControl::GroundOf() const {
-  Flight::Ground g;
-  g.found = foundGround;
-  g.distance = distance;
-  g.normal = ToVec(normal);
-  return g;
-}
-
 void FlightModeControl::SetOutput(const Flight::ModeOutput &aOut) {
   force = ToDirection(aOut.force);
   torque = ToDirection(aOut.torque);
-}
-
-void FlightModeControl::StandardLift(RED4ext::Handle<FlightStats> aStats, RED4ext::Handle<FlightPID> aPitchPid,
-                                     RED4ext::Handle<FlightPID> aRollPid, RED4ext::Vector4 aNormal, float aLiftForce) {
-  if (!aStats) {
-    SetOutput({});
-    return;
-  }
-  Flight::Pid pitchPid = Load(aPitchPid), rollPid = Load(aRollPid);
-  SetOutput(Flight::StandardLift(aStats->State(), aStats->Static(), Controls(), Standard(aStats->Static()), pitchPid, rollPid,
-                                 ToVec(aNormal), aLiftForce, dt));
-  Store(aPitchPid, pitchPid);
-  Store(aRollPid, rollPid);
-}
-
-void FlightModeControl::StandardDistance(RED4ext::Handle<FlightStats> aStats, RED4ext::Handle<FlightPID> aHoverPid,
-                                         RED4ext::Handle<FlightPID> aPitchPid, RED4ext::Handle<FlightPID> aRollPid,
-                                         RED4ext::Vector4 aNormal, float aHeightDifference) {
-  if (!aStats) {
-    SetOutput({});
-    return;
-  }
-  Flight::Pid hoverPid = Load(aHoverPid), pitchPid = Load(aPitchPid), rollPid = Load(aRollPid);
-  SetOutput(Flight::StandardDistance(aStats->State(), aStats->Static(), Controls(), Standard(aStats->Static()), hoverPid, pitchPid,
-                                     rollPid, ToVec(aNormal), aHeightDifference, dt));
-  Store(aHoverPid, hoverPid);
-  Store(aPitchPid, pitchPid);
-  Store(aRollPid, rollPid);
-}
-
-void FlightModeControl::HoverFly(RED4ext::Handle<FlightStats> aStats, RED4ext::Handle<FlightPID> aHoverPid,
-                                 RED4ext::Handle<FlightPID> aPitchPid, RED4ext::Handle<FlightPID> aRollPid) {
-  if (!aStats) {
-    SetOutput({});
-    return;
-  }
-  Flight::HoverFlyParams h;
-  h.altitudeHoldFactor = altitudeHoldFactor;
-  h.heightDampening = heightDampening;
-  h.heightCorrectionFactor = heightCorrectionFactor;
-  Flight::HoverFlyState m;
-  m.hovering = hovering;
-  m.referenceZ = referenceZ;
-  m.hoverHeight = hoverHeight;
-  m.holdingAltitude = holdingAltitude;
-  Flight::Pid hoverPid = Load(aHoverPid), pitchPid = Load(aPitchPid), rollPid = Load(aRollPid);
-  SetOutput(Flight::HoverFly(m, aStats->State(), aStats->Static(), Controls(), Standard(aStats->Static()), h, GroundOf(), hoverPid,
-                             pitchPid, rollPid, dt));
-  hovering = m.hovering;
-  referenceZ = m.referenceZ;
-  hoverHeight = m.hoverHeight;
-  holdingAltitude = m.holdingAltitude;
-  Store(aHoverPid, hoverPid);
-  Store(aPitchPid, pitchPid);
-  Store(aRollPid, rollPid);
-}
-
-void FlightModeControl::Automatic(RED4ext::Handle<FlightStats> aStats, RED4ext::Handle<FlightPID> aHoverPid,
-                                  RED4ext::Handle<FlightPID> aPitchPid, RED4ext::Handle<FlightPID> aRollPid) {
-  if (!aStats) {
-    SetOutput({});
-    return;
-  }
-  Flight::AutomaticParams a;
-  a.autoBrakingFactor = automaticModeAutoBrakingFactor;
-  a.yawDirectionality = automaticModeYawDirectionality;
-  a.liftFactor = automaticModeLiftFactor;
-  a.hoverFactor = automaticModeHoverFactor;
-  Flight::AutomaticState m;
-  m.hovering = hovering;
-  m.hoverHeight = hoverHeight;
-  Flight::Pid hoverPid = Load(aHoverPid), pitchPid = Load(aPitchPid), rollPid = Load(aRollPid);
-  SetOutput(Flight::Automatic(m, aStats->State(), aStats->Static(), Controls(), Standard(aStats->Static()), a, GroundOf(), hoverPid,
-                              pitchPid, rollPid, dt));
-  hovering = m.hovering;
-  hoverHeight = m.hoverHeight;
-  Store(aHoverPid, hoverPid);
-  Store(aPitchPid, pitchPid);
-  Store(aRollPid, rollPid);
 }
 
 void FlightModeControl::Drone(RED4ext::Handle<FlightStats> aStats, RED4ext::Handle<RED4ext::IScriptable> aComponent) {

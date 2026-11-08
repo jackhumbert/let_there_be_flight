@@ -44,21 +44,19 @@ public class FlightSummonTickCallback extends DelayCallback {
 public class FlightSummonSystem extends ScriptableSystem {
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Landing-Pads")
+  @runtimeProperty("ModSettings.category.order", "6")
+  @runtimeProperty("ModSettings.order", "2")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Pad-Summon")
   @runtimeProperty("ModSettings.description", "UI-Settings-Pad-Summon-Description")
   public let padSummonEnabled: Bool = true;
 
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Landing-Pads")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Pad-Summon-Range")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Pad-Summon-Range-Description")
-  @runtimeProperty("ModSettings.step", "5.0")
-  @runtimeProperty("ModSettings.min", "10.0")
-  @runtimeProperty("ModSettings.max", "200.0")
+  // a developer value, not a Mod Setting (docs/design/settings-audit.md)
   public let padSummonRange: Float = 60.0;    // m beyond a pad's radius V counts as near it
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Landing-Pads")
+  @runtimeProperty("ModSettings.category.order", "6")
+  @runtimeProperty("ModSettings.order", "3")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Summon-Fallback")
   @runtimeProperty("ModSettings.description", "UI-Settings-Summon-Fallback-Description")
   public let summonFallbackEnabled: Bool = true;

@@ -229,6 +229,7 @@ add_executable(flightsim EXCLUDE_FROM_ALL
   tools/flightsim/Replay.cpp
   src/red4ext/Flight/Stats.cpp
   src/red4ext/Flight/Force.cpp
+  src/red4ext/Flight/Handling.cpp
   src/red4ext/Flight/Pid.cpp
   src/red4ext/Flight/Controls.cpp
   src/red4ext/Flight/Modes.cpp
@@ -380,6 +381,7 @@ add_executable(ltbf_tests
   src/red4ext/Navigation/Doorways.cpp
   src/red4ext/Flight/Stats.cpp
   src/red4ext/Flight/Force.cpp
+  src/red4ext/Flight/Handling.cpp
   src/red4ext/Flight/Pid.cpp
   src/red4ext/Flight/Controls.cpp
   src/red4ext/Flight/Modes.cpp

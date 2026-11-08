@@ -1,22 +1,3 @@
-public class FlightModeFly extends FlightModeStandard {
-
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Mode-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Fly-Mode-Enabled")
-  public let enabled: Bool = false;
-
-  public func Activate() {}
-  public func Deactivate() {}
-
-
-  public func GetDescription() -> String = "Fly";
-
-  public func IsEnabled() -> Bool = this.enabled;
-
-  public func Update(timeDelta: Float) -> Void {
-    let idealNormal = FlightUtils.Up();
-    // let liftForce: Float = FlightSettings.GetFloat("flyModeLiftFactor") * this.component.lift + (9.81000042) * this.gravityFactor;
-    let liftForce: Float = this.standardModeLiftFactor * this.component.lift * timeDelta + (9.81000042) * this.gravityFactor;
-    this.UpdateWithNormalLift(timeDelta, idealNormal, liftForce);
-  }
-}
+// Fly, in C++ (Flight/FlightModeStandard.hpp): Standard with the ground ignored, the height held where lift leaves it.
+// In the mode list behind Extra Flight Modes (FlightSettings.extraModesEnabled).
+public native class FlightModeFly extends FlightModeStandard {}

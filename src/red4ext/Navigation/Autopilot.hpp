@@ -108,7 +108,7 @@ struct AutopilotInput {
   // shapeDrag, dragK, thrustStrength, thrustPerThruster as FlightVehicleModel reads them; nullptr: Flight::Developer()
   const Flight::DeveloperSettings *developer = nullptr;
   // the component's pitch and roll PIDs: with both given, a frame the player has taken over is flown here
-  // (Flight::StandardLift); without, the shell flies it from AutopilotOutput's manual request
+  // (Flight::AttitudeLift); without, the shell flies it from AutopilotOutput's manual request
   Flight::Pid *pitchPid = nullptr;
   Flight::Pid *rollPid = nullptr;
 };

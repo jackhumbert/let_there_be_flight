@@ -8,6 +8,7 @@
 #include "Flight/FlightModeControl.hpp"
 #include "Flight/FlightPID.hpp"
 #include "Flight/FlightStats.hpp"
+#include "Flight/Handling.hpp"
 #include "Flight/Settings.hpp"
 #include "Flight/Telemetry.hpp"
 #include "FlightSettings.hpp"
@@ -38,7 +39,8 @@ struct Props {
             *rollPid = nullptr, *modes = nullptr;
   // FlightSettings' instance fields (the script read FlightSettings.GetInstance().<name>)
   CProperty *physx = nullptr, *brakeLinear = nullptr, *brakeAngular = nullptr, *dampAngular = nullptr,
-            *yawDamp = nullptr, *dampMax = nullptr, *rollWithYaw = nullptr;
+            *yawDamp = nullptr, *dampMax = nullptr, *rollWithYaw = nullptr, *brakeStrength = nullptr,
+            *handling = nullptr;
   bool ok = false;
 };
 
@@ -74,6 +76,8 @@ const Props &GetProps() {
       p.yawDamp = settings->GetProperty("generalYawDampFactor");
       p.dampMax = settings->GetProperty("generalDampFactorAngularMax");
       p.rollWithYaw = settings->GetProperty("generalRollWithYaw");
+      p.brakeStrength = settings->GetProperty("brakeStrength");
+      p.handling = settings->GetProperty("handling");
     }
     p.ok = all && p.component && p.gravityFactor && p.tensor && p.isPlayerMounted && p.collisionTimer && p.modes;
     return p;
@@ -85,6 +89,25 @@ template <typename T> T &Field(CProperty *aProp, void *aOwner) { return *aProp->
 
 template <typename T> T FieldOr(CProperty *aProp, void *aOwner, T aFallback) {
   return aProp && aOwner ? *aProp->GetValuePtr<T>(aOwner) : aFallback;
+}
+
+// A redscript enum field's value (its type's size: 1 to 8 bytes), or aFallback.
+int32_t EnumFieldOr(CProperty *aProp, void *aOwner, int32_t aFallback) {
+  if (!aProp || !aOwner || !aProp->type)
+    return aFallback;
+  const void *data = aProp->GetValuePtr<void>(aOwner);
+  switch (aProp->type->GetSize()) {
+  case 1:
+    return *static_cast<const int8_t *>(data);
+  case 2:
+    return *static_cast<const int16_t *>(data);
+  case 4:
+    return *static_cast<const int32_t *>(data);
+  case 8:
+    return static_cast<int32_t>(*static_cast<const int64_t *>(data));
+  default:
+    return aFallback;
+  }
 }
 
 Navigation::Vec3 N(const RED4ext::Vector4 &aV) { return {aV.X, aV.Y, aV.Z}; }
@@ -135,7 +158,8 @@ FlightModeAutopilot::FlightModeAutopilot() : ap(world, FlightNavMap::Queue(), pa
   status = "idle";
 }
 
-// Initialize (425): set up, with the Mod Settings applied; the standard modes' hit penalty (FlightModeStandard did it)
+// Initialize (425): set up, with the Mod Settings applied; the old standard modes' hit penalty (the script
+// FlightModeStandard did it)
 void FlightModeAutopilot::OnInitializeNative() {
   const Props &p = GetProps();
   if (p.ok) {
@@ -152,8 +176,8 @@ void FlightModeAutopilot::OnInitializeNative() {
   PullState();
 }
 
-// The Mod Settings (enabled, brakeAccel, landAtDestination, padRange) and the developer overrides (autopilot.<name>)
-// written into the tuning: when the mode is set up and engaged (aForce), and when either changes. A field a script set
+// The Mod Settings (enabled, landAtDestination, padRange; brakeAccel at its default) and the developer overrides
+// (autopilot.<name>) written into the tuning: when the mode is set up and engaged (aForce), and when either changes. A field a script set
 // meanwhile keeps its value until then, as with the script mode.
 void FlightModeAutopilot::ApplySettings(bool aForce) {
   const uint32_t settings = Flight::AutopilotSettingsGeneration();
@@ -219,23 +243,31 @@ bool FlightModeAutopilot::Gather(Navigation::AutopilotInput &aIn, Frame &aFrame)
   static FlightSettings *settings = FlightSettings::GetInstance().GetPtr();
   auto &f = aIn.settings;
   f.physxFlightPhysics = FieldOr<bool>(p.physx, settings, f.physxFlightPhysics);
-  f.brakeFactorLinear = FieldOr<float>(p.brakeLinear, settings, f.brakeFactorLinear);
-  f.brakeFactorAngular = FieldOr<float>(p.brakeAngular, settings, f.brakeFactorAngular);
+  // the brakes times Brake Strength, as FlightSettings.LinearBrake and AngularBrake give them
+  const float brakeStrength = FieldOr<float>(p.brakeStrength, settings, 1.0f);
+  f.brakeFactorLinear = FieldOr<float>(p.brakeLinear, settings, f.brakeFactorLinear) * brakeStrength;
+  f.brakeFactorAngular = FieldOr<float>(p.brakeAngular, settings, f.brakeFactorAngular) * brakeStrength;
   f.generalDampFactorAngular = FieldOr<float>(p.dampAngular, settings, f.generalDampFactorAngular);
   f.generalYawDampFactor = FieldOr<float>(p.yawDamp, settings, f.generalYawDampFactor);
   f.generalDampFactorAngularMax = FieldOr<float>(p.dampMax, settings, f.generalDampFactorAngularMax);
+  // Handling's set in place of the handling values, as the car's own force tail has it (FlightForce)
+  const int32_t handling = EnumFieldOr(p.handling, settings, static_cast<int32_t>(Flight::Handling::Default));
+  f = Flight::WithHandling(f, handling);
   f.dampStabilityK = FlightSettings::GetFloatN("dampStabilityK");
   f.dampMaxPerFrame = FlightSettings::GetFloatN("dampMaxPerFrame");
   f.collisionRecoveryDelay = FlightSettings::GetFloatN("collisionRecoveryDelay");
   f.shapeDrag = Flight::Developer().shapeDrag;
   f.dragK = Flight::Developer().dragK;
 
-  // the Standard factors the car model and the player's takeover use: the code's own (Flight::StandardParams), not the
-  // Standard modes' Mod Settings (Jack, 2026-11-05: the Autopilot's car should not change with another mode's sliders;
-  // until then it read them from the first FlightModeStandard in the car's list)
+  // the standard factors the car model and the player's takeover use: the code's own (Flight::StandardParams), not
+  // another mode's settings, so the Autopilot's car does not change with another mode's sliders
   auto &s = aIn.standard;
   s = {};
-  s.rollWithYaw = FieldOr<float>(p.rollWithYaw, settings, s.rollWithYaw);
+  {
+    Flight::HandlingFactors d;
+    d.generalRollWithYaw = FieldOr<float>(p.rollWithYaw, settings, s.rollWithYaw);
+    s.rollWithYaw = Flight::HandlingSet(handling, d).generalRollWithYaw;
+  }
   s.pitchWithLift = FlightSettings::GetFloatN("pitchWithLift");
   s.pitchWithSurge = FlightSettings::GetFloatN("pitchWithSurge");
   s.brakeFactorLinear = f.brakeFactorLinear;
@@ -439,8 +471,8 @@ void FlightModeAutopilot::OnUpdateNative(float aTimeDelta) {
   const Navigation::AutopilotOutput out = ap.Step(in);
 
   if (out.manual) {
-    // the player has the controls: the Standard mode's UpdateWithNormalLift on the native path (FlightModeControl's
-    // StandardLift with StandardControl's params: surge and sway scaled by the car's thrust) and the component's PIDs
+    // the player has the controls: the old standard modes' UpdateWithNormalLift (Flight::AttitudeLift, surge and sway
+    // scaled by the car's thrust as their StandardControl did) and the component's PIDs
     const Props &p = GetProps();
     Flight::StandardParams scaled = in.standard;
     const float thrust = FlightModeControl::Thrust(in.statics, scaled.surgeFactor);
@@ -460,7 +492,7 @@ void FlightModeAutopilot::OnUpdateNative(float aTimeDelta) {
       rollPid.state = rollHandle->State();
       rollPid.gains = rollHandle->Gains();
     }
-    const Flight::ModeOutput manual = Flight::StandardLift(in.stats, in.statics, in.controls, scaled, pitchPid, rollPid,
+    const Flight::ModeOutput manual = Flight::AttitudeLift(in.stats, in.statics, in.controls, scaled, pitchPid, rollPid,
                                                            out.manualNormal, out.manualLift, aTimeDelta);
     if (pitchHandle) {
       pitchHandle->SetState(pitchPid.state);

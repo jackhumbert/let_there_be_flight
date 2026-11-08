@@ -260,7 +260,7 @@ AutopilotOutput Autopilot::Step(const AutopilotInput &aIn) {
     out.manualNormal = Flight::kUp;
     out.manualLift = 9.81f * aIn.standard.gravityFactor + aIn.controls.lift * aIn.standard.liftFactor - v.z;
     if (aIn.pitchPid && aIn.rollPid) {
-      const auto manual = Flight::StandardLift(stats, aIn.statics, aIn.controls, aIn.standard, *aIn.pitchPid,
+      const auto manual = Flight::AttitudeLift(stats, aIn.statics, aIn.controls, aIn.standard, *aIn.pitchPid,
                                                *aIn.rollPid, out.manualNormal, out.manualLift, timeDelta);
       out.force = manual.force;
       out.torque = manual.torque;

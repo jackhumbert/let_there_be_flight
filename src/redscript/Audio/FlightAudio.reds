@@ -78,7 +78,9 @@ public native class FlightAudio extends IScriptable {
   public let isPopupShown: Bool;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Audio-Settings")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Hud-And-Sound")
+  @runtimeProperty("ModSettings.category.order", "7")
+  @runtimeProperty("ModSettings.order", "1")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Engine-Volume")
   @runtimeProperty("ModSettings.step", "0.05")
   @runtimeProperty("ModSettings.min", "0.0")
@@ -86,7 +88,9 @@ public native class FlightAudio extends IScriptable {
   public let engineVolume: Float = 1.0;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Audio-Settings")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Hud-And-Sound")
+  @runtimeProperty("ModSettings.category.order", "7")
+  @runtimeProperty("ModSettings.order", "2")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Wind-Volume")
   @runtimeProperty("ModSettings.step", "0.05")
   @runtimeProperty("ModSettings.min", "0.0")
@@ -94,7 +98,9 @@ public native class FlightAudio extends IScriptable {
   public let windVolume: Float = 0.6;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Audio-Settings")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Hud-And-Sound")
+  @runtimeProperty("ModSettings.category.order", "7")
+  @runtimeProperty("ModSettings.order", "3")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Warning-Volume")
   @runtimeProperty("ModSettings.step", "0.05")
   @runtimeProperty("ModSettings.min", "0.0")

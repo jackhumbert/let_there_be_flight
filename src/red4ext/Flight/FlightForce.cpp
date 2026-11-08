@@ -1,6 +1,7 @@
 #include "FlightForce.hpp"
 
 #include "Flight/DeveloperSettings.hpp"
+#include "Flight/Handling.hpp"
 
 namespace {
 Flight::Vec3 ToVec(const RED4ext::Vector4 &aV) { return {aV.X, aV.Y, aV.Z}; }
@@ -27,7 +28,7 @@ Flight::ForceParams FlightForce::Params() const {
   p.generalPitchAeroFactor = generalPitchAeroFactor;
   p.collisionRecoveryDelay = collisionRecoveryDelay;
   p.collisionRecoveryDuration = collisionRecoveryDuration;
-  return p;
+  return Flight::WithHandling(p, handling);
 }
 
 Flight::ForceInput FlightForce::Input() const {

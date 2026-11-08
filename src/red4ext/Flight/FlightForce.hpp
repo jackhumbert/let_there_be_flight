@@ -28,6 +28,8 @@ struct FlightForce : RED4ext::IScriptable {
   float generalPitchAeroFactor = 0.0f;
   float collisionRecoveryDelay = 0.8f;
   float collisionRecoveryDuration = 0.8f;
+  // FlightSettings.handling (Flight::Handling): the set Params puts in place of the handling values above
+  int32_t handling = 1;
 
   // inputs, this frame
   float dt = 0.0f;
@@ -78,6 +80,7 @@ RTTI_DEFINE_CLASS(FlightForce, {
   RTTI_PROPERTY(generalPitchAeroFactor);
   RTTI_PROPERTY(collisionRecoveryDelay);
   RTTI_PROPERTY(collisionRecoveryDuration);
+  RTTI_PROPERTY(handling);
   RTTI_PROPERTY(dt);
   RTTI_PROPERTY(force);
   RTTI_PROPERTY(torque);

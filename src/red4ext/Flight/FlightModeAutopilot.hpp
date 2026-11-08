@@ -8,12 +8,11 @@
 // Each frame (FlightMode's NativeUpdate) it gathers what Step reads, as tools/flightsim/Trip.cpp does offline: the
 // component's stats (FlightStats::Of), its input fields as FlightComponent wrote them this frame (before anything here
 // writes them), isPlayerMounted, collisionTimer, thrusterTensor, the world inertia (FlightComponent's
-// GetWorldInertiaRow), FlightSettings' values, the Standard factors (from a FlightModeStandard in the car's mode list,
-// whose fields Mod Settings writes; the script mode inherited them) and the tracked destination (the redscript
-// TrackedDestination). It writes the telemetry row, calls Step, writes force and torque, the component's input
+// GetWorldInertiaRow), FlightSettings' values, the standard factors (the code's own, Flight::StandardParams) and the
+// tracked destination (the redscript TrackedDestination). It writes the telemetry row, calls Step, writes force and torque, the component's input
 // fields the output asks for (the thrusters' look, the engine sound, the force tail's damping), and turns the
 // output's events into the redscript glue below. A frame the player has taken over is flown with
-// Flight::StandardLift and the component's pitch and roll PIDs, as the script's UpdateWithNormalLift did.
+// Flight::AttitudeLift and the component's pitch and roll PIDs, as the script's UpdateWithNormalLift did.
 //
 // Redscript glue the C++ calls by name on this object (FlightModeAutopilot.reds; found once, warned once if missing):
 // TrackedDestination, AutodriveEngaged (facts and vanilla's autodrive panel), PublishProgress, PublishFreeRoamUI,

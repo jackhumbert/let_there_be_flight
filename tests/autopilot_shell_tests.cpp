@@ -47,22 +47,22 @@ std::set<std::string> Matches(const std::string &aText, const std::regex &aPatte
 // @runtimeProperty fields under its own class, so a script field's key is [FlightModeAutopilot] <field>
 // (ModSettings::ProcessScriptData: mod->classes[scriptClass->name], the variable named prop->name). The C++ registers
 // under kAutopilotSettingsClass with each row's name (FlightSettingsLink: className, propertyName). These are the
-// script's declarations at c3e24ab, less the two dropped settings.
+// script's declarations at c3e24ab, less the two dropped settings and brakeAccel (a developer value,
+// docs/design/settings-audit.md), all in the menu's Flight Modes category.
 TEST(autopilot_shell_mod_settings_keys) {
   struct Expected {
-    const char *name, *category, *displayName, *description;
+    const char *name, *displayName, *description;
     bool isBool;
     float defaultValue, step, min, max;
+    uint32_t order;
   };
   const Expected expected[] = {
-      {"enabled", "UI-Settings-Flight-Mode-Settings", "UI-Settings-Autopilot-Enabled",
-       "UI-Settings-Autopilot-Enabled-Description", true, 1.0f, 0.0f, 0.0f, 0.0f},
-      {"brakeAccel", "UI-Settings-Autopilot", "UI-Settings-Autopilot-Braking",
-       "UI-Settings-Autopilot-Braking-Description", false, 6.0f, 0.5f, 2.0f, 15.0f},
-      {"landAtDestination", "UI-Settings-Autopilot", "UI-Settings-Autopilot-Land",
-       "UI-Settings-Autopilot-Land-Description", true, 1.0f, 0.0f, 0.0f, 0.0f},
-      {"padRange", "UI-Settings-Autopilot", "UI-Settings-Autopilot-Pad-Range",
-       "UI-Settings-Autopilot-Pad-Range-Description", false, 0.0f, 25.0f, 0.0f, 500.0f},
+      {"enabled", "UI-Settings-Autopilot-Enabled", "UI-Settings-Autopilot-Enabled-Description", true, 1.0f, 0.0f, 0.0f,
+       0.0f, 7},
+      {"landAtDestination", "UI-Settings-Autopilot-Land", "UI-Settings-Autopilot-Land-Description", true, 1.0f, 0.0f,
+       0.0f, 0.0f, 8},
+      {"padRange", "UI-Settings-Autopilot-Pad-Range", "UI-Settings-Autopilot-Pad-Range-Description", false, 0.0f, 25.0f,
+       0.0f, 500.0f, 9},
   };
   CHECK(std::string(kAutopilotSettingsClass) == "FlightModeAutopilot");
   CHECK(std::string(kPlayerSettingsMod) == "Let There Be Flight");
@@ -72,7 +72,7 @@ TEST(autopilot_shell_mod_settings_keys) {
     const auto &t = table[i];
     const auto &e = expected[i];
     CHECK(std::string(t.name) == e.name);
-    CHECK(std::string(t.category) == e.category);
+    CHECK(t.order == e.order);
     CHECK(std::string(t.displayName) == e.displayName);
     CHECK(std::string(t.description) == e.description);
     CHECK(t.isBool == e.isBool);
@@ -99,9 +99,10 @@ TEST(autopilot_shell_mod_settings_keys) {
   CHECK_NEAR(params.brakeAccel, defaults.brakeAccel, 0.0);
   CHECK(params.landAtDestination == defaults.landAtDestination);
   CHECK_NEAR(params.padRange, defaults.padRange, 0.0);
-  // the dropped two are not registered
+  // the dropped two and brakeAccel are not registered
   for (const auto &t : table) {
-    CHECK(std::string(t.name) != "maxSpeed" && std::string(t.name) != "lateralAccel");
+    CHECK(std::string(t.name) != "maxSpeed" && std::string(t.name) != "lateralAccel" &&
+          std::string(t.name) != "brakeAccel");
   }
 }
 
@@ -109,8 +110,8 @@ TEST(autopilot_shell_mod_settings_set) {
   AutopilotSettings s;
   CHECK(SetAutopilotSetting(s, "enabled", 0.0f));
   CHECK(!s.enabled);
-  CHECK(SetAutopilotSetting(s, "brakeAccel", 40.0f)); // out of range: clamped
-  CHECK_NEAR(s.brakeAccel, 15.0, 0.0);
+  CHECK(!SetAutopilotSetting(s, "brakeAccel", 40.0f)); // a developer value: not the menu's
+  CHECK_NEAR(s.brakeAccel, 6.0, 0.0);
   CHECK(SetAutopilotSetting(s, "landAtDestination", 0.0f));
   CHECK(!s.landAtDestination);
   CHECK(SetAutopilotSetting(s, "padRange", 100.0f));

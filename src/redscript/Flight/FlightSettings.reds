@@ -13,6 +13,14 @@ enum FlightAvailability {
   WhitelistOnly = 3
 }
 
+// How flying feels, as one choice over the ten handling values (FlightSettings.handling; the sets are
+// Flight::HandlingFactors, Flight/Handling.hpp, whose Flight::Handling has the same numbers).
+enum FlightHandling {
+  Loose = 0,
+  Default = 1,
+  Tight = 2
+}
+
 public native class FlightSettings extends IScriptable {
   public native static func GetInstance() -> ref<FlightSettings>;
   public native static func GetFloat(name: String) -> Float;
@@ -24,10 +32,19 @@ public native class FlightSettings extends IScriptable {
   public native static func SetVector3(name: String, x: Float, y: Float, z: Float) -> Vector3;
   public native static func DebugBreak() -> Void;
 
+  // The player's settings (Mod Settings), in the menu's order: General, Controls, Flight Modes (with the C++ modes'
+  // and FlightModeDrone's), Crashes, Camera, Landing Pads and Summons, HUD and Sound, Key Bindings
+  // (docs/design/settings-audit.md). The fields after them are developer values: no Mod Settings attributes, so a
+  // value a player once saved is no longer read and the code default holds.
+
+  // General
+
   // Restricts flight to a subset of vehicles without any redscript. See the readme's
   // Configuration section for the Whitelist Only yaml.
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")
+  @runtimeProperty("ModSettings.category.order", "1")
+  @runtimeProperty("ModSettings.order", "0")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Flight-Availability")
   @runtimeProperty("ModSettings.description", "UI-Settings-Flight-Availability-Description")
   @runtimeProperty("ModSettings.displayValues.AllVehicles", "UI-Settings-Flight-Availability-All-Vehicles")
@@ -36,214 +53,82 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.displayValues.WhitelistOnly", "UI-Settings-Flight-Availability-Whitelist-Only")
   public let flightAvailability: FlightAvailability = FlightAvailability.AllVehicles;
 
-  // Read by the plugin (FlightComponent::OnUpdate) from the class default each frame. On: a
-  // flying vehicle is simulated by PhysX alone (gravity, ground contacts and surface friction
-  // solved together), see src/red4ext/Physics/ChassisContacts.cpp. Off: the game's own
-  // vehicle integrator moves it and PhysX only reports contacts once per frame.
+  // Turns flight on when V gets into a vehicle that is autoActivationHeight or more above the ground.
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-PhysX-Flight-Physics")
-  @runtimeProperty("ModSettings.description", "UI-Settings-PhysX-Flight-Physics-Description")
-  public let physxFlightPhysics: Bool = true;
-
-  // Read by the plugin each frame. Extra friction against the ground for flying vehicles
-  // (PhysX Flight Physics only), as a Coulomb coefficient on top of PhysX's own.
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Ground-Friction")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Ground-Friction-Description")
-  @runtimeProperty("ModSettings.step", "0.01")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "1.0")
-  public let groundFriction: Float = 0.5;
-
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")
+  @runtimeProperty("ModSettings.category.order", "1")
+  @runtimeProperty("ModSettings.order", "1")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Enable-Auto-Activation")
   @runtimeProperty("ModSettings.description", "UI-Settings-Enable-Auto-Activation-Description")
   public let autoActivationEnabled: Bool = false;
 
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Auto-Activation-Height")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Auto-Activation-Height-Description")
-  @runtimeProperty("ModSettings.step", "0.5")
-  @runtimeProperty("ModSettings.max", "10.0")
-  public let autoActivationHeight: Float = 3.0;
-
-  // Flight Control Settings
-
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Control-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Linear-Brake-Factor")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Linear-Brake-Factor-Description")
-  @runtimeProperty("ModSettings.step", "0.1")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "5.0")
-  public let brakeFactorLinear: Float = 1.0;
-
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Control-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Angular-Brake-Factor")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Angular-Brake-Factor-Description")
-  @runtimeProperty("ModSettings.step", "0.1")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "5.0")
-  public let brakeFactorAngular: Float = 1.0;
+  // Controls
 
   // Flips the sign of the Flight_Lift axis for every device, so it covers the gamepad
   // stick and the keyboard up/down buttons without editing the input xml.
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Control-Settings")
+  @runtimeProperty("ModSettings.category.order", "2")
+  @runtimeProperty("ModSettings.order", "0")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Invert-Lift")
   @runtimeProperty("ModSettings.description", "UI-Settings-Invert-Lift-Description")
   public let invertLift: Bool = false;
 
-  // When on, the gamepad flight toggle has to be held for gamepadToggleHoldTime seconds
-  // instead of tapped. The keyboard toggle stays a tap either way.
+  // The ten handling values below as one choice (Flight/Handling.hpp): Default is their values here, Loose and Tight
+  // the sets there. Applied where they are read (the force tail, the Autopilot), never written into the fields.
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Control-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Gamepad-Toggle-Requires-Hold")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Gamepad-Toggle-Requires-Hold-Description")
-  public let gamepadToggleRequiresHold: Bool = false;
+  @runtimeProperty("ModSettings.category.order", "2")
+  @runtimeProperty("ModSettings.order", "1")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Handling")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Handling-Description")
+  @runtimeProperty("ModSettings.displayValues.Loose", "UI-Settings-Handling-Loose")
+  @runtimeProperty("ModSettings.displayValues.Default", "UI-Settings-Handling-Default")
+  @runtimeProperty("ModSettings.displayValues.Tight", "UI-Settings-Handling-Tight")
+  public let handling: FlightHandling = FlightHandling.Default;
 
-  // Seconds the gamepad toggle has to be held when gamepadToggleRequiresHold is on. Vanilla
-  // autodrive is a 0.5 s hold on the same button, so the default stays clear of it.
+  // Scales both brakes (brakeFactorLinear and brakeFactorAngular below): LinearBrake() and AngularBrake().
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Control-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Gamepad-Toggle-Hold-Time")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Gamepad-Toggle-Hold-Time-Description")
+  @runtimeProperty("ModSettings.category.order", "2")
+  @runtimeProperty("ModSettings.order", "2")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Brake-Strength")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Brake-Strength-Description")
   @runtimeProperty("ModSettings.step", "0.1")
-  @runtimeProperty("ModSettings.min", "0.2")
+  @runtimeProperty("ModSettings.min", "0.5")
   @runtimeProperty("ModSettings.max", "3.0")
-  public let gamepadToggleHoldTime: Float = 1.0;
+  public let brakeStrength: Float = 1.0;
 
-  // Flight Physics Settings
-
+  // Seconds the gamepad flight toggle has to be held; 0 is a tap. The keyboard toggle stays a tap. Vanilla autodrive is
+  // a 0.5 s hold on the same button (L3). It replaced gamepadToggleRequiresHold and gamepadToggleHoldTime.
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Apply-Flight-Physics-When-Deactivated")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Apply-Flight-Physics-When-Deactivated-Description")
-  public let generalApplyFlightPhysicsWhenDeactivated: Bool = false;
-
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Linear-Damp-Factor")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Linear-Damp-Factor-Description")
-  @runtimeProperty("ModSettings.step", "0.05")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "20.0")
-  public let generalDampFactorLinear: Float = 0.0;
-
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Angular-Damp-Factor")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Angular-Damp-Factor-Description")
-  @runtimeProperty("ModSettings.step", "0.05")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "20.0")
-  public let generalDampFactorAngular: Float = 2.0;
-
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Angular-Damp-Max")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Angular-Damp-Max-Description")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Control-Settings")
+  @runtimeProperty("ModSettings.category.order", "2")
+  @runtimeProperty("ModSettings.order", "3")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Gamepad-Toggle-Hold")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Gamepad-Toggle-Hold-Description")
   @runtimeProperty("ModSettings.step", "0.1")
   @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "50.0")
-  public let generalDampFactorAngularMax: Float = 3.5;
+  @runtimeProperty("ModSettings.max", "3.0")
+  public let gamepadToggleHold: Float = 0.0;
 
+  // Flight Modes (the rest of the category is the C++ modes' and FlightModeDrone's)
+
+  // Hover, Fly and the anti-gravity drone in the mode switch (their IsEnabled).
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Pitch-Aero-Factor")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Pitch-Aero-Factor-Description")
-  @runtimeProperty("ModSettings.step", "0.05")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "1.0")
-  public let generalPitchAeroFactor: Float = 0.0;
+  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Mode-Settings")
+  @runtimeProperty("ModSettings.category.order", "3")
+  @runtimeProperty("ModSettings.order", "6")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Extra-Flight-Modes")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Extra-Flight-Modes-Description")
+  public let extraModesEnabled: Bool = false;
 
-  // How much the vehicle is rotated (yaw) towards its velocity
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Yaw-Aero-Factor")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Yaw-Aero-Factor-Description")
-  @runtimeProperty("ModSettings.step", "0.05")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "1.0")
-  public let generalYawAeroFactor: Float = 0.0;
-
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Pitch-Directionality-Factor")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Pitch-Directionality-Factor-Description")
-  @runtimeProperty("ModSettings.step", "1.0")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "100.0")
-  public let generalPitchDirectionalityFactor: Float = 15.0;
-
-  // How much the vehicle's yaw affects its velocity
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Yaw-Directionality-Factor")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Yaw-Directionality-Factor-Description")
-  @runtimeProperty("ModSettings.step", "1.0")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "100.0")
-  public let generalYawDirectionalityFactor: Float = 5.0;
-
-  // Extra multiplier on the yaw (Z) part of the angular damping, applied after the
-  // "no damping while the stick is deflected" term and before the Angular Damp Max clamp.
-  // 1.0 is the shipped behaviour.
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Yaw-Damp-Factor")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Yaw-Damp-Factor-Description")
-  @runtimeProperty("ModSettings.step", "0.05")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "5.0")
-  public let generalYawDampFactor: Float = 1.0;
-
-  // Adds yaw input to the yaw directionality term, so turning redirects more of the
-  // existing velocity into the new heading. 0.0 is the shipped behaviour.
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Sway-With-Yaw")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Sway-With-Yaw-Description")
-  @runtimeProperty("ModSettings.step", "0.05")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "2.0")
-  public let generalSwayWithYaw: Float = 0.0;
-
-  // How much yaw input banks the vehicle into the turn (Standard and Automatic modes).
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Physics-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Roll-With-Yaw")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Roll-With-Yaw-Description")
-  @runtimeProperty("ModSettings.step", "0.01")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "1.0")
-  public let generalRollWithYaw: Float = 0.15;
-
-  // Flight Camera Settings
+  // Camera
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Camera-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Driving-Direction-Compensation-Angle-Smoothing")
-  @runtimeProperty("ModSettings.step", "1.0")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "180.0")
-  public let drivingDirectionCompensationAngleSmooth: Float = 120.0;
-
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Camera-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Driving-Direction-Compensation-Speed-Coef")
-  @runtimeProperty("ModSettings.step", "0.05")
-  @runtimeProperty("ModSettings.min", "0.0")
-  @runtimeProperty("ModSettings.max", "1.0")
-  public let drivingDirectionCompensationSpeedCoef: Float = 0.1;
-
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Camera-Settings")
+  @runtimeProperty("ModSettings.category.order", "5")
+  @runtimeProperty("ModSettings.order", "0")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-FPV-Camera-Pitch-Offset")
   @runtimeProperty("ModSettings.description", "UI-Settings-FPV-Camera-Pitch-Offset-Description")
   @runtimeProperty("ModSettings.step", "5.0")
@@ -253,6 +138,8 @@ public native class FlightSettings extends IScriptable {
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Camera-Settings")
+  @runtimeProperty("ModSettings.category.order", "5")
+  @runtimeProperty("ModSettings.order", "1")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-TPP-Camera-Pitch-Offset")
   @runtimeProperty("ModSettings.description", "UI-Settings-TPP-Camera-Pitch-Offset-Description")
   @runtimeProperty("ModSettings.step", "1.0")
@@ -260,11 +147,55 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.max", "60.0")
   public let tppCameraPitchOffset: Float = 20.0;
 
-  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
-  @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Camera-Settings")
-  @runtimeProperty("ModSettings.displayName", "UI-Settings-Enable-Center-On-Mass")
-  @runtimeProperty("ModSettings.description", "UI-Settings-Enable-Center-On-Mass-Description")
+  // Developer values (no longer Mod Settings)
+
+  // Read by the plugin (FlightComponent::OnUpdate) from the class default each frame. On: a
+  // flying vehicle is simulated by PhysX alone (gravity, ground contacts and surface friction
+  // solved together), see src/red4ext/Physics/ChassisContacts.cpp. Off: the game's own
+  // vehicle integrator moves it and PhysX only reports contacts once per frame.
+  public let physxFlightPhysics: Bool = true;
+
+  // Read by the plugin each frame. Extra friction against the ground for flying vehicles
+  // (PhysX Flight Physics only), as a Coulomb coefficient on top of PhysX's own.
+  public let groundFriction: Float = 0.5;
+
+  // How far above the ground (m) a vehicle has to be for autoActivationEnabled to turn flight on.
+  public let autoActivationHeight: Float = 3.0;
+
+  // The brakes before Brake Strength: read through LinearBrake() and AngularBrake().
+  public let brakeFactorLinear: Float = 1.0;
+  public let brakeFactorAngular: Float = 1.0;
+
+  // Skips the cleanup that stops flight's updates when flight is switched off.
+  public let generalApplyFlightPhysicsWhenDeactivated: Bool = false;
+
+  // The handling values: Handling's Default set (Loose's and Tight's are Flight::HandlingFactors in C++).
+  public let generalDampFactorLinear: Float = 0.0;
+  public let generalDampFactorAngular: Float = 2.0;
+  public let generalDampFactorAngularMax: Float = 3.5;
+  public let generalPitchAeroFactor: Float = 0.0;
+  // How much the vehicle is rotated (yaw) towards its velocity
+  public let generalYawAeroFactor: Float = 0.0;
+  public let generalPitchDirectionalityFactor: Float = 15.0;
+  // How much the vehicle's yaw affects its velocity
+  public let generalYawDirectionalityFactor: Float = 5.0;
+  // Extra multiplier on the yaw (Z) part of the angular damping, applied after the
+  // "no damping while the stick is deflected" term and before the Angular Damp Max clamp.
+  public let generalYawDampFactor: Float = 1.0;
+  // Adds yaw input to the yaw directionality term, so turning redirects more of the
+  // existing velocity into the new heading.
+  public let generalSwayWithYaw: Float = 0.0;
+  // How much yaw input banks the vehicle into the turn (the Autopilot's manual flight, Flight::AttitudeLift).
+  public let generalRollWithYaw: Float = 0.15;
+
+  // The chase camera while flying (the C++ hooks TPPCameraComponent_SetVehicleData and _CalculateLookAtPosition).
+  public let drivingDirectionCompensationAngleSmooth: Float = 120.0;
+  public let drivingDirectionCompensationSpeedCoef: Float = 0.1;
   public let tppCameraCenterOnMass: Bool = true;
+
+  // The brakes as the modes and the force tail apply them: the developer factor times Brake Strength.
+  public final func LinearBrake() -> Float = this.brakeFactorLinear * this.brakeStrength;
+  public final func AngularBrake() -> Float = this.brakeFactorAngular * this.brakeStrength;
 
   // public cb func OnModSettingsUpdate(variable: CName, value: Variant) {
   //   switch (variable) {
