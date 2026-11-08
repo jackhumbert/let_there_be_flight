@@ -138,8 +138,12 @@ void SkidScrapes::Step(const SkidContact (&aContacts)[kThrusters], float aDt, co
       s.normal = c.normal;
       s.slide = c.slide;
       s.since = 0.0f;
+      const float target = Clamp01(c.slide / aParams.fullSlide) *
+                           (0.5f + 0.5f * Clamp01((aParams.touch - c.clearance) / aParams.fullPress));
+      s.intensity += (target - s.intensity) * Clamp01(aParams.rise * aDt);
     } else if (s.active) {
       s.since += aDt;
+      s.intensity -= s.intensity * Clamp01(aParams.fall * aDt);
       if (s.since > aParams.hold)
         s = {};
       else if (c.valid)

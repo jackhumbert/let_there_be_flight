@@ -298,24 +298,31 @@ void Component(FlightComponent *c, float deltaTime) {
     const bool front = Ref<bool>(p.isFront, thruster);
     Inputs::Values thrusterValues = v;
     const auto mesh = WorldMatrix(thruster->meshComponent->worldTransform);
-    // the car's scrapes (Flight::ScrapeTracker): the one that sounds most here, fading out 3 m from the thruster
+    // the car's scrapes, the game's contacts (Flight::ScrapeTracker) and the skid's at the thrusters
+    // (Flight::SkidScrapes): the one that sounds most here, fading out 3 m from the thruster
     thrusterValues.scrape = 0.0f;
     {
       const auto &wt = vehicle->worldTransform;
       const auto &q = wt.Orientation;
       const auto origin = wt.Position.AsVector4();
+      auto consider = [&](const Flight::Vec3 &aAt, float aIntensity, Flight::Surface aSurface, float aSlide) {
+        const float dx = aAt.x - mesh.W.X, dy = aAt.y - mesh.W.Y, dz = aAt.z - mesh.W.Z;
+        const float closeness = std::max(0.0f, 1.0f - std::sqrt(dx * dx + dy * dy + dz * dz) / 3.0f);
+        if (aIntensity * closeness > thrusterValues.scrape) {
+          thrusterValues.scrape = aIntensity * closeness;
+          thrusterValues.scrapeSurface = static_cast<int>(aSurface);
+          thrusterValues.scrapeSlide = aSlide;
+        }
+      };
       for (const Flight::Scrape &s : c->scrapes) {
         if (!s.active)
           continue;
         const Flight::Vec3 o = Flight::Rotate(Flight::Quat{q.i, q.j, q.k, q.r}, s.local);
-        const float dx = origin.X + o.x - mesh.W.X, dy = origin.Y + o.y - mesh.W.Y, dz = origin.Z + o.z - mesh.W.Z;
-        const float closeness = std::max(0.0f, 1.0f - std::sqrt(dx * dx + dy * dy + dz * dz) / 3.0f);
-        if (s.intensity * closeness > thrusterValues.scrape) {
-          thrusterValues.scrape = s.intensity * closeness;
-          thrusterValues.scrapeSurface = static_cast<int>(s.surface);
-          thrusterValues.scrapeSlide = s.slide;
-        }
+        consider({origin.X + o.x, origin.Y + o.y, origin.Z + o.z}, s.intensity, s.surface, s.slide);
       }
+      for (const Flight::SkidScrape &s : c->skidScrapes)
+        if (s.active)
+          consider(s.ground, s.intensity, s.surface, s.slide);
     }
     FlightAudio::UpdateThruster(Ref<CString>(p.id, thruster).c_str(), thrusterValues,
                                 Inputs::ThrusterVolume(front, f.speed), {mesh.W.X, mesh.W.Y, mesh.W.Z},

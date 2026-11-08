@@ -175,3 +175,33 @@ TEST(scrape_skid_surface_change) {
     s.Step(c, kDt, {});
   CHECK(!k.active);
 }
+
+TEST(scrape_skid_intensity) {
+  // pressed into the road at full slide the scrape is loud, only touching at half the slide a quarter as loud; it
+  // fades once the thruster lifts off
+  const SkidScrapeParams p;
+  auto loudness = [&](float aClearance, float aSlide) {
+    SkidScrapes s;
+    SkidContact c[SkidScrapes::kThrusters];
+    c[0].valid = true;
+    c[0].normal = {0, 0, 1};
+    c[0].clearance = aClearance;
+    c[0].slide = aSlide;
+    for (int i = 0; i < 30; ++i)
+      s.Step(c, kDt, p);
+    return s.begin()->intensity;
+  };
+  CHECK_NEAR(loudness(p.touch - p.fullPress, p.fullSlide), 1.0f, 0.01f);
+  CHECK_NEAR(loudness(p.touch, 0.5f * p.fullSlide), 0.25f, 0.01f);
+  SkidScrapes s;
+  SkidContact c[SkidScrapes::kThrusters];
+  c[0].valid = true;
+  c[0].slide = p.fullSlide;
+  for (int i = 0; i < 30; ++i)
+    s.Step(c, kDt, p);
+  const float on = s.begin()->intensity;
+  c[0].clearance = 0.3f;
+  for (int i = 0; i < 6; ++i)
+    s.Step(c, kDt, p);
+  CHECK(s.begin()->active && s.begin()->intensity < 0.7f * on);
+}

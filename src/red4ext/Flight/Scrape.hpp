@@ -91,6 +91,11 @@ struct SkidScrapeParams {
   // s a scrape is held after its thruster lifts off or stops: on rough ground (the Badlands) a thruster touched for
   // half a second at a time, and held 0.15 s each touch began a new trail, too short to see
   float hold = 0.4f;
+  // its loudness (SkidScrape.intensity): full at fullSlide pressed fullPress into the ground, half as loud only
+  // touching; rising and falling at the tracker's rates (ScrapeParams)
+  float fullSlide = 12.0f;  // m/s
+  float fullPress = 0.05f;  // m under touch
+  float rise = 25.0f, fall = 5.0f;  // 1/s
 };
 
 // A thruster scraping the ground: where (the ground under it, world), the ground's normal, how fast it slides and on
@@ -100,8 +105,9 @@ struct SkidScrape {
   uint32_t id = 0;  // new for each scrape, so an effect can follow it
   Surface surface = Surface::Hard;
   Vec3 ground, normal;
-  float slide = 0.0f;  // m/s along the ground
-  float since = 0.0f;  // s since it last touched and slid
+  float slide = 0.0f;      // m/s along the ground
+  float since = 0.0f;      // s since it last touched and slid
+  float intensity = 0.0f;  // 0..1, smoothed: how loud it is (the engine synth's scrape voice)
 };
 
 // The marks of the thrusters on the ground, placed where each one is, from the skid's contacts rather than the
