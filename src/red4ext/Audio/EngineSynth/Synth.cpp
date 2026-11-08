@@ -176,8 +176,9 @@ float Synth::Biquad::Run(float x) {
 }
 
 Synth::Synth(float aSampleRate, float aPitch, uint32_t aSeed, const Tuning &aTuning)
-    : sampleRate(aSampleRate), carPitch(aPitch), tuning(aTuning), rng(aSeed * 2654435761u + 12345u) {
+    : sampleRate(aSampleRate), carPitch(aPitch), tuning(aTuning), rng(aSeed * 2654435761u + 12345u), scrape(aSeed) {
   rng = rng ? rng : 1;
+  scrape.Prepare(sampleRate);
   detune = tuning.spread * (2.0f * (float(Noise() * 0.5f + 0.5f)) - 1.0f);
   smooth = 1.0f - std::exp(-float(kControlSamples) / (kSmoothSeconds * sampleRate));
   // the event's pitch moves everything in it, its EQs too
@@ -281,16 +282,12 @@ void Synth::Control() {
   whirlFrequency = kWhirlFundamental * Semitones(kWhirlPitch(speed));
   whirlGain = Db(kDamageLevel(now.damage) + kWhirlVolume + tuning.level[Damage]);
 
-  // the surface's sound, its pitch rising with the slide (with the car's speed when no surface is known)
-  const ScrapeProfile &scrape = ScrapeProfileOf(now.scrapeSurface);
-  const float scrapePitch = now.scrapeSurface ? Semitones(kScrapeSlidePitch(now.scrapeSlide)) : Semitones(kScrapePitch(speed));
+  // the surface's sound, driven by the slide (by the car's speed when no surface is known)
   const float scrapeSpeed = now.scrapeSurface ? now.scrapeSlide : speed;
-  scrapeGain = Db(kScrapeLevel(now.scrape) + kScrapeSpeedLevel(scrapeSpeed) + kScrapeSend + scrape.level +
-                  tuning.level[Scrape]);
-  scrapeRate = (scrape.rate + scrape.rateFull * now.scrape) * scrapePitch / sampleRate;
-  scrapeBand.Set(std::min(scrape.band * scrapePitch, 0.45f * sampleRate), scrape.q, sampleRate);
-  scrapeDecay = scrape.decay;
-  scrapeBed = scrape.bed;
+  scrapeGain = now.scrape > 0.001f ? Db(kScrapeLevel(now.scrape) + kScrapeSpeedLevel(scrapeSpeed) + kScrapeSend +
+                                        ScrapeModelOf(now.scrapeSurface).level + tuning.level[Scrape])
+                                   : 0.0f;
+  scrape.Set(now.scrapeSurface, scrapeSpeed, now.scrape);
 
   masterGain = Db(kInsideLevel(now.inside) + tuning.master) * std::max(0.0f, now.volume);
   waterCutoff = kWaterCutoff(now.water);
@@ -385,14 +382,7 @@ void Synth::Render(float *aOut, uint32_t aFrames, float *aVoices) {
       part[Damage] = whirlGain * float(0.6 * std::sin(w) + 0.3 * std::sin(2 * w) + 0.1 * std::sin(3 * w));
     }
     if (scrapeGain > 1e-5f) {
-      // a click now and then, each a short decaying burst
-      if (Noise() * 0.5f + 0.5f < scrapeRate) {
-        click = 1.0f;
-      }
-      click *= scrapeDecay;
-      float low, band;
-      scrapeBand.Run(white * (click + scrapeBed), low, band);
-      part[Scrape] = scrapeGain * band;
+      part[Scrape] = scrapeGain * scrape.Next();
     }
     float sum = 0;
     for (int v = 0; v < kVoices; ++v) {

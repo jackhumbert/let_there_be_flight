@@ -142,7 +142,7 @@ public:
   RED4ext::Vector3 groundNormal{0.0f, 0.0f, 1.0f};
   float groundPush = 0.0f;
   bool groundContact = false;
-  float groundFriction = 0.1f;
+  float groundFriction = 0.5f;
   // the game's teleport hold (Flight/Component.cpp OnUpdate): s held so far, -1 when not held
   float teleportHold = -1.0f;
   int32_t teleportClear = 0; // frames the hold bits have been clear

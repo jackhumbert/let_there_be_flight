@@ -22,4 +22,8 @@ void Update(FlightComponent *aComponent, RED4ext::vehicle::BaseObject *aVehicle,
 // The surface of a physics material by its CName's hash (Flight::SurfaceOf its name), cached; None for none (0).
 Flight::Surface SurfaceOfMaterial(uint64_t aMaterial);
 
+// A physics material's grip, a factor on Ground Friction (Physics/ScrapeAudio.cpp's table); 1 for none (0), as hard
+// ground.
+float FrictionOfMaterial(uint64_t aMaterial);
+
 } // namespace ScrapeEffects

@@ -55,7 +55,7 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.step", "0.01")
   @runtimeProperty("ModSettings.min", "0.0")
   @runtimeProperty("ModSettings.max", "1.0")
-  public let groundFriction: Float = 0.1;
+  public let groundFriction: Float = 0.5;
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-General-Flight-Settings")

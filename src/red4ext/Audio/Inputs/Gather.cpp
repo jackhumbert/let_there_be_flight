@@ -33,6 +33,9 @@ using namespace RED4ext;
 namespace Gather {
 
 namespace {
+// m another thruster must be nearer a car's scrapes than the one they play from before they move to it
+constexpr float kScrapeEmitterMargin = 0.5f;
+
 
 // the script classes' fields, found once
 struct Props {
@@ -290,43 +293,69 @@ void Component(FlightComponent *c, float deltaTime) {
   }
 
   // the thrusters
+  constexpr int kMaxThrusters = 8;
+  struct Emitter {
+    IFlightThruster *thruster = nullptr;
+    Matrix mesh;
+    bool front = false;
+    float scrape = 0.0f, scrapeSlide = 0.0f;
+    int scrapeSurface = 0;
+  };
+  Emitter emitters[kMaxThrusters];
+  Flight::Vec3 at[kMaxThrusters];
+  int count = 0;
   for (auto &handle : c->configuration->thrusters) {
     auto thruster = handle.GetPtr();
-    if (!thruster || !thruster->attached || !thruster->meshComponent) {
+    if (!thruster || !thruster->attached || !thruster->meshComponent || count == kMaxThrusters) {
       continue;
     }
-    const bool front = Ref<bool>(p.isFront, thruster);
-    Inputs::Values thrusterValues = v;
-    const auto mesh = WorldMatrix(thruster->meshComponent->worldTransform);
-    // the car's scrapes, the game's contacts (Flight::ScrapeTracker) and the skid's at the thrusters
-    // (Flight::SkidScrapes): the one that sounds most here, fading out 3 m from the thruster
-    thrusterValues.scrape = 0.0f;
-    {
-      const auto &wt = vehicle->worldTransform;
-      const auto &q = wt.Orientation;
-      const auto origin = wt.Position.AsVector4();
-      auto consider = [&](const Flight::Vec3 &aAt, float aIntensity, Flight::Surface aSurface, float aSlide) {
-        const float dx = aAt.x - mesh.W.X, dy = aAt.y - mesh.W.Y, dz = aAt.z - mesh.W.Z;
-        const float closeness = std::max(0.0f, 1.0f - std::sqrt(dx * dx + dy * dy + dz * dz) / 3.0f);
-        if (aIntensity * closeness > thrusterValues.scrape) {
-          thrusterValues.scrape = aIntensity * closeness;
-          thrusterValues.scrapeSurface = static_cast<int>(aSurface);
-          thrusterValues.scrapeSlide = aSlide;
-        }
-      };
-      for (const Flight::Scrape &s : c->scrapes) {
-        if (!s.active)
-          continue;
-        const Flight::Vec3 o = Flight::Rotate(Flight::Quat{q.i, q.j, q.k, q.r}, s.local);
-        consider({origin.X + o.x, origin.Y + o.y, origin.Z + o.z}, s.intensity, s.surface, s.slide);
-      }
-      for (const Flight::SkidScrape &s : c->skidScrapes)
-        if (s.active)
-          consider(s.ground, s.intensity, s.surface, s.slide);
+    Emitter &e = emitters[count];
+    e.thruster = thruster;
+    e.mesh = WorldMatrix(thruster->meshComponent->worldTransform);
+    e.front = Ref<bool>(p.isFront, thruster);
+    at[count++] = {e.mesh.W.X, e.mesh.W.Y, e.mesh.W.Z};
+  }
+  // the car's scrapes, the game's contacts (Flight::ScrapeTracker) and the skid's at the thrusters
+  // (Flight::SkidScrapes), as one voice (Flight::ScrapeMixer) from one thruster (Flight::ChooseEmitter): a scrape
+  // heard from each thruster near it, and the skid's four at once, were one sound from emitters a metre or two
+  // apart, which combed and swept as the car moved past the listener
+  {
+    const auto &wt = vehicle->worldTransform;
+    const auto &q = wt.Orientation;
+    const auto origin = wt.Position.AsVector4();
+    Flight::ScrapeMixer mixer;
+    for (const Flight::Scrape &s : c->scrapes) {
+      if (!s.active)
+        continue;
+      const Flight::Vec3 o = Flight::Rotate(Flight::Quat{q.i, q.j, q.k, q.r}, s.local);
+      mixer.Add({origin.X + o.x, origin.Y + o.y, origin.Z + o.z}, s.intensity, s.surface, s.slide);
     }
-    FlightAudio::UpdateThruster(Ref<CString>(p.id, thruster).c_str(), thrusterValues,
-                                Inputs::ThrusterVolume(front, f.speed), {mesh.W.X, mesh.W.Y, mesh.W.Z},
-                                Inputs::ConeAxes(Axes(mesh)));
+    for (const Flight::SkidScrape &s : c->skidScrapes)
+      if (s.active)
+        mixer.Add(s.ground, s.intensity, s.surface, s.slide);
+    const Flight::ScrapeMix mix = mixer.Result();
+    static std::mutex ownerLock;
+    static std::unordered_map<uint64_t, int> owners; // the thruster each car's scrape played from last
+    std::lock_guard ownerGuard(ownerLock);
+    auto &owner = owners.try_emplace(entity, -1).first->second;
+    if (mix.any) {
+      owner = Flight::ChooseEmitter(mix.at, at, count, owner, kScrapeEmitterMargin);
+      if (owner >= 0) {
+        emitters[owner].scrape = mix.intensity;
+        emitters[owner].scrapeSurface = static_cast<int>(mix.surface);
+        emitters[owner].scrapeSlide = mix.slide;
+      }
+    }
+  }
+  for (int i = 0; i < count; ++i) {
+    const Emitter &e = emitters[i];
+    Inputs::Values thrusterValues = v;
+    thrusterValues.scrape = e.scrape;
+    thrusterValues.scrapeSurface = e.scrapeSurface;
+    thrusterValues.scrapeSlide = e.scrapeSlide;
+    FlightAudio::UpdateThruster(Ref<CString>(p.id, e.thruster).c_str(), thrusterValues,
+                                Inputs::ThrusterVolume(e.front, f.speed), {e.mesh.W.X, e.mesh.W.Y, e.mesh.W.Z},
+                                Inputs::ConeAxes(Axes(e.mesh)));
   }
 }
 

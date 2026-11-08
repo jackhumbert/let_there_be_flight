@@ -8,6 +8,7 @@
 #include <RED4ext/Scripting/Natives/Generated/WorldTransform.hpp>
 #include <RED4ext/Scripting/Natives/Generated/game/FxResource.hpp>
 #include <RED4ext/Scripting/Natives/vehicleBaseObject.hpp>
+#include <RED4ext/Scripting/Natives/vehiclePhysicsData.hpp>
 #include <cmath>
 #include <mutex>
 #include <unordered_map>
@@ -16,31 +17,38 @@ namespace {
 using RED4ext::Handle;
 using RED4ext::IScriptable;
 
-// the effects of a surface: sparks (or dust, splinters) and the trail decal; empty paths for none
+// the effects of a surface: sparks (or dust, splinters) and the trail decal at each depth (Flight::TrailDepth: light,
+// as drawn, deep); empty paths for none
 struct SurfaceFx {
-  const char *sparks, *trail;
+  const char *sparks;
+  const char *trail[3];
 };
+#define LTBF_TRAIL(name)                                                                                               \
+  { R"(user\jackhumbert\effects\)" name "_light.effect", R"(user\jackhumbert\effects\)" name ".effect",              \
+    R"(user\jackhumbert\effects\)" name "_deep.effect" }
 SurfaceFx EffectsOf(Flight::Surface aSurface) {
   switch (aSurface) {
   case Flight::Surface::Hard:
-    return {R"(user\jackhumbert\effects\scrape_sparks_hard.effect)", R"(user\jackhumbert\effects\scrape_trail_hard.effect)"};
+    return {R"(user\jackhumbert\effects\scrape_sparks_hard.effect)", LTBF_TRAIL("scrape_trail_hard")};
   case Flight::Surface::Metal:
-    return {R"(user\jackhumbert\effects\scrape_sparks_metal.effect)",
-            R"(user\jackhumbert\effects\scrape_trail_metal.effect)"};
+    return {R"(user\jackhumbert\effects\scrape_sparks_metal.effect)", LTBF_TRAIL("scrape_trail_metal")};
   case Flight::Surface::Glass:
-    return {R"(user\jackhumbert\effects\scrape_sparks_glass.effect)", ""};
+    return {R"(user\jackhumbert\effects\scrape_sparks_glass.effect)", {"", "", ""}};
   case Flight::Surface::Wood:
-    return {R"(base\fx\vehicles\_damage\scratches\car_scratches_wood.effect)", ""};
+    return {R"(base\fx\vehicles\_damage\scratches\car_scratches_wood.effect)", {"", "", ""}};
   case Flight::Surface::Soft:
-    return {R"(user\jackhumbert\effects\scrape_dust_soft.effect)", R"(user\jackhumbert\effects\scrape_trail_soft.effect)"};
+    return {R"(user\jackhumbert\effects\scrape_dust_soft.effect)", LTBF_TRAIL("scrape_trail_soft")};
   case Flight::Surface::None:
     break;
   }
-  return {"", ""};
+  return {"", {"", "", ""}};
 }
+#undef LTBF_TRAIL
 
 struct Live {
   Handle<IScriptable> sparks, trail;
+  Flight::Surface surface = Flight::Surface::None;
+  Flight::TrailDepth depth; // which trail it lays
   bool seen = false;
 };
 // per component, per scrape id
@@ -48,6 +56,8 @@ std::unordered_map<FlightComponent *, std::unordered_map<uint32_t, Live>> gLive;
 
 struct Calls {
   RED4ext::CBaseFunction *spawn = nullptr, *update = nullptr, *breakLoop = nullptr;
+  // gameFxInstance.SetBlackboardValue(CName, Float): an effect's input parameter (none: the effects as drawn)
+  RED4ext::CBaseFunction *setValue = nullptr;
   bool ok = false;
 };
 const Calls &Resolve() {
@@ -61,6 +71,7 @@ const Calls &Resolve() {
     c.spawn = system->GetFunction("SpawnEffect");
     c.update = instance->GetFunction("UpdateTransform");
     c.breakLoop = instance->GetFunction("BreakLoop");
+    c.setValue = instance->GetFunction("SetBlackboardValue");
     c.ok = c.spawn && c.update && c.breakLoop;
     return c;
   }();
@@ -133,6 +144,15 @@ void Move(Handle<IScriptable> &aFx, RED4ext::WorldTransform aAt) {
     RED4ext::ExecuteFunction(aFx.GetPtr(), Resolve().update, nullptr, aAt);
 }
 
+// the scrape's inputs on its effect (the names tools/fx/scrape_effects.py gives them)
+void Feed(Handle<IScriptable> &aFx, const Flight::ScrapeFxInputs &aIn) {
+  if (!aFx || !Resolve().setValue)
+    return;
+  static const RED4ext::CName kForce("scrape_force"), kPress("scrape_press"), kSpeed("scrape_speed");
+  for (auto [name, value] : {std::pair{kForce, aIn.force}, std::pair{kPress, aIn.press}, std::pair{kSpeed, aIn.speed}})
+    RED4ext::ExecuteFunction(aFx.GetPtr(), Resolve().setValue, nullptr, name, value);
+}
+
 void End(Handle<IScriptable> &aFx) {
   if (aFx)
     RED4ext::ExecuteFunction(aFx.GetPtr(), Resolve().breakLoop, nullptr);
@@ -169,6 +189,12 @@ void ScrapeEffects::Update(FlightComponent *aComponent, RED4ext::vehicle::BaseOb
     }
     return;
   }
+  if (const auto *body = aVehicle->physicsData) {
+    const auto &q = body->currentTransform.Orientation;
+    aComponent->scrapes.Follow({body->velocity.X, body->velocity.Y, body->velocity.Z},
+                               {body->angularVelocity.X, body->angularVelocity.Y, body->angularVelocity.Z},
+                               {q.i, q.j, q.k, q.r});
+  }
   aComponent->scrapes.Step(aDt, params);
   // the skid's contacts while it runs (it may run less often than this, so they are kept a moment)
   aComponent->skidContactsAge += aDt;
@@ -189,34 +215,50 @@ void ScrapeEffects::Update(FlightComponent *aComponent, RED4ext::vehicle::BaseOb
   for (auto &[id, l] : live)
     l.seen = false;
   auto follow = [&](uint32_t aId, Flight::Surface aSurface, const RED4ext::WorldTransform &aAt,
-                    const RED4ext::WorldTransform &aTrailAt) {
+                    const RED4ext::WorldTransform &aTrailAt, const Flight::ScrapeFxInputs &aIn) {
+    const SurfaceFx fx = EffectsOf(aSurface);
     auto found = live.find(aId);
     if (found == live.end()) {
-      const SurfaceFx fx = EffectsOf(aSurface);
       Live l;
+      l.surface = aSurface;
       l.sparks = Spawn(system, fx.sparks, aAt);
-      l.trail = Spawn(system, fx.trail, aTrailAt);
+      l.depth.Step(aIn.press, aDt);
+      const char *trail = fx.trail[l.depth.band];
+      l.trail = Spawn(system, trail, aTrailAt);
       // one line a scrape, where it begins: which surface, and whether its effects spawned
-      spdlog::info("[ScrapeFx] scrape {:#x} on {}: sparks {}, trail {}", aId, Flight::SurfaceName(aSurface),
+      spdlog::info("[ScrapeFx] scrape {:#x} on {}: sparks {}, trail {} (depth {})", aId, Flight::SurfaceName(aSurface),
                    *fx.sparks ? (l.sparks ? "spawned" : "failed") : "none",
-                   *fx.trail ? (l.trail ? "spawned" : "failed") : "none");
+                   *trail ? (l.trail ? "spawned" : "failed") : "none", l.depth.band);
       found = live.emplace(aId, std::move(l)).first;
     } else {
-      Move(found->second.sparks, aAt);
-      Move(found->second.trail, aTrailAt);
+      Live &l = found->second;
+      Move(l.sparks, aAt);
+      if (l.depth.Step(aIn.press, aDt)) {
+        // pressed harder or lighter: this segment ends where it is and one of the new depth goes on from here
+        End(l.trail);
+        l.trail = Spawn(system, fx.trail[l.depth.band], aTrailAt);
+      } else {
+        Move(l.trail, aTrailAt);
+      }
     }
+    Feed(found->second.sparks, aIn);
     found->second.seen = true;
   };
-  // each touching thruster marks the ground right under it, with the effects of the ground its ray hit
+  const Flight::SkidScrapeParams skidParams;
+  // each touching thruster marks the ground right under it, with the effects of the ground its ray hit; a scrape's
+  // effects show while it touches (a thruster bridging a short hop), and end where it left the ground
   for (const Flight::SkidScrape &s : aComponent->skidScrapes)
-    if (s.active)
-      follow(s.id, s.surface, OnGround(aVehicle, s.ground, s.normal),
-             OnGround(aVehicle, s.ground, s.normal, kTrailTurn));
+    if (s.active && s.since <= skidParams.effectsBridge)
+      follow(s.id, s.surface, OnGround(aVehicle, s.ground, s.normal), OnGround(aVehicle, s.ground, s.normal, kTrailTurn),
+             Flight::FxInputsOf(s.intensity, s.load, skidParams.fullLoad, s.slide, skidParams.fullSlide));
   for (const Flight::Scrape &s : aComponent->scrapes) {
-    // the ground under the car is the thrusters' while the skid runs; the rest (kerbs, walls) stays the game's contacts
-    if (!s.active || (skid && s.normal.z > 0.7f))
+    // the ground under the car is the thrusters' while the skid runs; the rest (kerbs, walls) stays the game's contacts.
+    // Effects only while it touches: they sit on the car at the contact, and shown while the scrape faded out they rode
+    // along in the air
+    if (!s.active || !s.touching || (skid && s.normal.z > 0.7f))
       continue;
-    follow(s.id, s.surface, At(aVehicle, s.local), At(aVehicle, s.local, kTrailTurn));
+    follow(s.id, s.surface, At(aVehicle, s.local), At(aVehicle, s.local, kTrailTurn),
+           Flight::FxInputsOf(s.intensity, s.load, params.fullLoad, s.slide, params.fullSlide));
   }
   for (auto l = live.begin(); l != live.end();) {
     if (!l->second.seen) {

@@ -16,6 +16,9 @@ for byte). The plugin spawns them per scrape (src/red4ext/Physics/ScrapeEffects.
 - scrape_sparks_hard, scrape_sparks_metal, scrape_sparks_glass: the vanilla scratch sparks, every emitter's birth rate
   scaled (metal the most, and hotter).
 - scrape_dust_soft: the vanilla concrete scratch with its sparks off and its dust tan, thicker and more of it.
+- The sparks and the dust take the scrape's inputs (INPUTS, driven()): their emission scales with its force, their
+  velocity and size follow its speed and press. The trails come in three depths each (DEPTHS: _light, as named,
+  _deep), picked by its press: a parameter on a trail changed the whole line already laid.
 The new files are tracked with git add -f (source/archive is gitignored, its files tracked).
 """
 
@@ -221,20 +224,73 @@ def emitters(**kinds):
     return edit
 
 
+# The scrape's inputs, set on each live effect every frame (Physics/ScrapeEffects.cpp, Flight::FxInputsOf): force, how
+# much it throws (0..2, 1 the effect as drawn); press, its load (0..1 of a full load); speed, its slide (0..1 of 12
+# m/s).
+INPUTS = ("scrape_force", "scrape_press", "scrape_speed")
+
+
+def cname(value):
+    return {"$type": "CName", "$storage": "string", "$value": value}
+
+
+def curve(points):
+    return {"$type": "CEvaluatorFloatCurve", "curves": {
+        "InterpolationType": "Linear", "LinkType": "ESLT_Normal",
+        "Elements": [{"Point": p, "Value": v} for p, v in points]}, "numberOfCurveSamples": 16}
+
+
+def driven(inner, velocity=((0.0, 0.5), (1.0, 1.6)), size=((0.0, 0.7), (1.0, 1.4))):
+    """inner, then the effect takes the scrape's inputs: its particles' emission is multiplied by force (keeping the
+    effect's own emission over time, which fades the sparks out once the loop is broken), and their velocity and size
+    are curves of speed and press, as the game's vehicle effects map veh_impact_force and veh_speed (the parameter the
+    curve's input, not a multiplier)."""
+    def edit(node):
+        inner(node)
+        if not isinstance(node, dict):
+            return
+        if node.get("$type") == "worldEffect":
+            node["inputParameterNames"] = [cname(n) for n in INPUTS]
+        elif node.get("$type") == "effectTrackItemParticles":
+            node["emissionScale"]["inputParameterOverride"] = cname("scrape_force")
+            node["emissionScale"]["inputParameterIsPostMultiplier"] = 1
+            for field, name, points in (("velocity", "scrape_speed", velocity), ("size", "scrape_press", size)):
+                node[field]["evaluator"]["Data"] = curve(points)
+                node[field]["inputParameterOverride"] = cname(name)
+                node[field]["inputParameterIsPostMultiplier"] = 0
+    return edit
+
+
+# A trail's depths, light to deep (Flight::TrailDepth picks one by the scrape's press; a change starts a new segment):
+# its width, its colour's alpha and its normals' strength, each a factor on the trail's own. A parameter on the trail
+# (its alpha or size) changed the whole line already laid, not what was laid after it, and none of the game's skid
+# marks take one: they come in sizes instead.
+DEPTHS = (("_light", 0.65, 0.55, 0.6), ("", 1.0, 1.0, 1.0), ("_deep", 1.4, 1.0, 1.4))
+
+
+def trails(name, color, size, life, normal_strength, texture=SCRATCH_TEX):
+    """The trail called name at each depth (DEPTHS): {name + suffix: (SKID, edit)}."""
+    return {name + suffix: (SKID, trail((color[0], color[1], color[2], round(color[3] * alpha)), size * width, life,
+                                        normal_strength * normals, texture))
+            for suffix, width, alpha, normals in DEPTHS}
+
+
 # name: (vanilla source without extension, edit)
 EFFECTS = {
-    "scrape_trail_hard": (SKID, trail((235, 232, 225, 255), 1.0, 45.0, 1.0)),
-    "scrape_trail_metal": (SKID, trail((235, 238, 245, 255), 0.8, 45.0, 1.0, SCRATCH_METAL_TEX)),
+    **trails("scrape_trail_hard", (235, 232, 225, 255), 1.0, 45.0, 1.0),
+    **trails("scrape_trail_metal", (235, 238, 245, 255), 0.8, 45.0, 1.0, SCRATCH_METAL_TEX),
     # soft ground (dirt, sand, mud): a dark furrow of turned earth
-    "scrape_trail_soft": (SKID, trail((95, 78, 60, 255), 1.4, 30.0, 0.6)),
-    "scrape_sparks_hard": (SPARKS, birth(1.3)),
+    **trails("scrape_trail_soft", (95, 78, 60, 255), 1.4, 30.0, 0.6),
+    "scrape_sparks_hard": (SPARKS, driven(birth(1.3))),
     # metal: many more sparks and hotter ones (the blackbody shader's Temperature), so they read by day
-    "scrape_sparks_metal": (SPARKS, emitters(sparks=(3.0, {"Temperature": 80.0}))),
-    "scrape_sparks_glass": (SPARKS, birth(0.35)),
-    # soft ground: the concrete scratch's dust, tan, thicker and more of it, with fewer clods and no sparks
-    "scrape_dust_soft": (CONCRETE, emitters(sparks=(0.0, {}), chunks=(0.6, {}),
-                                            smoke=(6.0, {"LightSmoke": (200, 176, 142), "DarkSmoke": (140, 118, 92),
-                                                         "maxAlpha": 0.75}))),
+    "scrape_sparks_metal": (SPARKS, driven(emitters(sparks=(3.0, {"Temperature": 80.0})))),
+    "scrape_sparks_glass": (SPARKS, driven(birth(0.35))),
+    # soft ground: the concrete scratch's dust, tan, thicker and more of it, with fewer clods and no sparks; it rolls
+    # out slower than sparks fly
+    "scrape_dust_soft": (CONCRETE, driven(emitters(sparks=(0.0, {}), chunks=(0.6, {}),
+                                                   smoke=(6.0, {"LightSmoke": (200, 176, 142),
+                                                                "DarkSmoke": (140, 118, 92), "maxAlpha": 0.75})),
+                                          velocity=((0.0, 0.6), (1.0, 1.3)), size=((0.0, 0.8), (1.0, 1.5)))),
 }
 
 

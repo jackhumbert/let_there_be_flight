@@ -84,6 +84,13 @@ float MaterialFriction(RED4ext::CName material) {
   return friction;
 }
 
+} // namespace
+
+float ScrapeEffects::FrictionOfMaterial(uint64_t aMaterial) {
+  return aMaterial ? MaterialFriction(RED4ext::CName(aMaterial)) : 1.0f;
+}
+
+namespace {
 // What a flying car scrapes (docs/design/scrape-effects.md, step 1), summed over 2 s per material and logged: the
 // contacts, how many the vanilla gate let through, the slide speed and impulse at most, where on the car (its own
 // frame: the lowest and highest point, the widest from the centre line) and how much the contact faced up. The
@@ -92,6 +99,7 @@ struct ScrapeTally {
   uint32_t contacts = 0, vanilla = 0;
   float maxSpeed = 0, maxImpulse = 0, minZ = 1e9f, maxZ = -1e9f, maxSide = 0, normalUp = 0;
 };
+std::atomic<uint32_t> gLost{0}; // contact pairs reported lost, logged with the tally
 std::mutex gTallyLock;
 std::unordered_map<uint64_t, std::pair<std::string, ScrapeTally>> gTally;
 int64_t gTallyStart = 0;
@@ -123,6 +131,7 @@ void Tally(RED4ext::CName aMaterial, float aSpeed, float aImpulse, const RED4ext
                    e.first, x.contacts, x.vanilla, x.maxSpeed, x.maxImpulse, x.minZ, x.maxZ, x.maxSide,
                    x.normalUp / std::max<uint32_t>(x.contacts, 1));
     }
+    spdlog::info("[ScrapeLog] {} contact pairs lost", gLost.exchange(0));
     gTally.clear();
     gTallyStart = now;
   }
@@ -141,6 +150,16 @@ RED4ext::Vector3 ToLocal(const RED4ext::vehicle::BaseObject *aSelf, const RED4ex
   return RED4ext::Vector3(px + 2.0f * (w * cx + uy * cz - uz * cy), py + 2.0f * (w * cy + uz * cx - ux * cz),
                           pz + 2.0f * (w * cz + ux * cy - uy * cx));
 }
+
+Flight::Vec3 Vec(const RED4ext::Vector3 &a) { return {a.X, a.Y, a.Z}; }
+Flight::Quat Orientation(const RED4ext::vehicle::BaseObject *aSelf) {
+  const auto &q = aSelf->physicsData->currentTransform.Orientation;
+  return {q.i, q.j, q.k, q.r};
+}
+
+// a contact's impulse is summed over one physics step (s), the vehicles' fixed 60 Hz
+constexpr float kContactStep = 1.0f / 60.0f;
+constexpr float kGravity = 9.81f;
 
 // NotifyContacts' gate: awake vehicles ignore contacts below this summed impulse
 constexpr float kVanillaImpulseGate = 100.0f;
@@ -166,6 +185,10 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1399724886, BaseObject_NotifyContacts
     return;
   }
   if (contact[kContactState] == kContactLost) {
+    // the car left that surface: its scrapes end now (their sound fades, their effects stop where they are)
+    auto material = *reinterpret_cast<const RED4ext::CName *>(contact + kContactMaterials + 8 * (isFirst ? 1 : 0));
+    fc->scrapes.Release(ScrapeEffects::SurfaceOfMaterial(material.hash), Flight::ScrapeParams{});
+    ++gLost;
     return;
   }
   // per-material ground friction (and a one-time log line per new material)
@@ -179,12 +202,12 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1399724886, BaseObject_NotifyContacts
   if (self->physicsData) {
     auto at = *reinterpret_cast<const RED4ext::Vector3 *>(contact + kContactPosition);
     auto nn = *reinterpret_cast<const RED4ext::Vector3 *>(contact + kContactNormal);
-    auto v = self->physicsData->velocity;
-    float along = v.X * nn.X + v.Y * nn.Y + v.Z * nn.Z;
-    float sx = v.X - nn.X * along, sy = v.Y - nn.Y * along, sz = v.Z - nn.Z * along;
     auto other = *reinterpret_cast<const RED4ext::CName *>(contact + kContactMaterials + 8 * (isFirst ? 1 : 0));
-    const float slide = std::sqrt(sx * sx + sy * sy + sz * sz);
     const RED4ext::Vector3 local = ToLocal(self, at);
+    // the contact point's own slide, the car's spin included: a car dragging its nose while it turns slides there
+    // faster than its centre
+    const float slide = Flight::SlideAt(Vec(self->physicsData->velocity), Vec(self->physicsData->angularVelocity),
+                                        Orientation(self), {local.X, local.Y, local.Z}, {nn.X, nn.Y, nn.Z});
     Tally(other, slide, impulse, local, std::fabs(nn.Z),
           !physics || physics->sleepTimer != 1.0f || impulse >= kVanillaImpulseGate);
     // the car's scrapes (Flight::ScrapeTracker): every world contact, whatever the vanilla gate does with it
@@ -193,6 +216,8 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1399724886, BaseObject_NotifyContacts
     c.normal = {nn.X, nn.Y, nn.Z};
     c.slide = slide;
     c.impulse = impulse;
+    // the push as a share of the car's weight: the impulse is over one physics step
+    c.load = impulse * self->physicsData->inverseMass / (kGravity * kContactStep);
     c.surface = ScrapeEffects::SurfaceOfMaterial(other.hash);
     fc->scrapes.Add(c, Flight::ScrapeParams{});
   }
@@ -209,7 +234,12 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1399724886, BaseObject_NotifyContacts
   if (!isFirst) {
     n = RED4ext::Vector3(-n.X, -n.Y, -n.Z);
   }
-  auto v = self->physicsData->velocity;
+  // the contact point's velocity, the car's spin included (as the tracker's slide above)
+  const Flight::Vec3 vp =
+      Flight::Add(Vec(self->physicsData->velocity),
+                  Flight::Cross(Vec(self->physicsData->angularVelocity),
+                                Flight::Rotate(Orientation(self), Vec(ToLocal(self, position)))));
+  const RED4ext::Vector3 v(vp.x, vp.y, vp.z);
   float vn = v.X * n.X + v.Y * n.Y + v.Z * n.Z;
   float tx = v.X - n.X * vn, ty = v.Y - n.Y * vn, tz = v.Z - n.Z * vn;
   float speed = std::sqrt(tx * tx + ty * ty + tz * tz);

@@ -73,8 +73,8 @@ float DroneSkid(float aClearance, float aVerticalSpeed, float aBodyUpZ, float aL
   return std::fmin(std::fmax(a, 0.0f), k.maxAccel) * hold;
 }
 
-float GroundedLift(float aLiftAccel, float aClearance, const DroneSkidParams &k) {
-  if (aLiftAccel >= -k.press || !std::isfinite(aClearance))
+float GroundedLift(float aLiftAccel, float aClearance, float aBodyUpZ, const DroneSkidParams &k) {
+  if (aLiftAccel >= -k.press || !std::isfinite(aClearance) || aBodyUpZ < k.minUp)
     return aLiftAccel;
   const float w = std::fmin(std::fmax((k.clearance + k.band - aClearance) / k.band, 0.0f), 1.0f);
   return aLiftAccel + w * (-k.press - aLiftAccel);
@@ -85,7 +85,7 @@ float ClosingSpeed(Vec3 aVelocity, Vec3 aGroundNormal) {
 }
 
 ModeOutput DroneSkidPoints(const SkidPoint *aPoints, int aCount, const StatsState &s, const StatsStatic &st,
-                           Vec3 aResponse, float aLift, const DroneSkidParams &k) {
+                           Vec3 aResponse, float aLift, const DroneSkidParams &k, float *aLoads) {
   ModeOutput out;
   if (aCount <= 0)
     return out;
@@ -93,16 +93,29 @@ ModeOutput DroneSkidPoints(const SkidPoint *aPoints, int aCount, const StatsStat
   const Vec3 up = Rotate(toBody, kUp); // world up in the body frame
   const float share = 1.0f / static_cast<float>(aCount);
   float lift = 0.0f;
+  Vec3 drag;   // the points' friction (body frame)
   Vec3 moment; // the points' moment about the centre of mass per unit of the car's mass (body frame)
   for (int i = 0; i < aCount; ++i) {
-    const Vec3 r = aPoints[i].offset;
+    const SkidPoint &p = aPoints[i];
+    const Vec3 r = p.offset;
     const Vec3 pointVelocity = Add(s.d_velocity, Rotate(s.d_orientation, Cross(s.d_angularVelocity, r)));
-    const float a =
-        DroneSkid(aPoints[i].clearance, ClosingSpeed(pointVelocity, aPoints[i].normal), s.d_up.z, aLift, k) * share;
+    const float a = DroneSkid(p.clearance, ClosingSpeed(pointVelocity, p.normal), s.d_up.z, aLift, k) * share;
     lift += a;
     moment = Add(moment, Cross(r, Mul(up, a)));
+    if (aLoads)
+      aLoads[i] = a / kGravity;
+    if (k.floor || p.friction <= 0.0f || a <= 0.0f || k.touch <= k.clearance)
+      continue;
+    const float touching = std::fmin(std::fmax((k.touch - p.clearance) / (k.touch - k.clearance), 0.0f), 1.0f);
+    const Vec3 along = Sub(pointVelocity, Mul(p.normal, Dot(pointVelocity, p.normal)));
+    const float slide = Length(along);
+    if (touching <= 0.0f || !(slide > 1e-4f))
+      continue;
+    const Vec3 f = Rotate(toBody, Mul(along, -p.friction * a * touching / std::fmax(slide, k.softSlide)));
+    drag = Add(drag, f);
+    moment = Add(moment, Cross(r, f));
   }
-  out.force = Mul(up, lift);
+  out.force = Add(Mul(up, lift), drag);
   auto axis = [&](float m, float inertia, float response) {
     return inertia > 0.0f && response > 0.0f ? k.turn * st.mass * m / inertia / response : 0.0f;
   };

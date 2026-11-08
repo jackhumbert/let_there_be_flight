@@ -212,7 +212,7 @@ void FlightComponent::OnUpdate(float deltaTime) {
     this->UpdateDepenetration();
     this->UpdateThrusterContacts();
     ScrapeEffects::Update(this, vehicle, deltaTime);
-    this->groundFriction = GetFlightSettingsFloat(rtti, "groundFriction", 0.1f);
+    this->groundFriction = GetFlightSettingsFloat(rtti, "groundFriction", 0.5f);
     if (this->physxOwned) {
       // applied straight to the PhysX body in the PushToPhysX hook
       this->pendingImpulse += this->force.AsVector3();

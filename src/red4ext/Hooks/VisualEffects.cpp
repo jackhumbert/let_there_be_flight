@@ -7,7 +7,8 @@
 #include <spdlog/spdlog.h>
 #include "Flight/Component.hpp"
 
-#include <queue>
+#include <mutex>
+#include <unordered_map>
 
 // using namespace RED4ext;
 
@@ -25,33 +26,36 @@ struct FlightStatus {
   uint8_t hasChanged : 1;
 };
 
-// doesn't seem to affect audio bug
-
-// replace tire tracks & skid marks with our own effects
+// While flight is on the wheels leave no skid marks or tyre tracks: the scrapes have their own sparks and trails
+// (Physics/ScrapeEffects.cpp). The wheels' effects had been swapped for thruster_sparks.effect and thruster_mark.effect,
+// whose sound (the engine damage loop) played at every wheel at once and combed. The lookup the game gets back while
+// flying is a copy of the material's with its effects emptied, one per material, kept for as long as the game holds it.
 // vehicle::FX::WheelsMaterial const * vehicle::FX::FindWheelsMaterial(CName, bool) const
 REGISTER_FLIGHT_HOOK_HASH(RED4ext::vehicle::MaterialFx * __fastcall, 2081691750, FX_FindWheelsMaterial, RED4ext::vehicle::Effects *effects,
                      RED4ext::CName material, bool isBackWheel) {
   auto og = FX_FindWheelsMaterial_Original(effects, material, isBackWheel);
-  RED4ext::vehicle::MaterialFx * fx = og;
-  auto fc = FlightComponent::Get(effects->vehicle);
-  if (fc) {
-    auto status = (FlightStatus*)&og->normal.particle.extra_byte_for_fun;
-    status->hasChanged = status->isActive ^ fc->active;
-    status->isActive = fc->active;
-    if (fc->active && fc->configuration) {
-      fx = new RED4ext::vehicle::MaterialFx();
-      // *fx = fc->configuration->ExecuteFunction<RED4ext::vehicle::MaterialFx>("GetEffectForMaterial", material, *og).value();
-      RED4ext::ExecuteFunction(
-        (RED4ext::ScriptInstance*)fc->configuration.instance, 
-        fc->configuration->nativeType->GetFunction("GetEffectForMaterial"), 
-        (void*)fx,
-        material, 
-        *og
-      );
-
+  auto fc = og ? FlightComponent::Get(effects->vehicle) : nullptr;
+  if (!fc) {
+    return og;
+  }
+  auto status = (FlightStatus *)&og->normal.particle.extra_byte_for_fun;
+  status->hasChanged = status->isActive ^ fc->active;
+  status->isActive = fc->active;
+  if (!fc->active) {
+    return og;
+  }
+  static std::mutex lock;
+  static std::unordered_map<uint64_t, RED4ext::vehicle::MaterialFx> empty; // nodes stay put: the game keeps pointers
+  std::lock_guard<std::mutex> _(lock);
+  auto &fx = empty[material.hash];
+  fx = *og;
+  for (auto *condition : {&fx.normal, &fx.wet, &fx.rain}) {
+    for (auto *resource : {&condition->particle, &condition->decal}) {
+      resource->skidMarks = {};
+      resource->tireTracks = {};
     }
   }
-  return fx;
+  return &fx;
 }
 
 // trigger resource change when flight is changed

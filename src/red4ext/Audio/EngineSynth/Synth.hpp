@@ -14,7 +14,7 @@
 //   air          pink noise band-passed, opening with thrust and speed
 //   brake        two bands of hiss, the high one following brake, tremolo faster with speed
 //   damage       a whirl that rises with speed, and the voices' pitch up with damage
-//   scrape       crackle (sparse filtered clicks) with the wheel's spring force above 10 m/s
+//   scrape       a thruster dragged along a surface (ScrapeVoice), by the scrape's intensity, surface and slide
 //   master       the cabin view's level, the water low-pass, the event's volume; the Engine return
 //                louder when the thruster faces the listener (FMOD's Cone return)
 //
@@ -22,6 +22,7 @@
 // game or FMOD types: the plugin's generator DSP and the offline target (tools/acoustics/engine_synth.cpp)
 // both drive it. One thread.
 
+#include "Scrape.hpp"
 #include "Sources.hpp"
 
 #include <array>
@@ -149,9 +150,9 @@ private:
   // damage
   double whirlPhase = 0;
   float whirlFrequency = 0, whirlGain = 0;
-  // scrape: clicks (each a decaying burst) and a noise bed through one band, per surface (ScrapeProfile)
-  Svf scrapeBand;
-  float scrapeGain = 0, scrapeRate = 0, click = 0, scrapeDecay = 0.995f, scrapeBed = 0;
+  // scrape: a contact's texture, grit, stick-slip and grains ringing the surface's and the thruster pod's resonances
+  ScrapeVoice scrape;
+  float scrapeGain = 0;
   // master
   Svf water;
   float masterGain = 0, waterCutoff = 22000;

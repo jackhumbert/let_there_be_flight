@@ -119,39 +119,4 @@ public abstract native class IFlightConfiguration extends IScriptable {
     this.percentageAttached = attachedThrusters / totalThrusters;
     return total;
   }
-
-  public func GetEffectForMaterial(material: CName, originalFx: MaterialFx) -> MaterialFx {
-    if Equals(material, n"concrete.physmat") ||
-       Equals(material, n"asphalt.physmat") ||
-       Equals(material, n"metal.physmat") ||
-       Equals(material, n"metal_painted.physmat")||
-       Equals(material, n"default_material.physmat") {
-        originalFx.normal.particle.skidMarks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
-        originalFx.normal.particle.tireTracks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
-        originalFx.normal.particle.loaded = true;
-        originalFx.wet.particle.skidMarks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
-        originalFx.wet.particle.tireTracks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
-        originalFx.wet.particle.loaded = true;
-        originalFx.rain.particle.skidMarks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
-        originalFx.rain.particle.tireTracks = r"user\\jackhumbert\\effects\\thruster_sparks.effect";
-        originalFx.rain.particle.loaded = true;
-        
-        originalFx.normal.decal.skidMarks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
-        originalFx.normal.decal.tireTracks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
-        originalFx.normal.decal.loaded = true;
-        originalFx.wet.decal.skidMarks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
-        originalFx.wet.decal.tireTracks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
-        originalFx.wet.decal.loaded = true;
-        originalFx.rain.decal.skidMarks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
-        originalFx.rain.decal.tireTracks = r"user\\jackhumbert\\effects\\thruster_mark.effect";
-        originalFx.rain.decal.loaded = true;
-    }
-
-    //   case n"dirt.physmat":
-    //   case n"grass.physmat":
-    //   case n"sand.physmat":
-    //   case n"mud.physmat":
- 
-    return originalFx;
-  }
 }

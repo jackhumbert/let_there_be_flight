@@ -150,31 +150,15 @@ inline constexpr Curve kWhirlPitch{{2.97f, -15}, {300, -0.2f}};
 inline constexpr float kWhirlFundamental = 392.0f;
 inline constexpr float kWhirlVolume = 7.0f;
 
-// Scrape: only above 10 m/s, pitch up an octave by 300 m/s
-inline constexpr Curve kScrapeLevel{{0, -80}, {1, 0}};
-inline constexpr Curve kScrapeSpeedLevel{{0, -80}, {10, 0}};
-inline constexpr Curve kScrapePitch{{0, 0}, {300, 12}};
-inline constexpr float kScrapeSend = 1.0f;
-// the pitch of a known surface's scrape with its slide speed (m/s)
-inline constexpr Curve kScrapeSlidePitch{{0, -3}, {25, 9}};
-
-// A surface's scrape (Flight::Surface's order): clicks a second at the scrape's start and more at full, the band
-// (Hz) and its Q, how fast a click dies per sample, a steady noise under the clicks (the grind), and a level (dB).
-// Hard a dense mid grind, metal a bright ringing screech, glass high and brittle, wood dull and low, soft a hiss.
-struct ScrapeProfile {
-  float rate, rateFull, band, q, decay, bed, level;
-};
-inline constexpr ScrapeProfile kScrapeProfiles[] = {
-    {20, 200, 1650, 1.5f, 0.995f, 0.0f, 0},     // none known: the voice as before
-    {300, 1500, 1300, 1.0f, 0.990f, 0.35f, 0},  // hard
-    {120, 700, 3200, 4.0f, 0.9975f, 0.12f, -2}, // metal
-    {50, 300, 5200, 6.0f, 0.993f, 0.04f, -4},   // glass
-    {80, 350, 650, 1.2f, 0.985f, 0.2f, -3},     // wood
-    {30, 150, 380, 0.8f, 0.980f, 0.6f, -6},     // soft
-};
-inline const ScrapeProfile &ScrapeProfileOf(int aSurface) {
-  return kScrapeProfiles[aSurface >= 0 && aSurface < 6 ? aSurface : 0];
-}
+// Scrape: its level by its intensity (0..1, mostly the press: Flight::ScrapeParams) and by its slide (m/s; the car's
+// speed when no surface is known); they add. The voice itself is some 16 dB quieter at a crawl than at 6 m/s (less
+// texture, fewer impacts), so the slide's curve lifts a crawl rather than lowering it: a skid at rest load is about
+// 5 dB under its 6 m/s level at 1 m/s and 8 dB under at 0.1 m/s, not some 50.
+inline constexpr Curve kScrapeLevel{{0, -60}, {0.1f, -24}, {0.4f, -9}, {1, 0}};
+inline constexpr Curve kScrapeSpeedLevel{{0, 9}, {1, 5}, {3, 1.5f}, {6, 0}};
+// so a scrape at 6 m/s keeps its level
+inline constexpr float kScrapeSend = -7.9f;
+// each surface's sound is its ScrapeModel (Scrape.hpp)
 
 // the event's master: the cabin view's level, the water low-pass
 inline constexpr Curve kInsideLevel{{0, -5.5f}, {1, -3.5f}};

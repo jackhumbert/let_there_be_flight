@@ -948,11 +948,14 @@ TEST(modes_grounded_lift) {
   // far from the ground lift down is kept; at the ground it is held to press, between the two it fades; lift up and a
   // light push are never touched
   const DroneSkidParams k;
-  CHECK_NEAR(GroundedLift(-40.0f, 5.0f, k), -40.0f, kTol);
-  CHECK_NEAR(GroundedLift(-40.0f, 0.0f, k), -k.press, kLoose);
-  CHECK_NEAR(GroundedLift(-40.0f, k.clearance + 0.5f * k.band, k), 0.5f * (-40.0f - k.press), kLoose);
-  CHECK_NEAR(GroundedLift(30.0f, 0.0f, k), 30.0f, kTol);
-  CHECK_NEAR(GroundedLift(-2.0f, 0.0f, k), -2.0f, kTol);
+  CHECK_NEAR(GroundedLift(-40.0f, 5.0f, 1.0f, k), -40.0f, kTol);
+  CHECK_NEAR(GroundedLift(-40.0f, 0.0f, 1.0f, k), -k.press, kLoose);
+  CHECK_NEAR(GroundedLift(-40.0f, k.clearance + 0.5f * k.band, 1.0f, k), 0.5f * (-40.0f - k.press), kLoose);
+  CHECK_NEAR(GroundedLift(30.0f, 0.0f, 1.0f, k), 30.0f, kTol);
+  CHECK_NEAR(GroundedLift(-2.0f, 0.0f, 1.0f, k), -2.0f, kTol);
+  // upside down (or past the skid's tilt) lift down pushes it off the ground, all of it
+  CHECK_NEAR(GroundedLift(-40.0f, 0.0f, -1.0f, k), -40.0f, kTol);
+  CHECK_NEAR(GroundedLift(-40.0f, 0.0f, 0.5f, k), -40.0f, kTol);
 }
 
 TEST(modes_drone_skid_points) {
@@ -991,4 +994,46 @@ TEST(modes_drone_skid_points) {
   CHECK_NEAR(Length(DroneSkidPoints(front.data(), 4, s, st, response, -1.0f, k).force), 0.0f, kTol);
   const auto high = corners(0.5f, 0.5f, 0.5f, 0.5f);
   CHECK_NEAR(Length(DroneSkidPoints(high.data(), 4, s, st, response, 0.0f, k).force), 0.0f, kTol);
+}
+
+TEST(modes_drone_skid_friction) {
+  // a car on its skid at the clearance, sliding 10 m/s forward on ground of friction 0.5: the ground drags it back by
+  // the friction times the load (gravity at rest), and the drag fades out as the thrusters lift past touch; a bike's
+  // points are its tyres and do not drag; none without friction, and none at rest
+  DroneSkidParams k;
+  StatsState s;
+  s.d_orientation = {0, 0, 0, 1};
+  s.d_up = {0, 0, 1};
+  s.d_velocity = {0, 10, 0};
+  StatsStatic st;
+  st.mass = 1600;
+  st.momentOfInertia = {2551, 817, 2896};
+  const Vec3 response{1, 1, 1};
+  auto corners = [](float c, float mu) {
+    std::array<SkidPoint, 4> p{SkidPoint{{-1.1f, 1.7f, -0.4f}, c}, SkidPoint{{1.1f, 1.7f, -0.4f}, c},
+                               SkidPoint{{-1.1f, -1.7f, -0.4f}, c}, SkidPoint{{1.1f, -1.7f, -0.4f}, c}};
+    for (SkidPoint &q : p)
+      q.friction = mu;
+    return p;
+  };
+  const auto resting = corners(k.clearance, 0.5f);
+  const ModeOutput out = DroneSkidPoints(resting.data(), 4, s, st, response, 0.0f, k);
+  CHECK_NEAR(out.force.y, -0.5f * out.force.z, kLoose);
+  CHECK_NEAR(out.force.z, DroneSkid(k.clearance, 0.0f, 1.0f, 0.0f, k), kLoose);
+  CHECK(out.torque.x < 0.0f); // dragged at the bottom, the nose dips
+  const auto lifted = corners(k.touch + 0.01f, 0.5f);
+  CHECK_NEAR(DroneSkidPoints(lifted.data(), 4, s, st, response, 0.0f, k).force.y, 0.0f, kTol);
+  const auto half = corners(0.5f * (k.clearance + k.touch), 0.5f);
+  const ModeOutput h = DroneSkidPoints(half.data(), 4, s, st, response, 0.0f, k);
+  CHECK_NEAR(h.force.y, -0.25f * h.force.z, kLoose);
+  const auto none = corners(k.clearance, 0.0f);
+  CHECK_NEAR(DroneSkidPoints(none.data(), 4, s, st, response, 0.0f, k).force.y, 0.0f, kTol);
+  DroneSkidParams bike = k;
+  bike.floor = true;
+  CHECK_NEAR(DroneSkidPoints(resting.data(), 4, s, st, response, 0.0f, bike).force.y, 0.0f, kTol);
+  StatsState still = s;
+  still.d_velocity = {0, 0, 0};
+  CHECK_NEAR(Length(Sub(DroneSkidPoints(resting.data(), 4, still, st, response, 0.0f, k).force,
+                        DroneSkidPoints(none.data(), 4, still, st, response, 0.0f, k).force)),
+             0.0f, kTol);
 }

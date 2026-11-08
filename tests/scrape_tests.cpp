@@ -4,17 +4,19 @@
 
 #include "Flight/Scrape.hpp"
 
+#include <cmath>
+
 using namespace Flight;
 
 namespace {
 constexpr float kDt = 1.0f / 60.0f;
 
-ScrapeContact Contact(Vec3 aLocal, float aSlide, Surface aSurface = Surface::Hard, float aImpulse = 400.0f) {
+ScrapeContact Contact(Vec3 aLocal, float aSlide, Surface aSurface = Surface::Hard, float aLoad = 1.0f) {
   ScrapeContact c;
   c.local = aLocal;
   c.normal = {0, 0, 1};
   c.slide = aSlide;
-  c.impulse = aImpulse;
+  c.load = aLoad;
   c.surface = aSurface;
   return c;
 }
@@ -83,15 +85,16 @@ TEST(scrape_two_sides_and_surfaces) {
 TEST(scrape_slow_and_none_left_out) {
   ScrapeTracker t;
   const ScrapeParams p;
-  t.Add(Contact({0, 0, 0}, 0.5f), p);
+  t.Add(Contact({0, 0, 0}, 0.01f), p);
   t.Add(Contact({0, 0, 0}, 8.0f, Surface::None), p);
   t.Step(kDt, p);
   CHECK(Active(t) == 0);
   // harder and faster is more intense
   ScrapeTracker a, b;
-  a.Add(Contact({0, 0, 0}, 4.0f, Surface::Hard, 50.0f), p);
-  b.Add(Contact({0, 0, 0}, 12.0f, Surface::Hard, 800.0f), p);
-  for (int i = 0; i < 30; ++i) {
+  a.Add(Contact({0, 0, 0}, 4.0f, Surface::Hard, 0.1f), p);
+  b.Add(Contact({0, 0, 0}, 12.0f, Surface::Hard, 2.0f), p);
+  // within the hold, while both are held at their contacts'
+  for (int i = 0; i < 10; ++i) {
     a.Step(kDt, p);
     b.Step(kDt, p);
   }
@@ -177,22 +180,29 @@ TEST(scrape_skid_surface_change) {
 }
 
 TEST(scrape_skid_intensity) {
-  // pressed into the road at full slide the scrape is loud, only touching at half the slide a quarter as loud; it
-  // fades once the thruster lifts off
+  // carrying its full load at full slide the scrape is loud, carrying nothing at half the slide a fifth as loud, at
+  // rest on four (a quarter of the car each) in between; it fades once the thruster lifts off
   const SkidScrapeParams p;
-  auto loudness = [&](float aClearance, float aSlide) {
+  auto loudness = [&](float aLoad, float aSlide) {
     SkidScrapes s;
     SkidContact c[SkidScrapes::kThrusters];
     c[0].valid = true;
     c[0].normal = {0, 0, 1};
-    c[0].clearance = aClearance;
+    c[0].load = aLoad;
     c[0].slide = aSlide;
     for (int i = 0; i < 30; ++i)
       s.Step(c, kDt, p);
     return s.begin()->intensity;
   };
-  CHECK_NEAR(loudness(p.touch - p.fullPress, p.fullSlide), 1.0f, 0.01f);
-  CHECK_NEAR(loudness(p.touch, 0.5f * p.fullSlide), 0.25f, 0.01f);
+  CHECK_NEAR(loudness(p.fullLoad, p.fullSlide), 1.0f, 0.01f);
+  CHECK_NEAR(loudness(0.0f, 0.5f * p.fullSlide), 0.875f * 0.25f, 0.01f);
+  CHECK_NEAR(loudness(0.25f, p.fullSlide), 0.625f, 0.01f);
+  // heavier is louder, and a crawl pressed in is nearly as loud as a slide: at 0.1 m/s three quarters of full,
+  // fading in from 0.02 m/s
+  CHECK(loudness(0.5f, 6.0f) > 1.5f * loudness(0.1f, 6.0f));
+  CHECK(loudness(p.fullLoad, 0.1f) > 0.7f);
+  CHECK(loudness(p.fullLoad, 0.03f) < loudness(p.fullLoad, 0.1f));
+  CHECK_NEAR(loudness(p.fullLoad, 0.01f), 0.0f, 1e-6f);
   SkidScrapes s;
   SkidContact c[SkidScrapes::kThrusters];
   c[0].valid = true;
@@ -204,4 +214,145 @@ TEST(scrape_skid_intensity) {
   for (int i = 0; i < 6; ++i)
     s.Step(c, kDt, p);
   CHECK(s.begin()->active && s.begin()->intensity < 0.7f * on);
+}
+
+TEST(scrape_slide_at_point) {
+  // a car at rest spinning 2 rad/s about its up axis: its nose 2 m ahead slides 4 m/s sideways along flat ground, its
+  // centre not at all; driving 5 m/s straight into a wall it slides along none of it
+  const Quat level{0, 0, 0, 1};
+  CHECK_NEAR(SlideAt({0, 0, 0}, {0, 0, 2}, level, {0, 2, 0}, {0, 0, 1}), 4.0f, 1e-4f);
+  CHECK_NEAR(SlideAt({0, 0, 0}, {0, 0, 2}, level, {0, 0, 0}, {0, 0, 1}), 0.0f, 1e-6f);
+  CHECK_NEAR(SlideAt({0, 5, 0}, {0, 0, 0}, level, {0, 2, 0}, {0, -1, 0}), 0.0f, 1e-6f);
+  // turned 90 degrees about up, the car's nose points along world -X: the spin moves it along -Y
+  const float h = 0.70710678f;
+  CHECK_NEAR(SlideAt({3, 0, 0}, {0, 0, 2}, {0, 0, h, h}, {0, 2, 0}, {0, 0, 1}), 5.0f, 1e-3f);
+}
+
+TEST(scrape_follow_updates_slide) {
+  // contacts come in bursts: between them the scrape's slide is the car's at that point now
+  ScrapeTracker t;
+  const ScrapeParams p;
+  t.Add(Contact({0, 2, -0.5f}, 10.0f), p);
+  t.Follow({3, 0, 0}, {0, 0, 0}, {0, 0, 0, 1});
+  CHECK_NEAR(t.Loudest()->slide, 3.0f, 1e-4f);
+  t.Follow({0, 0, 0}, {0, 0, 1}, {0, 0, 0, 1});
+  CHECK_NEAR(t.Loudest()->slide, 2.0f, 1e-4f);
+}
+
+TEST(scrape_nearest_emitter) {
+  // a scrape sounds from one thruster only, the nearest
+  const Vec3 thrusters[4] = {{-1, 2, 0}, {1, 2, 0}, {-1, -2, 0}, {1, -2, 0}};
+  CHECK(NearestEmitter({0.9f, 2.5f, -0.5f}, thrusters, 4) == 1);
+  CHECK(NearestEmitter({-0.2f, -1.0f, 0}, thrusters, 4) == 2);
+  CHECK(NearestEmitter({0, 0, 0}, thrusters, 0) == -1);
+}
+
+TEST(scrape_fx_inputs) {
+  // what a scrape's effects are given: force twice its intensity (1, the effect as drawn, at half), press and speed
+  // its load and slide over their full, held to 0..1
+  ScrapeFxInputs in = FxInputsOf(0.5f, 0.25f, 0.5f, 6.0f, 12.0f);
+  CHECK_NEAR(in.force, 1.0f, 1e-6f);
+  CHECK_NEAR(in.press, 0.5f, 1e-6f);
+  CHECK_NEAR(in.speed, 0.5f, 1e-6f);
+  in = FxInputsOf(1.5f, 3.0f, 1.0f, 40.0f, 12.0f);
+  CHECK_NEAR(in.force, 2.0f, 1e-6f);
+  CHECK_NEAR(in.press, 1.0f, 1e-6f);
+  CHECK_NEAR(in.speed, 1.0f, 1e-6f);
+  CHECK_NEAR(FxInputsOf(0.0f, 0.0f, 0.0f, 0.0f, 0.0f).press, 0.0f, 1e-6f);
+}
+
+TEST(scrape_tracker_keeps_load) {
+  // a frame's contacts: the scrape keeps the hardest's load; the next frame's replaces it
+  ScrapeTracker t;
+  const ScrapeParams p;
+  t.Add(Contact({0, 0, 0}, 6.0f, Surface::Hard, 0.3f), p);
+  t.Add(Contact({0.1f, 0, 0}, 6.0f, Surface::Hard, 0.8f), p);
+  CHECK_NEAR(t.Loudest()->load, 0.8f, 1e-6f);
+  t.Step(kDt, p);
+  t.Add(Contact({0, 0, 0}, 6.0f, Surface::Hard, 0.2f), p);
+  CHECK_NEAR(t.Loudest()->load, 0.2f, 1e-6f);
+}
+
+TEST(scrape_released_when_lost) {
+  // the game reports the pair lost: the scrape stops touching at once (its effects end) and fades out within a few
+  // tenths of a second, not after the hold; a scrape of another surface goes on
+  ScrapeTracker t;
+  const ScrapeParams p;
+  t.Add(Contact({0, 0, 0}, 6.0f), p);
+  t.Add(Contact({0, 3, 0}, 6.0f, Surface::Metal), p);
+  for (int i = 0; i < 10; ++i)
+    t.Step(kDt, p);
+  t.Release(Surface::Hard, p);
+  const Scrape *hard = nullptr, *metal = nullptr;
+  for (const Scrape &s : t)
+    if (s.active)
+      (s.surface == Surface::Hard ? hard : metal) = &s;
+  CHECK(hard && !hard->touching);
+  CHECK(metal && metal->touching);
+  for (int i = 0; i < 24; ++i)
+    t.Step(kDt, p);
+  int hardLeft = 0;
+  for (const Scrape &s : t)
+    hardLeft += s.active && s.surface == Surface::Hard ? 1 : 0;
+  CHECK(hardLeft == 0);
+  // untouched past the hold it stops touching too
+  ScrapeTracker u;
+  u.Add(Contact({0, 0, 0}, 6.0f), p);
+  for (int i = 0; i < int(p.hold / kDt) + 2; ++i)
+    u.Step(kDt, p);
+  CHECK(!u.Loudest() || !u.Loudest()->touching);
+}
+
+TEST(scrape_mix_one_voice) {
+  // two thrusters scraping: one voice, louder than either (their power summed), with the louder one's surface and
+  // slide, sitting between them nearer the louder
+  ScrapeMixer m;
+  m.Add({-1, 2, 0}, 0.6f, Surface::Metal, 9.0f);
+  m.Add({1, 2, 0}, 0.3f, Surface::Hard, 4.0f);
+  const ScrapeMix mix = m.Result();
+  CHECK(mix.any);
+  CHECK_NEAR(mix.intensity, std::sqrt(0.36f + 0.09f), 1e-5f);
+  CHECK(mix.surface == Surface::Metal);
+  CHECK_NEAR(mix.slide, 9.0f, 1e-6f);
+  CHECK_NEAR(mix.at.x, -1.0f / 3.0f, 1e-5f);
+  CHECK(!ScrapeMixer().Result().any);
+  // four loud ones at once are still at most full
+  ScrapeMixer four;
+  for (int i = 0; i < 4; ++i)
+    four.Add({0, 0, 0}, 0.9f, Surface::Hard, 6.0f);
+  CHECK_NEAR(four.Result().intensity, 1.0f, 1e-6f);
+}
+
+TEST(scrape_emitter_holds) {
+  // the voice stays at its thruster until another is half a metre nearer
+  const Vec3 thrusters[4] = {{-1, 2, 0}, {1, 2, 0}, {-1, -2, 0}, {1, -2, 0}};
+  CHECK(ChooseEmitter({0.1f, 2, 0}, thrusters, 4, -1, 0.5f) == 1);
+  CHECK(ChooseEmitter({0.1f, 2, 0}, thrusters, 4, 0, 0.5f) == 0);
+  CHECK(ChooseEmitter({0.4f, 2, 0}, thrusters, 4, 0, 0.5f) == 1);
+  CHECK(ChooseEmitter({0, 0, 0}, thrusters, 0, 0, 0.5f) == -1);
+}
+
+TEST(scrape_trail_depth) {
+  // the first press picks the depth at once; a press past the next edge by the margin moves it after the dwell, one
+  // wavering at an edge does not
+  TrailDepth d;
+  CHECK(d.Step(0.5f, kDt) && d.band == 1);
+  int moves = 0;
+  for (int i = 0; i < 60; ++i)
+    moves += d.Step(i % 2 ? 0.80f : 0.70f, kDt) ? 1 : 0; // about the edge, inside the margin
+  CHECK(moves == 0 && d.band == 1);
+  for (int i = 0; i < 6; ++i)
+    CHECK(!d.Step(0.95f, kDt)); // pressed hard, still within the dwell
+  bool moved = false;
+  for (int i = 0; i < 12; ++i)
+    moved = d.Step(0.95f, kDt) || moved;
+  CHECK(moved && d.band == 2);
+  // a brief light touch inside a hard scrape is not a new segment
+  for (int i = 0; i < 6; ++i)
+    CHECK(!d.Step(0.1f, kDt));
+  CHECK(!d.Step(0.95f, kDt) && d.band == 2);
+  // let up for longer: light
+  for (int i = 0; i < 20; ++i)
+    d.Step(0.1f, kDt);
+  CHECK(d.band == 0);
 }

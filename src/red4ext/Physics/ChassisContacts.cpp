@@ -96,9 +96,9 @@ constexpr float kGravity = 9.81f;
 constexpr float kMaxFrameDt = 0.1f;
 // time constant for the contact spin to fade once contacts stop changing it
 constexpr float kContactSpinDecay = 0.5f;
-// a PhysX velocity correction counts as a ground contact above this size and upward share
-constexpr float kGroundPushThreshold = 0.03f;
-constexpr float kGroundMinUp = 0.3f;
+// a PhysX velocity correction counts as a contact above this size (m/s a frame): a light scrape
+// pushes about a tenth of gravity's step
+constexpr float kGroundPushThreshold = 0.015f;
 
 // alignment-safe scratch for the engine's 0x20-byte ConcurrentProxyWriter
 struct alignas(16) ProxyWriterStorage {
@@ -193,13 +193,14 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 547299556, PhysXSynchronizer_SyncFrom
     }
 
     // Likewise the linear velocity PhysX changed is the contact push: its direction is the
-    // ground normal and its size how hard the ground pushed (m/s this frame), the normal
-    // impulse per mass that Coulomb friction scales with.
+    // surface normal and its size how hard the surface pushed (m/s this frame), the normal
+    // impulse per mass that Coulomb friction scales with. Any surface: a car scraping along a
+    // wall or a kerb grips it as it grips the road.
     auto writtenLinear =
         *reinterpret_cast<const Vector3 *>(reinterpret_cast<const uint8_t *>(self) + kTrackingLinear);
     auto push = Sub(Vector3(lv.X, lv.Y, lv.Z), writtenLinear);
     float pushLen = std::sqrt(Dot(push, push));
-    owner->groundContact = std::isfinite(pushLen) && pushLen > kGroundPushThreshold && push.Z / pushLen > kGroundMinUp;
+    owner->groundContact = std::isfinite(pushLen) && pushLen > kGroundPushThreshold;
     if (owner->groundContact) {
       owner->groundNormal = Scale(push, 1.0f / pushLen);
       owner->groundPush = pushLen;
@@ -344,9 +345,9 @@ REGISTER_FLIGHT_HOOK_HASH(char __fastcall, 3628605463, PhysXSynchronizer_PushToP
   fc->pendingImpulse = Vector3();
   fc->pendingAngularImpulse = Vector3();
 
-  // Extra Coulomb friction on the ground: PhysX's own friction uses the chassis material,
-  // which lets cars slide like soap. Remove up to groundFriction * normal push of the
-  // sliding speed along the ground this frame.
+  // Extra Coulomb friction against what the car touches: PhysX's own friction uses the chassis
+  // material, which lets cars slide like soap. Remove up to groundFriction * normal push of the
+  // sliding speed along the surface this frame.
   if (fc->groundContact && fc->groundFriction > 0.0f) {
     const auto &n = fc->groundNormal;
     auto tangent = Sub(linear, Scale(n, Dot(linear, n)));

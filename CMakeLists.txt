@@ -264,6 +264,7 @@ add_executable(engine_synth EXCLUDE_FROM_ALL
   tools/acoustics/engine_synth.cpp
   src/red4ext/Audio/EngineSynth/Synth.cpp
   src/red4ext/Audio/EngineSynth/Sources.cpp
+  src/red4ext/Audio/EngineSynth/Scrape.cpp
   src/red4ext/Audio/Acoustics/Probe.cpp
   src/red4ext/Audio/Acoustics/Images.cpp
   src/red4ext/Audio/Acoustics/Reflections.cpp
@@ -334,6 +335,7 @@ add_executable(ltbf_tests
   tools/flightsim/Trip.cpp
   src/red4ext/Audio/EngineSynth/Synth.cpp
   src/red4ext/Audio/EngineSynth/Sources.cpp
+  src/red4ext/Audio/EngineSynth/Scrape.cpp
   src/red4ext/Audio/Buses.cpp
   src/red4ext/Audio/Voices/Pool.cpp
   src/red4ext/Audio/Samples/Events.cpp

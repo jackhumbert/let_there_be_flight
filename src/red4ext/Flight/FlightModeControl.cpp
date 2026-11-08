@@ -84,12 +84,25 @@ Flight::ModeOutput Skid(const Flight::StatsState &aState, const Flight::StatsSta
           hits[i].material ? ScrapeEffects::SurfaceOfMaterial(hits[i].material) : Flight::Surface::Hard;
       aComponent->skidContacts[i] = {hits[i].valid, hits[i].position, points[i].normal, points[i].clearance,
                                      Flight::Length(along), surface};
+      // the ground's grip on it: Ground Friction times the material's (as the chassis's against PhysX contacts)
+      points[i].friction = aComponent->groundFriction * ScrapeEffects::FrictionOfMaterial(hits[i].material);
     }
     aComponent->skidContactsAge = 0.0f;
+    static bool frictionLogged = false;
+    if (!frictionLogged && points[0].friction > 0.0f) {
+      frictionLogged = true;
+      spdlog::info("[Skid] the ground grips the thrusters: Ground Friction {:.2f}, x{:.2f} on this ground",
+                   aComponent->groundFriction, points[0].friction / aComponent->groundFriction);
+    }
     aClearance = 0.25f * (points[0].clearance + points[1].clearance + points[2].clearance + points[3].clearance);
     const auto &t = *tensorField->GetValuePtr<RED4ext::Vector4>(aComponent);
-    return Flight::DroneSkidPoints(points, 4, aState, aStatic, Flight::TorqueResponse(aStatic, {t.X, t.Y, t.Z}), aLift,
-                                   k);
+    float loads[4] = {};
+    const Flight::ModeOutput skid = Flight::DroneSkidPoints(
+        points, 4, aState, aStatic, Flight::TorqueResponse(aStatic, {t.X, t.Y, t.Z}), aLift, k, loads);
+    // how hard each thruster presses, for its scrape's loudness
+    for (int i = 0; i < 4; ++i)
+      aComponent->skidContacts[i].load = loads[i];
+    return skid;
   }
   const float emittersOverBottom = Flight::Dot(Flight::Sub(emitters, o3), up) - bottom;
   aClearance = g.distance - emittersOverBottom;
@@ -262,7 +275,7 @@ void FlightModeControl::Drone(RED4ext::Handle<FlightStats> aStats, RED4ext::Hand
   Flight::DroneSkidParams k;
   k.clearance = Flight::Developer().droneSkid;
   const float push = Controls().lift * p.liftFactor;
-  out.force.z += Flight::GroundedLift(push, clearance, k) - push;
+  out.force.z += Flight::GroundedLift(push, clearance, aStats->State().d_up.z, k) - push;
   SetOutput(out);
 }
 
