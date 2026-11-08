@@ -8,6 +8,7 @@
 #include "Audio/Wwise/Ids.hpp"
 #include "Audio/Wwise/Pattern.hpp"
 #include "Audio/Wwise/Relay.hpp"
+#include "Audio/Wwise/Sends.hpp"
 
 #include <cstring>
 #include <vector>
@@ -312,4 +313,52 @@ TEST(wwise_bank_copies_mod_sfx_street) {
   const AkUniqueID input = Bank::IdsFor(sound.event).input;
   std::memcpy(expected.data() + 5, &input, 4);
   CHECK(std::vector<uint8_t>(body->body.begin(), body->body.end() - 2) == expected);
+}
+
+TEST(wwise_bank_game_sends) {
+  // a sound that takes the game's sends differs from one that does not in its aux byte alone: 0x03 against 0x01
+  const Bank::Sound plain[] = {{"ltbf_test_3d", true}};
+  const Bank::Sound room[] = {{"ltbf_test_3d", true, Bank::kSfxBus, 0, {}, false, 0, 0, true}};
+  const auto a = Bank::Build("ltbf_test", plain), b = Bank::Build("ltbf_test", room);
+  CHECK(a.size() == b.size());
+  int differ = 0, at = -1;
+  for (size_t i = 0; i < a.size() && i < b.size(); ++i)
+    if (a[i] != b[i]) {
+      ++differ;
+      at = int(i);
+    }
+  CHECK(differ == 1);
+  CHECK(at >= 0 && a[size_t(at)] == 0x01 && b[size_t(at)] == 0x03);
+  CHECK(Bank::Parse(b).ok);
+}
+
+TEST(wwise_sends_book) {
+  // the game's objects noted as it sets their sends, ours left out, oldest first, forgotten on request
+  Sends::Book book;
+  AkAuxSendValue v{kInvalidGameObject, 123, 0.5f};
+  book.Note(7, &v, 1);
+  book.Note(ObjectId(3), &v, 1);
+  book.Note(9, &v, 1);
+  book.Note(7, &v, 1);
+  const auto objects = book.Objects();
+  CHECK(objects.size() == 2 && objects[0] == 9 && objects[1] == 7);
+  CHECK(book.TakeCalls() == 3);
+  CHECK(book.TakeCalls() == 0);
+  book.Forget(9);
+  CHECK(book.Objects().size() == 1);
+}
+
+TEST(wwise_sends_car_and_listener) {
+  // the car's object is the nearest within range; its sends go on ours for our listener; a reverb bus is named
+  const std::vector<AkVector64> at = {{10, 0, 0}, {2, 1, 0}, {0, 0, 3}};
+  CHECK(Sends::Nearest(at, {0, 0, 0}, 6.0) == 1);
+  CHECK(Sends::Nearest(at, {100, 0, 0}, 6.0) == -1);
+  Sends::Set s;
+  s.values[0] = {kInvalidGameObject, Fnv1("revb_exterior_default__medium"), 0.8f};
+  s.count = 1;
+  const Sends::Set ours = Sends::ForListener(s, ObjectId(1));
+  CHECK(ours.count == 1 && ours.values[0].listenerID == ObjectId(1) && ours.values[0].controlValue == 0.8f);
+  CHECK(Sends::Describe(s) == "revb_exterior_default__medium 0.80");
+  CHECK(Sends::BusName(42) == "bus 42");
+  CHECK(Sends::Describe({}) == "none");
 }

@@ -54,6 +54,9 @@ const Link &Link::Get() {
     Wwise::Get(l.listenerPosition,
                "?GetListenerPosition@Query@SoundEngine@AK@@YA?AW4AKRESULT@@_KAEAVAkWorldTransform@@@Z", m);
     Wwise::Get(l.position, "?GetPosition@Query@SoundEngine@AK@@YA?AW4AKRESULT@@_KAEAVAkWorldTransform@@@Z", m);
+    Wwise::Get(l.setAuxSends, "?SetGameObjectAuxSendValues@SoundEngine@AK@@YA?AW4AKRESULT@@_KPEAUAkAuxSendValue@@I@Z", m);
+    Wwise::Get(l.auxSends,
+               "?GetGameObjectAuxSendValues@Query@SoundEngine@AK@@YA?AW4AKRESULT@@_KPEAUAkAuxSendValue@@AEAI@Z", m);
     if (!m.empty()) {
       spdlog::warn("[Wwise] exports not found: {}", m);
     }

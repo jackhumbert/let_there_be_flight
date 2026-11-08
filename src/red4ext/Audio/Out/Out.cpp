@@ -75,6 +75,12 @@ void SetListener(const Pose &aListener) {
   }
 }
 
+void SetReverbFrom(const Voices::Vec3 &aCar) {
+  if (backend) {
+    backend->SetReverbFrom(aCar);
+  }
+}
+
 void Update() {
   if (backend) {
     backend->Update();

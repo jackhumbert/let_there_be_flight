@@ -2,6 +2,7 @@
 
 #include "Audio/EngineSynth/ScrapeChannels.hpp"
 #include "Audio/FlightAudio.hpp"
+#include "Audio/Out/Out.hpp"
 #include "Physics/ScrapeEffects.hpp"
 #include "Flight/Component.hpp"
 #include "Flight/FlightModeAutopilot.hpp"
@@ -285,6 +286,8 @@ void Component(FlightComponent *c, float deltaTime) {
       CameraListener();
     }
     const auto carMatrix = WorldMatrix(vehicle->worldTransform);
+    // the game's reverb where the car is, for the voices that take it (the scrapes)
+    Out::SetReverbFrom({carMatrix.W.X, carMatrix.W.Y, carMatrix.W.Z});
     const auto &velocity = stats->d_velocity;
     audio->UpdateAcoustics(carMatrix, Ref<bool>(p.acoustics, audio) ? Ref<float>(p.acousticsGain, audio) : 0.0f, v.inside,
                            Ref<int32_t>(p.acousticsRaySource, audio));

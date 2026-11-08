@@ -352,6 +352,7 @@ add_executable(ltbf_tests
   src/red4ext/Audio/Wwise/Ids.cpp
   src/red4ext/Audio/Wwise/Pattern.cpp
   src/red4ext/Audio/Wwise/Relay.cpp
+  src/red4ext/Audio/Wwise/Sends.cpp
   src/red4ext/Audio/Out/Mix.cpp
   src/red4ext/Audio/Samples/Player.cpp
   src/red4ext/Navigation/Vehicle.cpp

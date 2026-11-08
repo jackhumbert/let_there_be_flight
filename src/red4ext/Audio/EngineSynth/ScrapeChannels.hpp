@@ -2,7 +2,8 @@
 
 // The player's thrusters' scrapes, each a voice of its own (a ScrapeSynth), placed at the scrape and played on the
 // Scrape bus, as the game plays its own scraping from an emitter moved to the contact (vehicle::Audio's
-// scrapingEmitter). In the thruster's synth the scrape took the thruster's volume (a rear one's faded by speed), the
+// scrapingEmitter), and in the game's area reverb where the car is, as its own tyres and scrapes are (Wwise:
+// Out::Options::gameReverb). In the thruster's synth the scrape took the thruster's volume (a rear one's faded by speed), the
 // Engine group's limiter and the acoustics' floor echo, whose comb swept through it. Started and stopped with the
 // thruster's engine voice (FlightAudio::StartEngine, StopEngine), by the thruster's id.
 //

@@ -26,6 +26,9 @@ struct Link {
   AKRESULT (*listeners)(AkGameObjectID, AkGameObjectID *, uint32_t &) = nullptr;
   AKRESULT (*listenerPosition)(AkGameObjectID, AkWorldTransform &) = nullptr;
   AKRESULT (*position)(AkGameObjectID, AkWorldTransform &) = nullptr;
+  // a game object's aux sends: set (the game's reverb on ours), and read back (the car's: Query, count in and out)
+  AKRESULT (*setAuxSends)(AkGameObjectID, AkAuxSendValue *, uint32_t) = nullptr;
+  AKRESULT (*auxSends)(AkGameObjectID, AkAuxSendValue *, uint32_t &) = nullptr;
   // the exports not found, by name; empty when every one was
   std::string missing;
 

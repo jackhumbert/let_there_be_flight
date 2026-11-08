@@ -39,6 +39,9 @@ struct Options {
   float minDistance = 0, maxDistance = 100;
   // a low-pass after the generator (an NPC car's occlusion, SetLowpass)
   bool lowpass = false;
+  // takes the game's area reverb where the player's car is (Wwise only, SetReverbFrom; Audio/Wwise/Sends.hpp): the
+  // reverb the game gives its own sounds there
+  bool gameReverb = false;
   // for the log and the backend's state
   const char *name = "";
 };
@@ -86,6 +89,8 @@ void SetBusVolume(Buses::Bus aBus, float aVolume);
 // what SetBusVolume set last (any thread)
 float BusVolume(Buses::Bus aBus);
 void SetListener(const Pose &aListener);
+// each frame the player is in a car: where it is, so the voices with gameReverb take the reverb the game gives the car
+void SetReverbFrom(const Voices::Vec3 &aCar);
 void Update();
 // every voice silent (the game's pause), until SetPaused(false)
 void SetPaused(bool aPaused);

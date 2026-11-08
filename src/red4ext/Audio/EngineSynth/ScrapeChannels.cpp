@@ -62,6 +62,8 @@ bool Start(const std::string &aId) {
   c.generator->synth = std::make_unique<ScrapeSynth>(float(Out::Rate()), uint32_t(std::hash<std::string>()(aId)));
   Out::Options options;
   options.bus = Buses::Bus::Scrape;
+  // the game's area reverb where the car is, as its own tyres and scrapes take (Wwise)
+  options.gameReverb = true;
   options.name = "LTBF scrape";
   c.out = Out::Play(Render, c.generator.get(), options);
   c.voice = std::hash<std::string>()(aId + "/scrape");

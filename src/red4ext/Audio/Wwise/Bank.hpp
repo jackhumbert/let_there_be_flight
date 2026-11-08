@@ -58,6 +58,8 @@ struct Sound {
   AkUniqueID aux = 0;
   // a Spread's ID (Fnv1 of its name), written as the attenuation property with the attenuation on; 0: none
   AkUniqueID spread = 0;
+  // takes the game-defined aux sends its game object has (the game's area reverb, Sends.hpp); off, none
+  bool gameSends = false;
 };
 
 // mod_sfx_street's spread: all the speakers within 1.7 m, a quarter at 6.8 m, a point from 30 m

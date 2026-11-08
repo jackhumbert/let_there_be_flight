@@ -17,6 +17,8 @@ public:
   virtual std::unique_ptr<Voice> Play(RenderFn aRender, void *aUser, const Options &aOptions) = 0;
   virtual void SetBusVolume(Buses::Bus aBus, float aVolume) = 0;
   virtual void SetListener(const Pose &aListener) = 0;
+  // the player's car, for the game's reverb on the voices that take it (Wwise; FMOD has none)
+  virtual void SetReverbFrom(const Voices::Vec3 &) {}
   virtual void Update() = 0;
   virtual void SetPaused(bool aPaused) = 0;
   virtual int Rate() const = 0;

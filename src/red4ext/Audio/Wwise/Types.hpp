@@ -46,6 +46,16 @@ inline constexpr uint32_t kFloatBits = 32u | (4u << 6) | (1u << 16) | (1u << 18)
 struct AkVector {
   float x, y, z;
 };
+
+// a game object's send to an aux bus (SetGameObjectAuxSendValues): for which listener (AK_INVALID_GAME_OBJECT: every
+// listener), to which bus, how much (0..1)
+struct AkAuxSendValue {
+  AkGameObjectID listenerID;
+  AkUniqueID auxBusID;
+  float controlValue;
+};
+static_assert(sizeof(AkAuxSendValue) == 16);
+inline constexpr AkGameObjectID kInvalidGameObject = ~0ull;
 struct AkVector64 {
   double x, y, z;
 };

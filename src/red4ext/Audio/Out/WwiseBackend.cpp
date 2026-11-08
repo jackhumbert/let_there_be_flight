@@ -10,11 +10,14 @@
 #include "Audio/Wwise/Ids.hpp"
 #include "Audio/Wwise/Link.hpp"
 #include "Audio/Wwise/Relay.hpp"
+#include "Audio/Wwise/Sends.hpp"
 
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
 #include <atomic>
+#include <chrono>
+#include <cmath>
 #include <cstring>
 #include <vector>
 
@@ -27,9 +30,18 @@ using namespace Wwise;
 constexpr const char *kBank = "ltbf";
 constexpr const char *kPositioned = "ltbf_voice_3d";
 constexpr const char *kFlat = "ltbf_voice_2d";
+// positioned, taking the game-defined aux sends its object has (the game's area reverb: Options::gameReverb)
+constexpr const char *kPositionedRoom = "ltbf_voice_3d_room";
 constexpr const char *kSpread = "ltbf_spread";
 const Bank::Spread kSpreads[] = {{kSpread, Bank::kStreetSpread}};
-const Bank::Sound kSounds[] = {{kPositioned, true, Bank::kSfxBus, 0, {}, false, 0, Fnv1(kSpread)}, {kFlat, false}};
+const Bank::Sound kSounds[] = {{kPositioned, true, Bank::kSfxBus, 0, {}, false, 0, Fnv1(kSpread)},
+                                {kFlat, false},
+                                {kPositionedRoom, true, Bank::kSfxBus, 0, {}, false, 0, Fnv1(kSpread), true}};
+// the car's game object: the nearest of the game's objects with sends within this (m), looked for this often (s)
+constexpr double kCarObjectRange = 6.0;
+constexpr float kCarObjectEvery = 0.5f;
+// the game's sends noted, logged this often (s)
+constexpr float kReverbLogEvery = 10.0f;
 
 // our listener: the first of our game objects; the voices' from kFirstVoice on
 const AkGameObjectID kListener = ObjectId(1);
@@ -63,6 +75,8 @@ public:
   // game thread, once a frame: starts or stops the Wwise voice as wanted
   void Sync(bool aReady, AkGameObjectID aListener);
   bool Playing() const { return playing != 0; }
+  // the game's reverb sends on its object, when it takes them and they changed (game thread)
+  void TakeSends(const Sends::Set &aSends, uint64_t aGeneration);
 
   uint32_t Channels() const override { return options.channels; }
   void Render(float *aData, uint32_t aFrames, uint32_t aChannels) override;
@@ -78,6 +92,8 @@ private:
   // game thread
   AkPlayingID playing = 0;
   bool registered = false, placed = false;
+  // the sends' generation last set on its object (Sends: the car's)
+  uint64_t sendsGeneration = 0;
   AkWorldTransform transform{};
   // set on the game thread, read on the audio thread
   std::atomic<bool> paused{true}, fresh{true};
@@ -126,6 +142,11 @@ public:
     }
   }
 
+  void SetReverbFrom(const Voices::Vec3 &aCar) override {
+    car = ToWwise({aCar.x, aCar.y, aCar.z}, {0, 1, 0}, {0, 0, 1}).position;
+    carKnown = true;
+  }
+
   void Update() override {
     if (!ready) {
       Begin();
@@ -134,6 +155,7 @@ public:
     for (WwiseVoice *v : voices) {
       v->Sync(ready, kListener);
     }
+    UpdateReverb();
   }
 
   void SetPaused(bool aPaused) override { shared.paused.store(aPaused); }
@@ -176,8 +198,82 @@ private:
                  listenerRegistered ? "registered" : "NOT registered", ready ? "ready" : "NOT ready");
   }
 
+  // The game's reverb on our voices that take it (Sends.hpp): every kCarObjectEvery the car's game object is looked
+  // for again (the nearest of the game's objects it set sends on), each frame its sends are read back, and when they
+  // change they go on our voices, for our listener. Logged when the car's object or its sends change, and every
+  // kReverbLogEvery how often the game set sends.
+  void UpdateReverb() {
+    if (!ready || !carKnown) {
+      return;
+    }
+    const Link &ak = Link::Get();
+    if (!ak.auxSends || !ak.setAuxSends || !ak.position) {
+      return;
+    }
+    const auto now = std::chrono::steady_clock::now();
+    const float sinceLook = std::chrono::duration<float>(now - lastLook).count();
+    if (sinceLook >= kCarObjectEvery) {
+      lastLook = now;
+      std::vector<AkGameObjectID> objects = Sends::TheBook().Objects();
+      std::vector<AkVector64> positions;
+      std::vector<AkGameObjectID> found;
+      for (AkGameObjectID o : objects) {
+        AkWorldTransform t{};
+        if (ak.position(o, t) == AK_Success) {
+          positions.push_back(t.position);
+          found.push_back(o);
+        } else {
+          // unregistered since: not looked at again
+          Sends::TheBook().Forget(o);
+        }
+      }
+      const int i = Sends::Nearest(positions, car, kCarObjectRange);
+      const AkGameObjectID chosen = i >= 0 ? found[size_t(i)] : kInvalidGameObject;
+      if (chosen != carObject) {
+        carObject = chosen;
+        if (chosen != kInvalidGameObject) {
+          const double dx = positions[size_t(i)].x - car.x, dy = positions[size_t(i)].y - car.y,
+                       dz = positions[size_t(i)].z - car.z;
+          spdlog::info("[Reverb] the car's game object is now {:#x}, {:.1f} m from it (of {} with sends)", chosen,
+                       std::sqrt(dx * dx + dy * dy + dz * dz), found.size());
+        } else {
+          spdlog::info("[Reverb] none of the game's {} objects with sends is within {:.0f} m of the car", found.size(),
+                       kCarObjectRange);
+        }
+      }
+    }
+    const float sinceLog = std::chrono::duration<float>(now - lastLog).count();
+    if (sinceLog >= kReverbLogEvery) {
+      lastLog = now;
+      spdlog::info("[Reverb] the game set sends {} times in {:.0f} s", Sends::TheBook().TakeCalls(), sinceLog);
+    }
+    Sends::Set sends;
+    if (carObject != kInvalidGameObject) {
+      uint32_t count = Sends::kMax;
+      if (ak.auxSends(carObject, sends.values, count) == AK_Success) {
+        sends.count = std::min(count, Sends::kMax);
+      }
+    }
+    if (!(sends == carSends)) {
+      carSends = sends;
+      ++sendsGeneration;
+      spdlog::info("[Reverb] the car's sends: {}", Sends::Describe(sends));
+    }
+    const Sends::Set ours = Sends::ForListener(carSends, kListener);
+    for (WwiseVoice *v : voices) {
+      v->TakeSends(ours, sendsGeneration);
+    }
+  }
+
   std::vector<WwiseVoice *> voices;
   uint32_t nextObject = 0;
+  // the game's reverb (UpdateReverb)
+  AkVector64 car{};
+  bool carKnown = false;
+  AkGameObjectID carObject = kInvalidGameObject;
+  Sends::Set carSends;
+  uint64_t sendsGeneration = 1;
+  std::chrono::steady_clock::time_point lastLook{}, lastLog = std::chrono::steady_clock::now();
   bool ready = false, listenerRegistered = false;
   AKRESULT bankResult = 0, lastListenerResult = 0;
   AkWorldTransform listener = ToWwise({0, 0, 0}, {0, 1, 0}, {0, 0, 1});
@@ -217,6 +313,16 @@ void WwiseVoice::StopPlaying() {
   playing = 0;
 }
 
+void WwiseVoice::TakeSends(const Sends::Set &aSends, uint64_t aGeneration) {
+  if (!options.gameReverb || !registered || aGeneration == sendsGeneration) {
+    return;
+  }
+  Sends::Set copy = aSends;
+  if (Link::Get().setAuxSends(object, copy.values, copy.count) == AK_Success) {
+    sendsGeneration = aGeneration;
+  }
+}
+
 void WwiseVoice::Sync(bool aReady, AkGameObjectID aListener) {
   const Link &ak = Link::Get();
   // a positioned voice waits for its place: one started at the origin, out of range, is dropped for good (spike)
@@ -233,13 +339,15 @@ void WwiseVoice::Sync(bool aReady, AkGameObjectID aListener) {
     if (!registered) {
       return;
     }
+    sendsGeneration = 0;
     ak.setListeners(object, &aListener, 1);
     if (placed) {
       ak.setPosition(object, transform, 3);
     }
   }
   fresh.store(true);
-  playing = ak.postEvent(Fnv1(options.positioned ? kPositioned : kFlat), object, 0, nullptr, nullptr, 0, nullptr, 0);
+  const char *event = !options.positioned ? kFlat : options.gameReverb ? kPositionedRoom : kPositioned;
+  playing = ak.postEvent(Fnv1(event), object, 0, nullptr, nullptr, 0, nullptr, 0);
   if (!playing || !TheRelay().Bind(playing, this)) {
     ++backend.failedPosts;
     if (playing) {

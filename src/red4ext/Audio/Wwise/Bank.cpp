@@ -89,14 +89,14 @@ Writer SoundBody(const Sound &aSound, const Ids &aIds) {
   // or not at all; the attenuation (8) off unless asked for
   w.U8(0x03);
   w.U8((aSound.positioned ? 0x02 : 0x00) | (aSound.attenuated || aSound.spread ? 0x08 : 0x00));
-  // aux: none of the game's sends and no user sends (1), or the game's and one user send (0x0b, as mod_sfx_street);
-  // no reflections bus
+  // aux: its own sends over the parent's (1), the game-defined ones its object has (2), user sends (8, one, as
+  // mod_sfx_street's 0x0b); no reflections bus
   if (aSound.aux) {
     w.U8(0x0b);
     w.U32(aSound.aux);
     w.Zeros(12);
   } else {
-    w.U8(0x01);
+    w.U8(aSound.gameSends ? 0x03 : 0x01);
   }
   w.U32(0);
   // advanced: play on from the elapsed time when virtual, no instance limit, keep playing under the threshold
