@@ -1,7 +1,5 @@
 # Docs
 
-- `history.md`: decisions and findings, newest first, append-only. Write an entry for every finding
-  or decision (date, title, decision, why, numbers, tried and dropped, commits).
 - `design/`: how each subsystem works now, edited in place when it changes.
   - `autopilot.md`: the Autopilot flight mode, a flight from engage to landing, tuning.
   - `planner.md`: route search, doorways, the line's passes and repair, navplan.
@@ -29,10 +27,6 @@
     thrusters) to C++, and M6, the Autopilot as a C++ mode (steps 2 to 4 built).
   - `autopilot-regressions.md`: every Autopilot and summon problem found in game, and the test that
     should catch it again offline.
-- `testing.md`: driving the game for tests, the test drivers and bridge helpers.
 - `release.md`: cutting a release, Nexus Mods.
-- `game-patch.md`: what a game patch breaks, the update checklist, reverse engineering.
-- `research/`: dated analyses and research notes, kept as written.
-- `archive/`: superseded plans and logs, kept as written (`autodrive-flight-plan.md`,
-  `helipads.md`, `organization_plan.md`).
-- `nexus/`: user-facing texts (sticky, settings guide) and the comment feedback queue.
+- `game-patch.md`: what a game patch breaks, the update checklist, reverse engineering, the SDK v1 migration.
+- `nexus/`: the Nexus page texts (sticky, settings guide).
