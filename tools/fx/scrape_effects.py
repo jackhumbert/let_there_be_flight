@@ -449,10 +449,12 @@ def run(cli, *args):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--cli", default=os.environ.get("WOLVENKIT_CLI", r"D:\cp2077_work\build\tools\wolvenkit-9.0.1\WolvenKit.CLI.exe"))
-    ap.add_argument("--cli10", default=os.environ.get("WOLVENKIT_CLI10", r"D:\cp2077_work\build\tools\wolvenkit-10.0.0-beta.1\WolvenKit.CLI.exe"))
+    ap.add_argument("--cli", help="WolvenKit.CLI.exe 9.0.1 (default paths.WOLVENKIT_PACK)")
+    ap.add_argument("--cli10", help="WolvenKit.CLI.exe 10.x (default paths.WOLVENKIT)")
     ap.add_argument("--work", default=os.path.join(paths.TMP, "scrape_effects"))
     args = ap.parse_args()
+    args.cli = args.cli or paths.WOLVENKIT_PACK
+    args.cli10 = args.cli10 or paths.WOLVENKIT
     work = Path(args.work)
     raw, js = work / "raw", work / "json"
     for d in (raw, js):

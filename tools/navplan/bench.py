@@ -80,7 +80,7 @@ def table(rts, res, base=None):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--out", help="folder for navplan's files (default: a new one in paths.TMP, D:/cp2077_work/tmp)")
+    ap.add_argument("--out", help="folder for navplan's files (default: a new one in paths.TMP)")
     ap.add_argument("--navmap", help="default: LTBF_NAVMAP_FILE in build/CMakeCache.txt")
     ap.add_argument("--navplan", help="navplan.exe (default build/navplan.exe)")
     ap.add_argument("--vehicle", default="shion", help="a car in vehicles.json")

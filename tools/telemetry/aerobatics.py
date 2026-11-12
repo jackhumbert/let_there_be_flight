@@ -1,6 +1,6 @@
 """Summarise and plot the Autopilot's aerobatics telemetry ([AutopilotA] lines in the LTBF log).
 
-Switch telemetry on (python ../cp2077_tools/bridge.py call LtbfBridge.Telemetry true), fly, then:
+With the Autopilot's telemetry on (FlightModeAutopilot's `telemetry` switch), fly, then:
 
     python tools/telemetry/aerobatics.py [let_there_be_flight.log or an extract ...]
     python tools/telemetry/aerobatics.py before=run1.log after=run2.log --plot runs.png
@@ -23,7 +23,7 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/, for common
 from common import paths  # noqa: E402
 
-DEFAULT_LOG = Path(paths.LTBF_LOG)
+DEFAULT_LOG = None  # paths.LTBF_LOG, read in main
 NAMES = {0: "cruise", 1: "aileron roll", 2: "barrel roll", 3: "loop", 4: "Immelmann", 5: "split-S"}
 
 
@@ -159,7 +159,7 @@ def main():
     ap.add_argument("--plot", help="write a PNG with one column per log")
     args = ap.parse_args()
     runs = []
-    for item in args.logs or [str(DEFAULT_LOG)]:
+    for item in args.logs or [str(paths.LTBF_LOG)]:
         name, _, path = item.rpartition("=") if "=" in item and not Path(item).exists() else ("", "", item)
         rows = parse(path)
         if not rows:

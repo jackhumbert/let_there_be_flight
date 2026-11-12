@@ -1,4 +1,4 @@
-"""Place our pad entities in the world (docs/archive/helipads.md, step 8): rewrite our sector's pad nodes
+"""Place our pad entities in the world (docs/design/landing-pads.md, step 8): rewrite our sector's pad nodes
 from pad_sectors.json and fit its streaming block descriptor.
 
 Works on the committed CR2W files in src/wolvenkit/source/archive: serializes the sector and the
@@ -72,12 +72,13 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/, for common
 from common import paths  # noqa: E402
+from common.lazy import Lazy  # noqa: E402
 
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 SOURCE = os.path.join(REPO, "src", "wolvenkit", "source", "archive")
-DEFAULT_WOLVENKIT = paths.WOLVENKIT
+DEFAULT_WOLVENKIT = Lazy(lambda: paths.WOLVENKIT)
 PAD_PREFIX = "user\\jackhumbert\\entities\\ltbf_"  # every entity of ours (pads, hangar)
 
 

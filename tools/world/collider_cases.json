@@ -1,5 +1,5 @@
 {
-  "_doc": "Known places where the nav map's solid space and the game disagree, or agree, for checking the hidden collider audit and the bake. box: x0,y0,z0,x1,y1,z1 in game space (not car-inflated). truth: what is there in game. rays: segments through the box; expect: what the game's collision answers (clear: nothing to hit; hit: real collision). Checked offline with tools/world/collision_at.py --case <name> and in game with tools/ingame/check_collider.py --case <name>.",
+  "_doc": "Known places where the nav map's solid space and the game disagree, or agree, for checking the hidden collider audit and the bake. box: x0,y0,z0,x1,y1,z1 in game space (not car-inflated). truth: what is there in game. rays: segments through the box; expect: what the game's collision answers (clear: nothing to hit; hit: real collision). Checked offline with tools/world/collision_at.py --case <name> and in game by casting each case's rays.",
   "cases": [
     {
       "name": "highway_pillar_ghost",
@@ -11,7 +11,7 @@
         -631,
         115
       ],
-      "truth": "nothing: open air beside the elevated road, Jack saw nothing there (North run, 2026-10-30, the swerve at 0:21)",
+      "truth": "nothing: open air beside the elevated road, seen in game: nothing there (North run, 2026-10-30, the swerve at 0:21)",
       "navmap": "blocked from z 22 to 210 in bake_2026-10-29_noblockers; free from z 34 to 118 since bake_2026-10-30_forced (no hollow fill)",
       "cause": "bake: spans.py fill_hollow filled the 32 to 120 m gap under the wall of an overhead mass (exterior_-5_-3_0_2 World Static, z 120 to 208) as if it were a 15 m thick roof; only a corner of one mesh reaches into the box (exterior_-3_-2_0_3 node 466 group 22 actor 24, z 85 to 97). In game, rays at z 50 and 70 are clear.",
       "rays": [
@@ -70,7 +70,7 @@
         -4062.9,
         107.6
       ],
-      "truth": "nothing: open air over the protein farm south of the badlands catwalks (Jack, 2026-10-31, near -2848.5, -4095.2, 68.5); the farm's meshes (protein_farm_a_top / _segment, h1000) end at z 77",
+      "truth": "nothing: open air over the protein farm south of the badlands catwalks (seen in game near -2848.5, -4095.2, 68.5); the farm's meshes (protein_farm_a_top / _segment, h1000) end at z 77",
       "navmap": "not checked",
       "cause": "hidden collider (offline, 2026-10-31): exterior_-11_-17_0_2 node 34 group 36 (nodeData 2301) actor 0, one World Static box at (-2805.13, -4104.47), yaw -37.8, 73 x 49 m, z 67.6 to 107.6: about 30 m of solid air over the farm roof",
       "rays": [
@@ -104,7 +104,7 @@
         -2644.0,
         61.9
       ],
-      "truth": "nothing above the riverbank top (z about 30) on the Pacifica shore (Jack, 2026-10-31, near -3143.3, -2646.8, 5.1); nothing drawn there has its pivot above z 35 (a pivot check, not mesh bounds)",
+      "truth": "nothing above the riverbank top (z about 30) on the Pacifica shore (seen in game near -3143.3, -2646.8, 5.1); nothing drawn there has its pivot above z 35 (a pivot check, not mesh bounds)",
       "navmap": "not checked",
       "cause": "likely hidden collider (offline, 2026-10-31): exterior_-13_-11_0_2 node 16 groups 18 and 14 (nodeData 385 and 381), one World Static convex hull each (36 verts, scale 6.21 x 11.52 x 20), z -0.3 to 61.9, side by side; group 18 spans x -3185.7 to -3141.1, group 14 x -3141.7 to -3110.4 at y -2691.3. The rocks at the reported point (group 7) match drawn pier_c_shore_single_a rocks and the riverbank corner (group 13) matches its mesh; group 18's corner is 3 to 6 m from the point.",
       "rays": [
@@ -138,7 +138,7 @@
         -1618.9,
         149.3
       ],
-      "truth": "nothing: open air north of the Pacifica stadium (Jack, 2026-10-31, at -1174.819, -1691.700, 97.078); no node in the sectors round it is placed above z 66 within 80 m (a pivot check: catwalks at z 62 to 66)",
+      "truth": "nothing: open air north of the Pacifica stadium (seen in game at -1174.819, -1691.700, 97.078); no node in the sectors round it is placed above z 66 within 80 m (a pivot check: catwalks at z 62 to 66)",
       "navmap": "blocked (the bake takes colliders.npz)",
       "cause": "LTBF's own proxy collider (offline, 2026-10-31): no game collision in the box, only colliders.npz triangles from stadium_supports_a_mproxy.mesh (exterior_-3_-5_0_3 nodeData 104, gid 1270655967675935631, audit row 109396). The proxy hides within 207 m (nearAutoHideDistance) and nothing full-detail is placed there, so up close nothing is drawn but the collider stays. The audit kept 94,180 of its 123,422 m2 (z 67 to 162), in blocks round the stadium; this block is 11,600 m2, its neighbours to the west (-1252 to -1204, 6,900 m2) and north-west (-1415 to -1315, 17,500 m2) and the east one (x -1072 to -1007, y -1929 to -1778, 16,400 m2) also stand clear of any game collision.",
       "rays": [
@@ -172,7 +172,7 @@
         -3785.5,
         108.2
       ],
-      "truth": "nothing: open air between the rows of modules to the north-west and the yard to the south-east (Jack, 2026-10-31, at -1914.194, -4002.941, 76.787); the drawn things there have collision only up to z 78",
+      "truth": "nothing: open air between the rows of modules to the north-west and the yard to the south-east (seen in game at -1914.194, -4002.941, 76.787); the drawn things there have collision only up to z 78",
       "navmap": "not checked",
       "cause": "hidden collider (offline, 2026-10-31): exterior_-2_-4_0_4 node 215 group 0 (nodeData 326) actor 0, stored at (-1997.22, -4121.54, 68.18), one World Static convex box 429.3 x 14.1 x 46.2 m, z 62.0 to 108.2, from (-1997, -4129) to (-1735, -3790): a wall about 40 m above the ground. Not a blocker preset, so blockers.py does not list it. The reported point is 4.65 m off its north-west face; the trimesh collision there (exterior_-8_-16_0_2 node 38, exterior_-15_-32_0_1 node 32) is roofs at z 67.6 to 77.9.",
       "rays": [
@@ -206,7 +206,7 @@
         -3037,
         87
       ],
-      "truth": "an invisible collider just below (-2880.529, -3042.979, 86.195): Jack, 2026-11-05; which of the two actors below, and its top, not yet checked in game",
+      "truth": "an invisible collider just below (-2880.529, -3042.979, 86.195), seen in game 2026-11-05; which of the two actors below, and its top, not yet checked in game",
       "navmap": "not checked",
       "cause": "two World Static convex meshes reach into the box (collision_at.py --actors, bake_2026-10-26): exterior_-12_-13_0_2 node 31 group 35 (nodeData 2430) actor 0 at (-2916.39, -3088.65, 46.89), bounds -2956.1,-3134.5,45.2 to -2873.4,-3032.8,88.3, the likelier one (its top near the point); exterior_-12_-12_0_2 node 32 group 8 (nodeData 1379) actor 3 at (-2872.05, -3028.53, 42.35), bounds -2884.0,-3041.4,42.2 to -2858.9,-3022.2,82.6",
       "rays": [
@@ -244,7 +244,7 @@
         ]
       ],
       "expect": "hit",
-      "note": "the ray straight down through the point: it should hit a little under z 86.2. Not yet in hidden_colliders.json: confirm the actor in game first (cp2077_tools mods/let_there_be_flight/check_collider.py --case southwest_world_static_86)."
+      "note": "the ray straight down through the point: it should hit a little under z 86.2. Not yet in hidden_colliders.json: confirm the actor in game first (case southwest_world_static_86)."
     }
   ]
 }

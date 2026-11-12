@@ -2,8 +2,7 @@
 
 // Seams in the city's drivable collision: where two pieces of ground meet without sharing an edge, and what a car
 // sliding over the meeting finds there (a step up or down, a gap). A chassis dragged along the ground in Drone mode
-// meets them with PhysX's mesh contacts; a step of a few millimetres can throw it (the drone launches over roads, Jack,
-// 2026-11-06). flightsim --seams scans a region for them.
+// meets them with PhysX's mesh contacts; a step of a few millimetres can throw it (the drone launched over roads). flightsim --seams scans a region for them.
 
 #include "Colliders.hpp"
 

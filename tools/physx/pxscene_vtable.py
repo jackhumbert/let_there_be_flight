@@ -27,7 +27,7 @@ import pefile
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from common import paths  # noqa: E402
 
-DLL = os.path.join(paths.GAME, "bin", "x64", "PhysX3_x64.dll")
+DLL = None  # the game bin/x64/PhysX3_x64.dll, set when used
 
 
 class Image:
@@ -82,7 +82,7 @@ class Image:
 
 
 def main():
-    img = Image(sys.argv[1] if len(sys.argv) > 1 else DLL)
+    img = Image(sys.argv[1] if len(sys.argv) > 1 else os.path.join(paths.GAME, "bin", "x64", "PhysX3_x64.dll"))
     release = [s for f in img.message_function("PxScene::release()") for s in img.slots_pointing_at(f)]
     assert len(release) == 1, f"release() slots: {release}"
     start = release[0] - 8

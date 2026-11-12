@@ -36,8 +36,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import rig_geometry as rg  # noqa: E402
 
-DUMP = os.path.join(os.path.dirname(rg.RIGS), "tweaks_vanilla")
-SURVEY = os.path.join(os.path.dirname(rg.RIGS), "survey", "measured.tsv")
+FLIGHTSIM_WORK = os.path.join(rg.machine.WORK, "flightsim")  # the work folder's flightsim folder
+RIGS = os.path.join(FLIGHTSIM_WORK, "rigs")
+DUMP = os.path.join(FLIGHTSIM_WORK, "tweaks_vanilla")
+SURVEY = os.path.join(FLIGHTSIM_WORK, "survey", "measured.tsv")
 OUT = os.path.join(HERE, "vehicle_slots.tsv")
 # the game's class tree, as far as LTBF's IsOfClass checks go (RED4ext.SDK: ArmedCarBaseObject : CarBaseObject)
 KIND = {"vehicleCarBaseObject": "car", "vehicleArmedCarBaseObject": "car", "vehicleBikeBaseObject": "bike"}
@@ -103,7 +105,7 @@ def appearance_file(rigs, depot_path):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("rigs", nargs="?", default=rg.RIGS)
+    ap.add_argument("rigs", nargs="?", default=RIGS)
     ap.add_argument("--dump", default=DUMP)
     ap.add_argument("--survey", default=SURVEY)
     ap.add_argument("-o", "--out", default=OUT)

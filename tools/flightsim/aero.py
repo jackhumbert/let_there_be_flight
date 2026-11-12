@@ -1,10 +1,10 @@
-"""A drag per vehicle from its chassis collision shape, and what it would do to top speeds (prototype; the research
-note is docs/research/2026-11-04-aero-drag.md). Nothing here is used by the mod.
+"""A drag per vehicle from its chassis collision shape, and what it would do to top speeds (prototype; the fleet's drag
+factor is in docs/design/autopilot.md, "Character"). Nothing here is used by the mod.
 
     python -I tools/flightsim/aero.py [--vehicles tools/flightsim/vehicles.tsv] [--dump <TweakDB dump>]
                                       [--rigs <dir>] [--phys <dir>] [-o <aero.tsv>] [--ref "<name>"]
 
-Inputs, all already extracted under D:\\cp2077_work\\tmp\\flightsim:
+Inputs, all already extracted under <paths.WORK>/flightsim (the work folder, tools/common/paths.py):
 - the fleet table (one row per physical car; its record maps to an entity template through the dump's vehicles.tsv
   and rig_geometry's templates.txt);
 - each template's vehicleChassisComponent `Chassis`: its collisionResource, a physicsSystemResource (.phys), and its
@@ -45,9 +45,9 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
+sys.path.insert(0, os.path.dirname(HERE))  # tools/, for common
+from common import paths as machine  # noqa: E402  (this file's `paths` is a dict of template paths)
 from rig_geometry import NONE, Template, basename, compose, fnv1a64, load_json, qrot, read  # noqa: E402
-
-WORK = r"D:\cp2077_work\tmp\flightsim"
 RHO = 1.2
 SURGE = 15.0     # m/s2, standardModeSurgeFactor
 CELL = 0.02      # m, raster cell for the union of the pieces
@@ -355,12 +355,17 @@ def pearson(x, y):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--vehicles", default=os.path.join(HERE, "vehicles.tsv"))
-    ap.add_argument("--dump", default=os.path.join(WORK, "tweaks_vanilla"))
-    ap.add_argument("--rigs", default=os.path.join(WORK, "rigs"))
-    ap.add_argument("--phys", default=os.path.join(WORK, "aero", "phys"))
-    ap.add_argument("-o", "--out", default=os.path.join(WORK, "aero", "aero.tsv"))
+    ap.add_argument("--dump", help="default <paths.WORK>/flightsim/tweaks_vanilla")
+    ap.add_argument("--rigs", help="default <paths.WORK>/flightsim/rigs")
+    ap.add_argument("--phys", help="default <paths.WORK>/flightsim/aero/phys")
+    ap.add_argument("-o", "--out", help="default <paths.WORK>/flightsim/aero/aero.tsv")
     ap.add_argument("--ref", default="Cortes V5000 Valor", help="the mid-size car whose top speed is kept")
     args = ap.parse_args()
+    work = os.path.join(machine.WORK, "flightsim")
+    args.dump = args.dump or os.path.join(work, "tweaks_vanilla")
+    args.rigs = args.rigs or os.path.join(work, "rigs")
+    args.phys = args.phys or os.path.join(work, "aero", "phys")
+    args.out = args.out or os.path.join(work, "aero", "aero.tsv")
 
     tweak = read(os.path.join(args.dump, "vehicles.tsv"))
     with open(os.path.join(args.rigs, "templates.txt"), encoding="utf-8") as f:

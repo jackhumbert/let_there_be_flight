@@ -1,6 +1,6 @@
 """A recorded run's video with LTBF's own FMOD sound as its audio: the plugin's stems
-(LtbfBridge.AcousticsStems: <base>_dry.wav, _wet.wav, _bus.wav and <base>.json) lined up with
-lib.Recording's take, in one mp4 with an audio track each.
+(FlightAudio's AcousticsStems writes red4ext/logs/ltbf_stems_<time>_<dry|wet|bus>.wav: <base>_dry.wav, _wet.wav, _bus.wav and <base>.json) lined up with
+a screen recording take, in one mp4 with an audio track each.
 
     python tools/acoustics/stems_video.py <out>/<take> <stems base> [--first wet] [--shift s]
 
@@ -80,8 +80,8 @@ def place(label, at):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("take", help="lib.Recording's <out>/<name> (.mp4, .wav, .wall, .offset beside it)")
-    ap.add_argument("stems", help="the stems' base path (LtbfBridge.AcousticsStems returned it)")
+    ap.add_argument("take", help="the recording's <out>/<name> (.mp4, .wav, .wall, .offset beside it)")
+    ap.add_argument("stems", help="the stems' base path (the path AcousticsStems returned, up to _dry.wav etc.)")
     ap.add_argument("--first", default="wet", help="the track played first: " + ", ".join(TRACKS) + " or an --extra's name")
     ap.add_argument("--shift", type=float, default=0.0, help="seconds added to the stems' place")
     ap.add_argument("--out", help="default <take>_fx.mp4")

@@ -1,5 +1,5 @@
 {
-  "note": "ArchiveXL nodeDeletions ported to game 2.5 (see docs/archive/autodrive-flight-plan.md). Not shipped: a crash 15 s after ArchiveXL 1.28 patched exterior_-5_-6_0_3 (2026-10-26) suggests nodeDeletions in 2.5 sectors, whose nodeData has an always-on block mirrored in persistentNodes, may break the sector. Copy into src/archive_xl/let_there_be_flight.archive.json streaming.sectors once verified.",
+  "note": "ArchiveXL nodeDeletions ported to game 2.5 (see docs/design/city-collision.md). Not shipped: a crash 15 s after ArchiveXL 1.28 patched exterior_-5_-6_0_3 (2026-10-26) suggests nodeDeletions in 2.5 sectors, whose nodeData has an always-on block mirrored in persistentNodes, may break the sector. Copy into src/archive_xl/let_there_be_flight.archive.json streaming.sectors once verified.",
   "sectors": [
     {
       "path": "base\\worlds\\03_night_city\\_compiled\\default\\exterior_-6_-11_0_2.streamingsector",

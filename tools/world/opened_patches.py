@@ -17,7 +17,7 @@ proxy_colliders.py scan / export):
 Writes <out>/patches.json: per patch its centre, area, the opened height range, the drawn surface
 bounding it and how much of it has no collision (m2 and share), the verdict (building / open /
 unsure), the proxy placements with the most uncovered surface (the ones to give collision), and
-<out>/labels.npy (patch id per column). Spot checks in game: tools/ingame/check_patches.py.
+<out>/labels.npy (patch id per column). Spot checks in game: put the car beside the patches the report lists.
 """
 
 import argparse

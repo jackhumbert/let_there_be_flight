@@ -1,7 +1,7 @@
 #pragma once
 
 // The terrain runs checked against the game (docs/design/hover-fly-terrain.md, step 6): a recording of
-// TerrainDriver (cp2077_tools' mods/let_there_be_flight/terrain_check.reds; HoverFlyRecorder's columns, then
+// a car driven along the terrain lines (the Hover & Fly recording's columns, then
 // FindGround's four rays a frame: start, hit, hit point, normal) against a region of the city's collision.
 // - GroundCheck casts each recorded ray again through the region: where both hit, how far apart and how differently
 //   tilted; where only one did (missing or extra collision: streaming, a blocker the region kept, water, which the

@@ -1,5 +1,5 @@
 """Build a landing pad entity (<name>.ent + <name>.app, WolvenKit JSON) from a pad kit
-(docs/archive/helipads.md, step 8).
+(docs/design/landing-pads.md, step 8).
 
 The .app's appearance "default" holds one mesh component per visual part of the kit; the .ent
 holds one collider component (preset World Static) with a collider per collision shape, all in

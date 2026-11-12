@@ -1,6 +1,6 @@
 {
   "comment": "Hand edits applied by pads.py build. remove: pad ids to drop. names: id -> display name. add: pads the scan cannot find, each {id, name, pos: [x, y, deck z], yaw, radius, note}; they get the same deck check as found pads, except own_deck ones (a deck from our own sector, not in the nav map), and replace a found pad with the same id. The spaceport (Phantom Liberty, q306) has no pad meshes in the open-world sectors, so its spots are picked from the nav map (flat, open sky, 12 m radius).",
-  "remove_comment": "Visual-only decks: no cooked collision under them (tools/pads/pad_collision.py, levels 0 to 3, 2026-10-26). The spaceport's launch pad 2 has only proxies. Take one off this list once a sector of our own gives it a real deck (docs/archive/helipads.md, step 8; the 499 m tower v2 went that way, see add).",
+  "remove_comment": "Visual-only decks: no cooked collision under them (tools/pads/pad_collision.py, levels 0 to 3, 2026-10-26). The spaceport's launch pad 2 has only proxies. Take one off this list once a sector of our own gives it a real deck (docs/design/landing-pads.md, step 8; the 499 m tower v2 went that way, see add).",
   "remove": [
     "spaceport_launchpad_2"
   ],
@@ -16,7 +16,7 @@
       "yaw": 22.5,
       "radius": 6.0,
       "own_deck": true,
-      "note": "499 m tower v2: the game's deck is visual only; in its place the inventor's city hangar (pad_sectors.json hangar_city, docs/archive/helipads.md section 9) stands on the roof (498.51), its deck top 7.175 above, the hatch at the centre; yaw 22.5 lines a car up with the hatch's 12 m side (the hangar is turned 90 deg from the pad). Was our v2 pad entity at 505.58 until 2026-10-27"
+      "note": "499 m tower v2: the game's deck is visual only; in its place the inventor's city hangar (pad_sectors.json hangar_city, docs/design/hangar.md) stands on the roof (498.51), its deck top 7.175 above, the hatch at the centre; yaw 22.5 lines a car up with the hatch's 12 m side (the hangar is turned 90 deg from the pad). Was our v2 pad entity at 505.58 until 2026-10-27"
     },
     {
       "id": "spaceport_apron",
@@ -51,7 +51,7 @@
       "note": "base of the middle launch pad; check in game"
     }
   ],
-  "specials_comment": "Step 6 (docs/archive/helipads.md): one rare car parked on each of these pads. car = Vehicle record; offset = [right, forward] m from the deck centre in the pad's frame and heading = degrees from the pad's yaw, both set in game. Not read by pads.py yet.",
+  "specials_comment": "Step 6 (docs/design/landing-pads.md): one rare car parked on each of these pads. car = Vehicle record; offset = [right, forward] m from the deck centre in the pad's frame and heading = degrees from the pad's yaw, both set in game. Not read by pads.py yet.",
   "specials": [
     {
       "pad": "4087052302204947314",

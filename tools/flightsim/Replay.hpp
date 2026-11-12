@@ -1,7 +1,7 @@
 #pragma once
 
-// The simulator checked against the game: a Hover & Fly recording (HoverFlyRecorder in cp2077_tools'
-// mods/let_there_be_flight/ltbf_bridge.reds, ltbf_hoverfly_<time>.csv) is cut where a control starts, and each piece
+// The simulator checked against the game: a Hover & Fly recording (red4ext/logs/ltbf_hoverfly_<time>.csv, written through
+// FlightTelemetry: one row a frame of the car's state, the controls and the ground distance) is cut where a control starts, and each piece
 // is flown offline from the recorded state on the recorded controls and ground distance. What differs is the body
 // model (Sim.hpp): its gains, its delay, and what it leaves out.
 

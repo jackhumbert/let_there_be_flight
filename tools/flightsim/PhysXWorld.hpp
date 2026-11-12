@@ -2,11 +2,11 @@
 
 // The game's own PhysX 3.4.2 (its PhysX3_x64.dll and the DLLs it loads, from the game's bin/x64, read only) running a
 // car body over the city's collision, for what flightsim's own contact cannot show: PhysX does not know a triangle's
-// neighbours across two meshes and pushes a shape sliding over the joint (docs/history.md, 2026-11-06). Each mesh of the
+// neighbours across two meshes and pushes a shape sliding over the joint. Each mesh of the
 // world is added as its own triangle mesh actor, as the game has it.
 //
 // Built only into flightsim, against the PhysX 3.4 headers (NVIDIA's PhysX-3.4 repository, BSD-3; LTBF_PHYSX34 in
-// CMake, D:/cp2077_work/tools/physx34 by default); the DLLs are loaded at run time and never shipped or committed.
+// CMake); the DLLs are loaded at run time and never shipped or committed.
 // Nothing here includes PhysX: the rest of flightsim sees plain vectors.
 
 #include "Flight/ScriptMath.hpp"

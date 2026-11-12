@@ -1,5 +1,5 @@
 {
-  "comment": "Our pad entities placed in the world by pad_sector.py (docs/archive/helipads.md, step 8). sector: our sector that holds them (a second sector of our own with its own descriptor did not load, so they share this one). base_box: the descriptor box the sector's other nodes need (the Watson car spawners). pads: one per visual-only pad, the part entities (pad_entity.py, one per 100 meshes) at the proxy's transform; streaming_distance as far as the hidden proxy drew (its forcedAutoHideDistance); node_id: globalNodeId of the first part, the next ones count up. spawners: vehicle spawners (pad_sector.py), a fresh car on every load; none now (the Archer Quartz beside the Badlands hangar, a car for the hatch tests of 2026-10-27, was removed on 2026-11-03: it stood 11 m from the quest's test car spot). quest_nodes: named nodes a quest or scene addresses by NodeRef (docs/design/hangar.md, Quest nodes), in their pad's frame.",
+  "comment": "Our pad entities placed in the world by pad_sector.py (docs/design/landing-pads.md, step 8). sector: our sector that holds them (a second sector of our own with its own descriptor did not load, so they share this one). base_box: the descriptor box the sector's other nodes need (the Watson car spawners). pads: one per visual-only pad, the part entities (pad_entity.py, one per 100 meshes) at the proxy's transform; streaming_distance as far as the hidden proxy drew (its forcedAutoHideDistance); node_id: globalNodeId of the first part, the next ones count up. spawners: vehicle spawners (pad_sector.py), a fresh car on every load; none now (the Archer Quartz beside the Badlands hangar, a car for the hatch tests of 2026-10-27, was removed on 2026-11-03: it stood 11 m from the quest's test car spot). quest_nodes: named nodes a quest or scene addresses by NodeRef (docs/design/hangar.md, Quest nodes), in their pad's frame.",
   "sector": "user\\jackhumbert\\sectors\\helipad_vehicles.streamingsector",
   "block": "user\\jackhumbert\\all.streamingblock",
   "colliders": "../world/proxy_collider_tiles.json",
@@ -18,7 +18,7 @@
   "pads": [
     {
       "pad": "hangar",
-      "note": "the inventor's hangar (docs/archive/helipads.md section 9; tools/kitbash/hangar_build.py), on bare salt flat in the Badlands; z is the floor origin, terrain 52.66 .. 52.88 under the shell (terrain raster); moved here from (1735, -1215) on 2026-11-03, clear of sq004's world boundary (docs/design/hangar.md)",
+      "note": "the inventor's hangar (docs/design/hangar.md; tools/kitbash/hangar_build.py), on bare salt flat in the Badlands; z is the floor origin, terrain 52.66 .. 52.88 under the shell (terrain raster); moved here from (1735, -1215) on 2026-11-03, clear of sq004's world boundary (docs/design/hangar.md)",
       "pos": [
         1996.0,
         -1376.0,
@@ -27,7 +27,7 @@
       "yaw": 0.0,
       "map_pin": {
         "id": "hangar_badlands",
-        "note": "the permanent map pin, on V's door (the quest kit's DOOR, cp2077_tools quest/kit/hangar.py)",
+        "note": "the permanent map pin, on V's door (the quest kit's DOOR)",
         "local": [
           -3.0,
           -8.6,

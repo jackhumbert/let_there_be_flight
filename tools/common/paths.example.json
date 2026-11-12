@@ -1,0 +1,13 @@
+{
+  "_doc": "Copy to paths.local.json (not tracked) and fill in what your tools need; see paths.py for each key. An environment variable of the same setting wins over this file.",
+  "GAME": "path/to/Cyberpunk 2077",
+  "WOLVENKIT": "path/to/WolvenKit.CLI 10/WolvenKit.CLI.exe",
+  "WOLVENKIT_PACK": "path/to/WolvenKit.CLI 9.0.1/WolvenKit.CLI.exe",
+  "WORK": "path/to/a work folder",
+  "TMP": "path/to/a scratch folder",
+  "DEPOT": "path/to/the unbundled archives",
+  "DEPOT_TEX": "path/to/the exported textures",
+  "BLENDER": "path/to/blender.exe",
+  "FFMPEG": "path/to/ffmpeg.exe",
+  "PHYSX_SRC": "path/to/physx-3.4-src"
+}

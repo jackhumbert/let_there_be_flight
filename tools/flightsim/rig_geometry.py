@@ -47,7 +47,8 @@ import sys
 from collections import Counter, defaultdict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-RIGS = r"D:\cp2077_work\tmp\flightsim\rigs"
+sys.path.insert(0, os.path.dirname(HERE))  # tools/, for common
+from common import paths as machine  # noqa: E402  (main's `paths` is a dict of template paths)
 NONE = ("", "0x0000000000000000", "None", "NULL")
 COLUMNS = ["template", "driveModel", "tensorX", "tensorY", "tensorZ", "wheelX", "wheelY", "wheelZ", "bottom",
            "thrusters", "source"]
@@ -344,10 +345,11 @@ def compare(rows, vehicles, model, survey_path, names):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("dump")
-    ap.add_argument("--rigs", default=RIGS)
+    ap.add_argument("--rigs", help="default <paths.WORK>/flightsim/rigs")
     ap.add_argument("-o", "--out", default="")
     ap.add_argument("--survey", default="")
     args = ap.parse_args()
+    args.rigs = args.rigs or os.path.join(machine.WORK, "flightsim", "rigs")
     out = args.out or os.path.join(args.rigs, "geometry.tsv")
 
     vehicles = read(os.path.join(args.dump, "vehicles.tsv"))

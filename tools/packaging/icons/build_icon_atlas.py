@@ -1,7 +1,7 @@
 """Build an icon's textures and atlas for the mod archive from its PNGs: the landing pad icon
 (landing_pad_icon.py) or the AUTOPILOT logo (autopilot_logo.py), see ICONS.
 
-Steps (WolvenKit.Console 10; see the wolvenkit skill in E:\\src\\.claude\\skills):
+Steps (WolvenKit.Console 10, the WOLVENKIT setting):
   1. Each PNG is imported into a copy of a vanilla texture (`import --keep`), so it gets the vanilla
      UI texture setup (TEXG_Generic_UI, TCM_QualityColor, gamma, no mips), then the setup is
      matched exactly (not streamable, downgrade allowed) through a JSON round trip.
@@ -23,11 +23,13 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 
 from PIL import Image
 
-GAME = r"D:\Games\SteamLibrary\steamapps\common\Cyberpunk 2077\archive\pc\content"
-WOLVENKIT = r"D:\cp2077_work\build\tools\wolvenkit-10.0.0-beta.1\WolvenKit.CLI.exe"
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # tools/, for common
+from common import paths  # noqa: E402
+
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 DEPOT_DIR = r"user\jackhumbert\textures"
 OUT = os.path.join(REPO, r"src\wolvenkit\source\archive", DEPOT_DIR)
@@ -46,7 +48,7 @@ ICONS = {
 
 
 def wk(*args):
-    r = subprocess.run([WOLVENKIT, *args], capture_output=True, text=True)
+    r = subprocess.run([paths.WOLVENKIT, *args], capture_output=True, text=True)
     # `import --keep` exits 3 ("No buffers found to rebuild") even when every file was imported
     imported = args[0] == "import" and "Imported" in r.stdout and "/" in r.stdout
     if r.returncode != 0 and not (imported and r.returncode == 3):
@@ -65,7 +67,7 @@ def main():
     shutil.rmtree(work, ignore_errors=True)
     vanilla = os.path.join(work, "vanilla")
     stems = "|".join(sorted({vanilla_atlas.split(".")[0], *templates}))
-    wk("unbundle", GAME, "-o", vanilla, "-r", vanilla_dir.replace("\\", ".") + r".(" + stems + r")\.(xbm|inkatlas)$")
+    wk("unbundle", os.path.join(paths.ARCHIVES, "content"), "-o", vanilla, "-r", vanilla_dir.replace("\\", ".") + r".(" + stems + r")\.(xbm|inkatlas)$")
 
     # 1. textures
     raw = os.path.join(work, "raw", DEPOT_DIR)

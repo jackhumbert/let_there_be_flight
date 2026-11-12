@@ -15,9 +15,10 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/, for common
 from common import paths  # noqa: E402
+from common.lazy import Lazy  # noqa: E402
 
-DEFAULT_WOLVENKIT = paths.WOLVENKIT
-CONTENT = os.path.join(paths.ARCHIVES, "content")
+DEFAULT_WOLVENKIT = Lazy(lambda: paths.WOLVENKIT)
+CONTENT = Lazy(lambda: os.path.join(paths.ARCHIVES, "content"))
 
 
 def fnv1a64(s):

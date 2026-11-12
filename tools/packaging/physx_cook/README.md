@@ -11,7 +11,8 @@ materials (flag 0x1), which we do not write.
 ## Building (once)
 
 1. The PhysX 3.4 SDK source: `git clone --depth 1 https://github.com/NVIDIAGameWorks/PhysX-3.4.git`
-   (kevin: `D:\cp2077_work\build\tools\physx-3.4-src`).
+   Point the `LTBF_PHYSX_SRC` setting (environment variable, or `PHYSX_SRC` in `tools/common/paths.local.json`)
+   at the checkout.
 2. Newer MSVC has no `<typeinfo.h>`: in `PxShared\src\foundation\include\PsAllocator.h` include
    `<typeinfo>` instead.
 3. Build the cooking library with the VS 2022 toolset, warnings not as errors:
@@ -22,4 +23,4 @@ materials (flag 0x1), which we do not write.
    ```
 
 4. `powershell -File tools\physx_cook\build.ps1 [-PhysX <checkout>] [-Out <dir>]` builds `cook.exe`
-   and copies the three DLLs next to it (default `D:\cp2077_work\build\tools\physx_cook`).
+   and copies the three DLLs next to it (default `tools\physx_cook` under the work folder, `LTBF_WORK`, where `tools/world/physx_cook.py` looks for it).

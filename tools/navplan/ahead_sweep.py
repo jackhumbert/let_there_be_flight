@@ -48,7 +48,7 @@ def main():
     ap.add_argument("--margins", default="0.5,1,2")
     ap.add_argument("--routes", type=int, default=20, help="helipad routes on top of the benchmark ones")
     ap.add_argument("--jobs", type=int, default=6)
-    ap.add_argument("--out", help="folder for navplan's files and sweep.json (default: a new one in paths.TMP, D:/cp2077_work/tmp)")
+    ap.add_argument("--out", help="folder for navplan's files and sweep.json (default: a new one in paths.TMP)")
     ap.add_argument("--navmap")
     ap.add_argument("--vehicle", default="shion")
     args = ap.parse_args()

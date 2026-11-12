@@ -1,37 +1,77 @@
-"""Machine paths the tools default to, each overridable by an environment variable. The defaults are
-Jack's PC (kevin); set the variables on another machine instead of editing the tools."""
+"""Machine paths for the offline tools.
 
+Each path comes from, in order: its environment variable, then tools/common/paths.local.json (not
+tracked; copy paths.example.json beside this file and fill it in), then a default where one makes
+sense. A path with no default that is not set raises a KeyError naming the variable and the json
+key, only when a tool reads it, so tools that do not need the game or the depot run without them.
+
+    from common import paths
+    paths.WORK      # work folder for bakes, caches and the hangar build
+"""
+
+import json
 import os
+import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+# this repo, and its tools folder (tools/<folder>/ scripts reach each other's data through it)
 REPO = os.path.dirname(os.path.dirname(HERE))
+TOOLS = os.path.dirname(HERE)
 
-# the game install
-GAME = os.environ.get("CP2077_GAME_DIR", r"D:\Games\SteamLibrary\steamapps\common\Cyberpunk 2077")
-ARCHIVES = os.path.join(GAME, "archive", "pc")
-LTBF_LOG = os.path.join(GAME, "red4ext", "logs", "let_there_be_flight.log")
-# WolvenKit.Console 10 (reads 2.5 sectors; pack_archive.py has its own 9.0.1 default)
-WOLVENKIT = os.environ.get("WOLVENKIT_CLI10", r"D:\cp2077_work\build\tools\wolvenkit-10.0.0-beta.1\WolvenKit.CLI.exe")
-# WolvenKit.Console 9.0.1, the one pack_archive.py packs the archive with (its --cli); the game's Oodle dll beside it
-WOLVENKIT_PACK = os.environ.get("WOLVENKIT_CLI", r"D:\cp2077_work\build\tools\wolvenkit-9.0.1\WolvenKit.CLI.exe")
-# work folder for bakes, caches and the hangar build (not in the repo)
-WORK = os.environ.get("LTBF_WORK", r"D:\cp2077_work\build")
-# bulky scratch output (benchmark runs and the like), off C:; delete it when the task is done
-TMP = os.environ.get("CP2077_TMP", r"D:\cp2077_work\tmp")
+LOCAL_JSON = os.path.join(HERE, "paths.local.json")
+
+# name: (environment variable, default or None, what it is)
+SETTINGS = {
+    "GAME": ("CP2077_GAME_DIR", None, "the game install (the folder holding bin/ and archive/)"),
+    "WOLVENKIT": ("WOLVENKIT_CLI10", None, "WolvenKit.CLI.exe 10.x (reads 2.5 sectors)"),
+    "WOLVENKIT_PACK": ("WOLVENKIT_CLI", None,
+                       "WolvenKit.CLI.exe 9.0.1, which packs the archive; the game's oo2ext_7_win64.dll beside it"),
+    "WORK": ("LTBF_WORK", os.path.join(REPO, "build", "tools_work"),
+             "work folder for bakes, caches and the hangar build (kept between runs)"),
+    "TMP": ("CP2077_TMP", os.path.join(tempfile.gettempdir(), "ltbf_tools"),
+            "scratch output of one run (benchmarks and the like); delete it when done"),
+    "DEPOT": ("CP2077_DEPOT", None, "the game's archives unbundled (tools/kitbash/make_depot.ps1)"),
+    "DEPOT_TEX": ("CP2077_DEPOT_TEX", None, "the game's textures exported for Blender (the depot's textures)"),
+    "BLENDER": ("BLENDER_EXE", "blender", "blender.exe (default: the one on PATH)"),
+    "FFMPEG": ("FFMPEG", "ffmpeg", "ffmpeg.exe (default: the one on PATH)"),
+    "PHYSX_SRC": ("LTBF_PHYSX_SRC", None, "a PhysX 3.4 source checkout (tools/packaging/physx_cook)"),
+}
+
+_local = None
+
+
+def _local_json():
+    global _local
+    if _local is None:
+        _local = {}
+        if os.path.exists(LOCAL_JSON):
+            with open(LOCAL_JSON, encoding="utf-8") as f:
+                _local = json.load(f)
+    return _local
+
+
+def get(name):
+    """The path for one SETTINGS name; KeyError naming where to set it if it has no value."""
+    env, default, what = SETTINGS[name]
+    value = os.environ.get(env) or _local_json().get(name) or default
+    if not value:
+        raise KeyError(f"{name} is not set: {what}. Set the environment variable {env}, or \"{name}\" in {LOCAL_JSON} "
+                       f"(template: paths.example.json)")
+    return value
+
+
+def __getattr__(name):
+    if name in SETTINGS:
+        return get(name)
+    if name == "ARCHIVES":
+        return os.path.join(get("GAME"), "archive", "pc")
+    if name == "LTBF_LOG":
+        return os.path.join(get("GAME"), "red4ext", "logs", "let_there_be_flight.log")
+    raise AttributeError(name)
 
 
 def scratch(prefix):
     """A new folder under TMP for one run's files."""
-    import tempfile
-
-    os.makedirs(TMP, exist_ok=True)
-    return tempfile.mkdtemp(prefix=prefix, dir=TMP)
-# extracted game files (tools/kitbash/make_depot.ps1)
-DEPOT = os.environ.get("CP2077_DEPOT", r"E:\cp2077_depot")
-BLENDER = os.environ.get("BLENDER_EXE", r"C:\Program Files\Blender Foundation\Blender 5.2\blender.exe")
-# ffmpeg with gfxcapture (window capture without focus)
-FFMPEG = os.environ.get("FFMPEG", r"D:\cp2077_work\build\tools\ffmpeg\ffmpeg-9.0.2-essentials_build\bin\ffmpeg.exe")
-# the shared game-driving tools (bridge.py, game.py)
-CP2077_TOOLS = os.environ.get("CP2077_TOOLS", os.path.join(os.path.dirname(REPO), "cp2077_tools"))
-# this repo's tools folder (tools/<folder>/ scripts reach each other's data through it)
-TOOLS = os.path.dirname(HERE)
+    tmp = get("TMP")
+    os.makedirs(tmp, exist_ok=True)
+    return tempfile.mkdtemp(prefix=prefix, dir=tmp)

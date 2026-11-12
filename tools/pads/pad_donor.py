@@ -1,4 +1,4 @@
-"""Inventory everything placed in a complete landing pad's footprint (docs/archive/helipads.md, step 8).
+"""Inventory everything placed in a complete landing pad's footprint (docs/design/landing-pads.md, step 8).
 
 A visual-only pad gets a real deck by copying a complete pad of the same prefab: this lists the
 pieces of the donor, i.e. every node instance whose position lies in the prefab's footprint
@@ -21,8 +21,9 @@ import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/, for common
 from common import paths  # noqa: E402
+from common.lazy import Lazy  # noqa: E402
 
-DEFAULT_WOLVENKIT = paths.WOLVENKIT
+DEFAULT_WOLVENKIT = Lazy(lambda: paths.WOLVENKIT)
 FIXED_POINT = 1.0 / 131072.0
 LEVELS = (0, 1, 2, 3)
 

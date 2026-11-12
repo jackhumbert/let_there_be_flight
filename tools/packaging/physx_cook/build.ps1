@@ -1,11 +1,22 @@
 # Build cook.exe against a PhysX 3.4 source checkout whose PhysXCooking project is built
 # (see README.md). Run from any shell; it sets up MSVC itself.
 param(
-    [string]$PhysX = 'D:\cp2077_work\build\tools\physx-3.4-src',
-    [string]$Out = 'D:\cp2077_work\build\tools\physx_cook'
+    [string]$PhysX = $env:LTBF_PHYSX_SRC,
+    [string]$Out
 )
-$vcvars = 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat'
-if (-not (Test-Path $vcvars)) { $vcvars = 'C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat' }
+if (-not $PhysX) { throw '-PhysX is not set: pass the PhysX 3.4 source checkout, or set the environment variable LTBF_PHYSX_SRC.' }
+if (-not $Out) {
+    $work = if ($env:LTBF_WORK) { $env:LTBF_WORK } else { Join-Path $PSScriptRoot '..\..\..\build\tools_work' }
+    $Out = Join-Path $work 'tools\physx_cook'
+}
+$vcvars = $null
+foreach ($root in @(${env:ProgramFiles(x86)}, ${env:ProgramFiles})) {
+    foreach ($edition in 'BuildTools', 'Community', 'Professional', 'Enterprise') {
+        $candidate = Join-Path $root "Microsoft Visual Studio\2022\$edition\VC\Auxiliary\Build\vcvars64.bat"
+        if (-not $vcvars -and (Test-Path $candidate)) { $vcvars = $candidate }
+    }
+}
+if (-not $vcvars) { throw 'No Visual Studio 2022 (vcvars64.bat) found under the Program Files folders.' }
 New-Item -ItemType Directory -Force $Out | Out-Null
 $src = Join-Path $PSScriptRoot 'cook.cpp'
 $inc = "/I`"$PhysX\PhysX_3.4\Include`" /I`"$PhysX\PxShared\include`""

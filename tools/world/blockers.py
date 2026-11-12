@@ -33,8 +33,9 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/, for common
 from common import paths  # noqa: E402
+from common.lazy import Lazy  # noqa: E402
 
-DEFAULT_WOLVENKIT = paths.WOLVENKIT
+DEFAULT_WOLVENKIT = Lazy(lambda: paths.WOLVENKIT)
 FIXED_POINT = 1.0 / 131072.0
 BATCH = 80
 BLOCKERS = {

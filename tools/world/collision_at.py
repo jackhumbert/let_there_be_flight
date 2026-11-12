@@ -185,8 +185,9 @@ def main():
     ap.add_argument("--raw", default=DEFAULT_RAW)
     ap.add_argument("--extra", action="append", default=None)
     ap.add_argument("--geometry", default=DEFAULT_GEOMETRY)
-    ap.add_argument("--wolvenkit", default=paths.WOLVENKIT)
+    ap.add_argument("--wolvenkit", help="default paths.WOLVENKIT")
     args = ap.parse_args()
+    args.wolvenkit = args.wolvenkit or paths.WOLVENKIT
     args.extra = args.extra or DEFAULT_EXTRA
     if args.case:
         case = next(c for c in json.load(open(CASES))["cases"] if c["name"] == args.case)

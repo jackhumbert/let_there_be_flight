@@ -64,7 +64,7 @@ struct Car {
   // zero when unknown
   Vec3 boxMin, boxMax;
   // the chassis collision shape's drag area per body axis (m2: X side, Y front, Z top; aero.py, vehicles.tsv), and
-  // the fleet-wide factor on it (docs/research/2026-11-04-aero-drag.md); zero: unknown, today's drag stays
+  // the fleet-wide factor on it (docs/design/autopilot.md, "Character"); zero: unknown, today's drag stays
   Vec3 cda;
   float dragK = Flight::kShapeDragK;
   float thrusters = 0; // vehicles.tsv; 0: unknown, the thrust stays today's

@@ -4,7 +4,7 @@ step 6): flightsim --ground-check (the game's ground rays cast again through the
 
     python -P -E tools/flightsim/terrain_compare.py <dir> [--flightsim build/flightsim.exe]
 
-<dir> holds cp2077_tools' terrain_check.py output: <line>@<kmh>_<record>.csv, a TerrainDriver recording each. The
+<dir> holds the terrain recordings: <line>@<kmh>_<record>.csv, one Hover & Fly recording of a car driven along the line each. The
 line's region comes from terrain_runs.tsv, the car from vehicles.tsv by its record. A recording whose game found no
 ground on most frames is left out (the car fell through the world), and one is cut where the game's car stood still
 at full surge (it ran into something the bake does not hold). For each: the rays both hit and

@@ -3,7 +3,7 @@
     python tools/flightsim/tweak_physics.py <dump dir> [--survey <measured.tsv>] [--geometry <geometry.tsv>]
                                             [-o tools/flightsim/vehicles.tsv] [--todo <records to survey.txt>]
 
-<dump dir> is vehicle_tweaks.py's output (cp2077_tools/mods/let_there_be_flight): every car and bike record's drive
+<dump dir> is a dump of the game's TweakDB vehicle records (vehicles.tsv, drive_models.tsv, bike_drive_models.tsv): every car and bike record's drive
 model, wheel setup and entity template, and each drive model's mass, inertia and friction. Records sharing all three
 are one physical car (most records are paint and trim variants) and become one row of the table.
 
@@ -44,8 +44,7 @@ GEOMETRY = ["tensorX", "tensorY", "tensorZ", "wheelX", "wheelY", "wheelZ", "bott
 NONE = ("", "0x0000000000000000", "None", "NULL")
 # The stand-in drive model CDPR gives vehicles that are never driven: 1300 kg, inertia 0,0,0, air resistance 0.35
 # (AVs, drones, trains, barges, q101's stretchers, quest wrecks: 164 records, 67 physical cars, none named).
-# Not something a player flies, and its low drag put every one of them at the Autopilot's speed cap: left out
-# (Jack, 2026-11-04).
+# Not something a player flies, and its low drag put every one of them at the Autopilot's speed cap: left out.
 PLACEHOLDER_DRIVE_MODELS = {"0x00000027714d3107"}
 
 

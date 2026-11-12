@@ -2,8 +2,9 @@
 line, and the line itself, projected through the game camera frame by frame. What the planner
 avoids, next to what the game shows: an outline in empty air is a hidden collider.
 
-The run must log the camera (the test's --camera: LtbfBridge CameraPoseSampler writes
-red4ext/logs/ltbf_camerapose_<time>.csv with a wall clock) and dump its line (LtbfBridge.RouteDump).
+The run must log the camera (red4ext/logs/ltbf_camerapose_<time>.csv, columns wall, x, y, z, qi, qj, qk, qr,
+fov, carx, cary, carz; wall is the wall clock in seconds since midnight UTC, FlightTelemetry.WallClock) and
+dump the line it flew (red4ext/logs/ltbf_route_<time>.csv, columns x, y, z).
 For every 2 m cell within --width of the line, the blocked space is sliced at the line's local height
 and --offsets above and below it; each edge between a blocked and a free cell is drawn at that
 height. The map holds car-centre space: walls sit the car's radius (3 m) inside the outlines.
@@ -27,9 +28,11 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # tools/, for common
+from common import paths  # noqa: E402
 from plot import NavMap  # noqa: E402
 
-FFMPEG = os.environ.get("FFMPEG", r"D:\cp2077_work\build\tools\ffmpeg\ffmpeg-9.0.2-essentials_build\bin\ffmpeg.exe")
+FFMPEG = None  # paths.FFMPEG, read in main
 
 
 def outlines(nav, line, width, offsets):
@@ -128,6 +131,8 @@ def main():
     ap.add_argument("--behind", choices=("hide", "faint", "show"), default="hide", help="outlines behind something solid")
     ap.add_argument("--short", type=float, default=4.0, help="m short of an outline its occlusion ray stops")
     args = ap.parse_args()
+    global FFMPEG
+    FFMPEG = paths.FFMPEG
 
     nav = NavMap(args.navmap)
     with open(args.route) as f:

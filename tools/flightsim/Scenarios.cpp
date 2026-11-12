@@ -501,7 +501,7 @@ const std::map<std::string, Scenario> &Scenarios() {
       {"knock_roll", [](const Setup &s) { return Knocked("knock_roll", s, {0, 4.0f, 0}, 0.0f); }},
       {"knock_roll_yaw", [](const Setup &s) { return Knocked("knock_roll_yaw", s, {0, 4.0f, 0}, 1.0f); }},
       // knocked hovering low (2 m): the recovery cuts the lift, so it may drop to the ground; it must come back up to
-      // at least the bottom of the hover band and stay there (Jack, 2026-11-04)
+      // at least the bottom of the hover band and stay there (seen in game)
       {"knock_low",
        [](const Setup &s) {
          Flown f = Hovering("knock_low", s);
@@ -545,7 +545,7 @@ const std::map<std::string, Scenario> &Scenarios() {
          return f.run;
        }},
       // the brake (linear and angular, as the brake key gives them) held 4 s: hovering 3 m up, at rest 30 m up, and
-      // flying at speed 30 m up; the height it gains or loses in each (Jack: holding the brake, the car rises)
+      // flying at speed 30 m up; the height it gains or loses in each (seen in game: holding the brake, the car rises)
       {"brake_hold",
        [](const Setup &s) {
          Keys brake;

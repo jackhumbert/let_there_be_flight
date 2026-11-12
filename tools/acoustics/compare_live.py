@@ -1,4 +1,4 @@
-"""The acoustics comparison log (red4ext/logs/ltbf_acoustics_<time>.csv, LtbfBridge.AcousticsLive):
+"""The acoustics comparison log (red4ext/logs/ltbf_acoustics_<time>.csv, written while FlightAudio's AcousticsLog is on):
 for each near surface (floor, ceiling, nearest wall left and right), over the probes with live rays
 on (by who cast them: the scripts or the plugin through PhysX), how often the game's own collision answered, how far its distance is from the nav map's, and
 where only one of the two found a surface; then the materials hit and the probe's cost.

@@ -2,7 +2,7 @@
 
 Builds `navmap.bin`, the city-wide free-space map the autopilot plans over
 (`src/red4ext/Navigation/NavMap.hpp`), from the game's own files. Background, decisions and
-validation results: `docs/archive/autodrive-flight-plan.md`.
+validation results: `docs/design/navmap.md`.
 
 What goes in: cooked collision of every exterior and interior streaming sector (boxes, capsules,
 convex and triangle meshes from the geometry cache; presets that block vehicles only), terrain
@@ -13,23 +13,22 @@ Output: per 2 m column, the vertical gaps a car's centre can occupy (solids grow
 ## Requirements
 
 - WolvenKit.Console 10.0.0-beta.1 or later (9.x cannot read 2.5 sectors), at
-  `D:\cp2077_work\build\tools\wolvenkit-10.0.0-beta.1\` with the game's `oo2ext_7_win64.dll`
+  anywhere (the `WOLVENKIT` setting, `WOLVENKIT_CLI10`) with the game's `oo2ext_7_win64.dll`
   next to it. Its `appsettings.json` needs `"MeshExportArgs": { "WithMaterials": false }`
   (original kept as `appsettings.json.orig`), or mesh export fails asking for a depot path.
 - Python with numpy, scipy, Pillow, matplotlib. About 25 GB free disk for a full run.
-- The game install (archives are read directly). Paths are set for this PC (game on
-  `D:\Games\SteamLibrary\...`); check `ARCHIVES` in `proxies.py` and `DEFAULT_WOLVENKIT` in
-  `sectors.py` on another machine.
+- The game install (archives are read directly): the `GAME` setting (`CP2077_GAME_DIR`), see
+  `tools/common/paths.py`.
 
-## Full run (about 3 hours on kevin, 16 threads)
+## Full run (about 3 hours on 16 threads)
 
 `W` is a work folder (not in the repo). With Phantom Liberty installed, `ep1_1_nightcity.archive`
 overrides 15,111 of the base game's 15,121 exterior sectors and adds Dogtown, so the ep1 sectors
 are the source; the base-game geometry cache fills a few gaps.
 
 ```
-CLI=D:\cp2077_work\build\tools\wolvenkit-10.0.0-beta.1\WolvenKit.CLI.exe
-PC="D:\Games\SteamLibrary\steamapps\common\Cyberpunk 2077\archive\pc"
+CLI=<the WOLVENKIT setting: WolvenKit.CLI.exe 10.x>
+PC="<the game folder>\archive\pc"
 
 # 1. unbundle sectors + geometry caches + collision presets
 $CLI unbundle $PC\ep1\ep1_1_nightcity.archive -o W\raw\ep1 -r "(_compiled.default.(exterior|interior)_.*\.streamingsector|\.geometry_cache)$"
@@ -62,7 +61,7 @@ python navmap.py W\spans -o W\navmap.bin
 ```
 
 Landing pads (`pads.py`, minutes; needs only the raw exterior sectors and `navmap.bin`, see
-`docs/archive/helipads.md`):
+`docs/design/landing-pads.md`):
 
 ```
 $CLI unbundle $PC\ep1\ep1_1_nightcity.archive -o W\raw\ep1 -r "_compiled.default.exterior_.*\.streamingsector$"
@@ -71,7 +70,7 @@ python pads.py build W\pads --navmap W\navmap.bin -o W\pads\helipads.json --prev
 python flat_spots.py W\navmap.bin -6400 -400 -2300 1200 -o spaceport.png --radius 12   # spots for helipads_overrides.json
 ```
 
-Visual-only pads (`docs/archive/helipads.md` step 8, "Recipe"): `pad_collision.py` finds them (unbundle
+Visual-only pads (`docs/design/landing-pads.md`, "Recipe"): `pad_collision.py` finds them (unbundle
 the level-3 sectors too: `-r "_compiled.default.exterior_-?\d+_-?\d+_-?\d+_3\.streamingsector$"`,
 517 files, and run `sectors.py` on them); `pad_donor.py` / `pad_kit.py` / `pad_geometry.py` /
 `pad_appearances.py` / `pad_entity.py` turn a complete prefab into our pad entity;
@@ -98,7 +97,7 @@ The tool finds proxy surface with no vehicle-blocking collision or terrain withi
 into PhysX triangle meshes (`tools/physx_cook`, see its README) and writes one collider-only
 entity per 128 m tile, placed by `pad_sector.py` from `proxy_collider_tiles.json` ("colliders" in
 `pad_sectors.json`). The proxies stay the visual. Needs the full run's `sectors` (collision
-triangles) and `terrain2`. About an hour on kevin:
+triangles) and `terrain2`. About an hour:
 
 ```
 python proxy_colliders.py scan --sectors W\raw\ep1\base\worlds\03_night_city\_compiled\default -o P --match "^exterior_.*_[1-6]\.streamingsector$"
@@ -122,15 +121,14 @@ python ..\pack_archive.py
   only). Such buildings are listed by hand in `tools/world/proxy_collider_force.json` and `force`
   gives their placements' triangles inside each entry's box collision wherever no real collision
   is within 4 m. The list came from the space the bake's old hollow fill closed
-  (`tools/world/opened_patches.py`; docs/history.md 2026-10-30); the fill is gone.
+  (`tools/world/opened_patches.py`); the fill is gone.
 - The ocean patches (`global_ocean_patch_*`, 87 km2) are left out (`--exclude`), and so are terrain
   proxies.
 - 548 tiles, 1.69 M triangles, 50 MB cooked (27 MB packed archive, from 7 MB). Each tile streams
   within its reach + 300 m.
 - The nav map bake takes the same triangles: `spans.py bin --extra P\colliders.npz` (written by
   `build`), so the Autopilot does not plan through the new walls.
-- Checked in game with rays (then a CET helper, since removed; now `LtbfBridge.Ray` and
-  `tools/ingame/ray_probe.py`): the five reported points inside the
+- Checked in game with rays: the five reported points inside the
   raised complex all hit the proxy's surfaces above and below (e.g. (-1200, -689): 294.9 and
   208.4, the proxy's floor slabs at 295 and 208).
 
@@ -138,15 +136,14 @@ Previews and checks:
 
 - `rasterize.py --presets ... -o W\city4 --cell 4` + `preview.py W\city4 -o top.png`: shaded
   top-surface map. `spans.py preview W\spans -o gaps.png --bounds x0,y0,x1,y1`: gaps per column.
-- `tools/ingame/validate_bake.py W\spans [--teleport x,y,z]`: compares the bake with live raycasts through the native
-  bridge around the player (collision streams in only ~60 m around a parked car, so keep
-  `--radius` near 55). `tools/ingame/check_navmap.py W\spans`: compares the plugin's `FlightNavMap.GetGaps`
-  with the bake (needs navmap.bin installed and the game running).
+- To check the bake in game: compare it with live raycasts around the player (collision streams in only
+  ~60 m around a parked car, so keep the radius near 55), and the plugin's `FlightNavMap.GetGaps` with the
+  bake (needs navmap.bin installed).
 
 Last full bake (2026-10-26 evening, game 2.5, with `spans.py` fill_hollow): everything in
-`D:\cp2077_work\build\heightmap\bake_2026-10-26\` (raw sectors, per-sector triangles, proxies,
-spans, `navmap.bin`), 36 minutes on kevin with 10 jobs, reusing `geometry.npz` and
-`presets_table.json` from the morning bake in `D:\cp2077_work\build\heightmap\` (whose
+`heightmap/bake_2026-10-26/` under the work folder (raw sectors, per-sector triangles, proxies,
+spans, `navmap.bin`), 36 minutes with 10 jobs, reusing `geometry.npz` and
+`presets_table.json` from the morning bake in `heightmap/` (whose
 `navmap.bin` is the previous map). Against the morning bake about 2% of columns lost free space
 (towers whose collision has a hole, now solid, and some low arcades under skyscrapers), none
 gained. 3 sectors failed to parse (JSONDecodeError): exterior_-17_21_0_0, exterior_-21_-1_0_0,

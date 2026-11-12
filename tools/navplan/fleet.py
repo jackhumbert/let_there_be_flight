@@ -57,13 +57,13 @@ def fleet(only=None, character=None):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--out", help="folder for navplan's files (default: a new one in paths.TMP, D:/cp2077_work/tmp)")
+    ap.add_argument("--out", help="folder for navplan's files (default: a new one in paths.TMP)")
     ap.add_argument("--navmap", help="default: LTBF_NAVMAP_FILE in build/CMakeCache.txt")
     ap.add_argument("--navplan", help="navplan.exe (default build/navplan.exe)")
     ap.add_argument("--routes", type=int, default=0, help="helipad routes besides the benchmarks")
     ap.add_argument("--only", help="mass/airResistance pairs to run, comma separated")
     ap.add_argument("--character", type=float, default=None,
-                    help="each car's shape drag and thrust at this strength (0 to 1; docs/research/2026-11-04-aero-drag.md)")
+                    help="each car's shape drag and thrust at this strength (0 to 1; docs/design/autopilot.md, Character)")
     ap.add_argument("--jobs", type=int, default=max(1, (os.cpu_count() or 4) - 2))
     args = ap.parse_args()
 

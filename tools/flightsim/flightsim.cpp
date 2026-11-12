@@ -31,8 +31,8 @@
 // line's usable length and tags, the metrics.
 // --sample prints <count> random lines in a region, tagged by their ground, as rows for a runs file. Regions are
 // <regions>/<name>.ltbfregion (region_pack.py --regions), by default %LTBF_WORK%/flightsim_regions
-// (D:/cp2077_work/build/flightsim_regions without it).
-// --ground-check casts the rays of a game recording of the terrain runs (cp2077_tools' terrain_check.py) again
+// (build/tools_work/flightsim_regions without it, tools/common/paths.py's default work folder).
+// --ground-check casts the rays of a game recording of the terrain runs (a car driven along each line, its FindGround rays logged a frame) again
 // through the region and prints where they agree and where not (TerrainCheck.hpp); --replay with --region flies
 // the recording in windows of --window s over the region's collision (the redesign unless --mode says otherwise).
 // --match takes a car's name or its vehicles.tsv record.
@@ -176,7 +176,7 @@ Car FromTable(Car aTable, const Car &aSet) {
 
 std::string RegionsDir() {
   const char *work = std::getenv("LTBF_WORK");
-  return std::string(work ? work : "D:/cp2077_work/build") + "/flightsim_regions";
+  return std::string(work ? work : "build/tools_work") + "/flightsim_regions";
 }
 
 // the region files, each loaded once
