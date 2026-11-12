@@ -396,3 +396,12 @@ crash_stack.hpp
 
 # packed at build time from src/wolvenkit/source (CMakeLists.txt, tools/packaging/pack_archive.py)
 src/wolvenkit/packed/
+
+# this machine's editor setup and paths, never tracked (mod_standard.md section 3)
+.vscode/
+src/redscript/.vscode/
+src/red4ext/.vscode/
+*.code-workspace
+compile_commands.json
+tools/common/paths.local.json
+.claude/

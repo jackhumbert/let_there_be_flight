@@ -25,6 +25,9 @@ jobs:
       with:
         arch: amd64
 
+    - name: The repo stands alone (no private tooling, sessions or machine paths)
+      run: python tools/maintenance/check_public.py
+
     - name: Fetch the Oodle dll
       if: env.CI_ASSETS_TOKEN != ''
       uses: actions/checkout@v4

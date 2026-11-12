@@ -31,7 +31,6 @@ find_program(REDSCRIPT_CLI_EXE NAMES redscript-cli.exe PATHS "${MOD_TOOLS_DIR}" 
 find_program(CYBERPUNK_2077_EXE NAMES Cyberpunk2077.exe PATHS "${CYBERPUNK_2077_GAME_DIR}/bin/x64" CACHE DOC "Cyberpunk2077.exe Executable File")
 
 set(MOD_GAME_DIR_FMOD_FOLDER "${MOD_GAME_DIR}/red4ext/plugins/${MOD_SLUG}")
-set(ZOLTAN_CLANG_EXE "C:/Users/Jack/Documents/cyberpunk/zoltan/target/release/zoltan-clang.exe")
 
 # Sound files LTBF plays itself on FMOD Core channels (Audio/Samples, docs/design/audio-native.md A.3)
 
@@ -89,7 +88,7 @@ configure_mod_file(src/navigation/helipads.tsv red4ext/plugins/${MOD_SLUG}/helip
 # Openings for the Autopilot's free roam to fly through, from the nav map's doorways (tools/navmap_bake/gates.py, in git).
 configure_mod_file(src/navigation/gates.tsv red4ext/plugins/${MOD_SLUG}/gates.tsv)
 # Invisible vehicle blockers the plugin moves out of the world as sectors load (tools/world/blockers.py export).
-# Without the file the hook in Hooks/StreamingSector_OnPostLoad.cpp does nothing (A/B in docs/archive/autodrive-flight-plan.md).
+# Without the file the hook in Hooks/StreamingSector_OnPostLoad.cpp does nothing (docs/design/city-collision.md).
 configure_mod_file(src/navigation/blockers.txt red4ext/plugins/${MOD_SLUG}/blockers.txt)
 configure_mod_file(src/navigation/hidden_nodes.txt red4ext/plugins/${MOD_SLUG}/hidden_nodes.txt)
 
@@ -104,11 +103,10 @@ endif()
 set(MOD_NATIVE_TWEAKS ON)
 set(MOD_YAML_TWEAKS ON)
 configure_tweaks(src/tweaks)
-# Tweaks always go through TweakXL: the game's built-in TweakDB loader (2.5+) crashes on new typed flats
-# (docs/history.md, "tweaks_to_json.py removed").
+# Tweaks always go through TweakXL: the game's built-in TweakDB loader (2.5+) crashes on new typed flats.
 # The archive is not in git: it is packed from src/wolvenkit/source at build time (tools/packaging/pack_archive.py) with a
 # WolvenKit CLI and the game's Oodle dll (oo2ext_7_win64.dll: not redistributable, so CI gets it from a private repo,
-# .github/workflows). It is written to src/wolvenkit/packed (gitignored), where game.py --archive-only finds it.
+# .github/workflows). It is written to src/wolvenkit/packed (gitignored), where an archive-only install finds it.
 # With neither, an archive already there is shipped; with none at all the build has no archive (a warning).
 set(LTBF_WOLVENKIT_CLI "$ENV{WOLVENKIT_CLI}" CACHE FILEPATH "WolvenKit.CLI.exe to pack the archive with (oo2ext_7_win64.dll next to it)")
 set(LTBF_OODLE_DLL "$ENV{LTBF_OODLE_DLL}" CACHE FILEPATH "oo2ext_7_win64.dll to pack the archive with (copied next to the CLI)")
@@ -238,7 +236,7 @@ target_include_directories(flightsim PRIVATE src/red4ext)
 target_compile_features(flightsim PRIVATE cxx_std_20)
 # the game's own PhysX for flightsim --physx-joint (tools/flightsim/PhysXWorld.hpp): NVIDIA's PhysX 3.4 headers, the
 # game's DLLs loaded at run time from its bin/x64
-set(LTBF_PHYSX34 "D:/cp2077_work/tools/physx34" CACHE PATH "PhysX-3.4 checkout (its PhysX_3.4/Include and PxShared/include)")
+set(LTBF_PHYSX34 "$ENV{LTBF_PHYSX34}" CACHE PATH "PhysX-3.4 checkout (its PhysX_3.4/Include and PxShared/include)")
 if(EXISTS "${LTBF_PHYSX34}/PhysX_3.4/Include/PxPhysicsAPI.h")
   target_sources(flightsim PRIVATE tools/flightsim/PhysXWorld.cpp tools/flightsim/PhysXCheck.cpp)
   target_include_directories(flightsim PRIVATE "${LTBF_PHYSX34}/PhysX_3.4/Include" "${LTBF_PHYSX34}/PxShared/include")
