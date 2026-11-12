@@ -58,18 +58,11 @@ REGISTER_FLIGHT_HOOK_HASH(char __fastcall, 2531201123, FPPCameraComponent_Rotate
 
   auto og = FPPCameraComponent_Rotate_Original(fpp, deltaTime, deltaYaw, deltaPitch, deltaYawExternal, deltaPitchExternal, a7);
 
-  if (lockCamera) {
-    // fpp->animFeature->additiveCameraMovementsWeight = 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone");
-    fpp->animFeature->vehicleProceduralCameraWeight = 1.0 - FlightSettings::GetFloatN("lockFPPCameraForDrone");
-    // fpp->animFeature->vehicleOffsetWeight = 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone");
-    // fpp->animFeature->gameplayCameraPoseWeight = 1.0 - FlightSettings::GetFloat("lockFPPCameraForDrone");
-    // fpp->pitchOffset = 0.0;
-    // fpp->yawOffset = 0.0;
-    auto vehicle = *(RED4ext::vehicle::BaseObject **)&fpp->entity;
-    // if (vehicle->physics) {
-    //   vehicle->physics->customTiltTarget = 0.0;
-    // }
-
+  // The vehicle procedural camera leans V's head with the car's acceleration. Flight corrects
+  // thrust every frame, so at full weight the head rocks back and forth and the view seems to zoom
+  // in and out (seen in Hover and Fly; Drone was already damped). Damp it in every flight mode.
+  if (fc->active) {
+    fpp->animFeature->vehicleProceduralCameraWeight = 1.0 - FlightSettings::GetFloatN("lockFPPCameraInFlight");
   } else {
     fpp->animFeature->vehicleProceduralCameraWeight = 1.0;
   }

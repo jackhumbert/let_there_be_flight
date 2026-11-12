@@ -232,7 +232,7 @@ public native class FlightSettings extends IScriptable {
     FlightSettings.SetFloat("hoverClamp", 10.0);
     // FlightSettings.SetFloat("hoverModeLiftFactor", 8.0);
     FlightSettings.SetFloat("isFlightUIActive", 1.0);
-    FlightSettings.SetFloat("lockFPPCameraForDrone", 1.0);
+    FlightSettings.SetFloat("lockFPPCameraInFlight", 1.0);
     FlightSettings.SetFloat("lookAheadMax", 10.0);
     FlightSettings.SetFloat("lookAheadMin", 1.0);
     FlightSettings.SetFloat("hoverModeMaxHoverHeight", 7.0);
