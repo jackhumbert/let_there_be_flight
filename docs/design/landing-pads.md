@@ -2,7 +2,6 @@
 
 The city's AV landing pads, found in the world sectors at bake time, shipped as a small list, used
 as Autopilot landing spots, world-map pins (discovered by flying near them) and places with supplies.
-The full story with probes and measurements: `docs/archive/helipads.md`.
 
 ## Data and code
 
@@ -27,11 +26,10 @@ The full story with probes and measurements: `docs/archive/helipads.md`.
   `JournalNotificationQueue` and pushes a `FlightLandingPadToastData` onto it;
   `NewLocationNotification` sets the icon's part name only, so our atlas and the header are set
   one tick after the widget initializes (the compiler will not wrap `SetNotificationData`).
-  `LtbfBridge.HelipadToast` shows one for tests, `../cp2077_tools/mods/let_there_be_flight/helipad_toast.py` records it.
 - The Autopilot lands on a pad when the destination is one, or within `padRange` of one, on the
   pad's heading.
-- A voice line on discovery or touchdown (Johnny's, or a custom recording): researched in
-  `research/pad-vo-research.md` (how the game triggers character lines, options A to D); no option picked yet.
+- A voice line on discovery or touchdown (Johnny's, or a custom recording): how the game triggers
+  character lines is researched (four options); no option picked yet.
 
 ## Visual-only pads
 

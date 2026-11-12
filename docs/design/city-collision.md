@@ -1,6 +1,6 @@
 # City collision
 
-Jack's goal: the city should be flyable as it looks. Two sides to it:
+The goal: the city should be flyable as it looks. Two sides to it:
 
 - Hidden colliders (collision with nothing visible) are removed. `tools/world/blockers.py` finds
   invisible vehicle blockers in the streaming sectors; the list ships as `src/navigation/blockers.txt`
@@ -37,9 +37,8 @@ next to it goes in too, so a check is tested both ways.
 1. `tools/world/collision_at.py --case <name> [--actors]`: the collision the bake read in the box,
    by sector and preset, and with `--actors` the collision node, group (nodeData index for
    ArchiveXL), actor and stored position behind it. Nothing listed means the bake made it.
-2. `tools/ingame/check_collider.py --case <name>` (inside `game.py run`): V is put down near the
-   box and the rays are cast against the game's collision (`LtbfBridge.Ray`), once a ray down from
-   V has hit (collision streamed in) and V stands next to the box.
+2. In game: V is put down near the box and the rays are cast against the game's collision, once
+   a ray down from V has hit (collision streamed in) and V stands next to the box.
 3. What it is: a blocker preset that should have been moved (`blockers.py`), real collision with
    nothing drawn (not caught by the scan yet: wanted, a check of collision shapes against the
    visible meshes), or a bake mistake (the game's rays are clear).

@@ -23,7 +23,7 @@ The limits are functions of it: `Drag`, `DroneAccel`, `TopSpeed`, `Lateral`, `La
   surge the car gets speeding up in level flight near top speed; `TopSpeed` and `Accel` use it. In
   between (30 to 70 m/s) the body leans further into a hard push and the car gets more (about 20
   m/s2), not modelled: the plan errs on the safe side there. Refit after a change to the flight
-  physics or the follower (`docs/history.md`).
+  physics or the follower.
 - `LateralAt(vertical)`: the turn left where the path also needs `vertical` m/s2 upwards (gravity
   plus the bend's own, less over a crest). Drone style the body's tilt turns the car only through the
   lift, so the tilt's part scales with what the lift has left; pushing over a crest only sway and the
@@ -46,11 +46,11 @@ The limits are functions of it: `Drag`, `DroneAccel`, `TopSpeed`, `Lateral`, `La
 | tune.py, bench.py, dips.py | `tools/navplan/vehicles.json` names cars and passes them to navplan; dips.py reads the profile CSV and has no physics of its own |
 
 The Autopilot flies the trajectory's speeds; it has no speed profile of its own (the redscript one
-was removed, `docs/history.md`).
+was removed).
 
 ## Adding a car
 
-1. Mount it in game and call `LtbfBridge.VehicleModel` (through `bridge.py call`): it prints the
+1. Mount it in game and read its vehicle model (`FlightModeAutopilot.Vehicle()`, a test read-out): the
    car's line as the Autopilot plans with it, in `name=value` form.
 2. Add an entry to `tools/navplan/vehicles.json` with the fields that differ from the defaults.
 3. Plan with it: `NAVPLAN_VEHICLE` from that entry (tune.py and bench.py take `--vehicle <name>`).

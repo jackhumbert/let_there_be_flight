@@ -58,7 +58,7 @@ contacts and material friction in one place.
 - The chassis-contact workarounds in the same file only run when the mode is off.
 - The RigidBody's velocity is what the scripts read (`GetLinearVelocity`), and the fixed steps still add gravity
   and the wheel solve to it: `IntegrateMotion` puts PhysX's velocities back after each step (until 2026-11-06 the
-  vertical speed read a step of gravity low and the modes' damping lifted the car; `docs/history.md`).
+  vertical speed read a step of gravity low and the modes' damping lifted the car).
 - The wheels' suspension runs but moves nothing. What touches the ground is the chassis collider and LTBF's thruster
   spheres (0.4 m, at the thruster slots where the wheels were, `FlightConfiguration::AddColliders`), which hold a car
   at rest about where its tyres would.
@@ -68,4 +68,4 @@ contacts and material friction in one place.
   Drone's skid holds the pods' bottom 3 cm over the road at each thruster from its own ray (`Flight::DroneSkidPoints`),
   as the game's wheels are queries under springs, not shapes on the road. Capping the chassis body's depenetration
   speed (`maxDepenetration`) and taking the thruster colliders' contacts away (`thrusterContacts`) are there, off by
-  default. flightsim flies it on the game's own PhysX (`flightsim --physx`; `docs/history.md`).
+  default. flightsim flies it on the game's own PhysX (`flightsim --physx`).

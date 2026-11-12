@@ -72,8 +72,8 @@ event's curves, one home), `Synth` (one thruster), `Channels` (the plugin's FMOD
 ## Sounds: what the voices start from
 
 `Tuning::sound` (`Sources.hpp`) picks each axis voice's source; the curves, EQs and gains after it
-are the same for all. Live: `LtbfBridge.EngineSound("drone" | "bullroarer" | "fan")`; offline:
-`engine_synth ... --sound name`. The research behind them: `docs/research/thruster-sound-sources.md`.
+are the same for all. Live: a test switch (`drone`, `bullroarer` or `fan`); offline:
+`engine_synth ... --sound name`.
 
 - `drone` (default): the old loops, two detuned saws and a sine (below).
 - `bullroarer`: a harmonic series (-10, -10, -12, -15, -19, -23, -25 dB for k = 2..8, as measured)
@@ -90,7 +90,7 @@ Offline cost on the 10-31 flight: drone 1.0%, bullroarer 1.5%, fan 2.2% of a cor
 ## Switches: which FMOD effects to keep
 
 The event's effects were made by hand to sound like a space; with the acoustics doing that from the
-city, some work against it. `Character` (Synth.hpp) keeps or drops each; all off by default ("clean", Jack's pick by ear), all on is the event:
+city, some work against it. `Character` (Synth.hpp) keeps or drops each; all off by default ("clean", picked by ear), all on is the event:
 
 - `cone`: the Cone return, up to +7 dB when a thruster faces the listener, from the camera's angle.
 - `distortion`: FMOD's three distortion stages. Off, each keeps its level behaviour as a gain following
@@ -103,11 +103,10 @@ city, some work against it. `Character` (Synth.hpp) keeps or drops each; all off
 And on the echoes, `Tuning::airAbsorption` (Reflections): each echo low-passed by its path (about
 16 kHz near, 8 kHz by 60 m, 4 kHz by 180 m), the reverb's lines at 5 kHz.
 
-In game, at once: `LtbfBridge.EngineCharacter("clean")`, `("fmod")` or `("darkness=0,grit=0")`, and
-`LtbfBridge.AcousticsAir(true)`. These and the other audio setters (`Acoustics`,
-`AcousticsLive`, `AcousticsTest`, `AcousticsStems`) answer with what they set and then the audio as the
-plugin has it (`LtbfBridge.AudioStatus`: who plays the thrusters, the character, echoes, air, test sound,
-ray source, stems), or a line starting `error:` when the input was wrong and nothing changed. Offline, for any recorded run with stems: `tools/acoustics/
+In game the character (`clean`, `fmod` or a list such as `darkness=0,grit=0`) and the air absorption switch at
+once, through test switches that answer with what they set and then the audio as the plugin has it (who plays the
+thrusters, the character, echoes, air, test sound, ray source, stems), or a line starting `error:` when the input
+was wrong and nothing changed. Offline, for any recorded run with stems: `tools/acoustics/
 engine_variants.py <run dir>` renders each variant from the run's parameter log with the echoes along its
 own path (the car's place and axes from the four thrusters' logged positions, the nav map probed 20
 times a second), at the event's loudness, as tracks of the run's video with a 10 s tour first.
@@ -121,7 +120,6 @@ nothing there (the camera behind and above, the thrusters never facing it).
 
 - The stems' `<base>_params.csv`: each thruster's parameters per frame (wall clock, id, start pitch,
   volume, position, every `FlightAudioUpdate` field, the cone angle).
-- `../cp2077_tools/mods/let_there_be_flight/axis_sweep.py`: each control held in turn, recorded with stems.
 - `tools/acoustics/engine_synth.cpp` (target `engine_synth`): a params log through the synth on the
   stems' timeline, `--voices` for each voice, `--tune` to try levels, `--character` for the switches,
   `--acoustics navmap.bin [--air]` for the echoes along the run's path.
@@ -137,4 +135,4 @@ On the FMOD axis sweep (the inputs it was fitted on): every control held within 
 event, brightness close (centroids 260..1440 Hz, within about 100 Hz on most), the same lowest
 partial, loudness r 0.89. On a free roam it was not fitted on: 2.4 dB quieter, r 0.86. Left: at speed
 with nothing held FMOD is about 3 dB louder and brighter; pitch, roll and yaw centroids run low.
-Jack approved it by ear in game and it became the only thruster sound; tuning by ear comes later.
+It was approved by ear in game and became the only thruster sound; tuning by ear comes later.
