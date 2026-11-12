@@ -12,6 +12,8 @@ ARCHIVES = os.path.join(GAME, "archive", "pc")
 LTBF_LOG = os.path.join(GAME, "red4ext", "logs", "let_there_be_flight.log")
 # WolvenKit.Console 10 (reads 2.5 sectors; pack_archive.py has its own 9.0.1 default)
 WOLVENKIT = os.environ.get("WOLVENKIT_CLI10", r"D:\cp2077_work\build\tools\wolvenkit-10.0.0-beta.1\WolvenKit.CLI.exe")
+# WolvenKit.Console 9.0.1, the one pack_archive.py packs the archive with (its --cli); the game's Oodle dll beside it
+WOLVENKIT_PACK = os.environ.get("WOLVENKIT_CLI", r"D:\cp2077_work\build\tools\wolvenkit-9.0.1\WolvenKit.CLI.exe")
 # work folder for bakes, caches and the hangar build (not in the repo)
 WORK = os.environ.get("LTBF_WORK", r"D:\cp2077_work\build")
 # bulky scratch output (benchmark runs and the like), off C:; delete it when the task is done
