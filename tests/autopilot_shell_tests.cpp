@@ -3,8 +3,9 @@
 //   - the Mod Settings keys: the class, names, types, categories, localization keys, defaults and ranges;
 //   - the developer overrides of the tuning by name (autopilot.<name>);
 //   - the telemetry CSV's header and row width;
-//   - every member of FlightModeAutopilot that script in this repo and in cp2077_tools' LTBF helpers uses is declared,
-//     and every native field and function declared is registered by the C++.
+//   - every member of FlightModeAutopilot that script in this repo uses is declared (and in the script folders listed
+//     in LTBF_EXTRA_SCRIPT_DIRS, for scripts kept elsewhere), and every native field and function declared is
+//     registered by the C++.
 #include "check.hpp"
 
 #include "Flight/DeveloperSettings.hpp"
@@ -13,6 +14,7 @@
 #include "Navigation/AutopilotTelemetry.hpp"
 
 #include <algorithm>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <regex>
@@ -158,7 +160,7 @@ TEST(autopilot_shell_developer_overrides) {
 }
 
 // The header as FlightModeAutopilot.WriteTelemetry wrote it (c3e24ab), parsed by name by tools/telemetry,
-// tools/navplan/plot.py, tools/acoustics/flyby.py and cp2077_tools' surge_analyse.py and sweep_follower.py.
+// tools/navplan/plot.py, tools/acoustics/flyby.py and other readers of the telemetry file.
 TEST(autopilot_shell_telemetry_header) {
   const std::string script =
       std::string("t,x,y,z,vx,vy,vz,speed,speed2d,target,rate,cmd,off,following,maneuver,on_line,segment,") +
@@ -219,7 +221,7 @@ std::set<std::string> Declared() {
 
 // The members script reaches on a FlightModeAutopilot, each "file: name": within each function, the variables it
 // declares with that type (`x: ref<FlightModeAutopilot>`, `let x = ... as FlightModeAutopilot`, `let x =
-// <helper>.Autopilot()`, as LtbfBridge and LtbfDraw find the mode) and the statics (FlightModeAutopilot.<name>).
+// <helper>.Autopilot()`, as scripts outside the mod find it) and the statics (FlightModeAutopilot.<name>).
 std::set<std::string> Used(const std::filesystem::path &aFile) {
   std::set<std::string> out;
   const std::string text = Read(aFile);
@@ -257,9 +259,17 @@ TEST(autopilot_shell_script_uses_declared) {
   const auto declared = Declared();
   CHECK(declared.count("status") && declared.count("FindGroundSpot") && declared.count("component"));
   std::vector<std::filesystem::path> dirs{std::filesystem::path(LTBF_SOURCE_DIR) / "src" / "redscript"};
-  const auto tools = std::filesystem::path(LTBF_SOURCE_DIR) / ".." / "cp2077_tools" / "mods" / "let_there_be_flight";
-  if (std::filesystem::exists(tools)) {
-    dirs.push_back(tools);
+  // more script folders that call FlightModeAutopilot, ';'-separated (another mod's scripts, test helpers)
+  if (const char *extra = std::getenv("LTBF_EXTRA_SCRIPT_DIRS")) {
+    std::stringstream list(extra);
+    for (std::string dir; std::getline(list, dir, ';');) {
+      if (!dir.empty() && std::filesystem::exists(dir)) {
+        dirs.push_back(dir);
+      } else if (!dir.empty()) {
+        std::printf("  LTBF_EXTRA_SCRIPT_DIRS: %s does not exist\n", dir.c_str());
+        CHECK(false);
+      }
+    }
   }
   size_t uses = 0;
   for (const auto &dir : dirs) {

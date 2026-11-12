@@ -1,7 +1,7 @@
 #pragma once
 
 // What each axis voice of the synth starts from before its EQs and gains (the old event's loops were a
-// tuned drone; docs/research/thruster-sound-sources.md): the drone stays in Synth, the others are here.
+// tuned drone): the drone stays in Synth, the others are here.
 //
 // Bullroarer: a slat spinning on a cord, from measured recordings: a harmonic series twice the slat's
 // spin, swelling and wobbling (Doppler) at the orbit rate, gliding down as the cord twists until the slat

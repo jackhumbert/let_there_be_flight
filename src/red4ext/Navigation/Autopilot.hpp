@@ -164,9 +164,9 @@ public:
   // the Autopilot's own keep-clear is not touched.
   bool FindGroundSpot(const Vec3 &aTarget, const Vec3 &aKeepClear, float aKeepRadius, Vec3 &aSpot) const;
   // The route's trajectory built again for this car (the script's public BuildTrajectory, for
-  // LtbfBridge.DroneTuning after it changes the tuning).
+  // test helpers, after the tuning changes).
   void BuildTrajectory(const AutopilotInput &aIn);
-  // The car's limits filled again from aIn (the script's public RefreshVehicle, for LtbfBridge's readers of them).
+  // The car's limits filled again from aIn (the script's public RefreshVehicle, for test readers of them).
   void RefreshVehicle(const AutopilotInput &aIn);
   // The events gathered since the last Step, cleared (for a method called between frames).
   AutopilotEvents TakeEvents();

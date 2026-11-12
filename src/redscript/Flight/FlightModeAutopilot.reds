@@ -3,7 +3,7 @@
 // or a summon's own goal), descends and lands, or flies free roam legs with nothing tracked. This file declares its
 // fields for script and holds the game glue the C++ calls by name: the tracked destination, vanilla autodrive's facts
 // and HUD panel, the cinematic camera, the toast and FlightController. The script mode it replaced is in git at
-// c3e24ab (docs/history.md).
+// c3e24ab.
 //
 // A mod extends it by subclassing it and overriding FlightMode's hooks (OnActivate, OnUpdate, ...).
 public native class FlightModeAutopilot extends FlightMode {
@@ -250,7 +250,7 @@ public native class FlightModeAutopilot extends FlightMode {
   public native func PlannedSpeed(s: Float) -> Float;
   // A tap of the autodrive key while engaged (FlightController): free roam to the tracked destination, or back.
   public native func ToggleFreeRoam() -> Void;
-  // The route's trajectory built again for the tuning as it is now (LtbfBridge after changing it).
+  // The route's trajectory built again for the tuning as it is now (for test helpers, after changing it).
   public native func BuildTrajectory() -> Void;
   // The car's limits filled again, and their model (FlightVehicleModel), as the Autopilot plans with them.
   public native func RefreshVehicle() -> Void;

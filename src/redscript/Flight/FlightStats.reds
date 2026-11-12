@@ -118,7 +118,7 @@ public native class FlightStats extends IScriptable {
     this.d_rollDeg = Vector4.GetAngleDegAroundAxis(this.d_localUp, FlightUtils.Up(), FlightUtils.Forward());
   }
 
-  // what the script's own position provider gives, to compare with d_position (LtbfBridge.StatsDiff)
+  // what the script's own position provider gives, to compare with d_position (for tests)
   public func ScriptPosition() -> Vector4 {
     let p: Vector4;
     this.ipp.CalculatePosition(p);

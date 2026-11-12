@@ -421,7 +421,7 @@ public native class FlightComponent extends GameComponent {
       this.sys.ctlr.ResetInputs();
       this.isPlayerMounted = true;
       this.SetupVehicleTPPBBListener();
-      // timing marker, see docs/research/mount-stutter-analysis.md
+      // timing marker for the mount hitch
       FlightLog.Info("[FlightComponent] OnMountingEvent done");
       // this.uiControl = FlightControllerUI.Create(this.ui_info.GetGameController(), this.ui_info.GetGameController().GetRootCompoundWidget());
       // this.uiControl.Setup(this.stats);

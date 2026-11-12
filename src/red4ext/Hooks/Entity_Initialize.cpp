@@ -46,7 +46,7 @@ static bool IsFlightHudAttachedToPlayer(RED4ext::CRTTISystem *rtti) {
 // mounted, and inkHUDLayer::SpawnFrom despawns and respawns the whole HUD hierarchy
 // whenever that resource differs from the one it is showing. A FlightHUD component on the
 // vehicle therefore rebuilds every HUD entry on mount and again on unmount, which is the
-// enter/exit hitch and the "HUD reset" reports (docs/research/mount-stutter-analysis.md).
+// enter/exit hitch and the "HUD reset" reports.
 //
 // hud_flight.inkhud is a copy of the base game's hud entries plus one "hud flight" entry,
 // so pointing the player's own WidgetHudComponent at it gives the flight HUD a permanent
@@ -279,7 +279,7 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_Initialize, EntityExt *entity
     // Fallback path (Mod Settings "HUD attached to player" off): the FlightHUD
     // WidgetHudComponent rides on the vehicle, which makes the engine swap the whole HUD
     // to hud_flight.inkhud on every mount and back on every unmount. See
-    // docs/research/mount-stutter-analysis.md and AttachFlightHudToPlayer above. Skip it entirely
+    // AttachFlightHudToPlayer above. Skip it entirely
     // when the flight UI is disabled in Mod Settings; the controller would only hide itself.
     if (!IsFlightHudEnabled(rtti)) {
       LTBF_WARN_ONCE("[Entity_Initialize] flight UI disabled in Mod Settings; FlightHUD component not added to vehicles");

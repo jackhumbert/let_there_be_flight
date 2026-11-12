@@ -8,7 +8,7 @@
 // Setting `flightDisabled = true` on a vehicle record keeps Let There Be Flight from
 // attaching anything to that vehicle (no flight component, no thruster meshes, no extra
 // slots or colliders, no flight HUD). Use it for vehicles that crash on enter or when a
-// CrystalCoat color is applied (see docs/research/crystalcoat-crash-analysis.md).
+// CrystalCoat color is applied.
 //
 // Nothing is disabled by default. To disable a vehicle without editing this file, drop
 // a yaml into r6/tweaks/, e.g. r6/tweaks/ltbf_blacklist.yaml:

@@ -1,4 +1,4 @@
-# Landing pad map pins (src/redscript/Navigation/FlightHelipads.reds, docs/archive/helipads.md).
+# Landing pad map pins (src/redscript/Navigation/FlightHelipads.reds, docs/design/landing-pads.md).
 
 # The pins' mappin type (MappinData.mappinType). The drop point type the pins started from is
 # world-map only (showOnMinimap / showInWorld false), so the minimap and in-world containers never

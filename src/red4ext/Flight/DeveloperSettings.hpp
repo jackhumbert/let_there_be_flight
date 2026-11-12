@@ -1,8 +1,8 @@
 #pragma once
 
-// Settings only Jack changes, never shown in Mod Settings (docs/design/hover-fly-native.md, decision 2): the code
+// Developer settings, never shown in Mod Settings (docs/design/hover-fly-native.md, decision 2): the code
 // defaults below, overridden at plugin load by an optional developer.ini in the plugin folder (releases never ship
-// one) and live through FlightDeveloperSettings.Set (bridge.py call FlightDeveloperSettings.Set <name> <value>).
+// one) and live through FlightDeveloperSettings.Set (FlightDeveloperSettings.Set(name, value) at run time).
 
 #include "Flight/Force.hpp"
 
@@ -14,7 +14,7 @@
 namespace Flight {
 
 struct DeveloperSettings {
-  // The car's character (docs/research/2026-11-04-aero-drag.md). Off by default: every car flies as today.
+  // The car's character (docs/design/autopilot.md, "Character"). Off by default: every car flies as today.
   // shapeDrag: the air drag from the chassis collision shape on each body axis (Flight::ShapeDragAccel, the car's
   // dragArea) in place of airResistanceFactor's along the velocity; dragK is the fleet-wide factor on it.
   bool shapeDrag = false;
@@ -32,7 +32,7 @@ struct DeveloperSettings {
   // LTBF's sound through the game's Wwise (Audio/Out, docs/design/wwise-audio.md), the default since step 7; false for
   // its own FMOD as before. Read once, when the plugin loads (developer.ini). FMOD plays when Wwise cannot start.
   bool wwiseAudio = true;
-  // Ground contacts in flight (docs/history.md, 2026-11-06): where two road meshes meet flush PhysX pushes a shape
+  // Ground contacts in flight: where two road meshes meet flush PhysX pushes a shape
   // sliding over the joint and throws the car. maxDepenetration: m/s the chassis body is pushed out of the ground at
   // most while flight owns it (PxRigidBody::setMaxDepenetrationVelocity; 0 leaves PhysX's own, unbounded; off: with
   // it on, one car placed on a road did not stay on it). droneSkid: m Drone holds the car's lowest point off the

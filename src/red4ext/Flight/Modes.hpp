@@ -57,7 +57,7 @@ ModeOutput Drone(const StatsState &s, const StatsStatic &st, const Controls &c, 
 
 // Drone's skid: just over the ground, a soft spring holds the chassis clearance m off it, so a car let down onto a
 // road does not slide on it. Where two road meshes meet flush PhysX still pushes at the joint, and a chassis dragged
-// over joints was thrown up 0.1 to 0.3 m each 10 m (docs/history.md, 2026-11-06). It fades in over band m above the
+// over joints was thrown up 0.1 to 0.3 m each 10 m. It fades in over band m above the
 // clearance, only lifts (gravity fed forward, so it holds at the clearance), gives way as lift down is held (the car
 // lands), and does nothing past minUp of tilt (body up's world z) or at a clearance of 0.
 // turn: the share of the points' moment DroneSkidPoints turns the car with. The springs at full stiffness turn it at

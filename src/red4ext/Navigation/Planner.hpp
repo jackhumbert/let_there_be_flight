@@ -1,6 +1,6 @@
 #pragma once
 
-// Route planning over the NavMap (docs/archive/autodrive-flight-plan.md, docs/research/autopilot-research.md).
+// Route planning over the NavMap (docs/design/planner.md).
 //
 // 1. Direct (optional): climb to a cruise altitude above everything along the straight line,
 //    fly straight, descend. Used when every leg is free.
@@ -184,7 +184,7 @@ PlanResult PlanWithRetries(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const Pl
 // PlanWithRetries, then the line's slots whose room would cost the car too much speed
 // (Trajectory.hpp's room caps, over slotDetour*): the route searched again round them (Avoid), and
 // round any the new line finds, up to three searches; kept when its line has none left, takes at most
-// 20% longer and loses less speed in dips (DipLoss); otherwise the first line, flown slower there. Jack, 2026-10-30: a small slowdown is flown, a large one routed round.
+// 20% longer and loses less speed in dips (DipLoss); otherwise the first line, flown slower there. A small slowdown is flown, a large one routed round.
 PlanResult PlanRace(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &aParams,
                     const std::function<void(const PlanResult &)> &aAttempt = {});
 

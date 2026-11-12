@@ -37,7 +37,7 @@ inline constexpr int kSlots = 8;
 // the echo voices: floor, ceiling, left, right, scatter right, scatter left, and the four quarters
 inline constexpr int kEchoes = 6 + kQuarters;
 // the channels' own gain, the same as the thrusters' (Channels), so the echoes sit against the dry
-// sound as Reflections sets them (docs/history.md)
+// sound as Reflections sets them
 inline constexpr float kChannelGainDb = 4.7f;
 
 // Creates the bed and the echo voices in the Engine bus; once, later calls do nothing. False if the backend refused

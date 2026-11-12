@@ -15,7 +15,7 @@ std::atomic<uint64_t> flyingVehicle{0};
 // emitter) carries a road surface layer that follows veh_speed and the last surface the wheels
 // touched, so in the air it played a dirt or gravel rush that grew with speed. veh_speed is held at
 // 0 on the general emitter while flying; the engine and wheel emitters keep it, and LTBF's own wind
-// (FMOD) takes over. Found by muting in flight (docs/history.md 2026-10-30).
+// (FMOD) takes over. Found by muting in flight.
 REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1874005891, SetSoundParameter, uint64_t aEntity, RED4ext::CName aParam, float aValue,
                           RED4ext::CName aEmitter, float aInterp) {
   SetSoundParameter_Original(aEntity, aParam, aValue, aEmitter, aInterp);

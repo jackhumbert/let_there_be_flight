@@ -18,7 +18,7 @@
 #       - !remove FlightModeStandard
 #       - !prepend-once GentleStandard
 #
-# (checked in game with !append-once: cp2077_tools/mods/let_there_be_flight/native_mode_probe.yaml)
+# (!append-once checked in game)
 FlightModes.classes:
   $type: array:CName
   $value:

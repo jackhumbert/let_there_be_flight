@@ -7,7 +7,7 @@ namespace Samples {
 namespace {
 
 // The levels and pitches the old FMOD Studio events played these sounds at (their project is in git
-// history, docs/history.md), curves taken as linear. No reverb or EQ: the echoes make the space.
+// history), curves taken as linear. No reverb or EQ: the echoes make the space.
 constexpr Event kEvents[] = {
     // 62e81e8b..., group Engine {5c36583b...}
     {"vehicle3_on", "vehicle3_startup.wav", Bus::Engine, false, 0.0f, {{{0.0f, -4.5f}, {0.1f, 0.0f}}}, 0.055f, 1.5f,

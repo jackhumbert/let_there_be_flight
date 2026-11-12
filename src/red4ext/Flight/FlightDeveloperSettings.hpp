@@ -1,6 +1,6 @@
 #pragma once
 
-// The developer settings (Flight/DeveloperSettings.hpp) for scripts and the bridge: bridge.py calls Set.
+// The developer settings (Flight/DeveloperSettings.hpp) for scripts and tests: Set changes one at run time.
 // LoadFile reads developer.ini from the plugin folder at plugin load.
 
 #include <RED4ext/Scripting/IScriptable.hpp>

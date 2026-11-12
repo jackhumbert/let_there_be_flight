@@ -45,7 +45,7 @@ TEST(scrape_surfaces) {
   CHECK(SurfaceOf("character_flesh.physmat") == Surface::None);
   CHECK(SurfaceOf("") == Surface::None);
   CHECK(SurfaceOf("something_new.physmat") == Surface::Hard);
-  // seen in the city's collision (cp2077_tools surface_survey.py, 2026-11-07)
+  // seen in the city's collision
   CHECK(SurfaceOf("plexiglass.physmat") == Surface::Glass);
   CHECK(SurfaceOf("neon.physmat") == Surface::Glass);
   CHECK(SurfaceOf("fabrics.physmat") == Surface::Soft);

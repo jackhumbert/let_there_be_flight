@@ -53,7 +53,7 @@ struct ForceOutput {
 // angular velocity in a frame. A negative gain is not capped.
 float CapDamping(float damp, float angularVelocity, float tensor, float inertia, float mass, const ForceParams &p);
 
-// Air drag from the vehicle's shape (docs/research/2026-11-04-aero-drag.md; not used by the game yet): on each body
+// Air drag from the vehicle's shape (docs/design/autopilot.md, "Character"; not used by the game yet): on each body
 // axis i, -dragArea_i |v| v_i / mass, an acceleration in the body frame. dragArea is 0.5 rho K CdA per axis (N per
 // (m/s)^2): the chassis collision shape's area across that axis times a drag coefficient for the body class, and K
 // one fleet-wide factor (about 4.1 keeps a mid-size car's top speed). Sideways, where the area is 2 to 4 times the

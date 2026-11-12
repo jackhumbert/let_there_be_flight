@@ -3,7 +3,7 @@
 // The Autopilot as a C++ flight mode (docs/design/native-ports.md, M6 step 6; docs/design/autopilot.md): a native
 // FlightMode around the pure Navigation::Autopilot, under the class name the script mode had, so every reader keeps
 // working (FlightController, FlightSummonSystem, AutoDriveController, VehicleFlight, the HUD, Audio/Inputs/Gather,
-// cp2077_tools' ltbf_bridge and ltbf_draw).
+// the test helpers).
 //
 // Each frame (FlightMode's NativeUpdate) it gathers what Step reads, as tools/flightsim/Trip.cpp does offline: the
 // component's stats (FlightStats::Of), its input fields as FlightComponent wrote them this frame (before anything here
@@ -20,7 +20,7 @@
 //
 // Fields script reads keep the script's names and types. The tuning (AutopilotParams, every field by its name) and the
 // state's numbers and flags are RTTI properties straight over the C++ members (DescribeFields), so a write from script
-// (LtbfBridge) reaches the next frame. The Vector4 and String fields are copies: written after each call into the
+// (a test helper) reaches the next frame. The Vector4 and String fields are copies: written after each call into the
 // Autopilot, and the three a summon writes (externalDestination, padLandingOffset, landingKeepClear) read back before
 // the next one when script changed them.
 
@@ -60,9 +60,9 @@ struct FlightModeAutopilot : FlightMode {
   RED4ext::Vector4 GroundSpot(RED4ext::Vector4 aTarget, RED4ext::Vector4 aKeepClear, float aKeepRadius);
   // a tap of the autodrive key while engaged (FlightController.TapModeSwitch)
   void ToggleFreeRoam();
-  // the route's trajectory built again for the tuning as it is now (LtbfBridge after changing it)
+  // the route's trajectory built again for the tuning as it is now (for test helpers, after changing it)
   void BuildTrajectory();
-  // the car's limits filled again, and the model of them Vehicle returns (LtbfBridge)
+  // the car's limits filled again, and the model of them Vehicle returns (for test helpers)
   void RefreshVehicle();
   RED4ext::Handle<FlightVehicleModel> Vehicle();
   // the horizontal unit vector of v, zero if v is vertical (FlightSummonSystem)

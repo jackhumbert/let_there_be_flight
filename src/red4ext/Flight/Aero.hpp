@@ -1,6 +1,6 @@
 #pragma once
 
-// The car's drag area from its chassis collision shape (docs/research/2026-11-04-aero-drag.md), measured when flight
+// The car's drag area from its chassis collision shape (docs/design/autopilot.md, "Character"), measured when flight
 // starts: tools/flightsim/aero.py did the same offline from the .phys files.
 
 #include "Flight/ScriptMath.hpp"

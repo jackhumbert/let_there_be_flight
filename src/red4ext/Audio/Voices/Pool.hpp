@@ -22,7 +22,7 @@ enum class Kind : uint8_t { PlayerThruster, PlayerSample, Wind, PlayerEcho, NpcT
 
 // under Windows Sonic's dynamic object limit
 inline constexpr int kMaxObjects = 16;
-// thruster synth voices that may play at once, about 1% of a core each (docs/history.md, 'Engine synth')
+// thruster synth voices that may play at once, about 1% of a core each
 inline constexpr int kMaxSynth = 16;
 
 struct Budget {

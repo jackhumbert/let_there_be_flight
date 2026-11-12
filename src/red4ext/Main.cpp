@@ -214,7 +214,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
       return false;
     }
 
-    // settings only Jack changes (Flight/DeveloperSettings.hpp); releases ship no developer.ini
+    // developer settings (Flight/DeveloperSettings.hpp); releases ship no developer.ini
     FlightDeveloperSettings::LoadFile(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "developer.ini");
     // the C++ modes' Mod Settings (Flight/Settings.hpp), when Mod Settings is installed
     FlightSettingsLink::Register();

@@ -214,7 +214,7 @@ void BedRender(void *aUser, float *aOut, uint32_t aLength, uint32_t aChannels) {
   }
   // Under Wwise, the Engine group's limiter (FMOD has it on the group): on the sum the thruster and echo voices will
   // play (their gain, FMOD's fold, the bus's volume), its gain on everything they read. Without it the thrusters were
-  // 5 dB over FMOD's in flight (docs/history.md).
+  // 5 dB over FMOD's in flight.
   if (m->wwise) {
     const float gain = 2.0f * std::pow(10.0f, kChannelGainDb / 20.0f) * Out::BusVolume(Buses::Bus::Engine);
     float *bus = m->bus.data(), *limit = m->limit.data();

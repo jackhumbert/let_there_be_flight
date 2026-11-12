@@ -29,7 +29,6 @@
 //    Applying it as an impulse at r with an angular part rocked the vehicle diagonally:
 //    SyncFromPhysX's spin change also contains PushToPhysX's orientation chase, so r is
 //    only good enough as a weight.
-// See docs/research/drone-ground-jitter-analysis.md for the engine call order this relies on.
 
 namespace {
 using RED4ext::Vector3;

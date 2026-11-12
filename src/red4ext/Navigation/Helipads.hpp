@@ -1,7 +1,7 @@
 #pragma once
 
 // Helipads: the AV landing pads found in the world sectors (tools/pads/pads.py,
-// docs/archive/helipads.md), loaded from helipads.tsv in the plugin folder.
+// docs/design/landing-pads.md), loaded from helipads.tsv in the plugin folder.
 //
 // Positions are the deck the car rests on (not the car's centre). Read once at plugin load and
 // read-only afterwards, so queries need no locking.

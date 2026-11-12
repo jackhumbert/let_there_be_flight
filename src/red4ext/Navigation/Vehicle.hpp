@@ -45,7 +45,7 @@ struct VehicleSpec {
   float planDecel = 18.0f;       // m/s2 braking planned at most (racePlanDecel)
   float pushOver = 21.0f;        // m/s2 bending the path downwards, as planned (margin already in: dronePushOver;
                                  // racePushOver 15 plane style)
-  // the car's shape and thrust (docs/research/2026-11-04-aero-drag.md; the game does not pass them yet, and the
+  // the car's shape and thrust (docs/design/autopilot.md, "Character"; the game does not pass them yet, and the
   // defaults keep today's model): the chassis shape's frontal drag area (m2, tools/flightsim/vehicles.tsv cdaY;
   // 0: airResistance's drag) with Flight::kShapeDragK, and the thrusters that scale surge and sway in Effective
   float cdaFront = 0.0f;

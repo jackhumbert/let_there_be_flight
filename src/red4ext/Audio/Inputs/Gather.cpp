@@ -281,8 +281,8 @@ void Component(FlightComponent *c, float deltaTime) {
   if (mounted) {
     if (cinematic || tpp) {
       // third person hears from the camera, as most third-person games do: the player's soundListener stays with V
-      // but turns with the camera, so orbiting it swung the thrusters round a listener sitting among them (Jack,
-      // 2026-11-05). The voices' linear-squared rolloff over 100 m makes the camera's few metres back about 1 dB.
+      // but turns with the camera, so orbiting it swung the thrusters round a listener sitting among them.
+      // The voices' linear-squared rolloff over 100 m makes the camera's few metres back about 1 dB.
       CameraListener();
     }
     const auto carMatrix = WorldMatrix(vehicle->worldTransform);

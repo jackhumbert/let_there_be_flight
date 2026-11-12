@@ -103,7 +103,7 @@ VehicleSpec Spec(const FleetCar &aCar) {
   return s;
 }
 
-// The same with the car's shape drag and thrust at aStrength (docs/research/2026-11-04-aero-drag.md): what the
+// The same with the car's shape drag and thrust at aStrength (docs/design/autopilot.md, "Character"): what the
 // Autopilot would plan with once the game passes them.
 VehicleSpec CharacterSpec(const FleetCar &aCar, float aStrength) {
   VehicleSpec s = Spec(aCar);

@@ -56,13 +56,13 @@ public native class FlightAudio extends IScriptable {
   // one line: the thrusters' synth, its character and the echoes, as they are now
   public native func AudioSummary() -> String;
 
-  // the echoes on or off, and their level (not a Mod Setting yet: LtbfBridge.Acoustics for tests)
+  // the echoes on or off, and their level (not a Mod Setting yet; set by test helpers)
   public let acoustics: Bool = true;
   public let acousticsGain: Float = 1.0;
   // the near surfaces from the game's own collision (live raycasts) rather than the nav map alone:
   // 0 off, 2 the plugin through PhysX
   public let acousticsRaySource: Int32 = 2;
-  // the comparison log is being written (LtbfBridge.AcousticsLive)
+  // the comparison log is being written (read by test helpers)
   public let acousticsLogging: Bool;
 
   public static func Get() -> ref<FlightAudio> {

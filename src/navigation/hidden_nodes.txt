@@ -2,7 +2,7 @@
 # By hand. S = sector path, N = globalNodeId and the x y it is stored at (checked before hiding);
 # id 0 (nodes without one, e.g. foliage clusters) matches by the stored x y alone.
 # The 499 m tower v2 landing pad's proxy: our pad entity in helipad_vehicles.streamingsector
-# replaces it (docs/archive/helipads.md, step 8).
+# replaces it (docs/design/landing-pads.md).
 S base\worlds\03_night_city\_compiled\default\exterior_-3_0_0_3.streamingsector
 N 8040860436745735587 -1212.96021 81.1298828
 

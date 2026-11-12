@@ -34,7 +34,7 @@ bool Touches(FlightComponent *aComponent, const Flight::StatsState &aState, cons
 
 } // namespace FlightGroundNative
 
-// For scripts and the bridge: the native ground next to the script's (LtbfBridge compares them in game).
+// For scripts and tests: the native ground next to the script's (tests compare them in game).
 struct FlightGround : RED4ext::IScriptable {
   // the normal in X Y Z and the distance in W; W is -1 when nothing is found
   static RED4ext::Vector4 Find(RED4ext::Handle<RED4ext::IScriptable> aComponent);

@@ -6,7 +6,7 @@
 // targetUp) and the car's own, with the angles between them. Taken at the start of the frame, before Step, so a
 // command is paired with what the car made of it. The columns, their order and their meaning are the script's
 // (FlightModeAutopilot.WriteTelemetry, the last commit with it: c3e24ab): tools/telemetry, tools/navplan/plot.py,
-// tools/acoustics/flyby.py and cp2077_tools' surge_analyse.py and sweep_follower.py read them by name. The manoeuvre
+// tools/acoustics/flyby.py and other offline tools read them by name. The manoeuvre
 // column is always 0 (the manoeuvres are gone) and drone always 1 (the only style).
 
 #include "Autopilot.hpp"

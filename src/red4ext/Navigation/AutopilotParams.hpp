@@ -17,7 +17,7 @@ struct AutopilotParams {
   bool landAtDestination = true;
   float padRange = 0.0f; // m around a destination on the ground to look for a landing pad (0 = off)
   // drone style: the nose turns into the landing heading over the last seconds before the descent
-  // (LandSlewYaw; not in Mod Settings: LtbfBridge.DroneBrakeTurn; a Mod Setting is written back from its stored value when the mode
+  // (LandSlewYaw; not in Mod Settings, set by test helpers; a Mod Setting is written back from its stored value when the mode
   // is engaged)
   bool droneBrakeTurn = false;
   // drone style: the body tilts droneBodyShare of the way to the thrust direction the commanded

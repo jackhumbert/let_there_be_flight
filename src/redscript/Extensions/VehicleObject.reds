@@ -30,8 +30,8 @@ public func GetFlightComponent() -> ref<FlightComponent> {
 
 // Per-vehicle blacklist: `Vehicle.<record>.flightDisabled = true` (any TweakXL tweak or
 // yaml file) keeps LTBF from attaching its flight component, thruster meshes, slots and HUD
-// to that vehicle. Used to exclude vehicles that crash with CrystalCoat, see
-// docs/research/crystalcoat-crash-analysis.md. `Vehicle.<record>.canEnterFlight = false` does the same.
+// to that vehicle. Used to exclude vehicles that crash with CrystalCoat.
+// `Vehicle.<record>.canEnterFlight = false` does the same.
 @addMethod(VehicleObject)
 public func IsFlightDisabledByTweak() -> Bool {
   let tweakID = this.GetRecordID();
