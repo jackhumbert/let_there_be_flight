@@ -11,10 +11,13 @@ streaming sector, terrain height fields, building proxy meshes (visible building
 collision up high), our proxy colliders (`docs/design/city-collision.md`), less the blockers the
 plugin removes.
 
-Shipping: too big for git. CMake downloads the `navmap-<game version>` release asset (URL and
-SHA-256 in the root `CMakeLists.txt`) or takes a local bake (`-DLTBF_NAVMAP_FILE=...`) and embeds
-it in the DLL as resource `NAVMAP`. A new bake for players: upload it as a new release asset, update
-the URL and hash.
+Shipping: too big for git. The bakes are release assets of the public repo
+[cp2077_navmap](https://github.com/jackhumbert/cp2077_navmap), one release per bake, tagged
+`<game version>-<first 12 hex of the SHA-256>`, so other mods can use them too. CMake downloads the
+one pinned in the root `CMakeLists.txt` (URL and SHA-256) or takes a local bake
+(`-DLTBF_NAVMAP_FILE=...`) and embeds it in the DLL as resource `NAVMAP`. A new bake for players:
+`python tools/navmap_bake/publish.py <navmap.bin> [--game <version>]` uploads it, checks the served
+hash and updates the URL and hash; commit `CMakeLists.txt`.
 
 Checks against the live game: `tools/ingame/validate_bake.py` (rays) and
 `tools/ingame/check_navmap.py` (the plugin's `FlightNavMap.GetGaps`).

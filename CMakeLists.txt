@@ -41,11 +41,12 @@ foreach(_FILE ${LTBF_AUDIO_FILES})
 endforeach()
 
 # Autopilot nav map, baked offline by tools/navmap_bake/ from the game's collision. Too big for git, so it is a
-# release asset (tag navmap-<game version>) fetched once into build/downloads. After a rebake: upload the new
-# navmap.bin under a new tag and update the URL and hash here. LTBF_NAVMAP_FILE points at a local bake instead.
+# release asset of jackhumbert/cp2077_navmap (tag <game version>-<hash>) fetched once into build/downloads.
+# After a rebake, tools/navmap_bake/publish.py uploads it and sets the URL and hash here. LTBF_NAVMAP_FILE
+# points at a local bake instead.
 
-set(LTBF_NAVMAP_URL "https://github.com/jackhumbert/let_there_be_flight/releases/download/navmap-2.50/navmap.bin")
-set(LTBF_NAVMAP_SHA256 "1583a1ba2fcb3eb7f7ae1f8c83d454c03a58c4edddf0c607c8c5ad4c2cd6d04f")
+set(LTBF_NAVMAP_URL "https://github.com/jackhumbert/cp2077_navmap/releases/download/2.50-de4e5fb7de76/navmap.bin")
+set(LTBF_NAVMAP_SHA256 "de4e5fb7de767d5ab24c416d53b5b687487c1641ebe0e783d71909bc0c555ef1")
 set(LTBF_NAVMAP_FILE "" CACHE FILEPATH "Local navmap.bin to ship instead of the release asset")
 if(LTBF_NAVMAP_FILE)
   set(_NAVMAP "${LTBF_NAVMAP_FILE}")
