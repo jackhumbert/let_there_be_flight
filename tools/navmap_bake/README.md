@@ -6,7 +6,9 @@ validation results: `docs/design/navmap.md`.
 
 What goes in: cooked collision of every exterior and interior streaming sector (boxes, capsules,
 convex and triangle meshes from the geometry cache; presets that block vehicles only), terrain
-height fields, and building proxy meshes (visible buildings often lack vehicle collision up high).
+height fields, building proxy meshes (visible buildings often lack vehicle collision up high), and
+the collision of street furniture placed as entities or destructible meshes (lamps, traffic
+lights, sign gantries, railings: `entities.py`).
 Output: per 2 m column, the vertical gaps a car's centre can occupy (solids grown by a 3 m radius,
 1.5 m half-height cylinder), keeping only gaps reachable from open sky.
 
@@ -49,9 +51,16 @@ python sectors.py --sectors W\raw\ep1\base\worlds\03_night_city\_compiled\defaul
 python proxies.py export --sectors W\sectors --work W\proxywork --jobs 6
 python proxies.py place --sectors W\sectors --work W\proxywork
 
+# 4b. street furniture: entity and destructible mesh collision (see "Street furniture" below;
+#     ~25 min scan with 10 jobs, ~45 min templates + meshes, 2 min build)
+python entities.py scan --sectors W\raw\ep1\base\worlds\03_night_city\_compiled\default -o W\entities --jobs 10
+python entities.py templates W\entities
+python entities.py meshes W\entities --depot <the DEPOT setting, if there is one>
+python entities.py build W\entities
+
 # 5. terrain at 2 m, then the span map (~40 min)
 python rasterize.py --sectors W\sectors --no-collision -o W\terrain2 --cell 2
-python spans.py bin --sectors W\sectors --presets W\presets_table.json --terrain-dir W\terrain2 -o W\spans
+python spans.py bin --sectors W\sectors --extra W\entities\entities.npz --presets W\presets_table.json --terrain-dir W\terrain2 -o W\spans
 python spans.py build W\spans --jobs 10
 python spans.py merge W\spans
 python spans.py reach W\spans
@@ -162,6 +171,25 @@ spans, `navmap.bin`), 36 minutes with 10 jobs, reusing `geometry.npz` and
 (towers whose collision has a hole, now solid, and some low arcades under skyscrapers), none
 gained. 3 sectors failed to parse (JSONDecodeError): exterior_-17_21_0_0, exterior_-21_-1_0_0,
 exterior_-23_1_4_0.
+
+Street furniture (`entities.py`, 2026-11-14): the cooked collision holds only what was baked into
+`worldCookedCollisionNode`. Lamps, traffic lights and sign gantries are entities
+(`worldEntityNode` / `worldDeviceNode` with an `.ent` template) and railings and similar props
+destructible mesh nodes (`worldInstancedDestructibleMeshNode`, `worldPhysicalDestructionNode`),
+whose collision the game creates as they stream in; the Autopilot stopped dead on a highway lamp
+and a sign gantry it did not know were there. `scan` reads the placements and the templates
+embedded in the sectors (`Flags: Embedded`), `templates` unbundles and reads the others with their
+`.app` appearances and includes, `meshes` the physics of every mesh they name (the depot first),
+`build` places the shapes (`entities.npz`). What counts and why is in its docstring: Static and
+Kinematic parts, the intact bodies of destruction meshes (Destructible counts as solid), shapes
+whose filter touches a car, placements bigger than `--min-size` (0.6 m). `spans.py bin` takes the
+file's own `blocks` flags in place of the preset table (which would drop Destructible).
+First run (2026-11-14, game 2.5): 165k entity and 659k destructible mesh placements, 3046 templates
+(70 not in the archives, 285 placements), 3359 meshes with physics; 17.2 M triangles (2.0 M of them
+intact destructibles), most of them street-level clutter (wrecks, vending machines, trash piles).
+The nav map grew from 15.18 to 15.31 MB.
+`python -m unittest test_entities` checks a lamp placement offline;
+`entities.py report W\entities --near x,y,r` lists what landed around a point.
 
 ## Format notes worth knowing
 

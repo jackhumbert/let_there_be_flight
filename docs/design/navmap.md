@@ -14,7 +14,9 @@ bay flew the line down to 4 m above the water at 60 m/s, and a car flying into t
 It is baked offline from the game's own files by `tools/navmap_bake/` (about 3 hours; the steps,
 requirements and format notes are in `tools/navmap_bake/README.md`): cooked collision of every
 streaming sector, terrain height fields, building proxy meshes (visible buildings often lack
-collision up high), our proxy colliders (`docs/design/city-collision.md`), less the blockers the
+collision up high), our proxy colliders (`docs/design/city-collision.md`), the street furniture
+placed as entities or destructible meshes (lamps, traffic lights, sign gantries, railings:
+`tools/navmap_bake/entities.py`; intact destructibles count as solid), less the blockers the
 plugin removes.
 
 Shipping: too big for git. The bakes are release assets of the public repo

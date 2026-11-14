@@ -174,7 +174,10 @@ def cmd_bin(args):
     for k, f in enumerate(files):
         d = np.load(f)
         names = [str(n) for n in d["preset_names"]]
-        keep = np.array([lookup.get(n, {"blocks_vehicles": True})["blocks_vehicles"] for n in names])
+        if "blocks" in d:  # a file that decided per preset itself (entities.py: Destructible counts)
+            keep = d["blocks"].astype(bool)
+        else:
+            keep = np.array([lookup.get(n, {"blocks_vehicles": True})["blocks_vehicles"] for n in names])
         all_tris, all_preset = drop_removed(os.path.basename(f)[:-4], d["tris"], names, d["preset"], removed)
         all_tris, all_preset = drop_hand(os.path.basename(f)[:-4], all_tris, names, all_preset, hand)
         dropped += len(d["tris"]) - len(all_tris)
