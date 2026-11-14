@@ -155,6 +155,7 @@ struct StandardState {
   float hovering = 1, referenceZ = 0, hoverHeight = 0;
   bool holdingAltitude = false;
   float outOfBand = 0; // s the ground has been out of the hover band
+  float groundVz = 0;   // m/s, the ground's vertical speed under the car, smoothed (GroundRate)
 };
 
 // Standard (Hover & Fly redesigned for beginners, docs/design/hover-fly-feel.md): every control asks for a speed, and
@@ -181,8 +182,18 @@ struct StandardGains {
   float maxBrake = 12, maxSideGrip = 25; // m/s2 the braking gives at most, along and across (the grip in a turn)
   float maxClimbRate = 8, climbP = 5;    // m/s at full lift input; m/s2 per m/s off it
   float holdP = 4, holdD = 4;            // the height hold: m/s2 per m off, per m/s of vertical speed
-  float hoverP = 6, hoverD = 5;          // the hover band: m/s2 per m off the hover height, per m/s
+  float hoverP = 10, hoverD = 7;         // the hover band: m/s2 per m off the hover height, per m/s against the ground
+  // the share of the ground's own vertical speed under the car (the slope of its normal along the velocity) the hover
+  // band's damping takes off the car's: 0 damps the car's vertical speed itself, so it settled under its hover
+  // height while climbing (hoverD / hoverP x the climb rate: 0.6 m up a 20% ramp, the body scraping)
+  float hoverGroundRate = 1;
+  float maxGroundRate = 15;              // m/s of the ground's vertical speed counted at most
+  float groundRateTime = 0.15f;          // s, the smoothing of it: each ray crossing a seam or a kerb's edge steps it
 };
+
+// The ground's vertical speed under a car moving at aVelocity, from its normal: 0 without ground or on a face
+// steeper than 30 degrees (a kerb's edge or a wall, not a road to follow), at most aLimit either way.
+float GroundRate(const Ground &g, Vec3 aVelocity, float aLimit);
 
 // The body's rad/s2 of angular acceleration per unit of mode torque x mass x thruster tensor / inertia (FlightComponent
 // scales the mode torque by mass and tensor, PhysX divides by the inertia), per body axis: X pitch, Y roll, Z yaw.

@@ -141,6 +141,38 @@ TEST(terrain_ramp_followed) {
   CHECK(r.Get("pitch_wobble") < 3.0f);
 }
 
+TEST(terrain_steep_ramp_climbed_clear) {
+  // a city on-ramp: its foot bends from flat to 20% over 30 m, then 20% up to 12 m, climbed at 80 km/h. Damped
+  // against the ground's own vertical speed the car keeps near its hover height and clear of the ramp; damped on its
+  // own vertical speed it settled under the hover height all the way up and its body scraped
+  Colliders c;
+  Square(c, -500, -500, 500, 60, 0.0f);
+  auto strip = [&](float aY0, float aZ0, float aY1, float aZ1) {
+    c.Add({-500, aY0, aZ0}, {500, aY0, aZ0}, {500, aY1, aZ1});
+    c.Add({-500, aY0, aZ0}, {500, aY1, aZ1}, {-500, aY1, aZ1});
+  };
+  auto foot = [](float y) { return 0.2f / 60.0f * (y - 60.0f) * (y - 60.0f); };
+  for (float y = 60.0f; y < 90.0f; y += 2.0f)
+    strip(y, foot(y), y + 2.0f, foot(y + 2.0f));
+  strip(90.0f, 1.5f, 142.5f, 12.0f);
+  Square(c, -500, 142.5f, 500, 500, 12.0f);
+  c.Build();
+  Line l = Along(0, 200);
+  Profile p = GroundProfile(c, l.a, l.b);
+  Run r = FlyLine(Assist(), c, l, p, 80.0f / 3.6f, 1.0f);
+  CHECK(r.Get("blocked") == 0.0f);
+  CHECK(r.Get("contacts") == 0.0f);
+  CHECK(r.Get("height_under_p95") < 0.45f);
+  CHECK(r.Get("clear_min") > 0.05f);
+  Setup old = Assist();
+  old.standardGains.hoverGroundRate = 0.0f;
+  old.standardGains.hoverP = 6.0f;
+  old.standardGains.hoverD = 5.0f;
+  Run before = FlyLine(old, c, l, p, 80.0f / 3.6f, 1.0f);
+  CHECK(before.Get("height_under_p95") > 0.6f);
+  CHECK(before.Get("clear_min") < 0.0f);
+}
+
 TEST(terrain_run_stops_at_wall) {
   // flown with a profile that missed the wall (another world's), the run stops at the wall: a block 4 m high, taller
   // than the car's centre, so the underside's rays (cast from the centre's height down) see its top as a ceiling

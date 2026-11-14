@@ -171,6 +171,14 @@ Vec3 TorqueResponse(const StatsStatic &st, Vec3 t) {
           axis(kEngineTorqueGain.z, t.z, st.momentOfInertia.z)};
 }
 
+float GroundRate(const Ground &g, Vec3 aVelocity, float aLimit) {
+  if (!g.found || g.normal.z < 0.866f)
+    return 0.0f;
+  // the surface n . p = const: moving dx, dy along it rises -(nx dx + ny dy) / nz
+  float rate = -(g.normal.x * aVelocity.x + g.normal.y * aVelocity.y) / g.normal.z;
+  return std::fmin(std::fmax(rate, -aLimit), aLimit);
+}
+
 ModeOutput Standard(StandardState &m, const StatsState &s, const StatsStatic &st, const Controls &c,
                     const StandardParams &p, const StandardGains &a, const Ground &g, Vec3 response, float dt,
                     HoverBand band) {
@@ -241,7 +249,12 @@ ModeOutput Standard(StandardState &m, const StatsState &s, const StatsStatic &st
     fly = a.holdP * (m.referenceZ - z) - a.holdD * vz;
   }
   fly = clamp(fly, -p.liftFactor, p.liftFactor);
-  float hover = clamp(a.hoverP * (m.hoverHeight - g.distance) - a.hoverD * vz, -p.liftFactor, p.liftFactor);
+  // damped on the vertical speed against the ground's, from its normal, not on the change of the ground distance
+  // (a step under the car would kick it)
+  float groundVz = a.hoverGroundRate * GroundRate(g, s.d_velocity, a.maxGroundRate);
+  m.groundVz += (groundVz - m.groundVz) * (a.groundRateTime > dt ? dt / a.groundRateTime : 1.0f);
+  float hover = clamp(a.hoverP * (m.hoverHeight - g.distance) - a.hoverD * (vz - m.groundVz), -p.liftFactor,
+                      p.liftFactor);
   float az = Lerp(m.hovering, fly, hover);
 
   // the brake scales the travel the mode asks for; the height stays held (the old Hover & Fly's brake scaled its
