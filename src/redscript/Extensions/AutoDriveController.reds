@@ -37,3 +37,15 @@ private func UpdateUIData() -> Void {
   inkWidgetRef.SetVisible(this.m_remainingTimeCounterContainer, true);
   this.m_remainingTimeCounterTextParams.UpdateTime("TIME", FloorF(this.m_autodriveBB.GetFloat(this.m_autodriveBBDef.DestinationRemainingTime)));
 }
+
+// The panel's input hint greys out ("Unavailable") when vanilla says autodrive is not available,
+// which a damaged car (or no road lane) makes it. In flight the hold toggles the Autopilot
+// instead (FlightController.ToggleAutopilot), which neither stops, so the hint stays lit.
+// FlightController.Activate and Deactivate signal AutoDriveAvailable to bring this back round.
+@wrapMethod(AutoDriveController)
+private func UpdateInputHintState() -> Void {
+  wrappedMethod();
+  if FlightController.GetInstance().IsActive() {
+    inkWidgetRef.Get(this.m_inputHintContainer).SetState(n"Default");
+  }
+}

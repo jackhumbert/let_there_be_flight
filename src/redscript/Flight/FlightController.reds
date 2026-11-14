@@ -351,6 +351,8 @@ public native class FlightController extends IScriptable {
 
     this.SetupPositionProviders();
 
+    this.RefreshAutodriveHint();
+
     // this.sys.tppCamera = GetPlayer(this.gameInstance).FindComponentByName(n"vehicleTPPCamera") as vehicleTPPCameraComponent;
 
     // idk what to do with this
@@ -382,6 +384,7 @@ public native class FlightController extends IScriptable {
       this.GetBlackboard().SetInt(GetAllBlackboardDefs().VehicleFlight.Mode, this.mode);
     }
     this.SetupActions();
+    this.RefreshAutodriveHint();
 
     //let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.gameInstance);
     //uiSystem.PopGameContext(IntEnum(10));
@@ -403,6 +406,12 @@ public native class FlightController extends IScriptable {
     // evt.groupId = n"FlightControl";
     // evt.targetHintContainer = n"GameplayInputHelper";
     // GameInstance.GetUISystem(this.gameInstance).QueueEvent(evt);
+  }
+
+  // Vanilla's autodrive hint re-reads its state when AutoDriveAvailable is signalled; in flight it
+  // stays lit whatever vanilla says (Extensions/AutoDriveController.reds).
+  private func RefreshAutodriveHint() -> Void {
+    GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().UI_AutodriveData).SignalBool(GetAllBlackboardDefs().UI_AutodriveData.AutoDriveAvailable);
   }
 
   private func ShowMoreInfo() -> Void {
