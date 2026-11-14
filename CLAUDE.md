@@ -16,7 +16,6 @@ Sibling repos with the same build/release shape: `../mod_settings` (Nexus 4885),
 - `tests/` - offline unit tests (`ltbf_tests`, run by CMake and CI).
 - `tools/` - offline tools, one folder per job; `tools/README.md` lists them. Machine paths come from `tools/common/paths.py` (environment variables, or an untracked `tools/common/paths.local.json` from `paths.example.json`).
 - `docs/` - design notes, release and patch guides; `docs/README.md` is the index.
-- The hangars are edited by hand in Blender and read back into the build (`docs/design/hangar.md`, "Editing a hangar in Blender").
 - `experiments/`, `examples/` - scratch, not built. `game_dir/`, `game_dir_debug/` - build output, zipped for release.
 
 ## Build

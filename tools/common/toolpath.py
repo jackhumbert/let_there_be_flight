@@ -6,7 +6,7 @@ import os
 import sys
 
 _TOOLS = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-for _folder in ("navmap_bake", "pads", "world", "kitbash"):
+for _folder in ("navmap_bake", "pads", "world"):
     _path = os.path.join(_TOOLS, _folder)
     if _path not in sys.path:
         sys.path.append(_path)

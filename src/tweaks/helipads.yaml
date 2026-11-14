@@ -23,17 +23,3 @@ UIIcon.LTBF_LandingPad:
   $type: gamedataUIIcon_Record
   atlasResourcePath: user\jackhumbert\textures\landing_pad_icons.inkatlas
   atlasPartName: landing_pad
-
-# The inventor's hangar's permanent pin (src/redscript/Navigation/FlightHangarPins.reds): on the world map
-# and the minimap, not as an in-world marker.
-Mappins.LTBF_HangarMappin:
-  $base: Mappins.DropPointStaticMappin
-  showOnMinimap: true
-  showOnMap: true
-  showInWorld: false
-
-# Its icon: the vanilla car modding one (the inventor fits thrusters to cars).
-UIIcon.LTBF_Hangar:
-  $type: gamedataUIIcon_Record
-  atlasResourcePath: base\gameplay\gui\common\icons\mappin_icons.inkatlas
-  atlasPartName: car_mod

@@ -1,19 +1,8 @@
 {
-  "journal": [
-    "user\\jackhumbert\\journal\\ltbf_shards.journal"
-  ],
   "localization": {
     "onscreens": {
       "en-us": "user\\jackhumbert\\localization\\let_there_be_flight.en-us.json",
       "es-es": "user\\jackhumbert\\localization\\let_there_be_flight.es-es.json"
-    }
-  },
-  "resource": {
-    "patch": {
-      "user\\jackhumbert\\worldmap\\ltbf_3dmap_view_patch.ent": {
-        "props": ["components"],
-        "targets": ["base\\entities\\cameras\\3dmap\\3dmap_view.ent"]
-      }
     }
   },
   "streaming": {

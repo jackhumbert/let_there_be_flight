@@ -6,7 +6,7 @@ sense. A path with no default that is not set raises a KeyError naming the varia
 key, only when a tool reads it, so tools that do not need the game or the depot run without them.
 
     from common import paths
-    paths.WORK      # work folder for bakes, caches and the hangar build
+    paths.WORK      # work folder for bakes and caches
 """
 
 import json
@@ -27,10 +27,10 @@ SETTINGS = {
     "WOLVENKIT_PACK": ("WOLVENKIT_CLI", None,
                        "WolvenKit.CLI.exe 9.0.1, which packs the archive; the game's oo2ext_7_win64.dll beside it"),
     "WORK": ("LTBF_WORK", os.path.join(REPO, "build", "tools_work"),
-             "work folder for bakes, caches and the hangar build (kept between runs)"),
+             "work folder for bakes and caches (kept between runs)"),
     "TMP": ("CP2077_TMP", os.path.join(tempfile.gettempdir(), "ltbf_tools"),
             "scratch output of one run (benchmarks and the like); delete it when done"),
-    "DEPOT": ("CP2077_DEPOT", None, "the game's archives unbundled (tools/kitbash/make_depot.ps1)"),
+    "DEPOT": ("CP2077_DEPOT", None, "the game's archives unbundled"),
     "DEPOT_TEX": ("CP2077_DEPOT_TEX", None, "the game's textures exported for Blender (the depot's textures)"),
     "BLENDER": ("BLENDER_EXE", "blender", "blender.exe (default: the one on PATH)"),
     "FFMPEG": ("FFMPEG", "ffmpeg", "ffmpeg.exe (default: the one on PATH)"),

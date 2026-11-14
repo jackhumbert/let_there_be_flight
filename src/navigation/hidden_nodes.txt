@@ -5,7 +5,3 @@
 # replaces it (docs/design/landing-pads.md).
 S base\worlds\03_night_city\_compiled\default\exterior_-3_0_0_3.streamingsector
 N 8040860436745735587 -1212.96021 81.1298828
-
-# The inventor's hangar (docs/design/hangar.md): nothing. Its first site (1735, -1215) had 20 desert scrub
-# clusters within 40 m that grew through its floor and were hidden here; the site it moved to on 2026-11-03,
-# (1996, -1376), has no foliage cluster within 45 m.
