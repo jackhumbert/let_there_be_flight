@@ -34,6 +34,9 @@ struct World : Space {
   virtual bool Loaded() const { return true; }
   // the nav map behind the world, for the trajectory's room caps (BuildTrajectory); nullptr: none
   virtual const NavMap *Map() const { return nullptr; }
+  // the straight line between the two (in the horizontal) passes a world boundary in force
+  // (Boundaries.hpp): free roam does not pick a goal on the far side of one
+  virtual bool CrossesBoundary(const Vec3 &aFrom, const Vec3 &aTo) const { return false; }
 };
 
 // The first gap of aP's column whose top is above aP (the one aP is in, or the next one up), as the
@@ -71,6 +74,9 @@ struct MapWorld : World {
   bool GroundRay(const Vec3 &aFrom, const Vec3 &aTo, Vec3 &aHit) const override;
   bool Loaded() const override { return map.IsLoaded(); }
   const NavMap *Map() const override { return map.IsLoaded() ? &map : nullptr; }
+  bool CrossesBoundary(const Vec3 &aFrom, const Vec3 &aTo) const override {
+    return map.CrossesMask(aFrom.x, aFrom.y, aTo.x, aTo.y);
+  }
 
   const NavMap &map;
   const std::vector<Helipad> &pads;

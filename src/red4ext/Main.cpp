@@ -20,6 +20,7 @@
 #include "Flight/FlightDeveloperSettings.hpp"
 #include "Flight/FlightSettingsLink.hpp"
 #include "Navigation/Blockers.hpp"
+#include "Navigation/Boundaries.hpp"
 #include "Navigation/Gates.hpp"
 #include "Navigation/Helipads.hpp"
 #include "Navigation/NavMap.hpp"
@@ -235,6 +236,9 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     }
     Navigation::Helipads::Get().Load(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "helipads.tsv");
     Navigation::Gates::Get().Load(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "gates.tsv");
+    // the areas the game keeps the player out of, laid over the nav map once the player is attached
+    // (FlightBoundariesSystem in src/redscript/Navigation/FlightBoundaries.reds)
+    Navigation::Boundaries::Get().Load(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "boundaries.tsv");
     Navigation::Blockers::Get().Load(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "blockers.txt");
     Navigation::Blockers::Get().LoadHidden(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "hidden_nodes.txt");
 

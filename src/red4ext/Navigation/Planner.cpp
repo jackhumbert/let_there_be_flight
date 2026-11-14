@@ -615,7 +615,7 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
     costs.climbCost = aParams.climbCost;
   costs.climbScale = aParams.climbScale;
     costs.underCost = aParams.underCost;
-    Doorways &doorways = DoorwaysFor(aMap, costs);
+    Doorways &doorways = DoorwaysFor(view, costs);
     // from the start seeds to the doorways of the blocks they are in, and from the doorways of the
     // goal's block and the ones round it to the goal
     int32_t sx0 = width, sy0 = aMap.Height(), sx1 = -1, sy1 = -1;

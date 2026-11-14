@@ -72,25 +72,28 @@ std::unordered_map<uint64_t, float> RegionCosts(NavMap::View &aView, const StepC
   return dist;
 }
 
-// One set of doorways per map and set of step costs (the Race and its no-minPassage retry), kept
-// for the session; plans running at once take turns.
+// One set of doorways per map, set of step costs (the Race and its no-minPassage retry) and column
+// mask (the world boundaries in force), kept for the session; plans running at once take turns.
 std::mutex doorwaysLock;
 std::vector<std::unique_ptr<Doorways>> doorwaySets;
 
 // The set for these costs; a new one starts from the map's baked doorways made with the same costs
 // (the Race's, and the Race's without minPassage for its retry: tools/navmap_bake/doorways.py),
 // else empty, filled in as searches reach blocks.
-Doorways &DoorwaysFor(const NavMap &aMap, const StepCosts &aCosts) {
+Doorways &DoorwaysFor(const NavMap::View &aView, const StepCosts &aCosts) {
+  const NavMap &aMap = aView.Map();
+  const uint64_t mask = aView.MaskKey();
   for (auto &set : doorwaySets) {
-    if (set->costs == aCosts && set->width == aMap.Width()) {
+    if (set->costs == aCosts && set->width == aMap.Width() && set->mask == mask) {
       return *set;
     }
   }
-  doorwaySets.push_back(std::make_unique<Doorways>(aCosts, aMap.Width()));
+  doorwaySets.push_back(std::make_unique<Doorways>(aCosts, aMap.Width(), mask));
   std::vector<uint8_t> baked;
   for (size_t k = 0; aMap.Section(kDoorwayTag, baked, k); ++k) {
     if (doorwaySets.back()->Load(baked)) {
-      spdlog::info("[NavMap] {} baked doorways (minimum passage {:.0f} m)", doorwaySets.back()->doors.size(), aCosts.minPassage);
+      spdlog::info("[NavMap] {} baked doorways (minimum passage {:.0f} m, mask {:016x})", doorwaySets.back()->doors.size(),
+                   aCosts.minPassage, mask);
       break;
     }
   }
@@ -114,7 +117,7 @@ DoorwayCount WorkOutDoorways(const NavMap &aMap, const PlanParams &aParams, floa
   costs.climbScale = aParams.climbScale;
   costs.underCost = aParams.underCost;
   std::lock_guard guard(doorwaysLock);
-  Doorways &doorways = DoorwaysFor(aMap, costs);
+  Doorways &doorways = DoorwaysFor(view, costs);
   int32_t cx0, cy0, cx1, cy1;
   aMap.CellOf(aX0, aY0, cx0, cy0);
   aMap.CellOf(aX1, aY1, cx1, cy1);

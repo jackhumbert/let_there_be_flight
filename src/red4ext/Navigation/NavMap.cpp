@@ -2,6 +2,7 @@
 #include "ThirdParty/miniz/miniz_tinfl.h"
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <cstring>
 #include <fstream>
@@ -50,6 +51,7 @@ bool NavMap::Load(std::vector<uint8_t> aBytes, const std::filesystem::path &aPat
   std::lock_guard guard(lock);
   loaded = false;
   ++generation;
+  mask.store(nullptr, std::memory_order_release); // built for the old map's size
   cache.clear();
   lru.clear();
   file = std::move(aBytes);
@@ -202,6 +204,9 @@ uint32_t NavMap::ColumnAt(int32_t aCx, int32_t aCy, const uint16_t *&aGaps) cons
   if (!loaded || aCx < 0 || aCy < 0 || aCx >= int32_t(width) || aCy >= int32_t(height)) {
     return 0;
   }
+  if (const ColumnMask *m = Mask(); m && m->Blocked(aCx, aCy)) {
+    return 0;
+  }
   const Tile *tile = RecentTile(uint32_t(aCy) / tileCells * tilesX + uint32_t(aCx) / tileCells);
   if (!tile) {
     return 0;
@@ -229,6 +234,9 @@ uint32_t NavMap::View::Column(int32_t aCx, int32_t aCy, const uint16_t *&aGaps, 
   }
   if (aHasData) {
     *aHasData = true;
+  }
+  if (mask && mask->Blocked(aCx, aCy)) {
+    return 0;
   }
   uint32_t col = (uint32_t(aCy) % map.tileCells) * map.tileCells + (uint32_t(aCx) % map.tileCells);
   aGaps = tile->gaps + 2 * size_t(tile->starts[col]);
@@ -315,6 +323,48 @@ float NavMap::SegmentClear(float aX0, float aY0, float aZ0, float aX1, float aY1
     }
   }
   return 1.0f;
+}
+
+bool NavMap::CrossesMask(float aX0, float aY0, float aX1, float aY1) const {
+  const ColumnMask *m = Mask();
+  if (!m) {
+    return false;
+  }
+  const float dx = aX1 - aX0, dy = aY1 - aY0;
+  const int steps = std::max(1, int(std::ceil(std::hypot(dx, dy) / (0.5f * cell))));
+  for (int i = 0; i <= steps; ++i) {
+    const float t = float(i) / float(steps);
+    int32_t cx, cy;
+    if (CellOf(aX0 + dx * t, aY0 + dy * t, cx, cy) && m->Blocked(cx, cy)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+ColumnMask::ColumnMask(uint64_t aKey, int32_t aWidth, int32_t aHeight)
+    : key(aKey), width(aWidth), height(aHeight), tilesX((aWidth + kTile - 1) / kTile),
+      tilesY((aHeight + kTile - 1) / kTile), tiles(size_t(tilesX) * tilesY, -1) {}
+
+void ColumnMask::Set(int32_t aCx, int32_t aCy) {
+  if (aCx < 0 || aCy < 0 || aCx >= width || aCy >= height) {
+    return;
+  }
+  int32_t &tile = tiles[size_t(aCy / kTile) * tilesX + aCx / kTile];
+  if (tile < 0) {
+    tile = int32_t(bits.size());
+    bits.resize(bits.size() + kTile * kTile / 64, 0);
+  }
+  const uint32_t bit = uint32_t(aCy % kTile) * kTile + uint32_t(aCx % kTile);
+  bits[size_t(tile) + bit / 64] |= uint64_t(1) << (bit % 64);
+}
+
+size_t ColumnMask::Count() const {
+  size_t n = 0;
+  for (uint64_t word : bits) {
+    n += size_t(std::popcount(word));
+  }
+  return n;
 }
 
 } // namespace Navigation

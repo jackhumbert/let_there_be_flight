@@ -73,7 +73,7 @@ void Autopilot::BeginFreeRoam() {
 
 // PickFreeRoamGoal (1069): freeRoamLegMin to freeRoamLegMax from aFrom, within freeRoamSpread of the heading
 // (wider for each candidate that does not fit, up to aMaxTurn degrees), inside freeRoamRadius of the centre,
-// freeRoamRouteHeight above the ground under open sky there
+// freeRoamRouteHeight above the ground under open sky there, and not across a world boundary in force
 bool Autopilot::PickFreeRoamGoal(const Vec3 &aFrom, const Vec3 &aHeading, float aMaxTurn, Vec3 &aGoal) {
   const float base = std::atan2(aHeading.y, aHeading.x);
   for (int tries = 0; tries < 24; ++tries) {
@@ -82,7 +82,7 @@ bool Autopilot::PickFreeRoamGoal(const Vec3 &aFrom, const Vec3 &aHeading, float 
     const float angle = base + rng.RangeF(-1.0f, 1.0f) * spread;
     const float distance = rng.RangeF(params.freeRoamLegMin, params.freeRoamLegMax);
     const Vec3 c{aFrom.x + distance * std::cos(angle), aFrom.y + distance * std::sin(angle), aFrom.z};
-    if (Distance2D(c, freeRoamCentre) <= params.freeRoamRadius) {
+    if (Distance2D(c, freeRoamCentre) <= params.freeRoamRadius && !world.CrossesBoundary(aFrom, c)) {
       const auto gaps = world.Gaps(c);
       if (!gaps.empty()) {
         const Gap &sky = gaps.back();
@@ -100,7 +100,7 @@ bool Autopilot::PickFreeRoamGoal(const Vec3 &aFrom, const Vec3 &aHeading, float 
 }
 
 // PickFreeRoamGate (1101): a gate freeRoamGateMin to freeRoamLegMax away, within freeRoamSpread of the
-// heading, inside freeRoamRadius, not one of the last few flown; aEntry is gateLead before it, gateTail the
+// heading, inside freeRoamRadius, not one of the last few flown nor across a world boundary in force; aEntry is gateLead before it, gateTail the
 // straight run from there through it to gateLead past it
 bool Autopilot::PickFreeRoamGate(const Vec3 &aFrom, const Vec3 &aHeading, Vec3 &aEntry) {
   const auto &gates = world.GateList();
@@ -111,7 +111,8 @@ bool Autopilot::PickFreeRoamGate(const Vec3 &aFrom, const Vec3 &aHeading, Vec3 &
     const Vec3 toGate = Sub(gate, aFrom);
     if (std::find(recentGates.begin(), recentGates.end(), i) == recentGates.end() &&
         Length2D(toGate) >= params.freeRoamGateMin && Distance2D(gate, freeRoamCentre) <= params.freeRoamRadius &&
-        Dot(Flat(toGate), Flat(aHeading)) >= std::cos(Deg2Rad(params.freeRoamSpread))) {
+        Dot(Flat(toGate), Flat(aHeading)) >= std::cos(Deg2Rad(params.freeRoamSpread)) &&
+        !world.CrossesBoundary(aFrom, gate)) {
       candidates.push_back(i);
     }
   }

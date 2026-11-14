@@ -35,11 +35,15 @@
 //                           touchdown speed, replans, rays, Step time, plans pending; the car, the plan delay, and
 //                           the trip checks broken, CheckTrip)
 //   NAVPLAN_DOORWAY_COUNT=x0,y0,x1,y1  work out the doorways over that area instead, and save them
+//   NAVPLAN_FACTS=a=1,b=0   the quest facts the world boundaries' gates read (src/navigation/boundaries.tsv,
+//                           Navigation/Boundaries.hpp); a fact not given is 0. Default ep1_installed=1: after
+//                           the prologue, with Phantom Liberty, as most games are. NAVPLAN_BOUNDARIES=0: none
 //
 // Build: cmake --build build --target navplan (not part of the default build).
 
 #include "../flightsim/Trip.hpp"
 
+#include "Navigation/Boundaries.hpp"
 #include "Navigation/Gates.hpp"
 #include "Navigation/Helipads.hpp"
 #include "Navigation/NavMap.hpp"
@@ -60,6 +64,7 @@
 #include <cstring>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 
@@ -226,6 +231,23 @@ int main(int argc, char **argv) {
   if (!map.Load(argv[1])) {
     std::fprintf(stderr, "could not load %s\n", argv[1]);
     return 1;
+  }
+  // the world boundaries in force, as the game lays them over the map (FlightBoundaries)
+  if (!std::getenv("NAVPLAN_BOUNDARIES") || std::atoi(std::getenv("NAVPLAN_BOUNDARIES")) != 0) {
+    std::unordered_map<std::string, int32_t> facts;
+    std::stringstream given(std::getenv("NAVPLAN_FACTS") ? std::getenv("NAVPLAN_FACTS") : "ep1_installed=1");
+    for (std::string item; std::getline(given, item, ',');) {
+      if (const size_t eq = item.find('='); eq != std::string::npos) {
+        facts[item.substr(0, eq)] = std::atoi(item.c_str() + eq + 1);
+      }
+    }
+    auto &boundaries = Navigation::Boundaries::Get();
+    if (boundaries.Load(std::string(LTBF_SOURCE_DIR) + "/src/navigation/boundaries.tsv")) {
+      boundaries.Apply(map, [&](const std::string &aFact) {
+        auto it = facts.find(aFact);
+        return it == facts.end() ? 0 : it->second;
+      });
+    }
   }
   const bool race = std::getenv("NAVPLAN_RACE") && std::atoi(std::getenv("NAVPLAN_RACE")) != 0;
   if (const char *area = std::getenv("NAVPLAN_DOORWAY_COUNT")) {

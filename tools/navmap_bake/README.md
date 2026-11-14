@@ -132,6 +132,20 @@ python ..\pack_archive.py
   raised complex all hit the proxy's surfaces above and below (e.g. (-1200, -689): 294.9 and
   208.4, the proxy's floor slabs at 295 and 208).
 
+World boundaries (`docs/design/world-boundaries.md`): the areas the game keeps the player out of, from
+the same raw sectors and the streaming block of the same archive. Rerun after a game patch; it stops on
+a boundary in a sector variant it has no quest-fact gate for. It adds the closures drawn by hand in
+`boundary_closures.tsv` (where the game's fences end open; why and how they were placed: the design doc).
+
+```
+$CLI unbundle $PC\ep1\ep1_1_nightcity.archive -o W\block -r "default.blocks.all\.streamingblock$"
+python boundaries.py --sectors W\raw\ep1\base\worlds\03_night_city\_compiled\default --block W\block\base\worlds\03_night_city\_compiled\default\blocks\all.streamingblock -o ..\..\src\navigation\boundaries.tsv --preview W\boundaries.png
+```
+
+The doorways (`doorways.py`) are baked under the boundaries `navplan` applies (by default after the
+prologue, with Phantom Liberty): rebake them after `boundaries.tsv` changes, or the plugin works the
+doorways out as it goes.
+
 Previews and checks:
 
 - `rasterize.py --presets ... -o W\city4 --cell 4` + `preview.py W\city4 -o top.png`: shaded

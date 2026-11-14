@@ -1,0 +1,18 @@
+# Closures: world boundaries drawn by hand where the game's fences (gameWorldBoundaryNode) end
+# open and terrain or the sea closes the gap only for a car on the ground. boundaries.py widens each
+# polyline into areas (one per segment, always in force) and adds them to src/navigation/boundaries.tsv.
+# Placed from the game's own extents: the minimap's tiles (MinimapDataNode, every 128 m over the
+# playable area and a little past it) and the fences either side (docs/design/world-boundaries.md).
+# name	width (m)	x y pairs (world metres), in order
+closure_north_shore	40	-2060	3750	-1100	4000	-470	3490
+closure_spaceport_north	40	-4840	780	-4850	1300	-3805	1682
+closure_pacifica_coast	40	-3270	-2610	-4200	-2960	-5400	-3150
+closure_southwest	40	-5400	-3150	-5300	-4200	-5050	-5300	-4950	-6300	-4750	-7100
+closure_south	40	-170	-6106	-250	-7100
+closure_northeast	40	3740	1540	5582	-256
+# slits of a few metres between the game's own fence boxes: north of the North Oak hills, and three where the
+# sea fences west of Pacifica and south of the spaceport cross
+closure_north_oak_gap	40	-300	2555	-130	2610
+closure_spaceport_slit_west	40	-4660	-530	-4555	-420
+closure_spaceport_slit_east	40	-4230	-810	-4120	-695
+closure_pacifica_sea_slit	40	-3500	-1690	-3390	-1585

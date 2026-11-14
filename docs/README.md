@@ -13,6 +13,7 @@
     set; Hover & Fly renamed Standard.
   - `vehicle-limits.md`: the car's limits (VehicleSpec) and who reads them.
   - `navmap.md`: the baked nav map, how it is made and shipped.
+  - `world-boundaries.md`: the areas the game keeps the player out of, gated by quest facts, laid over the nav map.
   - `city-collision.md`: hidden colliders removed, proxy colliders added.
   - `vehicle-summon.md`: the pad summon (a summoned vehicle flies the Autopilot to the pad).
   - `summon-edge-hover.md`: plan, not built: a summon with no room to land waits at the roof's edge, driver door to V.

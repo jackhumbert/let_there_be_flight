@@ -88,6 +88,8 @@ endif()
 configure_mod_file(src/navigation/helipads.tsv red4ext/plugins/${MOD_SLUG}/helipads.tsv)
 # Openings for the Autopilot's free roam to fly through, from the nav map's doorways (tools/navmap_bake/gates.py, in git).
 configure_mod_file(src/navigation/gates.tsv red4ext/plugins/${MOD_SLUG}/gates.tsv)
+# The areas the game keeps the player out of, which the Autopilot keeps out of too (tools/navmap_bake/boundaries.py, in git).
+configure_mod_file(src/navigation/boundaries.tsv red4ext/plugins/${MOD_SLUG}/boundaries.tsv)
 # Invisible vehicle blockers the plugin moves out of the world as sectors load (tools/world/blockers.py export).
 # Without the file the hook in Hooks/StreamingSector_OnPostLoad.cpp does nothing (docs/design/city-collision.md).
 configure_mod_file(src/navigation/blockers.txt red4ext/plugins/${MOD_SLUG}/blockers.txt)
@@ -183,11 +185,13 @@ add_executable(navplan EXCLUDE_FROM_ALL
   src/red4ext/Flight/Pid.cpp
   src/red4ext/Flight/Controls.cpp
   src/red4ext/Flight/Modes.cpp
+  src/red4ext/Flight/Handling.cpp
   src/red4ext/Flight/DeveloperSettings.cpp
   src/red4ext/Navigation/World.cpp
   src/red4ext/Navigation/Plans.cpp
   src/red4ext/Navigation/Helipads.cpp
   src/red4ext/Navigation/Gates.cpp
+  src/red4ext/Navigation/Boundaries.cpp
   src/red4ext/Navigation/AutopilotParams.cpp
   src/red4ext/Navigation/Landing.cpp
   src/red4ext/Navigation/Aerobatics.cpp
@@ -317,6 +321,7 @@ add_executable(ltbf_tests
   tests/terrain_runs_tests.cpp
   tests/settings_tests.cpp
   tests/world_tests.cpp
+  tests/boundaries_tests.cpp
   tests/plans_tests.cpp
   tests/autopilot_params_tests.cpp
   tests/landing_tests.cpp
@@ -364,6 +369,7 @@ add_executable(ltbf_tests
   src/red4ext/Navigation/Aerobatics.cpp
   src/red4ext/Camera/Cinematic.cpp
   src/red4ext/Navigation/NavMap.cpp
+  src/red4ext/Navigation/Boundaries.cpp
   src/red4ext/Navigation/World.cpp
   src/red4ext/Navigation/Plans.cpp
   src/red4ext/Navigation/AutopilotParams.cpp

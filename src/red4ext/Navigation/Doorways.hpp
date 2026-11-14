@@ -72,10 +72,12 @@ public:
     std::vector<Link> links;
   };
 
-  Doorways(const StepCosts &aCosts, int32_t aWidth) : costs(aCosts), width(aWidth) {}
+  // aMask: the key of the column mask the doorways are worked out under (NavMap::View::MaskKey, 0 for none)
+  Doorways(const StepCosts &aCosts, int32_t aWidth, uint64_t aMask = 0) : costs(aCosts), width(aWidth), mask(aMask) {}
 
   const StepCosts costs;
   const int32_t width;
+  const uint64_t mask;
   std::vector<Door> doors;
 
   // the doorways of block (aBx, aBy), working it out the first time
@@ -115,10 +117,11 @@ public:
     auto put = [&](const void *aData, size_t aSize) {
       out.insert(out.end(), static_cast<const uint8_t *>(aData), static_cast<const uint8_t *>(aData) + aSize);
     };
-    const uint32_t version = 1;
+    const uint32_t version = 2;
     put(&version, 4);
     put(&costs, sizeof(costs));
     put(&width, 4);
+    put(&mask, 8);
     uint32_t n = uint32_t(doors.size());
     put(&n, 4);
     for (const auto &door : doors) {
@@ -162,7 +165,12 @@ public:
     get(&version, 4);
     get(&saved, sizeof(saved));
     get(&savedWidth, 4);
-    if (!ok || version != 1 || !(saved == costs) || savedWidth != width) {
+    // version 1 predates the masks: made with none
+    uint64_t savedMask = 0;
+    if (version == 2) {
+      get(&savedMask, 8);
+    }
+    if (!ok || (version != 1 && version != 2) || !(saved == costs) || savedWidth != width || savedMask != mask) {
       return false;
     }
     uint32_t n = 0;
@@ -332,10 +340,10 @@ private:
   }
 };
 
-// One set of doorways per map and set of step costs, kept for the session; plans take turns.
+// One set of doorways per map, set of step costs and column mask, kept for the session; plans take turns.
 extern std::mutex doorwaysLock;
-// The set for these costs; a new one starts from the map's baked doorways when they were made
-// with the same costs (the Race's), else empty, filled in as searches reach blocks.
-Doorways &DoorwaysFor(const NavMap &aMap, const StepCosts &aCosts);
+// The set for these costs under the view's mask; a new one starts from the map's baked doorways when
+// they were made with the same costs (the Race's) and mask, else empty, filled in as searches reach blocks.
+Doorways &DoorwaysFor(const NavMap::View &aView, const StepCosts &aCosts);
 
 } // namespace Navigation::detail
