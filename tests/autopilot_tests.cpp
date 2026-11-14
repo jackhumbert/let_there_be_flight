@@ -478,6 +478,48 @@ TEST(autopilot_free_roam_through_gate) {
   CHECK_NEAR(rig.ap.gateEndS, rig.ap.route.Length(), 1e-3);
 }
 
+// A gate whose run passes under a deck lower than raceMinPassage is never reached by the search
+// (it squeezes through nothing lower): it is not picked, the open one beside it is.
+TEST(autopilot_free_roam_skips_low_gate) {
+  static NavMap map;
+  static bool loaded = [] {
+    NavFixture::Spec spec;
+    // a deck from 10 to 30 m: under it the car's centre has 1 to 9 m, 8 m of room, too little for
+    // raceMinPassage 12
+    spec.blocks.push_back({100, 120, 140, 160, 30, 10});
+    return map.Load(NavFixture::Make(spec), "autopilot low gate");
+  }();
+  CHECK(loaded);
+  Rig rig(map, {128, 30, 1});
+  auto &p = rig.params;
+  p.freeRoamLegMin = 100.0f;
+  p.freeRoamLegMax = 150.0f;
+  p.freeRoamGateMin = 50.0f;
+  p.gateLead = 20.0f;
+  // under the deck at 5 m (gap 1 to 9: 8 m), and an open one 60 m to the east
+  rig.gates.push_back({120, 140, 5, 90.0f, 20.0f, 10.0f, 4.0f});
+  rig.gates.push_back({180, 140, 20, 90.0f, 20.0f, 10.0f, 1e9f});
+  for (int i = 0; i < 8; ++i) {
+    Rig r(map, {128, 30, 1}, 0.3f, uint64_t(i + 1));
+    r.params.freeRoamLegMin = 100.0f;
+    r.params.freeRoamLegMax = 150.0f;
+    r.params.freeRoamGateMin = 50.0f;
+    r.params.freeRoamSpread = 60.0f;
+    r.params.gateLead = 20.0f;
+    r.gates = rig.gates;
+    r.Engage();
+    r.Frame();
+    // never the low gate: the open one, or a plain point when that is off the heading
+    CHECK(r.ap.recentGates.empty() || r.ap.recentGates.back() == 1);
+  }
+  // with the room asked for lowered to what the deck leaves, the low gate counts again
+  rig.params.raceMinPassage = 6.0f;
+  rig.params.freeRoamSpread = 10.0f; // the open gate off to the side, outside the spread
+  rig.Engage();
+  rig.Frame();
+  CHECK(rig.ap.recentGates.size() == 1 && rig.ap.recentGates.back() == 0);
+}
+
 TEST(autopilot_player_input_overrides) {
   Rig rig(Small(), {40, 40, 1});
   rig.Track({200, 200, 1});

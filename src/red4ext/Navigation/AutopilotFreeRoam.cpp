@@ -100,7 +100,8 @@ bool Autopilot::PickFreeRoamGoal(const Vec3 &aFrom, const Vec3 &aHeading, float 
 }
 
 // PickFreeRoamGate (1101): a gate freeRoamGateMin to freeRoamLegMax away, within freeRoamSpread of the
-// heading, inside freeRoamRadius, not one of the last few flown nor across a world boundary in force; aEntry is gateLead before it, gateTail the
+// heading, inside freeRoamRadius, not one of the last few flown nor across a world boundary in force, with
+// raceMinPassage of free height along its straight run; aEntry is gateLead before it, gateTail the
 // straight run from there through it to gateLead past it
 bool Autopilot::PickFreeRoamGate(const Vec3 &aFrom, const Vec3 &aHeading, Vec3 &aEntry) {
   const auto &gates = world.GateList();
@@ -129,7 +130,21 @@ bool Autopilot::PickFreeRoamGate(const Vec3 &aFrom, const Vec3 &aHeading, Vec3 &
     }
     const Vec3 start = Sub(gate, Mul(way, params.gateLead));
     const Vec3 end = Add(gate, Mul(way, params.gateLead));
-    if (world.SegmentClear(start, end) >= 1.0f) {
+    // the run's free height at least raceMinPassage all along: the search squeezes through nothing
+    // lower, so an entry tucked under a deck is never reached and the search floods the whole area
+    // (a 6 m gate under a deck: four searches of 3M expansions, a minute hovering)
+    bool room = true;
+    for (float d = 0.0f; room && d <= 2.0f * params.gateLead + 0.01f; d += params.gateStep) {
+      const Vec3 p = Add(start, Mul(way, d));
+      room = false;
+      for (const Gap &gap : world.Gaps(p)) {
+        if (gap.bottom <= p.z && p.z <= gap.top) {
+          room = gap.top - gap.bottom >= params.raceMinPassage;
+          break;
+        }
+      }
+    }
+    if (room && world.SegmentClear(start, end) >= 1.0f) {
       aEntry = start;
       gateEntry = start;
       gateTail.clear();

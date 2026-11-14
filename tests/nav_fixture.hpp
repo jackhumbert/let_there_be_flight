@@ -18,6 +18,9 @@ namespace NavFixture {
 struct Block {
   float x0, y0, x1, y1; // metres, the column centres inside it are blocked up to top
   float top;            // metres; a gap's bottom (car centre) above it is top + halfHeight
+  // metres: above 0, a slab from here up to top with room under it (a deck), not a block on the floor;
+  // one slab per column at most
+  float under = 0.0f;
 };
 
 struct Spec {
@@ -61,7 +64,8 @@ inline std::vector<uint8_t> Stored(const std::vector<uint8_t> &aRaw) {
 }
 } // namespace detail
 
-// The map's bytes: each column one gap from the floor (or a block's top) plus halfHeight to open sky.
+// The map's bytes: each column one gap from the floor (or a block's top) plus halfHeight to open sky,
+// and under a slab one more below it.
 inline std::vector<uint8_t> Make(const Spec &aSpec) {
   constexpr uint32_t kTile = 128;
   const float cell = 2.0f, vz = 0.5f;
@@ -110,19 +114,39 @@ inline std::vector<uint8_t> Make(const Spec &aSpec) {
           }
           const float x = aSpec.originX + (float(cx) + 0.5f) * cell, y = aSpec.originY + (float(cy) + 0.5f) * cell;
           float ground = aSpec.z0;
+          const Block *slab = nullptr;
           for (const auto &b : aSpec.blocks) {
             if (x >= b.x0 && x <= b.x1 && y >= b.y0 && y <= b.y1) {
-              ground = std::max(ground, b.top);
+              if (b.under > 0.0f) {
+                slab = &b;
+              } else {
+                ground = std::max(ground, b.top);
+              }
             }
           }
-          const float bottom = ground + aSpec.halfHeight;
-          const uint16_t lo = uint16_t(std::ceil((bottom - aSpec.z0) / vz - 1e-4f));
-          if (lo >= aSpec.nz) {
-            continue;
+          auto voxel = [&](float aZ, bool aUp) {
+            const float v = (aZ - aSpec.z0) / vz;
+            return uint16_t(std::max(0.0f, aUp ? std::ceil(v - 1e-4f) : std::floor(v + 1e-4f)));
+          };
+          uint8_t count = 0;
+          float from = ground;
+          if (slab && slab->under > ground) {
+            // the gap under the deck, when the car fits in it
+            const uint16_t lo = voxel(ground + aSpec.halfHeight, true), hi = voxel(slab->under - aSpec.halfHeight, false);
+            if (hi > lo) {
+              gaps.push_back(lo);
+              gaps.push_back(hi);
+              ++count;
+            }
+            from = slab->top;
           }
-          counts[ly * kTile + lx] = 1;
-          gaps.push_back(lo);
-          gaps.push_back(uint16_t(aSpec.nz));
+          const uint16_t lo = voxel(from + aSpec.halfHeight, true);
+          if (lo < aSpec.nz) {
+            gaps.push_back(lo);
+            gaps.push_back(uint16_t(aSpec.nz));
+            ++count;
+          }
+          counts[ly * kTile + lx] = count;
         }
       }
       std::vector<uint8_t> raw(counts);
