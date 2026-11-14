@@ -138,13 +138,16 @@ public native class FlightAudio extends IScriptable {
     }
   }
 
+  // the handles cleared too, so the next OnWorldAttached registers the listeners again
   protected cb func OnWorldPendingDetach() {
     if IsDefined(this.uiBlackboard) && IsDefined(this.menuCallback) {
       this.uiBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UI_System.IsInMenu, this.menuCallback);
     }
+    this.menuCallback = null;
     if IsDefined(this.uiGameDataBlackboard) && IsDefined(this.popupCallback) {
       this.uiGameDataBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UIGameData.Popup_IsShown, this.popupCallback);
     }
+    this.popupCallback = null;
   }
 
   protected cb func OnIsInMenu(inMenu: Bool) -> Bool {
