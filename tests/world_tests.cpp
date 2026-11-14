@@ -104,3 +104,24 @@ TEST(world_map_world_rays) {
   CHECK_NEAR(hit.z, 0.0, 1e-5);
   CHECK_NEAR(hit.x, 20.0, 1e-5);
 }
+
+TEST(world_sea_is_the_floor) {
+  // the bake knows no water: a seabed 20 m below the sea's surface, open sky above it. The gap starts at the
+  // surface plus the car's half height (1 m), so nothing plans through the water
+  static NavMap sea;
+  NavFixture::Spec spec;
+  spec.z0 = -20.0f;
+  spec.blocks.push_back({100, 100, 140, 140, 10}); // an island 10 m above the surface
+  CHECK(sea.Load(NavFixture::Make(spec), "sea"));
+  auto gaps = sea.GetGaps(50, 50);
+  CHECK(gaps.size() == 1);
+  if (!gaps.empty()) {
+    CHECK_NEAR(gaps[0].bottom, NavMap::kSeaLevel + 1.0f, 1e-4);
+    CHECK(std::isinf(gaps[0].top));
+  }
+  CHECK(!sea.IsFree(50, 50, -5.0f));
+  CHECK(sea.IsFree(50, 50, 2.0f));
+  // land above the surface keeps its own floor
+  gaps = sea.GetGaps(120, 120);
+  CHECK(!gaps.empty() && std::fabs(gaps[0].bottom - 11.0f) < 1e-4f);
+}

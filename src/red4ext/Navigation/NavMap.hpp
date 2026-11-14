@@ -3,6 +3,9 @@
 // NavMap: the baked city-wide free-space map for the autopilot (tools/navmap_bake/navmap.py).
 //
 // Per 2 m column it holds the vertical gaps a car's centre can occupy, reachable from open sky.
+// The bake knows no water: over the sea its open-sky gap reaches down to the seabed. Load raises
+// such a gap's bottom to the sea's surface (kSeaLevel) plus the car's half height, so nothing
+// plans through water (a car flying into the sea kills V).
 // Solids were inflated by a car cylinder when the map was baked, so a point inside a gap is a
 // valid car position. Several gaps per column = something overhead (an overpass, a tunnel).
 // The top gap of most columns is open sky (top = +infinity).

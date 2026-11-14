@@ -149,6 +149,25 @@ std::shared_ptr<const NavMap::Tile> NavMap::Inflate(uint32_t aKey) const {
     spdlog::error("[NavMap] tile {}: gap data truncated", aKey);
     return nullptr;
   }
+  // over water the open-sky gap (a column's last, top at nz) reaches the seabed: its bottom up to the sea's
+  // surface plus the car's half height (kSeaLevel)
+  const float seaFloor = std::ceil((kSeaLevel + halfHeight - z0) / vz - 1e-4f);
+  if (seaFloor > 0.0f && seaFloor < float(nz)) {
+    const uint16_t sea = uint16_t(seaFloor);
+    uint8_t *gaps = tile->raw.data() + columns;
+    for (size_t c = 0; c < columns; ++c) {
+      if (tile->raw[c] == 0) {
+        continue;
+      }
+      uint8_t *last = gaps + 4 * size_t(tile->starts[c + 1] - 1);
+      uint16_t bottom, top;
+      std::memcpy(&bottom, last, 2);
+      std::memcpy(&top, last + 2, 2);
+      if (top >= nz && bottom < sea) {
+        std::memcpy(last, &sea, 2);
+      }
+    }
+  }
   tile->gaps = reinterpret_cast<const uint16_t *>(tile->raw.data() + columns);
   return tile;
 }

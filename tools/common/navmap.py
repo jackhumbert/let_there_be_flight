@@ -1,6 +1,7 @@
 """Reader for navmap.bin, the Autopilot's nav map (format: tools/navmap_bake/navmap.py, read in the
 plugin by src/red4ext/Navigation/NavMap.hpp). Sections appended after the tiles (the baked doorways,
-tag LTBFDOOR) are ignored."""
+tag LTBFDOOR) are ignored. As the plugin does, an open-sky gap reaching below the sea's surface (water:
+the bake knows none) starts at the surface plus the car's half height (NavMap.hpp, kSeaLevel)."""
 
 import math
 import struct
@@ -12,6 +13,7 @@ MAGIC = b"LTBFNAV1"
 VERSION = 1
 HEADER = struct.Struct("<8sII5fIIIIII2f")
 INDEX = struct.Struct("<QII")
+SEA_LEVEL = 0.0  # NavMap.hpp kSeaLevel: the ocean's water patches are placed at z 0
 
 
 class NavMap:
@@ -52,8 +54,12 @@ class NavMap:
             return []
         counts, gaps, starts = t
         c = (cy % self.tile) * self.tile + cx % self.tile
-        return [(self.z0 + b * self.vz, math.inf if top >= self.nz else self.z0 + top * self.vz)
-                for b, top in gaps[starts[c]:starts[c] + counts[c]]]
+        out = [(self.z0 + b * self.vz, math.inf if top >= self.nz else self.z0 + top * self.vz)
+               for b, top in gaps[starts[c]:starts[c] + counts[c]]]
+        sea = self.z0 + math.ceil((SEA_LEVEL + self.half - self.z0) / self.vz - 1e-4) * self.vz
+        if out and math.isinf(out[-1][1]) and out[-1][0] < sea:
+            out[-1] = (sea, math.inf)
+        return out
 
     def gaps(self, x, y):
         """Gaps (floor, ceiling) a car's centre can occupy at world (x, y); ceiling inf = open sky."""
