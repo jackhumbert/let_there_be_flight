@@ -64,8 +64,8 @@ Game patches and reverse engineering: `docs/game-patch.md`. Releases and Nexus: 
 | `deps/red4ext.sdk` | jackhumbert/RED4ext.SDK, branch `new-types` | Our fork: ~264 commits ahead of WopsS master (hand-written vehicle/physics/effects/world types, ~400 files). Upstream is 34 commits ahead of us, including patch 2.31 support, the SDK 1.0.0 / API V1 promotion, `CBaseRTTIType` -> `rtti::IType` rename, container rewrites. |
 | `deps/red_lib` | jackhumbert/cp2077-red-lib, branch `jack` | Fork of psiberx. Upstream has "Support RED4ext.SDK V1" commits; our branch is 5 ahead / 55 behind. |
 | `deps/cyberpunk_cmake` | jackhumbert/cyberpunk_cmake | Ours. |
-| `deps/input_loader` | jackhumbert/cyberpunk2077-input-loader | Ours. Built from source in-tree (`add_subdirectory`), shares the parent's SDK target. Pin is 3 behind its main (2.30 xml updates). |
-| `deps/mod_settings` | jackhumbert/mod_settings | Ours. Built in-tree for its redscript API. Pin is 8 behind its main (2.3 fixes). |
+| `deps/input_loader` | jackhumbert/cyberpunk2077-input-loader | Ours. Built from source in-tree (`add_subdirectory`), shares the parent's SDK target. |
+| `deps/mod_settings` | jackhumbert/mod_settings | Ours. Built in-tree for its redscript API. |
 | `deps/archive_xl`, `deps/tweak_xl` | psiberx | Used for their C++ API headers only (`ArchiveXL.hpp`, `TweakXL.hpp`). |
 | `deps/spdlog`, `deps/detours` | upstream | Stable. |
 
