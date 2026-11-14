@@ -737,6 +737,7 @@ void FlightModeAutopilot::DescribeFields(RED4ext::CClass *aType) {
   LTBF_AP_FIELD(float, "speedRate", ap.tracker.speedRate);
   LTBF_AP_FIELD(bool, "surgeHeld", ap.tracker.surge.held);
   LTBF_AP_FIELD(float, "surgeChanging", ap.tracker.surge.changing);
+  LTBF_AP_FIELD(float, "surgeWeight", ap.tracker.surge.weight);
   // the drone attitude's and the attitude control's
   LTBF_AP_FIELD(float, "droneYaw", ap.attitude.droneYaw);
   LTBF_AP_FIELD(float, "droneYawRate", ap.attitude.droneYawRate);
@@ -751,9 +752,7 @@ void FlightModeAutopilot::DescribeFields(RED4ext::CClass *aType) {
   LTBF_AP_FIELD(bool, "surgeFullSurge", ap.surgeHold.fullSurge);
   LTBF_AP_FIELD(float, "surgeSlack", ap.surgeHold.slack);
   LTBF_AP_FIELD(float, "surgeDwell", ap.surgeHold.dwell);
-  LTBF_AP_FIELD(float, "surgeAudioWindow", ap.surgeHold.audioWindow);
-  LTBF_AP_FIELD(float, "surgeAudioJump", ap.surgeHold.audioJump);
-  LTBF_AP_FIELD(float, "surgeAudioTime", ap.surgeHold.audioTime);
+  LTBF_AP_FIELD(float, "surgeRate", ap.surgeHold.rate);
   // AutopilotPlanAhead's (the script's ahead.<name>)
   LTBF_AP_FIELD(bool, "aheadEnabled", ap.ahead.enabled);
   LTBF_AP_FIELD(float, "aheadHorizon", ap.ahead.horizon);

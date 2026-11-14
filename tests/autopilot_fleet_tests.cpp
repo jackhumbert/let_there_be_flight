@@ -258,7 +258,8 @@ TEST(autopilot_fleet_follow) {
   CHECK(offMax < 6.5f);         // 5.95 m measured (Behemoth); 6.5
   CHECK(offSlow < 5.0f);        // 4.52 m measured; 5.0
   CHECK(errMax < 2.3f);         // 2.06 m/s measured; 2.3
-  CHECK(lateMax < -0.8f);       // -0.94 s measured: the surge hold flies every car a little ahead of its plan
+  CHECK(lateMax < -0.6f);       // -0.68 s measured: the surge hold flies every car a little ahead of its plan (up to
+                                // its slack; -0.94 s while it held full surge past the plan)
   CHECK(earlyMax > -1.4f);      // -1.28 s measured
   CHECK(tMax - tMin < 3.3f);    // 29.92 to 32.78 s measured: the drag's spread of top speed
 }
@@ -728,6 +729,7 @@ TEST(autopilot_fleet_character) {
   // Since the bends are planned with the surge the drag leaves and at the speed the surge hold flies (2026-11-04) the
   // Behemoth stays within 7.6 m (was 20.35). The worst left is a low-drag 6.2 m/s2 car (top 91 m/s) in the turn: it
   // flies the plan's speed, but its roll sits at the 55 deg cap and its 2.1 m/s2 of sway cannot take back the metres
-  // it lost entering the turn. 17.33 m measured.
-  CHECK(offMax < 18.5f);
+  // it lost entering the turn. 17.33 m measured while the surge hold held full surge past the plan; 19.13 m since its
+  // push falls off over the slack (the Behemoth 10.19 m), lost in the turn and once before it (s 825).
+  CHECK(offMax < 20.0f);
 }

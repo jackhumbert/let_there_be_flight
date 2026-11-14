@@ -59,11 +59,9 @@ struct Rng {
 struct AutopilotSurgeHold {
   bool dragFeedForward = true;
   bool fullSurge = true;
-  float slack = 4.0f;       // m/s over the trajectory's speed the surge is still held full
+  float slack = 4.0f;       // m/s over the trajectory's speed the push toward full surge falls off over
   float dwell = 0.3f;       // s a change of the hold has to last before it is taken
-  float audioWindow = 3.0f; // s the demand the command follows
-  float audioJump = 0.6f;   // share of full the demand has to fall below the command to follow over audioTime
-  float audioTime = 0.25f;  // s
+  float rate = 4.0f;        // share of full per s the hold's weight moves at most (a safety release lets go at once)
 };
 
 // AutopilotPlanAhead: a trip from rest asked for as a first leg flown at once, its rest spliced on at

@@ -96,11 +96,11 @@ FollowResult Follow(const VehicleSpec &aSpec, const Route &aRoute, const Traject
     th.x = Clamp(th.x, -aSpec.sway, aSpec.sway);
     th.y = Clamp(th.y, Navigation::Drag(aSpec, speed) - Decel(aSpec, speed), aSpec.surge);
     th.z = Clamp(th.z, g - aSpec.lift, g + aSpec.lift);
-    if (state.surge.held) {
-      // AutopilotSurge.Full: more along the path until the surge is full
+    if (state.surge.weight > 0.0f) {
+      // AutopilotSurge.Full: more along the path, toward full surge by the hold's weight
       const Vec3 path = local(Normalize(v));
       if (path.y >= 0.2f && th.y < aSpec.surge) {
-        th = Add(th, Mul(path, (aSpec.surge - th.y) / path.y));
+        th = Add(th, Mul(path, state.surge.weight * (aSpec.surge - th.y) / path.y));
       }
       th.x = Clamp(th.x, -aSpec.sway, aSpec.sway);
       th.z = Clamp(th.z, g - aSpec.lift, g + aSpec.lift);

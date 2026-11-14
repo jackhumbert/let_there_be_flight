@@ -300,6 +300,7 @@ AutopilotOutput Autopilot::Step(const AutopilotInput &aIn) {
   trackerParams.surge.fullSurge = surgeHold.fullSurge;
   trackerParams.surge.slack = surgeHold.slack;
   trackerParams.surge.dwell = surgeHold.dwell;
+  trackerParams.surge.rate = surgeHold.rate;
   if (following) {
     // the follower (Navigation::Track): the replans and the route request are the Autopilot's
     TrackInput track;
@@ -595,11 +596,13 @@ void Autopilot::FlyAerobatic(float aTimeDelta, const Vec3 &aAccel, const Vec3 &a
   attitudeError = c.attitudeError;
   Flight::Vec3 local = c.thrust;
   const float g = 9.81f * in->standard.gravityFactor;
-  // where the speed is the car's to set, the surge held full along the path (Navigation::Command decided it)
-  if (tracker.surge.held) {
+  // where the speed is the car's to set, the surge pushed toward full along the path by the hold's weight
+  // (Navigation::Command decided it)
+  const float surgeWeight = tracker.surge.weight;
+  if (surgeWeight > 0.0f) {
     const Flight::Vec3 path = Flight::Rotate(Flight::Conjugate(stats.d_orientation), Flight::Normalize(stats.d_velocity));
     if (!(path.y < 0.2f || local.y >= surgeMax)) {
-      local = Flight::Add(local, Flight::Mul(path, (surgeMax - local.y) / path.y));
+      local = Flight::Add(local, Flight::Mul(path, surgeWeight * (surgeMax - local.y) / path.y));
     }
     local.x = Clamp(local.x, -swayMax, swayMax);
     local.z = Clamp(local.z, g - in->standard.liftFactor, g + in->standard.liftFactor);
@@ -607,13 +610,10 @@ void Autopilot::FlyAerobatic(float aTimeDelta, const Vec3 &aAccel, const Vec3 &a
   aOut.force = local;
   thrustCmd = local;
   aOut.torque = c.torque;
-  // inputs for audio and the thrusters' look; no yaw input, ApplyPhysics damps less on an axis with input
-  auto ease = [&](float aCurrent, float aTarget) {
-    const float time = aTarget < aCurrent - surgeHold.audioJump ? surgeHold.audioTime : surgeHold.audioWindow;
-    return aCurrent + (aTarget - aCurrent) * Clamp(aTimeDelta / std::max(time, 0.001f), 0.0f, 1.0f);
-  };
-  commandSurge = ease(commandSurge, Clamp(local.y / surgeMax, -1.0f, 1.0f));
-  commandSway = ease(commandSway, Clamp(local.x / swayMax, -1.0f, 1.0f));
+  // inputs for audio, the thrust as a share of full, not eased; no yaw input, ApplyPhysics damps less on an
+  // axis with input
+  commandSurge = Clamp(local.y / surgeMax, -1.0f, 1.0f);
+  commandSway = Clamp(local.x / swayMax, -1.0f, 1.0f);
   aOut.commandSurge = commandSurge;
   aOut.commandSway = commandSway;
   aOut.writeControls = true;

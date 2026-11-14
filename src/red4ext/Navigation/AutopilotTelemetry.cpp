@@ -97,7 +97,7 @@ std::vector<float> AutopilotTelemetryRow(const Autopilot &aAp, float aClock, con
           aAp.thrustCmd.x,
           aAp.thrustCmd.y,
           aAp.thrustCmd.z,
-          t.surge.held ? 1.0f : 0.0f,
+          t.surge.weight,
           drift,
           aAp.commandSurge};
 }

@@ -211,10 +211,11 @@ TEST(follow_surge_clamp_limits_speeding_up) {
   CHECK(weak.time > good.time + 1.0f);         // 17.75 s measured against 16.37
 }
 
-TEST(follow_surge_hold_passes_the_plan) {
+TEST(follow_surge_hold_settles_in_the_slack) {
   // 2500 m from 60 m/s: the plan reaches its Top limit and holds it (27.65 s). With the surge hold on, the
-  // car keeps the surge full on that stretch and goes past the plan on purpose (the hold's slack is 4 m/s);
-  // with it off it follows the plan.
+  // surge is pushed toward full by a weight that falls off over the slack (4 m/s) above the plan, so the car
+  // settles a little past the plan with a steady surge (it used to switch between full and the controller's
+  // every 1.5 s, which the thrusters showed); with it off it follows the plan.
   const auto line = Straight(2500.0f);
   const VehicleSpec spec;
   TrajectoryParams tp;
@@ -235,13 +236,27 @@ TEST(follow_surge_hold_passes_the_plan) {
     }
     return m;
   };
+  // the forward thrust over the second half: its range, and the largest change from one frame to the next
+  float lo = 1e9f, hi = -1e9f, step = 0.0f;
+  for (size_t i = with.frames.size() / 2; i < with.frames.size(); ++i) {
+    const float y = with.frames[i].got.y;
+    lo = std::min(lo, y);
+    hi = std::max(hi, y);
+    if (i > with.frames.size() / 2) {
+      step = std::max(step, std::fabs(y - with.frames[i - 1].got.y));
+    }
+  }
+  std::printf("  hold on, second half: surge %.3f to %.3f m/s2, largest step %.4f\n", lo, hi, step);
   CHECK(without.held == 0);
   CHECK(over(without) < 0.1f);         // 0.01 m/s measured
-  CHECK(with.held > 1000);             // 1137 frames (18.9 s) measured
-  CHECK(over(with) > 5.0f);            // 5.36 m/s past the plan measured
-  CHECK(with.speedBiasMean > 3.0f);    // 3.215 measured
-  CHECK(with.time < without.time - 0.9f); // 26.60 s against 27.57
-  CHECK(with.offMax < 0.3f);           // 0.221 m measured
+  CHECK(with.held > 1000);
+  CHECK(over(with) > 1.0f);            // past the plan, but inside the slack
+  CHECK(over(with) < on.tracker.surge.slack);
+  CHECK(with.speedBiasMean > 1.0f);
+  CHECK(with.time < without.time - 0.3f);
+  CHECK(with.offMax < 0.3f);
+  CHECK(hi - lo < 0.5f);               // steady: no cycle between full and the controller's
+  CHECK(step < 0.1f);
 }
 
 TEST(follow_blocked_ahead) {

@@ -216,6 +216,7 @@ public native class FlightModeAutopilot extends FlightMode {
   public native let speedRate: Float;
   public native let surgeHeld: Bool;
   public native let surgeChanging: Float;
+  public native let surgeWeight: Float;
   public native let droneYaw: Float;
   public native let droneYawRate: Float;
   public native let dronePitch: Float;
@@ -228,9 +229,7 @@ public native class FlightModeAutopilot extends FlightMode {
   public native let surgeFullSurge: Bool;
   public native let surgeSlack: Float;
   public native let surgeDwell: Float;
-  public native let surgeAudioWindow: Float;
-  public native let surgeAudioJump: Float;
-  public native let surgeAudioTime: Float;
+  public native let surgeRate: Float;
   public native let aheadEnabled: Bool;
   public native let aheadHorizon: Float;
   public native let aheadMinTrip: Float;
