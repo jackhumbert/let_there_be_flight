@@ -42,6 +42,9 @@ constexpr double kCarObjectRange = 6.0;
 constexpr float kCarObjectEvery = 0.5f;
 // the game's sends noted, logged this often (s)
 constexpr float kReverbLogEvery = 10.0f;
+// a playing voice Wwise has not rendered for this long (s), while not paused, has been stopped under us (the game
+// stops its sounds when the world goes, after V dies) and is posted again
+constexpr float kStallSeconds = 1.0f;
 
 // our listener: the first of our game objects; the voices' from kFirstVoice on
 const AkGameObjectID kListener = ObjectId(1);
@@ -95,8 +98,13 @@ private:
   // the sends' generation last set on its object (Sends: the car's)
   uint64_t sendsGeneration = 0;
   AkWorldTransform transform{};
+  // the renders seen at the last Sync, and since when that count has not moved (game thread)
+  uint64_t seenRenders = 0;
+  std::chrono::steady_clock::time_point stillSince{};
   // set on the game thread, read on the audio thread
   std::atomic<bool> paused{true}, fresh{true};
+  // Render's calls (audio thread), for Sync to see a voice Wwise has dropped
+  std::atomic<uint64_t> renders{0};
   std::atomic<float> volume{0}, rolloff{1}, cutoff{0};
   // the audio thread's
   Mix mix;
@@ -170,14 +178,14 @@ public:
       playingNow += v->Playing();
     }
     return fmt::format("{{\"backend\":\"wwise\",\"ready\":{},\"bank\":{},\"listener\":{},\"voices\":{},"
-                       "\"playing\":{},\"posts\":{},\"failedPosts\":{},\"relay\":{{\"installed\":{},\"reinstalls\":{},"
-                       "\"ours\":{},\"passed\":{},\"unanswered\":{},\"loops\":{},\"frames\":{}}}}}",
-                       ready, bankResult, lastListenerResult, voices.size(), playingNow, posts, failedPosts,
+                       "\"playing\":{},\"posts\":{},\"failedPosts\":{},\"restarts\":{},\"relay\":{{\"installed\":{},"
+                       "\"reinstalls\":{},\"ours\":{},\"passed\":{},\"unanswered\":{},\"loops\":{},\"frames\":{}}}}}",
+                       ready, bankResult, lastListenerResult, voices.size(), playingNow, posts, failedPosts, restarts,
                        install.installed, install.reinstalls, s.ours, s.passed, s.unanswered, s.loops, s.frames);
   }
 
   Shared shared;
-  uint64_t posts = 0, failedPosts = 0;
+  uint64_t posts = 0, failedPosts = 0, restarts = 0;
 
 private:
   // Wwise is up by the first game frame: our bank and our listener
@@ -331,8 +339,21 @@ void WwiseVoice::Sync(bool aReady, AkGameObjectID aListener) {
     StopPlaying();
     return;
   }
+  const auto now = std::chrono::steady_clock::now();
   if (playing) {
-    return;
+    const uint64_t r = renders.load(std::memory_order_relaxed);
+    if (r != seenRenders || backend.shared.paused.load()) {
+      seenRenders = r;
+      stillSince = now;
+      return;
+    }
+    if (std::chrono::duration<float>(now - stillSince).count() < kStallSeconds) {
+      return;
+    }
+    ++backend.restarts;
+    spdlog::info("[Out] Wwise stopped '{}' under us (not rendered for {:.0f} s): posting it again", options.name,
+                 kStallSeconds);
+    StopPlaying();
   }
   if (!registered) {
     registered = ak.registerGameObj(object, options.name) == AK_Success;
@@ -357,9 +378,12 @@ void WwiseVoice::Sync(bool aReady, AkGameObjectID aListener) {
     return;
   }
   ++backend.posts;
+  seenRenders = renders.load(std::memory_order_relaxed);
+  stillSince = now;
 }
 
 void WwiseVoice::Render(float *aData, uint32_t aFrames, uint32_t aChannels) {
+  renders.fetch_add(1, std::memory_order_relaxed);
   if (fresh.exchange(false)) {
     mix.Reset();
   }
