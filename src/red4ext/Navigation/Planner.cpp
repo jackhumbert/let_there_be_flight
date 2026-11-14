@@ -427,6 +427,8 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
     }
   }
 
+  const GuideField guide(aParams); // guideCost
+
   // street level per 32 m block: the lowest floor in it (overCost); a block worked out once a search
   std::unordered_map<uint64_t, float> streetLevel;
   auto street = [&](int32_t aCx, int32_t aCy) -> float {
@@ -453,6 +455,7 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
   // start seed to the goal; aLimit says the search ran out of expansions.
   auto search = [&](const Corridor *aAllowed, std::vector<uint64_t> &aPath, bool &aLimit) -> bool {
     std::unordered_map<uint64_t, Rec> recs;
+    std::unordered_map<uint64_t, float> guideOff; // GuideField::Off per node, worked out on first use
     recs.reserve(size_t(1) << 20);
     std::priority_queue<Entry, std::vector<Entry>, std::greater<Entry>> open;
     uint32_t expansions = 0;
@@ -563,6 +566,17 @@ PlanResult Plan(const NavMap &aMap, Vec3 aStart, Vec3 aGoal, const PlanParams &a
               const float cosine = (float(kDx[d]) * heading.x + float(kDy[d]) * heading.y) / std::hypot(float(kDx[d]), float(kDy[d]));
               cost += aParams.startHeadingCost * step * 0.5f * (1.0f - cosine) * (1.0f - from / headingReach);
             }
+          }
+          if (guide.Active()) {
+            // once per node: up to eight neighbours step into it
+            const uint64_t k = MakeKey(nx, ny, j, width);
+            auto [at, fresh] = guideOff.try_emplace(k, 0.0f);
+            if (fresh) {
+              float x, y;
+              aMap.CellCentre(nx, ny, x, y);
+              at->second = guide.Off(x, y, next.b, next.t);
+            }
+            cost += aParams.guideCost * step * at->second;
           }
           if (!aParams.avoid.empty()) {
             float x, y;

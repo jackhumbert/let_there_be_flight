@@ -197,6 +197,11 @@ struct AutopilotParams {
   // per metre flown over a building (PlanParams.overCost): legs go round buildings rather than over
   // them (on two Dogtown legs 17 to 21% over buildings instead of 37%, the legs 3 to 14 s longer)
   float freeRoamOverCost = 2.0f;
+  // per metre flown off the game's roads (Roads, roads.tsv; PlanParams.guideCost): legs keep near some
+  // road, 15 to 40 m over it, and may leave one for another; 0: off. freeRoamGuideLine: the line kept
+  // to that band too, not only the route search
+  float freeRoamGuideCost = 0.0f;
+  bool freeRoamGuideLine = false;
   float positionJumpHold = 0.5f; // s a jump is held off before it counts as a real move
 };
 

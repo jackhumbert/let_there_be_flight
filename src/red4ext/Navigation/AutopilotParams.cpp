@@ -117,6 +117,8 @@ const std::vector<AutopilotParamRef> &AutopilotParamTable() {
       {"freeRoamHeightFree", &P::freeRoamHeightFree, nullptr, nullptr},
       {"freeRoamHeightWavelength", &P::freeRoamHeightWavelength, nullptr, nullptr},
       {"freeRoamOverCost", &P::freeRoamOverCost, nullptr, nullptr},
+      {"freeRoamGuideCost", &P::freeRoamGuideCost, nullptr, nullptr},
+      {"freeRoamGuideLine", nullptr, nullptr, &P::freeRoamGuideLine},
       {"positionJumpHold", &P::positionJumpHold, nullptr, nullptr},
   };
   return table;

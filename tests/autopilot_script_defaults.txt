@@ -143,4 +143,6 @@ public let freeRoamRouteHeight: Float = 15.0;
 public let freeRoamHeightFree: Float = 8.0;
 public let freeRoamHeightWavelength: Float = 300.0;
 public let freeRoamOverCost: Float = 2.0;
+public let freeRoamGuideCost: Float = 0.0;
+public let freeRoamGuideLine: Bool = false;
 public let positionJumpHold: Float = 0.5;

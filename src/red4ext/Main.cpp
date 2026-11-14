@@ -24,6 +24,7 @@
 #include "Navigation/Gates.hpp"
 #include "Navigation/Helipads.hpp"
 #include "Navigation/NavMap.hpp"
+#include "Navigation/Roads.hpp"
 #include <RED4ext/ResourceDepot.hpp>
 #include <filesystem>
 #include <fstream>
@@ -240,6 +241,7 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
     // (FlightBoundariesSystem in src/redscript/Navigation/FlightBoundaries.reds)
     Navigation::Boundaries::Get().Load(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "boundaries.tsv");
     Navigation::Blockers::Get().Load(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "blockers.txt");
+    Navigation::Roads::Get().Load(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "roads.tsv");
     Navigation::Blockers::Get().LoadHidden(Utils::GetRootDir() / "red4ext" / "plugins" / "let_there_be_flight" / "hidden_nodes.txt");
 
     RED4ext::RTTIRegistrator::Add(RegisterTypes, PostRegisterTypes);

@@ -17,6 +17,7 @@
 //   NAVPLAN_PARAMS=a=1,b=2  PlanParams fields by name (the table below), applied after the preset
 //   NAVPLAN_VEHICLE=a=1,..  the car (VehicleSpec fields by name; tools/navplan/vehicles.json names cars)
 //   NAVPLAN_LINE=<csv>     build the trajectory on this line (x,y,z columns) instead of planning one
+//   NAVPLAN_GUIDE=<csv>    PlanParams::guide, a path to keep to (x,y,z columns; guideCost sets its weight)
 //   NAVPLAN_REPEAT=1        plan the line again: what a later plan costs once its doorways are known
 //   NAVPLAN_AHEAD=h,m       plan ahead (docs/design/trajectory.md step 7): a first leg of h metres
 //                           along the doorway route, the rest planned from where the car will be on it
@@ -85,9 +86,37 @@ const Field kFields[] = {
     F(lineOverThick), F(lineOverRise), F(lineOverGain), F(lineOverWindow), F(lineCeilingClearance), F(linePush),
     F(lineSpread), F(lineCorridorIterations), F(lineCorridorMax), F(lineCorridorMargin), F(lineCurvatureRate),
     F(lineTurnRounds), F(lineTurnWeightMax), F(lineStep), F(lineVerticalWeight), F(directMargin), F(maxCruise), F(slotDetourLoss), F(slotDetourShare), F(slotDetourLossMin), F(slotAvoidRadius),
-    F(slotAvoidCost), F(lineSettle), F(overCost), F(overHeight),
+    F(slotAvoidCost), F(lineSettle), F(overCost), F(overHeight), F(guideLow), F(guideHigh), F(guideRadius),
+    F(guideRamp), F(guideCost), F(guideLine),
 };
 #undef F
+
+// x,y,z columns of a CSV with a header row (NAVPLAN_LINE, NAVPLAN_GUIDE)
+std::vector<Navigation::Vec3> ReadPoints(const char *aPath) {
+  std::vector<Navigation::Vec3> points;
+  FILE *f = std::fopen(aPath, "r");
+  if (!f) {
+    return points;
+  }
+  char row[512];
+  std::fgets(row, sizeof(row), f); // header
+  int32_t x = -1, y = -1, z = -1, col = 0;
+  for (char *c = std::strtok(row, ",\r\n"); c; c = std::strtok(nullptr, ",\r\n"), ++col) {
+    x = std::strcmp(c, "x") == 0 ? col : x;
+    y = std::strcmp(c, "y") == 0 ? col : y;
+    z = std::strcmp(c, "z") == 0 ? col : z;
+  }
+  while (x >= 0 && y >= 0 && z >= 0 && std::fgets(row, sizeof(row), f)) {
+    float v[32] = {};
+    col = 0;
+    for (char *c = std::strtok(row, ","); c && col < 32; c = std::strtok(nullptr, ","), ++col) {
+      v[col] = std::strtof(c, nullptr);
+    }
+    points.push_back({v[x], v[y], v[z]});
+  }
+  std::fclose(f);
+  return points;
+}
 
 bool SetParams(PlanParams &aParams, const std::string &aText) {
   std::stringstream items(aText);
@@ -303,29 +332,15 @@ int main(int argc, char **argv) {
     params.vehicle = Navigation::Effective(params.vehicle); // its thrust, when thrusters and thrustStrength are set
   }
   std::printf("vehicle %s\n", params.vehicle.Describe().c_str());
+  if (const char *given = std::getenv("NAVPLAN_GUIDE")) {
+    params.guide = ReadPoints(given);
+    std::printf("guide %s: %zu points\n", given, params.guide.size());
+  }
   // as the Autopilot plans it: with its retries when the first search fails; or a line given as a
   // CSV (NAVPLAN_LINE, x,y,z columns: a RouteDump from the game) to build its trajectory alone
   Navigation::PlanResult line;
   if (const char *given = std::getenv("NAVPLAN_LINE")) {
-    if (FILE *f = std::fopen(given, "r")) {
-      char row[512];
-      std::fgets(row, sizeof(row), f); // header
-      int32_t x = -1, y = -1, z = -1, col = 0;
-      for (char *c = std::strtok(row, ",\r\n"); c; c = std::strtok(nullptr, ",\r\n"), ++col) {
-        x = std::strcmp(c, "x") == 0 ? col : x;
-        y = std::strcmp(c, "y") == 0 ? col : y;
-        z = std::strcmp(c, "z") == 0 ? col : z;
-      }
-      while (std::fgets(row, sizeof(row), f)) {
-        float v[32] = {};
-        col = 0;
-        for (char *c = std::strtok(row, ","); c && col < 32; c = std::strtok(nullptr, ","), ++col) {
-          v[col] = std::strtof(c, nullptr);
-        }
-        line.points.push_back({v[x], v[y], v[z]});
-      }
-      std::fclose(f);
-    }
+    line.points = ReadPoints(given);
     line.ok = line.points.size() >= 2;
     line.info = "line from " + std::string(given) + ": " + std::to_string(line.points.size()) + " points";
   } else {

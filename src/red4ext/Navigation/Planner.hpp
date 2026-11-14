@@ -78,6 +78,20 @@ struct PlanParams {
   // rather than over them (free roam); 0: no cost
   float overCost = 0.0f;
   float overHeight = 10.0f;      // m
+  // paths to keep to (the game's roads, say; a point with a NaN x breaks one path from the next, and
+  // the route may leave one for another, paying for the stretch between): within guideRadius of one
+  // across and between
+  // guideLow and guideHigh over its height costs nothing extra; past either the search charges up
+  // to guideCost per metre, reached over guideRamp metres, and the line keeps to the band where it
+  // is within guideRadius and the band is free. A charge off the path rather than a discount on it,
+  // so the heuristic (straight distance) stays a lower bound. Empty guide or guideCost 0: none.
+  std::vector<Vec3> guide;
+  float guideLow = 15.0f;        // m over the path
+  float guideHigh = 40.0f;       // m over the path
+  float guideRadius = 20.0f;     // m across
+  float guideRamp = 20.0f;       // m
+  float guideCost = 0.0f;
+  bool guideLine = true;         // the line kept to the band too
   // the line: the route evened out to points lineSpacing apart and bent as little as the free space
   // allows (least summed squared curvature), coarse to fine. Off only for a piece the caller makes
   // its line from together with what follows (PlanRejoin's connector).

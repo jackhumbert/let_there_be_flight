@@ -31,6 +31,82 @@ float Preferred(GapM aGap, float aHeight) {
   return z;
 }
 
+namespace {
+constexpr float kGuideBucket = 16.0f; // the city's lanes are dense: a bigger square holds hundreds
+uint64_t GuideKey(int32_t aBx, int32_t aBy) { return (uint64_t(uint32_t(aBx)) << 32) | uint32_t(aBy); }
+} // namespace
+
+GuideField::GuideField(const PlanParams &aParams)
+    : low(aParams.guideLow), high(aParams.guideHigh), radius(aParams.guideRadius), ramp(std::max(aParams.guideRamp, 0.1f)),
+      reach(aParams.guideRadius + std::max(aParams.guideRamp, 0.1f)) {
+  if (aParams.guideCost <= 0.0f || aParams.guide.size() < 2) {
+    return;
+  }
+  for (size_t i = 0; i + 1 < aParams.guide.size(); ++i) {
+    const Vec3 a = aParams.guide[i], b = aParams.guide[i + 1];
+    if (!std::isfinite(a.x) || !std::isfinite(b.x)) {
+      continue; // a break between two paths
+    }
+    const auto index = uint32_t(segments.size());
+    segments.push_back({a, b});
+    const int32_t x0 = int32_t(std::floor((std::min(a.x, b.x) - reach) / kGuideBucket));
+    const int32_t x1 = int32_t(std::floor((std::max(a.x, b.x) + reach) / kGuideBucket));
+    const int32_t y0 = int32_t(std::floor((std::min(a.y, b.y) - reach) / kGuideBucket));
+    const int32_t y1 = int32_t(std::floor((std::max(a.y, b.y) + reach) / kGuideBucket));
+    for (int32_t by = y0; by <= y1; ++by) {
+      for (int32_t bx = x0; bx <= x1; ++bx) {
+        buckets[GuideKey(bx, by)].push_back(index);
+      }
+    }
+  }
+}
+
+// aEach(across, height of the path there) for every segment within reach of (aX, aY)
+template <typename F> void GuideField::Near(float aX, float aY, F &&aEach) const {
+  auto it = buckets.find(GuideKey(int32_t(std::floor(aX / kGuideBucket)), int32_t(std::floor(aY / kGuideBucket))));
+  if (it == buckets.end()) {
+    return;
+  }
+  for (uint32_t i : it->second) {
+    const Seg &s = segments[i];
+    const float dx = s.b.x - s.a.x, dy = s.b.y - s.a.y, l2 = dx * dx + dy * dy;
+    const float t = l2 > 0.0f ? std::clamp(((aX - s.a.x) * dx + (aY - s.a.y) * dy) / l2, 0.0f, 1.0f) : 0.0f;
+    const float across = std::hypot(aX - (s.a.x + dx * t), aY - (s.a.y + dy * t));
+    if (across <= reach) {
+      aEach(across, s.a.z + (s.b.z - s.a.z) * t);
+    }
+  }
+}
+
+float GuideField::Off(float aX, float aY, float aB, float aT) const {
+  float best = 1.0f;
+  const float top = std::min(aT, kTopCap);
+  Near(aX, aY, [&](float aAcross, float aZ) {
+    const float lo = aZ + low, hi = aZ + high;
+    const float dz = std::max({0.0f, lo - top, aB - hi});
+    const float off = std::clamp((aAcross - radius) / ramp, 0.0f, 1.0f) + std::clamp(dz / ramp, 0.0f, 1.0f);
+    best = std::min(best, off);
+  });
+  return best;
+}
+
+bool GuideField::BandAt(float aX, float aY, float aZ, float &aLo, float &aHi) const {
+  float bestDz = kInf;
+  Near(aX, aY, [&](float aAcross, float aZ0) {
+    if (aAcross > radius) {
+      return;
+    }
+    const float lo = aZ0 + low, hi = aZ0 + high;
+    const float dz = std::max({0.0f, lo - aZ, aZ - hi});
+    if (dz < bestDz) {
+      bestDz = dz;
+      aLo = lo;
+      aHi = hi;
+    }
+  });
+  return std::isfinite(bestDz);
+}
+
 bool Anchor(NavMap::View &aView, Vec3 aP, int32_t &aCx, int32_t &aCy, uint32_t &aGap) {
   const NavMap &map = aView.Map();
   int32_t c0x, c0y;

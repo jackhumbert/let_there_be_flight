@@ -125,6 +125,7 @@ void SmoothHeights(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
   const float spacing = along.back() / float(n - 1);
   const float pull = aParams.lineHeightWavelength > 0.0f ? std::pow(6.2831853f / aParams.lineHeightWavelength, 4.0f) : 0.0f;
   bool ceilings = false;
+  const GuideField guide(aParams);
   for (size_t i = 2; i + 2 < n; ++i) {
     Gap gap;
     if (aMap.FindGap(aPts[i].x, aPts[i].y, aPts[i].z, gap)) {
@@ -140,6 +141,13 @@ void SmoothHeights(const NavMap &aMap, std::vector<Vec3> &aPts, const PlanParams
       // the line where it is now is always allowed (a band can sit above it near a takeoff)
       lo[i] = std::min(lo[i], z[i]);
       hi[i] = std::max(hi[i], z[i]);
+      // near the guide, its band where that is inside this one
+      float glo, ghi;
+      if (aParams.guideLine && guide.Active() && guide.BandAt(aPts[i].x, aPts[i].y, z[i], glo, ghi) &&
+          std::max(lo[i], glo) <= std::min(hi[i], ghi)) {
+        lo[i] = std::max(lo[i], glo);
+        hi[i] = std::min(hi[i], ghi);
+      }
       // the gap over whatever is overhead, for the line to go over it instead
       if (aParams.lineOverReach >= 0.0f && std::isfinite(gap.top) && along[i] > aParams.lineOverEnds && along.back() - along[i] > aParams.lineOverEnds) {
         for (const Gap &g : aMap.GetGaps(aPts[i].x, aPts[i].y)) {

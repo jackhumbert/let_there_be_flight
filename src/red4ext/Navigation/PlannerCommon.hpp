@@ -8,6 +8,7 @@
 #include <cmath>
 #include <cstdint>
 #include <limits>
+#include <unordered_map>
 #include <vector>
 
 namespace Navigation::detail {
@@ -76,6 +77,28 @@ std::vector<Vec3> Respace(const NavMap &aMap, const std::vector<Vec3> &aPoints, 
 // Each leg of the polyline cut into equal steps of at most aSpacing, its corners kept: every new
 // leg lies on an old one, so a free polyline stays free.
 std::vector<Vec3> Resample(const std::vector<Vec3> &aPoints, float aSpacing);
+
+// PlanParams::guide for lookups: its segments bucketed in 16 m squares.
+class GuideField {
+public:
+  explicit GuideField(const PlanParams &aParams);
+  bool Active() const { return !segments.empty(); }
+  // the share of guideCost (0..1) a step into gap [aB, aT] at (aX, aY) pays: across past
+  // guideRadius plus the gap's distance from the band, each over guideRamp; the best of the
+  // segments near (roads stacked on decks)
+  float Off(float aX, float aY, float aB, float aT) const;
+  // the band [aLo, aHi] over the segment within guideRadius of (aX, aY) whose band is nearest aZ
+  bool BandAt(float aX, float aY, float aZ, float &aLo, float &aHi) const;
+
+private:
+  struct Seg {
+    Vec3 a, b;
+  };
+  template <typename F> void Near(float aX, float aY, F &&aEach) const;
+  std::vector<Seg> segments;
+  std::unordered_map<uint64_t, std::vector<uint32_t>> buckets;
+  float low, high, radius, ramp, reach;
+};
 
 // The line through the route's corridor (Line.cpp).
 std::vector<Vec3> Line(const NavMap &aMap, const std::vector<Vec3> &aRoute, const PlanParams &aParams);

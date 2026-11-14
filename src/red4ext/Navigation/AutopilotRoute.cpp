@@ -6,6 +6,7 @@
 #include "Autopilot.hpp"
 
 #include "AutopilotDetail.hpp"
+#include "Roads.hpp"
 
 #include <spdlog/spdlog.h>
 
@@ -171,9 +172,13 @@ void Autopilot::RequestRoute(const Vec3 &aFrom) {
   // from rest: a first leg at once, the rest planned while the car flies it
   if (freeRoam) {
     const FreeRoamShape free{params.freeRoamHeightFree, params.freeRoamHeightWavelength, params.freeRoamOverCost};
-    request = plans.Race(aFrom, routeGoal,
-                         FreeRoamParams(planBase, RaceShape(params, params.freeRoamRouteHeight), free, &vehicle, hits,
-                                        velocity));
+    auto leg = FreeRoamParams(planBase, RaceShape(params, params.freeRoamRouteHeight), free, &vehicle, hits, velocity);
+    if (params.freeRoamGuideCost > 0.0f && Roads::Get().IsLoaded()) {
+      leg.guideCost = params.freeRoamGuideCost;
+      leg.guideLine = params.freeRoamGuideLine;
+      Roads::Get().Near(aFrom, routeGoal, 400.0f, leg.guide);
+    }
+    request = plans.Race(aFrom, routeGoal, leg);
   } else if (!AheadRequest(aFrom, velocity)) {
     request = plans.Race(aFrom, routeGoal,
                          RaceParams(planBase, RaceShape(params, params.raceRouteHeight), &vehicle, true, hits, velocity));

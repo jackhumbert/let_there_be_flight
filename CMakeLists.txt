@@ -197,6 +197,7 @@ add_executable(navplan EXCLUDE_FROM_ALL
   src/red4ext/Navigation/Aerobatics.cpp
   src/red4ext/Navigation/Autopilot.cpp
   src/red4ext/Navigation/AutopilotRoute.cpp
+  src/red4ext/Navigation/Roads.cpp
   src/red4ext/Navigation/AutopilotFreeRoam.cpp
   src/red4ext/Navigation/AutopilotDescent.cpp
   src/red4ext/Navigation/NavMap.cpp
@@ -376,6 +377,7 @@ add_executable(ltbf_tests
   src/red4ext/Navigation/Landing.cpp
   src/red4ext/Navigation/Autopilot.cpp
   src/red4ext/Navigation/AutopilotRoute.cpp
+  src/red4ext/Navigation/Roads.cpp
   src/red4ext/Navigation/AutopilotFreeRoam.cpp
   src/red4ext/Navigation/AutopilotDescent.cpp
   src/red4ext/Navigation/AutopilotTelemetry.cpp

@@ -125,6 +125,8 @@ public native class FlightModeAutopilot extends FlightMode {
   public native let freeRoamHeightFree: Float;
   public native let freeRoamHeightWavelength: Float;
   public native let freeRoamOverCost: Float;
+  public native let freeRoamGuideCost: Float;
+  public native let freeRoamGuideLine: Bool;
   public native let positionJumpHold: Float;
 
   // The state (Navigation/Autopilot.hpp), under the script's names: the C++ fields themselves for numbers and flags,
