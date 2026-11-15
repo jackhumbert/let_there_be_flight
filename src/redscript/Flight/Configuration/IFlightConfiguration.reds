@@ -46,8 +46,6 @@ public abstract native class IFlightConfiguration extends IScriptable {
   public func OnSetup(vehicle: ref<VehicleObject>) {
     let name = NameToString(vehicle.GetCurrentAppearanceName());
 
-    // if (VehicleComponent.CheckVehicleDesiredTag(vehicle, n"Sport"))
-    
     if StrFindFirst(name, "poor") > -1 {
       this.type = FlightVehicleType.Poor;
     }
@@ -77,15 +75,6 @@ public abstract native class IFlightConfiguration extends IScriptable {
     if (Equals(this.type, FlightVehicleType.Corpo)) {
       defaultMesh = r"user\\jackhumbert\\meshes\\engine_corpo.mesh";
     }
-
-    // let appearanceTweak = vehicle.GetRecordID();
-    // TDBID.Append(appearanceTweak, t".thrusterAppearance");
-    // let thrusterAppearance = TweakDBInterface.GetCName(appearanceTweak, n"default");
-    
-    // let meshTweak = vehicle.GetRecordID();
-    // TDBID.Append(meshTweak, t".thrusterMesh");
-    // let thrusterMesh = TweakDBInterface.GetResRef(meshTweak, defaultMesh);
-
 
     let mc = new PhysicalMeshComponent();
     mc.SetMesh(vehicle.GetResRef("thrusterMesh", defaultMesh));

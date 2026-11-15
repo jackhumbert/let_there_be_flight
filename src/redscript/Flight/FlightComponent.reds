@@ -61,9 +61,7 @@ public native class FlightComponent extends GameComponent {
   // row 0, 1 or 2 of the world inertia AngularImpulseFor multiplies by (X, Y, Z of the matrix); W = 1, or all 0 when
   // it is not known
   public native func GetWorldInertiaRow(row: Int32) -> Vector4;
-  // public native func ChaseTarget() -> Void;
 
-  // private let helper: ref<vehicleFlightHelper>;
   private let stats: ref<FlightStats>;
   private let forceTail: ref<FlightForce>;
 
@@ -75,7 +73,6 @@ public native class FlightComponent extends GameComponent {
   public let isPlayerMounted: Bool;
 
   let hoverGroundPID: ref<PID>;
-  // let hoverPID: ref<PID>;
   let pitchPID: ref<PID>;
   let rollPID: ref<PID>;
 
@@ -104,9 +101,6 @@ public native class FlightComponent extends GameComponent {
   private let angularBrake: Float;
 
   public let thrusterTensor: Vector4;
-
-  // public let ui: wref<worlduiWidgetComponent>;
-  // public let ui_info: wref<worlduiWidgetComponent>;
 
   public let alarmIsPlaying: Bool;
 
@@ -198,41 +192,17 @@ public native class FlightComponent extends GameComponent {
 
   private final func OnGameAttach() -> Void {
     LTBF_RegisterListener(this);
-    // ArrayResize(this.playingScraping, 4);
-    // FlightLog.Info("[FlightComponent] OnGameAttach: " + this.GetVehicle().GetDisplayName());
     this.m_interaction = this.FindComponentByName(n"interaction") as InteractionComponent;
     this.m_healthStatPoolListener = new VehicleHealthStatPoolListener();
     this.m_healthStatPoolListener.m_owner = this.GetVehicle();
     GameInstance.GetStatPoolsSystem(this.GetVehicle().GetGame()).RequestRegisteringListener(Cast(this.GetVehicle().GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     this.m_vehicleBlackboard = this.GetVehicle().GetBlackboard();
-    // QuickhackModule.RequestRefreshQuickhackMenu(this.GetVehicle().GetGame(), this.GetVehicle().GetEntityID());
 
-
-    // let vehicleFlight = new PSMAddOnDemandStateMachine();
-    // vehicleFlight.stateMachineName = n"VehicleFlight";
-    // vehicleFlight.owner = this.GetVehicle();
-    // // vehicleFlight.instanceData = instanceData;
-    // // needs to be player?
-    // // mountChild.QueueEvent(vehicleFlight);
-    // // let vehicle: ref<VehicleObject> = this.GetVehicle();
-    // // let gameInstance: GameInstance = vehicle.GetGame();
-    // // let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
-    // GameInstance.GetPlayerSystem(this.GetVehicle().GetGame()).GetLocalPlayerControlledGameObject().QueueEvent(vehicleFlight);
-
-    // this.hoverGroundPID = PID.Create(1.0, 0.01, 0.1);
     this.hoverGroundPID = PID.Create(FlightSettings.GetVector3("hoverModePID"));
-    // this.hoverPID = PID.Create(1.0, 0.01, 0.1);
     this.pitchPID = PID.Create(FlightSettings.GetVector3("inputPitchPID"));
     this.rollPID =  PID.Create(FlightSettings.GetVector3("inputRollPID"));
 
-    // this.sys = FlightSystem.GetInstance();
-    // this.sys.RegisterComponent(this);
     this.sqs = GameInstance.GetSpatialQueriesSystem(this.GetVehicle().GetGame());
-    // this.fx = FlightFx.Create(this);
-    // this.thrusters = FlightThruster.CreateThrusters(this);
-
-    // this.helper = this.GetVehicle().AddFlightHelper();
-    // this.stats = FlightStats.Create(this.GetVehicle());
 
     this.collisionTimer = FlightSettings.GetFloat("collisionRecoveryDelay");
     this.distance = 0.0;
@@ -259,21 +229,12 @@ public native class FlightComponent extends GameComponent {
       }
     }
 
-    // if ArraySize(this.configuration.thrusters) == 0 {
-    //   this.configuration.thrusters = IFlightThruster.CreateThrusters(this);
-    // }
-    // this.sys.RegisterComponent(this);
   }
 
   private final func OnGameDetach() -> Void {
     LTBF_UnregisterListener(this);
-    //FlightLog.Info("[FlightComponent] OnGameDetach: " + this.GetVehicle().GetDisplayName());
     GameInstance.GetStatPoolsSystem(this.GetVehicle().GetGame()).RequestUnregisteringListener(Cast(this.GetVehicle().GetEntityID()), gamedataStatPoolType.Health, this.m_healthStatPoolListener);
     this.UnregisterVehicleTPPBBListener();
-
-    // let vehicleFlight = new PSMRemoveOnDemandStateMachine();
-    // vehicleFlight.stateMachineIdentifier.definitionName = n"VehicleFlight";
-    // GameInstance.GetPlayerSystem(this.GetVehicle().GetGame()).GetLocalPlayerControlledGameObject().QueueEvent(vehicleFlight);
 
     this.isDestroyed = true;
     this.hasExploded = true;
@@ -285,19 +246,6 @@ public native class FlightComponent extends GameComponent {
       mode.Deinitialize();
     }
   }
-
-  // private final func RegisterInputListener() -> Void {
-  //   let playerPuppet: ref<PlayerPuppet> = GameInstance.GetPlayerSystem(this.GetVehicle().GetGame()).GetLocalPlayerMainGameObject() as PlayerPuppet;
-  //   playerPuppet.RegisterInputListener(this, n"VehicleInsideWheel");
-  //   playerPuppet.RegisterInputListener(this, n"VehicleHorn");
-  // }
-
-  // private final func UnregisterInputListener() -> Void {
-  //   let playerPuppet: ref<PlayerPuppet> = GameInstance.GetPlayerSystem(this.GetVehicle().GetGame()).GetLocalPlayerMainGameObject() as PlayerPuppet;
-  //   if IsDefined(playerPuppet) {
-  //     playerPuppet.UnregisterInputListener(this);
-  //   };
-  // }
 
   protected final func SetupVehicleTPPBBListener() -> Void {
     let activeVehicleUIBlackboard: wref<IBlackboard>;
@@ -357,23 +305,12 @@ public native class FlightComponent extends GameComponent {
 
   // callbacks
 
-  // public let uiControl: ref<FlightControllerUI>;
-
   protected cb func OnMountingEvent(evt: ref<MountingEvent>) -> Bool {
 
-
-    // this.helper = this.GetVehicle().AddFlightHelper();
-    // LTBF_RegisterListener(this);
     this.thrusterTensor = this.configuration.GetThrusterTensor();
     FlightLog.Info("[FlightComponent] thrusterTensor: " + this.thrusterTensor.X + ", " + this.thrusterTensor.Y + ", " + this.thrusterTensor.Z + ", " + this.thrusterTensor.W);
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if mountChild.IsPlayer() {
-
-      // let instanceData: StateMachineInstanceData;
-      // let initData = new VehicleFlightInitData();
-      // initData.vehicle = this.GetVehicle();
-      // initData.driver = mountChild;
-      // instanceData.initData = initData;
 
       let vehicleFlight = new PSMAddOnDemandStateMachine();
       vehicleFlight.stateMachineName = n"VehicleFlight";
@@ -381,16 +318,9 @@ public native class FlightComponent extends GameComponent {
       // vehicleFlight.instanceData = instanceData;
       // needs to be player?
       mountChild.QueueEvent(vehicleFlight);
-      // let vehicle: ref<VehicleObject> = this.GetVehicle();
-      // let gameInstance: GameInstance = vehicle.GetGame();
-      // let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
-      // GameInstance.GetPlayerSystem(this.GetVehicle().GetGame()).GetLocalPlayerControlledGameObject().QueueEvent(vehicleFlight);
 
       FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName() + ": " + NameToString(this.GetVehicle().GetCurrentAppearanceName()));
       FlightLog.Info("[FlightComponent] TDBID: " + TDBID.ToStringDEBUG(this.GetVehicle().GetRecordID()));
-      // this.GetVehicle().TurnOffAirControl();
-      // FlightLog.Info("[FlightComponent] OnMountingEvent: " + this.GetVehicle().GetDisplayName());
-      // (this.GetVehicle().FindComponentByName(n"cars_sport_fx") as EffectSpawnerComponent).AddEffect();
       this.sys.SetPlayerComponent(this);
       this.sys.NotifyHudVehicleChanged(this.GetVehicle());
       this.sys.ctlr.ResetInputs();
@@ -398,10 +328,7 @@ public native class FlightComponent extends GameComponent {
       this.SetupVehicleTPPBBListener();
       // timing marker for the mount hitch
       FlightLog.Info("[FlightComponent] OnMountingEvent done");
-      // this.uiControl = FlightControllerUI.Create(this.ui_info.GetGameController(), this.ui_info.GetGameController().GetRootCompoundWidget());
-      // this.uiControl.Setup(this.stats);
     } else {
-      // FlightLog.Info("[FlightComponent] OnMountingEvent for other vehicle: " + this.GetVehicle().GetDisplayName());
     }
   }
 
@@ -431,7 +358,6 @@ public native class FlightComponent extends GameComponent {
   }
 
   protected cb func OnUnmountingEvent(evt: ref<UnmountingEvent>) -> Bool {
-    // LTBF_UnregisterListener(this);
     let mountChild: ref<GameObject> = GameInstance.FindEntityByID(this.GetVehicle().GetGame(), evt.request.lowLevelMountingInfo.childId) as GameObject;
     if IsDefined(mountChild) && mountChild.IsPlayer() {
       FlightLog.Info("[FlightComponent] OnUnmountingEvent: " + this.GetVehicle().GetDisplayName());
@@ -490,44 +416,18 @@ public native class FlightComponent extends GameComponent {
     }
   }
 
-  // protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool {
-  //   FlightLog.Info("[FlightComponent] OnAction: " + this.GetVehicle().GetDisplayName());
-  // }
-
   protected cb func OnVehicleFlightActivationEvent(evt: ref<VehicleFlightActivationEvent>) -> Bool {
     this.Activate();
   }
 
-  // Toggles flight on summon button press
-  // protected cb func OnSummonStartedEvent(evt: ref<SummonStartedEvent>) -> Bool {
-  //   if Equals(evt.state, vehicleSummonState.EnRoute) || Equals(evt.state, vehicleSummonState.AlreadySummoned) {
-  //     // this.CreateMappin();
-  //     if Equals(evt.state, vehicleSummonState.EnRoute) {
-  //       // this.SendParkEvent(false);
-  //     };
-  //     if Equals(evt.state, vehicleSummonState.AlreadySummoned) {
-  //       // this.HonkAndFlash();
-  //       if this.active {
-  //         this.Deactivate(false);
-  //       } else {
-  //         this.Activate();
-  //       }
-  //       // this.GetVehicle().PhysicsWakeUp();
-  //     };
-  //   };
-  // }
-
   public func Activate(opt silent: Bool) -> Void {
-    // this.helper = this.GetVehicle().AddFlightHelper();
     FlightLog.Info("[FlightComponent] Activating Flight: " + this.GetVehicle().GetDisplayName());
     FlightLog.Info("[FlightComponent] AppearanceName: " + NameToString(this.GetVehicle().GetCurrentAppearanceName()));
-    // this.GetVehicle().ScheduleAppearanceChange(this.GetVehicle().GetCurrentAppearanceName());
     if !this.active {
       this.stats = FlightStats.Create(this.GetVehicle());
       // OnMountingEvent sets it too, but a car flown with nobody in it (the pad summon) never gets
       // one: a zero tensor scales the pitch and yaw torque, damping included, to nothing
       this.thrusterTensor = this.configuration.GetThrusterTensor();
-      // this.sys.ctlr.ui.Setup(this.stats);
 
       this.SetupTires();
       for thruster in this.configuration.thrusters {
@@ -535,15 +435,10 @@ public native class FlightComponent extends GameComponent {
       }
       // these stop engine noises if they were already playing?
       this.GetVehicle().TurnEngineOn(false);
-      // this.GetVehicle().TurnOn(true);
-      // this.GetVehicle().GetVehicleComponent().GetVehicleControllerPS().SetLightMode(vehicleELightMode.HighBeams);
       this.GetVehicle().GetVehicleComponent().GetVehicleController().ToggleLights(true);
 
       this.hoverGroundPID.Reset();
-      // this.hoverPID.Reset();
-      // this.pitchGroundPID.Reset();
       this.pitchPID.Reset();
-      // this.rollGroundPID.Reset();
       this.rollPID.Reset();
 
       // the player's mode comes from the controller: pick it before activating, or the mode the
@@ -629,23 +524,6 @@ public native class FlightComponent extends GameComponent {
       }
       return;
     }
-    // something that responds to acceleration & collisions
-    // maybe just need a custom effect
-    // let velocity = this.GetVehicle().GetLinearVelocity();
-    // let acceleration = velocity - this.lastVelocity;
-    // this.lastVelocity = velocity;
-    // if Vector4.Length(acceleration) > this.accThreshold {
-    //   // if !IsDefined(this.accelerationFx) {
-    //     let fx = ResRefToFxResource(r"base\\fx\\player\\p_damage\\p_health_low.effect");
-    //     this.accelerationFx = GameInstance.GetFxSystem(this.GetVehicle().GetGame()).SpawnEffect(fx, new WorldTransform());
-    //   // }
-    //   this.smoothFx = LerpF(0.1, this.smoothFx, Vector4.Length(acceleration));
-    //   this.accelerationFx.SetBlackboardValue(n"health_state", ClampF(1.0 - (this.smoothFx - this.accThreshold) * 0.5, 0.0, 1.0));
-    // } else {
-    //   // if IsDefined(this.accelerationFx) {
-    //     this.accelerationFx.BreakLoop();
-    //   // }
-    // }
     if this.active {
       if this.isPlayerMounted {
         this.GetVehicle().ResetQuestEnforceTransform();
@@ -701,8 +579,6 @@ public native class FlightComponent extends GameComponent {
         torque += this.modes[this.mode].torque;
       }
     }
-
-
 
     // what the thrusters get; the plugin reads smoothForce for the sound (Audio/Inputs/Gather)
     this.smoothForce = force;
@@ -838,33 +714,17 @@ public native class FlightComponent extends GameComponent {
       };
       i += 1;
     };
-      // FlightLog.Info("[FlightComponent] OnGridDestruction: " + FloatToStringPrec(biggestImpact, 2));
     if biggestImpact > 0.00 {
       this.ProcessImpact(biggestImpact);
       if this.isPlayerMounted {
         this.sys.ctlr.ProcessImpact(biggestImpact);
       } else {
-        // let pc = FlightSystem.GetInstance().playerComponent;
-        // if IsDefined(pc) && IsDefined(pc.GetVehicle()) {
-        //   this.ChaseTarget(pc.GetVehicle());
-        //   // this.ChaseTarget();
-        // }
-        // if biggestImpact > 0.00 {
-        //   if !this.active {
-        //     this.Activate();
-        //   } else {
-        //     // this.Deactivate(true);
-        //   }
-        // }
         if !this.active && this.GetVehicle().bouncy {
           this.FireVerticalImpulse(gridID);
         }
         if biggestImpact > this.explosionThreshold {
           GameObjectEffectHelper.StartEffectEvent(this.GetVehicle(), n"explosion");
         }
-        // let event = new vehicleDriveToPointEvent();
-        // event.targetPos = new Vector3(0.0, 0.0, 0.0);
-        // vehicle.QueueEvent(event);
       }
     }
   }
@@ -878,58 +738,6 @@ public native class FlightComponent extends GameComponent {
       this.Deactivate(true);
     }
   }
-
-  // protected cb func OnHit(evt: ref<gameHitEvent>) -> Bool {
-  //   let vehicle: ref<VehicleObject> = this.GetVehicle();
-  //   let gameInstance: GameInstance = vehicle.GetGame();
-  //   let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
-  //   let isPlayerMounted = VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), vehicle);
-  //   FlightLog.Info("[FlightComponent] OnPhysicalCollision: " + FloatToStringPrec(evt.attackData.vehicleImpactForce, 2));
-  //   if isPlayerMounted {
-  //       this.sys.ctlr.ProcessImpact(evt.attackData.vehicleImpactForce);
-  //   } else {
-  //     let impulseEvent: ref<PhysicalImpulseEvent> = new PhysicalImpulseEvent();
-  //     impulseEvent.radius = 1.0;
-  //     impulseEvent.worldPosition = Vector4.Vector4To3(evt.hitPosition);
-  //     impulseEvent.worldImpulse = new Vector3(0.0, 0.0, evt.attackData.vehicleImpactForce);
-  //     this.GetVehicle().QueueEvent(impulseEvent);
-  //   }
-  // }
-
-  // idk if this is needed still
-  // protected cb func OnInteractionActivated(evt: ref<InteractionActivationEvent>) -> Bool {
-  //   let radialRequest: ref<ResolveQuickHackRadialRequest>;
-  //   if !IsDefined(evt.activator as PlayerPuppet) && !IsDefined(evt.activator as Muppet) {
-  //     return false;
-  //   };
-  //   radialRequest = new ResolveQuickHackRadialRequest();
-  //   this.GetVehicle().GetHudManager().QueueRequest(radialRequest);
-  // }
-
-  // idk if this is needed still
-  // protected cb func OnSetExposeQuickHacks(evt: ref<SetExposeQuickHacks>) -> Bool {
-  //   let request: ref<RefreshActorRequest> = new RefreshActorRequest();
-  //   request.ownerID = this.GetVehicle().GetEntityID();
-  //   this.GetVehicle().GetHudManager().QueueRequest(request);
-  // }
-
-  // protected cb func OnActionEngineering(evt: ref<ActionEngineering>) -> Bool {
-  //   FlightLog.Info("[FlightComponent] OnActionEngineering");
-  //   // this.FireVerticalImpulse();
-  // }
-
-  // public func OnQuickHackFlightMalfunction(evt: ref<QuickHackFlightMalfunction>) -> EntityNotificationType {
-  //   FlightLog.Info("[FlightComponent] OnQuickHackFlightMalfunction");
-  //   // let type: EntityNotificationType = this.OnQuickHackFlightMalfunction(evt);
-  //   // if Equals(type, EntityNotificationType.DoNotNotifyEntity) {
-  //   //   return type;
-  //   // };
-  //   if evt.IsStarted() {
-  //     // this.ExecutePSAction(this.FireVerticalImpulse());
-  //     // this.FireVerticalImpulse();
-  //   };
-  //   return EntityNotificationType.SendThisEventToEntity;
-  // }
 
   // gridID
   // 0 rear left
@@ -966,78 +774,10 @@ public native class FlightComponent extends GameComponent {
     if impulse == 0.0 {
       impulse = 1.0;
     }
-    // FlightLog.Info("[FlightComponent] FireVerticalImpulse: " + gridID);
     impulseEvent.worldPosition = Vector4.Vector4To3(this.GetVehicle().GetLocalToWorld() * offset);
     impulseEvent.worldImpulse = new Vector3(0.0, 0.0, 20.0 * impulse * this.GetVehicle().GetTotalMass());
-    // impulseEvent.worldImpulse = new Vector3(0.0, 0.0, 10000.0 * impulse);
     this.GetVehicle().QueueEvent(impulseEvent);
   }
-
-  // protected cb func OnPhysicalCollision(evt: ref<PhysicalCollisionEvent>) -> Bool {
-  //   FlightLog.Info("[FlightComponent] OnPhysicalCollision");
-  //   let vehicle = this.GetVehicle();
-  //   let gameInstance: GameInstance = vehicle.GetGame();
-  //   let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
-  //   let isPlayerMounted = VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), this);
-  //   if isPlayerMounted {
-  //     // this.sys.ctlr.ProcessImpact(evt.attackData.vehicleImpactForce);
-  //   } else {
-  //     let impulseEvent: ref<PhysicalImpulseEvent> = new PhysicalImpulseEvent();
-  //     impulseEvent.radius = 1.0;
-  //     impulseEvent.worldPosition = Vector4.Vector4To3(evt.worldPosition);
-  //     impulseEvent.worldImpulse = new Vector3(0.0, 0.0, 10000.0);
-  //     vehicle.QueueEvent(impulseEvent);
-  //   }
-  // }
-
-  // protected cb func OnHit(evt: ref<gameHitEvent>) -> Bool {
-  //   FlightLog.Info("[FlightComponent] OnHit: " + FloatToStringPrec(evt.attackData.vehicleImpactForce, 2));
-  //   let vehicle = this.GetVehicle();
-  //   let gameInstance: GameInstance = vehicle.GetGame();
-  //   let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
-  //   let isPlayerMounted = VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), this);
-  //   if isPlayerMounted {
-  //     this.sys.ctlr.ProcessImpact(evt.attackData.vehicleImpactForce);
-  //   } else {
-  //     let impulseEvent: ref<PhysicalImpulseEvent> = new PhysicalImpulseEvent();
-  //     impulseEvent.radius = 1.0;
-  //     impulseEvent.worldPosition = Vector4.Vector4To3(evt.hitPosition);
-  //     impulseEvent.worldImpulse = new Vector3(0.0, 0.0, evt.attackData.vehicleImpactForce);
-  //     vehicle.QueueEvent(impulseEvent);
-  //   }
-  // }
-
-  // public cb func OnAnyEvent(evt: ref<Event>) {
-  //   FlightLog.Info("[FlightComponent] OnAnyEvent: " + ToString(evt.GetClassName()));
-  // }
-
-  // hook into sound somehow
-  // protected cb func OnVehicleOnPartDetached(evt: ref<VehicleOnPartDetachedEvent>) -> Bool {
-  //   let partName: CName = evt.partName;
-  //   if Equals(partName, n"Trunk") {
-  //     (this.GetPS() as VehicleComponentPS).SetDoorState(EVehicleDoor.trunk, VehicleDoorState.Detached);
-  //   } else {
-  //     if Equals(partName, n"Hood") {
-  //       (this.GetPS() as VehicleComponentPS).SetDoorState(EVehicleDoor.hood, VehicleDoorState.Detached);
-  //     } else {
-  //       if Equals(partName, n"DoorFrontLeft") || Equals(partName, n"DoorFrontLeft_A") || Equals(partName, n"DoorFrontLeft_B") || Equals(partName, n"DoorFrontLeft_C") {
-  //         (this.GetPS() as VehicleComponentPS).SetDoorState(EVehicleDoor.seat_front_left, VehicleDoorState.Detached);
-  //       } else {
-  //         if Equals(partName, n"DoorFrontRight") || Equals(partName, n"DoorFrontRight_A") || Equals(partName, n"DoorFrontRight_B") || Equals(partName, n"DoorFrontRight_C") {
-  //           (this.GetPS() as VehicleComponentPS).SetDoorState(EVehicleDoor.seat_front_right, VehicleDoorState.Detached);
-  //         } else {
-  //           if Equals(partName, n"DoorBackLeft") {
-  //             (this.GetPS() as VehicleComponentPS).SetDoorState(EVehicleDoor.seat_back_left, VehicleDoorState.Detached);
-  //           } else {
-  //             if Equals(partName, n"DoorBackRight") {
-  //               (this.GetPS() as VehicleComponentPS).SetDoorState(EVehicleDoor.seat_back_right, VehicleDoorState.Detached);
-  //             };
-  //           };
-  //         };
-  //       };
-  //     };
-  //   };
-  // }
 
   protected final func OnVehicleCameraChange(state: Bool) -> Void {
     this.sys.ctlr.isTPP = state;
@@ -1045,7 +785,6 @@ public native class FlightComponent extends GameComponent {
 
   public func ProcessImpact(impact: Float) {
     this.collisionTimer = (FlightSettings.GetFloat("collisionRecoveryDelay") + FlightSettings.GetFloat("collisionRecoveryDuration")) * (1.0 - (impact * this.GetFlightMode().collisionPenalty));
-    // this.ui_info.StartGlitching(impact, FlightSettings.GetFloat("collisionRecoveryDuration") + impact);
   }
 
   private func GetUniqueID() -> String {
@@ -1054,10 +793,6 @@ public native class FlightComponent extends GameComponent {
 
   public func SetupTires() -> Void {
     if this.GetVehicle() == (this.GetVehicle() as CarObject) {
-      // this.fl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_left_tire") as IPlacedComponent;
-      // this.fr_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"front_right_tire") as IPlacedComponent;
-      // this.bl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_left_tire") as IPlacedComponent;
-      // this.br_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"back_right_tire") as IPlacedComponent;
       this.fl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterFL") as IPlacedComponent;
       this.fr_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterFR") as IPlacedComponent;
       this.bl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterBL") as IPlacedComponent;
@@ -1071,16 +806,10 @@ public native class FlightComponent extends GameComponent {
   }
 
   public func FindGround(out normal: Vector4) -> Bool {
-    // let lookAhead = this.stats.d_velocity * timeDelta * this.lookAheadMax;
-    // let fl_tire: Vector4 = Matrix.GetTranslation(this.fl_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
-    // let fr_tire: Vector4 = Matrix.GetTranslation(this.fr_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
-    // let bl_tire: Vector4 = Matrix.GetTranslation(this.bl_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
-    // let br_tire: Vector4 = Matrix.GetTranslation(this.br_tire.GetLocalToWorld()) - this.stats.d_velocity * timeDelta;
     let fl_tire: Vector4 = Matrix.GetTranslation(this.fl_tire.GetLocalToWorld());
     let fr_tire: Vector4 = Matrix.GetTranslation(this.fr_tire.GetLocalToWorld());
     let bl_tire: Vector4 = Matrix.GetTranslation(this.bl_tire.GetLocalToWorld());
     let br_tire: Vector4 = Matrix.GetTranslation(this.br_tire.GetLocalToWorld());
-
 
     let findGround1: TraceResult;
     let findGround2: TraceResult;
@@ -1090,10 +819,6 @@ public native class FlightComponent extends GameComponent {
     // all in engine\physics\collision_presets.json
     // VehicleBlocker? RagdollVehicle?
     let lookDown = new Vector4(0.0, 0.0, -FlightSettings.GetFloatN(n"hoverModeMaxHoverHeight") - 10.0, 0.0);
-    // this.sqs.SyncRaycastByCollisionGroup(fl_tire, fl_tire + lookDown, n"VehicleBlocker", findGround1, false, false);
-    // this.sqs.SyncRaycastByCollisionGroup(fr_tire, fr_tire + lookDown, n"VehicleBlocker", findGround2, false, false);
-    // this.sqs.SyncRaycastByCollisionGroup(bl_tire, bl_tire + lookDown, n"VehicleBlocker", findGround3, false, false);
-    // this.sqs.SyncRaycastByCollisionGroup(br_tire, br_tire + lookDown, n"VehicleBlocker", findGround4, false, false);
 
     let queryFilter: QueryFilter;
     QueryFilter.AddGroup(queryFilter, n"VehicleBlocker");
@@ -1111,31 +836,15 @@ public native class FlightComponent extends GameComponent {
 
     if TraceResult.IsValid(findGround1) {
       groundPoint1 = Vector4.Vector3To4(findGround1.position);// - this.stats.d_velocity * timeDelta;
-      // if this.showUI {
-      //   this.ui.DrawMark(groundPoint1);
-      //   this.ui.DrawText(groundPoint1, FloatToStringPrec(Vector4.Distance(fl_tire, Cast(findGround1.position)), 2));
-      // }
     }
     if TraceResult.IsValid(findGround2) {
       groundPoint2 = Vector4.Vector3To4(findGround2.position);// - this.stats.d_velocity * timeDelta;
-      // if this.showUI {
-      //   this.ui.DrawMark(groundPoint2);
-      //   this.ui.DrawText(groundPoint2, FloatToStringPrec(Vector4.Distance(fr_tire, Cast(findGround2.position)), 2));
-      // }
     }
     if TraceResult.IsValid(findGround3) {
       groundPoint3 = Vector4.Vector3To4(findGround3.position);// - this.stats.d_velocity * timeDelta;
-      // if this.showUI {
-      //   this.ui.DrawMark(groundPoint3);
-      //   this.ui.DrawText(groundPoint3, FloatToStringPrec(Vector4.Distance(bl_tire, Cast(findGround3.position)), 2));
-      // }
     }
     if TraceResult.IsValid(findGround4) {
       groundPoint4 = Vector4.Vector3To4(findGround4.position);// - this.stats.d_velocity * timeDelta;
-      // if this.showUI {
-      //   this.ui.DrawMark(groundPoint4);
-      //   this.ui.DrawText(groundPoint4, FloatToStringPrec(Vector4.Distance(br_tire, Cast(findGround4.position)), 2));
-      // }
     }
 
     if TraceResult.IsValid(findGround1) && TraceResult.IsValid(findGround2) && TraceResult.IsValid(findGround3) && TraceResult.IsValid(findGround4) {
@@ -1148,12 +857,10 @@ public native class FlightComponent extends GameComponent {
         Vector4.Distance(fr_tire, Vector4.Vector3To4(findGround2.position)) +
         Vector4.Distance(bl_tire, Vector4.Vector3To4(findGround3.position)) +
         Vector4.Distance(br_tire, Vector4.Vector3To4(findGround4.position))) / 4.0;
-      // this.distance = distance * (1.0 - this.distanceEase) + this.distance * (this.distanceEase);
       this.distance = distance;
 
       // FromVariant(scriptInterface.GetStateVectorParameter(physicsStateValue.Radius)) maybe?
       let n = (Vector4.Normalize(Cast(findGround1.normal)) + Vector4.Normalize(Cast(findGround2.normal)) + Vector4.Normalize(Cast(findGround3.normal)) + Vector4.Normalize(Cast(findGround4.normal))) / 4.0;
-      // this.normal = Vector4.Interpolate(this.normal, normal, this.normalEase);
       normal = Vector4.Normalize(n);
 
       return true;
@@ -1162,102 +869,18 @@ public native class FlightComponent extends GameComponent {
     }
   }
 
-  // idk if this is needed still
-  // protected cb func OnHUDInstruction(evt: ref<HUDInstruction>) -> Bool {
-  //   // working
-  //   // FlightLog.Info("[FlightComponent] OnHUDInstruction");
-  //   if evt.quickhackInstruction.ShouldProcess() {
-  //     // FlightLog.Info("[FlightComponent] quickhackInstructions.ShouldProcess");
-  //     // this.GetVehicle().TryOpenQuickhackMenu(true);
-  //     this.GetVehicle().TryOpenQuickhackMenu(evt.quickhackInstruction.ShouldOpen());
-  //   };
-  // }
-
-
-	// protected cb func OnFlightMalfunction(evt : ref<FlightMalfunction>) -> Bool {
-  //     FlightLog.Info("[FlightComponent] OnFlightMalfunction");
-	// 	if evt.IsCompleted() {
-	// 		this.Activate(false);
-	// 	} else {
-	// 		this.Activate(true);
-	// 	}
-	// }
-
-
-	// protected event OnHUDInstruction( evt : HUDInstruction )
-	// {
-	// 	super.OnHUDInstruction( evt );
-	// 	if( evt.highlightInstructions.GetState() == InstanceState.ON )
-	// 	{
-	// 		GetDevicePS().SetFocusModeData( true );
-	// 		ResolveDeviceOperationOnFocusMode( gameVisionModeType.Focus, true );
-	// 	}
-	// 	else
-	// 	{
-	// 		if( evt.highlightInstructions.WasProcessed() )
-	// 		{
-	// 			GetDevicePS().SetFocusModeData( false );
-	// 			ToggleAreaIndicator( false );
-	// 			ResolveDeviceOperationOnFocusMode( gameVisionModeType.Default, false );
-	// 			NotifyConnectionHighlightSystem( false, false );
-	// 		}
-	// 	}
-	// 	if( evt.quickhackInstruction.ShouldProcess() )
-	// 	{
-	// 		TryOpenQuickhackMenu( evt.quickhackInstruction.ShouldOpen() );
-	// 	}
-	// }
-
-
-
   public func OnFireWeapon(placeholderQuat: Quaternion, weaponItem:TweakDBID, attachmentSlot: TweakDBID) -> Void {
-    // let weapon = TweakDBInterface.GetWeaponItemRecord(weaponItem);
     let wt: WorldTransform;
     let vehicleSlots = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"vehicle_slots") as SlotComponent;
     vehicleSlots.GetSlotTransform(StringToName(TweakDBInterface.GetAttachmentSlotRecord(attachmentSlot).EntitySlotName()), wt);
     let quat = WorldTransform.GetOrientation(wt);
-    // let start = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(wt));
-    // let end = Vector4.Vector3To4(tracePosition);
-    // WorldTransform.SetPosition(wt, start)
     WorldTransform.SetOrientation(wt, quat * placeholderQuat);
 
     let effect = ResRefToFxResource(r"base\\fx\\vehicles\\av\\av_panzer\\weapons\\v_panzer_muzzle_flash.effect");
-    // let effect = ResRefToFxResource(r"base\\fx\\weapons\\firearms\\_muzzle_lights\\smart\\w_s_rifles_mq_muzzle_lights_tpp.effect");
     let fxSystem = GameInstance.GetFxSystem(this.GetVehicle().GetGame());
     if IsDefined(fxSystem) {
       fxSystem.SpawnEffect(effect, wt);
     }
-
-
-    // let attack: ref<Attack_GameEffect>;
-    // let attackContext: AttackInitContext;
-    // let effect: ref<EffectInstance>;
-    // let position: Vector4;
-    // let slotTransform: WorldTransform;
-    // let statMods: array<ref<gameStatModifierData>>;
-    // let slotName = StringToName(TweakDBInterface.GetAttachmentSlotRecord(attachmentSlot).EntitySlotName());
-    // let validSlotPosition: Bool = vehicleSlots.GetSlotTransform(slotName, slotTransform);
-    // if validSlotPosition {
-    //   position = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(slotTransform));
-    // } else {
-    //   position = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(this.GetVehicle().GetWorldTransform()));
-    // };
-    // attackContext.source = this.GetVehicle();
-    // attackContext.record = weapon.RangedAttacks().DefaultFire().PlayerAttack();
-    // attackContext.instigator = this.sys.player;
-    // attack = IAttack.Create(attackContext) as Attack_GameEffect;
-    // attack.GetStatModList(statMods);
-    // effect = attack.PrepareAttack(this.sys.player);
-    // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.position, position);
-    // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.muzzlePosition, position);
-    // EffectData.SetVector(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.forward, Quaternion.GetForward(placeholderQuat));
-    // EffectData.SetVariant(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.attack, ToVariant(attack));
-    // EffectData.SetVariant(effect.GetSharedData(), GetAllBlackboardDefs().EffectSharedData.attackStatModList, ToVariant(statMods));
-    // attack.StartAttack();
-
-    // effect.AttachToSlot(this.GetVehicle(), slotName, GetAllBlackboardDefs().EffectSharedData.position, GetAllBlackboardDefs().EffectSharedData.forward);
-
-    // ArrayPush(this.m_attacksSpawned, effect);
 
     let broadcaster = this.sys.player.GetStimBroadcasterComponent();
     if IsDefined(broadcaster) {
@@ -1268,9 +891,6 @@ public native class FlightComponent extends GameComponent {
       broadcaster.TriggerSingleBroadcast(this.sys.player, gamedataStimType.Gunshot, 100.0, data, true);
     };
 
-    // let tp: WorldPosition;
-    // WorldPosition.SetVector4(tp, Vector4.Vector3To4(tracePosition));
-    // fxi.UpdateTargetPosition(tp);
   }
 
 /*  private final func RegisterToHUDManager(shouldRegister: Bool) -> Void {

@@ -45,114 +45,11 @@ private final func CanShowHintMessage() -> Bool {
   return this.IsCyberdeckEquipped();
 }
 
-// added in 2.0
-// @addMethod(VehicleObject)
-// public const func IsQuickHackAble() -> Bool {
-//   return true;
-// }
-
-// added in 2.0
-// @addMethod(VehicleObject)
-// public const func IsQuickHacksExposed() -> Bool {
-//   return true;
-// }
-
 @addMethod(VehicleObject)
 public const func ShouldEnableRemoteLayer() -> Bool {
   return this.IsTechie() || this.IsQuickHacksExposed() && this.IsNetrunner();
 }
 
-// added in 2.0
-// @addMethod(VehicleObject)
-// public const func CanRevealRemoteActionsWheel() -> Bool {
-//   if !this.ShouldRegisterToHUD() {
-//     return false;
-//   };
-//   if !this.IsQuickHackAble() {
-//     return false;
-//   };
-//   return true;
-// }
-
-// @addMethod(VehicleObject)
-// protected cb func OnQuickHackPanelStateChanged(evt: ref<QuickHackPanelStateEvent>) -> Bool {
-//  this.DetermineInteractionStateByTask();
-// }
-
-// added in 2.0
-// @addMethod(VehicleObject)
-// public const func ShouldRegisterToHUD() -> Bool {
-//   return true;
-// }
-
-// @addMethod(VehicleObject)
-// protected final func DetermineInteractionStateByTask() -> Void {
-//   GameInstance.GetDelaySystem(this.GetGame()).QueueTask(this, null, n"DetermineInteractionStateTask", gameScriptTaskExecutionStage.Any);
-// }
-
-// @addMethod(VehicleObject)
-// protected final func DetermineInteractionStateTask(data: ref<ScriptTaskData>) -> Void {
-//   this.DetermineInteractionState();
-// }
-
-// @addMethod(VehicleObject)
-// protected final func DetermineInteractionState() -> Void {
-//   let context: GetActionsContext;
-//     context.requestorID = this.GetEntityID();
-//     context.requestType = gamedeviceRequestType.Remote;
-//     context.processInitiatorObject = GetPlayer(this.GetGame());
-//     this.GetPS().DetermineInteractionState(this.m_interactionComponent, context, this.m_objectActionsCallbackCtrl);
-// }
-
-// @addMethod(VehicleComponentPS)
-// public func OnFlightMalfunction(evt: ref<FlightMalfunction>) -> EntityNotificationType {
-//   FlightLog.Info("[VehicleComponentPS] OnFlightMalfunction");
-//   return EntityNotificationType.SendThisEventToEntity;
-// }
-
-// @addMethod(VehicleObject)
-// protected cb func OnFlightMalfunction(evt: ref<FlightMalfunction>) -> Bool {
-//   FlightLog.Info("[VehicleObject] OnFlightMalfunction");
-// }
-
-// @addMethod(VehicleObject)
-// protected cb func OnPerformedAction(evt: ref<PerformedAction>) -> Bool {
-//     FlightLog.Info("[VehicleObject] OnPerformedAction");
-//   let action: ref<ScriptableDeviceAction>;
-//   // let sequenceQuickHacks: ref<ForwardAction>;
-//   this.SetScannerDirty(true);
-//   action = evt.m_action as ScriptableDeviceAction;
-//   // this.ExecuteBaseActionOperation(evt.m_action.GetClassName());
-//   if action.CanTriggerStim() {
-//     // this.TriggerAreaEffectDistractionByAction(action);
-//   };
-//   if IsDefined(action) && action.IsIllegal() && !action.IsQuickHack() {
-//     // this.ResolveIllegalAction(action.GetExecutor(), action.GetDurationValue());
-//   };
-//   // if this.IsConnectedToActionsSequencer() && !this.IsLockedViaSequencer() {
-//     // sequenceQuickHacks = new ForwardAction();
-//     // sequenceQuickHacks.requester = this.GetDevicePS().GetID();
-//     // sequenceQuickHacks.actionToForward = action;
-//     // GameInstance.GetPersistencySystem(this.GetGame()).QueuePSEvent(this.GetDevicePS().GetActionsSequencer().GetID(), this.GetDevicePS().GetActionsSequencer().GetClassName(), sequenceQuickHacks);
-//   // };
-//   // this.ResolveQuestImportanceOnPerformedAction(action);
-// }
-
-// added in 2.0
-// @addMethod(VehicleObject)
-// protected func SendQuickhackCommands(shouldOpen: Bool) {
-//   // FlightLog.Info("[VehicleObject] SendQuickhackCommands()");
-//   let actions: array<ref<DeviceAction>>;
-//   let commands: array<ref<QuickhackData>>;
-//   // let context: GetActionsContext;
-//   let quickSlotsManagerNotification: ref<RevealInteractionWheel> = new RevealInteractionWheel();
-//   quickSlotsManagerNotification.lookAtObject = this;
-//   quickSlotsManagerNotification.shouldReveal = shouldOpen;
-//   if shouldOpen {
-//     // FlightLog.Info("[VehicleObject] SendQuickhackCommands() shouldOpen == true");
-//     // context = this.GetPS().GenerateContext(gamedeviceRequestType.Remote, Device.GetInteractionClearance(), this.GetPlayerMainObject(), this.GetEntityID());
-//     // this.GetPS().GetRemoteActions(actions, context);
-    
 //     // action.SetInactiveWithReason(false, "LocKey#49279");
 //     if this.m_flightComponent.isQuickHackable {
 //       ArrayPush(actions, ActionFlightEnable(this));
@@ -163,19 +60,8 @@ public const func ShouldEnableRemoteLayer() -> Bool {
 //       ArrayPush(actions, ActionFunhouse(this));
 //     }
 
-//     if this.m_isQhackUploadInProgerss {
-//       ScriptableDeviceComponentPS.SetActionsInactiveAll(actions, "LocKey#7020");
-//     };
-//     this.TranslateActionsIntoQuickSlotCommands(actions, commands);
-//     quickSlotsManagerNotification.commands = commands;
-//   };
-//   // HUDManager.SetQHDescriptionVisibility(this.GetGame(), shouldOpen);
-//   GameInstance.GetUISystem(this.GetGame()).QueueEvent(quickSlotsManagerNotification);
-// }
-
 @replaceMethod(VehicleObject)
 protected func SendQuickhackCommands(shouldOpen: Bool) {
-  // FlightLog.Info("[VehicleObject] SendQuickhackCommands()");
   let ltbf_actions: array<ref<DeviceAction>>;
   let actions: array<ref<DeviceAction>>;
   let commands: array<ref<QuickhackData>>;
@@ -183,14 +69,10 @@ protected func SendQuickhackCommands(shouldOpen: Bool) {
   let quickSlotsManagerNotification: ref<RevealInteractionWheel> = new RevealInteractionWheel();
   quickSlotsManagerNotification.lookAtObject = this;
   if shouldOpen {
-    // FlightLog.Info("[VehicleObject] SendQuickhackCommands() shouldOpen == true");
-    // context = this.GetPS().GenerateContext(gamedeviceRequestType.Remote, Device.GetInteractionClearance(), this.GetPlayerMainObject(), this.GetEntityID());
-    // this.GetPS().GetRemoteActions(actions, context);
     
     context = this.GetVehiclePS().GenerateContext(gamedeviceRequestType.Remote, Device.GetInteractionClearance(), GameInstance.GetPlayerSystem(this.GetGame()).GetLocalPlayerControlledGameObject(), this.GetEntityID());
     this.GetVehiclePS().GetRemoteActions(actions, context);
     
-    // action.SetInactiveWithReason(false, "LocKey#49279");
     if this.IsFlightAvailable() && this.m_flightComponent.isQuickHackable {
       ArrayPush(ltbf_actions, ActionFlightEnable(this));
       ArrayPush(ltbf_actions, ActionFlightDisable(this));
@@ -200,9 +82,6 @@ protected func SendQuickhackCommands(shouldOpen: Bool) {
       ArrayPush(ltbf_actions, ActionFunhouse(this));
     }
 
-    // if this.m_isQhackUploadInProgerss {
-    //   ScriptableDeviceComponentPS.SetActionsInactiveAll(ltbf_actions, "LocKey#7020");
-    // };
     if this.m_isQhackUploadInProgress && !this.IsActionQueueEnabled() || this.IsActionQueueFull() {
       ScriptableDeviceComponentPS.SetActionsInactiveAll(ltbf_actions, "LocKey#7020");
       ScriptableDeviceComponentPS.SetActionsInactiveAll(actions, "LocKey#7020");
@@ -216,7 +95,6 @@ protected func SendQuickhackCommands(shouldOpen: Bool) {
     quickSlotsManagerNotification.commands = commands;
     quickSlotsManagerNotification.shouldReveal = ArraySize(actions) > 0 || ArraySize(ltbf_actions) > 0;
   };
-  // HUDManager.SetQHDescriptionVisibility(this.GetGame(), shouldOpen);
   GameInstance.GetUISystem(this.GetGame()).QueueEvent(quickSlotsManagerNotification);
 }
 
@@ -260,27 +138,6 @@ protected final const func ExecuteAction(action: ref<DeviceAction>, opt executor
   return false;
 }
 
-// added in 2.0
-// @addField(VehicleObject)
-// public let m_isQhackUploadInProgerss: Bool;
-
-// added in 2.0
-// @addMethod(VehicleObject)
-// protected cb func OnUploadProgressStateChanged(evt: ref<UploadProgramProgressEvent>) -> Bool {
-//   // FlightLog.Info("[VehicleObject] OnUploadProgressStateChanged");
-//   if Equals(evt.progressBarContext, EProgressBarContext.QuickHack) {
-//     if Equals(evt.progressBarType, EProgressBarType.UPLOAD) {
-//       if Equals(evt.state, EUploadProgramState.STARTED) {
-//         this.m_isQhackUploadInProgerss = true;
-//       } else {
-//         if Equals(evt.state, EUploadProgramState.COMPLETED) {
-//           this.m_isQhackUploadInProgerss = false;
-//         };
-//       };
-//     };
-//   };
-// }
-
 @addMethod(VehicleObject)
 protected cb func OnScanningLookedAt(evt: ref<ScanningLookAtEvent>) -> Bool {
   super.OnScanningLookedAt(evt);
@@ -322,7 +179,6 @@ private final const func GetQuickHackDuration(quickHackID: TweakDBID, rootObject
   return this.GetObjectActionEffectDurationValue(durationMods, rootObject, targetID, instigatorID);
 }
 
-
 @addMethod(VehicleObject)
    private final const func GetIgnoredDurationStats() -> array<wref<StatusEffect_Record>> {
     let result: array<wref<StatusEffect_Record>>;
@@ -360,7 +216,6 @@ private final const func GetQuickHackDuration(quickHackID: TweakDBID, rootObject
     return durationValue;
   }
 
-  
 @addMethod(VehicleObject)
 private final const func GetICELevel() -> Float {
   let statsSystem: ref<StatsSystem> = GameInstance.GetStatsSystem(this.GetGame());
@@ -375,12 +230,9 @@ private final const func GetICELevel() -> Float {
     let actionCompletionEffects: array<wref<ObjectActionEffect_Record>>;
     let actionRecord: wref<ObjectAction_Record>;
     let actionStartEffects: array<wref<ObjectActionEffect_Record>>;
-    // let choice: InteractionChoice;
-    // let emptyChoice: InteractionChoice;
     let i: Int32;
     let i1: Int32;
     let newCommand: ref<QuickhackData>;    
-    // let prereqsToCheck: array<wref<IPrereq_Record>>;
     let targetActivePrereqs: array<wref<ObjectActionPrereq_Record>>;
     let sAction: ref<FlightAction>;
     let isOngoingUpload: Bool = GameInstance.GetStatPoolsSystem(this.GetGame()).IsStatPoolAdded(Cast<StatsObjectID>(this.GetEntityID()), gamedataStatPoolType.QuickHackUpload);
@@ -403,19 +255,8 @@ private final const func GetICELevel() -> Float {
         ArrayClear(actionStartEffects);
         sAction = actions[i] as FlightAction;
         actionRecord = sAction.GetObjectActionRecord();
-        // if NotEquals(actionRecord.ObjectActionType().Type(), gamedataObjectActionType.DeviceQuickHack) {
-        // } else {
           newCommand.m_uploadTime = sAction.GetActivationTime();
-          // newCommand.m_duration = sAction.GetDurationValue();
           newCommand.m_duration = this.GetQuickHackDuration(actionRecord, this, Cast<StatsObjectID>(this.GetEntityID()), playerRef.GetEntityID());         
-          // newCommand.m_title = GetLocalizedTextByKey(sAction.title);
-          // if StrLen(newCommand.m_title) == 0 {
-            // newCommand.m_title = ToString(sAction.title);
-          // };
-          // newCommand.m_description = GetLocalizedTextByKey(sAction.description);
-          // if StrLen(newCommand.m_description) == 0 {
-            // newCommand.m_description = ToString(sAction.title);
-          // };
           newCommand.m_actionOwnerName = actionOwnerName;
           newCommand.m_title = LocKeyToString(actionRecord.ObjectActionUI().Caption());
           newCommand.m_description = LocKeyToString(actionRecord.ObjectActionUI().Description());
@@ -426,9 +267,7 @@ private final const func GetICELevel() -> Float {
           newCommand.m_isInstant = false;
           newCommand.m_ICELevel = iceLVL;
           newCommand.m_ICELevelVisible = true;
-          // newCommand.m_vulnerabilities = this.GetPS().GetActiveQuickHackVulnerabilities();
           newCommand.m_actionState = EActionInactivityReson.Locked;
-          // newCommand.m_quality = sAction.quality;
           newCommand.m_costRaw = BaseScriptableAction.GetBaseCostStatic(playerRef, actionRecord);
           newCommand.m_category = actionRecord.HackCategory();
           ArrayClear(actionCompletionEffects);
@@ -447,13 +286,6 @@ private final const func GetICELevel() -> Float {
             }
             i1 += 1;
           };
-          // if !IsDefined(this as GenericDevice) {
-          //   choice = emptyChoice;
-          //   choice = sAction.GetInteractionChoice();
-          //   if TDBID.IsValid(choice.choiceMetaData.tweakDBID) {
-          //     newCommand.m_titleAlternative = LocKeyToString(TweakDBInterface.GetInteractionBaseRecord(choice.choiceMetaData.tweakDBID).Caption());
-          //   };
-          // };
 
           newCommand.m_costRaw = sAction.GetBaseCost();
           newCommand.m_cost = sAction.GetCost();
@@ -461,14 +293,6 @@ private final const func GetICELevel() -> Float {
             sAction.SetInactiveWithReason(false, "LocKey#7019");
           } else {
             newCommand.m_uploadTime = sAction.GetActivationTime();
-            // let interactionChoice = sAction.GetInteractionChoice();
-            // let i2 = 0;
-            // while i2 < ArraySize(interactionChoice.captionParts.parts) {
-            //   if IsDefined(interactionChoice.captionParts.parts[i2] as InteractionChoiceCaptionStringPart) {
-            //     newCommand.m_title = GetLocalizedText(interactionChoice.captionParts.parts[i2] as InteractionChoiceCaptionStringPart.content);
-            //   };
-            //   i2 += 1;
-            // };
             if sAction.IsInactive() {
             } else {
               if !sAction.CanPayCost(playerRef) {
@@ -478,22 +302,12 @@ private final const func GetICELevel() -> Float {
               if actionRecord.GetTargetActivePrereqsCount() > 0 {
                 ArrayClear(targetActivePrereqs);
                 actionRecord.TargetActivePrereqs(targetActivePrereqs);
-                // i2 = 0;
-                // while i2 < ArraySize(targetActivePrereqs) {
-                //   ArrayClear(prereqsToCheck);
-                //   targetActivePrereqs[i2].FailureConditionPrereq(prereqsToCheck);
-                //   if !RPGManager.CheckPrereqs(prereqsToCheck, this) {
-                //     sAction.SetInactiveWithReason(false, targetActivePrereqs[i2].FailureExplanation());
-                //   }
-                //   i2 += 1;
-                // };
               };
               if isOngoingUpload {
                 sAction.SetInactiveWithReason(false, "LocKey#7020");
               };
             }
           }
-
 
           if sAction.IsInactive() {
             newCommand.m_isLocked = true;
@@ -520,7 +334,6 @@ private final const func GetICELevel() -> Float {
             newCommand.m_actionState = EActionInactivityReson.Ready;
           };
           ArrayPush(commands, newCommand);
-        // };
         i += 1;
       };
     };
@@ -537,95 +350,6 @@ private final const func GetICELevel() -> Float {
 // */
 
 // 2.0 method that isn't working
-
-// @replaceMethod(VehicleComponentPS)
-// protected func GetQuickHackActions(out outActions: array<ref<DeviceAction>>, const context: script_ref<GetActionsContext>) -> Void {
-//   let areVehicleQuickhacksAvailable: Bool;
-//   let controllerPS: ref<vehicleControllerPS>;
-//   let currentAction: ref<ScriptableDeviceAction>;
-//   let playerMountedVehicle: wref<VehicleObject>;
-//   let playerPuppet: ref<PlayerPuppet>;
-//   let vehicleState: vehicleEState;
-//   let isValidRange: Bool = false;
-//   let isVehicleRemoteControlled: Bool = this.GetOwnerEntity().IsVehicleRemoteControlled();
-//   let maxDistance: Float = TweakDBInterface.GetFloat(t"player.vehicleQuickHacks.maxRange", 0.00);
-//   if this.GetOwnerEntity().GetDistanceToPlayerSquared() < maxDistance * maxDistance {
-//     isValidRange = true;
-//   };
-//   playerPuppet = GameInstance.GetPlayerSystem(this.GetGameInstance()).GetLocalPlayerMainGameObject() as PlayerPuppet;
-//   if PlayerDevelopmentSystem.GetData(playerPuppet).IsNewPerkBoughtAnyLevel(gamedataNewPerkType.Intelligence_Right_Milestone_1) {
-//     controllerPS = this.GetVehicleControllerPS();
-//     vehicleState = controllerPS.GetState();
-//     areVehicleQuickhacksAvailable = this.GetOwnerEntity().IsHackable();
-//     if !this.GetIsDestroyed() {
-//       if !VehicleComponent.GetVehicle(playerPuppet.GetGame(), playerPuppet.GetEntityID(), playerMountedVehicle) {
-//         currentAction = this.ActionToggleTakeOverControl();
-//         currentAction.SetObjectActionID(t"DeviceAction.TakeControlVehicleClassHack");
-//         currentAction.SetExecutor(GetPlayer(this.GetGameInstance()));
-//         currentAction.SetDurationValue(currentAction.GetDurationTime());
-//         ArrayPush(outActions, currentAction);
-//         if !isValidRange || isVehicleRemoteControlled || Equals(this.GetOwnerEntity().GetVehicleType(), gamedataVehicleType.Bike) && playerPuppet.CheckIsStandingOnVehicle(this.GetOwnerEntity().GetEntityID()) {
-//           currentAction.SetInactiveWithReason(false, "LocKey#7003");
-//         };
-//       };
-//       currentAction = this.ActionVehicleOverrideForceBrakes();
-//       currentAction.SetObjectActionID(t"DeviceAction.VehicleForceBrakesClassHack");
-//       currentAction.SetExecutor(GetPlayer(this.GetGameInstance()));
-//       currentAction.SetDurationValue(TweakDBInterface.GetFloat(t"player.vehicleQuickHacks.forceBrakesDuration", 0.00));
-//       if !isValidRange || isVehicleRemoteControlled {
-//         currentAction.SetInactiveWithReason(false, "LocKey#7003");
-//       } else {
-//         if this.GetOwnerEntity().IsVehicleForceBrakesQuickhackActive() {
-//           currentAction.SetInactiveWithReason(false, "LocKey#7004");
-//         };
-//       };
-//       ArrayPush(outActions, currentAction);
-//       currentAction = this.ActionVehicleOverrideExplode();
-//       currentAction.SetObjectActionID(t"DeviceAction.VehicleExplodeClassHack");
-//       currentAction.SetExecutor(GetPlayer(this.GetGameInstance()));
-//       currentAction.SetDurationValue(currentAction.GetDurationTime());
-//       ArrayPush(outActions, currentAction);
-//       if !isValidRange {
-//         currentAction.SetInactiveWithReason(false, "LocKey#7003");
-//       };
-//       currentAction = this.ActionVehicleOverrideAccelerate();
-//       currentAction.SetObjectActionID(t"DeviceAction.VehicleAccelerateClassHack");
-//       currentAction.SetExecutor(GetPlayer(this.GetGameInstance()));
-//       currentAction.SetDurationValue(TweakDBInterface.GetFloat(t"player.vehicleQuickHacks.accelerateDuration", 0.00));
-//       if !isValidRange || isVehicleRemoteControlled {
-//         currentAction.SetInactiveWithReason(false, "LocKey#7003");
-//       } else {
-//         if this.GetOwnerEntity().IsVehicleAccelerateQuickhackActive() {
-//           currentAction.SetInactiveWithReason(false, "LocKey#7004");
-//         };
-//       };
-//       ArrayPush(outActions, currentAction);
-
-//       // Flight QuickHacks
-//       // ArrayPush(outActions, ActionFlightEnable(this.GetOwnerEntity()));
-//       // ArrayPush(outActions, ActionFlightDisable(this.GetOwnerEntity()));
-//       // ArrayPush(outActions, ActionFlightMalfunction(this.GetOwnerEntity()));
-//       // ArrayPush(outActions, ActionDisableGravity(this.GetOwnerEntity()));
-//       // ArrayPush(outActions, ActionEnableGravity(this.GetOwnerEntity()));
-//       // ArrayPush(outActions, ActionFunhouse(this.GetOwnerEntity()));
-//     };
-//     if !areVehicleQuickhacksAvailable || Equals(vehicleState, vehicleEState.Destroyed) || Equals(vehicleState, vehicleEState.Disabled) || this.GetOwnerEntity().IsVehicleInsideInnerAreaOfAreaSpeedLimiter() {
-//       ScriptableDeviceComponentPS.SetActionsInactiveAll(outActions, "LocKey#27694");
-//     };
-//   };
-//   this.FinalizeGetQuickHackActions(outActions, context);
-// }
-
-// @wrapMethod(QuickhacksListGameController)
-// private final func SelectData(data: ref<QuickhackData>) -> Void {
-//   wrappedMethod(data);
-//   // let description: String = GetLocalizedText(this.m_selectedData.m_description);
-//   // if StrLen(description) == 0 || Equals(description, "Loading") {
-//       let description = ToString(this.m_selectedData.m_description);
-//   // };
-//   inkTextRef.SetText(this.m_description, description);
-// }
-
 
 @wrapMethod(QuickHackDescriptionGameController)
 protected cb func OnQuickHackDataChanged(value: Variant) -> Bool {

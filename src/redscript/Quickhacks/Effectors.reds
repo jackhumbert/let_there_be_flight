@@ -3,7 +3,6 @@ public class FlightMalfunctionEffector extends Effector {
 
   protected func Initialize(record: TweakDBID, game: GameInstance, parentRecord: TweakDBID) -> Void {
     FlightLog.Info("[FlightMalfunctionEffector] Initialize");
-    // this.m_quickhackLevel = TweakDBInterface.GetFloat(record + t".level", 1.00);
   }
 
   // The effectors keep using CanEnterFlight(), i.e. "does this vehicle have a flight
@@ -46,7 +45,6 @@ public class FunhouseEffector extends Effector {
 
   protected func Initialize(record: TweakDBID, game: GameInstance, parentRecord: TweakDBID) -> Void {
     FlightLog.Info("[FunhouseEffector] Initialize");
-    // this.m_quickhackLevel = TweakDBInterface.GetFloat(record + t".level", 1.00);
   }
 
   protected func ActionOn(owner: ref<GameObject>) -> Void {

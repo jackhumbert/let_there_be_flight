@@ -3,7 +3,6 @@ public abstract importonly class IFlightSystem extends IGameSystem {
 
 public func fs() -> ref<FlightSystem> = FlightSystem.GetInstance();
 
-// public native class FlightSystem extends IFlightSystem {
 public native class FlightSystem extends IGameSystem {
   public static native func GetInstance() -> ref<FlightSystem>;
   public native func RegisterComponent(component: ref<FlightComponent>) -> Void;
@@ -22,8 +21,6 @@ public native class FlightSystem extends IGameSystem {
   public let player: wref<PlayerPuppet>;
   public let ctlr: ref<FlightController>;
   public let stats: ref<FlightStats>;
-  // public let fx: ref<FlightFx>;
-  // public let tppCamera: wref<vehicleTPPCameraComponent>;
 
   @runtimeProperty("offset", "0xB8")
   public native let playerComponent: wref<FlightComponent>;
@@ -39,8 +36,6 @@ public native class FlightSystem extends IGameSystem {
     this.soundListener = player.FindComponentByName(n"soundListener") as IPlacedComponent;
     this.gameInstance = player.GetGame();
     this.ctlr = FlightController.GetInstance();
-    // this.tppCamera = player.FindComponentByName(n"vehicleTPPCamera") as vehicleTPPCameraComponent;
-    // this.soundListener = this.tppCamera;
   }
 
   public func SetPlayerComponent(component: wref<FlightComponent>) -> Void {
@@ -65,10 +60,6 @@ public native class FlightSystem extends IGameSystem {
     }
   }
 
-//   public static func Get(gameInstance: GameInstance) -> ref<FlightSystem> {
-//     return GameInstance.GetScriptableSystemsContainer(gameInstance).Get(n"FlightSystem") as FlightSystem;
-//   }
-
   protected final func OnFlightSystemAttach() -> Void {
     FlightLog.Info("[FlightSystem] OnFlightSystemAttach");
   }
@@ -77,16 +68,5 @@ public native class FlightSystem extends IGameSystem {
     FlightLog.Info("[FlightSystem] OnPlayerAttach");
   }
 
-//   private func OnDetach() -> Void {
-//     FlightLog.Info("[FlightSystem] OnDetach");
-//   }
-
-//   private func OnRestored(saveVersion: Int32, gameVersion: Int32) -> Void {
-//     FlightLog.Info("[FlightSystem] OnRestored");
-//   }
-
-//   // private func IsSavingLocked() -> Bool {
-//   //   return FlightController.GetInstance().IsActive();
-//   // }
 }
 

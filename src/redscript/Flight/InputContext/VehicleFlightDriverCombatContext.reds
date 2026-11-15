@@ -36,9 +36,7 @@ public class VehicleFlightDriverCombatContextDecisions extends VehicleFlightCont
 
   protected func UpdateEnterConditionForFlight() -> Void {
     let value = this.m_psmVehicle == EnumInt(gamePSMVehicle.DriverCombat) && this.m_isFlying;
-    // let value = this.m_isFlying;
     this.EnableOnEnterCondition(value);
-    // FlightLog.Info("[InputContext] " + this.GetContextName() + " EnterCondition: " + ToString(value));
   }
 
   protected cb func OnVehiclePerspectiveChanged(value: Bool) -> Bool {
@@ -72,7 +70,6 @@ public class VehicleFlightDriverCombatContextDecisions extends VehicleFlightCont
     if StatusEffectSystem.ObjectHasStatusEffectWithTag(scriptInterface.executionOwner, n"NoDriving") {
       return false;
     };
-    // FlightLog.Info("[InputContext] " + this.GetContextName() + " Entering");
     return true;
   }
 }

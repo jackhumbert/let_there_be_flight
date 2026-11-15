@@ -4,14 +4,8 @@ public final func CanVehicleEnterFlight(const scriptInterface: ref<StateGameScri
   return IsDefined(vehicle) && vehicle.IsFlightAvailable();
 }
 
-// @addMethod(DefaultTransition)
-// protected final const func IsVehicleFlying(const scriptInterface: ref<StateGameScriptInterface>) -> Bool {
-//   return scriptInterface.IsVehicleFlying();
-// }
-
 @addMethod(DefaultTransition)
 protected final func SetIsInFlight(value: Bool) -> Void {
-  // stateContext.SetPermanentBoolParameter(n"isInFlight", value, true);
   FlightController.GetInstance().GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsActive, value, true);
 }
 @addMethod(DefaultTransition)

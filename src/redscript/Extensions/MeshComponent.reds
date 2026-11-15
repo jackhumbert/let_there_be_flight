@@ -13,10 +13,6 @@
 
 // Entity
 
-// @addField(Entity)
-// @runtimeProperty("offset", "0x50")
-// public native let currentAppearance: CName;
-
 @addField(Entity)
 @runtimeProperty("offset", "0x138")
 public native let entityTags: array<CName>;
@@ -112,14 +108,6 @@ public native let LODMode: entMeshComponentLODMode;
 @addField(MeshComponent)
 @runtimeProperty("offset", "0x1AB")
 public native let order: Uint8;
-
-// @addField(MeshComponent)
-// @runtimeProperty("offset", "0x1AC")
-// public native let castShadows: Bool;
-
-// @addField(MeshComponent)
-// @runtimeProperty("offset", "0x1AD")
-// public native let castLocalShadows: Bool;
 
 // PhysicalMeshComponent
 

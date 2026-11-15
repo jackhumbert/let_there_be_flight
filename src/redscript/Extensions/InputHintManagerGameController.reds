@@ -19,9 +19,3 @@ protected cb func OnInitialize() -> Bool {
   this.LTBF_ResizeHudEntry();
 }
 
-// @if(ModuleExists("LimitedHudConfig"))
-// @wrapMethod(InputHintManagerGameController)
-// protected cb func OnInitialize() -> Bool {
-//  this.LTBF_ResizeHudEntry();
-//  return wrappedMethod();
-// }

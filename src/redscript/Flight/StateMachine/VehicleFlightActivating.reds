@@ -15,13 +15,6 @@ public class VehicleFlightActivatingEvents extends VehicleFlightEventsTransition
       FlightLog.Info("[VehicleFlightActivatingEvents] No vehicle defined in enter");
       return;
     }
-      // FlightLog.Info("[VehicleEventsTransition] OnEnterFlight, starting");
-    // this.SetSide(stateContext, scriptInterface);
-    // this.SetIsVehicleDriver(stateContext, true);
-    // this.PlayerStateChange(scriptInterface, 1);
-    // this.SetBlackboardIntVariable(scriptInterface, GetAllBlackboardDefs().PlayerStateMachine.Vehicle, 8);
-    // this.SendAnimFeature(stateContext, scriptInterface);
-    // this.SetVehFppCameraParams(stateContext, scriptInterface, false);
     /*
     switch vehicle.GetCameraManager().GetActivePerspective() {
       case vehicleCameraPerspective.FPP:
@@ -35,14 +28,7 @@ public class VehicleFlightActivatingEvents extends VehicleFlightEventsTransition
     };
     */
       
-      // if !VehicleTransition.CanEnterDriverCombat() {
-      //   stateContext.SetPermanentBoolParameter(n"ForceEmptyHands", true, true);
-      // };
-      // FlightController.GetInstance().Activate();
-    // if (!vehicle.GetFlightComponent().active) {
       let evt = new VehicleFlightActivationEvent();
-      // evt.vehicle = scriptInterface.owner as VehicleObject;
       vehicle.QueueEvent(evt);
-    // }
   }
 }

@@ -19,26 +19,3 @@ public let VehicleFlight: ref<VehicleFlightDef>;
 @addField(PlayerStateMachineDef)
 public let VehicleFlight: BlackboardID_Int;
 
-// @addField(VehicleDef)
-// public let IsFlightActive: BlackboardID_Bool;
-
-// @addField(VehicleDef)
-// public let FlightMode: BlackboardID_Int;
-
-// @addField(VehicleDef)
-// public let IsFlightUIActive: BlackboardID_Bool;
-
-// @addField(VehicleDef)
-// public let Orientation: BlackboardID_Quat;
-
-// @addField(VehicleDef)
-// public let Pitch: BlackboardID_Float;
-
-// @addField(VehicleDef)
-// public let Force: BlackboardID_Vector4;
-
-// @addField(VehicleDef)
-// public let Torque: BlackboardID_Vector4;
-
-// @addField(VehicleDef)
-// public let Position: BlackboardID_Vector4;

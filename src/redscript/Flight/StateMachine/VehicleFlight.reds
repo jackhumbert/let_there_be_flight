@@ -1,7 +1,3 @@
-// public class VehicleFlightInitData extends IScriptable {
-// 	let vehicle: wref<GameObject>;
-//   let driver: wref<GameObject>;
-// }
 
 public class VehicleFlightTransition extends DefaultTransition {
 
@@ -48,7 +44,6 @@ public class VehicleFlightTransition extends DefaultTransition {
 public class VehicleFlightEventsTransition extends VehicleFlightTransition {
 
   protected func OnEnter(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-    // let param: StateResultCName = this.GetStaticCNameParameter("onEnterCameraParamsName");
     FlightLog.Info("[VehicleFlightEventsTransition] " + this.m_name);
   }
 
@@ -61,9 +56,6 @@ public class VehicleFlightEventsTransition extends VehicleFlightTransition {
     if scriptInterface.IsActionJustHeld(n"HoldCinematicCamera") && !this.IsVehicleCameraChangeBlocked(scriptInterface) && FlightModeAutopilot.IsEngaged() {
       scriptInterface.executionOwner.QueueEvent(new vehicleCinematicCameraToggleEvent());
     };
-    // if scriptInterface.IsActionJustTapped(n"VehicleCameraInverse") {
-    //   this.ResetVehicleCamera(scriptInterface);
-    // };
   }
 
   protected final func RequestToggleVehicleFlightCamera(scriptInterface: ref<StateGameScriptInterface>) -> Void {
@@ -136,27 +128,5 @@ public class VehicleFlightEventsTransition extends VehicleFlightTransition {
     // let workspotSystem: ref<WorkspotGameSystem> = scriptInterface.GetWorkspotSystem();
     // workspotSystem.SwitchSeatVehicle(scriptInterface.owner, scriptInterface.executionOwner, n"OccupantSlots", n"seat_front_left");
   }
-
-  // public final func HandleFlightExitRequest(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-  //   let isTeleportExiting: StateResultBool = stateContext.GetPermanentBoolParameter(n"teleportExitActive");
-  //   let isScheduledExit: StateResultBool = stateContext.GetPermanentBoolParameter(n"validExitAfterSwitchRequest");
-  //   let isSwitchingSeats: StateResultBool = stateContext.GetPermanentBoolParameter(n"validSwitchSeatExitRequest");
-  //   if isTeleportExiting.value || isScheduledExit.value || isSwitchingSeats.value {
-  //     return;
-  //   };
-  //   if !this.IsExitVehicleBlocked(scriptInterface) {
-  //     let stateTime = this.GetInStateTime();      
-  //     let exitActionPressCount = scriptInterface.GetActionPressCount(n"Exit");
-  //     let exitPressCountResult = stateContext.GetPermanentIntParameter(n"exitPressCountOnEnter");
-  //     let onDifferentExitPress = !exitPressCountResult.valid || exitPressCountResult.value != Cast<Int32>(exitActionPressCount);
-  //     if onDifferentExitPress && stateTime >= 0.30 && scriptInterface.GetActionValue(n"Exit") > 0.00 && scriptInterface.GetActionStateTime(n"Exit") > 0.30{
-  //       let vehicle = scriptInterface.owner as VehicleObject;
-  //       // let inputStateTime = scriptInterface.GetActionStateTime(n"Exit");
-  //       let validUnmount = vehicle.CanUnmount(true, scriptInterface.executionOwner);
-  //       stateContext.SetPermanentIntParameter(n"vehUnmountDir", EnumInt(validUnmount.direction), true);
-  //       // this.ExitWithTeleport(stateContext, scriptInterface, validUnmount, false, true);
-  //     }
-  //   }
-  // }
 
 }

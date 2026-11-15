@@ -51,12 +51,7 @@ protected func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scrip
       
       this.RemoveInputHint(scriptInterface, n"DeployGlider", n"Paraglider");
       this.ShowInputHint(scriptInterface, n"PackGlider", n"Paraglider", LocKeyToString(n"Input-Hint-Pack-Glider"));
-      // scriptInterface.GetAudioSystem().NotifyGameTone(n"EnterCrouch");
-      // this.StartEffect(scriptInterface, n"skif_buff");
-      // GameObjectEffectHelper.StartEffectEvent(scriptInterface.executionOwner, n"camera_mask");
       
-      // scriptInterface.PushAnimationEvent(n"StaggerHit");
-
       scriptInterface.PushAnimationEvent(n"Jump");
       this.PlaySound(n"q115_thruster_start", scriptInterface);
       this.SetDetailedState(scriptInterface, gamePSMDetailedLocomotionStates.Jump); // HoverJump, DodgeAir, AirThrusters, Jump
@@ -68,8 +63,6 @@ protected func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scrip
       this.RemoveInputHint(scriptInterface, n"PackGlider", n"Paraglider");
       this.ShowInputHint(scriptInterface, n"DeployGlider", n"Paraglider", LocKeyToString(n"Input-Hint-Deploy-Glider"));
 
-      // GameObjectEffectHelper.StopEffectEvent(scriptInterface.executionOwner, n"camera_mask");
-      // scriptInterface.GetAudioSystem().NotifyGameTone(n"LeaveCrouch");
       scriptInterface.PushAnimationEvent(n"AirHover");
       this.PlaySound(n"q115_thruster_stop", scriptInterface);
       this.SetDetailedState(scriptInterface, gamePSMDetailedLocomotionStates.Fall);
@@ -79,24 +72,16 @@ protected func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scrip
 
   // // slow fall if exited during flight
   if this.m_isParagliding {
-    // let threshold = stateContext.GetFloatParameter(n"HardLandingFallingSpeed", true);
     let threshold = this.GetFallingSpeedBasedOnHeight(scriptInterface, 7.0);
     if verticalSpeed < threshold {
       let velocity = FromVariant<Vector4>(scriptInterface.GetStateVectorParameter(physicsStateValue.LinearVelocity));
       verticalSpeed = threshold;
       velocity.Z = verticalSpeed;
 
-      // scriptInterface.SetStateVectorParameter(physicsStateValue.LinearVelocity, ToVariant(new Vector3(0, 0, this.GetFallingSpeedBasedOnHeight(scriptInterface, 10.0))));
       scriptInterface.SetStateVectorParameter(physicsStateValue.LinearVelocity, ToVariant(velocity));
 
-      // let ev = new PSMImpulse();
-      // ev.id = n"impulse";
-      // ev.impulse =  new Vector4(0.0, 0.0, 2.0, 1.0);
-      // scriptInterface.owner.QueueEvent(ev);
     }
   }
-
-
 
   if this.m_updateInputToggles && verticalSpeed < this.GetFallingSpeedBasedOnHeight(scriptInterface, this.GetStaticFloatParameterDefault("minFallHeightToConsiderInputToggles", 0.00)) {
     this.UpdateInputToggles(stateContext, scriptInterface);
@@ -169,9 +154,7 @@ protected func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scrip
 
   if this.m_isParagliding {
     landingType = LandingType.Regular;
-    // this.PlaySound(n"lcm_falling_wind_loop", scriptInterface);
   }
-
 
   stateContext.SetPermanentIntParameter(n"LandingType", EnumInt(landingType), true);
   stateContext.SetPermanentFloatParameter(n"ImpactSpeed", verticalSpeed, true);
@@ -229,11 +212,8 @@ protected func OnExit(stateContext: ref<StateContext>, scriptInterface: ref<Stat
       this.RemoveInputHint(scriptInterface, n"DeployGlider", n"Paraglider");
     }
 
-    // scriptInterface.PushAnimationEvent(n"AirHover");
     this.PlaySound(n"q115_thruster_stop", scriptInterface);
-    // this.SetDetailedState(scriptInterface, gamePSMDetailedLocomotionStates.Fall);
     DefaultTransition.StopRumbleLoop(scriptInterface, "light");
   }
-  // GameObjectEffectHelper.StopEffectEvent(scriptInterface.executionOwner, n"camera_mask");
   super.OnExit(stateContext, scriptInterface);
 }

@@ -38,9 +38,7 @@ public class hudFlightController extends inkHUDGameController {
   private let m_yawFluff: inkTextRef;
   private let m_leftPart: inkWidgetRef;
   private let m_rightPart: inkWidgetRef;
-  // @default(hudFlightController, -838.0f)
   private let offsetLeft: Float;
-  // @default(hudFlightController, 1495.0f)
   private let offsetRight: Float;
   private let currentTime: GameTime;
   private let m_currentHealth: Int32;
@@ -95,16 +93,10 @@ public class hudFlightController extends inkHUDGameController {
 
   protected cb func OnInitialize() -> Bool {
     FlightLog.Info("[hudFlightController] OnInitialize");
-    // let delayInitialize: ref<DelayedHUDInitializeEvent>;
-    // inkTextRef.SetText(this.m_Date, "XX-XX-XXXX");
-    // delayInitialize = new DelayedHUDInitializeEvent();
-    // GameInstance.GetDelaySystem(this.GetPlayerControlledObject().GetGame()).DelayEvent(this.GetPlayerControlledObject(), delayInitialize, 0.10);
-    // this.GetPlayerControlledObject().RegisterInputListener(this);
     this.offsetLeft = -838.0;
     this.offsetRight = 1495.0;
     this.FindAttitudeWidgets();
     this.GetRootWidget().SetVisible(false);
-    // this.PlayLibraryAnimation(n"outro");
 
     // With the hud entry on the player there is no mounted vehicle at this point, so the
     // health listener is bound later, from OnFlightVehicleChanged. Binding it here as well
@@ -121,8 +113,6 @@ public class hudFlightController extends inkHUDGameController {
   protected cb func OnUninitialize() -> Bool {
     LTBF_UnregisterListener(this);
     FlightLog.Info("[hudFlightController] OnUninitialize");
-    // TakeOverControlSystem.CreateInputHint(this.GetPlayerControlledObject().GetGame(), false);
-    // SecurityTurret.CreateInputHint(this.GetPlayerControlledObject().GetGame(), false);
     this.UnbindVehicle();
     FlightSystem.GetInstance().SetHud(null);
   }
@@ -247,12 +237,6 @@ public class hudFlightController extends inkHUDGameController {
   protected cb func OnCameraModeChanged(tpp: Bool) -> Bool {
     this.m_isTPP = tpp;
     this.UpdateCrosshairVisibility();
-    // let hp_gauge = this.GetRootCompoundWidget().GetWidget(n"hp_gauge");
-    // if IsDefined(hp_gauge) {
-      // if tpp {
-      // } else {
-      //   hp_gauge.SetMargin(new inkMargin(2150.0, 32.0 - 100.0, 0.0, 0.0));
-      // }
 
       // right of LB hud stuff
       // hp_gauge.SetMargin(new inkMargin(2150.0, 32.0, 0.0, 0.0));
@@ -261,7 +245,6 @@ public class hudFlightController extends inkHUDGameController {
     // }
   }
 
-  
   private let m_crosshairAnimationProxy: ref<inkAnimProxy>;
 
   protected func ShouldShowCrosshair() -> Bool {
@@ -279,7 +262,6 @@ public class hudFlightController extends inkHUDGameController {
     opacityInterpolator.SetMode(inkanimInterpolationMode.EasyInOut);
     let animation = new inkAnimDef();
     animation.AddInterpolator(opacityInterpolator);
-    // let options: inkAnimOptions;
 
     if IsDefined(this.m_crosshairAnimationProxy) && this.m_crosshairAnimationProxy.IsPlaying() {
       this.m_crosshairAnimationProxy.Stop(true);
@@ -297,7 +279,6 @@ public class hudFlightController extends inkHUDGameController {
     if !IsDefined(this.m_rulers) {
       this.FindAttitudeWidgets();
     }
-    // if FlightSystem.GetInstance().playerComponent.GetFlightMode().usesRightStickInput && !FlightSystem.GetInstance().ctlr.isTPP {
     if !FlightSystem.GetInstance().ctlr.isTPP { // FPP
       this.m_rulers.SetRotation(0);
       this.m_rulersH.SetRotation(-roll);
@@ -367,24 +348,14 @@ public class hudFlightController extends inkHUDGameController {
           this.m_outroAnimationProxy.Stop();
         }
         this.m_introAnimationProxy = this.PlayLibraryAnimation(n"intro", options);
-        // this.PlayAnim(n"intro", n"OnIntroComplete");
-        // optionIntro.executionDelay = 0.25;
-        // this.PlayLibraryAnimation(n"Malfunction_off", optionIntro);
-        // this.PlayAnim(n"Malfunction_timed", n"OnMalfunction");
-        // this.UpdateJohnnyThemeOverride(true);
       }
     } else {
-      // this.GetRootWidget().SetVisible(false);
-      // this.PlayLibraryAnimation(n"outro");
-      // this.PlayLibraryAnimation(n"Malfunction");
       let options: inkAnimOptions;
       if IsDefined(this.m_introAnimationProxy) && this.m_introAnimationProxy.IsPlaying() {
         this.m_introAnimationProxy.Stop();
       }
       this.m_outroAnimationProxy = this.PlayLibraryAnimation(n"outro", options);
 
-      // this.PlayAnim(n"outro", n"OnOutroComplete");
-      // this.UpdateJohnnyThemeOverride(false);
     }
   }
 
@@ -408,12 +379,6 @@ public class hudFlightController extends inkHUDGameController {
   }
 
   protected func RegisterBB() {
-    // this.m_bbPlayerStats = this.GetBlackboardSystem().Get(GetAllBlackboardDefs().UI_PlayerBioMonitor);
-    // this.m_bbPlayerEventId = this.m_bbPlayerStats.RegisterListenerVariant(GetAllBlackboardDefs().UI_PlayerBioMonitor.PlayerStatsInfo, this, n"OnStatsChanged");    
-    // this.m_psmBlackboard = this.GetPSMBlackboard(this.m_playerPuppet);
-    // if IsDefined(this.m_psmBlackboard) {
-    //   this.m_PSM_BBID = this.m_psmBlackboard.RegisterDelayedListenerFloat(GetAllBlackboardDefs().PlayerStateMachine.ZoomLevel, this, n"OnZoomChange");
-    // };
 
     if IsDefined(this.m_vehicleFlightBlackboard) {
       if !IsDefined(this.m_vehicleBBUIActivId) {
@@ -443,12 +408,6 @@ public class hudFlightController extends inkHUDGameController {
   }
 
   protected func UnregisterBB() {
-    // if IsDefined(this.m_bbPlayerStats) {
-      // this.m_bbPlayerStats.UnregisterListenerVariant(GetAllBlackboardDefs().UI_PlayerBioMonitor.PlayerStatsInfo, this.m_bbPlayerEventId);
-    // };
-    // if IsDefined(this.m_psmBlackboard) && IsDefined(this.m_PSM_BBID) {
-    //   this.m_psmBlackboard.UnregisterDelayedListener(GetAllBlackboardDefs().PlayerStateMachine.ZoomLevel, this.m_PSM_BBID);
-    // };
     if IsDefined(this.m_vehicleFlightBlackboard) {
       if IsDefined(this.m_vehicleBBUIActivId) {
         this.m_vehicleFlightBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, this.m_vehicleBBUIActivId);
@@ -482,39 +441,16 @@ public class hudFlightController extends inkHUDGameController {
     this.UnbindVehicle();
   }
 
-  // protected cb func OnAction(action: ListenerAction, consumer: ListenerActionConsumer) -> Bool {
-  //   let yaw: Float = ClampF(this.m_playerPuppet.GetWorldYaw(), -300.00, 300.00);
-  //   inkTextRef.SetText(this.m_yawFluff, ToString(yaw));
-  //   inkTextRef.SetText(this.m_pitchFluff, ToString(yaw * 1.50));
-  //   inkWidgetRef.SetMargin(this.m_leftPart, new inkMargin(yaw, this.offsetLeft, 0.00, 0.00));
-  //   inkWidgetRef.SetMargin(this.m_rightPart, new inkMargin(this.offsetRight, yaw, 0.00, 0.00));
-  //   this.UpdateTime();
-  // }
-  
   protected cb func OnZoomChange(evt: Float) -> Bool {
-    // if evt > this.m_currentZoom {
-    //     this.PlayLibraryAnimation(n"zoomUp");
-    // } else {
-    //     this.PlayLibraryAnimation(n"zoomDown");
-    // }
-    // this.m_currentZoom = evt;
   }
 
   protected cb func OnIntroComplete(anim: ref<inkAnimProxy>) -> Bool {
-    // GameInstance.GetAudioSystem(this.GetPlayerControlledObject().GetGame()).Play(n"ui_main_menu_cc_loading");
   }
   protected cb func OnOutroComplete(anim: ref<inkAnimProxy>) -> Bool {
-      // this.GetRootWidget().SetVisible(false);
   }
 
   protected cb func OnStatsChanged(value: Variant) -> Bool {
-    // let incomingData: PlayerBioMonitor = FromVariant<PlayerBioMonitor>(value);
-    // this.m_previousHealth = this.m_currentHealth;
-    // this.m_maximumHealth = incomingData.maximumHealth;
        
-   
-    // this.m_currentHealth = CeilF(GameInstance.GetStatPoolsSystem(this.m_playerObject.GetGame()).GetStatPoolValue(Cast<StatsObjectID>(GetPlayer(this.m_playerObject.GetGame()).GetEntityID()), gamedataStatPoolType.Health, false));
-    // this.m_currentHealth = Clamp(this.m_currentHealth, 0, this.m_maximumHealth);
   }
 
   protected cb func OnScannerUIVisibleChanged(visible: Bool) -> Bool {
@@ -529,8 +465,6 @@ public class hudFlightController extends inkHUDGameController {
   }
 
   protected cb func OnDelayedHUDInitializeEvent(evt: ref<DelayedHUDInitializeEvent>) -> Bool {
-    // TakeOverControlSystem.CreateInputHint(this.GetPlayerControlledObject().GetGame(), true);
-    // SecurityTurret.CreateInputHint(this.GetPlayerControlledObject().GetGame(), true);
   }
 
   public final func PlayAnim(animName: CName, opt callBack: CName, opt animOptions: inkAnimOptions) -> Void {

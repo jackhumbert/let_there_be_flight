@@ -33,8 +33,6 @@ protected final const func ShowVehicleDriverInputHints(stateContext: ref<StateCo
 
 @addMethod(InputContextTransitionEvents)
 protected final func UpdateVehicleFlightInputHints(stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-  // let isExitVehicleBlocked: Bool;
-  // let isVehicleCombatModeBlocked: Bool;
   if this.ShouldForceRefreshInputHints(stateContext) {
     this.RemoveVehicleFlightInputHints(stateContext, scriptInterface);
     this.m_isGameplayInputHintRefreshRequired = false;
@@ -44,14 +42,6 @@ protected final func UpdateVehicleFlightInputHints(stateContext: ref<StateContex
   let vehicle = object as VehicleObject;
   if IsDefined(vehicle) && vehicle.IsFlightAvailable() {
     if stateContext.GetBoolParameter(n"isFlightInputHintDisplayed", true) {
-      // isVehicleCombatModeBlocked = this.IsVehicleBlockingCombat(scriptInterface) || this.IsEmptyHandsForced(stateContext, scriptInterface);
-      // isExitVehicleBlocked = this.IsExitVehicleBlocked(scriptInterface);
-      // if NotEquals(isVehicleCombatModeBlocked, stateContext.GetBoolParameter(n"IsVehicleCombatModeBlocked", true)) {
-      //   this.ShowVehicleDrawWeaponInputHint(stateContext, scriptInterface);
-      // };
-      // if NotEquals(isExitVehicleBlocked, stateContext.GetBoolParameter(n"IsExitVehicleBlocked", true)) {
-      //   this.ShowVehicleExitInputHint(stateContext, scriptInterface, n"VehicleFlight");
-      // };
     } else {
       this.ShowVehicleFlightInputHints(stateContext, scriptInterface);
     }

@@ -14,11 +14,7 @@ protected cb func OnRequestComponents(ri: EntityRequestComponentsInterface) -> B
 @wrapMethod(VehicleObject)
 protected cb func OnTakeControl(ri: EntityResolveComponentsInterface) -> Bool {
   if this.CanEnterFlight() {
-    //FlightLog.Info("[VehicleObject] OnTakeControl: " + this.GetDisplayName());
     this.m_flightComponent = EntityResolveComponentsInterface.GetComponent(ri, n"flightComponent") as FlightComponent;
-    // this.m_flightComponent.ui = EntityResolveComponentsInterface.GetComponent(ri, n"flight_ui") as worlduiWidgetComponent;
-    // this.m_flightComponent.ui_info = EntityResolveComponentsInterface.GetComponent(ri, n"flight_ui_info") as worlduiWidgetComponent;
-    // this.m_flightComponent.Toggle(false);
   }
   wrappedMethod(ri);
 }
@@ -98,7 +94,6 @@ public func IsFlightAvailable() -> Bool {
     return GameInstance.GetVehicleSystem(this.GetGame()).IsVehiclePlayerUnlocked(this.GetRecordID());
   }
 
-  // Only records a tweak opted in with `canEnterFlight = true`.
   if Equals(availability, FlightAvailability.WhitelistOnly) {
     return this.IsFlightWhitelistedByTweak();
   }
@@ -136,9 +131,6 @@ public func GetResRef(const varName: script_ref<String>, opt defaultValue: ResRe
   return TweakDBInterface.GetResRef(tweak, globalValue);
 }
 
-// @addField(VehicleObject)
-// public let chassis: ref<vehicleChassisComponent>;
-
 @if(!ModuleExists("Codeware"))
 @addField(VehicleObject)
 @runtimeProperty("offset", "0x25C")
@@ -157,15 +149,6 @@ public native let deceleration: Float;
 @addField(VehicleObject)
 @runtimeProperty("offset", "0x270")
 public native let handbrake: Float;
-
-// @addField(VehicleObject)
-// public native let turnX: Float;
-
-// @addField(VehicleObject)
-// public native let turnX2: Float;
-
-// @addField(VehicleObject)
-// public native let turnX3: Float;
 
 @addField(VehicleObject)
 @runtimeProperty("offset", "0x6B9")
@@ -191,9 +174,6 @@ public native func UsesInertiaTensor() -> Bool;
 @addMethod(VehicleObject)
 public native func GetInertiaTensor() -> Matrix;
 
-// @addMethod(VehicleObject)
-// public native func GetWorldInertiaTensor() -> Matrix;
-
 @addMethod(VehicleObject)
 public native func GetMomentOfInertiaScale() -> Vector3;
 
@@ -208,14 +188,6 @@ public native func GetAngularVelocity() -> Vector3;
 
 @addMethod(VehicleObject)
 public native func TurnOffAirControl() -> Bool;
-
-// public native class vehicleFlightHelper extends IScriptable {
-//     public native let force: Vector4;
-//     public native let torque: Vector4;
-// }
-
-// @addMethod(VehicleObject)
-// public native func AddFlightHelper() -> ref<vehicleFlightHelper>;
 
 @addMethod(VehicleObject)
 public native func GetComponentsUsingSlot(slotName: CName) -> array<ref<IComponent>>;
@@ -234,57 +206,6 @@ public native func GetDampedSpringForce(wheelIndex: Int32) -> Float;
 
 @addField(VehicleObject)
 public let bouncy: Bool;
-
-// working
-// @addMethod(VehicleObject)
-// protected cb func OnPhysicalCollision(evt: ref<PhysicalCollisionEvent>) -> Bool {
-//   // FlightLog.Info("[VehicleObject] OnPhysicalCollision");
-//   let vehicle = evt.otherEntity as VehicleObject;
-//   if IsDefined(vehicle) {
-//     let gameInstance: GameInstance = this.GetGame();
-//     let player: ref<PlayerPuppet> = GetPlayer(gameInstance);
-//     let isPlayerMounted = VehicleComponent.IsMountedToProvidedVehicle(gameInstance, player.GetEntityID(), vehicle);
-//     if !isPlayerMounted && this.bouncy {
-//       let impulseEvent: ref<PhysicalImpulseEvent> = new PhysicalImpulseEvent();
-//       impulseEvent.radius = 1.0;
-//       impulseEvent.worldPosition = Vector4.Vector4To3(evt.worldPosition);
-//       impulseEvent.worldImpulse = new Vector3(0.0, 0.0, 10000.0);
-//       vehicle.QueueEvent(impulseEvent);
-//     }
-//   }
-// }
-
-// @wrapMethod(VehicleObject)
-// public final func IsOnPavement() -> Bool {
-//   return wrappedMethod() || FlightController.GetInstance().IsActive();
-// }
-
-// @wrapMethod(VehicleObject)
-// protected cb func OnLookedAtEvent(evt: ref<LookedAtEvent>) -> Bool {
-//   wrappedMethod(evt);
-//   if this.IsDestroyed() && this.IsCurrentlyScanned() {
-//     let player: ref<PlayerPuppet> = GetPlayer(this.GetGame());
-//     let uiSystem: ref<UISystem> = GameInstance.GetUISystem(this.GetGame());
-//     if evt.isLookedAt {
-//         player.RegisterInputListener(this.m_vehicleComponent, n"Choice1");
-//         uiSystem.QueueEvent(FlightController.ShowHintHelper("Repair Vehicle", n"Choice1", n"RepairVehicle"));
-//     } else {
-//         player.UnregisterInputListener(this.m_vehicleComponent, n"Choice1");
-//         uiSystem.QueueEvent(FlightController.HideHintFromSource(n"RepairVehicle"));
-//     }
-//   }
-// } 
-
-// @addMethod(VehicleObject)
-// public const func IsQuickHackAble() -> Bool {
-//   return true;
-// }
-
-// @addMethod(VehicleObject)
-// public const func IsQuickHacksExposed() -> Bool {
-//   return true;
-// }
-
 
 @addMethod(VehicleObject)
 public native func ResetQuestEnforceTransform() -> Void;

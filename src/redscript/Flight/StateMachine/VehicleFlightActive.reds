@@ -33,15 +33,9 @@ public class VehicleFlightActiveEvents extends VehicleFlightEventsTransition {
   }
   
   public final func OnUpdate(timeDelta: Float, stateContext: ref<StateContext>, scriptInterface: ref<StateGameScriptInterface>) -> Void {
-    // let fc = FlightController.GetInstance();
-    // fc.OnUpdate(timeDelta, stateContext, scriptInterface);
-    // fc.sys.OnUpdate(timeDelta);
-    // this.SetSide(stateContext, scriptInterface);
-    // this.SendAnimFeature(stateContext, scriptInterface);
     if (!FlightController.GetInstance().showOptions) {
       this.HandleFlightCameraInput(scriptInterface);
     }
-    // this.HandleFlightExitRequest(stateContext, scriptInterface);
   }
 
 }

@@ -9,7 +9,6 @@ public class VehicleFlightContextDecisions extends InputContextTransitionDecisio
   protected let m_context: ref<StateContext>;
 
   protected func OnAttach(const stateContext: ref<StateContext>, const scriptInterface: ref<StateGameScriptInterface>) -> Void {
-    // FlightLog.Info("[VehicleFlightContextDecisions] OnAttach");
     this.m_context = stateContext;
     let allBlackboardDef = GetAllBlackboardDefs();
       
@@ -17,7 +16,6 @@ public class VehicleFlightContextDecisions extends InputContextTransitionDecisio
       this.m_stateCallbackID = scriptInterface.localBlackboard.RegisterListenerInt(allBlackboardDef.PlayerStateMachine.Vehicle, this, n"OnVehicleStateChanged");
       this.OnVehicleStateChanged(scriptInterface.localBlackboard.GetInt(allBlackboardDef.PlayerStateMachine.Vehicle));
       
-      // FlightController.GetInstance().SetupMountedToCallback(scriptInterface.localBlackboard);
     }
       
     let bb = FlightController.GetInstance().GetBlackboard();
@@ -51,12 +49,8 @@ public class VehicleFlightContextDecisions extends InputContextTransitionDecisio
 
   protected func UpdateEnterConditionForFlight() -> Void {
     let value = this.m_psmVehicle == EnumInt(gamePSMVehicle.Driving) && this.m_isFlying;
-    // let value = this.m_isFlying;
     this.EnableOnEnterCondition(value);
-    // FlightLog.Info("[InputContext] " + this.GetContextName() + " EnterCondition: " + ToString(value));
     
-    // let inputState = this.m_context.GetStateMachineCurrentState(n"InputContext");
-    // FlightLog.Info("[InputContext] Current: " + NameToString(inputState));
   }
 
   protected cb func OnVehicleStateChanged(value: Int32) -> Bool {

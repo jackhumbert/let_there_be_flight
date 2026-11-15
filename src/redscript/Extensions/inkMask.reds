@@ -4,14 +4,6 @@ enum inkMaskDataSource {
     DynamicTexture = 1
 }
 
-// public native class inkTextureAtlas {
-
-// }
-
-// @addField(inkMask)
-// native let textureAtlas: inkTextureAtlas;
-// @addField(inkMask)
-// native let texturePart: CName;
 @if(!ModuleExists("Codeware"))
 @addField(inkMask)
 public native let dynamicTextureMask: CName;
@@ -75,10 +67,5 @@ func SetMaskTransparency(value: Float) {
     this.maskTransparency = value;
 }
 
-
-// @addMethod(inkMask)
-// func SetAtlasResource(textureAtlas: ResRef) {
-//     this.textureAtlas = textureAtlas;
-// }
 @addMethod(inkMask)
 public native func SetAtlasResource(atlasResourcePath: ResRef) -> Bool;

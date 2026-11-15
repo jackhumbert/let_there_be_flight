@@ -197,14 +197,6 @@ public native class FlightSettings extends IScriptable {
   public final func LinearBrake() -> Float = this.brakeFactorLinear * this.brakeStrength;
   public final func AngularBrake() -> Float = this.brakeFactorAngular * this.brakeStrength;
 
-  // public cb func OnModSettingsUpdate(variable: CName, value: Variant) {
-  //   switch (variable) {
-  //     case n"autoActivationHeight":
-  //       this.autoActivationHeight = FromVariant<Float>(value);
-  //       break;
-  //   }
-  // }
-
   private func OnAttach() -> Void {
     FlightLog.Info("[FlightSettings] OnAttach");
     LTBF_RegisterListener(this);
@@ -212,24 +204,19 @@ public native class FlightSettings extends IScriptable {
     FlightSettings.SetVector3("inputPitchPID", 1.0, 0.2, 0.05);
     FlightSettings.SetVector3("inputRollPID", 1.0, 0.5, 0.0);
 
-
     FlightSettings.SetVector3("hoverModePID", 1.0, 0.005, 0.5);
 
     FlightSettings.SetFloat("collisionRecoveryDelay", 0.8);
     FlightSettings.SetFloat("collisionRecoveryDuration", 0.8);
     FlightSettings.SetFloat("defaultHoverHeight", 3.50);
 
-    // FlightSettings.SetFloat("flyModeLiftFactor", 20.0);
-
     FlightSettings.SetVector3("FPVCameraOffset", 0.0, 0.0, -0.5);
 
     FlightSettings.SetFloat("hoverClamp", 10.0);
-    // FlightSettings.SetFloat("hoverModeLiftFactor", 8.0);
     FlightSettings.SetFloat("isFlightUIActive", 1.0);
     FlightSettings.SetFloat("lockFPPCameraInFlight", 1.0);
     FlightSettings.SetFloat("hoverModeMaxHoverHeight", 7.0);
     FlightSettings.SetFloat("hoverModeMinHoverHeight", 1.0);
-
 
     // angular damping stability cap, see FlightMode.CapDamping
     FlightSettings.SetFloat("dampStabilityK", 0.19);
@@ -237,7 +224,6 @@ public native class FlightSettings extends IScriptable {
 
     FlightSettings.SetFloat("pitchWithLift", 0.0);
     FlightSettings.SetFloat("pitchWithSurge", 0.0);
-
 
     FlightSettings.SetBool("inTPPDriverCombat", false);
   }
