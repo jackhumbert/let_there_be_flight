@@ -1,4 +1,4 @@
-// The Autopilot's game shell (docs/design/native-ports.md, M6 step 6, tests kind 6): what other tools and players'
+// The Autopilot's game shell (docs/design/autopilot.md, Shell tests): what other tools and players'
 // saved files depend on stays as the script mode had it (FlightModeAutopilot.reds at c3e24ab).
 //   - the Mod Settings keys: the class, names, types, categories, localization keys, defaults and ranges;
 //   - the developer overrides of the tuning by name (autopilot.<name>);
@@ -50,7 +50,7 @@ std::set<std::string> Matches(const std::string &aText, const std::regex &aPatte
 // (ModSettings::ProcessScriptData: mod->classes[scriptClass->name], the variable named prop->name). The C++ registers
 // under kAutopilotSettingsClass with each row's name (FlightSettingsLink: className, propertyName). These are the
 // script's declarations at c3e24ab, less the two dropped settings and brakeAccel (a developer value,
-// docs/design/settings-audit.md), all in the menu's Flight Modes category.
+// docs/design/flight-modes.md, Settings), all in the menu's Flight Modes category.
 TEST(autopilot_shell_mod_settings_keys) {
   struct Expected {
     const char *name, *displayName, *description;

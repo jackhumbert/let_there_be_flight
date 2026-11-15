@@ -2,7 +2,7 @@
 
 // The beginner's situations Hover & Fly is measured on, and Drone's (its spin per axis, lift, surge and angular brake,
 // and its skid over the ground: drone_skid_*), each a scripted input over a small world, and the numbers each one is
-// judged by (docs/design/hover-fly-feel.md). The feel tests (tests/feel_tests.cpp) and the flightsim tool
+// judged by (docs/design/flightsim.md; the feel spec: docs/design/flight-modes.md). The feel tests (tests/feel_tests.cpp) and the flightsim tool
 // (flightsim.cpp) both run these.
 
 #include "Sim.hpp"

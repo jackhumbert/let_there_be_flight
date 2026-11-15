@@ -1,6 +1,6 @@
 #pragma once
 
-// FlightComponent.FindGround in C++ (docs/design/hover-fly-native.md, step 3): the same four rays, one straight down
+// FlightComponent.FindGround in C++ (docs/design/flight-modes.md, FindGround): the same four rays, one straight down
 // from each wheel emitter (Flight::GroundRayEnd) but starting over it and seeing only the static world
 // (Flight::GroundRayStart, so a bike's emitters under the road's surface still find it; the script's start at the
 // emitters and see cars too), through the same engine calls the script makes

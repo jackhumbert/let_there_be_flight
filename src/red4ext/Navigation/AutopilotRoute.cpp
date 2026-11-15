@@ -1,4 +1,4 @@
-// The Autopilot's route (docs/design/native-ports.md, M6 step 4b): the goal, the plans asked for and
+// The Autopilot's route (docs/design/autopilot.md, Route): the goal, the plans asked for and
 // taken (with the plan-ahead of AutopilotPlanAhead.reds), the splices, the replans after a hit or off
 // the line, the trajectory and the landing spot checked again on the approach. FlightModeAutopilot.reds
 // line numbers name what each part ports.

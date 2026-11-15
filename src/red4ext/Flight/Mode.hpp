@@ -1,16 +1,16 @@
 #pragma once
 
-// FlightMode as a native class (docs/design/hover-fly-native.md): the base of every flight mode, C++ or redscript.
+// FlightMode as a native class (docs/design/flight-modes.md, FlightMode, the native base): the base of every flight
+// mode, C++ or redscript.
 //
 // A C++ mode is a subclass overriding the C++ virtuals below. Redscript reaches it through the base's own functions:
 // FlightMode.reds' Initialize, IsEnabled, Activate, Deactivate, Teleported, Update and GetDescription call
 // NativeInitialize, NativeIsEnabled, NativeActivate, NativeDeactivate, NativeTeleported, NativeUpdate and
 // NativeDescription, which run the C++ step and then the redscript hook (OnInitialize, OnActivate, OnDeactivate,
 // OnTeleported, OnUpdate) when the object's class overrides it, or the hook in place of the C++ answer (Enabled,
-// Description). So a mod extends a C++ mode in redscript by overriding the hooks,
-// and no redscript call has to find a C++ override (the step 1 spike, 2026-11-05: redscript calling a function that a
-// native subclass overrode by name reached another function). The redscript modes that still override Update and the
-// rest themselves work as before.
+// Description). So a mod extends a C++ mode in redscript by overriding the hooks, and no redscript call has to find a
+// C++ override (redscript calling a function that a native subclass overrides by name does not reach the override).
+// The redscript modes that still override Update and the rest themselves work as before.
 //
 // FlightModeNativeProbe is the spike's mode: it counts its calls and gives no force but a 0.25 m/s2 sideways marker
 // (in the list behind the developer setting nativeModeProbe; the car falls).

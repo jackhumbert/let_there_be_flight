@@ -32,7 +32,7 @@ find_program(CYBERPUNK_2077_EXE NAMES Cyberpunk2077.exe PATHS "${CYBERPUNK_2077_
 
 set(MOD_GAME_DIR_FMOD_FOLDER "${MOD_GAME_DIR}/red4ext/plugins/${MOD_SLUG}")
 
-# Sound files LTBF plays itself on FMOD Core channels (Audio/Samples, docs/design/audio-native.md A.3)
+# Sound files LTBF plays itself (Audio/Samples, docs/design/audio.md, Samples)
 
 file(GLOB LTBF_AUDIO_FILES ${PROJECT_SOURCE_DIR}/src/audio/*.wav)
 foreach(_FILE ${LTBF_AUDIO_FILES})
@@ -221,7 +221,7 @@ target_link_libraries(navplan PRIVATE spdlog)
 target_compile_definitions(navplan PRIVATE LTBF_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 
 # Hover & Fly flown offline on the plugin's mode, input and force code, scenario by scenario
-# (tools/flightsim, docs/design/hover-fly-feel.md); not built by default
+# (tools/flightsim, docs/design/flightsim.md); not built by default
 add_executable(flightsim EXCLUDE_FROM_ALL
   tools/flightsim/flightsim.cpp
   tools/flightsim/Sim.cpp

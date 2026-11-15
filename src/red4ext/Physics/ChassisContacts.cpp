@@ -293,7 +293,7 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 2021199885, RigidBody_IntegrateMotion
     // the RigidBody's velocity, which nothing moves with now (PushToPhysX writes from PhysX's own), but the scripts
     // read it (GetLinearVelocity): put PhysX's back. Left in, the vertical speed read a step of gravity low, 0.16 m/s
     // at 60 fps, and every mode's damping lifted the car against a sink that was not there (Hover & Fly hovered
-    // 0.14 m over its hover height; 24 in-game flights, docs/design/hover-fly-terrain.md, 2026-11-06)
+    // 0.14 m over its hover height)
     if (fc->physxCopied) {
       rb->velocity = fc->physxLinear;
       rb->angularVelocity = fc->physxAngular;

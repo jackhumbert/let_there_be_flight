@@ -1,7 +1,7 @@
 #pragma once
 
-// Step 0 of docs/design/wwise-audio.md, kept as the first in-game test of the Wwise path: a tone through the game's
-// Wwise. It plays through the step 1 pieces (Link installs the Relay, which hands our playing ID's buffers to a sine
+// The first in-game test of the Wwise path (docs/design/audio.md, Wwise): a tone through the game's
+// Wwise. It plays through the Audio/Wwise pieces (Link installs the Relay, which hands our playing ID's buffers to a sine
 // and passes every other ID to the game's callbacks) on a game object of ours, from one of mod.bnk's events or from
 // LTBF's own bank (Bank, loaded by LoadOurBank: ltbf_spike_3d positioned with no attenuation, ltbf_spike_2d).
 // For the bridge only (WwiseSpike.Start and the rest); nothing calls it otherwise.

@@ -1,4 +1,4 @@
-"""The simulator's car table from TweakDB, grouped by physics (docs/design/hover-fly-feel.md).
+"""The simulator's car table from TweakDB, grouped by physics (docs/design/flightsim.md, The car table).
 
     python tools/flightsim/tweak_physics.py <dump dir> [--survey <measured.tsv>] [--geometry <geometry.tsv>]
                                             [-o tools/flightsim/vehicles.tsv] [--todo <records to survey.txt>]
@@ -22,7 +22,7 @@ Where each number comes from:
 Records on CDPR's stand-in drive model (PLACEHOLDER_DRIVE_MODELS: AVs, drones, props) are left out.
 --aero adds, from aero.py's aero.tsv, each car's drag area per body axis (cdaX side, cdaY front, cdaZ top, m2) and
 its chassis box and underside profile from the centre of mass (boxMinX .. boxMaxZ, m; underside, the lowest point per
-square, as aero.underside() writes it: the ground contact, docs/design/hover-fly-terrain.md) and its body class (body:
+square, as aero.underside() writes it: the ground contact, docs/design/flightsim.md) and its body class (body:
 sport, standard, suv, truck, bike or other, from its chassis shape's folder, aero.body_class); empty for the three cars
 with no chassis shape.
 """

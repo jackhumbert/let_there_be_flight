@@ -1,6 +1,6 @@
 #pragma once
 
-// The wind as the listener hears it (docs/design/audio-native.md A.4), with no FMOD or game types so
+// The wind as the listener hears it (docs/design/audio.md, Wind), with no FMOD or game types so
 // tests/ can link it.
 //
 // Field: the city's wind where the listener is. A mean that grows with height above the floor (the

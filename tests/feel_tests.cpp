@@ -1,4 +1,4 @@
-// How the flight modes feel, on every surveyed car and bike (docs/design/hover-fly-feel.md): the flightsim scenarios
+// How the flight modes feel, on every surveyed car and bike (docs/design/flight-modes.md, Feel spec): the flightsim scenarios
 // (tools/flightsim) flown over tools/flightsim/vehicles.tsv, each metric checked against a bound.
 //
 // - Drone (Flight::Drone) and the anti-gravity drone: a regression guard on what they do today. Their torque is a
@@ -164,7 +164,7 @@ TEST(feel_drone_assist_fleet) {
 }
 
 namespace {
-// The draft spec (docs/design/hover-fly-feel.md) on Standard at one Handling choice.
+// The feel spec (docs/design/flight-modes.md, Feel spec) on Standard at one Handling choice.
 void StandardSpec(float aHandling) {
   auto runs = FlyFleet(Mode::Standard, {"yaw_hold", "knock_roll_yaw", "knock_pitch_yaw", "tilt_recovery",
                                       "tilt_recovery_yaw", "knock_low", "surge_turn", "climb_short", "climb_long"},

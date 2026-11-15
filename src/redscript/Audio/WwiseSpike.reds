@@ -1,4 +1,4 @@
-// Step 0 of docs/design/wwise-audio.md (src/red4ext/Audio/Wwise/WwiseSpike.hpp): a tone through the game's Wwise, for
+// A test of the Wwise path (docs/design/audio.md, Wwise; src/red4ext/Audio/Wwise/WwiseSpike.hpp): a tone through the game's Wwise, for
 // tests only (WwiseSpike.Start("mod_sfx_2d", 440, 0.2) at run time).
 public native class WwiseSpike extends IScriptable {
   public native static func Start(event: String, frequency: Float, gain: Float) -> String;

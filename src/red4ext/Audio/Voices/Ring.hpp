@@ -1,7 +1,7 @@
 #pragma once
 
-// A single producer, single consumer ring of mono samples between the mixer's DSPs (docs/design/audio-native.md
-// D.9): the engine's bed writes a block, an echo voice reads it one block later. The buffer is allocated
+// A single producer, single consumer ring of mono samples between the mixer's DSPs (docs/design/audio.md,
+// Rings): the engine's bed writes a block, an echo voice reads it one block later. The buffer is allocated
 // in the constructor and nothing waits. The ring starts holding aPrefill zeros, so the reader is that
 // many samples behind the writer from the first block on.
 //

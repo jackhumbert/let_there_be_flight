@@ -1,6 +1,6 @@
 #pragma once
 
-// The ranking behind LTBF's 3D sounds (docs/design/audio-native.md, A.2), with no FMOD or game types
+// The ranking behind LTBF's 3D sounds (docs/design/audio.md, Voices), with no FMOD or game types
 // so tests/ can link it. Every source says where it is and how loud; each Update ranks them by their
 // level at the listener and decides who gets a Windows Sonic object, who is folded into one voice
 // per car, and who plays nothing.

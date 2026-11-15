@@ -1,4 +1,4 @@
-// The Autopilot's free roam (docs/design/native-ports.md, M6 step 4c): engaged with nothing tracked,
+// The Autopilot's free roam (docs/design/autopilot.md, Free roam): engaged with nothing tracked,
 // legs to random points or gates ahead, chained into one route without stopping, around where it
 // began. The picks draw from the Autopilot's Rng in the script's order. FlightModeAutopilot.reds line
 // numbers name what each part ports.

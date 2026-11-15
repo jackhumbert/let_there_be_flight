@@ -1,7 +1,7 @@
 #pragma once
 
-// The relay: our callbacks in front of the game's for the Audio Input plugin (docs/design/wwise-audio.md, "The
-// shape"). Wwise calls them on its audio thread for every Audio Input sound playing: ours answer the playing IDs bound
+// The relay: our callbacks in front of the game's for the Audio Input plugin (docs/design/audio.md,
+// Wwise). Wwise calls them on its audio thread for every Audio Input sound playing: ours answer the playing IDs bound
 // to a source of ours and pass every other ID to the callbacks that were there before (the game's, for REDmod's
 // sounds), so those keep playing. The game sets its callbacks only when it has REDmod sounds (the spike found none
 // set without them), so it may set them after ours: Observe, once a frame, notices and keeps the new ones to pass on,

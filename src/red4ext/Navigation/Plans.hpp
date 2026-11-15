@@ -1,6 +1,6 @@
 #pragma once
 
-// The Autopilot's route plans (docs/design/native-ports.md, M6): the planner's params for each kind
+// The Autopilot's route plans (docs/design/autopilot.md, Plans): the planner's params for each kind
 // of plan, and the requests they run as. In the game a PlanQueue runs each request on its own thread
 // (FlightNavMap's Plan*Async); offline it plans at once and hands the plan over after a modelled
 // delay, so a simulated flight waits for its plans as the game's does.

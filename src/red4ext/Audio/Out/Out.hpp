@@ -1,10 +1,10 @@
 #pragma once
 
-// Where LTBF's sound goes (docs/design/wwise-audio.md, step 2): every sound LTBF makes is a generator, a function
+// Where LTBF's sound goes (docs/design/audio.md, Backends): every sound LTBF makes is a generator, a function
 // that renders a block on the audio thread, and plays through a voice of one of two backends, chosen once at load by
 // the developer setting wwiseAudio:
 //
-//   FMOD    the plugin's own FMOD Core system (docs/design/audio-native.md): a voice is a channel playing a generator
+//   FMOD    the plugin's own FMOD Core system (docs/design/audio.md, FMOD): a voice is a channel playing a generator
 //           DSP with the Object Spatializer (and an NPC car's low-pass) after it, in its bus's channel group; the
 //           buses' volumes and limiters, the listener and the pause are the system's.
 //   Wwise   the game's Wwise through the Audio Input plugin (Audio/Wwise): a voice is a game object of ours playing

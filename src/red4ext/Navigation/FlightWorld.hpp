@@ -1,6 +1,6 @@
 #pragma once
 
-// The Autopilot's world in the game (Navigation::World, docs/design/native-ports.md, M6 step 6): the nav map, the
+// The Autopilot's world in the game (Navigation::World, docs/design/autopilot.md, World): the nav map, the
 // landing pads and the gates (MapWorld over NavMap::Get(), Helipads::Get(), Gates::Get()), with the two landing rays
 // cast through the engine as FlightModeAutopilot.reds cast them (the last commit with it: c3e24ab), from the
 // component's spatial queries system (FlightComponent.sqs, as FlightGround reads it):

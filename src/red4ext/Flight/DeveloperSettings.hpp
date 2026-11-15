@@ -1,6 +1,6 @@
 #pragma once
 
-// Developer settings, never shown in Mod Settings (docs/design/hover-fly-native.md, decision 2): the code
+// Developer settings, never shown in Mod Settings (docs/design/flight-modes.md, Developer values): the code
 // defaults below, overridden at plugin load by an optional developer.ini in the plugin folder (releases never ship
 // one) and live through FlightDeveloperSettings.Set (FlightDeveloperSettings.Set(name, value) at run time).
 
@@ -27,9 +27,9 @@ struct DeveloperSettings {
   bool nativeModeProbe = false;
   // PhysX rays the acoustics cast each time (Audio/Acoustics/LiveRays.cpp, 20 a second): the first 32 are the near
   // rays the echoes use; the rest the live sphere, bunched where the car is going, for the reverb's enclosure and mean
-  // free path (Probe::SphereRays; docs/design/acoustics.md, "How many rays"). 32: the nav map's sphere alone.
+  // free path (Probe::SphereRays; docs/design/acoustics.md, Live rays). 32: the nav map's sphere alone.
   float acousticsRays = 1024.0f;
-  // LTBF's sound through the game's Wwise (Audio/Out, docs/design/wwise-audio.md), the default since step 7; false for
+  // LTBF's sound through the game's Wwise (Audio/Out, docs/design/audio.md, Wwise), the default; false for
   // its own FMOD as before. Read once, when the plugin loads (developer.ini). FMOD plays when Wwise cannot start.
   bool wwiseAudio = true;
   // where LTBF's sound is heard from, drawn each frame through the Debug Draw mod when it is installed

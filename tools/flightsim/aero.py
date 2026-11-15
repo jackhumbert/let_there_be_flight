@@ -26,7 +26,7 @@ drag F = 1.2 airResistanceFactor v^2 (FlightMode.ApplyPhysics) as a CdA, and the
 (budget with real drag and a smaller force per thruster gives the same speeds: only force / K matters.)
 Speeds are uncapped and without TopSpeed's 0.97 (Navigation/Vehicle.cpp caps at speedCap, 120 m/s by default).
 Finally a rough flat turn per named car under each drag model, with and without the yaw directionality redirect.
-For the ground contact (docs/design/hover-fly-terrain.md), also the chassis box and its underside profile (the
+For the ground contact (docs/design/flightsim.md, Ground contact), also the chassis box and its underside profile (the
 lowest point per 0.5 m square, `underside()`), from the drive model's centre of mass as vehicles.tsv's wheel offsets
 and bottom are; tweak_physics.py --aero carries them into vehicles.tsv.
 Writes <out> (one row per fleet row) and prints the comparison.

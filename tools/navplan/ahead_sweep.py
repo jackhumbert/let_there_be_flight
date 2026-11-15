@@ -1,4 +1,4 @@
-"""Sweep plan ahead (docs/design/trajectory.md step 7) offline: for each first-leg horizon (metres
+"""Sweep plan ahead (docs/design/trajectory.md, Plan ahead) offline: for each first-leg horizon (metres
 along the doorway route) and margin (seconds added to the expected plan time before the join),
 navplan plans every route the way the Autopilot would (NAVPLAN_AHEAD: first leg, the rest from
 where the car will be, spliced) and against one full plan from rest. Per setting: the time until

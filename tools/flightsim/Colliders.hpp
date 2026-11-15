@@ -1,7 +1,7 @@
 #pragma once
 
 // The city's collision offline, as triangles, for rays: what the car's FindGround and its underside meet in game
-// (docs/design/hover-fly-terrain.md). A region file comes from tools/flightsim/region_pack.py (the sector collision
+// (docs/design/flightsim.md, Colliders). A region file comes from tools/flightsim/region_pack.py (the sector collision
 // that blocks vehicles less what the plugin moves away, LTBF's proxy colliders, and the terrain as triangles); tests
 // build worlds in memory with Add.
 //

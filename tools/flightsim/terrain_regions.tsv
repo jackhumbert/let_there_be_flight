@@ -1,4 +1,4 @@
-# The boxes of the city's collision Hover & Fly is flown over offline (docs/design/hover-fly-terrain.md, step 4).
+# The boxes of the city's collision Hover & Fly is flown over offline (docs/design/flightsim.md, Terrain runs).
 # region_pack.py --regions packs each into <name>.ltbfregion (20 m margin); flightsim --sample draws lines in them.
 # name	x0	y0	x1	y1	what
 cc	-1950	-1000	-1710	-760	the city centre's streets and plazas (navplan routes cc2dog and via start here)

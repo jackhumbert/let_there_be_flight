@@ -1,10 +1,10 @@
 #pragma once
 
-// The Autopilot's tuning (docs/design/native-ports.md, M6 step 3): every field of FlightModeAutopilot.reds
+// The Autopilot's tuning (docs/design/autopilot.md, Tuning): every field of FlightModeAutopilot.reds
 // the native Autopilot reads, with the script's defaults and comments, by the script's names. A test
 // (autopilot_params_defaults) checks each default against the script while both exist. Not here: the Mod
-// Settings that did nothing (maxSpeed, lateralAccel), the manoeuvres and the plane attitude (deleted, M6
-// decisions), the native switches and the runtime state.
+// Settings that did nothing (maxSpeed, lateralAccel), the manoeuvres and the plane attitude (deleted),
+// the native switches and the runtime state.
 
 #include <cstdint>
 #include <string_view>
@@ -45,7 +45,7 @@ struct AutopilotParams {
   // (standardModeLiftFactor - g) of lift downwards, 25 m/s2, planned at raceMargin
   float dronePushOver = 21.0f;
   float trajectoryAttitudeLead = 0.0f; // s ahead the planned tilt is read (the plan's tilts already start early)
-  // leaving the line on a trajectory (docs/design/trajectory.md, step 5): replanned from the car's
+  // leaving the line on a trajectory (docs/design/trajectory.md, Leaving the plan): replanned from the car's
   // state, never steered back to a point behind it
   float replanOffLine = 8.0f; // m off the line before replanning (replanDistance without a trajectory)
   float trajectoryCorrectionMax = 25.0f; // m/s2 the follower adds to the trajectory's acceleration at most (swept)

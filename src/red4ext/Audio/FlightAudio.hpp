@@ -33,7 +33,7 @@ public:
   void UpdateListenerMatrix(RED4ext::Matrix matrix);
   // the water low-pass's input of the engine synth: 1 under water, 0 in the air
   void SetWater(float value);
-  // LTBF's own samples on FMOD Core channels at the car (Samples, docs/design/audio-native.md A.3): a
+  // LTBF's own samples at the car (docs/design/audio.md, Samples): a
   // sound by its event's name that plays once, or loops under an id until StopLoop
   void PlayOneShot(RED4ext::CString name, RED4ext::Handle<RED4ext::vehicle::BaseObject> vehicle);
   void StartLoop(RED4ext::CString id, RED4ext::CString name, RED4ext::Handle<RED4ext::vehicle::BaseObject> vehicle);
@@ -61,7 +61,7 @@ public:
   RED4ext::CString VoicesBudget(int32_t maxObjects, int32_t maxSynth);
   // the voice pool as JSON (Voices::State), for tests
   RED4ext::CString VoicesState();
-  // the wind as the listener hears it (Wind, docs/design/audio-native.md A.4): each frame the player's car
+  // the wind as the listener hears it (docs/design/audio.md, Wind): each frame the player's car
   // flies (Inputs::Gather), its matrix, world velocity, the angles between its nose and its way (degrees) and
   // the view (0 TPP, 1 FPP, 2 the cinematic camera)
   void UpdateWind(RED4ext::Matrix carMatrix, RED4ext::Vector4 velocity, int32_t view);

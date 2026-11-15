@@ -1,4 +1,4 @@
-"""A box of the city's collision as one region file, for flightsim's Colliders (docs/design/hover-fly-terrain.md).
+"""A box of the city's collision as one region file, for flightsim's Colliders (docs/design/flightsim.md, Colliders).
 
     python -P -E tools/flightsim/region_pack.py x0,y0,x1,y1 -o <region.ltbfregion> [--margin 20]
     python -P -E tools/flightsim/region_pack.py --regions tools/flightsim/terrain_regions.tsv [--force]

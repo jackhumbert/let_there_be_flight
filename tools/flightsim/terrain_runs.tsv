@@ -1,4 +1,4 @@
-# Lines Hover & Fly is flown along offline (flightsim --terrain; TerrainRuns.hpp, docs/design/hover-fly-terrain.md).
+# Lines Hover & Fly is flown along offline (flightsim --terrain; TerrainRuns.hpp, docs/design/flightsim.md).
 # Drawn by flightsim --sample <region> 8 --length 160 --min-length 80 --seed 1 in each region of terrain_regions.tsv;
 # lines picked by hand go at the end. Columns: name, region, x0, y0, x1, y1, z0 (start surface; empty: topmost), tags.
 cc_1	cc	-1844.02	-979.92	-1833.09	-843.86	7.48	

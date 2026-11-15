@@ -22,7 +22,7 @@
 // lands it; the completion closes vanilla's state (Arrived, the SummonFinishedEvent to the
 // vehicle's component for its arrival effects) when the game has not already.
 //
-// The fallback (docs/design/vehicle-summon.md section 6): anywhere else, vanilla's summon runs and
+// The fallback (docs/design/vehicle-summon.md section 5): anywhere else, vanilla's summon runs and
 // the tick watches it. When it cannot bring the car to V, the car flies the rest of the way and
 // lands next to V on the ground (the Autopilot's own landing spot search, kept clear of V):
 //   1. no car at all: the summon was pressed (not on cooldown) and nothing came of it - the
@@ -50,7 +50,7 @@ public class FlightSummonSystem extends ScriptableSystem {
   @runtimeProperty("ModSettings.description", "UI-Settings-Pad-Summon-Description")
   public let padSummonEnabled: Bool = true;
 
-  // a developer value, not a Mod Setting (docs/design/settings-audit.md)
+  // a developer value, not a Mod Setting (docs/design/flight-modes.md, Developer values)
   public let padSummonRange: Float = 60.0;    // m beyond a pad's radius V counts as near it
 
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
@@ -232,7 +232,7 @@ public class FlightSummonSystem extends ScriptableSystem {
     // the record goes straight to the spawn (the VehicleSystem's RequestNewVehicle takes the
     // TweakDBID; the C++ side refuses one that is not in TweakDB). No TDBID natives in this
     // flow - their runtime wrappers can be unbound in a modded launch and the script call
-    // crashes, whose frame it runs in (docs/design/vehicle-summon.md section 4): the callers
+    // crashes, whose frame it runs in (docs/design/vehicle-summon.md section 3): the callers
     // hand the record over (the wheel wrap this.PickedRecord(), the bridge the resolved one).
     let spot: Vector4;
     let yaw: Float;

@@ -44,7 +44,7 @@ FlightAudio* FlightAudio::Get() {
 }
 
 bool FlightAudio::Load(RED4ext::CGameApplication *aApp) {
-  // the backend for the session (docs/design/wwise-audio.md); Wwise falls back to FMOD when it cannot install
+  // the backend for the session (docs/design/audio.md, Backends); Wwise falls back to FMOD when it cannot install
   if (!Out::Init(Flight::Developer().wwiseAudio ? Out::Backend::Wwise : Out::Backend::Fmod)) {
     return false;
   }

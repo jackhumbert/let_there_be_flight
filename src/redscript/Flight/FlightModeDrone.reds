@@ -31,7 +31,7 @@ public class FlightModeDrone extends FlightMode {
   @runtimeProperty("ModSettings.max", "3.0")
   public let droneThrust: Float = 1.0;
 
-  // Developer values (no longer Mod Settings, docs/design/settings-audit.md): thrust, m/s2 at full input, and
+  // Developer values (no longer Mod Settings, docs/design/flight-modes.md, Developer values): thrust, m/s2 at full input, and
   // turn, torque per unit of input. Drone Thrust and Drone Turn Speed scale them.
   public let droneModeLiftFactor: Float = 40.0;
   public let droneModePitchFactor: Float = 5.0;

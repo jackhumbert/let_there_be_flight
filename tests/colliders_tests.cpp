@@ -1,4 +1,4 @@
-// The city's collision offline (tools/flightsim/Colliders, docs/design/hover-fly-terrain.md): its rays, its region
+// The city's collision offline (tools/flightsim/Colliders, docs/design/flightsim.md): its rays, its region
 // file, and the Sim's ground and underside contact on it.
 #include "check.hpp"
 

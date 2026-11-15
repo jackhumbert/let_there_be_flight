@@ -1,6 +1,6 @@
 #pragma once
 
-// The terrain runs checked against the game (docs/design/hover-fly-terrain.md, step 6): a recording of
+// The terrain runs checked against the game (docs/design/flightsim.md, Checking the terrain runs against the game): a recording of
 // a car driven along the terrain lines (the Hover & Fly recording's columns, then
 // FindGround's four rays a frame: start, hit, hit point, normal) against a region of the city's collision.
 // - GroundCheck casts each recorded ray again through the region: where both hit, how far apart and how differently

@@ -1,5 +1,5 @@
-"""Every in-game terrain recording of a folder against the offline collision and simulator (docs/design/hover-fly-terrain.md,
-step 6): flightsim --ground-check (the game's ground rays cast again through the region) and flightsim --replay
+"""Every in-game terrain recording of a folder against the offline collision and simulator (docs/design/flightsim.md,
+Checking the terrain runs against the game): flightsim --ground-check (the game's ground rays cast again through the region) and flightsim --replay
 --region (the flight in 3 s windows over the region), summed up a recording a line.
 
     python -P -E tools/flightsim/terrain_compare.py <dir> [--flightsim build/flightsim.exe]

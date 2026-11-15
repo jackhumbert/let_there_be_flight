@@ -1,6 +1,6 @@
 #pragma once
 
-// What the Autopilot asks of the world (docs/design/native-ports.md, M6): free space (Space), the
+// What the Autopilot asks of the world (docs/design/autopilot.md, World): free space (Space), the
 // nav map's columns, the landing pads and gates, and the two engine rays its landing checks cast.
 // In the game the nav map and the engine answer it (FlightWorld: MapWorld with the rays cast through the engine); offline and in
 // tests the nav map or boxes do.

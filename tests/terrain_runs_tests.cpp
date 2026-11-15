@@ -1,4 +1,4 @@
-// Hover & Fly along lines over real ground (tools/flightsim/TerrainRuns, docs/design/hover-fly-terrain.md): the
+// Hover & Fly along lines over real ground (tools/flightsim/TerrainRuns, docs/design/flightsim.md, Terrain runs): the
 // ground profile and its tags, the sampler, the driver, a run's metrics and its stop at a wall, on worlds built here.
 #include "check.hpp"
 

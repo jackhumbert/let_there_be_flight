@@ -1,7 +1,7 @@
 #pragma once
 
 // The studio events LTBF's own samples came from (vehicle3_on, vehicle3_off, vehicle3_destroyed), as
-// plain data for Core channels (docs/design/audio-native.md A.3). No FMOD, so tests/ can link it.
+// plain data for Core channels (docs/design/audio.md, Samples). No FMOD, so tests/ can link it.
 
 #include <array>
 #include <string_view>

@@ -1,4 +1,4 @@
-"""Each vehicle's flight geometry worked out from its entity template and rig, nothing spawned (docs/design/hover-fly-feel.md).
+"""Each vehicle's flight geometry worked out from its entity template and rig, nothing spawned (docs/design/flightsim.md, The car table).
 
     python -I tools/flightsim/rig_geometry.py <dump dir> [--rigs <dir>] [-o <dir>/geometry.tsv] [--survey <measured.tsv>]
 

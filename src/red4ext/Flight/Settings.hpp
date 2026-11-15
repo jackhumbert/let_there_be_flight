@@ -1,6 +1,6 @@
 #pragma once
 
-// The player's Mod Settings for the C++ flight modes (docs/design/hover-fly-native.md, decision 1: few, in plain
+// The player's Mod Settings for the C++ flight modes (docs/design/flight-modes.md, Settings: few, in plain
 // words), registered from C++ with Mod Settings' AddVariable (FlightSettingsLink.cpp). Without Mod Settings they keep
 // the defaults below. Every other tunable is a developer setting (Flight/DeveloperSettings.hpp).
 
@@ -66,7 +66,7 @@ constexpr const char *kHoverFlyClassicEnabledDescription = "UI-Settings-Hover-An
 // them under, with the same names, keys and defaults, so the values players saved in Mod Settings' user.ini
 // ([FlightModeAutopilot], name = value) carry over. enabled is the mode's switch (IsEnabled); the others are written
 // into the Autopilot's tuning (Navigation::AutopilotParams) when the mode is set up and engaged, and when the player
-// changes one. brakeAccel is a developer value (docs/design/settings-audit.md): out of the menu, so
+// changes one. brakeAccel is a developer value (docs/design/flight-modes.md, Developer values): out of the menu, so
 // a saved value is no longer read and it stays at its default (the developer setting autopilot.brakeAccel overrides
 // the tuning).
 struct AutopilotSettings {

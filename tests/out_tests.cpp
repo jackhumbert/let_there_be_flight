@@ -1,4 +1,4 @@
-// The game-free parts of the audio backends (src/red4ext/Audio/Out, docs/design/wwise-audio.md steps 2 to 5): a Wwise
+// The game-free parts of the audio backends (src/red4ext/Audio/Out, docs/design/audio.md, Wwise and Samples): a Wwise
 // voice's gain ramp and low-pass (Mix), the sample player both backends play LTBF's samples with (Samples/Player:
 // the WAV, the pitch, the loop and the one-shot's end, the tremolo and the distortion) and the bank's spread.
 #include "check.hpp"

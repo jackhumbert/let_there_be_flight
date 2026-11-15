@@ -1,6 +1,6 @@
 #pragma once
 
-// The three buses of the plugin's own FMOD Core system (docs/design/audio-native.md B.5, B.6), with no FMOD
+// The buses LTBF's voices play in (docs/design/audio.md, Buses), with no FMOD
 // types so tests/ can link it: what each bus's volume is, and the limiters on the Engine group and the
 // master.
 

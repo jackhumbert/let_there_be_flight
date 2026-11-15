@@ -1,6 +1,6 @@
 #pragma once
 
-// Reflectivity by band per physics material (docs/design/audio-native.md D.12): how much of the low
+// Reflectivity by band per physics material (docs/design/acoustics.md, Materials): how much of the low
 // (below 250 Hz), mid and high (above 2.5 kHz) part of a sound a surface sends back. Pure; no game
 // or FMOD types.
 

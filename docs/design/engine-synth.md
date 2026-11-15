@@ -3,7 +3,7 @@
 A plain thruster sound made in C++, driven by the same parameters the FMOD event `vehicle3_TPP`
 took, so the acoustics (`acoustics.md`) do the space round the car instead of FX baked into the
 event. It is the only thruster sound, on every flying car; FMOD Studio and the event are gone
-(`audio-native.md`). "What the FMOD event did" below is kept as the model's reference.
+(`audio.md`). "What the FMOD event did" below is kept as the model's reference.
 
 ## What the FMOD event did
 

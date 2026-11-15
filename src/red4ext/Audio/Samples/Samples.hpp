@@ -1,6 +1,6 @@
 #pragma once
 
-// LTBF's own samples (docs/design/audio-native.md A.3): the startup and off sounds and the destroyed alarm, each
+// LTBF's own samples (docs/design/audio.md, Samples): the startup and off sounds and the destroyed alarm, each
 // played by a Player (its WAV, the tremolo and distortion the event had, the pitch driven each frame) on a voice of
 // the audio backend (Audio/Out) in its event's bus (Events.hpp). They are at the car through the voice pool
 // (Audio/Voices).

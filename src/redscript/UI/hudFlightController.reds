@@ -26,7 +26,7 @@ public class hudFlightController extends inkHUDGameController {
   // session. Off: the pre-0.3.19 behaviour, one FlightHUD WidgetHudComponent per vehicle,
   // which makes the engine rebuild the entire HUD on every mount and unmount.
   // Takes effect for entities spawned after the change, so reload a save to flip it.
-  // a developer value, not a Mod Setting (docs/design/settings-audit.md)
+  // a developer value, not a Mod Setting (docs/design/flight-modes.md, Developer values)
   public let attachToPlayer: Bool = true;
 
   private let m_Date: inkTextRef;

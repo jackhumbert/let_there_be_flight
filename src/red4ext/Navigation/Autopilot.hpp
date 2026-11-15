@@ -1,9 +1,9 @@
 #pragma once
 
-// The Autopilot as pure C++ (docs/design/native-ports.md, M6 steps 4b to 4e): everything
+// The Autopilot as pure C++ (docs/design/autopilot.md): everything
 // FlightModeAutopilot.reds (the script mode, at c3e24ab) did each frame and on its events, over a World
 // (free space, the nav map's columns, pads, gates and the landing rays), a PlanQueue (the route plans)
-// and an Rng (the free roam picks). The game mode (step 6) and the offline simulation (step 5) both drive
+// and an Rng (the free roam picks). The game mode and the offline simulation (tools/flightsim/Trip) both drive
 // it: each frame they gather an AutopilotInput, call Step, apply the force and torque, write the input
 // fields back into the component and do what the events ask (ExitAutopilot, flight off, the HUD,
 // notifications).
@@ -11,7 +11,7 @@
 // Faithful to the script's native paths (nativeTracker, nativeAttitude, nativeAerobatics on, drone
 // style): the same decisions, numbers, order and log lines, the fields under the script's names
 // (the follower's in tracker, the drone attitude's in attitude, the attitude control's in control,
-// as the script keeps them in its helpers). Left out, by the M6 decisions: the manoeuvres, the plane
+// as the script keeps them in its helpers). Left out: the manoeuvres, the plane
 // attitude, the script paths behind the switches and the fields nothing reads. The telemetry CSV,
 // blackboards, facts, notifications and the cinematic camera are the shell's: Step reports what they
 // need (AutopilotEvents) and keeps a telemetry row's data in its members.

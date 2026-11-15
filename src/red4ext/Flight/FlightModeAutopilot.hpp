@@ -1,6 +1,6 @@
 #pragma once
 
-// The Autopilot as a C++ flight mode (docs/design/native-ports.md, M6 step 6; docs/design/autopilot.md): a native
+// The Autopilot as a C++ flight mode (docs/design/autopilot.md, Script shell): a native
 // FlightMode around the pure Navigation::Autopilot, under the class name the script mode had, so every reader keeps
 // working (FlightController, FlightSummonSystem, AutoDriveController, VehicleFlight, the HUD, Audio/Inputs/Gather,
 // the test helpers).

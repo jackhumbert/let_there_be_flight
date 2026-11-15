@@ -1,8 +1,8 @@
-// Whole Autopilot trips flown offline (tools/flightsim/Trip.hpp; docs/design/native-ports.md, M6 step 5): the
+// Whole Autopilot trips flown offline (tools/flightsim/Trip.hpp; docs/design/autopilot.md, Trip): the
 // Autopilot's own C++ from the engage to "landed" on flightsim's rigid body with the real force tail, over a nav map
 // made in memory, plans handed over 0.5 s after they are asked for, boxes for what the map leaves out. Each test names
 // the in-game problems it checks (numbered as in the list of Autopilot problems found in game); every trip is held
-// to CheckTrip (tests kind 2).
+// to CheckTrip (docs/design/autopilot.md, Trip checks).
 #include "check.hpp"
 
 #include "nav_fixture.hpp"
@@ -398,7 +398,7 @@ TEST(autopilot_trip_knock_on_approach) {
 }
 
 TEST(autopilot_trip_same_seed_same_flight) {
-  // tests kind 2: the same setup and seed fly the same trip, bit for bit (a knock and its replans included)
+  // Trip checks: the same setup and seed fly the same trip, bit for bit (a knock and its replans included)
   TripSetup s = Street();
   s.seed = 3;
   FlightSim::TripKnock k;
@@ -521,8 +521,8 @@ TEST(autopilot_trip_arrives_and_hands_back) {
 }
 
 TEST(autopilot_trip_budgets) {
-  // tests kind 4: rays per frame and per trip, rays per landing search, time per Step and the plan's wait, so a
-  // change that makes the Autopilot expensive again fails here
+  // the budgets (docs/design/autopilot.md, Trip checks): rays per frame and per trip, rays per landing search, time
+  // per Step and the plan's wait, so a change that makes the Autopilot expensive again fails here
   TripSetup s = Street();
   s.boxes.push_back({{{258, 258, 0}, {262, 262, 1.5f}}});
   s.boxes.back().appearWithin = 85.0f;

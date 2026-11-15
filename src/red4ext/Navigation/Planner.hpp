@@ -69,7 +69,7 @@ struct PlanParams {
   float legClearance = 2.0f;     // straight legs must also be free this far to either side (m), on top
                                  // of the bake's car inflation, so a follower can stray a little
   bool tryDirect = false;
-  // a first leg only (docs/design/trajectory.md step 7): when the doorway route is long, the plan
+  // a first leg only (docs/design/trajectory.md, Plan ahead): when the doorway route is long, the plan
   // ends at its doorway about horizon metres along and the rest is planned while the car flies
   // this; 0: all the way
   float horizon = 0.0f;

@@ -1,4 +1,4 @@
-// The game-free pieces of the Wwise path (src/red4ext/Audio/Wwise, docs/design/wwise-audio.md step 1): Wwise's name
+// The game-free pieces of the Wwise path (src/red4ext/Audio/Wwise, docs/design/audio.md, Wwise): Wwise's name
 // hash and our game-object range, the game's axes to Wwise's, the callback setter's byte pattern, the relay's dispatch
 // (ours, the game's, nobody's, a loop through another mod) and LTBF's bank against mod.bnk's layout.
 #include "check.hpp"

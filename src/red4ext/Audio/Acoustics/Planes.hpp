@@ -1,6 +1,6 @@
 #pragma once
 
-// Planes fitted to the PhysX hits (docs/design/audio-native.md D.11): the hits of the last second sit in
+// Planes fitted to the PhysX hits (docs/design/acoustics.md, Planes): the hits of the last second sit in
 // a world space cache, and each side of the car (floor, ceiling, left, right) takes the plane most of
 // its hits agree on, so a pole or a sign cannot stand in for a wall and a cast that finds nothing
 // (collision not streamed in) does not drop the wall. Pure maths; no game or FMOD types.

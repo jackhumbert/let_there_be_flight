@@ -1,6 +1,6 @@
 #pragma once
 
-// Handling: Loose / Default / Tight, the player's one lever on how flying feels (docs/design/settings-audit.md), in
+// Handling: Loose / Default / Tight, the player's one lever on how flying feels (docs/design/flight-modes.md, Handling), in
 // place of the ten handling values that were Mod Settings and are developer values now (FlightSettings' fields of the
 // same names). Default is those fields and Standard's gains as they are; Loose and Tight replace them with the sets
 // below. Applied where the values are read (the force tail, FlightForce; Standard, Hover and Fly; the Autopilot),

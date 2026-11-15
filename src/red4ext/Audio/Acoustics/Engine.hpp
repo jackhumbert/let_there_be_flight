@@ -1,6 +1,6 @@
 #pragma once
 
-// The acoustics engine for the player's car (docs/design/audio-native.md D.9): one place where the
+// The acoustics engine for the player's car (docs/design/acoustics.md, Acoustics engine): one place where the
 // car's echoes are made, from the dry sum of its thrusters, and played by voices at the echoes'
 // image sources.
 //

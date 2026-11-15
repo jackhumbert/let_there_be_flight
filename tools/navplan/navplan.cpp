@@ -19,7 +19,7 @@
 //   NAVPLAN_LINE=<csv>     build the trajectory on this line (x,y,z columns) instead of planning one
 //   NAVPLAN_GUIDE=<csv>    PlanParams::guide, a path to keep to (x,y,z columns; guideCost sets its weight)
 //   NAVPLAN_REPEAT=1        plan the line again: what a later plan costs once its doorways are known
-//   NAVPLAN_AHEAD=h,m       plan ahead (docs/design/trajectory.md step 7): a first leg of h metres
+//   NAVPLAN_AHEAD=h,m       plan ahead (docs/design/trajectory.md, Plan ahead): a first leg of h metres
 //                           along the doorway route, the rest planned from where the car will be on it
 //                           when a full plan's time plus m seconds have passed, the two spliced; prints
 //                           "ahead {json}" (time to move, arrival against one full plan, late, dips)

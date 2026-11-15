@@ -1,6 +1,6 @@
 #pragma once
 
-// Image sources (docs/design/audio-native.md D.9): a surface is a plane, the echo off it is heard from
+// Image sources (docs/design/acoustics.md, Image sources): a surface is a plane, the echo off it is heard from
 // the car's mirror image behind the plane, and its path is source to image to listener. Pure maths
 // for Targets() (Reflections.cpp) and the echo voices' positions; no game or FMOD types.
 

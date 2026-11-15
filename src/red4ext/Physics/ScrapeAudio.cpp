@@ -91,7 +91,7 @@ float ScrapeEffects::FrictionOfMaterial(uint64_t aMaterial) {
 }
 
 namespace {
-// What a flying car scrapes (docs/design/scrape-effects.md, step 1), summed over 2 s per material and logged: the
+// What a flying car scrapes (docs/design/scrape-effects.md, Contacts), summed over 2 s per material and logged: the
 // contacts, how many the vanilla gate let through, the slide speed and impulse at most, where on the car (its own
 // frame: the lowest and highest point, the widest from the centre line) and how much the contact faced up. The
 // game's scrape loop is logged when it changes.

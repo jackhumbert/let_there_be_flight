@@ -1,6 +1,6 @@
 #pragma once
 
-// Where the Autopilot lands (docs/design/native-ports.md, M6 step 4a): a spot on the ground near a
+// Where the Autopilot lands (docs/design/autopilot.md, Landing): a spot on the ground near a
 // destination with room to come straight down into, a landing pad, the heading to land on, and the
 // route's end moved over when the spot turns out taken. FlightModeAutopilot.reds' FindLandingSpot,
 // ShaftClear, SpotTaken, IsFlat, SpotSupported, FindLandingPad, PadHeading, LandingHeading and

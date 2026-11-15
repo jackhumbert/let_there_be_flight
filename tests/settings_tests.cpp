@@ -11,7 +11,7 @@
 using namespace Flight;
 
 TEST(settings_table) {
-  // decision 1 (docs/design/hover-fly-native.md): the turn and the climb, each default inside its range on a step,
+  // the player's few settings (docs/design/flight-modes.md, Settings): the turn and the climb, each default inside its range on a step,
   // every name and localization key distinct
   const auto &table = PlayerSettingsTable();
   CHECK(table.size() == 2);

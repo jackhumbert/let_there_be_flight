@@ -14,7 +14,7 @@
 //   mode torque times a per-axis gain measured in game (TorqueProbe, Archer Quartz hovering, 2026-10-28: about
 //   1.25 rad/s2 per unit of mode torque on each axis, answering two frames late at 32 fps);
 // - the ground contact is a stop: the body's bottom never goes below the ground, downward speed is removed.
-// With groundRay set (the city's collision, Colliders.hpp; docs/design/hover-fly-terrain.md) FindGround's rays and
+// With groundRay set (the city's collision, Colliders.hpp; docs/design/flightsim.md) FindGround's rays and
 // the contact go through it instead of the height field: the hit's own normal, overpasses and ledges, and the
 // underside's corners as well as its centre.
 

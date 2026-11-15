@@ -1,6 +1,6 @@
 #pragma once
 
-// LTBF's 3D sounds through one pool (Pool.hpp, docs/design/audio-native.md A.2): each sound is a voice of the audio
+// LTBF's 3D sounds through one pool (Pool.hpp, docs/design/audio.md, Voices): each sound is a voice of the audio
 // backend (Audio/Out) that registers here. Each game frame ranks them; the ones that win a voice play, the rest are
 // paused (a paused voice's generator is not run, so a thruster synth that loses costs nothing).
 //

@@ -1,7 +1,7 @@
 # Let There Be Flight: Settings Guide
 
 Every flight setting a player can change, where to find it and what it does, then the controls. Numbers are the
-shipped defaults. The settings were cut from 90 rows to 46 in the 2026-11 re-org (`docs/design/settings-audit.md`);
+shipped defaults. The settings were cut from 90 rows to 46 in the 0.4 re-org;
 "What the re-org changed" at the end says what that means for values saved before it.
 
 ## Where the settings live

@@ -1,6 +1,6 @@
 #pragma once
 
-// The wind (docs/design/audio-native.md A.4): two voices of the audio backend (Audio/Out) playing a generator
+// The wind (docs/design/audio.md, Wind): two voices of the audio backend (Audio/Out) playing a generator
 // (Render, the model's noise) in the Wind bus, each a voice in the pool (Audio/Voices).
 // First person puts one at each window so the air comes from the side it does; third person has one
 // ahead of the listener along the car's velocity; the cinematic camera has the camera's own wind and

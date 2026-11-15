@@ -1,6 +1,6 @@
 #pragma once
 
-// A whole Autopilot trip flown offline (docs/design/native-ports.md, M6 step 5): Navigation::Autopilot, the mode's
+// A whole Autopilot trip flown offline (docs/design/autopilot.md, Trip): Navigation::Autopilot, the mode's
 // own C++, flying the flightsim rigid body (Sim.hpp) through the real force tail, from Activate to "landed" (or
 // another end), over a MapWorld on a nav map (navmap.bin, or one made in memory for tests). Shared by ltbf_tests
 // (autopilot_trip_*) and navplan (NAVPLAN_TRIP, which bench.py and fleet.py run).
@@ -220,7 +220,7 @@ private:
   Flight::Pid pitchPid, rollPid;
 };
 
-// What every trip must keep to (native-ports.md, M6 tests kind 2).
+// What every trip must keep to (docs/design/autopilot.md, Trip checks).
 struct TripLimits {
   bool mustLand = true;
   float inside = 0.5f;         // m into a nav map solid allowed in flight

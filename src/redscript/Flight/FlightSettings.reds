@@ -34,7 +34,7 @@ public native class FlightSettings extends IScriptable {
 
   // The player's settings (Mod Settings), in the menu's order: General, Controls, Flight Modes (with the C++ modes'
   // and FlightModeDrone's), Crashes, Camera, Landing Pads and Summons, HUD and Sound, Key Bindings
-  // (docs/design/settings-audit.md). The fields after them are developer values: no Mod Settings attributes, so a
+  // (docs/design/flight-modes.md, Settings). The fields after them are developer values: no Mod Settings attributes, so a
   // value a player once saved is no longer read and the code default holds.
 
   // General

@@ -43,8 +43,8 @@ uint32_t AutopilotSettingsGeneration() { return autopilotGeneration; }
 
 const std::vector<AutopilotSetting> &AutopilotSettingsTable() {
   // FlightModeAutopilot.reds' @runtimeProperty fields (the last commit with it: c3e24ab), less maxSpeed and
-  // lateralAccel (dropped, docs/design/native-ports.md, M6 decisions) and brakeAccel (a developer value,
-  // docs/design/settings-audit.md)
+  // lateralAccel (dropped: nothing read them) and brakeAccel (a developer value,
+  // docs/design/flight-modes.md, Developer values)
   static const std::vector<AutopilotSetting> table = {
       {"enabled", "UI-Settings-Autopilot-Enabled", "UI-Settings-Autopilot-Enabled-Description", true, 1.0f, 0.0f, 0.0f,
        0.0f, 8},

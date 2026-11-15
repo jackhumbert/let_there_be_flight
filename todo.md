@@ -19,12 +19,12 @@
 * use input contexts for flight options?
 * move input hints to inputContext classes
 * prevent thrusters from moving during photo mode
-* parachute (paraglide): shelved code found, phase 0 done, plan in `docs/design/paraglide.md`
+* parachute (paraglide): shelved code found, phase 0 done
 * summon flying vehicle: working (the spawn is LTBF's own RequestNewVehicle call at an `IsFree` spot, the
-  Autopilot flies it to the pad and lands; all seven test stages true 2026-11-01, `docs/design/vehicle-summon.md`).
+  Autopilot flies it to the pad and lands, `docs/design/vehicle-summon.md`).
   Still open: the landed car's enterability. The fallback (a summon that cannot drive to V
   flies, section 6 of the design doc) works; cases 1 and 4 seen natively, 2 and 3 only forced.
-  Next idea: hover at the roof's edge for V to get in where there is no room to land (`docs/design/summon-edge-hover.md`).
+  Next idea: hover at the roof's edge for V to get in where there is no room to land.
 
 -15_-16_0_1 1450 - CriticalCollisionNode_017: Uk12 == 1
 related to safe areas? how are those defined

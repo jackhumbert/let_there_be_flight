@@ -1,6 +1,6 @@
 #pragma once
 
-// NPC cars heard through buildings (docs/design/audio-native.md D.13), with no FMOD or game types so
+// NPC cars heard through buildings (docs/design/acoustics.md, Occlusion), with no FMOD or game types so
 // tests/ can link it. The game thread publishes the cars that hold a channel into a few slots; the PhysX
 // caster (LiveRays.cpp) casts a ray from the listener to some of them each cast and stores whether
 // static geometry is in the way; the game thread smooths that per car into 0 (open) .. 1 (blocked) and

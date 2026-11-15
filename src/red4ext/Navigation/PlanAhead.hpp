@@ -1,6 +1,6 @@
 #pragma once
 
-// Plan ahead (docs/design/trajectory.md step 7): a trip from rest planned as a short first leg the
+// Plan ahead (docs/design/trajectory.md, Plan ahead): a trip from rest planned as a short first leg the
 // car takes off on at once, and the rest planned from where the car will be on that leg by the time
 // the rest's plan is done, at its velocity there, to be spliced on at that point. The Autopilot runs
 // both on its planning thread (FlightNavMap::PlanTripAsync); navplan simulates the same

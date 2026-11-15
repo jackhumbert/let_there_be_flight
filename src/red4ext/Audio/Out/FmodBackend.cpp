@@ -1,5 +1,5 @@
 // The FMOD backend (Out.hpp): the plugin's own FMOD Core system and its three buses as channel groups under the
-// master (docs/design/audio-native.md B.5), the Engine group's and the master's limiters, and a voice as a channel
+// master (docs/design/audio.md, FMOD), the Engine group's and the master's limiters, and a voice as a channel
 // playing a generator DSP with the Object Spatializer after it.
 #include "Backend.hpp"
 

@@ -1,4 +1,4 @@
-"""Every surveyed vehicle through the flight simulator, summed up (docs/design/hover-fly-feel.md).
+"""Every surveyed vehicle through the flight simulator, summed up (docs/design/flightsim.md, The fleet run).
 
     python tools/flightsim/fleet.py [--vehicles tools/flightsim/vehicles.tsv] [--flightsim build/flightsim.exe]
                                     [--metric yaw_hold.yaw_rate_3s]... [--worst 8] [--csv out.csv]
@@ -14,7 +14,7 @@ Records with the same physics (most of the 1400 car and bike records are paint a
 For each metric: the spread over the distinct cars, and the cars at either end.
 
 --terrain flies every distinct car (its underside counted in the physics) along the lines of a runs file over real
-ground (flightsim --terrain, docs/design/hover-fly-terrain.md) and sums the runs up by car class (CLASSES), by kind
+ground (flightsim --terrain, docs/design/flightsim.md) and sums the runs up by car class (CLASSES), by kind
 of ground (the lines' tags) and by speed: how often and how long the cars touch, the air over and sink under the
 hover height, how late they follow, how much they rock, how many runs a wall stopped; then the cars that touch most
 in each class. --save keeps the runs (a car's name is its index in the distinct cars), --from sums up a saved file

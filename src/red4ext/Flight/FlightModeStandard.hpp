@@ -1,7 +1,7 @@
 #pragma once
 
-// Standard, the mode flight starts in (the Hover & Fly redesign, docs/design/settings-audit.md), as a C++ flight
-// mode over the maths Flight::Standard (Modes.hpp, designed in tools/flightsim: docs/design/hover-fly-feel.md). Each
+// Standard, the mode flight starts in (docs/design/flight-modes.md, Standard), as a C++ flight
+// mode over the maths Flight::Standard (Modes.hpp, measured in tools/flightsim: docs/design/flightsim.md). Each
 // frame it gathers once what the maths reads: the component's stats, controls, thruster tensor and hover height
 // (script fields, by name), the ground (FlightGroundNative, the script's rays in C++), the car's torque response
 // (Flight::TorqueResponse) and the player's two settings (Flight::Player: turn and climb speed). The rest of

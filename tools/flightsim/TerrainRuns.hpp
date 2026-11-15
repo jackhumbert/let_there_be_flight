@@ -1,6 +1,6 @@
 #pragma once
 
-// Hover & Fly flown along lines over the city's real ground (docs/design/hover-fly-terrain.md, step 4): each line's
+// Hover & Fly flown along lines over the city's real ground (docs/design/flightsim.md, Terrain runs): each line's
 // ground profile and what kind of ground it is, random lines drawn in a region, and a driver that holds the speed and
 // the heading along the line and never touches lift, so the mode alone keeps the height.
 //

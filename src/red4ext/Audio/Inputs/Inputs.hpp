@@ -1,6 +1,6 @@
 #pragma once
 
-// The per-frame audio inputs (docs/design/audio-native.md C.7), with no FMOD or game types so tests/ can
+// The per-frame audio inputs (docs/design/audio.md, Inputs), with no FMOD or game types so tests/ can
 // link it. A port of FlightComponent.UpdateAudioParams (both overloads) and the audio half of
 // IFlightThruster.Update, rule for rule: the caller fills a Frame from the vehicle, Update turns it into
 // Values.

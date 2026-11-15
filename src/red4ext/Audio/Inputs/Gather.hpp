@@ -1,6 +1,6 @@
 #pragma once
 
-// The audio inputs from the game (docs/design/audio-native.md C.7): once a frame per flight component,
+// The audio inputs from the game (docs/design/audio.md, Inputs): once a frame per flight component,
 // after its script's OnUpdate, Component() reads the vehicle and the script's fields through RTTI into
 // Inputs::Frame, works Inputs::Values out (Inputs.hpp, the rules of the old FlightComponent.UpdateAudioParams
 // and the audio half of IFlightThruster.Update), and hands them to the thrusters' sound, the player's

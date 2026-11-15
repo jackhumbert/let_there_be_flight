@@ -22,7 +22,7 @@ namespace {
 // [0] with (the wrapper's capture, the EntityStub*'s location) when the stub materializes, its
 // [8] when copying the callable (dest, this) and its [24] to destroy (the buffer) - the
 // 2026-11-01 run's crash: a zeroed callback (the earlier design) put null there and the
-// materialize's call went through it (docs/design/vehicle-summon.md section 4). The table's
+// materialize's call went through it (docs/design/vehicle-summon.md section 3). The table's
 // unfilled entries point at the destroy no-op: a call through any slot lands somewhere safe.
 RED4ext::ent::EntityID g_lastSpawnedEntity;
 
@@ -72,7 +72,7 @@ bool FlightCarSummon::SpawnVehicleAt(RED4ext::TweakDBID aRecord, float aX, float
   }
   // the record must be in TweakDB at all - through the C++ API, not the script native: the
   // GetVehicleRecord wrapper's native binding can be unbound in a modded launch and the script
-  // call crashes no matter whose frame it is (docs/design/vehicle-summon.md section 4)
+  // call crashes no matter whose frame it is (docs/design/vehicle-summon.md section 3)
   auto* tweaks = RED4ext::TweakDB::Get();
   RED4ext::Handle<RED4ext::IScriptable> vehicleRecord;
   if (!tweaks || !tweaks->TryGetRecord(aRecord, vehicleRecord) || !vehicleRecord) {

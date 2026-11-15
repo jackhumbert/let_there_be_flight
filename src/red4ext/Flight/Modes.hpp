@@ -3,7 +3,7 @@
 // The flight modes' maths as pure code, over the ground FindGround left.
 //
 // - Standard (FlightModeStandard, C++): the mode flight starts in, the Hover & Fly redesign
-//   (docs/design/settings-audit.md). Every control asks for a speed; let go, the car comes to rest, level, where it was. Hover and
+//   (docs/design/flight-modes.md, Standard). Every control asks for a speed; let go, the car comes to rest, level, where it was. Hover and
 //   Fly (behind Extra Flight Modes) are Standard with the hover band always on or always off (HoverBand).
 // - AttitudeLift: the old standard modes' attitude PIDs and lift (the deleted script
 //   FlightModeStandard.UpdateWithNormalLift), kept as the Autopilot's manual flight. The script was the truth: the products keep its
@@ -186,7 +186,7 @@ struct StandardState {
   float groundVz = 0;   // m/s, the ground's vertical speed under the car, smoothed (GroundRate)
 };
 
-// Standard (Hover & Fly redesigned for beginners, docs/design/hover-fly-feel.md): every control asks for a speed, and
+// Standard (docs/design/flight-modes.md, Standard and Feel spec): every control asks for a speed, and
 // letting go of everything brings the car to rest, level, where it was let go.
 // - attitude: PD on the rotation from the body's up to the target up (world up blended to the ground normal by
 //   hovering, tilted by the pitch and roll inputs), so it holds at any tilt, upside down too, and has no integral to
@@ -250,7 +250,7 @@ ModeOutput Standard(StandardState &m, const StatsState &s, const StatsStatic &st
                     const StandardParams &p, const StandardGains &a, const Ground &g, Vec3 response, float dt,
                     HoverBand band = HoverBand::Blend);
 
-// Drone mode made car-independent, a proposal (docs/design/hover-fly-feel.md, "Drone across the fleet"); not called
+// Drone mode made car-independent, a proposal (docs/design/flight-modes.md, Drone); not called
 // by the game. Drone's torque is input x factor, so a held key spins a car at a rate that grows with its own response
 // (TorqueResponse spans about 30 times over the fleet) until PhysX's 7 rad/s cap. Here each of pitch, roll and yaw asks
 // for a body rate instead (input x maxRate, the angular brake slowing it to 0), and the torque is the angular

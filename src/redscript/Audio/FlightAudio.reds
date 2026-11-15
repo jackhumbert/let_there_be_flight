@@ -1,6 +1,6 @@
 public native class FlightAudio extends IScriptable {
   // defined in red4ext part
-  // LTBF's own samples as objects at the car (docs/design/audio-native.md A.3): by the event's name,
+  // LTBF's own samples as objects at the car (docs/design/audio.md, Samples): by the event's name,
   // once, or looping under an id until StopLoop
   public native func PlayOneShot(name: String, vehicle: ref<VehicleObject>) -> Void;
   public native func StartLoop(id: String, name: String, vehicle: ref<VehicleObject>) -> Void;
@@ -42,7 +42,7 @@ public native class FlightAudio extends IScriptable {
   // the voice pool as JSON: sources, who has channels, folded cars, the synth's cost
   public native func VoicesState() -> String;
   // the car's front windows (world positions) for the first person wind (the wind itself,
-  // docs/design/audio-native.md A.4, the plugin works out from the car each frame)
+  // docs/design/audio.md, Wind, the plugin works out from the car each frame)
   public native func SetWindowSlots(vehicle: ref<VehicleObject>, left: Vector4, right: Vector4) -> Void;
   public native func WindOn(on: Bool) -> Void;
   // the wind's state as JSON, for tests

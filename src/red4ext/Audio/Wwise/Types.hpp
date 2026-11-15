@@ -1,7 +1,7 @@
 #pragma once
 
-// Wwise 2023.1's types as the game's exe has them (the spike's
-// readings: docs/design/wwise-audio.md, "Where it stands"), only as far as LTBF needs them. No game or Windows
+// Wwise 2023.1's types as the game's exe has them (docs/design/audio.md,
+// Wwise), only as far as LTBF needs them. No game or Windows
 // headers, so tests/ can link everything under Audio/Wwise but Link.
 
 #include <cstddef>
