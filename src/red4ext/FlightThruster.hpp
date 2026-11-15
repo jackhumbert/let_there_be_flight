@@ -26,13 +26,14 @@ public:
   RED4ext::WeakHandle<RED4ext::vehicle::BaseObject> vehicle;
   bool attached = true;
 
-  // Called by the script at the end of Start(): resolves the game's natives and the script fields once, fills the
-  // thruster's parameters and finds the animation controller. False (logged once; the thruster is then not animated)
-  // when anything is missing or the effects do not fit.
+  // Not called at the moment: the first UpdateNative in game crashed the game (2026-11-15) and the script animates
+  // the thrusters (IFlightThruster.Update) until that is found. Resolves the game's natives and the script fields
+  // once, fills the thruster's parameters and finds the animation controller. False (logged once) when anything is
+  // missing or the effects do not fit.
   bool SetupMotion();
 
-  // IFlightThruster.Update in C++ (Flight::Thruster*), called from the script each frame. False without doing anything
-  // when SetupMotion has not succeeded.
+  // IFlightThruster.Update in C++ (Flight::Thruster*), for the script to call each frame once it works. False without
+  // doing anything when SetupMotion has not succeeded.
   bool UpdateNative(RED4ext::Vector4 aForce, RED4ext::Vector4 aTorque);
 
   // JSON of what SetupMotion resolved: {"ready","multiply","findOnEntity","fx","anim"}

@@ -38,19 +38,61 @@ struct Natives {
   CProperty *fxInstance = nullptr;
   CClass *mainFx = nullptr, *sideFx = nullptr, *regularFx = nullptr, *animationControllerClass = nullptr;
   // the game's own, for each step of Update
-  CBaseFunction *makeEulerAngles = nullptr, *toQuat = nullptr, *slerp = nullptr, *multiply = nullptr,
+  CBaseFunction *toQuat = nullptr, *slerp = nullptr, *multiply = nullptr,
                 *getUp = nullptr, *getLocalOrientation = nullptr, *setLocalOrientation = nullptr,
                 *setInputFloat = nullptr, *setBlackboardValue = nullptr, *findComponentByName = nullptr,
                 *getEntity = nullptr;
   // FindComponentByName is called on the flight component's entity when the component itself does not have it
   bool findOnEntity = false;
 
+  // the names of what was not found, for the log
+  std::string Missing() const {
+    std::string out;
+    auto add = [&](const void *aPtr, const char *aName) {
+      if (!aPtr)
+        out += (out.empty() ? "" : ", ") + std::string(aName);
+    };
+    add(motionKind, "motionKind");
+    add(isFront, "isFront");
+    add(isRight, "isRight");
+    add(mainThrusterYawFactor, "mainThrusterYawFactor");
+    add(maxThrusterAnglePitch, "maxThrusterAnglePitch");
+    add(maxThrusterAngleOutside, "maxThrusterAngleOutside");
+    add(maxThrusterAngleInside, "maxThrusterAngleInside");
+    add(thrusterAngleAllowance, "thrusterAngleAllowance");
+    add(boneLerpAmount, "boneLerpAmount");
+    add(forceThreshold, "forceThreshold");
+    add(torqueThreshold, "torqueThreshold");
+    add(animDeviation, "animDeviation");
+    add(initialOrientation, "initialOrientation");
+    add(deviationName, "deviationName");
+    add(fxs, "fxs");
+    add(force, "force");
+    add(torque, "torque");
+    add(fxInstance, "IFlightThrusterFX.instance");
+    add(mainFx, "MainFlightThrusterFX");
+    add(sideFx, "SideFlightThrusterFX");
+    add(regularFx, "RegularFlightThrusterFX");
+    add(animationControllerClass, "entAnimationControllerComponent");
+    add(toQuat, "EulerAngles.ToQuat");
+    add(slerp, "Quaternion.Slerp");
+    add(getUp, "Quaternion.GetUp");
+    add(getLocalOrientation, "GetLocalOrientation");
+    add(setLocalOrientation, "SetLocalOrientation");
+    add(setInputFloat, "SetInputFloat");
+    add(setBlackboardValue, "SetBlackboardValue");
+    add(findComponentByName, "FindComponentByName");
+    if (findOnEntity)
+      add(getEntity, "GetEntity");
+    return out;
+  }
+
   bool Ready() const {
     return motionKind && isFront && isRight && mainThrusterYawFactor && maxThrusterAnglePitch &&
            maxThrusterAngleOutside && maxThrusterAngleInside && thrusterAngleAllowance && boneLerpAmount &&
            forceThreshold && torqueThreshold && animDeviation && initialOrientation && deviationName && fxs &&
            force && torque && fxInstance && mainFx && sideFx && regularFx && animationControllerClass &&
-           makeEulerAngles && toQuat && slerp && getUp && getLocalOrientation && setLocalOrientation &&
+           toQuat && slerp && getUp && getLocalOrientation && setLocalOrientation &&
            setInputFloat && setBlackboardValue && findComponentByName && (!findOnEntity || getEntity);
   }
 };
@@ -85,7 +127,6 @@ const Natives &Resolve() {
     n.sideFx = rtti->GetClass("SideFlightThrusterFX");
     n.regularFx = rtti->GetClass("RegularFlightThrusterFX");
     n.animationControllerClass = rtti->GetClass("entAnimationControllerComponent");
-    n.makeEulerAngles = rtti->GetFunction("MakeEulerAngles");
     if (auto cls = rtti->GetClass("EulerAngles")) {
       n.toQuat = cls->GetFunction("ToQuat");
     }
@@ -155,8 +196,11 @@ bool IFlightThruster::SetupMotion() {
   motionReady = false;
   const Natives &n = Resolve();
   if (!n.Ready()) {
-    LTBF_WARN_ONCE("[IFlightThruster] a script field or a game native for the thruster motion was not found; the "
-                   "script moves the thrusters");
+    static bool warned = false;
+    if (!warned) {
+      warned = true;
+      spdlog::warn("[IFlightThruster] not found for the thruster motion, the thrusters are not animated: {}", n.Missing());
+    }
     return false;
   }
   auto fc = flightComponent.Lock();
@@ -272,11 +316,15 @@ bool IFlightThruster::UpdateNative(RED4ext::Vector4 aForce, RED4ext::Vector4 aTo
 
   Flight::ThrusterAngles angles = Flight::ThrusterEuler(params, f, t, active);
   float pitch = angles.pitch, roll = angles.roll, yaw = angles.yaw;
+  // as the script's MakeEulerAngles(pitch, roll, yaw) filled it: its parameters are declared (Pitch, Yaw, Roll), so
+  // the roll goes into Yaw and the yaw into Roll (the thrusters' look was tuned with that)
   RED4ext::EulerAngles euler{};
+  euler.Pitch = pitch;
+  euler.Yaw = roll;
+  euler.Roll = yaw;
   RED4ext::Quaternion q{}, target{}, current{}, next{};
-  if (!RED4ext::ExecuteFunction(kNone, n.makeEulerAngles, &euler, pitch, roll, yaw) ||
-      !RED4ext::ExecuteFunction(kNone, n.toQuat, &q, euler)) {
-    return fail("MakeEulerAngles or EulerAngles.ToQuat failed");
+  if (!RED4ext::ExecuteFunction(kNone, n.toQuat, &q, euler)) {
+    return fail("EulerAngles.ToQuat failed");
   }
   auto &initial = Field<RED4ext::Quaternion>(n.initialOrientation, this);
   if (!Multiply(n, initial, q, target)) {

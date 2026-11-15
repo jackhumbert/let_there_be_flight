@@ -15,6 +15,8 @@ public abstract native class IFlightThruster extends IScriptable {
   @runtimeProperty("offset", "0xB0")
   public native let attached: Bool;
 
+  // The thruster motion in C++ (FlightThruster.cpp), not called: its first frame in game crashed the game (2026-11-15),
+  // so Update below animates the thrusters until it is fixed.
   public native func SetupMotion() -> Bool;
   public native func UpdateNative(force: Vector4, torque: Vector4) -> Bool;
   public native func MotionState() -> String;
@@ -96,8 +98,7 @@ public abstract native class IFlightThruster extends IScriptable {
     }
   }
 
-  // the mesh's starting angles at OnSetup (no force yet); each frame's are worked out in C++ (Flight::Thruster*, with
-  // the per-type differences as motionKind)
+  // the mesh's angles: at OnSetup (no force yet) and each frame in Update
   public func GetEulerAngles() -> EulerAngles {
     return MakeEulerAngles(this.GetPitch(), this.GetRoll(), this.GetYaw());
   }
@@ -175,7 +176,6 @@ public abstract native class IFlightThruster extends IScriptable {
       FlightAudio.Get().StartEngine(this.id, this.flightComponent.GetPitch(), Cast<Uint64>(EntityID.GetHash(this.vehicle.GetEntityID())), this.flightComponent.isPlayerMounted);
     }
 
-    this.SetupMotion();
   }
 
   let forceThreshold: Float = 10.0;
@@ -198,8 +198,50 @@ public abstract native class IFlightThruster extends IScriptable {
       return;
     }
 
-    // in C++ (UpdateNative); without a game function it needs it logs once and the thruster is not animated
-    this.UpdateNative(force, torque);
+    if Vector4.Length(force) > this.forceThreshold {
+      this.force = Vector4.Normalize(force);
+    } else {
+      this.force = force / this.forceThreshold;
+    }
+    if Vector4.Length(torque) > this.torqueThreshold {
+      this.torque = Vector4.Normalize(torque);
+    } else {
+      this.torque = torque / this.torqueThreshold;
+    }
+    
+    let vec = new Vector4(1.0, 1.0, 1.0, 1.0);
+    if !this.flightComponent.active {
+      vec = Vector4.EmptyVector();
+    }
+    
+    if IsDefined(this.meshComponent) {
+
+      let vec_og = Vector4.Vector3To4(this.meshComponent.visualScale);
+
+      this.meshComponent.visualScale = Vector4.Vector4To3(Vector4.Interpolate(vec_og, vec, 0.1));
+      this.meshComponent.SetLocalOrientation(Quaternion.Slerp(this.meshComponent.GetLocalOrientation(), this.initialOrientation * EulerAngles.ToQuat(this.GetEulerAngles()), 0.1));
+
+      // scale FX to how much "work" the thruster is actually doing
+      let amount = Vector4.Dot(Quaternion.GetUp(this.meshComponent.GetLocalOrientation()), this.force);
+
+      for fx in this.fxs {
+        amount += fx.UpdateGetDisplacement();
+      }
+      // -4, 4 / -10, 10
+      let animDeviationCenter = 0.0;
+
+      // how much thrusters move opposite of the force effect
+      let animDeviationScale = 0.025;
+
+      // the deviation input takes -4 to 4 (or -10 to 10); the radius input, no longer driven, took 0.0 to 16.0 and defaults to 0.4
+      this.animDeviation = LerpF(this.boneLerpAmount, this.animDeviation, animDeviationCenter + amount * animDeviationScale);
+
+      let acc = this.flightComponent.FindComponentByName(n"AnimationController") as AnimationControllerComponent;
+      if IsDefined(acc) {
+        // between -4.0 & 4.0
+        acc.SetInputFloat(this.deviationName, this.animDeviation);
+      }
+    }
   }
 
   public func Stop() {
