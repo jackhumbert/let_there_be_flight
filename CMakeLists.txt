@@ -45,8 +45,8 @@ endforeach()
 # After a rebake, tools/navmap_bake/publish.py uploads it and sets the URL and hash here. LTBF_NAVMAP_FILE
 # points at a local bake instead.
 
-set(LTBF_NAVMAP_URL "https://github.com/jackhumbert/cp2077_navmap/releases/download/2.50-56018fba2934/navmap.bin")
-set(LTBF_NAVMAP_SHA256 "56018fba29346c750b048cbd64b1b98a8e9ee5c8fdeef3aed580b4e879489e7a")
+set(LTBF_NAVMAP_URL "https://github.com/jackhumbert/cp2077_navmap/releases/download/2.50-dbacef07d45d/navmap.bin")
+set(LTBF_NAVMAP_SHA256 "dbacef07d45db699afa85abc3113d089bc3803266402ce246b110f2e3d920a7e")
 set(LTBF_NAVMAP_FILE "" CACHE FILEPATH "Local navmap.bin to ship instead of the release asset")
 if(LTBF_NAVMAP_FILE)
   set(_NAVMAP "${LTBF_NAVMAP_FILE}")
