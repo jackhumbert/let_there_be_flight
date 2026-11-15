@@ -391,7 +391,7 @@ Reflections::Sample Reflections::Tick(float x) {
   const float ffb = float(floorFeedback.Next()), wfb = float(wallFeedback.Next());
   const float decay = float(rt60.Next()), decayHigh = float(rt60High.Next()), send = float(wet.Next());
   // clamped: a ramp to 0 can end a rounding below it, and the large network's share is its square root (a NaN there
-  // filled the networks and silenced the Engine bus driving into a tunnel, 2026-11-05)
+  // filled the networks and silenced the Engine bus driving into a tunnel)
   const float large01 = std::clamp(float(size.Next()), 0.0f, 1.0f);
   std::array<float, kQuarters> distant{}, tailOut{}, tailAmp{};
   for (int q = 0; q < kQuarters; ++q) {

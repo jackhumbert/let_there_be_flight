@@ -18,7 +18,7 @@ static bool skip = false;
 // }
 
 // void audio::SoundSystem::SetListenerVectors(struct Vector4 const &,struct Vector4 const &,struct Vector4 const &)
-// (Hooked on 2026-10-27, game 2.5: it is called with the player's soundListener component exactly, yAxis
+// (On game 2.5 it is called with the player's soundListener component exactly, yAxis
 // forward and zAxis up, in TPP and through the cinematic camera's shots alike; the game does not hear from
 // the cinematic camera either. The FMOD listener takes the active camera there instead, FlightComponent.)
 // REGISTER_FLIGHT_HOOK_HASH(void, 3465549286, SoundSystem_SetListenerVectors, void *self, Vector4 & position, Vector4 & zAxis, Vector4 & yAxis) {

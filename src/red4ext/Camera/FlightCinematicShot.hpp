@@ -17,7 +17,7 @@ struct FlightCinematicShot : RED4ext::IScriptable {
   static RED4ext::WorldTransform AimAtCar(RED4ext::WorldTransform aXform, RED4ext::Vector4 aCentreOfMass);
   // Cinematic::FitAhead: the scale shrunk until the shot's point aOffset, its Y scaled, is in open air.
   static float FitAhead(RED4ext::WorldTransform aShot, RED4ext::Vector4 aOffset, float aScale);
-  // the pure C++ defaults, for the bridge's comparison with the game's natives
+  // the pure C++ versions of the game's natives, so a test can compare the two
   static RED4ext::Quaternion OrientationFromDir(RED4ext::Vector4 aDir);
   static RED4ext::Vector4 TransformPoint(RED4ext::WorldTransform aXform, RED4ext::Vector4 aPoint);
 

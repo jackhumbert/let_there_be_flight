@@ -141,7 +141,7 @@ float BrakingDistance(const VehicleSpec &aSpec, float aSpeed) {
 
 TEST(autopilot_fleet_loads) {
   const auto &cars = Fleet();
-  CHECK(cars.size() >= 255); // 261 rows on 2026-11-04 (241 cars, 20 bikes; the stand-in drive model left out)
+  CHECK(cars.size() >= 255); // 261 rows (241 cars, 20 bikes; the stand-in drive model left out)
   int bikes = 0;
   for (const auto &c : cars) {
     bikes += c.type == "bike" ? 1 : 0;
@@ -153,7 +153,7 @@ TEST(autopilot_fleet_loads) {
   CHECK(DistinctSpecs().size() >= 60); // 69 distinct (mass, airResistance, brakingFriction)
 }
 
-// Bounds are the fleet's measured range on 2026-11-04 plus a margin, written beside each check ("measured; bound").
+// Bounds are the fleet's measured range plus a margin, written beside each check ("measured; bound").
 
 TEST(autopilot_fleet_limits) {
   const VehicleSpec base;
@@ -218,7 +218,7 @@ TEST(autopilot_fleet_follow) {
   // Every distinct car plans the route with its own limits and flies it with the follower. The cars differ only in
   // drag, so in top speed (72.6 to 120 m/s). Some cars leave the line once, on the climb's crest (s 1200 to 1250 m,
   // past raceOffLine's 4 m), the faster ones further: a weakness of the follower over a crest at speed, not of one car.
-  // Planning the bends at the speed the surge hold flies (FlownTop) and with the surge the drag leaves (2026-11-04)
+  // Planning the bends at the speed the surge hold flies (FlownTop) and with the surge the drag leaves
   // took the worst from 9.89 m to 5.95 m.
   const auto line = FleetRoute();
   const Route route = Route::Make(line);
@@ -570,7 +570,7 @@ TEST(autopilot_fleet_attitude_loop) {
   //   impulse is exact.
   // - As in game, the damping (2 x the spin in mode torque, cut per car by CapDamping) acts on the body through
   //   mass x tensor / inertia, which spans about 30 times over the fleet, and the give-back for it is the same
-  //   Flight::AngularDamping at the rate wanted, CapDamping included. Before 2026-11-04 the give-back was 2 x rateRef,
+  //   Flight::AngularDamping at the rate wanted, CapDamping included. A give-back of 2 x rateRef,
   //   never cut by CapDamping: more than the damping wherever the cap cuts in, and the cars that answer most
   //   (pitch 11 rad/s2 per unit of torque) tracked 0.33 rad off and overshot 0.36 rad (20 deg), settling in 1.6 s.
   // - The damping without the give-back only damps more on the cars that answer most.
@@ -617,7 +617,7 @@ TEST(autopilot_fleet_attitude_loop) {
     CHECK(refBare.trackMax < 0.06f);             // 0.0546 rad measured
     CHECK(refBare.overshoot < 0.07f);            // 0.0651 measured
     CHECK(refBare.settle < 0.7f);                // 0.65 s measured
-    CHECK(trackMax < 0.055f);                    // 0.0491, 0.0494, 0.0479 rad at most measured (2026-11-04)
+    CHECK(trackMax < 0.055f);                    // 0.0491, 0.0494, 0.0479 rad at most measured
     CHECK(trackMax - trackMin < 0.012f);         // 0.0084, 0.0024, 0.0056 measured: close on every car
     CHECK(overMax < 0.065f);                     // 0.0567, 0.0571, 0.0547 at most measured: about 3 deg
     CHECK(settleMax < 0.8f);                     // 0.72, 0.68, 0.72 s at most measured
@@ -657,7 +657,7 @@ TEST(autopilot_fleet_knock) {
               distinct.size(), contactDamp, driven, worstMin, worstMax, backMin, backMax, slowest.c_str());
   CHECK(contactDamp < 1e-4f); // the contact's spin is not damped: it tumbles as for a player
   CHECK(driven < 1e-6f);      // nothing reaches the body while the recovery has it at 0, the give-back included
-  CHECK(backMax < 2.6f);      // 1.63 to 2.25 s measured (2026-11-04): every car back within 2 deg
+  CHECK(backMax < 2.6f);      // 1.63 to 2.25 s measured: every car back within 2 deg
   CHECK(worstMax < 1.05f);    // 0.67 to 0.97 rad measured: how far the hit throws the car before it is back
 }
 
@@ -719,14 +719,14 @@ TEST(autopilot_fleet_character) {
               "%d arrived\n",
               distinct.size(), topMin, slowest.c_str(), topMax, fastest.c_str(), surgeMin, surgeMax, brakeMax, tMin, tMax,
               offMax, worstOff.c_str(), errMax, arrived);
-  CHECK(topMin > 45.0f && topMin < 55.0f); // 49.7 m/s measured (2026-11-04): q204's bus, a 2100 kg record on the coach
+  CHECK(topMin > 45.0f && topMin < 55.0f); // 49.7 m/s measured: q204's bus, a 2100 kg record on the coach
   CHECK(topMax == VehicleSpec{}.speedCap); // 120: the clean coupes reach the cap
   CHECK(surgeMin > 5.5f && surgeMax < 26.0f); // 6.2 (the Behemoth) to 24.5 m/s2 measured
   CHECK(brakeMax < 420.0f);                // 400 m measured
   CHECK(tMax < 42.0f);                     // 29.7 to 40.6 s measured
   CHECK(errMax < 3.1f);                    // 2.78 m/s measured
   // The heavy cars with a third of today's surge leave the line in the 200 m turn (s 917 to 940) and over the crest.
-  // Since the bends are planned with the surge the drag leaves and at the speed the surge hold flies (2026-11-04) the
+  // Since the bends are planned with the surge the drag leaves and at the speed the surge hold flies the
   // Behemoth stays within 7.6 m (was 20.35). The worst left is a low-drag 6.2 m/s2 car (top 91 m/s) in the turn: it
   // flies the plan's speed, but its roll sits at the 55 deg cap and its 2.1 m/s2 of sway cannot take back the metres
   // it lost entering the turn. 17.33 m measured while the surge hold held full surge past the plan; 19.13 m since its

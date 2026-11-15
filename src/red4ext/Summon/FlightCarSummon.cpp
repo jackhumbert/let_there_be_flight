@@ -20,9 +20,8 @@ namespace {
 // The red::FixedSizeFunction the spawn takes: 64 bytes of storage plus the erased dispatcher
 // (the table of handlers) at +64. The machinery reads that slot unconditionally and calls its
 // [0] with (the wrapper's capture, the EntityStub*'s location) when the stub materializes, its
-// [8] when copying the callable (dest, this) and its [24] to destroy (the buffer) - the
-// 2026-11-01 run's crash: a zeroed callback (the earlier design) put null there and the
-// materialize's call went through it (docs/design/vehicle-summon.md section 3). The table's
+// [8] when copying the callable (dest, this) and its [24] to destroy (the buffer) : a
+// zeroed callback puts null there, and the materialize's call through it crashes the game (docs/design/vehicle-summon.md section 3). The table's
 // unfilled entries point at the destroy no-op: a call through any slot lands somewhere safe.
 RED4ext::ent::EntityID g_lastSpawnedEntity;
 
@@ -93,8 +92,8 @@ bool FlightCarSummon::SpawnVehicleAt(RED4ext::TweakDBID aRecord, float aX, float
     // (WorldTransform const&: three int32 of the fixed-point position, the float read as the
     // value scaled by 2^17 (math::WorldTransform::_ToXForm multiplies by 2^-17), then the
     // quaternion; TweakDBID by value; our FixedSizeFunction const& - storage plus the
-    // dispatcher at +64.) Verified against the 2.5 binary (the summon machine's own spawn and
-    // the 2026-11-01 run's misplaced spawn); a vtable that no longer holds the offset never
+    // dispatcher at +64.) Verified against the 2.5 binary (the summon machine's own spawn, and
+    // a spawn that passed floats here landed 8 km up); a vtable that no longer holds the offset never
     // gets here.
     struct alignas(16) WorldTransform {
       int32_t x;

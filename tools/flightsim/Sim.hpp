@@ -11,7 +11,7 @@
 //   averaged with GroundFromHits; the world is a height field;
 // - the body is modelled: the linear part integrates the tail's world force as an acceleration (FlightComponent
 //   scales it by mass and PhysX divides it out) plus gravity and PhysX's linear damping; the angular part applies the
-//   mode torque times a per-axis gain measured in game (TorqueProbe, Archer Quartz hovering, 2026-10-28: about
+//   mode torque times a per-axis gain measured in game (TorqueProbe, Archer Quartz hovering: about
 //   1.25 rad/s2 per unit of mode torque on each axis, answering two frames late at 32 fps);
 // - the ground contact is a stop: the body's bottom never goes below the ground, downward speed is removed.
 // With groundRay set (the city's collision, Colliders.hpp; docs/design/flightsim.md) FindGround's rays and
@@ -33,8 +33,8 @@ namespace FlightSim {
 using Flight::Vec3;
 
 // The car. The defaults are a mid-size car (Navigation/Vehicle.hpp's VehicleSpec) with a Shion MZ1's torque response,
-// fitted to a Hover & Fly recording (hoverfly_check, flightsim --replay, 2026-11-04): pitch 3.0 and yaw 2.57 rad/s2
-// per unit of mode torque, 30 ms late. Roll is not fitted yet: 1.2 is the Archer's (TorqueProbe CSV of 2026-10-28).
+// fitted to a Hover & Fly recording (flightsim --replay): pitch 3.0 and yaw 2.57 rad/s2
+// per unit of mode torque, 30 ms late. Roll is not fitted yet: 1.2 is the Archer's (TorqueProbe).
 // A surveyed car (vehicles.tsv) sets inertia and tensor, and its gain is Flight::TorqueResponse's.
 struct Car {
   std::string name = "generic";
@@ -52,7 +52,7 @@ struct Car {
   // answers angularGain x this (for robustness runs: flightsim --set errX=2)
   Vec3 responseError{1, 1, 1};
   // rad/s the body never spins faster than: PhysX's default max angular velocity (a held turn in game levels off at
-  // 7.1 rad/s, hoverfly_check on a Shion MZ1, 2026-11-04)
+  // 7.1 rad/s on a Shion MZ1)
   float maxAngularSpeed = 7.0f;
   // the wheel emitters FindGround casts from, relative to the centre of mass (body frame), and the body's bottom
   float wheelX = 0.8f, wheelY = 1.4f, wheelZ = -0.3f;
@@ -69,10 +69,10 @@ struct Car {
   float dragK = Flight::kShapeDragK;
   float thrusters = 0; // vehicles.tsv; 0: unknown, the thrust stays today's
   // the body's gravity against the 9.81 the modes hold up: an imbalance they have to correct (flightsim --set
-  // gravity=0.95; in game the car rose while braking in Hover & Fly, 2026-11-05)
+  // gravity=0.95; in game the car rose while braking in Hover & Fly)
   float gravityScale = 1.0f;
-  // 1: the vertical speed the mode reads is a frame of gravity low, as in game with the PhysX-owned flight physics
-  // until the fix of 2026-11-06 (g x the frame, 1/60 s at least: the recorded vz against the height's change, 24
+  // 1: the vertical speed the mode reads is a frame of gravity low, as the game read it with the PhysX-owned flight
+  // physics before a fix (g x the frame, 1/60 s at least: the recorded vz against the height's change, 24
   // flights); 0: the body's own, as the game reads it since (flightsim --set velocityLag=1, for older recordings)
   float velocityLag = 0.0f;
 };

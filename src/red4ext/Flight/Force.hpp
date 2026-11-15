@@ -8,8 +8,8 @@
 
 namespace Flight {
 
-// The fleet-wide factor on the shape's drag: 4.42 keeps the vanilla fleet's median top speed at today's 103 m/s
-// (tools/flightsim, 2026-11-04).
+// The fleet-wide factor on the shape's drag: 4.42 keeps the vanilla fleet's median top speed at 103 m/s
+// (tools/flightsim's fleet run).
 constexpr float kShapeDragK = 4.42f;
 
 // The FlightSettings the force tail reads, with the script's names and defaults; shapeDrag and dragK are the developer
@@ -53,7 +53,7 @@ struct ForceOutput {
 // angular velocity in a frame. A negative gain is not capped.
 float CapDamping(float damp, float angularVelocity, float tensor, float inertia, float mass, const ForceParams &p);
 
-// Air drag from the vehicle's shape (docs/design/autopilot.md, "Character"; not used by the game yet): on each body
+// Air drag from the vehicle's shape (docs/design/autopilot.md, "Character"; only with the developer setting shapeDrag on, off by default): on each body
 // axis i, -dragArea_i |v| v_i / mass, an acceleration in the body frame. dragArea is 0.5 rho K CdA per axis (N per
 // (m/s)^2): the chassis collision shape's area across that axis times a drag coefficient for the body class, and K
 // one fleet-wide factor (about 4.1 keeps a mid-size car's top speed). Sideways, where the area is 2 to 4 times the

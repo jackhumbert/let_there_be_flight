@@ -15,7 +15,7 @@ constexpr float kTextureDrive = 1.5f;
 
 // Flight::Surface's order: none known, hard, metal, glass, wood, soft, grass. First guesses at each material, to be tuned by
 // ear through tools/acoustics/engine_synth. The levels set a scrape at 0.4 sliding 5.5 m/s to about -36 dB, the
-// engine's level at 6 m/s there (2026-11-07).
+// engine's level at 6 m/s there.
 // clang-format off
 constexpr ScrapeModel kModels[] = {
     // none known: as hard

@@ -333,7 +333,7 @@ void WwiseVoice::TakeSends(const Sends::Set &aSends, uint64_t aGeneration) {
 
 void WwiseVoice::Sync(bool aReady, AkGameObjectID aListener) {
   const Link &ak = Link::Get();
-  // a positioned voice waits for its place: one started at the origin, out of range, is dropped for good (spike)
+  // a positioned voice waits for its place: one started at the origin, out of range, is dropped for good
   const bool want = aReady && !paused.load() && (placed || !options.positioned);
   if (!want) {
     StopPlaying();

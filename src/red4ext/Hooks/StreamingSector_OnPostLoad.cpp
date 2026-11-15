@@ -75,7 +75,7 @@ size_t MoveActors(world::CookedCollisionNode *aNode, const std::vector<Navigatio
 
 // A placement in nodeSetups (CompiledNodeInstanceSetupInfo, layout from ArchiveXL's
 // Red/StreamingSector.hpp, 0x90 bytes before 2.5): +00 position (Vector4), +20 scale (Vector3),
-// +58 globalNodeID; still so on 2.5 (2026-10-27, the tower pad proxy). The record is found by its
+// +58 globalNodeID; still so on 2.5 (the tower pad proxy). The record is found by its
 // globalNodeID and only touched when its stored x y are the listed ones, in case that changes. Hidden as ArchiveXL's
 // nodeDeletions hides a node: 2 km below the map, scale 0.
 constexpr uintptr_t SetupIdOffset = 0x58;

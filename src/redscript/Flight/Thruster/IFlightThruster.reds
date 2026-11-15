@@ -15,7 +15,7 @@ public abstract native class IFlightThruster extends IScriptable {
   @runtimeProperty("offset", "0xB0")
   public native let attached: Bool;
 
-  // The thruster motion in C++ (FlightThruster.cpp), not called: its first frame in game crashed the game (2026-11-15),
+  // The thruster motion in C++ (FlightThruster.cpp), not called: its first frame in game crashed the game,
   // so Update below animates the thrusters until it is fixed.
   public native func SetupMotion() -> Bool;
   public native func UpdateNative(force: Vector4, torque: Vector4) -> Bool;

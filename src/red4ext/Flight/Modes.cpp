@@ -215,7 +215,7 @@ ModeOutput Standard(StandardState &m, const StatsState &s, const StatsStatic &st
 
   // the hover band; a moment without ground (a ray through a seam in the collision, off a
   // kerb's edge) is not leaving it: the hover height crept up 0.1 to 0.25 m a time on such frames, taken again at
-  // the next frame's distance (in game, 2026-11-06)
+  // the next frame's distance
   m.hovering = HoverWeight(g, p, band);
   if (m.hovering > 0.0f) {
     if (m.outOfBand >= kRegainHoverHeight)

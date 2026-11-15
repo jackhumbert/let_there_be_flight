@@ -59,7 +59,7 @@ std::vector<Vec3> Arc(float aRadius, float aLead) {
 
 } // namespace
 
-// Bounds are the value measured on 2026-10-31 plus a margin, written beside each check ("measured; bound").
+// Bounds are the value measured plus a margin, written beside each check ("measured; bound").
 
 TEST(follow_percentile) {
   // nearest rank: index ceil(q n) - 1 of the sorted values

@@ -12,9 +12,10 @@
 //   "Gamepad, less floaty" preset (docs/nexus/settings-guide.md); the guide's keyboard preset is not used, as its
 //   linear damping held Standard's top speed to 15 m/s from 97.
 // - Standard's braking and side grip (Flight::StandardGains brake, sideBrake, maxBrake): how far it coasts and how much
-//   it slides through a turn. At full speed Loose coasts about 134 m with up to 12 deg of slip in a turn, Default 128 m
-//   and 9 deg, Tight 90 m and 6 deg; the top speed is the same. All three keep Standard's spec (tests/feel_tests.cpp,
-//   feel_standard_fleet and feel_handling_*). Not yet flown in game.
+//   it slides through a turn. On a Shion MZ1 let go at 61 m/s (5 s of full forward, flightsim's surge_release) Loose
+//   coasts about 134 m, Default 128 m, Tight 90 m; turning at 27 m/s (surge_turn) it slips up to 12, 9 and 6 deg. The
+//   top speed is the same. In game the same flights come within 5% of the coasts and 1 deg of the slips. All three keep
+//   Standard's spec (tests/feel_tests.cpp, feel_standard_fleet and feel_handling_*).
 
 #include "Flight/Force.hpp"
 #include "Flight/Modes.hpp"

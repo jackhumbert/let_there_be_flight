@@ -17,7 +17,7 @@ using namespace RED4ext;
 /// @hash 1554324956
 // void __fastcall UpdateTireParameters(vehicle::TireParameterUpdate *tpu, vehicle::TireUpdate *tireUpdate, CName emitter,
 //                                      float suspensionPressure);
-// (the 4th argument, in xmm3, was left out before 2026-10-30: the original got whatever xmm3 held)
+// (the 4th argument is in xmm3: left out, the original gets whatever xmm3 holds)
 
 namespace VehicleAudio {
 extern std::atomic<uint64_t> flyingVehicle;

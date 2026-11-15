@@ -302,7 +302,7 @@ AttitudeControlOutput AttitudeControl(AttitudeControlState &aState, const Attitu
   }
   // ApplyPhysics damps the rotation: give back exactly what it takes from the rotation wanted, its CapDamping per
   // axis included (without it, on the cars the cap cuts, the give-back outweighed the damping and the attitude
-  // overshot by up to 20 deg, 2026-11-04). No inputs and no angular brake while the Autopilot flies. A hit is
+  // overshot by up to 20 deg). No inputs and no angular brake while the Autopilot flies. A hit is
   // untouched: ApplyPhysics still leaves the contact spin undamped and the recovery still fades this torque.
   F::ForceParams damping;
   damping.generalDampFactorAngular = aParams.generalDampFactorAngular;

@@ -30,7 +30,7 @@ int Active(const ScrapeTracker &t) {
 } // namespace
 
 TEST(scrape_surfaces) {
-  // the materials seen in game, 2026-11-06
+  // the materials seen in game
   CHECK(SurfaceOf("default_material.physmat") == Surface::Hard);
   CHECK(SurfaceOf("asphalt.physmat") == Surface::Hard);
   CHECK(SurfaceOf("metal_hollow.physmat") == Surface::Metal);

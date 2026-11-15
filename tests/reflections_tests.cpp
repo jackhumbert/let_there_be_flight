@@ -218,7 +218,7 @@ TEST(reflections_quarters_carry_the_bed) {
 TEST(reflections_into_a_tunnel_stays_finite) {
   // outside (the large network) into a tunnel (the small one alone): the size ramps to 0, and a ramp can end a
   // rounding below it; under the large network's square root that filled the lines with NaN and silenced the bus
-  // (2026-11-05, in game under a pier). Swept over where the size starts, as which starts round below 0 is chance.
+  // (in game, under a pier). Swept over where the size starts, as which starts round below 0 is chance.
   const float rate = 48000.0f;
   const int interval = 2400;
   const Tuning t;

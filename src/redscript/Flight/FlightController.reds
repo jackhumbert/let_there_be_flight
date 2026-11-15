@@ -338,7 +338,7 @@ public native class FlightController extends IScriptable {
     // The hint list keeps one hint per action, whatever the source: each action is added once
     // here with its label picked up front. A hide after a show of the same action in one event
     // removes the shown one (Linear Brake and the Autopilot hint never appeared that way), and
-    // reordering such pairs crashed the game on flight activation (2026-10-26).
+    // reordering such pairs crashed the game on flight activation.
     evt.AddInputHint(FlightController.CreateInputHint(this.FlightToggleHintLabel(), n"Flight_Toggle"),      (this.enabled && !this.active) || (this.active && !this.showOptions));
     evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Yaw", n"Yaw"),                           this.FlightControlsShown() && !this.showOptions);
     evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Pitch", n"Pitch"),                       this.FlightControlsShown() && !this.showOptions && (usesRightStick || this.usingKB));

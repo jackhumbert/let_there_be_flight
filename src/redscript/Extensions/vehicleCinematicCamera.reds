@@ -6,7 +6,7 @@
 // at the car's centre of mass with the horizon level, from at least 4.5 m (Cinematic::kMinDistance): the shots' own
 // angles were made for a level car and lost a banking one off the frame.
 // The shot maths in C++ (src/red4ext/Camera/FlightCinematicShot.cpp): the game's own WorldTransform natives are
-// called from there. OrientationFromDir and TransformPoint are the assumed conventions, for the bridge's comparison.
+// called from there. OrientationFromDir and TransformPoint are the assumed conventions, kept to compare with the natives.
 public native class FlightCinematicShot extends IScriptable {
   public static native func AimAtCar(xform: WorldTransform, centreOfMass: Vector4) -> WorldTransform;
   public static native func FitAhead(shot: WorldTransform, offset: Vector4, scale: Float) -> Float;
@@ -201,7 +201,7 @@ public func UpdateCameraState(context: vehicleCinematicCameraShotUpdateContext) 
 
 // Every shot stops once the car is 30 m from the camera, but the shots fixed in the world start
 // about 30 m out (RightAheadHigh at 31 m, so it never lasted even on a road) and further in flight:
-// they ended within 0.1 s and the camera drew one after another (2026-10-27). In flight their
+// they ended within 0.1 s and the camera drew one after another. In flight their
 // limit is where the camera started plus a margin, so a flyby ends once the car is past and away.
 @wrapMethod(vehicleCinematicCameraShotStopCondition_VehicleDistanceFromCamera)
 public func Evaluate(const data: CinematicCameraData, const finalTransform: WorldTransform) -> Bool {

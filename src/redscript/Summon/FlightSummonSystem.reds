@@ -6,7 +6,7 @@
 //
 // Why the spawn is ours (docs, section 4): the vanilla summon's spawn-point search is tied to
 // road-side summon spots, so at a pad it refuses; the record-path summon native crashes the
-// game on 2.5 (dumps of 2026-11-01: a null function object read at the call); and the garage's
+// game on 2.5 (a null function object read at the call); and the garage's
 // summon-to-transform path only feeds the garage machine, which drives on traffic lanes - none
 // at a pad. The spawn is instead the VehicleSystem's own record spawn,
 // game::VehicleSystem::RequestNewVehicle (FlightCarSummon.cpp calls it) with a transform we
@@ -682,12 +682,12 @@ public class FlightSummonSystem extends ScriptableSystem {
     }
     mode.hasExternalDestination = true;
     // the activate-time free-roam decision pre-dates these fields; free roam would fly the car
-    // out to its own legs and never look at the destination again (the 2026-11-01 run's 1631 m
-    // route)
+    // out to its own legs and never look at the destination again (a 1.6 km
+    // route for a pad 150 m off)
     mode.freeRoamChosen = false;
     // and turn onto the pad heading at approach speed, before the sink, not with it: the
     // descent's own z-blend rotates the target yaw over the whole sink (~5 deg/s) and the
-    // hovering car never follows it - the 2026-11-01 run12's touchdown was ~90 degrees of yaw
+    // hovering car never follows it, touching down about 90 degrees of yaw
     // off the pad heading
     mode.droneBrakeTurn = true;
     this.engaged = true;

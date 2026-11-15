@@ -3,7 +3,7 @@
 //
 // - Drone (Flight::Drone) and the anti-gravity drone: a regression guard on what they do today. Their torque is a
 //   fixed factor x input, so each car spins at a rate set by its own TorqueResponse until PhysX's 7 rad/s cap; the
-//   bounds are the fleet's spread as measured on 2026-11-04, a little widened, so a change that makes the slowest
+//   bounds are the fleet's spread as measured, a little widened, so a change that makes the slowest
 //   car slower or the longest coast longer turns this red.
 // - DroneAssist (the proposal): the same rate on every car.
 // - Standard (the Hover & Fly redesign): the draft spec's bounds, on every car, at each Handling choice (Loose, Default
@@ -89,7 +89,7 @@ const std::vector<std::string> kDroneScenarios{"drone_pitch", "drone_roll", "dro
 } // namespace
 
 TEST(feel_fleet_loads) {
-  // 261 physical cars on 2026-11-04, bikes included (the stand-in drive model's 67 left out)
+  // 261 physical cars, bikes included (the stand-in drive model's 67 left out)
   CHECK(Fleet().size() >= 255);
   for (const Car &c : Fleet())
     CHECK(c.angularGain.x > 0.0f && c.angularGain.y > 0.0f && c.angularGain.z > 0.0f && std::isfinite(c.angularGain.x) &&

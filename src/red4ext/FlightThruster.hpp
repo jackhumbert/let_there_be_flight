@@ -26,7 +26,7 @@ public:
   RED4ext::WeakHandle<RED4ext::vehicle::BaseObject> vehicle;
   bool attached = true;
 
-  // Not called at the moment: the first UpdateNative in game crashed the game (2026-11-15) and the script animates
+  // Not called at the moment: the first UpdateNative in game crashed the game, and the script animates
   // the thrusters (IFlightThruster.Update) until that is found. Resolves the game's natives and the script fields
   // once, fills the thruster's parameters and finds the animation controller. False (logged once) when anything is
   // missing or the effects do not fit.
