@@ -94,7 +94,7 @@ void FlightStats::SetState(const Flight::StatsState &aState) {
 }
 
 void FlightStats::UpdateNative(RED4ext::vehicle::BaseObject *aVehicle) {
-  // the natives the script's UpdateDynamic calls, resolved once (GetFunction searches the parent classes)
+  // the natives the script UpdateDynamic called, resolved once (GetFunction searches the parent classes)
   struct Natives {
     RED4ext::CBaseFunction *orientation = nullptr;
     RED4ext::CBaseFunction *position = nullptr;
@@ -121,10 +121,10 @@ void FlightStats::UpdateNative(RED4ext::vehicle::BaseObject *aVehicle) {
     return n;
   }();
 
-  // on a failure the previous state stays and the script updates the stats this frame
+  // on a failure the previous state stays (warned once)
   auto fail = [this] { nativeUpdate = false; };
   if (!natives.orientation || !natives.position || !natives.angularVelocity || !natives.linearVelocity) {
-    LTBF_WARN_ONCE("[FlightStats] a vehicle native for the stats was not found; the script updates the stats");
+    LTBF_WARN_ONCE("[FlightStats] a vehicle native for the stats was not found; the stats are not updated");
     fail();
     return;
   }
@@ -136,7 +136,7 @@ void FlightStats::UpdateNative(RED4ext::vehicle::BaseObject *aVehicle) {
   if (!RED4ext::ExecuteFunction(aVehicle, natives.orientation, &orientation) ||
       !RED4ext::ExecuteFunction(aVehicle, natives.angularVelocity, &angularVelocity) ||
       !RED4ext::ExecuteFunction(aVehicle, natives.linearVelocity, &velocity)) {
-    LTBF_WARN_ONCE("[FlightStats] a vehicle native for the stats failed; the script updates the stats");
+    LTBF_WARN_ONCE("[FlightStats] a vehicle native for the stats failed; the stats are not updated");
     fail();
     return;
   }
@@ -154,7 +154,7 @@ void FlightStats::UpdateNative(RED4ext::vehicle::BaseObject *aVehicle) {
       uint64_t result = 0; // CalculatePosition's Bool
       fromProvider = RED4ext::ExecuteFunction(provider.GetPtr(), natives.calculatePosition, &result, position);
       if (!fromProvider) {
-        LTBF_WARN_ONCE("[FlightStats] the position provider failed; the script updates the stats");
+        LTBF_WARN_ONCE("[FlightStats] the position provider failed; the stats are not updated");
         fail();
         return;
       }
@@ -162,7 +162,7 @@ void FlightStats::UpdateNative(RED4ext::vehicle::BaseObject *aVehicle) {
   }
   if (!fromProvider) {
     if (!RED4ext::ExecuteFunction(aVehicle, natives.position, &position)) {
-      LTBF_WARN_ONCE("[FlightStats] GetWorldPosition failed; the script updates the stats");
+      LTBF_WARN_ONCE("[FlightStats] GetWorldPosition failed; the stats are not updated");
       fail();
       return;
     }
@@ -173,6 +173,21 @@ void FlightStats::UpdateNative(RED4ext::vehicle::BaseObject *aVehicle) {
   auto state = State();
   Flight::UpdateDynamic(state, in);
   SetState(state);
+}
+
+void FlightStats::UpdateNow() {
+  static RED4ext::CProperty *field = [] {
+    auto cls = RED4ext::CRTTISystem::Get()->GetClass("FlightStats");
+    return cls ? cls->GetProperty("vehicle") : nullptr;
+  }();
+  if (!field) {
+    LTBF_WARN_ONCE("[FlightStats] FlightStats.vehicle was not found; the stats are not updated");
+    return;
+  }
+  auto vehicle = field->GetValuePtr<RED4ext::WeakHandle<RED4ext::IScriptable>>(this)->Lock();
+  if (vehicle) {
+    UpdateNative(reinterpret_cast<RED4ext::vehicle::BaseObject *>(vehicle.GetPtr()));
+  }
 }
 
 FlightStats *FlightStats::Of(RED4ext::IScriptable *aComponent) {

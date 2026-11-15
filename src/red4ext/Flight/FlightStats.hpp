@@ -52,12 +52,16 @@ struct FlightStats : RED4ext::IScriptable {
   float d_pitchDeg = 0.0f;
   float d_rollDeg = 0.0f;
 
-  // true when the plugin updates the dynamic half before FlightComponent.OnUpdate this frame (FlightComponent.nativeStats)
+  // true when the plugin updates the dynamic half before FlightComponent.OnUpdate this frame (FlightComponent.UpdateStats
+  // sets it after a new FlightStats' first frame)
   bool nativeUpdate = false;
 
-  // Flight::UpdateDynamic from the vehicle's state, read through the natives the script's UpdateDynamic calls (the
+  // Flight::UpdateDynamic from the vehicle's state, read through the natives the script UpdateDynamic called (the
   // current pose). If one cannot be called it warns once, leaves the state and clears nativeUpdate.
   void UpdateNative(RED4ext::vehicle::BaseObject *aVehicle);
+  // UpdateNative for the script's own vehicle field, now: a new FlightStats' first frame, before the plugin's update
+  // before OnUpdate takes over
+  void UpdateNow();
 
   // the d_ fields as plain values, and back (a Vector4's W is left as it is)
   Flight::StatsState State() const;
@@ -107,4 +111,5 @@ RTTI_DEFINE_CLASS(FlightStats, {
   RTTI_PROPERTY(d_pitchDeg);
   RTTI_PROPERTY(d_rollDeg);
   RTTI_PROPERTY(nativeUpdate);
+  RTTI_METHOD(UpdateNow);
 });

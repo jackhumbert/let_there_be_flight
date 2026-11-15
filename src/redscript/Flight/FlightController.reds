@@ -73,10 +73,6 @@ public native class FlightController extends IScriptable {
   public native let outLinearBrake: Float;
   public native let outAngularBrake: Float;
   public native func StepInputs() -> Void;
-  // the input smoothing and normalisation in C++ (StepInputs); false: UpdateInputs and FlightComponent.OnUpdate in script (docs/design/native-ports.md)
-  public let nativeInputs: Bool = true;
-  // the cinematic camera's aim and shot fit in C++ (FlightCinematicShot); false: FlightCinematic's script (docs/design/native-ports.md)
-  public let nativeCinematic: Bool = true;
 
   private let secondCounter: Float;
 
@@ -872,19 +868,9 @@ public native class FlightController extends IScriptable {
     }
   }
 
+  // the input smoothing and normalisation in C++ (StepInputs: the out* fields)
   public func UpdateInputs(timeDelta: Float) -> Void {
-    if this.nativeInputs {
-      this.StepInputs();
-      return;
-    }
-    this.yaw.GetValue(timeDelta);
-    this.sway.GetValue(timeDelta);
-    this.roll.GetValue(timeDelta);
-    this.pitch.GetValue(timeDelta);
-    this.lift.GetValue(timeDelta);
-    this.linearBrake.GetValue(timeDelta);
-    this.angularBrake.GetValue(timeDelta);
-    this.surge.GetValue(timeDelta);
+    this.StepInputs();
   }
 
 

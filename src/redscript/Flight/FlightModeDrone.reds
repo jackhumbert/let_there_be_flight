@@ -74,41 +74,17 @@ public class FlightModeDrone extends FlightMode {
 
   public func GetDescription() -> String = "Drone";
 
+  // the maths in C++ (FlightModeControl.Drone, Flight::Drone)
   public func Update(timeDelta: Float) -> Void {
-      if this.component.nativeModes {
-        let k = this.Control(timeDelta);
-        k.droneModeLiftFactor = this.droneModeLiftFactor * this.droneThrust;
-        k.droneModePitchFactor = this.droneModePitchFactor * this.droneTurnSpeed;
-        k.droneModeRollFactor = this.droneModeRollFactor * this.droneTurnSpeed;
-        k.droneModeSurgeFactor = this.droneModeSurgeFactor * this.droneThrust;
-        k.droneModeYawFactor = this.droneModeYawFactor * this.droneTurnSpeed;
-        k.droneModeSwayFactor = this.droneModeSwayFactor * this.droneThrust;
-        k.Drone(this.component.stats, this.component);
-        this.force = k.force;
-        this.torque = k.torque;
-        return;
-      }
-      let velocityDamp: Vector4 = this.component.stats.d_localVelocity * this.component.linearBrake * FlightSettings.GetInstance().LinearBrake() * this.component.stats.s_brakingFrictionFactor;   
-      // let velocityDamp: Vector4;
-      let angularDamp: Vector4 = this.component.stats.d_angularVelocity * this.component.angularBrake * FlightSettings.GetInstance().AngularBrake() * this.component.stats.s_brakingFrictionFactor;
-      // let angularDamp: Vector4;
-
-      this.force = new Vector4(0.0, 0.0, 0.0, 0.0);
-      // lift
-      this.force += FlightUtils.Up() * this.component.lift * this.droneModeLiftFactor * this.droneThrust;
-      // surge
-      this.force += FlightUtils.Forward() * this.component.surge * this.droneModeSurgeFactor * this.droneThrust;
-      // sway
-      this.force += FlightUtils.Right() * this.component.sway * this.droneModeSwayFactor * this.droneThrust;
-      // directional brake
-      this.force -= velocityDamp;
-
-      this.torque = new Vector4(0.0, 0.0, 0.0, 0.0);
-      // pitch correction
-      this.torque.X = -(this.component.pitch * this.droneModePitchFactor * this.droneTurnSpeed + angularDamp.X);
-      // roll correction
-      this.torque.Y = (this.component.roll * this.droneModeRollFactor * this.droneTurnSpeed - angularDamp.Y);
-      // yaw correction
-      this.torque.Z = -(this.component.yaw * this.droneModeYawFactor * this.droneTurnSpeed + angularDamp.Z);
+    let k = this.Control(timeDelta);
+    k.droneModeLiftFactor = this.droneModeLiftFactor * this.droneThrust;
+    k.droneModePitchFactor = this.droneModePitchFactor * this.droneTurnSpeed;
+    k.droneModeRollFactor = this.droneModeRollFactor * this.droneTurnSpeed;
+    k.droneModeSurgeFactor = this.droneModeSurgeFactor * this.droneThrust;
+    k.droneModeYawFactor = this.droneModeYawFactor * this.droneTurnSpeed;
+    k.droneModeSwayFactor = this.droneModeSwayFactor * this.droneThrust;
+    k.Drone(this.component.stats, this.component);
+    this.force = k.force;
+    this.torque = k.torque;
   }
 }

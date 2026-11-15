@@ -18,7 +18,9 @@ struct Pose {
   Flight::Quat orientation{0.0f, 0.0f, 0.0f, 1.0f};
 };
 
-constexpr float kMinDistance = 4.5f; // FlightCinematic.MinDistance
+// m, closest a camera comes to the centre of mass (the shot context's bounding box is no use for this: it read
+// -2.75 m long for a 5.8 m car)
+constexpr float kMinDistance = 4.5f;
 constexpr float kRoadSpeed = 20.0f;  // FlightCinematic.RoadSpeed
 constexpr float kMaxScale = 5.0f;    // the clamp's top in GetRootTransform
 constexpr float kShrink = 0.8f;      // the fit loop's step

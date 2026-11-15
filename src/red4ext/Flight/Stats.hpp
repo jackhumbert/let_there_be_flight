@@ -1,6 +1,7 @@
 #pragma once
 
-// FlightStats.UpdateDynamic (src/redscript/Flight/FlightStats.reds) as pure code, for the native FlightStats.
+// FlightStats.UpdateDynamic (the script it was ported from is deleted; git has it) as pure code, for the native
+// FlightStats.
 // The script reads the vehicle's orientation, angular velocity and linear velocity, and its position from an
 // entity position provider; StatsInput carries those as plain values.
 

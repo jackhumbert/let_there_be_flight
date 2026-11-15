@@ -3,7 +3,7 @@
 // ones already do; the stabilised ones cross world up with the car's right vector, which has no
 // answer at 90 degrees of bank), so the camera swings round a banking car and stays outside it
 // (kept level, the close side shots had the car roll its roof into the lens). Every shot then aims
-// at the car's centre of mass with the horizon level, from at least MinDistance: the shots' own
+// at the car's centre of mass with the horizon level, from at least 4.5 m (Cinematic::kMinDistance): the shots' own
 // angles were made for a level car and lost a banking one off the frame.
 // The shot maths in C++ (src/red4ext/Camera/FlightCinematicShot.cpp): the game's own WorldTransform natives are
 // called from there. OrientationFromDir and TransformPoint are the assumed conventions, for the bridge's comparison.
@@ -19,36 +19,14 @@ public abstract class FlightCinematic {
     return FlightController.GetInstance().IsActive();
   }
 
-  // closest a camera comes to the centre of mass, m (the shot context's bounding box is no use for
-  // this: it read -2.75 m long for a 5.8 m car in Update)
-  public static func MinDistance() -> Float {
-    return 4.5;
-  }
-
   public static func AimAtCar(xform: WorldTransform, context: vehicleCinematicCameraShotUpdateContext) -> WorldTransform {
     let vehicle = GetMountedVehicle(GetPlayer(GetGameInstance()));
     let com = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(context.vehicleTransform));
     if IsDefined(vehicle) {
       com = WorldPosition.ToVector4(WorldTransform.TransformPoint(context.vehicleTransform, Vector4.Vector3To4(vehicle.GetCenterOfMass())));
     }
-    let ctlr = FlightController.GetInstance();
-    if IsDefined(ctlr) && ctlr.nativeCinematic {
-      return FlightCinematicShot.AimAtCar(xform, com);
-    }
-    let camera = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(xform));
-    let toCar = com - camera;
-    let distance = Vector4.Length(toCar);
-    if distance < 0.01 {
-      return xform;
-    }
-    let least = FlightCinematic.MinDistance();
-    if distance < least {
-      WorldTransform.SetPosition(xform, com - toCar * (least / distance));
-    }
-    if AbsF(toCar.Z) / distance < 0.98 {
-      WorldTransform.SetOrientationFromDir(xform, toCar);
-    }
-    return xform;
+    // in C++ (Cinematic::AimAtCar): no nearer than Cinematic::kMinDistance, facing the centre of mass
+    return FlightCinematicShot.AimAtCar(xform, com);
   }
 
   // how much more often a shot fixed in the world (a flyby) is picked in flight: 5 flybys against
@@ -160,15 +138,8 @@ public func GetRootTransform(data: CinematicCameraData) -> WorldTransform {
     // pulled back towards the shot's own place until the camera is in open air (the nav map's
     // free space): scaled out into a building, a flyby ended as it began
     let scale = ClampF(AbsF(data.vehicleSpeed) / FlightCinematic.RoadSpeed(), 1.0, 5.0);
-    let ctlr = FlightController.GetInstance();
-    if IsDefined(ctlr) && ctlr.nativeCinematic {
-      scale = FlightCinematicShot.FitAhead(this.GetShotSpaceTransform(data), Transform.GetPosition(offset), scale);
-    } else {
-      while scale > 1.0 && FlightNavMap.IsLoaded()
-          && !FlightNavMap.IsFree(WorldPosition.ToVector4(WorldTransform.TransformPoint(this.GetShotSpaceTransform(data), FlightCinematic.Ahead(Transform.GetPosition(offset), scale)))) {
-        scale = MaxF(1.0, scale * 0.8);
-      }
-    }
+    // in C++ (Cinematic::FitAhead): shrunk by 0.8 a try while the nav map has the point solid
+    scale = FlightCinematicShot.FitAhead(this.GetShotSpaceTransform(data), Transform.GetPosition(offset), scale);
     this.flightScale = scale;
   }
   Transform.SetPosition(offset, FlightCinematic.Ahead(Transform.GetPosition(offset), this.flightScale));

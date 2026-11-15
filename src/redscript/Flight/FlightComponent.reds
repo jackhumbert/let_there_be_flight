@@ -65,11 +65,7 @@ public native class FlightComponent extends GameComponent {
 
   // private let helper: ref<vehicleFlightHelper>;
   private let stats: ref<FlightStats>;
-  public let nativeForce: Bool = true;  // the force tail in C++ (FlightForce: ApplyPhysics and the scaling below); false: the script (docs/design/native-ports.md)
-  public let nativeThrusters: Bool = true;  // the thrusters' animation in C++ (IFlightThruster.UpdateNative); false: IFlightThruster.Update's script (docs/design/native-ports.md)
   private let forceTail: ref<FlightForce>;
-  public let nativeModes: Bool = true;  // the mode controllers' maths in C++ (FlightModeControl: Drone; Standard, Hover and Fly are C++ modes); false: Drone's script (docs/design/native-ports.md)
-  public let nativeStats: Bool = true;  // FlightStats' dynamic half in C++ (FlightStats.UpdateNative, before OnUpdate); false: FlightStats.UpdateDynamic's script (docs/design/native-ports.md)
 
   public let m_interaction: ref<InteractionComponent>;
   public let m_healthStatPoolListener: ref<VehicleHealthStatPoolListener>;
@@ -621,14 +617,13 @@ public native class FlightComponent extends GameComponent {
     }
   }
 
-  // Exactly one of the two updates the stats each frame: the plugin's, before OnUpdate, when nativeUpdate was
-  // set last frame, else the script's. The plugin reads nativeUpdate before the next OnUpdate, and a new
-  // FlightStats (Activate) starts false, so its first frame is the script's.
+  // The stats' dynamic half is updated in C++ (FlightStats.UpdateNative) before OnUpdate once nativeUpdate is set; a
+  // new FlightStats (Activate) starts with it clear, so its first frame is updated here.
   private final func UpdateStats() -> Void {
     if !this.stats.nativeUpdate {
-      this.stats.UpdateDynamic();
+      this.stats.UpdateNow();
     }
-    this.stats.nativeUpdate = this.nativeStats;
+    this.stats.nativeUpdate = true;
   }
 
   protected func OnUpdate(timeDelta: Float) -> Void {
@@ -684,39 +679,16 @@ public native class FlightComponent extends GameComponent {
       if this.isPlayerMounted {
         this.GetVehicle().ResetQuestEnforceTransform();
         this.sys.ctlr.OnUpdate(timeDelta);
+        // the controller's smoothed and normalised inputs (FlightController.StepInputs, in C++)
         let fc = this.sys.ctlr;
-        if !fc.nativeInputs {
-          this.yaw = fc.yaw.GetValue();
-          this.roll = fc.roll.GetValue();
-          this.pitch = fc.pitch.GetValue();
-          this.lift = fc.lift.GetValue();
-          this.linearBrake = fc.linearBrake.GetValue();
-          this.angularBrake = fc.angularBrake.GetValue();
-          this.surge = fc.surge.GetValue();
-          this.sway = fc.sway.GetValue();
-
-          let total = SqrtF(PowF(this.surge, 2.0) + PowF(this.lift, 2.0) + PowF(this.sway, 2.0));
-          if (total > 1.0) {
-            this.surge /= total;
-            this.lift /= total;
-            this.sway /= total;
-          }
-          total = SqrtF(PowF(this.yaw, 2.0) + PowF(this.roll, 2.0) + PowF(this.pitch, 2.0));
-          if (total > 1.0) {
-            this.yaw /= total;
-            this.roll /= total;
-            this.pitch /= total;
-          }
-        } else {
-          this.yaw = fc.outYaw;
-          this.roll = fc.outRoll;
-          this.pitch = fc.outPitch;
-          this.lift = fc.outLift;
-          this.linearBrake = fc.outLinearBrake;
-          this.angularBrake = fc.outAngularBrake;
-          this.surge = fc.outSurge;
-          this.sway = fc.outSway;
-        }
+        this.yaw = fc.outYaw;
+        this.roll = fc.outRoll;
+        this.pitch = fc.outPitch;
+        this.lift = fc.outLift;
+        this.linearBrake = fc.outLinearBrake;
+        this.angularBrake = fc.outAngularBrake;
+        this.surge = fc.outSurge;
+        this.sway = fc.outSway;
       } else {
         let v = this.GetVehicle();
         this.surge = v.acceleration * 0.5 - v.deceleration * 0.1;
@@ -773,70 +745,12 @@ public native class FlightComponent extends GameComponent {
       this.sys.ctlr.GetBlackboard().SetFloat(GetAllBlackboardDefs().VehicleFlight.Roll, this.stats.d_rollDeg, false);
     }
 
-    if this.nativeForce {
-      this.NativeForceTail(force, torque, timeDelta);
-      return;
-    }
-
-    // apply physics helpers
-    if this.mode < ArraySize(this.modes) {
-      this.modes[this.mode].ApplyPhysics(timeDelta);
-      force += this.modes[this.mode].force;
-      torque += this.modes[this.mode].torque;
-      // this.angularDamp = this.modes[this.mode].angularDamp;
-      // this.linearDamp = this.modes[this.mode].linearDamp;
-    }
-
-    force *= timeDelta;
-    // force *= 1.0/60.0;
-
-    // factor in mass
-    force *= this.stats.s_mass;
-    // convert to global
-    force = this.stats.d_orientation * force;
-
-    // need something similar that affects force
-    // force.X *= this.thrusterTensor.X;
-    // force.Y *= this.thrusterTensor.Y;
-    // force.Z *= this.thrusterTensor.Z;
-
-    torque *= timeDelta;
-    // torque *= 1.0/60.0;
-
-    // factor in inertia tensor - maybe half?
-    // let it = this.GetVehicle().GetInertiaTensor();
-    // let v = Vector4.Normalize(new Vector4(PowF(it.X.X, 0.5), PowF(it.Y.Y, 0.5), PowF(it.Z.Z, 0.5), 0.0));
-    // torque.X *= v.X;
-    // torque.Y *= v.Y;
-    // torque.Z *= v.Z;
-    // torque *= it;
-
-    // assume thrusters combined are capable of holding the weight of the vehicle
-    torque *= this.stats.s_mass;
-    // torque *= 1500.0;
-
-    // factor in where thrusters are
-    torque.X *= this.thrusterTensor.X;
-    torque.Y *= MaxF(this.thrusterTensor.Y, 1.0); // prevents bikes from rolling excessively
-    torque.Z *= this.thrusterTensor.Z;
-
-    // convert to global
-    torque = this.stats.d_orientation * torque;
-
-    if this.collisionTimer < FlightSettings.GetFloatN(n"collisionRecoveryDelay") + FlightSettings.GetFloatN(n"collisionRecoveryDuration") {
-      let collisionDampener = MinF(MaxF(0.0, (this.collisionTimer - FlightSettings.GetFloatN(n"collisionRecoveryDelay")) / FlightSettings.GetFloatN(n"collisionRecoveryDuration")), 1.0);
-      torque *= collisionDampener;
-      force *= collisionDampener;
-      this.collisionTimer += timeDelta;
-    }
-
-    this.force += force;
-    this.torque += torque;
+    this.NativeForceTail(force, torque, timeDelta);
   }
 
-  // The force tail in C++ (FlightForce, Flight/Force.hpp): replaces FlightMode.ApplyPhysics and OnUpdate's
-  // scaling after it. The params come from FlightSettings once a frame; the mode's force, torque and linearDamp and the
-  // collision timer are written back, so every reader is as with the script. No mode overrides ApplyPhysics.
+  // The force tail in C++ (FlightForce, Flight/Force.hpp): the damping, drag and aero redirect, then the scaling to
+  // world force and torque. The params come from FlightSettings once a frame; the mode's force, torque and linearDamp
+  // and the collision timer are written back.
   private final func NativeForceTail(force: Vector4, torque: Vector4, timeDelta: Float) -> Void {
     if !IsDefined(this.forceTail) {
       this.forceTail = new FlightForce();

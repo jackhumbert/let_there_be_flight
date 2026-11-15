@@ -44,6 +44,8 @@ public native class FlightStats extends IScriptable {
 
   // true when the plugin updates the dynamic half before FlightComponent.OnUpdate this frame
   public native let nativeUpdate: Bool;
+  // the dynamic half now, in C++ (FlightComponent.UpdateStats, a new FlightStats' first frame)
+  public native func UpdateNow() -> Void;
 
   private let reset: Bool;
   private let ipp: ref<IPositionProvider>;
@@ -86,38 +88,6 @@ public native class FlightStats extends IScriptable {
     this.s_forwardWeightTransferFactor = this.s_driveModelData.ForwardWeightTransferFactor();
   }
 
-  public final func UpdateDynamic() -> Void {
-    this.d_lastOrientation = this.d_orientation;
-    let orientation = this.vehicle.GetWorldOrientation();
-    this.d_orientation = orientation;
-    this.d_orientationChange = Quaternion.MulInverse(this.d_orientation, this.d_lastOrientation);
-
-    let angularVelocity = Quaternion.Conjugate(this.d_orientation) * Vector4.Vector3To4(this.vehicle.GetAngularVelocity());
-    this.d_angularAcceleration = (angularVelocity - this.d_angularVelocity);
-    this.d_angularVelocity = angularVelocity;
-
-    Quaternion.GetAxes(this.d_orientation, this.d_forward, this.d_right, this.d_up);
-    this.d_forward2D = Vector4.Normalize2D(this.d_forward);
-    let position: Vector4;
-    this.ipp.CalculatePosition(position);
-    this.d_velocity = this.vehicle.GetLinearVelocity();
-    this.d_localVelocity = Quaternion.Conjugate(this.d_orientation) * this.d_velocity;
-    this.d_localUp = Quaternion.Conjugate(this.d_orientation) * FlightUtils.Up();
-    this.d_speed = Vector4.Length(this.d_velocity);
-    this.d_speedRatio = this.d_speed / 100.0;
-    this.d_speedRatioSquared = this.d_speedRatio * this.d_speedRatio;
-    this.d_speed2D = Vector4.Length2D(this.d_velocity);
-    this.d_direction = Vector4.Normalize(this.d_velocity);
-    this.d_localDirection = Vector4.Normalize(this.d_localVelocity);
-    this.d_direction2D = Vector4.Normalize2D(this.d_velocity);
-    this.d_localDirection2D = Vector4.Normalize2D(this.d_localVelocity);
-    this.d_velocity2D = this.d_direction2D * this.d_speed2D;
-    this.d_visualPosition = this.d_position;
-    this.d_position =  position;
-    this.d_pitchDeg = 90.0 - Vector4.GetAngleBetween(this.d_forward, FlightUtils.Up());
-    this.d_rollDeg = Vector4.GetAngleDegAroundAxis(this.d_localUp, FlightUtils.Up(), FlightUtils.Forward());
-  }
-
   // what the script's own position provider gives, to compare with d_position (for tests)
   public func ScriptPosition() -> Vector4 {
     let p: Vector4;
@@ -125,11 +95,10 @@ public native class FlightStats extends IScriptable {
     return p;
   }
 
-  // The local angular velocity as UpdateDynamic works it out from the vehicle now, without writing a field (the
+  // The local angular velocity worked out from the vehicle now, without writing a field (the
   // bridge's StatsDiff compares d_angularVelocity with it). Read with the car parked or hovering still for an
   // exact comparison: in motion the values differ by up to a frame's motion, because the script values are read
-  // later in the frame. With nativeStats off the d_ fields are the script's from earlier in the frame, so the
-  // difference is near 0, not exactly 0.
+  // later in the frame.
   public func ScriptAngularVelocity() -> Vector4 {
     return Quaternion.Conjugate(this.vehicle.GetWorldOrientation()) * Vector4.Vector3To4(this.vehicle.GetAngularVelocity());
   }

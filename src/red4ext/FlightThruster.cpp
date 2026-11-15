@@ -246,9 +246,8 @@ bool IFlightThruster::UpdateNative(RED4ext::Vector4 aForce, RED4ext::Vector4 aTo
     return false;
   }
   const Natives &n = Resolve();
-  // A call that fails hands the thruster back to the script from the next frame. Force, torque and scale are already
-  // written by then, so that one frame is partly native; the script's Update runs whole from the next one. Each
-  // failure point has its own message and is logged once.
+  // A call that fails stops the thruster's animation from the next frame (force, torque and scale are already written
+  // for this one). Each failure point has its own message and is logged once.
   auto fail = [this](const char *aMessage) {
     WarnOnceByText(aMessage);
     motionReady = false;

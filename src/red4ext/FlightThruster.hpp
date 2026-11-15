@@ -27,15 +27,15 @@ public:
   bool attached = true;
 
   // Called by the script at the end of Start(): resolves the game's natives and the script fields once, fills the
-  // thruster's parameters and finds the animation controller. False (and the script path runs) when anything is
-  // missing or the effects do not fit.
+  // thruster's parameters and finds the animation controller. False (logged once; the thruster is then not animated)
+  // when anything is missing or the effects do not fit.
   bool SetupMotion();
 
-  // IFlightThruster.Update in C++ (Flight::Thruster*), called from the script when FlightComponent.nativeThrusters
-  // is on. False without doing anything when SetupMotion has not succeeded; the script then runs its own path.
+  // IFlightThruster.Update in C++ (Flight::Thruster*), called from the script each frame. False without doing anything
+  // when SetupMotion has not succeeded.
   bool UpdateNative(RED4ext::Vector4 aForce, RED4ext::Vector4 aTorque);
 
-  // JSON of what SetupMotion resolved, for the A/B: {"ready","multiply","findOnEntity","fx","anim"}
+  // JSON of what SetupMotion resolved: {"ready","multiply","findOnEntity","fx","anim"}
   RED4ext::CString MotionState();
 
   // not RTTI properties: C++-only members appended to the struct after `attached`. The scripts never see them; the
