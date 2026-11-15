@@ -13,7 +13,7 @@ The goal: the city should be flyable as it looks. Two sides to it:
 - Collision is added where the game draws something solid but gives it none: proxy-only geometry
   (for example the raised complex at (-1600, -680), 150 to 350 m up). `tools/world/proxy_colliders.py`
   cuts the proxy meshes not covered by real collision, terrain or a finer proxy into one collider
-  entity per 128 m tile (548 tiles), cooked with `tools/packaging/physx_cook`, placed by
+  entity per 128 m tile (566 tiles), cooked with `tools/packaging/physx_cook`, placed by
   `tools/pads/pad_sector.py` from `tools/world/proxy_collider_tiles.json`. The bake takes the same
   triangles so the Autopilot does not plan through them. Steps: `tools/navmap_bake/README.md`.
 - A proxy is only what the game draws from afar when it hides up close (`nearAutoHideDistance` above
