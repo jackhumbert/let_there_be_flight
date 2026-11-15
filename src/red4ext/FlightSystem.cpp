@@ -21,6 +21,7 @@
 #include <RED4ext/Scripting/Natives/Generated/Matrix.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 #include "Flight/Component.hpp"
+#include "Flight/DeveloperSettings.hpp"
 #include "Audio/ListenerDraw.hpp"
 #include <RED4ext/Scripting/Natives/Generated/ent/MeshComponent.hpp>
 #include <RED4ext/Scripting/Natives/UpdateManager.hpp>
@@ -96,7 +97,9 @@ void PrePhysics(UpdateBucketEnum bucket, FrameInfo& frame, JobQueue& job) {
                     matrix.W.Z);
     }
     fs->audio->UpdateListenerMatrix(useCamera ? camera : matrix);
-    ListenerDraw::Draw(useCamera ? camera : matrix, useCamera);
+    if (Flight::Developer().drawListener) {
+      ListenerDraw::Draw(useCamera ? camera : matrix, useCamera);
+    }
     fs->audio->UpdateVolume();
   }
 }

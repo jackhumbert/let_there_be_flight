@@ -32,6 +32,9 @@ struct DeveloperSettings {
   // LTBF's sound through the game's Wwise (Audio/Out, docs/design/wwise-audio.md), the default since step 7; false for
   // its own FMOD as before. Read once, when the plugin loads (developer.ini). FMOD plays when Wwise cannot start.
   bool wwiseAudio = true;
+  // where LTBF's sound is heard from, drawn each frame through the Debug Draw mod when it is installed
+  // (Audio/ListenerDraw); off for players
+  bool drawListener = false;
   // Ground contacts in flight: where two road meshes meet flush PhysX pushes a shape
   // sliding over the joint and throws the car. maxDepenetration: m/s the chassis body is pushed out of the ground at
   // most while flight owns it (PxRigidBody::setMaxDepenetrationVelocity; 0 leaves PhysX's own, unbounded; off: with
