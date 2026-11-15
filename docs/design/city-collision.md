@@ -44,7 +44,11 @@ next to it goes in too, so a check is tested both ways.
    visible meshes), or a bake mistake (the game's rays are clear).
 
 The other way round, drawn with no collision: `proxy_colliders.py` finds proxy-only geometry, and
-buildings its coverage rule misses are listed by hand in `tools/world/proxy_collider_force.json`.
-To find more after a bake change, `tools/world/opened_patches.py --old <spans> --new <spans>`
+buildings its coverage rule misses are listed in `tools/world/proxy_collider_force.json`. The
+rule counts a surface under the top real surface of its column as covered, so a proxy-only
+building under a roof that has collision keeps open walls; `proxy_colliders.py walls` finds
+those (walls drawn with a roof near above, nothing behind them and open air beside them,
+checked with rays from outside) and writes them as `walls_only` entries to read over and add:
+only their near-vertical faces get collision, since the roof has its own. To find more after a bake change, `tools/world/opened_patches.py --old <spans> --new <spans>`
 lists the space that opened and, per patch, how much of the drawn surface bounding it has no
 collision (a hollow building) or none does (open air the old bake closed).

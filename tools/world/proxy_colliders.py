@@ -18,6 +18,13 @@ Steps:
            collision that audit counted as covered: a surface under the top real surface of its
            column counts as covered there), their triangles inside each entry's box not within --tol
            of real collision -> forced.npz, for build --force.
+  walls    Finds what the audit's column rule misses: proxy walls with real collision near
+           above them (their roof), none within --tol (the game's or colliders.npz, LTBF's)
+           and open air beside them. Placements with at least --min-wall m2 of such wall are
+           checked with horizontal rays from outside (a ray passes when it hits the proxy and
+           no collision lies within 4 m past it); those where --pass-share of them pass are
+           grouped into buildings -> walls.json, walls_only entries for the force list (read
+           them over and copy them in, then force and build again).
   detail   For the kept placements whose proxy hides up close (nearAutoHideDistance > 0): what
            the game draws up close round their triangles (--margin), from the exterior sectors
            whose grid cell meets them: mesh nodes (mesh and transform), instanced groups (world
@@ -39,6 +46,7 @@ Steps:
   python proxy_colliders.py export W\\proxycol --raw <unbundled proxy meshes>
   python proxy_colliders.py audit W\\proxycol --tris <sectors.py output> --city x0,y0,x1,y1
       [--preview W\\proxycol\\audit.png]
+  python proxy_colliders.py walls W\\proxycol --tris <sectors.py output> [--terrain <folder>]
   python proxy_colliders.py detail W\\proxycol --sectors <raw ep1 _compiled\\default>
   python proxy_colliders.py drawn W\\proxycol --raw <unbundled meshes>
   python proxy_colliders.py build W\\proxycol --entities <out dir> [--tile 128] [--force] [--drawn]
@@ -741,6 +749,10 @@ def cmd_force(args):
     voxel, tile = meta["voxel"], meta["tile"]
     reach = max(1, int(math.ceil(args.tol / voxel)))
     entries = json.load(open(args.list))["buildings"]
+    audit_vox = np.zeros((0, 3), np.int64)
+    if any(e.get("walls_only") for e in entries):
+        u = np.load(os.path.join(args.work, "uncovered.npz"))["tris"]
+        audit_vox = np.unique(np.floor(sample(u, voxel * 0.75)[0] / voxel).astype(np.int64), axis=0)
     kept_t, kept_o, missing = [], [], 0
     for e in entries:
         lo, hi = np.array(e["box"][:3], float), np.array(e["box"][3:], float)
@@ -752,6 +764,9 @@ def cmd_force(args):
                 missing += 1
                 continue
             m = np.all(w.max(1) >= lo, 1) & np.all(w.min(1) <= hi, 1)
+            if e.get("walls_only"):  # only the near-vertical faces: the roof over them has collision
+                n = np.cross(w[:, 1] - w[:, 0], w[:, 2] - w[:, 0])
+                m &= np.abs(n[:, 2]) < 0.3 * np.linalg.norm(n, axis=1)
             tris.append(w[m])
             owner.append(np.full(m.sum(), i, np.int32))
         if not tris:
@@ -769,14 +784,46 @@ def cmd_force(args):
                     v = np.load(f).astype(np.int64)
                     v = v[np.all((v >= vlo) & (v <= vhi), axis=1)]
                     grid[tuple((v - vlo).T)] = True
+        if e.get("walls_only") and len(audit_vox):  # the audit's kept triangles are collision already
+            v = audit_vox[np.all((audit_vox >= vlo) & (audit_vox <= vhi), axis=1)]
+            grid[tuple((v - vlo).T)] = True
         solid = ndimage.binary_dilation(grid, np.ones((3, 3, 3), bool), iterations=reach)
-        pts, ids = sample(tris, voxel * 0.75)
-        v = np.clip(np.floor(pts / voxel).astype(np.int64) - vlo, 0, np.array(grid.shape) - 1)
-        out = np.zeros(len(tris), bool)
-        out[ids[~solid[tuple(v.T)]]] = True
-        kept_t.append(tris[out].astype(np.float32))
-        kept_o.append(owner[out])
-        print(f"({e['near'][0]}, {e['near'][1]}): {out.sum()} of {len(tris)} triangles, {tri_area(tris[out]).sum():.0f} m2",
+        shape = np.array(grid.shape)
+
+        def uncovered(t):
+            pts, ids = sample(t, voxel * 0.75)
+            cov = solid[tuple(np.clip(np.floor(pts / voxel).astype(np.int64) - vlo, 0, shape - 1).T)]
+            some_out, some_in = np.zeros(len(t), bool), np.zeros(len(t), bool)
+            some_out[ids[~cov]] = True
+            some_in[ids[cov]] = True
+            return some_out, some_in
+
+        n_in = len(tris)
+        if not e.get("walls_only"):
+            out = uncovered(tris)[0]
+            tris, owner = tris[out], owner[out]
+        else:  # as the audit: partly covered triangles cut down to --split, pieces centred in the box
+            done_t, done_o = [], []
+            while len(tris):
+                meets = np.all(tris.max(1) >= lo, 1) & np.all(tris.min(1) <= hi, 1)
+                tris, owner = tris[meets], owner[meets]
+                some_out, some_in = uncovered(tris)
+                edge = np.max(np.linalg.norm(tris - np.roll(tris, 1, axis=1), axis=2), axis=1)
+                within = np.all((tris.min(1) >= lo) & (tris.max(1) <= hi), axis=1)
+                split = some_out & (some_in | ~within) & (edge > args.split)
+                c = tris.mean(1)
+                keep = some_out & ~split & np.all((c >= lo) & (c <= hi), axis=1)
+                done_t.append(tris[keep])
+                done_o.append(owner[keep])
+                s = tris[split]
+                m01, m12, m20 = (s[:, 0] + s[:, 1]) / 2, (s[:, 1] + s[:, 2]) / 2, (s[:, 2] + s[:, 0]) / 2
+                tris = np.concatenate([np.stack(x, 1) for x in ((s[:, 0], m01, m20), (m01, s[:, 1], m12),
+                                                                (m20, m12, s[:, 2]), (m01, m12, m20))])
+                owner = np.tile(owner[split], 4)
+            tris, owner = np.concatenate(done_t), np.concatenate(done_o)
+        kept_t.append(tris.astype(np.float32))
+        kept_o.append(owner)
+        print(f"({e['near'][0]}, {e['near'][1]}): {len(tris)} triangles from {n_in}, {tri_area(tris).sum():.0f} m2",
               file=sys.stderr)
     tris = np.concatenate(kept_t) if kept_t else np.zeros((0, 3, 3), np.float32)
     owner = np.concatenate(kept_o) if kept_o else np.zeros(0, np.int32)
@@ -787,6 +834,238 @@ def cmd_force(args):
     np.savez(os.path.join(args.work, "forced.npz"), tris=tris, owner=owner)
     print(f"{len(entries)} buildings, {len(tris)} triangles ({tri_area(tris).sum() / 1e6:.3f} km2), "
           f"{missing} placements not found", file=sys.stderr)
+
+
+# ---------------------------------------------------------------------------------------- walls
+
+
+def _walls_tile(work, key, rows, ids, voxel, tile, tol, extra_vox, terrain_dir):
+    """One solid tile's proxy walls (near-vertical faces whose centre is in the tile) that the audit
+    counted covered only because real collision lies above them: per placement [wall m2, total wall
+    m2, box of those walls]."""
+    from scipy import ndimage
+
+    tx, ty = _tile_xy(key)
+    tris, owner = [], []
+    for i in ids:
+        w = _placed(work, rows[i])
+        if w is None:
+            continue
+        n = np.cross(w[:, 1] - w[:, 0], w[:, 2] - w[:, 0])
+        c = w.mean(1)
+        m = ((np.floor(c[:, 0] / tile) == tx) & (np.floor(c[:, 1] / tile) == ty)
+             & (np.abs(n[:, 2]) < 0.3 * np.linalg.norm(n, axis=1)))
+        if m.any():
+            tris.append(w[m])
+            owner.append(np.full(m.sum(), i, np.int32))
+    if not tris:
+        return {}
+    tris, owner = np.concatenate(tris), np.concatenate(owner)
+    reach = max(1, int(math.ceil(tol / voxel)))
+    p, sid = sample(tris, voxel * 0.75)
+    q = np.floor(p / voxel).astype(np.int64)
+    lo, hi = q.min(0) - reach - 4, q.max(0) + reach + 4
+    hi[2] = max(hi[2], lo[2] + 1)
+    grid = np.zeros(tuple(hi - lo + 1), bool)
+    for dx in (-1, 0, 1):
+        for dy in (-1, 0, 1):
+            for f in glob.glob(os.path.join(work, "solid", f"{tx + dx}_{ty + dy}_*.npy")):
+                v = np.load(f).astype(np.int64)
+                v = v[np.all((v >= lo) & (v <= hi), axis=1)]
+                grid[tuple((v - lo).T)] = True
+    shape = np.array(grid.shape)
+    v = np.clip(q - lo, 0, shape - 1)
+    # covered: real collision or LTBF's colliders (colliders.npz) within --tol
+    g2 = grid.copy()
+    ev = extra_vox[np.all((extra_vox >= lo) & (extra_vox <= hi), axis=1)]
+    g2[tuple((ev - lo).T)] = True
+    cov = ndimage.binary_dilation(g2, np.ones((3, 3, 3), bool), iterations=reach)[tuple(v.T)]
+    # a roof near above: real collision over the sample, no higher than 12 m over the placement's
+    # own top (a deck high above is not this building's roof)
+    own_top = {i: tris[owner == i][:, :, 2].max() for i in np.unique(owner)}
+    cs = np.cumsum(grid, axis=2, dtype=np.int32)
+    tops = np.array([own_top[o] for o in owner])[sid]
+    zmax = np.clip(np.floor((tops + 12) / voxel).astype(np.int64) - lo[2], 0, shape[2] - 1)
+    zmax = np.maximum(zmax, v[:, 2])
+    roof = cs[v[:, 0], v[:, 1], zmax] > cs[v[:, 0], v[:, 1], v[:, 2]]
+    # open air on one side: nothing 2 to 8 m out along the face's horizontal normal
+    n = np.cross(tris[:, 1] - tris[:, 0], tris[:, 2] - tris[:, 0])
+    n[:, 2] = 0
+    n /= np.linalg.norm(n, axis=1, keepdims=True) + 1e-12
+    ns = n[sid]
+    open_side = np.zeros(len(p), bool)
+    for sgn in (1, -1):
+        free = np.ones(len(p), bool)
+        for d in (2, 4, 6, 8):
+            vv = np.clip(np.floor((p + sgn * d * ns) / voxel).astype(np.int64) - lo, 0, shape - 1)
+            free &= ~grid[tuple(vv.T)]
+        open_side |= free
+    bad = ~cov & roof & open_side
+    if terrain_dir:  # above the terrain (-inf or NaN: none)
+        ground = np.load(os.path.join(terrain_dir, "terrain.npy"), mmap_mode="r")
+        tm = json.load(open(os.path.join(terrain_dir, "meta.json")))
+        cx = np.clip(np.floor((p[:, 0] - tm["origin"][0]) / tm["cell"]).astype(np.int64), 0, ground.shape[1] - 1)
+        cy = np.clip(np.floor((p[:, 1] - tm["origin"][1]) / tm["cell"]).astype(np.int64), 0, ground.shape[0] - 1)
+        bad &= ~(p[:, 2] <= np.asarray(ground[cy, cx]) + tol)
+    frac = np.bincount(sid, bad, len(tris)) / np.maximum(np.bincount(sid, None, len(tris)), 1)
+    area, full = tri_area(tris) * frac, tri_area(tris)
+    out = {}
+    for i in np.unique(owner):
+        m = owner == i
+        if area[m].sum() <= 0:
+            continue
+        t = tris[m][frac[m] > 0].reshape(-1, 3)
+        out[int(i)] = [float(area[m].sum()), float(full[m].sum()), [*t.min(0).tolist(), *t.max(0).tolist()]]
+    return out
+
+
+def _tile_xy(key):
+    return key // 2000 - 1000, key % 2000 - 1000
+
+
+def _first_hits(T, O, D):
+    """Per ray (origins O, unit directions D): distance to the first triangle of T hit, or inf."""
+    out = np.full(len(D), np.inf)
+    if not len(T):
+        return out
+    e1, e2 = T[:, 1] - T[:, 0], T[:, 2] - T[:, 0]
+    for k in range(len(D)):
+        p = np.cross(D[k], e2)
+        det = (e1 * p).sum(1)
+        ok = np.abs(det) > 1e-9
+        inv = np.where(ok, 1 / np.where(ok, det, 1), 0)
+        s = O[k] - T[:, 0]
+        u = (s * p).sum(1) * inv
+        q = np.cross(s, e1)
+        v = (q * D[k]).sum(1) * inv
+        t = (q * e2).sum(1) * inv
+        m = ok & (u >= 0) & (v >= 0) & (u + v <= 1) & (t > 1e-4)
+        if m.any():
+            out[k] = t[m].min()
+    return out
+
+
+def cmd_walls(args):
+    """Proxy walls drawn with no collision behind them, which the audit missed: candidate
+    walls_only entries for proxy_collider_force.json."""
+    import collision_at
+
+    rows = json.load(open(os.path.join(args.work, "placements.json")))
+    meta = json.load(open(os.path.join(args.work, "solid", "meta.json")))
+    voxel, tile = meta["voxel"], meta["tile"]
+    force = json.load(open(args.list))["buildings"]
+    have = {(p["sector"], str(p["gid"])) for b in force for p in b["placements"]}
+    skip = re.compile(args.skip) if args.skip else None
+    extra = np.load(os.path.join(args.work, "colliders.npz"))["tris"]
+    extra_vox = np.unique(np.floor(sample(extra, voxel * 0.75)[0] / voxel).astype(np.int64), axis=0)
+    city = [float(x) for x in args.city.split(",")] if args.city else None
+
+    # 1. per placement, the wall area with a roof near above, nothing within --tol and open air beside
+    tiles = collections.defaultdict(list)
+    for i, r in enumerate(rows):
+        if (sector_level(r["sector"]) > 4 or r["type"] == "worldTerrainProxyMeshNode"
+                or re.search(args.exclude, r["mesh"])):
+            continue
+        w = _placed(args.work, r)
+        if w is None:
+            continue
+        f = w.reshape(-1, 3)
+        lo, hi = f.min(0), f.max(0)
+        if city and (hi[0] < city[0] or lo[0] > city[2] or hi[1] < city[1] or lo[1] > city[3]):
+            continue
+        for tx in range(int(lo[0] // tile), int(hi[0] // tile) + 1):
+            for ty in range(int(lo[1] // tile), int(hi[1] // tile) + 1):
+                tiles[(tx + 1000) * 2000 + (ty + 1000)].append(i)
+    _glb_cache.clear()
+    found = {}
+    with ProcessPoolExecutor(args.jobs) as pool:
+        futs = [pool.submit(_walls_tile, args.work, k, rows, ids, voxel, tile, args.tol, extra_vox, args.terrain)
+                for k, ids in tiles.items()]
+        for n, f in enumerate(as_completed(futs)):
+            for i, (a, full, box) in f.result().items():
+                if i in found:
+                    e = found[i]
+                    e[0] += a
+                    e[1] += full
+                    e[2] = [min(e[2][j], box[j]) for j in range(3)] + [max(e[2][j], box[j]) for j in range(3, 6)]
+                else:
+                    found[i] = [a, full, box]
+            if (n + 1) % 200 == 0:
+                print(f"{n + 1}/{len(futs)} tiles", file=sys.stderr, flush=True)
+    cand = [dict(row=i, wall_m2=a, box=box) for i, (a, _, box) in found.items()
+            if a >= args.min_wall and (rows[i]["sector"], str(rows[i]["gid"])) not in have
+            and not (skip and skip.search(rows[i]["mesh"]))]
+    print(f"{len(found)} placements with such walls, {len(cand)} of at least {args.min_wall:.0f} m2 "
+          f"not listed or skipped", file=sys.stderr)
+
+    # 2. horizontal rays at each one's wall box from outside, 5 heights x 16 directions, against
+    # the placement's own triangles: a ray passes when it hits the proxy and no collision (the
+    # game's or LTBF's) lies within 4 m past that point
+    bounds = collision_at.bounds_index(args.tris)
+    extra = extra.reshape(-1, 3, 3).astype(np.float64)
+    cache = {}
+
+    def sector_tris(stem):
+        if stem not in cache:
+            if len(cache) > 60:
+                cache.clear()
+            cache[stem] = np.load(os.path.join(args.tris, stem + ".npz"))["tris"].reshape(-1, 3, 3).astype(np.float64)
+        return cache[stem]
+
+    def tris_in(T, lo, hi):
+        return T[np.all(T.max(1) >= lo, 1) & np.all(T.min(1) <= hi, 1)]
+
+    cand.sort(key=lambda c: (c["box"][0] // 256, c["box"][1] // 256))
+    ok = []
+    for n, c in enumerate(cand):
+        b = np.array(c["box"])
+        lo, hi = b[:3] - 10, b[3:] + 10
+        lo[2], hi[2] = b[2] - 2, b[5] + 2
+        C = [tris_in(extra, lo, hi)] + [tris_in(sector_tris(s), lo, hi) for s, sb in bounds.items()
+                                        if not any(sb[k + 3] < lo[k] or sb[k] > hi[k] for k in range(3))]
+        P = tris_in(_placed(args.work, rows[c["row"]]), lo, hi)
+        mid, R = (b[:3] + b[3:]) / 2, max(b[3] - b[0], b[4] - b[1]) / 2 + 8
+        D = np.array([[math.cos(a * math.pi / 8), math.sin(a * math.pi / 8), 0.0] for a in range(16)] * 5)
+        Z = np.repeat(np.linspace(b[2], b[5], 7)[1:-1], 16)
+        O = np.stack([mid[0] - D[:, 0] * R, mid[1] - D[:, 1] * R, Z], 1)
+        tp, tc = _first_hits(P, O, D), _first_hits(np.concatenate(C), O, D)
+        c["proxy_rays"], c["pass_rays"] = int(np.isfinite(tp).sum()), int((np.isfinite(tp) & (tc > tp + 4)).sum())
+        if c["proxy_rays"] >= 20 and c["pass_rays"] >= args.pass_share * c["proxy_rays"]:
+            ok.append(c)
+        if (n + 1) % 100 == 0:
+            print(f"{n + 1}/{len(cand)} ray checked", file=sys.stderr, flush=True)
+
+    # 3. into buildings: overlapping wall boxes (grown 6 m), largest first
+    groups = []
+    for c in sorted(ok, key=lambda c: -c["wall_m2"]):
+        b = c["box"]
+        g = [b[0] - 6, b[1] - 6, b[2] - 6, b[3] + 6, b[4] + 6, b[5] + 6]
+        hit = [G for G in groups if not any(g[k + 3] < G["box"][k] or g[k] > G["box"][k + 3] for k in range(3))]
+        G = hit[0] if hit else {"box": g, "items": []}
+        if not hit:
+            groups.append(G)
+        for H in hit[1:]:
+            G["items"] += H["items"]
+            G["box"] = [min(G["box"][k], H["box"][k]) for k in range(3)] + [max(G["box"][k], H["box"][k]) for k in range(3, 6)]
+            groups.remove(H)
+        G["items"].append(c)
+        G["box"] = [min(G["box"][k], g[k]) for k in range(3)] + [max(G["box"][k], g[k]) for k in range(3, 6)]
+    out = []
+    for G in sorted(groups, key=lambda G: -sum(c["wall_m2"] for c in G["items"])):
+        box = [float(round(v)) for v in G["box"]]
+        items = sorted(G["items"], key=lambda c: -c["wall_m2"])
+        out.append(dict(near=[round((box[0] + box[3]) / 2), round((box[1] + box[4]) / 2)], box=box,
+                        wall_m2=round(sum(c["wall_m2"] for c in items)),
+                        rays_through=f"{sum(c['pass_rays'] for c in items)}/{sum(c['proxy_rays'] for c in items)}",
+                        walls_only=True,
+                        placements=[dict(sector=rows[c["row"]]["sector"], gid=str(rows[c["row"]]["gid"]),
+                                         mesh=rows[c["row"]]["mesh"], wall_m2=round(c["wall_m2"], 1)) for c in items]))
+    json.dump(out, open(os.path.join(args.work, "walls.json"), "w"), indent=1)
+    print(f"{len(ok)} placements pass, {len(out)} buildings, {sum(e['wall_m2'] for e in out)} m2 -> walls.json",
+          file=sys.stderr)
+    for e in out[:20]:
+        print(f"  {e['wall_m2']:6d} m2 near {e['near']} z {e['box'][2]:.0f}..{e['box'][5]:.0f} rays {e['rays_through']}"
+              f"  {e['placements'][0]['mesh'].rsplit(chr(92), 1)[-1]}", file=sys.stderr)
 
 
 def cmd_build(args):
@@ -920,6 +1199,20 @@ def main():
     p.add_argument("work")
     p.add_argument("--list", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "proxy_collider_force.json"))
     p.add_argument("--tol", type=float, default=4.0, help="a surface within this of real collision is covered (m)")
+    p.add_argument("--split", type=float, default=6.0, help="walls_only entries: cut partly covered triangles down to this edge (m)")
+    p = sub.add_parser("walls")
+    p.add_argument("work")
+    p.add_argument("--tris", required=True, help="sectors.py output (<sector>.npz world triangles), for the ray check")
+    p.add_argument("--terrain", help="rasterize.py --no-collision folder: walls on or under the terrain do not count")
+    p.add_argument("--list", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "proxy_collider_force.json"))
+    p.add_argument("--city", help="x0,y0,x1,y1: only placements reaching inside")
+    p.add_argument("--exclude", default=r"(?i)ocean_patch", help="as audit")
+    p.add_argument("--skip", default=r"(?i)billboard|antenna|stadium_supports",
+                   help="regex on the mesh path: not listed (billboards, antennas: thin, and flown past)")
+    p.add_argument("--tol", type=float, default=4.0, help="a wall within this of collision is covered (m)")
+    p.add_argument("--min-wall", type=float, default=100.0, help="uncovered wall m2 for a placement to count")
+    p.add_argument("--pass-share", type=float, default=0.25, help="share of the rays hitting the proxy that pass through")
+    p.add_argument("--jobs", type=int, default=10)
     p = sub.add_parser("detail")
     p.add_argument("work")
     p.add_argument("--sectors", required=True)
@@ -947,7 +1240,7 @@ def main():
     p.add_argument("--node-id", type=int, default=1000000000010000)
     args = ap.parse_args()
     {"scan": cmd_scan, "export": cmd_export, "solid": cmd_solid, "audit": cmd_audit,
-     "force": cmd_force, "detail": cmd_detail, "drawn": cmd_drawn, "build": cmd_build}[args.cmd](args)
+     "force": cmd_force, "walls": cmd_walls, "detail": cmd_detail, "drawn": cmd_drawn, "build": cmd_build}[args.cmd](args)
 
 
 if __name__ == "__main__":
