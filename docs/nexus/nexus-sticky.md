@@ -16,7 +16,7 @@ REQUIREMENTS (exact versions, please check before reporting "it doesn't load")
 * ArchiveXL 1.27.0 or newer
 * TweakXL 1.11.0 or newer
 * Redscript 0.5.31 or newer
-* Input Loader v0.2.3 or newer
+* Input Loader v0.2.4 or newer
 * Mod Settings v0.2.21 or newer (optional, but recommended - this is where LTBF's settings
   live, see below)
 

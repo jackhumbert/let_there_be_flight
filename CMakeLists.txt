@@ -418,7 +418,7 @@ target_link_libraries(${MOD_SLUG}.packed.reds PUBLIC mod_settings.packed.reds)
 configure_folder_file(readme.md)
 configure_folder_file(license.md)
 
-mod_require("Input Loader" 0.2.3)
+mod_require("Input Loader" 0.2.4)
 mod_require("Mod Settings" 0.2.23 OPTIONAL)
 
 configure_uninstall()

@@ -177,8 +177,9 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
       std::filesystem::remove_all(inputXML);
     }
 
-    // Input Loader releases (through v0.2.3) report 0.1.1 from Query(), so the floor must stay there
-    auto inputLoader_version = RED4EXT_SEMVER(0, 1, 1);
+    // Input Loader reports its real version from v0.2.4 on (the releases before it all said 0.1.1), and
+    // v0.2.4 is the first that reads game 2.5's input xmls
+    auto inputLoader_version = RED4EXT_SEMVER(0, 2, 4); // requirements.md, CMakeLists.txt
     auto archiveXL_version = RED4EXT_SEMVER(1, 28, 3); // world node mutations (requirements.md, CMakeLists.txt)
     auto tweakXL_version = RED4EXT_SEMVER(1, 12, 0);
     auto modSettings_version = RED4EXT_SEMVER(0, 2, 23);
