@@ -3,9 +3,6 @@ public native class FlightStats extends IScriptable {
   public let vehicle: wref<VehicleObject>;
   public let s_record: wref<Vehicle_Record>;
   public let s_driveModelData: wref<VehicleDriveModelData_Record>;
-  public let s_engineData: wref<VehicleEngineData_Record>;
-  public let s_wheelDimensions: wref<VehicleWheelDimensionsSetup_Record>;
-  public let s_wheelDriving: wref<VehicleWheelDrivingSetup_Record>;
   public native let s_mass: Float;
   public native let s_centerOfMass: Vector3;
   public native let s_momentOfInertia: Vector4;
@@ -47,23 +44,16 @@ public native class FlightStats extends IScriptable {
   // the dynamic half now, in C++ (FlightComponent.UpdateStats, a new FlightStats' first frame)
   public native func UpdateNow() -> Void;
 
-  private let reset: Bool;
   private let ipp: ref<IPositionProvider>;
-  private let iop: ref<IOrientationProvider>;
 
   public static func Create(vehicle: wref<VehicleObject>) -> ref<FlightStats> {
     let self: ref<FlightStats> = new FlightStats();
     self.vehicle = vehicle;
-    self.reset = false;
     self.UpdateStatic();
     self.ipp = IPositionProvider.CreateEntityPositionProvider(self.vehicle, self.s_centerOfMass);
     self.ipp.CalculatePosition(self.d_position);
     self.d_orientation = self.vehicle.GetWorldOrientation();
     return self;
-  }
-
-  public func Reset() -> Void {
-    this.reset = true;
   }
 
   public final func UpdateStatic() -> Void {
@@ -75,8 +65,6 @@ public native class FlightStats extends IScriptable {
       this.s_brakingFrictionFactor = 1.4;
     }
     this.s_airResistanceFactor = this.s_driveModelData.AirResistanceFactor();
-    this.s_wheelDimensions = this.s_record.VehWheelDimensionsSetup();
-    this.s_wheelDriving = this.s_driveModelData.WheelSetup();
     this.s_mass = this.vehicle.GetTotalMass(); // might be dynamic? pulled from otherPhysicsData->totalMass
     this.s_centerOfMass = this.vehicle.GetCenterOfMass();
     let it = this.vehicle.GetInertiaTensor();

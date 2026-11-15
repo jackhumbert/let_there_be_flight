@@ -12,7 +12,6 @@ public class FlightThrusterFL extends IFlightThruster {
 
     this.isFront = true;
     this.parentSlotName = n"wheel_front_left";
-    this.radiusName = n"veh_rad_w_f_l";
     this.deviationName = n"veh_press_w_f_l";
     return this;
   }
@@ -33,7 +32,6 @@ public class FlightThrusterFR extends IFlightThruster {
     this.isFront = true;
     this.isRight = true;
     this.parentSlotName = n"wheel_front_right";
-    this.radiusName = n"veh_rad_w_f_r";
     this.deviationName = n"veh_press_w_f_r";
     return this;
   }
@@ -53,7 +51,6 @@ public class FlightThrusterBR extends IFlightThruster {
 
     this.isRight = true;
     this.parentSlotName = n"wheel_back_right";
-    this.radiusName = n"veh_rad_w_b_r";
     this.deviationName = n"veh_press_w_b_r";
     return this;
   }
@@ -72,7 +69,6 @@ public class FlightThrusterBL extends IFlightThruster {
     this.meshComponent.SetParentTransform(n"vehicle_slots", this.slotName);
 
     this.parentSlotName = n"wheel_back_left";
-    this.radiusName = n"veh_rad_w_b_l";
     this.deviationName = n"veh_press_w_b_l";
     return this;
   }
@@ -93,7 +89,6 @@ public class FlightThrusterFLB extends IFlightThruster {
     this.isFront = true;
     this.isB = true;
     this.parentSlotName = n"wheel_front_left_b";
-    this.radiusName = n"veh_rad_w_1_l";
     this.deviationName = n"veh_press_w_1_l";
     return this;
   }
@@ -115,7 +110,6 @@ public class FlightThrusterFRB extends IFlightThruster {
     this.isRight = true;
     this.isB = true;
     this.parentSlotName = n"wheel_front_right_b";
-    this.radiusName = n"veh_rad_w_1_r";
     this.deviationName = n"veh_press_w_1_r";
     return this;
   }
@@ -136,7 +130,6 @@ public class FlightThrusterBLB extends IFlightThruster {
     this.isFront = false;
     this.isB = true;
     this.parentSlotName = n"wheel_back_left_b";
-    this.radiusName = n"veh_rad_w_1_l";
     this.deviationName = n"veh_press_w_1_l";
     return this;
   }
@@ -158,7 +151,6 @@ public class FlightThrusterBRB extends IFlightThruster {
     this.isRight = true;
     this.isB = true;
     this.parentSlotName = n"wheel_back_right_b";
-    this.radiusName = n"veh_rad_w_1_r";
     this.deviationName = n"veh_press_w_1_r";
     return this;
   }
@@ -179,7 +171,6 @@ public class FlightThrusterBLC extends IFlightThruster {
     this.isFront = false;
     this.isB = true;
     this.parentSlotName = n"wheel_back_left_c";
-    this.radiusName = n"veh_rad_w_2_l";
     this.deviationName = n"veh_press_w_2_l";
     return this;
   }
@@ -199,7 +190,6 @@ public class FlightThrusterBRC extends IFlightThruster {
     this.isRight = true;
     this.isB = true;
     this.parentSlotName = n"wheel_back_right_c";
-    this.radiusName = n"veh_rad_w_2_r";
     this.deviationName = n"veh_press_w_2_r";
     return this;
   }
@@ -218,7 +208,6 @@ public class FlightThrusterBLD extends IFlightThruster {
     this.isFront = false;
     this.isB = true;
     this.parentSlotName = n"wheel_back_left_d";
-    this.radiusName = n"veh_rad_w_3_l";
     this.deviationName = n"veh_press_w_3_l";
     return this;
   }
@@ -238,7 +227,6 @@ public class FlightThrusterBRD extends IFlightThruster {
     this.isRight = true;
     this.isB = true;
     this.parentSlotName = n"wheel_back_right_d";
-    this.radiusName = n"veh_rad_w_3_r";
     this.deviationName = n"veh_press_w_3_r";
     return this;
   }

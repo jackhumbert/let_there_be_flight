@@ -21,7 +21,6 @@ public class FlightThrusterFront extends IFlightThruster {
     this.motionKind = 1;
     this.isFront = true;
     this.parentSlotName = n"wheel_front_spring";
-    this.radiusName = n"None";
     this.deviationName = n"None";
     return this;
   }
@@ -108,7 +107,6 @@ public class FlightThrusterBack extends IFlightThruster {
 
     this.motionKind = 2;
     this.parentSlotName = n"axle_back";
-    this.radiusName = n"None";
     this.deviationName = n"None";
     return this;
   }

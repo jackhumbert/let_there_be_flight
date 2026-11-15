@@ -212,36 +212,24 @@ public native class FlightSettings extends IScriptable {
     FlightSettings.SetVector3("inputPitchPID", 1.0, 0.2, 0.05);
     FlightSettings.SetVector3("inputRollPID", 1.0, 0.5, 0.0);
 
-    FlightSettings.SetVector3("aeroYawPID", 1.0, 0.01, 1.0);
-    FlightSettings.SetVector3("aeroPitchPID", 1.0, 0.01, 1.0);
 
     FlightSettings.SetVector3("hoverModePID", 1.0, 0.005, 0.5);
 
-    FlightSettings.SetFloat("brakeOffset", 0.0);
     FlightSettings.SetFloat("collisionRecoveryDelay", 0.8);
     FlightSettings.SetFloat("collisionRecoveryDuration", 0.8);
     FlightSettings.SetFloat("defaultHoverHeight", 3.50);
-    FlightSettings.SetFloat("distance", 0.0);
-    FlightSettings.SetFloat("distanceEase", 0.1);
 
     // FlightSettings.SetFloat("flyModeLiftFactor", 20.0);
 
     FlightSettings.SetVector3("FPVCameraOffset", 0.0, 0.0, -0.5);
 
-    FlightSettings.SetFloat("fwtfCorrection", 0.0);
     FlightSettings.SetFloat("hoverClamp", 10.0);
     // FlightSettings.SetFloat("hoverModeLiftFactor", 8.0);
     FlightSettings.SetFloat("isFlightUIActive", 1.0);
     FlightSettings.SetFloat("lockFPPCameraInFlight", 1.0);
-    FlightSettings.SetFloat("lookAheadMax", 10.0);
-    FlightSettings.SetFloat("lookAheadMin", 1.0);
     FlightSettings.SetFloat("hoverModeMaxHoverHeight", 7.0);
     FlightSettings.SetFloat("hoverModeMinHoverHeight", 1.0);
-    FlightSettings.SetFloat("normalEase", 0.3);
-    FlightSettings.SetFloat("referenceZ", 0.0);
-    FlightSettings.SetFloat("secondCounter", 0.0);
 
-    FlightSettings.SetFloat("surgeOffset", 0.5);
 
     // angular damping stability cap, see FlightMode.CapDamping
     FlightSettings.SetFloat("dampStabilityK", 0.19);
@@ -250,7 +238,6 @@ public native class FlightSettings extends IScriptable {
     FlightSettings.SetFloat("pitchWithLift", 0.0);
     FlightSettings.SetFloat("pitchWithSurge", 0.0);
 
-    FlightSettings.SetFloat("yawD", 3.0);
 
     FlightSettings.SetBool("inTPPDriverCombat", false);
   }

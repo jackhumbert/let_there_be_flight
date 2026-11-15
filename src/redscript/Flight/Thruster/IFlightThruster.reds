@@ -22,11 +22,9 @@ public abstract native class IFlightThruster extends IScriptable {
   public let motionKind: Int32 = 0; // Flight::ThrusterShape: 0 car, 1 bike front, 2 bike back (set at Create)
 
   public let parentSlotName: CName;
-  public let radiusName: CName;
   public let deviationName: CName;
 
   public let fxs: array<ref<IFlightThrusterFX>>;
-  public let bone: Float = 0.0;
   public let boneLerpAmount: Float = 0.25;
   public let maxThrusterAnglePitch: Float = 90.0;
   public let maxThrusterAngleOutside: Float = 60.0;
@@ -40,7 +38,6 @@ public abstract native class IFlightThruster extends IScriptable {
   public let torque: Vector4;
   public let isRight: Bool = false;
   public let isFront: Bool = false;
-  public let isMotorcycle: Bool = false;
   public let isB: Bool = false;
   public let id: String;
   public let wheelIndex: Int32;
@@ -185,7 +182,6 @@ public abstract native class IFlightThruster extends IScriptable {
   let torqueThreshold: Float = 1.0;
 
   let animDeviation: Float = 0.3;
-  let animRadius: Float = 0.0;
 
   public func Detach() {
     this.attached = false;

@@ -33,8 +33,6 @@ public native class FlightController extends IScriptable {
   private let sys: ref<FlightSystem>;
   private let gameInstance: GameInstance;
   private let player: wref<PlayerPuppet>;
-  private let m_callbackID: ref<CallbackHandle>;
-  private let m_vehicleCollisionBBStateID: ref<CallbackHandle>;
   // private let ui: ref<FlightControllerUI>;
   // public final func SetUI(ui: ref<FlightControllerUI>) {
   //   this.ui = ui;
@@ -74,15 +72,11 @@ public native class FlightController extends IScriptable {
   public native let outAngularBrake: Float;
   public native func StepInputs() -> Void;
 
-  private let secondCounter: Float;
 
-  public let isInAnyMenu: Bool;
-  public let audioEnabled: Bool;
 
   public let isTPP: Bool;
 
   private let uiBlackboard: ref<IBlackboard>;
-  private let uiSystemBB: ref<UI_SystemDef>;
 
   public let initialized: Bool;
   public let usingKB: Bool;
@@ -219,12 +213,9 @@ public native class FlightController extends IScriptable {
     this.pitch = InputPID.Create(0.5, 1.0);
     this.yaw = InputPID.Create(0.5, 1.0);
 
-    this.secondCounter = 0.0;
 
-    this.audioEnabled = true;
 
     this.uiBlackboard = GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().UI_System);
-    this.uiSystemBB = GetAllBlackboardDefs().UI_System;
 
     this.initialized = true;
 
@@ -408,14 +399,6 @@ public native class FlightController extends IScriptable {
   // stays lit whatever vanilla says (Extensions/AutoDriveController.reds).
   private func RefreshAutodriveHint() -> Void {
     GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().UI_AutodriveData).SignalBool(GetAllBlackboardDefs().UI_AutodriveData.AutoDriveAvailable);
-  }
-
-  private func ShowMoreInfo() -> Void {
-    // very intrusive - need a prompt/confirmation that they want this popup, eg Detailed Info / About
-    let shardUIevent = new NotifyShardRead();
-    shardUIevent.title = "Flight Control: Now Available";
-    shardUIevent.text = "Your new car is equiped with the state-of-the-art Flight Control!";
-    GameInstance.GetUISystem(this.gameInstance).QueueEvent(shardUIevent);
   }
 
   private func SetupActions() -> Void {
@@ -982,48 +965,6 @@ public native class FlightController extends IScriptable {
     };
     // data.groupId = n"FlightController";
     return data;
-  }
-
-  public static func HideHintFromSource(source: CName) -> ref<DeleteInputHintBySourceEvent> {
-    let evt: ref<DeleteInputHintBySourceEvent> = new DeleteInputHintBySourceEvent();
-    evt.source = source;
-    evt.targetHintContainer = n"GameplayInputHelper";
-    return evt;
-  }
-
-  // Method to add new widget requires parent widget
-  // inkCompoundWidget is a base class for all widget types that can have children
-  // Usually it's inkCanvas or inkFlex containers with absolute positioning
-  // And inkHorizontalPanel or inkVerticalPanel containers for auto layouts
-  public static func HUDStatusSetup(parent: wref<inkCompoundWidget>) -> ref<inkText> {
-    let flightControlStatus: ref<inkText> = new inkText();
-    flightControlStatus.SetName(n"flightControlStatus");
-    // Add widget instance to the parent
-    flightControlStatus.Reparent(parent);
-
-    // Set font
-    flightControlStatus.SetFontFamily("base\\gameplay\\gui\\fonts\\industry\\industry.inkfontfamily");
-    flightControlStatus.SetFontStyle(n"Medium");
-    flightControlStatus.SetFontSize(24);
-    flightControlStatus.SetLetterCase(textLetterCase.UpperCase);
-
-    // Set color
-    flightControlStatus.SetTintColor(new HDRColor(0.368627, 0.964706, 1.0, 1.0));
-
-    // Set content
-    flightControlStatus.SetText("You shouldn't see this!");
-    // flightControlStatus.SetHorizontalAlignment(textHorizontalAlignment.Center);
-    // flightControlStatus.SetAnchor(inkEAnchor.TopCenter);
-
-
-    // Set widget position relative to parent
-    // Altough the position is absolute for FHD resoltuion,
-    // it will be adapted for the current resoltuion
-    flightControlStatus.SetMargin(100, 1802, 0, 0);
-
-    // Set widget size
-    flightControlStatus.SetSize(220.0, 50.0);
-    return flightControlStatus;
   }
 
 }

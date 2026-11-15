@@ -3,10 +3,6 @@ public class VehicleFlightDef extends BlackboardDefinition {
   public let IsActive: BlackboardID_Bool;
   public let Mode: BlackboardID_Int;
   public let IsUIActive: BlackboardID_Bool;
-  public let Orientation: BlackboardID_Quat;
-  public let Force: BlackboardID_Vector4;
-  public let Torque: BlackboardID_Vector4;
-  public let Position: BlackboardID_Vector4;
   public let Pitch: BlackboardID_Float;
   public let Roll: BlackboardID_Float;
   public let InMountedVehicleCombat: BlackboardID_Bool;

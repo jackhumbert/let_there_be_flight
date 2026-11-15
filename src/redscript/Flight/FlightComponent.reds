@@ -78,8 +78,6 @@ public native class FlightComponent extends GameComponent {
   // let hoverPID: ref<PID>;
   let pitchPID: ref<PID>;
   let rollPID: ref<PID>;
-  let aeroYawPID: ref<PID>;
-  let pitchAeroPID: ref<PID>;
 
   private let sqs: ref<SpatialQueriesSystem>;
 
@@ -87,8 +85,6 @@ public native class FlightComponent extends GameComponent {
   public let br_tire: ref<IPlacedComponent>;
   public let fl_tire: ref<IPlacedComponent>;
   public let fr_tire: ref<IPlacedComponent>;
-  public let hood: ref<IPlacedComponent>;
-  public let trunk: ref<IPlacedComponent>;
 
   public let collisionTimer: Float;
 
@@ -116,10 +112,6 @@ public native class FlightComponent extends GameComponent {
 
   protected final func GetVehicle() -> wref<VehicleObject> {
     return this.GetEntity() as VehicleObject;
-  }
-
-  private final func GetMyPS() -> ref<FlightComponentPS> {
-    return this.GetPS() as FlightComponentPS;
   }
 
   protected cb func OnVehicleOnPartDetached(evt: ref<VehicleOnPartDetachedEvent>) -> Bool {
@@ -232,8 +224,6 @@ public native class FlightComponent extends GameComponent {
     // this.hoverPID = PID.Create(1.0, 0.01, 0.1);
     this.pitchPID = PID.Create(FlightSettings.GetVector3("inputPitchPID"));
     this.rollPID =  PID.Create(FlightSettings.GetVector3("inputRollPID"));
-    this.aeroYawPID = PID.Create(FlightSettings.GetVector3("aeroYawPID"));
-    this.pitchAeroPID = PID.Create(FlightSettings.GetVector3("aeroPitchPID"));
 
     // this.sys = FlightSystem.GetInstance();
     // this.sys.RegisterComponent(this);
@@ -329,12 +319,9 @@ public native class FlightComponent extends GameComponent {
     };
   }
 
-  private func GetPitch() -> Float{
+  // the engine sound's pitch for this car, by its mass (IFlightThruster.Start)
+  public func GetPitch() -> Float {
     return ClampF(700.0 / this.GetVehicle().GetTotalMass() + 0.5, 0.5, 1.5);
-  }
-
-  public func GetFlightModeIndex() -> Int32 {
-    return this.mode;
   }
 
   public func GetFlightMode() -> ref<FlightMode> {
@@ -366,14 +353,6 @@ public native class FlightComponent extends GameComponent {
       }
     }
     return this.modes[mode];
-  }
-
-  public func GetNextFlightModeDescription() -> String {
-    if ArraySize(this.modes) > 0 {
-      return this.GetNextFlightMode(1).GetDescription();
-    } else {
-      return "None";
-    }
   }
 
   // callbacks
@@ -566,8 +545,6 @@ public native class FlightComponent extends GameComponent {
       this.pitchPID.Reset();
       // this.rollGroundPID.Reset();
       this.rollPID.Reset();
-      this.aeroYawPID.Reset();
-      this.pitchAeroPID.Reset();
 
       // the player's mode comes from the controller: pick it before activating, or the mode the
       // component last flew in (the Autopilot, after a landing) is the one activated
@@ -597,10 +574,6 @@ public native class FlightComponent extends GameComponent {
   let smoothTorque: Vector4;
   let isDestroyed: Bool;
   let hasExploded: Bool;
-  let lastVelocity: Vector4;
-  public let accelerationFx: ref<FxInstance>;
-  public let smoothFx: Float = 1.0;
-  public let accThreshold: Float = 1.0;
 
   // Called by the plugin (Flight/Component.cpp) when the game lets go of a teleported car: the
   // controllers and the modes start over at the new place.
@@ -610,8 +583,6 @@ public native class FlightComponent extends GameComponent {
     this.hoverGroundPID.Reset();
     this.pitchPID.Reset();
     this.rollPID.Reset();
-    this.aeroYawPID.Reset();
-    this.pitchAeroPID.Reset();
     if this.mode >= 0 && this.mode < ArraySize(this.modes) {
       this.modes[this.mode].Teleported();
     }
@@ -1091,8 +1062,6 @@ public native class FlightComponent extends GameComponent {
       this.fr_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterFR") as IPlacedComponent;
       this.bl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterBL") as IPlacedComponent;
       this.br_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterBR") as IPlacedComponent;
-      this.hood = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"VehicleHoodEmitter") as IPlacedComponent;
-      this.trunk = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"VehicleTrunkEmitter") as IPlacedComponent;
     } else {
       this.fl_tire = this.GetVehicle().GetVehicleComponent().FindComponentByName(n"WheelAudioEmitterFront") as IPlacedComponent;
       this.fr_tire = this.fl_tire;
@@ -1240,7 +1209,6 @@ public native class FlightComponent extends GameComponent {
 	// }
 
 
-  protected let m_attacksSpawned: array<ref<EffectInstance>>;
 
   public func OnFireWeapon(placeholderQuat: Quaternion, weaponItem:TweakDBID, attachmentSlot: TweakDBID) -> Void {
     // let weapon = TweakDBInterface.GetWeaponItemRecord(weaponItem);
