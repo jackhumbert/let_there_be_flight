@@ -26,8 +26,6 @@
   - `engine-synth.md`: the thruster sound, made in C++ on the old FMOD event's parameters.
   - `native-ports.md`: the plan for moving the per-frame redscript (follower, force path, modes,
     thrusters) to C++, and M6, the Autopilot as a C++ mode (steps 2 to 4 built).
-  - `autopilot-regressions.md`: every Autopilot and summon problem found in game, and the test that
-    should catch it again offline.
 - `release.md`: cutting a release, Nexus Mods.
 - `game-patch.md`: what a game patch breaks, the update checklist, reverse engineering, the SDK v1 migration.
 - `nexus/`: the Nexus page texts (sticky, settings guide).

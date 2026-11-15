@@ -1,7 +1,8 @@
 // Whole Autopilot trips flown offline (tools/flightsim/Trip.hpp; docs/design/native-ports.md, M6 step 5): the
 // Autopilot's own C++ from the engage to "landed" on flightsim's rigid body with the real force tail, over a nav map
 // made in memory, plans handed over 0.5 s after they are asked for, boxes for what the map leaves out. Each test names
-// the entries of docs/design/autopilot-regressions.md it checks; every trip is held to CheckTrip (tests kind 2).
+// the in-game problems it checks (numbered as in the list of Autopilot problems found in game); every trip is held
+// to CheckTrip (tests kind 2).
 #include "check.hpp"
 
 #include "nav_fixture.hpp"
