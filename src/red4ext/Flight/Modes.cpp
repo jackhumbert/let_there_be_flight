@@ -39,6 +39,34 @@ ModeOutput AttitudeLift(const StatsState &s, const StatsStatic &st, const Contro
   return out;
 }
 
+void HoverFlyClassicActivate(HoverFlyClassicState &aState, float aDistance, const StandardParams &p) {
+  aState.hoverHeight = std::fmax(aDistance, p.minHoverHeight);
+}
+
+ModeOutput HoverFlyClassic(HoverFlyClassicState &aState, const StatsState &s, const StatsStatic &st, const Controls &c,
+                           const StandardParams &p, const HoverFlyClassicParams &k, Pid &pitchPid, Pid &rollPid,
+                           Pid &hoverPid, const Ground &g, float dt) {
+  const float lastHovering = aState.hovering;
+  aState.hovering =
+      g.found ? std::fmin(std::fmax(1.0f - (g.distance - p.minHoverHeight) / (p.maxHoverHeight - p.minHoverHeight),
+                                    0.0f),
+                          1.0f)
+              : 0.0f;
+  // coming down into the band: hover at the height it came in at
+  if (lastHovering == 0.0f && aState.hovering > 0.0f)
+    aState.hoverHeight = g.distance;
+  aState.hoverHeight = std::fmax(aState.hoverHeight + c.lift * k.heightCorrection, p.minHoverHeight);
+
+  const float heightDifference = aState.hoverHeight - g.distance;
+  const Vec3 idealNormal = Interpolate(kUp, g.normal, aState.hovering);
+  const float hoverCorrection = PidCorrectionClamped(hoverPid.state, hoverPid.gains, heightDifference, dt, p.hoverClamp);
+  const float flyCorrection = c.lift;
+  float liftFactor = Lerp(aState.hovering, flyCorrection * p.liftFactor - s.d_velocity.z * k.heightDampening,
+                           hoverCorrection * p.hoverFactor);
+  liftFactor *= (1.0f - c.linearBrake);
+  return AttitudeLift(s, st, c, p, pitchPid, rollPid, idealNormal, liftFactor + kGravity * p.gravityFactor, dt);
+}
+
 ModeOutput Drone(const StatsState &s, const StatsStatic &st, const Controls &c, const DroneParams &p) {
   Vec3 velocityDamp = Mul(Mul(Mul(s.d_localVelocity, c.linearBrake), p.brakeFactorLinear), st.brakingFrictionFactor);
   Vec3 angularDamp = Mul(Mul(Mul(s.d_angularVelocity, c.angularBrake), p.brakeFactorAngular), st.brakingFrictionFactor);

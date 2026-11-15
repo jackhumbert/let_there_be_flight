@@ -60,11 +60,11 @@ TEST(autopilot_shell_mod_settings_keys) {
   };
   const Expected expected[] = {
       {"enabled", "UI-Settings-Autopilot-Enabled", "UI-Settings-Autopilot-Enabled-Description", true, 1.0f, 0.0f, 0.0f,
-       0.0f, 7},
+       0.0f, 8},
       {"landAtDestination", "UI-Settings-Autopilot-Land", "UI-Settings-Autopilot-Land-Description", true, 1.0f, 0.0f,
-       0.0f, 0.0f, 8},
+       0.0f, 0.0f, 9},
       {"padRange", "UI-Settings-Autopilot-Pad-Range", "UI-Settings-Autopilot-Pad-Range-Description", false, 0.0f, 25.0f,
-       0.0f, 500.0f, 9},
+       0.0f, 500.0f, 10},
   };
   CHECK(std::string(kAutopilotSettingsClass) == "FlightModeAutopilot");
   CHECK(std::string(kPlayerSettingsMod) == "Let There Be Flight");

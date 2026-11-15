@@ -17,6 +17,8 @@ struct PlayerSettings {
   float standardClimbRate = 8.0f;
   // Standard in the cars' mode lists (IsEnabled)
   bool standardEnabled = true;
+  // Hover & Fly as 0.3.20 flew it (FlightModeHoverFlyClassic) in the cars' mode lists
+  bool hoverFlyClassicEnabled = true;
 };
 
 // The instance the modes read, written by Mod Settings' callbacks.
@@ -40,7 +42,7 @@ constexpr const char *kPlayerSettingsMod = "Let There Be Flight";
 constexpr const char *kPlayerSettingsClass = "LTBF_HoverFly";
 
 // The menu's Flight Modes category, shared with the script's mode settings, and each row's place in it (Mod Settings'
-// order): Standard 0 to 2, Drone 3 to 5 and Extra Flight Modes 6 (redscript), the Autopilot 7 to 9.
+// order): Standard 0 to 2, Hover & Fly 3, Drone 4 to 6 and Extra Flight Modes 7 (redscript), the Autopilot 8 to 10.
 constexpr const char *kFlightModesCategory = "UI-Settings-Flight-Mode-Settings";
 
 // Writes the value Mod Settings gives for a variable into aSettings, clamped to its range; false for a name not in the
@@ -53,6 +55,12 @@ constexpr const char *kStandardEnabledClass = "FlightModeHoverFly";
 constexpr const char *kStandardEnabledName = "enabled";
 constexpr const char *kStandardEnabledDisplayName = "UI-Settings-Standard-Enabled";
 constexpr const char *kStandardEnabledDescription = "UI-Settings-Standard-Enabled-Description";
+
+// Hover & Fly's switch (PlayerSettings::hoverFlyClassicEnabled), under its own class (FlightModeHoverFlyClassic.hpp).
+constexpr const char *kHoverFlyClassicEnabledClass = "FlightModeHoverFlyClassic";
+constexpr const char *kHoverFlyClassicEnabledName = "enabled";
+constexpr const char *kHoverFlyClassicEnabledDisplayName = "UI-Settings-Hover-And-Fly-Enabled";
+constexpr const char *kHoverFlyClassicEnabledDescription = "UI-Settings-Hover-And-Fly-Enabled-Description";
 
 // The Autopilot's Mod Settings (FlightModeAutopilot): registered from C++ under the class name the script registered
 // them under, with the same names, keys and defaults, so the values players saved in Mod Settings' user.ini

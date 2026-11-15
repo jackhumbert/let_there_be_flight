@@ -580,6 +580,16 @@
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Hover-And-Fly-Enabled",
+              "femaleVariant": "Hover & Fly"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Hover-And-Fly-Enabled-Description",
+              "femaleVariant": "Flight as it was up to version 0.3.20: the vehicle pitches and rolls with your input and keeps its momentum. Near the ground it hovers at a height you raise and lower with lift and tilts with the ground; higher up, lift pushes it up and down."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Standard-Turn-Speed",
               "femaleVariant": "Standard Turn Speed (deg/s)"
             },

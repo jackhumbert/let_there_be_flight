@@ -47,11 +47,11 @@ const std::vector<AutopilotSetting> &AutopilotSettingsTable() {
   // docs/design/settings-audit.md)
   static const std::vector<AutopilotSetting> table = {
       {"enabled", "UI-Settings-Autopilot-Enabled", "UI-Settings-Autopilot-Enabled-Description", true, 1.0f, 0.0f, 0.0f,
-       0.0f, 7},
+       0.0f, 8},
       {"landAtDestination", "UI-Settings-Autopilot-Land", "UI-Settings-Autopilot-Land-Description", true, 1.0f, 0.0f,
-       0.0f, 0.0f, 8},
+       0.0f, 0.0f, 9},
       {"padRange", "UI-Settings-Autopilot-Pad-Range", "UI-Settings-Autopilot-Pad-Range-Description", false, 0.0f, 25.0f,
-       0.0f, 500.0f, 9},
+       0.0f, 500.0f, 10},
   };
   return table;
 }

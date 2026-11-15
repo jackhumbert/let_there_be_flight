@@ -118,7 +118,7 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Mode-Settings")
   @runtimeProperty("ModSettings.category.order", "3")
-  @runtimeProperty("ModSettings.order", "6")
+  @runtimeProperty("ModSettings.order", "7")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Extra-Flight-Modes")
   @runtimeProperty("ModSettings.description", "UI-Settings-Extra-Flight-Modes-Description")
   public let extraModesEnabled: Bool = false;

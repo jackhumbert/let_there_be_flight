@@ -9,6 +9,8 @@
 //   FlightModeStandard.UpdateWithNormalLift), kept as the Autopilot's manual flight. The script was the truth: the products keep its
 //   operand order and the same float32 steps.
 // - Drone (FlightModeDrone.Update; the anti-gravity drone adds d_localUp * 9.81000042 * gravityFactor in its script).
+// - HoverFlyClassic (FlightModeHoverFlyClassic, C++): Hover & Fly as releases up to 0.3.20 flew it (the deleted script
+//   FlightModeHoverFly.Update), a hover band over AttitudeLift.
 
 #include "Flight/Controls.hpp"
 #include "Flight/Pid.hpp"
@@ -149,6 +151,32 @@ inline constexpr float kGroundRayRise = 0.5f; // m
 Vec3 GroundRayStart(Vec3 aTire);
 // Where one of FindGround's rays ends: straight down from its wheel emitter aTire, maxHoverHeight + 10 m.
 Vec3 GroundRayEnd(Vec3 aTire, float aMaxHoverHeight);
+
+// Hover & Fly as releases up to 0.3.20 flew it: the deleted script FlightModeHoverFly.Update, step for step. Near the
+// ground (hovering 1 at minHoverHeight, 0 at maxHoverHeight) the hover PID holds hoverHeight over it and the attitude
+// follows the ground's normal; higher up lift pushes straight, damped by the vertical speed, and the car levels.
+// Holding lift moves hoverHeight by heightCorrection each frame (per frame, as the script did, not per second). The
+// script's two Mod Settings are developer values at their old defaults.
+struct HoverFlyClassicParams {
+  float heightDampening = 1.0f;  // FlightModeHoverFly.heightDampening
+  float heightCorrection = 0.5f; // FlightModeHoverFly.heightCorrectionFactor
+};
+
+// Its fields: hovering starts at 1 when the mode is made and is not reset when it is switched to again (as the
+// script's); hoverHeight is FlightComponent.hoverHeight.
+struct HoverFlyClassicState {
+  float hovering = 1, hoverHeight = 0;
+};
+
+// Activate: hold the height the car is at, no lower than minHoverHeight (aDistance: FlightComponent.distance after
+// FindGround).
+void HoverFlyClassicActivate(HoverFlyClassicState &aState, float aDistance, const StandardParams &p);
+
+// One frame. g is FindGround's answer (g.distance is FlightComponent.distance after it, the last found when nothing
+// was); the hover PID steps every frame, in the band or not, as the script's did.
+ModeOutput HoverFlyClassic(HoverFlyClassicState &aState, const StatsState &s, const StatsStatic &st, const Controls &c,
+                           const StandardParams &p, const HoverFlyClassicParams &k, Pid &pitchPid, Pid &rollPid,
+                           Pid &hoverPid, const Ground &g, float dt);
 
 // Standard's fields; hoverHeight is FlightComponent.hoverHeight.
 struct StandardState {

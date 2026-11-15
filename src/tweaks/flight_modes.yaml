@@ -23,6 +23,7 @@ FlightModes.classes:
   $type: array:CName
   $value:
     - FlightModeStandard
+    - FlightModeHoverFlyClassic
     - FlightModeHover
     - FlightModeFly
     - FlightModeDroneAntiGravity

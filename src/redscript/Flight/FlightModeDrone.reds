@@ -3,7 +3,7 @@ public class FlightModeDrone extends FlightMode {
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Mode-Settings")
   @runtimeProperty("ModSettings.category.order", "3")
-  @runtimeProperty("ModSettings.order", "3")
+  @runtimeProperty("ModSettings.order", "4")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Drone-Mode-Enabled")
   public let enabled: Bool = true;
 
@@ -11,7 +11,7 @@ public class FlightModeDrone extends FlightMode {
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Mode-Settings")
   @runtimeProperty("ModSettings.category.order", "3")
-  @runtimeProperty("ModSettings.order", "4")
+  @runtimeProperty("ModSettings.order", "5")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Drone-Turn-Speed")
   @runtimeProperty("ModSettings.description", "UI-Settings-Drone-Turn-Speed-Description")
   @runtimeProperty("ModSettings.step", "0.05")
@@ -23,7 +23,7 @@ public class FlightModeDrone extends FlightMode {
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Flight-Mode-Settings")
   @runtimeProperty("ModSettings.category.order", "3")
-  @runtimeProperty("ModSettings.order", "5")
+  @runtimeProperty("ModSettings.order", "6")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Drone-Thrust")
   @runtimeProperty("ModSettings.description", "UI-Settings-Drone-Thrust-Description")
   @runtimeProperty("ModSettings.step", "0.05")

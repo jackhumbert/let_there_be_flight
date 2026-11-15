@@ -596,3 +596,91 @@ TEST(modes_drone_skid_friction) {
                         DroneSkidPoints(none.data(), 4, still, st, response, 0.0f, k).force)),
              0.0f, kTol);
 }
+
+// HoverFlyClassic: the script FlightModeHoverFly.Update (v0.3.20) over AttitudeLift. The hover band is 1 to 7 m
+// (StandardParams' defaults), so hovering is 1 - (distance - 1) / 6.
+
+TEST(modes_hover_fly_classic_hover_pid) {
+  // in the band at 2 m: hovering 1 - 1/6 = 0.833333. Holding 3 m, the height difference is 1; the hover PID (P 1)
+  // gives 1, times hoverFactor 10. The fly side: lift 0, vertical speed 0.6 damped by 1, -0.6. LerpF: -0.6 + (10 +
+  // 0.6) * 0.833333 = 8.233333, plus gravity 9.81 along the car's up.
+  HoverFlyClassicState state;
+  state.hoverHeight = 3.0f;
+  StatsState s = Level();
+  s.d_velocity = {0, 0, 0.6f};
+  Ground g{true, 2.0f, kUp};
+  Pid pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0), hover = Gains(1, 0, 0);
+  ModeOutput o = HoverFlyClassic(state, s, Static(), Controls{}, StandardParams{}, HoverFlyClassicParams{}, pitch, roll,
+                                 hover, g, 0.5f);
+  CHECK_NEAR(state.hovering, 0.8333333, kTol);
+  CHECK_NEAR(state.hoverHeight, 3.0, kTol);
+  CheckVec(o.force, 0, 0, 8.2333333 + 9.81, kLoose);
+  CheckVec(o.torque, 0, 0, 0, kTol);
+}
+
+TEST(modes_hover_fly_classic_above_the_band) {
+  // no ground: hovering 0, lift pushes straight (0.5 * liftFactor 25) less the vertical speed 2: 10.5 + 9.81. The
+  // hover height still moves with lift, 0.5 * heightCorrection 0.5 a frame.
+  HoverFlyClassicState state;
+  state.hoverHeight = 3.0f;
+  StatsState s = Level();
+  s.d_velocity = {0, 0, 2.0f};
+  Controls c;
+  c.lift = 0.5f;
+  Pid pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0), hover = Gains(1, 0, 0);
+  ModeOutput o = HoverFlyClassic(state, s, Static(), c, StandardParams{}, HoverFlyClassicParams{}, pitch, roll, hover,
+                                 Ground{}, 0.5f);
+  CHECK_NEAR(state.hovering, 0.0, kTol);
+  CHECK_NEAR(state.hoverHeight, 3.25, kTol);
+  CheckVec(o.force, 0, 0, 10.5 + 9.81, kLoose);
+}
+
+TEST(modes_hover_fly_classic_comes_into_the_band) {
+  // from above the band (hovering 0) to ground at 4 m: hovering 0.5 and the hover height becomes 4, so no height
+  // difference and no pull back to the old height
+  HoverFlyClassicState state;
+  state.hovering = 0.0f;
+  state.hoverHeight = 1.5f;
+  Pid pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0), hover = Gains(1, 0, 0);
+  ModeOutput o = HoverFlyClassic(state, Level(), Static(), Controls{}, StandardParams{}, HoverFlyClassicParams{}, pitch,
+                                 roll, hover, Ground{true, 4.0f, kUp}, 0.5f);
+  CHECK_NEAR(state.hovering, 0.5, kTol);
+  CHECK_NEAR(state.hoverHeight, 4.0, kTol);
+  CheckVec(o.force, 0, 0, 9.81, kLoose);
+}
+
+TEST(modes_hover_fly_classic_height_floor_and_brake) {
+  // lift down at 1.2 m: 1.2 - 0.5 is under the band's floor, held at 1. Full linear brake takes the lift correction
+  // away: gravity alone.
+  HoverFlyClassicState state;
+  state.hoverHeight = 1.2f;
+  Controls c;
+  c.lift = -1.0f;
+  c.linearBrake = 1.0f;
+  Pid pitch = Gains(1, 0, 0), roll = Gains(1, 0, 0), hover = Gains(1, 0, 0);
+  ModeOutput o = HoverFlyClassic(state, Level(), Static(), c, StandardParams{}, HoverFlyClassicParams{}, pitch, roll,
+                                 hover, Ground{true, 3.0f, kUp}, 0.5f);
+  CHECK_NEAR(state.hoverHeight, 1.0, kTol);
+  CheckVec(o.force, 0, 0, 9.81, kLoose);
+}
+
+TEST(modes_hover_fly_classic_follows_the_ground) {
+  // at the band's floor (hovering 1) the attitude target is the ground's normal, 30 degrees toward forward: the same
+  // pitch correction as modes_attitude_lift_tilted_normal, -1.2
+  HoverFlyClassicState state;
+  state.hoverHeight = 1.0f;
+  Pid pitch = Gains(1, 0.2f, 0.05f), roll = Gains(1, 0.5f, 0), hover;
+  ModeOutput o = HoverFlyClassic(state, Level(), Static(), Controls{}, StandardParams{}, HoverFlyClassicParams{}, pitch,
+                                 roll, hover, Ground{true, 1.0f, {0, 0.5f, 0.8660254f}}, 0.5f);
+  CHECK_NEAR(state.hovering, 1.0, kTol);
+  CHECK_NEAR(o.torque.x, -1.2, kLoose);
+}
+
+TEST(modes_hover_fly_classic_activate) {
+  // the height the car is at, no lower than the band's floor
+  HoverFlyClassicState state;
+  HoverFlyClassicActivate(state, 0.4f, StandardParams{});
+  CHECK_NEAR(state.hoverHeight, 1.0, kTol);
+  HoverFlyClassicActivate(state, 5.0f, StandardParams{});
+  CHECK_NEAR(state.hoverHeight, 5.0, kTol);
+}
