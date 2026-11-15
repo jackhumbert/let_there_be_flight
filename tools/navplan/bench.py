@@ -38,18 +38,21 @@ def parse_params(text):
 
 def trip_columns(t):
     """The trip's columns (bench and fleet): landed (or the end status), flown s, off95, off99, speed error, landing
-    error, touchdown, replans, rays at most in a frame, checks broken."""
+    error, touchdown, replans, rays at most in a frame, checks broken, and the start (the first 8 s on the route): m/s
+    over the planned speed at most and m off the line at most."""
     if not t:
-        return f" {'-':>9s} {'-':>6s} {'-':>5s} {'-':>5s} {'-':>4s} {'-':>5s} {'-':>4s} {'-':>3s} {'-':>4s} {'-':>3s}"
+        return (f" {'-':>9s} {'-':>6s} {'-':>5s} {'-':>5s} {'-':>4s} {'-':>5s} {'-':>4s} {'-':>3s} {'-':>4s} {'-':>3s}"
+                f" {'-':>5s} {'-':>5s}")
     end = "landed" if t["landed"] else t["status"].replace(" ", "_")[:9]
     land = f"{t['landing_distance']:5.2f}" if t["landed"] else f"{'-':>5s}"
     touch = f"{t['touchdown_speed']:4.1f}" if t["touchdown_speed"] >= 0 else f"{'-':>4s}"
     return (f" {end:>9s} {t['time']:6.1f} {t['off_p95']:5.1f} {t['off_p99']:5.1f} {t['speed_err_mean']:4.1f} {land} {touch}"
-            f" {t['replans']:3d} {t['rays_max_frame']:4d} {len(t['broken']):3d}")
+            f" {t['replans']:3d} {t['rays_max_frame']:4d} {len(t['broken']):3d}"
+            f" {t.get('start_over', 0):5.1f} {t.get('start_off', 0):5.1f}")
 
 
 TRIP_HEADER = (f" {'trip':>9s} {'flown':>6s} {'off95':>5s} {'off99':>5s} {'spd':>4s} {'land':>5s} {'td':>4s} {'rp':>3s}"
-               f" {'rays':>4s} {'brk':>3s}")
+               f" {'rays':>4s} {'brk':>3s} {'st+':>5s} {'stoff':>5s}")
 
 
 def table(rts, res, base=None):

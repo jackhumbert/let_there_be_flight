@@ -564,7 +564,30 @@ bool SameTrip(const TripResult &aA, const TripResult &aB) {
   return true;
 }
 
+// The start of the route: over the first kStartWindow s after the follower takes the route, how far the car flew over
+// the trajectory's speed (m/s) and off the line (m). The surge hold at the start ran 6 to 18 m/s over the plan and 5 to
+// 20 m off on the benchmark routes (2026-11-05); these keep it in sight until it is fixed.
+constexpr float kStartWindow = 8.0f; // s
+void StartMetrics(const TripResult &r, float &aOver, float &aOff) {
+  aOver = 0.0f;
+  aOff = 0.0f;
+  float start = -1.0f;
+  for (const auto &q : r.frames) {
+    if (!q.following)
+      continue;
+    if (start < 0.0f)
+      start = q.t;
+    if (q.t - start > kStartWindow)
+      break;
+    if (q.leadSpeed >= 0.0f)
+      aOver = std::max(aOver, q.speed - q.leadSpeed);
+    aOff = std::max(aOff, q.off);
+  }
+}
+
 std::string TripJson(const TripResult &r) {
+  float startOver = 0.0f, startOff = 0.0f;
+  StartMetrics(r, startOver, startOff);
   std::string changes;
   for (const auto &c : r.changes) {
     char one[96];
@@ -578,11 +601,13 @@ std::string TripJson(const TripResult &r) {
                 "\"landing_distance\": %.2f, \"landing_heading\": %.1f, \"touchdown_speed\": %.2f, \"impact_max\": %.2f, "
                 "\"requests\": %d, \"replans\": %d, \"hits\": %d, \"rays\": %lld, \"rays_max_frame\": %d, "
                 "\"step_ms_mean\": %.3f, \"step_ms_p99\": %.3f, \"step_ms_max\": %.3f, \"pending\": %zu, \"nan\": %s, "
-                "\"inside_max\": %.2f, \"inside_contact_max\": %.2f, \"changes\": \"%s\"}",
+                "\"inside_max\": %.2f, \"inside_contact_max\": %.2f, \"start_over\": %.2f, \"start_off\": %.2f, "
+                "\"changes\": \"%s\"}",
                 r.landed ? "true" : "false", r.status.c_str(), r.time, r.offP50, r.offP95, r.offP99, r.offMax,
                 r.speedErrMean, r.speedErrP95, r.landingDistance, r.landingHeadingDeg, r.touchdownSpeed, r.impactMax,
                 r.requests, r.replans, r.hits, static_cast<long long>(r.rays), r.raysMaxFrame, r.stepMsMean, r.stepMsP99,
-                r.stepMsMax, r.pendingAtEnd, r.nan ? "true" : "false", r.insideMax, r.insideContactMax, changes.c_str());
+                r.stepMsMax, r.pendingAtEnd, r.nan ? "true" : "false", r.insideMax, r.insideContactMax, startOver,
+                startOff, changes.c_str());
   return text;
 }
 
