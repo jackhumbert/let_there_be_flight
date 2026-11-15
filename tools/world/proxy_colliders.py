@@ -19,7 +19,8 @@ Steps:
            column counts as covered there), their triangles inside each entry's box not within --tol
            of real collision -> forced.npz, for build --force.
   walls    Finds what the audit's column rule misses: proxy walls with real collision near
-           above them (their roof), none within --tol (the game's or colliders.npz, LTBF's)
+           above them (their roof: within --roof m of the placement's top; a tower stacked from
+           modules needs --roof inf), none within --tol (the game's or colliders.npz, LTBF's)
            and open air beside them. Placements with at least --min-wall m2 of such wall are
            checked with horizontal rays from outside (a ray passes when it hits the proxy and
            no collision lies within 4 m past it); those where --pass-share of them pass are
@@ -839,7 +840,7 @@ def cmd_force(args):
 # ---------------------------------------------------------------------------------------- walls
 
 
-def _walls_tile(work, key, rows, ids, voxel, tile, tol, extra_vox, terrain_dir):
+def _walls_tile(work, key, rows, ids, voxel, tile, tol, extra_vox, terrain_dir, roof_reach):
     """One solid tile's proxy walls (near-vertical faces whose centre is in the tile) that the audit
     counted covered only because real collision lies above them: per placement [wall m2, total wall
     m2, box of those walls]."""
@@ -880,12 +881,13 @@ def _walls_tile(work, key, rows, ids, voxel, tile, tol, extra_vox, terrain_dir):
     ev = extra_vox[np.all((extra_vox >= lo) & (extra_vox <= hi), axis=1)]
     g2[tuple((ev - lo).T)] = True
     cov = ndimage.binary_dilation(g2, np.ones((3, 3, 3), bool), iterations=reach)[tuple(v.T)]
-    # a roof near above: real collision over the sample, no higher than 12 m over the placement's
-    # own top (a deck high above is not this building's roof)
+    # a roof near above: real collision over the sample, no higher than roof_reach m over the
+    # placement's own top (a deck high above is not this building's roof). A tower stacked from
+    # modules has its one real roof far above all but the top module, so a stack needs a longer reach.
     own_top = {i: tris[owner == i][:, :, 2].max() for i in np.unique(owner)}
     cs = np.cumsum(grid, axis=2, dtype=np.int32)
     tops = np.array([own_top[o] for o in owner])[sid]
-    zmax = np.clip(np.floor((tops + 12) / voxel).astype(np.int64) - lo[2], 0, shape[2] - 1)
+    zmax = np.clip(np.floor(np.minimum(tops + roof_reach, 1e5) / voxel).astype(np.int64) - lo[2], 0, shape[2] - 1)
     zmax = np.maximum(zmax, v[:, 2])
     roof = cs[v[:, 0], v[:, 1], zmax] > cs[v[:, 0], v[:, 1], v[:, 2]]
     # open air on one side: nothing 2 to 8 m out along the face's horizontal normal
@@ -979,7 +981,7 @@ def cmd_walls(args):
     _glb_cache.clear()
     found = {}
     with ProcessPoolExecutor(args.jobs) as pool:
-        futs = [pool.submit(_walls_tile, args.work, k, rows, ids, voxel, tile, args.tol, extra_vox, args.terrain)
+        futs = [pool.submit(_walls_tile, args.work, k, rows, ids, voxel, tile, args.tol, extra_vox, args.terrain, args.roof)
                 for k, ids in tiles.items()]
         for n, f in enumerate(as_completed(futs)):
             for i, (a, full, box) in f.result().items():
@@ -1212,6 +1214,8 @@ def main():
     p.add_argument("--tol", type=float, default=4.0, help="a wall within this of collision is covered (m)")
     p.add_argument("--min-wall", type=float, default=100.0, help="uncovered wall m2 for a placement to count")
     p.add_argument("--pass-share", type=float, default=0.25, help="share of the rays hitting the proxy that pass through")
+    p.add_argument("--roof", type=float, default=12.0,
+                   help="real collision at most this far (m) over a placement's top counts as its roof (inf: any)")
     p.add_argument("--jobs", type=int, default=10)
     p = sub.add_parser("detail")
     p.add_argument("work")

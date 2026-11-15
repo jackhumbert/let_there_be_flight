@@ -1,5 +1,5 @@
 {
- "_doc": "Proxy placements given collision in full inside their box (proxy_colliders.py force, then build --force): buildings the game draws whose walls have no collision, found where the old bake's hollow fill closed space (tools/world/opened_patches.py: the drawn surface bounding the opened space with no collision, share at least 0.1). Each entry: near (x, y), box (x0,y0,z0,x1,y1,z1, the opened patch plus 6 m), the placements carrying at least 2% (and 100 m2) of the uncovered surface (sector, globalNodeId, mesh) and their uncovered m2. Written 2026-10-30 from the 31 building patches; entries are added or dropped by hand. Entries with wall_m2 and rays_through (2026-11-14, from proxy_colliders.py walls): walls the audit counted as covered only because the building's own roof (real collision up to 12 m over the proxy's top) is above them, with no real collision within 4 m and open air on one side; kept where at least 25% of 80 horizontal rays at the walls hit the proxy and found no collision within 4 m behind it (rays_through), and the placement has at least 100 m2 of such wall. Billboards, antennas and the stadium supports left out. walls_only: only the entry's near-vertical faces are forced.",
+ "_doc": "Proxy placements given collision in full inside their box (proxy_colliders.py force, then build --force): buildings the game draws whose walls have no collision, found where the old bake's hollow fill closed space (tools/world/opened_patches.py: the drawn surface bounding the opened space with no collision, share at least 0.1). Each entry: near (x, y), box (x0,y0,z0,x1,y1,z1, the opened patch plus 6 m), the placements carrying at least 2% (and 100 m2) of the uncovered surface (sector, globalNodeId, mesh) and their uncovered m2. Written 2026-10-30 from the 31 building patches; entries are added or dropped by hand. Entries with wall_m2 and rays_through (2026-11-14, from proxy_colliders.py walls): walls the audit counted as covered only because the building's own roof (real collision up to 12 m over the proxy's top) is above them, with no real collision within 4 m and open air on one side; kept where at least 25% of 80 horizontal rays at the walls hit the proxy and found no collision within 4 m behind it (rays_through), and the placement has at least 100 m2 of such wall. Billboards, antennas and the stadium supports left out. Added 2026-11-15 with walls --roof inf (any real collision above counts as the roof: a tower stacked from modules has its real roof far above the lower modules): the building entries only; terrain, sidewalk, pier, sign, tarp, frame bridge, highway support and rooftop deco entries left out. walls_only: only the entry's near-vertical faces are forced.",
  "buildings": [
   {
    "near": [
@@ -5647,6 +5647,1369 @@
      "gid": "14860208257763061764",
      "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\86241328\\wat_lch_building_e_v8.mesh",
      "wall_m2": 103.2
+    }
+   ]
+  },
+  {
+   "near": [
+    -1547,
+    -395
+   ],
+   "box": [
+    -1576.0,
+    -423.0,
+    154.0,
+    -1518.0,
+    -367.0,
+    490.0
+   ],
+   "wall_m2": 14081,
+   "rays_through": "183/689",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-2_-1_0_4",
+     "gid": "8840941045166343755",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1394119253\\cct_cpz_building_militech_uf_side_v2.mesh",
+     "wall_m2": 1612.6
+    },
+    {
+     "sector": "exterior_-2_-1_0_4",
+     "gid": "3653788246591178010",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1394119253\\cct_cpz_building_militech_uf_side_v2.mesh",
+     "wall_m2": 1612.6
+    },
+    {
+     "sector": "exterior_-2_-1_0_4",
+     "gid": "15608529702264246304",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1394119253\\cct_cpz_building_militech_uf_side_v2.mesh",
+     "wall_m2": 1612.6
+    },
+    {
+     "sector": "exterior_-2_-1_0_4",
+     "gid": "14672083883053253185",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1394119253\\cct_cpz_building_militech_uf_side_v2.mesh",
+     "wall_m2": 1612.6
+    },
+    {
+     "sector": "exterior_-2_-1_0_4",
+     "gid": "18172909331533482926",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1394119253\\cct_cpz_building_militech_uf_side_v2.mesh",
+     "wall_m2": 1612.6
+    },
+    {
+     "sector": "exterior_-2_-1_0_4",
+     "gid": "13050075942774326292",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1394119253\\cct_cpz_building_militech_uf_side_v2.mesh",
+     "wall_m2": 1612.6
+    },
+    {
+     "sector": "exterior_-2_-1_0_4",
+     "gid": "2198074264310630743",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1394119253\\cct_cpz_building_militech_uf_side_v2.mesh",
+     "wall_m2": 1612.6
+    },
+    {
+     "sector": "exterior_-2_-1_0_4",
+     "gid": "4819762844058747974",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1394119253\\cct_cpz_building_militech_uf_side_v2.mesh",
+     "wall_m2": 1541.7
+    },
+    {
+     "sector": "exterior_-2_-1_0_4",
+     "gid": "17262286085518336906",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1394119253\\cct_cpz_building_militech_uf_side_v2.mesh",
+     "wall_m2": 1250.8
+    }
+   ]
+  },
+  {
+   "near": [
+    -1368,
+    724
+   ],
+   "box": [
+    -1395.0,
+    609.0,
+    136.0,
+    -1342.0,
+    839.0,
+    174.0
+   ],
+   "wall_m2": 11671,
+   "rays_through": "270/560",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-3_1_0_3",
+     "gid": "16485016297881302420",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3885595151\\wat_lch_building_b_v2_c.mesh",
+     "wall_m2": 1978.3
+    },
+    {
+     "sector": "exterior_-3_1_0_3",
+     "gid": "14132425548764880869",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3885595151\\wat_lch_building_b_v2_c.mesh",
+     "wall_m2": 1977.9
+    },
+    {
+     "sector": "exterior_-3_1_0_3",
+     "gid": "13919178785286660679",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3885595151\\wat_lch_building_b_v2_c.mesh",
+     "wall_m2": 1939.4
+    },
+    {
+     "sector": "exterior_-3_1_0_3",
+     "gid": "14336157409629942829",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3885595151\\wat_lch_building_b_v2_c.mesh",
+     "wall_m2": 1816.3
+    },
+    {
+     "sector": "exterior_-3_1_0_3",
+     "gid": "4211475929556206546",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3885595151\\wat_lch_building_b_v2_c.mesh",
+     "wall_m2": 1727.2
+    },
+    {
+     "sector": "exterior_-3_1_0_3",
+     "gid": "8854231593451639977",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3885595151\\wat_lch_building_b_v2_c.mesh",
+     "wall_m2": 1223.1
+    },
+    {
+     "sector": "exterior_-3_1_0_3",
+     "gid": "6216247336692340083",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3885595151\\wat_lch_building_b_v2_c.mesh",
+     "wall_m2": 1009.1
+    }
+   ]
+  },
+  {
+   "near": [
+    -1580,
+    606
+   ],
+   "box": [
+    -1623.0,
+    572.0,
+    229.0,
+    -1536.0,
+    640.0,
+    305.0
+   ],
+   "wall_m2": 8479,
+   "rays_through": "235/560",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "7185108627017108816",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2565856240\\wat_kab_building_c_v10_b.mesh",
+     "wall_m2": 1300.8
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "683780617613999195",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2565856240\\wat_kab_building_c_v10_b.mesh",
+     "wall_m2": 1240.2
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "7388410316867689329",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2131279958\\wat_kab_building_c_v8_c.mesh",
+     "wall_m2": 1215.8
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "3287156217030779199",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2131279958\\wat_kab_building_c_v8_c.mesh",
+     "wall_m2": 1215.8
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "6968031461908322234",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2131279958\\wat_kab_building_c_v8_c.mesh",
+     "wall_m2": 1215.8
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "11511224181862812040",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2131279958\\wat_kab_building_c_v8_c.mesh",
+     "wall_m2": 1215.8
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "6224818917397633522",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2131279958\\wat_kab_building_c_v8_c.mesh",
+     "wall_m2": 1075.3
+    }
+   ]
+  },
+  {
+   "near": [
+    -1276,
+    591
+   ],
+   "box": [
+    -1338.0,
+    553.0,
+    199.0,
+    -1213.0,
+    629.0,
+    296.0
+   ],
+   "wall_m2": 8334,
+   "rays_through": "490/1030",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "7554164474909925114",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1632676738\\wat_kab_building_c_v6f.mesh",
+     "wall_m2": 1025.4
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "18442145186380821985",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1632676738\\wat_kab_building_c_v6f.mesh",
+     "wall_m2": 1025.4
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "7245930160895429136",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1632676738\\wat_kab_building_c_v6f.mesh",
+     "wall_m2": 1025.4
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "3024428020611842829",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1508559655\\wat_kab_building_c_v6a.mesh",
+     "wall_m2": 762.7
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "3156934829705857291",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1508559655\\wat_kab_building_c_v6a.mesh",
+     "wall_m2": 762.7
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "15268092453117217479",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1632676738\\wat_kab_building_c_v6f.mesh",
+     "wall_m2": 744.5
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "13915519139456520210",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1508559655\\wat_kab_building_c_v6a.mesh",
+     "wall_m2": 629.7
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "4013175543737913619",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1508559655\\wat_kab_building_c_v6a.mesh",
+     "wall_m2": 629.7
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "3959693730499007177",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1508559655\\wat_kab_building_c_v6a.mesh",
+     "wall_m2": 414.1
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "14782611649233454776",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1508559655\\wat_kab_building_c_v6a.mesh",
+     "wall_m2": 387.6
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "6291398678849571526",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2392624428\\wat_kab_building_c_v6c_yellow.mesh",
+     "wall_m2": 381.6
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "13401465008849639615",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2392624428\\wat_kab_building_c_v6c_yellow.mesh",
+     "wall_m2": 381.6
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "17217544428535919278",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\570840500\\wall_a_top_truss.mesh",
+     "wall_m2": 163.3
+    }
+   ]
+  },
+  {
+   "near": [
+    -1580,
+    -328
+   ],
+   "box": [
+    -1593.0,
+    -336.0,
+    154.0,
+    -1566.0,
+    -319.0,
+    490.0
+   ],
+   "wall_m2": 7126,
+   "rays_through": "315/720",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-4_-1_0_3",
+     "gid": "10045634378333183489",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3136929588\\cct_cpz_building_militech_uf_side_v3.mesh",
+     "wall_m2": 812.4
+    },
+    {
+     "sector": "exterior_-4_-1_0_3",
+     "gid": "14955373063014672122",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3136929588\\cct_cpz_building_militech_uf_side_v3.mesh",
+     "wall_m2": 812.4
+    },
+    {
+     "sector": "exterior_-4_-1_0_3",
+     "gid": "4264371771715888133",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3136929588\\cct_cpz_building_militech_uf_side_v3.mesh",
+     "wall_m2": 812.4
+    },
+    {
+     "sector": "exterior_-4_-1_0_3",
+     "gid": "13725461962433446512",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3136929588\\cct_cpz_building_militech_uf_side_v3.mesh",
+     "wall_m2": 812.4
+    },
+    {
+     "sector": "exterior_-4_-1_0_3",
+     "gid": "17381831849842244174",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3136929588\\cct_cpz_building_militech_uf_side_v3.mesh",
+     "wall_m2": 812.4
+    },
+    {
+     "sector": "exterior_-4_-1_0_3",
+     "gid": "17899973830361441135",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3136929588\\cct_cpz_building_militech_uf_side_v3.mesh",
+     "wall_m2": 812.4
+    },
+    {
+     "sector": "exterior_-4_-1_0_3",
+     "gid": "3149983767938100587",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3136929588\\cct_cpz_building_militech_uf_side_v3.mesh",
+     "wall_m2": 812.4
+    },
+    {
+     "sector": "exterior_-4_-1_0_3",
+     "gid": "8345252990080891343",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3136929588\\cct_cpz_building_militech_uf_side_v3.mesh",
+     "wall_m2": 772.3
+    },
+    {
+     "sector": "exterior_-4_-1_0_3",
+     "gid": "10007903417904955699",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3136929588\\cct_cpz_building_militech_uf_side_v3.mesh",
+     "wall_m2": 666.9
+    }
+   ]
+  },
+  {
+   "near": [
+    -563,
+    904
+   ],
+   "box": [
+    -607.0,
+    860.0,
+    154.0,
+    -519.0,
+    948.0,
+    184.0
+   ],
+   "wall_m2": 5334,
+   "rays_through": "67/80",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-3_3_0_2",
+     "gid": "18373753019335377627",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2123973897\\wat_kab_building_c_v9b.mesh",
+     "wall_m2": 5334.4
+    }
+   ]
+  },
+  {
+   "near": [
+    -739,
+    930
+   ],
+   "box": [
+    -763.0,
+    921.0,
+    133.0,
+    -715.0,
+    939.0,
+    263.0
+   ],
+   "wall_m2": 4816,
+   "rays_through": "130/400",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-1_0_0_4",
+     "gid": "16332867812322734683",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\325975699\\wat_lch_building_e_v17_b.mesh",
+     "wall_m2": 1095.8
+    },
+    {
+     "sector": "exterior_-1_0_0_4",
+     "gid": "6841572215336838864",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\325975699\\wat_lch_building_e_v17_b.mesh",
+     "wall_m2": 1095.8
+    },
+    {
+     "sector": "exterior_-1_0_0_4",
+     "gid": "12105151928866503341",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\325975699\\wat_lch_building_e_v17_b.mesh",
+     "wall_m2": 1095.8
+    },
+    {
+     "sector": "exterior_-1_0_0_4",
+     "gid": "7564262331946792954",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\325975699\\wat_lch_building_e_v17_b.mesh",
+     "wall_m2": 847.9
+    },
+    {
+     "sector": "exterior_-1_0_0_4",
+     "gid": "4398701642448467278",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\325975699\\wat_lch_building_e_v17_b.mesh",
+     "wall_m2": 680.8
+    }
+   ]
+  },
+  {
+   "near": [
+    -1782,
+    -694
+   ],
+   "box": [
+    -1812.0,
+    -731.0,
+    113.0,
+    -1751.0,
+    -658.0,
+    208.0
+   ],
+   "wall_m2": 3406,
+   "rays_through": "31/80",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-4_-2_0_3",
+     "gid": "7222204732277600423",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1668604862\\wat_lch_building_c_v17_2_gf_b.mesh",
+     "wall_m2": 3405.8
+    }
+   ]
+  },
+  {
+   "near": [
+    -535,
+    1119
+   ],
+   "box": [
+    -554.0,
+    1093.0,
+    131.0,
+    -516.0,
+    1145.0,
+    239.0
+   ],
+   "wall_m2": 3292,
+   "rays_through": "116/320",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-1_2_0_3",
+     "gid": "7449914187439934634",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1373444989\\wat_lch_building_d_v10_jt.mesh",
+     "wall_m2": 1331.8
+    },
+    {
+     "sector": "exterior_-1_2_0_3",
+     "gid": "18377347815859183597",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1373444989\\wat_lch_building_d_v10_jt.mesh",
+     "wall_m2": 1276.6
+    },
+    {
+     "sector": "exterior_-1_2_0_3",
+     "gid": "10021803033547751658",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\112249082\\tech_canopy_d_v1.mesh",
+     "wall_m2": 384.1
+    },
+    {
+     "sector": "exterior_-1_2_0_3",
+     "gid": "16797491834512336837",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\112249082\\tech_canopy_d_v1.mesh",
+     "wall_m2": 299.4
+    }
+   ]
+  },
+  {
+   "near": [
+    -512,
+    1352
+   ],
+   "box": [
+    -548.0,
+    1314.0,
+    91.0,
+    -475.0,
+    1390.0,
+    246.0
+   ],
+   "wall_m2": 2666,
+   "rays_through": "239/480",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-3_5_0_2",
+     "gid": "8532705347152796630",
+     "mesh": "base\\prefabs\\environment\\architecture\\watson\\kabuki\\_proxyhelper\\_src\\wat_kab_building_a_v27_jt_up_mproxy.mesh",
+     "wall_m2": 799.6
+    },
+    {
+     "sector": "exterior_-3_5_0_2",
+     "gid": "15567921891758398231",
+     "mesh": "base\\prefabs\\environment\\architecture\\watson\\kabuki\\_proxyhelper\\_src\\wat_kab_building_a_v27_jt_down_mproxy.mesh",
+     "wall_m2": 722.9
+    },
+    {
+     "sector": "exterior_-3_5_0_2",
+     "gid": "13669220154386887690",
+     "mesh": "base\\prefabs\\environment\\architecture\\watson\\kabuki\\_proxyhelper\\_src\\wat_kab_building_a_v27_jt_down_mproxy.mesh",
+     "wall_m2": 499.6
+    },
+    {
+     "sector": "exterior_-3_5_0_2",
+     "gid": "2422568862145869932",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3801262320\\tech_canopy_b_v2_exterior.mesh",
+     "wall_m2": 289.1
+    },
+    {
+     "sector": "exterior_-3_5_0_2",
+     "gid": "7523366393446155441",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3801262320\\tech_canopy_b_v2_exterior.mesh",
+     "wall_m2": 194.6
+    },
+    {
+     "sector": "exterior_-3_5_0_2",
+     "gid": "3535669756893926185",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3801262320\\tech_canopy_b_v2_exterior.mesh",
+     "wall_m2": 159.8
+    }
+   ]
+  },
+  {
+   "near": [
+    -536,
+    830
+   ],
+   "box": [
+    -555.0,
+    802.0,
+    86.0,
+    -518.0,
+    857.0,
+    171.0
+   ],
+   "wall_m2": 2506,
+   "rays_through": "107/160",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-1_0_0_4",
+     "gid": "10357072474162467",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1813216628\\wat_lch_building_c_v2.mesh",
+     "wall_m2": 1736.0
+    },
+    {
+     "sector": "exterior_-1_0_0_4",
+     "gid": "9869934248108732601",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1813216628\\wat_lch_building_c_v2.mesh",
+     "wall_m2": 770.4
+    }
+   ]
+  },
+  {
+   "near": [
+    -905,
+    327
+   ],
+   "box": [
+    -929.0,
+    303.0,
+    96.0,
+    -881.0,
+    351.0,
+    147.0
+   ],
+   "wall_m2": 2020,
+   "rays_through": "115/160",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-1_0_0_4",
+     "gid": "18181375991956595512",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1327108432\\wat_lch_building_e_v11_mf.mesh",
+     "wall_m2": 1405.2
+    },
+    {
+     "sector": "exterior_-1_0_0_4",
+     "gid": "13869793888625850771",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3581900618\\wat_lch_building_e_v11_gf.mesh",
+     "wall_m2": 615.1
+    }
+   ]
+  },
+  {
+   "near": [
+    -700,
+    1372
+   ],
+   "box": [
+    -745.0,
+    1322.0,
+    102.0,
+    -654.0,
+    1423.0,
+    241.0
+   ],
+   "wall_m2": 1991,
+   "rays_through": "310/560",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-2_2_0_3",
+     "gid": "4759412923907623099",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\664433987\\wat_lch_building_e_v10_bottom_grey_thin.mesh",
+     "wall_m2": 1023.7
+    },
+    {
+     "sector": "exterior_-2_2_0_3",
+     "gid": "16135180184080004473",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\325975699\\wat_lch_building_e_v17_b.mesh",
+     "wall_m2": 207.7
+    },
+    {
+     "sector": "exterior_-2_2_0_3",
+     "gid": "4355853523831096262",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\325975699\\wat_lch_building_e_v17_b.mesh",
+     "wall_m2": 177.9
+    },
+    {
+     "sector": "exterior_-2_2_0_3",
+     "gid": "7065084712384033287",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\325975699\\wat_lch_building_e_v17_b.mesh",
+     "wall_m2": 177.9
+    },
+    {
+     "sector": "exterior_-2_2_0_3",
+     "gid": "7508117603432901756",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\325975699\\wat_lch_building_e_v17_b.mesh",
+     "wall_m2": 157.8
+    },
+    {
+     "sector": "exterior_-2_2_0_3",
+     "gid": "4245357645417413104",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\645661324\\wat_lch_building_e_v10_bottom_aqua.mesh",
+     "wall_m2": 132.8
+    },
+    {
+     "sector": "exterior_-2_2_0_3",
+     "gid": "2864587332515761381",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\325975699\\wat_lch_building_e_v17_b.mesh",
+     "wall_m2": 113.7
+    }
+   ]
+  },
+  {
+   "near": [
+    -1455,
+    606
+   ],
+   "box": [
+    -1499.0,
+    572.0,
+    257.0,
+    -1411.0,
+    639.0,
+    302.0
+   ],
+   "wall_m2": 1987,
+   "rays_through": "95/140",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "14968794925689649611",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\699213029\\wat_kab_building_c_v6c.mesh",
+     "wall_m2": 1629.0
+    },
+    {
+     "sector": "exterior_-3_1_0_3",
+     "gid": "14246736881949755279",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1678247664\\cct_cpz_building_a_v9_v16_bridge.mesh",
+     "wall_m2": 357.8
+    }
+   ]
+  },
+  {
+   "near": [
+    -563,
+    906
+   ],
+   "box": [
+    -607.0,
+    860.0,
+    62.0,
+    -519.0,
+    953.0,
+    120.0
+   ],
+   "wall_m2": 1793,
+   "rays_through": "75/158",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-3_3_0_2",
+     "gid": "8758853965240550662",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2123973897\\wat_kab_building_c_v9b.mesh",
+     "wall_m2": 1470.6
+    },
+    {
+     "sector": "exterior_-3_3_0_2",
+     "gid": "7788773044929008816",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3742195752\\tech_canopy_e_v2b.mesh",
+     "wall_m2": 322.0
+    }
+   ]
+  },
+  {
+   "near": [
+    -647,
+    1314
+   ],
+   "box": [
+    -674.0,
+    1293.0,
+    59.0,
+    -620.0,
+    1336.0,
+    91.0
+   ],
+   "wall_m2": 954,
+   "rays_through": "100/240",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-3_5_0_2",
+     "gid": "12695393963451261020",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\4293476560\\wejt_01_cpo_building05_part5.mesh",
+     "wall_m2": 589.9
+    },
+    {
+     "sector": "exterior_-3_5_0_2",
+     "gid": "1039415001900711763",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\4293476560\\wejt_01_cpo_building05_part5.mesh",
+     "wall_m2": 209.9
+    },
+    {
+     "sector": "exterior_-3_5_0_2",
+     "gid": "14476395529433776234",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\4293476560\\wejt_01_cpo_building05_part5.mesh",
+     "wall_m2": 154.0
+    }
+   ]
+  },
+  {
+   "near": [
+    -1613,
+    586
+   ],
+   "box": [
+    -1620.0,
+    574.0,
+    138.0,
+    -1606.0,
+    599.0,
+    214.0
+   ],
+   "wall_m2": 869,
+   "rays_through": "440/640",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "6068452278981758844",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2131279958\\wat_kab_building_c_v8_c.mesh",
+     "wall_m2": 108.7
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "3849984974439562898",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2131279958\\wat_kab_building_c_v8_c.mesh",
+     "wall_m2": 108.7
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "1156290192459285446",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2131279958\\wat_kab_building_c_v8_c.mesh",
+     "wall_m2": 108.7
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "17360197952095963025",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2131279958\\wat_kab_building_c_v8_c.mesh",
+     "wall_m2": 108.7
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "11954925241486578012",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2131279958\\wat_kab_building_c_v8_c.mesh",
+     "wall_m2": 108.7
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "10703971017907170856",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2131279958\\wat_kab_building_c_v8_c.mesh",
+     "wall_m2": 108.7
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "8218622188113757171",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2131279958\\wat_kab_building_c_v8_c.mesh",
+     "wall_m2": 108.7
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "7915707307111291205",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2131279958\\wat_kab_building_c_v8_c.mesh",
+     "wall_m2": 108.7
+    }
+   ]
+  },
+  {
+   "near": [
+    -1250,
+    619
+   ],
+   "box": [
+    -1279.0,
+    608.0,
+    88.0,
+    -1221.0,
+    630.0,
+    116.0
+   ],
+   "wall_m2": 821,
+   "rays_through": "28/80",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "6619092889968399903",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1632676738\\wat_kab_building_c_v6f.mesh",
+     "wall_m2": 821.2
+    }
+   ]
+  },
+  {
+   "near": [
+    -1845,
+    1102
+   ],
+   "box": [
+    -1879.0,
+    1090.0,
+    131.0,
+    -1811.0,
+    1114.0,
+    165.0
+   ],
+   "wall_m2": 782,
+   "rays_through": "59/80",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-2_1_0_4",
+     "gid": "6725096038298407517",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\86241328\\wat_lch_building_e_v8.mesh",
+     "wall_m2": 782.2
+    }
+   ]
+  },
+  {
+   "near": [
+    -728,
+    -126
+   ],
+   "box": [
+    -756.0,
+    -146.0,
+    208.0,
+    -700.0,
+    -105.0,
+    244.0
+   ],
+   "wall_m2": 621,
+   "rays_through": "27/80",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-1_0_0_4",
+     "gid": "17797591249818267024",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1752203411\\wbr_cha_building_b_v7.mesh",
+     "wall_m2": 621.2
+    }
+   ]
+  },
+  {
+   "near": [
+    -549,
+    552
+   ],
+   "box": [
+    -561.0,
+    535.0,
+    116.0,
+    -537.0,
+    568.0,
+    176.0
+   ],
+   "wall_m2": 537,
+   "rays_through": "44/80",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-3_1_0_2",
+     "gid": "14809115053463079081",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1198932827\\wat_lch_building_c_v25.mesh",
+     "wall_m2": 536.6
+    }
+   ]
+  },
+  {
+   "near": [
+    -1188,
+    616
+   ],
+   "box": [
+    -1212.0,
+    609.0,
+    199.0,
+    -1164.0,
+    622.0,
+    227.0
+   ],
+   "wall_m2": 459,
+   "rays_through": "70/160",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "3365891547481476372",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1508559655\\wat_kab_building_c_v6a.mesh",
+     "wall_m2": 229.3
+    },
+    {
+     "sector": "exterior_-2_0_0_4",
+     "gid": "10409502820122976087",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1508559655\\wat_kab_building_c_v6a.mesh",
+     "wall_m2": 229.3
+    }
+   ]
+  },
+  {
+   "near": [
+    -2113,
+    150
+   ],
+   "box": [
+    -2125.0,
+    134.0,
+    226.0,
+    -2101.0,
+    167.0,
+    264.0
+   ],
+   "wall_m2": 442,
+   "rays_through": "26/78",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-3_0_0_4",
+     "gid": "14783623905260298059",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1340793329\\wat_awt_arasaka_harbour_1.mesh",
+     "wall_m2": 442.1
+    }
+   ]
+  },
+  {
+   "near": [
+    -739,
+    930
+   ],
+   "box": [
+    -763.0,
+    921.0,
+    62.0,
+    -715.0,
+    939.0,
+    98.0
+   ],
+   "wall_m2": 409,
+   "rays_through": "25/80",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-1_0_0_4",
+     "gid": "3584446311393716528",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\325975699\\wat_lch_building_e_v17_b.mesh",
+     "wall_m2": 409.2
+    }
+   ]
+  },
+  {
+   "near": [
+    -630,
+    1402
+   ],
+   "box": [
+    -653.0,
+    1379.0,
+    36.0,
+    -606.0,
+    1426.0,
+    66.0
+   ],
+   "wall_m2": 335,
+   "rays_through": "39/80",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-2_2_0_3",
+     "gid": "6446585431608486332",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\807855890\\wejt_01_cpo_building05_part3.mesh",
+     "wall_m2": 335.1
+    }
+   ]
+  },
+  {
+   "near": [
+    -582,
+    887
+   ],
+   "box": [
+    -599.0,
+    862.0,
+    26.0,
+    -564.0,
+    912.0,
+    58.0
+   ],
+   "wall_m2": 290,
+   "rays_through": "31/80",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-3_3_0_2",
+     "gid": "1123943201991396205",
+     "mesh": "base\\prefabs\\environment\\architecture\\watson\\kabuki\\_proxyhelper\\wat_kab_building_a_v17_a_mproxy.mesh",
+     "wall_m2": 290.3
+    }
+   ]
+  },
+  {
+   "near": [
+    -572,
+    1264
+   ],
+   "box": [
+    -593.0,
+    1245.0,
+    42.0,
+    -550.0,
+    1282.0,
+    71.0
+   ],
+   "wall_m2": 288,
+   "rays_through": "22/80",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-3_5_0_2",
+     "gid": "14313158450978505971",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2572203412\\wat_kab_building_a_v32_v2.mesh",
+     "wall_m2": 288.5
+    }
+   ]
+  },
+  {
+   "near": [
+    -1657,
+    -668
+   ],
+   "box": [
+    -1681.0,
+    -717.0,
+    103.0,
+    -1633.0,
+    -620.0,
+    120.0
+   ],
+   "wall_m2": 261,
+   "rays_through": "62/160",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-4_-2_0_3",
+     "gid": "8387811070475321592",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3133305169\\wbr_cha_building_a_v3_2_cutted.mesh",
+     "wall_m2": 156.9
+    },
+    {
+     "sector": "exterior_-4_-2_0_3",
+     "gid": "10228663965887517452",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2374161987\\wbr_cha_building_a_v3_2.mesh",
+     "wall_m2": 104.1
+    }
+   ]
+  },
+  {
+   "near": [
+    -722,
+    1112
+   ],
+   "box": [
+    -730.0,
+    1092.0,
+    179.0,
+    -713.0,
+    1132.0,
+    247.0
+   ],
+   "wall_m2": 260,
+   "rays_through": "45/80",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-2_1_0_3",
+     "gid": "12625692775720003443",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2315986574\\wat_lch_building_c_v2b.mesh",
+     "wall_m2": 260.1
+    }
+   ]
+  },
+  {
+   "near": [
+    -913,
+    14
+   ],
+   "box": [
+    -936.0,
+    -15.0,
+    136.0,
+    -890.0,
+    43.0,
+    160.0
+   ],
+   "wall_m2": 232,
+   "rays_through": "29/48",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-2_0_0_3",
+     "gid": "12050709338980371230",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2485325561\\wat_lch_building_c_v25_a.mesh",
+     "wall_m2": 232.1
+    }
+   ]
+  },
+  {
+   "near": [
+    -416,
+    764
+   ],
+   "box": [
+    -429.0,
+    750.0,
+    80.0,
+    -402.0,
+    777.0,
+    114.0
+   ],
+   "wall_m2": 200,
+   "rays_through": "56/56",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-1_1_0_3",
+     "gid": "8785794018661427742",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\524623059\\japan_town_round_animated_commercial_e_small.mesh",
+     "wall_m2": 199.6
+    }
+   ]
+  },
+  {
+   "near": [
+    -533,
+    1236
+   ],
+   "box": [
+    -589.0,
+    1203.0,
+    219.0,
+    -477.0,
+    1269.0,
+    251.0
+   ],
+   "wall_m2": 198,
+   "rays_through": "23/80",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-3_5_0_2",
+     "gid": "9630023781122120984",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\618185199\\wejt_01_cpo_conector_e.mesh",
+     "wall_m2": 198.3
+    }
+   ]
+  },
+  {
+   "near": [
+    -768,
+    1064
+   ],
+   "box": [
+    -791.0,
+    1055.0,
+    131.0,
+    -746.0,
+    1073.0,
+    199.0
+   ],
+   "wall_m2": 191,
+   "rays_through": "36/80",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-2_1_0_3",
+     "gid": "7348769101306018088",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\2315986574\\wat_lch_building_c_v2b.mesh",
+     "wall_m2": 191.0
+    }
+   ]
+  },
+  {
+   "near": [
+    -916,
+    -278
+   ],
+   "box": [
+    -931.0,
+    -292.0,
+    14.0,
+    -901.0,
+    -263.0,
+    35.0
+   ],
+   "wall_m2": 187,
+   "rays_through": "33/64",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-2_-1_0_3",
+     "gid": "17308065336589689657",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\1762499012\\wbr_cha_building_c_bridge_v4_being_constructed.mesh",
+     "wall_m2": 187.0
+    }
+   ]
+  },
+  {
+   "near": [
+    -1469,
+    1081
+   ],
+   "box": [
+    -1484.0,
+    1069.0,
+    13.0,
+    -1454.0,
+    1093.0,
+    35.0
+   ],
+   "wall_m2": 144,
+   "rays_through": "39/80",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-3_2_0_3",
+     "gid": "18057083412260227157",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\197121907\\wat_nhr_building_b_industrial_c.mesh",
+     "wall_m2": 144.2
+    }
+   ]
+  },
+  {
+   "near": [
+    -1312,
+    1502
+   ],
+   "box": [
+    -1332.0,
+    1495.0,
+    12.0,
+    -1292.0,
+    1510.0,
+    30.0
+   ],
+   "wall_m2": 136,
+   "rays_through": "38/80",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-2_1_0_4",
+     "gid": "1616258604791105293",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3008899992\\wat_lch_building_c_v2_gf_v1.mesh",
+     "wall_m2": 136.2
+    }
+   ]
+  },
+  {
+   "near": [
+    -1791,
+    1259
+   ],
+   "box": [
+    -1810.0,
+    1241.0,
+    65.0,
+    -1772.0,
+    1277.0,
+    97.0
+   ],
+   "wall_m2": 101,
+   "rays_through": "23/80",
+   "walls_only": true,
+   "placements": [
+    {
+     "sector": "exterior_-4_2_0_3",
+     "gid": "9901049265917737499",
+     "mesh": "base\\worlds\\03_night_city\\sectors\\_external\\proxy\\3968306986\\wat_lch_building_b_v1_uf_v1.mesh",
+     "wall_m2": 101.2
     }
    ]
   }

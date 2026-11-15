@@ -133,7 +133,7 @@ python ..\pack_archive.py
   (`tools/world/opened_patches.py`); the fill is gone.
 - The ocean patches (`global_ocean_patch_*`, 87 km2) are left out (`--exclude`), and so are terrain
   proxies.
-- 566 tiles, 1.86 M triangles, 55 MB cooked (29 MB packed archive, from 7 MB). Each tile streams
+- 567 tiles, 1.89 M triangles, 56 MB cooked (29 MB packed archive, from 7 MB). Each tile streams
   within its reach + 300 m.
 - The nav map bake takes the same triangles: `spans.py bin --extra P\colliders.npz` (written by
   `build`), so the Autopilot does not plan through the new walls.

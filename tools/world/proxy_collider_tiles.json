@@ -769,7 +769,7 @@
    ],
    "streaming_distance": 389.4,
    "node_id": 1000000000010069,
-   "tris": 2052
+   "tris": 2180
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m17_2.ent",
@@ -1341,7 +1341,7 @@
    ],
    "streaming_distance": 412.1,
    "node_id": 1000000000010121,
-   "tris": 24870
+   "tris": 25430
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_m5.ent",
@@ -1451,7 +1451,7 @@
    ],
    "streaming_distance": 361.3,
    "node_id": 1000000000010131,
-   "tris": 4301
+   "tris": 4618
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_9.ent",
@@ -1460,9 +1460,9 @@
     1216.0,
     -4.0
    ],
-   "streaming_distance": 382.8,
+   "streaming_distance": 385.2,
    "node_id": 1000000000010132,
-   "tris": 3103
+   "tris": 3121
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m15_10.ent",
@@ -1627,7 +1627,7 @@
    ],
    "streaming_distance": 408.6,
    "node_id": 1000000000010147,
-   "tris": 18354
+   "tris": 18751
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_m5.ent",
@@ -1638,7 +1638,7 @@
    ],
    "streaming_distance": 401.2,
    "node_id": 1000000000010148,
-   "tris": 2863
+   "tris": 2870
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_m1.ent",
@@ -1748,7 +1748,7 @@
    ],
    "streaming_distance": 395.4,
    "node_id": 1000000000010158,
-   "tris": 8174
+   "tris": 8246
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m14_10.ent",
@@ -1924,7 +1924,7 @@
    ],
    "streaming_distance": 403.4,
    "node_id": 1000000000010174,
-   "tris": 11102
+   "tris": 11376
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_m5.ent",
@@ -1946,18 +1946,18 @@
    ],
    "streaming_distance": 391.2,
    "node_id": 1000000000010176,
-   "tris": 1527
+   "tris": 3171
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_m3.ent",
    "pos": [
     -1600.0,
     -320.0,
-    483.0
+    159.0
    ],
    "streaming_distance": 392.1,
    "node_id": 1000000000010177,
-   "tris": 1105
+   "tris": 3758
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_1.ent",
@@ -2001,7 +2001,7 @@
    ],
    "streaming_distance": 377.3,
    "node_id": 1000000000010181,
-   "tris": 6059
+   "tris": 9735
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m13_7.ent",
@@ -2250,11 +2250,11 @@
    "pos": [
     -1472.0,
     -448.0,
-    483.0
+    163.0
    ],
    "streaming_distance": 388.9,
    "node_id": 1000000000010204,
-   "tris": 452
+   "tris": 3518
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_m3.ent",
@@ -2309,7 +2309,7 @@
    ],
    "streaming_distance": 389.1,
    "node_id": 1000000000010209,
-   "tris": 5760
+   "tris": 6486
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_5.ent",
@@ -2338,11 +2338,11 @@
    "pos": [
     -1472.0,
     1088.0,
-    20.0
+    18.0
    ],
    "streaming_distance": 380.5,
    "node_id": 1000000000010212,
-   "tris": 1246
+   "tris": 1313
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m12_9.ent",
@@ -2573,7 +2573,7 @@
    ],
    "streaming_distance": 386.0,
    "node_id": 1000000000010233,
-   "tris": 2469
+   "tris": 2759
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_5.ent",
@@ -2584,7 +2584,7 @@
    ],
    "streaming_distance": 391.6,
    "node_id": 1000000000010234,
-   "tris": 3070
+   "tris": 5122
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_6.ent",
@@ -2595,7 +2595,7 @@
    ],
    "streaming_distance": 378.5,
    "node_id": 1000000000010235,
-   "tris": 2779
+   "tris": 3626
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_7.ent",
@@ -2646,11 +2646,11 @@
    "pos": [
     -1344.0,
     1472.0,
-    20.0
+    17.0
    ],
    "streaming_distance": 386.4,
    "node_id": 1000000000010240,
-   "tris": 7707
+   "tris": 7732
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m11_12.ent",
@@ -2921,11 +2921,11 @@
    "pos": [
     -1216.0,
     576.0,
-    110.0
+    94.0
    ],
    "streaming_distance": 385.7,
    "node_id": 1000000000010265,
-   "tris": 2406
+   "tris": 3623
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m10_6.ent",
@@ -3500,15 +3500,26 @@
    "tris": 451
   },
   {
+   "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_m3.ent",
+   "pos": [
+    -960.0,
+    -320.0,
+    20.0
+   ],
+   "streaming_distance": 366.0,
+   "node_id": 1000000000010318,
+   "tris": 91
+  },
+  {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_m1.ent",
    "pos": [
     -960.0,
     -64.0,
-    247.0
+    142.0
    ],
    "streaming_distance": 374.1,
-   "node_id": 1000000000010318,
-   "tris": 456
+   "node_id": 1000000000010319,
+   "tris": 520
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_0.ent",
@@ -3518,8 +3529,8 @@
     11.0
    ],
    "streaming_distance": 383.4,
-   "node_id": 1000000000010319,
-   "tris": 6367
+   "node_id": 1000000000010320,
+   "tris": 6895
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_1.ent",
@@ -3529,7 +3540,7 @@
     9.0
    ],
    "streaming_distance": 400.3,
-   "node_id": 1000000000010320,
+   "node_id": 1000000000010321,
    "tris": 6418
   },
   {
@@ -3540,8 +3551,8 @@
     32.0
    ],
    "streaming_distance": 389.6,
-   "node_id": 1000000000010321,
-   "tris": 5189
+   "node_id": 1000000000010322,
+   "tris": 5557
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m8_3.ent",
@@ -3551,7 +3562,7 @@
     114.0
    ],
    "streaming_distance": 375.8,
-   "node_id": 1000000000010322,
+   "node_id": 1000000000010323,
    "tris": 915
   },
   {
@@ -3562,7 +3573,7 @@
     44.0
    ],
    "streaming_distance": 362.0,
-   "node_id": 1000000000010323,
+   "node_id": 1000000000010324,
    "tris": 280
   },
   {
@@ -3573,7 +3584,7 @@
     21.0
    ],
    "streaming_distance": 377.2,
-   "node_id": 1000000000010324,
+   "node_id": 1000000000010325,
    "tris": 262
   },
   {
@@ -3584,7 +3595,7 @@
     43.0
    ],
    "streaming_distance": 364.0,
-   "node_id": 1000000000010325,
+   "node_id": 1000000000010326,
    "tris": 56
   },
   {
@@ -3595,7 +3606,7 @@
     57.0
    ],
    "streaming_distance": 388.3,
-   "node_id": 1000000000010326,
+   "node_id": 1000000000010327,
    "tris": 440
   },
   {
@@ -3606,7 +3617,7 @@
     49.0
    ],
    "streaming_distance": 386.2,
-   "node_id": 1000000000010327,
+   "node_id": 1000000000010328,
    "tris": 386
   },
   {
@@ -3617,7 +3628,7 @@
     39.0
    ],
    "streaming_distance": 387.3,
-   "node_id": 1000000000010328,
+   "node_id": 1000000000010329,
    "tris": 402
   },
   {
@@ -3628,7 +3639,7 @@
     47.0
    ],
    "streaming_distance": 348.1,
-   "node_id": 1000000000010329,
+   "node_id": 1000000000010330,
    "tris": 207
   },
   {
@@ -3639,7 +3650,7 @@
     15.0
    ],
    "streaming_distance": 377.8,
-   "node_id": 1000000000010330,
+   "node_id": 1000000000010331,
    "tris": 874
   },
   {
@@ -3650,7 +3661,7 @@
     44.0
    ],
    "streaming_distance": 388.5,
-   "node_id": 1000000000010331,
+   "node_id": 1000000000010332,
    "tris": 299
   },
   {
@@ -3661,7 +3672,7 @@
     44.0
    ],
    "streaming_distance": 388.5,
-   "node_id": 1000000000010332,
+   "node_id": 1000000000010333,
    "tris": 704
   },
   {
@@ -3672,7 +3683,7 @@
     9.0
    ],
    "streaming_distance": 366.2,
-   "node_id": 1000000000010333,
+   "node_id": 1000000000010334,
    "tris": 214
   },
   {
@@ -3683,7 +3694,7 @@
     9.0
    ],
    "streaming_distance": 366.7,
-   "node_id": 1000000000010334,
+   "node_id": 1000000000010335,
    "tris": 530
   },
   {
@@ -3694,7 +3705,7 @@
     39.0
    ],
    "streaming_distance": 342.5,
-   "node_id": 1000000000010335,
+   "node_id": 1000000000010336,
    "tris": 902
   },
   {
@@ -3705,7 +3716,7 @@
     33.0
    ],
    "streaming_distance": 374.7,
-   "node_id": 1000000000010336,
+   "node_id": 1000000000010337,
    "tris": 4
   },
   {
@@ -3716,7 +3727,7 @@
     15.0
    ],
    "streaming_distance": 376.1,
-   "node_id": 1000000000010337,
+   "node_id": 1000000000010338,
    "tris": 102
   },
   {
@@ -3727,7 +3738,7 @@
     33.0
    ],
    "streaming_distance": 367.0,
-   "node_id": 1000000000010338,
+   "node_id": 1000000000010339,
    "tris": 357
   },
   {
@@ -3738,7 +3749,7 @@
     48.0
    ],
    "streaming_distance": 360.1,
-   "node_id": 1000000000010339,
+   "node_id": 1000000000010340,
    "tris": 611
   },
   {
@@ -3749,7 +3760,7 @@
     15.0
    ],
    "streaming_distance": 356.0,
-   "node_id": 1000000000010340,
+   "node_id": 1000000000010341,
    "tris": 114
   },
   {
@@ -3760,7 +3771,7 @@
     33.0
    ],
    "streaming_distance": 369.8,
-   "node_id": 1000000000010341,
+   "node_id": 1000000000010342,
    "tris": 258
   },
   {
@@ -3771,7 +3782,7 @@
     134.0
    ],
    "streaming_distance": 381.7,
-   "node_id": 1000000000010342,
+   "node_id": 1000000000010343,
    "tris": 30
   },
   {
@@ -3782,7 +3793,7 @@
     68.0
    ],
    "streaming_distance": 382.9,
-   "node_id": 1000000000010343,
+   "node_id": 1000000000010344,
    "tris": 8727
   },
   {
@@ -3793,7 +3804,7 @@
     154.0
    ],
    "streaming_distance": 384.3,
-   "node_id": 1000000000010344,
+   "node_id": 1000000000010345,
    "tris": 3116
   },
   {
@@ -3804,7 +3815,7 @@
     53.0
    ],
    "streaming_distance": 340.9,
-   "node_id": 1000000000010345,
+   "node_id": 1000000000010346,
    "tris": 490
   },
   {
@@ -3815,7 +3826,7 @@
     145.0
    ],
    "streaming_distance": 398.1,
-   "node_id": 1000000000010346,
+   "node_id": 1000000000010347,
    "tris": 64
   },
   {
@@ -3826,7 +3837,7 @@
     144.0
    ],
    "streaming_distance": 409.2,
-   "node_id": 1000000000010347,
+   "node_id": 1000000000010348,
    "tris": 163
   },
   {
@@ -3837,7 +3848,7 @@
     45.0
    ],
    "streaming_distance": 374.3,
-   "node_id": 1000000000010348,
+   "node_id": 1000000000010349,
    "tris": 4
   },
   {
@@ -3848,7 +3859,7 @@
     209.0
    ],
    "streaming_distance": 398.3,
-   "node_id": 1000000000010349,
+   "node_id": 1000000000010350,
    "tris": 1401
   },
   {
@@ -3859,7 +3870,7 @@
     103.0
    ],
    "streaming_distance": 399.1,
-   "node_id": 1000000000010350,
+   "node_id": 1000000000010351,
    "tris": 4630
   },
   {
@@ -3870,7 +3881,7 @@
     117.0
    ],
    "streaming_distance": 382.1,
-   "node_id": 1000000000010351,
+   "node_id": 1000000000010352,
    "tris": 528
   },
   {
@@ -3881,7 +3892,7 @@
     9.0
    ],
    "streaming_distance": 380.8,
-   "node_id": 1000000000010352,
+   "node_id": 1000000000010353,
    "tris": 2622
   },
   {
@@ -3892,8 +3903,8 @@
     -9.0
    ],
    "streaming_distance": 381.8,
-   "node_id": 1000000000010353,
-   "tris": 535
+   "node_id": 1000000000010354,
+   "tris": 717
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_4.ent",
@@ -3903,7 +3914,7 @@
     20.0
    ],
    "streaming_distance": 364.3,
-   "node_id": 1000000000010354,
+   "node_id": 1000000000010355,
    "tris": 998
   },
   {
@@ -3914,7 +3925,7 @@
     23.0
    ],
    "streaming_distance": 385.6,
-   "node_id": 1000000000010355,
+   "node_id": 1000000000010356,
    "tris": 695
   },
   {
@@ -3925,7 +3936,7 @@
     17.0
    ],
    "streaming_distance": 351.5,
-   "node_id": 1000000000010356,
+   "node_id": 1000000000010357,
    "tris": 668
   },
   {
@@ -3936,7 +3947,7 @@
     21.0
    ],
    "streaming_distance": 394.1,
-   "node_id": 1000000000010357,
+   "node_id": 1000000000010358,
    "tris": 6256
   },
   {
@@ -3947,8 +3958,8 @@
     47.0
    ],
    "streaming_distance": 393.9,
-   "node_id": 1000000000010358,
-   "tris": 9998
+   "node_id": 1000000000010359,
+   "tris": 10103
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m7_9.ent",
@@ -3958,7 +3969,7 @@
     80.0
    ],
    "streaming_distance": 393.4,
-   "node_id": 1000000000010359,
+   "node_id": 1000000000010360,
    "tris": 5325
   },
   {
@@ -3969,7 +3980,7 @@
     23.0
    ],
    "streaming_distance": 377.2,
-   "node_id": 1000000000010360,
+   "node_id": 1000000000010361,
    "tris": 464
   },
   {
@@ -3980,7 +3991,7 @@
     91.0
    ],
    "streaming_distance": 356.1,
-   "node_id": 1000000000010361,
+   "node_id": 1000000000010362,
    "tris": 121
   },
   {
@@ -3991,7 +4002,7 @@
     44.0
    ],
    "streaming_distance": 387.0,
-   "node_id": 1000000000010362,
+   "node_id": 1000000000010363,
    "tris": 27
   },
   {
@@ -4002,7 +4013,7 @@
     9.0
    ],
    "streaming_distance": 364.6,
-   "node_id": 1000000000010363,
+   "node_id": 1000000000010364,
    "tris": 210
   },
   {
@@ -4013,7 +4024,7 @@
     9.0
    ],
    "streaming_distance": 372.2,
-   "node_id": 1000000000010364,
+   "node_id": 1000000000010365,
    "tris": 114
   },
   {
@@ -4024,7 +4035,7 @@
     9.0
    ],
    "streaming_distance": 363.5,
-   "node_id": 1000000000010365,
+   "node_id": 1000000000010366,
    "tris": 212
   },
   {
@@ -4035,7 +4046,7 @@
     20.0
    ],
    "streaming_distance": 382.8,
-   "node_id": 1000000000010366,
+   "node_id": 1000000000010367,
    "tris": 367
   },
   {
@@ -4046,7 +4057,7 @@
     15.0
    ],
    "streaming_distance": 355.3,
-   "node_id": 1000000000010367,
+   "node_id": 1000000000010368,
    "tris": 212
   },
   {
@@ -4057,7 +4068,7 @@
     33.0
    ],
    "streaming_distance": 343.4,
-   "node_id": 1000000000010368,
+   "node_id": 1000000000010369,
    "tris": 1098
   },
   {
@@ -4068,7 +4079,7 @@
     68.0
    ],
    "streaming_distance": 395.5,
-   "node_id": 1000000000010369,
+   "node_id": 1000000000010370,
    "tris": 1
   },
   {
@@ -4079,7 +4090,7 @@
     68.0
    ],
    "streaming_distance": 410.7,
-   "node_id": 1000000000010370,
+   "node_id": 1000000000010371,
    "tris": 765
   },
   {
@@ -4090,7 +4101,7 @@
     157.0
    ],
    "streaming_distance": 385.8,
-   "node_id": 1000000000010371,
+   "node_id": 1000000000010372,
    "tris": 1028
   },
   {
@@ -4101,7 +4112,7 @@
     40.0
    ],
    "streaming_distance": 376.5,
-   "node_id": 1000000000010372,
+   "node_id": 1000000000010373,
    "tris": 24
   },
   {
@@ -4112,7 +4123,7 @@
     34.0
    ],
    "streaming_distance": 378.7,
-   "node_id": 1000000000010373,
+   "node_id": 1000000000010374,
    "tris": 4
   },
   {
@@ -4123,7 +4134,7 @@
     203.0
    ],
    "streaming_distance": 425.5,
-   "node_id": 1000000000010374,
+   "node_id": 1000000000010375,
    "tris": 1888
   },
   {
@@ -4134,8 +4145,8 @@
     189.0
    ],
    "streaming_distance": 421.1,
-   "node_id": 1000000000010375,
-   "tris": 3261
+   "node_id": 1000000000010376,
+   "tris": 3460
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_0.ent",
@@ -4145,7 +4156,7 @@
     281.0
    ],
    "streaming_distance": 384.7,
-   "node_id": 1000000000010376,
+   "node_id": 1000000000010377,
    "tris": 638
   },
   {
@@ -4156,7 +4167,7 @@
     20.0
    ],
    "streaming_distance": 376.1,
-   "node_id": 1000000000010377,
+   "node_id": 1000000000010378,
    "tris": 1135
   },
   {
@@ -4167,7 +4178,7 @@
     20.0
    ],
    "streaming_distance": 389.1,
-   "node_id": 1000000000010378,
+   "node_id": 1000000000010379,
    "tris": 741
   },
   {
@@ -4178,7 +4189,7 @@
     20.0
    ],
    "streaming_distance": 389.9,
-   "node_id": 1000000000010379,
+   "node_id": 1000000000010380,
    "tris": 471
   },
   {
@@ -4189,7 +4200,7 @@
     19.0
    ],
    "streaming_distance": 400.0,
-   "node_id": 1000000000010380,
+   "node_id": 1000000000010381,
    "tris": 8301
   },
   {
@@ -4200,7 +4211,7 @@
     35.0
    ],
    "streaming_distance": 417.2,
-   "node_id": 1000000000010381,
+   "node_id": 1000000000010382,
    "tris": 3757
   },
   {
@@ -4211,7 +4222,7 @@
     280.0
    ],
    "streaming_distance": 384.5,
-   "node_id": 1000000000010382,
+   "node_id": 1000000000010383,
    "tris": 341
   },
   {
@@ -4222,8 +4233,8 @@
     19.0
    ],
    "streaming_distance": 396.5,
-   "node_id": 1000000000010383,
-   "tris": 14607
+   "node_id": 1000000000010384,
+   "tris": 15417
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_8.ent",
@@ -4233,8 +4244,8 @@
     36.0
    ],
    "streaming_distance": 397.6,
-   "node_id": 1000000000010384,
-   "tris": 41036
+   "node_id": 1000000000010385,
+   "tris": 41178
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_9.ent",
@@ -4244,7 +4255,7 @@
     88.0
    ],
    "streaming_distance": 421.7,
-   "node_id": 1000000000010385,
+   "node_id": 1000000000010386,
    "tris": 16305
   },
   {
@@ -4255,8 +4266,8 @@
     29.0
    ],
    "streaming_distance": 427.0,
-   "node_id": 1000000000010386,
-   "tris": 22507
+   "node_id": 1000000000010387,
+   "tris": 24598
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_11.ent",
@@ -4266,8 +4277,8 @@
     23.0
    ],
    "streaming_distance": 422.8,
-   "node_id": 1000000000010387,
-   "tris": 14262
+   "node_id": 1000000000010388,
+   "tris": 14416
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m6_12.ent",
@@ -4277,7 +4288,7 @@
     163.0
    ],
    "streaming_distance": 380.5,
-   "node_id": 1000000000010388,
+   "node_id": 1000000000010389,
    "tris": 16
   },
   {
@@ -4288,7 +4299,7 @@
     63.0
    ],
    "streaming_distance": 340.8,
-   "node_id": 1000000000010389,
+   "node_id": 1000000000010390,
    "tris": 184
   },
   {
@@ -4299,7 +4310,7 @@
     73.0
    ],
    "streaming_distance": 363.8,
-   "node_id": 1000000000010390,
+   "node_id": 1000000000010391,
    "tris": 306
   },
   {
@@ -4310,7 +4321,7 @@
     86.0
    ],
    "streaming_distance": 396.5,
-   "node_id": 1000000000010391,
+   "node_id": 1000000000010392,
    "tris": 6147
   },
   {
@@ -4321,7 +4332,7 @@
     86.0
    ],
    "streaming_distance": 395.2,
-   "node_id": 1000000000010392,
+   "node_id": 1000000000010393,
    "tris": 5641
   },
   {
@@ -4332,7 +4343,7 @@
     55.0
    ],
    "streaming_distance": 359.9,
-   "node_id": 1000000000010393,
+   "node_id": 1000000000010394,
    "tris": 284
   },
   {
@@ -4343,7 +4354,7 @@
     9.0
    ],
    "streaming_distance": 364.4,
-   "node_id": 1000000000010394,
+   "node_id": 1000000000010395,
    "tris": 108
   },
   {
@@ -4354,7 +4365,7 @@
     9.0
    ],
    "streaming_distance": 369.9,
-   "node_id": 1000000000010395,
+   "node_id": 1000000000010396,
    "tris": 310
   },
   {
@@ -4365,7 +4376,7 @@
     31.0
    ],
    "streaming_distance": 384.1,
-   "node_id": 1000000000010396,
+   "node_id": 1000000000010397,
    "tris": 183
   },
   {
@@ -4376,7 +4387,7 @@
     32.0
    ],
    "streaming_distance": 384.6,
-   "node_id": 1000000000010397,
+   "node_id": 1000000000010398,
    "tris": 157
   },
   {
@@ -4387,7 +4398,7 @@
     48.0
    ],
    "streaming_distance": 361.9,
-   "node_id": 1000000000010398,
+   "node_id": 1000000000010399,
    "tris": 558
   },
   {
@@ -4398,7 +4409,7 @@
     48.0
    ],
    "streaming_distance": 380.5,
-   "node_id": 1000000000010399,
+   "node_id": 1000000000010400,
    "tris": 495
   },
   {
@@ -4409,7 +4420,7 @@
     17.0
    ],
    "streaming_distance": 365.4,
-   "node_id": 1000000000010400,
+   "node_id": 1000000000010401,
    "tris": 176
   },
   {
@@ -4420,7 +4431,7 @@
     8.0
    ],
    "streaming_distance": 367.1,
-   "node_id": 1000000000010401,
+   "node_id": 1000000000010402,
    "tris": 274
   },
   {
@@ -4431,7 +4442,7 @@
     13.0
    ],
    "streaming_distance": 370.8,
-   "node_id": 1000000000010402,
+   "node_id": 1000000000010403,
    "tris": 34
   },
   {
@@ -4442,7 +4453,7 @@
     13.0
    ],
    "streaming_distance": 370.7,
-   "node_id": 1000000000010403,
+   "node_id": 1000000000010404,
    "tris": 287
   },
   {
@@ -4453,7 +4464,7 @@
     -12.0
    ],
    "streaming_distance": 368.1,
-   "node_id": 1000000000010404,
+   "node_id": 1000000000010405,
    "tris": 727
   },
   {
@@ -4464,7 +4475,7 @@
     47.0
    ],
    "streaming_distance": 352.2,
-   "node_id": 1000000000010405,
+   "node_id": 1000000000010406,
    "tris": 262
   },
   {
@@ -4475,7 +4486,7 @@
     16.0
    ],
    "streaming_distance": 405.8,
-   "node_id": 1000000000010406,
+   "node_id": 1000000000010407,
    "tris": 7239
   },
   {
@@ -4486,7 +4497,7 @@
     79.0
    ],
    "streaming_distance": 395.4,
-   "node_id": 1000000000010407,
+   "node_id": 1000000000010408,
    "tris": 25809
   },
   {
@@ -4497,7 +4508,7 @@
     35.0
    ],
    "streaming_distance": 446.1,
-   "node_id": 1000000000010408,
+   "node_id": 1000000000010409,
    "tris": 6359
   },
   {
@@ -4508,7 +4519,7 @@
     136.0
    ],
    "streaming_distance": 389.1,
-   "node_id": 1000000000010409,
+   "node_id": 1000000000010410,
    "tris": 425
   },
   {
@@ -4519,8 +4530,8 @@
     110.0
    ],
    "streaming_distance": 411.7,
-   "node_id": 1000000000010410,
-   "tris": 17321
+   "node_id": 1000000000010411,
+   "tris": 17433
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_5.ent",
@@ -4530,7 +4541,7 @@
     85.0
    ],
    "streaming_distance": 397.6,
-   "node_id": 1000000000010411,
+   "node_id": 1000000000010412,
    "tris": 4507
   },
   {
@@ -4538,11 +4549,11 @@
    "pos": [
     -576.0,
     832.0,
-    51.0
+    31.0
    ],
    "streaming_distance": 386.9,
-   "node_id": 1000000000010412,
-   "tris": 7125
+   "node_id": 1000000000010413,
+   "tris": 10154
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_7.ent",
@@ -4552,8 +4563,8 @@
     29.0
    ],
    "streaming_distance": 400.7,
-   "node_id": 1000000000010413,
-   "tris": 19508
+   "node_id": 1000000000010414,
+   "tris": 21349
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_8.ent",
@@ -4563,8 +4574,8 @@
     31.0
    ],
    "streaming_distance": 392.1,
-   "node_id": 1000000000010414,
-   "tris": 10101
+   "node_id": 1000000000010415,
+   "tris": 11237
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_9.ent",
@@ -4574,8 +4585,8 @@
     7.0
    ],
    "streaming_distance": 431.9,
-   "node_id": 1000000000010415,
-   "tris": 21279
+   "node_id": 1000000000010416,
+   "tris": 21990
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_10.ent",
@@ -4585,8 +4596,8 @@
     27.0
    ],
    "streaming_distance": 416.5,
-   "node_id": 1000000000010416,
-   "tris": 22865
+   "node_id": 1000000000010417,
+   "tris": 23998
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_11.ent",
@@ -4596,8 +4607,8 @@
     26.0
    ],
    "streaming_distance": 398.4,
-   "node_id": 1000000000010417,
-   "tris": 21896
+   "node_id": 1000000000010418,
+   "tris": 21959
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m5_12.ent",
@@ -4607,7 +4618,7 @@
     160.0
    ],
    "streaming_distance": 380.6,
-   "node_id": 1000000000010418,
+   "node_id": 1000000000010419,
    "tris": 1261
   },
   {
@@ -4618,7 +4629,7 @@
     42.0
    ],
    "streaming_distance": 379.2,
-   "node_id": 1000000000010419,
+   "node_id": 1000000000010420,
    "tris": 205
   },
   {
@@ -4629,7 +4640,7 @@
     78.0
    ],
    "streaming_distance": 363.8,
-   "node_id": 1000000000010420,
+   "node_id": 1000000000010421,
    "tris": 334
   },
   {
@@ -4640,7 +4651,7 @@
     90.0
    ],
    "streaming_distance": 392.5,
-   "node_id": 1000000000010421,
+   "node_id": 1000000000010422,
    "tris": 40
   },
   {
@@ -4651,7 +4662,7 @@
     65.0
    ],
    "streaming_distance": 390.0,
-   "node_id": 1000000000010422,
+   "node_id": 1000000000010423,
    "tris": 8815
   },
   {
@@ -4662,7 +4673,7 @@
     11.0
    ],
    "streaming_distance": 374.5,
-   "node_id": 1000000000010423,
+   "node_id": 1000000000010424,
    "tris": 306
   },
   {
@@ -4673,7 +4684,7 @@
     12.0
    ],
    "streaming_distance": 344.3,
-   "node_id": 1000000000010424,
+   "node_id": 1000000000010425,
    "tris": 788
   },
   {
@@ -4684,7 +4695,7 @@
     8.0
    ],
    "streaming_distance": 367.2,
-   "node_id": 1000000000010425,
+   "node_id": 1000000000010426,
    "tris": 212
   },
   {
@@ -4695,7 +4706,7 @@
     47.0
    ],
    "streaming_distance": 378.1,
-   "node_id": 1000000000010426,
+   "node_id": 1000000000010427,
    "tris": 100
   },
   {
@@ -4706,7 +4717,7 @@
     9.0
    ],
    "streaming_distance": 367.8,
-   "node_id": 1000000000010427,
+   "node_id": 1000000000010428,
    "tris": 462
   },
   {
@@ -4717,7 +4728,7 @@
     26.0
    ],
    "streaming_distance": 376.7,
-   "node_id": 1000000000010428,
+   "node_id": 1000000000010429,
    "tris": 19
   },
   {
@@ -4728,7 +4739,7 @@
     8.0
    ],
    "streaming_distance": 373.2,
-   "node_id": 1000000000010429,
+   "node_id": 1000000000010430,
    "tris": 445
   },
   {
@@ -4739,7 +4750,7 @@
     14.0
    ],
    "streaming_distance": 368.6,
-   "node_id": 1000000000010430,
+   "node_id": 1000000000010431,
    "tris": 202
   },
   {
@@ -4750,7 +4761,7 @@
     13.0
    ],
    "streaming_distance": 372.3,
-   "node_id": 1000000000010431,
+   "node_id": 1000000000010432,
    "tris": 246
   },
   {
@@ -4761,7 +4772,7 @@
     15.0
    ],
    "streaming_distance": 369.6,
-   "node_id": 1000000000010432,
+   "node_id": 1000000000010433,
    "tris": 4770
   },
   {
@@ -4772,7 +4783,7 @@
     14.0
    ],
    "streaming_distance": 442.3,
-   "node_id": 1000000000010433,
+   "node_id": 1000000000010434,
    "tris": 12222
   },
   {
@@ -4783,7 +4794,7 @@
     13.0
    ],
    "streaming_distance": 396.6,
-   "node_id": 1000000000010434,
+   "node_id": 1000000000010435,
    "tris": 6228
   },
   {
@@ -4794,7 +4805,7 @@
     160.0
    ],
    "streaming_distance": 396.9,
-   "node_id": 1000000000010435,
+   "node_id": 1000000000010436,
    "tris": 4622
   },
   {
@@ -4805,7 +4816,7 @@
     129.0
    ],
    "streaming_distance": 386.0,
-   "node_id": 1000000000010436,
+   "node_id": 1000000000010437,
    "tris": 227
   },
   {
@@ -4813,22 +4824,22 @@
    "pos": [
     -448.0,
     704.0,
-    166.0
+    85.0
    ],
    "streaming_distance": 376.3,
-   "node_id": 1000000000010437,
-   "tris": 180
+   "node_id": 1000000000010438,
+   "tris": 282
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_6.ent",
    "pos": [
     -448.0,
     832.0,
-    115.0
+    98.0
    ],
-   "streaming_distance": 374.5,
-   "node_id": 1000000000010438,
-   "tris": 1624
+   "streaming_distance": 376.0,
+   "node_id": 1000000000010439,
+   "tris": 1632
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_7.ent",
@@ -4838,7 +4849,7 @@
     29.0
    ],
    "streaming_distance": 402.1,
-   "node_id": 1000000000010439,
+   "node_id": 1000000000010440,
    "tris": 10552
   },
   {
@@ -4849,7 +4860,7 @@
     32.0
    ],
    "streaming_distance": 393.8,
-   "node_id": 1000000000010440,
+   "node_id": 1000000000010441,
    "tris": 9186
   },
   {
@@ -4860,7 +4871,7 @@
     32.0
    ],
    "streaming_distance": 416.9,
-   "node_id": 1000000000010441,
+   "node_id": 1000000000010442,
    "tris": 19613
   },
   {
@@ -4871,8 +4882,8 @@
     40.0
    ],
    "streaming_distance": 405.5,
-   "node_id": 1000000000010442,
-   "tris": 20734
+   "node_id": 1000000000010443,
+   "tris": 21062
   },
   {
    "entity": "user\\jackhumbert\\entities\\ltbf_proxycol_m4_11.ent",
@@ -4882,7 +4893,7 @@
     175.0
    ],
    "streaming_distance": 374.2,
-   "node_id": 1000000000010443,
+   "node_id": 1000000000010444,
    "tris": 9
   },
   {
@@ -4893,7 +4904,7 @@
     42.0
    ],
    "streaming_distance": 380.1,
-   "node_id": 1000000000010444,
+   "node_id": 1000000000010445,
    "tris": 103
   },
   {
@@ -4904,7 +4915,7 @@
     65.0
    ],
    "streaming_distance": 363.8,
-   "node_id": 1000000000010445,
+   "node_id": 1000000000010446,
    "tris": 140
   },
   {
@@ -4915,7 +4926,7 @@
     65.0
    ],
    "streaming_distance": 369.1,
-   "node_id": 1000000000010446,
+   "node_id": 1000000000010447,
    "tris": 226
   },
   {
@@ -4926,7 +4937,7 @@
     30.0
    ],
    "streaming_distance": 381.5,
-   "node_id": 1000000000010447,
+   "node_id": 1000000000010448,
    "tris": 680
   },
   {
@@ -4937,7 +4948,7 @@
     32.0
    ],
    "streaming_distance": 377.0,
-   "node_id": 1000000000010448,
+   "node_id": 1000000000010449,
    "tris": 230
   },
   {
@@ -4948,7 +4959,7 @@
     26.0
    ],
    "streaming_distance": 377.8,
-   "node_id": 1000000000010449,
+   "node_id": 1000000000010450,
    "tris": 86
   },
   {
@@ -4959,7 +4970,7 @@
     16.0
    ],
    "streaming_distance": 369.4,
-   "node_id": 1000000000010450,
+   "node_id": 1000000000010451,
    "tris": 734
   },
   {
@@ -4970,7 +4981,7 @@
     12.0
    ],
    "streaming_distance": 318.8,
-   "node_id": 1000000000010451,
+   "node_id": 1000000000010452,
    "tris": 214
   },
   {
@@ -4981,7 +4992,7 @@
     18.0
    ],
    "streaming_distance": 388.0,
-   "node_id": 1000000000010452,
+   "node_id": 1000000000010453,
    "tris": 92
   },
   {
@@ -4992,7 +5003,7 @@
     14.0
    ],
    "streaming_distance": 388.2,
-   "node_id": 1000000000010453,
+   "node_id": 1000000000010454,
    "tris": 548
   },
   {
@@ -5003,7 +5014,7 @@
     22.0
    ],
    "streaming_distance": 383.2,
-   "node_id": 1000000000010454,
+   "node_id": 1000000000010455,
    "tris": 7
   },
   {
@@ -5014,7 +5025,7 @@
     22.0
    ],
    "streaming_distance": 374.3,
-   "node_id": 1000000000010455,
+   "node_id": 1000000000010456,
    "tris": 43
   },
   {
@@ -5025,7 +5036,7 @@
     48.0
    ],
    "streaming_distance": 336.3,
-   "node_id": 1000000000010456,
+   "node_id": 1000000000010457,
    "tris": 259
   },
   {
@@ -5036,7 +5047,7 @@
     14.0
    ],
    "streaming_distance": 373.8,
-   "node_id": 1000000000010457,
+   "node_id": 1000000000010458,
    "tris": 137
   },
   {
@@ -5047,7 +5058,7 @@
     9.0
    ],
    "streaming_distance": 342.4,
-   "node_id": 1000000000010458,
+   "node_id": 1000000000010459,
    "tris": 106
   },
   {
@@ -5058,7 +5069,7 @@
     9.0
    ],
    "streaming_distance": 365.9,
-   "node_id": 1000000000010459,
+   "node_id": 1000000000010460,
    "tris": 361
   },
   {
@@ -5069,7 +5080,7 @@
     9.0
    ],
    "streaming_distance": 366.1,
-   "node_id": 1000000000010460,
+   "node_id": 1000000000010461,
    "tris": 375
   },
   {
@@ -5080,7 +5091,7 @@
     13.0
    ],
    "streaming_distance": 379.7,
-   "node_id": 1000000000010461,
+   "node_id": 1000000000010462,
    "tris": 150
   },
   {
@@ -5091,7 +5102,7 @@
     8.0
    ],
    "streaming_distance": 381.9,
-   "node_id": 1000000000010462,
+   "node_id": 1000000000010463,
    "tris": 573
   },
   {
@@ -5102,7 +5113,7 @@
     14.0
    ],
    "streaming_distance": 389.2,
-   "node_id": 1000000000010463,
+   "node_id": 1000000000010464,
    "tris": 120
   },
   {
@@ -5113,7 +5124,7 @@
     176.0
    ],
    "streaming_distance": 399.2,
-   "node_id": 1000000000010464,
+   "node_id": 1000000000010465,
    "tris": 971
   },
   {
@@ -5124,7 +5135,7 @@
     71.0
    ],
    "streaming_distance": 396.8,
-   "node_id": 1000000000010465,
+   "node_id": 1000000000010466,
    "tris": 6530
   },
   {
@@ -5135,7 +5146,7 @@
     25.0
    ],
    "streaming_distance": 402.9,
-   "node_id": 1000000000010466,
+   "node_id": 1000000000010467,
    "tris": 6961
   },
   {
@@ -5146,7 +5157,7 @@
     49.0
    ],
    "streaming_distance": 382.0,
-   "node_id": 1000000000010467,
+   "node_id": 1000000000010468,
    "tris": 1087
   },
   {
@@ -5157,7 +5168,7 @@
     332.0
    ],
    "streaming_distance": 368.8,
-   "node_id": 1000000000010468,
+   "node_id": 1000000000010469,
    "tris": 123
   },
   {
@@ -5168,7 +5179,7 @@
     168.0
    ],
    "streaming_distance": 391.1,
-   "node_id": 1000000000010469,
+   "node_id": 1000000000010470,
    "tris": 588
   },
   {
@@ -5179,7 +5190,7 @@
     201.0
    ],
    "streaming_distance": 394.6,
-   "node_id": 1000000000010470,
+   "node_id": 1000000000010471,
    "tris": 185
   },
   {
@@ -5190,7 +5201,7 @@
     54.0
    ],
    "streaming_distance": 393.8,
-   "node_id": 1000000000010471,
+   "node_id": 1000000000010472,
    "tris": 4384
   },
   {
@@ -5201,7 +5212,7 @@
     72.0
    ],
    "streaming_distance": 366.1,
-   "node_id": 1000000000010472,
+   "node_id": 1000000000010473,
    "tris": 264
   },
   {
@@ -5212,7 +5223,7 @@
     70.0
    ],
    "streaming_distance": 382.4,
-   "node_id": 1000000000010473,
+   "node_id": 1000000000010474,
    "tris": 490
   },
   {
@@ -5223,7 +5234,7 @@
     60.0
    ],
    "streaming_distance": 385.0,
-   "node_id": 1000000000010474,
+   "node_id": 1000000000010475,
    "tris": 98
   },
   {
@@ -5234,7 +5245,7 @@
     29.0
    ],
    "streaming_distance": 367.0,
-   "node_id": 1000000000010475,
+   "node_id": 1000000000010476,
    "tris": 516
   },
   {
@@ -5245,7 +5256,7 @@
     26.0
    ],
    "streaming_distance": 367.2,
-   "node_id": 1000000000010476,
+   "node_id": 1000000000010477,
    "tris": 568
   },
   {
@@ -5256,7 +5267,7 @@
     32.0
    ],
    "streaming_distance": 367.2,
-   "node_id": 1000000000010477,
+   "node_id": 1000000000010478,
    "tris": 232
   },
   {
@@ -5267,7 +5278,7 @@
     10.0
    ],
    "streaming_distance": 371.5,
-   "node_id": 1000000000010478,
+   "node_id": 1000000000010479,
    "tris": 71
   },
   {
@@ -5278,7 +5289,7 @@
     9.0
    ],
    "streaming_distance": 372.6,
-   "node_id": 1000000000010479,
+   "node_id": 1000000000010480,
    "tris": 1035
   },
   {
@@ -5289,7 +5300,7 @@
     12.0
    ],
    "streaming_distance": 363.5,
-   "node_id": 1000000000010480,
+   "node_id": 1000000000010481,
    "tris": 88
   },
   {
@@ -5300,7 +5311,7 @@
     22.0
    ],
    "streaming_distance": 384.0,
-   "node_id": 1000000000010481,
+   "node_id": 1000000000010482,
    "tris": 16
   },
   {
@@ -5311,7 +5322,7 @@
     22.0
    ],
    "streaming_distance": 373.5,
-   "node_id": 1000000000010482,
+   "node_id": 1000000000010483,
    "tris": 49
   },
   {
@@ -5322,7 +5333,7 @@
     13.0
    ],
    "streaming_distance": 348.3,
-   "node_id": 1000000000010483,
+   "node_id": 1000000000010484,
    "tris": 366
   },
   {
@@ -5333,7 +5344,7 @@
     11.0
    ],
    "streaming_distance": 362.3,
-   "node_id": 1000000000010484,
+   "node_id": 1000000000010485,
    "tris": 87
   },
   {
@@ -5344,7 +5355,7 @@
     9.0
    ],
    "streaming_distance": 378.8,
-   "node_id": 1000000000010485,
+   "node_id": 1000000000010486,
    "tris": 245
   },
   {
@@ -5355,7 +5366,7 @@
     11.0
    ],
    "streaming_distance": 342.3,
-   "node_id": 1000000000010486,
+   "node_id": 1000000000010487,
    "tris": 106
   },
   {
@@ -5366,7 +5377,7 @@
     8.0
    ],
    "streaming_distance": 375.0,
-   "node_id": 1000000000010487,
+   "node_id": 1000000000010488,
    "tris": 298
   },
   {
@@ -5377,7 +5388,7 @@
     126.0
    ],
    "streaming_distance": 389.4,
-   "node_id": 1000000000010488,
+   "node_id": 1000000000010489,
    "tris": 218
   },
   {
@@ -5388,7 +5399,7 @@
     126.0
    ],
    "streaming_distance": 389.0,
-   "node_id": 1000000000010489,
+   "node_id": 1000000000010490,
    "tris": 14
   },
   {
@@ -5399,7 +5410,7 @@
     67.0
    ],
    "streaming_distance": 380.7,
-   "node_id": 1000000000010490,
+   "node_id": 1000000000010491,
    "tris": 919
   },
   {
@@ -5410,7 +5421,7 @@
     62.0
    ],
    "streaming_distance": 379.4,
-   "node_id": 1000000000010491,
+   "node_id": 1000000000010492,
    "tris": 110
   },
   {
@@ -5421,7 +5432,7 @@
     74.0
    ],
    "streaming_distance": 357.3,
-   "node_id": 1000000000010492,
+   "node_id": 1000000000010493,
    "tris": 47
   },
   {
@@ -5432,7 +5443,7 @@
     56.0
    ],
    "streaming_distance": 353.9,
-   "node_id": 1000000000010493,
+   "node_id": 1000000000010494,
    "tris": 137
   },
   {
@@ -5443,7 +5454,7 @@
     31.0
    ],
    "streaming_distance": 337.9,
-   "node_id": 1000000000010494,
+   "node_id": 1000000000010495,
    "tris": 199
   },
   {
@@ -5454,7 +5465,7 @@
     7.0
    ],
    "streaming_distance": 365.8,
-   "node_id": 1000000000010495,
+   "node_id": 1000000000010496,
    "tris": 37
   },
   {
@@ -5465,7 +5476,7 @@
     14.0
    ],
    "streaming_distance": 382.9,
-   "node_id": 1000000000010496,
+   "node_id": 1000000000010497,
    "tris": 242
   },
   {
@@ -5476,7 +5487,7 @@
     10.0
    ],
    "streaming_distance": 381.3,
-   "node_id": 1000000000010497,
+   "node_id": 1000000000010498,
    "tris": 95
   },
   {
@@ -5487,7 +5498,7 @@
     43.0
    ],
    "streaming_distance": 366.0,
-   "node_id": 1000000000010498,
+   "node_id": 1000000000010499,
    "tris": 711
   },
   {
@@ -5498,7 +5509,7 @@
     10.0
    ],
    "streaming_distance": 364.8,
-   "node_id": 1000000000010499,
+   "node_id": 1000000000010500,
    "tris": 112
   },
   {
@@ -5509,7 +5520,7 @@
     9.0
    ],
    "streaming_distance": 362.7,
-   "node_id": 1000000000010500,
+   "node_id": 1000000000010501,
    "tris": 106
   },
   {
@@ -5520,7 +5531,7 @@
     8.0
    ],
    "streaming_distance": 354.0,
-   "node_id": 1000000000010501,
+   "node_id": 1000000000010502,
    "tris": 318
   },
   {
@@ -5531,7 +5542,7 @@
     13.0
    ],
    "streaming_distance": 381.6,
-   "node_id": 1000000000010502,
+   "node_id": 1000000000010503,
    "tris": 367
   },
   {
@@ -5542,7 +5553,7 @@
     69.0
    ],
    "streaming_distance": 379.2,
-   "node_id": 1000000000010503,
+   "node_id": 1000000000010504,
    "tris": 768
   },
   {
@@ -5553,7 +5564,7 @@
     126.0
    ],
    "streaming_distance": 382.2,
-   "node_id": 1000000000010504,
+   "node_id": 1000000000010505,
    "tris": 96
   },
   {
@@ -5564,7 +5575,7 @@
     126.0
    ],
    "streaming_distance": 389.1,
-   "node_id": 1000000000010505,
+   "node_id": 1000000000010506,
    "tris": 297
   },
   {
@@ -5575,7 +5586,7 @@
     14.0
    ],
    "streaming_distance": 334.1,
-   "node_id": 1000000000010506,
+   "node_id": 1000000000010507,
    "tris": 110
   },
   {
@@ -5586,7 +5597,7 @@
     13.0
    ],
    "streaming_distance": 365.0,
-   "node_id": 1000000000010507,
+   "node_id": 1000000000010508,
    "tris": 88
   },
   {
@@ -5597,7 +5608,7 @@
     13.0
    ],
    "streaming_distance": 364.2,
-   "node_id": 1000000000010508,
+   "node_id": 1000000000010509,
    "tris": 403
   },
   {
@@ -5608,7 +5619,7 @@
     28.0
    ],
    "streaming_distance": 347.7,
-   "node_id": 1000000000010509,
+   "node_id": 1000000000010510,
    "tris": 578
   },
   {
@@ -5619,7 +5630,7 @@
     47.0
    ],
    "streaming_distance": 378.1,
-   "node_id": 1000000000010510,
+   "node_id": 1000000000010511,
    "tris": 485
   },
   {
@@ -5630,7 +5641,7 @@
     55.0
    ],
    "streaming_distance": 328.8,
-   "node_id": 1000000000010511,
+   "node_id": 1000000000010512,
    "tris": 269
   },
   {
@@ -5641,7 +5652,7 @@
     65.0
    ],
    "streaming_distance": 381.2,
-   "node_id": 1000000000010512,
+   "node_id": 1000000000010513,
    "tris": 636
   },
   {
@@ -5652,7 +5663,7 @@
     69.0
    ],
    "streaming_distance": 379.4,
-   "node_id": 1000000000010513,
+   "node_id": 1000000000010514,
    "tris": 4
   },
   {
@@ -5663,7 +5674,7 @@
     9.0
    ],
    "streaming_distance": 369.7,
-   "node_id": 1000000000010514,
+   "node_id": 1000000000010515,
    "tris": 128
   },
   {
@@ -5674,7 +5685,7 @@
     17.0
    ],
    "streaming_distance": 366.7,
-   "node_id": 1000000000010515,
+   "node_id": 1000000000010516,
    "tris": 88
   },
   {
@@ -5685,7 +5696,7 @@
     54.0
    ],
    "streaming_distance": 377.2,
-   "node_id": 1000000000010516,
+   "node_id": 1000000000010517,
    "tris": 16
   },
   {
@@ -5696,7 +5707,7 @@
     54.0
    ],
    "streaming_distance": 369.3,
-   "node_id": 1000000000010517,
+   "node_id": 1000000000010518,
    "tris": 194
   },
   {
@@ -5707,7 +5718,7 @@
     10.0
    ],
    "streaming_distance": 375.6,
-   "node_id": 1000000000010518,
+   "node_id": 1000000000010519,
    "tris": 447
   },
   {
@@ -5718,7 +5729,7 @@
     10.0
    ],
    "streaming_distance": 376.6,
-   "node_id": 1000000000010519,
+   "node_id": 1000000000010520,
    "tris": 252
   },
   {
@@ -5729,7 +5740,7 @@
     35.0
    ],
    "streaming_distance": 374.0,
-   "node_id": 1000000000010520,
+   "node_id": 1000000000010521,
    "tris": 362
   },
   {
@@ -5740,7 +5751,7 @@
     76.0
    ],
    "streaming_distance": 349.8,
-   "node_id": 1000000000010521,
+   "node_id": 1000000000010522,
    "tris": 170
   },
   {
@@ -5751,7 +5762,7 @@
     405.0
    ],
    "streaming_distance": 381.0,
-   "node_id": 1000000000010522,
+   "node_id": 1000000000010523,
    "tris": 1440
   },
   {
@@ -5762,7 +5773,7 @@
     14.0
    ],
    "streaming_distance": 363.6,
-   "node_id": 1000000000010523,
+   "node_id": 1000000000010524,
    "tris": 85
   },
   {
@@ -5773,7 +5784,7 @@
     14.0
    ],
    "streaming_distance": 326.8,
-   "node_id": 1000000000010524,
+   "node_id": 1000000000010525,
    "tris": 158
   },
   {
@@ -5784,7 +5795,7 @@
     107.0
    ],
    "streaming_distance": 386.0,
-   "node_id": 1000000000010525,
+   "node_id": 1000000000010526,
    "tris": 5729
   },
   {
@@ -5795,7 +5806,7 @@
     155.0
    ],
    "streaming_distance": 382.0,
-   "node_id": 1000000000010526,
+   "node_id": 1000000000010527,
    "tris": 2574
   },
   {
@@ -5806,7 +5817,7 @@
     24.0
    ],
    "streaming_distance": 374.1,
-   "node_id": 1000000000010527,
+   "node_id": 1000000000010528,
    "tris": 528
   },
   {
@@ -5817,7 +5828,7 @@
     20.0
    ],
    "streaming_distance": 374.3,
-   "node_id": 1000000000010528,
+   "node_id": 1000000000010529,
    "tris": 352
   },
   {
@@ -5828,7 +5839,7 @@
     453.0
    ],
    "streaming_distance": 366.8,
-   "node_id": 1000000000010529,
+   "node_id": 1000000000010530,
    "tris": 21
   },
   {
@@ -5839,7 +5850,7 @@
     117.0
    ],
    "streaming_distance": 378.4,
-   "node_id": 1000000000010530,
+   "node_id": 1000000000010531,
    "tris": 376
   },
   {
@@ -5850,7 +5861,7 @@
     34.0
    ],
    "streaming_distance": 330.6,
-   "node_id": 1000000000010531,
+   "node_id": 1000000000010532,
    "tris": 540
   },
   {
@@ -5861,7 +5872,7 @@
     26.0
    ],
    "streaming_distance": 385.3,
-   "node_id": 1000000000010532,
+   "node_id": 1000000000010533,
    "tris": 1456
   },
   {
@@ -5872,7 +5883,7 @@
     10.0
    ],
    "streaming_distance": 380.0,
-   "node_id": 1000000000010533,
+   "node_id": 1000000000010534,
    "tris": 230
   },
   {
@@ -5883,7 +5894,7 @@
     35.0
    ],
    "streaming_distance": 368.9,
-   "node_id": 1000000000010534,
+   "node_id": 1000000000010535,
    "tris": 355
   },
   {
@@ -5894,7 +5905,7 @@
     160.0
    ],
    "streaming_distance": 392.7,
-   "node_id": 1000000000010535,
+   "node_id": 1000000000010536,
    "tris": 350
   },
   {
@@ -5905,7 +5916,7 @@
     34.0
    ],
    "streaming_distance": 389.3,
-   "node_id": 1000000000010536,
+   "node_id": 1000000000010537,
    "tris": 743
   },
   {
@@ -5916,7 +5927,7 @@
     14.0
    ],
    "streaming_distance": 382.4,
-   "node_id": 1000000000010537,
+   "node_id": 1000000000010538,
    "tris": 1048
   },
   {
@@ -5927,7 +5938,7 @@
     23.0
    ],
    "streaming_distance": 326.9,
-   "node_id": 1000000000010538,
+   "node_id": 1000000000010539,
    "tris": 110
   },
   {
@@ -5938,7 +5949,7 @@
     46.0
    ],
    "streaming_distance": 372.1,
-   "node_id": 1000000000010539,
+   "node_id": 1000000000010540,
    "tris": 428
   },
   {
@@ -5949,7 +5960,7 @@
     36.0
    ],
    "streaming_distance": 369.8,
-   "node_id": 1000000000010540,
+   "node_id": 1000000000010541,
    "tris": 85
   },
   {
@@ -5960,7 +5971,7 @@
     160.0
    ],
    "streaming_distance": 381.3,
-   "node_id": 1000000000010541,
+   "node_id": 1000000000010542,
    "tris": 253
   },
   {
@@ -5971,7 +5982,7 @@
     36.0
    ],
    "streaming_distance": 380.8,
-   "node_id": 1000000000010542,
+   "node_id": 1000000000010543,
    "tris": 566
   },
   {
@@ -5982,7 +5993,7 @@
     41.0
    ],
    "streaming_distance": 379.5,
-   "node_id": 1000000000010543,
+   "node_id": 1000000000010544,
    "tris": 4
   },
   {
@@ -5993,7 +6004,7 @@
     153.0
    ],
    "streaming_distance": 360.1,
-   "node_id": 1000000000010544,
+   "node_id": 1000000000010545,
    "tris": 260
   },
   {
@@ -6004,7 +6015,7 @@
     153.0
    ],
    "streaming_distance": 357.1,
-   "node_id": 1000000000010545,
+   "node_id": 1000000000010546,
    "tris": 228
   },
   {
@@ -6015,7 +6026,7 @@
     53.0
    ],
    "streaming_distance": 353.3,
-   "node_id": 1000000000010546,
+   "node_id": 1000000000010547,
    "tris": 774
   },
   {
@@ -6026,7 +6037,7 @@
     51.0
    ],
    "streaming_distance": 355.5,
-   "node_id": 1000000000010547,
+   "node_id": 1000000000010548,
    "tris": 1352
   },
   {
@@ -6037,7 +6048,7 @@
     38.0
    ],
    "streaming_distance": 376.9,
-   "node_id": 1000000000010548,
+   "node_id": 1000000000010549,
    "tris": 501
   },
   {
@@ -6048,7 +6059,7 @@
     121.0
    ],
    "streaming_distance": 383.5,
-   "node_id": 1000000000010549,
+   "node_id": 1000000000010550,
    "tris": 388
   },
   {
@@ -6059,7 +6070,7 @@
     38.0
    ],
    "streaming_distance": 376.9,
-   "node_id": 1000000000010550,
+   "node_id": 1000000000010551,
    "tris": 343
   },
   {
@@ -6070,7 +6081,7 @@
     117.0
    ],
    "streaming_distance": 383.7,
-   "node_id": 1000000000010551,
+   "node_id": 1000000000010552,
    "tris": 42
   },
   {
@@ -6081,7 +6092,7 @@
     150.0
    ],
    "streaming_distance": 381.8,
-   "node_id": 1000000000010552,
+   "node_id": 1000000000010553,
    "tris": 38
   },
   {
@@ -6092,7 +6103,7 @@
     204.0
    ],
    "streaming_distance": 345.3,
-   "node_id": 1000000000010553,
+   "node_id": 1000000000010554,
    "tris": 3
   },
   {
@@ -6103,7 +6114,7 @@
     121.0
    ],
    "streaming_distance": 384.0,
-   "node_id": 1000000000010554,
+   "node_id": 1000000000010555,
    "tris": 40
   },
   {
@@ -6114,7 +6125,7 @@
     58.0
    ],
    "streaming_distance": 350.3,
-   "node_id": 1000000000010555,
+   "node_id": 1000000000010556,
    "tris": 601
   },
   {
@@ -6125,7 +6136,7 @@
     40.0
    ],
    "streaming_distance": 356.7,
-   "node_id": 1000000000010556,
+   "node_id": 1000000000010557,
    "tris": 184
   },
   {
@@ -6136,7 +6147,7 @@
     42.0
    ],
    "streaming_distance": 388.1,
-   "node_id": 1000000000010557,
+   "node_id": 1000000000010558,
    "tris": 963
   },
   {
@@ -6147,7 +6158,7 @@
     23.0
    ],
    "streaming_distance": 361.8,
-   "node_id": 1000000000010558,
+   "node_id": 1000000000010559,
    "tris": 202
   },
   {
@@ -6158,7 +6169,7 @@
     139.0
    ],
    "streaming_distance": 389.4,
-   "node_id": 1000000000010559,
+   "node_id": 1000000000010560,
    "tris": 10
   },
   {
@@ -6169,7 +6180,7 @@
     143.0
    ],
    "streaming_distance": 387.7,
-   "node_id": 1000000000010560,
+   "node_id": 1000000000010561,
    "tris": 123
   },
   {
@@ -6180,7 +6191,7 @@
     42.0
    ],
    "streaming_distance": 386.2,
-   "node_id": 1000000000010561,
+   "node_id": 1000000000010562,
    "tris": 182
   },
   {
@@ -6191,7 +6202,7 @@
     192.0
    ],
    "streaming_distance": 385.7,
-   "node_id": 1000000000010562,
+   "node_id": 1000000000010563,
    "tris": 6
   },
   {
@@ -6202,7 +6213,7 @@
     264.0
    ],
    "streaming_distance": 389.8,
-   "node_id": 1000000000010563,
+   "node_id": 1000000000010564,
    "tris": 11
   },
   {
@@ -6213,7 +6224,7 @@
     264.0
    ],
    "streaming_distance": 390.0,
-   "node_id": 1000000000010564,
+   "node_id": 1000000000010565,
    "tris": 5
   },
   {
@@ -6224,7 +6235,7 @@
     203.0
    ],
    "streaming_distance": 347.2,
-   "node_id": 1000000000010565,
+   "node_id": 1000000000010566,
    "tris": 412
   }
  ]

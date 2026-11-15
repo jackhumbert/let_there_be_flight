@@ -455,6 +455,48 @@
       ],
       "expect": "hit",
       "note": "LTBF's proxy collider tile answers these rays (a walls_only entry in tools/world/proxy_collider_force.json)."
+    },
+    {
+      "name": "kabuki_tower_module_159",
+      "box": [
+        -601,
+        879,
+        153,
+        -561,
+        937,
+        178
+      ],
+      "truth": "a Kabuki tower module (z 159 to 178) drawn by a never-hiding proxy with no collision; the tower's real collision resumes at 239 m, too far above for the walls scan's 12 m roof reach",
+      "navmap": "not checked",
+      "cause": "game: proxy placement 18373753019335377627 has no collision; the proxy audit counted its walls covered by the real surfaces above",
+      "rays": [
+        [
+          -598.7,
+          889.4,
+          161.9,
+          -591.8,
+          890.7,
+          161.9
+        ],
+        [
+          -594.8,
+          912.8,
+          168.3,
+          -589.1,
+          908.8,
+          168.3
+        ],
+        [
+          -598.7,
+          889.4,
+          173.6,
+          -591.8,
+          890.7,
+          173.6
+        ]
+      ],
+      "expect": "hit",
+      "note": "LTBF's proxy collider tile answers these rays (a walls_only entry found by proxy_colliders.py walls --roof inf). The Autopilot flew into this face before the entry."
     }
   ]
 }

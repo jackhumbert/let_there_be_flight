@@ -13,7 +13,7 @@ The goal: the city should be flyable as it looks. Two sides to it:
 - Collision is added where the game draws something solid but gives it none: proxy-only geometry
   (for example the raised complex at (-1600, -680), 150 to 350 m up). `tools/world/proxy_colliders.py`
   cuts the proxy meshes not covered by real collision, terrain or a finer proxy into one collider
-  entity per 128 m tile (566 tiles), cooked with `tools/packaging/physx_cook`, placed by
+  entity per 128 m tile (567 tiles), cooked with `tools/packaging/physx_cook`, placed by
   `tools/pads/pad_sector.py` from `tools/world/proxy_collider_tiles.json`. The bake takes the same
   triangles so the Autopilot does not plan through them. Steps: `tools/navmap_bake/README.md`.
 - A proxy is only what the game draws from afar when it hides up close (`nearAutoHideDistance` above
@@ -49,6 +49,9 @@ rule counts a surface under the top real surface of its column as covered, so a 
 building under a roof that has collision keeps open walls; `proxy_colliders.py walls` finds
 those (walls drawn with a roof near above, nothing behind them and open air beside them,
 checked with rays from outside) and writes them as `walls_only` entries to read over and add:
-only their near-vertical faces get collision, since the roof has its own. To find more after a bake change, `tools/world/opened_patches.py --old <spans> --new <spans>`
+only their near-vertical faces get collision, since the roof has its own. A roof is real
+collision at most 12 m over a placement's top by default; a tower stacked from modules has its
+real roof far above the lower ones (a Kabuki tower: a module at 159 to 178 m with nothing until
+239 m), so the scan is also run with `--roof inf`, where any real collision above counts. To find more after a bake change, `tools/world/opened_patches.py --old <spans> --new <spans>`
 lists the space that opened and, per patch, how much of the drawn surface bounding it has no
 collision (a hollow building) or none does (open air the old bake closed).
