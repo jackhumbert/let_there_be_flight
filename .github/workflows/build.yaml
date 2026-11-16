@@ -13,13 +13,13 @@ jobs:
         config: [ Debug, RelWithDebInfo ]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         submodules: true
         fetch-depth: 0
-    - uses: ilammy/msvc-dev-cmd@v1.12.1
+    - uses: TheMrMilchmann/setup-msvc-dev@v4
       with:
-        arch: amd64
+        arch: x64
 
     - name: The repo stands alone (no private tooling, sessions or machine paths)
       run: python tools/maintenance/check_public.py
@@ -60,25 +60,25 @@ jobs:
         echo "PRETTY_CONFIG=${config}" | Out-File -FilePath $env:GITHUB_ENV -Encoding UTF8 -Append
 
     - name: Upload game_dir with zip file name
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ env.MOD_ZIP_FILENAME }}_${{ env.PRETTY_CONFIG }}_${{ env.SHORT_SHA }}
         path: ${{ github.workspace }}/game_dir/**
 
     - name: Upload game_dir_debug with zip file name
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ env.MOD_ZIP_FILENAME }}_${{ env.PRETTY_CONFIG }}_${{ env.SHORT_SHA }}_pdb
         path: ${{ github.workspace }}/game_dir_debug/**
 
     # - name: Upload game_dir_requirements with zip file name
-    #   uses: actions/upload-artifact@v4
+    #   uses: actions/upload-artifact@v7
     #   with:
     #     name: ${{ env.MOD_ZIP_FILENAME }}_${{ env.PRETTY_CONFIG }}_${{ env.SHORT_SHA }}_requirements
     #     path: ${{ github.workspace }}/game_dir_requirements/**
 
     # - name: Upload game_dir_requirements_debug with zip file name
-    #   uses: actions/upload-artifact@v4
+    #   uses: actions/upload-artifact@v7
     #   with:
     #     name: ${{ env.MOD_ZIP_FILENAME }}_${{ env.PRETTY_CONFIG }}_${{ env.SHORT_SHA }}_requirements_pdb
     #     path: ${{ github.workspace }}/game_dir_requirements_debug/**
@@ -91,9 +91,8 @@ jobs:
 
     - name: Push shields branch
       if: github.ref == 'refs/heads/main'
-      uses: s0/git-publish-subdir-action@develop
-      env:
-        REPO: self
-        BRANCH: shields
-        FOLDER: badge
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_branch: shields
+        publish_dir: badge

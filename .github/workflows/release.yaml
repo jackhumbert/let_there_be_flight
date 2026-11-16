@@ -15,13 +15,13 @@ jobs:
       NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: true
           fetch-depth: 0   # git-cliff needs the full history and all tags to build the changelog
-      - uses: ilammy/msvc-dev-cmd@v1.12.1
+      - uses: TheMrMilchmann/setup-msvc-dev@v4
         with:
-          arch: amd64
+          arch: x64
 
       # the archive is packed in the build (CMAKE_CI_BUILD turns LTBF_PACK_ARCHIVE on): the WolvenKit CLI is
       # downloaded and needs nothing of the game's
@@ -40,7 +40,7 @@ jobs:
           }
 
       - name: Install git-cliff
-        uses: Alex079/setup-custom-tool@v1
+        uses: Alex079/setup-custom-tool@v3
         with:
           archiveUrl: https://github.com/orhun/git-cliff/releases/download/v${{ env.GIT_CLIFF_VERSION }}/git-cliff-${{ env.GIT_CLIFF_VERSION }}-x86_64-pc-windows-msvc.zip
           archiveGlob: '*'
@@ -84,7 +84,7 @@ jobs:
       #   working-directory:  game_dir_requirements_debug
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           name: ${{ github.ref_name }}${{ env.CYBERPUNK_2077_GAME_VERSION_STR }}
           body_path: ${{ env.CHANGELOG_FILE }}
