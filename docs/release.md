@@ -12,6 +12,7 @@ git tag vX.Y.Z && git push origin main vX.Y.Z
 - Checkout uses `fetch-depth: 0`; with a shallow clone git-cliff sees no history and the release body has no Changes section.
 - Commit messages feed git-cliff (`cliff.toml`): `feat:`, `fix:` and `perf:` appear in the changelog, written for players; `docs:`, `refactor:`, `build:`, `test:`, `chore:` and `ci:` are skipped.
 - The changelog is everything since the last full release: the workflow finds that tag (`git describe --exclude "*-*"`) and runs `git-cliff --tag <tag> <previous>..<tag>`. A prerelease tag in between is not a version of its own (`ignore_tags`), so `vX.Y.Z-rc.1` and the `vX.Y.Z` after it both list the whole release. `git-cliff --current` (0.10.0) is not used: in CI it put every older version under the new one.
+- Release notes are written by hand, one file per version: `docs/releases/vX.Y.Z.md` (what is new, fixes, upgrading, known issues, for players). The workflow puts it at the top of the GitHub release, folds the generated commit list under it, and sends the notes alone to Nexus. A prerelease tag uses its version's file. Without the file the commit list is the body: write it before the tag.
 - The archive is packed in CI with a downloaded WolvenKit CLI and no secret (`CMAKE_CI_BUILD` turns `LTBF_PACK_ARCHIVE` on). The Build log says "Packing let_there_be_flight.archive", and both workflows fail when no archive was packed. Tag a prerelease first (`vX.Y.Z-rc.1`: no Nexus upload) to prove the pipeline.
 - Nexus Mods: the same zip is uploaded by the release workflow; see "Nexus Mods" below.
 
