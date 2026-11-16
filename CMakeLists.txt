@@ -31,6 +31,12 @@ find_program(REDSCRIPT_CLI_EXE NAMES redscript-cli.exe PATHS "${MOD_TOOLS_DIR}" 
 find_program(CYBERPUNK_2077_EXE NAMES Cyberpunk2077.exe PATHS "${CYBERPUNK_2077_GAME_DIR}/bin/x64" CACHE DOC "Cyberpunk2077.exe Executable File")
 
 set(MOD_GAME_DIR_FMOD_FOLDER "${MOD_GAME_DIR}/red4ext/plugins/${MOD_SLUG}")
+# FMOD Studio's dll and banks left in game_dir from before the plugin played through FMOD Core: nothing loads them,
+# and game_dir is installed and zipped into releases as it is
+file(REMOVE
+  "${MOD_GAME_DIR_FMOD_FOLDER}/fmodstudio.dll"
+  "${MOD_GAME_DIR_FMOD_FOLDER}/base_sounds.bank"
+  "${MOD_GAME_DIR_FMOD_FOLDER}/base_sounds.strings.bank")
 
 # Sound files LTBF plays itself (Audio/Samples, docs/design/audio.md, Samples)
 
