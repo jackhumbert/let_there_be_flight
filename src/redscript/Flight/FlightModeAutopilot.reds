@@ -334,11 +334,18 @@ public native class FlightModeAutopilot extends FlightMode {
   }
 
   // Engaged or disengaged with the player in the car: as vanilla autodrive, no combat events while it drives
-  // (AutoDriveSystem.OnAutodriveToggled), and vanilla's autodrive panel.
+  // (AutoDriveSystem.OnAutodriveToggled), and vanilla's autodrive panel. No saving either, as under vanilla
+  // autodrive: the two facts are saved with the game, and a save made mid-flight would load with them set and
+  // nothing flying. The lock has its own name, so vanilla's autodrive ending does not lift it.
   protected func AutodriveEngaged(engaged: Bool) -> Void {
     let game = this.component.GetVehicle().GetGame();
     SetFactValue(game, n"disable_combat_events", engaged ? 1 : 0);
     SetFactValue(game, n"player_in_autodrive", engaged ? 1 : 0);
+    if engaged {
+      SaveLocksManager.RequestSaveLockAdd(game, n"LTBF_Autopilot");
+    } else {
+      SaveLocksManager.RequestSaveLockRemove(game, n"LTBF_Autopilot");
+    }
     this.PublishAutodriveUI(engaged);
   }
 
