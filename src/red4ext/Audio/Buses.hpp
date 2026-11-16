@@ -10,6 +10,8 @@ namespace Buses {
 // group's limiter (a loud engine ducked the scrape with it)
 enum class Bus { Engine, Wind, Warning, Scrape };
 inline constexpr int kBusCount = 4;
+// arrays indexed by Bus are sized with kBusCount: a bus added after Scrape has to raise it
+static_assert(int(Bus::Scrape) + 1 == kBusCount, "kBusCount must cover every Bus");
 
 // the Mod Settings sliders (each bus) and the game's own volume (Inputs::GameVolume)
 struct Volumes {

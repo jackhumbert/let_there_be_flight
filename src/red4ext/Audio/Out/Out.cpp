@@ -13,7 +13,8 @@ namespace {
 std::unique_ptr<Detail::Backend> backend;
 Backend current = Backend::Fmod;
 std::string fallenWhy;
-std::atomic<float> busVolumes[3] = {1.0f, 1.0f, 1.0f};
+// one per bus, indexed by Buses::Bus
+std::atomic<float> busVolumes[Buses::kBusCount] = {1.0f, 1.0f, 1.0f, 1.0f};
 
 } // namespace
 
