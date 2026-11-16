@@ -97,6 +97,12 @@ On the system, category `UI-Settings-Landing-Pads`:
   as near.
 - `UI-Settings-Summon-Fallback`: Bool, default on. Off, vanilla's summon is left alone everywhere
   but at pads.
+- `UI-Settings-Summon-Always-Fly` (`alwaysFlySummon`): Bool, default off. On, a summon away from
+  a pad never goes to vanilla (`FlySummonAlways`, from the summon wraps, for a press vanilla's
+  cooldown check would act on): the summoned car already out is taken over where it is and flown
+  to V as in the fallback (left to vanilla when it is already next to V or cannot fly), and with
+  none out the record is spawned out from V and flown in as in the fallback's case 1. A press
+  while a summon flight is under way is dropped.
 
 The keys are in `let_there_be_flight.en-us.json.json` (en-us only). The summon reuses vanilla's
 notification widget, which reads the same blackboard state.

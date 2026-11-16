@@ -69,6 +69,7 @@ with Extra Flight Modes on, then Drone and the Autopilot. A mode switched off is
 | Only Discovered Pads | On | Only the pads you have been near (within 150 m). |
 | Fly Summoned Vehicles to Pads | On | A vehicle you summon near a pad flies there and lands. |
 | Fly Summons That Cannot Drive | On | A summoned vehicle that cannot be driven to you (on a roof, off the roads, stuck) flies the rest of the way and lands next to you. |
+| Always Fly Summoned Vehicles | Off | Every vehicle you summon flies to you and lands next to you instead of driving up, wherever you are. Near a pad it flies to the pad (the setting above). |
 
 ## HUD and Sound
 

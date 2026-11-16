@@ -470,6 +470,16 @@
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Summon-Always-Fly",
+              "femaleVariant": "Always Fly Summoned Vehicles"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Summon-Always-Fly-Description",
+              "femaleVariant": "Every vehicle you summon flies to you with the Autopilot and lands next to you, instead of driving up in traffic. Near a landing pad it still flies to the pad."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "LTBF-Landing-Pad",
               "femaleVariant": "AV Landing Pad"
             },
