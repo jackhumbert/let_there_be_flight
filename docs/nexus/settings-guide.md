@@ -35,7 +35,7 @@ with Extra Flight Modes on, then Drone and the Autopilot. A mode switched off is
 
 | Setting | Default | Range | What it does |
 |---|---|---|---|
-| Standard | On | | The mode flight starts in (it was called Hover & Fly). Every control asks for a speed; let go and the vehicle comes to rest, level, where it is. Near the ground it hovers at a height you raise and lower with lift; higher up it holds its altitude. |
+| Standard | On | | The mode flight starts in. Every control asks for a speed; let go and the vehicle comes to rest, level, where it is. Near the ground it hovers at a height you raise and lower with lift; higher up it holds its altitude. |
 | Hover & Fly | On | | Flight as it was up to version 0.3.20, when Hover & Fly was the mode flight started in: the vehicle pitches and rolls with your input and keeps its momentum. Near the ground (up to 7 m) it hovers at a height you raise and lower with lift and tilts with the ground; higher up, lift pushes it up and down and it slows its climb or fall when you let go. |
 | Standard Turn Speed (deg/s) | 90 | 30 to 180 | How fast the vehicle turns while you hold a turn key. Hover and Fly use it too. |
 | Standard Climb and Descent Speed (m/s) | 8 | 2 to 20 | How fast it climbs or descends while you hold the lift keys. Hover and Fly use it too. |
@@ -175,12 +175,12 @@ rest:
   a tap; set it again if you used the hold), Extra Flight Modes (off: turn it on if you used Hover or Fly), Drone Turn
   Speed and Drone Thrust (1: today's drone), the Brake key (C: rebind it if you had moved either brake), Handling
   (Default).
-- **Hover & Fly, as it flew:** the mode that was Hover & Fly is Standard now, with a new feel; the old feel is back
-  as its own mode, Hover & Fly, second in the list. Its old Height Dampening and Height Correction settings stay at
-  their defaults (1 and 0.5) and are not in the menu.
+- **Hover & Fly, as it flew:** flight starts in a new mode, Standard, with a new feel; Hover & Fly is second in the
+  list and flies as it did. If you had switched Hover & Fly off, it stays off. Its old Height Dampening and Height
+  Correction settings stay at their defaults (1 and 0.5) and are not in the menu.
 - **Gone:** the Automatic mode, the Standard (Non-Drone) Mode and Automatic Mode factors, the Drone factors (now
   Drone Turn Speed and Drone Thrust), Top Speed and Cornering (they did nothing).
-- **Kept:** Standard's switch, turn and climb speed (Hover & Fly's), everything else in the tables above.
+- **Kept:** Hover & Fly's switch, everything else in the tables above.
 - **Prev Mode** defaults to J, as the input file always bound it. If you had saved settings before, it may still be
   stored as no key: set it in Key Bindings.
 - **For mod authors:** the first mode is `FlightModeStandard` (was `FlightModeHoverFlyAssist`) in
@@ -195,6 +195,5 @@ rest:
 - **No gamepad stick rebinding.** The sticks are bound in the input XML with no `overridableUI`; inverting pitch,
   roll or yaw still needs an XML edit (lift has Invert Lift).
 - **The menu's order** depends on Mod Settings: up to 0.2.28 it lists Flight Modes first and the rows inside a
-  category in its own order; the next Mod Settings release lists them as the tables above have them.
+  category in its own order; 0.2.29 and later list them as the tables above have them.
 - **Handling's Loose and Tight** were tuned in the offline simulator over every surveyed vehicle, not yet in game.
-- **Spanish** has no text for the new settings yet.
