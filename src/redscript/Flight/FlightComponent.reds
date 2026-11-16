@@ -273,7 +273,14 @@ public native class FlightComponent extends GameComponent {
   }
 
   public func GetFlightMode() -> ref<FlightMode> {
-    return this.modes[this.mode];
+    return this.modes[this.ModeInList(this.mode)];
+  }
+
+  // A mode index from the controller, which is shared by every car, as an index into this car's list:
+  // the list is made when the car enters the game, so a car from before a mode was switched on in Mod
+  // Settings has a shorter one. The first mode for an index past its end.
+  private func ModeInList(index: Int32) -> Int32 {
+    return index >= 0 && index < ArraySize(this.modes) ? index : 0;
   }
 
   // The Autopilot mode in this component's list (FlightSummonSystem flies a summoned vehicle
@@ -384,8 +391,8 @@ public native class FlightComponent extends GameComponent {
   }
 
   protected cb func OnVehicleFlightModeChangeEvent(evt: ref<VehicleFlightModeChangeEvent>) -> Bool {
-    this.modes[this.mode].Deactivate();
-    this.mode = evt.mode;
+    this.modes[this.ModeInList(this.mode)].Deactivate();
+    this.mode = this.ModeInList(evt.mode);
     this.modes[this.mode].Activate();
   }
 
@@ -446,6 +453,7 @@ public native class FlightComponent extends GameComponent {
       if this.isPlayerMounted {
         this.mode = this.sys.ctlr.mode;
       }
+      this.mode = this.ModeInList(this.mode);
       this.modes[this.mode].Activate();
 
       if this.isPlayerMounted {
