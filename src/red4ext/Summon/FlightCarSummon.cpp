@@ -1,5 +1,7 @@
 #include "Summon/FlightCarSummon.hpp"
 
+#include "Flight/Settings.hpp"
+
 #include <Windows.h>
 #include <spdlog/spdlog.h>
 
@@ -124,4 +126,9 @@ bool FlightCarSummon::SpawnVehicleAt(RED4ext::TweakDBID aRecord, float aX, float
 
 RED4ext::ent::EntityID FlightCarSummon::LastSpawnEntity() {
   return g_lastSpawnedEntity;
+}
+
+bool FlightCarSummon::AutopilotLands() {
+  const auto &autopilot = Flight::AutopilotPlayer();
+  return autopilot.enabled && autopilot.landAtDestination;
 }

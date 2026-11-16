@@ -14,9 +14,8 @@
 // spawn put it.
 //
 // The player flow (the dpad tap or the wheel's summon item) is
-// QuickSlotsManager.SetVehicleActive + SummonVehicle(false): SetActiveVehicle is wrapped to
-// remember which record the player picked, SummonVehicle's wrap takes over when the pad gate
-// passes. The tick (2 s, paused with the game) then finds the spawned vehicle (the summon
+// QuickSlotsManager.SummonActiveVehicle: its wrap takes over when the pad gate passes, with the
+// record of the garage's active vehicle. The tick (2 s, paused with the game) then finds the spawned vehicle (the summon
 // blackboard's SummonedVehicleEntityID, else the record's vehicle nearest the spawn spot),
 // engages the Autopilot on it with the pad as this flight's destination, watches the flight and
 // lands it; the completion closes vanilla's state (Arrived, the SummonFinishedEvent to the
@@ -98,7 +97,7 @@ public class FlightSummonSystem extends ScriptableSystem {
   public let vehicle: wref<VehicleObject>;
   private let ticking: Bool;
   private let vehicleID: EntityID;
-  private let recordID: TweakDBID;            // the record the player picked (SetActiveVehicle)
+  private let recordID: TweakDBID;            // the record of the vehicle this summon spawned, none for vanilla's car
   public let padSpot: Vector4;                // where the transform summon put the vehicle
   private let awaitingSpawnTicks: Int32;
   private let pendingTicks: Int32;
@@ -202,24 +201,6 @@ public class FlightSummonSystem extends ScriptableSystem {
 
   // --- the player's summon: the wrapped flow -----------------------------------------------------
 
-  // QuickSlotsManager.SetActiveVehicle (the wheel's vehicle pick): remembered, so the summon
-  // knows which record to spawn at the pad.
-  public func NoteActiveVehicle(data: PlayerVehicle) -> Void {
-    this.recordID = data.recordID;
-    this.activeName = data.name;
-    this.activeType = data.vehicleType;
-    this.activeKnown = true;
-  }
-  // the wheel pick's record, zero until one is; the summon wrap spawns it and the pad summon's
-  // callers pass their own (no TDBID natives in this flow, docs/design/vehicle-summon.md)
-  public func PickedRecord() -> TweakDBID {
-    return this.recordID;
-  }
-
-  private let activeName: CName;
-  private let activeType: gamedataVehicleType;
-  private let activeKnown: Bool;
-
   // The wrap's gate: the setting on, the map in, the player on or near a pad, and the flight
   // machinery able to take the vehicle at all (mode settings and the flight component are
   // checked at the engage; the pad gate here is the cheap one).
@@ -231,8 +212,8 @@ public class FlightSummonSystem extends ScriptableSystem {
   }
 
   // The summon wrap's replacement: spawn the player's picked vehicle at a spot out from the pad
-  // and take it over. False = not for us (vanilla runs on). The tests pass the record explicitly;
-  // the wrap relies on the wheel's SetActiveVehicle (noted above).
+  // and take it over. False = not for us (vanilla runs on). The wrap passes the garage's active
+  // vehicle's record.
   public func FlySummonToPad(game: GameInstance, aRecord: TweakDBID) -> Bool {
     let player = GetPlayer(game);
     if !IsDefined(player) {
@@ -242,11 +223,16 @@ public class FlightSummonSystem extends ScriptableSystem {
     if pad < 0 {
       return false;
     }
+    if !FlightCarSummon.AutopilotLands() {
+      // spawned in the air, the car could only be dropped
+      FlightLog.Info("[Summon] the Autopilot or Land at Destination is off: leaving the summon to vanilla");
+      return false;
+    }
     // the record goes straight to the spawn (the VehicleSystem's RequestNewVehicle takes the
     // TweakDBID; the C++ side refuses one that is not in TweakDB). No TDBID natives in this
     // flow - their runtime wrappers can be unbound in a modded launch and the script call
     // crashes, whose frame it runs in (docs/design/vehicle-summon.md section 3): the callers
-    // hand the record over (the wheel wrap this.PickedRecord(), the bridge the resolved one).
+    // hand the record over.
     let spot: Vector4;
     let yaw: Float;
     let padYaw = Deg2Rad(FlightNavMap.GetHelipadYaw(pad));
@@ -266,6 +252,7 @@ public class FlightSummonSystem extends ScriptableSystem {
     this.vehicle = null;
     // the spawned vehicle's EntityID is not returned by the spawn; the system's tick finds it
     // (the machine's blackboard id, else the record's vehicle nearest the spot)
+    this.recordID = aRecord;
     this.pad = pad;
     this.reason = "pad";
     this.awaitingSpawnTicks = 0;
@@ -461,6 +448,11 @@ public class FlightSummonSystem extends ScriptableSystem {
   public func FlySummonToGround(game: GameInstance, aRecord: TweakDBID, why: String) -> Bool {
     let player = GetPlayer(game);
     if !IsDefined(player) {
+      return false;
+    }
+    if !FlightCarSummon.AutopilotLands() {
+      // spawned in the air, the car could only be dropped
+      FlightLog.Info("[Summon] the Autopilot or Land at Destination is off: no flying summon");
       return false;
     }
     let v = player.GetWorldPosition();
@@ -912,12 +904,20 @@ public class FlightSummonSystem extends ScriptableSystem {
   }
 
   // A summon to release while the car is up (a fight vanilla would not end, a flight that took
-  // too long, a pad the car would not land on): keep it hovering - switching flight off here
-  // would drop it - clear the summon fields and the ownership, and let vanilla's state say
-  // PathfindingFailed.
+  // too long, a pad the car would not land on): keep it up - switching flight off here would drop
+  // it - drop the ownership, and let vanilla's state say PathfindingFailed. The flight keeps a
+  // destination of its own, where the car is now: with none, the Autopilot reads the one the
+  // player tracks and the empty car would fly off to it.
   private func ReleaseAirborne(mode: ref<FlightModeAutopilot>, reason: String) -> Void {
-    FlightLog.Warn("[Summon] " + reason + ": leaving the vehicle hovering (flight stays on), summon released");
-    this.ClearSummonFields(mode);
+    FlightLog.Warn("[Summon] " + reason + ": leaving the vehicle where it is (flight stays on), summon released");
+    if IsDefined(mode) {
+      if IsDefined(this.vehicle) {
+        mode.externalDestination = this.vehicle.GetWorldPosition();
+      }
+      mode.hasExternalDestination = true;
+      mode.padLandingOffset = new Vector4(0.0, 0.0, 0.0, 0.0);
+      mode.landingKeepClearRadius = 0.0;
+    }
     if this.IsState(this.State(), vehicleSummonState.EnRoute) || this.IsState(this.State(), vehicleSummonState.Arrived) {
       this.SetState(vehicleSummonState.PathfindingFailed);
     }
@@ -968,16 +968,6 @@ public func LTBF_SummonPerformed() -> Void {
   GameInstance.GetUISystem(this.m_Player.GetGame()).QueueEvent(dpadAction);
 }
 
-// The wheel's vehicle pick: remembered, so the summon knows which record to spawn at the pad.
-@wrapMethod(QuickSlotsManager)
-public final func SetActiveVehicle(vehicleData: PlayerVehicle) -> Void {
-  let system = FlightSummonSystem.GetInstance(this.m_Player.GetGame());
-  if IsDefined(system) {
-    system.NoteActiveVehicle(vehicleData);
-  }
-  wrappedMethod(vehicleData);
-}
-
 // The summon itself: the dpad tap and the wheel's summon item both run SummonActiveVehicle(force)
 // (the raw quickSlotsManager.script; the decompile's one-arg SummonVehicle is stale for 2.5). At a
 // landing pad (the gate) spawn the picked record at a spot out from the pad and fly it in, and
@@ -988,7 +978,9 @@ public func SummonActiveVehicle(force: Bool) -> Void {
   let game = this.m_Player.GetGame();
   let system = FlightSummonSystem.GetInstance(game);
   if IsDefined(system) && system.ShouldFlySummon(this.m_Player.GetWorldPosition()) {
-    if system.FlySummonToPad(game, system.PickedRecord()) {
+    // the garage's active vehicle, as vanilla's summon reads it
+    let padPick = GameInstance.GetVehicleSystem(game).GetActivePlayerVehicle(this.GetActiveVehicleType());
+    if system.FlySummonToPad(game, padPick.recordID) {
       this.LTBF_SummonPerformed();
       return;
     }

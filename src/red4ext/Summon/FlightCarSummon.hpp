@@ -38,8 +38,17 @@ struct FlightCarSummon : RED4ext::IScriptable {
   // The entity id of the last vehicle this class spawned, from its callback's stub; empty
   // (zero) until one materializes. The summon machine's tick reads it to find its vehicle.
   static RED4ext::ent::EntityID LastSpawnEntity();
+
+  // Whether the Autopilot can take a summoned vehicle and put it down: its mode on and Land at Destination on
+  // (the player's Mod Settings, Flight::AutopilotPlayer). Asked before a spawn, since a vehicle spawned in the
+  // air that the Autopilot will not land can only be dropped.
+  static bool AutopilotLands();
   RTTI_IMPL_TYPEINFO(FlightCarSummon);
   RTTI_IMPL_ALLOCATOR();
 };
 
-RTTI_DEFINE_CLASS(FlightCarSummon, { RTTI_METHOD(SpawnVehicleAt); RTTI_METHOD(LastSpawnEntity); });
+RTTI_DEFINE_CLASS(FlightCarSummon, {
+  RTTI_METHOD(SpawnVehicleAt);
+  RTTI_METHOD(LastSpawnEntity);
+  RTTI_METHOD(AutopilotLands);
+});
