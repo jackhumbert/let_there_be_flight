@@ -48,9 +48,14 @@ jobs:
           toolVersion: ${{ env.GIT_CLIFF_VERSION }}
 
       - name: Generate a changelog
+        # everything since the last full release: a prerelease tag in between (v1.2.3-rc.1) is not a version of its
+        # own (cliff.toml, ignore_tags), so an rc and the release after it both list the whole release
         run: |
-          git-cliff --current --strip header
-          git-cliff --current --strip header -o ${{ env.CHANGELOG_FILE }}
+          $tag = "${{ github.ref_name }}"
+          $previous = git describe --tags --abbrev=0 --exclude "*-*" --exclude "*_*" "$tag^"
+          Write-Host "changelog: $previous..$tag"
+          git-cliff --strip header --tag $tag "$previous..$tag"
+          git-cliff --strip header --tag $tag "$previous..$tag" -o ${{ env.CHANGELOG_FILE }}
           cat requirements.md >> ${{ env.CHANGELOG_FILE }}
 
       - name: Zipping game_dir

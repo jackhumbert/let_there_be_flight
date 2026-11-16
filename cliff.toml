@@ -14,7 +14,7 @@ body = """
     ### {{ group | upper_first }}
     {% for commit in commits %}\
         - {% if commit.breaking %}[**breaking**] {% endif %}\
-            {{ commit.message | upper_first }}{% if commit.scope %} ({{ commit.scope }}){% endif %} ({{ commit.id }})
+            {{ commit.message | upper_first }}{% if commit.scope %} ({{ commit.scope }}){% endif %} ({{ commit.id | truncate(length=7, end="") }})
     {% endfor %}\
 {% endfor %}
 ### Contributors
@@ -30,15 +30,19 @@ conventional_commits = true
 commit_parsers = [
     { message = "^feat", group = "Features" },
     { message = "^fix", group = "Bug Fixes" },
-    { message = "^doc", group = "Documentation" },
+    { message = "^doc", group = "Documentation", skip = true },
     { message = "^perf", group = "Performance" },
-    { message = "^refactor", group = "Refactor" },
-    { message = "^style", group = "Styling" },
-    { message = "^test", group = "Testing" },
+    { message = "^refactor", group = "Refactor", skip = true },
+    { message = "^style", group = "Styling", skip = true },
+    { message = "^test", group = "Testing", skip = true },
     { message = "^chore", group = "Miscellaneous", skip = true },
     { message = "^ci", group = "CI", skip = true },
+    { message = "^build", group = "Build", skip = true },
     { body = ".*security", group = "Security" }
 ]
 # git-cliff 0.10 matches this as a glob (libgit2 tag_names), not a regex;
 # the old regex-style "v[0-9]+..." matched no tags at all.
 tag_pattern = "v[0-9]*"
+# A prerelease tag (v1.2.3-rc.1) is not a version of its own: its commits belong to the release that follows.
+# The release workflow names the version itself (--tag) and gives the range from the last full release.
+ignore_tags = "-|_"
