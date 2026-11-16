@@ -71,8 +71,10 @@ public:
   virtual void Place(const Placement &aPlacement) = 0;
 };
 
-// The backend; false (logged) when it could not start, and LTBF then plays nothing. aWwise falls back to FMOD when
-// the relay cannot be installed (the first frame finds out: Fallen()).
+// The backend; false (logged) when it could not start, and LTBF then plays nothing. Wwise falls back to FMOD here,
+// when the game's exports or its callback setter are not found (Fallen()). Once Wwise is the backend there is no
+// switch to FMOD: if Wwise then refuses LTBF's bank or listener, the start is tried a few times and LTBF stays silent
+// for the session (the voices already made belong to the backend).
 bool Init(Backend aBackend);
 void Shutdown();
 Backend Current();

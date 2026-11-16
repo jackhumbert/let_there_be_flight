@@ -16,6 +16,11 @@ reverb) and returns a voice, paused. A voice is paused, given a volume and a low
 The backend is chosen once, when the plugin loads, by the developer setting `wwiseAudio` (on by default). Everything
 in `Out` runs on the game thread; generators run on the backend's audio thread and never lock or allocate.
 
+Wwise gives way to FMOD only at that choice, when the game's exports or its callback setter are not found. A failure
+after it (Wwise refusing LTBF's bank or listener on the first frames) is tried again ten times, a second apart, and
+then left: LTBF is silent for the session, with one warning in the log. There is no switch to FMOD at that point,
+since the voices already made belong to the backend. With neither backend the plugin loads and flies silent.
+
 ## Wwise
 
 LTBF plays through the game's own Wwise (2023.1 in the exe) by the Audio Input source plugin, the one the game uses
