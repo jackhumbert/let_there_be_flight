@@ -1,6 +1,7 @@
-# PhysX-owned flight (experimental)
+# PhysX-owned flight
 
-Mod Settings > General Flight Settings > **PhysX Flight Physics (experimental)**, default off.
+How every vehicle flies: on for everyone and no longer in the Mod Settings menu (the script field
+`physxFlightPhysics`, default true).
 Code: `src/red4ext/Physics/ChassisContacts.cpp` (hooks), `src/red4ext/Flight/Component.cpp` (force routing).
 
 ## Why
