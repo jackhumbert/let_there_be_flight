@@ -576,7 +576,7 @@
             {
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Gamepad-Toggle-Hold-Description",
-              "femaleVariant": "How long to hold the gamepad flight toggle. 0: a tap. Keep it above 0.5 s or move the toggle off L3: vanilla autodrive is a 0.5 s hold on L3."
+              "femaleVariant": "How long to hold the gamepad flight toggle. 0: a tap. With a hold set, move the toggle off L3: an L3 hold also starts vanilla autodrive and, while flying, the Autopilot."
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",

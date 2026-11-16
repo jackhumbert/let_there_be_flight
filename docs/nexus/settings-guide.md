@@ -26,7 +26,7 @@ under "The controls".
 | Invert Lift | Off | | Flips the lift axis (pulling the stick down or pressing lift-down climbs), gamepad and keyboard together. |
 | Handling | Default | Loose / Default / Tight | How flying feels. Loose: the car drifts and keeps turning longer (Standard coasts about 134 m let go at 60 m/s and slips up to 12 deg through a turn; a Drone spin lasts longer). Tight: it stops sliding sooner and follows its nose (90 m, 6 deg; a Drone spin stops sooner). The top speed is the same in all three. |
 | Brake Strength | 1.0 | 0.5 to 3 | How hard the brake slows the vehicle and stops it turning (both brakes). |
-| Gamepad Flight Toggle Hold (s) | 0 | 0 to 3 | How long to hold the gamepad flight toggle; 0 is a tap. The keyboard toggle stays a tap. Keep it above 0.5 s or move the toggle off L3: vanilla autodrive is a 0.5 s hold on L3. |
+| Gamepad Flight Toggle Hold (s) | 0 | 0 to 3 | How long to hold the gamepad flight toggle; 0 is a tap. The keyboard toggle stays a tap. With a hold set, move the toggle off L3 (Key Bindings > Toggle Flight (Gamepad)): an L3 hold also starts vanilla autodrive after 0.5 s and, while flying, the Autopilot. |
 
 ## Flight Modes
 
