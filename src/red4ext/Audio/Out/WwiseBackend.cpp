@@ -45,6 +45,10 @@ constexpr float kReverbLogEvery = 10.0f;
 // a playing voice Wwise has not rendered for this long (s), while not paused, has been stopped under us (the game
 // stops its sounds when the world goes, after V dies) and is posted again
 constexpr float kStallSeconds = 1.0f;
+// how often the start (our bank and listener) is tried before LTBF gives up on sound for the session, and the
+// time between tries (s)
+constexpr int kBeginTries = 10;
+constexpr float kBeginEvery = 1.0f;
 
 // our listener: the first of our game objects; the voices' from kFirstVoice on
 const AkGameObjectID kListener = ObjectId(1);
@@ -152,12 +156,27 @@ public:
 
   void SetReverbFrom(const Voices::Vec3 &aCar) override {
     car = ToWwise({aCar.x, aCar.y, aCar.z}, {0, 1, 0}, {0, 0, 1}).position;
+    if (!carKnown) {
+      // UpdateReverb reads and prunes the book from here on
+      Sends::Listen();
+    }
     carKnown = true;
   }
 
   void Update() override {
-    if (!ready) {
-      Begin();
+    // a start that fails (the bank or the listener refused) is tried again a few times, a second apart, then left:
+    // each try builds and loads the bank, and LTBF stays silent for the session
+    if (!ready && beginTries < kBeginTries) {
+      const auto now = std::chrono::steady_clock::now();
+      if (beginTries == 0 || std::chrono::duration<float>(now - lastBegin).count() >= kBeginEvery) {
+        lastBegin = now;
+        ++beginTries;
+        Begin();
+        if (!ready && beginTries == kBeginTries) {
+          spdlog::warn("[Out] Wwise did not take our bank or listener in {} tries: LTBF plays nothing this session",
+                       kBeginTries);
+        }
+      }
     }
     KeepRelayInstalled();
     for (WwiseVoice *v : voices) {
@@ -283,6 +302,8 @@ private:
   uint64_t sendsGeneration = 1;
   std::chrono::steady_clock::time_point lastLook{}, lastLog = std::chrono::steady_clock::now();
   bool ready = false, listenerRegistered = false;
+  int beginTries = 0;
+  std::chrono::steady_clock::time_point lastBegin{};
   AKRESULT bankResult = 0, lastListenerResult = 0;
   AkWorldTransform listener = ToWwise({0, 0, 0}, {0, 1, 0}, {0, 0, 1});
 };

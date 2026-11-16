@@ -48,6 +48,10 @@ private:
 };
 Book &TheBook();
 
+// Starts the game's calls being noted in TheBook (the hook, SendsHook.cpp): called by the reader of the book, which
+// also prunes it. Until then the hook passes the calls on and notes nothing.
+void Listen();
+
 // the index of the position nearest aCar within aRange (m), -1 for none
 int Nearest(const std::vector<AkVector64> &aPositions, const AkVector64 &aCar, double aRange);
 

@@ -8,14 +8,21 @@
 #include <spdlog/spdlog.h>
 #include <windows.h>
 
+#include <atomic>
+
 namespace {
 
 using SetAuxSendsFn = Wwise::AKRESULT (*)(Wwise::AkGameObjectID, Wwise::AkAuxSendValue *, uint32_t);
 SetAuxSendsFn original = nullptr;
 void *address = nullptr;
+// set by the Wwise backend once it reads the book (Sends::Listen): until then, and on the FMOD backend for the whole
+// session, nothing is noted, since nothing would ever prune the book
+std::atomic<bool> listening{false};
 
 Wwise::AKRESULT Hook(Wwise::AkGameObjectID aObject, Wwise::AkAuxSendValue *aValues, uint32_t aCount) {
-  Wwise::Sends::TheBook().Note(aObject, aValues, aCount);
+  if (listening.load(std::memory_order_relaxed)) {
+    Wwise::Sends::TheBook().Note(aObject, aValues, aCount);
+  }
   return original(aObject, aValues, aCount);
 }
 
@@ -42,3 +49,7 @@ struct SendsHook : FlightModule {
 REGISTER_FLIGHT_MODULE(SendsHook);
 
 } // namespace
+
+void Wwise::Sends::Listen() {
+  listening.store(true, std::memory_order_relaxed);
+}

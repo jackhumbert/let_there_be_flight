@@ -135,7 +135,9 @@ bool OnInitializationExit(RED4ext::CGameApplication *aApp) {
   RED4ext::CName actionName;
   tweakDB->TryGetValue(RED4ext::TweakDBID("DeviceAction.FlightMalfunction.actionName"), actionName);
   spdlog::info("Tweaks applied: typeName='{}' actionName='{}'", typeName.c_str(), actionName.ToString());
-  return FlightAudio::Load(aApp);
+  // without a sound backend the mod flies silent (Out logs why); the state's result is not read by RED4ext
+  FlightAudio::Load(aApp);
+  return true;
 }
 
 RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::EMainReason aReason,
