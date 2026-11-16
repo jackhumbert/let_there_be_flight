@@ -2,12 +2,17 @@
 
 [![](https://byob.yarr.is/jackhumbert/let_there_be_flight/cp_version)](https://github.com/jackhumbert/let_there_be_flight/actions/workflows/build.yaml)
 
-This is a mod for Cyberpunk 2077 that adds a flying mechanism to all cars, with a couple different modes and options.
+This is a mod for Cyberpunk 2077 that makes every car and bike fly.
 
-Other features include:
-* Imminent explosion audio indicator
-* Visual explosions happen more readily with other cars
-* Quick-eject in flight mode (hold exit)
+* **Flight modes.** Standard, the mode flight starts in: every control asks for a speed, and letting go brings the vehicle to rest, level. Hover & Fly, flight as it was up to 0.3.20. Drone, point-and-fly with the right stick. Hover, Fly and Anti-Gravity Drone behind a setting.
+* **Autopilot.** While flying, hold the autodrive key: the vehicle takes off, flies a planned route between the buildings to the tracked destination and lands. With no destination it roams the city, as vanilla autodrive does.
+* **Landing pads.** The city's AV pads are on the map and the minimap, discovered by flying near them. Track one and the Autopilot lands on it.
+* **Flying summons.** Near a landing pad, or where a summoned vehicle cannot drive to you, it flies in and lands. A setting makes every summon fly.
+* **Sound and effects.** Synthesised thrusters and wind with echoes and reverb from the space around the vehicle, and sparks, trails and a scrape sound for each surface when it touches the ground.
+* **A city you can fly through.** Hidden colliders removed, and collision added to buildings that had none.
+* Imminent explosion audio indicator, quick-eject in flight (hold exit), flight quickhacks.
+
+The settings are in Mod Settings; [docs/nexus/settings-guide.md](docs/nexus/settings-guide.md) describes each one.
 
 [Video preview of the Drone/Acrobat mode](https://www.youtube.com/watch?v=U9t2JWMY1-k)
 
@@ -19,18 +24,18 @@ Other features include:
 
 ## Dependencies
 
-* [RED4ext](https://github.com/WopsS/RED4ext) 1.29.0+
-* [TweakXL](https://github.com/psiberx/cp2077-tweak-xl) 1.11.0+
-* [ArchiveXL](https://github.com/psiberx/cp2077-archive-xl) 1.27.0+
-* [Input Loader](https://github.com/jackhumbert/cyberpunk2077-input-loader) v0.2.4+
-* [Redscript](https://github.com/jac3km4/redscript) 0.5.31+
-* [Mod Settings](https://github.com/jackhumbert/mod_settings) v0.2.21+ (optional)
+* [RED4ext](https://github.com/WopsS/RED4ext) 1.31.0+
+* [TweakXL](https://github.com/psiberx/cp2077-tweak-xl) 1.12.0+
+* [ArchiveXL](https://github.com/psiberx/cp2077-archive-xl) 1.28.3+ (optional on game 2.5+)
+* [Redscript](https://github.com/jac3km4/redscript) 0.5.32+
+* [Input Loader](https://github.com/jackhumbert/cyberpunk2077-input-loader) 0.2.4+
+* [Mod Settings](https://github.com/jackhumbert/mod_settings) 0.2.23+ (optional: the settings menu and key rebinding)
 
 ## Configuration
 
-[`red4ext/let_there_be_flight/inputs.xml`](https://github.com/jackhumbert/let_there_be_flight/tree/main/src/input_loader/let_there_be_flight.xml) contains all the keybindings for the keyboard & controller - you can customize these to your liking. See all possibilities here: https://nativedb.red4ext.com/EInputKey
+Settings and key bindings are in **Mod Settings > Let There Be Flight** ([the settings guide](docs/nexus/settings-guide.md)).
 
-Other settings can be found in `red4ext/plugins/let_there_be_flight/packed.reds` for the time being - search for `FlightSettings.SetFloat` to see all the variables used by the mod.
+[`red4ext/plugins/let_there_be_flight/inputs.xml`](https://github.com/jackhumbert/let_there_be_flight/tree/main/src/input_loader/let_there_be_flight.xml) contains all the keybindings for the keyboard & controller, for changes Mod Settings does not offer. See all possibilities here: https://nativedb.red4ext.com/EInputKey
 
 ### Restricting flight to certain vehicles
 
@@ -135,11 +140,17 @@ red4ext/plugins/let_there_be_flight/            (the whole folder)
     let_there_be_flight.dll
     let_there_be_flight.archive
     let_there_be_flight.archive.xl
+    let_there_be_flight.archive.json
     let_there_be_flight.tweak
     let_there_be_flight.yaml
     packed.reds
     module.reds
     inputs.xml
+    helipads.tsv
+    gates.tsv
+    boundaries.tsv
+    blockers.txt
+    hidden_nodes.txt
     audio/
       brake-1.wav
       vehicle3_off.wav
@@ -150,22 +161,13 @@ red4ext/plugins/let_there_be_flight/            (the whole folder)
 red4ext/plugins/let_there_be_flight_uninstall.bat
 ```
 
+Versions up to 0.3.20 also installed `fmodstudio.dll`, `base_sounds.bank` and `base_sounds.strings.bank` in that folder. Nothing reads them any more; delete them if they are still there.
+
 Mod settings values saved by Mod Settings live in its own files, not in the LTBF folder.
 
 ## Development
 
-These are some of the steps I take to update the mod for new versions of the game - it involves some manual address looking-up using IDA, a custom version of Zoltan, and my fork of RED4ext.SDK:
-
-1. Merge deps/red4ext.sdk from upstream
-1. Update all addresses with "1.61hf1 RVA:" (that matches latest game version) in RED4ext.SDK
-  1. Patterns & hints for each addresss should be in each file
-  1. Addresses that don't have the current version likely aren't used by LTBF
-1. Run "Generate Addresses" in the VS Code project
-1. Update the game option addresses in src/red4ext/FlightSystem.cpp
-1. Update RED4ext.SDK VFTs
-  1. Uncomment the VFT finder in src/red4ext/FlightSystem.cpp:L192
-  1. Run the game until it crashes (expected)
-  1. Copy the `#define`s from red4ext/logs/let_there_be_flight.log to deps/red4ext.sdk/include/RED4ext/Addresses_VFT.hpp
+Building, the layout of the repo and its conventions are in [CLAUDE.md](CLAUDE.md); [docs/README.md](docs/README.md) is the index of the design notes. Updating the mod for a new game version is in [docs/game-patch.md](docs/game-patch.md), releasing in [docs/release.md](docs/release.md).
 
 Helpful state machine viewer: https://cyberpunk.ldlework.com/
 
