@@ -49,28 +49,25 @@ jobs:
 
       - name: Generate a changelog
         # The release body: the notes written for this version (docs/releases/vX.Y.Z.md; a prerelease tag uses its
-        # version's), then every feat, fix and perf commit since the last full release, folded away, then the
-        # requirements. Without a notes file the commit list is the body. Nexus gets the notes alone when there are any.
-        # A prerelease tag in between (v1.2.3-rc.1) is not a version of its own (cliff.toml, ignore_tags), so an rc and
-        # the release after it both list the whole release.
+        # version's), a link to the commits since the last full release, then the requirements. Nexus gets the notes
+        # and the requirements. Only without a notes file is the body generated: every feat, fix and perf commit
+        # since the last full release (git-cliff; a prerelease tag in between is not a version of its own, cliff.toml's
+        # ignore_tags).
         run: |
           $tag = "${{ github.ref_name }}"
           $previous = git describe --tags --abbrev=0 --exclude "*-*" --exclude "*_*" "$tag^"
-          Write-Host "changelog: $previous..$tag"
-          $commits = "${{ github.workspace }}-COMMITS.md"
-          git-cliff --strip header --tag $tag "$previous..$tag" -o $commits
-          $list = (Get-Content -Raw $commits).Trim()
           $notes = "docs/releases/$(($tag -split '[-_]')[0]).md"
           if (Test-Path $notes) {
             Write-Host "release notes: $notes"
-            $written = (Get-Content -Raw $notes).Trim()
-            $count = @($list -split "`n" | Where-Object { $_ -match '\([0-9a-f]{7}\)\s*$' }).Count
-            $body = "$written`n`n<details>`n<summary>Every change since $previous ($count commits)</summary>`n`n$list`n`n</details>`n"
-            $nexus = $written
+            $nexus = (Get-Content -Raw $notes).Trim()
+            $compare = "${{ github.server_url }}/${{ github.repository }}/compare/$previous...$tag"
+            $body = "$nexus`n`n[Every commit since $previous]($compare)`n"
           } else {
-            Write-Host "no ${notes}: the commit list is the release body"
-            $body = "$list`n"
-            $nexus = $list
+            Write-Host "no ${notes}: the commit list $previous..$tag is the release body"
+            $commits = "${{ github.workspace }}-COMMITS.md"
+            git-cliff --strip header --tag $tag "$previous..$tag" -o $commits
+            $nexus = (Get-Content -Raw $commits).Trim()
+            $body = "$nexus`n"
           }
           $requirements = (Get-Content -Raw requirements.md).Trim()
           Set-Content -Path "${{ env.CHANGELOG_FILE }}" -Value "$body`n$requirements" -Encoding utf8
