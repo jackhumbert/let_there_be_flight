@@ -345,7 +345,6 @@ public native class FlightController extends IScriptable {
     evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Roll", n"Roll"),                         this.FlightControlsShown() && !this.showOptions && (usesRightStick || this.usingKB));
     evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Lift", n"Lift"),                         this.FlightControlsShown() && !this.showOptions);
     evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Brake", n"Flight_LinearBrake"),           this.FlightControlsShown() && !this.showOptions);
-    evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Angular-Brake", n"Flight_AngularBrake"), this.FlightControlsShown() && !this.showOptions && this.usingKB);
     evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Flight-Options", n"Flight_Options"),     this.FlightControlsShown() && !this.showOptions);
 
     evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Sway", n"Sway"),                         this.FlightControlsShown() && this.showOptions && this.usingKB);
