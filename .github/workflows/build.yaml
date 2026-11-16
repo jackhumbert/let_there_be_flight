@@ -7,10 +7,6 @@ jobs:
     runs-on: windows-latest
     permissions:
       contents: write
-    env:
-      # read access to the private repo holding the game's Oodle dll, which packing the archive needs
-      # (not redistributable); missing on pull requests from forks, which then build without the archive
-      CI_ASSETS_TOKEN: ${{ secrets.CI_ASSETS_TOKEN }}
 
     strategy:
       matrix:
@@ -28,23 +24,22 @@ jobs:
     - name: The repo stands alone (no private tooling, sessions or machine paths)
       run: python tools/maintenance/check_public.py
 
-    - name: Fetch the Oodle dll
-      if: env.CI_ASSETS_TOKEN != ''
-      uses: actions/checkout@v4
-      with:
-        repository: jackhumbert/cp2077-ci-assets
-        token: ${{ env.CI_ASSETS_TOKEN }}
-        path: ci_assets
-
+    # the archive is packed in the build (CMAKE_CI_BUILD turns LTBF_PACK_ARCHIVE on): the WolvenKit CLI is downloaded
+    # and needs nothing of the game's
     - name: Configure CMake
-      run: |
-        $oodle = "${{ github.workspace }}/ci_assets/oo2ext_7_win64.dll"
-        $pack = if (Test-Path $oodle) { "-DLTBF_OODLE_DLL=$oodle" } else { "-ULTBF_OODLE_DLL" }
-        cmake -B ${{ github.workspace }}/build -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CI_BUILD=ON -DGITHUB_ENV="$env:GITHUB_ENV" $pack -G Ninja
+      run: cmake -B ${{ github.workspace }}/build -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CI_BUILD=ON -DGITHUB_ENV="$env:GITHUB_ENV" -G Ninja
 
     - name: Build
       id: build
       run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.config }}
+
+    # a build without the archive would load with no meshes, effects, HUD or sectors
+    - name: Check the archive was packed
+      run: |
+        if (-not (Test-Path "${{ github.workspace }}/game_dir/red4ext/plugins/let_there_be_flight/let_there_be_flight.archive")) {
+          Write-Error "let_there_be_flight.archive was not packed"
+          exit 1
+        }
 
     - name: Unit tests
       run: ctest --test-dir ${{ github.workspace }}/build --output-on-failure

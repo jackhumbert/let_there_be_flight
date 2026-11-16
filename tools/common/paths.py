@@ -25,7 +25,7 @@ SETTINGS = {
     "GAME": ("CP2077_GAME_DIR", None, "the game install (the folder holding bin/ and archive/)"),
     "WOLVENKIT": ("WOLVENKIT_CLI10", None, "WolvenKit.CLI.exe 10.x (reads 2.5 sectors)"),
     "WOLVENKIT_PACK": ("WOLVENKIT_CLI", None,
-                       "WolvenKit.CLI.exe 9.0.1, which packs the archive; the game's oo2ext_7_win64.dll beside it"),
+                       "WolvenKit.CLI.exe 9.0.1, which packs the archive"),
     "WORK": ("LTBF_WORK", os.path.join(REPO, "build", "tools_work"),
              "work folder for bakes and caches (kept between runs)"),
     "TMP": ("CP2077_TMP", os.path.join(tempfile.gettempdir(), "ltbf_tools"),

@@ -114,13 +114,14 @@ set(MOD_YAML_TWEAKS ON)
 configure_tweaks(src/tweaks)
 # Tweaks always go through TweakXL: the game's built-in TweakDB loader (2.5+) crashes on new typed flats.
 # The archive is not in git: it is packed from src/wolvenkit/source at build time (tools/packaging/pack_archive.py) with a
-# WolvenKit CLI and the game's Oodle dll (oo2ext_7_win64.dll: not redistributable, so CI gets it from a private repo,
-# .github/workflows). It is written to src/wolvenkit/packed (gitignored), where an archive-only install finds it.
-# With neither, an archive already there is shipped; with none at all the build has no archive (a warning).
-set(LTBF_WOLVENKIT_CLI "$ENV{WOLVENKIT_CLI}" CACHE FILEPATH "WolvenKit.CLI.exe to pack the archive with (oo2ext_7_win64.dll next to it)")
-set(LTBF_OODLE_DLL "$ENV{LTBF_OODLE_DLL}" CACHE FILEPATH "oo2ext_7_win64.dll to pack the archive with (copied next to the CLI)")
+# WolvenKit CLI, which needs nothing of the game's (it packs with the Kraken library it ships). It is written to
+# src/wolvenkit/packed (gitignored), where an archive-only install finds it. Packed when a CLI is given, or with
+# LTBF_PACK_ARCHIVE (on in CI), for which the script downloads the CLI. Otherwise an archive already there is
+# shipped; with none at all the build has no archive (a warning).
+set(LTBF_WOLVENKIT_CLI "$ENV{WOLVENKIT_CLI}" CACHE FILEPATH "WolvenKit.CLI.exe to pack the archive with")
+option(LTBF_PACK_ARCHIVE "Pack the archive at build time, downloading the WolvenKit CLI when none is given" ${CMAKE_CI_BUILD})
 set(_ARCHIVE "${CMAKE_CURRENT_SOURCE_DIR}/src/wolvenkit/packed/archive/pc/mod/let_there_be_flight.archive")
-if(LTBF_WOLVENKIT_CLI OR LTBF_OODLE_DLL)
+if(LTBF_WOLVENKIT_CLI OR LTBF_PACK_ARCHIVE)
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
   file(GLOB_RECURSE _ARCHIVE_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/wolvenkit/source/archive/*"
@@ -128,9 +129,6 @@ if(LTBF_WOLVENKIT_CLI OR LTBF_OODLE_DLL)
   set(_PACK_ARGS --out "${_ARCHIVE}")
   if(LTBF_WOLVENKIT_CLI)
     list(APPEND _PACK_ARGS --cli "${LTBF_WOLVENKIT_CLI}")
-  endif()
-  if(LTBF_OODLE_DLL)
-    list(APPEND _PACK_ARGS --oodle "${LTBF_OODLE_DLL}")
   endif()
   add_custom_command(
     OUTPUT "${_ARCHIVE}"
@@ -141,10 +139,10 @@ if(LTBF_WOLVENKIT_CLI OR LTBF_OODLE_DLL)
   message(STATUS "Archive: packed at build time")
   configure_archives("${_ARCHIVE}")
 elseif(EXISTS "${_ARCHIVE}")
-  message(STATUS "Archive: the one already in src/wolvenkit/packed (no WolvenKit CLI or Oodle dll to repack it)")
+  message(STATUS "Archive: the one already in src/wolvenkit/packed (no WolvenKit CLI to repack it)")
   configure_archives("${_ARCHIVE}")
 else()
-  message(WARNING "No archive: set WOLVENKIT_CLI (with oo2ext_7_win64.dll next to it) or LTBF_OODLE_DLL to pack one")
+  message(WARNING "No archive: set WOLVENKIT_CLI, or LTBF_PACK_ARCHIVE=ON to download the CLI, to pack one")
 endif()
 # One config, installed twice: .archive.xl is read by ArchiveXL when it is installed, .archive.json by the
 # game's built-in loader (2.5+, via GameModFolders.hpp) when it is not. JSON is valid YAML, so ArchiveXL reads it too.

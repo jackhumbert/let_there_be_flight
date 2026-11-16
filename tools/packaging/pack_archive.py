@@ -12,14 +12,15 @@ from 2022 and predates the packed widget), so edit those assets in the Wolvenkit
 
   python tools/packaging/pack_archive.py           # import + pack + verify
   python tools/packaging/pack_archive.py --check   # only report raw json that differs from source/archive
-  python tools/packaging/pack_archive.py --out build/archive/let_there_be_flight.archive --oodle path/to/oo2ext_7_win64.dll
+  python tools/packaging/pack_archive.py --out build/archive/let_there_be_flight.archive
 
 The CLI is --cli, then WOLVENKIT_CLI, then %LOCALAPPDATA%/Programs/WolvenKit.Console/<version>/.
 If missing it is downloaded from the WolvenKit GitHub release (the NuGet `wolvenkit.cli`
-dotnet tool stopped being a valid tool package after 8.x). Packing needs the game's
-oo2ext_7_win64.dll next to the CLI (Oodle; not redistributable): --oodle copies it there. CMake
-runs this at build time when it has a CLI or the dll (LTBF_WOLVENKIT_CLI / LTBF_OODLE_DLL); CI
-gets the dll from a private repo (.github/workflows).
+dotnet tool stopped being a valid tool package after 8.x). The CLI packs with the Kraken
+library it ships (kraken.dll), so nothing of the game's is needed; with the game's
+oo2ext_7_win64.dll (Oodle) next to it, it uses that. CMake runs this at build time when it has
+a CLI (LTBF_WOLVENKIT_CLI) or is told to pack (LTBF_PACK_ARCHIVE, on in CI, where the CLI is
+downloaded).
 """
 
 import argparse
@@ -114,14 +115,9 @@ def main() -> None:
                         help="a file the archive loses on purpose (forward or back slashes; repeatable)")
     parser.add_argument("--out", type=Path, default=OUTPUT, help="where to write the archive (default: the packed path in src/wolvenkit)")
     parser.add_argument("--cli", help="WolvenKit.CLI.exe (default: WOLVENKIT_CLI, else the pinned version, downloaded if missing)")
-    parser.add_argument("--oodle", type=Path, help="the game's oo2ext_7_win64.dll, copied next to the CLI if it is not there")
     args = parser.parse_args()
 
     cli = find_cli(args.cli)
-    if args.oodle:
-        target = cli.parent / args.oodle.name
-        if not target.exists():
-            shutil.copyfile(args.oodle, target)
     out = args.out.resolve()
     with tempfile.TemporaryDirectory() as tmp_str:
         tmp = Path(tmp_str)
