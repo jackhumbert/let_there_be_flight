@@ -1,6 +1,7 @@
 #include "Physics/ScrapeEffects.hpp"
 
 #include "Flight/Component.hpp"
+#include "Flight/DeveloperSettings.hpp"
 #include "Flight/FlightGround.hpp"
 #include "Flight/FlightStats.hpp"
 #include "Flight/Scrape.hpp"
@@ -270,9 +271,10 @@ void ScrapeEffects::Update(FlightComponent *aComponent, RED4ext::vehicle::BaseOb
       l.depth.Step(aIn.press, aDt);
       const char *trail = fx.trail[l.depth.band];
       l.trail = Spawn(system, trail, aTrailAt);
-      // one line a scrape, where it begins: which surface and physics material (none: the skid's ray had none, and
-      // it scrapes as hard ground), and whether its effects spawned
-      spdlog::info("[ScrapeFx] scrape {:#x} on {} ('{}'): sparks {}, trail {} (depth {})", aId,
+      // one line a scrape, where it begins (the developer setting verboseLog): which surface and physics material
+      // (none: the skid's ray had none, and it scrapes as hard ground), and whether its effects spawned
+      if (Flight::Developer().verboseLog)
+        spdlog::info("[ScrapeFx] scrape {:#x} on {} ('{}'): sparks {}, trail {} (depth {})", aId,
                    Flight::SurfaceName(aSurface), aMaterial ? RED4ext::CName(aMaterial).ToString() : "none",
                    *fx.sparks ? (l.sparks ? "spawned" : "failed") : "none",
                    *trail ? (l.trail ? "spawned" : "failed") : "none", l.depth.band);

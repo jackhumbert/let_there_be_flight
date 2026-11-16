@@ -1,5 +1,6 @@
 #include "Utils/FlightModule.hpp"
 #include "Flight/Component.hpp"
+#include "Flight/DeveloperSettings.hpp"
 #include "Flight/Scrape.hpp"
 #include "Physics/ScrapeEffects.hpp"
 #include <RED4ext/Scripting/Natives/vehicleAcoustics.hpp>
@@ -32,13 +33,6 @@
 // map's scrapingMinTangentialVelocityThreshold) and a zero normal, which passes the belly
 // angle gate. Vehicle::Audio::UpdateScrapingCollision ends the loop on its own once calls
 // stop for scrapingMaxCollisionCooldown.
-
-namespace {
-// diagnostics (temporary), see FX_NotifyCollision below
-thread_local bool tFromLTBF = false;
-std::atomic<uint32_t> gVanillaCalls{0}, gLTBFCalls{0};
-std::atomic<int64_t> gLastLog{0};
-}
 
 namespace {
 // physics::ContactData (0xB8), filled per PxContactPair by the simulation event callback
@@ -94,7 +88,7 @@ namespace {
 // What a flying car scrapes (docs/design/scrape-effects.md, Contacts), summed over 2 s per material and logged: the
 // contacts, how many the vanilla gate let through, the slide speed and impulse at most, where on the car (its own
 // frame: the lowest and highest point, the widest from the centre line) and how much the contact faced up. The
-// game's scrape loop is logged when it changes.
+// game's scrape loop is logged when it changes. Both only with the developer setting verboseLog.
 struct ScrapeTally {
   uint32_t contacts = 0, vanilla = 0;
   float maxSpeed = 0, maxImpulse = 0, minZ = 1e9f, maxZ = -1e9f, maxSide = 0, normalUp = 0;
@@ -106,6 +100,8 @@ uint64_t gLastLoop = 0;
 
 void Tally(RED4ext::CName aMaterial, float aSpeed, float aImpulse, const RED4ext::Vector3 &aLocal, float aNormalUp,
            bool aVanilla) {
+  if (!Flight::Developer().verboseLog)
+    return;
   std::lock_guard<std::mutex> _(gTallyLock);
   auto now = std::chrono::steady_clock::now().time_since_epoch().count();
   if (gTallyStart == 0)
@@ -252,7 +248,7 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1399724886, BaseObject_NotifyContacts
                                                     static_cast<const RED4ext::vehicle::BaseObject *>(nullptr), speed,
                                                     material);
   // the game's scrape loop, logged when it changes
-  if (self->acoustics) {
+  if (self->acoustics && Flight::Developer().verboseLog) {
     auto loop = self->acoustics->scrapingLoopStart;
     std::lock_guard<std::mutex> _(gTallyLock);
     if (loop.hash != gLastLoop) {
@@ -283,29 +279,6 @@ REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 1399724886, BaseObject_NotifyContacts
     float deltaV = 0.0f; // no per-frame impact burst, scratches only
     // void vehicle::FX::NotifyCollision(Vector3 const &localPos, Vector3 const &worldPos, Vector3 const &normal,
     //                                   Vector3 const &slideDir, float deltaV, float slideSpeed, CName material)
-    tFromLTBF = true;
     RED4ext::IHookable::StaticHook<void, 3095401716>(fx, &localPos, &position, &n, &slideDir, deltaV, speed, material);
-    tFromLTBF = false;
   }
-}
-
-// --- diagnostics (temporary): are scratch effects being requested, and with what? --------
-
-// void vehicle::FX::NotifyCollision(Vector3 const &localPos, Vector3 const &worldPos, Vector3 const &normal,
-//                                   Vector3 const &slideDir, float deltaV, float slideSpeed, CName material)
-// 2.31: 0x140108294
-REGISTER_FLIGHT_HOOK_HASH(void __fastcall, 3095401716, FX_NotifyCollision, uint8_t *self, RED4ext::Vector3 *localPos,
-                          RED4ext::Vector3 *worldPos, RED4ext::Vector3 *normal, RED4ext::Vector3 *slideDir, float deltaV,
-                          float slideSpeed, RED4ext::CName material) {
-  (tFromLTBF ? gLTBFCalls : gVanillaCalls)++;
-  auto now = std::chrono::steady_clock::now().time_since_epoch().count();
-  auto last = gLastLog.load();
-  if (now - last > 2'000'000'000LL && gLastLog.compare_exchange_strong(last, now)) {
-    auto params = self ? *reinterpret_cast<float *const *>(self + 0xA8) : nullptr;
-    spdlog::info("[ScrapeFX] NotifyCollision calls in 2 s: vanilla {} ltbf {}; last deltaV {:.2f} slide {:.2f} '{}'; "
-                 "thresholds impact {:.2f} scratch {:.2f} reuse {:.2f}",
-                 gVanillaCalls.exchange(0), gLTBFCalls.exchange(0), deltaV, slideSpeed, material.ToString(),
-                 params ? params[1] : -1.0f, params ? params[2] : -1.0f, params ? params[6] : -1.0f);
-  }
-  FX_NotifyCollision_Original(self, localPos, worldPos, normal, slideDir, deltaV, slideSpeed, material);
 }

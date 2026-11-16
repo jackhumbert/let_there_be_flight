@@ -11,6 +11,7 @@
 #include "Audio/Wwise/Link.hpp"
 #include "Audio/Wwise/Relay.hpp"
 #include "Audio/Wwise/Sends.hpp"
+#include "Flight/DeveloperSettings.hpp"
 
 #include <spdlog/spdlog.h>
 
@@ -272,7 +273,10 @@ private:
     const float sinceLog = std::chrono::duration<float>(now - lastLog).count();
     if (sinceLog >= kReverbLogEvery) {
       lastLog = now;
-      spdlog::info("[Reverb] the game set sends {} times in {:.0f} s", Sends::TheBook().TakeCalls(), sinceLog);
+      const uint64_t calls = Sends::TheBook().TakeCalls();
+      if (Flight::Developer().verboseLog) {
+        spdlog::info("[Reverb] the game set sends {} times in {:.0f} s", calls, sinceLog);
+      }
     }
     Sends::Set sends;
     if (carObject != kInvalidGameObject) {

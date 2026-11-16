@@ -65,7 +65,9 @@ void FlightComponent::ChaseTarget(WeakHandle<game::Object> target) {
 }
 
 void FlightComponent::OnEnabled(bool enabled) { 
-  spdlog::info("FlightComponent {}", enabled);
+  if (Flight::Developer().verboseLog) {
+    spdlog::info("FlightComponent {}", enabled);
+  }
 };
 
 // FlightSettings Bool read from the class defaults, which Mod Settings writes (same as the
@@ -269,7 +271,7 @@ void FlightComponent::UpdateThrusterContacts() {
   auto body = (physx::PxRigidDynamic *)proxy->bodies.entries[0];
   physx::PxShape *shapes[64];
   const auto count = body->getShapes(shapes, 64, 0);
-  if (!this->thrusterOffsetsLogged) {
+  if (!this->thrusterOffsetsLogged && Flight::Developer().verboseLog) {
     for (uint32_t i = 0; i < count; ++i)
       spdlog::info("[FlightComponent] chassis shape {}{}: contact offset {:.3f} m, rest offset {:.3f} m", i,
                    this->configuration->IsTrackedShape(shapes[i]) ? " (thruster sphere)" : "",

@@ -35,6 +35,10 @@ struct DeveloperSettings {
   // where LTBF's sound is heard from, drawn each frame through the Debug Draw mod when it is installed
   // (Audio/ListenerDraw); off for players
   bool drawListener = false;
+  // the log lines that repeat while playing (what a flying car scrapes, per material every 2 s, and each scrape's
+  // effects; how often the game sets reverb sends; each car's chassis shapes; each vehicle's flight enabled); off
+  // for players, whose log keeps to what happened once
+  bool verboseLog = false;
   // Ground contacts in flight: where two road meshes meet flush PhysX pushes a shape
   // sliding over the joint and throws the car. maxDepenetration: m/s the chassis body is pushed out of the ground at
   // most while flight owns it (PxRigidBody::setMaxDepenetrationVelocity; 0 leaves PhysX's own, unbounded; off: with

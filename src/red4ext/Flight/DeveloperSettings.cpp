@@ -29,6 +29,7 @@ const Entry kEntries[] = {
     {"acousticsRays", nullptr, &DeveloperSettings::acousticsRays, 0.0f, 4096.0f},
     {"wwiseAudio", &DeveloperSettings::wwiseAudio, nullptr, 0.0f, 0.0f},
     {"drawListener", &DeveloperSettings::drawListener, nullptr, 0.0f, 0.0f},
+    {"verboseLog", &DeveloperSettings::verboseLog, nullptr, 0.0f, 0.0f},
     {"maxDepenetration", nullptr, &DeveloperSettings::maxDepenetration, 0.0f, 100.0f},
     {"droneSkid", nullptr, &DeveloperSettings::droneSkid, 0.0f, 0.5f},
     {"thrusterContacts", &DeveloperSettings::thrusterContacts, nullptr, 0.0f, 0.0f},
