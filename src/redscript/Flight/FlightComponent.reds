@@ -374,14 +374,23 @@ public native class FlightComponent extends GameComponent {
       mountChild.QueueEvent(vehicleFlight);
 
       this.UnregisterVehicleTPPBBListener();
-      // a direct seat swap mounts the next vehicle before this unmount finishes, so only clear our own entry
+      // the controller first, while it can still reach this car's modes: leaving an Autopilot flight
+      // takes its mode down (vanilla's autodrive facts and panel) through playerComponent. Only when
+      // the controller is still this car's (a direct seat swap mounts the next vehicle before this
+      // unmount finishes)
+      if this.active && this.sys.playerComponent == this {
+        this.sys.ctlr.Deactivate(true);
+        // the car stays up without V, in the mode the controller fell back to: not in the Autopilot
+        // it just took down, which would fly the empty car on
+        if this.mode != this.ModeInList(this.sys.ctlr.mode) {
+          this.mode = this.ModeInList(this.sys.ctlr.mode);
+          this.modes[this.mode].Activate();
+        }
+      }
       if this.sys.playerComponent == this {
         this.sys.playerComponent = null;
       }
       this.isPlayerMounted = false;
-      if this.active {
-        this.sys.ctlr.Deactivate(true);
-      }
       this.sys.ctlr.ResetInputs();
       this.sys.ctlr.Disable();
       // After the deactivation above, so a flight exit still plays its outro first.

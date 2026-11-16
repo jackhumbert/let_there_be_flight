@@ -405,8 +405,12 @@ public native class FlightModeAutopilot extends FlightMode {
   }
 
   // Settled and handed back, or the destination untracked on the way: back to the mode it was engaged from.
+  // The controller is the player's: a car flying without V (a summon) leaves it alone, or it would take the
+  // player out of the Autopilot in the car they are in.
   protected func ExitAutopilot() -> Void {
-    FlightController.GetInstance().ExitAutopilot();
+    if this.component.isPlayerMounted {
+      FlightController.GetInstance().ExitAutopilot();
+    }
   }
 
   // Landed with the player in the car: the flight state machine turns flight off as if the player had.
