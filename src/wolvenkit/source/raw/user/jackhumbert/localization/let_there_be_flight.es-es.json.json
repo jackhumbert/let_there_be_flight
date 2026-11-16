@@ -232,6 +232,436 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "Quickhacks-Funhouse-Description",
               "femaleVariant": "Encanta este vehiculo con la locura de la juventud y hazlo botar a tope"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Key-Bindings",
+              "femaleVariant": "Asignación de teclas"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Flight-Toggle",
+              "femaleVariant": "Alternar vuelo"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Yaw-Left",
+              "femaleVariant": "Virar a la izquierda"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Yaw-Right",
+              "femaleVariant": "Virar a la derecha"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Pitch-Forward",
+              "femaleVariant": "Inclinación hacia delante"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Pitch-Backward",
+              "femaleVariant": "Inclinación hacia atrás"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Roll-Left",
+              "femaleVariant": "Cabeceo a la izquierda"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Roll-Right",
+              "femaleVariant": "Cabeceo a la derecha"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Lift-Up",
+              "femaleVariant": "Ascender"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Lift-Down",
+              "femaleVariant": "Descender"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Sway-Left",
+              "femaleVariant": "Balanceo a la izquierda"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Sway-Right",
+              "femaleVariant": "Balanceo a la derecha"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Deploy-Glider",
+              "femaleVariant": "Desplegar planeador"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Pack-Glider",
+              "femaleVariant": "Recoger planeador"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Detachable-Thrusters",
+              "femaleVariant": "Los propulsores se desprenden en los choques"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Explosion-Threshold",
+              "femaleVariant": "Resistencia a los choques"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Explosion-Threshold-Description",
+              "femaleVariant": "Con qué fuerza puede chocar un vehículo volador en el que no estás antes de explotar. En el máximo nunca explota."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-TPP-Camera-Pitch-Offset",
+              "femaleVariant": "Inclinación de la cámara en tercera persona"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-TPP-Camera-Pitch-Offset-Description",
+              "femaleVariant": "Cuánto mira hacia abajo la cámara de seguimiento al vehículo durante el vuelo, en grados."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Invert-Lift",
+              "femaleVariant": "Invertir ascenso"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Invert-Lift-Description",
+              "femaleVariant": "Invierte el eje de ascenso: tirar hacia abajo asciende y empujar hacia arriba desciende. Se aplica al stick del mando y a las teclas de ascenso."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Flight-Toggle-Pad",
+              "femaleVariant": "Alternar vuelo (mando)"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-Availability",
+              "femaleVariant": "Disponibilidad del vuelo"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-Availability-Description",
+              "femaleVariant": "Qué vehículos puedes hacer volar. Restringirlo no cambia el aspecto ni la conducción de los vehículos: solo decide dónde se ofrecen el botón de vuelo, su indicación y los quickhacks de vuelo."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-Availability-All-Vehicles",
+              "femaleVariant": "Todos los vehículos"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-Availability-Owned-Vehicles",
+              "femaleVariant": "Vehículos en propiedad"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-Availability-Player-Vehicle-Only",
+              "femaleVariant": "Solo el vehículo del jugador"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-Availability-Whitelist-Only",
+              "femaleVariant": "Solo la lista blanca"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Autopilot",
+              "femaleVariant": "Piloto automático"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Disable-Autopilot",
+              "femaleVariant": "Desactivar piloto automático"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Simple-Message-Autopilot-No-Destination",
+              "femaleVariant": "Piloto automático: marca antes un destino en el mapa"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Enabled",
+              "femaleVariant": "Piloto automático"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Enabled-Description",
+              "femaleVariant": "Durante el vuelo, mantén pulsada la tecla de conducción automática para volar por sí solo hasta el destino marcado. Cualquier control de vuelo retoma el mando por un momento."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "Input-Hint-Next-Mode-Autopilot",
+              "femaleVariant": "Siguiente modo / Mantener: piloto automático"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Land",
+              "femaleVariant": "Aterrizar en el destino"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Land-Description",
+              "femaleVariant": "Aterriza en un destino a nivel del suelo y desactiva el vuelo, como la conducción automática al parar junto a la acera. Desactivado: se queda flotando sobre el destino y devuelve los controles."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Pad-Range",
+              "femaleVariant": "Aterrizar en una plataforma cercana (m)"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Pad-Range-Description",
+              "femaleVariant": "Aterriza en una plataforma de AV a esta distancia en metros del destino en lugar de en la calle. 0: desactivado."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Landing-Pads",
+              "femaleVariant": "Plataformas de aterrizaje y llamadas"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Landing-Pads-Show",
+              "femaleVariant": "Mostrar plataformas de aterrizaje en el mapa"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Landing-Pads-Show-Description",
+              "femaleVariant": "Marca las plataformas de aterrizaje de AV en el mapa del mundo y en el minimapa. Marca una como destino y activa el piloto automático para volar hasta ella y aterrizar."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Landing-Pads-Discovered",
+              "femaleVariant": "Solo plataformas descubiertas"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Landing-Pads-Discovered-Description",
+              "femaleVariant": "Muestra solo las plataformas a las que te has acercado (a menos de 150 m). Desactivado: muestra todas las plataformas de la ciudad."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Pad-Summon",
+              "femaleVariant": "Los vehículos llamados vuelan a las plataformas"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Pad-Summon-Description",
+              "femaleVariant": "En una plataforma de aterrizaje o cerca de ella, el vehículo que llamas despega, vuela hasta la plataforma con el piloto automático y aterriza en ella, en lugar de llegar por el tráfico."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Summon-Fallback",
+              "femaleVariant": "Vuelan las llamadas que no pueden llegar por carretera"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Summon-Fallback-Description",
+              "femaleVariant": "Cuando un vehículo llamado no puede llegar hasta ti conduciendo (estás en una azotea, lejos de las carreteras, se queda atascado por el camino o en otro nivel), vuela el resto del trayecto y aterriza a tu lado."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Summon-Always-Fly",
+              "femaleVariant": "Los vehículos llamados siempre vuelan"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Summon-Always-Fly-Description",
+              "femaleVariant": "Todo vehículo que llamas vuela hasta ti con el piloto automático y aterriza a tu lado, en lugar de llegar por el tráfico. Cerca de una plataforma de aterrizaje sigue volando a la plataforma."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "LTBF-Landing-Pad",
+              "femaleVariant": "Plataforma de aterrizaje de AV"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "LTBF-Landing-Pad-Discovered",
+              "femaleVariant": "Plataforma de aterrizaje descubierta"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "LTBF-Landing-Pads-Discovered",
+              "femaleVariant": "{count} plataformas de aterrizaje descubiertas"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "LTBF-Landing-Pad-Description",
+              "femaleVariant": "Márcala como destino y mantén pulsada la tecla de conducción automática durante el vuelo: el piloto automático vuela hasta allí y aterriza en la plataforma."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "LTBF-Landing-Pad-Supplies",
+              "femaleVariant": "Suministros de la plataforma de aterrizaje"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "LTBF-Landing-Pad-Supplies-Description",
+              "femaleVariant": "Guardados para la primera tripulación que aterrice aquí: {money} pavos y componentes de fabricación."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "LTBF-Landing-Pad-Discovered-Description",
+              "femaleVariant": "Añadida al mapa. Márcala como destino y mantén pulsada la tecla de conducción automática durante el vuelo: el piloto automático aterriza en ella."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Crashes",
+              "femaleVariant": "Choques"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Hud-And-Sound",
+              "femaleVariant": "Interfaz y sonido"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-Quickhacks-Enabled",
+              "femaleVariant": "Quickhacks de vuelo"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Flight-Quickhacks-Enabled-Description",
+              "femaleVariant": "Ofrece los quickhacks de vuelo (Activar vuelo, Antigravedad, Lanzamiento y otros) en otros vehículos."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Handling",
+              "femaleVariant": "Manejo"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Handling-Description",
+              "femaleVariant": "Cómo se siente el vuelo. Suelto: el vehículo derrapa y sigue girando más tiempo. Firme: deja de deslizarse antes y sigue su morro en las curvas."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Handling-Loose",
+              "femaleVariant": "Suelto"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Handling-Default",
+              "femaleVariant": "Predeterminado"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Handling-Tight",
+              "femaleVariant": "Firme"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Brake-Strength",
+              "femaleVariant": "Fuerza del freno"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Brake-Strength-Description",
+              "femaleVariant": "Con qué fuerza el freno reduce la velocidad del vehículo y detiene su giro."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Gamepad-Toggle-Hold",
+              "femaleVariant": "Mantener el botón de vuelo del mando (s)"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Gamepad-Toggle-Hold-Description",
+              "femaleVariant": "Cuánto tiempo hay que mantener pulsado el botón de vuelo del mando. 0: una pulsación. Si usas un tiempo, cambia el botón para que no sea L3: mantener L3 también inicia la conducción automática del juego y, en vuelo, el piloto automático."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Standard-Enabled",
+              "femaleVariant": "Estándar"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Standard-Enabled-Description",
+              "femaleVariant": "El modo en el que empieza el vuelo: cada control pide una velocidad y, al soltarlo, el vehículo se detiene, nivelado, donde está."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Hover-And-Fly-Enabled",
+              "femaleVariant": "Hover & Fly"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Hover-And-Fly-Enabled-Description",
+              "femaleVariant": "El vuelo como era hasta la versión 0.3.20: el vehículo se inclina y cabecea con tus controles y conserva su inercia. Cerca del suelo flota a una altura que subes y bajas con el ascenso y se inclina con el terreno; más arriba, el ascenso lo empuja hacia arriba y hacia abajo."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Standard-Turn-Speed",
+              "femaleVariant": "Velocidad de giro de Estándar (grados/s)"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Standard-Turn-Speed-Desc",
+              "femaleVariant": "A qué velocidad gira el vehículo mientras mantienes una tecla de giro."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Standard-Climb-Speed",
+              "femaleVariant": "Velocidad de ascenso y descenso de Estándar (m/s)"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Standard-Climb-Speed-Desc",
+              "femaleVariant": "A qué velocidad asciende o desciende el vehículo mientras mantienes las teclas de ascenso."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Drone-Turn-Speed",
+              "femaleVariant": "Velocidad de giro del dron"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Drone-Turn-Speed-Description",
+              "femaleVariant": "A qué velocidad el dron se inclina, cabecea y gira."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Drone-Thrust",
+              "femaleVariant": "Empuje del dron"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Drone-Thrust-Description",
+              "femaleVariant": "Con qué fuerza el dron empuja hacia arriba, hacia delante y hacia los lados."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Extra-Flight-Modes",
+              "femaleVariant": "Modos de vuelo adicionales"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Extra-Flight-Modes-Description",
+              "femaleVariant": "Añade Hover (mantiene siempre su altura sobre el suelo), Fly (ignora el suelo) y Dron antigravedad al cambio de modo."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Detachable-Thrusters-Description",
+              "femaleVariant": "Permite que los propulsores se desprendan del vehículo en un choque fuerte."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Show-Flight-Hud",
+              "femaleVariant": "Mostrar la interfaz de vuelo"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Show-Flight-Hud-Description",
+              "femaleVariant": "Muestra la interfaz de vuelo mientras vuelas. Desactívala si se superpone a otro mod de interfaz."
             }
           ]
         }
