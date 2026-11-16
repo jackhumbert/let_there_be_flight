@@ -30,6 +30,7 @@ void FlightComponent::OnAttach(void* a1) {
 }
 
 void FlightComponent::OnDetach(void* a1) {
+  ScrapeEffects::Forget(this);
   Gather::Forget(this->entity->entityID.hash);
   this->sys->UnregisterComponent(Handle<FlightComponent>(this));
   game::Component::OnDetach(a1);
@@ -222,6 +223,10 @@ void FlightComponent::OnUpdate(float deltaTime) {
     }
     this->force = Vector4();
     this->torque = Vector4();
+  } else {
+    // the script stops the update in the same call as it ends flight when the car explodes or its driver dies:
+    // the scrape effects still looping are ended here
+    ScrapeEffects::Forget(this);
   }
 }
 

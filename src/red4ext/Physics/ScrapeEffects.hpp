@@ -19,6 +19,10 @@ namespace ScrapeEffects {
 // Steps the component's scrapes and moves, starts and ends their effects; ends them all when flight is off.
 void Update(FlightComponent *aComponent, RED4ext::vehicle::BaseObject *aVehicle, float aDt);
 
+// Ends the component's scrape effects and drops its scrapes: for a component that no longer updates (the car
+// exploded, its driver died, it left the game), which Update would never see again. Nothing to do when it has none.
+void Forget(FlightComponent *aComponent);
+
 // The surface of a physics material by its CName's hash (Flight::SurfaceOf its name), cached; None for none (0).
 Flight::Surface SurfaceOfMaterial(uint64_t aMaterial);
 

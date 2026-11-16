@@ -212,19 +212,23 @@ Flight::Period ScrapeEffects::PeriodOfMaterial(uint64_t aMaterial) {
   return p;
 }
 
+void ScrapeEffects::Forget(FlightComponent *aComponent) {
+  aComponent->scrapes.Clear();
+  aComponent->skidScrapes.Clear();
+  auto it = gLive.find(aComponent);
+  if (it != gLive.end()) {
+    for (auto &[id, live] : it->second) {
+      End(live.sparks);
+      End(live.trail);
+    }
+    gLive.erase(it);
+  }
+}
+
 void ScrapeEffects::Update(FlightComponent *aComponent, RED4ext::vehicle::BaseObject *aVehicle, float aDt) {
   const Flight::ScrapeParams params;
-  auto it = gLive.find(aComponent);
   if (!aComponent->active || !aVehicle) {
-    aComponent->scrapes.Clear();
-    aComponent->skidScrapes.Clear();
-    if (it != gLive.end()) {
-      for (auto &[id, live] : it->second) {
-        End(live.sparks);
-        End(live.trail);
-      }
-      gLive.erase(it);
-    }
+    Forget(aComponent);
     return;
   }
   if (const auto *body = aVehicle->physicsData) {

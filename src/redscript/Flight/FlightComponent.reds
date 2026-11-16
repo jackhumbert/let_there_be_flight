@@ -238,6 +238,8 @@ public native class FlightComponent extends GameComponent {
 
     this.isDestroyed = true;
     this.hasExploded = true;
+    // the alarm of a wreck whose flight is already off: Deactivate below is not reached for it
+    this.StopDestroyedAlarm();
     if this.active {
       this.Deactivate(true);
     }
