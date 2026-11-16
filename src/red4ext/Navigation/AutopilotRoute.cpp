@@ -40,6 +40,14 @@ void Autopilot::DropRequest() {
   request = 0;
 }
 
+// A request about to be replaced by a new one: its plan, never taken, is freed. Not the trip planned ahead, whose
+// rest is still wanted (AheadReset drops that one).
+void Autopilot::ForgetRequest() {
+  if (request > 0 && request != ahead.trip) {
+    plans.Drop(request);
+  }
+}
+
 // ChooseRouteGoal (710): where the route should end, above the landing spot or the point itself
 void Autopilot::ChooseRouteGoal() {
   float top = 0.0f;
@@ -169,6 +177,7 @@ void Autopilot::RequestRoute(const Vec3 &aFrom) {
       Distance(routeGoal, routeGateEntry) < 1.0f) {
     gateTail = routeGateTail;
   }
+  ForgetRequest();
   // from rest: a first leg at once, the rest planned while the car flies it
   if (freeRoam) {
     const FreeRoamShape free{params.freeRoamHeightFree, params.freeRoamHeightWavelength, params.freeRoamOverCost};
@@ -373,6 +382,7 @@ void Autopilot::Replan(const Vec3 &aP, const Vec3 &aV) {
   requestRace = true;
   requestJoin = false;
   requestRejoin = true;
+  ForgetRequest();
   request = plans.Rejoin(aP, std::move(line), std::max(params.rejoinMin, Length(aV) * params.rejoinAhead),
                          CarPlanParams(planBase, &vehicle, hits, aV));
   replanTimer = 3.0f;

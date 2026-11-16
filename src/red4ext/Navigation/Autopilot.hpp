@@ -287,6 +287,7 @@ private:
   // the route (AutopilotRoute.cpp)
   void ClearRoute();
   void DropRequest();
+  void ForgetRequest();
   void ChooseRouteGoal();
   void RequestRoute(const Vec3 &aFrom);
   bool AheadRequest(const Vec3 &aFrom, const Vec3 &aVelocity);
