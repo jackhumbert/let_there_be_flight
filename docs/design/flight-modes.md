@@ -184,10 +184,11 @@ Where they live:
 
 - The C++ modes' settings are registered from C++ with Mod Settings' `AddVariable` (`Flight/Settings.hpp`,
   `Flight/FlightSettingsLink.cpp`), into `Flight::PlayerSettings` and `Flight::AutopilotSettings`. Without Mod
-  Settings they keep their defaults. Their classes and names are the ones the script modes had, so saved values
-  carry over: Standard's switch is `[FlightModeHoverFly] enabled`, its two speeds `[LTBF_HoverFly]`
-  `hoverFlyTurnRate` and `hoverFlyClimbRate`, the Autopilot's `[FlightModeAutopilot]`. Hover & Fly's switch is
-  `[FlightModeHoverFlyClassic] enabled`. The rows' places in Flight Modes are fixed in `Settings.hpp`.
+  Settings they keep their defaults. Hover & Fly's switch keeps the class and name the script mode had up to
+  0.3.20, `[FlightModeHoverFly] enabled`, so a saved value still switches Hover & Fly. Standard is new and has
+  its own: `[FlightModeStandard] enabled`, and its two speeds `[LTBF_HoverFly]` `hoverFlyTurnRate` and
+  `hoverFlyClimbRate`. The Autopilot's are `[FlightModeAutopilot]`. The rows' places in Flight Modes are fixed
+  in `Settings.hpp`.
 - The rest are redscript fields with `ModSettings` attributes, mostly in `FlightSettings.reds` and
   `FlightModeDrone.reds`.
 

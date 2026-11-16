@@ -35,8 +35,8 @@ struct PlayerSetting {
   uint32_t order;
 };
 
-// The variables, all under kFlightModesCategory. Their class and names are the ones Hover & Fly had, so the values
-// players saved ([LTBF_HoverFly] hoverFlyTurnRate = ...) carry over to Standard.
+// The variables, all under kFlightModesCategory: Standard's turn and climb speed, stored as [LTBF_HoverFly]
+// hoverFlyTurnRate and hoverFlyClimbRate (no release before Standard had them, so nothing carries over from one).
 const std::vector<PlayerSetting> &PlayerSettingsTable();
 constexpr const char *kPlayerSettingsMod = "Let There Be Flight";
 constexpr const char *kPlayerSettingsClass = "LTBF_HoverFly";
@@ -49,15 +49,18 @@ constexpr const char *kFlightModesCategory = "UI-Settings-Flight-Mode-Settings";
 // table.
 bool SetPlayerSetting(PlayerSettings &aSettings, const std::string &aName, float aValue);
 
-// Standard's switch (PlayerSettings::standardEnabled), registered under the class and name the script Hover & Fly had
-// it, so the value players saved ([FlightModeHoverFly] enabled) carries over.
-constexpr const char *kStandardEnabledClass = "FlightModeHoverFly";
+// Standard's switch (PlayerSettings::standardEnabled), under its own class: a new mode, on for everyone until they
+// switch it off.
+constexpr const char *kStandardEnabledClass = "FlightModeStandard";
 constexpr const char *kStandardEnabledName = "enabled";
 constexpr const char *kStandardEnabledDisplayName = "UI-Settings-Standard-Enabled";
 constexpr const char *kStandardEnabledDescription = "UI-Settings-Standard-Enabled-Description";
 
-// Hover & Fly's switch (PlayerSettings::hoverFlyClassicEnabled), under its own class (FlightModeHoverFlyClassic.hpp).
-constexpr const char *kHoverFlyClassicEnabledClass = "FlightModeHoverFlyClassic";
+// Hover & Fly's switch (PlayerSettings::hoverFlyClassicEnabled), registered under the class and name the script
+// Hover & Fly had it in releases up to 0.3.20, so the value players saved in Mod Settings' user.ini
+// ([FlightModeHoverFly] enabled) still switches the mode it was saved for. The mode's own class has a new name
+// (FlightModeHoverFlyClassic.hpp).
+constexpr const char *kHoverFlyClassicEnabledClass = "FlightModeHoverFly";
 constexpr const char *kHoverFlyClassicEnabledName = "enabled";
 constexpr const char *kHoverFlyClassicEnabledDisplayName = "UI-Settings-Hover-And-Fly-Enabled";
 constexpr const char *kHoverFlyClassicEnabledDescription = "UI-Settings-Hover-And-Fly-Enabled-Description";

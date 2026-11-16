@@ -39,11 +39,13 @@ TEST(settings_callback_writes) {
 }
 
 TEST(settings_standard_switch_key) {
-  // Standard's switch registered where the script Hover & Fly had it (the deleted FlightModeHoverFly.reds:
-  // `enabled`), so a value saved in Mod Settings' user.ini ([FlightModeHoverFly] enabled) still applies; its turn and
-  // climb speed keep Hover & Fly's keys ([LTBF_HoverFly] hoverFlyTurnRate, hoverFlyClimbRate) the same way. All three
-  // are in the Flight Modes category, first.
-  CHECK(std::string(kStandardEnabledClass) == "FlightModeHoverFly");
+  // Hover & Fly's switch is registered where the script Hover & Fly had it up to 0.3.20 (FlightModeHoverFly.reds:
+  // `enabled`), so a value saved in Mod Settings' user.ini ([FlightModeHoverFly] enabled) still switches Hover & Fly:
+  // a player who turned it off keeps it off. Standard, a new mode, has a key of its own and so starts on. Standard's
+  // switch and its two speeds are in the Flight Modes category, first.
+  CHECK(std::string(kHoverFlyClassicEnabledClass) == "FlightModeHoverFly");
+  CHECK(std::string(kHoverFlyClassicEnabledName) == "enabled");
+  CHECK(std::string(kStandardEnabledClass) == "FlightModeStandard");
   CHECK(std::string(kStandardEnabledName) == "enabled");
   CHECK(std::string(kFlightModesCategory) == "UI-Settings-Flight-Mode-Settings");
   CHECK(std::string(kStandardEnabledDisplayName) == "UI-Settings-Standard-Enabled");

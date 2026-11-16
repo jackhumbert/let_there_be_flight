@@ -11,8 +11,8 @@
 // Handling and Brake Strength. Second in FlightModes.classes (src/tweaks/flight_modes.yaml), after Standard, switched
 // on and off by its Mod Setting (Flight::Player().hoverFlyClassicEnabled).
 //
-// The class name is new: the old script class's name, FlightModeHoverFly, keys Standard's switch in Mod Settings'
-// user.ini (Flight::kStandardEnabledClass), so the value players saved carries over to Standard.
+// The class name is new, but its switch is stored under the old script class's name, FlightModeHoverFly
+// (Flight::kHoverFlyClassicEnabledClass), so the value players saved for Hover & Fly still applies to it.
 
 #include "Flight/Mode.hpp"
 #include "Flight/Modes.hpp"
