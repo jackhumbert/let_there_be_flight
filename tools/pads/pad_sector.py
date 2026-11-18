@@ -2,18 +2,15 @@
 from pad_sectors.json and fit its streaming block descriptor.
 
 Works on the committed CR2W files in src/wolvenkit/source/archive: serializes the sector and the
-block, keeps every node that is not one of our pad entities (the Watson car spawners), drops the
-old pad nodes, adds one worldEntityNode per part entity of each listed pad at the pad's transform
-(a copy of the first existing pad node, so the sector must hold one; the first was built from a
-vanilla v68 exterior sector's worldEntityNode), sets the descriptor box to base_box joined with
-each pad's position +- its streaming distance, and writes both files back.
+block, drops the old pad nodes and every population spawner (the sector began as a test with two
+vehicle spawners, which gave a fresh car on every load), keeps any other node, adds one
+worldEntityNode per part entity of each listed pad at the pad's transform (a copy of the first
+existing pad node, so the sector must hold one; the first was built from a vanilla v68 exterior
+sector's worldEntityNode), sets the descriptor box to each node's position +- its streaming
+distance, and writes both files back.
 
   python pad_sector.py [--config pad_sectors.json] [--wolvenkit <WolvenKit 10 CLI>]
   then: python tools/packaging/pack_archive.py
-
-"spawners" (optional): vehicle spawners, {"record": "Vehicle.<id>", "pos", "yaw", "node_id",
-"streaming_distance"}, copies of the sector's first spawner (a Watson pad car) with debugName
-"[LTBF spawner] <record>"; like that one they give a fresh car on every load.
 
 "colliders" (optional): a tiles file from proxy_colliders.py build (relative to this folder), one
 collider entity per tile (collision for proxy-only buildings), placed unrotated at its "pos".
@@ -50,7 +47,6 @@ def cli(wk, *args):
         raise SystemExit(f"WolvenKit {' '.join(args[:2])} failed:\n{r.stdout[-2000:]}{r.stderr[-1000:]}")
 
 
-SPAWNER_PREFIX = "[LTBF spawner] "  # debugName of the vehicle spawners this tool adds
 # debugNames of the decal and quest nodes earlier builds of the sector held: still ours, so they are dropped
 DECAL_PREFIX = "[LTBF decal] "
 QUEST_PREFIX = "[LTBF quest] "
@@ -59,9 +55,7 @@ QUEST_PREFIX = "[LTBF quest] "
 def is_pad(node):
     d = node["Data"]
     if d.get("$type") == "worldPopulationSpawnerNode":
-        # ours are the vehicle spawners and the NPC spawners of earlier builds; the Watson pad's car spawner stays
-        name = str(d.get("debugName", {}).get("$value", ""))
-        return name.startswith(SPAWNER_PREFIX) or name.startswith(QUEST_PREFIX)
+        return True  # the test vehicle spawners and the NPC spawners of earlier builds
     if d.get("$type") == "worldStaticDecalNode":
         return str(d.get("debugName", {}).get("$value", "")).startswith(DECAL_PREFIX)
     if str(d.get("debugName", {}).get("$value", "")).startswith(QUEST_PREFIX):
@@ -108,11 +102,6 @@ def build_sector(doc, cfg):
         raise SystemExit("the sector has no pad node to copy")
     template_node = copy.deepcopy(nodes[entity_idx[0]])
     template_data = copy.deepcopy(next(d for d in data if int(d["nodeIdx"]) == entity_idx[0]))
-    # vehicle spawners copy the first spawner node (the Watson pad's, which this tool never touches)
-    spawner_idx = next(i for i, n in enumerate(nodes)
-                       if n["Data"]["$type"] == "worldPopulationSpawnerNode" and i not in pad_idx)
-    spawner_node = copy.deepcopy(nodes[spawner_idx])
-    spawner_data = copy.deepcopy(next(d for d in data if int(d["nodeIdx"]) == spawner_idx))
     # keep the other nodes, renumbered
     remap, kept = {}, []
     for i, n in enumerate(nodes):
@@ -139,20 +128,12 @@ def build_sector(doc, cfg):
         n_["Data"]["debugName"]["$value"] = c["entity"].rsplit("\\", 1)[-1][:-4]
         kept_data.append(place(template_data, *c["pos"], 0.0, c["node_id"], c["streaming_distance"], len(kept)))
         kept.append(n_)
-    for sp in cfg.get("spawners", []):
-        n_ = copy.deepcopy(spawner_node)
-        n_["Data"]["objectRecordId"]["$value"] = sp["record"]
-        n_["Data"]["debugName"]["$value"] = SPAWNER_PREFIX + sp["record"]
-        x, y, z = sp["pos"]
-        kept_data.append(place(spawner_data, x, y, z, sp["yaw"], sp["node_id"],
-                               sp.get("streaming_distance", spawner_data["streamingDistance"]), len(kept)))
-        kept.append(n_)
     rc["nodeRefs"] = []
     rc["nodes"] = kept
     rc["nodeData"]["Data"] = kept_data
     rc["persistentNodes"] = copy.deepcopy(kept_data)
     renumber_handles(doc)
-    return len(kept) - len(remap)
+    return len(kept) - len(remap), kept_data
 
 
 def colliders(cfg):
@@ -163,11 +144,14 @@ def colliders(cfg):
     return json.load(open(os.path.join(HERE, cfg["colliders"]), encoding="utf-8"))["tiles"]
 
 
-def fit_block(doc, cfg):
-    (x0, y0, z0), (x1, y1, z1) = cfg["base_box"]
-    for pad in cfg["pads"] + cfg.get("spawners", []) + colliders(cfg):
-        x, y, z = pad["pos"]
-        r = pad.get("streaming_distance", 100.0)
+def fit_block(doc, cfg, node_data):
+    """The descriptor box gates loading, so it covers every node of the sector +- its streaming distance."""
+    x0 = y0 = z0 = math.inf
+    x1 = y1 = z1 = -math.inf
+    for d in node_data:
+        p = d["transform"]["position"]
+        x, y, z = float(p["X"]), float(p["Y"]), float(p["Z"])
+        r = float(d["streamingDistance"])
         x0, y0, z0 = min(x0, x - r), min(y0, y - r), min(z0, z - r)
         x1, y1, z1 = max(x1, x + r), max(y1, y + r), max(z1, z + r)
     for desc in doc["Data"]["RootChunk"]["descriptors"]:
@@ -192,9 +176,9 @@ def main():
             cli(args.wolvenkit, "cr2w", "-s", src, "-o", tmp)
             files[key] = (src, os.path.join(tmp, os.path.basename(src) + ".json"))
         sector = json.load(open(files["sector"][1], encoding="utf-8"))
-        added = build_sector(sector, cfg)
+        added, node_data = build_sector(sector, cfg)
         block = json.load(open(files["block"][1], encoding="utf-8"))
-        box = fit_block(block, cfg)
+        box = fit_block(block, cfg, node_data)
         out = os.path.join(tmp, "out")
         os.makedirs(out)
         for key, doc in (("sector", sector), ("block", block)):

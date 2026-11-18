@@ -1,20 +1,8 @@
 {
-  "comment": "Our pad entities placed in the world by pad_sector.py (docs/design/landing-pads.md, step 8). sector: our sector that holds them (a second sector of our own with its own descriptor did not load, so they share this one). base_box: the descriptor box the sector's other nodes need (the Watson car spawners). pads: one per visual-only pad, the part entities (pad_entity.py, one per 100 meshes) at the proxy's transform; streaming_distance as far as the hidden proxy drew (its forcedAutoHideDistance); node_id: globalNodeId of the first part, the next ones count up. spawners: vehicle spawners (pad_sector.py), a fresh car on every load; none now.",
+  "comment": "Our pad entities placed in the world by pad_sector.py (docs/design/landing-pads.md, step 8). sector: our sector that holds them (a second sector of our own with its own descriptor did not load, so they share this one). pads: one per visual-only pad, the part entities (pad_entity.py, one per 100 meshes) at the proxy's transform; streaming_distance as far as the hidden proxy drew (its forcedAutoHideDistance); node_id: globalNodeId of the first part, the next ones count up.",
   "sector": "user\\jackhumbert\\sectors\\helipad_vehicles.streamingsector",
   "block": "user\\jackhumbert\\all.streamingblock",
   "colliders": "../world/proxy_collider_tiles.json",
-  "base_box": [
-    [
-      -1337.85974,
-      1015.79688,
-      -32.7368622
-    ],
-    [
-      -1037.85974,
-      1315.79688,
-      267.263123
-    ]
-  ],
   "pads": [
     {
       "pad": "8040860436745735587",
@@ -35,6 +23,5 @@
         "user\\jackhumbert\\entities\\ltbf_landing_pad_v2_4.ent"
       ]
     }
-  ],
-  "spawners": []
+  ]
 }
