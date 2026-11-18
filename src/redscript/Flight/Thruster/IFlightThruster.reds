@@ -24,6 +24,8 @@ public abstract native class IFlightThruster extends IScriptable {
   public let motionKind: Int32 = 0; // Flight::ThrusterShape: 0 car, 1 bike front, 2 bike back (set at Create)
 
   public let parentSlotName: CName;
+  // the slot some cars hang this wheel's brake disc and caliper from; hidden with the wheel
+  public let brakeSlotName: CName;
   public let deviationName: CName;
 
   public let fxs: array<ref<IFlightThrusterFX>>;
@@ -158,6 +160,11 @@ public abstract native class IFlightThruster extends IScriptable {
 
   public func SetOGComponents() {
     this.ogComponents = this.vehicle.GetComponentsUsingSlot(this.parentSlotName);
+    if IsNameValid(this.brakeSlotName) {
+      for c in this.vehicle.GetComponentsUsingSlot(this.brakeSlotName) {
+        ArrayPush(this.ogComponents, c);
+      }
+    }
   }
 
   public func Start() {

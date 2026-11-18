@@ -664,7 +664,8 @@ v_spaceport_tram_01__basic_01.rig	S	missing	wheel_front_left_b,wheel_front_right
 0xb1e493f7a6aaa5dd	A	chevalier_emperor__basic_zetatech_01,chevalier_emperor__basic_zetatech_02	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
 0xb1e493f7a6aaa5dd	A	*	* 1 -
 0xc79a87b61c194ffa	T	delamain_cab.ent	vehicleCarBaseObject car v_standard2_villefort_cortes_01__basic_01.rig 1 0.38 0.38 LocKey#46581
-0xc79a87b61c194ffa	A	6_appearances	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
+0xc79a87b61c194ffa	A	5_appearances	brake_back_left,brake_back_right,brake_front_left,brake_front_right,wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
+0xc79a87b61c194ffa	A	villefort_cortes__basic_burnt_01	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
 0xc79a87b61c194ffa	A	*	* 1 4x1
 0xc4721daf177f0207	T	jackie_bike.ent	vehicleBikeBaseObject bike v_sportbike2_arch_nemesis_01.rig 1 0.29 0.32
 0xc4721daf177f0207	A	arch_nemesis_basic_jackie_tuned_up,v_sportbike2_arch_nemesis_basic_jackie	wheel_back,wheel_front axle_f_01@None,tire_b_01@wheel_back,tire_f_01@wheel_front,v_sportbike2_arch_nemesis__ext01_axle_b_01@None,wheel_b_01@wheel_back,wheel_f_01@wheel_front 0 -
@@ -723,7 +724,8 @@ v_spaceport_tram_01__basic_01.rig	S	missing	wheel_front_left_b,wheel_front_right
 0x168409b1496500ef	A	*	* 1 4x1
 0x072866ee5b34fd97	T	q101_corpo_av.ent	vehicleAVBaseObject none - 1 0 0
 0x7f4c67781cf5872e	T	q101_delamain_car.ent	vehicleCarBaseObject car v_standard2_villefort_cortes_01__basic_01.rig 1 0.38 0.38 Cortes V5000 Valor
-0x7f4c67781cf5872e	A	6_appearances	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
+0x7f4c67781cf5872e	A	5_appearances	brake_back_left,brake_back_right,brake_front_left,brake_front_right,wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
+0x7f4c67781cf5872e	A	villefort_cortes__basic_burnt_01	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
 0x7f4c67781cf5872e	A	*	* 1 4x1
 0xc822571fd6ba55ca	T	q101_wheelchair.ent	vehicleAVBaseObject none - 1 0 0
 0xc8e4c782b818129c	T	q101_wheelstretchers.ent	vehicleBaseObject none - 1 0 0
@@ -828,7 +830,7 @@ v_spaceport_tram_01__basic_01.rig	S	missing	wheel_front_left_b,wheel_front_right
 0xe2b48eb465506252	T	q000_kid_6thstreet_car.ent	entEntity none - 1 0 0
 0x671b0d3fa530cd37	T	q000_kid_av_garbage.ent	vehicleAVBaseObject none - 2 0 0
 0x0f54b6b95f380a7b	T	q000_kid_padre_car.ent	vehicleCarBaseObject car v_standard2_villefort_cortes_01__basic_01.rig 1 0.38 0.38 LocKey#39024
-0x0f54b6b95f380a7b	A	villefort_cortes__basic_padre	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
+0x0f54b6b95f380a7b	A	villefort_cortes__basic_padre	brake_back_left,brake_back_right,brake_front_left,brake_front_right,wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
 0x0f54b6b95f380a7b	A	*	* 1 4x1
 0x7d0dc91afb561a7f	T	q000_kid_police_car.ent	vehicleCarBaseObject car v_standard2_villefort_cortes_01__basic_01.rig 2 0.38 0.38 Cortes V6000 NCPD Overlord
 0x7d0dc91afb561a7f	A	villefort_cortes__basic_police_q000_streetkid,villefort_cortes__basic_police_q000_streetkid_02	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 2 4x2
@@ -853,7 +855,7 @@ v_spaceport_tram_01__basic_01.rig	S	missing	wheel_front_left_b,wheel_front_right
 0x27edb853c092247e	T	q005_arasaka_drone.ent	vehicleAVBaseObject none - 1 0 0
 0xed03f86e63a63da6	T	q005_arasaka_drone_small.ent	vehicleAVBaseObject none - 1 0 0
 0xc3d04b89b7e62950	T	q005_delamain_cab_combat.ent	vehicleCarBaseObject car v_standard2_villefort_cortes_01__basic_01.rig 1 0.38 0.38 Cortes V5000 Valor
-0xc3d04b89b7e62950	A	7_appearances	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
+0xc3d04b89b7e62950	A	7_appearances	brake_back_left,brake_back_right,brake_front_left,brake_front_right,wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
 0xc3d04b89b7e62950	A	villefort_cortes__basic_burnt_01	wheel_front_left,wheel_front_right 0 -
 0xc3d04b89b7e62950	A	*	* 1 4x1
 0x5a108f46fc382f75	T	q005_saburo_av.ent	vehicleAVBaseObject none - 1 0 0
@@ -942,7 +944,8 @@ v_spaceport_tram_01__basic_01.rig	S	missing	wheel_front_left_b,wheel_front_right
 0x72d744ec284f8276	A	12_appearances	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 5 4x4
 0x72d744ec284f8276	A	*	* 9 4x6
 0x7bc806216fb04865	T	v_sport1_yaiba_semimaru__basic_01.ent	vehicleCarBaseObject car v_sport1_rayfield_caliburn_01__basic_01.rig 3 0.37 0.39 ARV-Q340 Semimaru
-0x7bc806216fb04865	A	6_appearances	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 2 4x2
+0x7bc806216fb04865	A	5_appearances	brake_front_left,brake_front_right,wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 2 4x2
+0x7bc806216fb04865	A	yaiba_semimaru_basic_burnt_01	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
 0x7bc806216fb04865	A	*	* 1 -
 0x9bd7bcb9600a3553	T	v_sport2_mizutani_shion__basic_01.ent	vehicleCarBaseObject car v_sport2_mizutani_shion_01__basic_01.rig 25 0.385 0.385 Shion "Kyokotsu"
 0x9bd7bcb9600a3553	A	28_appearances	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 6 4x4
@@ -1046,15 +1049,18 @@ v_spaceport_tram_01__basic_01.rig	S	missing	wheel_front_left_b,wheel_front_right
 0x5b2b6938f3e391f8	A	20_appearances	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 5 4x5
 0x5b2b6938f3e391f8	A	*	* 22 4x17
 0x8fa9cfe859ba1cf4	T	v_standard2_villefort_cortes_01__basic_01.ent	vehicleCarBaseObject car v_standard2_villefort_cortes_01__basic_01.rig 36 0.38 0.38 Cortes V5000 Valor
-0x8fa9cfe859ba1cf4	A	28_appearances	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 3 4x2
+0x8fa9cfe859ba1cf4	A	19_appearances	brake_back_left,brake_back_right,brake_front_left,brake_front_right,wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 2 4x1
+0x8fa9cfe859ba1cf4	A	villefort_cortes__basic_burnt_01,villefort_cortes__basic_poor_1_01,villefort_cortes__basic_poor_1_02,villefort_cortes__basic_poor_1_03,villefort_cortes__basic_poor_1_04,villefort_cortes__basic_poor_1_05,villefort_cortes__basic_poor_1_06,villefort_cortes__basic_q108_15c_arasaka,villefort_cortes__basic_trevors	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 1 4x1
 0x8fa9cfe859ba1cf4	A	*	* 33 4x25
 0xeeee0f2dc961a6fa	T	v_standard2_villefort_cortes_01__police_01.ent	vehicleCarBaseObject car v_standard2_villefort_cortes_01__basic_01.rig 27 0.38 0.38 Cortes V6000 NCPD Overlord
 0xeeee0f2dc961a6fa	A	8_appearances	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 27 4x24
 0x4a0f0b40d3d11bf8	T	v_standard2_villefort_cortes_02__delamain_01.ent	vehicleCarBaseObject car v_standard2_villefort_cortes_01__basic_01.rig 11 0.38 0.38 Delamain Cab
-0x4a0f0b40d3d11bf8	A	6_appearances	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 1 -
+0x4a0f0b40d3d11bf8	A	5_appearances	brake_back_left,brake_back_right,brake_front_left,brake_front_right,wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 1 -
+0x4a0f0b40d3d11bf8	A	villefort_cortes__basic_burnt_01	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
 0x4a0f0b40d3d11bf8	A	*	* 10 4x10
 0xf890ec274802ff11	T	v_standard2_villefort_cortes_02__delamain_02.ent	vehicleCarBaseObject car v_standard2_villefort_cortes_01__basic_01.rig 2 0.38 0.38 Delamain Cab
-0xf890ec274802ff11	A	villefort_cortes__basic_burnt_01,villefort_cortes__basic_delamain_taxi	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 1 4x1
+0xf890ec274802ff11	A	villefort_cortes__basic_delamain_taxi	brake_back_left,brake_back_right,brake_front_left,brake_front_right,wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 1 4x1
+0xf890ec274802ff11	A	villefort_cortes__basic_burnt_01	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
 0xf890ec274802ff11	A	*	* 1 4x1
 0xcc554a14c87160b9	T	v_standard3_chevalier_emperor_01__basic_01.ent	vehicleCarBaseObject car v_standard3_chevalier_emperor_01__basic_01.rig 32 0.485 0.485 Emperor 620 Ragnar
 0xcc554a14c87160b9	A	27_appearances	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 12 4x8
@@ -1161,7 +1167,7 @@ v_spaceport_tram_01__basic_01.rig	S	missing	wheel_front_left_b,wheel_front_right
 0xa53dec3dea5d36f4	T	q302_kurtz_av_manticore.ent	vehiclePreventionAVObject none - 1 0 0
 0x001cded26ec7062d	T	q302_militia_car.ent	vehicleBaseObject none - 1 0 0
 0x3192f41cdfe72c22	T	q303_limo.ent	vehicleCarBaseObject car v_standard2_villefort_cortes_01__basic_01.rig 1 0.38 0.38 Cortes V5000 Valor
-0x3192f41cdfe72c22	A	villefort_cortes__basic_mafia_01	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
+0x3192f41cdfe72c22	A	villefort_cortes__basic_mafia_01	brake_back_left,brake_back_right,brake_front_left,brake_front_right,wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
 0x3192f41cdfe72c22	A	*	* 1 4x1
 0x1b9539cdf9d59b5b	T	q304_cab.ent	vehicleCarBaseObject car v_standard2_archer_hella_01__basic_01.rig 1 0.37 0.37 Hella EC-V i660 Voyage
 0x1b9539cdf9d59b5b	A	archer_hella__basic_suburban_1_3	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
@@ -1176,7 +1182,7 @@ v_spaceport_tram_01__basic_01.rig	S	missing	wheel_front_left_b,wheel_front_right
 0x4b1248184cd35048	A	5_appearances	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 2 4x1
 0x5cb7dee8091c3924	T	q304_core_transport.ent	gameObject none - 1 0 0
 0x4b470cdc32f387f5	T	q304_crash_cortes.ent	vehicleCarBaseObject car v_standard2_villefort_cortes_01__basic_01.rig 1 0.38 0.38 Cortes V5000 Valor
-0x4b470cdc32f387f5	A	villefort_cortes__basic_suburban_1_02	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
+0x4b470cdc32f387f5	A	villefort_cortes__basic_suburban_1_02	brake_back_left,brake_back_right,brake_front_left,brake_front_right,wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
 0x4b470cdc32f387f5	A	*	* 1 4x1
 0x9e19ad681ab82287	T	q304_get_away_car.ent	vehicleCarBaseObject car v_sport1_quadra_sport_r7_01__basic_01.rig 3 0.35 0.35 Sport R-7 "Charon"
 0x9e19ad681ab82287	A	4_appearances	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 3 4x3
@@ -1217,7 +1223,8 @@ v_spaceport_tram_01__basic_01.rig	S	missing	wheel_front_left_b,wheel_front_right
 0x5bb633adc5fe1128	A	12_appearances	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
 0x5bb633adc5fe1128	A	*	* 1 4x1
 0xf43335e5f43069cd	T	q304_scanning_villefort_cortez.ent	vehicleCarBaseObject car v_standard2_villefort_cortes_01__basic_01.rig 1 0.38 0.38 Cortes V5000 Valor
-0xf43335e5f43069cd	A	19_appearances	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
+0xf43335e5f43069cd	A	13_appearances	brake_back_left,brake_back_right,brake_front_left,brake_front_right,wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
+0xf43335e5f43069cd	A	villefort_cortes__basic_poor_1_01,villefort_cortes__basic_poor_1_02,villefort_cortes__basic_poor_1_03,villefort_cortes__basic_poor_1_04,villefort_cortes__basic_poor_1_05,villefort_cortes__basic_poor_1_06	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
 0xf43335e5f43069cd	A	*	* 1 4x1
 0xae42ae22d0950b5b	T	q304_songbird_escape_trap_car_01.ent	vehicleCarBaseObject car v_sport2_mizutani_shion_01__basic_01.rig 1 0.385 0.385 Shion MZ1
 0xae42ae22d0950b5b	A	30_appearances	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
@@ -1265,7 +1272,8 @@ v_spaceport_tram_01__basic_01.rig	S	missing	wheel_front_left_b,wheel_front_right
 0x2613c07f9f6b493b	T	q306_rocket_maglev_ride.ent	ElectricLight none - 1 0 0
 0x4a9c889bc7cd43c6	T	q306_shooty_mcshootface.ent	vehicleAVBaseObject none - 1 0 0
 0xdba71c9d3004e91f	T	q307_delamain_vehicle.ent	vehicleCarBaseObject car v_standard2_villefort_cortes_01__basic_01.rig 1 0.38 0.38 Delamain Cab
-0xdba71c9d3004e91f	A	6_appearances	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
+0xdba71c9d3004e91f	A	5_appearances	brake_back_left,brake_back_right,brake_front_left,brake_front_right,wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
+0xdba71c9d3004e91f	A	villefort_cortes__basic_burnt_01	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
 0xdba71c9d3004e91f	A	*	* 1 4x1
 0xbe24da6d4b39a7e0	T	q307_ent_av.ent	vehicleAVBaseObject none - 1 0 0
 0xe1440ba124704b39	T	q307_ent_militech_manticore.ent	vehicleAVBaseObject none - 1 0 0
@@ -1278,7 +1286,8 @@ v_spaceport_tram_01__basic_01.rig	S	missing	wheel_front_left_b,wheel_front_right
 0x7fba01ff8ae9417c	T	escape_pod_basic_01.ent	vehicleAVBaseObject none - 1 0 0
 0x4cc353cee70a6b8d	T	orbital_air_capsule_basic_01.ent	vehicleAVBaseObject none - 1 0 0
 0x88477752c61fdf0c	T	v_sport1_herrera_outlaw_heist_01.ent	vehicleArmedCarBaseObject car v_sport1_herrera_outlaw_01__basic_01.rig 2 0.39 0.39 Outlaw "Weiler"
-0x88477752c61fdf0c	A	herrera_outlaw__heist_burnt_01,herrera_outlaw__heist_heist_01,herrera_outlaw__heist_player_01	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 1 4x1
+0x88477752c61fdf0c	A	herrera_outlaw__heist_burnt_01,herrera_outlaw__heist_heist_01	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 0 -
+0x88477752c61fdf0c	A	herrera_outlaw__heist_player_01	brake_back_left,brake_back_right,brake_front_left,brake_front_right,wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 1 4x1
 0x88477752c61fdf0c	A	*	* 1 -
 0xeac200decf70aeb5	T	v_sport1_herrera_riptide_01.ent	vehicleCarBaseObject car v_sport1_herrera_riptide_01__basic_01.rig 8 0.355 0.39 Riptide GT2
 0xeac200decf70aeb5	A	23_appearances	wheel_back_left,wheel_back_right,wheel_front_left,wheel_front_right 3 4x3

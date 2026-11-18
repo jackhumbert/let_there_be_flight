@@ -87,7 +87,7 @@ Where the numbers come from:
 
 `thruster_slots.py` (ctest `thruster_slots`) checks, with no game, that the configuration each vanilla template and
 appearance gets finds every bone and wheel slot its thrusters need, that the thrusters sit on their wheels, that no
-wheel is left showing, and that the count matches the table. Its rig facts are `vehicle_slots.tsv`, which
+wheel or brake is left showing, and that the count matches the table. Its rig facts are `vehicle_slots.tsv`, which
 `vehicle_slots.py` regenerates from the game files after a patch. `ALLOW` lists what it lets pass, each with its
 reason.
 

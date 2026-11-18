@@ -9,12 +9,12 @@ LTBF comes from its own sources, never copied here:
   which of those classes the redscript defines (commented-out code does not count);
 - each configuration's thrusters: the `new <Thruster>().Create` lines of its class and the classes it extends;
 - each thruster's bone, offset and the wheel it hides: its `AddSlot(n"<bone>", ..., new Vector3(...), ...)`,
-  `parentSlotName`, isFront / isRight, and, where it overrides SetOGComponents, the slots and component names that
+  `parentSlotName`, `brakeSlotName`, isFront / isRight, and, where it overrides SetOGComponents, the slots and component names that
   one hides by (GetComponentsUsingSlot, FindComponentByName) in place of parentSlotName.
 
 For every template and appearance group it works out the class, the thrusters and their positions, and fails, with
 a list, when a configuration needs a bone the rig lacks or a wheel slot vehicle_slots lacks, when a sanity check is
-out of tolerance, when a wheel or tyre is left showing with no thruster over it, or when the thruster count differs
+out of tolerance, when a wheel, tyre or brake is left showing with no thruster over it, or when the thruster count differs
 from what the survey measured in game. ALLOW holds what it lets pass, each with its reason: vanilla oddities that
 are fine, and known LTBF gaps (an entry that matches nothing any more fails the check until it is removed).
 --report writes the whole audit as markdown. ctest runs it (thruster_slots).
@@ -100,7 +100,9 @@ class Thruster:
             self.hide_slots = re.findall(r'GetComponentsUsingSlot\(\s*n"(\w+)"', rest)
             self.hide_names = re.findall(r'FindComponentByName\(\s*n"(\w+)"', rest)
         else:
-            self.hide_slots, self.hide_names = [self.parent_slot] if self.parent_slot else [], []
+            brake = re.search(r'brakeSlotName\s*=\s*n"(\w+)"', body)
+            self.hide_slots = [m.group(1) for m in (parent, brake) if m]
+            self.hide_names = []
 
 
 class Ltbf:
@@ -373,6 +375,8 @@ class Audit:
             if s.startswith("wheel") and s not in hidden and s in self.slots[v.rig]:
                 self.problem(v, g.label, "bare", f"a wheel is bound to {s} {fmt(self.slots[v.rig][s])} and no thruster "
                              "replaces it")
+            elif s.startswith("brake") and s not in hidden:
+                self.problem(v, g.label, "bare", f"a brake is bound to {s} and no thruster hides it")
 
     def bare_bike(self, v, g, thrusters, row):
         names = {n for t in thrusters for n in t.hide_names}

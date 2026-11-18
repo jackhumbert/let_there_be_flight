@@ -18,7 +18,7 @@ name, data:
                        S missing lists the slots whose bone the rig lacks (they sit on the rig's origin);
                        a wheel or axle bone no slot is named after is an S row too, its bone given as "bone"
 - A  <appearances>    one group of appearances (comma separated; "None" is the entity with no appearance loaded)
-                       with the same outcome: the wheel and axle names its components are bound to (template and
+                       with the same outcome: the wheel, axle and brake names its components are bound to (template and
                        appearance components, entHardTransformBinding slotName), for a bike its wheel parts
                        (component@slot), records, surveyed thruster counts (count x records). The usual outcome's
                        appearances are written as a count (30_appearances), "*" is the records spawned with no
@@ -46,6 +46,7 @@ KIND = {"vehicleCarBaseObject": "car", "vehicleArmedCarBaseObject": "car", "vehi
 # bones a thruster can be put on, and the slots and bones a wheel's components hang from
 THRUSTER_BONE = re.compile(r"^(swingarm|suspension)")
 WHEELISH = re.compile(r"^(wheel|axle|axel|tire|tyre)")
+BRAKE = re.compile(r"^brake")  # a disc and caliper of their own
 WHEEL_PART = re.compile(r"wheel|tire|tyre|axle|axel")
 NOTHING = "-"
 
@@ -86,10 +87,10 @@ def bindings(components, handles):
 
 
 def outcome_of(pairs, bike):
-    """An appearance's A row fields: the wheel and axle slots something is bound to, and for a bike its wheel parts
+    """An appearance's A row fields: the wheel, axle and brake slots something is bound to, and for a bike its wheel parts
     (name@slot: bound to a wheel or axle slot, or named like a wheel, tyre or axle; shadows left out), which
     BikeThrusters hides by name or by slot."""
-    slots = sorted({s for _, s in pairs if WHEELISH.search(s)})
+    slots = sorted({s for _, s in pairs if WHEELISH.search(s) or BRAKE.search(s)})
     text = ",".join(slots) or NOTHING
     if bike:
         parts = sorted(f"{n}@{s}" for n, s in pairs if not n.endswith("_shadow")
