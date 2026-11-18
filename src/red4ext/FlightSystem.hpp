@@ -7,9 +7,12 @@
 #include <RED4ext/Scripting/Natives/Generated/ent/IPlacedComponent.hpp>
 #include <RED4ext/SharedSpinLock.hpp>
 #include <RED4ext/Map.hpp>
+#include <RED4ext/ResourceLoader.hpp>
+#include <RED4ext/Scripting/Natives/Generated/CMesh.hpp>
 #include "Audio/FlightAudio.hpp"
 #include "Flight/Component.hpp"
 #include <unordered_map>
+#include <vector>
 
 using namespace RED4ext;
 
@@ -53,6 +56,11 @@ public:
   WeakHandle<FlightComponent> playerComponent;
 
 private:
+  // Loads every mesh a thruster can use and keeps it loaded until the world detaches. See the definition.
+  void LoadThrusterMeshes();
+
+  std::vector<SharedPtr<ResourceToken<CMesh>>> thrusterMeshes;
+
   friend Descriptor;
   static void OnRegister(Descriptor *aType) {
     //aType->flags.b20000 = true;

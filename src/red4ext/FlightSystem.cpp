@@ -12,12 +12,16 @@
 #include <chrono>
 #include <iostream>
 #include <RED4ext/GameOptions.hpp>
+#include <RED4ext/ResourceDepot.hpp>
+#include <RED4ext/TweakDB.hpp>
+#include <RED4ext/Scripting/Natives/gamedataTweakDBRecord.hpp>
+#include <shared_mutex>
+#include <thread>
 
 
 #include "Flight/Log.hpp"
 #include "Utils/Utils.hpp"
 #include "stdafx.hpp"
-#include "LoadResRef.hpp"
 #include <RED4ext/Scripting/Natives/Generated/Matrix.hpp>
 #include <RED4ext/Scripting/Natives/Generated/vehicle/BaseObject.hpp>
 #include "Flight/Component.hpp"
@@ -28,6 +32,79 @@
 #include "Hooks/GetMatrixFromOrientation.hpp"
 
 using namespace RED4ext;
+
+namespace {
+// How long the loading screen may wait for the thruster meshes. The wait is bounded so that a loader that needs
+// this thread, or a very slow disk, costs a warning in the log and never a hang.
+constexpr auto kThrusterMeshWait = std::chrono::seconds(15);
+
+// Every mesh a thruster can be given: IFlightConfiguration.CreateMesh's two defaults, the player.vehicle.thrusterMesh
+// default, and each vehicle record's thrusterMesh (other mods' records included).
+std::vector<ResourcePath> ThrusterMeshPaths() {
+  std::vector<ResourcePath> paths{R"(user\jackhumbert\meshes\engine_nomad.mesh)",
+                                  R"(user\jackhumbert\meshes\engine_corpo.mesh)"};
+  auto tweakDB = TweakDB::Get();
+  auto addFlat = [&](TweakDBID aFlat) {
+    ResourceAsyncReference<> mesh;
+    if (tweakDB->TryGetValue(aFlat, mesh) && mesh.path.hash != 0 &&
+        std::find(paths.begin(), paths.end(), mesh.path) == paths.end()) {
+      paths.push_back(mesh.path);
+    }
+  };
+  addFlat(TweakDBID("player.vehicle.thrusterMesh"));
+
+  auto recordType = CRTTISystem::Get()->GetClass("gamedataVehicle_Record");
+  std::shared_lock<SharedSpinLock> lock(tweakDB->mutex01);
+  if (auto records = tweakDB->recordsByType.Get(recordType)) {
+    for (const auto &record : *records) {
+      addFlat(TweakDBID(reinterpret_cast<game::data::TweakDBRecord *>(record.instance)->recordID, ".thrusterMesh"));
+    }
+  }
+  return paths;
+}
+} // namespace
+
+// A thruster's mesh component is given its mesh once, when the vehicle is set up, and vehicles are set up while the
+// world loads and whenever one spawns. So the meshes are loaded here, behind the loading screen, before the first
+// vehicle, and the tokens are kept: a resource is only guaranteed to stay loaded while something holds its token.
+void FlightSystem::LoadThrusterMeshes() {
+  if (!this->thrusterMeshes.empty()) {
+    return;
+  }
+  const auto start = std::chrono::steady_clock::now();
+  auto depot = ResourceDepot::Get();
+  auto loader = ResourceLoader::Get();
+  const auto paths = ThrusterMeshPaths();
+  for (const auto &path : paths) {
+    if (!depot->ResourceExists(path)) {
+      spdlog::warn("[FlightSystem] thruster mesh {:#x} is in no mounted archive", path.hash);
+      continue;
+    }
+    if (auto token = loader->LoadAsync<CMesh>(path)) {
+      this->thrusterMeshes.push_back(token);
+    }
+  }
+
+  const auto allFinished = [this] {
+    return std::all_of(this->thrusterMeshes.begin(), this->thrusterMeshes.end(),
+                       [](const auto &aToken) { return aToken->IsFinished(); });
+  };
+  while (!allFinished() && std::chrono::steady_clock::now() - start < kThrusterMeshWait) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(5));
+  }
+
+  size_t loaded = 0;
+  for (const auto &token : this->thrusterMeshes) {
+    if (token->IsLoaded()) {
+      loaded++;
+    } else {
+      spdlog::warn("[FlightSystem] thruster mesh {:#x} {}", token->path.hash,
+                   token->IsFailed() ? "failed to load" : "is still loading");
+    }
+  }
+  const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
+  spdlog::info("[FlightSystem] thruster meshes: {} of {} loaded in {} ms", loaded, paths.size(), ms.count());
+}
 
 // These can be found in strings via their variable names
 // 1.61hf1 RVA: 0x484F4A8
@@ -150,6 +227,7 @@ void FlightSystem::OnRegisterUpdates(UpdateRegistrar *aRegistrar) {
  void FlightSystem::OnWorldAttached(world::RuntimeScene *runtimeScene) {
   spdlog::info("[FlightSystem] OnWorldAttached");
   ExecuteFunction(this->audio, FlightAudio::GetRTTIType()->GetFunction("OnWorldAttached"), nullptr);
+  this->LoadThrusterMeshes();
 
   // VFT Finder
   //auto rtti = CRTTISystem::Get();
@@ -205,6 +283,7 @@ void FlightSystem::OnWorldDetached(world::RuntimeScene *runtimeScene) {
 
 void FlightSystem::OnAfterWorldDetach() {
 	spdlog::info("[FlightSystem] OnAfterWorldDetach!");
+  this->thrusterMeshes.clear();
 }
 
 uint32_t FlightSystem::OnBeforeGameSave(const JobGroup& aJobGroup, void* a2) {
@@ -224,10 +303,6 @@ void FlightSystem::OnGameLoad(const JobGroup& aJobGroup, bool& aSuccess, void* a
   CNamePool::Add("FlightMalfunctionEffector");
   CNamePool::Add("DisableGravityEffector");
   spdlog::info("[FlightSystem] OnGameLoad!");
-  auto r = ResourceReference<ent::MeshComponent>(R"(user\jackhumbert\meshes\engine_corpo.mesh)");
-  LoadResRef<ent::MeshComponent>(&r.path, &r.token, false);
-  r = ResourceReference<ent::MeshComponent>(R"(user\jackhumbert\meshes\engine_nomad.mesh)");
-  LoadResRef<ent::MeshComponent>(&r.path, &r.token, false);
 
   this->flightComponents.reserve(256);
 
