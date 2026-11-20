@@ -1,5 +1,6 @@
 // The defaults of FlightModeAutopilot.reds's fields as the script had them (git show c3e24ab:src/redscript/Flight/FlightModeAutopilot.reds,
-// the last commit with the script mode), for autopilot_params_defaults. Not read by anything else.
+// the last commit with the script mode), for autopilot_params_defaults, with the fields added since and the defaults
+// changed since on purpose (descentRate 4.0 then). Not read by anything else.
 public let enabled: Bool = true;
 public let maxSpeed: Float = 45.0;
 public let lateralAccel: Float = 5.0;
@@ -43,7 +44,7 @@ public let droneLandSlewBefore: Float = 2.0;
 public let droneLandSlewDuring: Float = 2.0;
 public let raceMode: Bool = true;
 public let approachHeight: Float = 20.0;
-public let descentRate: Float = 4.0;
+public let descentRate: Float = 8.0;
 public let touchdownRate: Float = 0.8;
 public let landingSearch: Int32 = 12;
 public let landingShaft: Float = 4.0;
@@ -146,3 +147,11 @@ public let freeRoamOverCost: Float = 2.0;
 public let freeRoamGuideCost: Float = 0.0;
 public let freeRoamGuideLine: Bool = false;
 public let positionJumpHold: Float = 0.5;
+public let landingMode: Int32 = 1;
+public let descentAccel: Float = 2.0;
+public let descentFrequency: Float = 4.0;
+public let wheelClearance: Float = 0.1;
+public let wheelTolerance: Float = 0.05;
+public let wheelStill: Float = 0.3;
+public let wheelSettle: Float = 0.4;
+public let wheelGroundSpread: Float = 0.3;

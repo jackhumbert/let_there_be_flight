@@ -53,7 +53,7 @@ void Autopilot::ChooseRouteGoal() {
   float top = 0.0f;
   landing = false;
   landingPad = -1;
-  if (params.landAtDestination) {
+  if (params.landingMode != kLandHover) {
     landingPad = FindLandingPad(world, params, destination);
     if (landingPad >= 0) {
       const Helipad &pad = world.Pads()[size_t(landingPad)];

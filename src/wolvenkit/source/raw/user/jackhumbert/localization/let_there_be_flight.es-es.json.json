@@ -411,7 +411,22 @@
             {
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Autopilot-Land-Description",
-              "femaleVariant": "Aterriza en un destino a nivel del suelo y desactiva el vuelo, como la conducción automática al parar junto a la acera. Desactivado: se queda flotando sobre el destino y devuelve los controles."
+              "femaleVariant": "Elige cómo termina el piloto automático un viaje a un destino a nivel del suelo. Posar sobre las ruedas: baja con suavidad hasta justo encima de donde descansarían las ruedas y luego desactiva el vuelo. Tomar tierra: desciende hasta tocar el suelo y luego desactiva el vuelo. Flotar: se queda sobre el destino y devuelve los controles."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Land-Hover",
+              "femaleVariant": "Flotar"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Land-Wheels",
+              "femaleVariant": "Posar sobre las ruedas"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Land-TouchDown",
+              "femaleVariant": "Tomar tierra"
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",

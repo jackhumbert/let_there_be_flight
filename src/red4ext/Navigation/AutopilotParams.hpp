@@ -12,9 +12,14 @@
 
 namespace Navigation {
 
+// How the Autopilot ends a flight to a destination on the ground (AutopilotParams::landingMode, the Mod Setting Land at
+// Destination's index): hover over it and hand back, set the car down on its wheels and switch flight off, or sink
+// until it touches down and switch flight off.
+enum LandingMode : int32_t { kLandHover = 0, kLandWheels = 1, kLandTouchDown = 2 };
+
 struct AutopilotParams {
   float brakeAccel = 6.0f; // m/s2 planned deceleration
-  bool landAtDestination = true;
+  int32_t landingMode = kLandWheels; // LandingMode
   float padRange = 0.0f; // m around a destination on the ground to look for a landing pad (0 = off)
   // drone style: the nose turns into the landing heading over the last seconds before the descent
   // (LandSlewYaw; not in Mod Settings, set by test helpers; a Mod Setting is written back from its stored value when the mode
@@ -62,8 +67,22 @@ struct AutopilotParams {
   float droneLandSlewDuring = 2.0f; // s into the descent it ends; spread evenly over both
   // takeoff and landing
   float approachHeight = 20.0f; // m above the landing spot the route ends at
-  float descentRate = 4.0f; // m/s at most during the landing descent
-  float touchdownRate = 0.8f; // m/s in the last metres
+  float descentRate = 8.0f; // m/s at most during the landing descent (a descent of up to 32 m is all speeding up and braking)
+  float touchdownRate = 0.8f; // m/s the touch down ends on (kLandTouchDown), and the landed car settles at
+  // the descent's profile: the sink speeds up at descentAccel and brakes at it, so a long descent is half each (the
+  // height two parabola halves), capped at descentRate; the car follows the profile's height, speed and acceleration
+  // with a critically damped spring of descentFrequency
+  float descentAccel = 2.0f; // m/s2
+  float descentFrequency = 4.0f; // rad/s
+  // kLandWheels: the car is held wheelClearance over the height it rests at on its wheels (the ground from the wheel
+  // emitters' rays), and flight goes off once it has stayed within wheelTolerance of it, slower than wheelStill and
+  // upright, for wheelSettle. Ground under the wheels further apart in height than wheelGroundSpread (a kerb under one
+  // side), or no ground found under them, and it touches down instead.
+  float wheelClearance = 0.1f; // m
+  float wheelTolerance = 0.05f; // m
+  float wheelStill = 0.3f; // m/s
+  float wheelSettle = 0.4f; // s
+  float wheelGroundSpread = 0.3f; // m
   int32_t landingSearch = 12; // rings of 2 m columns searched for a landing spot
   float landingShaft = 4.0f; // m around a landing spot that must be open above it too (ShaftClear)
   // m around a landing spot whose floor must be level on the nav map (IsFlat): the bake grows solids

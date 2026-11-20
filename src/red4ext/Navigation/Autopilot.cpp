@@ -184,6 +184,8 @@ void Autopilot::Activate(const AutopilotInput &aIn) {
   tracker.remaining = 0.0f;
   landing = false;
   landingPad = -1;
+  descentProfile = false;
+  setDown = false;
   tracker.speedCmd = stats.d_speed;
   tracker.speedRate = 0.0f;
   tracker.accelCmd = {0.0f, 0.0f, 0.0f};
@@ -381,6 +383,11 @@ AutopilotOutput Autopilot::Step(const AutopilotInput &aIn) {
     accel.y = horizontal.y;
     accel.z = Clamp(accel.z, -params.maxAccel, params.maxAccel);
   }
+  if (status == "descending" && descentProfile) {
+    // the descent's profile: its acceleration, and a critically damped spring onto its height and speed
+    const float w = params.descentFrequency;
+    accel.z = Clamp(descentA + w * w * (descentZ - p.z) + 2.0f * w * (descentV - v.z), -params.maxAccel, params.maxAccel);
+  }
   // the follower's acceleration (or, not following, the one above) rate limited, and the surge hold
   CommandInput command;
   command.dt = timeDelta;
@@ -466,10 +473,23 @@ void Autopilot::Arrive(const Vec3 &aP) {
   ClearRoute();
   settleTimer = 0.0f;
   touchdownTimer = 0.0f;
-  spdlog::info("[Autopilot] arrived{}", landing ? ", descending" : "");
+  // the descent's profile starts over the spot; setting down needs the car's rest height
+  descentProfile = false;
+  setDown = landing && params.landingMode == kLandWheels && in->restHeight > 0.0f;
+  setDownGround = false;
+  setDownTimer = 0.0f;
+  setDownWait = 0.0f;
+  setDownTarget = landingSpot.z - world.CarHalfHeight() + in->restHeight + params.wheelClearance;
+  spdlog::info("[Autopilot] arrived{}", !landing ? "" : setDown ? ", setting down on the wheels" : ", descending");
 }
 
-// The descending branch (1799-1829): touched down once the car stops sinking close to the floor
+namespace {
+// s the car may hold at the set-down height without settling (not still, not level) before it touches down instead
+constexpr float kSetDownWaitMax = 4.0f;
+} // namespace
+
+// The descending branch (1799-1829): set down once held still on the wheels' height (setDown), or touched down once the
+// car stops sinking close to the floor
 void Autopilot::Descend(const Vec3 &aP, float aDt) {
   const float height = aP.z - landingSpot.z;
   settleTimer += aDt; // time since the descent began
@@ -483,7 +503,36 @@ void Autopilot::Descend(const Vec3 &aP, float aDt) {
   } else {
     touchdownTimer += aDt;
   }
-  if (touchdownTimer > 0.7f && height < 3.0f) {
+  // set down: held at the target, still and level, for wheelSettle; not settling there in time, it touches down
+  if (setDown && descentProfile && descentZ <= setDownTarget + 0.001f) {
+    setDownWait += aDt;
+    const bool there = std::fabs(aP.z - setDownTarget) < params.wheelTolerance;
+    const bool still = in->stats.d_speed < params.wheelStill;
+    const bool level = in->stats.d_up.z > 0.996f; // within 5 degrees
+    setDownTimer = there && still && level ? setDownTimer + aDt : 0.0f;
+    if (setDownTimer >= params.wheelSettle) {
+      status = "landed";
+      // how far over its height resting on the wheels, over the ground under them (or the map's floor)
+      spdlog::info("[Autopilot] set down {:.2f} m over its rest on the wheels (over the {}, rest height {:.2f} m), {:.1f} m "
+                   "from the spot",
+                   aP.z - (setDownTarget - params.wheelClearance), setDownGround ? "ground under them" : "map's floor",
+                   in->restHeight, Distance2D(aP, landingSpot));
+      if (in->isPlayerMounted) {
+        pending.notifications.push_back("LocKey#96672");
+        pending.flightOff = true;
+      }
+      return;
+    }
+    if (setDownWait > kSetDownWaitMax) {
+      // touching down from here: it sinks onto the floor first (the hold made no new low point either)
+      setDown = false;
+      touchdownLow = aP.z;
+      touchdownTimer = 0.0f;
+      spdlog::warn("[Autopilot] not settled {:.2f} m from the set-down height in {:.0f} s: touching down",
+                   aP.z - setDownTarget, kSetDownWaitMax);
+    }
+  }
+  if (!setDown && touchdownTimer > 0.7f && height < 3.0f) {
     status = "landed";
     spdlog::info("[Autopilot] touched down {:.2f} m above the floor, {:.1f} m from the spot", height,
                  Distance2D(aP, landingSpot));
@@ -491,7 +540,7 @@ void Autopilot::Descend(const Vec3 &aP, float aDt) {
       pending.notifications.push_back("LocKey#96672");
       pending.flightOff = true;
     }
-  } else if (touchdownTimer > 1.5f) {
+  } else if (touchdownTimer > 1.5f && height >= 3.0f) {
     // held up well above the floor (something the map does not have): stay in the air
     status = "arrived";
     holdPosition = aP;

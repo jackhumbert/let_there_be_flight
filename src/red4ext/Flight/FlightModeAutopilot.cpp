@@ -11,6 +11,7 @@
 #include "Flight/Handling.hpp"
 #include "Flight/Settings.hpp"
 #include "Flight/Telemetry.hpp"
+#include "Flight/WheelRest.hpp"
 #include "FlightSettings.hpp"
 #include "Navigation/AutopilotTelemetry.hpp"
 #include "Navigation/FlightNavMap.hpp"
@@ -176,7 +177,7 @@ void FlightModeAutopilot::OnInitializeNative() {
   PullState();
 }
 
-// The Mod Settings (enabled, landAtDestination, padRange; brakeAccel at its default) and the developer overrides
+// The Mod Settings (enabled, landAtDestination as landingMode, padRange; brakeAccel at its default) and the developer overrides
 // (autopilot.<name>) written into the tuning: when the mode is set up and engaged (aForce), and when either changes. A field a script set
 // meanwhile keeps its value until then, as with the script mode.
 void FlightModeAutopilot::ApplySettings(bool aForce) {
@@ -191,7 +192,7 @@ void FlightModeAutopilot::ApplySettings(bool aForce) {
   const auto &player = Flight::AutopilotPlayer();
   enabled = player.enabled;
   params.brakeAccel = player.brakeAccel;
-  params.landAtDestination = player.landAtDestination;
+  params.landingMode = player.landingMode;
   params.padRange = player.padRange;
   for (const auto &[name, value] : dev.autopilot) {
     Navigation::SetAutopilotParam(params, name, value);
@@ -286,6 +287,14 @@ bool FlightModeAutopilot::Gather(Navigation::AutopilotInput &aIn, Frame &aFrame)
         aIn.tracked = {target.W > 0.5f, N(target)};
       }
     }
+  }
+  // the set-down on the wheels: how high the centre rests on them, and while descending the ground under them
+  aIn.restHeight = WheelRest::RestHeight(c, aIn.stats.d_position.z);
+  if (ap.WantsWheelGround()) {
+    const WheelRest::Ground g = WheelRest::Under(c);
+    aIn.wheelGroundValid = g.valid;
+    aIn.wheelGroundZ = g.z;
+    aIn.wheelGroundSpread = g.spread;
   }
   // the PIDs are not passed: a frame the player has taken over is flown below with the scaled Standard factors
   aIn.pitchPid = aIn.rollPid = nullptr;

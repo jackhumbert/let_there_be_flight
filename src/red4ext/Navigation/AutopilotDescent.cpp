@@ -1,5 +1,5 @@
 // The Autopilot's hold, descent and yaw (docs/design/autopilot.md, Descent): the velocity wanted
-// off the route (holding, sinking onto the landing spot, settling onto the wheels), the heading turned
+// off the route (holding, the descent's profile onto the landing spot, settling onto the wheels), the heading turned
 // with the height lost, and the landing turn (LandSlewYaw) the nose makes into the descent.
 // FlightModeAutopilot.reds line numbers (at c3e24ab) name what each part ports.
 
@@ -30,9 +30,77 @@ Vec3 BlendHeading(const Vec3 &aA, const Vec3 &aB, float aF) {
   return {std::cos(angle), std::sin(angle), 0.0f};
 }
 
+namespace {
+// m the ground the wheel rays hit may be off the nav map's floor under the spot and still be landed on: further off it
+// is something the map lacks (a canopy over the spot, a hole), and the car comes down onto the map's floor as it does
+// touching down (held up, it hovers: "arrived")
+constexpr float kWheelGroundMatch = 1.0f;
+} // namespace
+
+// The height the descent's profile ends at. Setting down: the rest height plus wheelClearance over the ground under
+// the wheels (the nav map's floor under the spot until the rays find it); touching down: the spot (where the map has a
+// resting car's centre), passed at touchdownRate.
+float Autopilot::DescentTarget() {
+  if (!setDown) {
+    return landingSpot.z;
+  }
+  const float floor = landingSpot.z - world.CarHalfHeight();
+  if (in->wheelGroundValid && std::fabs(in->wheelGroundZ - floor) < kWheelGroundMatch &&
+      Distance2D(N(in->stats.d_position), landingSpot) < params.landingOverSpot) {
+    if (in->wheelGroundSpread > params.wheelGroundSpread) {
+      setDown = false;
+      spdlog::info("[Autopilot] the ground under the wheels is {:.2f} m uneven: touching down", in->wheelGroundSpread);
+      return landingSpot.z;
+    }
+    if (!setDownGround) {
+      spdlog::info("[Autopilot] ground under the wheels at {:.2f} ({:+.2f} m off the map's floor, {:.2f} m uneven)",
+                   in->wheelGroundZ, in->wheelGroundZ - floor, in->wheelGroundSpread);
+    }
+    setDownGround = true;
+    setDownTarget = in->wheelGroundZ + in->restHeight + params.wheelClearance;
+  } else if (!setDownGround) {
+    setDownTarget = floor + in->restHeight + params.wheelClearance;
+  }
+  return setDownTarget;
+}
+
+// The descent's profile, a step: the reference height sinks speeding up at descentAccel and braking at it to end still
+// on the target (setting down) or at touchdownRate (touching down, sinking on at it until the floor stops the car),
+// capped at descentRate. From rest it is half speeding up, half braking. The target moving (the rays finding the
+// ground, a moved spot) reshapes what is left: braking harder than 2 x descentAccel is not asked for, so a target
+// come up too close is reached late and the hold catches it.
+void Autopilot::DescentProfile(const Vec3 &aP, float aDt) {
+  const float target = DescentTarget();
+  const float a = std::max(params.descentAccel, 0.1f);
+  const float vEnd = setDown ? 0.0f : params.touchdownRate;
+  if (!descentProfile) {
+    descentProfile = true;
+    descentZ = aP.z;
+    descentV = std::min(in->stats.d_velocity.z, 0.0f);
+    descentA = 0.0f;
+  }
+  const float d = descentZ - target;
+  const float sink = -descentV;
+  float next = vEnd;
+  if (d > 0.0f) {
+    next = std::min({sink + a * aDt, std::sqrt(vEnd * vEnd + 2.0f * a * d), params.descentRate});
+    next = std::max({next, sink - 2.0f * a * aDt, 0.0f});
+  }
+  descentA = aDt > 0.0f ? -(next - sink) / aDt : 0.0f;
+  descentV = -next;
+  descentZ += descentV * aDt;
+  if (setDown && descentZ <= target) {
+    descentZ = target;
+    descentV = 0.0f;
+    descentA = 0.0f;
+  } else if (!setDown && d <= 0.0f) {
+    // past the spot at touchdownRate: the speed alone, so the floor stopping the car does not wind up a push into it
+    descentZ = aP.z;
+  }
+}
+
 // Update 1852-1873: not following, approach the hold point, slowing down near it; descending, over the
-// spot first at the height the descent began, then down at a capped rate slowing in the last metres;
-// landed, settling onto the wheels
+// spot first at the height the descent began, then the descent's profile; landed, settling onto the wheels
 Vec3 Autopilot::HoldVelocity(const Vec3 &aP, const Vec3 &aToTarget) {
   // the next stretch of route is followed from the speed the car has
   tracker.speedCmd = in->stats.d_speed;
@@ -44,10 +112,11 @@ Vec3 Autopilot::HoldVelocity(const Vec3 &aP, const Vec3 &aToTarget) {
   }
   if (status == "descending") {
     // sliding across while sinking, the car can hit what is over the neighbouring columns
-    if (Distance2D(aP, landingSpot) > params.landingOverSpot) {
+    if (!descentProfile && Distance2D(aP, landingSpot) > params.landingOverSpot) {
       desired.z = Clamp(0.5f * (landingStartZ - aP.z), -2.0f, 2.0f);
     } else {
-      desired.z = -Clamp(0.5f * (aP.z - landingSpot.z), params.touchdownRate, params.descentRate);
+      DescentProfile(aP, in->dt);
+      desired.z = descentV;
     }
   } else if (status == "landed") {
     // flight is being switched off: keep settling onto the wheels

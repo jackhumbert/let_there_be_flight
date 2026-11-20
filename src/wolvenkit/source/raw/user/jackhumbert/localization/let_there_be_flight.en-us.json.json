@@ -411,7 +411,22 @@
             {
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Autopilot-Land-Description",
-              "femaleVariant": "Touch down at a destination on the ground and switch flight off, like autodrive stopping at the curb. Off: hover over the destination and hand the controls back."
+              "femaleVariant": "Choose how the Autopilot ends a trip to a destination on the ground. Set Down on Wheels: comes down smoothly to just above where the wheels would rest, then switches flight off. Touch Down: sinks until it touches the ground, then switches flight off. Hover: stays over the destination and hands the controls back."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Land-Hover",
+              "femaleVariant": "Hover"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Land-Wheels",
+              "femaleVariant": "Set Down on Wheels"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Land-TouchDown",
+              "femaleVariant": "Touch Down"
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",

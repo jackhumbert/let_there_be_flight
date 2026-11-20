@@ -130,5 +130,5 @@ RED4ext::ent::EntityID FlightCarSummon::LastSpawnEntity() {
 
 bool FlightCarSummon::AutopilotLands() {
   const auto &autopilot = Flight::AutopilotPlayer();
-  return autopilot.enabled && autopilot.landAtDestination;
+  return autopilot.enabled && autopilot.landingMode != 0; // not Hover
 }

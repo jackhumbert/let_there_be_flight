@@ -2,6 +2,7 @@
 #include "Flight/Settings.hpp"
 
 #include <algorithm>
+#include <cmath>
 
 namespace Flight {
 
@@ -46,12 +47,12 @@ const std::vector<AutopilotSetting> &AutopilotSettingsTable() {
   // lateralAccel (dropped: nothing read them) and brakeAccel (a developer value,
   // docs/design/flight-modes.md, Developer values)
   static const std::vector<AutopilotSetting> table = {
-      {"enabled", "UI-Settings-Autopilot-Enabled", "UI-Settings-Autopilot-Enabled-Description", true, 1.0f, 0.0f, 0.0f,
-       0.0f, 8},
-      {"landAtDestination", "UI-Settings-Autopilot-Land", "UI-Settings-Autopilot-Land-Description", true, 1.0f, 0.0f,
-       0.0f, 0.0f, 9},
-      {"padRange", "UI-Settings-Autopilot-Pad-Range", "UI-Settings-Autopilot-Pad-Range-Description", false, 0.0f, 25.0f,
-       0.0f, 500.0f, 10},
+      {"enabled", "UI-Settings-Autopilot-Enabled", "UI-Settings-Autopilot-Enabled-Description",
+       AutopilotSetting::Kind::Bool, 1.0f, 0.0f, 0.0f, 0.0f, 8},
+      {"landAtDestination", "UI-Settings-Autopilot-Land", "UI-Settings-Autopilot-Land-Description",
+       AutopilotSetting::Kind::List, 1.0f, 1.0f, 0.0f, 2.0f, 9, kLandingModeType},
+      {"padRange", "UI-Settings-Autopilot-Pad-Range", "UI-Settings-Autopilot-Pad-Range-Description",
+       AutopilotSetting::Kind::Float, 0.0f, 25.0f, 0.0f, 500.0f, 10},
   };
   return table;
 }
@@ -66,11 +67,11 @@ bool SetAutopilotSetting(AutopilotSettings &aSettings, const std::string &aName,
   if (!found) {
     return false;
   }
-  const float value = found->isBool ? aValue : std::clamp(aValue, found->min, found->max);
+  const float value = found->kind == AutopilotSetting::Kind::Bool ? aValue : std::clamp(aValue, found->min, found->max);
   if (aName == "enabled") {
     aSettings.enabled = value != 0.0f;
   } else if (aName == "landAtDestination") {
-    aSettings.landAtDestination = value != 0.0f;
+    aSettings.landingMode = int32_t(std::lround(value));
   } else {
     aSettings.padRange = value;
   }

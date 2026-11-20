@@ -8,7 +8,7 @@ const std::vector<AutopilotParamRef> &AutopilotParamTable() {
   using P = AutopilotParams;
   static const std::vector<AutopilotParamRef> table{
       {"brakeAccel", &P::brakeAccel, nullptr, nullptr},
-      {"landAtDestination", nullptr, nullptr, &P::landAtDestination},
+      {"landingMode", nullptr, &P::landingMode, nullptr},
       {"padRange", &P::padRange, nullptr, nullptr},
       {"droneBrakeTurn", nullptr, nullptr, &P::droneBrakeTurn},
       {"droneBodyShare", &P::droneBodyShare, nullptr, nullptr},
@@ -39,6 +39,13 @@ const std::vector<AutopilotParamRef> &AutopilotParamTable() {
       {"approachHeight", &P::approachHeight, nullptr, nullptr},
       {"descentRate", &P::descentRate, nullptr, nullptr},
       {"touchdownRate", &P::touchdownRate, nullptr, nullptr},
+      {"descentAccel", &P::descentAccel, nullptr, nullptr},
+      {"descentFrequency", &P::descentFrequency, nullptr, nullptr},
+      {"wheelClearance", &P::wheelClearance, nullptr, nullptr},
+      {"wheelTolerance", &P::wheelTolerance, nullptr, nullptr},
+      {"wheelStill", &P::wheelStill, nullptr, nullptr},
+      {"wheelSettle", &P::wheelSettle, nullptr, nullptr},
+      {"wheelGroundSpread", &P::wheelGroundSpread, nullptr, nullptr},
       {"landingSearch", nullptr, &P::landingSearch, nullptr},
       {"landingShaft", &P::landingShaft, nullptr, nullptr},
       {"landingFlat", &P::landingFlat, nullptr, nullptr},

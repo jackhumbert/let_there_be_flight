@@ -675,7 +675,7 @@ public class FlightSummonSystem extends ScriptableSystem {
       this.Reset();
       return;
     }
-    if !mode.landAtDestination {
+    if mode.landingMode == 0 {
       // the autopilot would hover at the pad and then this system could only drop the car:
       // leave the summon to vanilla
       FlightLog.Info("[Summon] land at destination is off: leaving the summon to vanilla");

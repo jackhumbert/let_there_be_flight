@@ -33,7 +33,7 @@ the player's summon calls:
   `wrappedMethod` runs vanilla as the game wrote it.
 - **The gate** (`ShouldFlySummon`): the Mod Setting on (`padSummonEnabled`), the nav map loaded,
   and V on or near a pad (`NearPad`: 2D distance to the deck within `GetHelipadRadius +
-  padSummonRange`, and the deck no more than `deckMaxDrop`, 15 m, below V). `landAtDestination` and
+  padSummonRange`, and the deck no more than `deckMaxDrop`, 15 m, below V). Land at Destination (not Hover) and
   the flight component are checked at the engage.
 - **The spawn** (`FlySummonToPad(game, record)`): `PickSpawnSpot` picks a spot `spawnDistance`
   (120 m) out from the pad, `spawnHeight` (20 m) over its deck, facing it. It tries five directions
@@ -44,7 +44,7 @@ the player's summon calls:
   blackboard gets the vanilla mirror (`SummonedVehicleEntityID` and `EnRoute`), so listeners see a
   vanilla-shaped summon. The engage follows one tick later.
 - **The engage** (`TryEngage`): the vehicle alive and unmounted, with a `FlightComponent`, an
-  Autopilot mode (`GetAutopilotModeIndex`) and `landAtDestination` on; otherwise the summon falls
+  Autopilot mode (`GetAutopilotModeIndex`) and Land at Destination not Hover (`landingMode`); otherwise the summon falls
   back to vanilla. Then `ForceEnablePhysics`, `EndActions`, the mode set and the component
   activated, and the mode's additive fields: `externalDestination` (the pad deck),
   `padLandingOffset` (`LandingOffset(pad)`: away from V, at least 4 m, at most the radius less 5 m,

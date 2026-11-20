@@ -144,8 +144,9 @@ int HitEpisodes(const TripResult &aResult) {
 
 TEST(autopilot_trip_ground_spot) {
   // regressions 2.1 (no hang over the spot), 2.2 (into the descent slow enough), 2.5 (touchdown detection),
-  // 9.2 (no tilt past the cap)
+  // 9.2 (no tilt past the cap); Land at Destination's Touch Down
   TripSetup s = Street();
+  s.params.landingMode = kLandTouchDown;
   Trip trip(Town(), kNoPads, kNoGates, s);
   const TripResult r = trip.Run();
   CHECK(Broken("ground", r, s.params) == 0);
@@ -179,6 +180,113 @@ TEST(autopilot_trip_ground_spot) {
               r.offP95, r.touchdownSpeed, static_cast<long long>(r.rays));
   CHECK(tilt < s.params.droneMaxTilt + 5.0f);
   CHECK(r.frames.back().tiltDeg < 5.0f); // on its wheels
+}
+
+// The descent's sink speed (m/s down) at each frame from aFrom to aTo, the fastest, and when it was reached
+float FastestSink(const TripResult &aResult, size_t aFrom, size_t aTo, float *aAt = nullptr) {
+  float best = 0.0f;
+  for (size_t i = aFrom; i < aTo && i < aResult.frames.size(); ++i) {
+    if (-aResult.frames[i].v.z > best) {
+      best = -aResult.frames[i].v.z;
+      if (aAt) {
+        *aAt = aResult.frames[i].t;
+      }
+    }
+  }
+  return best;
+}
+
+TEST(autopilot_trip_wheel_landing) {
+  // Land at Destination's default, Wheels: the descent's profile (speeding up then braking at descentAccel) down to
+  // wheelClearance over the car's rest on its wheels, held still there, then flight off and a short drop onto them
+  TripSetup s = Street();
+  CHECK(s.params.landingMode == kLandWheels);
+  Trip trip(Town(), kNoPads, kNoGates, s);
+  const TripResult r = trip.Run();
+  CHECK(Broken("wheels", r, s.params) == 0);
+  CHECK(r.landed);
+  CHECK(r.flightOff);
+  CHECK(r.hits == 0);
+  const size_t d = FrameAt(r, ChangeAt(r, "descending"));
+  const size_t l = FrameAt(r, ChangeAt(r, "landed"));
+  CHECK(d < l && l < r.frames.size());
+  // nothing touched before flight off: held over the floor, not sunk onto it
+  bool contact = false;
+  for (size_t i = d; i < l; ++i) {
+    contact |= r.frames[i].contact;
+  }
+  CHECK(!contact);
+  // released wheelClearance over the rest height (the floor is at 0, the centre rests -bottom over it)
+  const float rest = -Shion().bottom;
+  const float over = r.frames[l].p.z - rest;
+  // the profile's peak sink: from where it began over the spot, sqrt(a D), capped at descentRate
+  size_t over0 = d;
+  while (over0 < l && Distance2D(r.frames[over0].p, r.landingSpot) > s.params.landingOverSpot) {
+    ++over0;
+  }
+  const float drop = r.frames[over0].p.z - (rest + s.params.wheelClearance);
+  const float expected = std::min(std::sqrt(s.params.descentAccel * drop), s.params.descentRate);
+  float peakAt = 0.0f;
+  const float peak = FastestSink(r, over0, l, &peakAt);
+  const float seconds = r.frames[l].t - r.frames[over0].t;
+  std::printf("  wheels: released %.3f m over the rest height, dropped onto the wheels at %.2f m/s; %.1f m descent in "
+              "%.1f s, peak sink %.2f m/s (profile %.2f) at %.1f s\n",
+              over, r.touchdownSpeed, drop, seconds, peak, expected, peakAt - r.frames[over0].t);
+  CHECK(std::fabs(over - s.params.wheelClearance) < s.params.wheelTolerance + 0.01f);
+  CHECK(r.touchdownSpeed > 0.0f && r.touchdownSpeed < 2.0f); // free fall over the clearance: 1.4 m/s
+  CHECK(std::fabs(peak - expected) < 0.15f * expected);
+  // speeding up and braking take as long, a descent without a cruise: the peak near the middle
+  if (expected < s.params.descentRate) {
+    const float t = peakAt - r.frames[over0].t;
+    CHECK(t > 0.3f * seconds && t < 0.7f * seconds);
+  }
+  // never hanging over the spot, beyond the settle at the end
+  CHECK(LongestRun(r, over0, l, [](const auto &f) { return f.speed < 0.3f; }) < s.params.wheelSettle + 0.3f);
+  CHECK(r.frames.back().tiltDeg < 5.0f);
+}
+
+TEST(autopilot_trip_wheel_landing_kerb) {
+  // a step the nav map lacks under half the car (a kerb, 0.4 m): the ground under the wheels is uneven, so it touches
+  // down instead of setting down
+  TripSetup s = Street();
+  TripBox kerb{{{260.0f, 250.0f, 0.0f}, {270.0f, 270.0f, 0.4f}}};
+  kerb.kind = TripBox::Kind::Static;
+  s.boxes.push_back(kerb);
+  Trip trip(Town(), kNoPads, kNoGates, s);
+  const TripResult r = trip.Run();
+  std::printf("  kerb: landed %d, spot %.1f, %.1f, touchdown %.2f m/s\n", int(r.landed), r.landingSpot.x,
+              r.landingSpot.y, r.touchdownSpeed);
+  CHECK(r.landed);
+  CHECK(r.hits == 0);
+  // touched down: the floor (or the kerb) reached before "landed"
+  const size_t l = FrameAt(r, ChangeAt(r, "landed"));
+  bool contact = false;
+  for (size_t i = FrameAt(r, ChangeAt(r, "descending")); i < l && i < r.frames.size(); ++i) {
+    contact |= r.frames[i].contact;
+  }
+  CHECK(contact);
+}
+
+TEST(autopilot_trip_wheel_landing_not_still) {
+  // held at the set-down height but never still enough to release (in game it was still sliding over to the spot): it
+  // touches down after the wait and lands. It must not take the hold for a descent held up over the floor ("arrived",
+  // the car left hovering 1.2 m under the map's floor in game)
+  TripSetup s = Street();
+  s.params.wheelStill = 0.0f;
+  Trip trip(Town(), kNoPads, kNoGates, s);
+  const TripResult r = trip.Run();
+  std::printf("  not still: landed %d at %.1f s, arrived at %.1f s\n", int(r.landed), ChangeAt(r, "landed"),
+              ChangeAt(r, "arrived"));
+  CHECK(r.landed);
+  CHECK(ChangeAt(r, "arrived") < 0.0f);
+  CHECK(r.flightOff);
+  // touched down: on the floor before "landed", not let go from the hold
+  const size_t l = FrameAt(r, ChangeAt(r, "landed"));
+  bool contact = false;
+  for (size_t i = FrameAt(r, ChangeAt(r, "descending")); i < l && i < r.frames.size(); ++i) {
+    contact |= r.frames[i].contact;
+  }
+  CHECK(contact);
 }
 
 TEST(autopilot_trip_pad_landing) {
@@ -497,7 +605,7 @@ TEST(autopilot_trip_teleport_mid_route) {
 TEST(autopilot_trip_arrives_and_hands_back) {
   // regression 8.1: no landing, a point in the air: held there until still (or 5 s), then handed back
   TripSetup s = Street();
-  s.params.landAtDestination = false;
+  s.params.landingMode = kLandHover;
   s.destination = {260, 260, 30};
   s.settle = 0.0f;
   Trip trip(Town(), kNoPads, kNoGates, s);

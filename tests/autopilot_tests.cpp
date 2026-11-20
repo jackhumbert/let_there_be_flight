@@ -281,7 +281,7 @@ TEST(autopilot_lands_and_asks_flight_off) {
 
 TEST(autopilot_arrives_without_landing) {
   Rig rig(Small(), {40, 40, 1});
-  rig.params.landAtDestination = false;
+  rig.params.landingMode = kLandHover;
   rig.Track({200, 200, 30});
   rig.Engage();
   CHECK(rig.UntilStatus("arrived", 60.0f));

@@ -25,7 +25,7 @@ The nav map, planner, car limits, pads and gates are in `src/red4ext/Navigation/
 | `Autopilot.hpp/.cpp` | `Activate`, `Deactivate`, `Teleported`, `Step` (the override, the follower, the state machine), `FlyAerobatic` (attitude, torque, thrust) |
 | `AutopilotRoute.cpp` | the route: goal, plan requests, splices, replans, wedge recovery, the trajectory, the landing recheck |
 | `AutopilotFreeRoam.cpp` | free roam legs and gates, `ToggleFreeRoam` |
-| `AutopilotDescent.cpp` | hold, descent and yaw: `HoldVelocity`, `Heading`, `TimeToDescent`, `LandSlewYaw`, `ChooseYaw` |
+| `AutopilotDescent.cpp` | hold, descent and yaw: `HoldVelocity`, the descent's profile (`DescentProfile`, `DescentTarget`), `Heading`, `TimeToDescent`, `LandSlewYaw`, `ChooseYaw` |
 | `Landing.hpp/.cpp` | where it lands: ground spots, pads, landing headings, moving the route's end |
 | `AutopilotParams.hpp/.cpp` | the tuning, every field by name |
 | `Plans.hpp/.cpp` | the plan requests and the planner's params for each kind |
@@ -44,7 +44,7 @@ The state is a String `status` (the names script and tools compare against):
 | no route | the planner found none |
 | free roam | between free roam legs |
 | descending | coming down onto the landing spot |
-| landed | down; with the player in the car it asks for flight off |
+| landed | down (set down on the wheels, or touched down); with the player in the car it asks for flight off |
 | arrived | held where the route ended, or above a spot it could not land on |
 
 Being wedged, recovering after a hit and the player's override are timers and flags beside it. A flight
@@ -98,7 +98,7 @@ goal (`externalDestination`) wins over the tracked one. Untracked on the way, th
 as vanilla autodrive does; untracked once it is descending, landed or arrived (the game untracks a map
 pin when the player reaches it), it finishes the landing.
 
-- **Goal.** With `landAtDestination`, the destination's pad (`FindLandingPad`) or a ground spot near it
+- **Goal.** With `landingMode` not Hover, the destination's pad (`FindLandingPad`) or a ground spot near it
   (`FindLandingSpot`); the route ends `approachHeight` over the spot, under the room above it. Without a
   spot the route ends at the destination itself and the car arrives in the air.
 - **Requests** (`RequestRoute`). With no route to keep, the trip is planned ahead: a first leg of
@@ -154,13 +154,36 @@ stopping, around where it began (`freeRoamCentre`, `freeRoamRadius`).
 
 ## Descent
 
-`AutopilotDescent.cpp`: the velocity wanted when not following, and the nose's yaw.
+`AutopilotDescent.cpp`: the velocity wanted when not following, and the nose's yaw. The Mod Setting Land
+at Destination (`landingMode`, `Navigation::LandingMode`) picks how a flight to a destination on the
+ground ends: Wheels (the default) sets the car down just over its wheels and switches flight off, as
+vanilla autodrive stops at the curb; Touch Down sinks until the floor stops the car; Hover holds over
+the destination and hands back.
 
 - **Hold** (`HoldVelocity`): toward the hold point at 0.8 of the distance a second, at most 10 m/s.
 - **Descent**: first over the spot at the height the descent began (a car sliding across while sinking
-  can hit what is over the next columns), then, within `landingOverSpot`, down at half the height a
-  second, between `touchdownRate` and `descentRate`. Landed, it keeps settling at `touchdownRate` while
-  flight is switched off.
+  can hit what is over the next columns), then, within `landingOverSpot`, the descent's profile
+  (`DescentProfile`): a reference height that sinks speeding up at `descentAccel` and braking at it,
+  capped at `descentRate`, so a descent of up to 32 m is half speeding up and half braking (the height
+  two parabola halves). It ends still on the target (Wheels) or at `touchdownRate` on the spot (Touch
+  Down, then sinking on at it until the floor stops the car). The car follows the reference's height,
+  speed and acceleration with a critically damped spring of `descentFrequency`. A target that moves (the
+  rays finding the ground) reshapes what is left; braking past 2 x `descentAccel` is not asked for.
+  Landed, it keeps settling at `touchdownRate` while flight is switched off.
+- **Set down** (Wheels, `DescentTarget`): the target is `wheelClearance` over the height the car's
+  centre rests at on its wheels (`AutopilotInput::restHeight`), over the ground straight down from the
+  four wheel emitters (`wheelGround*`, read while descending), or over the nav map's floor until those
+  rays find it. Held within `wheelTolerance` of it, slower than `wheelStill` and within 5 degrees of
+  level for `wheelSettle`, it is `landed` and asks for flight off: the car drops the clearance onto its
+  wheels. The rays' ground more than 1 m off the map's floor (a canopy, a hole) is not used; ground
+  uneven by more than `wheelGroundSpread` (a kerb under one side), no rest height, or not settled
+  within 4 s of reaching the target, and it touches down instead.
+- **Rest height** (`Flight/WheelRest`): when flight comes on (`OnActivationCore`, before the thruster
+  colliders), a car standing level and still on its wheels has its origin's height over the ground
+  under them measured and kept per vehicle record (a summoned car of the same model has it too); never
+  measured, it is 2.2 times the depth of the chassis collision shape's lowest point under the origin
+  (four cars within 1.5 cm of what was measured), or 0.4 m. The shell adds the centre's height over the
+  origin.
 - **Heading** (`Heading`): along the wanted velocity; descending, from the arrival heading to the
   landing heading in step with the height lost, so the turn and the descent end together.
 - **Landing turn** (`ChooseYaw`, `LandSlewYaw`, `TimeToDescent`): with `droneBrakeTurn`, the nose keeps
@@ -171,7 +194,7 @@ stopping, around where it began (`freeRoamCentre`, `freeRoamRadius`).
 
 The arrival (`Autopilot::Arrive`): following, with less than `landingEntry` of route left below
 `landingEntrySpeed` (landing) or `arriveDistance` below 3 m/s (not landing), the status becomes
-`descending` or `arrived`. A first leg's end is not an arrival. Descending, the car has touched down
+`descending` or `arrived`. A first leg's end is not an arrival. Descending, the car is set down as above (Wheels), or has touched down
 once it has made no new low point for 0.7 s within 3 m of the floor (`landed`); held up for 1.5 s higher
 than that (something the map lacks), it hovers there (`arrived`). Arrived with the player in the car, it
 settles until still (or 5 s) and hands back with a toast.
@@ -202,7 +225,9 @@ settles until still (or 5 s) and hands back with a toast.
 held by reference, so a change reaches the next frame.
 
 - `AutopilotParamTable` names each field; `SetAutopilotParam` sets one by name.
-- Mod Settings: `enabled`, `landAtDestination` and `padRange`, registered from C++ under the class
+- Mod Settings: `enabled`, `landAtDestination` (the field `landingMode`: a list of Hover, Wheels and
+  Touch Down, the old Bool's saved false and true its first two; on a Mod Settings without lists, before its
+  `ApiVersion` 1, the old switch with on as Wheels) and `padRange`, registered from C++ under the class
   `FlightModeAutopilot` (`docs/design/flight-modes.md`, Settings). They are written into the params
   when the mode is set up and engaged and when the player changes one, so a value set on such a field
   before engaging is lost.

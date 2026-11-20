@@ -71,11 +71,14 @@ constexpr const char *kHoverFlyClassicEnabledDescription = "UI-Settings-Hover-An
 // into the Autopilot's tuning (Navigation::AutopilotParams) when the mode is set up and engaged, and when the player
 // changes one. brakeAccel is a developer value (docs/design/flight-modes.md, Developer values): out of the menu, so
 // a saved value is no longer read and it stays at its default (the developer setting autopilot.brakeAccel overrides
-// the tuning).
+// the tuning). landAtDestination was a Bool and is a list of the three Navigation::LandingMode values in their
+// order (Hover, Wheels, Touch Down) under the same name: the old Bool's saved false is Hover and its true (land, as it
+// did) is Wheels. A Mod Settings without lists (ModSettings::ApiVersion below 1) gets the old Bool in its place: on Wheels,
+// off Hover.
 struct AutopilotSettings {
   bool enabled = true;
   float brakeAccel = 6.0f; // m/s2 planned deceleration
-  bool landAtDestination = true;
+  int32_t landingMode = 1; // Navigation::LandingMode, kLandWheels
   float padRange = 0.0f; // m around a destination on the ground to look for a landing pad (0 = off)
 };
 
@@ -84,22 +87,28 @@ AutopilotSettings &AutopilotPlayer();
 // Bumped by every SetAutopilotSetting on AutopilotPlayer(): a mode applies the settings again when it changes.
 uint32_t AutopilotSettingsGeneration();
 
-// One Mod Settings variable of the Autopilot: a Bool (step, min and max unused) or a Float.
+// One Mod Settings variable of the Autopilot: a Bool (step, min and max unused), a Float, or a List (an index into
+// listType's values: default and max as indices, its values' names shown as <displayName>-<value name>).
 struct AutopilotSetting {
+  enum class Kind { Bool, Float, List };
   const char *name;
   const char *displayName;
   const char *description;
-  bool isBool;
+  Kind kind;
   float defaultValue, step, min, max;
-  uint32_t order; // its row in kFlightModesCategory
+  uint32_t order;               // its row in kFlightModesCategory
+  const char *listType = nullptr; // a List's RTTI enum (FlightSettingsLink.hpp)
 };
+
+// Land at Destination's values (FlightSettingsLink.hpp registers the enum in RTTI under this name).
+constexpr const char *kLandingModeType = "FlightAutopilotLanding";
 
 // The variables in the menu, all under kFlightModesCategory.
 const std::vector<AutopilotSetting> &AutopilotSettingsTable();
 constexpr const char *kAutopilotSettingsClass = "FlightModeAutopilot";
 
-// Writes the value Mod Settings gives (a Bool as 0 or 1) into aSettings, a Float clamped to its range; false for a name
-// not in the table (brakeAccel included). On AutopilotPlayer() it bumps AutopilotSettingsGeneration.
+// Writes the value Mod Settings gives (a Bool as 0 or 1, a List as its index) into aSettings, a Float or a List clamped
+// to its range; false for a name not in the table (brakeAccel included). On AutopilotPlayer() it bumps AutopilotSettingsGeneration.
 bool SetAutopilotSetting(AutopilotSettings &aSettings, const std::string &aName, float aValue);
 
 } // namespace Flight

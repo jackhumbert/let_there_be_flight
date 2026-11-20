@@ -109,6 +109,14 @@ struct AutopilotInput {
   // (Flight::AttitudeLift); without, the shell flies it from AutopilotOutput's manual request
   Flight::Pid *pitchPid = nullptr;
   Flight::Pid *rollPid = nullptr;
+  // the set-down on the wheels (kLandWheels): the ground straight down from the four wheel emitters (valid when every
+  // ray hits; the mean of the hits' heights and highest less lowest), read while Autopilot::WantsWheelGround, and how
+  // high the car's centre (stats.d_position) is over the ground when it rests on its wheels (m; 0: not known, it
+  // touches down instead)
+  bool wheelGroundValid = false;
+  float wheelGroundZ = 0.0f;
+  float wheelGroundSpread = 0.0f;
+  float restHeight = 0.0f;
 };
 
 // What the glue around the mode has to do, gathered since the last Step (the methods add to it too).
@@ -168,6 +176,8 @@ public:
   void RefreshVehicle(const AutopilotInput &aIn);
   // The events gathered since the last Step, cleared (for a method called between frames).
   AutopilotEvents TakeEvents();
+  // The next Step reads the ground under the wheels (AutopilotInput's wheelGround fields): descending or landed.
+  bool WantsWheelGround() const { return status == "descending" || status == "landed"; }
   // Whether Step would hold off aPosition this frame as a jump further than the car could have flown (CheckedPosition):
   // the position the frame flies from is then lastPosition. For the telemetry row the shell writes before Step.
   bool JumpHeldOff(const Vec3 &aPosition, float aSpeed, float aDt) const;
@@ -215,6 +225,17 @@ public:
   Vec3 landingHeading0{};
   Vec3 landingHeading{};
   float touchdownLow = 0.0f;
+  // the descent's profile (AutopilotDescent.cpp, DescentProfile): under way once over the spot; its height, vertical
+  // speed (+ up) and acceleration, world
+  bool descentProfile = false;
+  float descentZ = 0.0f, descentV = 0.0f, descentA = 0.0f;
+  // this landing sets the car down on its wheels (kLandWheels, its rest height known, level ground under the
+  // wheels); the time it has held there, and the height it is held at
+  bool setDown = false;
+  bool setDownGround = false; // the target is from the rays (else the nav map's floor)
+  float setDownTimer = 0.0f;
+  float setDownWait = 0.0f; // s since the profile reached the target
+  float setDownTarget = 0.0f;
   float spotCheckTimer = 0.0f;
   bool requestRace = false;
   bool requestRejoin = false;
@@ -314,6 +335,8 @@ private:
 
   // hold, descent and yaw (AutopilotDescent.cpp)
   Vec3 HoldVelocity(const Vec3 &aP, const Vec3 &aToTarget);
+  float DescentTarget();
+  void DescentProfile(const Vec3 &aP, float aDt);
   float TimeToDescent() const;
   float LandSlewYaw(float aTimeLeft, float aDt, float aYaw);
   float ChooseYaw(float aDt, bool aLive, float aWantedYaw);

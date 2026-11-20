@@ -13,10 +13,12 @@ public native class FlightModeAutopilot extends FlightMode {
   public native let standardModeLiftFactor: Float;
 
   // The tuning (Navigation/AutopilotParams.hpp, defaults and meaning there): the C++ fields themselves, so a write
-  // reaches the next frame. brakeAccel, landAtDestination and padRange are Mod Settings, written back from their saved
-  // values when the mode is engaged; any field can be overridden with the developer setting autopilot.<name>.
+  // reaches the next frame. brakeAccel, landingMode (the Mod Setting Land at Destination) and padRange are Mod Settings,
+  // written back from their saved values when the mode is engaged; any field can be overridden with the developer
+  // setting autopilot.<name>.
   public native let brakeAccel: Float;
-  public native let landAtDestination: Bool;
+  // 0 hover over the destination, 1 set down on the wheels, 2 touch down (Navigation::LandingMode)
+  public native let landingMode: Int32;
   public native let padRange: Float;
   public native let droneBrakeTurn: Bool;
   public native let droneBodyShare: Float;
@@ -47,6 +49,8 @@ public native class FlightModeAutopilot extends FlightMode {
   public native let approachHeight: Float;
   public native let descentRate: Float;
   public native let touchdownRate: Float;
+  public native let descentAccel: Float;
+  public native let wheelClearance: Float;
   public native let landingSearch: Int32;
   public native let landingShaft: Float;
   public native let landingFlat: Float;

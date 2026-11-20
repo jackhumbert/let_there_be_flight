@@ -159,6 +159,32 @@ void Trip::Input() {
   in.tracked = {setup.tracked && !setup.external, setup.destination};
   in.pitchPid = &pitchPid;
   in.rollPid = &rollPid;
+  // the set-down on the wheels: the body rests with its bottom on the floor (Sim's stop), and the ground under the four
+  // wheel emitters is the world's ground ray straight down from each, as the game casts from them (from just over
+  // them, 12 m down)
+  in.restHeight = -car.bottom;
+  in.wheelGroundValid = false;
+  if (ap.WantsWheelGround()) {
+    const Vec3 p = sim.Position();
+    float low = 1e9f, high = -1e9f, sum = 0.0f;
+    bool all = true;
+    for (const float sx : {-1.0f, 1.0f}) {
+      for (const float sy : {-1.0f, 1.0f}) {
+        const Vec3 e = Flight::Add(p, Flight::Rotate(q, {sx * car.wheelX, sy * car.wheelY, car.wheelZ}));
+        NV hit;
+        if (!world.GroundRay({e.x, e.y, e.z + 0.5f}, {e.x, e.y, e.z - 12.0f}, hit)) {
+          all = false;
+          continue;
+        }
+        low = std::min(low, hit.z);
+        high = std::max(high, hit.z);
+        sum += hit.z;
+      }
+    }
+    in.wheelGroundValid = all;
+    in.wheelGroundZ = sum * 0.25f;
+    in.wheelGroundSpread = all ? high - low : 0.0f;
+  }
 }
 
 void Trip::Change(const std::string &aFrom) {
@@ -319,7 +345,8 @@ void Trip::Frame() {
 
   // the force tail and the body: the mode's force and torque, and the input fields it wrote (the player's on a
   // frame they have the controls)
-  const Flight::ModeOutput mode{out.force, out.torque};
+  // flight switched off: the mode's force is gone and the car drops onto its wheels (the floor)
+  const Flight::ModeOutput mode = flightOff ? Flight::ModeOutput{} : Flight::ModeOutput{out.force, out.torque};
   const Flight::Controls controls = out.writeControls ? out.controls : in.controls;
   f.nan = !Finite(out.force) || !Finite(out.torque);
   refZ = sim.Position().z;

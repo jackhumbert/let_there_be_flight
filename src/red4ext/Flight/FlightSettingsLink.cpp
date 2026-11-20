@@ -26,6 +26,13 @@ bool Register() {
     spdlog::info("[Settings] Mod Settings not found: the C++ modes' settings keep their defaults");
     return false;
   }
+  // lists (an enum type's name as the type) from ModSettings::ApiVersion 1; before it the export is missing
+  auto apiVersion = reinterpret_cast<uint32_t (*)()>(GetProcAddress(module, "ApiVersion"));
+  const bool lists = apiVersion && apiVersion() >= 1;
+  if (!lists) {
+    spdlog::info("[Settings] this Mod Settings has no lists: Land at Destination is a switch (on: set down on the "
+                 "wheels)");
+  }
   // Mod Settings keeps the pointers until the game's scripts are loaded: the variables live as long as the plugin
   static std::vector<ModSettings::Variable> variables;
   variables.clear();
@@ -99,12 +106,19 @@ bool Register() {
     v.className = Flight::kAutopilotSettingsClass;
     v.categoryName = Flight::kFlightModesCategory;
     v.propertyName = s.name;
-    v.type = s.isBool ? "Bool" : "Float";
+    // a list on a Mod Settings without them: the old Bool under the same name (its 0 and 1 are the list's first two)
+    const auto kind = s.kind == Flight::AutopilotSetting::Kind::List && !lists ? Flight::AutopilotSetting::Kind::Bool
+                                                                                : s.kind;
+    v.type = kind == Flight::AutopilotSetting::Kind::Bool    ? RED4ext::CName("Bool")
+             : kind == Flight::AutopilotSetting::Kind::List ? RED4ext::CName(s.listType)
+                                                             : RED4ext::CName("Float");
     v.displayName = s.displayName;
     v.description = s.description;
     v.order = s.order;
-    if (s.isBool) {
+    if (kind == Flight::AutopilotSetting::Kind::Bool) {
       v.defaultValue.b = s.defaultValue != 0.0f;
+    } else if (kind == Flight::AutopilotSetting::Kind::List) {
+      v.defaultValue.u32 = uint32_t(s.defaultValue);
     } else {
       v.defaultValue.f32 = s.defaultValue;
       v.stepValue.f32 = s.step;
@@ -112,16 +126,20 @@ bool Register() {
       v.maxValue.f32 = s.max;
     }
     v.callback = std::make_shared<ModSettings::runtime_class_callback_t>(
-        [](RED4ext::CName aCategory, RED4ext::CName aProperty, ModSettings::ModVariableType aValue) {
+        [lists](RED4ext::CName aCategory, RED4ext::CName aProperty, ModSettings::ModVariableType aValue) {
           // Mod Settings keeps runtime callbacks per class and calls each with every variable of the class
           // (ModClass::NotifyListeners), so the type comes from the property handed in, not from this variable. A
-          // Bool's value is the union's first byte (the accepted value's bytes as the union).
+          // Bool's value is the union's first byte (the accepted value's bytes as the union), a list's its index.
           const std::string name = aProperty.ToString();
           const auto &table = Flight::AutopilotSettingsTable();
           auto it = std::find_if(table.begin(), table.end(), [&](const auto &aS) { return name == aS.name; });
           if (it == table.end())
             return;
-          const float value = it->isBool ? (aValue.b ? 1.0f : 0.0f) : aValue.f32;
+          float value = aValue.f32;
+          if (it->kind == Flight::AutopilotSetting::Kind::Bool || (it->kind == Flight::AutopilotSetting::Kind::List && !lists))
+            value = aValue.b ? 1.0f : 0.0f;
+          else if (it->kind == Flight::AutopilotSetting::Kind::List)
+            value = float(aValue.u32);
           if (Flight::SetAutopilotSetting(Flight::AutopilotPlayer(), aProperty.ToString(), value))
             spdlog::info("[Settings] {}.{} = {}", Flight::kAutopilotSettingsClass, aProperty.ToString(), value);
         });

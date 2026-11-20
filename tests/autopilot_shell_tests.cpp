@@ -52,19 +52,21 @@ std::set<std::string> Matches(const std::string &aText, const std::regex &aPatte
 // script's declarations at c3e24ab, less the two dropped settings and brakeAccel (a developer value,
 // docs/design/flight-modes.md, Settings), all in the menu's Flight Modes category.
 TEST(autopilot_shell_mod_settings_keys) {
+  using Kind = AutopilotSetting::Kind;
   struct Expected {
     const char *name, *displayName, *description;
-    bool isBool;
+    Kind kind;
     float defaultValue, step, min, max;
     uint32_t order;
   };
+  // Land at Destination: a list of the landing modes, Wheels (1) by default, under the Bool's old name
   const Expected expected[] = {
-      {"enabled", "UI-Settings-Autopilot-Enabled", "UI-Settings-Autopilot-Enabled-Description", true, 1.0f, 0.0f, 0.0f,
-       0.0f, 8},
-      {"landAtDestination", "UI-Settings-Autopilot-Land", "UI-Settings-Autopilot-Land-Description", true, 1.0f, 0.0f,
-       0.0f, 0.0f, 9},
-      {"padRange", "UI-Settings-Autopilot-Pad-Range", "UI-Settings-Autopilot-Pad-Range-Description", false, 0.0f, 25.0f,
-       0.0f, 500.0f, 10},
+      {"enabled", "UI-Settings-Autopilot-Enabled", "UI-Settings-Autopilot-Enabled-Description", Kind::Bool, 1.0f, 0.0f,
+       0.0f, 0.0f, 8},
+      {"landAtDestination", "UI-Settings-Autopilot-Land", "UI-Settings-Autopilot-Land-Description", Kind::List, 1.0f,
+       1.0f, 0.0f, 2.0f, 9},
+      {"padRange", "UI-Settings-Autopilot-Pad-Range", "UI-Settings-Autopilot-Pad-Range-Description", Kind::Float, 0.0f,
+       25.0f, 0.0f, 500.0f, 10},
   };
   CHECK(std::string(kAutopilotSettingsClass) == "FlightModeAutopilot");
   CHECK(std::string(kPlayerSettingsMod) == "Let There Be Flight");
@@ -77,29 +79,33 @@ TEST(autopilot_shell_mod_settings_keys) {
     CHECK(t.order == e.order);
     CHECK(std::string(t.displayName) == e.displayName);
     CHECK(std::string(t.description) == e.description);
-    CHECK(t.isBool == e.isBool);
+    CHECK(t.kind == e.kind);
     CHECK_NEAR(t.defaultValue, e.defaultValue, 0.0);
-    if (!e.isBool) {
+    CHECK((t.listType != nullptr) == (e.kind == Kind::List));
+    if (e.kind != Kind::Bool) {
       CHECK_NEAR(t.step, e.step, 0.0);
       CHECK_NEAR(t.min, e.min, 0.0);
       CHECK_NEAR(t.max, e.max, 0.0);
     }
   }
-  // the same names and defaults as the script's fields (tests/autopilot_script_defaults.txt, read from c3e24ab)
+  // the same names and defaults as the script's fields (tests/autopilot_script_defaults.txt, read from c3e24ab): the
+  // list was the script's Bool, its saved 0 and 1 the list's first two (Hover; Wheels, landing as the Bool's true did)
   const std::string script = Read(LTBF_SOURCE_DIR "/tests/autopilot_script_defaults.txt");
   for (const auto &t : table) {
-    const std::string decl = std::string("public let ") + t.name + ": " + (t.isBool ? "Bool" : "Float") + " = " +
-                             (t.isBool ? (t.defaultValue != 0.0f ? "true" : "false") : "");
+    const bool wasBool = t.kind != Kind::Float;
+    const std::string decl = std::string("public let ") + t.name + ": " + (wasBool ? "Bool" : "Float") + " = " +
+                             (wasBool ? (t.defaultValue != 0.0f ? "true" : "false") : "");
     CHECK(script.find(decl) != std::string::npos);
   }
+  CHECK(std::string(kLandingModeType) == "FlightAutopilotLanding");
   // the code's defaults are the table's
   const AutopilotSettings defaults;
-  CHECK(defaults.enabled && defaults.landAtDestination);
+  CHECK(defaults.enabled && defaults.landingMode == Navigation::kLandWheels);
   CHECK_NEAR(defaults.brakeAccel, 6.0, 0.0);
   CHECK_NEAR(defaults.padRange, 0.0, 0.0);
   const Navigation::AutopilotParams params;
   CHECK_NEAR(params.brakeAccel, defaults.brakeAccel, 0.0);
-  CHECK(params.landAtDestination == defaults.landAtDestination);
+  CHECK(params.landingMode == defaults.landingMode);
   CHECK_NEAR(params.padRange, defaults.padRange, 0.0);
   // the dropped two and brakeAccel are not registered
   for (const auto &t : table) {
@@ -115,7 +121,11 @@ TEST(autopilot_shell_mod_settings_set) {
   CHECK(!SetAutopilotSetting(s, "brakeAccel", 40.0f)); // a developer value: not the menu's
   CHECK_NEAR(s.brakeAccel, 6.0, 0.0);
   CHECK(SetAutopilotSetting(s, "landAtDestination", 0.0f));
-  CHECK(!s.landAtDestination);
+  CHECK(s.landingMode == Navigation::kLandHover);
+  CHECK(SetAutopilotSetting(s, "landAtDestination", 2.0f));
+  CHECK(s.landingMode == Navigation::kLandTouchDown);
+  CHECK(SetAutopilotSetting(s, "landAtDestination", 7.0f)); // clamped to the list
+  CHECK(s.landingMode == Navigation::kLandTouchDown);
   CHECK(SetAutopilotSetting(s, "padRange", 100.0f));
   CHECK_NEAR(s.padRange, 100.0, 0.0);
   CHECK(!SetAutopilotSetting(s, "maxSpeed", 30.0f));

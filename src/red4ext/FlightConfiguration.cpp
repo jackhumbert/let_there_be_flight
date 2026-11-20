@@ -14,6 +14,7 @@
 #include <RED4ext/Scripting/Natives/Generated/ent/HardTransformBinding.hpp>
 #include "Flight/ChassisShape.hpp"
 #include "Flight/FlightStats.hpp"
+#include "Flight/WheelRest.hpp"
 
 using namespace RED4ext;
 
@@ -351,6 +352,10 @@ void IFlightConfiguration::MeasureCharacter() {
 void IFlightConfiguration::OnActivationCore() {
   this->AddColliders();
   this->MeasureCharacter();
+  // standing on its wheels, how high the car rests (the Autopilot sets it down there); the rays see only the static
+  // world, and nothing has moved the car yet
+  if (auto component = this->component.Lock())
+    WheelRest::Measure(component.GetPtr());
   ExecuteFunction(this, this->nativeType->GetFunction("OnActivation"), nullptr);
 }
 
