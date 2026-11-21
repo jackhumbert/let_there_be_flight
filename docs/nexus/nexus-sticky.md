@@ -18,7 +18,8 @@ REQUIREMENTS (exact versions, please check before reporting "it doesn't load")
 * Redscript 0.5.32 or newer
 * Input Loader 0.2.4 or newer
 * Mod Settings 0.2.23 or newer (optional, but recommended: this is where LTBF's settings and
-  key bindings live. 0.2.29 or newer shows the settings in their intended order)
+  key bindings live. 0.2.29 or newer shows the settings in their intended order, 0.2.31 or newer
+  the three choices of Land at Destination)
 
 Most "mod doesn't work" and "no flight button" reports turn out to be one of these being out
 of date. If you're not sure, delete and reinstall each dependency fresh rather than trusting
