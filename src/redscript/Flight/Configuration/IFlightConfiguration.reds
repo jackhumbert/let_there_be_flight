@@ -80,7 +80,10 @@ public abstract native class IFlightConfiguration extends IScriptable {
     mc.SetMesh(vehicle.GetResRef("thrusterMesh", defaultMesh));
     mc.meshApperance = vehicle.GetCName("thrusterAppearance");
     mc.motionBlurScale = 0.1;
-    mc.LODMode = entMeshComponentLODMode.Appearance;
+    // not Appearance: a car whose flight first comes on while it is far away or in the air (a summon spawns it 120 m out,
+    // 20 m up) has its full appearance shown later without these added meshes, and so does every car of that model
+    // after it in the session
+    mc.LODMode = entMeshComponentLODMode.AlwaysVisible;
     return mc;
   }
 

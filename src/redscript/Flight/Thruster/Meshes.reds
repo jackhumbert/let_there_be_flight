@@ -12,7 +12,7 @@ public func CreateCorpoThruster(opt appearanceName: CName) -> ref<MeshComponent>
     mc.meshApperance = appearanceName;
   }
   mc.motionBlurScale = 0.1;
-  mc.LODMode = entMeshComponentLODMode.Appearance;
+  mc.LODMode = entMeshComponentLODMode.AlwaysVisible; // as IFlightConfiguration.CreateMesh
   return mc;
 }
 
@@ -25,6 +25,6 @@ public func CreateNomadThruster(opt appearanceName: CName) -> ref<MeshComponent>
     mc.meshApperance = appearanceName;
   }
   mc.motionBlurScale = 0.1;
-  mc.LODMode = entMeshComponentLODMode.Appearance;
+  mc.LODMode = entMeshComponentLODMode.AlwaysVisible; // as IFlightConfiguration.CreateMesh
   return mc;
 }

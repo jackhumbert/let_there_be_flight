@@ -140,7 +140,10 @@ void EntityExt::AddComponent(Handle<ent::IComponent> const & componentToAdd) {
     auto filterData = rtti->GetClass("physicsFilterData")->CreateInstance<physics::FilterData *>(true);
 
     pmComponent->filterData = Handle<physics::FilterData>(filterData);
-    pmComponent->filterDataSource = FilterDataSource::Collider;
+    // the component's own (empty) filter, not the mesh colliders' own: the thruster pods are always visible
+    // (IFlightConfiguration.CreateMesh), and with their colliders' filters a car flown far from V (a summon) was pushed
+    // around by its own pods
+    pmComponent->filterDataSource = FilterDataSource::Component;
   }
 
   // if (this->IsOfClass(rtti->GetClass("vehicleBaseObject"))) {
