@@ -44,21 +44,40 @@ std::vector<ResourcePath> ThrusterMeshPaths() {
   std::vector<ResourcePath> paths{R"(user\jackhumbert\meshes\engine_nomad.mesh)",
                                   R"(user\jackhumbert\meshes\engine_corpo.mesh)"};
   auto tweakDB = TweakDB::Get();
+  auto *meshType = CRTTISystem::Get()->GetType("raRef:CResource");
+  // Other mods' records are read too, and a broken TweakXL yaml can leave a record without an instance or a flat of
+  // another type under the name: both are skipped, never read as a mesh.
   auto addFlat = [&](TweakDBID aFlat) {
-    ResourceAsyncReference<> mesh;
-    if (tweakDB->TryGetValue(aFlat, mesh) && mesh.path.hash != 0 &&
-        std::find(paths.begin(), paths.end(), mesh.path) == paths.end()) {
+    std::shared_lock<SharedSpinLock> flats(tweakDB->mutex00);
+    auto *flat = tweakDB->GetFlatValue(aFlat);
+    if (!flat || !meshType) {
+      return;
+    }
+    const CStackType value = flat->GetValue();
+    if (value.type != meshType || !value.value) {
+      return;
+    }
+    const auto &mesh = *static_cast<ResourceAsyncReference<> *>(value.value);
+    if (mesh.path.hash != 0 && std::find(paths.begin(), paths.end(), mesh.path) == paths.end()) {
       paths.push_back(mesh.path);
     }
   };
   addFlat(TweakDBID("player.vehicle.thrusterMesh"));
 
   auto recordType = CRTTISystem::Get()->GetClass("gamedataVehicle_Record");
-  std::shared_lock<SharedSpinLock> lock(tweakDB->mutex01);
-  if (auto records = tweakDB->recordsByType.Get(recordType)) {
-    for (const auto &record : *records) {
-      addFlat(TweakDBID(reinterpret_cast<game::data::TweakDBRecord *>(record.instance)->recordID, ".thrusterMesh"));
+  std::vector<TweakDBID> flats;
+  {
+    std::shared_lock<SharedSpinLock> lock(tweakDB->mutex01);
+    if (auto records = recordType ? tweakDB->recordsByType.Get(recordType) : nullptr) {
+      for (const auto &record : *records) {
+        if (record.instance) {
+          flats.emplace_back(reinterpret_cast<game::data::TweakDBRecord *>(record.instance)->recordID, ".thrusterMesh");
+        }
+      }
     }
+  }
+  for (const auto &flat : flats) {
+    addFlat(flat);
   }
   return paths;
 }
