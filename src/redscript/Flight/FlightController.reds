@@ -55,6 +55,9 @@ public native class FlightController extends IScriptable {
   public let isTPP: Bool;
 
   private let uiBlackboard: ref<IBlackboard>;
+  // vanilla autodrive starting or stopping redoes the hints (no Enable Flight while it drives)
+  private let autodriveBlackboard: ref<IBlackboard>;
+  private let autodriveListener: ref<CallbackHandle>;
 
   public let initialized: Bool;
   public let usingKB: Bool;
@@ -196,6 +199,11 @@ public native class FlightController extends IScriptable {
     FlightHelipadSystem.GetInstance(player.GetGame()).Start(player);
     this.gameInstance = player.GetGame();
     this.player = player;
+    if IsDefined(this.autodriveBlackboard) && IsDefined(this.autodriveListener) {
+      this.autodriveBlackboard.UnregisterListenerBool(GetAllBlackboardDefs().UI_AutodriveData.AutoDriveEnabled, this.autodriveListener);
+    }
+    this.autodriveBlackboard = GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().UI_AutodriveData);
+    this.autodriveListener = this.autodriveBlackboard.RegisterListenerBool(GetAllBlackboardDefs().UI_AutodriveData.AutoDriveEnabled, this, n"OnAutodriveEnabledChanged");
 
     this.GetBlackboard().SetBool(GetAllBlackboardDefs().VehicleFlight.IsUIActive, FlightSettings.GetFloat("isFlightUIActive") > 0.5);
   }
@@ -293,6 +301,12 @@ public native class FlightController extends IScriptable {
     GameInstance.GetBlackboardSystem(this.gameInstance).Get(GetAllBlackboardDefs().UI_AutodriveData).SignalBool(GetAllBlackboardDefs().UI_AutodriveData.AutoDriveAvailable);
   }
 
+  protected cb func OnAutodriveEnabledChanged(value: Bool) -> Bool {
+    if IsDefined(this.player) {
+      this.SetupActions();
+    }
+  }
+
   private func SetupActions() -> Void {
     this.usingKB = this.player.PlayerLastUsedKBM();
     let evt = new UpdateInputHintMultipleEvent();
@@ -339,7 +353,10 @@ public native class FlightController extends IScriptable {
     // here with its label picked up front. A hide after a show of the same action in one event
     // removes the shown one (Linear Brake and the Autopilot hint never appeared that way), and
     // reordering such pairs crashed the game on flight activation.
-    evt.AddInputHint(FlightController.CreateInputHint(this.FlightToggleHintLabel(), n"Flight_Toggle"),      (this.enabled && !this.active) || (this.active && !this.showOptions));
+    // no Enable Flight while vanilla autodrive drives the car (its cinematic camera included):
+    // flight cannot be switched on then (ShowVehicleDriverInputHints hides vanilla's hint the same way)
+    let canEnable = this.enabled && !this.active && !IsAutodriveActive(this.gameInstance);
+    evt.AddInputHint(FlightController.CreateInputHint(this.FlightToggleHintLabel(), n"Flight_Toggle"),      canEnable || (this.active && !this.showOptions));
     evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Yaw", n"Yaw"),                           this.FlightControlsShown() && !this.showOptions);
     evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Pitch", n"Pitch"),                       this.FlightControlsShown() && !this.showOptions && (usesRightStick || this.usingKB));
     evt.AddInputHint(FlightController.CreateInputHint(n"Input-Hint-Roll", n"Roll"),                         this.FlightControlsShown() && !this.showOptions && (usesRightStick || this.usingKB));
