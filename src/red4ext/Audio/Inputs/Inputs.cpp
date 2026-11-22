@@ -134,4 +134,18 @@ float GameVolume(bool inMenu, bool hubMenu, bool worldMap, bool radialMenu, int 
   return float(master) / 100.0f * float(sfx) / 100.0f * (radialMenu ? 0.1f : 1.0f);
 }
 
+Vec3 ListenerVelocity(Vec3 aVelocity, Vec3 aFrom, Vec3 aTo, float aDt) {
+  if (aDt <= 0.0f) {
+    return aVelocity;
+  }
+  const Vec3 v{(aTo.x - aFrom.x) / aDt, (aTo.y - aFrom.y) / aDt, (aTo.z - aFrom.z) / aDt};
+  // set to zero at a jump, the cinematic camera's wind fell from its airspeed to the city's wind for a frame at every
+  // cut, 30 dB, and thumped as it came back
+  if (std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z) > 500.0f) {
+    return aVelocity;
+  }
+  const float k = 1.0f - std::exp(-aDt / 0.1f);
+  return {aVelocity.x + k * (v.x - aVelocity.x), aVelocity.y + k * (v.y - aVelocity.y), aVelocity.z + k * (v.z - aVelocity.z)};
+}
+
 } // namespace Inputs

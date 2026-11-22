@@ -253,3 +253,26 @@ TEST(inputs_to_synth) {
   CHECK_NEAR(in.water, 0.75, 0);
   CHECK_NEAR(in.cone, 120, 0);
 }
+
+// The listener's velocity (the cinematic camera's wind, the Doppler shift): eased to its motion, and kept as it was
+// over a jump. A cut of the cinematic camera moves the listener 30 m in a frame; read as a stop it dropped the
+// camera's wind from 95 m/s to the city's wind for a frame, 30 dB, and it thumped coming back.
+TEST(inputs_listener_velocity_kept_over_a_jump) {
+  const float dt = 1.0f / 60.0f;
+  Vec3 v{0, 80, 0};
+  // flying on at 80 m/s: stays there
+  v = ListenerVelocity(v, {0, 0, 0}, {0, 80 * dt, 0}, dt);
+  CHECK_NEAR(v.y, 80, 1e-3);
+  // a cut 30 m to the side in one frame: neither a speed of 1800 m/s nor a stop
+  const Vec3 cut = ListenerVelocity(v, {0, 80 * dt, 0}, {30, 80 * dt, 0}, dt);
+  CHECK_NEAR(cut.x, 0, 1e-6);
+  CHECK_NEAR(cut.y, 80, 1e-6);
+  // a cut to a camera standing still: eased down from 80, 0.1 s to about a third of it
+  Vec3 still = cut;
+  for (int i = 0; i < 6; ++i) {
+    still = ListenerVelocity(still, {30, 0, 0}, {30, 0, 0}, dt);
+  }
+  CHECK(still.y > 25 && still.y < 35);
+  // no time: as it was
+  CHECK_NEAR(ListenerVelocity(v, {0, 0, 0}, {5, 5, 5}, 0).y, 80, 0);
+}

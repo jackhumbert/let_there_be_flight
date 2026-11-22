@@ -89,5 +89,8 @@ EngineSynth::Inputs ToSynth(const Values &v, float volume, float water, float co
 float CarPitch(float mass);
 // the game's volume sliders as the mod hears them; 0 in the menus
 float GameVolume(bool inMenu, bool hubMenu, bool worldMap, bool radialMenu, int master, int sfx);
+// The listener's velocity: aVelocity eased over 0.1 s to its motion from aFrom to aTo in aDt. A move faster than
+// 500 m/s is a jump (a teleport, a cinematic camera's cut), neither a speed nor a stop: aVelocity is kept as it was.
+Vec3 ListenerVelocity(Vec3 aVelocity, Vec3 aFrom, Vec3 aTo, float aDt);
 
 } // namespace Inputs

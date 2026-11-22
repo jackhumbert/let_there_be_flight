@@ -222,18 +222,14 @@ void FlightAudio::UpdateListenerMatrix(RED4ext::Matrix matrix) {
                        ? 0.0f
                        : std::clamp(std::chrono::duration<float>(now - lastFrame).count(), 0.0f, 0.1f);
   lastFrame = now;
-  // the listener's velocity, differentiated and smoothed over 0.1 s, for the wind
+  // the listener's velocity, for the wind and the Doppler shift (Inputs::ListenerVelocity: a jump keeps it)
   static Voices::Vec3 lastListener;
   static bool haveListener = false;
-  if (haveListener && dt > 0.0f) {
-    const float k = 1.0f - std::exp(-dt / 0.1f);
-    const Voices::Vec3 v{(listenerFrame.position.x - lastListener.x) / dt, (listenerFrame.position.y - lastListener.y) / dt,
-                         (listenerFrame.position.z - lastListener.z) / dt};
-    // a teleport is not a speed
-    const bool jump = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z) > 500.0f;
-    listenerVelocity = jump ? Voices::Vec3{} : Voices::Vec3{listenerVelocity.x + k * (v.x - listenerVelocity.x),
-                                                            listenerVelocity.y + k * (v.y - listenerVelocity.y),
-                                                            listenerVelocity.z + k * (v.z - listenerVelocity.z)};
+  if (haveListener) {
+    const Voices::Vec3 &p = listenerFrame.position;
+    const Inputs::Vec3 v = Inputs::ListenerVelocity({listenerVelocity.x, listenerVelocity.y, listenerVelocity.z},
+                                                    {lastListener.x, lastListener.y, lastListener.z}, {p.x, p.y, p.z}, dt);
+    listenerVelocity = {v.x, v.y, v.z};
   }
   lastListener = listenerFrame.position;
   haveListener = true;
