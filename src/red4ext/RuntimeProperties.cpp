@@ -31,6 +31,57 @@ RED4ext::CRTTIResourceAsyncReferenceType **__fastcall CreateCRTTIRaRefTypeFromCl
   return call(a1, a2);
 }
 
+// The RTTI type `<wrapper>:<inner>` (whandle, handle, array, raRef) for a native property's
+// script type. The game's own type of that name is used when there is one: a second type with
+// the same name made here would not be the one native code puts in a Variant, so the script's
+// casts of that Variant (e.g. PlayerStateMachine.TrackedTarget, a whandle:entIPlacedComponent)
+// would fail. Only a type the game does not have is created and registered.
+static RED4ext::CBaseRTTIType *WrappedType(RED4ext::CRTTISystem *rtti, const std::string &wrapper,
+                                           RED4ext::CBaseRTTIType *inner) {
+  if (!inner) {
+    return nullptr;
+  }
+  const char *prefix = nullptr;
+  if (wrapper.starts_with("wref")) {
+    prefix = "whandle:";
+  } else if (wrapper.starts_with("ref")) {
+    prefix = "handle:";
+  } else if (wrapper.starts_with("array")) {
+    prefix = "array:";
+  } else if (wrapper.starts_with("raRef")) {
+    prefix = "raRef:";
+  } else {
+    return nullptr;
+  }
+  std::string name = std::string(prefix) + inner->GetName().ToString();
+  if (auto existing = rtti->GetType(RED4ext::CName(name.c_str()))) {
+    return existing;
+  }
+  RED4ext::CBaseRTTIType *created = nullptr;
+  if (prefix[0] == 'w') {
+    RED4ext::CRTTIWeakHandleType *t;
+    CreateCRTTIWeakHandleTypeFromClass(&t, inner);
+    created = t;
+  } else if (prefix[0] == 'h') {
+    RED4ext::CRTTIHandleType *t;
+    CreateCRTTIHandleTypeFromClass(&t, inner);
+    created = t;
+  } else if (prefix[0] == 'a') {
+    RED4ext::CRTTIArrayType *t;
+    CreateCRTTIArrayTypeFromClass(&t, inner);
+    created = t;
+  } else {
+    RED4ext::CRTTIResourceAsyncReferenceType *t;
+    CreateCRTTIRaRefTypeFromClass(&t, inner);
+    created = t;
+  }
+  if (created) {
+    spdlog::info("  created type '{}'", name);
+    rtti->RegisterType(created);
+  }
+  return created;
+}
+
 // bool CScriptDataValidator::Validate(CScriptedDataEnvironment const &, IScriptDataErrorReporter &) const
 // Struct layouts are 2.5 (ScriptDefinitions.hpp); the first argument is the validator (this).
 REGISTER_FLIGHT_HOOK_HASH(bool __fastcall, 898639042, CScriptDataValidator_Validate, uint32_t* version, const CScriptedDataEnvironment* scriptData, void* scriptLogger) {
@@ -72,58 +123,11 @@ REGISTER_FLIGHT_HOOK_HASH(bool __fastcall, 898639042, CScriptDataValidator_Valid
                     if (del != -1) {
                       auto innerInnerTypeStr = innerTypeStr.substr(del + 1, innerTypeStr.length());
                       auto innerInnerType = rtti->GetClassByScriptName(innerInnerTypeStr.c_str());
-                      if (innerTypeStr.starts_with("wref")) {
-                        RED4ext::CRTTIWeakHandleType *whType;
-                        CreateCRTTIWeakHandleTypeFromClass(&whType, innerInnerType);
-                        rtti->RegisterType(whType);
-                        innerType = whType;
-                      } else if (innerTypeStr.starts_with("ref")) {
-                        RED4ext::CRTTIHandleType *whType;
-                        CreateCRTTIHandleTypeFromClass(&whType, innerInnerType);
-                        rtti->RegisterType(whType);
-                        innerType = whType;
-                      } else if (innerTypeStr.starts_with("array")) {
-                        RED4ext::CRTTIArrayType *whType;
-                        CreateCRTTIArrayTypeFromClass(&whType, innerInnerType);
-                        rtti->RegisterType(whType);
-                        innerType = whType;
-                      } else if (innerTypeStr.starts_with("raRef")) {
-                        RED4ext::CRTTIResourceAsyncReferenceType *whType;
-                        CreateCRTTIRaRefTypeFromClass(&whType, innerInnerType);
-                        rtti->RegisterType(whType);
-                        innerType = whType;
-                      }
+                      innerType = WrappedType(rtti, innerTypeStr, innerInnerType);
                     }
                   }
                   if (innerType) {
-                    //if (customTypeStr) {
-                    //  //innerScriptType = ScriptType();
-                    //  ScriptClass *innerScriptCls = (ScriptClass*)malloc(0x90);
-                    //  innerScriptCls->rttiType = (RED4ext::CClass*)innerType;
-                    //  innerScriptCls->name = RED4ext::CName(innerTypeStr.c_str());
-                    //  prop->type->innerType = innerScriptCls;
-                    //}
-                    if (outerTypeStr.starts_with("wref")) {
-                      RED4ext::CRTTIWeakHandleType *whType;
-                      CreateCRTTIWeakHandleTypeFromClass(&whType, innerType);
-                      rtti->RegisterType(whType);
-                      rttiType = whType;
-                    } else if (outerTypeStr.starts_with("ref")) {
-                      RED4ext::CRTTIHandleType *whType;
-                      CreateCRTTIHandleTypeFromClass(&whType, innerType);
-                      rtti->RegisterType(whType);
-                      rttiType = whType;
-                    } else if (outerTypeStr.starts_with("array")) {
-                      RED4ext::CRTTIArrayType *whType;
-                      CreateCRTTIArrayTypeFromClass(&whType, innerType);
-                      rtti->RegisterType(whType);
-                      rttiType = whType;
-                    } else if (innerTypeStr.starts_with("raRef")) {
-                      RED4ext::CRTTIResourceAsyncReferenceType *whType;
-                      CreateCRTTIRaRefTypeFromClass(&whType, innerType);
-                      rtti->RegisterType(whType);
-                      innerType = whType;
-                    }
+                    rttiType = WrappedType(rtti, outerTypeStr, innerType);
                   } else {
                     spdlog::warn("could not find inner type '{}' in '{}'", innerTypeStr, typeStr);
                   }
