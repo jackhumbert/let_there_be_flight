@@ -638,6 +638,36 @@ TEST(autopilot_plan_ahead_first_leg_then_rest) {
   CHECK(rig.queue.Pending() == 0);
 }
 
+// The rest of a trip planned ahead came after the car passed the join: the trip is planned again from the car, and
+// the car reaches the end of the first leg before that plan comes. The end of the first leg is not the trip's end:
+// the car flies on to the goal and lands there, never descending (or hovering, "arrived") short of it.
+TEST(autopilot_late_rest_does_not_arrive_at_the_first_leg) {
+  Rig rig(Long(), {40, 64, 1}, 5.0f);
+  rig.ap.planBase.doorways = true;
+  rig.ap.ahead.horizon = 60.0f;
+  rig.Track({1200, 64, 1});
+  rig.Engage();
+  CHECK(rig.UntilStatus("following", 6.0f));
+  CHECK(rig.ap.ahead.firstLeg);
+  const Vec3 legEnd = rig.ap.route.Point(rig.ap.RouteSize() - 1);
+  CHECK(Distance2D(legEnd, {1200, 64, 1}) > 500.0f);
+  // the join already behind the car: the rest, when it comes, is late
+  rig.ap.joinS = 0.0f;
+  bool shortArrival = false;
+  rig.Until(
+      [&] {
+        const bool over = rig.ap.status == "descending" || rig.ap.status == "arrived" || rig.ap.status == "landed";
+        if (over && Distance2D(rig.P(), {1200, 64, 1}) > 100.0f) {
+          shortArrival = true;
+        }
+        return rig.ap.status == "landed" || shortArrival;
+      },
+      120.0f);
+  CHECK(!shortArrival);
+  CHECK(rig.ap.status == "landed");
+  CHECK(Distance2D(rig.P(), {1200, 64, 1}) < 30.0f);
+}
+
 TEST(autopilot_toggle_free_roam) {
   Rig rig(Small(), {40, 40, 1});
   rig.Track({200, 200, 1});

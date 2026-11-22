@@ -16,6 +16,11 @@ namespace Navigation {
 
 using namespace AutopilotDetail;
 
+namespace {
+// m between a route's end and the trip's goal past which the end is not the trip's (Arrive)
+constexpr float kShortOfGoal = 20.0f;
+} // namespace
+
 uint64_t Rng::Next() {
   // splitmix64
   uint64_t z = (state += 0x9E3779B97F4A7C15ull);
@@ -435,6 +440,11 @@ void Autopilot::Arrive(const Vec3 &aP) {
   }
   if (ahead.firstLeg) {
     // the end of a first leg, not the trip's: the rest is on its way (or asked for again)
+    return;
+  }
+  if (request > 0 && Distance(route.Point(route.Size() - 1), routeGoal) > kShortOfGoal) {
+    // a route that ends short of the goal while the trip is planned again: a first leg whose rest came after its
+    // join (the plan ahead reset, the trip asked for again from the car). Not the trip's end: on once the plan comes
     return;
   }
   const bool arrived = landing ? tracker.remaining < params.landingEntry && stats.d_speed < params.landingEntrySpeed
