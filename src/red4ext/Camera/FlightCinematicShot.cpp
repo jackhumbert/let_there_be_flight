@@ -8,14 +8,15 @@
 #include <RED4ext/Scripting/Natives/WorldPosition.hpp>
 #include <RED4ext/Scripting/Utils.hpp>
 
+#include <algorithm>
+#include <cmath>
+
 namespace {
 constexpr float kFixedPoint = 1.0f / 131072.0f;
 
-// the game's WorldTransform natives, resolved once (the script's WorldTransform.SetOrientationFromDir and
-// WorldTransform.TransformPoint)
+// the game's WorldTransform.SetOrientationFromDir, resolved once
 struct Natives {
   RED4ext::CBaseFunction *setOrientationFromDir = nullptr;
-  RED4ext::CBaseFunction *transformPoint = nullptr;
 };
 
 const Natives &Resolve() {
@@ -23,15 +24,10 @@ const Natives &Resolve() {
     Natives n;
     if (auto cls = RED4ext::CRTTISystem::Get()->GetClass("WorldTransform")) {
       n.setOrientationFromDir = cls->GetFunction("SetOrientationFromDir");
-      n.transformPoint = cls->GetFunction("TransformPoint");
     }
     if (!n.setOrientationFromDir) {
       LTBF_WARN_ONCE("[FlightCinematicShot] WorldTransform.SetOrientationFromDir was not found; the assumed "
                      "convention (Cinematic::OrientationFromDir) is in use");
-    }
-    if (!n.transformPoint) {
-      LTBF_WARN_ONCE("[FlightCinematicShot] WorldTransform.TransformPoint was not found; the assumed convention "
-                     "(Cinematic::TransformPoint) is in use");
     }
     return n;
   }();
@@ -53,7 +49,8 @@ Cinematic::Pose ToPose(const RED4ext::WorldTransform &aXform) {
 const RED4ext::ScriptInstance kNone = nullptr;
 } // namespace
 
-RED4ext::WorldTransform FlightCinematicShot::AimAtCar(RED4ext::WorldTransform aXform, RED4ext::Vector4 aCentreOfMass) {
+RED4ext::WorldTransform FlightCinematicShot::AimAtCar(RED4ext::WorldTransform aXform, RED4ext::Vector4 aCentre,
+                                                      RED4ext::Vector4 aVelocity, float aMinDistance) {
   const Natives &n = Resolve();
   // the game's orientation from a direction, through a copy of the camera's transform (the script calls it on the
   // transform itself, so whatever the native keeps of it is kept here too); the assumed one when it cannot be called
@@ -72,7 +69,10 @@ RED4ext::WorldTransform FlightCinematicShot::AimAtCar(RED4ext::WorldTransform aX
   };
 
   const Cinematic::Pose before = ToPose(aXform);
-  const Cinematic::Pose after = Cinematic::AimAtCar(before, ToVec(aCentreOfMass), orient);
+  const Flight::Vec3 centre = ToVec(aCentre);
+  const Flight::Vec3 aim = Cinematic::AimPoint(before.position, centre, ToVec(aVelocity));
+  const Cinematic::Pose after =
+      Cinematic::AimAtCarLead(before, centre, aim, orient, std::max(aMinDistance, Cinematic::kMinDistance));
   aXform.Orientation = {after.orientation.i, after.orientation.j, after.orientation.k, after.orientation.r};
   const bool moved = after.position.x != before.position.x || after.position.y != before.position.y ||
                      after.position.z != before.position.z;
@@ -82,27 +82,41 @@ RED4ext::WorldTransform FlightCinematicShot::AimAtCar(RED4ext::WorldTransform aX
   return aXform;
 }
 
-float FlightCinematicShot::FitAhead(RED4ext::WorldTransform aShot, RED4ext::Vector4 aOffset, float aScale) {
-  const Natives &n = Resolve();
-  // the game's TransformPoint of the shot's own transform; the point's W is the script's
-  const Cinematic::TransformPointFn transform = [&](const Cinematic::Pose &aPose, const Flight::Vec3 &aPoint) {
-    if (n.transformPoint) {
-      RED4ext::Vector4 point{aPoint.x, aPoint.y, aPoint.z, aOffset.W};
-      RED4ext::WorldPosition out{};
-      if (RED4ext::ExecuteFunction(kNone, n.transformPoint, &out, aShot, point)) {
-        return ToVec(out);
-      }
-      LTBF_WARN_ONCE("[FlightCinematicShot] WorldTransform.TransformPoint failed; the assumed convention "
-                     "(Cinematic::TransformPoint) is in use");
-    }
-    return Cinematic::TransformPoint(aPose, aPoint);
-  };
-  // the script's test: the nav map is loaded and the point is not free
-  const auto blocked = [](const Flight::Vec3 &aPoint) {
-    const auto &map = Navigation::NavMap::Get();
-    return map.IsLoaded() && !map.IsFree(aPoint.x, aPoint.y, aPoint.z);
-  };
-  return Cinematic::FitAhead(ToPose(aShot), ToVec(aOffset), aScale, blocked, transform);
+float FlightCinematicShot::FitDistance(RED4ext::Vector4 aCamera, RED4ext::Vector4 aCentre, RED4ext::Quaternion aCar,
+                                      RED4ext::Vector4 aHalf, float aFov, float aPrev, float aDt) {
+  const float tanHalfV = std::tan(std::clamp(aFov, 5.0f, 150.0f) * 0.5f * 3.14159265f / 180.0f);
+  const float target = Cinematic::FitDistanceAnyBank(ToVec(aCamera), ToVec(aCentre), ToQuat(aCar), ToVec(aHalf), tanHalfV);
+  return Cinematic::EaseDistance(aPrev, target, aDt);
+}
+
+RED4ext::Vector4 FlightCinematicShot::LevelHeading(RED4ext::Vector4 aPrev, RED4ext::Quaternion aCar,
+                                                   RED4ext::Vector4 aVelocity, float aDt) {
+  const Flight::Vec3 h = Cinematic::LevelHeading(ToVec(aPrev), ToQuat(aCar), ToVec(aVelocity), aDt);
+  return {h.x, h.y, h.z, 0.0f};
+}
+
+RED4ext::Handle<FlightCinematicFlyby> FlightCinematicShot::FlybyStraight(RED4ext::Vector4 aPosition,
+                                                                         RED4ext::Vector4 aVelocity,
+                                                                         RED4ext::Vector4 aOffset, int32_t aSide) {
+  const Flight::Vec3 velocity = ToVec(aVelocity);
+  return CinematicBinding::ToScript(Cinematic::PlanFlyby(Cinematic::StraightAhead(ToVec(aPosition), velocity),
+                                                         ToVec(aOffset), Flight::Length(velocity),
+                                                         aSide < 0 ? -1 : 1, CinematicBinding::Blocked));
+}
+
+bool CinematicBinding::Blocked(const Flight::Vec3 &aPoint) {
+  const auto &map = Navigation::NavMap::Get();
+  return map.IsLoaded() && !map.IsFree(aPoint.x, aPoint.y, aPoint.z);
+}
+
+RED4ext::Handle<FlightCinematicFlyby> CinematicBinding::ToScript(const Cinematic::Flyby &aFlyby) {
+  auto out = RED4ext::MakeHandle<FlightCinematicFlyby>();
+  out->ok = aFlyby.ok;
+  out->start = ToPoint(aFlyby.start);
+  out->velocity = {aFlyby.velocity.x, aFlyby.velocity.y, aFlyby.velocity.z, 0.0f};
+  out->pass = aFlyby.pass;
+  out->side = aFlyby.side;
+  return out;
 }
 
 RED4ext::Quaternion FlightCinematicShot::OrientationFromDir(RED4ext::Vector4 aDir) {

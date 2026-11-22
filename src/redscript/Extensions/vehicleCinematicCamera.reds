@@ -1,17 +1,37 @@
 // Vanilla's cinematic camera (autodrive's, and the Autopilot's) was made for cars on a road. In
-// flight the shots attached to the car follow its whole attitude (vanilla's suspension-tracking
-// ones already do; the stabilised ones cross world up with the car's right vector, which has no
-// answer at 90 degrees of bank), so the camera swings round a banking car and stays outside it
-// (kept level, the close side shots had the car roll its roof into the lens). Every shot then aims
-// at the car's centre of mass with the horizon level, from at least 4.5 m (Cinematic::kMinDistance): the shots' own
-// angles were made for a level car and lost a banking one off the frame.
+// flight:
+// - the shots attached to the car are placed in a level frame that turns with the car's heading,
+//   eased (Cinematic::LevelHeading): the car banks and pitches in the frame and never swings the
+//   camera round it (vanilla's stabilised frame crosses world up with the car's right vector, which
+//   has no answer at 90 degrees of bank; its suspension-tracking one follows the whole attitude);
+// - every shot aims ahead of the car's centre along its motion with the horizon level, from far
+//   enough out that the car fits the frame at any bank (Cinematic::FitDistanceAnyBank), the
+//   distance eased (out quickly, in slowly), so the car sits off centre with room in front and the
+//   camera does not pump in and out as it banks;
+// - the shots fixed in the world become flybys beside the route ahead (Cinematic::PlanFlyby): far
+//   enough out that the car crosses the view at a steady pan, drifting along with a fast car, clear
+//   of buildings and with a clear view, on the side the camera already is (no crossing the line);
+// - a shot is picked less often for a while after it ran, and an attached one not where its
+//   camera would hit something now or in the next 1.5 s.
 // The shot maths in C++ (src/red4ext/Camera/FlightCinematicShot.cpp): the game's own WorldTransform natives are
 // called from there. OrientationFromDir and TransformPoint are the assumed conventions, kept to compare with the natives.
 public native class FlightCinematicShot extends IScriptable {
-  public static native func AimAtCar(xform: WorldTransform, centreOfMass: Vector4) -> WorldTransform;
-  public static native func FitAhead(shot: WorldTransform, offset: Vector4, scale: Float) -> Float;
+  public static native func AimAtCar(xform: WorldTransform, centre: Vector4, velocity: Vector4, minDistance: Float) -> WorldTransform;
+  public static native func FitDistance(camera: Vector4, centre: Vector4, car: Quaternion, half: Vector4, fov: Float, prev: Float, dt: Float) -> Float;
+  public static native func LevelHeading(prev: Vector4, car: Quaternion, velocity: Vector4, dt: Float) -> Vector4;
+  public static native func FlybyStraight(position: Vector4, velocity: Vector4, offset: Vector4, side: Int32) -> ref<FlightCinematicFlyby>;
   public static native func OrientationFromDir(dir: Vector4) -> Quaternion;
   public static native func TransformPoint(xform: WorldTransform, point: Vector4) -> Vector4;
+}
+
+// A flyby's plan: the camera starts at `start` and moves at `velocity` (m/s); the car passes it `pass` s after the
+// start, on `side` (+1 right of its travel, -1 left). Not `ok`: no clear spot beside the route.
+public native class FlightCinematicFlyby extends IScriptable {
+  public native let ok: Bool;
+  public native let start: Vector4;
+  public native let velocity: Vector4;
+  public native let pass: Float;
+  public native let side: Int32;
 }
 
 public abstract class FlightCinematic {
@@ -19,20 +39,85 @@ public abstract class FlightCinematic {
     return FlightController.GetInstance().IsActive();
   }
 
-  public static func AimAtCar(xform: WorldTransform, context: vehicleCinematicCameraShotUpdateContext) -> WorldTransform {
-    let vehicle = GetMountedVehicle(GetPlayer(GetGameInstance()));
-    let com = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(context.vehicleTransform));
-    if IsDefined(vehicle) {
-      com = WorldPosition.ToVector4(WorldTransform.TransformPoint(context.vehicleTransform, Vector4.Vector3To4(vehicle.GetCenterOfMass())));
+  // The camera far enough out that the car fits the frame at any bank, the distance eased from `prev` (0 on the
+  // shot's first frame) over dt (in C++: Cinematic::FitDistanceAnyBank, Cinematic::EaseDistance).
+  public static func FitDistance(xform: WorldTransform, context: vehicleCinematicCameraShotUpdateContext, prev: Float, dt: Float) -> Float {
+    let box = context.vehicleBoundingBox;
+    let half = (box.Max - box.Min) * 0.5;
+    if half.X < 0.25 || half.Y < 0.5 || half.Z < 0.15 {
+      half = new Vector4(0.0, 0.0, 0.0, 0.0);
     }
-    // in C++ (Cinematic::AimAtCar): no nearer than Cinematic::kMinDistance, facing the centre of mass
-    return FlightCinematicShot.AimAtCar(xform, com);
+    return FlightCinematicShot.FitDistance(WorldPosition.ToVector4(WorldTransform.GetWorldPosition(xform)), FlightCinematic.Centre(context), WorldTransform.GetOrientation(context.vehicleTransform), half, context.cameraComponent.GetFOV(), prev, dt);
   }
 
-  // how much more often a shot fixed in the world (a flyby) is picked in flight: 5 flybys against
-  // 18 attached shots (at 10, with flybys free of the side rule, nothing else was picked)
+  // The camera at least `distance` from the car's centre, facing ahead of it (in C++: Cinematic::AimAtCarLead).
+  public static func AimAtCar(xform: WorldTransform, context: vehicleCinematicCameraShotUpdateContext, distance: Float) -> WorldTransform {
+    return FlightCinematicShot.AimAtCar(xform, FlightCinematic.Centre(context), FlightCinematic.Velocity(), distance);
+  }
+
+  // The player's car's velocity, m/s (zero without a car).
+  public static func Velocity() -> Vector4 {
+    let vehicle = GetMountedVehicle(GetPlayer(GetGameInstance()));
+    let velocity: Vector4;
+    if IsDefined(vehicle) {
+      velocity = vehicle.GetLinearVelocity();
+    }
+    return velocity;
+  }
+
+  // The middle of the car's bounding box in the world; the centre of mass when the box is degenerate.
+  public static func Centre(context: vehicleCinematicCameraShotUpdateContext) -> Vector4 {
+    let box = context.vehicleBoundingBox;
+    let size = box.Max - box.Min;
+    if size.X > 0.5 && size.Y > 1.0 && size.Z > 0.3 {
+      return WorldPosition.ToVector4(WorldTransform.TransformPoint(context.vehicleTransform, (box.Min + box.Max) * 0.5));
+    }
+    let vehicle = GetMountedVehicle(GetPlayer(GetGameInstance()));
+    if IsDefined(vehicle) {
+      return WorldPosition.ToVector4(WorldTransform.TransformPoint(context.vehicleTransform, Vector4.Vector3To4(vehicle.GetCenterOfMass())));
+    }
+    return WorldPosition.ToVector4(WorldTransform.GetWorldPosition(context.vehicleTransform));
+  }
+
+  // how much more often a shot fixed in the world (a flyby) is picked in flight: 6 flybys against
+  // about 18 attached shots
   public static func FixedShotWeight() -> Int32 {
     return 3;
+  }
+
+  // how much more often a shot is picked when it is not among the last RecentShots run
+  public static func FreshShotWeight() -> Int32 {
+    return 4;
+  }
+
+  public static func RecentShots() -> Int32 {
+    return 3;
+  }
+
+  // Shots made for a car on a road that do not work in flight: the wheel and the hood seen from
+  // under a metre away (the car filled the frame, half of it out of it).
+  public static func Unused(name: String) -> Bool {
+    return Equals(name, "S_WheelShot_Static") || Equals(name, "S_AttachedFarHoodShot1_Static");
+  }
+
+  // s ahead a shot attached to the car is checked to stay in open air, at its start and twice between
+  public static func ClearAhead() -> Float {
+    return 1.5;
+  }
+
+  // degrees the view of the car must turn at a cut, at least (less reads as a jump cut)
+  public static func MinCutAngle() -> Float {
+    return 30.0;
+  }
+
+  // The view of the car from `from` and from `to` differ by less than MinCutAngle.
+  public static func JumpCut(from: Vector4, to: Vector4, car: Vector4) -> Bool {
+    let a = car - from;
+    let b = car - to;
+    if Vector4.Length(a) < 0.1 || Vector4.Length(b) < 0.1 {
+      return false;
+    }
+    return Vector4.GetAngleBetween(a, b) < FlightCinematic.MinCutAngle();
   }
 
   // Shots cut short in flight, s (-1: as made). AttachedFront1 (ahead of the car, looking back at
@@ -80,22 +165,69 @@ public abstract class FlightCinematic {
     }
   }
 
-  // a shot offset with its distance ahead (shot-space Y) scaled
-  public static func Ahead(offset: Vector4, scale: Float) -> Vector4 {
-    offset.Y *= scale;
-    return offset;
+  // The side of the car the camera is on now: +1 right, -1 left, 0 within a metre of its middle.
+  public static func CameraSide(camera: Vector4, vehicleTransform: WorldTransform) -> Int32 {
+    let local = WorldTransform.TransformInvPoint(vehicleTransform, camera);
+    if AbsF(local.X) < 1.0 {
+      return 0;
+    }
+    return local.X > 0.0 ? 1 : -1;
   }
 
-  // the speed vanilla's shots were made for, m/s
-  public static func RoadSpeed() -> Float {
-    return 20.0;
+  // The Autopilot flying the player's car, if it is.
+  public static func Autopilot() -> ref<FlightModeAutopilot> {
+    let pc = FlightSystem.GetInstance().playerComponent;
+    if !IsDefined(pc) {
+      return null;
+    }
+    return pc.GetFlightMode() as FlightModeAutopilot;
   }
+}
+
+// The level heading an attached shot is placed by, and when it was last eased (the frame is asked for
+// more than once a frame; a heading older than half a second is from the shot's last run).
+@addField(cameraShotRoot_FixedOnVehicle)
+private let flightHeading: Vector4;
+
+@addField(cameraShotRoot_FixedOnVehicle)
+private let flightHeadingTime: Float;
+
+@wrapMethod(cameraShotRoot_FixedOnVehicle)
+public func Reset() -> Void {
+  wrappedMethod();
+  this.flightHeading = new Vector4(0.0, 0.0, 0.0, 0.0);
+  this.flightHeadingTime = 0.0;
+}
+
+@addMethod(cameraShotRoot_FixedOnVehicle)
+public func FlightLevelFrame(data: CinematicCameraData) -> WorldTransform {
+  let dt = data.currentTime - this.flightHeadingTime;
+  if dt < 0.0 || dt > 0.5 {
+    this.flightHeading = new Vector4(0.0, 0.0, 0.0, 0.0);
+    dt = 0.0;
+  }
+  if dt > 0.0 || Vector4.Length2D(this.flightHeading) < 0.5 {
+    // in C++ (Cinematic::LevelHeading)
+    this.flightHeading = FlightCinematicShot.LevelHeading(this.flightHeading, WorldTransform.GetOrientation(data.vehicleTransform), FlightCinematic.Velocity(), dt);
+    this.flightHeadingTime = data.currentTime;
+  }
+  let frame = data.vehicleTransform;
+  WorldTransform.SetOrientationFromDir(frame, this.flightHeading);
+  return frame;
 }
 
 @wrapMethod(cameraShotRoot_FixedOnVehicleNonSuspensionTracking)
 public func GetShotSpaceTransform(data: CinematicCameraData) -> WorldTransform {
   if FlightCinematic.Flying() {
-    return data.vehicleTransform;
+    return this.FlightLevelFrame(data);
+  }
+  return wrappedMethod(data);
+}
+
+@wrapMethod(cameraShotRoot_FixedOnVehicleSuspensionTracking)
+public func GetShotSpaceTransform(data: CinematicCameraData) -> WorldTransform {
+  if FlightCinematic.Flying() {
+    return this.FlightLevelFrame(data);
   }
   return wrappedMethod(data);
 }
@@ -104,18 +236,33 @@ public func GetShotSpaceTransform(data: CinematicCameraData) -> WorldTransform {
 public func Update(context: vehicleCinematicCameraShotUpdateContext) -> WorldTransform {
   let result = wrappedMethod(context);
   if FlightCinematic.Flying() {
-    return FlightCinematic.AimAtCar(result, context);
+    let dt = context.engineTime - this.flightFitTime;
+    if this.flightFitTime <= 0.0 || dt < 0.0 || dt > 0.5 {
+      this.flightFit = 0.0;
+      dt = 0.0;
+    }
+    this.flightFit = FlightCinematic.FitDistance(result, context, this.flightFit, dt);
+    this.flightFitTime = context.engineTime;
+    return FlightCinematic.AimAtCar(result, context, this.flightFit);
   }
   return result;
 }
 
-// The shots fixed in the world start about 28 m ahead of the car: made for road speeds, a flying
-// car went past in a third of a second. Their distance ahead is scaled with the speed at the shot's
-// start, so the car takes about as long to reach the camera as at road speed (FlightCinematic.
-// RoadSpeed); to the side and up they stay as made, so the car still passes close (scaled whole,
-// the camera ended up 30 to 40 m off the path and the car was a speck).
+// The distance from the car the shot keeps (FlightCinematic.FitDistance), eased, and when it was last
+// eased; dropped at the shot's start and when older than half a second.
+@addField(vehicleCinematicCameraShot)
+private let flightFit: Float;
+
+@addField(vehicleCinematicCameraShot)
+private let flightFitTime: Float;
+
+// The shots fixed in the world are flybys in flight (Cinematic::PlanFlyby): made for road speeds,
+// a flying car went past in a blink, close enough to whip the camera round. The plan puts the camera beside the
+// route the Autopilot will fly (a straight line without one), on the side the camera is on, so the
+// car passes it in up to 3 s at a pan of 0.75 radians a second as planned; faster than 15 m/s the camera
+// drifts along with the car. A shot with no clear spot is not picked (GetCanBeSelectedFromContext).
 @addField(cameraShotRoot_FixedShot)
-private let flightScale: Float;
+public let flightFlyby: ref<FlightCinematicFlyby>;
 
 // how far the camera starts from the car, m (for the distance stop condition)
 @addField(cameraShotRoot_FixedShot)
@@ -124,8 +271,30 @@ public let flightReach: Float;
 // (vehicleCinematicCameraShotRoot.Reset is empty, and the fixed shot does not override it)
 @addMethod(cameraShotRoot_FixedShot)
 public func Reset() -> Void {
-  this.flightScale = 0.0;
+  this.flightFlyby = null;
   this.flightReach = 0.0;
+}
+
+@addMethod(cameraShotRoot_FixedShot)
+public func FlightFlyby(data: CinematicCameraData) -> ref<FlightCinematicFlyby> {
+  if !IsDefined(this.flightFlyby) {
+    let offset = Transform.GetPosition(CinematicCameraData.ScaleTransformForVehicle(data, this.offsetFromInitialPosition));
+    let car = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(data.vehicleInitialTransform));
+    let side = FlightCinematic.CameraSide(WorldPosition.ToVector4(data.cameraComponent.GetWorldPosition()), data.vehicleInitialTransform);
+    if side == 0 {
+      side = offset.X < 0.0 ? -1 : 1;
+    }
+    let velocity = FlightCinematic.Velocity();
+    let autopilot = FlightCinematic.Autopilot();
+    // in C++ (FlightModeAutopilot.CinematicFlyby, Cinematic::PlanFlyby)
+    if IsDefined(autopilot) {
+      this.flightFlyby = autopilot.CinematicFlyby(car, velocity, offset, side);
+    } else {
+      this.flightFlyby = FlightCinematicShot.FlybyStraight(car, velocity, offset, side);
+    }
+    this.flightReach = Vector4.Distance(this.flightFlyby.start, car);
+  }
+  return this.flightFlyby;
 }
 
 @wrapMethod(cameraShotRoot_FixedShot)
@@ -133,20 +302,15 @@ public func GetRootTransform(data: CinematicCameraData) -> WorldTransform {
   if !FlightCinematic.Flying() {
     return wrappedMethod(data);
   }
-  let offset = CinematicCameraData.ScaleTransformForVehicle(data, this.offsetFromInitialPosition);
-  if this.flightScale <= 0.0 {
-    // pulled back towards the shot's own place until the camera is in open air (the nav map's
-    // free space): scaled out into a building, a flyby ended as it began
-    let scale = ClampF(AbsF(data.vehicleSpeed) / FlightCinematic.RoadSpeed(), 1.0, 5.0);
-    // in C++ (Cinematic::FitAhead): shrunk by 0.8 a try while the nav map has the point solid
-    scale = FlightCinematicShot.FitAhead(this.GetShotSpaceTransform(data), Transform.GetPosition(offset), scale);
-    this.flightScale = scale;
+  let flyby = this.FlightFlyby(data);
+  if !flyby.ok {
+    return wrappedMethod(data);
   }
-  Transform.SetPosition(offset, FlightCinematic.Ahead(Transform.GetPosition(offset), this.flightScale));
-  if this.flightReach <= 0.0 {
-    this.flightReach = Vector4.Length(Transform.GetPosition(offset));
-  }
-  return WorldTransform.TransformXForm(this.GetShotSpaceTransform(data), offset);
+  let camera = flyby.start + flyby.velocity * MaxF(data.currentTime - data.shotStartTime, 0.0);
+  let xform = this.GetShotSpaceTransform(data);
+  WorldTransform.SetPosition(xform, camera);
+  WorldTransform.SetOrientationFromDir(xform, WorldPosition.ToVector4(WorldTransform.GetWorldPosition(data.vehicleTransform)) - camera);
+  return xform;
 }
 
 // Which shot the camera picks while flying, one line each.
@@ -158,32 +322,99 @@ public func Start(context: vehicleCinematicCameraShotUpdateContext) -> Void {
   if IsDefined(fixed) {
     fixed.Reset();
   }
+  this.flightFit = 0.0;
+  this.flightFitTime = 0.0;
   wrappedMethod(context);
   if FlightCinematic.Flying() {
-    FlightLog.Info("[CinematicCamera] shot " + this.name + " (" + NameToString(this.root.GetClassName()) + ") at " + FloatToStringPrec(context.vehicleSpeed, 1) + " m/s");
+    context.cameraComponent.FlightRan(this.name);
+    let text = "[CinematicCamera] shot " + this.name + " (" + NameToString(this.root.GetClassName()) + ") at " + FloatToStringPrec(context.vehicleSpeed, 1) + " m/s";
+    if IsDefined(fixed) && IsDefined(fixed.flightFlyby) {
+      let flyby = fixed.flightFlyby;
+      if flyby.ok {
+        text += " flyby side " + ToString(flyby.side) + " pass " + FloatToStringPrec(flyby.pass, 1) + " s drift " + FloatToStringPrec(Vector4.Length(flyby.velocity), 1) + " m/s";
+      } else {
+        text += " flyby: no clear spot";
+      }
+    }
+    FlightLog.Info(text);
   }
 }
 
-// Shot weights in flight: the shots fixed in the world (the flybys) were rare next to the ones
-// attached to the car.
+// The shots run last, newest first (FlightCinematic.RecentShots of them).
+@addField(vehicleCinematicCameraComponent)
+private let flightRecent: array<String>;
+
+@addMethod(vehicleCinematicCameraComponent)
+public func FlightRan(name: String) -> Void {
+  ArrayInsert(this.flightRecent, 0, name);
+  while ArraySize(this.flightRecent) > FlightCinematic.RecentShots() {
+    ArrayPop(this.flightRecent);
+  }
+}
+
+@addMethod(vehicleCinematicCameraComponent)
+public func FlightRanLately(name: String) -> Bool {
+  return ArrayContains(this.flightRecent, name);
+}
+
+// Shot weights in flight: the shot's own, the flybys' more (they were rare next to the shots
+// attached to the car), and the shots not run lately more again. Vanilla's bonuses are left out:
+// the one for a shot starting near the camera picked the shot next to the last one (a cut to
+// nearly the same view) and kept the camera on one side; the one for a static shot after a static
+// shot applies to all but one.
 @wrapMethod(vehicleCinematicCameraShot)
 public const func GetShotProbabilityFromContext(context: vehicleCinematicCameraShotUpdateContext) -> Int32 {
-  let probability = wrappedMethod(context);
-  if FlightCinematic.Flying() && IsDefined(this.root as cameraShotRoot_FixedShot) {
-    return probability * FlightCinematic.FixedShotWeight();
+  if !FlightCinematic.Flying() {
+    return wrappedMethod(context);
+  }
+  let probability = this.probability;
+  if IsDefined(this.root as cameraShotRoot_FixedShot) {
+    probability *= FlightCinematic.FixedShotWeight();
+  }
+  if !context.cameraComponent.FlightRanLately(this.name) {
+    probability *= FlightCinematic.FreshShotWeight();
   }
   return probability;
 }
 
-// A shot is only picked on the side of the car the camera is on (no crossing the line), and four
-// of the five flybys are on the right: while the camera was on the left there were none. A flyby
-// watches from far ahead, where the cut across does not jar, so in flight they skip that rule.
+// Which shots can be picked in flight. A flyby: when it has a clear spot beside the route (its
+// plan takes the side the camera is on, so it keeps vanilla's no-crossing rule its own way). An
+// attached shot: vanilla's rule (on the side of the car the camera is on), not one of the road
+// shots (FlightCinematic.Unused), and with its camera clear of collision (the camera's own test,
+// as vanilla's CollisionWithEnvironment stop) now and over the next 1.5 s at the car's velocity.
+// (The nav map is no test for a camera: it has space blocked wherever the car would not fit.)
+// Either kind: its view of the car at the start turns at least FlightCinematic.MinCutAngle from
+// the camera's now (no jump cut).
 @wrapMethod(vehicleCinematicCameraShot)
 public const func GetCanBeSelectedFromContext(context: vehicleCinematicCameraShotUpdateContext) -> Bool {
-  if FlightCinematic.Flying() && IsDefined(this.root as cameraShotRoot_FixedShot) {
-    return true;
+  if !FlightCinematic.Flying() {
+    return wrappedMethod(context);
   }
-  return wrappedMethod(context);
+  if FlightCinematic.Unused(this.name) {
+    return false;
+  }
+  let fixed = this.root as cameraShotRoot_FixedShot;
+  let car = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(context.vehicleTransform));
+  let now = WorldPosition.ToVector4(context.cameraComponent.GetWorldPosition());
+  if IsDefined(fixed) {
+    // placing the camera plans the flyby, anew: a plan kept from an earlier time the shot was weighed is stale
+    fixed.Reset();
+    let at = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(this.GetRootTransformFromContext(context)));
+    return IsDefined(fixed.flightFlyby) && fixed.flightFlyby.ok && !FlightCinematic.JumpCut(now, at, car);
+  }
+  if !wrappedMethod(context) {
+    return false;
+  }
+  let start = WorldPosition.ToVector4(WorldTransform.GetWorldPosition(this.GetRootTransformFromContext(context)));
+  if FlightCinematic.JumpCut(now, start, car) {
+    return false;
+  }
+  let velocity = FlightCinematic.Velocity();
+  let ahead = FlightCinematic.ClearAhead();
+  let camera = context.cameraComponent;
+  return !camera.CheckCollisionsAtPosition(Vector4.Vector4To3(start))
+    && !camera.CheckCollisionsAtPosition(Vector4.Vector4To3(start + velocity * (0.5 * ahead)))
+    && !camera.CheckCollisionsAtPosition(Vector4.Vector4To3(start + velocity * ahead));
 }
 
 // Every group and shot the camera has, logged once a session when it first runs.
@@ -200,8 +431,8 @@ public func UpdateCameraState(context: vehicleCinematicCameraShotUpdateContext) 
 }
 
 // Every shot stops once the car is 30 m from the camera, but the shots fixed in the world start
-// about 30 m out (RightAheadHigh at 31 m, so it never lasted even on a road) and further in flight:
-// they ended within 0.1 s and the camera drew one after another. In flight their
+// about 30 m out (RightAheadHigh at 31 m, so it never lasted even on a road) and further as
+// flybys: they ended within 0.1 s and the camera drew one after another. In flight their
 // limit is where the camera started plus a margin, so a flyby ends once the car is past and away.
 @wrapMethod(vehicleCinematicCameraShotStopCondition_VehicleDistanceFromCamera)
 public func Evaluate(const data: CinematicCameraData, const finalTransform: WorldTransform) -> Bool {

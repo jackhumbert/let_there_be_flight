@@ -11,6 +11,8 @@
   - `navmap.md`: the baked nav map, how it is made and shipped.
   - `world-boundaries.md`: the areas the game keeps the player out of, gated by quest facts, laid over the nav map.
   - `city-collision.md`: hidden colliders removed, proxy colliders added.
+  - `cinematic-camera.md`: the Autopilot's cinematic camera in flight: level attached shots, framing with room ahead,
+    flybys beside the route, shot choice.
   - `vehicle-summon.md`: the pad summon (a summoned vehicle flies the Autopilot to the pad) and its fallback.
   - `landing-pads.md`: pads, pins, supplies, real decks for visual-only pads.
   - `physx-flight.md`: the experimental PhysX-owned flight physics.

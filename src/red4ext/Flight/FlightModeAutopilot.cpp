@@ -637,6 +637,46 @@ RED4ext::Handle<FlightVehicleModel> FlightModeAutopilot::Vehicle() {
   return vehicleModel;
 }
 
+RED4ext::Handle<FlightCinematicFlyby> FlightModeAutopilot::CinematicFlyby(RED4ext::Vector4 aPosition,
+                                                                          RED4ext::Vector4 aVelocity,
+                                                                          RED4ext::Vector4 aOffset, int32_t aSide) {
+  const Flight::Vec3 position{aPosition.X, aPosition.Y, aPosition.Z};
+  const Flight::Vec3 velocity{aVelocity.X, aVelocity.Y, aVelocity.Z};
+  const Flight::Vec3 offset{aOffset.X, aOffset.Y, aOffset.Z};
+  const int side = aSide < 0 ? -1 : 1;
+  const float speed = Flight::Length(velocity);
+  if (!ap.FollowsTrajectory() || ap.RouteSize() < 2) {
+    return CinematicBinding::ToScript(
+        Cinematic::PlanFlyby(Cinematic::StraightAhead(position, velocity), offset, speed, side, CinematicBinding::Blocked));
+  }
+  // the route from where the car is on it, timed by the trajectory: the distance reached aT seconds on is where the
+  // trajectory's clock has moved on by aT (bisection; the clock rises along the route)
+  const Navigation::Trajectory &trajectory = ap.trajectory;
+  const Navigation::Route &route = ap.route;
+  const float s0 = ap.tracker.closestS;
+  const float t0 = Navigation::SampleAt(trajectory, s0).t;
+  const float end = std::min(route.Length(), trajectory.samples.back().s);
+  const auto toF = [](const Navigation::Vec3 &aV) { return Flight::Vec3{aV.x, aV.y, aV.z}; };
+  Cinematic::Ahead ahead;
+  ahead.end = end;
+  ahead.distanceAfter = [&trajectory, s0, t0, end](float aT) {
+    if (aT <= 0.0f)
+      return s0;
+    float lo = s0, hi = end;
+    if (Navigation::SampleAt(trajectory, hi).t - t0 < aT)
+      return hi;
+    for (int i = 0; i < 30; ++i) {
+      const float mid = 0.5f * (lo + hi);
+      (Navigation::SampleAt(trajectory, mid).t - t0 < aT ? lo : hi) = mid;
+    }
+    return 0.5f * (lo + hi);
+  };
+  ahead.at = [&route, toF](float aS) { return toF(route.At(aS)); };
+  ahead.tangent = [&route, toF](float aS) { return toF(route.Tangent(aS, 15.0f)); };
+  ahead.speedAt = [&trajectory](float aS) { return Navigation::SampleAt(trajectory, aS).speed; };
+  return CinematicBinding::ToScript(Cinematic::PlanFlyby(ahead, offset, speed, side, CinematicBinding::Blocked));
+}
+
 RED4ext::Vector4 FlightModeAutopilot::Flat(RED4ext::Vector4 aV) {
   const float length = std::sqrt(aV.X * aV.X + aV.Y * aV.Y);
   return length > 0.0001f ? RED4ext::Vector4{aV.X / length, aV.Y / length, 0.0f, 0.0f} : RED4ext::Vector4{};

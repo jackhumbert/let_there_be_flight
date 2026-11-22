@@ -263,6 +263,10 @@ public native class FlightModeAutopilot extends FlightMode {
   // The horizontal unit vector of v (zero if v is vertical). Vector4.Normalize2D keeps v's Z: a dot product of two of
   // those adds the Zs' product.
   public static native func Flat(v: Vector4) -> Vector4;
+  // A flyby for the cinematic camera beside the route ahead (vehicleCinematicCamera.reds), timed by the route's
+  // trajectory, for a shot offset `offset` (shot space) on `side` (+1 right of the travel, -1 left) if it is clear;
+  // along the straight line from `position` at `velocity` without a route.
+  public native func CinematicFlyby(position: Vector4, velocity: Vector4, offset: Vector4, side: Int32) -> ref<FlightCinematicFlyby>;
   // FindGroundSpot's search: the spot with W 1, all 0 when there is none.
   public native func GroundSpot(target: Vector4, keepClear: Vector4, keepRadius: Float) -> Vector4;
 

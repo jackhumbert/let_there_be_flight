@@ -27,6 +27,7 @@
 #include "Flight/Mode.hpp"
 #include "Navigation/Autopilot.hpp"
 #include "Navigation/FlightVehicleModel.hpp"
+#include "Camera/FlightCinematicShot.hpp"
 #include "Navigation/FlightWorld.hpp"
 
 #include <RED4ext/Scripting/Natives/Generated/Vector4.hpp>
@@ -67,6 +68,11 @@ struct FlightModeAutopilot : FlightMode {
   RED4ext::Handle<FlightVehicleModel> Vehicle();
   // the horizontal unit vector of v, zero if v is vertical (FlightSummonSystem)
   static RED4ext::Vector4 Flat(RED4ext::Vector4 aV);
+  // A flyby for the cinematic camera (Cinematic::PlanFlyby) beside the route ahead, timed by the route's trajectory,
+  // for a shot offset aOffset (shot space) and preferring side aSide (+1 right of the travel, -1 left). Along the
+  // straight line from aPosition at aVelocity when there is no route with a trajectory.
+  RED4ext::Handle<FlightCinematicFlyby> CinematicFlyby(RED4ext::Vector4 aPosition, RED4ext::Vector4 aVelocity,
+                                                       RED4ext::Vector4 aOffset, int32_t aSide);
 
   // --- C++ state ---
   Navigation::AutopilotParams params;
@@ -157,4 +163,5 @@ RTTI_DEFINE_CLASS(FlightModeAutopilot, {
   RTTI_METHOD(RefreshVehicle);
   RTTI_METHOD(Vehicle);
   RTTI_METHOD(Flat);
+  RTTI_METHOD(CinematicFlyby);
 });
