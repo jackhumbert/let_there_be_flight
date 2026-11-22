@@ -97,6 +97,7 @@ public class FlightSummonSystem extends ScriptableSystem {
   public let vehicle: wref<VehicleObject>;
   private let ticking: Bool;
   private let vehicleID: EntityID;
+  private let lastSpawnID: EntityID;          // the car this system last spawned, for a second press
   private let recordID: TweakDBID;            // the record of the vehicle this summon spawned, none for vanilla's car
   public let padSpot: Vector4;                // where the transform summon put the vehicle
   private let awaitingSpawnTicks: Int32;
@@ -220,7 +221,7 @@ public class FlightSummonSystem extends ScriptableSystem {
       return false;
     }
     let pad = this.NearPad(player.GetWorldPosition());
-    if pad < 0 {
+    if pad < 0 || IsDefined(this.OwnCarOut(game, aRecord)) {
       return false;
     }
     if !FlightCarSummon.AutopilotLands() {
@@ -266,6 +267,45 @@ public class FlightSummonSystem extends ScriptableSystem {
       + FloatToStringPrec(spot.Z, 1) + " yaw " + FloatToStringPrec(yaw, 0) + ": the Autopilot flies it to pad "
       + FlightNavMap.GetHelipadId(pad));
     return true;
+  }
+
+  // A press while this system's own spawn from an earlier summon is still out. The garage never
+  // learns of that car, so vanilla's summon would bring a second one, and the pad and no-spawn
+  // paths would spawn another. True when the press is taken: the car is flying in already, or is
+  // next to V (or on V's pad) and stays put, or is flown in again from where it is.
+  public func ResummonOwnCar(game: GameInstance, aRecord: TweakDBID) -> Bool {
+    if this.summoning {
+      return true;
+    }
+    let car = this.OwnCarOut(game, aRecord);
+    let player = GetPlayer(game);
+    if !IsDefined(car) || !IsDefined(player) {
+      return false;
+    }
+    let v = player.GetWorldPosition();
+    let pad = this.NearPad(v);
+    let onPad = pad >= 0 && Vector4.Distance2D(car.GetWorldPosition(), FlightNavMap.GetHelipadPosition(pad)) <= FlightNavMap.GetHelipadRadius(pad);
+    if onPad || this.CloseEnough(car, v) {
+      FlightLog.Info("[Summon] summoned again: the vehicle is already here");
+      return true;
+    }
+    if !this.IsFlyableVehicle(car) || !FlightCarSummon.AutopilotLands() {
+      return false;
+    }
+    this.TakeOver(car, "summoned again");
+    return true;
+  }
+
+  // This system's last spawn of the record, when it is still in the world and not wrecked.
+  private func OwnCarOut(game: GameInstance, aRecord: TweakDBID) -> ref<VehicleObject> {
+    if !EntityID.IsDefined(this.lastSpawnID) {
+      return null;
+    }
+    let car = GameInstance.FindEntityByID(game, this.lastSpawnID) as VehicleObject;
+    if !IsDefined(car) || car.GetRecordID() != aRecord || car.IsDestroyed() {
+      return null;
+    }
+    return car;
   }
 
   // The always-fly summon (the wraps, away from a pad, for a press vanilla would act on): true when
@@ -455,6 +495,9 @@ public class FlightSummonSystem extends ScriptableSystem {
       FlightLog.Info("[Summon] the Autopilot or Land at Destination is off: no flying summon");
       return false;
     }
+    if IsDefined(this.OwnCarOut(game, aRecord)) {
+      return false;
+    }
     let v = player.GetWorldPosition();
     let spot: Vector4;
     let yaw: Float;
@@ -542,6 +585,7 @@ public class FlightSummonSystem extends ScriptableSystem {
       this.vehicle = this.FindSpawnedVehicle();
       if IsDefined(this.vehicle) {
         this.vehicleID = this.vehicle.GetEntityID();
+        this.lastSpawnID = this.vehicleID;
         // the spawn confirmed: the summon blackboard, as the vanilla machine writes it
         // (SummonedVehicleEntityID + EnRoute), so the poll side (and any listener) sees this
         // summon as a vanilla one from the spawn on
@@ -977,6 +1021,11 @@ public func LTBF_SummonPerformed() -> Void {
 public func SummonActiveVehicle(force: Bool) -> Void {
   let game = this.m_Player.GetGame();
   let system = FlightSummonSystem.GetInstance(game);
+  let current = GameInstance.GetVehicleSystem(game).GetActivePlayerVehicle(this.GetActiveVehicleType());
+  if IsDefined(system) && system.ResummonOwnCar(game, current.recordID) {
+    this.LTBF_SummonPerformed();
+    return;
+  }
   if IsDefined(system) && system.ShouldFlySummon(this.m_Player.GetWorldPosition()) {
     // the garage's active vehicle, as vanilla's summon reads it
     let padPick = GameInstance.GetVehicleSystem(game).GetActivePlayerVehicle(this.GetActiveVehicleType());
@@ -1016,6 +1065,10 @@ public func SummonActiveVehicle(force: Bool) -> Void {
 public func SummonVehicle(force: Bool, type: gamedataVehicleType, vehicle: TweakDBID, spawnOnlyOnValidRoad: Bool) -> Void {
   let game = this.m_Player.GetGame();
   let system = FlightSummonSystem.GetInstance(game);
+  if IsDefined(system) && TDBID.IsValid(vehicle) && system.ResummonOwnCar(game, vehicle) {
+    this.LTBF_SummonPerformed();
+    return;
+  }
   if IsDefined(system) && TDBID.IsValid(vehicle) && system.ShouldFlySummon(this.m_Player.GetWorldPosition()) {
     if system.FlySummonToPad(game, vehicle) {
       this.LTBF_SummonPerformed();

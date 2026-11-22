@@ -104,6 +104,13 @@ On the system, category `UI-Settings-Landing-Pads`:
   none out the record is spawned out from V and flown in as in the fallback's case 1. A press
   while a summon flight is under way is dropped.
 
+A second summon of a car this system spawned (at a pad or in the fallback's case 1) is answered by
+`ResummonOwnCar`, ahead of everything else in both wraps: the garage never learns of a car spawned
+through `RequestNewVehicle`, so vanilla's summon would bring a second one, and the pad and no-spawn
+paths would spawn another. The car is left where it is when it is next to V or on V's pad, else
+flown in again from where it is; a press during a flight is dropped. The spawn paths also refuse
+to spawn while that car is out.
+
 The keys are in `let_there_be_flight.en-us.json.json` (en-us only). The summon reuses vanilla's
 notification widget, which reads the same blackboard state.
 
