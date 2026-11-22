@@ -65,6 +65,11 @@ void ApplyPhysics(const ForceParams &p, const StatsStatic &st, const StatsState 
   Vec3 damp = AngularDamping(p, st, spin, in.pitch, in.roll, in.yaw, in.angularBrake, in.thrusterTensor);
 
   out.linearDamp = p.generalDampFactorLinear + in.linearBrake * p.brakeFactorLinear;
+  if (in.linearBrake > 0.0f && s.d_speed > p.brakeKneeSpeed) {
+    // the speed over the knee, braked along the velocity (velocityDamp is subtracted below)
+    const float over = s.d_speed - p.brakeKneeSpeed;
+    velocityDamp = Add(velocityDamp, Mul(Normalize(s.d_localVelocity), over * in.linearBrake * p.brakeHighSpeedRate));
+  }
 
   Vec3 direction = s.d_direction;
   if (Dot(s.d_direction, s.d_forward) < 0.0f)

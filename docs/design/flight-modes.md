@@ -153,6 +153,11 @@ set to. The modes feel through different values, so each choice has two parts:
 - **Standard's braking and side grip** (`StandardGains` `brake`, `sideBrake`, `maxBrake`): how far it coasts and
   how much it slips in a turn. Loose brakes softer, Tight harder; the top speed is the same.
 
+The brake at high speed (`ForceParams` `brakeKneeSpeed` 50 m/s, `brakeHighSpeedRate` 1.5 /s, in every mode's
+force tail): the brakes alone take the speed off exponentially, so the distance to stop grows with the speed, about
+2 km from 450 m/s. Past the knee each m/s over it is braked at the rate too, so a fast car sheds the extra speed in a
+second or two; under the knee nothing changes (`force_tail_high_speed_brake`).
+
 All three keep Standard's feel spec (`feel_standard_fleet`, `feel_handling_loose`, `feel_handling_tight`). The
 guide's keyboard preset is not used: its linear damping held Standard's top speed to a fraction of the default.
 

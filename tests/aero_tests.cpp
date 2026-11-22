@@ -101,6 +101,45 @@ TEST(aero_force_tail_shape_drag) {
   CHECK_NEAR(none.physicsForce.y, today.physicsForce.y, 1e-6f);
 }
 
+TEST(force_tail_high_speed_brake) {
+  // full brake: under the knee the force tail's brake is what it was (none from ApplyPhysics here), over it the speed
+  // past the knee is braked along the velocity at brakeHighSpeedRate
+  ForceParams p;
+  p.physxFlightPhysics = false;
+  StatsStatic st;
+  st.mass = 1500.0f;
+  StatsState s;
+  s.d_forward = {0.0f, 1.0f, 0.0f};
+  s.d_up = {0.0f, 0.0f, 1.0f};
+  s.d_right = {1.0f, 0.0f, 0.0f};
+  ForceInput in;
+  in.linearBrake = 1.0f;
+  auto at = [&](float aSpeed) {
+    s.d_localVelocity = {0.0f, aSpeed, 0.0f};
+    s.d_speed = aSpeed;
+    s.d_direction = s.d_localDirection = s.d_forward;
+    ForceOutput out;
+    ApplyPhysics(p, st, s, in, out);
+    return out.physicsForce.y;
+  };
+  CHECK_NEAR(at(40.0f), 0.0f, 1e-5f);
+  CHECK_NEAR(at(450.0f), -(450.0f - p.brakeKneeSpeed) * p.brakeHighSpeedRate, 1e-2f);
+  in.linearBrake = 0.0f;
+  CHECK_NEAR(at(450.0f), 0.0f, 1e-5f);
+
+  // stopping from 450 m/s (about 1000 mph) with the linear damping at its default (1/s at full brake): the distance
+  // to come down to the knee is the extra speed over (rate + damping), under 400 m; without this part it was 2 km
+  in.linearBrake = 1.0f;
+  float v = 450.0f, x = 0.0f;
+  const float dt = 1.0f / 60.0f;
+  while (v > p.brakeKneeSpeed) {
+    const float a = at(v) - v * p.brakeFactorLinear;
+    v += a * dt;
+    x += v * dt;
+  }
+  CHECK(x < 400.0f);
+}
+
 TEST(developer_settings_parse) {
   DeveloperSettings d;
   const auto messages = LoadDeveloperSettings(d, "; comment\n[section]\n\nshapeDrag = on\n# another\n"

@@ -21,6 +21,11 @@ struct ForceParams {
   float generalDampFactorAngular = 2.0f, brakeFactorAngular = 1.0f, generalYawDampFactor = 1.0f;
   float dampStabilityK = 0.19f, dampMaxPerFrame = 1.0f, generalDampFactorAngularMax = 3.5f;
   float generalDampFactorLinear = 0.0f, brakeFactorLinear = 1.0f;
+  // The brake's high-speed part: the linear brake alone damps the speed exponentially, so the distance to stop grows
+  // with the speed (2 km from 450 m/s). Past brakeKneeSpeed (m/s), each m/s over it is also braked at
+  // brakeHighSpeedRate (1/s) at full brake, so a fast car sheds the extra speed in a second or two and brakes as
+  // before under the knee.
+  float brakeKneeSpeed = 50.0f, brakeHighSpeedRate = 1.5f;
   float generalSwayWithYaw = 0.0f, generalYawDirectionalityFactor = 5.0f, generalPitchDirectionalityFactor = 15.0f;
   float generalYawAeroFactor = 0.0f, generalPitchAeroFactor = 0.0f;
   float collisionRecoveryDelay = 0.8f, collisionRecoveryDuration = 0.8f;
