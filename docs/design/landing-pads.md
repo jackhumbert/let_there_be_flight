@@ -18,6 +18,10 @@ as Autopilot landing spots, world-map pins (discovered by flying near them) and 
   discovered (saved), registered as our own map pins (`Mappins.LTBF_LandingPadMappin`, the icon from
   `tools/packaging/icons/landing_pad_icon.py`), and the first touchdown on each pad gives supplies
   (saved too).
+- The pins show on the world map, the minimap and as markers in the world (400 m). The world markers
+  follow the Landing Pad Markers in the World setting (`worldMarkers`: Always, In a Vehicle, the
+  default, or Flying): the wrap of `QuestMappinController.OnUpdate` hides the marker's root while
+  `WorldMarkersShown()` says no. Players took markers that stayed on screen on foot for a bug.
 - Toasts (discovery, supplies): the game's "new area" notification (`notification_LocationAdded`,
   as `JournalNotificationQueue.OnNewLocationDiscovered` pushes it on a first visit to a
   district), with the landing pad icon. The header line ("Entering a new area", `NewQuest_txt` in

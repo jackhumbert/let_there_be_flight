@@ -48,7 +48,7 @@ public class FlightSummonSystem extends ScriptableSystem {
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Landing-Pads")
   @runtimeProperty("ModSettings.category.order", "6")
-  @runtimeProperty("ModSettings.order", "2")
+  @runtimeProperty("ModSettings.order", "3")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Pad-Summon")
   @runtimeProperty("ModSettings.description", "UI-Settings-Pad-Summon-Description")
   public let padSummonEnabled: Bool = true;
@@ -59,7 +59,7 @@ public class FlightSummonSystem extends ScriptableSystem {
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Landing-Pads")
   @runtimeProperty("ModSettings.category.order", "6")
-  @runtimeProperty("ModSettings.order", "3")
+  @runtimeProperty("ModSettings.order", "4")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Summon-Fallback")
   @runtimeProperty("ModSettings.description", "UI-Settings-Summon-Fallback-Description")
   public let summonFallbackEnabled: Bool = true;
@@ -67,7 +67,7 @@ public class FlightSummonSystem extends ScriptableSystem {
   @runtimeProperty("ModSettings.mod", "Let There Be Flight")
   @runtimeProperty("ModSettings.category", "UI-Settings-Landing-Pads")
   @runtimeProperty("ModSettings.category.order", "6")
-  @runtimeProperty("ModSettings.order", "4")
+  @runtimeProperty("ModSettings.order", "5")
   @runtimeProperty("ModSettings.displayName", "UI-Settings-Summon-Always-Fly")
   @runtimeProperty("ModSettings.description", "UI-Settings-Summon-Always-Fly-Description")
   public let alwaysFlySummon: Bool = false;

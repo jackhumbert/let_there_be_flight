@@ -465,6 +465,31 @@
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Landing-Pads-World-Markers",
+              "femaleVariant": "Landing Pad Markers in the World"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Landing-Pads-World-Markers-Description",
+              "femaleVariant": "When the landing pads are marked in the world around you, as well as on the map. Always: on foot too. In a Vehicle: while you are in one. Flying: only while flight is on."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Landing-Pads-World-Markers-Always",
+              "femaleVariant": "Always"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Landing-Pads-World-Markers-In-Vehicle",
+              "femaleVariant": "In a Vehicle"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Landing-Pads-World-Markers-Flying",
+              "femaleVariant": "Flying"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Pad-Summon",
               "femaleVariant": "Fly Summoned Vehicles to Pads"
             },

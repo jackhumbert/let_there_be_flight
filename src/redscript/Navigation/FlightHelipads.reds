@@ -11,9 +11,27 @@
 // The first touchdown on each pad (in a vehicle, inside its radius, at deck height, nearly
 // stopped) gives a one-off supply drop of eddies and crafting components, also saved.
 
+// When the pads' markers show in the world (the map and minimap pins are not affected).
+enum FlightPadWorldMarkers {
+  Always = 0,
+  InVehicle = 1,
+  Flying = 2
+}
+
 public class FlightHelipadMappinData extends MappinScriptData {
   public let index: Int32;
   public let id: String;
+}
+
+// The world markers' check (FlightHelipadSystem.CheckWorldMarkers), every markerInterval s.
+public class FlightHelipadMarkerCallback extends DelayCallback {
+  public let system: wref<FlightHelipadSystem>;
+
+  public func Call() -> Void {
+    if IsDefined(this.system) {
+      this.system.CheckWorldMarkers();
+    }
+  }
 }
 
 public class FlightHelipadTickCallback extends DelayCallback {
@@ -43,8 +61,20 @@ public class FlightHelipadSystem extends ScriptableSystem {
   @runtimeProperty("ModSettings.description", "UI-Settings-Landing-Pads-Discovered-Description")
   public let onlyDiscovered: Bool = true;
 
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Landing-Pads")
+  @runtimeProperty("ModSettings.category.order", "6")
+  @runtimeProperty("ModSettings.order", "2")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Landing-Pads-World-Markers")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Landing-Pads-World-Markers-Description")
+  @runtimeProperty("ModSettings.displayValues.Always", "UI-Settings-Landing-Pads-World-Markers-Always")
+  @runtimeProperty("ModSettings.displayValues.InVehicle", "UI-Settings-Landing-Pads-World-Markers-In-Vehicle")
+  @runtimeProperty("ModSettings.displayValues.Flying", "UI-Settings-Landing-Pads-World-Markers-Flying")
+  public let worldMarkers: FlightPadWorldMarkers = FlightPadWorldMarkers.InVehicle;
+
   public let discoverDistance: Float = 150.0; // m (horizontal) from a pad that discovers it
   public let tickInterval: Float = 2.0;       // s between discovery checks and pin updates
+  public let markerInterval: Float = 0.2;     // s between checks of whether the world markers show
   public let touchdownHeight: Float = 3.0;    // m from the deck to the car's position
   public let touchdownSpeed: Float = 1.5;     // m/s
   public let supplyMoney: Int32 = 750;        // eddies on the first touchdown on a pad
@@ -59,10 +89,78 @@ public class FlightHelipadSystem extends ScriptableSystem {
   private let discoveredByPad: array<Bool>; // per pad index, from discovered: filled in Start and by Discover
   private let player: wref<PlayerPuppet>;
   private let ticking: Bool;
+  private let markers: array<wref<QuestMappinController>>; // our pins' in-world markers that have spawned
+  private let markersShown: Bool = true;      // what they were last set to
   public let notifications: wref<JournalNotificationQueue>; // the HUD queue that draws our toasts
 
   public static func GetInstance(game: GameInstance) -> ref<FlightHelipadSystem> {
     return GameInstance.GetScriptableSystemsContainer(game).Get(n"FlightHelipadSystem") as FlightHelipadSystem;
+  }
+
+  // Whether the pads' in-world markers show now, by the World Markers setting.
+  public func WorldMarkersShown() -> Bool {
+    if Equals(this.worldMarkers, FlightPadWorldMarkers.Always) {
+      return true;
+    }
+    if !IsDefined(this.player) || !VehicleComponent.IsMountedToVehicle(this.GetGameInstance(), this.player) {
+      return false;
+    }
+    if Equals(this.worldMarkers, FlightPadWorldMarkers.InVehicle) {
+      return true;
+    }
+    let fc = FlightSystem.GetInstance().playerComponent;
+    return IsDefined(fc) && fc.active;
+  }
+
+  // An in-world marker of one of our pins spawned (its OnUpdate): kept, so a change of WorldMarkersShown reaches it.
+  // The container calls OnUpdate when the marker's data change, not every frame, so a parked pin never hears of
+  // V getting into a car.
+  public func NoteMarker(marker: ref<QuestMappinController>) -> Void {
+    if !ArrayContains(this.markers, marker) {
+      ArrayPush(this.markers, marker);
+    }
+  }
+
+  // The spawned in-world markers, and how many of them are drawn: "<drawn> of <spawned>".
+  public func MarkersDrawn() -> String {
+    let drawn = 0;
+    let spawned = 0;
+    for marker in this.markers {
+      if IsDefined(marker) {
+        spawned += 1;
+        if marker.GetRootWidget().IsVisible() {
+          drawn += 1;
+        }
+      }
+    }
+    return ToString(drawn) + " of " + ToString(spawned);
+  }
+
+  private func ScheduleMarkers() -> Void {
+    let callback = new FlightHelipadMarkerCallback();
+    callback.system = this;
+    GameInstance.GetDelaySystem(this.GetGameInstance()).DelayCallback(callback, this.markerInterval, false);
+  }
+
+  // Every markerInterval s: when whether the markers show has changed, each spawned marker runs its update again
+  // (vanilla's visibility, then the wrap's hide); markers that have despawned are dropped.
+  public func CheckWorldMarkers() -> Void {
+    if !this.ticking {
+      return;
+    }
+    let shown = this.WorldMarkersShown();
+    if NotEquals(shown, this.markersShown) {
+      this.markersShown = shown;
+      let alive: array<wref<QuestMappinController>>;
+      for marker in this.markers {
+        if IsDefined(marker) {
+          marker.LTBF_Refresh();
+          ArrayPush(alive, marker);
+        }
+      }
+      this.markers = alive;
+    }
+    this.ScheduleMarkers();
   }
 
   // The pad behind a mappin, or -1 when it is not one of ours.
@@ -109,6 +207,7 @@ public class FlightHelipadSystem extends ScriptableSystem {
     FlightLog.Info("[Helipads] " + ToString(ArraySize(this.discovered)) + " of " + ToString(FlightNavMap.GetHelipadCount()) + " landing pads discovered");
     this.ticking = true;
     this.Schedule();
+    this.ScheduleMarkers();
   }
 
   private func OnPlayerDetach(request: ref<PlayerDetachRequest>) -> Void {
@@ -401,6 +500,26 @@ protected func UpdateIcon() {
   if FlightHelipadSystem.PadOf(this.m_mappin) >= 0 {
     this.SetTexture(this.iconWidget, FlightHelipadSystem.Icon());
   }
+}
+
+// The in-world marker follows the World Markers setting: hidden after vanilla's own update while the setting says
+// no. The system keeps the marker and runs this again when that changes (CheckWorldMarkers).
+@wrapMethod(QuestMappinController)
+protected cb func OnUpdate() -> Bool {
+  let r = wrappedMethod();
+  if FlightHelipadSystem.PadOf(this.m_mappin) >= 0 {
+    let system = FlightHelipadSystem.GetInstance(GetGameInstance());
+    system.NoteMarker(this);
+    if !system.WorldMarkersShown() {
+      this.SetRootVisible(false);
+    }
+  }
+  return r;
+}
+
+@addMethod(QuestMappinController)
+public func LTBF_Refresh() -> Void {
+  this.OnUpdate();
 }
 
 @wrapMethod(QuestMappinController)

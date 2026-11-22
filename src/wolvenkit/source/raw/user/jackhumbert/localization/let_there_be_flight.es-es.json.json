@@ -465,6 +465,31 @@
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Landing-Pads-World-Markers",
+              "femaleVariant": "Marcadores de plataformas en el mundo"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Landing-Pads-World-Markers-Description",
+              "femaleVariant": "Cuándo se marcan las plataformas de aterrizaje en el mundo a tu alrededor, además de en el mapa. Siempre: también a pie. En un vehículo: mientras estás en uno. Volando: solo con el vuelo activado."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Landing-Pads-World-Markers-Always",
+              "femaleVariant": "Siempre"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Landing-Pads-World-Markers-In-Vehicle",
+              "femaleVariant": "En un vehículo"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Landing-Pads-World-Markers-Flying",
+              "femaleVariant": "Volando"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Pad-Summon",
               "femaleVariant": "Los vehículos llamados vuelan a las plataformas"
             },
