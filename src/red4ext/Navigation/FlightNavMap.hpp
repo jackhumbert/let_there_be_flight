@@ -102,6 +102,8 @@ struct FlightNavMap : RED4ext::IScriptable {
   static float GetHelipadClearance(int32_t aIndex);
   static RED4ext::CString GetHelipadId(int32_t aIndex);
   static RED4ext::CString GetHelipadName(int32_t aIndex);
+  // The pad's number (painted on its deck), 0 for none.
+  static int32_t GetHelipadNumber(int32_t aIndex);
   // Nearest pad within aMaxDistance metres (horizontal) of the position, or -1.
   static int32_t FindNearestHelipad(RED4ext::Vector4 aPosition, float aMaxDistance);
   // Pads within aRadius metres (horizontal), nearest first.
@@ -157,6 +159,7 @@ RTTI_DEFINE_CLASS(FlightNavMap, {
   RTTI_METHOD(GetHelipadClearance);
   RTTI_METHOD(GetHelipadId);
   RTTI_METHOD(GetHelipadName);
+  RTTI_METHOD(GetHelipadNumber);
   RTTI_METHOD(FindNearestHelipad);
   RTTI_METHOD(FindHelipadsInRange);
   RTTI_METHOD(GetGateCount);

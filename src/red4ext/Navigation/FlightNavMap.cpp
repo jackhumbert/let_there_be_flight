@@ -323,6 +323,11 @@ RED4ext::CString FlightNavMap::GetHelipadName(int32_t aIndex) {
   return {pad ? pad->name.c_str() : ""};
 }
 
+int32_t FlightNavMap::GetHelipadNumber(int32_t aIndex) {
+  const auto *pad = PadAt(aIndex);
+  return pad ? pad->number : 0;
+}
+
 int32_t FlightNavMap::FindNearestHelipad(RED4ext::Vector4 aPosition, float aMaxDistance) {
   return Navigation::Helipads::Get().Nearest(aPosition.X, aPosition.Y, aMaxDistance);
 }

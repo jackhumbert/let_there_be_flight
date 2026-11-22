@@ -3,6 +3,7 @@
   "sector": "user\\jackhumbert\\sectors\\helipad_vehicles.streamingsector",
   "block": "user\\jackhumbert\\all.streamingblock",
   "colliders": "../world/proxy_collider_tiles.json",
+  "numbers": "pad_number_signs.json",
   "pads": [
     {
       "pad": "8040860436745735587",

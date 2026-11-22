@@ -29,10 +29,13 @@ public:
     int32_t x, y, z;
   };
   // a placement by its globalNodeId, with the x y it is stored at as a check; id 0 (foliage
-  // clusters and other nodes without one) matches by the x y alone
+  // clusters and other nodes without one) matches by the x y alone. A placement listed by its
+  // nodeData index (index >= 0) is that record, checked by its x y: cooked static meshes have no
+  // id and can share an x y with another node (a pad's marking and its border)
   struct Node {
-    uint64_t id;
-    float x, y;
+    uint64_t id = 0;
+    float x = 0.0f, y = 0.0f;
+    int32_t index = -1;
   };
 
   static Blockers &Get();

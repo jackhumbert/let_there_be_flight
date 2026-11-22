@@ -14,6 +14,8 @@ distance, and writes both files back.
 
 "colliders" (optional): a tiles file from proxy_colliders.py build (relative to this folder), one
 collider entity per tile (collision for proxy-only buildings), placed unrotated at its "pos".
+"numbers" (optional): pad_number_signs.json from pad_numbers.py signs, one number sign entity node per pad
+(appearance n<number>) at the vanilla marking's transform.
 
 Lessons (2026-10-27): a second sector of our own with its own descriptor in the same block never
 loaded (not even at a spot where the same nodes worked), so all pads share this sector; the
@@ -39,6 +41,8 @@ REPO = os.path.dirname(os.path.dirname(HERE))
 SOURCE = os.path.join(REPO, "src", "wolvenkit", "source", "archive")
 DEFAULT_WOLVENKIT = Lazy(lambda: paths.WOLVENKIT)
 PAD_PREFIX = "user\\jackhumbert\\entities\\ltbf_"  # every entity of ours
+NUMBER_PREFIX = "user\\jackhumbert\\pads\\ltbf_"  # the pad number signs (pad_numbers.py)
+NUMBER_NODE_ID = 1000000000200000  # + the pad's number
 
 
 def cli(wk, *args):
@@ -61,7 +65,7 @@ def is_pad(node):
     if str(d.get("debugName", {}).get("$value", "")).startswith(QUEST_PREFIX):
         return True
     return d.get("$type") == "worldEntityNode" and \
-        str(d.get("entityTemplate", {}).get("DepotPath", {}).get("$value", "")).startswith(PAD_PREFIX)
+        str(d.get("entityTemplate", {}).get("DepotPath", {}).get("$value", "")).startswith((PAD_PREFIX, NUMBER_PREFIX))
 
 
 def place(data, x, y, z, yaw, node_id, streaming_distance, index):
@@ -128,6 +132,14 @@ def build_sector(doc, cfg):
         n_["Data"]["debugName"]["$value"] = c["entity"].rsplit("\\", 1)[-1][:-4]
         kept_data.append(place(template_data, *c["pos"], 0.0, c["node_id"], c["streaming_distance"], len(kept)))
         kept.append(n_)
+    for sign in number_signs(cfg):
+        n_ = copy.deepcopy(template_node)
+        n_["Data"]["entityTemplate"]["DepotPath"]["$value"] = sign["entity"]
+        n_["Data"]["appearanceName"]["$value"] = f"n{sign['number']}"
+        n_["Data"]["debugName"]["$value"] = f"ltbf_pad_number_{sign['number']}"
+        kept_data.append(place(template_data, *sign["pos"], sign["yaw"], NUMBER_NODE_ID + sign["number"],
+                               sign["streaming_distance"], len(kept)))
+        kept.append(n_)
     rc["nodeRefs"] = []
     rc["nodes"] = kept
     rc["nodeData"]["Data"] = kept_data
@@ -142,6 +154,15 @@ def colliders(cfg):
     if not cfg.get("colliders"):
         return []
     return json.load(open(os.path.join(HERE, cfg["colliders"]), encoding="utf-8"))["tiles"]
+
+
+def number_signs(cfg):
+    """Pad number signs (pad_numbers.py signs): {"entity", "number", "pos", "yaw", "streaming_distance"} rows from
+    the file that "numbers" names (relative to this folder)."""
+    if not cfg.get("numbers"):
+        return []
+    doc = json.load(open(os.path.join(HERE, cfg["numbers"]), encoding="utf-8"))
+    return [{**s, "entity": doc["entity"], "streaming_distance": doc["streaming_distance"]} for s in doc["signs"]]
 
 
 def fit_block(doc, cfg, node_data):

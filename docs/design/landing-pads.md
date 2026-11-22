@@ -8,7 +8,7 @@ as Autopilot landing spots, world-map pins (discovered by flying near them) and 
 - `tools/pads/pads.py` finds the pads in the raw sectors (FNV-1a hashes of the pad meshes), checks
   them against the nav map, applies `tools/pads/helipads_overrides.json` (`remove`, `names`, `add`,
   `specials`) and writes `src/navigation/helipads.tsv` (id, x, y, z of the deck, yaw, radius,
-  clearance, name). After a rebake or an override edit: rerun `pads.py build --tsv ...` and commit
+  clearance, name, number). After a rebake or an override edit: rerun `pads.py build --tsv ...` and commit
   the TSV.
 - Ids: the prefab's `globalNodeId`, or `<sector>/<nodeData index>` for painted-only pads, or the
   override id. Stable for a given set of sectors; a patch that rebuilds sectors can change them.
@@ -30,6 +30,35 @@ as Autopilot landing spots, world-map pins (discovered by flying near them) and 
   pad's heading.
 - A voice line on discovery or touchdown (Johnny's, or a custom recording): how the game triggers
   character lines is researched (four options); no option picked yet.
+
+## Pad numbers
+
+Every listed pad has a number for good, painted on its deck and shown in its pin. In vanilla every pad with a
+numbered sign says "28": the sign is one mesh, `landing_pad_b_01.mesh`, a 5 x 5 m quad with a `diode_pavements`
+material (an LED grid) and a 128 x 128 texture, `helipad_b_01.xbm`, with the 28 in it; 71 placements of it.
+
+- **Numbers:** `tools/pads/pad_numbers.json` (pad id -> number), kept by `pad_numbers.py`: a new pad gets the
+  next free number, in map reading order (500 m bands north to south, west to east), and a number is never
+  reused. `pads.py build` and `pad_numbers.py number` write it into the TSV's `number` column; `FlightNavMap`
+  gives it to scripts (`GetHelipadNumber`), and the pin title reads "AV Landing Pad <n>" ("<name> (<n>)" for a named pad).
+- **Signs:** `pad_number_assets.py` makes the ring (the vanilla sign with its digits taken out) and one sign per
+  digit, drawn in the vanilla sign's pixel style, each a copy of the vanilla mesh with our texture
+  (`user\jackhumbert\pads\`). `pad_numbers.py signs` writes `ltbf_pad_number.ent` / `.app`, one appearance per
+  number (the ring and its digits as mesh components, digits along the sign's local X, a multiple of the
+  diode pitch apart), and `pad_number_signs.json`: one sign per pad at its vanilla marking, placed by
+  `pad_sector.py` as a `worldEntityNode` with that appearance.
+- **The vanilla 28:** hidden under each of ours by the generated block of `src/navigation/hidden_nodes.txt`.
+  The 28 is a cooked static mesh with no `globalNodeId`, and it shares its x y with the square border, so it is
+  listed by its nodeData index (`I <index> <x> <y>`; the plugin checks the record's x y before hiding it).
+- **Which pads:** 69 have the vanilla 28 (ours goes in its place), 17 only the square border (ours goes in its
+  middle, turned 90 degrees from it as the vanilla sign always is), 5 are `av_landing_pad_a_v3_small` decks with
+  nothing painted (ours goes in the deck's middle, from the proxy mesh's bounds: the prefab's origin is at one
+  end). Not painted: the 16 `av_landing_pad_a_v2` and 6 Charter Hill decks (grating, nowhere to paint), the v3
+  and v4 pads that show only as their proxy (its texture has a 28 that cannot be hidden alone) and the 499 m
+  tower's deck. The three spaceport spots had no marking at all and left the list.
+- The sign sits 1.5 cm over the vanilla paint (the digits 3 cm): at 2 mm one deck drew over it.
+- After a rebake or new pads: `pads.py build --tsv ...` (or `pad_numbers.py number`), then
+  `pad_numbers.py signs --work <pads.py work dir>`, `pad_sector.py`, `tools/packaging/pack_archive.py`.
 
 ## Visual-only pads
 

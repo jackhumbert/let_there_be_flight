@@ -53,7 +53,8 @@ bool Blockers::Load(const std::filesystem::path &aPath) {
   return true;
 }
 
-// Lines: "S <sector path>" starts a sector, "N <globalNodeId> <x> <y>" lists a placement of it.
+// Lines: "S <sector path>" starts a sector, "N <globalNodeId> <x> <y>" lists a placement of it,
+// "I <nodeData index> <x> <y>" a placement by its index.
 bool Blockers::LoadHidden(const std::filesystem::path &aPath) {
   hidden.clear();
   std::ifstream in(aPath);
@@ -80,7 +81,13 @@ bool Blockers::LoadHidden(const std::filesystem::path &aPath) {
     }
     Node node;
     std::istringstream fields(line.substr(1));
-    if (line[0] != 'N' || !current || !(fields >> node.id >> node.x >> node.y)) {
+    bool read = false;
+    if (line[0] == 'N') {
+      read = static_cast<bool>(fields >> node.id >> node.x >> node.y);
+    } else if (line[0] == 'I') {
+      read = static_cast<bool>(fields >> node.index >> node.x >> node.y) && node.index >= 0;
+    }
+    if (!current || !read) {
       spdlog::warn("[Blockers] {}:{}: cannot read the line, skipped", aPath.filename().string(), lineNumber);
       continue;
     }

@@ -11,7 +11,8 @@
 namespace Navigation {
 
 namespace {
-// Fields of one line: id, x, y, z, yaw, radius, clearance ("inf" = open sky), name (may be empty).
+// Fields of one line: id, x, y, z, yaw, radius, clearance ("inf" = open sky), name (may be empty), number
+// (may be missing).
 bool ParseLine(const std::string &aLine, Helipad &aOut) {
   std::vector<std::string> fields;
   std::stringstream stream(aLine);
@@ -31,6 +32,7 @@ bool ParseLine(const std::string &aLine, Helipad &aOut) {
     aOut.radius = std::stof(fields[5]);
     aOut.clearance = fields[6] == "inf" ? std::numeric_limits<float>::infinity() : std::stof(fields[6]);
     aOut.name = fields.size() > 7 ? fields[7] : "";
+    aOut.number = fields.size() > 8 && !fields[8].empty() ? std::stoi(fields[8]) : 0;
   } catch (const std::exception &) {
     return false;
   }

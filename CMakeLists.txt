@@ -330,6 +330,7 @@ add_executable(ltbf_tests
   tests/plans_tests.cpp
   tests/autopilot_params_tests.cpp
   tests/landing_tests.cpp
+  tests/helipads_tests.cpp
   tests/autopilot_tests.cpp
   tests/autopilot_trip_tests.cpp
   tests/autopilot_shell_tests.cpp
@@ -376,6 +377,7 @@ add_executable(ltbf_tests
   src/red4ext/Navigation/NavMap.cpp
   src/red4ext/Navigation/Boundaries.cpp
   src/red4ext/Navigation/World.cpp
+  src/red4ext/Navigation/Helipads.cpp
   src/red4ext/Navigation/Plans.cpp
   src/red4ext/Navigation/AutopilotParams.cpp
   src/red4ext/Navigation/Landing.cpp

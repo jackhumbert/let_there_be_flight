@@ -70,6 +70,8 @@ public native class FlightNavMap extends IScriptable {
   public native static func GetHelipadId(index: Int32) -> String;
   // empty unless named in tools/pads/helipads_overrides.json
   public native static func GetHelipadName(index: Int32) -> String;
+  // painted on the pad's deck (tools/pads/pad_numbers.json), 0 for none
+  public native static func GetHelipadNumber(index: Int32) -> Int32;
   // nearest pad within maxDistance metres (horizontal), or -1
   public native static func FindNearestHelipad(position: Vector4, maxDistance: Float) -> Int32;
   // pads within radius metres (horizontal), nearest first

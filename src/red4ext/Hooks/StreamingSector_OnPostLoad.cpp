@@ -94,6 +94,22 @@ bool HideNode(DataBuffer &aSetups, const Navigation::Blockers::Node &aNode) {
   if (!data) {
     return false;
   }
+  // listed by nodeData index: the setups are one record per nodeData entry, in order (ArchiveXL
+  // indexes them so)
+  if (aNode.index >= 0) {
+    uint64_t at = uint64_t(aNode.index) * SetupSize;
+    if (at + SetupSize > size) {
+      return false;
+    }
+    auto *record = reinterpret_cast<const float *>(data + at);
+    if (std::abs(record[0] - aNode.x) < 0.05f && std::abs(record[1] - aNode.y) < 0.05f) {
+      Hide(data + at);
+      return true;
+    }
+    spdlog::warn("[Blockers] node index {}: stored at {:.3f} {:.3f}, listed at {:.3f} {:.3f}", aNode.index, record[0],
+                 record[1], aNode.x, aNode.y);
+    return false;
+  }
   // nodes without a globalNodeId (foliage clusters, cooked statics) are listed with id 0: match the
   // record by its stored x y alone, record by record
   if (aNode.id == 0) {

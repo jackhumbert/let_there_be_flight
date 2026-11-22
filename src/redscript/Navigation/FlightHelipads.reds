@@ -260,10 +260,15 @@ public class FlightHelipadSystem extends ScriptableSystem {
     return TweakDBInterface.GetUIIconRecord(t"UIIcon.LTBF_LandingPad");
   }
 
-  // Title for a pad's pin: its name, or "AV Landing Pad".
+  // Title for a pad's pin and toasts: "AV Landing Pad 14", or its name with the number, "<name> (14)".
   public static func Title(index: Int32) -> String {
     let name = FlightNavMap.GetHelipadName(index);
-    return StrLen(name) > 0 ? name : GetLocalizedTextByKey(n"LTBF-Landing-Pad");
+    let number = FlightNavMap.GetHelipadNumber(index);
+    if StrLen(name) > 0 {
+      return number > 0 ? name + " (" + ToString(number) + ")" : name;
+    }
+    let title = GetLocalizedTextByKey(n"LTBF-Landing-Pad");
+    return number > 0 ? title + " " + ToString(number) : title;
   }
 }
 

@@ -20,6 +20,7 @@ struct Helipad {
   float yaw;        // degrees, from the pad prefab or its marking
   float radius;     // pad size, metres
   float clearance;  // free height above the deck, metres; +infinity for open sky
+  int32_t number = 0; // painted on the deck and shown in the pin (tools/pads/pad_numbers.json); 0 = none
 };
 
 class Helipads {
