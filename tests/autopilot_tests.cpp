@@ -337,6 +337,30 @@ TEST(autopilot_untracked_hands_back_but_not_mid_descent) {
   CHECK(!landing.seen.exitAutopilot);
 }
 
+// A map pin reached: the game untracks it and tracks the quest's objective again. The trip is over, so the car
+// lands (or hovers and hands back) where it is, and does not take off for the quest.
+TEST(autopilot_retracked_after_arrival_does_not_leave) {
+  Rig landing(Small(), {40, 40, 1});
+  landing.Track({200, 200, 1});
+  landing.Engage();
+  CHECK(landing.UntilStatus("descending", 60.0f));
+  landing.Track({60, 220, 1});
+  CHECK(landing.UntilStatus("landed", 40.0f));
+  CHECK(landing.seen.flightOff);
+  CHECK_NEAR(landing.ap.destination.x, 200.0, 1e-4);
+  CHECK(Distance2D(landing.P(), {200, 200, 1}) < 30.0f);
+
+  Rig hover(Small(), {40, 40, 1});
+  hover.params.landingMode = kLandHover;
+  hover.Track({200, 200, 30});
+  hover.Engage();
+  CHECK(hover.UntilStatus("arrived", 60.0f));
+  hover.Track({60, 220, 1});
+  CHECK(hover.UntilStatus("idle", 10.0f));
+  CHECK(hover.seen.exitAutopilot);
+  CHECK_NEAR(hover.ap.destination.x, 200.0, 1e-4);
+}
+
 TEST(autopilot_no_route) {
   Rig rig(Small(), {40, 40, 1});
   // off the map: no landing spot, and the planner finds no way there

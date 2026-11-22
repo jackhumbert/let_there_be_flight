@@ -215,8 +215,10 @@ void Autopilot::UpdateRoute(float aDt) {
   }
   Vec3 target;
   const bool has = CurrentDestination(target);
-  if (!has && !freeRoam && (status == "descending" || status == "landed" || status == "arrived")) {
-    // the game untracks a map pin once the player reaches it, mid-descent: finish the landing
+  if (!freeRoam && (status == "descending" || status == "landed" || status == "arrived")) {
+    // the trip is over once it arrives, as vanilla autodrive's is: finish the landing (or the hover) whatever the game
+    // tracks now. It untracks a map pin once the player reaches it, and then often tracks the quest's objective
+    // again, which must not take the car off to it.
     return;
   }
   if (freeRoamChosen) {
