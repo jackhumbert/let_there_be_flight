@@ -13,8 +13,7 @@
 // Nothing is disabled by default. To disable a vehicle without editing this file, drop
 // a yaml into r6/tweaks/, e.g. r6/tweaks/ltbf_blacklist.yaml:
 //
-//   Vehicle.v_sport1_rayfield_caliburn_player:
-//     flightDisabled: true
+//   Vehicle.v_sport1_rayfield_caliburn_player.flightDisabled: true
 //
 // or the same in native tweak syntax (r6/tweaks/ltbf_blacklist.tweak):
 //
@@ -33,10 +32,12 @@
 // In the default "All Vehicles" mode the flag only re-enables a record that something else
 // turned off. Example r6/tweaks/my_flight_whitelist.yaml:
 //
-//   Vehicle.v_sport2_quadra_type66_player:
-//     canEnterFlight: true
-//   Vehicle.v_sport1_rayfield_caliburn_player:
-//     canEnterFlight: true
+//   Vehicle.v_sport2_quadra_type66_player.canEnterFlight: true
+//   Vehicle.v_sport1_rayfield_caliburn_player.canEnterFlight: true
+//
+// In yaml, each flag is a flat on one line as above. Nested under the record
+// (`Vehicle.<name>:` then an indented `canEnterFlight: true`) TweakXL rejects it with
+// "Unknown property", since vehicle records have no such field, and nothing is set.
 //
 // Vehicles reported crashing with CrystalCoat on 2.3 / 2.31 (uncomment to disable):
 //

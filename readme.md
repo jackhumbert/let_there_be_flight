@@ -53,17 +53,14 @@ The setting applies live, and it only gates what you can fly: every vehicle stil
 For **Whitelist Only**, create a file called `r6/tweaks/my_flight_whitelist.yaml` (any name works, it just has to be in `r6/tweaks` and end in `.yaml`) and list one record per vehicle:
 
 ```yaml
-Vehicle.v_sport2_quadra_type66_player:
-  canEnterFlight: true
-
-Vehicle.v_sport1_rayfield_caliburn_player:
-  canEnterFlight: true
-
-Vehicle.v_sportbike2_arch_jackie_player:
-  canEnterFlight: true
+Vehicle.v_sport2_quadra_type66_player.canEnterFlight: true
+Vehicle.v_sport1_rayfield_caliburn_player.canEnterFlight: true
+Vehicle.v_sportbike2_arch_jackie_player.canEnterFlight: true
 ```
 
-The record names are the same `Vehicle.<name>` ids used elsewhere in TweakDB; [`src/tweaks/vehicles.tweak`](https://github.com/jackhumbert/let_there_be_flight/tree/main/src/tweaks/vehicles.tweak) lists most of the player-ownable ones. The opposite flag, `flightDisabled: true`, blacklists a vehicle in every mode and is documented in [`src/tweaks/vehicleFlight.tweak`](https://github.com/jackhumbert/let_there_be_flight/tree/main/src/tweaks/vehicleFlight.tweak).
+Write each line as `Vehicle.<name>.canEnterFlight: true`, on one line. The nested form (`canEnterFlight: true` indented under `Vehicle.<name>:`) does not work: vehicle records have no such field, so TweakXL rejects it ("Unknown property canEnterFlight" in `red4ext/plugins/TweakXL/TweakXL.log`) and the vehicle is not listed. A `.tweak` file in `r6/tweaks` works too: `Vehicle.v_sport2_quadra_type66_player { bool canEnterFlight = true; }`.
+
+The record names are the same `Vehicle.<name>` ids used elsewhere in TweakDB; [`src/tweaks/vehicles.tweak`](https://github.com/jackhumbert/let_there_be_flight/tree/main/src/tweaks/vehicles.tweak) lists most of the player-ownable ones. The opposite flag, `Vehicle.<name>.flightDisabled: true` (the same one-line form), blacklists a vehicle in every mode and is documented in [`src/tweaks/vehicleFlight.tweak`](https://github.com/jackhumbert/let_there_be_flight/tree/main/src/tweaks/vehicleFlight.tweak).
 
 ### Per-vehicle configuration classes
 

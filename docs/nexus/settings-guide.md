@@ -15,7 +15,7 @@ under "The controls".
 
 | Setting | Default | What it does |
 |---|---|---|
-| Flight Availability | All Vehicles | Which vehicles you can fly: All Vehicles, Owned Vehicles (your summoned vehicle and anything unlocked in your garage, matched by record, so an identical traffic car counts too), Player Vehicle Only (the vehicle you summon), Whitelist Only (the records you tag with `canEnterFlight: true` in an `r6/tweaks/*.yaml`, see the readme). Every vehicle keeps its flight component; only the toggle, its hint and the flight quickhacks are gated. Applies live. |
+| Flight Availability | All Vehicles | Which vehicles you can fly: All Vehicles, Owned Vehicles (your summoned vehicle and anything unlocked in your garage, matched by record, so an identical traffic car counts too), Player Vehicle Only (the vehicle you summon), Whitelist Only (the records you list as `Vehicle.<name>.canEnterFlight: true` lines in an `r6/tweaks/*.yaml`, see the readme). Every vehicle keeps its flight component; only the toggle, its hint and the flight quickhacks are gated. Applies live. |
 | Start Flying in Mid-Air | Off | Turns flight on by itself when you get into a vehicle more than 3 m above the ground. |
 | Flight Quickhacks | On | Offers the flight quickhacks (Enable Flight, Antigrav, Launch and others) on other vehicles. |
 
