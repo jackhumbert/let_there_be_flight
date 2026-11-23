@@ -6,12 +6,17 @@ so that file is the whole HUD on foot and in cars. It has to be the game's
 base\\gameplay\\gui\\prototype_hud.inkhud with the "hud flight" entry added. Anything the game adds
 or changes in a patch (entries, the contexts an entry shows in) is missing until this is run again.
 
-Steps (WolvenKit.Console 10, the WOLVENKIT setting; the game, the GAME setting):
+Steps (WolvenKit.Console 9.0.1, the WOLVENKIT_PACK setting; the game, the GAME setting):
   1. prototype_hud.inkhud is unbundled from the game's content archives and serialized.
   2. The current hud_flight.inkhud is serialized and its "hud flight" entry taken.
   3. The game's entries with "hud flight" first (where it has always been) are written back to
      src/wolvenkit/source/archive/user/jackhumbert/widgets/hud_flight.inkhud.
+  4. The written file is serialized again and must hold exactly what step 3 wrote.
 Pack it with tools/packaging/pack_archive.py. Run after every game patch.
+
+Not WolvenKit 10.0.0-beta.1: it reads the contextVisibility bitfield with the wrong names
+(the game's "SceneDefault, SceneTier1" comes out as "SceneTier4, SceneTier5") and writes those
+names back as those bits, so every game entry's scene tiers change in the round trip.
 
 Usage: python hud_flight.py --work <scratch dir> [--check]
   --check: exit 1 if the archive's file differs from what this would write (nothing is written).
@@ -34,7 +39,7 @@ FLIGHT_ENTRY = "hud flight"
 
 
 def wk(*args):
-    r = subprocess.run([paths.WOLVENKIT, *args], capture_output=True, text=True)
+    r = subprocess.run([paths.WOLVENKIT_PACK, *args], capture_output=True, text=True)
     if r.returncode != 0:
         raise SystemExit(f"WolvenKit {args[0]} failed ({r.returncode}):\n{r.stdout[-2000:]}\n{r.stderr[-2000:]}")
     return r.stdout
@@ -102,6 +107,9 @@ def main():
     out_dir = os.path.join(work, "out")
     os.makedirs(out_dir)
     wk("cr2w", "-d", json_file, "-o", out_dir)
+    reread = serialize(os.path.join(out_dir, "hud_flight.inkhud"), os.path.join(work, "reread"))
+    if contents(reread) != contents(built):
+        raise SystemExit(f"the written file does not read back as built: compare {json_file} with {os.path.join(work, 'reread')}")
     shutil.copyfile(os.path.join(out_dir, "hud_flight.inkhud"), OURS)
     print(f"wrote {OURS}")
 
