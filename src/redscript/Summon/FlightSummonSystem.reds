@@ -84,6 +84,7 @@ public class FlightSummonSystem extends ScriptableSystem {
   public let stallTime: Float = 12.0;         // s EnRoute without getting closer to V (case 3)
   public let stallProgress: Float = 5.0;      // m closer that counts as progress
   public let arrivedLevel: Float = 6.0;       // m of height between V and an arrived car: another level (case 4)
+  public let pressWatchTime: Float = 60.0;    // s the car of V's press is watched once the press has an answer (not counting EnRoute)
   public let arrivedFar: Float = 80.0;        // m (2D) from V an arrived car is too far (vanilla stops 40 m off on a street)
   public let groundKeepClear: Float = 4.0;    // m (2D) from V a landing car's centre stays (a car is 2.5 m half-long)
 
@@ -112,6 +113,9 @@ public class FlightSummonSystem extends ScriptableSystem {
   private let pressState: Int32;
   private let pressID: EntityID;
   private let pressPos: Vector4;
+  private let pressed: Bool;                  // V's own press is being watched: cases 2 to 4 are for it only
+  private let pressedID: EntityID;            // the car the garage answered that press with
+  private let pressedAge: Float;              // s since that answer, not counting EnRoute
   private let watchID: EntityID;              // the car seen with this summon, none between summons
   private let watchBest: Float;               // its closest yet to V, m
   private let watchStall: Float;              // s since it last got stallProgress closer
@@ -363,6 +367,10 @@ public class FlightSummonSystem extends ScriptableSystem {
       return;
     }
     this.pressPending = true;
+    this.pressed = true;
+    let none: EntityID;
+    this.pressedID = none;
+    this.pressedAge = 0.0;
     this.pressAge = 0.0;
     this.pressRecord = record;
     this.pressState = state;
@@ -375,6 +383,7 @@ public class FlightSummonSystem extends ScriptableSystem {
   private func TickWatch() -> Void {
     if !this.summonFallbackEnabled || !FlightNavMap.IsLoaded() {
       this.pressPending = false;
+      this.pressed = false;
       return;
     }
     let game = this.GetGameInstance();
@@ -395,10 +404,12 @@ public class FlightSummonSystem extends ScriptableSystem {
       if state != this.pressState || NotEquals(id, this.pressID) || moved {
         // the garage answered: a new car, a new state, or the same car put somewhere else
         this.pressPending = false;
+        this.pressedID = id;
         placed = moved && state == this.pressState;
       } else if this.pressAge >= this.noSpawnTime {
         // case 1: nothing at all
         this.pressPending = false;
+        this.pressed = false;
         let none: TweakDBID;
         if this.NearPad(v) < 0 && NotEquals(this.pressRecord, none) {
           FlightLog.Info("[Summon] nothing from the garage " + FloatToStringPrec(this.pressAge, 0) + " s after the summon: flying the car in");
@@ -408,8 +419,26 @@ public class FlightSummonSystem extends ScriptableSystem {
       }
     }
 
+    // Cases 2 to 4 only for the car V's own press brought, for pressWatchTime after the garage answered
+    // (EnRoute not counted). A summon a quest or another mod makes later (a car put in a parking spot by
+    // V's apartment while V is upstairs) is left where it put it.
+    if this.pressed && !this.pressPending {
+      if !this.IsState(state, vehicleSummonState.EnRoute) {
+        this.pressedAge += this.tickInterval;
+      }
+      if NotEquals(id, this.pressedID) || this.pressedAge > this.pressWatchTime {
+        this.pressed = false;
+      }
+    }
+    if !this.pressed {
+      this.ClearWatch();
+      return;
+    }
     if !IsDefined(car) || !this.IsFlyableVehicle(car) {
       this.ClearWatch();
+      if !this.pressPending {
+        this.pressed = false;
+      }
       return;
     }
     if this.IsState(state, vehicleSummonState.EnRoute) {
@@ -480,6 +509,7 @@ public class FlightSummonSystem extends ScriptableSystem {
     this.flightTimer = 0.0;
     this.planningTimer = 0.0;
     this.pressPending = false;
+    this.pressed = false;
     this.ClearWatch();
     FlightLog.Info("[Summon] vanilla's summon " + why + ": flying it to " + this.Where());
   }

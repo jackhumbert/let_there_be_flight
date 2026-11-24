@@ -132,8 +132,7 @@ flies to the pad instead. The four cases, each from what the game does:
    spawn) and flown in. After such a refusal later vanilla summons in the same launch do nothing
    either, so the fallback's own spawn is what makes the next summon work.
 2. **PathfindingFailed.** The garage spawned the car but made no traffic slot for it. Taken on the
-   change to that state. Player summons always set a target, so this comes from quests and other
-   summons.
+   change to that state. Player summons always set a target, so this is rare.
 3. **Stalled.** `EnRoute`, and the car has not got `stallProgress` (5 m) closer to V in
    `stallTime` (12 s).
 4. **Arrived far.** `Arrived` (on the change, or a re-summon that moved the car without one) with
@@ -141,6 +140,13 @@ flies to the pad instead. The four cases, each from what the game does:
    On a street vanilla's first summon spawns about 40 m from V and is `Arrived` a second later
    without driving (the game sets the drive's target to the spawn point), so 40 m is normal and
    only the height or a long way off counts.
+
+Cases 2 to 4 are only for the car V's own press brought (the press the wraps noted, and the car the
+garage answered it with). A summon a quest or another mod makes is left where it put it: a mod that
+respawns V's car in a parking spot by the apartment reports it `Arrived` a floor below V, and taking
+that over flew the car up into the garage ceiling. The press is watched for `pressWatchTime` (60 s)
+after the garage answered it, not counting time `EnRoute`, and ends early when the summon's car
+changes.
 
 A `PathfindingFailed` or `Arrived` left over from an earlier summon is never acted on: only a state
 that changed since the last tick. Arrival is judged on the tick after it, so V running off right
