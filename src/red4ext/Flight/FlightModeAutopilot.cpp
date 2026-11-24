@@ -530,6 +530,16 @@ void FlightModeAutopilot::OnUpdateNative(float aTimeDelta) {
   PullState();
 }
 
+bool FlightModeAutopilot::TrackedTarget(Navigation::Vec3 &aOut) {
+  auto *fn = GlueFunction(this, kTrackedDestination);
+  RED4ext::Vector4 target{};
+  if (!fn || !RED4ext::ExecuteFunction(this, fn, &target) || target.W < 0.5f) {
+    return false;
+  }
+  aOut = N(target);
+  return true;
+}
+
 int32_t FlightModeAutopilot::RouteSize() { return ap.RouteSize(); }
 
 RED4ext::Vector4 FlightModeAutopilot::RoutePoint(int32_t aIndex) {

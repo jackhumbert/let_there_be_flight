@@ -1,6 +1,7 @@
 #include <fmod_errors.h>
 
 #include "FlightSystem.hpp"
+#include "Navigation/FlightGuidance.hpp"
 
 #include <RED4ext/Common.hpp>
 #include <RED4ext/RTTITypes.hpp>
@@ -215,6 +216,8 @@ void UpdateComponents(UpdateBucketEnum bucket, FrameInfo& frame, JobQueue& job) 
     }
   }
   fs->flightComponentsMutex.UnlockShared();
+  // the player's flight route, after the components moved this frame
+  FlightGuidance::Update(frame.deltaTime);
 }
 
 // vehicle allocator
@@ -298,6 +301,7 @@ void FlightSystem::OnBeforeWorldDetach(world::RuntimeScene *runtimeScene) {
 
 void FlightSystem::OnWorldDetached(world::RuntimeScene *runtimeScene) {
 	spdlog::info("[FlightSystem] OnWorldDetached!");
+  FlightGuidance::Reset();
 }
 
 void FlightSystem::OnAfterWorldDetach() {

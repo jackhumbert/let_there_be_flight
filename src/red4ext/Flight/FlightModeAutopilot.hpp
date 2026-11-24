@@ -74,6 +74,13 @@ struct FlightModeAutopilot : FlightMode {
   RED4ext::Handle<FlightCinematicFlyby> CinematicFlyby(RED4ext::Vector4 aPosition, RED4ext::Vector4 aVelocity,
                                                        RED4ext::Vector4 aOffset, int32_t aSide);
 
+  // --- for C++ (FlightGuidance) ---
+  // the destination the game tracks (the TrackedDestination glue), engaged or not; false when there is none or the
+  // glue is missing
+  bool TrackedTarget(Navigation::Vec3 &aOut);
+  // the route the Autopilot flies (empty when it has none)
+  const Navigation::Route &FlownRoute() const { return ap.route; }
+
   // --- C++ state ---
   Navigation::AutopilotParams params;
   Navigation::Rng rng;
