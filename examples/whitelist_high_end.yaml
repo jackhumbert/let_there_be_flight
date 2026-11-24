@@ -1,0 +1,165 @@
+# Let There Be Flight: high-end cars whitelist (optional)
+#
+# Lets you fly only the expensive cars: the Hypercar and Sport class cars V can
+# own, plus anything that costs about 100,000 eddies or more. Every other
+# vehicle drives as normal.
+#
+# Install:
+#   1. Copy this file to Cyberpunk 2077/r6/tweaks/ (any file name ending in .yaml works).
+#   2. In Mod Settings > Let There Be Flight > General Flight Settings, set
+#      Flight Availability to "Whitelist Only".
+#   The setting applies live; a change to this file needs a game restart.
+#
+# Add or remove a car:
+#   - One line per vehicle record: Vehicle.<record>.canEnterFlight: true
+#     Keep it on one line. The nested form (canEnterFlight indented under
+#     Vehicle.<record>:) does not work, TweakXL rejects it as an unknown property.
+#   - To remove a car, delete its lines or put a # in front of them.
+#   - To add one, remove the # from its lines further down, or add a new line
+#     with its record name. The player-ownable records are listed in the game's
+#     Vehicle.vehicle_list (and in src/tweaks/vehicles.tweak in the LTBF repo).
+#   - A typo in a record name does nothing (no error): check the car in game.
+#
+# Each car has its own record (the one ending in _player, the car V owns and
+# summons) and, on the lines marked "traffic", the records that one inherits
+# from. Traffic, gang and quest copies of the model use those, so with them
+# listed you can fly any copy of the car you find in the street. To fly only
+# your own cars, delete the "traffic" lines. A model shares its traffic records
+# between its variants, so each one is listed once, under the first car that
+# uses it.
+#
+# Lines starting with # are left off by default: Executive, Economy and other
+# classes under about 100,000 eddies, and bikes.
+#
+# Class is the in-game vehicle class as the public wikis give it; "family"
+# means the wikis list the model but not that variant. Prices are the game's
+# own Autofixer prices; "reward" means the car is not sold.
+#
+# Record names are from the game's own tweak sources (Vehicle.vehicle_list and
+# the vehicle records, Phantom Liberty and the 2.x cars included) and were
+# checked against the shipped TweakDB.
+
+# Rayfield
+Vehicle.v_sport1_rayfield_caliburn_player.canEnterFlight: true          # Caliburn: Hypercar, 135,000
+Vehicle.v_sport1_rayfield_caliburn.canEnterFlight: true                 #   traffic
+Vehicle.v_sport1_rayfield_caliburn_02_player.canEnterFlight: true       # Caliburn "Murkmobile": Hypercar (family), reward
+Vehicle.v_sport1_rayfield_caliburn_mordred_player.canEnterFlight: true  # Caliburn "Mordred": Hypercar, reward
+Vehicle.v_sport1_rayfield_caliburn_mordred.canEnterFlight: true         #   traffic
+Vehicle.v_sport1_rayfield_aerondight_player.canEnterFlight: true        # Aerondight "Guinevere": Hypercar, 155,000
+Vehicle.v_sport1_rayfield_aerondight.canEnterFlight: true               #   traffic
+
+# Herrera
+Vehicle.v_sport1_herrera_outlaw_player.canEnterFlight: true             # Outlaw: Hypercar, 92,000
+Vehicle.v_sport1_herrera_outlaw.canEnterFlight: true                    #   traffic
+Vehicle.v_sport1_herrera_outlaw_heist_player.canEnterFlight: true       # Outlaw "Weiler": Hypercar (family), 105,000
+Vehicle.v_sport1_herrera_outlaw_heist.canEnterFlight: true              #   traffic
+Vehicle.v_sport1_herrera_riptide_player.canEnterFlight: true            # Riptide "Terrier": Sport, 108,000
+Vehicle.v_sport1_herrera_riptide_terrier.canEnterFlight: true           #   traffic
+Vehicle.v_sport1_herrera_riptide.canEnterFlight: true                   #   traffic
+
+# Quadra
+Vehicle.v_sport1_quadra_turbo_player.canEnterFlight: true               # Turbo-R 740: Sport, 69,000
+Vehicle.v_sport1_quadra_turbo.canEnterFlight: true                      #   traffic
+Vehicle.v_sport1_quadra_turbo_r_player.canEnterFlight: true             # Turbo-R V-Tech: Sport, reward
+Vehicle.v_sport1_quadra_turbo_r.canEnterFlight: true                    #   traffic
+Vehicle.v_sport1_quadra_sport_r7_player.canEnterFlight: true            # Sport R-7 "Chiaroscuro": Sport, 81,000
+Vehicle.v_sport1_quadra_sport_r7_rocket.canEnterFlight: true            #   traffic
+Vehicle.v_sport1_quadra_sport_r7_gt.canEnterFlight: true                #   traffic
+Vehicle.v_sport1_quadra_sport_r7.canEnterFlight: true                   #   traffic
+Vehicle.v_sport1_quadra_sport_r7_player_02.canEnterFlight: true         # Sport R-7 "Vigilante": Sport, 86,000
+# Charon and Sterling are also driven in Phantom Liberty quests: do not take
+# off during a scripted drive.
+Vehicle.v_sport1_quadra_sport_r7_netrunner.canEnterFlight: true         # Sport R-7 "Charon": Sport, reward
+Vehicle.v_sport1_quadra_sport_r7_netrunner_01.canEnterFlight: true      #   traffic
+Vehicle.v_sport1_quadra_sport_r7_mrhands.canEnterFlight: true           # Sport R-7 "Sterling": Sport, reward
+Vehicle.v_sport2_quadra_type66_player.canEnterFlight: true              # Type-66 "Jen Rowley": Sport, 52,000
+Vehicle.v_sport2_quadra_type66_rowley.canEnterFlight: true              #   traffic
+Vehicle.v_sport2_quadra_type66_rogue.canEnterFlight: true               #   traffic
+Vehicle.v_sport2_quadra_type66_sport.canEnterFlight: true               #   traffic
+Vehicle.v_sport2_quadra_type66.canEnterFlight: true                     #   traffic
+Vehicle.v_sport2_quadra_type66_avenger_player.canEnterFlight: true      # Type-66 Avenger: Sport, 75,000
+Vehicle.v_sport2_quadra_type66_avenger.canEnterFlight: true             #   traffic
+Vehicle.v_sport2_quadra_type66_base_player.canEnterFlight: true         # Type-66 640 TS: Sport, 40,000
+Vehicle.v_sport2_quadra_type66_gt_player.canEnterFlight: true           # Type-66 680 TS: Sport (family), 50,000
+Vehicle.v_sport2_quadra_type66_02_player.canEnterFlight: true           # Type-66 "BULITT": Sport (family), reward
+Vehicle.v_sport2_quadra_type66_bulleat.canEnterFlight: true             #   traffic
+
+# Mizutani
+Vehicle.v_sport2_mizutani_shion_base_player.canEnterFlight: true        # Shion MZ1: Sport (family), 43,000
+Vehicle.v_sport2_mizutani_shion.canEnterFlight: true                    #   traffic
+Vehicle.v_sport2_mizutani_shion_player.canEnterFlight: true             # Shion MZ2: Sport, 57,000
+Vehicle.v_sport2_mizutani_shion_tdr.canEnterFlight: true                #   traffic
+Vehicle.v_sport2_mizutani_shion_sport.canEnterFlight: true              #   traffic
+Vehicle.v_sport2_mizutani_shion_targa_player.canEnterFlight: true       # Shion Targa MZT: Sport (family), 61,000
+Vehicle.v_sport2_mizutani_shion_targa.canEnterFlight: true              #   traffic
+# Hozuki: a sedan, class not given on the wikis checked, under 100,000.
+# Vehicle.v_standard2_mizutani_hozuki_player.canEnterFlight: true       # Hozuki "Hoseki": 37,000
+# Vehicle.v_standard2_mizutani_hozuki_sti.canEnterFlight: true          #   traffic
+# Vehicle.v_standard2_mizutani_hozuki.canEnterFlight: true              #   traffic
+# Vehicle.v_standard2_mizutani_hozuki_gt_player.canEnterFlight: true    # Hozuki MH2: 29,000
+# Vehicle.v_standard2_mizutani_hozuki_premium.canEnterFlight: true      #   traffic
+# Vehicle.v_standard2_mizutani_hozuki_sport.canEnterFlight: true        #   traffic
+
+# Porsche
+Vehicle.v_sport2_porsche_911turbo_player.canEnterFlight: true           # 911 Turbo (930): Sport, reward
+Vehicle.v_sport2_porsche_911turbo.canEnterFlight: true                  #   traffic
+Vehicle.v_sport2_porsche_911turbo_cabrio_player.canEnterFlight: true    # 911 Turbo Cabriolet (930): Sport (family), 73,000
+Vehicle.v_sport2_porsche_911turbo_cabrio.canEnterFlight: true           #   traffic
+
+# Yaiba
+Vehicle.v_sport1_yaiba_semimaru_player.canEnterFlight: true             # ARV-Q340 Semimaru: Hypercar, 86,000
+Vehicle.v_sport1_yaiba_semimaru.canEnterFlight: true                    #   traffic
+
+# Militech
+Vehicle.v_standard3_militech_hellhound_player.canEnterFlight: true      # Hellhound: Heavy Duty (combat), 150,000
+Vehicle.v_standard3_militech_hellhound.canEnterFlight: true             #   traffic
+
+# Chevillon: Executive and under 100,000.
+# Vehicle.v_standard2_chevalier_thrax_player.canEnterFlight: true       # Thrax 388 Jefferson: Executive, 34,000
+# Vehicle.v_standard2_chevalier_thrax.canEnterFlight: true              #   traffic
+# Vehicle.v_standard3_chevalier_emperor_player.canEnterFlight: true     # Emperor 620 Ragnar: Executive, 38,000
+# Vehicle.v_standard3_chevalier_emperor.canEnterFlight: true            #   traffic
+# Vehicle.v_utility4_chevalier_legatus_player.canEnterFlight: true      # Legatus 450 Aquila: armored truck, 55,000
+# Vehicle.v_utility4_chevalier_legatus_aquila_basic.canEnterFlight: true  #   traffic
+# The Legatus also inherits from Vehicle.v_utility4_chevalier_centurion,
+# which is the Centurion, a different model, so it is not listed.
+
+# Villefort: Executive and under 100,000.
+# Vehicle.v_sport2_villefort_alvarado_player.canEnterFlight: true       # Alvarado V4F 570 Delegate: Executive, 38,000
+# Vehicle.v_sport2_villefort_alvarado.canEnterFlight: true              #   traffic
+# Vehicle.v_sport2_villefort_deleon_sport_player.canEnterFlight: true   # Deleon V410-S Coupe: class not given, 26,000
+# Vehicle.v_sport2_villefort_deleon_sport.canEnterFlight: true          #   traffic
+# Vehicle.v_sport2_villefort_deleon.canEnterFlight: true                #   traffic
+# Vehicle.v_sport2_villefort_deleon_player.canEnterFlight: true         # Deleon "Vindicator": Executive, 36,000
+# Vehicle.v_sport2_villefort_deleon_vindicator.canEnterFlight: true     #   traffic
+
+# Delamain
+# Vehicle.v_standard2_villefort_cortes_delamain_player.canEnterFlight: true  # Delamain no. 21: Executive, 32,000
+# Vehicle.v_standard2_villefort_cortes_delamain.canEnterFlight: true    #   traffic
+# The Delamain also inherits from Vehicle.v_standard2_villefort_cortes,
+# which is the plain Villefort Cortes, so it is not listed.
+
+# Bikes: Motorcycle class, off by default. The Muramasa has one record per
+# customization, so uncomment all of its lines together.
+# Vehicle.v_sportbike1_yaiba_kusanagi_player.canEnterFlight: true             # Kusanagi CT-3X: Motorcycle, 66,000
+# Vehicle.v_sportbike1_yaiba_kusanagi.canEnterFlight: true                    #   traffic
+# The Muramasa records inherit from Vehicle.v_sportbike1_yaiba_muramasa_player
+# (a shared base, not a car of its own) and then from the Kusanagi above; the
+# game has no Muramasa traffic record of its own.
+# Vehicle.v_sportbike1_yaiba_muramasa_player.canEnterFlight: true             #   shared base
+# Vehicle.v_sportbike1_yaiba_muramasa_naked.canEnterFlight: true              # ASM-R250 Muramasa: Motorcycle, 75,000
+# Vehicle.v_sportbike1_yaiba_muramasa_naked_as.canEnterFlight: true           # ASM-R250 Muramasa
+# Vehicle.v_sportbike1_yaiba_muramasa_naked_as_nr.canEnterFlight: true        # ASM-R250 Muramasa
+# Vehicle.v_sportbike1_yaiba_muramasa_naked_as_ns.canEnterFlight: true        # ASM-R250 Muramasa
+# Vehicle.v_sportbike1_yaiba_muramasa_naked_as_ns_nr.canEnterFlight: true     # ASM-R250 Muramasa
+# Vehicle.v_sportbike1_yaiba_muramasa_naked_nr.canEnterFlight: true           # ASM-R250 Muramasa
+# Vehicle.v_sportbike1_yaiba_muramasa_naked_ns.canEnterFlight: true           # ASM-R250 Muramasa
+# Vehicle.v_sportbike1_yaiba_muramasa_naked_ns_nr.canEnterFlight: true        # ASM-R250 Muramasa
+# Vehicle.v_sportbike1_yaiba_muramasa_regular.canEnterFlight: true            # ASM-R250 Muramasa
+# Vehicle.v_sportbike1_yaiba_muramasa_regular_as.canEnterFlight: true         # ASM-R250 Muramasa
+# Vehicle.v_sportbike1_yaiba_muramasa_regular_as_nr.canEnterFlight: true      # ASM-R250 Muramasa
+# Vehicle.v_sportbike1_yaiba_muramasa_regular_as_ns.canEnterFlight: true      # ASM-R250 Muramasa
+# Vehicle.v_sportbike1_yaiba_muramasa_regular_as_ns_nr.canEnterFlight: true   # ASM-R250 Muramasa
+# Vehicle.v_sportbike1_yaiba_muramasa_regular_nr.canEnterFlight: true         # ASM-R250 Muramasa
+# Vehicle.v_sportbike1_yaiba_muramasa_regular_ns.canEnterFlight: true         # ASM-R250 Muramasa
+# Vehicle.v_sportbike1_yaiba_muramasa_regular_ns_nr.canEnterFlight: true      # ASM-R250 Muramasa
