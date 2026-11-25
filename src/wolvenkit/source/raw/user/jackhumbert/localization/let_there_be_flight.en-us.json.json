@@ -702,6 +702,16 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Show-Flight-Hud-Description",
               "femaleVariant": "Show the flight HUD while flying. Turn it off if it overlaps another HUD mod."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Minimal-Input-Hints",
+              "femaleVariant": "Minimal Input Hints"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Minimal-Input-Hints-Description",
+              "femaleVariant": "Hide the flight keys from the input hints. Only Enable / Disable Flight, Autopilot and, while the Autopilot flies, the cinematic camera stay. The keys still work."
             }
           ]
         }

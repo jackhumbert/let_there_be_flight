@@ -702,6 +702,16 @@
               "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Show-Flight-Hud-Description",
               "femaleVariant": "Muestra la interfaz de vuelo mientras vuelas. Desactívala si se superpone a otro mod de interfaz."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Minimal-Input-Hints",
+              "femaleVariant": "Indicaciones de controles mínimas"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Minimal-Input-Hints-Description",
+              "femaleVariant": "Oculta las teclas de vuelo de las indicaciones de controles. Solo quedan Activar / Desactivar vuelo, Piloto automático y, mientras vuela el piloto automático, la cámara cinemática. Las teclas siguen funcionando."
             }
           ]
         }

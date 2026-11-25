@@ -147,6 +147,18 @@ public native class FlightSettings extends IScriptable {
   @runtimeProperty("ModSettings.max", "60.0")
   public let tppCameraPitchOffset: Float = 20.0;
 
+  // HUD and Sound (Show Flight HUD is hudFlightController's, the volumes FlightAudio's)
+
+  // Read by FlightController.SetupActions. On: the input hints list only Enable / Disable Flight, the
+  // Autopilot hold and, while the Autopilot flies, the cinematic camera. The other flight keys still work.
+  @runtimeProperty("ModSettings.mod", "Let There Be Flight")
+  @runtimeProperty("ModSettings.category", "UI-Settings-Hud-And-Sound")
+  @runtimeProperty("ModSettings.category.order", "7")
+  @runtimeProperty("ModSettings.order", "1")
+  @runtimeProperty("ModSettings.displayName", "UI-Settings-Minimal-Input-Hints")
+  @runtimeProperty("ModSettings.description", "UI-Settings-Minimal-Input-Hints-Description")
+  public let minimalInputHints: Bool = false;
+
   // Developer values (no longer Mod Settings)
 
   // Read by the plugin (FlightComponent::OnUpdate) from the class default each frame. On: a
@@ -196,6 +208,11 @@ public native class FlightSettings extends IScriptable {
   // The brakes as the modes and the force tail apply them: the developer factor times Brake Strength.
   public final func LinearBrake() -> Float = this.brakeFactorLinear * this.brakeStrength;
   public final func AngularBrake() -> Float = this.brakeFactorAngular * this.brakeStrength;
+
+  // Mod Settings calls this after the player accepts or rejects changes: redo the hint list for Minimal Input Hints.
+  public cb func OnModSettingsChange() -> Void {
+    FlightController.GetInstance().RefreshInputHints();
+  }
 
   private func OnAttach() -> Void {
     FlightLog.Info("[FlightSettings] OnAttach");

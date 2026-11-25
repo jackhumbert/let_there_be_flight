@@ -182,7 +182,7 @@ The menu, by category:
 - **Camera:** the first-person and third-person camera tilts.
 - **Landing Pads and Summons:** Show Landing Pads on the Map, Only Discovered Pads, Fly Summoned Vehicles to Pads,
   Fly Summons That Cannot Drive.
-- **HUD and Sound:** Show Flight HUD, Engine, Wind and Warning Volume.
+- **HUD and Sound:** Show Flight HUD, Minimal Input Hints, Engine, Wind and Warning Volume.
 - **Key Bindings:** the flight keys, one Brake for both brakes.
 
 Where they live:

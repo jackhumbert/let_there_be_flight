@@ -77,6 +77,7 @@ with Extra Flight Modes on, then Drone and the Autopilot. A mode switched off is
 | Setting | Default | Range | What it does |
 |---|---|---|---|
 | Show Flight HUD | On | | The flight HUD while flying. Turn it off if it overlaps another HUD mod. |
+| Minimal Input Hints | Off | | Hides the flight keys from the input hints at the side of the screen. Only Enable / Disable Flight, Autopilot and, while the Autopilot flies, the cinematic camera stay. The keys still work. |
 | Engine Volume | 1.0 | 0 to 1 | The thrusters' engine sound. |
 | Wind Volume | 0.6 | 0 to 1 | The wind. |
 | Warning Volume | 0.5 | 0 to 1 | The warning beeps. |
