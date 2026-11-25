@@ -616,6 +616,9 @@ public class FlightSummonSystem extends ScriptableSystem {
       if IsDefined(this.vehicle) {
         this.vehicleID = this.vehicle.GetEntityID();
         this.lastSpawnID = this.vehicleID;
+        // V's own car: the garage's spawn marks it V's, ours does not, and without the mark its trunk has no stash
+        // (VehicleComponentPS.GetTrunkActions, the flag's only reader)
+        this.vehicle.GetVehiclePS().SetIsPlayerVehicle(true);
         // the spawn confirmed: the summon blackboard, as the vanilla machine writes it
         // (SummonedVehicleEntityID + EnRoute), so the poll side (and any listener) sees this
         // summon as a vanilla one from the spawn on
