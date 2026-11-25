@@ -30,6 +30,7 @@
 #include <fstream>
 #include <iostream>
 #include <libloaderapi.h>
+#include <map>
 #include <string>
 #include <winbase.h>
 
@@ -42,6 +43,10 @@ enum EDependencyStatus {
   FoundNoVersion = 3,
   NotFound = 4
 };
+
+// The version and file of each dependency found too old, for the popup: a user with the newest release
+// installed has an older copy loaded from somewhere else, and only the path tells them where.
+std::map<std::wstring, std::wstring> g_tooOld;
 
 EDependencyStatus HasDependency(const wchar_t *name, RED4ext::SemVer minVersion) {
   Query_t query;
@@ -60,7 +65,10 @@ EDependencyStatus HasDependency(const wchar_t *name, RED4ext::SemVer minVersion)
           spdlog::info(L"{} found with version: {}", name, std::to_wstring(pluginInfo.version));
           return FoundWithCorrectVersion;
         } else {
-          spdlog::warn(L"{} found, but wrong version: {}", name, std::to_wstring(pluginInfo.version));
+          wchar_t path[MAX_PATH] = {};
+          GetModuleFileNameW(handle, path, MAX_PATH);
+          spdlog::warn(L"{} found, but wrong version: {} ({})", name, std::to_wstring(pluginInfo.version), path);
+          g_tooOld[name] = L" (found v" + std::to_wstring(pluginInfo.version) + L": " + path + L")";
           return FoundWithIncorrectVersion;
         }
       } else {
@@ -207,10 +215,10 @@ RED4EXT_C_EXPORT bool RED4EXT_CALL Main(RED4ext::PluginHandle aHandle, RED4ext::
       spdlog::error("Dependencies not met - game will load without Let There Be Flight");
       auto message = fmt::format(
         L"The following Let There Be Flight requirements were not met:\n\n{}{}{}{}\nPlease ensure the mods above are installed/up-to-date.",
-                      has_inputLoader ? L"" : L"* Input Loader v" + std::to_wstring(inputLoader_version) + L"+\n",
-                      has_archiveXL ? L"" : L"* ArchiveXL v" + std::to_wstring(archiveXL_version) + L"+\n",
-                      has_tweakXL ? L"" : L"* TweakXL v" + std::to_wstring(tweakXL_version) + L"+\n",
-                      has_modSettings ? L"" : L"* Mod Settings v" + std::to_wstring(modSettings_version) + L"+\n");
+                      has_inputLoader ? L"" : L"* Input Loader v" + std::to_wstring(inputLoader_version) + L"+" + g_tooOld[L"input_loader"] + L"\n",
+                      has_archiveXL ? L"" : L"* ArchiveXL v" + std::to_wstring(archiveXL_version) + L"+" + g_tooOld[L"ArchiveXL"] + L"\n",
+                      has_tweakXL ? L"" : L"* TweakXL v" + std::to_wstring(tweakXL_version) + L"+" + g_tooOld[L"TweakXL"] + L"\n",
+                      has_modSettings ? L"" : L"* Mod Settings v" + std::to_wstring(modSettings_version) + L"+" + g_tooOld[L"mod_settings"] + L"\n");
       MessageBoxW(nullptr, message.c_str(), L"Let There Be Flight requirements could not be found",
                   MB_SYSTEMMODAL | MB_ICONERROR);
       if (builtInArchives) {
