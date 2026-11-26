@@ -23,6 +23,7 @@
 #include <array>
 #include <chrono>
 #include <cmath>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 
@@ -124,10 +125,14 @@ constexpr std::array<const char *, 7> kGlue = {"TrackedDestination", "AutodriveE
 enum { kTrackedDestination, kAutodriveEngaged, kPublishProgress, kPublishFreeRoamUI, kShowNotification, kExitAutopilot,
        kRequestFlightOff };
 
-// the object's class's glue function, found once per class; nullptr (warned once) when the script lacks it
+// the object's class's glue function, found once per class; nullptr (warned once) when the script lacks it. Locked:
+// every vehicle's FlightComponent makes its modes in OnGameAttach, and the game attaches them on several threads at
+// once (an unlocked first fill linked duplicate nodes into the map and freed one twice when the plugin unloaded)
 RED4ext::CBaseFunction *GlueFunction(RED4ext::IScriptable *aMode, int aIndex) {
+  static std::mutex lock;
   static std::unordered_map<const RED4ext::CClass *, std::array<RED4ext::CBaseFunction *, kGlue.size()>> found;
   const RED4ext::CClass *cls = aMode->GetType();
+  std::lock_guard guard(lock);
   auto it = found.find(cls);
   if (it == found.end()) {
     std::array<RED4ext::CBaseFunction *, kGlue.size()> f{};
