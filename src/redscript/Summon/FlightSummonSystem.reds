@@ -619,6 +619,9 @@ public class FlightSummonSystem extends ScriptableSystem {
         // V's own car: the garage's spawn marks it V's, ours does not, and without the mark its trunk has no stash
         // (VehicleComponentPS.GetTrunkActions, the flag's only reader)
         this.vehicle.GetVehiclePS().SetIsPlayerVehicle(true);
+        // and the stash it opens is V's: the garage's spawn queues this on the car
+        // (GarageComponent::ProcessSpawnedVehicles), without it the trunk holds the car's own, empty, inventory
+        this.vehicle.QueueEvent(new MakeInventoryShareableEvent());
         // the spawn confirmed: the summon blackboard, as the vanilla machine writes it
         // (SummonedVehicleEntityID + EnRoute), so the poll side (and any listener) sees this
         // summon as a vanilla one from the spawn on
