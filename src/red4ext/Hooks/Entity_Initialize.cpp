@@ -69,60 +69,6 @@ static bool IsFlightHudAttachedToPlayer(RED4ext::CRTTISystem *rtti) {
   return GetFlightHudSetting(rtti, "attachToPlayer", true);
 }
 
-// inkHUDLayer holds exactly one inkHudEntriesResource at a time. RootHudGameController
-// (GetHudComponent / OnEntityHudChange in the 2.31 binary) picks the first
-// WidgetHudComponentInterface on the mounted entity, or the player's when nothing is
-// mounted, and inkHUDLayer::SpawnFrom despawns and respawns the whole HUD hierarchy
-// whenever that resource differs from the one it is showing. A FlightHUD component on the
-// vehicle therefore rebuilds every HUD entry on mount and again on unmount, which is the
-// enter/exit hitch and the "HUD reset" reports.
-//
-// hud_flight.inkhud is a copy of the base game's hud entries plus one "hud flight" entry,
-// so pointing the player's own WidgetHudComponent at it gives the flight HUD a permanent
-// home: the resource never changes, so the HUD is spawned once at player attach and the
-// mount/unmount swap disappears.
-static void AttachFlightHudToPlayer(RED4ext::CRTTISystem *rtti, EntityExt *entity) {
-  auto whciCls = rtti->GetClass("WidgetHudComponentInterface");
-  if (!whciCls) {
-    LTBF_WARN_ONCE("[Entity_Initialize] WidgetHudComponentInterface class not found; FlightHUD not attached to the player");
-    return;
-  }
-
-  if (!Utils::LooksLikeDynArray(entity->componentsStorage.components)) {
-    LTBF_WARN_ONCE("[Entity_Initialize] player componentsStorage.components header looks corrupt (size {} capacity {}); FlightHUD not attached to the player",
-                   entity->componentsStorage.components.size, entity->componentsStorage.components.capacity);
-    return;
-  }
-
-  // Only the first one is ever consulted by RootHudGameController::GetHudComponent, so
-  // repoint that one rather than appending a second component that would be ignored.
-  for (auto const &handle : entity->componentsStorage.components) {
-    auto component = handle.GetPtr();
-    if (!component || !handle.refCount) {
-      continue;
-    }
-    if (!component->IsOfClass(whciCls)) {
-      continue;
-    }
-    auto whci = reinterpret_cast<RED4ext::WidgetHudComponentInterface *>(component);
-    whci->hudEntriesResource.path = FLIGHT_HUD_ENTRIES;
-    LoadResRef<RED4ext::ink::HudEntriesResource>(&whci->hudEntriesResource.path, &whci->hudEntriesResource.token, false);
-    spdlog::info("[Entity_Initialize] FlightHUD attached to player ('{}' -> {})", component->name.ToString(),
-                 FLIGHT_HUD_ENTRIES);
-    return;
-  }
-
-  // No hud component on the puppet (should not happen, the base game HUD comes from one).
-  // Adding ours makes it the only one, which is still the right answer.
-  auto whc = rtti->GetClass("WidgetHudComponent")->CreateInstance<RED4ext::WidgetHudComponent *>(true);
-  whc->name = "FlightHUD";
-  whc->id = RED4ext::CRUID::Next();
-  whc->hudEntriesResource.path = FLIGHT_HUD_ENTRIES;
-  LoadResRef<RED4ext::ink::HudEntriesResource>(&whc->hudEntriesResource.path, &whc->hudEntriesResource.token, false);
-  entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::WidgetHudComponent>(whc));
-  spdlog::info("[Entity_Initialize] FlightHUD attached to player (new WidgetHudComponent)");
-}
-
 /// @hash 3490519617
 // void Entity_Initialize(RED4ext::ent::Entity *entity, void *a2, void *a3);
 
@@ -135,16 +81,8 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_Initialize, EntityExt *entity
     return;
   }
 
-  // PlayerPuppet is a script class, so ISerializable::IsOfClass (which walks the native
-  // type chain, gamePuppet and up) never matches it; walk GetType(), the script class.
-  auto playerPuppetCls = rtti->GetClass("PlayerPuppet");
-  bool isPlayer = false;
-  for (auto type = entity->GetType(); playerPuppetCls && type && !isPlayer; type = type->parent) {
-    isPlayer = type == playerPuppetCls;
-  }
-  if (isPlayer && IsFlightHudEnabled(rtti) && IsFlightHudAttachedToPlayer(rtti)) {
-    AttachFlightHudToPlayer(rtti, entity);
-  }
+  // The flight HUD is an entry in the player's own HUD (ResourceSerializer_OnDependenciesReady.cpp adds it to every
+  // HUD entries resource as it loads), so the player's HUD component is left as it is.
 
   auto isVehicle = entity->IsOfClass(rtti->GetClass("vehicleBaseObject"));
 
@@ -316,15 +254,16 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_Initialize, EntityExt *entity
     //  entity->componentsStorage.components.EmplaceBack(RED4ext::Handle<RED4ext::game::projectile::SpawnComponent>(gpsp));
     //}
 
-    // Fallback path (Mod Settings "HUD attached to player" off): the FlightHUD
-    // WidgetHudComponent rides on the vehicle, which makes the engine swap the whole HUD
-    // to hud_flight.inkhud on every mount and back on every unmount. See
-    // AttachFlightHudToPlayer above. Skip it entirely
-    // when the flight UI is disabled in Mod Settings; the controller would only hide itself.
+    // Fallback path (developer value "attachToPlayer" off): the FlightHUD WidgetHudComponent
+    // rides on the vehicle, which makes the engine swap the whole HUD to hud_flight.inkhud on
+    // every mount and back on every unmount. inkHUDLayer holds one inkHudEntriesResource at a
+    // time and respawns every HUD entry when it changes: that was the enter/exit hitch and the
+    // "HUD reset" reports. Skip it when the flight UI is disabled in Mod Settings; the
+    // controller would only hide itself.
     if (!IsFlightHudEnabled(rtti)) {
       LTBF_WARN_ONCE("[Entity_Initialize] flight UI disabled in Mod Settings; FlightHUD component not added to vehicles");
     } else if (IsFlightHudAttachedToPlayer(rtti)) {
-      LTBF_WARN_ONCE("[Entity_Initialize] FlightHUD lives on the player puppet; not adding it to vehicles");
+      LTBF_WARN_ONCE("[Entity_Initialize] FlightHUD is an entry of the player's HUD; not adding it to vehicles");
     } else {
       auto whc = rtti->GetClass("WidgetHudComponent")->CreateInstance<RED4ext::WidgetHudComponent *>(true);
       whc->name = "FlightHUD";

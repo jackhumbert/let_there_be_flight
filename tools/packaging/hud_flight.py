@@ -1,8 +1,9 @@
 """Rebuild hud_flight.inkhud from the game's own HUD entries.
 
-The flight HUD lives in the player's HUD entries resource: the player's WidgetHudComponent is
-pointed at user\\jackhumbert\\widgets\\hud_flight.inkhud (src/red4ext/Hooks/Entity_Initialize.cpp),
-so that file is the whole HUD on foot and in cars. It has to be the game's
+The plugin copies this file's "hud flight" entry into every HUD entries resource as it loads
+(src/red4ext/Hooks/ResourceSerializer_OnDependenciesReady.cpp). The whole file is the HUD only on
+the developer fallback that puts a FlightHUD component on each vehicle
+(src/red4ext/Hooks/Entity_Initialize.cpp, attachToPlayer off). For that it has to be the game's
 base\\gameplay\\gui\\prototype_hud.inkhud with the "hud flight" entry added. Anything the game adds
 or changes in a patch (entries, the contexts an entry shows in) is missing until this is run again.
 

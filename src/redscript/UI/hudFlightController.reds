@@ -22,9 +22,10 @@ public class hudFlightController extends inkHUDGameController {
   public let enabled: Bool = true;
 
   // Read from the class default by Entity_Initialize (C++). On: the flight hud
-  // entry is part of the player's own hud entries resource, so it is spawned once per
-  // session. Off: the pre-0.3.19 behaviour, one FlightHUD WidgetHudComponent per vehicle,
-  // which makes the engine rebuild the entire HUD on every mount and unmount.
+  // entry is part of the player's own hud entries resource (added to every one as it
+  // loads), so it is spawned once per session. Off: the pre-0.3.19 behaviour, one FlightHUD
+  // WidgetHudComponent per vehicle, which makes the engine rebuild the entire HUD on every
+  // mount and unmount.
   // Takes effect for entities spawned after the change, so reload a save to flip it.
   // a developer value, not a Mod Setting (docs/design/flight-modes.md, Developer values)
   public let attachToPlayer: Bool = true;
