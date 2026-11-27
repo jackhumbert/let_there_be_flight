@@ -310,12 +310,20 @@ void Component(FlightComponent *c, float deltaTime) {
   int count = 0;
   for (auto &handle : c->configuration->thrusters) {
     auto thruster = handle.GetPtr();
-    if (!thruster || !thruster->attached || !thruster->meshComponent || count == kMaxThrusters) {
+    if (!thruster || !thruster->attached || count == kMaxThrusters) {
       continue;
     }
     Emitter &e = emitters[count];
+    if (thruster->meshComponent) {
+      e.mesh = WorldMatrix(thruster->meshComponent->worldTransform);
+    } else {
+      // no mesh (a car with too many parts on vehicle_slots, Hooks/Entity_Initialize.cpp): its slot, from the script
+      auto func = thruster->GetType()->GetFunction("GetLocalToWorld");
+      if (!func || !ExecuteFunction(thruster, func, &e.mesh)) {
+        continue;
+      }
+    }
     e.thruster = thruster;
-    e.mesh = WorldMatrix(thruster->meshComponent->worldTransform);
     e.front = Ref<bool>(p.isFront, thruster);
     at[count++] = {e.mesh.W.X, e.mesh.W.Y, e.mesh.W.Z};
   }

@@ -87,9 +87,18 @@ public abstract native class IFlightThruster extends IScriptable {
   public func GetLocalToWorld() -> Matrix {
     if IsDefined(this.meshComponent) {
       return this.meshComponent.GetLocalToWorld();
-    } else {
+    }
+    // no mesh (a car with too many parts on vehicle_slots, Entity_Initialize.cpp): the slot it would hang from, so
+    // the thruster tensor and the thruster sounds still sit at the wheels
+    if !IsDefined(this.flightComponent) {
       return Matrix.Identity();
     }
+    let slots = this.flightComponent.FindComponentByName(n"vehicle_slots") as SlotComponent;
+    let wt: WorldTransform;
+    if IsDefined(slots) && slots.GetSlotTransform(this.slotName, wt) {
+      return WorldTransform.ToMatrix(wt);
+    }
+    return Matrix.Identity();
   }
 
   public func GetLocalOrientation() -> Quaternion {
@@ -169,8 +178,11 @@ public abstract native class IFlightThruster extends IScriptable {
 
   public func Start() {
 
-    this.SetOGComponents();
-    this.HideOGComponents();
+    // without a thruster mesh the wheels stay: nothing would show in their place
+    if IsDefined(this.meshComponent) {
+      this.SetOGComponents();
+      this.HideOGComponents();
+    }
 
     if this.attached {
       if IsDefined(this.meshComponent) {
