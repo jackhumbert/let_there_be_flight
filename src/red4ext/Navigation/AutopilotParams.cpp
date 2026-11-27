@@ -10,6 +10,7 @@ const std::vector<AutopilotParamRef> &AutopilotParamTable() {
       {"brakeAccel", &P::brakeAccel, nullptr, nullptr},
       {"landingMode", nullptr, &P::landingMode, nullptr},
       {"padRange", &P::padRange, nullptr, nullptr},
+      {"attitudeStyle", nullptr, &P::attitudeStyle, nullptr},
       {"droneBrakeTurn", nullptr, nullptr, &P::droneBrakeTurn},
       {"droneBodyShare", &P::droneBodyShare, nullptr, nullptr},
       {"droneBrakeShare", &P::droneBrakeShare, nullptr, nullptr},

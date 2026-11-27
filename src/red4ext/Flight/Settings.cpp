@@ -53,6 +53,8 @@ const std::vector<AutopilotSetting> &AutopilotSettingsTable() {
        AutopilotSetting::Kind::List, 1.0f, 1.0f, 0.0f, 2.0f, 9, kLandingModeType},
       {"padRange", "UI-Settings-Autopilot-Pad-Range", "UI-Settings-Autopilot-Pad-Range-Description",
        AutopilotSetting::Kind::Float, 0.0f, 25.0f, 0.0f, 500.0f, 10},
+      {"style", "UI-Settings-Autopilot-Style", "UI-Settings-Autopilot-Style-Description",
+       AutopilotSetting::Kind::List, 0.0f, 1.0f, 0.0f, 1.0f, 11, kAttitudeStyleType},
   };
   return table;
 }
@@ -72,6 +74,8 @@ bool SetAutopilotSetting(AutopilotSettings &aSettings, const std::string &aName,
     aSettings.enabled = value != 0.0f;
   } else if (aName == "landAtDestination") {
     aSettings.landingMode = int32_t(std::lround(value));
+  } else if (aName == "style") {
+    aSettings.attitudeStyle = int32_t(std::lround(value));
   } else {
     aSettings.padRange = value;
   }

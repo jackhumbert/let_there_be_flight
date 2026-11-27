@@ -386,7 +386,9 @@ Trajectory BuildTrajectory(const VehicleSpec &aSpec, const std::vector<Vec3> &aL
       // reverse surge slows the car, as a player pulls back on the surge rather than the nose
       const float along = ahead >= 0.0f ? aSpec.surge : Decel(aSpec, q.speed) - DragAt(aSpec, q.speed, tangent[i].z);
       const float share = ahead >= 0.0f ? aParams.bodyShare : aSpec.brakeShare;
-      pitch[i] = std::clamp(DroneBodyAngle(aSpec, std::atan2(ahead, thrust.z), size[i], along, share), -cap, cap);
+      const float pitchCap = aSpec.levelPitch ? 0.0f : cap;
+      pitch[i] = std::clamp(DroneBodyAngle(aSpec, std::atan2(ahead, thrust.z), size[i], along, share), -pitchCap,
+                            pitchCap);
     }
     // a coming turn's roll held from rollLook before it (same side, or nearly level now)
     for (size_t i = 0; i < n; ++i) {

@@ -440,6 +440,26 @@
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Style",
+              "femaleVariant": "Autopilot Style"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Style-Description",
+              "femaleVariant": "How the car's body flies under the Autopilot. Drone: the body leans forward to speed up, pulls back to slow down and banks into bends. Spinner: it still banks into bends, but the nose stays level and the thrusters speed it up and slow it down."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Style-Drone",
+              "femaleVariant": "Drone"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Style-Spinner",
+              "femaleVariant": "Spinner"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Landing-Pads",
               "femaleVariant": "Landing Pads and Summons"
             },

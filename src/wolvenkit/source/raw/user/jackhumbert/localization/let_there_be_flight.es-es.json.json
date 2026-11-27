@@ -440,6 +440,26 @@
             },
             {
               "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Style",
+              "femaleVariant": "Estilo del piloto automático"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Style-Description",
+              "femaleVariant": "Cómo vuela la carrocería con el piloto automático. Dron: se inclina hacia delante para acelerar, hacia atrás para frenar y se ladea en las curvas. Spinner: sigue ladeándose en las curvas, pero el morro se mantiene nivelado y los propulsores aceleran y frenan."
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Style-Drone",
+              "femaleVariant": "Dron"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
+              "secondaryKey": "UI-Settings-Autopilot-Style-Spinner",
+              "femaleVariant": "Spinner"
+            },
+            {
+              "$type": "localizationPersistenceOnScreenEntry",
               "secondaryKey": "UI-Settings-Landing-Pads",
               "femaleVariant": "Plataformas de aterrizaje y llamadas"
             },

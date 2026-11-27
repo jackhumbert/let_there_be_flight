@@ -106,6 +106,7 @@ void Autopilot::RefreshVehicle() {
   s.drag = in->settings.physxFlightPhysics;
   s.drone = true;
   s.maxTilt = params.droneMaxTilt;
+  s.levelPitch = LevelPitch(params);
   s.brakeShare = params.droneBrakeShare;
   s.tiltFloor = params.droneTiltFloor;
   s.driftMax = params.raceDriftMax;
@@ -600,7 +601,7 @@ void Autopilot::FlyAerobatic(float aTimeDelta, const Vec3 &aAccel, const Vec3 &a
   ap.raceRollRateMax = params.raceRollRateMax;
   ap.raceRollAccelMax = params.raceRollAccelMax;
   ap.trajectoryAttitudeLead = params.trajectoryAttitudeLead;
-  ap.droneTakeoffTilt = params.droneTakeoffTilt;
+  ap.droneTakeoffTilt = BodyTakeoffTilt(params);
   ap.droneTakeoffIn = params.droneTakeoffIn;
   ap.droneTakeoffFull = params.droneTakeoffFull;
   ap.droneTakeoffOut = params.droneTakeoffOut;

@@ -30,8 +30,8 @@ bool Register() {
   auto apiVersion = reinterpret_cast<uint32_t (*)()>(GetProcAddress(module, "ApiVersion"));
   const bool lists = apiVersion && apiVersion() >= 1;
   if (!lists) {
-    spdlog::info("[Settings] this Mod Settings has no lists: Land at Destination is a switch (on: set down on the "
-                 "wheels)");
+    spdlog::info("[Settings] this Mod Settings has no lists: Land at Destination and Autopilot Style are switches (on: "
+                 "set down on the wheels, spinner style)");
   }
   // Mod Settings keeps the pointers until the game's scripts are loaded: the variables live as long as the plugin
   static std::vector<ModSettings::Variable> variables;

@@ -14,6 +14,7 @@ public native class FlightVehicleModel extends IScriptable {
   public native let drag: Bool;             // FlightSettings.physxFlightPhysics
   public native let drone: Bool;
   public native let maxTilt: Float;         // deg, droneMaxTilt
+  public native let levelPitch: Bool;       // spinner style (attitudeStyle 1)
   public native let brakeShare: Float;      // droneBrakeShare
   public native let tiltFloor: Float;       // droneTiltFloor
   public native let driftMax: Float;        // deg, raceDriftMax

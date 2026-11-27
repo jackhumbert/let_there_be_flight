@@ -59,6 +59,9 @@ bool VehicleSpec::Parse(const std::string &aText, std::string &aError) {
     } else if (key == "drone") {
       drone = value != 0.0f;
       continue;
+    } else if (key == "levelPitch") {
+      levelPitch = value != 0.0f;
+      continue;
     } else {
       aError = "unknown vehicle field '" + key + "'";
       return false;

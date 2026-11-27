@@ -46,6 +46,7 @@ with Extra Flight Modes on, then Drone and the Autopilot. A mode switched off is
 | Autopilot | On | | While flying, hold the autodrive key to fly to the tracked destination on its own; any flight input takes over for a moment. |
 | Land at Destination | Set Down on Wheels | Set Down on Wheels, Touch Down, Hover | How the Autopilot ends a trip to a destination on the ground. Set Down on Wheels: it comes down smoothly to just above where the wheels would rest, then switches flight off. Touch Down: it sinks until it touches the ground, then switches flight off. Hover: it stays over the destination and hands the controls back. With a Mod Settings too old for lists it is a switch: on sets down on the wheels, off hovers. |
 | Land on a Nearby Pad (m) | 0 | 0 to 500 | The Autopilot lands on an AV pad within this many metres of the destination instead of on the street. 0: off. |
+| Autopilot Style | Drone | Drone, Spinner | How the car's body flies under the Autopilot. Drone: it leans forward to speed up, pulls back to slow down and banks into bends. Spinner: it still banks into bends, but the nose stays level and the thrusters speed it up and slow it down. With a Mod Settings too old for lists it is a switch: on is Spinner. |
 
 ## Crashes
 

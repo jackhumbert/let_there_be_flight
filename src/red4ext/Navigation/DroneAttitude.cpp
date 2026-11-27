@@ -29,9 +29,10 @@ Tilt TiltFor(const VehicleSpec &aSpec, const AttitudeParams &aParams, const Vec3
   float ahead = V::Dot(thrust, aH);
   float along = ahead >= 0.0f ? aSpec.surge : Decel(aSpec, aSpeed) - Drag(aSpec, aSpeed);
   Tilt tilt;
+  const float pitchCap = aSpec.levelPitch ? 0.0f : aCap;
   tilt.pitch = Clamp(DroneBodyAngle(aSpec, std::atan2(ahead, thrust.z), size, along,
                                     ahead >= 0.0f ? aParams.droneBodyShare : aSpec.brakeShare),
-                     -aCap, aCap);
+                     -pitchCap, pitchCap);
   tilt.roll = Clamp(DroneBodyAngle(aSpec, std::atan2(V::Dot(thrust, aSide), thrust.z), size, aSpec.sway,
                                    aParams.droneBodyShare),
                     -aCap, aCap);
@@ -138,7 +139,8 @@ AttitudeOutput DroneAttitude(AttitudeState &aState, const AttitudeParams &aParam
                            V::Mul(V::Sub(SampleAt(*aTrajectory, aInput.closestS).acceleration, aState.attRef), smooth));
     Tilt ref = TiltFor(aSpec, aParams, aState.attRef, drag, h, side, g, aInput.speed, cap);
     TrajectoryPoint plan = SampleAt(*aTrajectory, aInput.closestS + aInput.speed * aParams.trajectoryAttitudeLead);
-    pitch = Clamp(plan.pitch + pitch - ref.pitch, -cap, cap);
+    const float pitchCap = aSpec.levelPitch ? 0.0f : cap;
+    pitch = Clamp(plan.pitch + pitch - ref.pitch, -pitchCap, pitchCap);
     // the plan's roll is towards (h.y, -h.x), the heading turned right; side may point the other way
     float flip = V::Dot(side, Vec3{h.y, -h.x, 0.0f}) >= 0.0f ? 1.0f : -1.0f;
     roll = Clamp(flip * plan.roll + roll - ref.roll, -cap, cap);

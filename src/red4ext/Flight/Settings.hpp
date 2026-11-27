@@ -80,6 +80,7 @@ struct AutopilotSettings {
   float brakeAccel = 6.0f; // m/s2 planned deceleration
   int32_t landingMode = 1; // Navigation::LandingMode, kLandWheels
   float padRange = 0.0f; // m around a destination on the ground to look for a landing pad (0 = off)
+  int32_t attitudeStyle = 0; // Navigation::AttitudeStyle, kStyleDrone
 };
 
 // The instance the Autopilot reads, written by Mod Settings' callbacks.
@@ -102,6 +103,9 @@ struct AutopilotSetting {
 
 // Land at Destination's values (FlightSettingsLink.hpp registers the enum in RTTI under this name).
 constexpr const char *kLandingModeType = "FlightAutopilotLanding";
+// Autopilot Style's values (Drone, Spinner; FlightSettingsLink.hpp registers the enum). A Mod Settings without lists
+// gets a Bool in its place: on Spinner, off Drone.
+constexpr const char *kAttitudeStyleType = "FlightAutopilotStyle";
 
 // The variables in the menu, all under kFlightModesCategory.
 const std::vector<AutopilotSetting> &AutopilotSettingsTable();

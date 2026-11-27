@@ -67,6 +67,8 @@ TEST(autopilot_shell_mod_settings_keys) {
        1.0f, 0.0f, 2.0f, 9},
       {"padRange", "UI-Settings-Autopilot-Pad-Range", "UI-Settings-Autopilot-Pad-Range-Description", Kind::Float, 0.0f,
        25.0f, 0.0f, 500.0f, 10},
+      {"style", "UI-Settings-Autopilot-Style", "UI-Settings-Autopilot-Style-Description", Kind::List, 0.0f, 1.0f,
+       0.0f, 1.0f, 11},
   };
   CHECK(std::string(kAutopilotSettingsClass) == "FlightModeAutopilot");
   CHECK(std::string(kPlayerSettingsMod) == "Let There Be Flight");
@@ -92,12 +94,16 @@ TEST(autopilot_shell_mod_settings_keys) {
   // list was the script's Bool, its saved 0 and 1 the list's first two (Hover; Wheels, landing as the Bool's true did)
   const std::string script = Read(LTBF_SOURCE_DIR "/tests/autopilot_script_defaults.txt");
   for (const auto &t : table) {
+    if (std::string(t.name) == "style") {
+      continue; // added after the script mode
+    }
     const bool wasBool = t.kind != Kind::Float;
     const std::string decl = std::string("public let ") + t.name + ": " + (wasBool ? "Bool" : "Float") + " = " +
                              (wasBool ? (t.defaultValue != 0.0f ? "true" : "false") : "");
     CHECK(script.find(decl) != std::string::npos);
   }
   CHECK(std::string(kLandingModeType) == "FlightAutopilotLanding");
+  CHECK(std::string(kAttitudeStyleType) == "FlightAutopilotStyle");
   // the code's defaults are the table's
   const AutopilotSettings defaults;
   CHECK(defaults.enabled && defaults.landingMode == Navigation::kLandWheels);
@@ -107,6 +113,7 @@ TEST(autopilot_shell_mod_settings_keys) {
   CHECK_NEAR(params.brakeAccel, defaults.brakeAccel, 0.0);
   CHECK(params.landingMode == defaults.landingMode);
   CHECK_NEAR(params.padRange, defaults.padRange, 0.0);
+  CHECK(defaults.attitudeStyle == Navigation::kStyleDrone && params.attitudeStyle == defaults.attitudeStyle);
   // the dropped two and brakeAccel are not registered
   for (const auto &t : table) {
     CHECK(std::string(t.name) != "maxSpeed" && std::string(t.name) != "lateralAccel" &&
@@ -128,6 +135,10 @@ TEST(autopilot_shell_mod_settings_set) {
   CHECK(s.landingMode == Navigation::kLandTouchDown);
   CHECK(SetAutopilotSetting(s, "padRange", 100.0f));
   CHECK_NEAR(s.padRange, 100.0, 0.0);
+  CHECK(SetAutopilotSetting(s, "style", 1.0f));
+  CHECK(s.attitudeStyle == Navigation::kStyleSpinner);
+  CHECK(SetAutopilotSetting(s, "style", 5.0f)); // clamped to the list
+  CHECK(s.attitudeStyle == Navigation::kStyleSpinner);
   CHECK(!SetAutopilotSetting(s, "maxSpeed", 30.0f));
   // a change to the player's instance is seen by the modes
   const uint32_t before = AutopilotSettingsGeneration();

@@ -35,6 +35,7 @@ struct VehicleSpec {
   // the Autopilot's race tuning (FlightModeAutopilot)
   bool drone = true;             // drone style: the body tilts to steer (droneStyle)
   float maxTilt = 55.0f;         // deg, droneMaxTilt
+  bool levelPitch = false;       // spinner style: the body banks but its nose never tilts forward or back
   float brakeShare = 0.25f;      // share of the thrust's tilt the body takes slowing (droneBrakeShare): the nose
                                  // pulls up less than it leans speeding up, reverse surge does the rest
   float tiltFloor = 1.0f;        // x g: the vertical the body's tilt is worked out against at least (droneTiltFloor);

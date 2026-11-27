@@ -182,7 +182,7 @@ void FlightModeAutopilot::OnInitializeNative() {
   PullState();
 }
 
-// The Mod Settings (enabled, landAtDestination as landingMode, padRange; brakeAccel at its default) and the developer overrides
+// The Mod Settings (enabled, landAtDestination as landingMode, padRange, style as attitudeStyle; brakeAccel at its default) and the developer overrides
 // (autopilot.<name>) written into the tuning: when the mode is set up and engaged (aForce), and when either changes. A field a script set
 // meanwhile keeps its value until then, as with the script mode.
 void FlightModeAutopilot::ApplySettings(bool aForce) {
@@ -199,6 +199,7 @@ void FlightModeAutopilot::ApplySettings(bool aForce) {
   params.brakeAccel = player.brakeAccel;
   params.landingMode = player.landingMode;
   params.padRange = player.padRange;
+  params.attitudeStyle = player.attitudeStyle;
   for (const auto &[name, value] : dev.autopilot) {
     Navigation::SetAutopilotParam(params, name, value);
   }
@@ -629,6 +630,7 @@ void FlightModeAutopilot::RefreshVehicle() {
   m.drag = in.settings.physxFlightPhysics;
   m.drone = true;
   m.maxTilt = params.droneMaxTilt;
+  m.levelPitch = Navigation::LevelPitch(params);
   m.brakeShare = params.droneBrakeShare;
   m.tiltFloor = params.droneTiltFloor;
   m.driftMax = params.raceDriftMax;

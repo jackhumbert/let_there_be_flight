@@ -227,7 +227,10 @@ held by reference, so a change reaches the next frame.
 - `AutopilotParamTable` names each field; `SetAutopilotParam` sets one by name.
 - Mod Settings: `enabled`, `landAtDestination` (the field `landingMode`: a list of Hover, Wheels and
   Touch Down, the old Bool's saved false and true its first two; on a Mod Settings without lists, before its
-  `ApiVersion` 1, the old switch with on as Wheels) and `padRange`, registered from C++ under the class
+  `ApiVersion` 1, the old switch with on as Wheels), `padRange` and `style` (the field `attitudeStyle`: Drone or
+  Spinner; Spinner sets `VehicleSpec::levelPitch`, so the body banks but its nose is held level, and no takeoff
+  lean; the planner's speeds along the line are the surge thrusters' in both; without lists a switch with on as
+  Spinner), registered from C++ under the class
   `FlightModeAutopilot` (`docs/design/flight-modes.md`, Settings). They are written into the params
   when the mode is set up and engaged and when the player changes one, so a value set on such a field
   before engaging is lost.

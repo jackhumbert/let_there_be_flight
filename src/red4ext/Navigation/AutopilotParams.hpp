@@ -17,10 +17,17 @@ namespace Navigation {
 // until it touches down and switch flight off.
 enum LandingMode : int32_t { kLandHover = 0, kLandWheels = 1, kLandTouchDown = 2 };
 
+// How the car's body flies (AutopilotParams::attitudeStyle, the Mod Setting Autopilot Style's index): drone, the body
+// tilts towards the thrust (leaning forward to speed up, pulling back to slow down, banking into bends), or spinner,
+// it still banks into bends but the nose stays level and the surge thrusters alone speed it up and slow it down (the
+// planner's speeds along the line are the thrusters' already, so the route is the same).
+enum AttitudeStyle : int32_t { kStyleDrone = 0, kStyleSpinner = 1 };
+
 struct AutopilotParams {
   float brakeAccel = 6.0f; // m/s2 planned deceleration
   int32_t landingMode = kLandWheels; // LandingMode
   float padRange = 0.0f; // m around a destination on the ground to look for a landing pad (0 = off)
+  int32_t attitudeStyle = kStyleDrone; // AttitudeStyle
   // drone style: the nose turns into the landing heading over the last seconds before the descent
   // (LandSlewYaw; not in Mod Settings, set by test helpers; a Mod Setting is written back from its stored value when the mode
   // is engaged)
@@ -232,6 +239,12 @@ struct AutopilotParamRef {
   bool AutopilotParams::*b = nullptr;
 };
 const std::vector<AutopilotParamRef> &AutopilotParamTable();
+
+// Spinner style: the nose held level (VehicleSpec::levelPitch), no forward lean taking off.
+inline bool LevelPitch(const AutopilotParams &aParams) { return aParams.attitudeStyle == kStyleSpinner; }
+inline float BodyTakeoffTilt(const AutopilotParams &aParams) {
+  return LevelPitch(aParams) ? 0.0f : aParams.droneTakeoffTilt;
+}
 
 // Sets the field named aName (a Bool from 0 or 1, an Int32 rounded); false for an unknown name.
 bool SetAutopilotParam(AutopilotParams &aParams, std::string_view aName, float aValue);

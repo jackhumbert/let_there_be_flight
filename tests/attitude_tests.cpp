@@ -1,6 +1,7 @@
 // The drone attitude (src/red4ext/Navigation/DroneAttitude): EaseAngle, WrapAngle, the heading and the tilt.
 #include "check.hpp"
 
+#include "Navigation/AutopilotParams.hpp"
 #include "Navigation/DroneAttitude.hpp"
 #include "Navigation/Vec3Ops.hpp"
 
@@ -70,6 +71,27 @@ TEST(attitude_tilt_forward) {
   AttitudeOutput out = DroneAttitude(state, {}, {}, Frame({5, 0, 0}), 0.0f, nullptr, nullptr);
   CHECK_NEAR(NoseDown(out), 0.2356824, kTol);
   CHECK_NEAR(out.up.y, 0, kTol);
+}
+
+TEST(attitude_spinner_style_banks_level_nose) {
+  // spinner style: speeding up and turning hard, the body banks as drone style but the nose stays level
+  AutopilotParams params;
+  params.attitudeStyle = kStyleSpinner;
+  CHECK(LevelPitch(params));
+  CHECK_NEAR(BodyTakeoffTilt(params), 0.0, 0.0);
+  params.attitudeStyle = kStyleDrone;
+  CHECK(!LevelPitch(params));
+  CHECK_NEAR(BodyTakeoffTilt(params), params.droneTakeoffTilt, 0.0);
+  VehicleSpec drone, spinner;
+  spinner.levelPitch = true;
+  AttitudeState a, b;
+  a.attAccel = b.attAccel = {5, -12, 0};
+  AttitudeOutput d = DroneAttitude(a, {}, drone, Frame({5, -12, 0}), 0.0f, nullptr, nullptr);
+  AttitudeOutput s = DroneAttitude(b, {}, spinner, Frame({5, -12, 0}), 0.0f, nullptr, nullptr);
+  CHECK(NoseDown(d) > 0.1f);
+  CHECK_NEAR(NoseDown(s), 0, kTol);
+  CHECK_NEAR(std::asin(V::Dot(s.up, {0, -1, 0})), std::asin(V::Dot(d.up, {0, -1, 0})), 0.02);
+  CHECK(std::asin(V::Dot(s.up, {0, -1, 0})) > 0.3f);
 }
 
 TEST(attitude_roll_past_sway) {
