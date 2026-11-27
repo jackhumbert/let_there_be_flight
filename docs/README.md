@@ -24,4 +24,4 @@
   - `engine-synth.md`: the thruster sound, made in C++.
 - `release.md`: cutting a release, Nexus Mods.
 - `game-patch.md`: what a game patch breaks, the update checklist, reverse engineering, the SDK v1 migration.
-- `nexus/`: the Nexus page texts (sticky, settings guide).
+- `nexus/`: the settings guide, linked from the Nexus page.
