@@ -48,8 +48,10 @@ void EntityExt::AddComponent(Handle<ent::IComponent> const & componentToAdd) {
 
   if (componentToAdd->IsOfClass(rtti->GetClass("entMeshComponent"))) {
 
-    if (vcc) {
-      auto meshComponent = (ent::MeshComponent *)componentToAdd.instance;
+    auto meshComponent = (ent::MeshComponent *)componentToAdd.instance;
+    // A thruster with no mesh (the Blade Runner Spinner's, only an anchor for the flames) is not registered with the
+    // visual controller: an empty resource path there never loads, and the car stays on its proxy mesh for good.
+    if (vcc && !meshComponent->mesh.path.IsEmpty()) {
       meshComponent->appearanceName = meshComponent->meshAppearance;
 
       // entVisualControllerComponent is a hand-written layout (last regenerated for 1.62);
