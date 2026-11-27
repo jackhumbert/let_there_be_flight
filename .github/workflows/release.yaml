@@ -10,7 +10,6 @@ jobs:
     name: Build & Release
     runs-on: windows-latest
     env:
-      GIT_CLIFF_VERSION: 0.10.0
       CHANGELOG_FILE: ${{ github.workspace }}-CHANGES.md
       NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
 
@@ -18,7 +17,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           submodules: true
-          fetch-depth: 0   # git-cliff needs the full history and all tags to build the changelog
+          fetch-depth: 0   # the release notes need the full history and all tags
       - uses: TheMrMilchmann/setup-msvc-dev@v4
         with:
           arch: x64
@@ -39,40 +38,13 @@ jobs:
             exit 1
           }
 
-      - name: Install git-cliff
-        uses: Alex079/setup-custom-tool@v3
-        with:
-          archiveUrl: https://github.com/orhun/git-cliff/releases/download/v${{ env.GIT_CLIFF_VERSION }}/git-cliff-${{ env.GIT_CLIFF_VERSION }}-x86_64-pc-windows-msvc.zip
-          archiveGlob: '*'
-          toolName: git-cliff
-          toolVersion: ${{ env.GIT_CLIFF_VERSION }}
-
-      - name: Generate a changelog
-        # The release body: the notes written for this version (docs/releases/vX.Y.Z.md; a prerelease tag uses its
-        # version's), a link to the commits since the last full release, then the requirements. Nexus gets the notes
-        # and the requirements. Only without a notes file is the body generated: every feat, fix and perf commit
-        # since the last full release (git-cliff; a prerelease tag in between is not a version of its own, cliff.toml's
-        # ignore_tags).
-        run: |
-          $tag = "${{ github.ref_name }}"
-          $previous = git describe --tags --abbrev=0 --exclude "*-*" --exclude "*_*" "$tag^"
-          $notes = "docs/releases/$(($tag -split '[-_]')[0]).md"
-          if (Test-Path $notes) {
-            Write-Host "release notes: $notes"
-            $nexus = (Get-Content -Raw $notes).Trim()
-            $compare = "${{ github.server_url }}/${{ github.repository }}/compare/$previous...$tag"
-            $body = "$nexus`n`n[Every commit since $previous]($compare)`n"
-          } else {
-            Write-Host "no ${notes}: the commit list $previous..$tag is the release body"
-            $commits = "${{ github.workspace }}-COMMITS.md"
-            git-cliff --strip header --tag $tag "$previous..$tag" -o $commits
-            $nexus = (Get-Content -Raw $commits).Trim()
-            $body = "$nexus`n"
-          }
-          $requirements = (Get-Content -Raw requirements.md).Trim()
-          Set-Content -Path "${{ env.CHANGELOG_FILE }}" -Value "$body`n$requirements" -Encoding utf8
-          Set-Content -Path "${{ github.workspace }}-NEXUS.md" -Value "$nexus`n`n$requirements" -Encoding utf8
-          Get-Content "${{ env.CHANGELOG_FILE }}"
+      # The release notes (cyberpunk_cmake scripts/release_notes.py): docs/releases/vX.Y.Z.md when it exists, else the
+      # feat, fix and perf commits since the last full release. Writes the GitHub release body, and for Nexus one
+      # plain line per change (the Changelogs tab) and the same lines as the file's description, which Nexus does
+      # not let us change after the upload.
+      - name: Release notes
+        id: nexus_changelog
+        run: python deps/cyberpunk_cmake/scripts/release_notes.py --tag "${{ github.ref_name }}" --repo-url "${{ github.server_url }}/${{ github.repository }}" --github-body "${{ env.CHANGELOG_FILE }}"
 
       - name: Zipping game_dir
         run: tar -cvf "${{ github.workspace }}/${{ env.MOD_SLUG }}_${{ github.ref_name }}.zip" --format=zip *
@@ -116,16 +88,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Read changelog for Nexus
-        id: nexus_changelog
-        shell: pwsh
-        run: |
-          $body = Get-Content -Raw "${{ github.workspace }}-NEXUS.md"
-          "changelog<<NEXUS_EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding UTF8 -Append
-          $body | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding UTF8 -Append
-          "NEXUS_EOF" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding UTF8 -Append
-          "version=$('${{ github.ref_name }}'.TrimStart('v'))" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding UTF8 -Append
-
       # Requires repo secret NEXUSMODS_API_KEY (https://www.nexusmods.com/settings/api-keys)
       # file_id is the v3 file chain id for the main LTBF file (mod page -> Files -> Advanced / API Info); public, not a secret.
       # Skipped for prerelease tags and when the secret is not set.
@@ -151,6 +113,7 @@ jobs:
           display_name: Let There Be Flight ${{ github.ref_name }}${{ env.CYBERPUNK_2077_GAME_VERSION_STR }}
           category: main
           changelog: ${{ steps.nexus_changelog.outputs.changelog }}
+          description: ${{ steps.nexus_changelog.outputs.description }}
           update_mod_version: true
           archive_existing_version: false
           primary_mod_manager_download: true
