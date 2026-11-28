@@ -227,10 +227,10 @@ float GroundRate(const Ground &g, Vec3 aVelocity, float aLimit);
 // scales the mode torque by mass and tensor, PhysX divides by the inertia), per body axis: X pitch, Y roll, Z yaw.
 // Yaw 0.95 is TorqueProbe's on an Archer Quartz and agrees with a Shion MZ1 recording (2.57 rad/s2 per
 // unit measured, 2.65 from the Kyokotsu's survey numbers). Pitch 1.13 is fitted to that recording (TorqueProbe's 2.6
-// was the first frames only). Roll 0.24 is fitted to the C++ Hover & Fly's roll holds in game on a Shion MZ1, a
-// Bratsk and a Kusanagi (they overshot 45 deg to 49 to 54 deg, which the simulator gives at 0.4 to 0.55 of
-// TorqueProbe's 0.52).
-constexpr Vec3 kEngineTorqueGain{1.13f, 0.24f, 0.95f};
+// was the first frames only). Roll 0.95 is fitted to Standard's roll on five cars with PhysX flight on (0.84 to 1.03):
+// the 0.24 fitted earlier, to Hover & Fly's roll holds, made Standard's roll correction four times too strong, and a
+// car shook on its roll axis below about 18 fps.
+constexpr Vec3 kEngineTorqueGain{1.13f, 0.95f, 0.95f};
 
 // A car's rad/s2 per unit of mode torque on each body axis: kEngineTorqueGain x mass x tensor / inertia, with the
 // tensor's Y kept at 1 or more as the force tail keeps it. Zero on an axis with no inertia.
