@@ -317,7 +317,7 @@ void Component(FlightComponent *c, float deltaTime) {
     if (thruster->meshComponent) {
       e.mesh = WorldMatrix(thruster->meshComponent->worldTransform);
     } else {
-      // no mesh (a car with too many parts on vehicle_slots, Hooks/Entity_Initialize.cpp): its slot, from the script
+      // a thruster with no mesh: its slot, from the script
       auto func = thruster->GetType()->GetFunction("GetLocalToWorld");
       if (!func || !ExecuteFunction(thruster, func, &e.mesh)) {
         continue;

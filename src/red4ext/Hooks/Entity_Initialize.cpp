@@ -3,8 +3,6 @@
 #include "LoadResRef.hpp"
 #include "Utils/FlightModule.hpp"
 #include <RED4ext/Common.hpp>
-#include <RED4ext/Scripting/Natives/Generated/ent/HardTransformBinding.hpp>
-#include <RED4ext/Scripting/Natives/Generated/ent/IPlacedComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/WidgetHudComponent.hpp>
 #include <RED4ext/Scripting/Natives/Generated/ink/HudEntriesResource.hpp>
 #include <Extensions/MeshComponent.hpp>
@@ -15,33 +13,6 @@ static constexpr const char *FLIGHT_HUD_ENTRIES = "user\\jackhumbert\\widgets\\h
 // Settings). Mod Settings writes the user's choice into CClass::defaults (mod_settings
 // ModClass::SetDefaultValue), so this is the current setting without needing a HUD
 // controller instance. Unknown class/property/type falls back to aFallback.
-// The game keeps at most 256 transform children per component: RefreshHierarchyCache collects them into a 256-entry
-// stack array with no bounds check, and the 257th overwrites the count and crashes the game. The thrusters hang from
-// vehicle_slots, the busiest parent on a vanilla car (42 at most); a car modded with many more parts there gets no
-// thruster meshes rather than the crash (it still flies, with its wheels showing).
-static constexpr uint32_t kSlotChildLimit = 200;
-
-static uint32_t CountHardBoundTo(EntityExt *entity, RED4ext::CName aParent) {
-  auto rtti = RED4ext::CRTTISystem::Get();
-  auto placedCls = rtti->GetClass("entIPlacedComponent");
-  auto hardBindingCls = rtti->GetClass("entHardTransformBinding");
-  uint32_t count = 0;
-  for (auto const &handle : entity->componentsStorage.components) {
-    auto component = handle.GetPtr();
-    auto type = component ? component->GetNativeType() : nullptr;
-    if (!type || !placedCls || !type->IsA(placedCls)) {
-      continue;
-    }
-    auto &binding = reinterpret_cast<RED4ext::ent::IPlacedComponent *>(component)->parentTransform;
-    auto bindingType = binding ? binding->GetNativeType() : nullptr;
-    if (bindingType && hardBindingCls && bindingType->IsA(hardBindingCls) &&
-        reinterpret_cast<RED4ext::ent::HardTransformBinding *>(binding.GetPtr())->bindName == aParent) {
-      count++;
-    }
-  }
-  return count;
-}
-
 static bool GetFlightHudSetting(RED4ext::CRTTISystem *rtti, RED4ext::CName aProperty, bool aFallback) {
   auto cls = rtti->GetClass("hudFlightController");
   if (!cls) {
@@ -154,17 +125,6 @@ REGISTER_FLIGHT_HOOK_HASH(void, 3490519617, Entity_Initialize, EntityExt *entity
         configuration->Setup(vehicle);
         // configuration->AddMeshes(entity, vcc);
         if (Utils::LooksLikeDynArray(configuration->thrusters, 64)) {
-          const auto bound = CountHardBoundTo(entity, "vehicle_slots");
-          if (bound + configuration->thrusters.size > kSlotChildLimit) {
-            LTBF_WARN_ONCE("[Entity_Initialize] {} components already hang from vehicle_slots (the game crashes past 256): "
-                           "vehicles like this get no thruster meshes",
-                           bound);
-            for (auto const &thruster : configuration->thrusters) {
-              if (thruster) {
-                thruster->meshComponent = {};
-              }
-            }
-          }
           for (auto const & thruster : configuration->thrusters) {
             if (thruster && thruster->meshComponent) {
               thruster->meshComponent.refCount->IncRef();

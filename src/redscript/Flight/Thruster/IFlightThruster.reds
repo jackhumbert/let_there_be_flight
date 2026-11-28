@@ -88,8 +88,7 @@ public abstract native class IFlightThruster extends IScriptable {
     if IsDefined(this.meshComponent) {
       return this.meshComponent.GetLocalToWorld();
     }
-    // no mesh (a car with too many parts on vehicle_slots, Entity_Initialize.cpp): the slot it would hang from, so
-    // the thruster tensor and the thruster sounds still sit at the wheels
+    // no mesh: the slot it would hang from, so the thruster tensor and the thruster sounds still sit at the wheels
     if !IsDefined(this.flightComponent) {
       return Matrix.Identity();
     }
